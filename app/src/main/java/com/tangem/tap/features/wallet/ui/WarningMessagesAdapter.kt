@@ -86,12 +86,13 @@ class WarningMessageVH(val view: View) : RecyclerView.ViewHolder(view) {
                 }
                 view.btn_can_be_better.setOnClickListener {
                     FirebaseAnalyticsHandler.triggerEvent(AnalyticsEvent.APP_RATING_NEGATIVE)
+                    store.dispatch(WalletAction.Warnings.AppRating.SetNeverToShow)
                     store.dispatch(GlobalAction.HideWarningMessage(warning))
                     store.dispatch(GlobalAction.SendFeedback(RateCanBeBetterEmail()))
                 }
-                store.dispatch(WalletAction.Warnings.AppRating.SetNeverToShow)
                 view.btn_really_cool.setOnClickListener {
                     FirebaseAnalyticsHandler.triggerEvent(AnalyticsEvent.APP_RATING_POSITIVE)
+                    store.dispatch(WalletAction.Warnings.AppRating.SetNeverToShow)
                     val context = view.context
                     val reviewManager = ReviewManagerFactory.create(context)
                     val flow = reviewManager.requestReviewFlow()
@@ -107,7 +108,6 @@ class WarningMessageVH(val view: View) : RecyclerView.ViewHolder(view) {
                     }
                     store.dispatch(GlobalAction.HideWarningMessage(warning))
                 }
-                store.dispatch(WalletAction.Warnings.AppRating.SetNeverToShow)
             }
         }
     }
