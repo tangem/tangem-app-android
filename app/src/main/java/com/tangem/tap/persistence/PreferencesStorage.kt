@@ -106,7 +106,8 @@ class AppRatingLaunchObserver(
         private val launchCounts: Int,
 ) {
     private val K_SHOW_RATING_AT_LAUNCH_COUNT = "showRatingDialogAtLaunchCount"
-    private val K_FUNDS_FOUND_DATE = "aFundsFoundDate"
+    private val K_FUNDS_FOUND_DATE = "fundsFoundDate"
+    private val K_USER_WAS_INTERACT_WITH_RATING = "userWasInteractWithRating"
 
     private val deferShowing = 20
     private val firstShowing = 3
@@ -122,21 +123,23 @@ class AppRatingLaunchObserver(
 
         fundsFoundDate = Calendar.getInstance()
         preferences.edit().putLong(K_FUNDS_FOUND_DATE, fundsFoundDate!!.timeInMillis).apply()
-        updateNextShowing(launchCounts + firstShowing)
     }
 
     fun isReadyToShow(): Boolean {
         val fundsDate = fundsFoundDate ?: return false
 
-        val diff = Calendar.getInstance().timeInMillis - fundsDate.timeInMillis
-        val diffInDays = diff / (100 * 60 * 60 * 24)
-        if (diffInDays >= firstShowing) return true
+        if (!userWasInteractWithRating()) {
+            val diff = Calendar.getInstance().timeInMillis - fundsDate.timeInMillis
+            val diffInDays = diff / (100 * 60 * 60 * 24)
+            if (diffInDays >= firstShowing) return true
+        }
 
-        return launchCounts >= getCounterOfNextShowing()
+        val nextShowing = getCounterOfNextShowing()
+        return launchCounts >= nextShowing
     }
 
     fun applyDelayedShowing() {
-        if (getCounterOfNextShowing() < launchCounts) updateNextShowing(launchCounts + deferShowing)
+        updateNextShowing(launchCounts + deferShowing)
     }
 
     fun setNeverToShow() {
@@ -144,10 +147,12 @@ class AppRatingLaunchObserver(
     }
 
     private fun updateNextShowing(at: Int) {
-        preferences.edit().putInt(K_SHOW_RATING_AT_LAUNCH_COUNT, at).apply()
+        val editor = preferences.edit()
+        editor.putInt(K_SHOW_RATING_AT_LAUNCH_COUNT, at)
+        editor.putBoolean(K_USER_WAS_INTERACT_WITH_RATING, true)
+        editor.apply()
     }
 
-    private fun getCounterOfNextShowing(): Int {
-        return preferences.getInt(K_SHOW_RATING_AT_LAUNCH_COUNT, firstShowing)
-    }
+    private fun userWasInteractWithRating(): Boolean = preferences.getBoolean(K_USER_WAS_INTERACT_WITH_RATING, false)
+    private fun getCounterOfNextShowing(): Int = preferences.getInt(K_SHOW_RATING_AT_LAUNCH_COUNT, firstShowing)
 }
