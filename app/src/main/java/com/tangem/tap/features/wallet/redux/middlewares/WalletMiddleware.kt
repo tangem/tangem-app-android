@@ -3,6 +3,7 @@ package com.tangem.tap.features.wallet.redux.middlewares
 import android.content.Intent
 import android.net.Uri
 import androidx.core.content.ContextCompat
+import com.tangem.TangemSdkError
 import com.tangem.blockchain.common.*
 import com.tangem.common.CompletionResult
 import com.tangem.tap.*
@@ -22,6 +23,7 @@ import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletData
 import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.network.NetworkStateChanged
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.Middleware
@@ -29,7 +31,7 @@ import org.rekotlin.Middleware
 class WalletMiddleware {
     private val topUpMiddleware = TopUpMiddleware()
     private val twinsMiddleware = TwinsMiddleware()
-    private val checkSignedHashesMiddleware = CheckSignedHashesMiddleware()
+    private val warningsMiddleware = WarningsMiddleware()
     private val multiWalletMiddleware = MultiWalletMiddleware()
 
     val walletMiddleware: Middleware<AppState> = { dispatch, state ->
@@ -40,8 +42,7 @@ class WalletMiddleware {
                 when (action) {
                     is WalletAction.TopUpAction -> topUpMiddleware.handle(action)
                     is WalletAction.TwinsAction -> twinsMiddleware.handle(action)
-                    is WalletAction.CheckSignedHashes ->
-                        checkSignedHashesMiddleware.handle(action, globalState)
+                    is WalletAction.Warnings -> warningsMiddleware.handle(action, globalState)
                     is WalletAction.MultiWallet ->
                         multiWalletMiddleware.handle(action, walletState, globalState)
 
@@ -56,6 +57,10 @@ class WalletMiddleware {
                                 walletManager?.let { globalState?.tapWalletManager?.loadWalletData(it) }
                             }
                         }
+                    }
+                    is WalletAction.LoadWallet.Success -> {
+                        store.dispatch(WalletAction.Warnings.CheckHashesCount.CheckHashesCountOnline)
+                        warningsMiddleware.tryToShowAppRatingWarning(action.wallet)
                     }
                     is WalletAction.LoadFiatRate -> {
                         scope.launch {
@@ -118,9 +123,6 @@ class WalletMiddleware {
                         }
 
                     }
-                    is WalletAction.LoadWallet.Success -> {
-                        store.dispatch(WalletAction.CheckSignedHashes.CheckHashesCountOnline)
-                    }
                     is WalletAction.Scan -> {
                         scope.launch {
                             val result = tangemSdkManager.scanNote(FirebaseAnalyticsHandler)
@@ -135,13 +137,25 @@ class WalletMiddleware {
                                             store.dispatch(NavigationAction.NavigateTo(AppScreen.TwinsOnboarding))
                                         }
                                     }
+                                    store.dispatch(WalletAction.ScanCardFinished())
+                                }
+                                is CompletionResult.Failure -> {
+                                    if (result.error !is TangemSdkError.UserCancelled) {
+                                        scope.launch(Dispatchers.Main) {
+                                            store.dispatch(WalletAction.ScanCardFinished(result.error))
+                                            if (store.state.walletState.scanCardFailsCounter >= 2) {
+                                                store.dispatch(WalletAction.ShowDialog.ScanFails)
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
                     is WalletAction.LoadData -> {
                         scope.launch {
-                            val scanNoteResponse = globalState?.scanNoteResponse ?: return@launch
+                            val scanNoteResponse = globalState?.scanNoteResponse
+                                    ?: return@launch
                             if (!walletState?.wallets.isNullOrEmpty()) {
                                 globalState.tapWalletManager.reloadData(scanNoteResponse)
                             } else {
@@ -151,7 +165,7 @@ class WalletMiddleware {
                     }
                     is NetworkStateChanged -> {
                         globalState?.scanNoteResponse?.let { scanNoteResponse ->
-                            store.dispatch(WalletAction.CheckSignedHashes.CheckHashesCountOnline)
+                            store.dispatch(WalletAction.Warnings.CheckHashesCount.CheckHashesCountOnline)
                             scope.launch {
                                 globalState.tapWalletManager.loadData(scanNoteResponse)
                             }
