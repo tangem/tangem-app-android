@@ -52,6 +52,9 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
                 globalState
             }
         }
+        is GlobalAction.SetFeedbackManager -> {
+            globalState.copy(feedbackManager = action.feedbackManager)
+        }
         else -> globalState
     }
 }
