@@ -85,20 +85,10 @@ class TapWalletManager {
             FirebaseAnalyticsHandler.triggerEvent(AnalyticsEvent.CARD_IS_SCANNED, data.card)
         }
         TapWorkarounds.updateCard(data.card)
-
         store.state.globalState.warningManager?.setBlockchain(data.walletManager?.wallet?.blockchain)
-        val configManager = store.state.globalState.configManager
-        if (TapWorkarounds.isStart2Coin) {
-            configManager?.turnOff(ConfigManager.isSendingToPayIdEnabled)
-            configManager?.turnOff(ConfigManager.isTopUpEnabled)
-        } else if (data.walletManager?.wallet?.blockchain == Blockchain.Bitcoin
-                || data.card.cardData?.blockchainName == Blockchain.Bitcoin.id) {
-            configManager?.resetToDefault(ConfigManager.isSendingToPayIdEnabled)
-            configManager?.resetToDefault(ConfigManager.isTopUpEnabled)
-        } else {
-            configManager?.resetToDefault(ConfigManager.isSendingToPayIdEnabled)
-            configManager?.resetToDefault(ConfigManager.isTopUpEnabled)
-        }
+        updateConfigManager(data)
+        updateFeedbackManager(data)
+
         withContext(Dispatchers.Main) {
             store.dispatch(WalletAction.ResetState)
             store.dispatch(GlobalAction.SaveScanNoteResponse(data))
@@ -120,9 +110,38 @@ class TapWalletManager {
         }
     }
 
+    private fun updateConfigManager(data: ScanNoteResponse) {
+        val configManager = store.state.globalState.configManager
+        if (TapWorkarounds.isStart2Coin) {
+            configManager?.turnOff(ConfigManager.isSendingToPayIdEnabled)
+            configManager?.turnOff(ConfigManager.isTopUpEnabled)
+        } else if (data.walletManager?.wallet?.blockchain == Blockchain.Bitcoin
+                || data.card.cardData?.blockchainName == Blockchain.Bitcoin.id) {
+            configManager?.resetToDefault(ConfigManager.isSendingToPayIdEnabled)
+            configManager?.resetToDefault(ConfigManager.isTopUpEnabled)
+        } else {
+            configManager?.resetToDefault(ConfigManager.isSendingToPayIdEnabled)
+            configManager?.resetToDefault(ConfigManager.isTopUpEnabled)
+        }
+    }
+
+    private fun updateFeedbackManager(data: ScanNoteResponse) {
+        val card = data.card
+        val wallet = data.walletManager?.wallet ?: return
+        val infoHolder = store.state.globalState.feedbackManager?.infoHolder ?: return
+
+        infoHolder.cardId = card.cardId
+        infoHolder.cardFirmwareVersion = card.firmwareVersion.version
+        infoHolder.signedHashesCount = card.walletSignedHashes?.toString() ?: "0"
+        infoHolder.sourceAddress = wallet.address
+        infoHolder.explorerLink = wallet.getExploreUrl(wallet.address)
+        infoHolder.blockchain = wallet.blockchain
+    }
+
     suspend fun loadData(data: ScanNoteResponse) {
         withContext(Dispatchers.Main) {
-            store.dispatch(WalletAction.CheckSignedHashes.CheckIfWarningNeeded)
+            //TODO: I made it to WalletAction.CheckSignedHashes.CheckIfWarningNeeded
+            store.dispatch(WalletAction.Warnings.CheckIfNeeded)
             val artworkId = data.verifyResponse?.artworkInfo?.id
             if (data.walletManager != null) {
                 if (!NetworkConnectivity.getInstance().isOnlineOrConnecting()) {
