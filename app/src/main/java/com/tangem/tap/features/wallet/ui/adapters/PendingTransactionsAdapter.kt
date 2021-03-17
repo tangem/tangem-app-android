@@ -1,4 +1,4 @@
-package com.tangem.tap.features.wallet.ui
+package com.tangem.tap.features.wallet.ui.adapters
 
 import android.view.LayoutInflater
 import android.view.View
