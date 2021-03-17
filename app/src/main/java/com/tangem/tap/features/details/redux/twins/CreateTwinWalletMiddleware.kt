@@ -18,7 +18,7 @@ class CreateTwinWalletMiddleware {
     fun handle(action: DetailsAction.CreateTwinWalletAction) {
         when (action) {
             is DetailsAction.CreateTwinWalletAction.ShowWarning -> {
-                val wallet = store.state.detailsState.wallet
+                val wallet = store.state.detailsState.wallets.getOrNull(0)
                 if (wallet == null) {
                     store.dispatch(NavigationAction.NavigateTo(AppScreen.CreateTwinWalletWarning))
                     return
