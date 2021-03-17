@@ -1,12 +1,11 @@
 package com.tangem.tap.features.wallet.redux
 
 import android.content.Context
-import com.tangem.blockchain.common.*
 import com.tangem.TangemError
-import com.tangem.blockchain.common.Amount
-import com.tangem.blockchain.common.Wallet
+import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.commands.common.card.Card
+import com.tangem.tap.common.redux.ErrorAction
 import com.tangem.tap.common.redux.NotificationAction
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.domain.TapError
@@ -63,21 +62,20 @@ sealed class WalletAction : Action {
         data class SetPrimaryToken(val token: Token) : MultiWallet()
     }
 
-    sealed class CheckSignedHashes : WalletAction() {
-        object CheckIfWarningNeeded : CheckSignedHashes()
-        object CheckHashesCountOnline : CheckSignedHashes()
-        object NeedToCheckHashesCountOnline : CheckSignedHashes()
-        object ConfirmHashesCount : CheckSignedHashes()
-        object SaveCardId : CheckSignedHashes()
-    }
+    sealed class Warnings : WalletAction() {
+        object CheckHashesCount : Warnings() {
+            object CheckHashesCountOnline : Warnings()
+            object NeedToCheckHashesCountOnline : Warnings()
+            object ConfirmHashesCount : Warnings()
+            object SaveCardId : Warnings()
+        }
 
-    object Warnings : WalletAction() {
-        object CheckIfNeeded : WalletAction()
-        data class SetWarnings(val warningList: List<WarningMessage>) : WalletAction()
+        object CheckIfNeeded : Warnings()
+        data class SetWarnings(val warningList: List<WarningMessage>) : Warnings()
 
-        object AppRating : WalletAction() {
-            object SetNeverToShow : WalletAction()
-            object RemindLater : WalletAction()
+        object AppRating : Warnings() {
+            object SetNeverToShow : Warnings()
+            object RemindLater : Warnings()
         }
     }
 
@@ -107,51 +105,43 @@ sealed class WalletAction : Action {
         object Cancel : WalletAction()
     }
 
-    object CreatePayId : WalletAction() {
-        data class CompleteCreatingPayId(val payId: String) : WalletAction()
-        data class Success(val payId: String) : WalletAction()
-        object EmptyField : WalletAction(), ErrorAction {
-            override val error = TapError.PayIdEmptyField
-        }
 
-        data class CopyAddress(val address: String, val context: Context) : WalletAction() {
-            object Success : WalletAction(), NotificationAction {
-                override val messageResource = R.string.wallet_notification_address_copied
-            }
-        }
+    object EmptyField : WalletAction(), ErrorAction {
+        override val error = TapError.PayIdEmptyField
+    }
 
-        data class ShareAddress(val address: String, val context: Context) : WalletAction()
-
-        object ShowDialog : WalletAction() {
-            object QrCode : WalletAction()
-            object ScanFails : WalletAction()
-        }
-
-        object HideDialog : WalletAction()
-
-        data class ExploreAddress(val exploreUrl: String, val context: Context) : WalletAction()
-
-        object CreateWallet : WalletAction()
-        object EmptyWallet : WalletAction()
-        object Scan : WalletAction()
-
-        data class Send(val amount: Amount? = null) : WalletAction() {
-            data class ChooseCurrency(val amounts: List<Amount>?) : WalletAction()
-            object Cancel : WalletAction()
-        }
-
-        sealed class TopUpAction : WalletAction() {
-            data class TopUp(val context: Context, val toolbarColor: Int) : TopUpAction()
-        }
-
-        data class ChangeSelectedAddress(val type: AddressType) : WalletAction()
-
-        sealed class TwinsAction : WalletAction() {
-            object ShowOnboarding : TwinsAction()
-            object SetOnboardingShown : TwinsAction()
-            data class SetTwinCard(
-                    val secondCardId: String, val number: TwinCardNumber,
-                    val isCreatingTwinCardsAllowed: Boolean,
-            ) : TwinsAction()
+    data class CopyAddress(val address: String, val context: Context) : WalletAction() {
+        object Success : WalletAction(), NotificationAction {
+            override val messageResource = R.string.wallet_notification_address_copied
         }
     }
+
+    data class ShareAddress(val address: String, val context: Context) : WalletAction()
+
+    object ShowDialog : WalletAction() {
+        object QrCode : WalletAction()
+        object ScanFails : WalletAction()
+    }
+
+    object HideDialog : WalletAction()
+
+    data class ExploreAddress(val exploreUrl: String, val context: Context) : WalletAction()
+
+    object CreateWallet : WalletAction()
+    object EmptyWallet : WalletAction()
+
+    sealed class TopUpAction : WalletAction() {
+        data class TopUp(val context: Context, val toolbarColor: Int) : TopUpAction()
+    }
+
+    data class ChangeSelectedAddress(val type: AddressType) : WalletAction()
+
+    sealed class TwinsAction : WalletAction() {
+        object ShowOnboarding : TwinsAction()
+        object SetOnboardingShown : TwinsAction()
+        data class SetTwinCard(
+                val secondCardId: String, val number: TwinCardNumber,
+                val isCreatingTwinCardsAllowed: Boolean,
+        ) : TwinsAction()
+    }
+}
