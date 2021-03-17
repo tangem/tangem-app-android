@@ -12,7 +12,10 @@ class TopUpMiddleware {
             is WalletAction.TopUpAction.TopUp -> {
                 val selectedWalletData = store.state.walletState.getSelectedWalletData()
                 val config = store.state.globalState.configManager?.config ?: return
-                val defaultAddress = selectedWalletData?.walletAddresses!!.list[0].address
+                val addresses = selectedWalletData?.walletAddresses ?: return
+                if (addresses.list.isEmpty()) return
+
+                val defaultAddress = addresses.list[0].address
                 val url = TopUpHelper.getUrl(
                         selectedWalletData.currencyData.currencySymbol!!,
                         defaultAddress,
