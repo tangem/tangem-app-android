@@ -17,7 +17,7 @@ sealed class DetailsAction : Action {
     data class PrepareScreen(
             val card: Card,
             val scanNoteResponse: ScanNoteResponse,
-            val wallet: Wallet?,
+            val wallets: List<Wallet>,
             val isCreatingTwinWalletAllowed: Boolean?,
             val fiatCurrencyName: FiatCurrencyName,
             val fiatCurrencies: List<FiatCurrencyName>? = null,
