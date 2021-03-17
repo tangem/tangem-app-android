@@ -1,5 +1,6 @@
 package com.tangem.tap.features.details.ui
 
+import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.activity.OnBackPressedCallback
@@ -7,6 +8,7 @@ import androidx.fragment.app.Fragment
 import androidx.transition.TransitionInflater
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
+import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.twins.getTwinCardIdForUser
 import com.tangem.tap.domain.twins.isTwinCard
@@ -14,6 +16,7 @@ import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.features.details.redux.SecurityOption
 import com.tangem.tap.features.details.redux.twins.CreateTwinWallet
+import com.tangem.tap.features.feedback.FeedbackEmail
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fragment_details.*
@@ -79,6 +82,13 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
 
         tv_disclaimer.setOnClickListener { store.dispatch(DetailsAction.ShowDisclaimer) }
 
+        tv_card_tou.show(state.cardTermsOfUseUrl != null)
+        tv_card_tou.setOnClickListener {
+            val intent = Intent(Intent.ACTION_VIEW)
+            intent.data = state.cardTermsOfUseUrl
+            startActivity(intent)
+        }
+
         if (state.createTwinWalletState != null) {
             if (state.createTwinWalletState.allowRecreatingWallet == true) {
                 tv_erase_wallet.show()
@@ -105,6 +115,9 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
 
         tv_app_currency_title.setOnClickListener {
             store.dispatch(DetailsAction.AppCurrencyAction.ChooseAppCurrency)
+        }
+        tv_send_feedback.setOnClickListener {
+            store.dispatch(GlobalAction.SendFeedback(FeedbackEmail()))
         }
 
         tv_security_title.setOnClickListener {
