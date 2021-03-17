@@ -1,5 +1,6 @@
 package com.tangem.tap.domain.configurable.config
 
+import com.tangem.blockchain.common.BlockchainSdkConfig
 import com.tangem.tangem_sdk_new.ui.animation.VoidCallback
 import com.tangem.tap.domain.configurable.Loader
 
@@ -10,7 +11,7 @@ data class Config(
         val coinMarketCapKey: String = "f6622117-c043-47a0-8975-9d673ce484de",
         val moonPayApiKey: String = "pk_test_kc90oYTANy7UQdBavDKGfL4K9l6VEPE",
         val moonPayApiSecretKey: String = "sk_test_V8w4M19LbDjjYOt170s0tGuvXAgyEb1C",
-        val isWalletPayIdEnabled: Boolean = true,
+        val blockchainSdkConfig: BlockchainSdkConfig = BlockchainSdkConfig(),
         val isSendingToPayIdEnabled: Boolean = true,
         val isTopUpEnabled: Boolean = false,
         val isCreatingTwinCardsAllowed: Boolean = false
@@ -39,7 +40,6 @@ class ConfigManager(
 
     fun turnOff(name: String) {
         when (name) {
-            isWalletPayIdEnabled -> config = config.copy(isWalletPayIdEnabled = false)
             isSendingToPayIdEnabled -> config = config.copy(isSendingToPayIdEnabled = false)
             isTopUpEnabled -> config = config.copy(isTopUpEnabled = false)
             isCreatingTwinCardsAllowed -> config = config.copy(isCreatingTwinCardsAllowed = false)
@@ -48,7 +48,6 @@ class ConfigManager(
 
     fun resetToDefault(name: String) {
         when (name) {
-            isWalletPayIdEnabled -> config = config.copy(isWalletPayIdEnabled = defaultConfig.isWalletPayIdEnabled)
             isSendingToPayIdEnabled -> config = config.copy(isSendingToPayIdEnabled = defaultConfig.isSendingToPayIdEnabled)
             isTopUpEnabled -> config = config.copy(isTopUpEnabled = defaultConfig.isTopUpEnabled)
             isCreatingTwinCardsAllowed -> config =
@@ -60,13 +59,11 @@ class ConfigManager(
         val model = featureModel ?: return
 
         config = config.copy(
-                isWalletPayIdEnabled = model.isWalletPayIdEnabled,
                 isTopUpEnabled = model.isTopUpEnabled,
                 isSendingToPayIdEnabled = model.isSendingToPayIdEnabled,
                 isCreatingTwinCardsAllowed = model.isCreatingTwinCardsAllowed
         )
         defaultConfig = defaultConfig.copy(
-                isWalletPayIdEnabled = model.isWalletPayIdEnabled,
                 isTopUpEnabled = model.isTopUpEnabled,
                 isSendingToPayIdEnabled = model.isSendingToPayIdEnabled,
                 isCreatingTwinCardsAllowed = model.isCreatingTwinCardsAllowed
@@ -78,22 +75,28 @@ class ConfigManager(
         config = config.copy(
                 coinMarketCapKey = values.coinMarketCapKey,
                 moonPayApiKey = values.moonPayApiKey,
-                moonPayApiSecretKey = values.moonPayApiSecretKey
+                moonPayApiSecretKey = values.moonPayApiSecretKey,
+                blockchainSdkConfig = BlockchainSdkConfig(
+                        blockchairApiKey = values.blockchairApiKey,
+                        blockcypherTokens = values.blockcypherTokens,
+                        infuraProjectId =  values.infuraProjectId
+                )
         )
         defaultConfig = defaultConfig.copy(
                 coinMarketCapKey = values.coinMarketCapKey,
                 moonPayApiKey = values.moonPayApiKey,
-                moonPayApiSecretKey = values.moonPayApiSecretKey
+                moonPayApiSecretKey = values.moonPayApiSecretKey,
+                blockchainSdkConfig = BlockchainSdkConfig(
+                        blockchairApiKey = values.blockchairApiKey,
+                        blockcypherTokens = values.blockcypherTokens,
+                        infuraProjectId =  values.infuraProjectId
+                )
         )
     }
 
     companion object {
-        const val isWalletPayIdEnabled = "isWalletPayIdEnabled"
         const val isSendingToPayIdEnabled = "isSendingToPayIdEnabled"
         const val isCreatingTwinCardsAllowed = "isCreatingTwinCardsAllowed"
         const val isTopUpEnabled = "isTopUpEnabled"
-        const val coinMarketCapKey = "coinMarketCapKey"
-        const val moonPayApiKey = "moonPayApiKey"
-        const val moonPayApiSecretKey = "moonPayApiSecretKey"
     }
 }
