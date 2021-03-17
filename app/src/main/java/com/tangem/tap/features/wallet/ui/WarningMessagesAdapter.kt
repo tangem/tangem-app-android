@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.RecyclerView.ItemDecoration
 import com.google.android.play.core.review.ReviewManagerFactory
 import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
+import com.tangem.tap.common.extensions.getActivity
 import com.tangem.tap.common.extensions.getString
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
@@ -21,6 +22,7 @@ import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.layout_warning.view.*
+import timber.log.Timber
 
 class WarningMessagesAdapter : ListAdapter<WarningMessage, WarningMessageVH>(DiffUtilCallback) {
 
@@ -91,19 +93,27 @@ class WarningMessageVH(val view: View) : RecyclerView.ViewHolder(view) {
                 }
                 store.dispatch(WalletAction.Warnings.AppRating.SetNeverToShow)
                 view.btn_really_cool.setOnClickListener {
+                    val activity = view.context.getActivity() ?: return@setOnClickListener
+
                     FirebaseAnalyticsHandler.triggerEvent(AnalyticsEvent.APP_RATING_POSITIVE)
-                    val context = view.context
-                    val reviewManager = ReviewManagerFactory.create(context)
-                    val flow = reviewManager.requestReviewFlow()
-                    flow.addOnCompleteListener {
+                    val reviewManager = ReviewManagerFactory.create(activity)
+                    val task = reviewManager.requestReviewFlow()
+                    task.addOnCompleteListener {
                         if (it.isSuccessful) {
-//                            val info = it.result
-//                            Toast.makeText(context, "success", Toast.LENGTH_SHORT).show()
+                            val reviewInfo = it.result
+                            val reviewFlow = reviewManager.launchReviewFlow(activity, reviewInfo)
+                            reviewFlow.addOnCompleteListener {
+                                if (it.isSuccessful) {
+                                    // send review was succeed
+                                } else {
+                                    // send fails
+                                }
+                            }
                         } else {
-//                            Toast.makeText(context, "fail", Toast.LENGTH_SHORT).show()
+                            Timber.e(task.exception)
                         }
                     }.addOnFailureListener {
-//                        Toast.makeText(context, "failure", Toast.LENGTH_SHORT).show()
+                        Timber.e(it)
                     }
                     store.dispatch(GlobalAction.HideWarningMessage(warning))
                 }
