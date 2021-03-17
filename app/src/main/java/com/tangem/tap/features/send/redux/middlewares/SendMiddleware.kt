@@ -20,9 +20,11 @@ import com.tangem.tap.features.send.redux.*
 import com.tangem.tap.features.send.redux.FeeAction.RequestFee
 import com.tangem.tap.features.send.redux.states.SendButtonState
 import com.tangem.tap.features.send.redux.states.TransactionExtrasState
+import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.scope
 import com.tangem.tap.tangemSdk
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.rekotlin.Action
@@ -116,6 +118,12 @@ private fun sendTransaction(
                     dispatch(SendAction.SendSuccess)
                     dispatch(GlobalAction.UpdateWalletSignedHashes(result.data.walletSignedHashes))
                     dispatch(NavigationAction.PopBackTo())
+                    scope.launch(Dispatchers.IO) {
+                        delay(10000)
+                        withContext(Dispatchers.Main) {
+                            dispatch(WalletAction.UpdateWallet(walletManager.wallet.blockchain.currency))
+                        }
+                    }
                 }
                 is Result.Failure -> {
                     when (result.error) {
@@ -142,7 +150,7 @@ private fun sendTransaction(
                                 }
                                 // make it easier latter by handling an appropriate enumError or, like on iOS,
                                 // accept a string identifier of the error message
-                                message.contains("Target account is not created. To create account send 1+ XLM.")-> {
+                                message.contains("Target account is not created. To create account send 1+ XLM.") -> {
                                     dispatch(SendAction.SendError(TapError.XmlError.AssetAccountNotCreated))
                                 }
                                 else -> {
