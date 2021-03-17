@@ -24,7 +24,9 @@ object ReleaseSendState : Action
 
 data class PrepareSendScreen(
         val coinAmount: Amount?,
+        val coinRate: BigDecimal?,
         val tokenAmount: Amount? = null,
+        val tokenRate: BigDecimal? = null
 ) : SendScreenAction
 
 // Address or PayId
