@@ -39,7 +39,7 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
     var newState = state.walletState
 
     when (action) {
-        is WalletAction.CheckSignedHashes -> newState = handleCheckSignedHashesActions(action, newState)
+        is WalletAction.Warnings -> newState = handleCheckSignedHashesActions(action, newState)
         is WalletAction.TwinsAction -> newState = twinsReducer.reduce(action, newState)
         is WalletAction.MultiWallet -> newState = multiWalletReducer.reduce(action, newState)
 
@@ -235,10 +235,6 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
             )
         }
         is WalletAction.Send.Cancel -> newState = newState.copy(walletDialog = null)
-        is WalletAction.Warnings.SetWarnings -> newState = newState.copy(mainWarningsList = action.warningList)
-        is WalletAction.TopUpAction -> {
-            newState = newState.copy(topUpState = handleTopUpActions(action, newState.topUpState))
-        }
         is WalletAction.TopUpAction -> return newState
         is WalletAction.ChangeSelectedAddress -> {
             val selectedWalletData = newState.getWalletData(newState.selectedWallet)
@@ -286,13 +282,18 @@ fun createAddressList(wallet: Wallet?, walletAddresses: WalletAddresses? = null)
     return WalletAddresses(listOfAddressData[indexOfSelectedWallet], listOfAddressData)
 }
 
-private fun handleCheckSignedHashesActions(action: WalletAction.CheckSignedHashes, state: WalletState): WalletState {
+private fun handleCheckSignedHashesActions(action: WalletAction.Warnings, state: WalletState): WalletState {
     return when (action) {
-        WalletAction.CheckSignedHashes.CheckHashesCountOnline -> state
-        WalletAction.CheckSignedHashes.CheckIfWarningNeeded -> state
-        WalletAction.CheckSignedHashes.ConfirmHashesCount -> state.copy(hashesCountVerified = true)
-        WalletAction.CheckSignedHashes.NeedToCheckHashesCountOnline -> state.copy(hashesCountVerified = false)
-        WalletAction.CheckSignedHashes.SaveCardId -> state
+        WalletAction.Warnings.CheckHashesCount.CheckHashesCountOnline -> state
+        WalletAction.Warnings.CheckHashesCount.ConfirmHashesCount -> state.copy(hashesCountVerified = true)
+        WalletAction.Warnings.CheckHashesCount.NeedToCheckHashesCountOnline -> state.copy(hashesCountVerified = false)
+        WalletAction.Warnings.CheckHashesCount.SaveCardId -> state
+        is WalletAction.Warnings.SetWarnings -> state.copy(mainWarningsList = action.warningList)
+        WalletAction.Warnings.CheckIfNeeded -> state
+        WalletAction.Warnings.AppRating -> state
+        WalletAction.Warnings.CheckHashesCount -> state
+        WalletAction.Warnings.AppRating.RemindLater -> state
+        WalletAction.Warnings.AppRating.SetNeverToShow -> state
     }
 }
 
