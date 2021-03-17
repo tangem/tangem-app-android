@@ -15,6 +15,7 @@ import com.tangem.tap.features.wallet.ui.WalletFragment
 import com.tangem.tap.features.wallet.ui.adapters.PendingTransactionsAdapter
 import com.tangem.tap.features.wallet.ui.dialogs.AmountToSendDialog
 import com.tangem.tap.features.wallet.ui.dialogs.QrDialog
+import com.tangem.tap.features.wallet.ui.dialogs.ScanFailsDialog
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.card_balance.*
@@ -135,7 +136,7 @@ class SingleWalletView : WalletView {
                 store.dispatch(WalletAction.CopyAddress(addressString, fragment.requireContext()))
             }
         }
-        fragment.btn_show_qr.setOnClickListener { store.dispatch(WalletAction.ShowQrCode) }
+        fragment.btn_show_qr.setOnClickListener { store.dispatch(WalletAction.ShowDialog.QrCode) }
 
         fragment.btn_top_up.setOnClickListener {
             store.dispatch(
@@ -211,10 +212,11 @@ class SingleWalletView : WalletView {
 
     private fun handleDialogs(walletDialog: WalletDialog?) {
         val fragment = fragment ?: return
+        val context = fragment.context ?: return
         when (walletDialog) {
             is WalletDialog.QrDialog -> {
                 if (walletDialog.qrCode != null && walletDialog.shareUrl != null) {
-                    if (dialog == null) dialog = QrDialog(fragment.requireContext()).apply {
+                    if (dialog == null) dialog = QrDialog(context).apply {
                         this.showQr(
                                 walletDialog.qrCode, walletDialog.shareUrl, walletDialog.currencyName
                         )
@@ -222,8 +224,13 @@ class SingleWalletView : WalletView {
                 }
             }
             is WalletDialog.SelectAmountToSendDialog -> {
-                if (dialog == null) dialog = AmountToSendDialog(fragment.requireContext()).apply {
+                if (dialog == null) dialog = AmountToSendDialog(context).apply {
                     this.show(walletDialog.amounts)
+                }
+            }
+            is WalletDialog.ScanFailsDialog -> {
+                if (dialog == null) dialog = ScanFailsDialog.create(context).apply {
+                    this.show()
                 }
             }
             null -> {
