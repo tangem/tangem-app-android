@@ -6,6 +6,7 @@ import com.tangem.commands.common.card.Card
 import com.tangem.tap.common.redux.NotificationAction
 import com.tangem.tap.common.redux.global.FiatCurrencyName
 import com.tangem.tap.domain.tasks.ScanNoteResponse
+import com.tangem.tap.domain.termsOfUse.CardTou
 import com.tangem.tap.domain.twins.TwinCardNumber
 import com.tangem.tap.features.details.redux.twins.CreateTwinWallet
 import com.tangem.tap.network.coinmarketcap.FiatCurrency
@@ -19,6 +20,7 @@ sealed class DetailsAction : Action {
             val scanNoteResponse: ScanNoteResponse,
             val wallets: List<Wallet>,
             val isCreatingTwinWalletAllowed: Boolean?,
+            val cardTou: CardTou,
             val fiatCurrencyName: FiatCurrencyName,
             val fiatCurrencies: List<FiatCurrencyName>? = null,
     ) : DetailsAction()
