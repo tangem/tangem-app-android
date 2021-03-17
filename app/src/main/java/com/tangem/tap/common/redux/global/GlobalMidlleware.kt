@@ -26,10 +26,16 @@ val globalMiddleware: Middleware<AppState> = { dispatch, appState ->
                                 store.dispatch(WalletAction.CheckSignedHashes.SaveCardId)
                             }
 
-                            store.dispatch(WalletAction.SetWarnings(it.getWarnings(WarningMessage.Location.MainScreen)))
-                            store.dispatch(SendAction.SetWarnings(it.getWarnings(WarningMessage.Location.SendScreen)))
+                            store.dispatch(WalletAction.Warnings.SetWarnings(
+                                    it.getWarnings(WarningMessage.Location.MainScreen)))
+                            store.dispatch(SendAction.SetWarnings(
+                                    it.getWarnings(WarningMessage.Location.SendScreen)))
                         }
                     }
+                }
+
+                is GlobalAction.SendFeedback -> {
+                    store.state.globalState.feedbackManager?.send(action.emailData)
                 }
             }
             nextDispatch(action)

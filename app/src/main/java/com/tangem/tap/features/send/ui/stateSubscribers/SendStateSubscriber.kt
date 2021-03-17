@@ -21,6 +21,7 @@ import com.tangem.tap.features.send.redux.reducers.ReceiptReducer
 import com.tangem.tap.features.send.redux.states.*
 import com.tangem.tap.features.send.ui.FeeUiHelper
 import com.tangem.tap.features.send.ui.SendFragment
+import com.tangem.tap.features.send.ui.dialogs.SendTransactionFailsDialog
 import com.tangem.tap.features.send.ui.dialogs.TezosWarningDialog
 import com.tangem.tap.features.wallet.ui.adapters.WarningMessagesAdapter
 import com.tangem.tap.store
@@ -97,9 +98,15 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
         val sendFragment = (fg as? SendFragment) ?: return
 
         when (state.dialog) {
-            is SendAction.Dialog.ShowTezosWarningDialog -> {
+            is SendAction.Dialog.TezosWarningDialog -> {
                 if (dialog == null) {
                     dialog = TezosWarningDialog.create(fg.requireContext(), state.dialog)
+                    dialog?.show()
+                }
+            }
+            is SendAction.Dialog.SendTransactionFails -> {
+                if (dialog == null) {
+                    dialog = SendTransactionFailsDialog.create(fg.requireContext(), state.dialog)
                     dialog?.show()
                 }
             }
@@ -183,22 +190,6 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
         fg.etAmountToSend.filters = arrayOf(filter)
         val amountToSend = state.viewAmountValue
         if (!amountToSend.isFromUserInput) fg.etAmountToSend.update(amountToSend.value)
-
-//        fg.tvAmountToSendShadow.text = amountToSend
-//        if (amountToSend.length > 10) {
-//            post is needed to wait for text size changes
-//            fg.tvAmountToSendShadow.post {
-//                fg.etAmountToSend.setTextSize(TypedValue.COMPLEX_UNIT_PX, fg.tvAmountToSendShadow.textSize - 2)
-//                fg.etAmountToSend.update(amountToSend)
-//                if (!state.cursorAtTheSamePosition) fg.etAmountToSend.setSelection(amountToSend.length)
-//            }
-//        } else {
-//            val textSize = fg.resources.getDimension(R.dimen.text_size_amount_to_send)
-//            fg.tvAmountToSendShadow.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize)
-//            fg.etAmountToSend.setTextSize(TypedValue.COMPLEX_UNIT_PX, textSize)
-//            fg.etAmountToSend.update(amountToSend)
-//            if (!state.cursorAtTheSamePosition) fg.etAmountToSend.setSelection(amountToSend.length)
-//        }
 
         fg.tvAmountCurrency.update(state.mainCurrency.currencySymbol)
         (fg as? SendFragment)?.saveMainCurrency(state.mainCurrency.type)
