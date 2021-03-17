@@ -1,5 +1,6 @@
 package com.tangem.tap.features.details.redux
 
+import android.net.Uri
 import com.tangem.blockchain.common.Wallet
 import com.tangem.commands.common.card.Card
 import com.tangem.tap.common.entities.Button
@@ -18,13 +19,14 @@ data class DetailsState(
         val eraseWalletState: EraseWalletState? = null,
         val confirmScreenState: ConfirmScreenState? = null,
         val securityScreenState: SecurityScreenState? = null,
-        val createTwinWalletState: CreateTwinWalletState? = null
+        val createTwinWalletState: CreateTwinWalletState? = null,
+        val cardTermsOfUseUrl: Uri? = null,
 ) : StateType
 
 data class CardInfo(
         val cardId: String,
         val issuer: String,
-        val signedHashes: Int
+        val signedHashes: Int,
 )
 
 enum class EraseWalletState { Allowed, NotAllowedByCard, NotEmpty }
@@ -33,7 +35,7 @@ data class SecurityScreenState(
         val currentOption: SecurityOption = SecurityOption.LongTap,
         val selectedOption: SecurityOption = currentOption,
         val allowedOptions: EnumSet<SecurityOption> = EnumSet.allOf(SecurityOption::class.java),
-        val buttonProceed: Button = Button(true)
+        val buttonProceed: Button = Button(true),
 )
 
 enum class SecurityOption { LongTap, PassCode, AccessCode }

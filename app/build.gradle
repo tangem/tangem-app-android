@@ -40,6 +40,7 @@ android {
             initWith debug
             versionNameSuffix "-beta"
             applicationIdSuffix ".debug"
+            buildConfigField 'String', 'CONFIG_ENVIRONMENT', '\"prod\"'
         }
     }
     kotlinOptions {
@@ -69,8 +70,11 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.2.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.0.4'
     implementation 'com.google.android.material:material:1.3.0'
-    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.1.5'
     implementation "androidx.core:core-ktx:1.3.2"
+    implementation 'com.google.android.play:core:1.9.1'
+    implementation 'com.google.android.play:core-ktx:1.8.1'
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.1.5'
+
 
 //    implementation 'com.tangem:blockchain:1.141.0'
     implementation 'blockchain-sdk-kotlin:blockchain:tangem-20210302.084810-3'

@@ -22,6 +22,7 @@ import com.tangem.tap.features.send.redux.states.SendButtonState
 import com.tangem.tap.features.send.redux.states.TransactionExtrasState
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.scope
+import com.tangem.tap.store
 import com.tangem.tap.tangemSdk
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -52,7 +53,7 @@ val sendMiddleware: Middleware<AppState> = { dispatch, appState ->
 }
 
 private fun verifyAndSendTransaction(
-        action: SendActionUi.SendAmountToRecipient, appState: AppState?, dispatch: (Action) -> Unit
+        action: SendActionUi.SendAmountToRecipient, appState: AppState?, dispatch: (Action) -> Unit,
 ) {
     val sendState = appState?.sendState ?: return
     val walletManager = appState.globalState.scanNoteResponse?.walletManager ?: return
@@ -68,7 +69,7 @@ private fun verifyAndSendTransaction(
     when {
         hadTezosError -> {
             val reduceAmount = walletManager.wallet.blockchain.minimalAmount()
-            dispatch(SendAction.Dialog.ShowTezosWarningDialog(reduceCallback = {
+            dispatch(SendAction.Dialog.TezosWarningDialog(reduceCallback = {
                 dispatch(AmountAction.SetAmount(typedAmount.value!!.minus(reduceAmount), false))
                 dispatch(AmountActionUi.CheckAmountToSend)
             }, sendAllCallback = {
@@ -94,7 +95,7 @@ private fun sendTransaction(
         destinationAddress: String,
         transactionExtras: TransactionExtrasState,
         card: Card,
-        dispatch: (Action) -> Unit
+        dispatch: (Action) -> Unit,
 ) {
     dispatch(SendAction.ChangeSendButtonState(SendButtonState.PROGRESS))
     var txData = walletManager.createTransaction(amountToSend, feeAmount, destinationAddress)
@@ -144,6 +145,8 @@ private fun sendTransaction(
                             when {
                                 message == null -> {
                                     dispatch(SendAction.SendError(TapError.UnknownError))
+                                    updateFeedbackManager(walletManager, amountToSend, feeAmount, destinationAddress, card)
+                                    dispatch(SendAction.Dialog.SendTransactionFails("unknown error"))
                                 }
                                 message.contains("50002") -> {
                                     // user was cancelled the operation by closing the Sdk bottom sheet
@@ -157,6 +160,8 @@ private fun sendTransaction(
                                     Timber.e(throwable)
                                     FirebaseCrashlytics.getInstance().recordException(throwable)
                                     dispatch(SendAction.SendError(TapError.CustomError(message)))
+                                    updateFeedbackManager(walletManager, amountToSend, feeAmount, destinationAddress, card)
+                                    dispatch(SendAction.Dialog.SendTransactionFails(message))
                                 }
                             }
                         }
@@ -166,6 +171,29 @@ private fun sendTransaction(
             dispatch(SendAction.ChangeSendButtonState(SendButtonState.ENABLED))
         }
     }
+}
+
+private fun updateFeedbackManager(
+        walletManager: WalletManager,
+        amountToSend: Amount,
+        feeAmount: Amount,
+        destinationAddress: String,
+        card: Card,
+) {
+    val infoHolder = store.state.globalState.feedbackManager?.infoHolder ?: return
+    val amountState = store.state.sendState.amountState
+
+    infoHolder.cardId = card.cardId
+    infoHolder.blockchain = walletManager.wallet.blockchain
+    infoHolder.sourceAddress = walletManager.wallet.address
+    infoHolder.destinationAddress = destinationAddress
+    infoHolder.amount = amountToSend.value?.stripZeroPlainString() ?: "0"
+    infoHolder.fee = feeAmount.value?.stripZeroPlainString() ?: "0"
+    infoHolder.cardFirmwareVersion = card.firmwareVersion.version
+    if (amountState.typeOfAmount is AmountType.Token) {
+        infoHolder.token = amountState.amountToExtract?.currencySymbol ?: ""
+    }
+//    infoHolder.transactionHex = ""
 }
 
 fun extractErrorsForAmountField(errors: EnumSet<TransactionError>): EnumSet<TransactionError> {
