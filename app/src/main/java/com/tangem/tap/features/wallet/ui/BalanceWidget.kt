@@ -8,6 +8,7 @@ import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.card_balance.*
 import kotlinx.android.synthetic.main.layout_balance.*
 import kotlinx.android.synthetic.main.layout_balance_error.*
+import java.math.BigDecimal
 
 enum class BalanceStatus {
     VerifiedOnline,
@@ -25,6 +26,7 @@ data class BalanceWidgetData(
         val currencySymbol: String? = null,
         val amount: String? = null,
         val fiatAmount: String? = null,
+        val fiatAmountRaw: BigDecimal? = null,
         val token: TokenData? = null,
         val amountToCreateAccount: String? = null,
         val errorMessage: String? = null
@@ -33,14 +35,16 @@ data class BalanceWidgetData(
 data class TokenData(
         val amount: String,
         val tokenSymbol: String,
-        val fiatAmount: String? = null
+        val fiatAmount: String? = null,
+        val fiatRateString: String? = null,
+        val fiatRate: BigDecimal? = null,
 )
 
 
 class BalanceWidget(
         val fragment: Fragment,
         val data: BalanceWidgetData,
-        val isTwinCard: Boolean,
+        private val isTwinCard: Boolean,
 ) {
 
     fun setup() {
