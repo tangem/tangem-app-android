@@ -19,6 +19,7 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.toHexString
 import com.tangem.tap.domain.TapSdkError
 import com.tangem.tap.domain.TapWorkarounds
+import com.tangem.tap.domain.TapWorkarounds.isExcluded
 import com.tangem.tap.domain.twins.TwinCardsManager
 import com.tangem.tap.domain.twins.isTwinCard
 import com.tangem.tap.store
@@ -123,23 +124,13 @@ class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteRespons
     }
 
     private fun getErrorIfExcludedCard(card: Card): TangemError? {
-        val productMask = card.cardData?.productMask
-        if (productMask != null &&  // product mask is on cards v2.30 and later
-                !productMask.contains(Product.Note) && !productMask.contains(Product.TwinCard)) {
-            return TapSdkError.CardForDifferentApp
-        }
-        if (excludedBatches.contains(card.cardData?.batchId)) {
-            return TapSdkError.CardForDifferentApp
-        }
+        if (card.isExcluded()) return TapSdkError.CardForDifferentApp
         if (card.status == CardStatus.Purged) return TangemSdkError.CardIsPurged()
         if (card.status == CardStatus.NotPersonalized) return TangemSdkError.NotPersonalized()
-
         return null
     }
 
-    companion object {
-        private val excludedBatches = listOf("0027", "0030", "0031")
-    }
+
 }
 
 val Card.isMultiwalletAllowed: Boolean
