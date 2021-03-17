@@ -1,5 +1,6 @@
 package com.tangem.tap.features.wallet.ui.wallet
 
+import android.app.Dialog
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
@@ -7,10 +8,12 @@ import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.tokens.redux.TokensAction
 import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.features.wallet.redux.WalletDialog
 import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.WalletFragment
 import com.tangem.tap.features.wallet.ui.adapters.WalletAdapter
+import com.tangem.tap.features.wallet.ui.dialogs.ScanFailsDialog
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.card_balance.*
@@ -22,7 +25,10 @@ import kotlinx.android.synthetic.main.layout_wallet_long_buttons.*
 class MultiWalletView : WalletView {
 
     private var fragment: WalletFragment? = null
+    private var dialog: Dialog? = null
+
     private lateinit var walletsAdapter: WalletAdapter
+
 
     override fun changeWalletView(fragment: WalletFragment) {
         setFragment(fragment)
@@ -82,6 +88,7 @@ class MultiWalletView : WalletView {
             store.dispatch(NavigationAction.NavigateTo(AppScreen.AddTokens))
         }
         handleErrorStates(state, fragment)
+        handleDialogs(state.walletDialog)
     }
 
     private fun handleErrorStates(state: WalletState, fragment: WalletFragment) {
@@ -122,5 +129,21 @@ class MultiWalletView : WalletView {
         fragment.btn_scan_long.setOnClickListener { store.dispatch(WalletAction.Scan) }
         fragment.btn_confirm_long.setOnClickListener { store.dispatch(WalletAction.CreateWallet) }
         fragment.btn_confirm_long.text = fragment.getText(R.string.wallet_button_create_wallet)
+    }
+
+    private fun handleDialogs(walletDialog: WalletDialog?) {
+        val fragment = fragment ?: return
+        val context = fragment.context ?: return
+        when (walletDialog) {
+            is WalletDialog.ScanFailsDialog -> {
+                if (dialog == null) dialog = ScanFailsDialog.create(context).apply {
+                    this.show()
+                }
+            }
+            else -> {
+                dialog?.dismiss()
+                dialog = null
+            }
+        }
     }
 }
