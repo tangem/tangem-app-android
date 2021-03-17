@@ -20,7 +20,6 @@ import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.termsOfUse.CardTou
-import com.tangem.tap.domain.twins.TwinCardNumber
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.wallet.redux.*
 import com.tangem.tap.features.wallet.ui.adapters.SpacesItemDecoration
@@ -28,10 +27,6 @@ import com.tangem.tap.features.wallet.ui.adapters.WarningMessagesAdapter
 import com.tangem.tap.features.wallet.ui.wallet.MultiWalletView
 import com.tangem.tap.features.wallet.ui.wallet.SingleWalletView
 import com.tangem.tap.features.wallet.ui.wallet.WalletView
-import com.tangem.tap.features.wallet.ui.dialogs.AmountToSendDialog
-import com.tangem.tap.features.wallet.ui.dialogs.PayIdDialog
-import com.tangem.tap.features.wallet.ui.dialogs.QrDialog
-import com.tangem.tap.features.wallet.ui.dialogs.ScanFailsDialog
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fragment_wallet.*
@@ -183,78 +178,3 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     }
 
 }
-
-//TODO: handle addition of testnets
-//class MultipleAddressUiHelper {
-//    companion object {
-//        fun typeToId(type: AddressType): Int {
-//            return when (type) {
-//                is BitcoinAddressType.Legacy -> R.id.chip_legacy
-//                is BitcoinAddressType.Segwit -> R.id.chip_default
-//                is CardanoAddressType.Byron -> R.id.chip_legacy
-//                is CardanoAddressType.Shelley -> R.id.chip_default
-//                else -> View.NO_ID
-//            }
-//        }
-//
-//        fun idToType(id: Int, blockchain: Blockchain?): AddressType? {
-//            return when (id) {
-//                R.id.chip_default -> {
-//                    when (blockchain) {
-//                        Blockchain.Bitcoin, Blockchain.BitcoinTestnet -> BitcoinAddressType.Segwit
-//                        Blockchain.CardanoShelley -> CardanoAddressType.Shelley
-//                        else -> null
-//                    }
-//                }
-//                R.id.chip_legacy -> {
-//                    when (blockchain) {
-//                        Blockchain.Bitcoin, Blockchain.BitcoinTestnet -> BitcoinAddressType.Legacy
-//                        Blockchain.CardanoShelley -> CardanoAddressType.Byron
-//                        else -> null
-//                    }
-//                }
-//                else -> null
-//            }
-//        }
-//    }
-//}
-
-//TODO: handle scan failed dialog:
-//private fun handleDialogs(walletDialog: WalletDialog?) {
-//    when (walletDialog) {
-//        is WalletDialog.QrDialog -> {
-//            if (walletDialog.qrCode != null && walletDialog.shareUrl != null) {
-//                if (dialog == null) dialog = QrDialog(requireContext()).apply {
-//                    this.showQr(
-//                            walletDialog.qrCode, walletDialog.shareUrl, walletDialog.currencyName
-//                    )
-//                }
-//            }
-//        }
-//        is WalletDialog.CreatePayIdDialog -> {
-//            when (walletDialog.creatingPayIdState) {
-//                CreatingPayIdState.EnterPayId -> {
-//                    if (dialog == null) dialog = PayIdDialog(requireContext()).apply {
-//                        this.show()
-//                    }
-//                    (dialog as? PayIdDialog)?.stopProgress()
-//                }
-//                CreatingPayIdState.Waiting -> (dialog as? PayIdDialog)?.showProgress()
-//            }
-//        }
-//        is WalletDialog.SelectAmountToSendDialog -> {
-//            if (dialog == null) dialog = AmountToSendDialog(requireContext()).apply {
-//                this.show(walletDialog.amounts)
-//            }
-//        }
-//        is WalletDialog.ScanFailsDialog -> {
-//            if (dialog == null) dialog = ScanFailsDialog.create(requireContext()).apply {
-//                this.show()
-//            }
-//        }
-//        null -> {
-//            dialog?.dismiss()
-//            dialog = null
-//        }
-//    }
-//}
