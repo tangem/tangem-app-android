@@ -87,7 +87,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
         btn_confirm.text = getString(R.string.wallet_button_send)
         btn_confirm.setOnClickListener { store.dispatch(WalletAction.Send()) }
 
-        btn_share.setOnClickListener { store.dispatch(WalletAction.ShowQrCode) }
+        btn_share.setOnClickListener { store.dispatch(WalletAction.ShowDialog.QrCode) }
 
         btn_top_up.setOnClickListener {
             store.dispatch(
