@@ -140,7 +140,6 @@ class TapWalletManager {
 
     suspend fun loadData(data: ScanNoteResponse) {
         withContext(Dispatchers.Main) {
-            //TODO: I made it to WalletAction.CheckSignedHashes.CheckIfWarningNeeded
             store.dispatch(WalletAction.Warnings.CheckIfNeeded)
             val artworkId = data.verifyResponse?.artworkInfo?.id
             if (data.walletManager != null) {
