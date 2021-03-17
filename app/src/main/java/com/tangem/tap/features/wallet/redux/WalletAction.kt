@@ -1,11 +1,9 @@
 package com.tangem.tap.features.wallet.redux
 
 import android.content.Context
-import com.tangem.blockchain.common.Amount
-import com.tangem.blockchain.common.Wallet
+import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.commands.common.card.Card
-import com.tangem.tap.common.redux.ErrorAction
 import com.tangem.tap.common.redux.NotificationAction
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.domain.TapError
@@ -23,73 +21,94 @@ sealed class WalletAction : Action {
         data class Failure(val error: TapError) : WalletAction()
     }
 
-    data class LoadWallet(
-            val wallet: Wallet, val artworkId: String?, val allowTopUp: Boolean
-    ) : WalletAction() {
+
+    data class LoadWallet(val allowTopUp: Boolean? = null, val currency: CryptoCurrencyName? = null) : WalletAction() {
         data class Success(val wallet: Wallet) : WalletAction()
-        data class NoAccount(val amountToCreateAccount: String) : WalletAction()
-        data class Failure(val errorMessage: String? = null) : WalletAction()
+        data class NoAccount(val wallet: Wallet, val amountToCreateAccount: String) : WalletAction()
+        data class Failure(val wallet: Wallet, val errorMessage: String? = null) : WalletAction()
     }
 
-    object CheckIfWarningNeeded : WalletAction()
-    object CheckHashesCountOnline : WalletAction()
-    object NeedToCheckHashesCountOnline : WalletAction()
-    object ConfirmHashesCount : WalletAction()
-    data class SetWarnings(val warningList: List<WarningMessage>) : WalletAction()
-    object SaveCardId : WalletAction()
+    data class SetArtworkId(val artworkId: String?) : WalletAction()
 
-    object UpdateWallet : WalletAction() {
+//    sealed class ProcessWallet : WalletAction() {
+//        data class LoadWallet(val artworkId: String?, val allowTopUp: Boolean
+//        ) : ProcessWallet() {
+//            data class Success(val wallet: Wallet) : ProcessWallet()
+//            data class NoAccount(val wallet: Wallet, val amountToCreateAccount: String) : ProcessWallet()
+//            data class Failure(val wallet: Wallet, val errorMessage: String? = null) : ProcessWallet()
+//        }
+//
+//        data class UpdateWallet(val currency: CryptoCurrencyName? = null) : ProcessWallet() {
+//            object ScheduleUpdatingWallet : ProcessWallet()
+//            data class Success(val wallet: Wallet) : ProcessWallet()
+//            data class Failure(val errorMessage: String? = null) : ProcessWallet()
+//        }
+//    }
+
+
+    sealed class MultiWallet : WalletAction() {
+        data class SetIsMultiwalletAllowed(val isMultiwalletAllowed: Boolean) : MultiWallet()
+        data class AddWalletManagers(val walletManagers: List<WalletManager>) : MultiWallet()
+        data class AddBlockchain(val blockchain: Blockchain) : MultiWallet()
+        data class AddBlockchains(val blockchains: List<Blockchain>) : MultiWallet()
+        data class AddTokens(val tokens: List<Token>) : MultiWallet()
+        data class AddToken(val token: Token) : MultiWallet()
+        data class TokenLoaded(val amount: Amount) : MultiWallet()
+        data class SelectWallet(val walletData: WalletData?) : MultiWallet()
+        data class RemoveWallet(val walletData: WalletData) : MultiWallet()
+        data class SetPrimaryBlockchain(val blockchain: Blockchain) : MultiWallet()
+        data class SetPrimaryToken(val token: Token) : MultiWallet()
+    }
+
+    sealed class CheckSignedHashes : WalletAction() {
+        object CheckIfWarningNeeded : CheckSignedHashes()
+        object CheckHashesCountOnline : CheckSignedHashes()
+        object NeedToCheckHashesCountOnline : CheckSignedHashes()
+        object ConfirmHashesCount : CheckSignedHashes()
+        object SaveCardId : CheckSignedHashes()
+    }
+
+    data class SetWarnings(val warningList: List<WarningMessage>) : WalletAction()
+
+    data class UpdateWallet(val currency: CryptoCurrencyName? = null) : WalletAction() {
         object ScheduleUpdatingWallet : WalletAction()
         data class Success(val wallet: Wallet) : WalletAction()
         data class Failure(val errorMessage: String? = null) : WalletAction()
     }
 
-    object LoadFiatRate : WalletAction() {
-        data class Success(val fiatRates: Pair<CryptoCurrencyName, BigDecimal?>) : WalletAction()
+    data class LoadFiatRate(
+            val wallet: Wallet? = null, val currency: CryptoCurrencyName? = null
+    ) : WalletAction() {
+        data class Success(val fiatRate: Pair<CryptoCurrencyName, BigDecimal?>) : WalletAction()
         object Failure : WalletAction()
     }
-
-    object LoadPayId : WalletAction() {
-        data class Success(val payId: String) : WalletAction()
-        object NotCreated : WalletAction()
-        object Failure : WalletAction()
-    }
-
-    object DisablePayId : WalletAction()
 
     data class LoadArtwork(val card: Card, val artworkId: String?) : WalletAction() {
         data class Success(val artwork: Artwork) : WalletAction()
         object Failure : WalletAction()
     }
 
-    object Scan : WalletAction()
-    data class Send(val amount: Amount? = null) : WalletAction() {
-        data class ChooseCurrency(val amounts: List<Amount>?) : WalletAction()
-        object Cancel : WalletAction()
-    }
 
-    object CreatePayId : WalletAction() {
-        data class CompleteCreatingPayId(val payId: String) : WalletAction()
-        data class Success(val payId: String) : WalletAction()
-        object EmptyField : WalletAction(), ErrorAction {
-            override val error = TapError.PayIdEmptyField
-        }
-
-        class Failure(override val error: TapError) : WalletAction(), ErrorAction
-        object Cancel : WalletAction()
-    }
-
-    data class CopyAddress(val context: Context) : WalletAction() {
+    data class CopyAddress(val address: String, val context: Context) : WalletAction() {
         object Success : WalletAction(), NotificationAction {
             override val messageResource = R.string.wallet_notification_address_copied
         }
     }
 
+    data class ShareAddress(val address: String, val context: Context) : WalletAction()
+
     object ShowQrCode : WalletAction()
     object HideDialog : WalletAction()
-    data class ExploreAddress(val context: Context) : WalletAction()
+    data class ExploreAddress(val exploreUrl: String, val context: Context) : WalletAction()
+
     object CreateWallet : WalletAction()
     object EmptyWallet : WalletAction()
+    object Scan : WalletAction()
+
+    data class Send(val amount: Amount? = null) : WalletAction() {
+        data class ChooseCurrency(val amounts: List<Amount>?) : WalletAction()
+        object Cancel : WalletAction()
+    }
 
     sealed class TopUpAction : WalletAction() {
         data class TopUp(val context: Context, val toolbarColor: Int) : TopUpAction()
