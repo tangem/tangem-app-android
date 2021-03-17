@@ -25,6 +25,7 @@ data class WalletState(
         val walletDialog: WalletDialog? = null,
         val twinCardsState: TwinCardsState? = null,
         val mainWarningsList: List<WarningMessage> = mutableListOf(),
+        val scanCardFailsCounter: Int = 0,
         val wallets: List<WalletData> = emptyList(),
         val walletManagers: List<WalletManager> = emptyList(),
         val isMultiwalletAllowed: Boolean = false,
@@ -101,6 +102,7 @@ sealed class WalletDialog {
     ) : WalletDialog()
 
     data class SelectAmountToSendDialog(val amounts: List<Amount>?) : WalletDialog()
+    object ScanFailsDialog: WalletDialog()
 }
 
 enum class ProgressState { Loading, Done, Error }
