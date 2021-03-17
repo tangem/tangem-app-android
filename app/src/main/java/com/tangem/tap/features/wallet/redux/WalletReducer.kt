@@ -213,7 +213,7 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
             }
             newState = newState.copy(cardImage = Artwork(artworkId = artworkUrl))
         }
-        is WalletAction.ShowQrCode -> {
+        is WalletAction.ShowDialog.QrCode -> {
             val selectedWalletData = newState.getWalletData(newState.selectedWallet)
             newState = newState.copy(
                     walletDialog = WalletDialog.QrDialog(
@@ -222,6 +222,9 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                             selectedWalletData?.currencyData?.currency
                     )
             )
+        }
+        is WalletAction.ShowDialog.ScanFails -> {
+            newState = newState.copy(walletDialog = WalletDialog.ScanFailsDialog)
         }
         is WalletAction.HideDialog -> {
             newState = newState.copy(walletDialog = null)
@@ -232,7 +235,10 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
             )
         }
         is WalletAction.Send.Cancel -> newState = newState.copy(walletDialog = null)
-        is WalletAction.SetWarnings -> newState = newState.copy(mainWarningsList = action.warningList)
+        is WalletAction.Warnings.SetWarnings -> newState = newState.copy(mainWarningsList = action.warningList)
+        is WalletAction.TopUpAction -> {
+            newState = newState.copy(topUpState = handleTopUpActions(action, newState.topUpState))
+        }
         is WalletAction.TopUpAction -> return newState
         is WalletAction.ChangeSelectedAddress -> {
             val selectedWalletData = newState.getWalletData(newState.selectedWallet)
@@ -245,6 +251,13 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                     selectedWalletData?.copy(walletAddresses = WalletAddresses(address, walletAddresses.list))
             )
             newState = newState.copy(wallets = wallets)
+        }
+        is WalletAction.ScanCardFinished -> {
+            newState = if (action.scanError == null) {
+                newState.copy(scanCardFailsCounter = 0)
+            } else {
+                newState.copy(scanCardFailsCounter = newState.scanCardFailsCounter + 1)
+            }
         }
     }
     return newState
