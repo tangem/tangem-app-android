@@ -9,7 +9,6 @@ import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.domain.tasks.ScanNoteResponse
 import com.tangem.tap.network.coinmarketcap.CoinMarketCapService
 import org.rekotlin.StateType
-import java.math.BigDecimal
 
 data class GlobalState(
         val scanNoteResponse: ScanNoteResponse? = null,
@@ -17,20 +16,10 @@ data class GlobalState(
         val payIdManager: PayIdManager = PayIdManager(),
         val coinMarketCapService: CoinMarketCapService = CoinMarketCapService(),
         val tangemService: TangemService = TangemService(),
-        val conversionRates: ConversionRates = ConversionRates(emptyMap()),
         val configManager: ConfigManager? = null,
         val warningManager: WarningMessagesManager? = null,
         val appCurrency: FiatCurrencyName = DEFAULT_FIAT_CURRENCY
 ) : StateType
-
-data class ConversionRates(
-        val rates: Map<CryptoCurrencyName, BigDecimal>,
-) {
-
-    fun getRate(cryptoCurrency: CryptoCurrencyName): BigDecimal? {
-        return rates[cryptoCurrency]
-    }
-}
 
 typealias CryptoCurrencyName = String
 typealias FiatCurrencyName = String
