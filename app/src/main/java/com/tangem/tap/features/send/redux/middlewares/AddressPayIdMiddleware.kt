@@ -1,19 +1,17 @@
 package com.tangem.tap.features.send.redux.middlewares
 
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Wallet
 import com.tangem.commands.common.network.Result
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.PayIdManager
 import com.tangem.tap.domain.isPayIdSupported
-import com.tangem.tap.features.send.redux.AddressPayIdActionUi
-import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction
+import com.tangem.tap.features.send.redux.*
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.AddressVerification.SetAddressError
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.AddressVerification.SetWalletAddress
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.Error
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.PayIdVerification.SetPayIdError
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.PayIdVerification.SetPayIdWalletAddress
-import com.tangem.tap.features.send.redux.FeeAction
-import com.tangem.tap.features.send.redux.TransactionExtrasAction
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import kotlinx.coroutines.Dispatchers
@@ -50,7 +48,7 @@ internal class AddressPayIdMiddleware {
 
     private fun setAddressAndCheck(data: String, isUserInput: Boolean, dispatch: (Action) -> Unit) {
         val potentialPayId = data.toLowerCase()
-        if (PayIdManager.isPayId(potentialPayId) && isPayIdEnabled()) {
+        if (isPayIdEnabled() && PayIdManager.isPayId(potentialPayId)) {
             dispatch(SetPayIdWalletAddress(potentialPayId, "", isUserInput))
         } else {
             dispatch(SetWalletAddress(data, isUserInput))
@@ -64,7 +62,7 @@ internal class AddressPayIdMiddleware {
         val addressPayId = sendState.addressPayIdState.normalFieldValue ?: return
         val isUserInput = sendState.addressPayIdState.viewFieldValue.isFromUserInput
 
-        if (PayIdManager.isPayId(addressPayId) && isPayIdEnabled()) {
+        if (isPayIdEnabled() && PayIdManager.isPayId(addressPayId)) {
             verifyPayId(addressPayId, wallet, isUserInput, dispatch)
         } else {
             verifyAddress(addressPayId, wallet, isUserInput, dispatch)
@@ -110,7 +108,11 @@ internal class AddressPayIdMiddleware {
     }
 
     private fun verifyAddress(address: String, wallet: Wallet, isUserInput: Boolean, dispatch: (Action) -> Unit) {
-        val addressSchemeSplit = address.split(":")
+        val addressSchemeSplit = if (wallet.blockchain == Blockchain.BitcoinCash) {
+            listOf(address)
+        } else {
+            address.split(":")
+        }
         val noSchemeAddress = when (addressSchemeSplit.size) {
             1 -> address // no scheme
             2 -> { // scheme
@@ -131,6 +133,9 @@ internal class AddressPayIdMiddleware {
 
         val failReason = isValidBlockchainAddressAndNotTheSameAsWallet(wallet, supposedAddress)
         if (failReason == null) {
+            noSchemeAddress.getQueryParameter("amount")?.toBigDecimalOrNull()?.let {
+                dispatch(AmountAction.SetAmount(it, false))
+            }
             dispatch(SetWalletAddress(supposedAddress, isUserInput))
             dispatch(TransactionExtrasAction.Prepare(wallet.blockchain, address, null))
         } else {
@@ -141,7 +146,7 @@ internal class AddressPayIdMiddleware {
 
     private fun isValidBlockchainAddressAndNotTheSameAsWallet(wallet: Wallet, address: String): Error? {
         return if (wallet.blockchain.validateAddress(address)) {
-            if (wallet.addresses.all { it.value != address } ) {
+            if (wallet.addresses.all { it.value != address }) {
                 null
             } else {
                 Error.ADDRESS_SAME_AS_WALLET
@@ -151,14 +156,10 @@ internal class AddressPayIdMiddleware {
         }
     }
 
-    //TODO: move to the blockchainSDK
-    private fun extractAddressFromShareUri(shareUri: String): String {
-        val sharePrefix = listOf("bitcoin:", "ethereum:", "xrpl:", "litecoin:", "bnb:")
-        val prefixes = sharePrefix.filter { shareUri.contains(it) }
-        return if (prefixes.isEmpty()) shareUri else shareUri.replace(prefixes[0], "")
-    }
-
     private fun String.removeShareUriQuery(): String = this.substringBefore("?")
+    private fun String.getQueryParameter(name: String): String? {
+        return this.substringAfter("?").splitToMap("&", "=")[name]
+    }
 
     private fun verifyClipboard(input: String?, appState: AppState?, dispatch: DispatchFunction) {
         val addressPayId = input ?: return
@@ -186,4 +187,11 @@ internal class AddressPayIdMiddleware {
     private fun isPayIdEnabled(): Boolean {
         return store.state.globalState.configManager?.config?.isSendingToPayIdEnabled ?: false
     }
+}
+
+fun String.splitToMap(firstDelimiter: String, secondDelimiter: String): Map<String, String> {
+    return this.split(firstDelimiter)
+            .map { it.split(secondDelimiter) }
+            .map { it.first() to it.last().toString() }
+            .toMap()
 }
