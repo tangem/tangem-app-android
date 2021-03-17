@@ -13,6 +13,7 @@ import com.tangem.tap.domain.configurable.config.FeaturesLocalLoader
 import com.tangem.tap.domain.configurable.config.FeaturesRemoteLoader
 import com.tangem.tap.domain.configurable.warningMessage.RemoteWarningLoader
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
+import com.tangem.tap.domain.tokens.CurrenciesRepository
 import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.tap.network.createMoshi
 import com.tangem.tap.persistence.PreferencesStorage
@@ -26,6 +27,7 @@ val store = Store(
         state = AppState()
 )
 lateinit var preferencesStorage: PreferencesStorage
+lateinit var currenciesRepository: CurrenciesRepository
 
 class TapApplication : Application() {
     override fun onCreate() {
@@ -45,6 +47,7 @@ class TapApplication : Application() {
         NetworkConnectivity.createInstance(store, this)
         preferencesStorage = PreferencesStorage(this)
         PicassoHelper.initPicassoWithCaching(this)
+        currenciesRepository = CurrenciesRepository(this)
 
         loadConfigs()
     }

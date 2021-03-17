@@ -34,8 +34,8 @@ import com.tangem.tap.features.send.redux.FeeActionUi.*
 import com.tangem.tap.features.send.redux.states.FeeType
 import com.tangem.tap.features.send.redux.states.MainCurrencyType
 import com.tangem.tap.features.send.ui.stateSubscribers.SendStateSubscriber
-import com.tangem.tap.features.wallet.ui.SpacesItemDecoration
-import com.tangem.tap.features.wallet.ui.WarningMessagesAdapter
+import com.tangem.tap.features.wallet.ui.adapters.SpacesItemDecoration
+import com.tangem.tap.features.wallet.ui.adapters.WarningMessagesAdapter
 import com.tangem.tap.mainScope
 import com.tangem.tap.store
 import com.tangem.wallet.R
