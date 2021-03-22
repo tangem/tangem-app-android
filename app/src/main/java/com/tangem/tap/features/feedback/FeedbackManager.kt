@@ -33,10 +33,8 @@ class FeedbackManager(
     }
 
     private fun sendTo(email: String, subject: String, message: String, fileLog: File? = null) {
-        val intent = Intent(Intent.ACTION_SEND).apply {
-            data = Uri.parse("mailto:")
-            type = "text/plain"
-            putExtra(Intent.EXTRA_EMAIL, arrayOf(email))
+        val intent = Intent(Intent.ACTION_SENDTO).apply {
+            data = Uri.parse("mailto:$email")
             putExtra(Intent.EXTRA_SUBJECT, subject)
             putExtra(Intent.EXTRA_TEXT, message)
             fileLog?.let {
