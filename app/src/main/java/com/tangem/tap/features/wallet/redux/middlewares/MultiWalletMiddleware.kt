@@ -49,6 +49,28 @@ class MultiWalletMiddleware {
                     cardId?.let { currenciesRepository.removeBlockchain(it, action.walletData.blockchain) }
                 }
             }
+            is WalletAction.MultiWallet.FindTokensInUse -> {
+                val walletManager = walletState?.getWalletManager(Blockchain.Ethereum.currency)
+                        ?: return
+                val alreadyAddedTokens = walletManager.presetTokens
+                val tokenManager = walletManager as TokenManager
+                scope.launch {
+                    val result = tokenManager.findTokens()
+                    withContext(Dispatchers.Main) {
+                        when (result) {
+                            is Result.Success -> {
+                                if (result.data.isNotEmpty()) {
+                                    store.dispatch(WalletAction.MultiWallet.AddTokens(
+                                            walletManager.presetTokens
+                                                    .filterNot { presetToken -> alreadyAddedTokens.any { it.symbol == presetToken.symbol } }
+                                                    .toList()
+                                    ))
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -63,8 +85,6 @@ class MultiWalletMiddleware {
                         store.dispatch(WalletAction.LoadFiatRate(currency = token.symbol))
                         store.dispatch(WalletAction.MultiWallet.TokenLoaded(result.data))
                     }
-                    is Result.Failure -> null
-                    null -> null
                 }
             }
         }
