@@ -13,7 +13,6 @@ import com.tangem.tap.domain.configurable.config.ConfigManager
 import com.tangem.tap.domain.extensions.amountToCreateAccount
 import com.tangem.tap.domain.extensions.isNoAccountError
 import com.tangem.tap.domain.tasks.ScanNoteResponse
-import com.tangem.tap.domain.tasks.isMultiwalletAllowed
 import com.tangem.tap.domain.twins.TwinsHelper
 import com.tangem.tap.domain.twins.isTwinCard
 import com.tangem.tap.features.tokens.redux.TokensAction
@@ -151,20 +150,17 @@ class TapWalletManager {
 
                 val primaryWalletManager = data.walletManager
                 val primaryBlockchain = listOf(data.walletManager.wallet.blockchain)
+                val primaryTokenSymbol = data.card.cardData?.tokenSymbol
                 val primaryToken = primaryWalletManager.presetTokens.toList()
+                        .firstOrNull { it.symbol == primaryTokenSymbol }
 
                 store.dispatch(WalletAction.MultiWallet.SetPrimaryBlockchain(primaryBlockchain[0]))
-                if (primaryWalletManager.presetTokens.isNotEmpty()) {
-                    store.dispatch(WalletAction.MultiWallet.SetPrimaryToken(primaryToken.first()))
+                if (primaryToken != null) {
+                    store.dispatch(WalletAction.MultiWallet.SetPrimaryToken(primaryToken))
                 }
 
                 if (data.card.isMultiwalletAllowed) {
                     val savedCurrencies = currenciesRepository.loadCardCurrencies(data.card.cardId)
-                    val tokens = if (savedCurrencies.tokens.isNotEmpty()) {
-                        primaryToken + savedCurrencies.tokens
-                    } else {
-                        primaryToken
-                    }
 
                     val walletManagers = listOf(primaryWalletManager) +
                             currenciesRepository.getBlockchains()
@@ -172,9 +168,14 @@ class TapWalletManager {
                                     .mapNotNull { walletManagerFactory.makeWalletManager(data.card, it) }
                     val otherBlockhains = savedCurrencies.blockchains
 
+                    val activeTokens = walletManagers.first { it.wallet.blockchain == Blockchain.Ethereum}
+                            .presetTokens.toList()
+                    val tokens = activeTokens + savedCurrencies.tokens
+
                     store.dispatch(WalletAction.MultiWallet.AddWalletManagers(walletManagers))
                     store.dispatch(WalletAction.MultiWallet.AddBlockchains(primaryBlockchain + otherBlockhains))
                     store.dispatch(WalletAction.MultiWallet.AddTokens(tokens))
+                    store.dispatch(WalletAction.MultiWallet.FindTokensInUse)
                 } else {
                     store.dispatch(WalletAction.MultiWallet.AddWalletManagers(listOf(primaryWalletManager)))
                     store.dispatch(WalletAction.MultiWallet.AddBlockchains(primaryBlockchain))
