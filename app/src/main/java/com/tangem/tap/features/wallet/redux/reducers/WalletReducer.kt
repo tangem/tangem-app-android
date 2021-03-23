@@ -1,4 +1,4 @@
-package com.tangem.tap.features.wallet.redux
+package com.tangem.tap.features.wallet.redux.reducers
 
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Blockchain
@@ -14,9 +14,7 @@ import com.tangem.tap.common.redux.global.FiatCurrencyName
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.domain.twins.TwinCardNumber
-import com.tangem.tap.features.wallet.redux.reducers.MultiWalletReducer
-import com.tangem.tap.features.wallet.redux.reducers.OnWalletLoadedReducer
-import com.tangem.tap.features.wallet.redux.reducers.TwinsReducer
+import com.tangem.tap.features.wallet.redux.*
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import org.rekotlin.Action
