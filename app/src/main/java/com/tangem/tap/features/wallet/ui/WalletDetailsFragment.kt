@@ -58,7 +58,6 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
                 oldState.walletState == newState.walletState
             }.select { it.walletState }
         }
-        store.dispatch(WalletAction.UpdateWallet())
     }
 
     override fun onStop() {
