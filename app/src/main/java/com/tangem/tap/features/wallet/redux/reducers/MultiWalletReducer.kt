@@ -155,6 +155,7 @@ class MultiWalletReducer {
 
             is WalletAction.MultiWallet.SetPrimaryToken ->
                 state.copy(primaryToken = action.token)
+            is WalletAction.MultiWallet.FindTokensInUse -> state
         }
     }
 }
