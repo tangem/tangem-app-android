@@ -13,7 +13,7 @@ import com.tangem.tap.common.extensions.isGreaterThan
 import com.tangem.tap.common.redux.global.GlobalState
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
-import com.tangem.tap.domain.tasks.isMultiwalletAllowed
+import com.tangem.tap.domain.isMultiwalletAllowed
 import com.tangem.tap.domain.twins.isTwinCard
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.network.NetworkConnectivity
@@ -55,7 +55,7 @@ class WarningsMiddleware {
         }
     }
 
-    public fun tryToShowAppRatingWarning(wallet: Wallet) {
+    fun tryToShowAppRatingWarning(wallet: Wallet) {
         val nonZeroWalletsCount = wallet.amounts.filter {
             it.value.value?.isGreaterThan(BigDecimal.ZERO) ?: false
         }.size

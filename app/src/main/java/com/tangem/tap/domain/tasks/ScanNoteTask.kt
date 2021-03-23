@@ -11,14 +11,11 @@ import com.tangem.commands.CommandResponse
 import com.tangem.commands.ReadIssuerDataCommand
 import com.tangem.commands.common.card.Card
 import com.tangem.commands.common.card.CardStatus
-import com.tangem.commands.common.card.EllipticCurve
-import com.tangem.commands.common.card.masks.Product
 import com.tangem.commands.verifycard.VerifyCardCommand
 import com.tangem.commands.verifycard.VerifyCardResponse
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.toHexString
 import com.tangem.tap.domain.TapSdkError
-import com.tangem.tap.domain.TapWorkarounds
 import com.tangem.tap.domain.TapWorkarounds.isExcluded
 import com.tangem.tap.domain.twins.TwinCardsManager
 import com.tangem.tap.domain.twins.isTwinCard
@@ -30,7 +27,6 @@ data class ScanNoteResponse(
         val card: Card,
         val verifyResponse: VerifyCardResponse? = null,
         val secondTwinPublicKey: String? = null,
-        val multiwalletCard: Boolean = false,
 ) : CommandResponse
 
 class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteResponse> {
@@ -82,9 +78,7 @@ class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteRespons
             when (verifyResult) {
                 is CompletionResult.Success -> {
                     callback(CompletionResult.Success(ScanNoteResponse(
-                            walletManager, card, verifyResult.data, publicKey,
-                            batchesAllowingMultiwallet.contains(card.cardData?.batchId)
-                    )))
+                            walletManager, card, verifyResult.data, publicKey)))
                 }
                 is CompletionResult.Failure -> {
                     callback(CompletionResult.Failure(TangemSdkError.CardVerificationFailed()))
@@ -133,11 +127,3 @@ class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteRespons
 
 }
 
-val Card.isMultiwalletAllowed: Boolean
-    get() {
-        return cardData?.productMask?.contains(Product.TwinCard) != true
-                && !TapWorkarounds.isStart2Coin
-                && this.curve == EllipticCurve.Secp256k1
-    }
-
-private val batchesAllowingMultiwallet = listOf("FFFF")
