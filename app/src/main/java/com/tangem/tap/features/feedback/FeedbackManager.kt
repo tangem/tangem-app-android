@@ -8,8 +8,8 @@ import android.net.Uri
 import android.os.Build
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
-import com.tangem.LogMessage
-import com.tangem.LoggerInterface
+import com.tangem.Log
+import com.tangem.TangemSdkLogger
 import com.tangem.blockchain.common.Blockchain
 import timber.log.Timber
 import java.io.File
@@ -72,15 +72,11 @@ class FeedbackManager(
     }
 }
 
-class TangemLogCollector : LoggerInterface {
+class TangemLogCollector : TangemSdkLogger {
     private val logs = mutableListOf<String>()
 
-    override fun e(logTag: String, message: String) {}
-    override fun i(logTag: String, message: String) {}
-    override fun v(logTag: String, message: String) {}
-
-    override fun write(message: LogMessage) {
-        logs.add(message.message)
+    override fun log(message: () -> String, level: Log.Level) {
+        logs.add(message())
     }
 
     fun getLogs(): List<String> = logs.toList()
