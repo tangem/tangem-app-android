@@ -104,7 +104,7 @@ class DetailsMiddleware {
                 is DetailsAction.AppCurrencyAction.SelectAppCurrency -> {
                     preferencesStorage.saveAppCurrency(action.fiatCurrencyName)
                     store.dispatch(GlobalAction.ChangeAppCurrency(action.fiatCurrencyName))
-                    store.dispatch(WalletAction.LoadFiatRate)
+                    store.dispatch(WalletAction.LoadFiatRate())
                 }
             }
         }
@@ -152,9 +152,7 @@ class DetailsMiddleware {
                                     store.dispatch(DetailsAction.ManageSecurity.SaveChanges.Failure)
                             }
                         }
-
                     }
-
                 }
             }
         }
