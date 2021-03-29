@@ -12,8 +12,10 @@ import com.tangem.tap.features.home.redux.HomeMiddleware
 import com.tangem.tap.features.home.redux.HomeState
 import com.tangem.tap.features.send.redux.middlewares.sendMiddleware
 import com.tangem.tap.features.send.redux.states.SendState
-import com.tangem.tap.features.wallet.redux.WalletMiddleware
+import com.tangem.tap.features.tokens.redux.TokensMiddleware
+import com.tangem.tap.features.tokens.redux.TokensState
 import com.tangem.tap.features.wallet.redux.WalletState
+import com.tangem.tap.features.wallet.redux.middlewares.WalletMiddleware
 import org.rekotlin.Middleware
 import org.rekotlin.StateType
 
@@ -24,7 +26,8 @@ data class AppState(
         val walletState: WalletState = WalletState(),
         val sendState: SendState = SendState(),
         val detailsState: DetailsState = DetailsState(),
-        val disclaimerState: DisclaimerState = DisclaimerState()
+        val disclaimerState: DisclaimerState = DisclaimerState(),
+        val tokensState: TokensState = TokensState(),
 ) : StateType {
 
     companion object {
@@ -35,7 +38,8 @@ data class AppState(
                     WalletMiddleware().walletMiddleware,
                     sendMiddleware,
                     DetailsMiddleware().detailsMiddleware,
-                    DisclaimerMiddleware().disclaimerMiddleware
+                    DisclaimerMiddleware().disclaimerMiddleware,
+                    TokensMiddleware().tokensMiddleware,
             )
         }
     }
