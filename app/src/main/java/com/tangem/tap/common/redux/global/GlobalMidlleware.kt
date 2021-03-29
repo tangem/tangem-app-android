@@ -23,7 +23,7 @@ val globalMiddleware: Middleware<AppState> = { dispatch, appState ->
                         if (it.hideWarning(action.warning)) {
                             if (WarningMessagesManager.isAlreadySignedHashesWarning(action.warning)) {
                                 //TODO: No appropriate warningMessage identification. Make it better later
-                                store.dispatch(WalletAction.SaveCardId)
+                                store.dispatch(WalletAction.Warnings.CheckHashesCount.SaveCardId)
                             }
 
                             store.dispatch(WalletAction.Warnings.SetWarnings(
