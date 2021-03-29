@@ -13,7 +13,7 @@ import java.util.*
 
 data class DetailsState(
         val card: Card? = null,
-        val wallet: Wallet? = null,
+        val wallets: List<Wallet> = emptyList(),
         val cardInfo: CardInfo? = null,
         val appCurrencyState: AppCurrencyState = AppCurrencyState(),
         val eraseWalletState: EraseWalletState? = null,
