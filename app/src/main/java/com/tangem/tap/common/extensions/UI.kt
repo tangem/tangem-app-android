@@ -1,10 +1,7 @@
 package com.tangem.tap.common.extensions
 
 import android.app.Activity
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
-import android.content.Intent
+import android.content.*
 import android.content.res.Resources
 import android.graphics.drawable.Drawable
 import android.os.Build
@@ -73,6 +70,9 @@ fun Context.dpToPixels(dp: Int): Int =
         TypedValue.applyDimension(
                 TypedValue.COMPLEX_UNIT_DIP, dp.toFloat(), this.resources.displayMetrics
         ).toInt()
+
+tailrec fun Context?.getActivity(): Activity? = this as? Activity ?:
+    (this as? ContextWrapper)?.baseContext?.getActivity()
 
 fun MaterialCardView.setMargins(
         marginLeftDp: Int = 16,
