@@ -1,6 +1,7 @@
 package com.tangem.tap.domain
 
 import com.tangem.commands.common.card.Card
+import com.tangem.commands.common.card.EllipticCurve
 import com.tangem.commands.common.card.masks.Product
 import java.util.*
 
@@ -17,7 +18,7 @@ object TapWorkarounds {
         val cardData = this.cardData ?: return false
         val productMask = cardData.productMask
         val excludedBatch = excludedBatches.contains(cardData.batchId)
-        val excludedIssuerName = excludedIssuers.contains(cardData.issuerName?.capitalize(Locale.US))
+        val excludedIssuerName = excludedIssuers.contains(cardData.issuerName?.toUpperCase(Locale.US))
         val excludedProductMask = (productMask != null && // product mask is on cards v2.30 and later
                 !productMask.contains(Product.Note) && !productMask.contains(Product.TwinCard))
         return excludedBatch || excludedIssuerName || excludedProductMask
@@ -36,3 +37,10 @@ object TapWorkarounds {
             "TTM BANK"
     )
 }
+
+val Card.isMultiwalletAllowed: Boolean
+    get() {
+        return cardData?.productMask?.contains(Product.TwinCard) != true
+                && !TapWorkarounds.isStart2Coin
+                && this.curve == EllipticCurve.Secp256k1
+    }
