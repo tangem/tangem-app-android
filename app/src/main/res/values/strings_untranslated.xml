@@ -86,6 +86,7 @@ this wallet.
     <string name="custom_token_decimals_input_title" translatable="false">Decimals</string>
     <string name="custom_token_name_input_placeholder" translatable="false">ex. USD Coin</string>
     <string name="custom_token_token_symbol_input_placeholder" translatable="false">ex. USDC</string>
+    <string name="add_token_added" translatable="false">Added</string>
 
     //Details
     <string name="details_section_title_blockchain" translatable="false">Blockchain</string>
@@ -93,6 +94,12 @@ this wallet.
 
     <string name="add_tokens_subtitle_blockchains" translatable="false">Blockchains</string>
     <string name="add_tokens_subtitle_tokens" translatable="false">Ethereum Tokens</string>
+    <string name="wallet_address_button_copy" translatable="false">Copy</string>
+    <string name="wallet_address_button_share" translatable="false">Share</string>
+    <string name="wallet_button_add_tokens" translatable="false">+ Add tokens</string>
+
+
+
 
 
 </resources>
