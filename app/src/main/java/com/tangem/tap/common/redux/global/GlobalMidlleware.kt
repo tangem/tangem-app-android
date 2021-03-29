@@ -23,7 +23,7 @@ val globalMiddleware: Middleware<AppState> = { dispatch, appState ->
                         if (it.hideWarning(action.warning)) {
                             if (WarningMessagesManager.isAlreadySignedHashesWarning(action.warning)) {
 // [REDACTED_TODO_COMMENT]
-                                store.dispatch(WalletAction.SaveCardId)
+                                store.dispatch(WalletAction.Warnings.CheckHashesCount.SaveCardId)
                             }
 
                             store.dispatch(WalletAction.Warnings.SetWarnings(

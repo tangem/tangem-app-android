@@ -26,7 +26,7 @@ data class ScanNoteResponse(
         val walletManager: WalletManager?,
         val card: Card,
         val verifyResponse: VerifyCardResponse? = null,
-        val secondTwinPublicKey: String? = null
+        val secondTwinPublicKey: String? = null,
 ) : CommandResponse
 
 class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteResponse> {
@@ -78,8 +78,7 @@ class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteRespons
             when (verifyResult) {
                 is CompletionResult.Success -> {
                     callback(CompletionResult.Success(ScanNoteResponse(
-                            walletManager, card, verifyResult.data, publicKey
-                    )))
+                            walletManager, card, verifyResult.data, publicKey)))
                 }
                 is CompletionResult.Failure -> {
                     callback(CompletionResult.Failure(TangemSdkError.CardVerificationFailed()))
@@ -127,3 +126,4 @@ class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteRespons
 
 
 }
+
