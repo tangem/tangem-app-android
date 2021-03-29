@@ -1,8 +1,9 @@
 package com.tangem.tap.features.wallet.redux.middlewares
 
+import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
-import com.tangem.blockchain.common.TokenManager
+import com.tangem.blockchain.common.TokenFinder
 import com.tangem.blockchain.extensions.Result
 import com.tangem.tap.common.redux.global.GlobalState
 import com.tangem.tap.common.redux.navigation.AppScreen
@@ -53,9 +54,9 @@ class MultiWalletMiddleware {
                 val walletManager = walletState?.getWalletManager(Blockchain.Ethereum.currency)
                         ?: return
                 val alreadyAddedTokens = walletManager.presetTokens
-                val tokenManager = walletManager as TokenManager
+                val tokenFinder = walletManager as TokenFinder
                 scope.launch {
-                    val result = tokenManager.findTokens()
+                    val result = tokenFinder.findTokens()
                     withContext(Dispatchers.Main) {
                         when (result) {
                             is Result.Success -> {
@@ -75,10 +76,10 @@ class MultiWalletMiddleware {
     }
 
     private fun addToken(token: Token, walletState: WalletState?) {
-        val tokenManager =
-                (walletState?.getWalletManager(Blockchain.Ethereum.currency) as? TokenManager)
+        val walletManager =
+                (walletState?.getWalletManager(Blockchain.Ethereum.currency) as? EthereumWalletManager)
         scope.launch {
-            val result = tokenManager?.addToken(token)
+            val result = walletManager?.addToken(token)
             withContext(Dispatchers.Main) {
                 when (result) {
                     is Result.Success -> {
