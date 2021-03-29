@@ -1,4 +1,4 @@
 ext.versions = [
-        kotlin      : '1.4.30',
+        kotlin      : '1.4.31',
         build_gradle: '4.1.2',
 ]
