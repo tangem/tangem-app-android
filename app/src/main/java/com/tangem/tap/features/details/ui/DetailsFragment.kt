@@ -80,7 +80,6 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
         tv_signed_hashes.show(state.card?.isTwinCard() != true)
         tv_signed_hashes_title.show(state.card?.isTwinCard() != true)
 
-
         tv_disclaimer.setOnClickListener { store.dispatch(DetailsAction.ShowDisclaimer) }
 
         tv_card_tou.show(state.cardTermsOfUseUrl != null)
