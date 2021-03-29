@@ -85,7 +85,7 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="24dp"
         android:src="@drawable/ic_inactive"
-        android:text="Added"
+        android:text="@string/add_token_added"
         android:textAlignment="center"
         android:textColor="@android:color/white"
         app:chipBackgroundColor="@color/tapButtonDisabled"
