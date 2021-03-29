@@ -57,3 +57,12 @@ fun TextInputLayout.enableError(enable: Boolean, errorMessage: String? = null) {
         isErrorEnabled = false
     }
 }
+
+fun TextView.isEllipsized(): Boolean {
+    val layout = this.layout
+    if (layout != null) {
+        val lines: Int = layout.lineCount
+        return (lines > 0) && (layout.getEllipsisCount(lines - 1) > 0)
+    }
+    return false
+}
