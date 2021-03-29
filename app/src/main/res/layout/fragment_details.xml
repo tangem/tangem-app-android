@@ -116,15 +116,15 @@
                 android:id="@+id/tv_disclaimer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:drawablePadding="15dp"
                 android:paddingTop="7dp"
                 android:paddingBottom="10dp"
-                android:drawablePadding="15dp"
+                android:text="@string/disclaimer_title"
                 android:textColor="@color/darkGray6"
                 android:textSize="16sp"
                 app:drawableEndCompat="@drawable/ic_angle_bracket_right"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_signed_hashes_title"
-                android:text="@string/disclaimer_title" />
+                app:layout_constraintTop_toBottomOf="@id/tv_signed_hashes_title" />
 
             <TextView
                 android:id="@+id/tv_card_tou"
@@ -186,6 +186,19 @@
                 app:layout_constraintTop_toBottomOf="@id/tv_settings_title" />
 
             <TextView
+                android:id="@+id/tv_send_feedback"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="10dp"
+                android:paddingBottom="10dp"
+                android:text="@string/details_row_title_send_feedback"
+                android:textColor="@color/darkGray6"
+                android:textSize="16sp"
+                app:drawableEndCompat="@drawable/ic_angle_bracket_right"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_app_currency_title" />
+
+            <TextView
                 android:id="@+id/tv_card_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -196,7 +209,7 @@
                 android:textColor="@color/colorSecondary"
                 android:textSize="13sp"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_app_currency_title" />
+                app:layout_constraintTop_toBottomOf="@id/tv_send_feedback" />
 
             <View
                 android:layout_width="match_parent"
@@ -208,9 +221,9 @@
                 android:id="@+id/tv_security"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:drawablePadding="15dp"
                 android:paddingTop="7dp"
                 android:paddingBottom="7dp"
-                android:drawablePadding="15dp"
                 android:textColor="@color/darkGray1"
                 android:textSize="16sp"
                 app:drawableEndCompat="@drawable/ic_angle_bracket_right"
@@ -235,15 +248,57 @@
                 android:id="@+id/tv_erase_wallet"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:drawablePadding="15dp"
                 android:paddingTop="7dp"
                 android:paddingBottom="7dp"
-                android:drawablePadding="15dp"
+                android:text="@string/details_row_title_erase_wallet"
                 android:textColor="@color/darkGray6"
                 android:textSize="16sp"
                 app:drawableEndCompat="@drawable/ic_angle_bracket_right"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_security_title"
-                android:text="@string/details_row_title_erase_wallet" />
+                app:layout_constraintTop_toBottomOf="@id/tv_security_title" />
+
+            <TextView
+                android:id="@+id/tv_blockchain_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="22dp"
+                android:paddingBottom="4dp"
+                android:text="@string/details_section_title_blockchain"
+                android:textAllCaps="true"
+                android:textColor="@color/colorSecondary"
+                android:textSize="13sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_erase_wallet" />
+
+            <View
+                android:id="@+id/v_separator_blockchain"
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/separatorGrey2"
+                app:layout_constraintTop_toBottomOf="@id/tv_blockchain_title" />
+
+
+            <TextView
+                android:id="@+id/tv_manage_tokens"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:drawablePadding="15dp"
+                android:paddingTop="7dp"
+                android:paddingBottom="7dp"
+                android:text="@string/details_row_title_manage_tokens"
+                android:textColor="@color/darkGray6"
+                android:textSize="16sp"
+                app:drawableEndCompat="@drawable/ic_angle_bracket_right"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_blockchain_title" />
+
+            <androidx.constraintlayout.widget.Group
+                android:id="@+id/group_blockchain"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:constraint_referenced_ids="tv_blockchain_title, v_separator_blockchain, tv_manage_tokens" />
+
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
