@@ -4,6 +4,7 @@ import com.tangem.CardSession
 import com.tangem.CardSessionRunnable
 import com.tangem.TangemError
 import com.tangem.TangemSdkError
+import com.tangem.blockchain.common.BlockchainSdkConfig
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.commands.CommandResponse
@@ -18,17 +19,22 @@ import com.tangem.tap.domain.TapSdkError
 import com.tangem.tap.domain.TapWorkarounds.isExcluded
 import com.tangem.tap.domain.twins.TwinCardsManager
 import com.tangem.tap.domain.twins.isTwinCard
+import com.tangem.tap.store
 import com.tangem.tasks.ScanTask
 
 data class ScanNoteResponse(
         val walletManager: WalletManager?,
         val card: Card,
         val verifyResponse: VerifyCardResponse? = null,
-        val secondTwinPublicKey: String? = null
+        val secondTwinPublicKey: String? = null,
 ) : CommandResponse
 
 class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteResponse> {
     override val requiresPin2 = false
+
+    private val blockchainSdkConfig = store.state.globalState.configManager?.config
+            ?.blockchainSdkConfig ?: BlockchainSdkConfig()
+    private val walletManagerFactory = WalletManagerFactory(blockchainSdkConfig)
 
     override fun run(session: CardSession, callback: (result: CompletionResult<ScanNoteResponse>) -> Unit) {
         ScanTask().run(session) { result ->
@@ -53,7 +59,7 @@ class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteRespons
                     }
 
                     val walletManager = try {
-                        WalletManagerFactory.makeWalletManager(card)
+                        walletManagerFactory.makeWalletManager(card)
                     } catch (exception: Exception) {
                         return@run callback(CompletionResult.Success(ScanNoteResponse(null, card)))
                     }
@@ -72,8 +78,7 @@ class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteRespons
             when (verifyResult) {
                 is CompletionResult.Success -> {
                     callback(CompletionResult.Success(ScanNoteResponse(
-                            walletManager, card, verifyResult.data, publicKey
-                    )))
+                            walletManager, card, verifyResult.data, publicKey)))
                 }
                 is CompletionResult.Failure -> {
                     callback(CompletionResult.Failure(TangemSdkError.CardVerificationFailed()))
@@ -95,7 +100,7 @@ class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteRespons
                     if (verified) {
                         val twinPublicKey = readDataResult.data.issuerData.sliceArray(0 until 65)
                         val walletManager = try {
-                            WalletManagerFactory.makeMultisigWalletManager(card, twinPublicKey)
+                            walletManagerFactory.makeMultisigWalletManager(card, twinPublicKey)
                         } catch (exception: Exception) {
                             callback(CompletionResult.Success(ScanNoteResponse(null, card)))
                             return@run
