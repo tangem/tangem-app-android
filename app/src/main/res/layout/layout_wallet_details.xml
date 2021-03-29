@@ -74,8 +74,8 @@
 
             <ImageView
                 android:id="@+id/iv_qr_code"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
                 android:layout_marginStart="16dp"
                 android:layout_marginEnd="10dp"
                 android:adjustViewBounds="true"
@@ -83,6 +83,7 @@
                 app:layout_constraintEnd_toEndOf="@id/guideline"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/chip_group_address_type"
+                app:layout_constraintBottom_toBottomOf="@id/btn_copy"
                 tools:src="@drawable/ic_qr_code_show" />
 
             <androidx.constraintlayout.widget.Guideline
@@ -132,9 +133,10 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="6dp"
-                android:layout_marginBottom="4dp"
+                android:layout_marginBottom="24dp"
+                android:layout_marginTop="22dp"
                 android:src="@drawable/ic_inactive"
-                android:text="Copy"
+                android:text="@string/wallet_address_button_copy"
                 android:textAlignment="center"
                 android:textColor="@color/colorSecondary"
                 app:chipBackgroundColor="@color/blue_pale"
@@ -142,7 +144,7 @@
                 app:iconStartPadding="12dp"
                 app:iconEndPadding="0dp"
                 app:chipIconSize="16dp"
-                app:layout_constraintBottom_toBottomOf="@id/iv_qr_code"
+                app:layout_constraintTop_toBottomOf="@id/tv_explore"
                 app:layout_constraintEnd_toStartOf="@id/btn_share"
                 app:layout_constraintStart_toEndOf="@id/iv_qr_code" />
 
@@ -153,9 +155,10 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="16dp"
-                android:layout_marginBottom="4dp"
+                android:layout_marginBottom="24dp"
+                android:layout_marginTop="22dp"
                 android:src="@drawable/ic_inactive"
-                android:text="Share"
+                android:text="@string/wallet_address_button_share"
                 app:chipIcon="@drawable/ic_share_chip"
                 app:iconStartPadding="12dp"
                 app:iconEndPadding="0dp"
@@ -163,7 +166,7 @@
                 android:textAlignment="center"
                 android:textColor="@color/colorSecondary"
                 app:chipBackgroundColor="@color/blue_pale"
-                app:layout_constraintBottom_toBottomOf="@id/iv_qr_code"
+                app:layout_constraintTop_toBottomOf="@id/tv_explore"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@id/btn_copy" />
 
