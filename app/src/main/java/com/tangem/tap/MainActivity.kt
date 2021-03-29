@@ -5,10 +5,10 @@ import android.content.pm.ActivityInfo
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.os.Bundle
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import com.tangem.CardFilter
 import com.tangem.Config
-import com.tangem.Log
 import com.tangem.TangemSdk
 import com.tangem.commands.common.card.CardType
 import com.tangem.tangem_sdk_new.extensions.init
@@ -46,7 +46,7 @@ private fun initCoroutineExceptionHandler(): CoroutineExceptionHandler {
         val sw = StringWriter()
         throwable.printStackTrace(PrintWriter(sw))
         val exceptionAsString: String = sw.toString()
-        Log.e("TangemSdk", exceptionAsString)
+        Log.e("Coroutine", exceptionAsString)
         throw throwable
     }
 }
