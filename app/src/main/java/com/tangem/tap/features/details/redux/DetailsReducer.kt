@@ -66,8 +66,9 @@ private fun handlePrepareScreen(action: DetailsAction.PrepareScreen, state: Deta
     } else {
         null
     }
+
     return DetailsState(
-            card = action.card, wallet = action.wallet,
+            card = action.card, wallets = action.wallets,
             cardInfo = action.card.toCardInfo(),
             appCurrencyState = AppCurrencyState(
                     action.fiatCurrencyName
@@ -82,8 +83,9 @@ private fun handleEraseWallet(action: DetailsAction.EraseWallet, state: DetailsS
     return when (action) {
         DetailsAction.EraseWallet.Check -> {
             val notAllowedByCard = state.card?.settingsMask?.contains(Settings.ProhibitPurgeWallet) == true
-            val notEmpty = state.wallet?.recentTransactions?.isNullOrEmpty() != true ||
-                    state.wallet.amounts.toSendableAmounts().isNotEmpty()
+            val notEmpty = state.wallets.any {
+                !it.recentTransactions.isNullOrEmpty() || it.amounts.toSendableAmounts().isNotEmpty()
+            }
             val eraseWalletState = when {
                 notAllowedByCard -> EraseWalletState.NotAllowedByCard
                 notEmpty -> EraseWalletState.NotEmpty

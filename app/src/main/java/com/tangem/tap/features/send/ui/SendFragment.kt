@@ -9,9 +9,12 @@ import android.view.inputmethod.EditorInfo
 import android.widget.EditText
 import androidx.core.view.postDelayed
 import androidx.core.widget.addTextChangedListener
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.textfield.TextInputEditText
 import com.tangem.Message
 import com.tangem.merchant.common.toggleWidget.ToggleWidget
+import com.tangem.tangem_sdk_new.extensions.dpToPx
 import com.tangem.tangem_sdk_new.extensions.hideSoftKeyboard
 import com.tangem.tap.common.KeyboardObserver
 import com.tangem.tap.common.entities.TapCurrency
@@ -22,6 +25,7 @@ import com.tangem.tap.common.qrCodeScan.ScanQrCodeActivity
 import com.tangem.tap.common.snackBar.MaxAmountSnackbar
 import com.tangem.tap.common.text.truncateMiddleWith
 import com.tangem.tap.common.toggleWidget.*
+import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.features.send.BaseStoreFragment
 import com.tangem.tap.features.send.redux.*
 import com.tangem.tap.features.send.redux.AddressPayIdActionUi.*
@@ -30,10 +34,14 @@ import com.tangem.tap.features.send.redux.FeeActionUi.*
 import com.tangem.tap.features.send.redux.states.FeeType
 import com.tangem.tap.features.send.redux.states.MainCurrencyType
 import com.tangem.tap.features.send.ui.stateSubscribers.SendStateSubscriber
+import com.tangem.tap.features.wallet.ui.adapters.SpacesItemDecoration
+import com.tangem.tap.features.wallet.ui.adapters.WarningMessagesAdapter
 import com.tangem.tap.mainScope
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fragment_send.*
+import kotlinx.android.synthetic.main.fragment_send.rv_warning_messages
+import kotlinx.android.synthetic.main.fragment_wallet.*
 import kotlinx.android.synthetic.main.layout_send_address_payid.*
 import kotlinx.android.synthetic.main.layout_send_amount.*
 import kotlinx.android.synthetic.main.layout_send_fee.*
@@ -50,6 +58,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
     lateinit var sendBtn: ToggleWidget
 
     private lateinit var etAmountToSend: TextInputEditText
+    private lateinit var warningsAdapter: WarningMessagesAdapter
 
     private fun initSendButtonStates() {
         sendBtn = ToggleWidget(flSendButtonContainer, btnSend, progress, ProgressState.None())
@@ -70,6 +79,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         setupTransactionExtrasLayout()
         setupAmountLayout()
         setupFeeLayout()
+        setupWarningMessages()
 
         btnSend.setOnClickListener {
             store.dispatch(SendActionUi.SendAmountToRecipient(
@@ -230,6 +240,17 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
             store.dispatch(ChangeIncludeFee(isChecked))
             store.dispatch(CheckAmountToSend)
         }
+    }
+
+    private fun setupWarningMessages() {
+        warningsAdapter = WarningMessagesAdapter()
+        val layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
+        rv_warning_messages.layoutManager = layoutManager
+        rv_warning_messages.addItemDecoration(SpacesItemDecoration(rv_warning_messages.dpToPx(16f).toInt()))
+        rv_warning_messages.adapter = warningsAdapter
+
+        val warnings = store.state.globalState.warningManager?.getWarnings(WarningMessage.Location.SendScreen) ?: listOf()
+        store.dispatch(SendAction.SetWarnings(warnings))
     }
 
     override fun subscribeToStore() {
