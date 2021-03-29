@@ -12,7 +12,6 @@ data class Config(
         val moonPayApiKey: String = "pk_test_kc90oYTANy7UQdBavDKGfL4K9l6VEPE",
         val moonPayApiSecretKey: String = "sk_test_V8w4M19LbDjjYOt170s0tGuvXAgyEb1C",
         val blockchainSdkConfig: BlockchainSdkConfig = BlockchainSdkConfig(),
-        val isWalletPayIdEnabled: Boolean = true,
         val isSendingToPayIdEnabled: Boolean = true,
         val isTopUpEnabled: Boolean = false,
         val isCreatingTwinCardsAllowed: Boolean = false
@@ -41,7 +40,6 @@ class ConfigManager(
 
     fun turnOff(name: String) {
         when (name) {
-            isWalletPayIdEnabled -> config = config.copy(isWalletPayIdEnabled = false)
             isSendingToPayIdEnabled -> config = config.copy(isSendingToPayIdEnabled = false)
             isTopUpEnabled -> config = config.copy(isTopUpEnabled = false)
             isCreatingTwinCardsAllowed -> config = config.copy(isCreatingTwinCardsAllowed = false)
@@ -50,7 +48,6 @@ class ConfigManager(
 
     fun resetToDefault(name: String) {
         when (name) {
-            isWalletPayIdEnabled -> config = config.copy(isWalletPayIdEnabled = defaultConfig.isWalletPayIdEnabled)
             isSendingToPayIdEnabled -> config = config.copy(isSendingToPayIdEnabled = defaultConfig.isSendingToPayIdEnabled)
             isTopUpEnabled -> config = config.copy(isTopUpEnabled = defaultConfig.isTopUpEnabled)
             isCreatingTwinCardsAllowed -> config =
@@ -62,13 +59,11 @@ class ConfigManager(
         val model = featureModel ?: return
 
         config = config.copy(
-                isWalletPayIdEnabled = model.isWalletPayIdEnabled,
                 isTopUpEnabled = model.isTopUpEnabled,
                 isSendingToPayIdEnabled = model.isSendingToPayIdEnabled,
                 isCreatingTwinCardsAllowed = model.isCreatingTwinCardsAllowed
         )
         defaultConfig = defaultConfig.copy(
-                isWalletPayIdEnabled = model.isWalletPayIdEnabled,
                 isTopUpEnabled = model.isTopUpEnabled,
                 isSendingToPayIdEnabled = model.isSendingToPayIdEnabled,
                 isCreatingTwinCardsAllowed = model.isCreatingTwinCardsAllowed
@@ -100,7 +95,6 @@ class ConfigManager(
     }
 
     companion object {
-        const val isWalletPayIdEnabled = "isWalletPayIdEnabled"
         const val isSendingToPayIdEnabled = "isSendingToPayIdEnabled"
         const val isCreatingTwinCardsAllowed = "isCreatingTwinCardsAllowed"
         const val isTopUpEnabled = "isTopUpEnabled"
