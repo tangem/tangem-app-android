@@ -193,13 +193,14 @@ class WalletMiddleware {
     private fun prepareSendAction(amount: Amount?, state: WalletState?): Action {
         val selectedWalletData = state?.getSelectedWalletData()
         val currency = selectedWalletData?.currencyData?.currencySymbol
-        val wallet = currency?.let { state.getWalletManager(currency)?.wallet }
+        val walletManager = state?.getWalletManager(currency)
+        val wallet = walletManager?.wallet
 
         return if (amount != null) {
             if (amount.type is AmountType.Token) {
-                prepareSendActionForToken(amount, state, selectedWalletData, wallet)
+                prepareSendActionForToken(amount, state, selectedWalletData, wallet, walletManager)
             } else {
-                PrepareSendScreen(amount, selectedWalletData?.fiatRate)
+                PrepareSendScreen(amount, selectedWalletData?.fiatRate, walletManager)
             }
         } else {
             val amounts = wallet?.amounts?.toSendableAmounts()
@@ -207,23 +208,24 @@ class WalletMiddleware {
                 val amountToSend = amounts?.find { it.currencySymbol == currency }
                         ?: return WalletAction.Send.ChooseCurrency(amounts)
                 if (amountToSend.type is AmountType.Token) {
-                    prepareSendActionForToken(amount, state, selectedWalletData, wallet)
+                    prepareSendActionForToken(amount, state, selectedWalletData, wallet, walletManager)
                 } else {
-                    PrepareSendScreen(amountToSend, selectedWalletData.fiatRate)
+                    PrepareSendScreen(amountToSend, selectedWalletData.fiatRate, walletManager)
                 }
             } else {
                 if (amounts?.size ?: 0 > 1) {
                     WalletAction.Send.ChooseCurrency(amounts)
                 } else {
                     val amountToSend = amounts?.first()
-                    PrepareSendScreen(amountToSend, selectedWalletData?.fiatRate)
+                    PrepareSendScreen(amountToSend, selectedWalletData?.fiatRate, walletManager)
                 }
             }
         }
     }
 
     private fun prepareSendActionForToken(
-            amount: Amount?, state: WalletState?, selectedWalletData: WalletData?, wallet: Wallet?
+            amount: Amount?, state: WalletState?, selectedWalletData: WalletData?, wallet: Wallet?,
+            walletManager: WalletManager?
     ): PrepareSendScreen {
         val coinRate = state?.getWalletData(wallet?.blockchain?.currency)?.fiatRate
         val tokenRate = if (state?.isMultiwalletAllowed == true) {
@@ -232,7 +234,7 @@ class WalletMiddleware {
             selectedWalletData?.currencyData?.token?.fiatRate
         }
         return PrepareSendScreen(
-                wallet?.amounts?.get(AmountType.Coin), coinRate,
+                wallet?.amounts?.get(AmountType.Coin), coinRate, walletManager,
                 amount, tokenRate)
     }
 }
