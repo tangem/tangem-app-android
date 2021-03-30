@@ -3,6 +3,7 @@ package com.tangem.tap.features.send.redux
 import com.tangem.Message
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.WalletManager
 import com.tangem.tap.common.redux.ErrorAction
 import com.tangem.tap.common.redux.ToastNotificationAction
 import com.tangem.tap.domain.TapError
@@ -25,6 +26,7 @@ object ReleaseSendState : Action
 data class PrepareSendScreen(
         val coinAmount: Amount?,
         val coinRate: BigDecimal?,
+        val walletManager: WalletManager?,
         val tokenAmount: Amount? = null,
         val tokenRate: BigDecimal? = null
 ) : SendScreenAction
