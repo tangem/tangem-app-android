@@ -124,7 +124,7 @@
                 android:textColor="@color/darkGray2"
                 android:textSize="14sp"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@id/tv_exchange_rate"
+                app:layout_constraintBottom_toBottomOf="@id/iv_currency"
                 tools:text="0.43 USD" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>

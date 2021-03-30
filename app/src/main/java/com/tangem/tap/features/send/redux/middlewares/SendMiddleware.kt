@@ -56,8 +56,8 @@ private fun verifyAndSendTransaction(
         action: SendActionUi.SendAmountToRecipient, appState: AppState?, dispatch: (Action) -> Unit,
 ) {
     val sendState = appState?.sendState ?: return
-    val walletManager = appState.globalState.scanNoteResponse?.walletManager ?: return
-    val card = appState.globalState.scanNoteResponse.card
+    val walletManager = sendState.walletManager ?: return
+    val card = appState.globalState.scanNoteResponse?.card ?: return
     val destinationAddress = sendState.addressPayIdState.destinationWalletAddress ?: return
     val typedAmount = sendState.amountState.amountToExtract ?: return
     val feeAmount = sendState.feeState.currentFee ?: return
