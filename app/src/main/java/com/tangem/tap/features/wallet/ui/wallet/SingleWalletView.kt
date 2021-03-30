@@ -6,6 +6,8 @@ import android.view.ViewGroup
 import android.widget.Button
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.tangem.tap.common.extensions.*
+import com.tangem.tap.common.redux.navigation.AppScreen
+import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.twins.TwinCardNumber
 import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.redux.*
@@ -104,6 +106,9 @@ class SingleWalletView : WalletView {
             if (twinCardsState?.cardNumber == null) {
                 this.tv_twin_card_number.hide()
                 this.iv_twin_card.hide()
+            }
+            if (twinCardsState?.showTwinOnboarding == true) {
+                store.dispatch(NavigationAction.NavigateTo(AppScreen.TwinsOnboarding))
             }
         }
 
