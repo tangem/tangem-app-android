@@ -76,7 +76,7 @@ dependencies {
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.1.5'
 
 
-    implementation 'com.tangem:blockchain:1.157.0'
+    implementation 'com.tangem:blockchain:1.158.0'
     implementation 'com.tangem:core:1.108.0'
     implementation 'com.tangem:sdk:1.108.0'
 
