@@ -168,7 +168,7 @@ class TapWalletManager {
                                     .mapNotNull { walletManagerFactory.makeWalletManager(data.card, it) }
                     val otherBlockhains = savedCurrencies.blockchains
 
-                    val activeTokens = walletManagers.first { it.wallet.blockchain == Blockchain.Ethereum}
+                    val activeTokens = walletManagers.first { it.wallet.blockchain == Blockchain.Ethereum }
                             .presetTokens.toList()
                     val tokens = activeTokens + savedCurrencies.tokens
 
