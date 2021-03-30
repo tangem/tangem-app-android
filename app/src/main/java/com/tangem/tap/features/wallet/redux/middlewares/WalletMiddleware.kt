@@ -126,22 +126,16 @@ class WalletMiddleware {
                     is WalletAction.Scan -> {
                         scope.launch {
                             val result = tangemSdkManager.scanNote(FirebaseAnalyticsHandler)
-                            when (result) {
-                                is CompletionResult.Success -> {
-                                    tangemSdkManager.changeDisplayedCardIdNumbersCount(result.data.card)
-                                    globalState?.tapWalletManager
-                                            ?.onCardScanned(result.data, true)
-                                    if (walletState?.twinCardsState != null) {
-                                        val showOnboarding = !preferencesStorage.wasTwinsOnboardingShown()
-                                        if (showOnboarding) {
-                                            store.dispatch(NavigationAction.NavigateTo(AppScreen.TwinsOnboarding))
-                                        }
+                            scope.launch(Dispatchers.Main) {
+                                when (result) {
+                                    is CompletionResult.Success -> {
+                                        tangemSdkManager.changeDisplayedCardIdNumbersCount(result.data.card)
+                                        globalState?.tapWalletManager
+                                                ?.onCardScanned(result.data, true)
+                                        store.dispatch(WalletAction.ScanCardFinished())
                                     }
-                                    store.dispatch(WalletAction.ScanCardFinished())
-                                }
-                                is CompletionResult.Failure -> {
-                                    if (result.error !is TangemSdkError.UserCancelled) {
-                                        scope.launch(Dispatchers.Main) {
+                                    is CompletionResult.Failure -> {
+                                        if (result.error !is TangemSdkError.UserCancelled) {
                                             store.dispatch(WalletAction.ScanCardFinished(result.error))
                                             if (store.state.walletState.scanCardFailsCounter >= 2) {
                                                 store.dispatch(WalletAction.ShowDialog.ScanFails)
