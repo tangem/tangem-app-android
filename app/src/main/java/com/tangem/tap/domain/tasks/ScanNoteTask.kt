@@ -1,9 +1,6 @@
 package com.tangem.tap.domain.tasks
 
-import com.tangem.CardSession
-import com.tangem.CardSessionRunnable
-import com.tangem.TangemError
-import com.tangem.TangemSdkError
+import com.tangem.*
 import com.tangem.blockchain.common.BlockchainSdkConfig
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.WalletManagerFactory
@@ -32,10 +29,6 @@ data class ScanNoteResponse(
 class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteResponse> {
     override val requiresPin2 = false
 
-    private val blockchainSdkConfig = store.state.globalState.configManager?.config
-            ?.blockchainSdkConfig ?: BlockchainSdkConfig()
-    private val walletManagerFactory = WalletManagerFactory(blockchainSdkConfig)
-
     override fun run(session: CardSession, callback: (result: CompletionResult<ScanNoteResponse>) -> Unit) {
         ScanTask().run(session) { result ->
             when (result) {
@@ -59,7 +52,7 @@ class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteRespons
                     }
 
                     val walletManager = try {
-                        walletManagerFactory.makeWalletManager(card)
+                        getWalletManagerFactory().makeWalletManager(card)
                     } catch (exception: Exception) {
                         return@run callback(CompletionResult.Success(ScanNoteResponse(null, card)))
                     }
@@ -100,7 +93,7 @@ class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteRespons
                     if (verified) {
                         val twinPublicKey = readDataResult.data.issuerData.sliceArray(0 until 65)
                         val walletManager = try {
-                            walletManagerFactory.makeMultisigWalletManager(card, twinPublicKey)
+                            getWalletManagerFactory().makeMultisigWalletManager(card, twinPublicKey)
                         } catch (exception: Exception) {
                             callback(CompletionResult.Success(ScanNoteResponse(null, card)))
                             return@run
@@ -124,6 +117,11 @@ class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteRespons
         return null
     }
 
+    private fun getWalletManagerFactory(): WalletManagerFactory {
+        val blockchainSdkConfig = store.state.globalState.configManager?.config
+                ?.blockchainSdkConfig ?: BlockchainSdkConfig()
+        return WalletManagerFactory(blockchainSdkConfig)
+    }
 
 }
 
