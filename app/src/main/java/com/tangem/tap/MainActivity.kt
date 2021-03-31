@@ -55,6 +55,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        store.state.globalState.feedbackManager?.updateAcivity(this)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
         store.dispatch(NavigationAction.ActivityCreated(WeakReference(this)))
 
