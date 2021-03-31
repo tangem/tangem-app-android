@@ -6,6 +6,7 @@ import androidx.core.content.ContextCompat
 import com.tangem.TangemSdkError
 import com.tangem.blockchain.common.*
 import com.tangem.common.CompletionResult
+import com.tangem.common.extensions.isZero
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.common.extensions.copyToClipboard
@@ -59,6 +60,13 @@ class WalletMiddleware {
                         }
                     }
                     is WalletAction.LoadWallet.Success -> {
+                        val coinAmount = action.wallet.amounts[AmountType.Coin]?.value
+                        if (coinAmount != null && !coinAmount.isZero()) {
+                            if (walletState?.getWalletData(action.wallet.blockchain.currency) == null) {
+                                store.dispatch(WalletAction.MultiWallet.AddBlockchain(action.wallet.blockchain))
+                                store.dispatch(WalletAction.LoadWallet.Success(action.wallet))
+                            }
+                        }
                         store.dispatch(WalletAction.Warnings.CheckHashesCount.CheckHashesCountOnline)
                         warningsMiddleware.tryToShowAppRatingWarning(action.wallet)
                     }
