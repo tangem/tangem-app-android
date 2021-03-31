@@ -6,6 +6,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.tap.common.redux.ErrorAction
 import com.tangem.tap.common.redux.ToastNotificationAction
+import com.tangem.tap.common.redux.global.StateDialog
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.features.send.redux.states.FeeType
@@ -142,7 +143,7 @@ sealed class SendAction : SendScreenAction {
 
     data class SendError(override val error: TapError) : SendAction(), ErrorAction
 
-    sealed class Dialog : SendAction() {
+    sealed class Dialog : SendAction(), StateDialog {
         data class TezosWarningDialog(
                 val reduceCallback: () -> Unit,
                 val sendAllCallback: () -> Unit,

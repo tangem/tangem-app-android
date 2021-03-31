@@ -32,6 +32,7 @@ class HomeMiddleware {
                         scope.launch {
                             val result = tangemSdkManager.scanNote(FirebaseAnalyticsHandler)
                             withContext(Dispatchers.Main) {
+                                store.dispatch(GlobalAction.ScanFailsCounter.ChooseBehavior(result))
                                 when (result) {
                                     is CompletionResult.Success -> {
                                         tangemSdkManager.changeDisplayedCardIdNumbersCount(result.data.card)
