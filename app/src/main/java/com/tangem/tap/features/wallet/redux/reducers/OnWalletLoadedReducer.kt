@@ -27,7 +27,7 @@ class OnWalletLoadedReducer {
         } else {
             val fiatCurrencySymbol = store.state.globalState.appCurrency
             val amount = wallet.amounts[AmountType.Coin]?.value
-            if (walletState.getWalletData(wallet.blockchain.currency) == null && amount?.isZero() != false) {
+            if (walletState.getWalletData(wallet.blockchain.currency) == null) {
                 return walletState
             }
             if (wallet.blockchain != Blockchain.Ethereum) {
