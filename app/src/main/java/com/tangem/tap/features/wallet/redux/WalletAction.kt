@@ -1,7 +1,6 @@
 package com.tangem.tap.features.wallet.redux
 
 import android.content.Context
-import com.tangem.TangemError
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.commands.common.card.Card
@@ -99,7 +98,6 @@ sealed class WalletAction : Action {
     }
 
     object Scan : WalletAction()
-    class ScanCardFinished(val scanError: TangemError? = null) : WalletAction()
 
     data class Send(val amount: Amount? = null) : WalletAction() {
         data class ChooseCurrency(val amounts: List<Amount>?) : WalletAction()
