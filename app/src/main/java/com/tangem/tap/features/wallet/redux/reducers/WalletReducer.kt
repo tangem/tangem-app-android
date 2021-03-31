@@ -246,13 +246,6 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
             )
             newState = newState.copy(wallets = wallets)
         }
-        is WalletAction.ScanCardFinished -> {
-            newState = if (action.scanError == null) {
-                newState.copy(scanCardFailsCounter = 0)
-            } else {
-                newState.copy(scanCardFailsCounter = newState.scanCardFailsCounter + 1)
-            }
-        }
     }
     return newState
 }
