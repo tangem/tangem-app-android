@@ -1,11 +1,13 @@
 package com.tangem.tap.features.feedback
 
+import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import androidx.core.app.ShareCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.tangem.Log
@@ -22,10 +24,15 @@ import java.io.StringWriter
  */
 class FeedbackManager(
         val infoHolder: AdditionalEmailInfo,
-        private val context: Context,
         private val logCollector: TangemLogCollector,
         private val email: String = "support@tangem.com",
 ) {
+
+    private lateinit var activity: Activity
+
+    fun updateAcivity(activity: Activity) {
+        this.activity = activity
+    }
 
     fun send(emailData: EmailData) {
         val fileLog = if (emailData is ScanFailsEmail) createLogFile() else null
@@ -33,28 +40,44 @@ class FeedbackManager(
     }
 
     private fun sendTo(email: String, subject: String, message: String, fileLog: File? = null) {
-        val intent = Intent(Intent.ACTION_SENDTO).apply {
-            data = Uri.parse("mailto:$email")
-            putExtra(Intent.EXTRA_SUBJECT, subject)
-            putExtra(Intent.EXTRA_TEXT, message)
-            fileLog?.let {
-                val uri = FileProvider.getUriForFile(context, "${context.packageName}.provider", it)
-                putExtra(Intent.EXTRA_STREAM, uri)
-            }
-        }
-
+        val emailFilterIntent = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:"))
+        val originalIntentResults = activity.packageManager.queryIntentActivities(emailFilterIntent, 0)
+        val emailFilterIntentResults = activity.packageManager.queryIntentActivities(emailFilterIntent, 0)
+        val targetedIntents = originalIntentResults
+                .filter { originalResult ->
+                    emailFilterIntentResults.any {
+                        originalResult.activityInfo.packageName == it.activityInfo.packageName
+                    }
+                }
+                .map {
+                    createEmailShareIntent(email, subject, message, fileLog).apply {
+                        setPackage(it.activityInfo.packageName)
+                    }
+                }
+                .toMutableList()
         try {
-            val chooserIntent = Intent.createChooser(intent, "Send mail...")
+            val chooserIntent = Intent.createChooser(targetedIntents.removeAt(0), "Send mail...")
+            chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, targetedIntents.toTypedArray())
             chooserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            ContextCompat.startActivity(context, chooserIntent, null)
+            ContextCompat.startActivity(activity, chooserIntent, null)
         } catch (ex: ActivityNotFoundException) {
             Timber.e(ex)
         }
     }
 
+    private fun createEmailShareIntent(recipient: String, subject: String, text: String, file: File? = null): Intent {
+        val builder = ShareCompat.IntentBuilder.from(activity)
+                .setType("message/rfc822")
+                .setEmailTo(arrayOf(recipient))
+                .setSubject(subject)
+                .setText(text)
+        file?.let { builder.setStream(FileProvider.getUriForFile(activity, "${activity.packageName}.provider", it)) }
+        return builder.intent
+    }
+
     private fun createLogFile(): File? {
         return try {
-            val file = File(context.filesDir, "logs.txt")
+            val file = File(activity.filesDir, "logs.txt")
             file.delete()
             file.createNewFile()
 
