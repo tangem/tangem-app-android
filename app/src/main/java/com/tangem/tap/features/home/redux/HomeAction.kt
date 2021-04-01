@@ -9,5 +9,11 @@ sealed class HomeAction : Action {
     object CheckIfFirstLaunch : HomeAction() {
         data class Result(val firstLaunch: Boolean) : HomeAction()
     }
+
+    object ShowDialog : HomeAction() {
+        object ScanFails : HomeAction()
+    }
+
+    object HideDialog : HomeAction()
 }
 
