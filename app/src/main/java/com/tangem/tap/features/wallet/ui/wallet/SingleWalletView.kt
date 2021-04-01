@@ -6,6 +6,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.tangem.tap.common.extensions.*
+import com.tangem.tap.common.redux.global.StateDialog
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.twins.TwinCardNumber
@@ -161,7 +162,7 @@ class SingleWalletView : WalletView {
     }
 
     private fun setupConfirmButton(
-            state: WalletData, btnConfirm: Button, fragment: WalletFragment, isTwinsWallet: Boolean
+            state: WalletData, btnConfirm: Button, fragment: WalletFragment, isTwinsWallet: Boolean,
     ) {
         val buttonTitle = when (state.mainButton) {
             is WalletMainButton.SendButton -> R.string.wallet_button_send
@@ -215,7 +216,7 @@ class SingleWalletView : WalletView {
         }
     }
 
-    private fun handleDialogs(walletDialog: WalletDialog?) {
+    private fun handleDialogs(walletDialog: StateDialog?) {
         val fragment = fragment ?: return
         val context = fragment.context ?: return
         when (walletDialog) {
@@ -234,9 +235,7 @@ class SingleWalletView : WalletView {
                 }
             }
             is WalletDialog.ScanFailsDialog -> {
-                if (dialog == null) dialog = ScanFailsDialog.create(context).apply {
-                    this.show()
-                }
+                if (dialog == null) dialog = ScanFailsDialog.create(context).apply { show() }
             }
             null -> {
                 dialog?.dismiss()
