@@ -3,7 +3,6 @@ package com.tangem.tap.features.wallet.redux.middlewares
 import android.content.Intent
 import android.net.Uri
 import androidx.core.content.ContextCompat
-import com.tangem.TangemSdkError
 import com.tangem.blockchain.common.*
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.isZero
@@ -12,6 +11,7 @@ import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.common.extensions.copyToClipboard
 import com.tangem.tap.common.extensions.shareText
 import com.tangem.tap.common.redux.AppState
+import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.extensions.toSendableAmounts
@@ -135,20 +135,11 @@ class WalletMiddleware {
                         scope.launch {
                             val result = tangemSdkManager.scanNote(FirebaseAnalyticsHandler)
                             scope.launch(Dispatchers.Main) {
+                                store.dispatch(GlobalAction.ScanFailsCounter.ChooseBehavior(result))
                                 when (result) {
                                     is CompletionResult.Success -> {
                                         tangemSdkManager.changeDisplayedCardIdNumbersCount(result.data.card)
-                                        globalState?.tapWalletManager
-                                                ?.onCardScanned(result.data, true)
-                                        store.dispatch(WalletAction.ScanCardFinished())
-                                    }
-                                    is CompletionResult.Failure -> {
-                                        if (result.error !is TangemSdkError.UserCancelled) {
-                                            store.dispatch(WalletAction.ScanCardFinished(result.error))
-                                            if (store.state.walletState.scanCardFailsCounter >= 2) {
-                                                store.dispatch(WalletAction.ShowDialog.ScanFails)
-                                            }
-                                        }
+                                        globalState?.tapWalletManager?.onCardScanned(result.data, true)
                                     }
                                 }
                             }
