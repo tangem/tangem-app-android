@@ -11,6 +11,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.transition.TransitionInflater
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.tap.common.extensions.*
+import com.tangem.tap.common.redux.global.StateDialog
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.redux.WalletAction
@@ -249,7 +250,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
         }
     }
 
-    private fun handleDialogs(walletDialog: WalletDialog?) {
+    private fun handleDialogs(walletDialog: StateDialog?) {
         when (walletDialog) {
             is WalletDialog.SelectAmountToSendDialog -> {
                 if (dialog == null) dialog = AmountToSendDialog(requireContext()).apply {
