@@ -11,6 +11,12 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
     val globalState = state.globalState
 
     return when (action) {
+        is GlobalAction.ScanFailsCounter.Increment -> {
+            globalState.copy(scanCardFailsCounter = globalState.scanCardFailsCounter + 1)
+        }
+        is GlobalAction.ScanFailsCounter.Reset -> {
+            globalState.copy(scanCardFailsCounter = 0)
+        }
         is GlobalAction.SaveScanNoteResponse ->
             globalState.copy(scanNoteResponse = action.scanNoteResponse)
         is GlobalAction.ChangeAppCurrency -> {
