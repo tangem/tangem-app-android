@@ -4,6 +4,7 @@ import android.app.Dialog
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
+import com.tangem.tap.common.redux.global.StateDialog
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.tokens.redux.TokensAction
@@ -112,7 +113,7 @@ class MultiWalletView : WalletView {
     }
 
     private fun showErrorState(
-            fragment: WalletFragment, errorTitle: CharSequence, errorDescription: CharSequence
+            fragment: WalletFragment, errorTitle: CharSequence, errorDescription: CharSequence,
     ) {
         fragment.l_card_balance.show()
         fragment.l_balance.hide()
@@ -131,14 +132,12 @@ class MultiWalletView : WalletView {
         fragment.btn_confirm_long.text = fragment.getText(R.string.wallet_button_create_wallet)
     }
 
-    private fun handleDialogs(walletDialog: WalletDialog?) {
+    private fun handleDialogs(walletDialog: StateDialog?) {
         val fragment = fragment ?: return
         val context = fragment.context ?: return
         when (walletDialog) {
             is WalletDialog.ScanFailsDialog -> {
-                if (dialog == null) dialog = ScanFailsDialog.create(context).apply {
-                    this.show()
-                }
+                if (dialog == null) dialog = ScanFailsDialog.create(context).apply { show() }
             }
             else -> {
                 dialog?.dismiss()
