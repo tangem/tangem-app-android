@@ -74,7 +74,6 @@ class TapApplication : Application() {
         val logWriter = TangemLogCollector()
         Log.addLogger(logWriter)
 
-        val feedbackManager = FeedbackManager(infoHolder, this, logWriter)
-        store.dispatch(GlobalAction.SetFeedbackManager(feedbackManager))
+        store.dispatch(GlobalAction.SetFeedbackManager(FeedbackManager(infoHolder, logWriter)))
     }
 }
