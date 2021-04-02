@@ -179,7 +179,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
                         state.walletAddresses.selectedAddress.exploreUrl,
                         requireContext()))
             }
-            iv_qr_code.setImageBitmap(state.walletAddresses.selectedAddress.address.toQrCode())
+            iv_qr_code.setImageBitmap(state.walletAddresses.selectedAddress.shareUrl.toQrCode())
         }
     }
 
