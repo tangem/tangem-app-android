@@ -207,7 +207,7 @@ class WalletMiddleware {
                 val amountToSend = amounts?.find { it.currencySymbol == currency }
                         ?: return WalletAction.Send.ChooseCurrency(amounts)
                 if (amountToSend.type is AmountType.Token) {
-                    prepareSendActionForToken(amount, state, selectedWalletData, wallet, walletManager)
+                    prepareSendActionForToken(amountToSend, state, selectedWalletData, wallet, walletManager)
                 } else {
                     PrepareSendScreen(amountToSend, selectedWalletData.fiatRate, walletManager)
                 }
@@ -223,7 +223,7 @@ class WalletMiddleware {
     }
 
     private fun prepareSendActionForToken(
-            amount: Amount?, state: WalletState?, selectedWalletData: WalletData?, wallet: Wallet?,
+            amount: Amount, state: WalletState?, selectedWalletData: WalletData?, wallet: Wallet?,
             walletManager: WalletManager?
     ): PrepareSendScreen {
         val coinRate = state?.getWalletData(wallet?.blockchain?.currency)?.fiatRate
