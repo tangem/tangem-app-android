@@ -120,6 +120,9 @@ private fun sendTransaction(
                     dispatch(GlobalAction.UpdateWalletSignedHashes(result.data.walletSignedHashes))
                     dispatch(NavigationAction.PopBackTo())
                     scope.launch(Dispatchers.IO) {
+                        withContext(Dispatchers.Main) {
+                            dispatch(WalletAction.UpdateWallet(walletManager.wallet.blockchain.currency))
+                        }
                         delay(10000)
                         withContext(Dispatchers.Main) {
                             dispatch(WalletAction.UpdateWallet(walletManager.wallet.blockchain.currency))
