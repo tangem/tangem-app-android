@@ -41,6 +41,7 @@ class MultiWalletMiddleware {
                     currenciesRepository.saveAddedBlockchain(it, action.blockchain)
                 }
                 store.dispatch(WalletAction.LoadFiatRate(currency = action.blockchain.currency))
+                store.dispatch(WalletAction.LoadWallet(currency = action.blockchain.currency))
             }
             is WalletAction.MultiWallet.RemoveWallet -> {
                 val cardId = globalState?.scanNoteResponse?.card?.cardId
