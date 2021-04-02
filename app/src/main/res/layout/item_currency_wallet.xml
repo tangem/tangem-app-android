@@ -108,17 +108,34 @@
                 android:ellipsize="end"
                 android:gravity="end"
                 android:maxLines="1"
-                android:paddingStart="2dp"
-                android:paddingEnd="16dp"
+                android:layout_marginStart="2dp"
+                android:layout_marginTop="16dp"
+                android:textColor="@color/darkGray6"
+                android:textSize="17sp"
+                android:textStyle="bold"
+                app:layout_constraintEnd_toStartOf="@id/tv_currency_symbol"
+                app:layout_constraintHorizontal_weight="1"
+                app:layout_constraintStart_toEndOf="@id/tv_currency"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="3 588" />
+
+            <TextView
+                android:id="@+id/tv_currency_symbol"
+                android:layout_width="wrap_content"
+                android:layout_height="24dp"
+                android:gravity="end"
+                android:maxLines="1"
+                android:layout_marginStart="4dp"
+                android:layout_marginEnd="16dp"
                 android:layout_marginTop="16dp"
                 android:textColor="@color/darkGray6"
                 android:textSize="17sp"
                 android:textStyle="bold"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_weight="1"
-                app:layout_constraintStart_toEndOf="@id/tv_currency"
+                app:layout_constraintStart_toEndOf="@id/tv_amount"
                 app:layout_constraintTop_toTopOf="parent"
-                tools:text="3 588 BTC" />
+                tools:text="BTC" />
 
             <TextView
                 android:id="@+id/tv_amount_fiat"
