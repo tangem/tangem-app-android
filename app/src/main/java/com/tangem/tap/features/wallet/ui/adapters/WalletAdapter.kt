@@ -8,7 +8,9 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
-import com.tangem.tap.common.extensions.*
+import com.tangem.tap.common.extensions.getColor
+import com.tangem.tap.common.extensions.getIconRes
+import com.tangem.tap.common.extensions.show
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletData
 import com.tangem.tap.features.wallet.ui.BalanceStatus
@@ -80,11 +82,8 @@ class WalletAdapter
 
         fun bind(wallet: WalletData) {
             view.tv_currency.text = wallet.currencyData.currency
-            view.tv_amount.text = wallet.currencyData.amount
-            if (view.tv_amount.isEllipsized()) {
-                val allowedSize = view.tv_amount.text.length - 4
-                view.tv_amount.text = wallet.currencyData.amount?.ellipsizeBeforeSpace(allowedSize)
-            }
+            view.tv_amount.text = wallet.currencyData.amount?.takeWhile { !it.isWhitespace() }
+            view.tv_currency_symbol.text = wallet.currencyData.amount?.takeLastWhile { !it.isWhitespace() }
             view.tv_amount_fiat.text = wallet.currencyData.fiatAmount
             view.tv_exchange_rate.text = wallet.fiatRateString
             view.card_wallet.setOnClickListener {
