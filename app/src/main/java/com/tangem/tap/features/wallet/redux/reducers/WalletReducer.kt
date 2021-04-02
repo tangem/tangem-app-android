@@ -135,15 +135,14 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                     )
             )
             val wallets = newState.replaceWalletInWallets(walletData)
-            val state = if (wallets.any { it.currencyData.status == BalanceStatus.Loading }) {
+            val progressState = if (wallets.any { it.currencyData.status == BalanceStatus.Loading }) {
                 ProgressState.Loading
             } else {
                 ProgressState.Done
             }
             newState = newState.copy(
-                    state = state,
+                    state = progressState,
                     wallets = wallets
-
             )
         }
         is WalletAction.LoadWallet.Failure -> {
