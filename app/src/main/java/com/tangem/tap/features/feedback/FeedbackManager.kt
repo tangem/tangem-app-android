@@ -17,6 +17,8 @@ import timber.log.Timber
 import java.io.File
 import java.io.FileWriter
 import java.io.StringWriter
+import java.text.SimpleDateFormat
+import java.util.*
 
 
 /**
@@ -96,10 +98,12 @@ class FeedbackManager(
 }
 
 class TangemLogCollector : TangemSdkLogger {
+    private val dateFormatter = SimpleDateFormat("HH:mm:ss.SSS")
     private val logs = mutableListOf<String>()
 
     override fun log(message: () -> String, level: Log.Level) {
-        logs.add(message())
+        val time = dateFormatter.format(Date())
+        logs.add("$time: ${message()}\n")
     }
 
     fun getLogs(): List<String> = logs.toList()
