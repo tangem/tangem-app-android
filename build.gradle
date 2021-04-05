@@ -31,14 +31,14 @@ allprojects {
                     username = nexusUser
                     password = nexusPass
                 }
-                url "https://nexus.tangem.com/repository/maven-releases/"
+                url "https://nexus.tangem-tech.com/repository/maven-releases/"
             }
             maven {
                 credentials {
                     username = nexusUser
                     password = nexusPass
                 }
-                url "https://nexus.tangem.com/repository/maven-snapshots/"
+                url "https://nexus.tangem-tech.com/repository/maven-snapshots/"
             }
             maven { url 'https://jitpack.io' }
         }
