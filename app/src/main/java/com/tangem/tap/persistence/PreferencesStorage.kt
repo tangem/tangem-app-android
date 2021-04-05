@@ -122,7 +122,10 @@ class AppRatingLaunchObserver(
         if (fundsFoundDate != null) return
 
         fundsFoundDate = Calendar.getInstance()
-        preferences.edit().putLong(K_FUNDS_FOUND_DATE, fundsFoundDate!!.timeInMillis).apply()
+        preferences.edit(true) {
+            putLong(K_FUNDS_FOUND_DATE, fundsFoundDate!!.timeInMillis).apply()
+            putInt(K_SHOW_RATING_AT_LAUNCH_COUNT, launchCounts + firstShowing)
+        }
     }
 
     fun isReadyToShow(): Boolean {
