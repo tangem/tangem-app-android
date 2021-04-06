@@ -134,7 +134,7 @@ class AppRatingLaunchObserver(
         if (!userWasInteractWithRating()) {
             val diff = Calendar.getInstance().timeInMillis - fundsDate.timeInMillis
             val diffInDays = diff / (100 * 60 * 60 * 24)
-            if (diffInDays >= firstShowing) return true
+            return launchCounts >= firstShowing && diffInDays >= firstShowing
         }
 
         val nextShowing = getCounterOfNextShowing()
