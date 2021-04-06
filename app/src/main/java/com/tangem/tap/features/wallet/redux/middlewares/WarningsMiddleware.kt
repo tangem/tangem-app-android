@@ -32,8 +32,9 @@ class WarningsMiddleware {
                 val validator = globalState?.scanNoteResponse?.walletManager as? SignatureCountValidator
                 globalState?.scanNoteResponse?.card?.let { card ->
                     globalState.warningManager?.removeWarnings(WarningMessage.Origin.Local)
-                    if (card.getType() != CardType.Release) addWarningMessage(WarningMessagesManager.devCardWarning())
-                    if (!preferencesStorage.wasCardScannedBefore(card.cardId)) {
+                    if (card.getType() != CardType.Release) {
+                        addWarningMessage(WarningMessagesManager.devCardWarning())
+                    } else if (!preferencesStorage.wasCardScannedBefore(card.cardId)) {
                         checkIfWarningNeeded(card, validator)?.let { addWarningMessage(it) }
                     }
                     updateWarningMessages()
