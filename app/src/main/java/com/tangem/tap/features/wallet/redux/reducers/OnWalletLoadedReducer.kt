@@ -1,7 +1,6 @@
 package com.tangem.tap.features.wallet.redux.reducers
 
 import com.tangem.blockchain.common.AmountType
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Wallet
 import com.tangem.common.extensions.isZero
 import com.tangem.tap.common.extensions.toFiatString
@@ -21,112 +20,80 @@ import com.tangem.tap.store
 import java.math.RoundingMode
 
 class OnWalletLoadedReducer {
+
     fun reduce(wallet: Wallet, walletState: WalletState, topUpAllowed: Boolean? = null): WalletState {
-        if (!walletState.isMultiwalletAllowed) {
-            return onSingleWalletLoaded(wallet, walletState, topUpAllowed)
+        return if (!walletState.isMultiwalletAllowed) {
+            onSingleWalletLoaded(wallet, walletState, topUpAllowed)
         } else {
-            val fiatCurrencySymbol = store.state.globalState.appCurrency
-            val amount = wallet.amounts[AmountType.Coin]?.value
-            if (walletState.getWalletData(wallet.blockchain.currency) == null) {
-                return walletState
-            }
-            if (wallet.blockchain != Blockchain.Ethereum) {
-                val formattedAmount = amount?.toFormattedCurrencyString(
-                        wallet.blockchain.decimals(),
-                        wallet.blockchain.currency)
-
-                val pendingTransactions = wallet.recentTransactions
-                        .toPendingTransactions(wallet.address)
-
-                val sendButtonEnabled = amount?.isZero() == false && pendingTransactions.isEmpty()
-                val balanceStatus = if (pendingTransactions.isNotEmpty()) {
-                    BalanceStatus.TransactionInProgress
-                } else {
-                    BalanceStatus.VerifiedOnline
-                }
-                val walletData = walletState.getWalletData(wallet.blockchain.currency)
-                        ?: WalletData()
-                val newWalletData = walletData.copy(
-                        currencyData = walletData.currencyData.copy(
-                                status = balanceStatus, currency = wallet.blockchain.fullName,
-                                currencySymbol = wallet.blockchain.currency,
-                                amount = formattedAmount,
-                                fiatAmount = walletData.fiatRate?.let { amount?.toFiatString(it, fiatCurrencySymbol) }
-                        ),
-                        pendingTransactions = pendingTransactions.removeUnknownTransactions(),
-                        mainButton = WalletMainButton.SendButton(sendButtonEnabled)
-                )
-                val wallets = walletState.replaceWalletInWallets(newWalletData)
-                val state = if (wallets.any { it.currencyData.status == BalanceStatus.Loading }) {
-                    ProgressState.Loading
-                } else {
-                    ProgressState.Done
-                }
-                return walletState.copy(
-                        state = state, wallets = wallets
-                )
-            } else {
-                val formattedAmount = amount?.toFormattedCurrencyString(
-                        wallet.blockchain.decimals(),
-                        wallet.blockchain.currency)
-
-                val pendingTransactions = wallet.recentTransactions
-                        .toPendingTransactions(wallet.address)
-
-                val sendButtonEnabled = amount?.isZero() == false && pendingTransactions.isEmpty()
-                val balanceStatus = if (pendingTransactions.isNotEmpty()) {
-                    BalanceStatus.TransactionInProgress
-                } else {
-                    BalanceStatus.VerifiedOnline
-                }
-
-                val ethereumWalletData = walletState.getWalletData(wallet.blockchain.currency)
-                        ?: WalletData()
-                val newEthereumWalletData = ethereumWalletData.copy(
-                        currencyData = ethereumWalletData.currencyData.copy(
-                                status = balanceStatus,
-                                amount = formattedAmount,
-                                currency = wallet.blockchain.fullName,
-                                currencySymbol = wallet.blockchain.currency,
-                                fiatAmount = ethereumWalletData.fiatRate?.let {
-                                    amount?.toFiatString(it, fiatCurrencySymbol)
-                                }
-                        ),
-                        pendingTransactions = pendingTransactions.removeUnknownTransactions(),
-                        mainButton = WalletMainButton.SendButton(sendButtonEnabled)
-                )
-
-                val tokens = wallet.getTokens().mapNotNull { token ->
-                    val tokenWalletData = walletState.getWalletData(token.symbol)
-                    tokenWalletData?.copy(
-                            currencyData = tokenWalletData.currencyData.copy(
-                                    status = balanceStatus,
-                                    amount = wallet.getTokenAmount(token)?.value?.toFormattedCurrencyString(
-                                            token.decimals, token.symbol
-                                    ),
-                                    fiatAmount = tokenWalletData.fiatRate?.let {
-                                        wallet.getTokenAmount(token)?.value
-                                                ?.toFiatString(it, fiatCurrencySymbol)
-                                    }
-                            ),
-                            pendingTransactions = pendingTransactions.removeUnknownTransactions(),
-                            mainButton = WalletMainButton.SendButton(sendButtonEnabled)
-                    )
-                }
-                val wallets = walletState.replaceSomeWallets((tokens + newEthereumWalletData).filterNotNull())
-                val state = if (wallets.any { it.currencyData.status == BalanceStatus.Loading }) {
-                    ProgressState.Loading
-                } else {
-                    ProgressState.Done
-                }
-                return walletState.copy(
-                        state = state, wallets = wallets
-                )
-            }
+            onMultiWalletLoaded(wallet, walletState, topUpAllowed)
         }
     }
 
-    private fun onSingleWalletLoaded(wallet: Wallet, walletState: WalletState, topUpAllowed: Boolean? = null
+    private fun onMultiWalletLoaded(
+            wallet: Wallet, walletState: WalletState, topUpAllowed: Boolean? = null
+    ): WalletState {
+        val fiatCurrencySymbol = store.state.globalState.appCurrency
+        val amount = wallet.amounts[AmountType.Coin]?.value
+        if (walletState.getWalletData(wallet.blockchain.currency) == null) {
+            return walletState
+        }
+        val formattedAmount = amount?.toFormattedCurrencyString(
+                wallet.blockchain.decimals(),
+                wallet.blockchain.currency)
+
+        val pendingTransactions = wallet.recentTransactions
+                .toPendingTransactions(wallet.address)
+
+        val sendButtonEnabled = amount?.isZero() == false && pendingTransactions.isEmpty()
+        val balanceStatus = if (pendingTransactions.isNotEmpty()) {
+            BalanceStatus.TransactionInProgress
+        } else {
+            BalanceStatus.VerifiedOnline
+        }
+        val walletData = walletState.getWalletData(wallet.blockchain.currency)
+                ?: WalletData()
+        val newWalletData = walletData.copy(
+                currencyData = walletData.currencyData.copy(
+                        status = balanceStatus, currency = wallet.blockchain.fullName,
+                        currencySymbol = wallet.blockchain.currency,
+                        amount = formattedAmount,
+                        fiatAmount = walletData.fiatRate?.let { amount?.toFiatString(it, fiatCurrencySymbol) }
+                ),
+                pendingTransactions = pendingTransactions.removeUnknownTransactions(),
+                mainButton = WalletMainButton.SendButton(sendButtonEnabled)
+        )
+
+        val tokens = wallet.getTokens().mapNotNull { token ->
+            val tokenWalletData = walletState.getWalletData(token.symbol)
+            tokenWalletData?.copy(
+                    currencyData = tokenWalletData.currencyData.copy(
+                            status = balanceStatus,
+                            amount = wallet.getTokenAmount(token)?.value?.toFormattedCurrencyString(
+                                    token.decimals, token.symbol
+                            ),
+                            fiatAmount = tokenWalletData.fiatRate?.let {
+                                wallet.getTokenAmount(token)?.value
+                                        ?.toFiatString(it, fiatCurrencySymbol)
+                            }
+                    ),
+                    pendingTransactions = pendingTransactions.removeUnknownTransactions(),
+                    mainButton = WalletMainButton.SendButton(sendButtonEnabled)
+            )
+        }
+        val wallets = walletState.replaceSomeWallets((tokens + newWalletData))
+
+        val state = if (wallets.any { it.currencyData.status == BalanceStatus.Loading }) {
+            ProgressState.Loading
+        } else {
+            ProgressState.Done
+        }
+        return walletState.copy(
+                state = state, wallets = wallets
+        )
+    }
+
+    private fun onSingleWalletLoaded(
+            wallet: Wallet, walletState: WalletState, topUpAllowed: Boolean? = null
     ): WalletState {
         if (wallet.blockchain != walletState.primaryBlockchain) return walletState
 
