@@ -6,6 +6,7 @@ import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.commands.common.card.Card
 import com.tangem.commands.common.card.CardType
+import com.tangem.commands.verifycard.VerifyCardState
 import com.tangem.common.extensions.getType
 import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
@@ -29,16 +30,7 @@ class WarningsMiddleware {
     fun handle(action: WalletAction.Warnings, globalState: GlobalState?) {
         when (action) {
             is WalletAction.Warnings.CheckIfNeeded -> {
-                val validator = globalState?.scanNoteResponse?.walletManager as? SignatureCountValidator
-                globalState?.scanNoteResponse?.card?.let { card ->
-                    globalState.warningManager?.removeWarnings(WarningMessage.Origin.Local)
-                    if (card.getType() != CardType.Release) {
-                        addWarningMessage(WarningMessagesManager.devCardWarning())
-                    } else if (!preferencesStorage.wasCardScannedBefore(card.cardId)) {
-                        checkIfWarningNeeded(card, validator)?.let { addWarningMessage(it) }
-                    }
-                    updateWarningMessages()
-                }
+                showCardWarningsIfNeeded(globalState)
                 val readyToShow = preferencesStorage.appRatingLaunchObserver.isReadyToShow()
                 if (readyToShow) addWarningMessage(WarningMessagesManager.appRatingWarning(), true)
             }
@@ -66,6 +58,25 @@ class WarningsMiddleware {
         if (preferencesStorage.appRatingLaunchObserver.isReadyToShow()) {
             FirebaseAnalyticsHandler.triggerEvent(AnalyticsEvent.APP_RATING_DISPLAYED)
             addWarningMessage(WarningMessagesManager.appRatingWarning(), true)
+        }
+    }
+
+    private fun showCardWarningsIfNeeded(globalState: GlobalState?) {
+        val validator = globalState?.scanNoteResponse?.walletManager as? SignatureCountValidator
+        globalState?.scanNoteResponse?.card?.let { card ->
+            globalState.warningManager?.removeWarnings(WarningMessage.Origin.Local)
+            if (card.getType() != CardType.Release) {
+                addWarningMessage(WarningMessagesManager.devCardWarning())
+            } else if (!preferencesStorage.wasCardScannedBefore(card.cardId)) {
+                checkIfWarningNeeded(card, validator)?.let { addWarningMessage(it) }
+            }
+            if (card.getType() == CardType.Release) {
+                if (globalState.scanNoteResponse.verifyResponse?.verificationState ==
+                        VerifyCardState.VerifiedOffline) {
+                    addWarningMessage(WarningMessagesManager.onlineVerificationFailed())
+                }
+            }
+            updateWarningMessages()
         }
     }
 
