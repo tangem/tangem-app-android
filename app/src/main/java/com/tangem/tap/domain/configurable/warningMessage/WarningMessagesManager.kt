@@ -117,5 +117,17 @@ class WarningMessagesManager(
         fun isAlreadySignedHashesWarning(warning: WarningMessage): Boolean {
             return warning.messageResId == R.string.alert_card_signed_transactions
         }
+
+        fun onlineVerificationFailed(): WarningMessage = WarningMessage(
+                "",
+                "",
+                type = WarningMessage.Type.Permanent,
+                priority = WarningMessage.Priority.Critical,
+                listOf(WarningMessage.Location.MainScreen),
+                null,
+                R.string.warning_failed_to_verify_card_title,
+                R.string.warning_failed_to_verify_card_message,
+                WarningMessage.Origin.Local
+        )
     }
 }
