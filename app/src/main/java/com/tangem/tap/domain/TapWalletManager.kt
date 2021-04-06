@@ -1,6 +1,7 @@
 package com.tangem.tap.domain
 
 import com.tangem.blockchain.common.*
+import com.tangem.blockchain.extensions.getBlockchain
 import com.tangem.commands.common.card.CardStatus
 import com.tangem.commands.common.network.Result
 import com.tangem.tap.common.analytics.AnalyticsEvent
@@ -168,9 +169,9 @@ class TapWalletManager {
                                     .mapNotNull { walletManagerFactory.makeWalletManager(data.card, it) }
                     val otherBlockhains = savedCurrencies.blockchains
 
-                    val activeTokens = walletManagers.first { it.wallet.blockchain == Blockchain.Ethereum }
+                    val presetTokens = walletManagers.first { it.wallet.blockchain == data.card.getBlockchain() }
                             .presetTokens.toList()
-                    val tokens = activeTokens + savedCurrencies.tokens
+                    val tokens = presetTokens + savedCurrencies.tokens
 
                     store.dispatch(WalletAction.MultiWallet.AddWalletManagers(walletManagers))
                     store.dispatch(WalletAction.MultiWallet.AddBlockchains(primaryBlockchain + otherBlockhains))
