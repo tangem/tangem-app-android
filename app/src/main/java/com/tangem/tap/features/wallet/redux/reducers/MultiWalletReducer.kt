@@ -90,7 +90,7 @@ class MultiWalletReducer {
                             token = token
                     )
                 }
-                state.copy(wallets = state.wallets + wallets)
+                state.copy(wallets = state.replaceSomeWallets(wallets))
             }
             is WalletAction.MultiWallet.AddToken -> {
                 if (!state.isMultiwalletAllowed) return state
