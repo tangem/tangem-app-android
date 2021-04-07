@@ -54,7 +54,6 @@ class MultiWalletMiddleware {
             is WalletAction.MultiWallet.FindTokensInUse -> {
                 val walletManager = walletState?.getWalletManager(Blockchain.Ethereum.currency)
                         ?: return
-                val alreadyAddedTokens = walletManager.presetTokens
                 val tokenFinder = walletManager as TokenFinder
                 scope.launch {
                     val result = tokenFinder.findTokens()
@@ -63,9 +62,7 @@ class MultiWalletMiddleware {
                             is Result.Success -> {
                                 if (result.data.isNotEmpty()) {
                                     store.dispatch(WalletAction.MultiWallet.AddTokens(
-                                            walletManager.presetTokens
-                                                    .filterNot { presetToken -> alreadyAddedTokens.any { it.symbol == presetToken.symbol } }
-                                                    .toList()
+                                            walletManager.presetTokens.toList()
                                     ))
                                 }
                             }
