@@ -19,9 +19,13 @@ import kotlinx.coroutines.withContext
 
 class MultiWalletMiddleware {
     fun handle(
-            action: WalletAction.MultiWallet, walletState: WalletState?, globalState: GlobalState?
+            action: WalletAction.MultiWallet, walletState: WalletState?, globalState: GlobalState?,
     ) {
         when (action) {
+            is WalletAction.MultiWallet.AddWalletManagers -> {
+                val wallets = action.walletManagers.map { it.wallet }
+                store.state.globalState.feedbackManager?.infoHolder?.setWalletsInfo(wallets)
+            }
             is WalletAction.MultiWallet.SelectWallet -> {
                 if (action.walletData != null) {
                     store.dispatch(NavigationAction.NavigateTo(AppScreen.WalletDetails))
