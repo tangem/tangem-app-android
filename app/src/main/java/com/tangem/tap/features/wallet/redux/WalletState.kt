@@ -42,6 +42,9 @@ data class WalletState(
             primaryWallet?.currencyData?.status != com.tangem.tap.features.wallet.ui.BalanceStatus.EmptyCard &&
                     primaryWallet?.currencyData?.status != com.tangem.tap.features.wallet.ui.BalanceStatus.UnknownBlockchain
 
+    val blockchains: List<Blockchain>
+        get() = walletManagers.map { it.wallet.blockchain }
+
     fun getWalletManager(currencyName: CryptoCurrencyName?): WalletManager? {
         if (currencyName == null) return null
         val walletManager = walletManagers.find { it.wallet.blockchain.currency == currencyName }
