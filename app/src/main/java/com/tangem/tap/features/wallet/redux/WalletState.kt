@@ -45,13 +45,20 @@ data class WalletState(
     fun getWalletManager(currencyName: CryptoCurrencyName?): WalletManager? {
         if (currencyName == null) return null
         val walletManager = walletManagers.find { it.wallet.blockchain.currency == currencyName }
-        if (walletManager != null) return walletManager
+        return walletManager ?: getWalletManagerForToken(currencyName)
+    }
 
+    fun getWalletManagerForToken(currencyName: CryptoCurrencyName?): WalletManager? {
         val ethereumWalletManager = walletManagers.find { it.wallet.blockchain == Blockchain.Ethereum }
         return if (ethereumWalletManager?.presetTokens?.find { it.symbol == currencyName } != null) {
             ethereumWalletManager
         } else {
-            null
+            val primaryWalletManager = walletManagers.find { it.wallet.blockchain == primaryBlockchain }
+            if (primaryWalletManager?.presetTokens?.find { it.symbol == currencyName } != null) {
+                primaryWalletManager
+            } else {
+                null
+            }
         }
     }
 
