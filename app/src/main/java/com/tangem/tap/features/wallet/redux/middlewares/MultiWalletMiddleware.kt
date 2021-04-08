@@ -1,6 +1,5 @@
 package com.tangem.tap.features.wallet.redux.middlewares
 
-import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.TokenFinder
@@ -74,8 +73,7 @@ class MultiWalletMiddleware {
     }
 
     private fun addToken(token: Token, walletState: WalletState?) {
-        val walletManager =
-                (walletState?.getWalletManager(Blockchain.Ethereum.currency) as? EthereumWalletManager)
+        val walletManager = walletState?.getWalletManager(token.symbol)
         scope.launch {
             val result = walletManager?.addToken(token)
             withContext(Dispatchers.Main) {
