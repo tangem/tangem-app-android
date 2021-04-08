@@ -15,6 +15,7 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.TapWorkarounds
+import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.extensions.minimalAmount
 import com.tangem.tap.features.send.redux.*
 import com.tangem.tap.features.send.redux.FeeAction.RequestFee
@@ -46,6 +47,7 @@ val sendMiddleware: Middleware<AppState> = { dispatch, appState ->
                 is SendActionUi.SendAmountToRecipient ->
                     verifyAndSendTransaction(action, appState(), dispatch)
                 is PrepareSendScreen -> setIfSendingToPayIdEnabled(appState(), dispatch)
+                is SendAction.Warnings.Update -> updateWarnings(dispatch)
             }
             nextDispatch(action)
         }
@@ -222,5 +224,13 @@ private fun setIfSendingToPayIdEnabled(appState: AppState?, dispatch: (Action) -
     val isSendingToPayIdEnabled =
             appState?.globalState?.configManager?.config?.isSendingToPayIdEnabled ?: false
     dispatch(AddressPayIdActionUi.ChangePayIdState(isSendingToPayIdEnabled))
+}
+
+private fun updateWarnings(dispatch: (Action) -> Unit) {
+    val warningsManager = store.state.globalState.warningManager ?: return
+    val blockchain = store.state.sendState.walletManager?.wallet?.blockchain ?: return
+
+    val warnings = warningsManager.getWarnings(WarningMessage.Location.SendScreen, listOf(blockchain))
+    dispatch(SendAction.Warnings.Set(warnings))
 }
 
