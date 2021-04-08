@@ -45,7 +45,7 @@ private class SendReducer : SendInternalReducer {
             is SendAction.Dialog.TezosWarningDialog -> sendState.copy(dialog = action)
             is SendAction.Dialog.SendTransactionFails -> sendState.copy(dialog = action)
             is SendAction.Dialog.Hide -> sendState.copy(dialog = null)
-            is SendAction.SetWarnings -> sendState.copy(sendWarningsList = action.warningList)
+            is SendAction.Warnings.Set -> sendState.copy(sendWarningsList = action.warningList)
             else -> return sendState
         }
 

@@ -25,7 +25,6 @@ import com.tangem.tap.common.qrCodeScan.ScanQrCodeActivity
 import com.tangem.tap.common.snackBar.MaxAmountSnackbar
 import com.tangem.tap.common.text.truncateMiddleWith
 import com.tangem.tap.common.toggleWidget.*
-import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.features.send.BaseStoreFragment
 import com.tangem.tap.features.send.redux.*
 import com.tangem.tap.features.send.redux.AddressPayIdActionUi.*
@@ -249,8 +248,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         rv_warning_messages.addItemDecoration(SpacesItemDecoration(rv_warning_messages.dpToPx(16f).toInt()))
         rv_warning_messages.adapter = warningsAdapter
 
-        val warnings = store.state.globalState.warningManager?.getWarnings(WarningMessage.Location.SendScreen) ?: listOf()
-        store.dispatch(SendAction.SetWarnings(warnings))
+        store.dispatch(SendAction.Warnings.Update)
     }
 
     override fun subscribeToStore() {
