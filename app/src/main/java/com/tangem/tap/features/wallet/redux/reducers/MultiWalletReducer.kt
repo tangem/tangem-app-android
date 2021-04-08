@@ -1,7 +1,6 @@
 package com.tangem.tap.features.wallet.redux.reducers
 
 import com.tangem.blockchain.common.AmountType
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.isZero
 import com.tangem.tap.common.extensions.toFiatString
 import com.tangem.tap.common.extensions.toFormattedCurrencyString
@@ -76,7 +75,6 @@ class MultiWalletReducer {
             }
             is WalletAction.MultiWallet.AddTokens -> {
                 if (!state.isMultiwalletAllowed) return state
-                val walletAddresses = createAddressList(state.getWalletManager(Blockchain.Ethereum.currency)?.wallet)
                 val wallets = action.tokens.map { token ->
                     WalletData(
                             currencyData = BalanceWidgetData(
@@ -84,7 +82,9 @@ class MultiWalletReducer {
                                     currency = token.name,
                                     currencySymbol = token.symbol
                             ),
-                            walletAddresses = walletAddresses,
+                            walletAddresses = createAddressList(
+                                    state.getWalletManagerForToken(token.symbol)?.wallet
+                            ),
                             mainButton = WalletMainButton.SendButton(false),
                             topUpState = TopUpState(allowed = false),
                             token = token
@@ -94,7 +94,11 @@ class MultiWalletReducer {
             }
             is WalletAction.MultiWallet.AddToken -> {
                 if (!state.isMultiwalletAllowed) return state
-                val walletAddresses = createAddressList(state.getWalletManager(Blockchain.Ethereum.currency)?.wallet)
+
+                val walletAddresses = createAddressList(
+                        state.getWalletManagerForToken(action.token.symbol)?.wallet
+
+                )
                 val wallet = WalletData(
                         currencyData = BalanceWidgetData(
                                 BalanceStatus.Loading,
@@ -110,7 +114,7 @@ class MultiWalletReducer {
                 state.copy(wallets = wallets)
             }
             is WalletAction.MultiWallet.TokenLoaded -> {
-                val pendingTransactions = state.getWalletManager(Blockchain.Ethereum.currency)
+                val pendingTransactions = state.getWalletManagerForToken(action.amount.currencySymbol)
                         ?.wallet?.let { wallet ->
                             wallet.recentTransactions.toPendingTransactions(wallet.address)
                         } ?: emptyList()
