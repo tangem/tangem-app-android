@@ -88,7 +88,7 @@ class OnWalletLoadedReducer {
             ProgressState.Done
         }
         return walletState.copy(
-                state = state, wallets = wallets
+                state = state, wallets = wallets, error = null
         )
     }
 
@@ -143,7 +143,7 @@ class OnWalletLoadedReducer {
         )
         val wallets = walletData?.let { listOf(walletData) } ?: emptyList()
         return walletState.copy(
-                state = ProgressState.Done, wallets = wallets
+                state = ProgressState.Done, wallets = wallets, error = null
         )
     }
 }
