@@ -143,10 +143,6 @@ class TapWalletManager {
             store.dispatch(WalletAction.Warnings.CheckIfNeeded)
             val artworkId = data.verifyResponse?.artworkInfo?.id
             if (data.walletManager != null) {
-                if (!NetworkConnectivity.getInstance().isOnlineOrConnecting()) {
-                    store.dispatch(WalletAction.LoadData.Failure(TapError.NoInternetConnection))
-                    return@withContext
-                }
                 val config = store.state.globalState.configManager?.config ?: return@withContext
 
                 val primaryWalletManager = data.walletManager
@@ -218,6 +214,10 @@ class TapWalletManager {
             when (result) {
                 is Result.Success -> store.dispatch(WalletAction.LoadWallet.Success(result.data))
                 is Result.Failure -> {
+                    if (!NetworkConnectivity.getInstance().isOnlineOrConnecting()) {
+                        store.dispatch(WalletAction.LoadData.Failure(TapError.NoInternetConnection))
+                        return@withContext
+                    }
                     val error = result.error
                     val blockchain = walletManager.wallet.blockchain
                     if (error != null && blockchain.isNoAccountError(error)) {
