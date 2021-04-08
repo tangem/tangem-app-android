@@ -2,6 +2,7 @@ package com.tangem.tap.domain.configurable.warningMessage
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.tangem_sdk_new.ui.animation.VoidCallback
+import com.tangem.tap.common.extensions.containsAny
 import com.tangem.wallet.R
 
 /**
@@ -11,7 +12,6 @@ class WarningMessagesManager(
         private val warningLoader: RemoteWarningLoader,
 ) {
 
-    private var blockchain: Blockchain? = null
     private val warningsList: MutableList<WarningMessage> = mutableListOf()
 
     fun load(onComplete: VoidCallback? = null) {
@@ -23,10 +23,6 @@ class WarningMessagesManager(
         }
     }
 
-    fun setBlockchain(blockchain: Blockchain?) {
-        this.blockchain = blockchain
-    }
-
     fun addWarning(warning: WarningMessage) {
         if (findWarning(warning) == null) {
             warningsList.add(warning)
@@ -34,14 +30,14 @@ class WarningMessagesManager(
         }
     }
 
-    fun getWarnings(location: WarningMessage.Location): List<WarningMessage> {
+    fun getWarnings(location: WarningMessage.Location, forBlockchains: List<Blockchain> = emptyList()): List<WarningMessage> {
         return warningsList
                 .filter { !it.isHidden && it.location.contains(location) }
                 .filter {
-                    val blockchainList = it.blockchainList
+                    val list = it.blockchainList
                     when {
-                        blockchainList == null -> true
-                        blockchainList.contains(blockchain) -> true
+                        list == null -> true
+                        list.containsAny(forBlockchains) -> true
                         else -> false
                     }
                 }
