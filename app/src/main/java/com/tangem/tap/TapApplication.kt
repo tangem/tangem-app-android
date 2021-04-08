@@ -69,7 +69,7 @@ class TapApplication : Application() {
 
     private fun initFeedbackManager() {
         val infoHolder = AdditionalEmailInfo()
-        infoHolder.updateAppVersion(this)
+        infoHolder.setAppVersion(this)
 
         val logWriter = TangemLogCollector()
         Log.addLogger(logWriter)
