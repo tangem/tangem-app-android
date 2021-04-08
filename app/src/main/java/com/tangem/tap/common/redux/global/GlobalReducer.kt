@@ -39,7 +39,6 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
             globalState.copy(configManager = action.configManager)
         }
         is GlobalAction.SetWarningManager -> globalState.copy(warningManager = action.warningManager)
-        is GlobalAction.HideWarningMessage -> globalState
         is GlobalAction.UpdateSecurityOptions -> {
             val card = when (action.securityOption) {
                 SecurityOption.LongTap -> globalState.scanNoteResponse?.card?.copy(
