@@ -86,7 +86,6 @@ class TapWalletManager {
         }
         TapWorkarounds.updateCard(data.card)
         store.state.globalState.feedbackManager?.infoHolder?.setCardInfo(data.card)
-        store.state.globalState.warningManager?.setBlockchain(data.walletManager?.wallet?.blockchain)
         updateConfigManager(data)
 
         withContext(Dispatchers.Main) {
@@ -127,7 +126,6 @@ class TapWalletManager {
 
     suspend fun loadData(data: ScanNoteResponse) {
         withContext(Dispatchers.Main) {
-            store.dispatch(WalletAction.Warnings.CheckIfNeeded)
             val artworkId = data.verifyResponse?.artworkInfo?.id
             if (data.walletManager != null) {
                 val config = store.state.globalState.configManager?.config ?: return@withContext
@@ -175,6 +173,7 @@ class TapWalletManager {
                 store.dispatch(WalletAction.LoadData.Failure(TapError.UnknownBlockchain))
                 store.dispatch(WalletAction.LoadArtwork(data.card, artworkId))
             }
+            store.dispatch(WalletAction.Warnings.CheckIfNeeded)
         }
     }
 
