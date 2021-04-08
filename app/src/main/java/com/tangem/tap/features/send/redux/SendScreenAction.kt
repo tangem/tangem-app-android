@@ -149,8 +149,13 @@ sealed class SendAction : SendScreenAction {
                 val sendAllCallback: () -> Unit,
                 val reduceAmount: BigDecimal,
         ) : Dialog()
-        data class SendTransactionFails(val errorMessage: String): Dialog()
+
+        data class SendTransactionFails(val errorMessage: String) : Dialog()
         object Hide : Dialog()
     }
-    data class SetWarnings(val warningList: List<WarningMessage>) : SendAction()
+
+    sealed class Warnings : SendAction() {
+        object Update : SendAction()
+        data class Set(val warningList: List<WarningMessage>) : SendAction()
+    }
 }

@@ -29,6 +29,7 @@ import java.math.BigDecimal
 class WarningsMiddleware {
     fun handle(action: WalletAction.Warnings, globalState: GlobalState?) {
         when (action) {
+            WalletAction.Warnings.Update -> setWarningMessages()
             is WalletAction.Warnings.CheckIfNeeded -> {
                 showCardWarningsIfNeeded(globalState)
                 val readyToShow = preferencesStorage.appRatingLaunchObserver.isReadyToShow()
@@ -76,7 +77,7 @@ class WarningsMiddleware {
                     addWarningMessage(WarningMessagesManager.onlineVerificationFailed())
                 }
             }
-            updateWarningMessages()
+            setWarningMessages()
         }
     }
 
@@ -130,11 +131,15 @@ class WarningsMiddleware {
 
     private fun addWarningMessage(warning: WarningMessage, autoUpdate: Boolean = false) {
         store.state.globalState.warningManager?.addWarning(warning)
-        if (autoUpdate) updateWarningMessages()
+        if (autoUpdate) setWarningMessages()
     }
 
-    private fun updateWarningMessages() {
-        val warningManager = store.state.globalState.warningManager ?: return
-        store.dispatch(WalletAction.Warnings.SetWarnings(warningManager.getWarnings(WarningMessage.Location.MainScreen)))
+    private fun setWarningMessages() {
+        store.dispatch(WalletAction.Warnings.Set(getWarnings()))
+    }
+
+    private fun getWarnings(): List<WarningMessage> {
+        val warningManager = store.state.globalState.warningManager ?: return emptyList()
+        return warningManager.getWarnings(WarningMessage.Location.MainScreen, store.state.walletState.blockchains)
     }
 }
