@@ -145,10 +145,11 @@ private fun sendTransaction(
                         is Throwable -> {
                             val throwable = result.error as Throwable
                             val message = throwable.message
+                            val infoHolder = store.state.globalState.feedbackManager?.infoHolder
                             when {
                                 message == null -> {
                                     dispatch(SendAction.SendError(TapError.UnknownError))
-                                    updateFeedbackManager(walletManager, amountToSend, feeAmount, destinationAddress, card)
+                                    infoHolder?.updateOnSendError(walletManager.wallet, amountToSend, feeAmount, destinationAddress)
                                     dispatch(SendAction.Dialog.SendTransactionFails("unknown error"))
                                 }
                                 message.contains("50002") -> {
@@ -163,7 +164,7 @@ private fun sendTransaction(
                                     Timber.e(throwable)
                                     FirebaseCrashlytics.getInstance().recordException(throwable)
                                     dispatch(SendAction.SendError(TapError.CustomError(message)))
-                                    updateFeedbackManager(walletManager, amountToSend, feeAmount, destinationAddress, card)
+                                    infoHolder?.updateOnSendError(walletManager.wallet, amountToSend, feeAmount, destinationAddress)
                                     dispatch(SendAction.Dialog.SendTransactionFails(message))
                                 }
                             }
@@ -174,29 +175,6 @@ private fun sendTransaction(
             dispatch(SendAction.ChangeSendButtonState(SendButtonState.ENABLED))
         }
     }
-}
-
-private fun updateFeedbackManager(
-        walletManager: WalletManager,
-        amountToSend: Amount,
-        feeAmount: Amount,
-        destinationAddress: String,
-        card: Card,
-) {
-    val infoHolder = store.state.globalState.feedbackManager?.infoHolder ?: return
-    val amountState = store.state.sendState.amountState
-
-    infoHolder.cardId = card.cardId
-    infoHolder.blockchain = walletManager.wallet.blockchain
-    infoHolder.sourceAddress = walletManager.wallet.address
-    infoHolder.destinationAddress = destinationAddress
-    infoHolder.amount = amountToSend.value?.stripZeroPlainString() ?: "0"
-    infoHolder.fee = feeAmount.value?.stripZeroPlainString() ?: "0"
-    infoHolder.cardFirmwareVersion = card.firmwareVersion.version
-    if (amountState.typeOfAmount is AmountType.Token) {
-        infoHolder.token = amountState.amountToExtract?.currencySymbol ?: ""
-    }
-//    infoHolder.transactionHex = ""
 }
 
 fun extractErrorsForAmountField(errors: EnumSet<TransactionError>): EnumSet<TransactionError> {
