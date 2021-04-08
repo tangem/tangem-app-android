@@ -10,22 +10,18 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.transition.TransitionInflater
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.tap.MainActivity
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.global.StateDialog
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.wallet.models.PendingTransaction
-import com.tangem.tap.features.wallet.redux.WalletAction
-import com.tangem.tap.features.wallet.redux.WalletData
-import com.tangem.tap.features.wallet.redux.WalletDialog
-import com.tangem.tap.features.wallet.redux.WalletState
+import com.tangem.tap.features.wallet.redux.*
 import com.tangem.tap.features.wallet.ui.adapters.PendingTransactionsAdapter
 import com.tangem.tap.features.wallet.ui.dialogs.AmountToSendDialog
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fragment_details_twin_cards.*
-import kotlinx.android.synthetic.main.fragment_wallet.*
 import kotlinx.android.synthetic.main.fragment_wallet_details.*
-import kotlinx.android.synthetic.main.fragment_wallet_details.rv_pending_transaction
 import kotlinx.android.synthetic.main.fragment_wallet_details.toolbar
 import kotlinx.android.synthetic.main.item_currency_wallet.view.*
 import kotlinx.android.synthetic.main.layout_balance_error.*
@@ -105,6 +101,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
 
         showPendingTransactionsIfPresent(selectedWallet.pendingTransactions)
         setupAddressCard(selectedWallet)
+        setupNoInternetHandling(state)
         setupBalanceData(selectedWallet.currencyData)
 
         btn_confirm.isEnabled = selectedWallet.mainButton.enabled
@@ -180,6 +177,20 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
                         requireContext()))
             }
             iv_qr_code.setImageBitmap(state.walletAddresses.selectedAddress.shareUrl.toQrCode())
+        }
+    }
+
+    private fun setupNoInternetHandling(state: WalletState) {
+        if (state.state == ProgressState.Error) {
+            if (state.error == ErrorType.NoInternetConnection) {
+                srl_wallet_details?.isRefreshing = false
+                (activity as? MainActivity)?.showSnackbar(
+                        text = R.string.wallet_notification_no_internet,
+                        buttonTitle = R.string.common_retry
+                ) { store.dispatch(WalletAction.LoadData) }
+            }
+        } else {
+            (activity as? MainActivity)?.dismissSnackbar()
         }
     }
 
