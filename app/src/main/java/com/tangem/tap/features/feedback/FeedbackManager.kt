@@ -12,7 +12,13 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.tangem.Log
 import com.tangem.TangemSdkLogger
+import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.Wallet
+import com.tangem.commands.common.card.Card
+import com.tangem.tap.common.extensions.stripZeroPlainString
+import com.tangem.tap.store
 import timber.log.Timber
 import java.io.File
 import java.io.FileWriter
@@ -114,31 +120,86 @@ class TangemLogCollector : TangemSdkLogger {
 }
 
 class AdditionalEmailInfo {
-    var cardId: String = ""
-    var cardFirmwareVersion: String = ""
-    var blockchain: Blockchain = Blockchain.Unknown
+    class EmailWalletInfo(
+            var blockchain: Blockchain = Blockchain.Unknown,
+            var address: String = "",
+            var explorerLink: String = "",
+            //    var outputsCount: String = ""
+            //    var transactionHex: String = ""
+    )
 
-    var phoneModel: String = Build.MODEL
-    var osVersion: String = Build.VERSION.SDK_INT.toString()
     var appVersion: String = ""
 
-    var token: String = ""
-    var sourceAddress: String = ""
+    // card
+    var cardId: String = ""
+    var cardFirmwareVersion: String = ""
+
+    // wallets
+    internal val walletsInfo = mutableListOf<EmailWalletInfo>()
+    internal var onSendErrorWalletInfo: EmailWalletInfo? = null
+    var signedHashesCount: String = ""
+
+    // device
+    var phoneModel: String = Build.MODEL
+    var osVersion: String = Build.VERSION.SDK_INT.toString()
+
+    // send error
     var destinationAddress: String = ""
     var amount: String = ""
     var fee: String = ""
+    var token: String = ""
 
-    //    var transactionHex: String = ""
-    var signedHashesCount: String = ""
-    var explorerLink: String = ""
-//    var outputsCount: String = ""
-
-    fun updateAppVersion(context: Context) {
+    fun setAppVersion(context: Context) {
         try {
             val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
             appVersion = pInfo.versionName
         } catch (e: PackageManager.NameNotFoundException) {
             e.printStackTrace()
+        }
+    }
+
+    fun setCardInfo(card: Card) {
+        cardId = card.cardId
+        cardFirmwareVersion = card.firmwareVersion.version
+        signedHashesCount = card.walletSignedHashes?.toString() ?: "0"
+    }
+
+    fun setWalletsInfo(wallets: List<Wallet>) {
+        walletsInfo.clear()
+        wallets.forEach { walletsInfo.add(EmailWalletInfo(it.blockchain, getAddress(it), getExploreUri(it))) }
+    }
+
+    fun updateOnSendError(wallet: Wallet, amountToSend: Amount, feeAmount: Amount, destinationAddress: String) {
+        val amountState = store.state.sendState.amountState
+        onSendErrorWalletInfo = EmailWalletInfo(wallet.blockchain, getAddress(wallet), getExploreUri(wallet))
+
+        this.destinationAddress = destinationAddress
+        amount = amountToSend.value?.stripZeroPlainString() ?: "0"
+        fee = feeAmount.value?.stripZeroPlainString() ?: "0"
+        if (amountState.typeOfAmount is AmountType.Token) {
+            token = amountState.amountToExtract?.currencySymbol ?: ""
+        }
+    }
+
+    private fun getAddress(wallet: Wallet): String {
+        return if (wallet.addresses.size == 1) {
+            wallet.address
+        } else {
+            val addresses = wallet.addresses.joinToString(", ") {
+                "${it.type.javaClass.simpleName} - ${it.value}"
+            }
+            "Multiple address: $addresses"
+        }
+    }
+
+    private fun getExploreUri(wallet: Wallet): String {
+        return if (wallet.addresses.size == 1) {
+            wallet.getExploreUrl(wallet.address)
+        } else {
+            val links = wallet.addresses.joinToString(", ") {
+                "${it.type.javaClass.simpleName} - ${wallet.getExploreUrl(it.value)}"
+            }
+            "Multiple explorers links: $links"
         }
     }
 }
@@ -160,9 +221,10 @@ class RateCanBeBetterEmail : EmailData {
     override val mainMessage: String = "Tell us what functions you are missing, and we will try to help you."
 
     override fun createOptionalMessage(infoHolder: AdditionalEmailInfo): String {
+        val walletInfo = infoHolder.walletsInfo[0]
         return StringBuilder().apply {
             appendKeyValue("Card ID", infoHolder.cardId)
-            appendKeyValue("Blockchain", infoHolder.blockchain.fullName)
+            appendKeyValue("Blockchain", walletInfo.blockchain.fullName)
             appendKeyValue("Phone model", infoHolder.phoneModel)
             appendKeyValue("OS version", infoHolder.osVersion)
             appendKeyValue("App version", infoHolder.appVersion)
@@ -186,12 +248,13 @@ class SendTransactionFailedEmail(private val error: String) : EmailData {
     override val subject: String = "Can’t send a transaction"
     override val mainMessage: String = "Please tell us more about your issue. Every small detail can help."
     override fun createOptionalMessage(infoHolder: AdditionalEmailInfo): String {
+        val walletInfo = infoHolder.onSendErrorWalletInfo ?: AdditionalEmailInfo.EmailWalletInfo()
         return StringBuilder().apply {
             appendKeyValue("Error", error)
             appendKeyValue("Card ID", infoHolder.cardId)
-            appendKeyValue("Blockchain", infoHolder.blockchain.fullName)
+            appendKeyValue("Blockchain", walletInfo.blockchain.fullName)
             appendKeyValue("Token", infoHolder.token)
-            appendKeyValue("Source address", infoHolder.sourceAddress)
+            appendKeyValue("Source address", walletInfo.address)
             appendKeyValue("Destination address", infoHolder.destinationAddress)
             appendKeyValue("Amount", infoHolder.amount)
             appendKeyValue("Fee", infoHolder.fee)
@@ -208,17 +271,20 @@ class FeedbackEmail : EmailData {
     override val subject: String = "Tangem Tap feedback"
     override val mainMessage: String = "Hi Tangem,"
     override fun createOptionalMessage(infoHolder: AdditionalEmailInfo): String {
-        return StringBuilder().apply {
-            appendKeyValue("Card ID", infoHolder.cardId)
-            appendKeyValue("Firmware version", infoHolder.cardFirmwareVersion)
-            appendKeyValue("Signed hashes", infoHolder.signedHashesCount)
-            appendKeyValue("Blockchain", infoHolder.blockchain.fullName)
-            appendKeyValue("Wallet address", infoHolder.sourceAddress)
-            appendKeyValue("Explorer link", infoHolder.explorerLink)
+        val builder = StringBuilder()
+        builder.appendKeyValue("Card ID", infoHolder.cardId)
+        builder.appendKeyValue("Firmware version", infoHolder.cardFirmwareVersion)
+        builder.appendKeyValue("Signed hashes", infoHolder.signedHashesCount)
+
+        infoHolder.walletsInfo.forEach {
+            builder.appendKeyValue("Blockchain", it.blockchain.fullName)
+            builder.appendKeyValue("Wallet address", it.address)
+            builder.appendKeyValue("Explorer link", it.explorerLink)
+        }
 //            appendKeyValue("Outputs count", infoHolder.outputsCount)
-            appendKeyValue("Phone model", infoHolder.phoneModel)
-            appendKeyValue("OS version", infoHolder.osVersion)
-        }.toString()
+        builder.appendKeyValue("Phone model", infoHolder.phoneModel)
+        builder.appendKeyValue("OS version", infoHolder.osVersion)
+        return builder.toString()
     }
 }
 
