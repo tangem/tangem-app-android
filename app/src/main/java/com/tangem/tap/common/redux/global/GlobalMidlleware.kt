@@ -3,7 +3,6 @@ package com.tangem.tap.common.redux.global
 import com.tangem.TangemSdkError
 import com.tangem.common.CompletionResult
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.send.redux.SendAction
@@ -45,10 +44,8 @@ val globalMiddleware: Middleware<AppState> = { dispatch, appState ->
                                 store.dispatch(WalletAction.Warnings.CheckHashesCount.SaveCardId)
                             }
 
-                            store.dispatch(WalletAction.Warnings.SetWarnings(
-                                    it.getWarnings(WarningMessage.Location.MainScreen)))
-                            store.dispatch(SendAction.SetWarnings(
-                                    it.getWarnings(WarningMessage.Location.SendScreen)))
+                            store.dispatch(WalletAction.Warnings.Update)
+                            store.dispatch(SendAction.Warnings.Update)
                         }
                     }
                 }
