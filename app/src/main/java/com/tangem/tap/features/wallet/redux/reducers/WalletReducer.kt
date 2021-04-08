@@ -294,16 +294,10 @@ fun createAddressList(wallet: Wallet?, walletAddresses: WalletAddresses? = null)
 
 private fun handleCheckSignedHashesActions(action: WalletAction.Warnings, state: WalletState): WalletState {
     return when (action) {
-        WalletAction.Warnings.CheckHashesCount.CheckHashesCountOnline -> state
         WalletAction.Warnings.CheckHashesCount.ConfirmHashesCount -> state.copy(hashesCountVerified = true)
         WalletAction.Warnings.CheckHashesCount.NeedToCheckHashesCountOnline -> state.copy(hashesCountVerified = false)
-        WalletAction.Warnings.CheckHashesCount.SaveCardId -> state
-        is WalletAction.Warnings.SetWarnings -> state.copy(mainWarningsList = action.warningList)
-        WalletAction.Warnings.CheckIfNeeded -> state
-        WalletAction.Warnings.AppRating -> state
-        WalletAction.Warnings.CheckHashesCount -> state
-        WalletAction.Warnings.AppRating.RemindLater -> state
-        WalletAction.Warnings.AppRating.SetNeverToShow -> state
+        is WalletAction.Warnings.Set -> state.copy(mainWarningsList = action.warningList)
+        else -> state
     }
 }
 
