@@ -57,9 +57,16 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
         is WalletAction.LoadData.Failure -> {
             when (action.error) {
                 is TapError.NoInternetConnection -> {
+                    val wallets = newState.wallets
+                            .map {
+                                it.copy(currencyData = it.currencyData.copy(
+                                        status = BalanceStatus.Unreachable
+                                ))
+                            }
                     newState = newState.copy(
                             state = ProgressState.Error,
                             error = ErrorType.NoInternetConnection,
+                            wallets = wallets
                     )
                 }
                 is TapError.UnknownBlockchain -> {
@@ -100,7 +107,7 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                 )
             } else {
                 val walletManager = newState.getWalletManager(action.currency) ?: return newState
-                val currencies = listOf(walletManager.wallet.blockchain.currency + walletManager.presetTokens.map { it.symbol })
+                val currencies = listOf(walletManager.wallet.blockchain.currency) + walletManager.presetTokens.map { it.symbol }
                 val newWallets = newState.wallets.filter { currencies.contains(it.currencyData.currencySymbol) }
                         .map { wallet ->
                             wallet.copy(
@@ -146,22 +153,35 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
             )
         }
         is WalletAction.LoadWallet.Failure -> {
+            val message = if (newState.error == ErrorType.NoInternetConnection) {
+                null
+            } else {
+                action.errorMessage
+            }
             val walletData = newState.getWalletData(action.wallet.blockchain.currency)
             val newWalletData = walletData?.copy(
                     currencyData = walletData.currencyData.copy(
                             status = BalanceStatus.Unreachable,
-                            errorMessage = action.errorMessage
+                            errorMessage = message
                     ),
                     topUpState = TopUpState(false)
             )
-            val wallets = newState.replaceWalletInWallets(newWalletData)
-            val state = if (wallets.any { it.currencyData.status == BalanceStatus.Loading }) {
+            val tokenWallets = action.wallet.getTokens()
+                    .mapNotNull { newState.getWalletData(it.symbol) }
+                    .map {
+                        it.copy(currencyData = it.currencyData.copy(
+                                status = BalanceStatus.Unreachable, errorMessage = message
+                        ))
+                    }
+            val wallets = newState.replaceSomeWallets(listOfNotNull(newWalletData) + tokenWallets)
+
+            val progressState = if (wallets.any { it.currencyData.status == BalanceStatus.Loading }) {
                 ProgressState.Loading
             } else {
                 ProgressState.Done
             }
             newState = newState.copy(
-                    state = state, wallets = wallets
+                    state = progressState, wallets = wallets
             )
         }
         is WalletAction.SetArtworkId -> {

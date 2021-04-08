@@ -6,7 +6,9 @@ import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.os.Bundle
 import android.util.Log
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.snackbar.Snackbar
 import com.tangem.CardFilter
 import com.tangem.Config
 import com.tangem.TangemSdk
@@ -52,6 +54,9 @@ private fun initCoroutineExceptionHandler(): CoroutineExceptionHandler {
 }
 
 class MainActivity : AppCompatActivity() {
+
+    private var snackbar: Snackbar? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -103,5 +108,22 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         store.dispatch(NavigationAction.ActivityDestroyed)
         super.onDestroy()
+    }
+
+    fun showSnackbar(text: Int, buttonTitle: Int? = null, action: View.OnClickListener? = null) {
+        if (snackbar != null) return
+
+        snackbar = Snackbar.make(
+                fragment_container, getString(text), Snackbar.LENGTH_INDEFINITE
+        )
+        if (buttonTitle != null && action != null) {
+            snackbar?.setAction(getString(buttonTitle), action)
+        }
+        snackbar?.show()
+    }
+
+    fun dismissSnackbar() {
+        snackbar?.dismiss()
+        snackbar = null
     }
 }
