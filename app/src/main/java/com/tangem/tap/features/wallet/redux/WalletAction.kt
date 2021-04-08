@@ -71,7 +71,8 @@ sealed class WalletAction : Action {
         }
 
         object CheckIfNeeded : Warnings()
-        data class SetWarnings(val warningList: List<WarningMessage>) : Warnings()
+        object Update : Warnings()
+        data class Set(val warningList: List<WarningMessage>) : Warnings()
 
         object AppRating : Warnings() {
             object SetNeverToShow : Warnings()
