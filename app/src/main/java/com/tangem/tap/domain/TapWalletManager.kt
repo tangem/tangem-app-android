@@ -85,9 +85,9 @@ class TapWalletManager {
             FirebaseAnalyticsHandler.triggerEvent(AnalyticsEvent.CARD_IS_SCANNED, data.card)
         }
         TapWorkarounds.updateCard(data.card)
+        store.state.globalState.feedbackManager?.infoHolder?.setCardInfo(data.card)
         store.state.globalState.warningManager?.setBlockchain(data.walletManager?.wallet?.blockchain)
         updateConfigManager(data)
-        updateFeedbackManager(data)
 
         withContext(Dispatchers.Main) {
             store.dispatch(WalletAction.ResetState)
@@ -123,19 +123,6 @@ class TapWalletManager {
             configManager?.resetToDefault(ConfigManager.isSendingToPayIdEnabled)
             configManager?.resetToDefault(ConfigManager.isTopUpEnabled)
         }
-    }
-
-    private fun updateFeedbackManager(data: ScanNoteResponse) {
-        val card = data.card
-        val wallet = data.walletManager?.wallet ?: return
-        val infoHolder = store.state.globalState.feedbackManager?.infoHolder ?: return
-
-        infoHolder.cardId = card.cardId
-        infoHolder.cardFirmwareVersion = card.firmwareVersion.version
-        infoHolder.signedHashesCount = card.walletSignedHashes?.toString() ?: "0"
-        infoHolder.sourceAddress = wallet.address
-        infoHolder.explorerLink = wallet.getExploreUrl(wallet.address)
-        infoHolder.blockchain = wallet.blockchain
     }
 
     suspend fun loadData(data: ScanNoteResponse) {
