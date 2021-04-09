@@ -6,6 +6,7 @@ import com.tangem.common.extensions.isZero
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.send.redux.*
 import com.tangem.tap.features.send.redux.states.MainCurrencyType
+import com.tangem.tap.features.send.redux.states.SendState
 import org.rekotlin.Action
 import java.math.BigDecimal
 
@@ -43,6 +44,7 @@ class AmountMiddleware {
         }
 
         dispatch(AmountAction.SetAmount(inputValueCrypto, true))
+        dispatch(AmountActionUi.CheckAmountToSend)
         dispatch(FeeAction.RequestFee)
     }
 
@@ -81,18 +83,15 @@ class AmountMiddleware {
         val sendState = appState?.sendState ?: return
 
         dispatch(AmountAction.SetAmount(sendState.amountState.balanceCrypto, false))
-
-        if (sendState.addressPayIdState.destinationWalletAddress == null || sendState.addressPayIdState.error != null) {
-            // if the destination address is empty or it has an error - prevent requesting the fee
-            return
-        }
-
-        dispatch(FeeAction.RequestFee)
-        if (!sendState.amountState.isCoinAmount()) return
-
-        dispatch(FeeAction.ChangeLayoutVisibility(main = true, controls = true, chipGroup = true))
-        dispatch(FeeActionUi.ChangeIncludeFee(true))
         dispatch(AmountActionUi.CheckAmountToSend)
+
+        if (SendState.isReadyToRequestFee()) {
+            dispatch(FeeAction.RequestFee)
+            if (!sendState.amountState.isCoinAmount()) return
+
+            dispatch(FeeAction.ChangeLayoutVisibility(main = true, controls = true, chipGroup = true))
+            dispatch(FeeActionUi.ChangeIncludeFee(true))
+        }
     }
 
     private fun toggleMainCurrency(appState: AppState?, dispatch: (Action) -> Unit) {
