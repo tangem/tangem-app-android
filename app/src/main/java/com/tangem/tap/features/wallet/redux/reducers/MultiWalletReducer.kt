@@ -18,7 +18,7 @@ class MultiWalletReducer {
         return when (action) {
             is WalletAction.MultiWallet.AddWalletManagers -> {
                 state.copy(
-                        walletManagers = action.walletManagers
+                        walletManagers =   state.walletManagers + action.walletManagers
                 )
             }
             is WalletAction.MultiWallet.AddBlockchains -> {
@@ -160,6 +160,8 @@ class MultiWalletReducer {
             is WalletAction.MultiWallet.SetPrimaryToken ->
                 state.copy(primaryToken = action.token)
             is WalletAction.MultiWallet.FindTokensInUse -> state
+            is WalletAction.MultiWallet.FindBlockchainsInUse -> state
+            is WalletAction.MultiWallet.SaveCurrencies -> state
         }
     }
 }
