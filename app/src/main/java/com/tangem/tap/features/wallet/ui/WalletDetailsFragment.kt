@@ -205,10 +205,12 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
                 showStatus(R.id.tv_status_loading)
                 showBalanceWithoutToken(data, false)
             }
-            BalanceStatus.VerifiedOnline, BalanceStatus.TransactionInProgress -> {
+            BalanceStatus.VerifiedOnline, BalanceStatus.SameCurrencyTransactionInProgress,
+            BalanceStatus.TransactionInProgress -> {
                 l_balance.show()
                 l_balance_error.hide()
-                val statusView = if (data.status == BalanceStatus.VerifiedOnline) {
+                val statusView = if (data.status == BalanceStatus.VerifiedOnline ||
+                        data.status == BalanceStatus.SameCurrencyTransactionInProgress) {
                     R.id.tv_status_verified
                 } else {
                     tv_status_error.text =
@@ -245,6 +247,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
                         )
             }
         }
+        card_pending_transaction_warning.show(data.status == BalanceStatus.SameCurrencyTransactionInProgress)
     }
 
     private fun showStatus(@IdRes viewRes: Int) {
