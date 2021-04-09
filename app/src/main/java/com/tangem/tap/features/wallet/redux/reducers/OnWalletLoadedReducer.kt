@@ -65,9 +65,15 @@ class OnWalletLoadedReducer {
 
         val tokens = wallet.getTokens().mapNotNull { token ->
             val tokenWalletData = walletState.getWalletData(token.symbol)
+            val tokenPendingTransactions = pendingTransactions.filter { it.currency == token.symbol }
+            val tokenBalanceStatus = when {
+                tokenPendingTransactions.isNotEmpty() -> BalanceStatus.TransactionInProgress
+                pendingTransactions.isNotEmpty() -> BalanceStatus.SameCurrencyTransactionInProgress
+                else -> BalanceStatus.VerifiedOnline
+            }
             tokenWalletData?.copy(
                     currencyData = tokenWalletData.currencyData.copy(
-                            status = balanceStatus,
+                            status = tokenBalanceStatus,
                             amount = wallet.getTokenAmount(token)?.value?.toFormattedCurrencyString(
                                     token.decimals, token.symbol
                             ),
@@ -76,7 +82,7 @@ class OnWalletLoadedReducer {
                                         ?.toFiatString(it, fiatCurrencySymbol)
                             }
                     ),
-                    pendingTransactions = pendingTransactions.removeUnknownTransactions(),
+                    pendingTransactions = tokenPendingTransactions.removeUnknownTransactions(),
                     mainButton = WalletMainButton.SendButton(sendButtonEnabled)
             )
         }
