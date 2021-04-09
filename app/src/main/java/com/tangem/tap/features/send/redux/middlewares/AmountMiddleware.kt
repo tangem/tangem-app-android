@@ -78,11 +78,17 @@ class AmountMiddleware {
     }
 
     private fun setMaxAmount(appState: AppState?, dispatch: (Action) -> Unit) {
-        val amountState = appState?.sendState?.amountState ?: return
+        val sendState = appState?.sendState ?: return
 
-        dispatch(AmountAction.SetAmount(amountState.balanceCrypto, false))
+        dispatch(AmountAction.SetAmount(sendState.amountState.balanceCrypto, false))
+
+        if (sendState.addressPayIdState.destinationWalletAddress == null || sendState.addressPayIdState.error != null) {
+            // if the destination address is empty or it has an error - prevent requesting the fee
+            return
+        }
+
         dispatch(FeeAction.RequestFee)
-        if (!amountState.isCoinAmount()) return
+        if (!sendState.amountState.isCoinAmount()) return
 
         dispatch(FeeAction.ChangeLayoutVisibility(main = true, controls = true, chipGroup = true))
         dispatch(FeeActionUi.ChangeIncludeFee(true))
