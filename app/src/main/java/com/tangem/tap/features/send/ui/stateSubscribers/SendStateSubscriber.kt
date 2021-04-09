@@ -119,15 +119,15 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
         when (state.sendButtonState) {
             SendButtonState.ENABLED -> {
                 fg.btnSend.isEnabled = true
-                sendFragment.sendBtn.setState(ProgressState.None(), true)
+                sendFragment.sendBtn.changeState(ProgressState.None)
             }
             SendButtonState.DISABLED -> {
                 fg.btnSend.isEnabled = false
-                sendFragment.sendBtn.setState(ProgressState.None(), true)
+                sendFragment.sendBtn.changeState(ProgressState.None)
             }
             SendButtonState.PROGRESS -> {
                 fg.btnSend.isEnabled = true
-                sendFragment.sendBtn.setState(ProgressState.Progress(), true)
+                sendFragment.sendBtn.changeState(ProgressState.Progress())
             }
         }
 
