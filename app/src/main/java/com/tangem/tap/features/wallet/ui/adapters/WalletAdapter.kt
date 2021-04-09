@@ -100,7 +100,7 @@ class WalletAdapter
                 view.iv_currency.setImageResource(R.drawable.shape_circle)
             }
             when (wallet.currencyData.status) {
-                BalanceStatus.VerifiedOnline -> hideWarning()
+                BalanceStatus.VerifiedOnline, BalanceStatus.SameCurrencyTransactionInProgress -> hideWarning()
                 BalanceStatus.Loading -> {
                     hideWarning()
                     if (wallet.currencyData.amount == null) {
