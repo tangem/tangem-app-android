@@ -120,15 +120,17 @@ class MultiWalletReducer {
                         } ?: emptyList()
 
                 val sendButtonEnabled = action.amount.value?.isZero() == false && pendingTransactions.isEmpty()
-                val balanceStatus = if (pendingTransactions.isNotEmpty()) {
-                    BalanceStatus.TransactionInProgress
-                } else {
-                    BalanceStatus.VerifiedOnline
+                val tokenPendingTransactions = pendingTransactions
+                        .filter { it.currency ==  action.amount.currencySymbol }
+                val tokenBalanceStatus = when {
+                    tokenPendingTransactions.isNotEmpty() -> BalanceStatus.TransactionInProgress
+                    pendingTransactions.isNotEmpty() -> BalanceStatus.SameCurrencyTransactionInProgress
+                    else -> BalanceStatus.VerifiedOnline
                 }
                 val tokenWalletData = state.getWalletData(action.amount.currencySymbol)
                 val newTokenWalletData = tokenWalletData?.copy(
                         currencyData = tokenWalletData.currencyData.copy(
-                                status = balanceStatus,
+                                status = tokenBalanceStatus,
                                 amount = action.amount.value?.toFormattedCurrencyString(
                                         action.amount.decimals, action.amount.currencySymbol
                                 ),
