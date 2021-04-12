@@ -100,14 +100,12 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
                 .filter { store.state.sendState.addressPayIdState.viewFieldValue.value != it }
                 .onEach {
                     store.dispatch(AddressPayIdActionUi.HandleUserInput(it))
-                    store.dispatch(FeeAction.RequestFee)
                 }
                 .launchIn(mainScope)
 
         imvPaste.setOnClickListener {
             store.dispatch(PasteAddressPayId(requireContext().getFromClipboard()?.toString() ?: ""))
             store.dispatch(TruncateOrRestore(!etAddressOrPayId.isFocused))
-            store.dispatch(FeeAction.RequestFee)
         }
         imvQrCode.setOnClickListener {
             startActivityForResult(
@@ -126,12 +124,6 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
                 }
                 .onEach { store.dispatch(TransactionExtrasAction.XlmMemo.HandleUserInput(it)) }
                 .launchIn(mainScope)
-
-//        groupMemo.setOnCheckedChangeListener { group, checkedId ->
-//            if (checkedId == -1) return@setOnCheckedChangeListener
-//
-//            store.dispatch(TransactionExtrasAction.XlmMemo.ChangeSelectedMemo(MemoUiHelper.toType(checkedId)))
-//        }
 
         etDestinationTag.inputtedTextAsFlow()
                 .debounce(400)
@@ -155,7 +147,6 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         imvQrCode.postDelayed({
             store.dispatch(PasteAddressPayId(scannedCode))
             store.dispatch(TruncateOrRestore(!etAddressOrPayId.isFocused))
-            store.dispatch(FeeAction.RequestFee)
         }, 200)
     }
 
@@ -177,7 +168,6 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
             etAmountToSend.clearFocus()
             etAmountToSend.postDelayed(200) { etAmountToSend.hideSoftKeyboard() }
             store.dispatch(SetMaxAmount)
-            store.dispatch(CheckAmountToSend)
         }
         var snackbarControlledByChangingFocus = false
         keyboardObserver = KeyboardObserver(requireActivity())
@@ -230,6 +220,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         flExpandCollapse.setOnClickListener {
             store.dispatch(ToggleControlsVisibility)
         }
+        chipGroup.check(FeeUiHelper.toId(FeeType.NORMAL))
         chipGroup.setOnCheckedChangeListener { group, checkedId ->
             if (checkedId == -1) return@setOnCheckedChangeListener
 
