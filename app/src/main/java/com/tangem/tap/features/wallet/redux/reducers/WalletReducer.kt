@@ -125,14 +125,11 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                 val wallets = newState.replaceSomeWallets(newWallets)
                 newState = newState.copy(wallets = wallets)
             }
-
         }
         is WalletAction.LoadWallet.Success -> newState = onWalletLoadedReducer.reduce(action.wallet, newState)
         is WalletAction.UpdateWallet.Success -> {
             newState = onWalletLoadedReducer.reduce(action.wallet, newState)
-//            newState = newState.copy(updatingWallet = newState.pendingTransactions.isNotEmpty())
         }
-
         is WalletAction.LoadWallet.NoAccount -> {
             val walletData = newState.getWalletData(action.wallet.blockchain.currency)?.copy(
                     currencyData = BalanceWidgetData(
@@ -193,21 +190,6 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
             newState = newState.copy(cardImage = cardImage)
         }
 
-//        is WalletAction.UpdateWallet -> {
-//            if (store.state.walletState.state == ProgressState.Done) {
-//                newState = newState.copy(updatingWallet = true)
-//            }
-//        }
-//        is WalletAction.UpdateWallet.ScheduleUpdatingWallet ->
-//            newState = newState.copy(updatingWallet = true)
-
-//        is WalletAction.UpdateWallet.Failure -> newState = newState.copy(updatingWallet = false)
-//        is WalletAction.LoadFiatRate -> {
-//            newState.copy(currencyData = newState.currencyData.copy(
-//                    fiatAmount = null,
-//                    token = newState.currencyData.token?.copy(fiatAmount = null))
-//            )
-//        }
         is WalletAction.LoadFiatRate.Success ->
             newState = setNewFiatRate(action.fiatRate, state.globalState.appCurrency, newState)
         is WalletAction.LoadArtwork -> {
