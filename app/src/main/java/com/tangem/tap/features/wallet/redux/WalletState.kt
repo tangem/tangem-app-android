@@ -60,7 +60,7 @@ data class WalletState(
             if (primaryWalletManager?.presetTokens?.find { it.symbol == currencyName } != null) {
                 primaryWalletManager
             } else {
-                null
+                ethereumWalletManager
             }
         }
     }
