@@ -31,13 +31,77 @@ this wallet.
 
     <string name="notification_twins_recreate_success" translatable="false">The twin address was successfully created</string>
 
+    //Common
     <string name="common_start" translatable="false">Start</string>
     <string name="common_back" translatable="false">Back</string>
+    <string name="common_add" translatable="false">Add</string>
+    <string name="common_remove" translatable="false">Remove</string>
+    <string name="common_search" translatable="false">Search</string>
+
 
     <string name="send_extras_hint_memo" translatable="false">Memo</string>
     <string name="send_extras_hint_destination_tag" translatable="false">Destination tag</string>
     <string name="send_error_invalid_destination_tag" translatable="false">Invalid destination tag. It won\'t be added to the transaction</string>
     <string name="send_error_invalid_memo_id" translatable="false">Invalid Memo ID. It won\'t be added to the transaction</string>
+
+    <string name="details_section_title_app" translatable="false">App</string>
+    <string name="details_row_title_send_feedback" translatable="false">Send feedback</string>
+    <string name="alert_app_feedback_sent_title" translatable="false">Sent successfully</string>
+    <string name="alert_app_feedback_sent_message" translatable="false">Thank you for your feedback</string>
+    <string name="alert_negative_app_rate_sent_title" translatable="false">Your suggestions were sent</string>
+    <string name="alert_negative_app_rate_sent_message" translatable="false">Thank your for your feedback. We will response as soon as possible</string>
+    <string name="alert_failed_to_send_email_title" translatable="false">Failed to send email</string>
+    <string name="alert_failed_to_send_email_message" translatable="false">Reason: %s</string>
+    <string name="alert_failed_to_send_transaction_title" translatable="false">Can’t send a transaction</string>
+    <string name="alert_failed_to_send_transaction_message" translatable="false">Reason: %s. Do you want to send feedback?</string>
+    <string name="alert_troubleshooting_scan_card_title" translatable="false">Are you having difficulty scanning your card?</string>
+    <string name="alert_troubleshooting_scan_card_message" translatable="false">Please try to tap the card exactly as shown in the animation or request support.</string>
+    <string name="alert_button_try_again" translatable="false">Try again</string>
+    <string name="alert_button_request_support" translatable="false">Request support</string>
+    <string name="alert_button_send_feedback" translatable="false">Send feedback</string>
+    <string name="warning_button_really_cool" translatable="false">Really cool!</string>
+    <string name="warning_button_can_be_better" translatable="false">Can be better</string>
+    <string name="warning_rate_app_title" translatable="false">One question</string>
+    <string name="warning_rate_app_message" translatable="false">How do you like Tangem?</string>
+
+    <string name="custom_token_creation_error_empty_field" translatable="false">All fields are required</string>
+
+    //Manage tokens
+    <string name="manage_tokens_no_tokens" translatable="false">No tokens yet</string>
+    <string name="manage_tokens_section_title_added_tokens" translatable="false">Added tokens</string>
+    <string name="manage_tokens_alert_remove_token_title" translatable="false">Remove %s token</string>
+    <string name="manage_tokens_alert_remove_token_message" translatable="false">Are you sure you want to remove this token?</string>
+    <string name="add_tokens_title" translatable="false">Add Tokens</string>
+    <string name="add_token_button" translatable="false">Add Token</string>
+    <string name="manage_tokens_title" translatable="false">Manage Tokens</string>
+    <string name="add_custom" translatable="false">Add Custom</string>
+    <string name="add_token_section_title_custom_tokens" translatable="false">Custom tokens</string>
+    <string name="add_token_section_title_popular_tokens" translatable="false">Popular tokens</string>
+    <string name="add_custom_token_title" translatable="false">Add Custom Token</string>
+    <string name="custom_token_creation_error_empty_fields" translatable="false">Please, fill all fields</string>
+    <string name="custom_token_creation_error_wrong_decimals" translatable="false">Entered number is not a valid decimals number</string>
+    <string name="custom_token_name_input_title" translatable="false">Name</string>
+    <string name="custom_token_token_symbol_input_title" translatable="false">Token symbol</string>
+    <string name="custom_token_contract_address_input_title" translatable="false">Contract address</string>
+    <string name="custom_token_decimals_input_title" translatable="false">Decimals</string>
+    <string name="custom_token_name_input_placeholder" translatable="false">ex. USD Coin</string>
+    <string name="custom_token_token_symbol_input_placeholder" translatable="false">ex. USDC</string>
+    <string name="add_token_added" translatable="false">Added</string>
+
+    //Details
+    <string name="details_section_title_blockchain" translatable="false">Blockchain</string>
+    <string name="details_row_title_manage_tokens" translatable="false">Manage tokens</string>
+
+    <string name="add_tokens_subtitle_blockchains" translatable="false">Blockchains</string>
+    <string name="add_tokens_subtitle_tokens" translatable="false">Ethereum Tokens</string>
+    <string name="wallet_address_button_copy" translatable="false">Copy</string>
+    <string name="wallet_address_button_share" translatable="false">Share</string>
+    <string name="wallet_button_add_tokens" translatable="false">+ Add tokens</string>
+    <string name="wallet_pending_transaction_warning" translatable="false">Please wait for the transaction to complete to be able to send funds</string>
+
+    <string name="warning_failed_to_verify_card_title" translatable="false">Authenticity check failed</string>
+    <string name="warning_failed_to_verify_card_message" translatable="false">This card might be a production sample or counterfeit</string>
+
 
 
 </resources>
