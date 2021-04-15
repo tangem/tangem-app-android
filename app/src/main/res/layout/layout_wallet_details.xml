@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/fl_address"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:minWidth="300dp">
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/card_balance"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="4dp"
+        android:background="@android:color/white"
+        android:elevation="3dp">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/cl_address"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingBottom="24dp">
+
+            <include
+                android:id="@+id/l_balance"
+                layout="@layout/layout_balance_wallet_details" />
+
+            <include
+                android:id="@+id/l_balance_error"
+                layout="@layout/layout_balance_error"
+                android:visibility="gone" />
+
+            <androidx.constraintlayout.widget.Barrier
+                android:id="@+id/barrier_balance"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                app:barrierDirection="bottom"
+                app:constraint_referenced_ids="l_balance, l_balance_error" />
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chip_group_address_type"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_marginEnd="10dp"
+                android:layout_marginBottom="24dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/barrier_balance"
+                app:selectionRequired="true"
+                app:singleLine="true"
+                app:singleSelection="true"
+                tools:visibility="visible">
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_default"
+                    style="@style/TapChip"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/wallet_address_chip_default" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_legacy"
+                    style="@style/TapChip"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/wallet_address_chip_legacy" />
+
+            </com.google.android.material.chip.ChipGroup>
+
+
+            <ImageView
+                android:id="@+id/iv_qr_code"
+                android:layout_width="wrap_content"
+                android:layout_height="0dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="10dp"
+                android:adjustViewBounds="true"
+                android:scaleType="fitXY"
+                app:layout_constraintEnd_toEndOf="@id/guideline"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/chip_group_address_type"
+                app:layout_constraintBottom_toBottomOf="@id/v_qr_lower_end"
+                tools:src="@drawable/ic_qr_code_show" />
+
+            <androidx.constraintlayout.widget.Guideline
+                android:id="@+id/guideline"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintGuide_percent="0.4" />
+
+            <TextView
+                android:id="@+id/tv_address"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:layout_marginEnd="14dp"
+                android:ellipsize="middle"
+                android:maxLines="2"
+                android:textColor="@color/darkGray1"
+                android:textSize="13sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/iv_qr_code"
+                app:layout_constraintTop_toTopOf="@id/iv_qr_code"
+                tools:text="139mrsJgyWnJjkljlkhiuojlkljkjljljlkjlkljlkjkljlkjlkjkljky9BV" />
+
+            <TextView
+                android:id="@+id/tv_explore"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="14dp"
+                android:drawablePadding="9dp"
+                android:paddingTop="4dp"
+                android:text="@string/wallet_address_button_explore"
+                android:textColor="@color/darkGray6"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                app:drawableEndCompat="@drawable/ic_angle_bracket_right"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0"
+                app:layout_constraintStart_toEndOf="@id/iv_qr_code"
+                app:layout_constraintTop_toBottomOf="@id/tv_address" />
+
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/btn_copy"
+                style="@style/Widget.MaterialComponents.Chip.Action"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="6dp"
+                android:layout_marginBottom="24dp"
+                android:layout_marginTop="22dp"
+                android:src="@drawable/ic_inactive"
+                android:text="@string/wallet_address_button_copy"
+                android:textAlignment="center"
+                android:textColor="@color/colorSecondary"
+                app:chipBackgroundColor="@color/blue_pale"
+                app:chipIcon="@drawable/ic_copy_chip"
+                app:iconStartPadding="12dp"
+                app:iconEndPadding="0dp"
+                app:chipIconSize="16dp"
+                app:layout_constraintTop_toBottomOf="@id/tv_explore"
+                app:layout_constraintEnd_toStartOf="@id/btn_share"
+                app:layout_constraintStart_toEndOf="@id/iv_qr_code" />
+
+            <View
+                android:id="@+id/v_qr_lower_end"
+                android:layout_width="1dp"
+                android:layout_height="1dp"
+                app:layout_constraintTop_toBottomOf="@id/btn_copy"
+                app:layout_constraintStart_toStartOf="@id/btn_copy"
+                android:layout_marginTop="5dp"
+            />
+
+
+            <com.google.android.material.chip.Chip
+                android:id="@+id/btn_share"
+                style="@style/Widget.MaterialComponents.Chip.Action"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="16dp"
+                android:layout_marginBottom="24dp"
+                android:layout_marginTop="22dp"
+                android:src="@drawable/ic_inactive"
+                android:text="@string/wallet_address_button_share"
+                app:chipIcon="@drawable/ic_share_chip"
+                app:iconStartPadding="12dp"
+                app:iconEndPadding="0dp"
+                app:chipIconSize="16dp"
+                android:textAlignment="center"
+                android:textColor="@color/colorSecondary"
+                app:chipBackgroundColor="@color/blue_pale"
+                app:layout_constraintTop_toBottomOf="@id/tv_explore"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toEndOf="@id/btn_copy" />
+
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </com.google.android.material.card.MaterialCardView>
+
+</FrameLayout>
