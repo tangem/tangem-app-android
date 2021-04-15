@@ -8,8 +8,7 @@ import com.tangem.commands.common.card.Card
 
 object FirebaseAnalyticsHandler : AnalyticsHandler {
     override fun triggerEvent(event: AnalyticsEvent, card: Card?) {
-        Firebase.analytics
-                .logEvent(event.event, setCardData(card))
+        Firebase.analytics.logEvent(event.event, setCardData(card))
     }
 
     fun logException(name: String, throwable: Throwable) {

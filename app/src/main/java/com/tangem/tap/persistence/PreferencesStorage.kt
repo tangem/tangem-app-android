@@ -11,16 +11,18 @@ import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.tangem.tap.common.entities.TapCurrency.Companion.DEFAULT_FIAT_CURRENCY
 import com.tangem.tap.common.redux.global.FiatCurrencyName
 import com.tangem.tap.network.coinmarketcap.FiatCurrency
+import java.util.*
 
 
 class PreferencesStorage(applicationContext: Application) {
 
-    private val preferences: SharedPreferences by lazy {
-        applicationContext.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
-    }
+    private val preferences: SharedPreferences = applicationContext.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
+
+    val appRatingLaunchObserver: AppRatingLaunchObserver
 
     init {
         incrementLaunchCounter()
+        appRatingLaunchObserver = AppRatingLaunchObserver(preferences, getCountOfLaunches())
     }
 
     private val fiatCurrenciesAdapter: JsonAdapter<List<FiatCurrency>> by lazy {
@@ -97,4 +99,63 @@ class PreferencesStorage(applicationContext: Application) {
         private const val APP_LAUNCH_COUNT_KEY = "launchCount"
     }
 
+}
+
+class AppRatingLaunchObserver(
+        private val preferences: SharedPreferences,
+        private val launchCounts: Int,
+) {
+    private val K_SHOW_RATING_AT_LAUNCH_COUNT = "showRatingDialogAtLaunchCount"
+    private val K_FUNDS_FOUND_DATE = "fundsFoundDate"
+    private val K_USER_WAS_INTERACT_WITH_RATING = "userWasInteractWithRating"
+
+    private val deferShowing = 20
+    private val firstShowing = 3
+    private var fundsFoundDate: Calendar? = null
+
+    init {
+        val dateTimeMs = preferences.getLong(K_FUNDS_FOUND_DATE, -1)
+        if (dateTimeMs > 0) fundsFoundDate = Calendar.getInstance().apply { timeInMillis = dateTimeMs }
+    }
+
+    fun foundWalletWithFunds() {
+        if (fundsFoundDate != null) return
+
+        fundsFoundDate = Calendar.getInstance()
+        preferences.edit(true) {
+            putLong(K_FUNDS_FOUND_DATE, fundsFoundDate!!.timeInMillis).apply()
+            putInt(K_SHOW_RATING_AT_LAUNCH_COUNT, launchCounts + firstShowing)
+        }
+    }
+
+    fun isReadyToShow(): Boolean {
+        val fundsDate = fundsFoundDate ?: return false
+
+        if (!userWasInteractWithRating()) {
+            val diff = Calendar.getInstance().timeInMillis - fundsDate.timeInMillis
+            val diffInDays = diff / (1000 * 60 * 60 * 24)
+            return launchCounts >= getCounterOfNextShowing() && diffInDays >= firstShowing
+        }
+
+        val nextShowing = getCounterOfNextShowing()
+        return launchCounts >= nextShowing
+    }
+
+    fun applyDelayedShowing() {
+        updateNextShowing(launchCounts + deferShowing)
+    }
+
+    fun setNeverToShow() {
+        updateNextShowing(999999999)
+    }
+
+    private fun updateNextShowing(at: Int) {
+        val editor = preferences.edit()
+        editor.putInt(K_SHOW_RATING_AT_LAUNCH_COUNT, at)
+        editor.putBoolean(K_USER_WAS_INTERACT_WITH_RATING, true)
+        editor.apply()
+    }
+
+    private fun userWasInteractWithRating(): Boolean = preferences.getBoolean(K_USER_WAS_INTERACT_WITH_RATING, false)
+    private fun getCounterOfNextShowing(): Int = preferences.getInt(K_SHOW_RATING_AT_LAUNCH_COUNT, firstShowing)
 }
