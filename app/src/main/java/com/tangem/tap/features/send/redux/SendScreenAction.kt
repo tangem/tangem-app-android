@@ -3,9 +3,12 @@ package com.tangem.tap.features.send.redux
 import com.tangem.Message
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.WalletManager
 import com.tangem.tap.common.redux.ErrorAction
 import com.tangem.tap.common.redux.ToastNotificationAction
+import com.tangem.tap.common.redux.global.StateDialog
 import com.tangem.tap.domain.TapError
+import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.features.send.redux.states.FeeType
 import com.tangem.tap.features.send.redux.states.MainCurrencyType
 import com.tangem.tap.features.send.redux.states.SendButtonState
@@ -23,7 +26,10 @@ object ReleaseSendState : Action
 
 data class PrepareSendScreen(
         val coinAmount: Amount?,
+        val coinRate: BigDecimal?,
+        val walletManager: WalletManager?,
         val tokenAmount: Amount? = null,
+        val tokenRate: BigDecimal? = null
 ) : SendScreenAction
 
 // Address or PayId
@@ -137,13 +143,19 @@ sealed class SendAction : SendScreenAction {
 
     data class SendError(override val error: TapError) : SendAction(), ErrorAction
 
-    sealed class Dialog : SendAction() {
-        data class ShowTezosWarningDialog(
+    sealed class Dialog : SendAction(), StateDialog {
+        data class TezosWarningDialog(
                 val reduceCallback: () -> Unit,
                 val sendAllCallback: () -> Unit,
                 val reduceAmount: BigDecimal,
         ) : Dialog()
 
+        data class SendTransactionFails(val errorMessage: String) : Dialog()
         object Hide : Dialog()
+    }
+
+    sealed class Warnings : SendAction() {
+        object Update : SendAction()
+        data class Set(val warningList: List<WarningMessage>) : SendAction()
     }
 }
