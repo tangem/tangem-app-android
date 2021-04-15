@@ -42,8 +42,10 @@ private class SendReducer : SendInternalReducer {
     override fun handle(action: SendScreenAction, sendState: SendState): SendState {
         val result = when (action) {
             is SendAction.ChangeSendButtonState -> sendState.copy(sendButtonState = action.state)
-            is SendAction.Dialog.ShowTezosWarningDialog -> sendState.copy(dialog = action)
+            is SendAction.Dialog.TezosWarningDialog -> sendState.copy(dialog = action)
+            is SendAction.Dialog.SendTransactionFails -> sendState.copy(dialog = action)
             is SendAction.Dialog.Hide -> sendState.copy(dialog = null)
+            is SendAction.Warnings.Set -> sendState.copy(sendWarningsList = action.warningList)
             else -> return sendState
         }
 
@@ -58,16 +60,15 @@ private class EmptyReducer : SendInternalReducer {
 private class PrepareSendScreenStatesReducer : SendInternalReducer {
     override fun handle(action: SendScreenAction, sendState: SendState): SendState {
         val prepareAction = action as PrepareSendScreen
-        val walletManager = store.state.globalState.scanNoteResponse!!.walletManager!!
+        val walletManager = action.walletManager
+                ?: store.state.globalState.scanNoteResponse!!.walletManager!!
         val amountToExtract = prepareAction.tokenAmount ?: prepareAction.coinAmount!!
         val decimals = amountToExtract.decimals
 
-        val coinConverter = createCurrencyConverter(walletManager.wallet.blockchain.currency, decimals)
-        val tokenConverter = createCurrencyConverter(prepareAction.tokenAmount?.currencySymbol ?: "", decimals)
         return sendState.copy(
                 walletManager = walletManager,
-                coinConverter = coinConverter,
-                tokenConverter = tokenConverter,
+                coinConverter = action.coinRate?.let { CurrencyConverter(it, decimals) },
+                tokenConverter = action.tokenRate?.let { CurrencyConverter(it, decimals) },
                 amountState = sendState.amountState.copy(
                         amountToExtract = amountToExtract,
                         typeOfAmount = amountToExtract.type,
@@ -77,11 +78,6 @@ private class PrepareSendScreenStatesReducer : SendInternalReducer {
                         includeFeeSwitcherIsEnabled = amountToExtract.type == AmountType.Coin
                 )
         )
-    }
-
-    private fun createCurrencyConverter(currency: String, decimals: Int): CurrencyConverter? {
-        val rate = store.state.globalState.conversionRates.getRate(currency)
-        return if (rate == null) null else CurrencyConverter(rate, decimals)
     }
 }
 
