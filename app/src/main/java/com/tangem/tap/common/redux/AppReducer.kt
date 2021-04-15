@@ -6,7 +6,8 @@ import com.tangem.tap.features.details.redux.DetailsReducer
 import com.tangem.tap.features.disclaimer.redux.DisclaimerReducer
 import com.tangem.tap.features.home.redux.HomeReducer
 import com.tangem.tap.features.send.redux.reducers.SendScreenReducer
-import com.tangem.tap.features.wallet.redux.WalletReducer
+import com.tangem.tap.features.tokens.redux.TokensReducer
+import com.tangem.tap.features.wallet.redux.reducers.WalletReducer
 import org.rekotlin.Action
 
 fun appReducer(action: Action, state: AppState?): AppState {
@@ -20,7 +21,8 @@ fun appReducer(action: Action, state: AppState?): AppState {
             walletState = WalletReducer.reduce(action, state),
             sendState = SendScreenReducer.reduce(action, state.sendState),
             detailsState = DetailsReducer.reduce(action, state),
-            disclaimerState = DisclaimerReducer.reduce(action, state)
+            disclaimerState = DisclaimerReducer.reduce(action, state),
+            tokensState = TokensReducer.reduce(action, state),
     )
 }
 
