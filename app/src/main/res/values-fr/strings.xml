@@ -13,7 +13,7 @@
     <string name="common_camera_denied_alert_message">Vous n\'avez pas octroyé l’accès à votre caméra, veuillez modifier vos paramètres de confidentialité </string>
     <string name="common_camera_alert_button_settings">Paramètres </string>
     <string name="home_welcome">Bienvenue à Tangem. Avez-vous une de nos cartes</string>
-    <string name="home_welcome_back"> Encore une fois, bienvenue dans Tangem Tap. \nScannez votre carte pour commencer.</string>
+    <string name="home_welcome_back"> Encore une fois, bienvenue dans Tangem. \nScannez votre carte pour commencer.</string>
     <string name="home_button_yes">Oui! Scannez-la. </string>
     <string name="home_button_shop">Magasin </string>
     <string name="home_ready_title">Préparez-vous à appuyer votre carte au dos de votre téléphone.</string>
@@ -22,7 +22,7 @@
     <string name="wallet_button_scan">Scanner </string>
     <string name="wallet_button_send">Envoyer </string>
     <string name="wallet_button_create_wallet">Créer un portefeuille </string>
-    <string name="wallet_title">Tangem Tap</string>
+    <string name="wallet_title">Tangem</string>
     <string name="wallet_choice_wallet_option_title">Choisir une variante de portefeuille </string>
     <string name="wallet_balance_token_title"> Jeton d\'authentification </string>
     <string name="wallet_balance_tokens_title">Jetons d\'authentification </string>
@@ -96,8 +96,9 @@
     <string name="details_manage_security_access_code">Code d’accès </string>
     <string name="details_manage_security_access_code_description">Vous devrez entrer le mot de passe correct avant de scanner la carte </string>
     <string name="alert_old_device_this_card">Vous pouvez rencontrer des problèmes NFC avec certains iPhone 7/7 + lors de l’extraction </string>
-    <string name="alert_card_signed_transactions">Attention: cette carte a déjà été rechargée et a signé des transactions avant. Envisagez la possibilité de retirer tous les fonds immédiatement si vous avez reçu cette carte d\'une source non fiable.</string>
-    <string name="alert_unsupported_card">Cette carte n\'est pas conçue pour fonctionner avec Tangem Tap </string>
+    <string name="alert_card_signed_transactions">Cette carte a déjà été rechargée et a signé des transactions avant. Envisagez la possibilité de retirer tous les fonds immédiatement si vous avez reçu cette carte d\'une source non fiable.</string>
+    <string name="alert_title">Attention</string>
+    <string name="alert_unsupported_card">Cette carte n\'est pas conçue pour fonctionner avec Tangem</string>
     <string name="alert_developer_card">La carte que vous avez scannée est une carte de développement. Ne l\'acceptez pas comme paiement </string>
     <string name="alert_old_card">Les cartes Tangem émises avant septembre 2019 ne peuvent actuellement pas être extraites à l\'aide de l\'iPhone. Nous travaillons activement avec Apple pour rendre cela possible dans les futures versions d\'iOS. </string>
     <string name="initial_message_sign_header">Touchez pour signer </string>
@@ -112,7 +113,7 @@
 
 Avertissement
  
-\n\n1.Application Tangem Tap (Logiciel)
+\n\n1.Application Tangem (Logiciel)
  
 \n\nLe logiciel est destiné à l\’utilisation exclusivement avec les e-portefeuilles Tangem (Cartes) à l\’aide de l\’interface NFC. Le logiciel NE réalise pas ce qui suit :
  
