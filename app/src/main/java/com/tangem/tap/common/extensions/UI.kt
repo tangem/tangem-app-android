@@ -1,15 +1,10 @@
 package com.tangem.tap.common.extensions
 
 import android.app.Activity
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
-import android.content.Intent
+import android.content.*
 import android.content.res.Resources
 import android.graphics.drawable.Drawable
 import android.os.Build
-import android.text.Spannable
-import android.text.style.ForegroundColorSpan
 import android.util.TypedValue
 import android.view.View
 import android.view.ViewGroup
@@ -19,7 +14,6 @@ import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
-import androidx.core.text.toSpannable
 import androidx.fragment.app.Fragment
 import com.google.android.material.card.MaterialCardView
 
@@ -77,6 +71,9 @@ fun Context.dpToPixels(dp: Int): Int =
                 TypedValue.COMPLEX_UNIT_DIP, dp.toFloat(), this.resources.displayMetrics
         ).toInt()
 
+tailrec fun Context?.getActivity(): Activity? = this as? Activity ?:
+    (this as? ContextWrapper)?.baseContext?.getActivity()
+
 fun MaterialCardView.setMargins(
         marginLeftDp: Int = 16,
         marginTopDp: Int = 8,
@@ -104,24 +101,6 @@ fun Activity.setSystemBarTextColor(setTextDark: Boolean) {
                     flags or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
                 }
     }
-}
-
-
-fun String.colorSegment(
-        context: Context,
-        color: Int,
-        startIndex: Int = 0,
-        endIndex: Int = this.length
-): Spannable {
-    return this.toSpannable()
-            .also { spannable ->
-                spannable.setSpan(
-                        ForegroundColorSpan(ContextCompat.getColor(context, color)),
-                        startIndex,
-                        endIndex,
-                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-                )
-            }
 }
 
 fun View.hideKeyboard() {
