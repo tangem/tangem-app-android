@@ -43,5 +43,8 @@
     <color name="blue3">#CBE4FF</color>
     <color name="blue_pale">#E0E6FA</color>
 
+    <color name="warning_info">#1C1C1E</color>
+    <color name="warning_warning">#FFB71B</color>
+    <color name="warning_critical">#CA0F03</color>
 
 </resources>

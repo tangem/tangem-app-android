@@ -49,7 +49,7 @@ sealed class TapError(
 }
 
 sealed class TapSdkError(override val messageResId: Int?) : Throwable(), TangemError {
-    final override val code: Int = 1
+    final override val code: Int = 50100
     override var customMessage: String = code.toString()
 
     object CardForDifferentApp : TapSdkError(R.string.alert_unsupported_card)
