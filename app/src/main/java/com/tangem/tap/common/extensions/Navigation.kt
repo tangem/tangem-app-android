@@ -12,6 +12,8 @@ import com.tangem.tap.features.details.ui.twins.TwinWalletWarningFragment
 import com.tangem.tap.features.disclaimer.ui.DisclaimerFragment
 import com.tangem.tap.features.home.HomeFragment
 import com.tangem.tap.features.send.ui.SendFragment
+import com.tangem.tap.features.tokens.ui.AddTokensFragment
+import com.tangem.tap.features.wallet.ui.WalletDetailsFragment
 import com.tangem.tap.features.wallet.ui.WalletFragment
 import com.tangem.tap.features.wallet.ui.dialogs.TwinsOnboardingFragment
 import com.tangem.wallet.R
@@ -46,5 +48,7 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
         AppScreen.CreateTwinWalletWarning -> TwinWalletWarningFragment()
         AppScreen.CreateTwinWallet -> CreateTwinWalletFragment()
         AppScreen.TwinsOnboarding -> TwinsOnboardingFragment()
+        AppScreen.AddTokens -> AddTokensFragment()
+        AppScreen.WalletDetails -> WalletDetailsFragment()
     }
 }
