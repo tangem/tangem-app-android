@@ -11,18 +11,19 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
     val globalState = state.globalState
 
     return when (action) {
+        is GlobalAction.ScanFailsCounter.Increment -> {
+            globalState.copy(scanCardFailsCounter = globalState.scanCardFailsCounter + 1)
+        }
+        is GlobalAction.ScanFailsCounter.Reset -> {
+            globalState.copy(scanCardFailsCounter = 0)
+        }
         is GlobalAction.SaveScanNoteResponse ->
             globalState.copy(scanNoteResponse = action.scanNoteResponse)
-        is GlobalAction.SetFiatRate -> {
-            val rates = globalState.conversionRates.rates.toMutableMap()
-            rates[action.fiatRates.first] = action.fiatRates.second
-            globalState.copy(conversionRates = ConversionRates(rates))
-        }
         is GlobalAction.ChangeAppCurrency -> {
-            globalState.copy(appCurrency = action.appCurrency, conversionRates = ConversionRates(mapOf()))
+            globalState.copy(appCurrency = action.appCurrency)
         }
         is GlobalAction.RestoreAppCurrency.Success -> {
-            globalState.copy(appCurrency = action.appCurrency, conversionRates = ConversionRates(mapOf()))
+            globalState.copy(appCurrency = action.appCurrency)
         }
         is GlobalAction.UpdateWalletSignedHashes -> {
             val card = globalState.scanNoteResponse?.card?.copy(
@@ -37,6 +38,7 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
         is GlobalAction.SetConfigManager -> {
             globalState.copy(configManager = action.configManager)
         }
+        is GlobalAction.SetWarningManager -> globalState.copy(warningManager = action.warningManager)
         is GlobalAction.UpdateSecurityOptions -> {
             val card = when (action.securityOption) {
                 SecurityOption.LongTap -> globalState.scanNoteResponse?.card?.copy(
@@ -54,6 +56,9 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
             } else {
                 globalState
             }
+        }
+        is GlobalAction.SetFeedbackManager -> {
+            globalState.copy(feedbackManager = action.feedbackManager)
         }
         else -> globalState
     }
