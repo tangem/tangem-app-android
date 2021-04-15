@@ -5,10 +5,12 @@ import android.content.pm.ActivityInfo
 import android.nfc.NfcAdapter
 import android.nfc.Tag
 import android.os.Bundle
+import android.util.Log
+import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.snackbar.Snackbar
 import com.tangem.CardFilter
 import com.tangem.Config
-import com.tangem.Log
 import com.tangem.TangemSdk
 import com.tangem.commands.common.card.CardType
 import com.tangem.tangem_sdk_new.extensions.init
@@ -46,15 +48,19 @@ private fun initCoroutineExceptionHandler(): CoroutineExceptionHandler {
         val sw = StringWriter()
         throwable.printStackTrace(PrintWriter(sw))
         val exceptionAsString: String = sw.toString()
-        Log.e("TangemSdk", exceptionAsString)
+        Log.e("Coroutine", exceptionAsString)
         throw throwable
     }
 }
 
 class MainActivity : AppCompatActivity() {
+
+    private var snackbar: Snackbar? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        store.state.globalState.feedbackManager?.updateAcivity(this)
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
         store.dispatch(NavigationAction.ActivityCreated(WeakReference(this)))
 
@@ -102,5 +108,22 @@ class MainActivity : AppCompatActivity() {
     override fun onDestroy() {
         store.dispatch(NavigationAction.ActivityDestroyed)
         super.onDestroy()
+    }
+
+    fun showSnackbar(text: Int, buttonTitle: Int? = null, action: View.OnClickListener? = null) {
+        if (snackbar != null) return
+
+        snackbar = Snackbar.make(
+                fragment_container, getString(text), Snackbar.LENGTH_INDEFINITE
+        )
+        if (buttonTitle != null && action != null) {
+            snackbar?.setAction(getString(buttonTitle), action)
+        }
+        snackbar?.show()
+    }
+
+    fun dismissSnackbar() {
+        snackbar?.dismiss()
+        snackbar = null
     }
 }
