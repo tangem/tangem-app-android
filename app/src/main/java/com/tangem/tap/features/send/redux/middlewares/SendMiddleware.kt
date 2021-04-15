@@ -15,14 +15,18 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.TapWorkarounds
+import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.extensions.minimalAmount
 import com.tangem.tap.features.send.redux.*
 import com.tangem.tap.features.send.redux.FeeAction.RequestFee
 import com.tangem.tap.features.send.redux.states.SendButtonState
 import com.tangem.tap.features.send.redux.states.TransactionExtrasState
+import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.scope
+import com.tangem.tap.store
 import com.tangem.tap.tangemSdk
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.rekotlin.Action
@@ -43,6 +47,7 @@ val sendMiddleware: Middleware<AppState> = { dispatch, appState ->
                 is SendActionUi.SendAmountToRecipient ->
                     verifyAndSendTransaction(action, appState(), dispatch)
                 is PrepareSendScreen -> setIfSendingToPayIdEnabled(appState(), dispatch)
+                is SendAction.Warnings.Update -> updateWarnings(dispatch)
             }
             nextDispatch(action)
         }
@@ -50,11 +55,11 @@ val sendMiddleware: Middleware<AppState> = { dispatch, appState ->
 }
 
 private fun verifyAndSendTransaction(
-        action: SendActionUi.SendAmountToRecipient, appState: AppState?, dispatch: (Action) -> Unit
+        action: SendActionUi.SendAmountToRecipient, appState: AppState?, dispatch: (Action) -> Unit,
 ) {
     val sendState = appState?.sendState ?: return
-    val walletManager = appState.globalState.scanNoteResponse?.walletManager ?: return
-    val card = appState.globalState.scanNoteResponse.card
+    val walletManager = sendState.walletManager ?: return
+    val card = appState.globalState.scanNoteResponse?.card ?: return
     val destinationAddress = sendState.addressPayIdState.destinationWalletAddress ?: return
     val typedAmount = sendState.amountState.amountToExtract ?: return
     val feeAmount = sendState.feeState.currentFee ?: return
@@ -66,7 +71,7 @@ private fun verifyAndSendTransaction(
     when {
         hadTezosError -> {
             val reduceAmount = walletManager.wallet.blockchain.minimalAmount()
-            dispatch(SendAction.Dialog.ShowTezosWarningDialog(reduceCallback = {
+            dispatch(SendAction.Dialog.TezosWarningDialog(reduceCallback = {
                 dispatch(AmountAction.SetAmount(typedAmount.value!!.minus(reduceAmount), false))
                 dispatch(AmountActionUi.CheckAmountToSend)
             }, sendAllCallback = {
@@ -92,7 +97,7 @@ private fun sendTransaction(
         destinationAddress: String,
         transactionExtras: TransactionExtrasState,
         card: Card,
-        dispatch: (Action) -> Unit
+        dispatch: (Action) -> Unit,
 ) {
     dispatch(SendAction.ChangeSendButtonState(SendButtonState.PROGRESS))
     var txData = walletManager.createTransaction(amountToSend, feeAmount, destinationAddress)
@@ -116,6 +121,15 @@ private fun sendTransaction(
                     dispatch(SendAction.SendSuccess)
                     dispatch(GlobalAction.UpdateWalletSignedHashes(result.data.walletSignedHashes))
                     dispatch(NavigationAction.PopBackTo())
+                    scope.launch(Dispatchers.IO) {
+                        withContext(Dispatchers.Main) {
+                            dispatch(WalletAction.UpdateWallet(walletManager.wallet.blockchain.currency))
+                        }
+                        delay(10000)
+                        withContext(Dispatchers.Main) {
+                            dispatch(WalletAction.UpdateWallet(walletManager.wallet.blockchain.currency))
+                        }
+                    }
                 }
                 is Result.Failure -> {
                     when (result.error) {
@@ -133,22 +147,27 @@ private fun sendTransaction(
                         is Throwable -> {
                             val throwable = result.error as Throwable
                             val message = throwable.message
+                            val infoHolder = store.state.globalState.feedbackManager?.infoHolder
                             when {
                                 message == null -> {
                                     dispatch(SendAction.SendError(TapError.UnknownError))
+                                    infoHolder?.updateOnSendError(walletManager.wallet, amountToSend, feeAmount, destinationAddress)
+                                    dispatch(SendAction.Dialog.SendTransactionFails("unknown error"))
                                 }
                                 message.contains("50002") -> {
                                     // user was cancelled the operation by closing the Sdk bottom sheet
                                 }
                                 // make it easier latter by handling an appropriate enumError or, like on iOS,
                                 // accept a string identifier of the error message
-                                message.contains("Target account is not created. To create account send 1+ XLM.")-> {
+                                message.contains("Target account is not created. To create account send 1+ XLM.") -> {
                                     dispatch(SendAction.SendError(TapError.XmlError.AssetAccountNotCreated))
                                 }
                                 else -> {
                                     Timber.e(throwable)
                                     FirebaseCrashlytics.getInstance().recordException(throwable)
                                     dispatch(SendAction.SendError(TapError.CustomError(message)))
+                                    infoHolder?.updateOnSendError(walletManager.wallet, amountToSend, feeAmount, destinationAddress)
+                                    dispatch(SendAction.Dialog.SendTransactionFails(message))
                                 }
                             }
                         }
@@ -205,6 +224,14 @@ private fun setIfSendingToPayIdEnabled(appState: AppState?, dispatch: (Action) -
     val isSendingToPayIdEnabled =
             appState?.globalState?.configManager?.config?.isSendingToPayIdEnabled ?: false
     dispatch(AddressPayIdActionUi.ChangePayIdState(isSendingToPayIdEnabled))
+}
+
+private fun updateWarnings(dispatch: (Action) -> Unit) {
+    val warningsManager = store.state.globalState.warningManager ?: return
+    val blockchain = store.state.sendState.walletManager?.wallet?.blockchain ?: return
+
+    val warnings = warningsManager.getWarnings(WarningMessage.Location.SendScreen, listOf(blockchain))
+    dispatch(SendAction.Warnings.Set(warnings))
 }
 
 
