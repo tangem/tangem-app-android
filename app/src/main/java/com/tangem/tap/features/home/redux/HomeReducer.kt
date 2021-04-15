@@ -18,6 +18,12 @@ private fun internalReduce(action: Action, state: AppState): HomeState {
         is HomeAction.CheckIfFirstLaunch.Result -> {
             homeState = homeState.copy(firstLaunch = action.firstLaunch)
         }
+        is HomeAction.ShowDialog.ScanFails -> {
+            homeState = homeState.copy(dialog = HomeDialog.ScanFailsDialog)
+        }
+        is HomeAction.HideDialog -> {
+            homeState = homeState.copy(dialog = null)
+        }
     }
 
     return homeState
