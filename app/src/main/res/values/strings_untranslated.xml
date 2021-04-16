@@ -97,8 +97,10 @@ this wallet.
     <string name="wallet_address_button_copy" translatable="false">Copy</string>
     <string name="wallet_address_button_share" translatable="false">Share</string>
     <string name="wallet_button_add_tokens" translatable="false">+ Add tokens</string>
+    <string name="wallet_pending_transaction_warning" translatable="false">Please wait for the transaction to complete to be able to send funds</string>
 
-
+    <string name="warning_failed_to_verify_card_title" translatable="false">Authenticity check failed</string>
+    <string name="warning_failed_to_verify_card_message" translatable="false">This card might be a production sample or counterfeit</string>
 
 
 
