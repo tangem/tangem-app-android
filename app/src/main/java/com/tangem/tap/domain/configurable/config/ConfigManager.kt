@@ -31,11 +31,12 @@ class ConfigManager(
         localLoader.load { config ->
             setupFeature(config.features)
             setupKey(config.configValues)
-        }
-        remoteLoader.load { config ->
-            setupFeature(config.features)
             onComplete?.invoke()
         }
+        // Uncomment to enable remote config
+//        remoteLoader.load { config ->
+//            setupFeature(config.features)
+//        }
     }
 
     fun turnOff(name: String) {
@@ -79,7 +80,7 @@ class ConfigManager(
                 blockchainSdkConfig = BlockchainSdkConfig(
                         blockchairApiKey = values.blockchairApiKey,
                         blockcypherTokens = values.blockcypherTokens,
-                        infuraProjectId =  values.infuraProjectId
+                        infuraProjectId = values.infuraProjectId
                 )
         )
         defaultConfig = defaultConfig.copy(
@@ -89,7 +90,7 @@ class ConfigManager(
                 blockchainSdkConfig = BlockchainSdkConfig(
                         blockchairApiKey = values.blockchairApiKey,
                         blockcypherTokens = values.blockcypherTokens,
-                        infuraProjectId =  values.infuraProjectId
+                        infuraProjectId = values.infuraProjectId
                 )
         )
     }

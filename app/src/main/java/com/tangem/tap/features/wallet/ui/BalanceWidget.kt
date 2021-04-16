@@ -13,6 +13,7 @@ import java.math.BigDecimal
 enum class BalanceStatus {
     VerifiedOnline,
     TransactionInProgress,
+    SameCurrencyTransactionInProgress,
     Unreachable,
     Loading,
     NoAccount,
