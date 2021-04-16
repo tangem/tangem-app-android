@@ -12,9 +12,9 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.transition.TransitionInflater
-import com.google.android.material.snackbar.Snackbar
 import com.squareup.picasso.Picasso
 import com.tangem.tangem_sdk_new.extensions.dpToPx
+import com.tangem.tap.MainActivity
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
@@ -30,12 +30,12 @@ import com.tangem.tap.features.wallet.ui.wallet.WalletView
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fragment_wallet.*
+import kotlinx.android.synthetic.main.fragment_wallet.toolbar
+import kotlinx.android.synthetic.main.fragment_wallet_details.*
 import org.rekotlin.StoreSubscriber
 
 
 class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<WalletState> {
-
-    private var snackbar: Snackbar? = null
 
     private lateinit var warningsAdapter: WarningMessagesAdapter
 
@@ -133,15 +133,14 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     private fun setupNoInternetHandling(state: WalletState) {
         if (state.state == ProgressState.Error) {
             if (state.error == ErrorType.NoInternetConnection) {
-                srl_wallet?.isRefreshing = false
-                snackbar = Snackbar.make(
-                        coordinator_wallet, getString(R.string.wallet_notification_no_internet),
-                        Snackbar.LENGTH_INDEFINITE
-                ).setAction(getString(R.string.common_retry)) { store.dispatch(WalletAction.LoadData) }
-                snackbar?.show()
+                srl_wallet_details?.isRefreshing = false
+                (activity as? MainActivity)?.showSnackbar(
+                        text = R.string.wallet_notification_no_internet,
+                        buttonTitle = R.string.common_retry
+                ) { store.dispatch(WalletAction.LoadData) }
             }
         } else {
-            snackbar?.dismiss()
+            (activity as? MainActivity)?.dismissSnackbar()
         }
     }
 
