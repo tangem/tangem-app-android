@@ -1,7 +1,6 @@
 package com.tangem.tap.features.wallet.redux
 
 import android.content.Context
-import com.tangem.TangemError
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.commands.common.card.Card
@@ -10,6 +9,7 @@ import com.tangem.tap.common.redux.NotificationAction
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
+import com.tangem.tap.domain.tokens.CardCurrencies
 import com.tangem.tap.domain.twins.TwinCardNumber
 import com.tangem.wallet.R
 import org.rekotlin.Action
@@ -33,29 +33,18 @@ sealed class WalletAction : Action {
     data class SetArtworkId(val artworkId: String?) : WalletAction()
 
 
-    //    sealed class ProcessWallet : WalletAction() {
-//        data class LoadWallet(val artworkId: String?, val allowTopUp: Boolean
-//        ) : ProcessWallet() {
-//            data class Success(val wallet: Wallet) : ProcessWallet()
-//            data class NoAccount(val wallet: Wallet, val amountToCreateAccount: String) : ProcessWallet()
-//            data class Failure(val wallet: Wallet, val errorMessage: String? = null) : ProcessWallet()
-//        }
-//
-//        data class UpdateWallet(val currency: CryptoCurrencyName? = null) : ProcessWallet() {
-//            object ScheduleUpdatingWallet : ProcessWallet()
-//            data class Success(val wallet: Wallet) : ProcessWallet()
-//            data class Failure(val errorMessage: String? = null) : ProcessWallet()
-//        }
-//    }
-
     sealed class MultiWallet : WalletAction() {
         data class SetIsMultiwalletAllowed(val isMultiwalletAllowed: Boolean) : MultiWallet()
-        data class AddWalletManagers(val walletManagers: List<WalletManager>) : MultiWallet()
+        data class AddWalletManagers(val walletManagers: List<WalletManager>) : MultiWallet() {
+            constructor(walletManager: WalletManager) : this(listOf(walletManager))
+        }
         data class AddBlockchain(val blockchain: Blockchain) : MultiWallet()
         data class AddBlockchains(val blockchains: List<Blockchain>) : MultiWallet()
         data class AddTokens(val tokens: List<Token>) : MultiWallet()
         data class AddToken(val token: Token) : MultiWallet()
+        data class SaveCurrencies(val cardCurrencies: CardCurrencies) : MultiWallet()
         object FindTokensInUse : MultiWallet()
+        data class FindBlockchainsInUse(val card: Card, val factory: WalletManagerFactory) : MultiWallet()
         data class TokenLoaded(val amount: Amount) : MultiWallet()
         data class SelectWallet(val walletData: WalletData?) : MultiWallet()
         data class RemoveWallet(val walletData: WalletData) : MultiWallet()
@@ -72,7 +61,8 @@ sealed class WalletAction : Action {
         }
 
         object CheckIfNeeded : Warnings()
-        data class SetWarnings(val warningList: List<WarningMessage>) : Warnings()
+        object Update : Warnings()
+        data class Set(val warningList: List<WarningMessage>) : Warnings()
 
         object AppRating : Warnings() {
             object SetNeverToShow : Warnings()
@@ -99,7 +89,6 @@ sealed class WalletAction : Action {
     }
 
     object Scan : WalletAction()
-    class ScanCardFinished(val scanError: TangemError? = null) : WalletAction()
 
     data class Send(val amount: Amount? = null) : WalletAction() {
         data class ChooseCurrency(val amounts: List<Amount>?) : WalletAction()
