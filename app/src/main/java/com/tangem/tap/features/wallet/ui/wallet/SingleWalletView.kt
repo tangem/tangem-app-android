@@ -6,6 +6,9 @@ import android.view.ViewGroup
 import android.widget.Button
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.tangem.tap.common.extensions.*
+import com.tangem.tap.common.redux.global.StateDialog
+import com.tangem.tap.common.redux.navigation.AppScreen
+import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.twins.TwinCardNumber
 import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.redux.*
@@ -105,6 +108,9 @@ class SingleWalletView : WalletView {
                 this.tv_twin_card_number.hide()
                 this.iv_twin_card.hide()
             }
+            if (twinCardsState?.showTwinOnboarding == true) {
+                store.dispatch(NavigationAction.NavigateTo(AppScreen.TwinsOnboarding))
+            }
         }
 
     }
@@ -156,7 +162,7 @@ class SingleWalletView : WalletView {
     }
 
     private fun setupConfirmButton(
-            state: WalletData, btnConfirm: Button, fragment: WalletFragment, isTwinsWallet: Boolean
+            state: WalletData, btnConfirm: Button, fragment: WalletFragment, isTwinsWallet: Boolean,
     ) {
         val buttonTitle = when (state.mainButton) {
             is WalletMainButton.SendButton -> R.string.wallet_button_send
@@ -181,7 +187,7 @@ class SingleWalletView : WalletView {
 
     private fun setupAddressCard(state: WalletData) {
         val fragment = fragment ?: return
-        if (state.walletAddresses != null) {
+        if (state.walletAddresses != null && state.blockchain != null) {
             fragment.l_address?.show()
             if (state.shouldShowMultipleAddress()) {
                 (fragment.l_address as? ViewGroup)?.beginDelayedTransition()
@@ -193,7 +199,7 @@ class SingleWalletView : WalletView {
 
                 fragment.chip_group_address_type.setOnCheckedChangeListener { group, checkedId ->
                     if (checkedId == -1) return@setOnCheckedChangeListener
-                    val type = MultipleAddressUiHelper.idToType(checkedId, state.currencyData.currencySymbol)
+                    val type = MultipleAddressUiHelper.idToType(checkedId, state.blockchain)
                     type?.let { store.dispatch(WalletAction.ChangeSelectedAddress(type)) }
                 }
             } else {
@@ -210,7 +216,7 @@ class SingleWalletView : WalletView {
         }
     }
 
-    private fun handleDialogs(walletDialog: WalletDialog?) {
+    private fun handleDialogs(walletDialog: StateDialog?) {
         val fragment = fragment ?: return
         val context = fragment.context ?: return
         when (walletDialog) {
@@ -229,9 +235,7 @@ class SingleWalletView : WalletView {
                 }
             }
             is WalletDialog.ScanFailsDialog -> {
-                if (dialog == null) dialog = ScanFailsDialog.create(context).apply {
-                    this.show()
-                }
+                if (dialog == null) dialog = ScanFailsDialog.create(context).apply { show() }
             }
             null -> {
                 dialog?.dismiss()
