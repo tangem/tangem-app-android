@@ -10,21 +10,18 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.transition.TransitionInflater
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.tap.MainActivity
 import com.tangem.tap.common.extensions.*
+import com.tangem.tap.common.redux.global.StateDialog
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.wallet.models.PendingTransaction
-import com.tangem.tap.features.wallet.redux.WalletAction
-import com.tangem.tap.features.wallet.redux.WalletData
-import com.tangem.tap.features.wallet.redux.WalletDialog
-import com.tangem.tap.features.wallet.redux.WalletState
+import com.tangem.tap.features.wallet.redux.*
 import com.tangem.tap.features.wallet.ui.adapters.PendingTransactionsAdapter
 import com.tangem.tap.features.wallet.ui.dialogs.AmountToSendDialog
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fragment_details_twin_cards.*
-import kotlinx.android.synthetic.main.fragment_wallet.*
 import kotlinx.android.synthetic.main.fragment_wallet_details.*
-import kotlinx.android.synthetic.main.fragment_wallet_details.rv_pending_transaction
 import kotlinx.android.synthetic.main.fragment_wallet_details.toolbar
 import kotlinx.android.synthetic.main.item_currency_wallet.view.*
 import kotlinx.android.synthetic.main.layout_balance_error.*
@@ -104,6 +101,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
 
         showPendingTransactionsIfPresent(selectedWallet.pendingTransactions)
         setupAddressCard(selectedWallet)
+        setupNoInternetHandling(state)
         setupBalanceData(selectedWallet.currencyData)
 
         btn_confirm.isEnabled = selectedWallet.mainButton.enabled
@@ -156,7 +154,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
 
     private fun setupAddressCard(state: WalletData) {
         if (state.walletAddresses != null) {
-            if (state.shouldShowMultipleAddress()) {
+            if (state.shouldShowMultipleAddress() && state.blockchain != null) {
                 (card_balance as? ViewGroup)?.beginDelayedTransition()
                 chip_group_address_type.show()
                 chip_group_address_type.fitChipsByGroupWidth()
@@ -166,7 +164,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
 
                 chip_group_address_type.setOnCheckedChangeListener { group, checkedId ->
                     if (checkedId == -1) return@setOnCheckedChangeListener
-                    val type = MultipleAddressUiHelper.idToType(checkedId, state.currencyData.currencySymbol)
+                    val type = MultipleAddressUiHelper.idToType(checkedId, state.blockchain)
                     type?.let { store.dispatch(WalletAction.ChangeSelectedAddress(type)) }
                 }
             } else {
@@ -178,7 +176,21 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
                         state.walletAddresses.selectedAddress.exploreUrl,
                         requireContext()))
             }
-            iv_qr_code.setImageBitmap(state.walletAddresses.selectedAddress.address.toQrCode())
+            iv_qr_code.setImageBitmap(state.walletAddresses.selectedAddress.shareUrl.toQrCode())
+        }
+    }
+
+    private fun setupNoInternetHandling(state: WalletState) {
+        if (state.state == ProgressState.Error) {
+            if (state.error == ErrorType.NoInternetConnection) {
+                srl_wallet_details?.isRefreshing = false
+                (activity as? MainActivity)?.showSnackbar(
+                        text = R.string.wallet_notification_no_internet,
+                        buttonTitle = R.string.common_retry
+                ) { store.dispatch(WalletAction.LoadData) }
+            }
+        } else {
+            (activity as? MainActivity)?.dismissSnackbar()
         }
     }
 
@@ -193,10 +205,12 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
                 showStatus(R.id.tv_status_loading)
                 showBalanceWithoutToken(data, false)
             }
-            BalanceStatus.VerifiedOnline, BalanceStatus.TransactionInProgress -> {
+            BalanceStatus.VerifiedOnline, BalanceStatus.SameCurrencyTransactionInProgress,
+            BalanceStatus.TransactionInProgress -> {
                 l_balance.show()
                 l_balance_error.hide()
-                val statusView = if (data.status == BalanceStatus.VerifiedOnline) {
+                val statusView = if (data.status == BalanceStatus.VerifiedOnline ||
+                        data.status == BalanceStatus.SameCurrencyTransactionInProgress) {
                     R.id.tv_status_verified
                 } else {
                     tv_status_error.text =
@@ -233,6 +247,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
                         )
             }
         }
+        card_pending_transaction_warning.show(data.status == BalanceStatus.SameCurrencyTransactionInProgress)
     }
 
     private fun showStatus(@IdRes viewRes: Int) {
@@ -249,7 +264,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
         }
     }
 
-    private fun handleDialogs(walletDialog: WalletDialog?) {
+    private fun handleDialogs(walletDialog: StateDialog?) {
         when (walletDialog) {
             is WalletDialog.SelectAmountToSendDialog -> {
                 if (dialog == null) dialog = AmountToSendDialog(requireContext()).apply {

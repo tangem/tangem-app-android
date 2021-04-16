@@ -6,6 +6,7 @@ import com.tangem.blockchain.common.address.AddressType
 import com.tangem.blockchain.extensions.isAboveZero
 import com.tangem.tap.common.entities.Button
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
+import com.tangem.tap.common.redux.global.StateDialog
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.extensions.toSendableAmounts
 import com.tangem.tap.domain.twins.TwinCardNumber
@@ -22,10 +23,9 @@ data class WalletState(
         val error: ErrorType? = null,
         val cardImage: Artwork? = null,
         val hashesCountVerified: Boolean? = null,
-        val walletDialog: WalletDialog? = null,
+        val walletDialog: StateDialog? = null,
         val twinCardsState: TwinCardsState? = null,
         val mainWarningsList: List<WarningMessage> = mutableListOf(),
-        val scanCardFailsCounter: Int = 0,
         val wallets: List<WalletData> = emptyList(),
         val walletManagers: List<WalletManager> = emptyList(),
         val isMultiwalletAllowed: Boolean = false,
@@ -42,16 +42,26 @@ data class WalletState(
             primaryWallet?.currencyData?.status != com.tangem.tap.features.wallet.ui.BalanceStatus.EmptyCard &&
                     primaryWallet?.currencyData?.status != com.tangem.tap.features.wallet.ui.BalanceStatus.UnknownBlockchain
 
+    val blockchains: List<Blockchain>
+        get() = walletManagers.map { it.wallet.blockchain }
+
     fun getWalletManager(currencyName: CryptoCurrencyName?): WalletManager? {
         if (currencyName == null) return null
         val walletManager = walletManagers.find { it.wallet.blockchain.currency == currencyName }
-        if (walletManager != null) return walletManager
+        return walletManager ?: getWalletManagerForToken(currencyName)
+    }
 
+    fun getWalletManagerForToken(currencyName: CryptoCurrencyName?): WalletManager? {
         val ethereumWalletManager = walletManagers.find { it.wallet.blockchain == Blockchain.Ethereum }
         return if (ethereumWalletManager?.presetTokens?.find { it.symbol == currencyName } != null) {
             ethereumWalletManager
         } else {
-            null
+            val primaryWalletManager = walletManagers.find { it.wallet.blockchain == primaryBlockchain }
+            if (primaryWalletManager?.presetTokens?.find { it.symbol == currencyName } != null) {
+                primaryWalletManager
+            } else {
+                ethereumWalletManager
+            }
         }
     }
 
@@ -96,7 +106,7 @@ data class WalletState(
 
 }
 
-sealed class WalletDialog {
+sealed class WalletDialog: StateDialog {
     data class QrDialog(
             val qrCode: Bitmap?, val shareUrl: String?, val currencyName: CryptoCurrencyName?
     ) : WalletDialog()
