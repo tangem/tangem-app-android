@@ -3,14 +3,15 @@ package com.tangem.tap.features.wallet.redux.middlewares
 import android.content.Intent
 import android.net.Uri
 import androidx.core.content.ContextCompat
-import com.tangem.TangemSdkError
 import com.tangem.blockchain.common.*
 import com.tangem.common.CompletionResult
+import com.tangem.common.extensions.isZero
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.common.extensions.copyToClipboard
 import com.tangem.tap.common.extensions.shareText
 import com.tangem.tap.common.redux.AppState
+import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.extensions.toSendableAmounts
@@ -59,6 +60,13 @@ class WalletMiddleware {
                         }
                     }
                     is WalletAction.LoadWallet.Success -> {
+                        val coinAmount = action.wallet.amounts[AmountType.Coin]?.value
+                        if (coinAmount != null && !coinAmount.isZero()) {
+                            if (walletState?.getWalletData(action.wallet.blockchain.currency) == null) {
+                                store.dispatch(WalletAction.MultiWallet.AddBlockchain(action.wallet.blockchain))
+                                store.dispatch(WalletAction.LoadWallet.Success(action.wallet))
+                            }
+                        }
                         store.dispatch(WalletAction.Warnings.CheckHashesCount.CheckHashesCountOnline)
                         warningsMiddleware.tryToShowAppRatingWarning(action.wallet)
                     }
@@ -126,27 +134,12 @@ class WalletMiddleware {
                     is WalletAction.Scan -> {
                         scope.launch {
                             val result = tangemSdkManager.scanNote(FirebaseAnalyticsHandler)
-                            when (result) {
-                                is CompletionResult.Success -> {
-                                    tangemSdkManager.changeDisplayedCardIdNumbersCount(result.data.card)
-                                    globalState?.tapWalletManager
-                                            ?.onCardScanned(result.data, true)
-                                    if (walletState?.twinCardsState != null) {
-                                        val showOnboarding = !preferencesStorage.wasTwinsOnboardingShown()
-                                        if (showOnboarding) {
-                                            store.dispatch(NavigationAction.NavigateTo(AppScreen.TwinsOnboarding))
-                                        }
-                                    }
-                                    store.dispatch(WalletAction.ScanCardFinished())
-                                }
-                                is CompletionResult.Failure -> {
-                                    if (result.error !is TangemSdkError.UserCancelled) {
-                                        scope.launch(Dispatchers.Main) {
-                                            store.dispatch(WalletAction.ScanCardFinished(result.error))
-                                            if (store.state.walletState.scanCardFailsCounter >= 2) {
-                                                store.dispatch(WalletAction.ShowDialog.ScanFails)
-                                            }
-                                        }
+                            scope.launch(Dispatchers.Main) {
+                                store.dispatch(GlobalAction.ScanFailsCounter.ChooseBehavior(result))
+                                when (result) {
+                                    is CompletionResult.Success -> {
+                                        tangemSdkManager.changeDisplayedCardIdNumbersCount(result.data.card)
+                                        globalState?.tapWalletManager?.onCardScanned(result.data, true)
                                     }
                                 }
                             }
@@ -199,13 +192,14 @@ class WalletMiddleware {
     private fun prepareSendAction(amount: Amount?, state: WalletState?): Action {
         val selectedWalletData = state?.getSelectedWalletData()
         val currency = selectedWalletData?.currencyData?.currencySymbol
-        val wallet = currency?.let { state.getWalletManager(currency)?.wallet }
+        val walletManager = state?.getWalletManager(currency)
+        val wallet = walletManager?.wallet
 
         return if (amount != null) {
             if (amount.type is AmountType.Token) {
-                prepareSendActionForToken(amount, state, selectedWalletData, wallet)
+                prepareSendActionForToken(amount, state, selectedWalletData, wallet, walletManager)
             } else {
-                PrepareSendScreen(amount, selectedWalletData?.fiatRate)
+                PrepareSendScreen(amount, selectedWalletData?.fiatRate, walletManager)
             }
         } else {
             val amounts = wallet?.amounts?.toSendableAmounts()
@@ -213,23 +207,24 @@ class WalletMiddleware {
                 val amountToSend = amounts?.find { it.currencySymbol == currency }
                         ?: return WalletAction.Send.ChooseCurrency(amounts)
                 if (amountToSend.type is AmountType.Token) {
-                    prepareSendActionForToken(amount, state, selectedWalletData, wallet)
+                    prepareSendActionForToken(amountToSend, state, selectedWalletData, wallet, walletManager)
                 } else {
-                    PrepareSendScreen(amountToSend, selectedWalletData.fiatRate)
+                    PrepareSendScreen(amountToSend, selectedWalletData.fiatRate, walletManager)
                 }
             } else {
                 if (amounts?.size ?: 0 > 1) {
                     WalletAction.Send.ChooseCurrency(amounts)
                 } else {
                     val amountToSend = amounts?.first()
-                    PrepareSendScreen(amountToSend, selectedWalletData?.fiatRate)
+                    PrepareSendScreen(amountToSend, selectedWalletData?.fiatRate, walletManager)
                 }
             }
         }
     }
 
     private fun prepareSendActionForToken(
-            amount: Amount?, state: WalletState?, selectedWalletData: WalletData?, wallet: Wallet?
+            amount: Amount, state: WalletState?, selectedWalletData: WalletData?, wallet: Wallet?,
+            walletManager: WalletManager?
     ): PrepareSendScreen {
         val coinRate = state?.getWalletData(wallet?.blockchain?.currency)?.fiatRate
         val tokenRate = if (state?.isMultiwalletAllowed == true) {
@@ -238,7 +233,7 @@ class WalletMiddleware {
             selectedWalletData?.currencyData?.token?.fiatRate
         }
         return PrepareSendScreen(
-                wallet?.amounts?.get(AmountType.Coin), coinRate,
+                wallet?.amounts?.get(AmountType.Coin), coinRate, walletManager,
                 amount, tokenRate)
     }
 }
