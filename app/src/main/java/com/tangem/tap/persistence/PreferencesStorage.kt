@@ -122,7 +122,10 @@ class AppRatingLaunchObserver(
         if (fundsFoundDate != null) return
 
         fundsFoundDate = Calendar.getInstance()
-        preferences.edit().putLong(K_FUNDS_FOUND_DATE, fundsFoundDate!!.timeInMillis).apply()
+        preferences.edit(true) {
+            putLong(K_FUNDS_FOUND_DATE, fundsFoundDate!!.timeInMillis).apply()
+            putInt(K_SHOW_RATING_AT_LAUNCH_COUNT, launchCounts + firstShowing)
+        }
     }
 
     fun isReadyToShow(): Boolean {
@@ -130,8 +133,8 @@ class AppRatingLaunchObserver(
 
         if (!userWasInteractWithRating()) {
             val diff = Calendar.getInstance().timeInMillis - fundsDate.timeInMillis
-            val diffInDays = diff / (100 * 60 * 60 * 24)
-            if (diffInDays >= firstShowing) return true
+            val diffInDays = diff / (1000 * 60 * 60 * 24)
+            return launchCounts >= getCounterOfNextShowing() && diffInDays >= firstShowing
         }
 
         val nextShowing = getCounterOfNextShowing()
