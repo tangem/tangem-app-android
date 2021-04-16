@@ -19,8 +19,11 @@ class CurrenciesRepository(val context: Application) {
             Types.newParameterizedType(List::class.java, Blockchain::class.java)
     )
 
-    fun loadCardCurrencies(cardId: String): CardCurrencies {
-        return CardCurrencies(loadSavedTokens(cardId), loadSavedBlockchains(cardId))
+    fun loadCardCurrencies(cardId: String): CardCurrencies? {
+        val blockchains = loadSavedBlockchains(cardId)
+        if (blockchains.isEmpty()) return null
+
+        return CardCurrencies(loadSavedTokens(cardId), blockchains)
     }
 
     fun saveCardCurrencies(cardId: String, currencies: CardCurrencies) {
