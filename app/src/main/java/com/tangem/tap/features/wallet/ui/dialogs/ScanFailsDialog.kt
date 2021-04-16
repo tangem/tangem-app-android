@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.appcompat.app.AlertDialog
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.feedback.ScanFailsEmail
+import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.store
 import com.tangem.wallet.R
@@ -22,7 +23,10 @@ class ScanFailsDialog {
                     store.dispatch(GlobalAction.SendFeedback(ScanFailsEmail()))
                 }
                 setNegativeButton(R.string.common_cancel) { _, _ -> }
-                setOnDismissListener { store.dispatch(WalletAction.HideDialog) }
+                setOnDismissListener {
+                    store.dispatch(HomeAction.HideDialog)
+                    store.dispatch(WalletAction.HideDialog)
+                }
             }.create()
         }
     }
