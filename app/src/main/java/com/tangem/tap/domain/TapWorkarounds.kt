@@ -28,10 +28,11 @@ object TapWorkarounds {
     private const val START_2_COIN_ISSUER = "start2coin"
 
     private val excludedBatches = listOf(
-                "0027",
-                "0030",
-                "0031",
-        ) // Tangem tags
+            "0027",
+            "0030",
+            "0031",
+            "0035"
+    ) // Tangem tags
 
     private val excludedIssuers = listOf(
             "TTM BANK"
