@@ -1,6 +1,7 @@
 package com.tangem.tap.domain.tasks
 
 import com.tangem.*
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.BlockchainSdkConfig
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.WalletManagerFactory
@@ -14,6 +15,7 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.toHexString
 import com.tangem.tap.domain.TapSdkError
 import com.tangem.tap.domain.TapWorkarounds.isExcluded
+import com.tangem.tap.domain.isMultiwalletAllowed
 import com.tangem.tap.domain.twins.TwinCardsManager
 import com.tangem.tap.domain.twins.isTwinCard
 import com.tangem.tap.store
@@ -54,7 +56,14 @@ class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteRespons
                     val walletManager = try {
                         getWalletManagerFactory().makeWalletManager(card)
                     } catch (exception: Exception) {
-                        return@run callback(CompletionResult.Success(ScanNoteResponse(null, card)))
+                        if (card.isMultiwalletAllowed) {
+                            // Create default Bitcoin WalletManager
+                            getWalletManagerFactory().makeWalletManager(card, Blockchain.Bitcoin)
+                        } else {
+                            return@run callback(CompletionResult.Success(
+                                    ScanNoteResponse(null, card)
+                            ))
+                        }
                     }
                     verifyCard(walletManager, card, null, session, callback)
                 }
