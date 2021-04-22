@@ -13,8 +13,9 @@ class TokensMiddleware {
             { action ->
                 when (action) {
                     is TokensAction.LoadCurrencies -> {
+                        val cardFirmware = state()?.globalState?.scanNoteResponse?.card?.firmwareVersion
                         val tokens = currenciesRepository.getPopularTokens()
-                        val blockchains = currenciesRepository.getBlockchains()
+                        val blockchains = currenciesRepository.getBlockchains(cardFirmware)
                         val currencies = CurrencyListItem.createListOfCurrencies(
                                 blockchains, tokens
                         )
