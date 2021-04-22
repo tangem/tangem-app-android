@@ -7,6 +7,7 @@ import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Types
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
+import com.tangem.commands.common.card.FirmwareVersion
 import com.tangem.tap.common.extensions.readJsonFileToString
 import com.tangem.tap.network.createMoshi
 
@@ -93,19 +94,27 @@ class CurrenciesRepository(val context: Application) {
         return tokensAdapter.fromJson(json)!!.map { it.toToken() }
     }
 
-    fun getBlockchains(): List<Blockchain> {
-        return listOf(
-                Blockchain.Bitcoin, Blockchain.BitcoinCash, Blockchain.Binance, Blockchain.Litecoin,
-                Blockchain.XRP, Blockchain.Tezos,
-                Blockchain.Ethereum, Blockchain.RSK)
+    fun getBlockchains(cardFirmware: FirmwareVersion?): List<Blockchain> {
+        return if (cardFirmware == null || cardFirmware.major < 4) {
+            secp256k1Blochcains
+        } else {
+            secp256k1Blochcains + ed25519Blockchains
+        }
     }
 
     companion object {
         private const val POPULAR_TOKENS_FILE_NAME = "erc20_tokens"
         private const val FILE_NAME_PREFIX_TOKENS = "tokens"
         private const val FILE_NAME_PREFIX_BLOCKCHAINS = "blockchains"
+
         fun getFileNameForTokens(cardId: String): String = "${FILE_NAME_PREFIX_TOKENS}_$cardId"
         fun getFileNameForBlockchains(cardId: String): String = "${FILE_NAME_PREFIX_BLOCKCHAINS}_$cardId"
+
+        private val secp256k1Blochcains = listOf(
+                Blockchain.Bitcoin, Blockchain.BitcoinCash, Blockchain.Binance, Blockchain.Litecoin,
+                Blockchain.XRP, Blockchain.Tezos,
+                Blockchain.Ethereum, Blockchain.RSK)
+        private val ed25519Blockchains = listOf(Blockchain.CardanoShelley, Blockchain.Stellar)
     }
 }
 
