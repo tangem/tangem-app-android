@@ -6,6 +6,7 @@ import com.tangem.KeyPair
 import com.tangem.TangemSdkError
 import com.tangem.commands.*
 import com.tangem.common.CompletionResult
+import com.tangem.common.TangemSdkConstants
 import com.tangem.common.extensions.calculateSha256
 import com.tangem.common.extensions.guard
 import com.tangem.common.files.FileHashHelper
@@ -17,14 +18,14 @@ class WriteProtectedIssuerDataTask(
 
     override fun run(session: CardSession, callback: (result: CompletionResult<WriteIssuerDataResponse>) -> Unit) {
         val hashes = arrayOf(twinPublicKey.calculateSha256())
-        SignCommand(hashes).run(session) { signResult ->
+        SignCommand(hashes, TangemSdkConstants.getDefaultWalletIndex()).run(session) { signResult ->
             when (signResult) {
                 is CompletionResult.Success -> {
                     ReadIssuerDataCommand().run(session) { readResult ->
                         when (readResult) {
                             is CompletionResult.Success -> {
                                 writeIssuerData(
-                                        twinPublicKey, issuerKeys, signResult.data.signature,
+                                        twinPublicKey, issuerKeys, signResult.data.signatures[0],
                                         readResult.data, session, callback
                                 )
                             }
