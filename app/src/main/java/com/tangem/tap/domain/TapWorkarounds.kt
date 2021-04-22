@@ -32,7 +32,7 @@ object TapWorkarounds {
             "0030",
             "0031",
             "0035"
-    ) // Tangem tags
+    )
 
     private val excludedIssuers = listOf(
             "TTM BANK"
@@ -43,5 +43,6 @@ val Card.isMultiwalletAllowed: Boolean
     get() {
         return cardData?.productMask?.contains(Product.TwinCard) != true
                 && !TapWorkarounds.isStart2Coin
-                && this.curve == EllipticCurve.Secp256k1
+                && (this.firmwareVersion.major >= 4 ||
+                this.getWallets().getOrNull(0)?.curve == EllipticCurve.Secp256k1)
     }
