@@ -203,6 +203,5 @@ private fun prepareAllowedSecurityOptions(card: Card): EnumSet<SecurityOption> {
 private fun Card.toCardInfo(): CardInfo? {
     val cardId = this.cardId.chunked(4).joinToString(separator = " ")
     val issuer = this.cardData?.issuerName ?: return null
-    val signedHashes = this.walletSignedHashes ?: return null
-    return CardInfo(cardId, issuer, signedHashes)
+    return CardInfo(cardId, issuer)
 }
