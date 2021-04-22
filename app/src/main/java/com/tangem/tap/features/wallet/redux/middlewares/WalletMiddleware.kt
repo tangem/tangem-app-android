@@ -108,7 +108,11 @@ class WalletMiddleware {
                                 )
                                 when (result) {
                                     is CompletionResult.Success -> {
-                                        globalState?.tapWalletManager?.onCardScanned(result.data)
+                                        val scanNoteResponse =
+                                                globalState?.scanNoteResponse?.copy(card = result.data)
+                                        scanNoteResponse?.let {
+                                            globalState.tapWalletManager.onCardScanned(scanNoteResponse)
+                                        }
                                     }
                                 }
                             }
