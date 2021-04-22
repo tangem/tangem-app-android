@@ -25,16 +25,6 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
         is GlobalAction.RestoreAppCurrency.Success -> {
             globalState.copy(appCurrency = action.appCurrency)
         }
-        is GlobalAction.UpdateWalletSignedHashes -> {
-            val card = globalState.scanNoteResponse?.card?.copy(
-                    walletSignedHashes = action.walletSignedHashes
-            )
-            if (card != null) {
-                globalState.copy(scanNoteResponse = globalState.scanNoteResponse.copy(card = card))
-            } else {
-                globalState
-            }
-        }
         is GlobalAction.SetConfigManager -> {
             globalState.copy(configManager = action.configManager)
         }
