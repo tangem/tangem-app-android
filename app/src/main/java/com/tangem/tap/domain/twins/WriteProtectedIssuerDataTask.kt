@@ -10,6 +10,7 @@ import com.tangem.common.TangemSdkConstants
 import com.tangem.common.extensions.calculateSha256
 import com.tangem.common.extensions.guard
 import com.tangem.common.files.FileHashHelper
+import com.tangem.tap.domain.extensions.getDefaultWalletIndex
 
 class WriteProtectedIssuerDataTask(
         private val twinPublicKey: ByteArray, private val issuerKeys: KeyPair
