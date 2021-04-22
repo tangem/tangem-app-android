@@ -2,10 +2,16 @@ package com.tangem.tap.domain
 
 import androidx.activity.ComponentActivity
 import com.tangem.*
-import com.tangem.commands.*
+import com.tangem.commands.CommandResponse
+import com.tangem.commands.PinType
+import com.tangem.commands.SetPinCommand
+import com.tangem.commands.SetPinResponse
 import com.tangem.commands.common.card.Card
 import com.tangem.commands.common.card.CardType
+import com.tangem.commands.wallet.PurgeWalletCommand
+import com.tangem.commands.wallet.PurgeWalletResponse
 import com.tangem.common.CompletionResult
+import com.tangem.common.TangemSdkConstants
 import com.tangem.common.extensions.calculateSha256
 import com.tangem.tangem_sdk_new.extensions.init
 import com.tangem.tap.common.analytics.AnalyticsEvent
@@ -32,13 +38,15 @@ class TangemSdkManager(val activity: ComponentActivity) {
                 initialMessage = Message(activity.getString(R.string.initial_message_scan_header)))
     }
 
-    suspend fun createWallet(cardId: String?): CompletionResult<ScanNoteResponse> {
+    suspend fun createWallet(cardId: String?): CompletionResult<Card> {
         return runTaskAsyncReturnOnMain(CreateWalletAndRescanTask(), cardId,
                 initialMessage = Message(activity.getString(R.string.initial_message_create_wallet_body)))
     }
 
     suspend fun eraseWallet(cardId: String?): CompletionResult<PurgeWalletResponse> {
-        return runTaskAsyncReturnOnMain(PurgeWalletCommand(), cardId,
+        return runTaskAsyncReturnOnMain(PurgeWalletCommand(
+                TangemSdkConstants.getDefaultWalletIndex()),
+                cardId,
                 initialMessage = Message(activity.getString(R.string.initial_message_purge_wallet_body)))
     }
 
