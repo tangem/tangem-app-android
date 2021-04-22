@@ -3,7 +3,7 @@ package com.tangem.tap.domain.twins
 import com.tangem.CardSession
 import com.tangem.CardSessionRunnable
 import com.tangem.KeyPair
-import com.tangem.commands.ReadCommand
+import com.tangem.commands.read.ReadCommand
 import com.tangem.common.CompletionResult
 import com.tangem.tap.domain.tasks.ScanNoteResponse
 import com.tangem.tap.domain.tasks.ScanNoteTask
