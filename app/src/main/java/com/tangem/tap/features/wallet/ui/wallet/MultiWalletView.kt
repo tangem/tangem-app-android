@@ -34,28 +34,26 @@ class MultiWalletView : WalletView {
     override fun changeWalletView(fragment: WalletFragment) {
         setFragment(fragment)
         onViewCreated()
-        showMultiWalletView()
-        setupButtons()
+        showMultiWalletView(fragment)
+        setupButtons(fragment)
     }
 
 
-    private fun showMultiWalletView() {
-        val fragment = fragment ?: return
-        fragment.tv_twin_card_number.hide()
-        fragment.iv_twin_card.hide()
-        fragment.rv_pending_transaction.hide()
-        fragment.l_card_balance.hide()
-        fragment.l_address.hide()
-        fragment.l_buttons_short.hide()
-        fragment.l_buttons_long.hide()
-        fragment.btn_scan_multiwallet?.show()
-        fragment.rv_multiwallet.show()
-        fragment.btn_add_token.show()
+    private fun showMultiWalletView(fragment: WalletFragment) = with(fragment) {
+        tv_twin_card_number.hide()
+        iv_twin_card.hide()
+        rv_pending_transaction.hide()
+        l_card_balance.hide()
+        l_address.hide()
+        l_buttons_short.hide()
+        l_buttons_long.hide()
+        btn_scan_multiwallet?.show()
+        rv_multiwallet.show()
+        btn_add_token.show()
     }
 
-    private fun setupButtons() {
-        val fragment = fragment ?: return
-        fragment.btn_scan_multiwallet?.setOnClickListener { store.dispatch(WalletAction.Scan) }
+    private fun setupButtons(fragment: WalletFragment) = with(fragment) {
+        btn_scan_multiwallet?.setOnClickListener { store.dispatch(WalletAction.Scan) }
     }
 
     override fun setFragment(fragment: WalletFragment) {
@@ -114,22 +112,22 @@ class MultiWalletView : WalletView {
 
     private fun showErrorState(
             fragment: WalletFragment, errorTitle: CharSequence, errorDescription: CharSequence,
-    ) {
-        fragment.l_card_balance.show()
-        fragment.l_balance.hide()
-        fragment.l_balance_error.show()
-        fragment.rv_multiwallet.hide()
-        fragment.btn_add_token.hide()
-        fragment.tv_error_title.text = errorTitle
-        fragment.tv_error_descriptions.text = errorDescription
+    ) = with(fragment) {
+        l_card_balance.show()
+        l_balance.hide()
+        l_balance_error.show()
+        rv_multiwallet.hide()
+        btn_add_token.hide()
+        tv_error_title.text = errorTitle
+        tv_error_descriptions.text = errorDescription
     }
 
-    private fun configureButtonsForEmptyWalletState(fragment: WalletFragment) {
-        fragment.btn_scan_multiwallet.hide()
-        fragment.l_buttons_long.show()
-        fragment.btn_scan_long.setOnClickListener { store.dispatch(WalletAction.Scan) }
-        fragment.btn_confirm_long.setOnClickListener { store.dispatch(WalletAction.CreateWallet) }
-        fragment.btn_confirm_long.text = fragment.getText(R.string.wallet_button_create_wallet)
+    private fun configureButtonsForEmptyWalletState(fragment: WalletFragment) = with(fragment) {
+        btn_scan_multiwallet.hide()
+        l_buttons_long.show()
+        btn_scan_long.setOnClickListener { store.dispatch(WalletAction.Scan) }
+        btn_confirm_long.setOnClickListener { store.dispatch(WalletAction.CreateWallet) }
+        btn_confirm_long.text = fragment.getText(R.string.wallet_button_create_wallet)
     }
 
     private fun handleDialogs(walletDialog: StateDialog?) {
