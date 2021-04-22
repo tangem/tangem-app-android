@@ -1,35 +1,39 @@
 package com.tangem.tap.domain.tasks
 
 import com.tangem.*
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.BlockchainSdkConfig
-import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.commands.CommandResponse
 import com.tangem.commands.ReadIssuerDataCommand
 import com.tangem.commands.common.card.Card
 import com.tangem.commands.common.card.CardStatus
-import com.tangem.commands.verifycard.VerifyCardCommand
-import com.tangem.commands.verifycard.VerifyCardResponse
+import com.tangem.commands.common.card.EllipticCurve
+import com.tangem.commands.verification.VerifyCardCommand
+import com.tangem.commands.verification.VerifyCardResponse
+import com.tangem.commands.wallet.WalletConfig
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.toHexString
 import com.tangem.tap.domain.TapSdkError
 import com.tangem.tap.domain.TapWorkarounds.isExcluded
-import com.tangem.tap.domain.isMultiwalletAllowed
+import com.tangem.tap.domain.extensions.getSingleWallet
+import com.tangem.tap.domain.extensions.getStatus
 import com.tangem.tap.domain.twins.TwinCardsManager
 import com.tangem.tap.domain.twins.isTwinCard
 import com.tangem.tap.store
+import com.tangem.tasks.PreflightReadCapable
+import com.tangem.tasks.PreflightReadSettings
 import com.tangem.tasks.ScanTask
 
 data class ScanNoteResponse(
-        val walletManager: WalletManager?,
         val card: Card,
         val verifyResponse: VerifyCardResponse? = null,
         val secondTwinPublicKey: String? = null,
 ) : CommandResponse
 
-class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteResponse> {
+class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteResponse>, PreflightReadCapable {
     override val requiresPin2 = false
+
+    override fun preflightReadSettings() = PreflightReadSettings.FullCardRead
 
     override fun run(session: CardSession, callback: (result: CompletionResult<ScanNoteResponse>) -> Unit) {
         ScanTask().run(session) { result ->
@@ -48,39 +52,25 @@ class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteRespons
                         return@run
                     }
 
-                    if (card.isTwinCard()) {
-                        dealWithTwinCard(card, session, callback)
-                        return@run
-                    }
-
-                    val walletManager = try {
-                        getWalletManagerFactory().makeWalletManager(card)
-                    } catch (exception: Exception) {
-                        if (card.isMultiwalletAllowed) {
-                            // Create default Bitcoin WalletManager
-                            getWalletManagerFactory().makeWalletManager(card, Blockchain.Bitcoin)
-                        } else {
-                            return@run callback(CompletionResult.Success(
-                                    ScanNoteResponse(null, card)
-                            ))
-                        }
-                    }
-                    verifyCard(walletManager, card, null, session, callback)
+                    verifyCard(card, session, callback)
                 }
             }
         }
     }
 
     private fun verifyCard(
-            walletManager: WalletManager?, card: Card, publicKey: String? = null,
-            session: CardSession, callback: (result: CompletionResult<ScanNoteResponse>) -> Unit
+            card: Card, session: CardSession, callback: (result: CompletionResult<ScanNoteResponse>) -> Unit
     ) {
-
         VerifyCardCommand(true).run(session) { verifyResult ->
             when (verifyResult) {
                 is CompletionResult.Success -> {
-                    callback(CompletionResult.Success(ScanNoteResponse(
-                            walletManager, card, verifyResult.data, publicKey)))
+                    if (card.isTwinCard()) {
+                        dealWithTwinCard(card, session, verifyResult.data, callback)
+                    } else if (card.firmwareVersion.major >= 4) {
+                        createMissingWalletsIfNeeded(card, session, verifyResult.data, callback)
+                    } else {
+                        callback(CompletionResult.Success(ScanNoteResponse(card, verifyResult.data)))
+                    }
                 }
                 is CompletionResult.Failure -> {
                     callback(CompletionResult.Failure(TangemSdkError.CardVerificationFailed()))
@@ -89,39 +79,73 @@ class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteRespons
         }
     }
 
+    private fun createMissingWalletsIfNeeded(
+            card: Card, session: CardSession, verifyResponse: VerifyCardResponse,
+            callback: (result: CompletionResult<ScanNoteResponse>) -> Unit
+    ) {
+        if (card.getStatus() == CardStatus.Empty) {
+            callback(CompletionResult.Success(ScanNoteResponse(card, verifyResponse)))
+            return
+        }
+
+        val curvesPresent = card.getWallets().map { it.curve }
+        val curvesToCreate = EllipticCurve.values().subtract(curvesPresent)
+
+        if (curvesToCreate.isEmpty()) {
+            callback(CompletionResult.Success(ScanNoteResponse(card, verifyResponse)))
+            return
+        }
+
+        val configs = curvesToCreate.map { curve ->
+            WalletConfig(
+                    isReusable = null, prohibitPurgeWallet = null, curveId = curve,
+                    signingMethods = null
+            )
+        }
+        CreateWalletsTask(configs).run(session) { result ->
+            when (result) {
+                is CompletionResult.Success ->
+                    callback(CompletionResult.Success(ScanNoteResponse(result.data, verifyResponse)))
+                is CompletionResult.Failure -> callback(CompletionResult.Failure(result.error))
+            }
+        }
+
+    }
+
     private fun dealWithTwinCard(
-            card: Card, session: CardSession,
+            card: Card, session: CardSession, verifyResponse: VerifyCardResponse,
             callback: (result: CompletionResult<ScanNoteResponse>) -> Unit
     ) {
         ReadIssuerDataCommand().run(session) { readDataResult ->
             when (readDataResult) {
                 is CompletionResult.Success -> {
+                    val publicKey = card.getSingleWallet()?.publicKey
+                    if (publicKey == null) {
+                        callback(CompletionResult.Success(ScanNoteResponse(card, null)))
+                        return@run
+                    }
                     val verified = TwinCardsManager.verifyTwinPublicKey(
-                            readDataResult.data.issuerData, card.walletPublicKey
+                            readDataResult.data.issuerData, publicKey
                     )
                     if (verified) {
                         val twinPublicKey = readDataResult.data.issuerData.sliceArray(0 until 65)
-                        val walletManager = try {
-                            getWalletManagerFactory().makeMultisigWalletManager(card, twinPublicKey)
-                        } catch (exception: Exception) {
-                            callback(CompletionResult.Success(ScanNoteResponse(null, card)))
-                            return@run
-                        }
-                        verifyCard(walletManager, card, twinPublicKey.toHexString(), session, callback)
+                        callback(CompletionResult.Success(
+                                ScanNoteResponse(card, verifyResponse, twinPublicKey.toHexString())
+                        ))
                         return@run
                     } else {
-                        callback(CompletionResult.Success(ScanNoteResponse(null, card)))
+                        callback(CompletionResult.Success(ScanNoteResponse(card, null)))
                     }
                 }
                 is CompletionResult.Failure ->
-                    callback(CompletionResult.Success(ScanNoteResponse(null, card)))
+                    callback(CompletionResult.Success(ScanNoteResponse(card, null)))
             }
         }
     }
 
     private fun getErrorIfExcludedCard(card: Card): TangemError? {
         if (card.isExcluded()) return TapSdkError.CardForDifferentApp
-        if (card.status == CardStatus.Purged) return TangemSdkError.CardIsPurged()
+        if (card.status == CardStatus.Purged) return TangemSdkError.WalletIsPurged()
         if (card.status == CardStatus.NotPersonalized) return TangemSdkError.NotPersonalized()
         return null
     }
