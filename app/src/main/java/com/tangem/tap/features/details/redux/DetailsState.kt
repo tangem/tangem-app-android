@@ -26,7 +26,6 @@ data class DetailsState(
 data class CardInfo(
         val cardId: String,
         val issuer: String,
-        val signedHashes: Int,
 )
 
 enum class EraseWalletState { Allowed, NotAllowedByCard, NotEmpty }
