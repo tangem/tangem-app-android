@@ -4,14 +4,13 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.blockchain.blockchains.stellar.StellarTransactionExtras
 import com.tangem.blockchain.blockchains.xrp.XrpTransactionBuilder
 import com.tangem.blockchain.common.*
-import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.Signer
+import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.commands.common.card.Card
 import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.TapWorkarounds
@@ -115,11 +114,10 @@ private fun sendTransaction(
         val result = (walletManager as TransactionSender).send(txData, signer)
         withContext(Dispatchers.Main) {
             when (result) {
-                is Result.Success -> {
+                is SimpleResult.Success -> {
                     tangemSdk.config.linkedTerminal = isLinkedTerminal
                     FirebaseAnalyticsHandler.triggerEvent(AnalyticsEvent.TRANSACTION_IS_SENT, card)
                     dispatch(SendAction.SendSuccess)
-                    dispatch(GlobalAction.UpdateWalletSignedHashes(result.data.walletSignedHashes))
                     dispatch(NavigationAction.PopBackTo())
                     scope.launch(Dispatchers.IO) {
                         withContext(Dispatchers.Main) {
@@ -131,7 +129,7 @@ private fun sendTransaction(
                         }
                     }
                 }
-                is Result.Failure -> {
+                is SimpleResult.Failure -> {
                     when (result.error) {
                         is CreateAccountUnderfunded -> {
                             val error = result.error as CreateAccountUnderfunded
