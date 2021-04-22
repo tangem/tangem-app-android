@@ -7,6 +7,7 @@ import com.tangem.commands.wallet.CreateWalletResponse
 import com.tangem.commands.wallet.PurgeWalletCommand
 import com.tangem.common.CompletionResult
 import com.tangem.common.TangemSdkConstants
+import com.tangem.tap.domain.extensions.getDefaultWalletIndex
 import com.tangem.tap.domain.extensions.getSingleWallet
 import com.tangem.tasks.CreateWalletTask
 
