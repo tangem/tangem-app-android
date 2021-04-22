@@ -10,6 +10,8 @@ import com.tangem.tap.common.redux.global.GlobalState
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.currenciesRepository
+import com.tangem.tap.domain.extensions.makeWalletManagerForApp
+import com.tangem.tap.domain.extensions.makeWalletManagersForApp
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.scope
@@ -46,7 +48,7 @@ class MultiWalletMiddleware {
                 globalState?.scanNoteResponse?.card?.let { card ->
                     currenciesRepository.saveAddedBlockchain(card.cardId, action.blockchain)
                     globalState.tapWalletManager.walletManagerFactory
-                            .makeWalletManager(card, action.blockchain)?.let {
+                            .makeWalletManagerForApp(card, action.blockchain)?.let {
                                 store.dispatch(WalletAction.MultiWallet.AddWalletManagers(it))
                             }
                 }
@@ -66,9 +68,10 @@ class MultiWalletMiddleware {
                 }
             }
             is WalletAction.MultiWallet.FindBlockchainsInUse -> {
-                val blockchains = currenciesRepository.getBlockchains()
+                val cardFirmware = globalState?.scanNoteResponse?.card?.firmwareVersion
+                val blockchains = currenciesRepository.getBlockchains(cardFirmware)
                         .filterNot { walletState?.blockchains?.contains(it) == true }
-                val walletManagers = action.factory.makeWalletManagers(action.card, blockchains)
+                val walletManagers = action.factory.makeWalletManagersForApp(action.card, blockchains)
 
                 scope.launch {
                     walletManagers.map { walletManager ->
