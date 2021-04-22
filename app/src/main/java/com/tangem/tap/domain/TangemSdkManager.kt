@@ -16,6 +16,7 @@ import com.tangem.common.extensions.calculateSha256
 import com.tangem.tangem_sdk_new.extensions.init
 import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.AnalyticsHandler
+import com.tangem.tap.domain.extensions.getDefaultWalletIndex
 import com.tangem.tap.domain.tasks.CreateWalletAndRescanTask
 import com.tangem.tap.domain.tasks.ScanNoteResponse
 import com.tangem.tap.domain.tasks.ScanNoteTask
