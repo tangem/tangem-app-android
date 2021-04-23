@@ -284,6 +284,7 @@ class FeedbackEmail : EmailData {
 //            appendKeyValue("Outputs count", infoHolder.outputsCount)
         builder.appendKeyValue("Phone model", infoHolder.phoneModel)
         builder.appendKeyValue("OS version", infoHolder.osVersion)
+        builder.appendKeyValue("App version", infoHolder.appVersion)
         return builder.toString()
     }
 }
