@@ -10,7 +10,7 @@ interface Loader<T> {
 
     companion object {
         const val featuresName = "features_${BuildConfig.CONFIG_ENVIRONMENT}"
-        const val configValuesName = "tangem-android-config/config_${BuildConfig.CONFIG_ENVIRONMENT}"
+        const val configValuesName = "tangem-app-config/config_${BuildConfig.CONFIG_ENVIRONMENT}"
         const val warnings = "warnings_${BuildConfig.CONFIG_ENVIRONMENT}"
     }
 }
