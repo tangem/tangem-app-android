@@ -199,13 +199,12 @@ class TapWalletManager {
             store.dispatch(WalletAction.MultiWallet.FindBlockchainsInUse(card, walletManagerFactory))
             store.dispatch(WalletAction.MultiWallet.FindTokensInUse)
         } else {
-            val blockchains = listOfNotNull(primaryBlockchain) + savedCurrencies.blockchains
+            val blockchains =  savedCurrencies.blockchains
             val walletManagers = walletManagerFactory.makeWalletManagersForApp(card, blockchains)
-            val tokens = presetTokens + savedCurrencies.tokens
 
             store.dispatch(WalletAction.MultiWallet.AddWalletManagers(walletManagers))
             store.dispatch(WalletAction.MultiWallet.AddBlockchains(blockchains))
-            store.dispatch(WalletAction.MultiWallet.AddTokens(tokens))
+            store.dispatch(WalletAction.MultiWallet.AddTokens(savedCurrencies.tokens))
             store.dispatch(WalletAction.MultiWallet.FindTokensInUse)
         }
     }
