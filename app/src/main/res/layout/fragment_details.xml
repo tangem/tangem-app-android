@@ -91,6 +91,30 @@
                 tools:text="Tangem" />
 
             <TextView
+                android:id="@+id/tv_signed_hashes_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingTop="7dp"
+                android:paddingBottom="7dp"
+                android:text="@string/details_row_title_signed_hashes"
+                android:textColor="@color/darkGray6"
+                android:textSize="16sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_issuer_title" />
+
+            <TextView
+                android:id="@+id/tv_signed_hashes"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/darkGray1"
+                android:textSize="16sp"
+                android:paddingTop="7dp"
+                android:paddingBottom="7dp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_issuer"
+                tools:text="48 hashes" />
+
+            <TextView
                 android:id="@+id/tv_disclaimer"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -102,7 +126,7 @@
                 android:textSize="16sp"
                 app:drawableEndCompat="@drawable/ic_angle_bracket_right"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_issuer_title" />
+                app:layout_constraintTop_toBottomOf="@id/tv_signed_hashes_title" />
 
             <TextView
                 android:id="@+id/tv_card_tou"
