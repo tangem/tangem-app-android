@@ -111,4 +111,6 @@ this wallet.
     \n\nIt’s perfectly safe in all other respects.
     \n\nTangem is the only hardware wallet to offer signature count protection.</string>
     <string name="alert_button_i_understand" translatable="false">I understand</string>
+
+    <string name="warning_low_signatures_format" translatable="false">There are only %s signatures available on this card. You must withdraw all of your funds.</string>
 </resources>
