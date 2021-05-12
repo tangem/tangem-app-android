@@ -24,7 +24,12 @@ sealed class GlobalAction : Action {
         data class Success(val appCurrency: FiatCurrencyName) : GlobalAction()
     }
 
-    data class UpdateWalletSignedHashes(val walletSignedHashes: Int?) : GlobalAction()
+    data class UpdateWalletSignedHashes(
+        val walletSignedHashes: Int?,
+        val remainingSignatures: Int?,
+        val walletPublicKey: ByteArray,
+    ) : GlobalAction()
+
     data class HideWarningMessage(val warning: WarningMessage) : GlobalAction()
     data class UpdateSecurityOptions(val securityOption: SecurityOption) : GlobalAction()
 
