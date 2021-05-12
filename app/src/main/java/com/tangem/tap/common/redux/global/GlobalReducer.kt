@@ -1,5 +1,6 @@
 package com.tangem.tap.common.redux.global
 
+import com.tangem.commands.wallet.WalletIndex
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.details.redux.SecurityOption
 import org.rekotlin.Action
@@ -32,17 +33,33 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
         is GlobalAction.UpdateSecurityOptions -> {
             val card = when (action.securityOption) {
                 SecurityOption.LongTap -> globalState.scanNoteResponse?.card?.copy(
-                        isPin1Default = true, isPin2Default = true
+                    isPin1Default = true, isPin2Default = true
                 )
                 SecurityOption.PassCode -> globalState.scanNoteResponse?.card?.copy(
-                        isPin1Default = true, isPin2Default = false
+                    isPin1Default = true, isPin2Default = false
                 )
                 SecurityOption.AccessCode -> globalState.scanNoteResponse?.card?.copy(
-                        isPin1Default = false, isPin2Default = true
+                    isPin1Default = false, isPin2Default = true
                 )
             }
             if (card != null) {
                 globalState.copy(scanNoteResponse = globalState.scanNoteResponse?.copy(card = card))
+            } else {
+                globalState
+            }
+        }
+        is GlobalAction.UpdateWalletSignedHashes -> {
+            val wallet = globalState.scanNoteResponse?.card
+                ?.wallet(WalletIndex.PublicKey(action.walletPublicKey))
+                ?.copy(
+                    signedHashes = action.walletSignedHashes,
+                    remainingSignatures = action.remainingSignatures
+                )
+            val card = globalState.scanNoteResponse?.card
+            wallet?.let { globalState.scanNoteResponse.card.updateWallet(wallet) }
+
+            if (card != null) {
+                globalState.copy(scanNoteResponse = globalState.scanNoteResponse.copy(card = card))
             } else {
                 globalState
             }
