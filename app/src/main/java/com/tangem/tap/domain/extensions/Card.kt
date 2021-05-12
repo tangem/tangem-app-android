@@ -42,3 +42,6 @@ fun Card.hasSignedHashes(): Boolean {
 fun Card.signedHashesCount(): Int {
     return getWallets().map { it.signedHashes ?: 0 }.sum()
 }
+
+val Card.remainingSignatures: Int?
+    get() = this.getSingleWallet()?.remainingSignatures
