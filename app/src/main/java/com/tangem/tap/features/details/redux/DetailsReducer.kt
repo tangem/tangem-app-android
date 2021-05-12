@@ -5,6 +5,7 @@ import com.tangem.commands.common.card.Card
 import com.tangem.commands.common.card.masks.Settings
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.TapWorkarounds
+import com.tangem.tap.domain.extensions.signedHashesCount
 import com.tangem.tap.domain.extensions.toSendableAmounts
 import com.tangem.tap.domain.twins.TwinsHelper
 import com.tangem.tap.domain.twins.isTwinCard
@@ -203,5 +204,5 @@ private fun prepareAllowedSecurityOptions(card: Card): EnumSet<SecurityOption> {
 private fun Card.toCardInfo(): CardInfo? {
     val cardId = this.cardId.chunked(4).joinToString(separator = " ")
     val issuer = this.cardData?.issuerName ?: return null
-    return CardInfo(cardId, issuer)
-}
+    val signedHashes = this.signedHashesCount()
+    return CardInfo(cardId, issuer, signedHashes)}
