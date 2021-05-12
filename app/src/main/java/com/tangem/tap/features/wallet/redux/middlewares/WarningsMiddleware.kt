@@ -16,6 +16,7 @@ import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.domain.extensions.getSingleWallet
 import com.tangem.tap.domain.extensions.hasSignedHashes
+import com.tangem.tap.domain.extensions.remainingSignatures
 import com.tangem.tap.domain.isMultiwalletAllowed
 import com.tangem.tap.domain.twins.isTwinCard
 import com.tangem.tap.features.wallet.redux.WalletAction
@@ -48,6 +49,17 @@ class WarningsMiddleware {
             is WalletAction.Warnings.AppRating.SetNeverToShow -> {
                 preferencesStorage.appRatingLaunchObserver.setNeverToShow()
             }
+            is WalletAction.Warnings.CheckRemainingSignatures -> {
+                if (action.remainingSignatures != null &&
+                    action.remainingSignatures <= WarningMessagesManager.REMAINING_SIGNATURES_WARNING
+                ) {
+                    addWarningMessage(
+                        warning =
+                        WarningMessagesManager.remainingSignaturesNotEnough(action.remainingSignatures),
+                        autoUpdate = true
+                    )
+                }
+            }
         }
     }
 
@@ -67,6 +79,7 @@ class WarningsMiddleware {
     private fun showCardWarningsIfNeeded(globalState: GlobalState?) {
         globalState?.scanNoteResponse?.card?.let { card ->
             globalState.warningManager?.removeWarnings(WarningMessage.Origin.Local)
+            showWarningLowRemainingSignaturesIfNeeded(card)
             if (card.getType() != CardType.Release) {
                 addWarningMessage(WarningMessagesManager.devCardWarning())
             } else if (!preferencesStorage.wasCardScannedBefore(card.cardId)) {
@@ -74,7 +87,8 @@ class WarningsMiddleware {
             }
             if (card.getType() == CardType.Release) {
                 if (globalState.scanNoteResponse.verifyResponse?.verificationState ==
-                        VerifyCardState.VerifiedOffline) {
+                    VerifyCardState.VerifiedOffline
+                ) {
                     addWarningMessage(WarningMessagesManager.onlineVerificationFailed())
                 }
             }
@@ -82,8 +96,21 @@ class WarningsMiddleware {
         }
     }
 
+    private fun showWarningLowRemainingSignaturesIfNeeded(card: Card) {
+        val remainingSignatures = card.remainingSignatures
+        if (remainingSignatures != null &&
+            remainingSignatures <= WarningMessagesManager.REMAINING_SIGNATURES_WARNING
+        ) {
+            addWarningMessage(
+                WarningMessagesManager.remainingSignaturesNotEnough(
+                    remainingSignatures
+                )
+            )
+        }
+    }
+
     private fun checkIfWarningNeeded(
-            card: Card
+        card: Card
     ): WarningMessage? {
         if (card.isTwinCard()) return null
 
@@ -133,9 +160,15 @@ class WarningsMiddleware {
                     }
                     is SimpleResult.Failure ->
                         if (result.error is BlockchainSdkError.SignatureCountNotMatched) {
-                            addWarningMessage(WarningMessagesManager.alreadySignedHashesWarning(), true)
+                            addWarningMessage(
+                                WarningMessagesManager.alreadySignedHashesWarning(),
+                                true
+                            )
                         } else if (signedHashes > 0) {
-                            addWarningMessage(WarningMessagesManager.alreadySignedHashesWarning(), true)
+                            addWarningMessage(
+                                WarningMessagesManager.alreadySignedHashesWarning(),
+                                true
+                            )
                         }
                 }
             }
@@ -153,6 +186,9 @@ class WarningsMiddleware {
 
     private fun getWarnings(): List<WarningMessage> {
         val warningManager = store.state.globalState.warningManager ?: return emptyList()
-        return warningManager.getWarnings(WarningMessage.Location.MainScreen, store.state.walletState.blockchains)
+        return warningManager.getWarnings(
+            WarningMessage.Location.MainScreen,
+            store.state.walletState.blockchains
+        )
     }
 }
