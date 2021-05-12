@@ -87,9 +87,18 @@ class WarningsMiddleware {
     ): WarningMessage? {
         if (card.isTwinCard()) return null
 
+        if (card.isMultiwalletAllowed) {
+            return if (card.hasSignedHashes()) {
+                WarningMessagesManager.signedHashesMultiWalletWarning()
+            } else {
+                store.dispatch(WalletAction.Warnings.CheckHashesCount.SaveCardId)
+                null
+            }
+        }
+
         val validator = store.state.walletState.walletManagers.firstOrNull()
                 as? SignatureCountValidator
-        return if (validator == null || card.isMultiwalletAllowed) {
+        return if (validator == null) {
             if (card.hasSignedHashes()) {
                 WarningMessagesManager.alreadySignedHashesWarning()
             } else {
