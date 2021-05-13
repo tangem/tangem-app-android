@@ -27,22 +27,30 @@ fun Picasso.loadCurrenciesIcon(
     imageView.colorFilter = null
     textView.text = null
 
-    if (url != null) {
-        this.load(url)
-            .placeholder(R.drawable.shape_circle)
-            ?.into(imageView,
-                object : Callback {
-                    override fun onError(e: Exception?) {
-                        setOfflineCurrencyImage(imageView, textView, token, blockchain)
-                    }
+    when {
+        url != null -> {
+            this.load(url)
+                .placeholder(R.drawable.shape_circle)
+                ?.into(imageView,
+                    object : Callback {
+                        override fun onError(e: Exception?) {
+                            setOfflineCurrencyImage(imageView, textView, token, blockchain)
+                        }
 
-                    override fun onSuccess() {
-                    }
-                })
-    } else {
-        setOfflineCurrencyImage(imageView, textView, token, blockchain)
+                        override fun onSuccess() {
+                        }
+                    })
+        }
+        token?.symbol == QCX -> {
+            this.load(R.drawable.ic_qcx)?.into(imageView)
+        }
+        else -> {
+            setOfflineCurrencyImage(imageView, textView, token, blockchain)
+        }
     }
 }
+
+private const val QCX = "QCX"
 
 private fun setOfflineCurrencyImage(
     imageView: ImageView,
