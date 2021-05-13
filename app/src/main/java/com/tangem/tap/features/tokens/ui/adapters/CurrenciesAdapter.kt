@@ -7,7 +7,10 @@ import androidx.annotation.StringRes
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.squareup.picasso.Callback
+import com.squareup.picasso.Picasso
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.IconsUtil
 import com.tangem.blockchain.common.Token
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
@@ -16,6 +19,7 @@ import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.item_currency_subtitle.view.*
 import kotlinx.android.synthetic.main.item_popular_token.view.*
+import java.lang.Exception
 import java.util.*
 
 class CurrenciesAdapter : ListAdapter<CurrencyListItem, RecyclerView.ViewHolder>(DiffUtilCallback) {
@@ -104,9 +108,11 @@ class CurrenciesAdapter : ListAdapter<CurrencyListItem, RecyclerView.ViewHolder>
                     view.btn_add_token.show(!isAdded)
                     view.btn_token_added.show(isAdded)
 
-                    view.iv_currency.setImageResource(currency.blockchain.getIconRes())
-                    view.iv_currency.colorFilter = null
-                    view.tv_token_letter.text = null
+                    Picasso.get().loadCurrenciesIcon(
+                        imageView = view.iv_currency,
+                        textView = view.tv_token_letter,
+                        blockchain = blockchain, token = null
+                    )
 
                     view.btn_add_token.setOnClickListener {
                         store.dispatch(WalletAction.MultiWallet.AddBlockchain(blockchain))
@@ -123,10 +129,11 @@ class CurrenciesAdapter : ListAdapter<CurrencyListItem, RecyclerView.ViewHolder>
                     view.btn_add_token.show(!isAdded)
                     view.btn_token_added.show(isAdded)
 
-                    view.iv_currency.setImageResource(R.drawable.shape_circle)
-                    view.iv_currency.setColorFilter(token.getColor())
-                    view.tv_token_letter.text = token.symbol.take(1)
-
+                    Picasso.get().loadCurrenciesIcon(
+                        imageView = view.iv_currency,
+                        textView = view.tv_token_letter,
+                        token = token, blockchain = Blockchain.Ethereum
+                    )
                     view.btn_add_token.setOnClickListener {
                         store.dispatch(WalletAction.MultiWallet.AddToken(token))
                         view.btn_add_token.hide()
@@ -152,7 +159,10 @@ sealed class CurrencyListItem {
     data class TitleListItem(@StringRes val titleResId: Int) : CurrencyListItem()
 
     companion object {
-        fun createListOfCurrencies(blockchains: List<Blockchain>, tokens: List<Token>): List<CurrencyListItem> {
+        fun createListOfCurrencies(
+            blockchains: List<Blockchain>,
+            tokens: List<Token>
+        ): List<CurrencyListItem> {
             val blockchainsTitle = R.string.add_tokens_subtitle_blockchains
             val tokensTitle = R.string.add_tokens_subtitle_tokens
             return listOf(TitleListItem(blockchainsTitle)) +
