@@ -6,12 +6,15 @@ import com.tangem.blockchain.blockchains.xrp.XrpTransactionBuilder
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.extensions.Signer
 import com.tangem.blockchain.extensions.SimpleResult
+import com.tangem.commands.SignResponse
 import com.tangem.commands.common.card.Card
 import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.common.redux.AppState
+import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.domain.TangemSigner
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.TapWorkarounds
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
@@ -110,7 +113,17 @@ private fun sendTransaction(
         if (TapWorkarounds.isStart2Coin) {
             tangemSdk.config.linkedTerminal = false
         }
-        val signer = Signer(tangemSdk, action.messageForSigner)
+        val signer = TangemSigner(
+            tangemSdk = tangemSdk, initialMessage = action.messageForSigner
+        ) { signResponse ->
+            store.dispatch(
+                GlobalAction.UpdateWalletSignedHashes(
+                    walletSignedHashes = signResponse.walletSignedHashes,
+                    remainingSignatures = signResponse.walletRemainingSignatures,
+                    walletPublicKey = walletManager.wallet.publicKey
+                )
+            )
+        }
         val result = (walletManager as TransactionSender).send(txData, signer)
         withContext(Dispatchers.Main) {
             when (result) {
