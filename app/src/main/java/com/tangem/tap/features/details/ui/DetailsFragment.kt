@@ -74,7 +74,11 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
             }
             tv_card_id.text = cardId
             tv_issuer.text = state.cardInfo.issuer
+            tv_signed_hashes.text = state.cardInfo.signedHashes.toString()
         }
+
+        tv_signed_hashes.show(state.card?.isTwinCard() != true)
+        tv_signed_hashes_title.show(state.card?.isTwinCard() != true)
 
         tv_disclaimer.setOnClickListener { store.dispatch(DetailsAction.ShowDisclaimer) }
 

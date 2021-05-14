@@ -1,5 +1,6 @@
 package com.tangem.tap.domain.configurable.warningMessage
 
+import com.tangem.TangemSdkError
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.tangem_sdk_new.ui.animation.VoidCallback
 import com.tangem.tap.common.extensions.containsAny
@@ -140,5 +141,20 @@ class WarningMessagesManager(
                 R.string.warning_failed_to_verify_card_message,
                 WarningMessage.Origin.Local
         )
+
+        fun remainingSignaturesNotEnough(remainingSignatures: Int): WarningMessage = WarningMessage(
+            title = "",
+            message = "",
+            type = WarningMessage.Type.Permanent,
+            priority = WarningMessage.Priority.Critical,
+            listOf(WarningMessage.Location.MainScreen),
+            blockchains = null,
+            titleResId = R.string.alert_title,
+            messageResId = R.string.warning_low_signatures_format,
+            origin = WarningMessage.Origin.Local,
+            messageFormatArg = remainingSignatures.toString()
+        )
+
+        const val REMAINING_SIGNATURES_WARNING = 10
     }
 }

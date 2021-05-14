@@ -54,11 +54,13 @@ class WarningMessageVH(val view: View) : RecyclerView.ViewHolder(view) {
     }
 
     private fun setText(warning: WarningMessage) {
-        fun getString(resId: Int?, default: String) =
-            if (resId == null) default else view.getString(resId)
+        fun getString(resId: Int?, default: String, formatArgs: String? = null) =
+            if (resId == null) default else view.context.getString(resId, formatArgs)
 
         view.tv_title.text = getString(warning.titleResId, warning.title)
-        view.tv_message.text = getString(warning.messageResId, warning.message)
+        view.tv_message.text = getString(
+            resId = warning.messageResId, default = warning.message, formatArgs = warning.messageFormatArg
+        )
     }
 
     private fun setBgColor(priority: WarningMessage.Priority) {
