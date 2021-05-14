@@ -37,9 +37,11 @@ class WarningMessagesAdapter : ListAdapter<WarningMessage, WarningMessageVH>(Dif
     }
 
     object DiffUtilCallback : DiffUtil.ItemCallback<WarningMessage>() {
-        override fun areContentsTheSame(oldItem: WarningMessage, newItem: WarningMessage) = oldItem == newItem
+        override fun areContentsTheSame(oldItem: WarningMessage, newItem: WarningMessage) =
+            oldItem == newItem
 
-        override fun areItemsTheSame(oldItem: WarningMessage, newItem: WarningMessage) = oldItem == newItem
+        override fun areItemsTheSame(oldItem: WarningMessage, newItem: WarningMessage) =
+            oldItem == newItem
     }
 }
 
@@ -52,7 +54,8 @@ class WarningMessageVH(val view: View) : RecyclerView.ViewHolder(view) {
     }
 
     private fun setText(warning: WarningMessage) {
-        fun getString(resId: Int?, default: String) = if (resId == null) default else view.getString(resId)
+        fun getString(resId: Int?, default: String) =
+            if (resId == null) default else view.getString(resId)
 
         view.tv_title.text = getString(warning.titleResId, warning.title)
         view.tv_message.text = getString(warning.messageResId, warning.message)
@@ -67,63 +70,83 @@ class WarningMessageVH(val view: View) : RecyclerView.ViewHolder(view) {
         view.card_view.setCardBackgroundColor(view.context.resources.getColor(color))
     }
 
-    private fun setupControlButtons(warning: WarningMessage) {
-        when (warning.type) {
-            WarningMessage.Type.Permanent -> {
-                view.group_controls_temporary.hide()
-                view.group_controls_rating.hide()
-            }
-            WarningMessage.Type.Temporary -> {
-                view.group_controls_rating.hide()
-                view.group_controls_temporary.show()
-                view.btn_got_it.setOnClickListener { store.dispatch(GlobalAction.HideWarningMessage(warning)) }
-            }
-            WarningMessage.Type.AppRating -> {
-                view.group_controls_temporary.hide()
-                view.group_controls_rating.show()
-                view.btn_close.setOnClickListener {
-                    FirebaseAnalyticsHandler.triggerEvent(AnalyticsEvent.APP_RATING_DISMISS)
-                    store.dispatch(GlobalAction.HideWarningMessage(warning))
-                    store.dispatch(WalletAction.Warnings.AppRating.RemindLater)
-                }
-                view.btn_can_be_better.setOnClickListener {
-                    FirebaseAnalyticsHandler.triggerEvent(AnalyticsEvent.APP_RATING_NEGATIVE)
-                    store.dispatch(WalletAction.Warnings.AppRating.SetNeverToShow)
-                    store.dispatch(GlobalAction.HideWarningMessage(warning))
-                    store.dispatch(GlobalAction.SendFeedback(RateCanBeBetterEmail()))
-                }
-                view.btn_really_cool.setOnClickListener {
-                    val activity = view.context.getActivity() ?: return@setOnClickListener
-
-                    FirebaseAnalyticsHandler.triggerEvent(AnalyticsEvent.APP_RATING_POSITIVE)
-                    store.dispatch(WalletAction.Warnings.AppRating.SetNeverToShow)
-                    val reviewManager = ReviewManagerFactory.create(activity)
-                    val task = reviewManager.requestReviewFlow()
-                    task.addOnCompleteListener {
-                        if (it.isSuccessful) {
-                            val reviewFlow = reviewManager.launchReviewFlow(activity, it.result)
-                            reviewFlow.addOnCompleteListener {
-                                if (it.isSuccessful) {
-                                    // send review was succeed
-                                } else {
-                                    // send fails
-                                }
-                            }
-                        } else {
-                            Timber.e(task.exception)
+    private fun setupControlButtons(warning: WarningMessage) = when (warning.type) {
+        WarningMessage.Type.Permanent -> {
+            view.group_controls_temporary.hide()
+            view.group_controls_rating.hide()
+        }
+        WarningMessage.Type.Temporary -> {
+            view.group_controls_rating.hide()
+            view.group_controls_temporary.show()
+            val buttonAction =
+                when (warning.titleResId) {
+                    R.string.warning_important_security_info -> {
+                        View.OnClickListener {
+                            store.dispatch(WalletAction.ShowDialog.SignedHashesMultiWalletDialog)
                         }
-                    }.addOnFailureListener {
-                        Timber.e(it)
                     }
-                    store.dispatch(GlobalAction.HideWarningMessage(warning))
+                    else -> {
+                        View.OnClickListener {
+                            store.dispatch(GlobalAction.HideWarningMessage(warning))
+                        }
+                    }
                 }
+            val buttonTitle = view.getString(
+                warning.buttonTextId ?: R.string.how_to_got_it_button
+            )
+            view.btn_got_it.setOnClickListener (buttonAction)
+            view.btn_got_it.text = buttonTitle
+        }
+        WarningMessage.Type.AppRating -> {
+            view.group_controls_temporary.hide()
+            view.group_controls_rating.show()
+            view.btn_close.setOnClickListener {
+                FirebaseAnalyticsHandler.triggerEvent(AnalyticsEvent.APP_RATING_DISMISS)
+                store.dispatch(GlobalAction.HideWarningMessage(warning))
+                store.dispatch(WalletAction.Warnings.AppRating.RemindLater)
+            }
+            view.btn_can_be_better.setOnClickListener {
+                FirebaseAnalyticsHandler.triggerEvent(AnalyticsEvent.APP_RATING_NEGATIVE)
+                store.dispatch(WalletAction.Warnings.AppRating.SetNeverToShow)
+                store.dispatch(GlobalAction.HideWarningMessage(warning))
+                store.dispatch(GlobalAction.SendFeedback(RateCanBeBetterEmail()))
+            }
+            view.btn_really_cool.setOnClickListener {
+                val activity = view.context.getActivity() ?: return@setOnClickListener
+
+                FirebaseAnalyticsHandler.triggerEvent(AnalyticsEvent.APP_RATING_POSITIVE)
+                store.dispatch(WalletAction.Warnings.AppRating.SetNeverToShow)
+                val reviewManager = ReviewManagerFactory.create(activity)
+                val task = reviewManager.requestReviewFlow()
+                task.addOnCompleteListener {
+                    if (it.isSuccessful) {
+                        val reviewFlow = reviewManager.launchReviewFlow(activity, it.result)
+                        reviewFlow.addOnCompleteListener {
+                            if (it.isSuccessful) {
+                                // send review was succeed
+                            } else {
+                                // send fails
+                            }
+                        }
+                    } else {
+                        Timber.e(task.exception)
+                    }
+                }.addOnFailureListener {
+                    Timber.e(it)
+                }
+                store.dispatch(GlobalAction.HideWarningMessage(warning))
             }
         }
     }
 }
 
 class SpacesItemDecoration(private val spacePx: Int) : ItemDecoration() {
-    override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
+    override fun getItemOffsets(
+        outRect: Rect,
+        view: View,
+        parent: RecyclerView,
+        state: RecyclerView.State
+    ) {
         outRect.left = spacePx
         outRect.right = spacePx
 
