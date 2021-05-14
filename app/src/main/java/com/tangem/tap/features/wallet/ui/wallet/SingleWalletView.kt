@@ -19,6 +19,7 @@ import com.tangem.tap.features.wallet.ui.adapters.PendingTransactionsAdapter
 import com.tangem.tap.features.wallet.ui.dialogs.AmountToSendDialog
 import com.tangem.tap.features.wallet.ui.dialogs.QrDialog
 import com.tangem.tap.features.wallet.ui.dialogs.ScanFailsDialog
+import com.tangem.tap.features.wallet.ui.dialogs.SignedHashesWarningDialog
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.card_balance.*
@@ -237,6 +238,11 @@ class SingleWalletView : WalletView {
             }
             is WalletDialog.ScanFailsDialog -> {
                 if (dialog == null) dialog = ScanFailsDialog.create(context).apply { show() }
+            }
+            is WalletDialog.SignedHashesMultiWalletDialog -> {
+                if (dialog == null) {
+                    dialog = SignedHashesWarningDialog.create(context).apply { show() }
+                }
             }
             null -> {
                 dialog?.dismiss()
