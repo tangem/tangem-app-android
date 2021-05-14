@@ -111,6 +111,7 @@ sealed class WalletAction : Action {
     object ShowDialog : WalletAction() {
         object QrCode : WalletAction()
         object ScanFails : WalletAction()
+        object SignedHashesMultiWalletDialog : WalletAction()
     }
 
     object HideDialog : WalletAction()
