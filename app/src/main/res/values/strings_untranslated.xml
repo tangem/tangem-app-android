@@ -103,5 +103,12 @@ this wallet.
     <string name="warning_failed_to_verify_card_message" translatable="false">This card might be a production sample or counterfeit</string>
 
 
-
+    <string name="warning_important_security_info" translatable="false">Important security information \u26A0</string>
+    <string name="warning_signed_tx_previously" translatable="false">This card has signed transactions in the past</string>
+    <string name="warning_button_learn_more" translatable="false">Learn more</string>
+    <string name="alert_signed_hashes_message" translatable="false">This card is not a bearer note. We can’t currently match the signature count on the card with the information on the blockchain. This is normal but in rare cases can mean a previous holder is holding back an offline signature, which is a security concern.
+    \n\nDo not accept this card as physical payment from someone you don’t trust.
+    \n\nIt’s perfectly safe in all other respects.
+    \n\nTangem is the only hardware wallet to offer signature count protection.</string>
+    <string name="alert_button_i_understand" translatable="false">I understand</string>
 </resources>
