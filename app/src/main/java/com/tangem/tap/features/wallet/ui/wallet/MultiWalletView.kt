@@ -15,6 +15,7 @@ import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.WalletFragment
 import com.tangem.tap.features.wallet.ui.adapters.WalletAdapter
 import com.tangem.tap.features.wallet.ui.dialogs.ScanFailsDialog
+import com.tangem.tap.features.wallet.ui.dialogs.SignedHashesWarningDialog
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.card_balance.*
@@ -94,24 +95,24 @@ class MultiWalletView : WalletView {
         when (state.primaryWallet?.currencyData?.status) {
             BalanceStatus.EmptyCard -> {
                 showErrorState(
-                        fragment,
-                        fragment.getText(R.string.wallet_error_empty_card),
-                        fragment.getString(R.string.wallet_error_empty_card_subtitle)
+                    fragment,
+                    fragment.getText(R.string.wallet_error_empty_card),
+                    fragment.getString(R.string.wallet_error_empty_card_subtitle)
                 )
                 configureButtonsForEmptyWalletState(fragment)
             }
             BalanceStatus.UnknownBlockchain -> {
                 showErrorState(
-                        fragment,
-                        fragment.getText(R.string.wallet_error_unsupported_blockchain),
-                        fragment.getString(R.string.wallet_error_unsupported_blockchain_subtitle)
+                    fragment,
+                    fragment.getText(R.string.wallet_error_unsupported_blockchain),
+                    fragment.getString(R.string.wallet_error_unsupported_blockchain_subtitle)
                 )
             }
         }
     }
 
     private fun showErrorState(
-            fragment: WalletFragment, errorTitle: CharSequence, errorDescription: CharSequence,
+        fragment: WalletFragment, errorTitle: CharSequence, errorDescription: CharSequence,
     ) = with(fragment) {
         l_card_balance.show()
         l_balance.hide()
@@ -136,6 +137,11 @@ class MultiWalletView : WalletView {
         when (walletDialog) {
             is WalletDialog.ScanFailsDialog -> {
                 if (dialog == null) dialog = ScanFailsDialog.create(context).apply { show() }
+            }
+            is WalletDialog.SignedHashesMultiWalletDialog -> {
+                if (dialog == null) {
+                    dialog = SignedHashesWarningDialog.create(context).apply { show() }
+                }
             }
             else -> {
                 dialog?.dismiss()

@@ -3,6 +3,8 @@ package com.tangem.tap.domain.configurable.warningMessage
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.tangem_sdk_new.ui.animation.VoidCallback
 import com.tangem.tap.common.extensions.containsAny
+import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.store
 import com.tangem.wallet.R
 
 /**
@@ -96,6 +98,19 @@ class WarningMessagesManager(
                 R.string.alert_title,
                 R.string.alert_card_signed_transactions,
                 WarningMessage.Origin.Local
+        )
+
+        fun signedHashesMultiWalletWarning(): WarningMessage = WarningMessage(
+            title = "",
+            message =  "",
+            type = WarningMessage.Type.Temporary,
+            priority = WarningMessage.Priority.Info,
+            location = listOf(WarningMessage.Location.MainScreen),
+            blockchains = null,
+            titleResId = R.string.warning_important_security_info,
+            messageResId = R.string.warning_signed_tx_previously,
+            origin = WarningMessage.Origin.Local,
+            buttonTextId = R.string.warning_button_learn_more,
         )
 
         fun appRatingWarning(): WarningMessage = WarningMessage(
