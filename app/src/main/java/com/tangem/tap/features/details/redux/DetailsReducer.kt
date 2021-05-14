@@ -84,6 +84,7 @@ private fun handleEraseWallet(action: DetailsAction.EraseWallet, state: DetailsS
     return when (action) {
         DetailsAction.EraseWallet.Check -> {
             val notAllowedByCard = state.card?.settingsMask?.contains(Settings.ProhibitPurgeWallet) == true
+                    || state.card?.settingsMask?.contains(Settings.IsReusable) == false
             val notEmpty = state.wallets.any {
                 !it.recentTransactions.isNullOrEmpty() || it.amounts.toSendableAmounts().isNotEmpty()
             }
