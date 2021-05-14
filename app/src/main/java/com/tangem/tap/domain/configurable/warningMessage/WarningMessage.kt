@@ -19,6 +19,7 @@ data class WarningMessage(
     @StringRes val messageResId: Int? = null,
     val origin: Origin = Origin.Remote,
     @StringRes val buttonTextId: Int? = null,
+    val messageFormatArg: String? = null
 ) {
     val blockchainList: List<Blockchain>? by lazy {
         blockchains?.map { Blockchain.fromId(it.toUpperCase()) }
