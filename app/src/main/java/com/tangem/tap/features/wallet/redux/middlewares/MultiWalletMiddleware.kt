@@ -39,10 +39,10 @@ class MultiWalletMiddleware {
                 globalState?.scanNoteResponse?.card?.cardId?.let {
                     currenciesRepository.saveAddedToken(it, action.token)
                 }
-                addToken(action.token, walletState)
+                addToken(action.token, walletState, globalState)
             }
             is WalletAction.MultiWallet.AddTokens -> {
-                action.tokens.map { addToken(it, walletState) }
+                action.tokens.map { addToken(it, walletState, globalState) }
             }
             is WalletAction.MultiWallet.AddBlockchain -> {
                 globalState?.scanNoteResponse?.card?.let { card ->
@@ -62,6 +62,8 @@ class MultiWalletMiddleware {
             is WalletAction.MultiWallet.RemoveWallet -> {
                 val cardId = globalState?.scanNoteResponse?.card?.cardId
                 if (action.walletData.token != null) {
+                    walletState?.getWalletManagerForToken(action.walletData.token.symbol)
+                        ?.removeToken(action.walletData.token)
                     cardId?.let { currenciesRepository.removeToken(it, action.walletData.token) }
                 } else if (action.walletData.blockchain != null) {
                     cardId?.let { currenciesRepository.removeBlockchain(it, action.walletData.blockchain) }
@@ -120,8 +122,15 @@ class MultiWalletMiddleware {
         }
     }
 
-    private fun addToken(token: Token, walletState: WalletState?) {
-        val walletManager = walletState?.getWalletManager(token.symbol)
+    private fun addToken(token: Token, walletState: WalletState?, globalState: GlobalState?) {
+        val card = globalState?.scanNoteResponse?.card ?: return
+        val walletManager = walletState?.getWalletManager(token.symbol) ?:
+            globalState.tapWalletManager.walletManagerFactory.makeWalletManagerForApp(
+                card = card,
+                blockchain = Blockchain.Ethereum
+            )?.also {  walletManager ->
+                store.dispatch(WalletAction.MultiWallet.AddWalletManagers(walletManager))
+            }
         scope.launch {
             val result = walletManager?.addToken(token)
             withContext(Dispatchers.Main) {
