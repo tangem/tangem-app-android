@@ -225,6 +225,9 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
         is WalletAction.ShowDialog.ScanFails -> {
             newState = newState.copy(walletDialog = WalletDialog.ScanFailsDialog)
         }
+        is WalletAction.ShowDialog.SignedHashesMultiWalletDialog -> {
+            newState = newState.copy(walletDialog = WalletDialog.SignedHashesMultiWalletDialog)
+        }
         is WalletAction.HideDialog -> {
             newState = newState.copy(walletDialog = null)
         }
