@@ -115,7 +115,8 @@ sealed class WalletDialog: StateDialog {
     ) : WalletDialog()
 
     data class SelectAmountToSendDialog(val amounts: List<Amount>?) : WalletDialog()
-    object ScanFailsDialog: WalletDialog()
+    object ScanFailsDialog : WalletDialog()
+    object SignedHashesMultiWalletDialog : WalletDialog()
 }
 
 enum class ProgressState { Loading, Done, Error }
