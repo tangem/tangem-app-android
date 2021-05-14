@@ -6,10 +6,14 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.squareup.picasso.Callback
+import com.squareup.picasso.Picasso
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.IconsUtil
 import com.tangem.blockchain.common.Token
 import com.tangem.tap.common.extensions.getColor
 import com.tangem.tap.common.extensions.getIconRes
+import com.tangem.tap.common.extensions.loadCurrenciesIcon
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletData
@@ -17,6 +21,11 @@ import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.item_currency_wallet.view.*
+import kotlinx.android.synthetic.main.item_currency_wallet.view.iv_currency
+import kotlinx.android.synthetic.main.item_currency_wallet.view.tv_currency_symbol
+import kotlinx.android.synthetic.main.item_currency_wallet.view.tv_token_letter
+import kotlinx.android.synthetic.main.item_popular_token.view.*
+import java.lang.Exception
 import java.math.BigDecimal
 
 class WalletAdapter
@@ -89,16 +98,15 @@ class WalletAdapter
             view.card_wallet.setOnClickListener {
                 store.dispatch(WalletAction.MultiWallet.SelectWallet(wallet))
             }
-            val blockchain = wallet.currencyData.currencySymbol?.let { Blockchain.fromCurrency(it) }
-            if (blockchain != null && blockchain != Blockchain.Unknown) {
-                view.tv_token_letter.text = null
-                view.iv_currency.colorFilter = null
-                view.iv_currency.setImageResource(blockchain.getIconRes())
-            } else {
-                view.tv_token_letter.text = wallet.currencyData.currencySymbol?.take(1)
-                wallet.token?.getColor()?.let { view.iv_currency.setColorFilter(it) }
-                view.iv_currency.setImageResource(R.drawable.shape_circle)
-            }
+            val blockchain = wallet.blockchain
+            val token = wallet.token
+
+            Picasso.get().loadCurrenciesIcon(
+                imageView = view.iv_currency,
+                textView = view.tv_token_letter,
+                token = token, blockchain = blockchain
+            )
+
             when (wallet.currencyData.status) {
                 BalanceStatus.VerifiedOnline, BalanceStatus.SameCurrencyTransactionInProgress -> hideWarning()
                 BalanceStatus.Loading -> {
