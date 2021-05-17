@@ -6,6 +6,7 @@ import com.tangem.common.extensions.isZero
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.send.redux.*
 import com.tangem.tap.features.send.redux.states.MainCurrencyType
+import com.tangem.tap.features.send.redux.states.SendState
 import org.rekotlin.Action
 import java.math.BigDecimal
 
@@ -43,6 +44,7 @@ class AmountMiddleware {
         }
 
         dispatch(AmountAction.SetAmount(inputValueCrypto, true))
+        dispatch(AmountActionUi.CheckAmountToSend)
         dispatch(FeeAction.RequestFee)
     }
 
@@ -78,15 +80,18 @@ class AmountMiddleware {
     }
 
     private fun setMaxAmount(appState: AppState?, dispatch: (Action) -> Unit) {
-        val amountState = appState?.sendState?.amountState ?: return
+        val sendState = appState?.sendState ?: return
 
-        dispatch(AmountAction.SetAmount(amountState.balanceCrypto, false))
-        dispatch(FeeAction.RequestFee)
-        if (!amountState.isCoinAmount()) return
-
-        dispatch(FeeAction.ChangeLayoutVisibility(main = true, controls = true, chipGroup = true))
-        dispatch(FeeActionUi.ChangeIncludeFee(true))
+        dispatch(AmountAction.SetAmount(sendState.amountState.balanceCrypto, false))
         dispatch(AmountActionUi.CheckAmountToSend)
+
+        if (SendState.isReadyToRequestFee()) {
+            dispatch(FeeAction.RequestFee)
+            if (!sendState.amountState.isCoinAmount()) return
+
+            dispatch(FeeAction.ChangeLayoutVisibility(main = true, controls = true, chipGroup = true))
+            dispatch(FeeActionUi.ChangeIncludeFee(true))
+        }
     }
 
     private fun toggleMainCurrency(appState: AppState?, dispatch: (Action) -> Unit) {
