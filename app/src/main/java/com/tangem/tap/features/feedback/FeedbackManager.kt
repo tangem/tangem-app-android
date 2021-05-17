@@ -18,6 +18,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Wallet
 import com.tangem.commands.common.card.Card
 import com.tangem.tap.common.extensions.stripZeroPlainString
+import com.tangem.tap.domain.extensions.signedHashesCount
 import com.tangem.tap.store
 import timber.log.Timber
 import java.io.File
@@ -161,7 +162,7 @@ class AdditionalEmailInfo {
     fun setCardInfo(card: Card) {
         cardId = card.cardId
         cardFirmwareVersion = card.firmwareVersion.version
-        signedHashesCount = card.walletSignedHashes?.toString() ?: "0"
+        signedHashesCount = card.signedHashesCount().toString()
     }
 
     fun setWalletsInfo(wallets: List<Wallet>) {
@@ -274,7 +275,6 @@ class FeedbackEmail : EmailData {
         val builder = StringBuilder()
         builder.appendKeyValue("Card ID", infoHolder.cardId)
         builder.appendKeyValue("Firmware version", infoHolder.cardFirmwareVersion)
-        builder.appendKeyValue("Signed hashes", infoHolder.signedHashesCount)
 
         infoHolder.walletsInfo.forEach {
             builder.appendKeyValue("Blockchain", it.blockchain.fullName)
