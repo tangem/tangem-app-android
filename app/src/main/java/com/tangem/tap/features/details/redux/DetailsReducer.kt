@@ -5,6 +5,7 @@ import com.tangem.commands.common.card.Card
 import com.tangem.commands.common.card.masks.Settings
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.TapWorkarounds
+import com.tangem.tap.domain.extensions.signedHashesCount
 import com.tangem.tap.domain.extensions.toSendableAmounts
 import com.tangem.tap.domain.twins.TwinsHelper
 import com.tangem.tap.domain.twins.isTwinCard
@@ -83,6 +84,7 @@ private fun handleEraseWallet(action: DetailsAction.EraseWallet, state: DetailsS
     return when (action) {
         DetailsAction.EraseWallet.Check -> {
             val notAllowedByCard = state.card?.settingsMask?.contains(Settings.ProhibitPurgeWallet) == true
+                    || state.card?.settingsMask?.contains(Settings.IsReusable) == false
             val notEmpty = state.wallets.any {
                 !it.recentTransactions.isNullOrEmpty() || it.amounts.toSendableAmounts().isNotEmpty()
             }
@@ -203,6 +205,5 @@ private fun prepareAllowedSecurityOptions(card: Card): EnumSet<SecurityOption> {
 private fun Card.toCardInfo(): CardInfo? {
     val cardId = this.cardId.chunked(4).joinToString(separator = " ")
     val issuer = this.cardData?.issuerName ?: return null
-    val signedHashes = this.walletSignedHashes ?: return null
-    return CardInfo(cardId, issuer, signedHashes)
-}
+    val signedHashes = this.signedHashesCount()
+    return CardInfo(cardId, issuer, signedHashes)}
