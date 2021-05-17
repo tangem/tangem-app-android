@@ -81,6 +81,9 @@ data class WalletState(
                 && (walletData.token == null || walletData.token != store.state.walletState.primaryToken)) {
             val walletManager = getWalletManager(walletData.currencyData.currencySymbol)
                     ?: return true
+
+            if (walletData.token == null && walletManager.presetTokens.isNotEmpty()) return false
+
             val wallet = walletManager.wallet
             if (walletData.blockchain != null) {
                 return wallet.recentTransactions.toPendingTransactions(wallet.address).isEmpty() &&
@@ -112,7 +115,8 @@ sealed class WalletDialog: StateDialog {
     ) : WalletDialog()
 
     data class SelectAmountToSendDialog(val amounts: List<Amount>?) : WalletDialog()
-    object ScanFailsDialog: WalletDialog()
+    object ScanFailsDialog : WalletDialog()
+    object SignedHashesMultiWalletDialog : WalletDialog()
 }
 
 enum class ProgressState { Loading, Done, Error }
