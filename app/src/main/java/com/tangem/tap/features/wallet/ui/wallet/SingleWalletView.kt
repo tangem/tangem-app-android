@@ -19,6 +19,7 @@ import com.tangem.tap.features.wallet.ui.adapters.PendingTransactionsAdapter
 import com.tangem.tap.features.wallet.ui.dialogs.AmountToSendDialog
 import com.tangem.tap.features.wallet.ui.dialogs.QrDialog
 import com.tangem.tap.features.wallet.ui.dialogs.ScanFailsDialog
+import com.tangem.tap.features.wallet.ui.dialogs.SignedHashesWarningDialog
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.card_balance.*
@@ -44,17 +45,16 @@ class SingleWalletView : WalletView {
     override fun changeWalletView(fragment: WalletFragment) {
         setFragment(fragment)
         onViewCreated()
-        showSingleWalletView()
+        showSingleWalletView(fragment)
     }
 
-    private fun showSingleWalletView() {
-        val fragment = fragment ?: return
-        fragment.rv_multiwallet.hide()
-        fragment.btn_add_token.hide()
-        fragment.btn_scan_multiwallet?.hide()
-        fragment.rv_pending_transaction.hide()
-        fragment.l_card_balance.show()
-        fragment.l_address.show()
+    private fun showSingleWalletView(fragment: WalletFragment) = with(fragment) {
+        rv_multiwallet.hide()
+        btn_add_token.hide()
+        btn_scan_multiwallet?.hide()
+        rv_pending_transaction.hide()
+        l_card_balance.show()
+        l_address.show()
     }
 
     override fun onViewCreated() {
@@ -70,13 +70,15 @@ class SingleWalletView : WalletView {
     }
 
     override fun onNewState(state: WalletState) {
-        setupTwinCards(state.twinCardsState)
+        val fragment = fragment ?: return
         state.primaryWallet ?: return
-        setupButtons(state.primaryWallet, state.twinCardsState != null)
-        setupAddressCard(state.primaryWallet)
+
+        setupTwinCards(state.twinCardsState, fragment)
+        setupButtons(state.primaryWallet, state.twinCardsState != null, fragment)
+        setupAddressCard(state.primaryWallet, fragment)
         showPendingTransactionsIfPresent(state.primaryWallet.pendingTransactions)
         setupBalance(state, state.primaryWallet)
-        handleDialogs(state.walletDialog)
+        handleDialogs(state.walletDialog, fragment)
     }
 
     private fun showPendingTransactionsIfPresent(pendingTransactions: List<PendingTransaction>) {
@@ -92,43 +94,45 @@ class SingleWalletView : WalletView {
         }
     }
 
-    private fun setupTwinCards(twinCardsState: TwinCardsState?) {
-        fragment?.apply {
-            twinCardsState?.cardNumber?.let { cardNumber ->
-                this.tv_twin_card_number.show()
-                this.iv_twin_card.show()
-                val number = when (cardNumber) {
-                    TwinCardNumber.First -> "1"
-                    TwinCardNumber.Second -> "2"
-                }
-                this.tv_twin_card_number.text =
-                        this.getString(R.string.wallet_twins_chip_format, number)
+    private fun setupTwinCards(
+            twinCardsState: TwinCardsState?, fragment: WalletFragment
+    ) = with(fragment) {
+        twinCardsState?.cardNumber?.let { cardNumber ->
+            tv_twin_card_number.show()
+            iv_twin_card.show()
+            val number = when (cardNumber) {
+                TwinCardNumber.First -> "1"
+                TwinCardNumber.Second -> "2"
             }
-            if (twinCardsState?.cardNumber == null) {
-                this.tv_twin_card_number.hide()
-                this.iv_twin_card.hide()
-            }
-            if (twinCardsState?.showTwinOnboarding == true) {
-                store.dispatch(NavigationAction.NavigateTo(AppScreen.TwinsOnboarding))
-            }
+            tv_twin_card_number.text =
+                    this.getString(R.string.wallet_twins_chip_format, number)
         }
+        if (twinCardsState?.cardNumber == null) {
+            tv_twin_card_number.hide()
+            iv_twin_card.hide()
+        }
+        if (twinCardsState?.showTwinOnboarding == true) {
+            store.dispatch(NavigationAction.NavigateTo(AppScreen.TwinsOnboarding))
+        }
+
 
     }
 
-    private fun setupButtons(state: WalletData, isTwinsWallet: Boolean) {
-        val fragment = fragment ?: return
+    private fun setupButtons(
+            state: WalletData, isTwinsWallet: Boolean, fragment: WalletFragment
+    ) = with(fragment){
 
         setupButtonsType(state, fragment)
 
         val btnConfirm = if (state.topUpState.allowed) {
-            fragment.btn_confirm_short
+            btn_confirm_short
         } else {
-            fragment.btn_confirm_long
+            btn_confirm_long
         }
         val btnScan = if (state.topUpState.allowed) {
-            fragment.btn_scan_short
+            btn_scan_short
         } else {
-            fragment.btn_scan_long
+            btn_scan_long
         }
 
         setupConfirmButton(state, btnConfirm, fragment, isTwinsWallet)
@@ -137,27 +141,27 @@ class SingleWalletView : WalletView {
             store.dispatch(WalletAction.Scan)
         }
 
-        fragment.btn_copy.setOnClickListener {
+        btn_copy.setOnClickListener {
             state.walletAddresses?.selectedAddress?.address?.let { addressString ->
                 store.dispatch(WalletAction.CopyAddress(addressString, fragment.requireContext()))
             }
         }
-        fragment.btn_show_qr.setOnClickListener { store.dispatch(WalletAction.ShowDialog.QrCode) }
+        btn_show_qr.setOnClickListener { store.dispatch(WalletAction.ShowDialog.QrCode) }
 
-        fragment.btn_top_up.setOnClickListener {
+        btn_top_up.setOnClickListener {
             store.dispatch(
                     WalletAction.TopUpAction.TopUp(fragment.requireContext(), R.color.backgroundLightGray)
             )
         }
     }
 
-    private fun setupButtonsType(state: WalletData, fragment: WalletFragment) {
+    private fun setupButtonsType(state: WalletData, fragment: WalletFragment) = with(fragment) {
         if (state.topUpState.allowed) {
-            fragment.l_buttons_long.hide()
-            fragment.l_buttons_short.show()
+            l_buttons_long.hide()
+            l_buttons_short.show()
         } else {
-            fragment.l_buttons_long.show()
-            fragment.l_buttons_short.hide()
+            l_buttons_long.show()
+            l_buttons_short.hide()
         }
     }
 
@@ -185,39 +189,37 @@ class SingleWalletView : WalletView {
     }
 
 
-    private fun setupAddressCard(state: WalletData) {
-        val fragment = fragment ?: return
+    private fun setupAddressCard(state: WalletData, fragment: WalletFragment) = with(fragment) {
         if (state.walletAddresses != null && state.blockchain != null) {
-            fragment.l_address?.show()
+            l_address?.show()
             if (state.shouldShowMultipleAddress()) {
-                (fragment.l_address as? ViewGroup)?.beginDelayedTransition()
-                fragment.chip_group_address_type.show()
-                fragment.chip_group_address_type.fitChipsByGroupWidth()
+                (l_address as? ViewGroup)?.beginDelayedTransition()
+                chip_group_address_type.show()
+                chip_group_address_type.fitChipsByGroupWidth()
 
                 val checkedId = MultipleAddressUiHelper.typeToId(state.walletAddresses.selectedAddress.type)
-                if (checkedId != View.NO_ID) fragment.chip_group_address_type.check(checkedId)
+                if (checkedId != View.NO_ID) chip_group_address_type.check(checkedId)
 
-                fragment.chip_group_address_type.setOnCheckedChangeListener { group, checkedId ->
+                chip_group_address_type.setOnCheckedChangeListener { group, checkedId ->
                     if (checkedId == -1) return@setOnCheckedChangeListener
                     val type = MultipleAddressUiHelper.idToType(checkedId, state.blockchain)
                     type?.let { store.dispatch(WalletAction.ChangeSelectedAddress(type)) }
                 }
             } else {
-                fragment.chip_group_address_type.hide()
+                chip_group_address_type.hide()
             }
-            fragment.tv_address.text = state.walletAddresses.selectedAddress.address
-            fragment.tv_explore?.setOnClickListener {
+            tv_address.text = state.walletAddresses.selectedAddress.address
+            tv_explore?.setOnClickListener {
                 store.dispatch(WalletAction.ExploreAddress(
                         state.walletAddresses.selectedAddress.exploreUrl,
                         fragment.requireContext()))
             }
         } else {
-            fragment.l_address?.hide()
+            l_address?.hide()
         }
     }
 
-    private fun handleDialogs(walletDialog: StateDialog?) {
-        val fragment = fragment ?: return
+    private fun handleDialogs(walletDialog: StateDialog?, fragment: WalletFragment) {
         val context = fragment.context ?: return
         when (walletDialog) {
             is WalletDialog.QrDialog -> {
@@ -236,6 +238,11 @@ class SingleWalletView : WalletView {
             }
             is WalletDialog.ScanFailsDialog -> {
                 if (dialog == null) dialog = ScanFailsDialog.create(context).apply { show() }
+            }
+            is WalletDialog.SignedHashesMultiWalletDialog -> {
+                if (dialog == null) {
+                    dialog = SignedHashesWarningDialog.create(context).apply { show() }
+                }
             }
             null -> {
                 dialog?.dismiss()
