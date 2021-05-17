@@ -68,6 +68,7 @@ sealed class WalletAction : Action {
             object SetNeverToShow : Warnings()
             object RemindLater : Warnings()
         }
+        class CheckRemainingSignatures(val remainingSignatures: Int?) : Warnings()
     }
 
     data class UpdateWallet(val currency: CryptoCurrencyName? = null) : WalletAction() {
@@ -111,6 +112,7 @@ sealed class WalletAction : Action {
     object ShowDialog : WalletAction() {
         object QrCode : WalletAction()
         object ScanFails : WalletAction()
+        object SignedHashesMultiWalletDialog : WalletAction()
     }
 
     object HideDialog : WalletAction()
