@@ -45,13 +45,6 @@ data class SendState(
 
     override val stateId: StateId = StateId.SEND_SCREEN
 
-    fun isReadyToSend(): Boolean {
-        val sendState = store.state.sendState
-        return addressPayIdIsReady() && sendState.amountState.isReady() && sendState.feeState.isReady()
-    }
-
-    fun addressPayIdIsReady(): Boolean = store.state.sendState.addressPayIdState.isReady()
-
     fun getDecimals(type: MainCurrencyType): Int = when (type) {
         MainCurrencyType.FIAT -> 2
         MainCurrencyType.CRYPTO -> amountState.amountToExtract?.decimals ?: 0
@@ -109,6 +102,17 @@ data class SendState(
             is AmountType.Token -> tokenIsConvertible()
             AmountType.Reserve -> false
         }
+    }
+
+    companion object {
+        fun addressPayIdIsReady(): Boolean = store.state.sendState.addressPayIdState.isReady()
+
+        fun amountIsReady(): Boolean = store.state.sendState.amountState.isReady()
+
+        fun isReadyToRequestFee(): Boolean = addressPayIdIsReady() && amountIsReady()
+
+        fun isReadyToSend(): Boolean = addressPayIdIsReady() && amountIsReady() &&
+                store.state.sendState.feeState.isReady()
     }
 }
 

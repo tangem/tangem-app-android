@@ -13,12 +13,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.textfield.TextInputEditText
 import com.tangem.Message
-import com.tangem.merchant.common.toggleWidget.ToggleWidget
 import com.tangem.tangem_sdk_new.extensions.dpToPx
 import com.tangem.tangem_sdk_new.extensions.hideSoftKeyboard
 import com.tangem.tap.common.KeyboardObserver
 import com.tangem.tap.common.entities.TapCurrency
-import com.tangem.tap.common.extensions.getDrawableCompat
 import com.tangem.tap.common.extensions.getFromClipboard
 import com.tangem.tap.common.extensions.setOnImeActionListener
 import com.tangem.tap.common.qrCodeScan.ScanQrCodeActivity
@@ -54,16 +52,10 @@ import java.text.DecimalFormatSymbols
  */
 class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
 
-    lateinit var sendBtn: ToggleWidget
+    lateinit var sendBtn: ViewStateWidget
 
     private lateinit var etAmountToSend: TextInputEditText
     private lateinit var warningsAdapter: WarningMessagesAdapter
-
-    private fun initSendButtonStates() {
-        sendBtn = ToggleWidget(flSendButtonContainer, btnSend, progress, ProgressState.None())
-        sendBtn.setupSendButtonStateModifiers(requireContext())
-        sendBtn.setState(ProgressState.None())
-    }
 
     private val sendSubscriber = SendStateSubscriber(this)
     private lateinit var keyboardObserver: KeyboardObserver
@@ -79,12 +71,15 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         setupAmountLayout()
         setupFeeLayout()
         setupWarningMessages()
+    }
 
+    private fun initSendButtonStates() {
         btnSend.setOnClickListener {
             store.dispatch(SendActionUi.SendAmountToRecipient(
                     Message(getString(R.string.initial_message_sign_header))
             ))
         }
+        sendBtn = IndeterminateProgressButtonWidget(btnSend, progress)
     }
 
     private fun setupAddressOrPayIdLayout() {
@@ -99,14 +94,12 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
                 .filter { store.state.sendState.addressPayIdState.viewFieldValue.value != it }
                 .onEach {
                     store.dispatch(AddressPayIdActionUi.HandleUserInput(it))
-                    store.dispatch(FeeAction.RequestFee)
                 }
                 .launchIn(mainScope)
 
         imvPaste.setOnClickListener {
             store.dispatch(PasteAddressPayId(requireContext().getFromClipboard()?.toString() ?: ""))
             store.dispatch(TruncateOrRestore(!etAddressOrPayId.isFocused))
-            store.dispatch(FeeAction.RequestFee)
         }
         imvQrCode.setOnClickListener {
             startActivityForResult(
@@ -125,12 +118,6 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
                 }
                 .onEach { store.dispatch(TransactionExtrasAction.XlmMemo.HandleUserInput(it)) }
                 .launchIn(mainScope)
-
-//        groupMemo.setOnCheckedChangeListener { group, checkedId ->
-//            if (checkedId == -1) return@setOnCheckedChangeListener
-//
-//            store.dispatch(TransactionExtrasAction.XlmMemo.ChangeSelectedMemo(MemoUiHelper.toType(checkedId)))
-//        }
 
         etDestinationTag.inputtedTextAsFlow()
                 .debounce(400)
@@ -154,7 +141,6 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         imvQrCode.postDelayed({
             store.dispatch(PasteAddressPayId(scannedCode))
             store.dispatch(TruncateOrRestore(!etAddressOrPayId.isFocused))
-            store.dispatch(FeeAction.RequestFee)
         }, 200)
     }
 
@@ -176,7 +162,6 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
             etAmountToSend.clearFocus()
             etAmountToSend.postDelayed(200) { etAmountToSend.hideSoftKeyboard() }
             store.dispatch(SetMaxAmount)
-            store.dispatch(CheckAmountToSend)
         }
         var snackbarControlledByChangingFocus = false
         keyboardObserver = KeyboardObserver(requireActivity())
@@ -229,6 +214,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         flExpandCollapse.setOnClickListener {
             store.dispatch(ToggleControlsVisibility)
         }
+        chipGroup.check(FeeUiHelper.toId(FeeType.NORMAL))
         chipGroup.setOnCheckedChangeListener { group, checkedId ->
             if (checkedId == -1) return@setOnCheckedChangeListener
 
@@ -308,37 +294,3 @@ class FeeUiHelper {
         }
     }
 }
-
-
-//class MemoUiHelper {
-//    companion object {
-//        fun toId(memo: MemoType): Int {
-//            return when (memo) {
-//                MemoType.TEXT -> R.id.chipMemoText
-//                MemoType.ID -> R.id.chipMemoId
-//            }
-//        }
-//
-//        fun toType(id: Int): MemoType {
-//            return when (id) {
-//                R.id.chipMemoText -> MemoType.TEXT
-//                R.id.chipMemoId -> MemoType.ID
-//                else -> MemoType.TEXT
-//            }
-//        }
-//    }
-//}
-
-private fun ToggleWidget.setupSendButtonStateModifiers(context: Context) {
-    mainViewModifiers.clear()
-    mainViewModifiers.add(ReplaceTextStateModifier(context.getString(R.string.send_title), ""))
-    mainViewModifiers.add(
-            TextViewDrawableStateModifier(
-                    context.getDrawableCompat(R.drawable.ic_arrow_right), null, TextViewDrawableStateModifier.RIGHT
-            ))
-    mainViewModifiers.add(ClickableStateModifier())
-    toggleViewModifiers.clear()
-    toggleViewModifiers.add(ShowHideStateModifier())
-}
-
-

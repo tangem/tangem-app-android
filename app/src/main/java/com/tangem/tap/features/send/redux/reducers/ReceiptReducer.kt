@@ -41,7 +41,7 @@ class ReceiptReducer : SendInternalReducer {
 
         val layoutType = determineLayoutType(amountState.mainCurrency.type, amountState.typeOfAmount)
         val symbols = determineSymbols(wallet)
-        val showBlank = !sendState.isReadyToSend()
+        val showBlank = !SendState.isReadyToSend()
         val result = state.copy(
                 visibleTypeOfReceipt = layoutType,
                 mainCurrency = amountState.mainCurrency,

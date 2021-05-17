@@ -1,8 +1,11 @@
 package com.tangem.tap.domain.configurable.warningMessage
 
+import com.tangem.TangemSdkError
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.tangem_sdk_new.ui.animation.VoidCallback
 import com.tangem.tap.common.extensions.containsAny
+import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.store
 import com.tangem.wallet.R
 
 /**
@@ -98,6 +101,19 @@ class WarningMessagesManager(
                 WarningMessage.Origin.Local
         )
 
+        fun signedHashesMultiWalletWarning(): WarningMessage = WarningMessage(
+            title = "",
+            message =  "",
+            type = WarningMessage.Type.Temporary,
+            priority = WarningMessage.Priority.Info,
+            location = listOf(WarningMessage.Location.MainScreen),
+            blockchains = null,
+            titleResId = R.string.warning_important_security_info,
+            messageResId = R.string.warning_signed_tx_previously,
+            origin = WarningMessage.Origin.Local,
+            buttonTextId = R.string.warning_button_learn_more,
+        )
+
         fun appRatingWarning(): WarningMessage = WarningMessage(
                 "",
                 "",
@@ -125,5 +141,20 @@ class WarningMessagesManager(
                 R.string.warning_failed_to_verify_card_message,
                 WarningMessage.Origin.Local
         )
+
+        fun remainingSignaturesNotEnough(remainingSignatures: Int): WarningMessage = WarningMessage(
+            title = "",
+            message = "",
+            type = WarningMessage.Type.Permanent,
+            priority = WarningMessage.Priority.Critical,
+            listOf(WarningMessage.Location.MainScreen),
+            blockchains = null,
+            titleResId = R.string.alert_title,
+            messageResId = R.string.warning_low_signatures_format,
+            origin = WarningMessage.Origin.Local,
+            messageFormatArg = remainingSignatures.toString()
+        )
+
+        const val REMAINING_SIGNATURES_WARNING = 10
     }
 }
