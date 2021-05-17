@@ -135,9 +135,11 @@ internal class AddressPayIdMiddleware {
         if (failReason == null) {
             noSchemeAddress.getQueryParameter("amount")?.toBigDecimalOrNull()?.let {
                 dispatch(AmountAction.SetAmount(it, false))
+                dispatch(AmountActionUi.CheckAmountToSend)
             }
             dispatch(SetWalletAddress(supposedAddress, isUserInput))
             dispatch(TransactionExtrasAction.Prepare(wallet.blockchain, address, null))
+            dispatch(FeeAction.RequestFee)
         } else {
             dispatch(SetAddressError(failReason))
             dispatch(TransactionExtrasAction.Release)
