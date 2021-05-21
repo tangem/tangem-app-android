@@ -130,6 +130,7 @@ class MultiWalletMiddleware {
                 blockchain = Blockchain.Ethereum
             )?.also {  walletManager ->
                 store.dispatch(WalletAction.MultiWallet.AddWalletManagers(walletManager))
+                store.dispatch(WalletAction.MultiWallet.AddBlockchain(walletManager.wallet.blockchain))
             }
         scope.launch {
             val result = walletManager?.addToken(token)
