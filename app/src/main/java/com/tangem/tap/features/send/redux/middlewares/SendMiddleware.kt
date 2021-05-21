@@ -134,11 +134,11 @@ private fun sendTransaction(
                     dispatch(NavigationAction.PopBackTo())
                     scope.launch(Dispatchers.IO) {
                         withContext(Dispatchers.Main) {
-                            dispatch(WalletAction.UpdateWallet(walletManager.wallet.blockchain.currency))
+                            dispatch(WalletAction.UpdateWallet(walletManager.wallet.blockchain))
                         }
                         delay(10000)
                         withContext(Dispatchers.Main) {
-                            dispatch(WalletAction.UpdateWallet(walletManager.wallet.blockchain.currency))
+                            dispatch(WalletAction.UpdateWallet(walletManager.wallet.blockchain))
                         }
                     }
                 }
