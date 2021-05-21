@@ -34,9 +34,9 @@ fun Blockchain.getCurve(): EllipticCurve? {
         Blockchain.Unknown -> null
         Blockchain.Bitcoin, Blockchain.BitcoinTestnet, Blockchain.BitcoinCash, Blockchain.Litecoin,
         Blockchain.Ducatus, Blockchain.Ethereum, Blockchain.EthereumTestnet, Blockchain.RSK,
-        Blockchain.Tezos, Blockchain.XRP, Blockchain.Binance, Blockchain.BinanceTestnet ->
-            EllipticCurve.Secp256k1
-        Blockchain.Cardano, Blockchain.CardanoShelley, Blockchain.Stellar -> EllipticCurve.Ed25519
+        Blockchain.XRP, Blockchain.Binance, Blockchain.BinanceTestnet -> EllipticCurve.Secp256k1
+        Blockchain.Tezos, Blockchain.Cardano, Blockchain.CardanoShelley, Blockchain.Stellar ->
+            EllipticCurve.Ed25519
     }
 }
 
