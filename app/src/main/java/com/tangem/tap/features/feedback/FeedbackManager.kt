@@ -18,6 +18,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Wallet
 import com.tangem.commands.common.card.Card
 import com.tangem.tap.common.extensions.stripZeroPlainString
+import com.tangem.tap.domain.TapWorkarounds
 import com.tangem.tap.domain.extensions.signedHashesCount
 import com.tangem.tap.store
 import timber.log.Timber
@@ -34,7 +35,6 @@ import java.util.*
 class FeedbackManager(
         val infoHolder: AdditionalEmailInfo,
         private val logCollector: TangemLogCollector,
-        private val email: String = "support@tangem.com",
 ) {
 
     private lateinit var activity: Activity
@@ -45,7 +45,15 @@ class FeedbackManager(
 
     fun send(emailData: EmailData) {
         val fileLog = if (emailData is ScanFailsEmail) createLogFile() else null
-        sendTo(email, emailData.subject, emailData.joinTogether(infoHolder), fileLog)
+        sendTo(
+            email = getSupportEmail(),
+            subject = emailData.subject, message = emailData.joinTogether(infoHolder),
+            fileLog = fileLog
+        )
+    }
+
+    private fun getSupportEmail(): String {
+        return if (TapWorkarounds.isStart2Coin) S2C_SUPPORT_EMAIL else DEFAULT_SUPPORT_EMAIL
     }
 
     private fun sendTo(email: String, subject: String, message: String, fileLog: File? = null) {
@@ -101,6 +109,11 @@ class FeedbackManager(
             Timber.e(ex, "Can't create a file for email attachment")
             null
         }
+    }
+
+    companion object {
+        const val DEFAULT_SUPPORT_EMAIL = "support@tangem.com"
+        const val S2C_SUPPORT_EMAIL = "cardsupport@start2coin.com"
     }
 }
 
