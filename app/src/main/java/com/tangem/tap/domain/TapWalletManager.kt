@@ -17,12 +17,14 @@ import com.tangem.tap.domain.tokens.CardCurrencies
 import com.tangem.tap.domain.twins.TwinsHelper
 import com.tangem.tap.domain.twins.isTwinCard
 import com.tangem.tap.features.tokens.redux.TokensAction
+import com.tangem.tap.features.wallet.redux.Currency
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.tap.network.coinmarketcap.CoinMarketCapService
 import com.tangem.tap.store
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import java.math.BigDecimal
 
 
@@ -64,19 +66,23 @@ class TapWalletManager {
     }
 
     suspend fun loadFiatRate(fiatCurrency: FiatCurrencyName, wallet: Wallet) {
-        val currencyList = wallet.getTokens().map { it.symbol }.toMutableList()
-        currencyList.add(wallet.blockchain.currency)
-        loadFiatRate(fiatCurrency, currencyList)
+        Timber.d(wallet.getTokens().toString())
+        val currencies = wallet.getTokens()
+            .map { Currency.Token(it, wallet.blockchain) }
+            .plus(Currency.Blockchain(wallet.blockchain))
+        loadFiatRate(fiatCurrency, currencies)
     }
 
-    suspend fun loadFiatRate(fiatCurrency: FiatCurrencyName, cryptoCurrencyName: CryptoCurrencyName) {
-        val currencyList = listOf(cryptoCurrencyName)
-        loadFiatRate(fiatCurrency, currencyList)
+    suspend fun loadFiatRate(fiatCurrency: FiatCurrencyName, currency: Currency) {
+        val currencies = listOf(currency)
+        loadFiatRate(fiatCurrency, currencies)
     }
 
-    private suspend fun loadFiatRate(fiatCurrency: FiatCurrencyName, currencyList: List<CryptoCurrencyName>) {
-        val results = mutableListOf<Pair<CryptoCurrencyName, Result<BigDecimal>?>>()
-        currencyList.forEach { results.add(it to coinMarketCapService.getRate(it, fiatCurrency)) }
+    suspend fun loadFiatRate(fiatCurrency: FiatCurrencyName, currencies: List<Currency>) {
+        val results = mutableListOf<Pair<Currency, Result<BigDecimal>?>>()
+        currencies.forEach {
+            results.add(it to coinMarketCapService.getRate(it.currencySymbol, fiatCurrency))
+        }
         handleFiatRatesResult(results)
     }
 
@@ -268,7 +274,7 @@ class TapWalletManager {
         }
     }
 
-    private suspend fun handleFiatRatesResult(results: List<Pair<CryptoCurrencyName, Result<BigDecimal>?>>) {
+    private suspend fun handleFiatRatesResult(results: List<Pair<Currency, Result<BigDecimal>?>>) {
         withContext(Dispatchers.Main) {
             results.map {
                 when (it.second) {
