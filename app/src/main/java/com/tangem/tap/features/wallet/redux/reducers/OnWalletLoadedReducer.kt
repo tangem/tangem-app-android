@@ -110,8 +110,12 @@ class OnWalletLoadedReducer {
             if (tokenAmount != null) {
                 val tokenFiatRate = walletState.primaryWallet?.currencyData?.token?.fiatRate
                 val tokenFiatAmount = tokenFiatRate?.let { tokenAmount.value?.toFiatString(it, fiatCurrencySymbol) }
-                TokenData(tokenAmount.value?.toFormattedString(tokenAmount.decimals) ?: "",
-                        tokenAmount.currencySymbol, tokenFiatAmount)
+                TokenData(
+                    tokenAmount.value?.toFormattedCurrencyString(
+                        tokenAmount.decimals, token.symbol
+                    ) ?: "",
+                    tokenAmount.currencySymbol, tokenFiatAmount
+                )
             } else {
                 null
             }
