@@ -106,7 +106,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         if (!state.shouldShowDetails) {
             toolbar.menu.removeItem(R.id.details_menu)
         } else if (toolbar.menu.findItem(R.id.details_menu) == null) {
-            toolbar.menu.add(R.menu.wallet, R.id.details_menu, NONE, R.string.details_title)
+            toolbar.inflateMenu(R.menu.wallet)
         }
 
         setupNoInternetHandling(state)
