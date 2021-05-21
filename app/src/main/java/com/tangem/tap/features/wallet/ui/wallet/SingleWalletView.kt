@@ -190,7 +190,7 @@ class SingleWalletView : WalletView {
 
 
     private fun setupAddressCard(state: WalletData, fragment: WalletFragment) = with(fragment) {
-        if (state.walletAddresses != null && state.blockchain != null) {
+        if (state.walletAddresses != null && state.currency is Currency.Blockchain) {
             l_address?.show()
             if (state.shouldShowMultipleAddress()) {
                 (l_address as? ViewGroup)?.beginDelayedTransition()
@@ -202,7 +202,7 @@ class SingleWalletView : WalletView {
 
                 chip_group_address_type.setOnCheckedChangeListener { group, checkedId ->
                     if (checkedId == -1) return@setOnCheckedChangeListener
-                    val type = MultipleAddressUiHelper.idToType(checkedId, state.blockchain)
+                    val type = MultipleAddressUiHelper.idToType(checkedId, state.currency.blockchain)
                     type?.let { store.dispatch(WalletAction.ChangeSelectedAddress(type)) }
                 }
             } else {
