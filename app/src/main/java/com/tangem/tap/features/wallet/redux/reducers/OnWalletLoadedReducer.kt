@@ -3,9 +3,7 @@ package com.tangem.tap.features.wallet.redux.reducers
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Wallet
 import com.tangem.common.extensions.isZero
-import com.tangem.tap.common.extensions.toFiatString
-import com.tangem.tap.common.extensions.toFormattedCurrencyString
-import com.tangem.tap.common.extensions.toFormattedString
+import com.tangem.tap.common.extensions.*
 import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.features.wallet.models.removeUnknownTransactions
 import com.tangem.tap.features.wallet.models.toPendingTransactions
@@ -34,7 +32,7 @@ class OnWalletLoadedReducer {
     ): WalletState {
         val fiatCurrencySymbol = store.state.globalState.appCurrency
         val amount = wallet.amounts[AmountType.Coin]?.value
-        if (walletState.getWalletData(wallet.blockchain.currency) == null) {
+        if (walletState.getWalletData(wallet.blockchain) == null) {
             return walletState
         }
         val formattedAmount = amount?.toFormattedCurrencyString(
@@ -50,26 +48,31 @@ class OnWalletLoadedReducer {
         } else {
             BalanceStatus.VerifiedOnline
         }
-        val walletData = walletState.getWalletData(wallet.blockchain.currency)
+        val walletData = walletState.getWalletData(wallet.blockchain)
                 ?: WalletData()
+        val fiatAmount = walletData.fiatRate?.let { amount?.toFiatValue(it) }
         val newWalletData = walletData.copy(
                 currencyData = walletData.currencyData.copy(
                         status = balanceStatus, currency = wallet.blockchain.fullName,
                         currencySymbol = wallet.blockchain.currency,
                         amount = formattedAmount,
-                        fiatAmount = walletData.fiatRate?.let { amount?.toFiatString(it, fiatCurrencySymbol) }
+                        fiatAmount = fiatAmount,
+                        fiatAmountFormatted = fiatAmount?.toFormattedFiatValue(fiatCurrencySymbol)
                 ),
                 pendingTransactions = pendingTransactions.removeUnknownTransactions(),
                 mainButton = WalletMainButton.SendButton(sendButtonEnabled)
         )
 
         val tokens = wallet.getTokens().mapNotNull { token ->
-            val tokenWalletData = walletState.getWalletData(token.symbol)
+            val tokenWalletData = walletState.getWalletData(token)
             val tokenPendingTransactions = pendingTransactions.filter { it.currency == token.symbol }
             val tokenBalanceStatus = when {
                 tokenPendingTransactions.isNotEmpty() -> BalanceStatus.TransactionInProgress
                 pendingTransactions.isNotEmpty() -> BalanceStatus.SameCurrencyTransactionInProgress
                 else -> BalanceStatus.VerifiedOnline
+            }
+            val tokenFiatAmount = tokenWalletData?.fiatRate?.let { rate ->
+                wallet.getTokenAmount(token)?.value?.toFiatValue(rate)
             }
             tokenWalletData?.copy(
                     currencyData = tokenWalletData.currencyData.copy(
@@ -77,10 +80,8 @@ class OnWalletLoadedReducer {
                             amount = wallet.getTokenAmount(token)?.value?.toFormattedCurrencyString(
                                     token.decimals, token.symbol
                             ),
-                            fiatAmount = tokenWalletData.fiatRate?.let {
-                                wallet.getTokenAmount(token)?.value
-                                        ?.toFiatString(it, fiatCurrencySymbol)
-                            }
+                            fiatAmount = tokenFiatAmount,
+                            fiatAmountFormatted = tokenFiatAmount?.toFormattedFiatValue(fiatCurrencySymbol)
                     ),
                     pendingTransactions = tokenPendingTransactions.removeUnknownTransactions(),
                     mainButton = WalletMainButton.SendButton(sendButtonEnabled)
@@ -145,8 +146,8 @@ class OnWalletLoadedReducer {
                         currencySymbol = wallet.blockchain.currency,
                         formattedAmount,
                         token = tokenData,
-                        fiatAmount = fiatAmount,
-                        fiatAmountRaw = fiatAmountRaw
+                        fiatAmountFormatted = fiatAmount,
+                        fiatAmount = fiatAmountRaw
                 ),
                 pendingTransactions = pendingTransactions.removeUnknownTransactions(),
                 mainButton = WalletMainButton.SendButton(sendButtonEnabled)

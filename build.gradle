@@ -19,7 +19,6 @@ buildscript {
 allprojects {
     repositories {
         google()
-        jcenter()
         maven { url 'https://jitpack.io' }
         def nexusUser = "viewer"
         def nexusPass = "smartcash124"
