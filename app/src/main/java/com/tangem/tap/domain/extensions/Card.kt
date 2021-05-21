@@ -45,3 +45,6 @@ fun Card.signedHashesCount(): Int {
 
 val Card.remainingSignatures: Int?
     get() = this.getSingleWallet()?.remainingSignatures
+
+val Card.isWalletDataSupported: Boolean
+    get() = this.firmwareVersion.major >= 4
