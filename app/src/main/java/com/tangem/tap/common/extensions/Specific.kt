@@ -26,10 +26,19 @@ fun BigDecimal.toFormattedCurrencyString(decimals: Int, currency: String): Strin
     return "${this.toFormattedString(decimals)} $currency"
 }
 
-fun BigDecimal.toFiatString(rateValue: BigDecimal, fiatCurrencyName: FiatCurrencyName): String? {
+fun BigDecimal.toFiatString(rateValue: BigDecimal, fiatCurrencyName: FiatCurrencyName): String {
     var fiatValue = rateValue.multiply(this)
     fiatValue = fiatValue.setScale(2, RoundingMode.DOWN)
     return "≈ ${fiatCurrencyName}  $fiatValue"
+}
+
+fun BigDecimal.toFiatValue(rateValue: BigDecimal): BigDecimal {
+    val fiatValue = rateValue.multiply(this)
+    return fiatValue.setScale(2, RoundingMode.DOWN)
+}
+
+fun BigDecimal.toFormattedFiatValue(fiatCurrencyName: FiatCurrencyName): String {
+    return "≈ ${fiatCurrencyName}  $this"
 }
 
 fun FiatCurrency.toFormattedString(): String = "${this.name} (${this.symbol}) - ${this.sign}"
