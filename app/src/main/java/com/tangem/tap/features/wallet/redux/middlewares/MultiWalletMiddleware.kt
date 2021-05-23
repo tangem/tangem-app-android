@@ -105,8 +105,12 @@ class MultiWalletMiddleware {
                 }
             }
             is WalletAction.MultiWallet.FindTokensInUse -> {
+                val card = globalState?.scanNoteResponse?.card ?: return
                 val walletManager = walletState?.getWalletManager(Blockchain.Ethereum)
-                        ?: return
+                        ?: globalState.tapWalletManager.walletManagerFactory.makeWalletManagerForApp(
+                            card = card,
+                            blockchain = Blockchain.Ethereum
+                        )
                 val tokenFinder = walletManager as TokenFinder
                 scope.launch {
                     val result = tokenFinder.findTokens()
@@ -114,9 +118,21 @@ class MultiWalletMiddleware {
                         when (result) {
                             is Result.Success -> {
                                 if (result.data.isNotEmpty()) {
-                                    store.dispatch(WalletAction.MultiWallet.AddTokens(
+                                    store.dispatch(
+                                        WalletAction.MultiWallet.AddWalletManagers(
+                                            walletManager
+                                        )
+                                    )
+                                    store.dispatch(
+                                        WalletAction.MultiWallet.AddBlockchain(
+                                            walletManager.wallet.blockchain
+                                        )
+                                    )
+                                    store.dispatch(
+                                        WalletAction.MultiWallet.AddTokens(
                                             walletManager.presetTokens.toList()
-                                    ))
+                                        )
+                                    )
                                 }
                             }
                         }
