@@ -113,7 +113,7 @@ class OnWalletLoadedReducer {
                 val tokenFiatAmount = tokenFiatRate?.let { tokenAmount.value?.toFiatString(it, fiatCurrencySymbol) }
                 TokenData(
                     tokenAmount.value?.toFormattedCurrencyString(
-                        tokenAmount.decimals, token.symbol
+                        token.decimals, token.symbol
                     ) ?: "",
                     tokenAmount.currencySymbol, tokenFiatAmount
                 )
