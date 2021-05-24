@@ -54,6 +54,10 @@ class WarningsMiddleware {
                 if (action.remainingSignatures != null &&
                     action.remainingSignatures <= WarningMessagesManager.REMAINING_SIGNATURES_WARNING
                 ) {
+                    store.state.globalState.warningManager
+                        ?.removeWarnings(
+                            messageRes = R.string.warning_low_signatures_format
+                        )
                     addWarningMessage(
                         warning =
                         WarningMessagesManager.remainingSignaturesNotEnough(action.remainingSignatures),
@@ -102,10 +106,6 @@ class WarningsMiddleware {
         if (remainingSignatures != null &&
             remainingSignatures <= WarningMessagesManager.REMAINING_SIGNATURES_WARNING
         ) {
-            getWarnings()
-                .find { it.messageResId == R.string.warning_low_signatures_format }
-                ?.let { previousWarning -> hideWarning(previousWarning) }
-
             addWarningMessage(
                 WarningMessagesManager.remainingSignaturesNotEnough(
                     remainingSignatures
@@ -115,7 +115,7 @@ class WarningsMiddleware {
     }
 
     private fun checkIfWarningNeeded(
-        card: Card
+        card: Card,
     ): WarningMessage? {
         if (card.isTwinCard()) return null
 
@@ -195,9 +195,5 @@ class WarningsMiddleware {
             WarningMessage.Location.MainScreen,
             store.state.walletState.blockchains
         )
-    }
-
-    private fun hideWarning(warning: WarningMessage) {
-        store.state.globalState.warningManager?.hideWarning(warning)
     }
 }
