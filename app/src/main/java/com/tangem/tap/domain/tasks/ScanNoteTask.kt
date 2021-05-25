@@ -44,7 +44,7 @@ class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteRespons
                     val card = this.card?.copy(
                             isPin1Default = result.data.isPin1Default,
                             isPin2Default = result.data.isPin2Default
-                    ) ?: result.data
+                    )?.also { it.setWallets(card.getWallets()) } ?: result.data
 
                     val error = getErrorIfExcludedCard(card)
                     if (error != null) {
