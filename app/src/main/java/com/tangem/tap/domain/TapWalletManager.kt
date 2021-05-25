@@ -6,7 +6,6 @@ import com.tangem.commands.common.card.CardStatus
 import com.tangem.commands.common.network.Result
 import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
-import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.common.redux.global.FiatCurrencyName
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.currenciesRepository
@@ -150,11 +149,7 @@ class TapWalletManager {
                     val config = store.state.globalState.configManager?.config ?: return@withContext
 
                     val blockchain = data.card.getBlockchain()
-                    val primaryWalletManager = if (blockchain != null) {
-                        walletManagerFactory.makeWalletManagerForApp(data.card, blockchain)
-                    } else {
-                        null
-                    }
+                    val primaryWalletManager = walletManagerFactory.makePrimaryWalletManager(data)
 
                     if (blockchain != null && primaryWalletManager != null) {
                         val primaryToken = data.card.getToken()
