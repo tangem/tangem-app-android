@@ -35,6 +35,4 @@ class CreateWalletAndRescanTask : CardSessionRunnable<Card>, PreflightReadCapabl
             }
         }
     }
-
-
 }
