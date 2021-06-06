@@ -251,7 +251,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         val mainCurrency = sp.getString("mainCurrency", TapCurrency.DEFAULT_FIAT_CURRENCY)
         val foundType = MainCurrencyType.values()
                 .firstOrNull { it.name.toLowerCase() == mainCurrency!!.toLowerCase() }
-                ?: MainCurrencyType.FIAT
+                ?: MainCurrencyType.CRYPTO
         return foundType
     }
 
