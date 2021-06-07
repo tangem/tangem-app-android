@@ -15,6 +15,7 @@ import com.tangem.tap.domain.configurable.config.FeaturesRemoteLoader
 import com.tangem.tap.domain.configurable.warningMessage.RemoteWarningLoader
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.domain.tokens.CurrenciesRepository
+import com.tangem.tap.domain.walletconnect.WalletConnectRepository
 import com.tangem.tap.features.feedback.AdditionalEmailInfo
 import com.tangem.tap.features.feedback.FeedbackManager
 import com.tangem.tap.features.feedback.TangemLogCollector
@@ -32,6 +33,7 @@ val store = Store(
 )
 lateinit var preferencesStorage: PreferencesStorage
 lateinit var currenciesRepository: CurrenciesRepository
+lateinit var walletConnectRepository: WalletConnectRepository
 
 class TapApplication : Application() {
     override fun onCreate() {
@@ -52,6 +54,7 @@ class TapApplication : Application() {
         preferencesStorage = PreferencesStorage(this)
         PicassoHelper.initPicassoWithCaching(this)
         currenciesRepository = CurrenciesRepository(this)
+        walletConnectRepository = WalletConnectRepository(this)
 
         initFeedbackManager()
         loadConfigs()
