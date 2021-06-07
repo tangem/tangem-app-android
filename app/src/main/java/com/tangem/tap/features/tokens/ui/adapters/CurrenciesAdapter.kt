@@ -7,10 +7,8 @@ import androidx.annotation.StringRes
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.squareup.picasso.Callback
 import com.squareup.picasso.Picasso
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.IconsUtil
 import com.tangem.blockchain.common.Token
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
@@ -19,7 +17,6 @@ import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.item_currency_subtitle.view.*
 import kotlinx.android.synthetic.main.item_popular_token.view.*
-import java.lang.Exception
 import java.util.*
 
 class CurrenciesAdapter : ListAdapter<CurrencyListItem, RecyclerView.ViewHolder>(DiffUtilCallback) {
