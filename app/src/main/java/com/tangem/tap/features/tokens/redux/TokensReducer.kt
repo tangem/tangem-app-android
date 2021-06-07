@@ -1,6 +1,9 @@
 package com.tangem.tap.features.tokens.redux
 
 import com.tangem.tap.common.redux.AppState
+import com.tangem.tap.domain.tokens.CardCurrencies
+import com.tangem.tap.features.wallet.redux.Currency
+import com.tangem.tap.features.wallet.redux.WalletData
 import org.rekotlin.Action
 
 class TokensReducer {
@@ -18,13 +21,21 @@ private fun internalReduce(action: Action, state: AppState): TokensState {
             tokensState.copy(currencies = action.currencies)
         }
         is TokensAction.SetAddedCurrencies -> {
-            tokensState.copy(addedCurrencies = action.wallets.mapNotNull { it.currencyData.currencySymbol })
+
+
+            tokensState.copy(addedCurrencies = action.wallets.toCardCurrencies())
         }
         is TokensAction.LoadCardTokens.Success -> {
             tokensState.copy(addedTokens = LinkedHashSet(
-                    action.tokens.map { TokenWithAmount(it, null) }
+                action.tokens.map { TokenWithAmount(it, null) }
             ))
         }
         else -> tokensState
     }
+}
+
+private fun List<WalletData>.toCardCurrencies(): CardCurrencies {
+    val tokens = mapNotNull { (it.currency as? Currency.Token)?.token }
+    val blockchains = mapNotNull { (it.currency as? Currency.Blockchain)?.blockchain }
+    return CardCurrencies(tokens = tokens, blockchains = blockchains)
 }
