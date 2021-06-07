@@ -6,6 +6,8 @@ import com.tangem.tap.common.redux.navigation.NavigationState
 import com.tangem.tap.common.redux.navigation.navigationMiddleware
 import com.tangem.tap.features.details.redux.DetailsMiddleware
 import com.tangem.tap.features.details.redux.DetailsState
+import com.tangem.tap.features.details.redux.walletconnect.WalletConnectMiddleware
+import com.tangem.tap.features.details.redux.walletconnect.WalletConnectState
 import com.tangem.tap.features.disclaimer.redux.DisclaimerMiddleware
 import com.tangem.tap.features.disclaimer.redux.DisclaimerState
 import com.tangem.tap.features.home.redux.HomeMiddleware
@@ -20,14 +22,15 @@ import org.rekotlin.Middleware
 import org.rekotlin.StateType
 
 data class AppState(
-        val navigationState: NavigationState = NavigationState(),
-        val globalState: GlobalState = GlobalState(),
-        val homeState: HomeState = HomeState(),
-        val walletState: WalletState = WalletState(),
-        val sendState: SendState = SendState(),
-        val detailsState: DetailsState = DetailsState(),
-        val disclaimerState: DisclaimerState = DisclaimerState(),
-        val tokensState: TokensState = TokensState(),
+    val navigationState: NavigationState = NavigationState(),
+    val globalState: GlobalState = GlobalState(),
+    val homeState: HomeState = HomeState(),
+    val walletState: WalletState = WalletState(),
+    val sendState: SendState = SendState(),
+    val detailsState: DetailsState = DetailsState(),
+    val disclaimerState: DisclaimerState = DisclaimerState(),
+    val tokensState: TokensState = TokensState(),
+    val walletConnectState: WalletConnectState = WalletConnectState(),
 ) : StateType {
 
     companion object {
@@ -40,6 +43,7 @@ data class AppState(
                     DetailsMiddleware().detailsMiddleware,
                     DisclaimerMiddleware().disclaimerMiddleware,
                     TokensMiddleware().tokensMiddleware,
+                    WalletConnectMiddleware().walletConnectMiddleware
             )
         }
     }
