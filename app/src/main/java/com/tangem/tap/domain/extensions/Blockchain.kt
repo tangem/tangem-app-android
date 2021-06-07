@@ -29,14 +29,15 @@ fun Blockchain.minimalAmount(): BigDecimal {
     return 1.toBigDecimal().movePointLeft(decimals())
 }
 
-fun Blockchain.getCurve(): EllipticCurve? {
+fun Blockchain.getSupportedCurves(): List<EllipticCurve>? {
     return when (this) {
         Blockchain.Unknown -> null
         Blockchain.Bitcoin, Blockchain.BitcoinTestnet, Blockchain.BitcoinCash, Blockchain.Litecoin,
         Blockchain.Ducatus, Blockchain.Ethereum, Blockchain.EthereumTestnet, Blockchain.RSK,
-        Blockchain.Tezos, Blockchain.XRP, Blockchain.Binance, Blockchain.BinanceTestnet ->
-            EllipticCurve.Secp256k1
-        Blockchain.Cardano, Blockchain.CardanoShelley, Blockchain.Stellar -> EllipticCurve.Ed25519
+        Blockchain.XRP, Blockchain.Binance, Blockchain.BinanceTestnet -> listOf(EllipticCurve.Secp256k1)
+        Blockchain.Tezos -> listOf(EllipticCurve.Secp256k1, EllipticCurve.Ed25519)
+        Blockchain.Cardano, Blockchain.CardanoShelley, Blockchain.Stellar ->
+            listOf(EllipticCurve.Ed25519)
     }
 }
 
