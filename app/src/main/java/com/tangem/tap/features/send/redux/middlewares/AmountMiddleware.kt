@@ -83,15 +83,13 @@ class AmountMiddleware {
         val sendState = appState?.sendState ?: return
 
         dispatch(AmountAction.SetAmount(sendState.amountState.balanceCrypto, false))
-        dispatch(AmountActionUi.CheckAmountToSend)
-
-        if (SendState.isReadyToRequestFee()) {
-            dispatch(FeeAction.RequestFee)
-            if (!sendState.amountState.isCoinAmount()) return
-
+        if (sendState.amountState.isCoinAmount()) {
             dispatch(FeeAction.ChangeLayoutVisibility(main = true, controls = true, chipGroup = true))
             dispatch(FeeActionUi.ChangeIncludeFee(true))
         }
+
+        dispatch(AmountActionUi.CheckAmountToSend)
+        if (SendState.isReadyToRequestFee()) dispatch(FeeAction.RequestFee)
     }
 
     private fun toggleMainCurrency(appState: AppState?, dispatch: (Action) -> Unit) {
