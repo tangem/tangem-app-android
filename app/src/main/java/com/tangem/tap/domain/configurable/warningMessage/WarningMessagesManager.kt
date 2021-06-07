@@ -1,11 +1,8 @@
 package com.tangem.tap.domain.configurable.warningMessage
 
-import com.tangem.TangemSdkError
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.tangem_sdk_new.ui.animation.VoidCallback
 import com.tangem.tap.common.extensions.containsAny
-import com.tangem.tap.features.wallet.redux.WalletAction
-import com.tangem.tap.store
 import com.tangem.wallet.R
 
 /**
@@ -66,6 +63,10 @@ class WarningMessagesManager(
     fun removeWarnings(origin: WarningMessage.Origin) {
         warningsList.removeIf { it.origin == origin }
         sortByPriority()
+    }
+
+    fun removeWarnings(messageRes: Int) {
+        warningsList.removeIf { it.messageResId == messageRes }
     }
 
     private fun sortByPriority() {
