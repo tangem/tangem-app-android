@@ -22,6 +22,7 @@ data class GlobalState(
         val feedbackManager: FeedbackManager? = null,
         val appCurrency: FiatCurrencyName = DEFAULT_FIAT_CURRENCY,
         val scanCardFailsCounter: Int = 0,
+        val dialog: StateDialog? = null
 ) : StateType
 
 typealias CryptoCurrencyName = String
