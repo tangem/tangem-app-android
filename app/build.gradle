@@ -77,8 +77,7 @@ dependencies {
     implementation 'com.google.android.play:core-ktx:1.8.1'
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.1.5'
 
-//    implementation 'com.tangem:blockchain:develop-11' //TODO: set correct one
-    implementation 'blockchain-sdk-kotlin:blockchain:tangem-20210607.120025-19'
+    implementation 'com.tangem:blockchain:develop-12'
     implementation 'com.tangem:core:develop-36'
     implementation 'com.tangem:sdk:develop-36'
 
