@@ -28,9 +28,15 @@ fun Picasso.loadCurrenciesIcon(
     textView.text = null
 
     when {
+        token?.symbol == QCX -> {
+            this.load(R.drawable.ic_qcx)?.into(imageView)
+        }
         url != null -> {
+            if (token != null) {
+                setTokenImage(imageView, textView, token)
+            }
             this.load(url)
-                .placeholder(R.drawable.shape_circle)
+                .noPlaceholder()
                 ?.into(imageView,
                     object : Callback {
                         override fun onError(e: Exception?) {
@@ -38,11 +44,12 @@ fun Picasso.loadCurrenciesIcon(
                         }
 
                         override fun onSuccess() {
+                            if (token != null) {
+                                imageView.colorFilter = null
+                                textView.text = null
+                            }
                         }
                     })
-        }
-        token?.symbol == QCX -> {
-            this.load(R.drawable.ic_qcx)?.into(imageView)
         }
         else -> {
             setOfflineCurrencyImage(imageView, textView, token, blockchain)
