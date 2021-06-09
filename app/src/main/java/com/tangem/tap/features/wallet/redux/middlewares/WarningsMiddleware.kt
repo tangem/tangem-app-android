@@ -24,6 +24,7 @@ import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
+import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -53,6 +54,10 @@ class WarningsMiddleware {
                 if (action.remainingSignatures != null &&
                     action.remainingSignatures <= WarningMessagesManager.REMAINING_SIGNATURES_WARNING
                 ) {
+                    store.state.globalState.warningManager
+                        ?.removeWarnings(
+                            messageRes = R.string.warning_low_signatures_format
+                        )
                     addWarningMessage(
                         warning =
                         WarningMessagesManager.remainingSignaturesNotEnough(action.remainingSignatures),
@@ -110,7 +115,7 @@ class WarningsMiddleware {
     }
 
     private fun checkIfWarningNeeded(
-        card: Card
+        card: Card,
     ): WarningMessage? {
         if (card.isTwinCard()) return null
 
