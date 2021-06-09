@@ -24,7 +24,7 @@ sealed class WalletAction : Action {
     }
 
 
-    data class LoadWallet(val allowTopUp: Boolean? = null, val currency: CryptoCurrencyName? = null) : WalletAction() {
+    data class LoadWallet(val allowTopUp: Boolean? = null, val blockchain: Blockchain? = null) : WalletAction() {
         data class Success(val wallet: Wallet) : WalletAction()
         data class NoAccount(val wallet: Wallet, val amountToCreateAccount: String) : WalletAction()
         data class Failure(val wallet: Wallet, val errorMessage: String? = null) : WalletAction()
@@ -45,7 +45,7 @@ sealed class WalletAction : Action {
         data class SaveCurrencies(val cardCurrencies: CardCurrencies) : MultiWallet()
         object FindTokensInUse : MultiWallet()
         data class FindBlockchainsInUse(val card: Card, val factory: WalletManagerFactory) : MultiWallet()
-        data class TokenLoaded(val amount: Amount) : MultiWallet()
+        data class TokenLoaded(val amount: Amount, val token: Token) : MultiWallet()
         data class SelectWallet(val walletData: WalletData?) : MultiWallet()
         data class RemoveWallet(val walletData: WalletData) : MultiWallet()
         data class SetPrimaryBlockchain(val blockchain: Blockchain) : MultiWallet()
@@ -71,16 +71,16 @@ sealed class WalletAction : Action {
         class CheckRemainingSignatures(val remainingSignatures: Int?) : Warnings()
     }
 
-    data class UpdateWallet(val currency: CryptoCurrencyName? = null) : WalletAction() {
+    data class UpdateWallet(val blockchain: Blockchain? = null) : WalletAction() {
         object ScheduleUpdatingWallet : WalletAction()
         data class Success(val wallet: Wallet) : WalletAction()
         data class Failure(val errorMessage: String? = null) : WalletAction()
     }
 
     data class LoadFiatRate(
-            val wallet: Wallet? = null, val currency: CryptoCurrencyName? = null
+            val wallet: Wallet? = null, val currency: Currency? = null
     ) : WalletAction() {
-        data class Success(val fiatRate: Pair<CryptoCurrencyName, BigDecimal?>) : WalletAction()
+        data class Success(val fiatRate: Pair<Currency, BigDecimal?>) : WalletAction()
         object Failure : WalletAction()
     }
 
