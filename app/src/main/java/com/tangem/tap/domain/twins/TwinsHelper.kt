@@ -1,7 +1,9 @@
 package com.tangem.tap.domain.twins
 
 import com.tangem.commands.common.card.Card
+import com.tangem.commands.common.card.CardStatus
 import com.tangem.commands.common.card.masks.Product
+import com.tangem.commands.wallet.WalletStatus
 import com.tangem.tap.common.extensions.isEven
 
 class TwinsHelper {
@@ -53,16 +55,16 @@ class TwinsHelper {
 
 private fun String.calculateLuhn(): Int {
     val checksum = this.reversed()
-            .mapIndexed { index, c ->
-                val digit = if (c in '0'..'9') c - '0' else c - 'A'
-                if (!index.isEven()) {
-                    digit
-                } else {
-                    val newDigit = digit * 2
-                    if (newDigit >= 10) newDigit - 9 else newDigit
-                }
-            }.sum()
-            .rem(10)
+        .mapIndexed { index, c ->
+            val digit = if (c in '0'..'9') c - '0' else c - 'A'
+            if (!index.isEven()) {
+                digit
+            } else {
+                val newDigit = digit * 2
+                if (newDigit >= 10) newDigit - 9 else newDigit
+            }
+        }.sum()
+        .rem(10)
     return (10 - checksum) % 10
 }
 
@@ -81,4 +83,16 @@ fun Card.isTwinCard(): Boolean {
 
 fun Card.getTwinCardIdForUser(): String {
     return TwinsHelper.getTwinCardIdForUser(this.cardId)
+}
+
+fun Card.changeStatusToLoaded(): Card {
+    val wallets = getWallets().map { it.copy(status = WalletStatus.Loaded) }
+    return copy(status = CardStatus.Loaded)
+        .also { it.setWallets(wallets) }
+}
+
+fun Card.changeStatusToEmpty(): Card {
+    val wallets = getWallets().map { it.copy(status = WalletStatus.Empty) }
+    return copy(status = CardStatus.Empty)
+        .also { it.setWallets(wallets) }
 }
