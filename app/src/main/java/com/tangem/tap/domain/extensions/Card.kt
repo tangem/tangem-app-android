@@ -13,6 +13,7 @@ fun Card.getToken(): Token? {
     val symbol = cardData?.tokenSymbol ?: return null
     val contractAddress = cardData?.tokenContractAddress ?: return null
     val decimals = cardData?.tokenDecimal ?: return null
+    if (symbol.isBlank() || contractAddress.isBlank()) return null
     return Token(symbol, contractAddress, decimals)
 }
 
