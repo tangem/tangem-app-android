@@ -6,7 +6,6 @@ import com.tangem.commands.common.card.CardStatus
 import com.tangem.commands.common.network.Result
 import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
-import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.common.redux.global.FiatCurrencyName
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.currenciesRepository
@@ -17,12 +16,14 @@ import com.tangem.tap.domain.tokens.CardCurrencies
 import com.tangem.tap.domain.twins.TwinsHelper
 import com.tangem.tap.domain.twins.isTwinCard
 import com.tangem.tap.features.tokens.redux.TokensAction
+import com.tangem.tap.features.wallet.redux.Currency
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.tap.network.coinmarketcap.CoinMarketCapService
 import com.tangem.tap.store
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import java.math.BigDecimal
 
 
@@ -64,19 +65,23 @@ class TapWalletManager {
     }
 
     suspend fun loadFiatRate(fiatCurrency: FiatCurrencyName, wallet: Wallet) {
-        val currencyList = wallet.getTokens().map { it.symbol }.toMutableList()
-        currencyList.add(wallet.blockchain.currency)
-        loadFiatRate(fiatCurrency, currencyList)
+        Timber.d(wallet.getTokens().toString())
+        val currencies = wallet.getTokens()
+            .map { Currency.Token(it, wallet.blockchain) }
+            .plus(Currency.Blockchain(wallet.blockchain))
+        loadFiatRate(fiatCurrency, currencies)
     }
 
-    suspend fun loadFiatRate(fiatCurrency: FiatCurrencyName, cryptoCurrencyName: CryptoCurrencyName) {
-        val currencyList = listOf(cryptoCurrencyName)
-        loadFiatRate(fiatCurrency, currencyList)
+    suspend fun loadFiatRate(fiatCurrency: FiatCurrencyName, currency: Currency) {
+        val currencies = listOf(currency)
+        loadFiatRate(fiatCurrency, currencies)
     }
 
-    private suspend fun loadFiatRate(fiatCurrency: FiatCurrencyName, currencyList: List<CryptoCurrencyName>) {
-        val results = mutableListOf<Pair<CryptoCurrencyName, Result<BigDecimal>?>>()
-        currencyList.forEach { results.add(it to coinMarketCapService.getRate(it, fiatCurrency)) }
+    suspend fun loadFiatRate(fiatCurrency: FiatCurrencyName, currencies: List<Currency>) {
+        val results = mutableListOf<Pair<Currency, Result<BigDecimal>?>>()
+        currencies.forEach {
+            results.add(it to coinMarketCapService.getRate(it.currencySymbol, fiatCurrency))
+        }
         handleFiatRatesResult(results)
     }
 
@@ -144,11 +149,7 @@ class TapWalletManager {
                     val config = store.state.globalState.configManager?.config ?: return@withContext
 
                     val blockchain = data.card.getBlockchain()
-                    val primaryWalletManager = if (blockchain != null) {
-                        walletManagerFactory.makeWalletManagerForApp(data.card, blockchain)
-                    } else {
-                        null
-                    }
+                    val primaryWalletManager = walletManagerFactory.makePrimaryWalletManager(data)
 
                     if (blockchain != null && primaryWalletManager != null) {
                         val primaryToken = data.card.getToken()
@@ -199,8 +200,17 @@ class TapWalletManager {
             store.dispatch(WalletAction.MultiWallet.FindBlockchainsInUse(card, walletManagerFactory))
             store.dispatch(WalletAction.MultiWallet.FindTokensInUse)
         } else {
-            val blockchains =  savedCurrencies.blockchains
-            val walletManagers = walletManagerFactory.makeWalletManagersForApp(card, blockchains)
+            val blockchains = savedCurrencies.blockchains
+            val walletManagers = if (
+                presetTokens.isNotEmpty() &&
+                primaryWalletManager != null && primaryBlockchain != null
+            ) {
+                val blockchainsWithoutPrimary = blockchains.filterNot { it == primaryBlockchain }
+                walletManagerFactory.makeWalletManagersForApp(card, blockchainsWithoutPrimary)
+                    .plus(primaryWalletManager)
+            } else {
+                walletManagerFactory.makeWalletManagersForApp(card, blockchains)
+            }
 
             store.dispatch(WalletAction.MultiWallet.AddWalletManagers(walletManagers))
             store.dispatch(WalletAction.MultiWallet.AddBlockchains(blockchains))
@@ -259,7 +269,7 @@ class TapWalletManager {
         }
     }
 
-    private suspend fun handleFiatRatesResult(results: List<Pair<CryptoCurrencyName, Result<BigDecimal>?>>) {
+    private suspend fun handleFiatRatesResult(results: List<Pair<Currency, Result<BigDecimal>?>>) {
         withContext(Dispatchers.Main) {
             results.map {
                 when (it.second) {
