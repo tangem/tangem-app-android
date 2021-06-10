@@ -86,13 +86,11 @@ fun Card.getTwinCardIdForUser(): String {
 }
 
 fun Card.changeStatusToLoaded(): Card {
-    val wallets = getWallets().map { it.copy(status = WalletStatus.Loaded) }
-    return copy(status = CardStatus.Loaded)
-        .also { it.setWallets(wallets) }
+    val wallets = wallets.map { it.copy(status = WalletStatus.Loaded) }
+    return copy(status = CardStatus.Loaded, wallets = wallets)
 }
 
 fun Card.changeStatusToEmpty(): Card {
-    val wallets = getWallets().map { it.copy(status = WalletStatus.Empty) }
-    return copy(status = CardStatus.Empty)
-        .also { it.setWallets(wallets) }
+    val wallets = wallets.map { it.copy(status = WalletStatus.Empty) }
+    return copy(status = CardStatus.Empty, wallets = wallets)
 }
