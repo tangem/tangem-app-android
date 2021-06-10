@@ -43,8 +43,8 @@ class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteRespons
                 is CompletionResult.Success -> {
                     val card = this.card?.copy(
                             isPin1Default = result.data.isPin1Default,
-                            isPin2Default = result.data.isPin2Default
-                    )?.also { it.setWallets(card.getWallets()) } ?: result.data
+                            isPin2Default = result.data.isPin2Default,
+                    ) ?: result.data
 
                     val error = getErrorIfExcludedCard(card)
                     if (error != null) {
@@ -88,7 +88,7 @@ class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteRespons
             return
         }
 
-        val curvesPresent = card.getWallets().map { it.curve }
+        val curvesPresent = card.wallets.map { it.curve }
         val curvesToCreate = EllipticCurve.values().subtract(curvesPresent)
 
         if (curvesToCreate.isEmpty()) {
