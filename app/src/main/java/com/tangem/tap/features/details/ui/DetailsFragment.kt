@@ -9,6 +9,7 @@ import androidx.transition.TransitionInflater
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.redux.global.GlobalAction
+import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.twins.getTwinCardIdForUser
 import com.tangem.tap.domain.twins.isTwinCard
@@ -118,6 +119,10 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
         }
         tv_send_feedback.setOnClickListener {
             store.dispatch(GlobalAction.SendFeedback(FeedbackEmail()))
+        }
+
+        tv_wallet_connect.setOnClickListener {
+            store.dispatch(NavigationAction.NavigateTo(AppScreen.WalletConnectSessions))
         }
 
         tv_security_title.setOnClickListener {
