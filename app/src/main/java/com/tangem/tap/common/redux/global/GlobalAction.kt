@@ -38,4 +38,7 @@ sealed class GlobalAction : Action {
     data class SetFeedbackManager(val feedbackManager: FeedbackManager) : GlobalAction()
 
     data class SendFeedback(val emailData: EmailData) : GlobalAction()
+
+    data class ShowDialog(val stateDialog: StateDialog) : GlobalAction()
+    object HideDialog : GlobalAction()
 }
