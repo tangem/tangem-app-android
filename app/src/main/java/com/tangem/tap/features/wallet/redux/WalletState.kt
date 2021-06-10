@@ -44,14 +44,17 @@ data class WalletState(
     val blockchains: List<Blockchain>
         get() = walletManagers.map { it.wallet.blockchain }
 
+    val currencies: List<Currency>
+        get() = wallets.mapNotNull { it.currency }
+
     fun getWalletManager(token: Token?): WalletManager? {
         if (token == null) return null
         val ethereumWalletManager = walletManagers.find { it.wallet.blockchain == Blockchain.Ethereum }
-        return if (ethereumWalletManager?.presetTokens?.find { it == token } != null) {
+        return if (ethereumWalletManager?.presetTokens?.contains(token) == true) {
             ethereumWalletManager
         } else {
             val primaryWalletManager = walletManagers.find { it.wallet.blockchain == primaryBlockchain }
-            if (primaryWalletManager?.presetTokens?.find { it == token } != null) {
+            if (primaryWalletManager?.presetTokens?.contains(token) == true) {
                 primaryWalletManager
             } else {
                 ethereumWalletManager
@@ -132,6 +135,11 @@ data class WalletState(
         return wallets.filter { !currencies.contains(it.currencyData.currency) } + newWallets
     }
 
+    fun addWalletManagers(newWalletManagers: List<WalletManager>): WalletState {
+        val updatedWalletManagers = this.walletManagers +
+                newWalletManagers.filterNot { this.blockchains.contains(it.wallet.blockchain) }
+        return copy(walletManagers = updatedWalletManagers)
+    }
 }
 
 sealed class WalletDialog: StateDialog {
