@@ -113,4 +113,44 @@ this wallet.
     <string name="alert_button_i_understand" translatable="false">I understand</string>
 
     <string name="warning_low_signatures_format" translatable="false">There are only %s signatures available on this card. You must withdraw all of your funds.</string>
+
+    //Wallet Connect
+    <string name="wallet_connect" translatable="false">Wallet Connect</string>
+    <string name="wallet_connect_sessions_title" translatable="false">Wallet Connect Sessions</string>
+    <string name="wallet_connect_session_opened" translatable="false">WalletConnect session opened with %s</string>
+    <string name="wallet_connect_no_sessions_title" translatable="false">Ooops. No Sessions.</string>
+    <string name="wallet_connect_no_sessions_message" translatable="false">No opened WalletConnect sessions</string>
+    <string name="wallet_connect_open_session" translatable="false">Open session</string>
+    <string name="wallet_connect_card_number" translatable="false">Card: %s</string>
+    <string name="wallet_connect_scan_card_message" translatable="false">Tap card to bind to wallet connect</string>
+
+    <string name="wallet_connect_create_tx_message" translatable="false">Card: %1s
+    Request to create transaction for %2s
+    \n%3s
+
+    \n\nAmount: %4s
+    \nFee: %5s
+    \nTotal: %6s
+    \nBalance: %7s</string>
+
+    <string name="wallet_connect_create_tx_not_enough_funds" translatable="false">Can\'t send transaction. Not enough funds.</string>
+
+    <string name="wallet_connect_request_session_start" translatable="false">Request to start a session for card with ID %1s\n
+    for %2s\n\n
+
+    URL: %3s</string>
+
+
+    <string name="wallet_connect_alert_sign_message" translatable="false">Requesting to sign a message\nwith card %s\n\n</string>
+    <string name="wallet_connect_personal_sign_message" translatable="false">Message for %s:\n%s</string>
+
+
+    <string name="common_disconnect" translatable="false">Disconnect</string>
+    <string name="common_sign" translatable="false">Sign</string>
+    <string name="common_sign_and_send" translatable="false">Sign and send</string>
+    <string name="common_reject" translatable="false">Reject</string>
+
+    <string name="wallet_connect_clipboard_alert" translatable="false">Clipboard contain WalletConnect code. Use copied value or scan QR-code</string>
+    <string name="wallet_connect_paste_from_clipboard" translatable="false">Paste from clipboard</string>
+    <string name="wallet_connect_scan_new_code" translatable="false">Scan new code</string>
 </resources>
