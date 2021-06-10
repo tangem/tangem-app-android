@@ -21,8 +21,6 @@ private fun internalReduce(action: Action, state: AppState): TokensState {
             tokensState.copy(currencies = action.currencies)
         }
         is TokensAction.SetAddedCurrencies -> {
-
-
             tokensState.copy(addedCurrencies = action.wallets.toCardCurrencies())
         }
         is TokensAction.LoadCardTokens.Success -> {
@@ -35,7 +33,7 @@ private fun internalReduce(action: Action, state: AppState): TokensState {
 }
 
 private fun List<WalletData>.toCardCurrencies(): CardCurrencies {
-    val tokens = mapNotNull { (it.currency as? Currency.Token)?.token }
-    val blockchains = mapNotNull { (it.currency as? Currency.Blockchain)?.blockchain }
+    val tokens = mapNotNull { (it.currency as? Currency.Token)?.token }.toSet()
+    val blockchains = mapNotNull { (it.currency as? Currency.Blockchain)?.blockchain }.toSet()
     return CardCurrencies(tokens = tokens, blockchains = blockchains)
 }
