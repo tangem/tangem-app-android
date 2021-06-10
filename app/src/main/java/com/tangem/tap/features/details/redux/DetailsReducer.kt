@@ -12,6 +12,7 @@ import com.tangem.tap.domain.twins.TwinsHelper
 import com.tangem.tap.domain.twins.isTwinCard
 import com.tangem.tap.features.details.redux.twins.CreateTwinWalletReducer
 import com.tangem.tap.features.details.redux.twins.CreateTwinWalletState
+import com.tangem.tap.features.wallet.models.toPendingTransactions
 import org.rekotlin.Action
 import java.util.*
 
@@ -89,7 +90,8 @@ private fun handleEraseWallet(action: DetailsAction.EraseWallet, state: DetailsS
                         || state.card?.settingsMask?.contains(Settings.IsReusable) == false
                         || state.card?.isWalletDataSupported == true
             val notEmpty = state.wallets.any {
-                !it.recentTransactions.isNullOrEmpty() || it.amounts.toSendableAmounts().isNotEmpty()
+                !it.recentTransactions.toPendingTransactions(it.address).isNullOrEmpty()
+                        || it.amounts.toSendableAmounts().isNotEmpty()
             }
             val eraseWalletState = when {
                 notAllowedByCard -> EraseWalletState.NotAllowedByCard
