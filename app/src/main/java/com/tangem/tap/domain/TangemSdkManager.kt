@@ -33,10 +33,14 @@ class TangemSdkManager(val activity: ComponentActivity) {
             activity, Config(cardFilter = CardFilter(EnumSet.allOf(CardType::class.java)))
     )
 
-    suspend fun scanNote(analyticsHandler: AnalyticsHandler): CompletionResult<ScanNoteResponse> {
+    suspend fun scanNote(
+        analyticsHandler: AnalyticsHandler, messageRes: Int? = null
+    ): CompletionResult<ScanNoteResponse> {
         analyticsHandler.triggerEvent(AnalyticsEvent.READY_TO_SCAN, null)
         return runTaskAsyncReturnOnMain(ScanNoteTask(),
-                initialMessage = Message(activity.getString(R.string.initial_message_scan_header)))
+                initialMessage = Message(
+                    activity.getString(messageRes ?: R.string.initial_message_scan_header)
+                ))
     }
 
     suspend fun createWallet(cardId: String?): CompletionResult<Card> {
