@@ -12,10 +12,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.tangem.Log
 import com.tangem.TangemSdkLogger
-import com.tangem.blockchain.common.Amount
-import com.tangem.blockchain.common.AmountType
-import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.Wallet
+import com.tangem.blockchain.common.*
 import com.tangem.commands.common.card.Card
 import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.domain.TapWorkarounds
@@ -138,6 +135,7 @@ class AdditionalEmailInfo {
             var blockchain: Blockchain = Blockchain.Unknown,
             var address: String = "",
             var explorerLink: String = "",
+            var host: String = "",
             //    var outputsCount: String = ""
             //    var transactionHex: String = ""
     )
@@ -178,14 +176,28 @@ class AdditionalEmailInfo {
         signedHashesCount = card.signedHashesCount().toString()
     }
 
-    fun setWalletsInfo(wallets: List<Wallet>) {
+    fun setWalletsInfo(walletManagers: List<WalletManager>) {
         walletsInfo.clear()
-        wallets.forEach { walletsInfo.add(EmailWalletInfo(it.blockchain, getAddress(it), getExploreUri(it))) }
+        walletManagers.forEach { manager ->
+            walletsInfo.add(
+                EmailWalletInfo(
+                    blockchain = manager.wallet.blockchain,
+                    address = getAddress(manager.wallet),
+                    explorerLink = getExploreUri(manager.wallet),
+                    host = manager.currentHost
+                )
+            )
+        }
     }
 
-    fun updateOnSendError(wallet: Wallet, amountToSend: Amount, feeAmount: Amount, destinationAddress: String) {
+    fun updateOnSendError(wallet: Wallet, host: String, amountToSend: Amount, feeAmount: Amount, destinationAddress: String) {
         val amountState = store.state.sendState.amountState
-        onSendErrorWalletInfo = EmailWalletInfo(wallet.blockchain, getAddress(wallet), getExploreUri(wallet))
+        onSendErrorWalletInfo = EmailWalletInfo(
+            blockchain = wallet.blockchain,
+            address = getAddress(wallet),
+            explorerLink = getExploreUri(wallet),
+            host = host
+        )
 
         this.destinationAddress = destinationAddress
         amount = amountToSend.value?.stripZeroPlainString() ?: "0"
@@ -267,6 +279,7 @@ class SendTransactionFailedEmail(private val error: String) : EmailData {
             appendKeyValue("Error", error)
             appendKeyValue("Card ID", infoHolder.cardId)
             appendKeyValue("Blockchain", walletInfo.blockchain.fullName)
+            appendKeyValue("Host", walletInfo.host)
             appendKeyValue("Token", infoHolder.token)
             appendKeyValue("Source address", walletInfo.address)
             appendKeyValue("Destination address", infoHolder.destinationAddress)
@@ -291,6 +304,7 @@ class FeedbackEmail : EmailData {
 
         infoHolder.walletsInfo.forEach {
             builder.appendKeyValue("Blockchain", it.blockchain.fullName)
+            builder.appendKeyValue("Host", it.host)
             builder.appendKeyValue("Wallet address", it.address)
             builder.appendKeyValue("Explorer link", it.explorerLink)
         }

@@ -4,9 +4,7 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.blockchain.blockchains.stellar.StellarTransactionExtras
 import com.tangem.blockchain.blockchains.xrp.XrpTransactionBuilder
 import com.tangem.blockchain.common.*
-import com.tangem.blockchain.extensions.Signer
 import com.tangem.blockchain.extensions.SimpleResult
-import com.tangem.commands.SignResponse
 import com.tangem.commands.common.card.Card
 import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
@@ -162,7 +160,13 @@ private fun sendTransaction(
                             when {
                                 message == null -> {
                                     dispatch(SendAction.SendError(TapError.UnknownError))
-                                    infoHolder?.updateOnSendError(walletManager.wallet, amountToSend, feeAmount, destinationAddress)
+                                    infoHolder?.updateOnSendError(
+                                        wallet = walletManager.wallet,
+                                        host = walletManager.currentHost,
+                                        amountToSend = amountToSend,
+                                        feeAmount = feeAmount,
+                                        destinationAddress = destinationAddress
+                                    )
                                     dispatch(SendAction.Dialog.SendTransactionFails("unknown error"))
                                 }
                                 message.contains("50002") -> {
@@ -177,7 +181,13 @@ private fun sendTransaction(
                                     Timber.e(throwable)
                                     FirebaseCrashlytics.getInstance().recordException(throwable)
                                     dispatch(SendAction.SendError(TapError.CustomError(message)))
-                                    infoHolder?.updateOnSendError(walletManager.wallet, amountToSend, feeAmount, destinationAddress)
+                                    infoHolder?.updateOnSendError(
+                                        wallet = walletManager.wallet,
+                                        host = walletManager.currentHost,
+                                        amountToSend = amountToSend,
+                                        feeAmount = feeAmount,
+                                        destinationAddress = destinationAddress
+                                    )
                                     dispatch(SendAction.Dialog.SendTransactionFails(message))
                                 }
                             }
