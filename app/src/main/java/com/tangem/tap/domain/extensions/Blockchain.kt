@@ -3,16 +3,13 @@ package com.tangem.tap.domain.extensions
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.commands.common.card.EllipticCurve
-import org.stellar.sdk.requests.ErrorResponse
 import java.math.BigDecimal
 
 
 fun Blockchain.isNoAccountError(exception: Throwable): Boolean {
     return when (this) {
-        Blockchain.Stellar -> {
-            (exception is ErrorResponse) && (exception.code == 404)
-        }
-        Blockchain.XRP -> exception.message?.contains("Account not found") == true
+        Blockchain.Stellar, Blockchain.XRP ->
+            exception.message?.contains("Account not found") == true
         else -> false
     }
 }
