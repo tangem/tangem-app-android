@@ -10,8 +10,7 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.transition.TransitionInflater
 import com.squareup.picasso.Picasso
-import com.tangem.blockchain.common.Blockchain
-import com.tangem.tap.MainActivity
+import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.global.StateDialog
 import com.tangem.tap.common.redux.navigation.NavigationAction
@@ -25,8 +24,6 @@ import kotlinx.android.synthetic.main.fragment_details_twin_cards.*
 import kotlinx.android.synthetic.main.fragment_wallet_details.*
 import kotlinx.android.synthetic.main.fragment_wallet_details.toolbar
 import kotlinx.android.synthetic.main.item_currency_wallet.view.*
-import kotlinx.android.synthetic.main.item_currency_wallet.view.iv_currency
-import kotlinx.android.synthetic.main.item_currency_wallet.view.tv_token_letter
 import kotlinx.android.synthetic.main.item_popular_token.view.*
 import kotlinx.android.synthetic.main.layout_balance_error.*
 import kotlinx.android.synthetic.main.layout_balance_wallet_details.*
@@ -184,13 +181,13 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
         if (state.state == ProgressState.Error) {
             if (state.error == ErrorType.NoInternetConnection) {
                 srl_wallet_details?.isRefreshing = false
-                (activity as? MainActivity)?.showSnackbar(
+                (activity as? SnackbarHandler)?.showSnackbar(
                         text = R.string.wallet_notification_no_internet,
                         buttonTitle = R.string.common_retry
                 ) { store.dispatch(WalletAction.LoadData) }
             }
         } else {
-            (activity as? MainActivity)?.dismissSnackbar()
+            (activity as? SnackbarHandler)?.dismissSnackbar()
         }
     }
 
