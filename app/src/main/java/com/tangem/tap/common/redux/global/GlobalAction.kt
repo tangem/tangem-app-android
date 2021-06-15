@@ -1,5 +1,6 @@
 package com.tangem.tap.common.redux.global
 
+import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.CompletionResult
 import com.tangem.tap.domain.configurable.config.ConfigManager
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
@@ -38,4 +39,8 @@ sealed class GlobalAction : Action {
     data class SetFeedbackManager(val feedbackManager: FeedbackManager) : GlobalAction()
 
     data class SendFeedback(val emailData: EmailData) : GlobalAction()
+    data class UpdateFeedbackInfo(val walletManagers: List<WalletManager>) : GlobalAction()
+
+    data class ShowDialog(val stateDialog: StateDialog) : GlobalAction()
+    object HideDialog : GlobalAction()
 }
