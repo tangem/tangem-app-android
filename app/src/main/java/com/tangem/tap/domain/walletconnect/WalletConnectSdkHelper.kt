@@ -1,18 +1,15 @@
 package com.tangem.tap.domain.walletconnect
 
-import com.google.common.base.CharMatcher
 import com.tangem.Message
 import com.tangem.blockchain.blockchains.ethereum.EthereumGasLoader
-import com.tangem.blockchain.blockchains.ethereum.EthereumHelper
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
+import com.tangem.blockchain.blockchains.ethereum.EthereumUtils
+import com.tangem.blockchain.blockchains.ethereum.EthereumUtils.Companion.toKeccak
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.TransactionSender
-import com.tangem.blockchain.extensions.Result
-import com.tangem.blockchain.extensions.Signer
-import com.tangem.blockchain.extensions.SimpleResult
-import com.tangem.blockchain.extensions.hexToBigDecimal
+import com.tangem.blockchain.extensions.*
 import com.tangem.commands.SignCommand
 import com.tangem.commands.wallet.WalletIndex
 import com.tangem.common.CompletionResult
@@ -26,14 +23,8 @@ import com.tangem.tap.tangemSdk
 import com.tangem.tap.tangemSdkManager
 import com.trustwallet.walletconnect.models.ethereum.WCEthereumSignMessage
 import com.trustwallet.walletconnect.models.ethereum.WCEthereumTransaction
-import org.kethereum.crypto.api.ec.ECDSASignature
-import org.kethereum.crypto.determineRecId
-import org.kethereum.crypto.impl.ec.canonicalise
-import org.kethereum.keccakshortcut.keccak
-import org.kethereum.model.PublicKey
 import timber.log.Timber
 import java.math.BigDecimal
-import java.math.BigInteger
 
 class WalletConnectSdkHelper {
 
@@ -144,7 +135,7 @@ class WalletConnectSdkHelper {
     }
 
     private suspend fun signTransaction(data: WcTransactionData): String? {
-        val dataToSign = EthereumHelper.buildTransactionToSign(
+        val dataToSign = EthereumUtils.buildTransactionToSign(
             transactionData = data.transaction,
             nonce = null,
             blockchain = data.walletManager.wallet.blockchain,
@@ -176,7 +167,7 @@ class WalletConnectSdkHelper {
         val messageString = message.data.hexToAscii() ?: message.data
 
         val prefixData = (ETH_MESSAGE_PREFIX + messageData.size.toString()).toByteArray()
-        val hashToSign = (prefixData + messageData).keccak()
+        val hashToSign = (prefixData + messageData).toKeccak()
 
 
         val dialogData = PersonalSignDialogData(
@@ -203,8 +194,6 @@ class WalletConnectSdkHelper {
             .joinToString("")
     }
 
-    private fun Char.isAscii(): Boolean = CharMatcher.ascii().matches(this)
-
     suspend fun signPersonalMessage(hashToSign: ByteArray, wallet: WalletForSession): String? {
         val publicKey = wallet.walletPublicKey.hexToBytes()
         val command = SignCommand(
@@ -214,17 +203,9 @@ class WalletConnectSdkHelper {
             is CompletionResult.Success -> {
                 val hash = result.data.signatures.first()
 
-                val r = BigInteger(1, hash.copyOfRange(0, 32))
-                val s = BigInteger(1, hash.copyOfRange(32, 64))
-
-                val ecdsaSignature = ECDSASignature(r, s).canonicalise()
-
-                val recId = ecdsaSignature.determineRecId(hashToSign,
-                    PublicKey(publicKey.sliceArray(1..64)))
-                val v = (recId + 27).toBigInteger()
-
-                return HEX_PREFIX + ecdsaSignature.r.toString(16) + ecdsaSignature.s.toString(16) +
-                        v.toString(16)
+                return EthereumUtils.prepareSignedMessageData(
+                    hash, hashToSign, publicKey
+                )
             }
             is CompletionResult.Failure -> {
                 Timber.e(result.error.customMessage)
