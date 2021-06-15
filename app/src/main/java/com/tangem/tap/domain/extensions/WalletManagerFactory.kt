@@ -15,7 +15,7 @@ fun WalletManagerFactory.makeWalletManagerForApp(
     blockchain: Blockchain,
 ): WalletManager? {
     val supportedCurves = blockchain.getSupportedCurves() ?: return null
-    val wallets = card.getWallets().filter { wallet -> supportedCurves.contains(wallet.curve) }
+    val wallets = card.wallets.filter { wallet -> supportedCurves.contains(wallet.curve) }
     val wallet = selectWallet(wallets)
     val publicKey = wallet?.publicKey ?: return null
     val curveToUse = wallet.curve ?: return null
@@ -42,7 +42,7 @@ fun WalletManagerFactory.makePrimaryWalletManager(
     val card = data.card
     val blockchain = card.getBlockchain()
     val supportedCurves = blockchain?.getSupportedCurves() ?: return null
-    val wallets = card.getWallets().filter { wallet -> supportedCurves.contains(wallet.curve) }
+    val wallets = card.wallets.filter { wallet -> supportedCurves.contains(wallet.curve) }
     val wallet = selectWallet(wallets)
     val publicKey = wallet?.publicKey ?: return null
     val curveToUse = wallet.curve ?: return null
