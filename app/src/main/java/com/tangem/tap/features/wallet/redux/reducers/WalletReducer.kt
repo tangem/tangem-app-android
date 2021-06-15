@@ -15,6 +15,7 @@ import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import org.rekotlin.Action
 import java.math.BigDecimal
+import java.math.RoundingMode
 
 class WalletReducer {
     companion object {
@@ -291,7 +292,7 @@ private fun setNewFiatRate(
         appCurrency: FiatCurrencyName, state: WalletState
 ): WalletState {
     val rate = fiatRate.second ?: return state
-    val rateFormatted = rate.toFormattedCurrencyString(2, appCurrency)
+    val rateFormatted = rate.toFormattedCurrencyString(2, appCurrency, RoundingMode.HALF_UP)
     val currency = fiatRate.first
 
     return if (!state.isMultiwalletAllowed) {
