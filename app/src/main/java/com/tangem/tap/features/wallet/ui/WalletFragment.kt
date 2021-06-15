@@ -2,13 +2,11 @@ package com.tangem.tap.features.wallet.ui
 
 import android.os.Bundle
 import android.view.Menu
-import android.view.Menu.NONE
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.get
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
@@ -17,6 +15,7 @@ import com.squareup.picasso.Picasso
 import com.tangem.tangem_sdk_new.extensions.dpToPx
 import com.tangem.tap.MainActivity
 import com.tangem.tap.common.extensions.show
+import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
@@ -156,6 +155,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.details_menu -> {
+                store.dispatch(GlobalAction.UpdateFeedbackInfo(store.state.walletState.walletManagers))
                 store.state.globalState.scanNoteResponse?.let { scanNoteResponse ->
                     store.dispatch(DetailsAction.PrepareScreen(
                             scanNoteResponse.card, scanNoteResponse,
