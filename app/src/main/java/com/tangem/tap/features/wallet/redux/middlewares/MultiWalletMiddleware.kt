@@ -26,8 +26,8 @@ class MultiWalletMiddleware {
     ) {
         when (action) {
             is WalletAction.MultiWallet.AddWalletManagers -> {
-                val wallets = action.walletManagers.map { it.wallet }
-                store.state.globalState.feedbackManager?.infoHolder?.setWalletsInfo(wallets)
+                store.state.globalState.feedbackManager?.infoHolder
+                    ?.setWalletsInfo(action.walletManagers)
             }
             is WalletAction.MultiWallet.SelectWallet -> {
                 if (action.walletData != null) {
