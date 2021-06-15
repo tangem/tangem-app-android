@@ -884,6 +884,12 @@
     },
     {
         "decimalCount" : 18,
+        "symbol" : "WETH",
+        "name" : "Wrapped Ether",
+        "contractAddress" : "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
+    },
+    {
+        "decimalCount" : 18,
         "symbol" : "WPR",
         "name" : "WePower",
         "contractAddress" : "0x4CF488387F035FF08c371515562CBa712f9015d4"
