@@ -13,6 +13,7 @@ fun Card.getToken(): Token? {
     val symbol = cardData?.tokenSymbol ?: return null
     val contractAddress = cardData?.tokenContractAddress ?: return null
     val decimals = cardData?.tokenDecimal ?: return null
+    if (symbol.isBlank() || contractAddress.isBlank()) return null
     return Token(symbol, contractAddress, decimals)
 }
 
@@ -28,7 +29,7 @@ fun Card.getSingleWallet(): CardWallet? {
 fun Card.getStatus(): CardStatus {
     if (firmwareVersion < FirmwareConstraints.AvailabilityVersions.walletData) return status!!
 
-    return if (getWallets().any { it.status == WalletStatus.Loaded }) {
+    return if (wallets.any { it.status == WalletStatus.Loaded }) {
         CardStatus.Loaded
     } else {
         CardStatus.Empty
@@ -36,11 +37,11 @@ fun Card.getStatus(): CardStatus {
 }
 
 fun Card.hasSignedHashes(): Boolean {
-    return getWallets().any { it.status == WalletStatus.Loaded && it.signedHashes ?: 0 > 0 }
+    return wallets.any { it.status == WalletStatus.Loaded && it.signedHashes ?: 0 > 0 }
 }
 
 fun Card.signedHashesCount(): Int {
-    return getWallets().map { it.signedHashes ?: 0 }.sum()
+    return wallets.map { it.signedHashes ?: 0 }.sum()
 }
 
 val Card.remainingSignatures: Int?
