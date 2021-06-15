@@ -11,5 +11,6 @@ data class NavigationState(
 
 enum class AppScreen {
     Home, Wallet, WalletDetails, Send, Details, DetailsConfirm, DetailsSecurity, Disclaimer,
-    CreateTwinWalletWarning, CreateTwinWallet, TwinsOnboarding, AddTokens
+    CreateTwinWalletWarning, CreateTwinWallet, TwinsOnboarding, AddTokens, WalletConnectSessions,
+    QrScan
 }
