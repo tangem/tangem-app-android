@@ -1,8 +1,8 @@
 package com.tangem.tap.domain
 
 import android.net.Uri
+import android.util.Base64
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
-import org.spongycastle.util.encoders.Base64
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
@@ -37,7 +37,8 @@ class TopUpHelper {
             val sha256Hmac = Mac.getInstance("HmacSHA256")
             val secretKey = SecretKeySpec(key.toByteArray(), "HmacSHA256")
             sha256Hmac.init(secretKey)
-            return Base64.toBase64String(sha256Hmac.doFinal(data.toByteArray()))
+            val sha256encoded = sha256Hmac.doFinal(data.toByteArray())
+            return Base64.encodeToString(sha256encoded, Base64.NO_WRAP)
         }
     }
 }
