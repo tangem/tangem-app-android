@@ -78,6 +78,14 @@
             <meta-data
                 android:name="android.nfc.action.TECH_DISCOVERED"
                 android:resource="@xml/nfc_tech_filter" />
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="wc"/>
+            </intent-filter>
+
         </activity>
 
         <activity android:name="com.tangem.tap.common.qrCodeScan.ScanQrCodeActivity" />
