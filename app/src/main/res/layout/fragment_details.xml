@@ -106,10 +106,10 @@
                 android:id="@+id/tv_signed_hashes"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:textColor="@color/darkGray1"
-                android:textSize="16sp"
                 android:paddingTop="7dp"
                 android:paddingBottom="7dp"
+                android:textColor="@color/darkGray1"
+                android:textSize="16sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tv_issuer"
                 tools:text="48 hashes" />
@@ -120,7 +120,7 @@
                 android:layout_height="wrap_content"
                 android:drawablePadding="15dp"
                 android:paddingTop="7dp"
-                android:paddingBottom="10dp"
+                android:paddingBottom="7dp"
                 android:text="@string/disclaimer_title"
                 android:textColor="@color/darkGray6"
                 android:textSize="16sp"
@@ -132,16 +132,16 @@
                 android:id="@+id/tv_card_tou"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:drawablePadding="15dp"
                 android:paddingTop="7dp"
                 android:paddingBottom="10dp"
-                android:drawablePadding="15dp"
+                android:text="@string/details_row_title_card_tou"
                 android:textColor="@color/darkGray6"
                 android:textSize="16sp"
                 android:visibility="gone"
                 app:drawableEndCompat="@drawable/ic_angle_bracket_right"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_disclaimer"
-                android:text="@string/details_row_title_card_tou" />
+                app:layout_constraintTop_toBottomOf="@id/tv_disclaimer" />
 
             <TextView
                 android:id="@+id/tv_settings_title"
@@ -179,8 +179,8 @@
                 android:id="@+id/tv_app_currency_title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingTop="10dp"
-                android:paddingBottom="10dp"
+                android:paddingTop="7dp"
+                android:paddingBottom="7dp"
                 android:text="@string/details_row_title_currency"
                 android:textColor="@color/darkGray6"
                 android:textSize="16sp"
@@ -191,14 +191,34 @@
                 android:id="@+id/tv_send_feedback"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingTop="10dp"
-                android:paddingBottom="10dp"
+                android:paddingTop="7dp"
+                android:paddingBottom="7dp"
                 android:text="@string/details_row_title_send_feedback"
                 android:textColor="@color/darkGray6"
                 android:textSize="16sp"
                 app:drawableEndCompat="@drawable/ic_angle_bracket_right"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tv_app_currency_title" />
+
+            <TextView
+                android:id="@+id/tv_wallet_connect"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="7dp"
+                android:paddingBottom="7dp"
+                android:text="@string/wallet_connect"
+                android:textColor="@color/darkGray6"
+                android:textSize="16sp"
+                app:drawableEndCompat="@drawable/ic_angle_bracket_right"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_send_feedback" />
+
+            <androidx.constraintlayout.widget.Barrier
+                android:id="@+id/barrier"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:barrierDirection="bottom"
+                app:constraint_referenced_ids="tv_wallet_connect,tv_send_feedback" />
 
             <TextView
                 android:id="@+id/tv_card_title"
@@ -211,7 +231,7 @@
                 android:textColor="@color/colorSecondary"
                 android:textSize="13sp"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_send_feedback" />
+                app:layout_constraintTop_toBottomOf="@id/barrier" />
 
             <View
                 android:layout_width="match_parent"
@@ -237,7 +257,7 @@
                 android:id="@+id/tv_security_title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingTop="10dp"
+                android:paddingTop="7dp"
                 android:paddingBottom="7dp"
                 android:text="@string/details_row_title_manage_security"
                 android:textColor="@color/darkGray6"
