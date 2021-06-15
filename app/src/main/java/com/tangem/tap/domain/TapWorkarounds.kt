@@ -3,6 +3,7 @@ package com.tangem.tap.domain
 import com.tangem.commands.common.card.Card
 import com.tangem.commands.common.card.EllipticCurve
 import com.tangem.commands.common.card.masks.Product
+import com.tangem.tap.domain.extensions.getSingleWallet
 import java.util.*
 
 object TapWorkarounds {
@@ -43,6 +44,6 @@ val Card.isMultiwalletAllowed: Boolean
     get() {
         return cardData?.productMask?.contains(Product.TwinCard) != true
                 && !TapWorkarounds.isStart2Coin
-                && (this.firmwareVersion.major >= 4 ||
-                this.getWallets().getOrNull(0)?.curve == EllipticCurve.Secp256k1)
+                && (firmwareVersion.major >= 4 ||
+                getSingleWallet()?.curve == EllipticCurve.Secp256k1)
     }
