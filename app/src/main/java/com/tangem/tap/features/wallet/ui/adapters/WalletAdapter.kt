@@ -18,9 +18,6 @@ import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.item_currency_wallet.view.*
-import kotlinx.android.synthetic.main.item_currency_wallet.view.iv_currency
-import kotlinx.android.synthetic.main.item_currency_wallet.view.tv_currency_symbol
-import kotlinx.android.synthetic.main.item_currency_wallet.view.tv_token_letter
 import java.math.BigDecimal
 
 class WalletAdapter
@@ -57,7 +54,7 @@ class WalletAdapter
 
         val sorted = listModified.sortedWith(
                 compareByDescending<WalletData> { it.currencyData.fiatAmount ?: BigDecimal.ZERO }
-                        .thenBy { it.currencyData.currencySymbol }
+                    .thenBy { it.currencyData.currency }
         )
         val sortedList = listOfNotNull(primaryBlockchainWallet, primaryTokenWallet) + sorted
         super.submitList(sortedList)
