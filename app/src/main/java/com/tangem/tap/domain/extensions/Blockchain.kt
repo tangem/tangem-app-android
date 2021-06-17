@@ -35,6 +35,7 @@ fun Blockchain.getSupportedCurves(): List<EllipticCurve>? {
         Blockchain.Tezos -> listOf(EllipticCurve.Secp256k1, EllipticCurve.Ed25519)
         Blockchain.Cardano, Blockchain.CardanoShelley, Blockchain.Stellar ->
             listOf(EllipticCurve.Ed25519)
+        else -> listOf(EllipticCurve.Secp256k1)
     }
 }
 
