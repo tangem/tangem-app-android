@@ -25,6 +25,7 @@ class WalletConnectReducer {
                     state.copy(sessions = sessions)
                 }
                 is WalletConnectAction.ScanCard -> state.copy(loading = true)
+                is WalletConnectAction.UnsupportedCard -> state.copy(loading = false)
 
                 is WalletConnectAction.FailureEstablishingSession -> state.copy(loading = false)
 
