@@ -104,6 +104,10 @@ class WalletConnectMiddleware {
                         }
                     }
 
+                    is WalletConnectAction.UnsupportedCard -> {
+                        store.dispatchOnMain(GlobalAction.ShowDialog(WalletConnectDialog.UnsupportedCard))
+                    }
+
                     is WalletConnectAction.OpenSession -> {
                         walletConnectManager.connect(
                             wcUri = action.wcUri,
