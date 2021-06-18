@@ -37,6 +37,10 @@ class CurrenciesRepository(val context: Application) {
         saveTokens(cardId, tokens)
     }
 
+    fun saveAddedTokens(cardId: String, tokens: Collection<Token>) {
+        saveTokens(cardId, loadSavedTokens(cardId) + tokens)
+    }
+
     fun saveAddedBlockchain(cardId: String, blockchain: Blockchain) {
         val blockchains = loadSavedBlockchains(cardId) + blockchain
         saveBlockchains(cardId, blockchains)
