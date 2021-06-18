@@ -100,9 +100,9 @@ class CurrenciesRepository(val context: Application) {
 
     fun getBlockchains(cardFirmware: FirmwareVersion?): List<Blockchain> {
         return if (cardFirmware == null || cardFirmware.major < 4) {
-            secp256k1Blochcains
+            secp256k1Blockchains
         } else {
-            secp256k1Blochcains + ed25519Blockchains
+            secp256k1Blockchains + ed25519Blockchains
         }
     }
 
@@ -115,10 +115,19 @@ class CurrenciesRepository(val context: Application) {
         fun getFileNameForBlockchains(cardId: String): String =
             "${FILE_NAME_PREFIX_BLOCKCHAINS}_$cardId"
 
-        private val secp256k1Blochcains = listOf(
-            Blockchain.Bitcoin, Blockchain.BitcoinCash, Blockchain.Binance, Blockchain.Litecoin,
-            Blockchain.XRP, Blockchain.Tezos,
-            Blockchain.Ethereum, Blockchain.RSK)
+        private val secp256k1Blockchains = listOf(
+            Blockchain.Bitcoin,
+            Blockchain.BitcoinCash,
+            Blockchain.Binance,
+            Blockchain.BSC,
+            Blockchain.Litecoin,
+            Blockchain.XRP,
+            Blockchain.Tezos,
+            Blockchain.Ethereum,
+            Blockchain.RSK,
+            Blockchain.Polygon,
+            Blockchain.Dogecoin,
+        )
         private val ed25519Blockchains = listOf(Blockchain.CardanoShelley, Blockchain.Stellar)
     }
 }
