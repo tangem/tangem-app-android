@@ -6,6 +6,7 @@ import com.tangem.tap.common.redux.global.GlobalState
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectDialog
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.*
 import com.tangem.tap.store
+import com.tangem.wallet.R
 import org.rekotlin.StoreSubscriber
 
 class DialogManager : StoreSubscriber<GlobalState> {
@@ -38,7 +39,18 @@ class DialogManager : StoreSubscriber<GlobalState> {
 
         when (state.dialog) {
             is WalletConnectDialog.UnsupportedCard ->
-                dialog = UnsupportedCardDialog.create(context)
+                dialog = SimpleAlertDialog.create(
+                    titleRes = R.string.wallet_connect,
+                    messageRes = R.string.wallet_connect_scanner_error_no_ethereum_wallet,
+                    context = context
+                )
+            is WalletConnectDialog.OpeningSessionRejected -> {
+                dialog = SimpleAlertDialog.create(
+                    titleRes = R.string.wallet_connect,
+                    messageRes = R.string.wallet_connect_same_wcuri,
+                    context = context
+                )
+            }
             is WalletConnectDialog.ApproveWcSession ->
                 dialog = ApproveWcSessionDialog.create(state.dialog.session, context)
             is WalletConnectDialog.ClipboardOrScanQr ->
