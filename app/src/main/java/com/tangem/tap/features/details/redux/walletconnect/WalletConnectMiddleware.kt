@@ -1,6 +1,7 @@
 package com.tangem.tap.features.details.redux.walletconnect
 
 import com.tangem.blockchain.common.*
+import com.tangem.commands.common.card.Card
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.toHexString
 import com.tangem.tap.*
@@ -14,6 +15,7 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.extensions.makeWalletManagerForApp
 import com.tangem.tap.domain.isMultiwalletAllowed
 import com.tangem.tap.domain.walletconnect.WalletConnectManager
+import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -55,52 +57,12 @@ class WalletConnectMiddleware {
                     }
 
                     is WalletConnectAction.ScanCard -> {
-                        scope.launch {
-                            val result = tangemSdkManager.scanNote(
-                                FirebaseAnalyticsHandler,
-                                R.string.wallet_connect_scan_card_message
-                            )
-                            withContext(Dispatchers.Main) {
-                                when (result) {
-                                    is CompletionResult.Success -> {
-                                        val card = result.data.card
-                                        val factory =
-                                            store.state.globalState.tapWalletManager.walletManagerFactory
+                        handleScanCard(action.wcUri)
+                    }
 
-                                        val walletManager = if (card.isMultiwalletAllowed) {
-                                            if (currenciesRepository.loadCardCurrencies(card.cardId)?.blockchains?.contains(
-                                                    Blockchain.Ethereum) == true
-                                            ) {
-                                                factory.makeWalletManagerForApp(result.data.card,
-                                                    Blockchain.Ethereum)
-                                            } else {
-                                                factory.makeWalletManagerForApp(result.data.card,
-                                                    Blockchain.Ethereum)?.also {
-                                                    currenciesRepository.saveAddedBlockchain(card.cardId,
-                                                        Blockchain.Ethereum)
-                                                }
-                                            }
-                                        } else {
-                                            null
-                                        }
-                                        if (walletManager == null) {
-                                            store.dispatchOnMain(WalletConnectAction.UnsupportedCard)
-                                            return@withContext
-                                        };
-
-                                        val key = walletManager.wallet.publicKey
-                                        store.dispatchOnMain(WalletConnectAction.OpenSession(
-                                            wcUri = action.wcUri,
-                                            wallet = WalletForSession(
-                                                card.cardId, key.toHexString(),
-                                                isTestNet = false
-                                            ),
-                                        ))
-                                    }
-                                    is CompletionResult.Failure ->
-                                        store.dispatchOnMain(WalletConnectAction.FailureEstablishingSession)
-                                }
-                            }
+                    is WalletConnectAction.FailureEstablishingSession -> {
+                        if (action.session != null) {
+                            walletConnectManager.disconnect(action.session)
                         }
                     }
 
@@ -113,6 +75,12 @@ class WalletConnectMiddleware {
                             wcUri = action.wcUri,
                             wallet = action.wallet
                         )
+                    }
+
+                    is WalletConnectAction.RefuseOpeningSession -> {
+                        store.dispatch(GlobalAction.ShowDialog(
+                            WalletConnectDialog.OpeningSessionRejected
+                        ))
                     }
 
                     is WalletConnectAction.AcceptOpeningSession -> {
@@ -154,6 +122,71 @@ class WalletConnectMiddleware {
                     }
                 }
                 next(action)
+            }
+        }
+    }
+
+    private fun handleScanCard(wcUri: String) {
+        scope.launch {
+            val result = tangemSdkManager.scanNote(
+                FirebaseAnalyticsHandler,
+                R.string.wallet_connect_scan_card_message
+            )
+            withContext(Dispatchers.Main) {
+                when (result) {
+                    is CompletionResult.Success -> {
+                        val card = result.data.card
+
+                        if (!card.isMultiwalletAllowed) {
+                            store.dispatchOnMain(WalletConnectAction.UnsupportedCard)
+                            return@withContext
+                        }
+
+                        val walletManager = getWalletManager(card)
+                        if (walletManager == null) {
+                            store.dispatchOnMain(WalletConnectAction.UnsupportedCard)
+                            return@withContext
+                        }
+
+                        val key = walletManager.wallet.publicKey
+                        store.dispatchOnMain(WalletConnectAction.OpenSession(
+                            wcUri = wcUri,
+                            wallet = WalletForSession(
+                                card.cardId, key.toHexString(),
+                                isTestNet = false
+                            ),
+                        ))
+                    }
+                    is CompletionResult.Failure ->
+                        store.dispatchOnMain(WalletConnectAction.FailureEstablishingSession(
+                            null
+                        ))
+                }
+            }
+        }
+    }
+
+    private fun getWalletManager(card: Card): WalletManager? {
+        val factory = store.state.globalState.tapWalletManager.walletManagerFactory
+
+        return if (store.state.globalState.scanNoteResponse?.card?.cardId == card.cardId) {
+            store.state.walletState.getWalletManager(Blockchain.Ethereum)
+                ?: factory.makeWalletManagerForApp(card, Blockchain.Ethereum)
+                    ?.also { walletManager ->
+                        store.dispatch(WalletAction.MultiWallet.AddWalletManagers(walletManager))
+                        store.dispatch(WalletAction.MultiWallet.AddBlockchain(walletManager.wallet.blockchain))
+                    }
+        } else {
+            if (currenciesRepository.loadCardCurrencies(card.cardId)?.blockchains?.contains(
+                    Blockchain.Ethereum) == true
+            ) {
+                factory.makeWalletManagerForApp(card, Blockchain.Ethereum)
+            } else {
+                factory.makeWalletManagerForApp(card,
+                    Blockchain.Ethereum)
+                    ?.also {
+                        currenciesRepository.saveAddedBlockchain(card.cardId, Blockchain.Ethereum)
+                    }
             }
         }
     }
