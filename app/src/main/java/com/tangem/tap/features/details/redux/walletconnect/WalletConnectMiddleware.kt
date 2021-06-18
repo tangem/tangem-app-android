@@ -98,9 +98,17 @@ class WalletConnectMiddleware {
                                         ))
                                     }
                                     is CompletionResult.Failure ->
-                                        store.dispatchOnMain(WalletConnectAction.FailureEstablishingSession)
+                                        store.dispatchOnMain(WalletConnectAction.FailureEstablishingSession(
+                                            null
+                                        ))
                                 }
                             }
+                        }
+                    }
+
+                    is WalletConnectAction.FailureEstablishingSession -> {
+                        if (action.session != null) {
+                            walletConnectManager.disconnect(action.session)
                         }
                     }
 
