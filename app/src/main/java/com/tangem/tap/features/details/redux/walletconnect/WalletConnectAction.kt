@@ -39,7 +39,7 @@ sealed class WalletConnectAction : Action {
         data class Success(val session: WalletConnectSession) : WalletConnectAction()
     }
 
-    object FailureEstablishingSession : WalletConnectAction()
+    data class FailureEstablishingSession(val session: WCSession?) : WalletConnectAction()
 
 
     data class SetSessionsRestored(val sessions: List<WalletConnectSession>) :
