@@ -115,6 +115,12 @@ class WalletConnectMiddleware {
                         )
                     }
 
+                    is WalletConnectAction.RefuseOpeningSession -> {
+                        store.dispatch(GlobalAction.ShowDialog(
+                            WalletConnectDialog.OpeningSessionRejected
+                        ))
+                    }
+
                     is WalletConnectAction.AcceptOpeningSession -> {
                         store.dispatchOnMain(GlobalAction.ShowDialog(WalletConnectDialog.ApproveWcSession(
                             action.session)))
