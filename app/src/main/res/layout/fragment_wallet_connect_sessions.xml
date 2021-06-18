@@ -31,14 +31,6 @@
         android:layout_marginTop="16dp"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-
-        <com.google.android.material.progressindicator.LinearProgressIndicator
-            android:id="@+id/pb_wallet_connect"
-            android:indeterminate="true"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:layout_constraintTop_toTopOf="parent"/>
-
         <TextView
             android:id="@+id/tv_no_sessions_title"
             android:layout_width="wrap_content"
@@ -70,6 +62,13 @@
             android:id="@+id/rv_wallet_connect_sessions"
             android:layout_width="match_parent"
             android:layout_height="match_parent"/>
+
+        <com.google.android.material.progressindicator.LinearProgressIndicator
+            android:id="@+id/pb_wallet_connect"
+            android:indeterminate="true"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:layout_constraintTop_toTopOf="parent"/>
 
         <com.google.android.material.floatingactionbutton.FloatingActionButton
             android:id="@+id/fab_open_session"
