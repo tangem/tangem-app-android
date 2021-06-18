@@ -154,4 +154,6 @@ this wallet.
     <string name="wallet_connect_paste_from_clipboard" translatable="false">Paste from clipboard</string>
     <string name="wallet_connect_scan_new_code" translatable="false">Scan new code</string>
     <string name="wallet_connect_scanner_error_no_ethereum_wallet" translatable="false">This card can’t be used to establish WalletConnect session</string>
+    <string name="wallet_connect_could_not_complete" translatable="false">The operation couldn\'t be completed</string>
+    <string name="wallet_connect_same_wcuri" translatable="false">The operation couldn\'t be completed. \n\nYou have already established a WalletConnect session with this parameters.</string>
 </resources>
