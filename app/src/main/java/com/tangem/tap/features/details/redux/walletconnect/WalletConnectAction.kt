@@ -29,6 +29,8 @@ sealed class WalletConnectAction : Action {
         val wallet: WalletForSession,
     ) : WalletConnectAction()
 
+    object RefuseOpeningSession : WalletConnectAction()
+
     data class AcceptOpeningSession(val session: WalletConnectSession) : WalletConnectAction()
 
     data class ApproveSession(
