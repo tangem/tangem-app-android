@@ -17,7 +17,6 @@ import com.tangem.commands.common.card.Card
 import com.tangem.commands.wallet.WalletStatus
 import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.domain.TapWorkarounds
-import com.tangem.tap.store
 import timber.log.Timber
 import java.io.File
 import java.io.FileWriter
@@ -193,7 +192,6 @@ class AdditionalEmailInfo {
     }
 
     fun updateOnSendError(wallet: Wallet, host: String, amountToSend: Amount, feeAmount: Amount, destinationAddress: String) {
-        val amountState = store.state.sendState.amountState
         onSendErrorWalletInfo = EmailWalletInfo(
             blockchain = wallet.blockchain,
             address = getAddress(wallet),
@@ -204,9 +202,7 @@ class AdditionalEmailInfo {
         this.destinationAddress = destinationAddress
         amount = amountToSend.value?.stripZeroPlainString() ?: "0"
         fee = feeAmount.value?.stripZeroPlainString() ?: "0"
-        if (amountState.typeOfAmount is AmountType.Token) {
-            token = amountState.amountToExtract?.currencySymbol ?: ""
-        }
+        token = if (amountToSend.type is AmountType.Token) amountToSend.currencySymbol else ""
     }
 
     private fun getAddress(wallet: Wallet): String {
@@ -320,6 +316,6 @@ class FeedbackEmail : EmailData {
     }
 }
 
-fun StringBuilder.appendKeyValue(key: String, value: String): StringBuilder {
-    return this.append("$key: $value\n")
+private fun StringBuilder.appendKeyValue(key: String, value: String): StringBuilder {
+    return if (value.isNotBlank()) this.append("$key: $value\n") else this
 }
