@@ -25,7 +25,9 @@ class ApproveWcSessionDialog {
                         session.session
                     ))
                 }
-                setNegativeButton(context.getText(R.string.common_reject)) { _, _ -> }
+                setNegativeButton(context.getText(R.string.common_reject)) { _, _ ->
+                    store.dispatch(WalletConnectAction.FailureEstablishingSession(session.session))
+                }
                 setOnDismissListener {
                     store.dispatch(GlobalAction.HideDialog)
                 }
