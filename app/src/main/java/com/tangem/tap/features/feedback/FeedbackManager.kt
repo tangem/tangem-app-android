@@ -14,9 +14,9 @@ import com.tangem.Log
 import com.tangem.TangemSdkLogger
 import com.tangem.blockchain.common.*
 import com.tangem.commands.common.card.Card
+import com.tangem.commands.wallet.WalletStatus
 import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.domain.TapWorkarounds
-import com.tangem.tap.domain.extensions.signedHashesCount
 import com.tangem.tap.store
 import timber.log.Timber
 import java.io.File
@@ -173,7 +173,9 @@ class AdditionalEmailInfo {
     fun setCardInfo(card: Card) {
         cardId = card.cardId
         cardFirmwareVersion = card.firmwareVersion.version
-        signedHashesCount = card.signedHashesCount().toString()
+        signedHashesCount = card.wallets
+            .filter { it.status == WalletStatus.Loaded }
+            .joinToString(";") { "${it.curve?.curve} - ${it.signedHashes}" }
     }
 
     fun setWalletsInfo(walletManagers: List<WalletManager>) {
@@ -289,6 +291,7 @@ class SendTransactionFailedEmail(private val error: String) : EmailData {
             appendKeyValue("OS version", infoHolder.osVersion)
             appendKeyValue("App version", infoHolder.appVersion)
             appendKeyValue("Firmware version", infoHolder.cardFirmwareVersion)
+            appendKeyValue("Signed hashes", infoHolder.signedHashesCount)
 //            appendKeyValue("Transaction HEX", infoHolder.transactionHex)
         }.toString()
     }
@@ -301,6 +304,7 @@ class FeedbackEmail : EmailData {
         val builder = StringBuilder()
         builder.appendKeyValue("Card ID", infoHolder.cardId)
         builder.appendKeyValue("Firmware version", infoHolder.cardFirmwareVersion)
+        builder.appendKeyValue("Signed hashes", infoHolder.signedHashesCount)
 
         infoHolder.walletsInfo.forEach {
             builder.appendKeyValue("Blockchain", it.blockchain.fullName)

@@ -44,6 +44,10 @@ class WalletConnectManager {
 
     fun connect(wcUri: String, wallet: WalletForSession) {
         val session = WCSession.from(wcUri) ?: return
+        if (sessions[session] != null) {
+            store.dispatchOnMain(WalletConnectAction.RefuseOpeningSession)
+            return
+        }
         val client = WCClient(httpClient = okHttpClient)
         setListeners(client)
         val peerId = UUID.randomUUID().toString()
