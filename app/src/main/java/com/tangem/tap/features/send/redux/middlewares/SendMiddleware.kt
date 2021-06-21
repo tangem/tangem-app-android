@@ -14,7 +14,7 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.TangemSigner
 import com.tangem.tap.domain.TapError
-import com.tangem.tap.domain.TapWorkarounds
+import com.tangem.tap.domain.TapWorkarounds.isStart2Coin
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.extensions.minimalAmount
 import com.tangem.tap.features.send.redux.*
@@ -108,7 +108,7 @@ private fun sendTransaction(
     scope.launch {
         walletManager.update()
         val isLinkedTerminal = tangemSdk.config.linkedTerminal
-        if (TapWorkarounds.isStart2Coin) {
+        if (card.isStart2Coin) {
             tangemSdk.config.linkedTerminal = false
         }
         val signer = TangemSigner(
