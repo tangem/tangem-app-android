@@ -49,7 +49,11 @@ class FeedbackManager(
     }
 
     private fun getSupportEmail(): String {
-        return if (TapWorkarounds.isStart2Coin) S2C_SUPPORT_EMAIL else DEFAULT_SUPPORT_EMAIL
+        return if (TapWorkarounds.isStart2CoinIssuer(infoHolder.cardIssuer)) {
+            S2C_SUPPORT_EMAIL
+        } else {
+            DEFAULT_SUPPORT_EMAIL
+        }
     }
 
     private fun sendTo(email: String, subject: String, message: String, fileLog: File? = null) {
@@ -144,6 +148,7 @@ class AdditionalEmailInfo {
     // card
     var cardId: String = ""
     var cardFirmwareVersion: String = ""
+    var cardIssuer: String = ""
 
     // wallets
     internal val walletsInfo = mutableListOf<EmailWalletInfo>()
@@ -172,6 +177,7 @@ class AdditionalEmailInfo {
     fun setCardInfo(card: Card) {
         cardId = card.cardId
         cardFirmwareVersion = card.firmwareVersion.version
+        cardIssuer = card.cardData?.issuerName ?: ""
         signedHashesCount = card.wallets
             .filter { it.status == WalletStatus.Loaded }
             .joinToString(";") { "${it.curve?.curve} - ${it.signedHashes}" }
