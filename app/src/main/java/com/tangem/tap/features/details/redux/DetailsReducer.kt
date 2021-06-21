@@ -4,7 +4,7 @@ package com.tangem.tap.features.details.redux
 import com.tangem.commands.common.card.Card
 import com.tangem.commands.common.card.masks.Settings
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.domain.TapWorkarounds
+import com.tangem.tap.domain.TapWorkarounds.isStart2Coin
 import com.tangem.tap.domain.extensions.isWalletDataSupported
 import com.tangem.tap.domain.extensions.signedHashesCount
 import com.tangem.tap.domain.extensions.toSendableAmounts
@@ -143,7 +143,7 @@ private fun handleSecurityAction(
 ): DetailsState {
     return when (action) {
         is DetailsAction.ManageSecurity.OpenSecurity -> {
-            if (TapWorkarounds.isStart2Coin) {
+            if (state.card?.isStart2Coin == true) {
                 return state.copy(securityScreenState = state.securityScreenState?.copy(
                         allowedOptions = EnumSet.of(SecurityOption.LongTap),
                         selectedOption = state.securityScreenState.currentOption
