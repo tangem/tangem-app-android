@@ -16,6 +16,7 @@ import com.tangem.common.extensions.calculateSha256
 import com.tangem.tangem_sdk_new.extensions.init
 import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.AnalyticsHandler
+import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.domain.extensions.getDefaultWalletIndex
 import com.tangem.tap.domain.tasks.CreateWalletAndRescanTask
 import com.tangem.tap.domain.tasks.ScanNoteResponse
@@ -37,10 +38,16 @@ class TangemSdkManager(val activity: ComponentActivity) {
         analyticsHandler: AnalyticsHandler, messageRes: Int? = null
     ): CompletionResult<ScanNoteResponse> {
         analyticsHandler.triggerEvent(AnalyticsEvent.READY_TO_SCAN, null)
-        return runTaskAsyncReturnOnMain(ScanNoteTask(),
+        val result =  runTaskAsyncReturnOnMain(ScanNoteTask(),
                 initialMessage = Message(
                     activity.getString(messageRes ?: R.string.initial_message_scan_header)
                 ))
+        if (result is CompletionResult.Failure) {
+            (result.error as? TangemSdkError)?.let { error ->
+                analyticsHandler.logCardSdkError(error, FirebaseAnalyticsHandler.ActionToLog.Scan)
+            }
+        }
+        return result
     }
 
     suspend fun createWallet(cardId: String?): CompletionResult<Card> {
