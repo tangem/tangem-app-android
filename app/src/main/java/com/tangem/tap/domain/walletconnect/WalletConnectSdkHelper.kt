@@ -1,6 +1,7 @@
 package com.tangem.tap.domain.walletconnect
 
 import com.tangem.Message
+import com.tangem.TangemSdkError
 import com.tangem.blockchain.blockchains.ethereum.EthereumGasLoader
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.blockchains.ethereum.EthereumUtils
@@ -14,6 +15,7 @@ import com.tangem.commands.SignCommand
 import com.tangem.commands.wallet.WalletIndex
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.hexToBytes
+import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.common.extensions.toFormattedString
 import com.tangem.tap.features.details.redux.walletconnect.*
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.PersonalSignDialogData
@@ -128,6 +130,12 @@ class WalletConnectSdkHelper {
                 HEX_PREFIX + data.walletManager.wallet.recentTransactions.last().hash
             }
             is SimpleResult.Failure -> {
+                (result.error as? TangemSdkError)?.let { error ->
+                    FirebaseAnalyticsHandler.logCardSdkError(
+                        error,
+                        FirebaseAnalyticsHandler.ActionToLog.WalletConnectTransaction,
+                    )
+                }
                 Timber.e(result.error)
                 null
             }
@@ -152,6 +160,12 @@ class WalletConnectSdkHelper {
                 HEX_PREFIX + result.data
             }
             is CompletionResult.Failure -> {
+                (result.error as? TangemSdkError)?.let { error ->
+                    FirebaseAnalyticsHandler.logCardSdkError(
+                        error,
+                        FirebaseAnalyticsHandler.ActionToLog.WalletConnectSign,
+                    )
+                }
                 Timber.e(result.error.customMessage)
                 null
             }
@@ -208,6 +222,12 @@ class WalletConnectSdkHelper {
                 )
             }
             is CompletionResult.Failure -> {
+                (result.error as? TangemSdkError)?.let { error ->
+                    FirebaseAnalyticsHandler.logCardSdkError(
+                        error,
+                        FirebaseAnalyticsHandler.ActionToLog.WalletConnectSign,
+                    )
+                }
                 Timber.e(result.error.customMessage)
                 null
             }
