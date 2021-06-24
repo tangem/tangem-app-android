@@ -15,6 +15,7 @@ import com.trustwallet.walletconnect.models.ethereum.WCEthereumSignMessage
 import com.trustwallet.walletconnect.models.ethereum.WCEthereumTransaction
 import com.trustwallet.walletconnect.models.session.WCSession
 import com.trustwallet.walletconnect.models.session.WCSessionUpdate
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
@@ -29,9 +30,9 @@ class WalletConnectManager {
 
     private val okHttpClient: OkHttpClient by lazy {
         OkHttpClient.Builder()
-            .connectTimeout(30, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)
-            .writeTimeout(30, TimeUnit.SECONDS)
+            .connectTimeout(20, TimeUnit.SECONDS)
+            .readTimeout(20, TimeUnit.SECONDS)
+            .writeTimeout(20, TimeUnit.SECONDS)
             .addInterceptor(interceptor)
             .addInterceptor(RetryInterceptor())
             .build()
@@ -59,6 +60,18 @@ class WalletConnectManager {
             client = client,
             wallet = wallet
         )
+        setupConnectionTimeoutCheck(session)
+    }
+
+    private fun setupConnectionTimeoutCheck(session: WCSession) {
+        scope.launch {
+            delay(20_000)
+            val data = sessions[session]
+            if (data != null && data.peerMeta == null) {
+                disconnect(session)
+                store.dispatchOnMain(WalletConnectAction.OpeningSessionTimeout(session))
+            }
+        }
     }
 
     fun restoreSessions() {
@@ -184,7 +197,6 @@ class WalletConnectManager {
             acceptRequest(data.session.session, data.id, hash)
             sessions[data.session.session] = activeData.copy(transactionData = null)
         }
-
     }
 
     fun handlePersonalSignRequest(
@@ -252,7 +264,6 @@ class WalletConnectManager {
                     type = WcTransactionType.EthSendTransaction
                 ))
             }
-
         }
         client.onEthSignTransaction = { id: Long, transaction: WCEthereumTransaction ->
             Timber.d("onEthSignTransaction: $transaction")
