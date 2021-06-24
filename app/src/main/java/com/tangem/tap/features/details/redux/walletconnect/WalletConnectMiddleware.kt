@@ -60,6 +60,10 @@ class WalletConnectMiddleware {
                         handleScanCard(action.wcUri)
                     }
 
+                    is WalletConnectAction.OpeningSessionTimeout -> {
+                        store.dispatchOnMain(GlobalAction.ShowDialog(WalletConnectDialog.SessionTimeout))
+                    }
+
                     is WalletConnectAction.FailureEstablishingSession -> {
                         if (action.session != null) {
                             walletConnectManager.disconnect(action.session)
