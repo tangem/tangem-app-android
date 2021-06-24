@@ -3,6 +3,7 @@ package com.tangem.tap.features.wallet.redux.middlewares
 import android.content.Intent
 import android.net.Uri
 import androidx.core.content.ContextCompat
+import com.tangem.TangemSdkError
 import com.tangem.blockchain.common.*
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.isZero
@@ -109,6 +110,15 @@ class WalletMiddleware {
                                                 globalState?.scanNoteResponse?.copy(card = result.data)
                                         scanNoteResponse?.let {
                                             globalState.tapWalletManager.onCardScanned(scanNoteResponse)
+                                        }
+                                    }
+                                    is CompletionResult.Failure -> {
+                                        (result.error as? TangemSdkError)?.let { error ->
+                                            FirebaseAnalyticsHandler.logCardSdkError(
+                                                error,
+                                                FirebaseAnalyticsHandler.ActionToLog.CreateWallet,
+                                                card = store.state.detailsState.card
+                                            )
                                         }
                                     }
                                 }
