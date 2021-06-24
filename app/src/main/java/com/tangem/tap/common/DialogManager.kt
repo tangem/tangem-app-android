@@ -51,6 +51,13 @@ class DialogManager : StoreSubscriber<GlobalState> {
                     context = context
                 )
             }
+            is WalletConnectDialog.SessionTimeout -> {
+                dialog = SimpleAlertDialog.create(
+                    titleRes = R.string.wallet_connect,
+                    messageRes = R.string.wallet_connect_error_timeout,
+                    context = context
+                )
+            }
             is WalletConnectDialog.ApproveWcSession ->
                 dialog = ApproveWcSessionDialog.create(state.dialog.session, context)
             is WalletConnectDialog.ClipboardOrScanQr ->
