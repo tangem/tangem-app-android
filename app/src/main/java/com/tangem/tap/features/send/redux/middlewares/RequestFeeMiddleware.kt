@@ -10,6 +10,7 @@ import com.tangem.tap.features.send.redux.AmountActionUi
 import com.tangem.tap.features.send.redux.FeeAction
 import com.tangem.tap.features.send.redux.ReceiptAction
 import com.tangem.tap.features.send.redux.SendAction
+import com.tangem.tap.features.send.redux.states.SendState
 import com.tangem.tap.scope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -26,7 +27,7 @@ class RequestFeeMiddleware {
         val sendState = appState?.sendState ?: return
         val walletManager = sendState.walletManager ?: return
 
-        if (!sendState.addressPayIdIsReady()) {
+        if (!SendState.isReadyToRequestFee()) {
             dispatch(FeeAction.FeeCalculation.SetFeeError(FeeAction.Error.ADDRESS_OR_AMOUNT_IS_EMPTY))
             dispatch(FeeAction.ChangeLayoutVisibility(main = false, chipGroup = true))
             dispatch(ReceiptAction.RefreshReceipt)
