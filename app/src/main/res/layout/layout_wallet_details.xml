@@ -101,13 +101,13 @@
                 android:layout_marginTop="10dp"
                 android:layout_marginEnd="14dp"
                 android:ellipsize="middle"
-                android:maxLines="2"
                 android:textColor="@color/darkGray1"
                 android:textSize="13sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@id/iv_qr_code"
                 app:layout_constraintTop_toTopOf="@id/iv_qr_code"
-                tools:text="139mrsJgyWnJjkljlkhiuojlkljkjljljlkjlkljlkjkljlkjlkjkljky9BV" />
+                tools:text="139mrsJgyWnJjkljlkhiuojlkljkjljljlkjlkfsdkdsjflsdkjflsdkjfffffffljlkjkljlkjlkjkljky9BV"
+                android:singleLine="true" />
 
             <TextView
                 android:id="@+id/tv_explore"
