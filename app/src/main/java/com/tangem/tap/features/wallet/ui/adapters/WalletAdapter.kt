@@ -6,11 +6,12 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.squareup.picasso.Picasso
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
-import com.tangem.tap.common.extensions.getColor
-import com.tangem.tap.common.extensions.getIconRes
+import com.tangem.tap.common.extensions.loadCurrenciesIcon
 import com.tangem.tap.common.extensions.show
+import com.tangem.tap.features.wallet.redux.Currency
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletData
 import com.tangem.tap.features.wallet.ui.BalanceStatus
@@ -29,7 +30,9 @@ class WalletAdapter
     fun submitList(list: List<WalletData>, primaryBlockchain: Blockchain?, primaryToken: Token? = null) {
         val listModified = list.toMutableList()
         val primaryBlockchainWallet = when (
-            val index = listModified.indexOfFirst { it.blockchain == primaryBlockchain }
+            val index = listModified.indexOfFirst {
+                (it.currency as? Currency.Blockchain)?.blockchain == primaryBlockchain
+            }
         ) {
             -1 -> null
             else -> listModified.removeAt(index)
@@ -37,21 +40,21 @@ class WalletAdapter
 
 
         val primaryTokenWallet = if (primaryToken == null) null else when (
-            val index = listModified.indexOfFirst { it.token == primaryToken }
+            val index = listModified.indexOfFirst { (it.currency as? Currency.Token)?.token == primaryToken }
         ) {
             -1 -> null
             else -> listModified.removeAt(index)
         }
 
-        if (list.all { it.currencyData.fiatAmount == null }) {
+        if (list.all { it.currencyData.fiatAmountFormatted == null }) {
             val sortedList = listOfNotNull(primaryBlockchainWallet, primaryTokenWallet) + listModified
             super.submitList(sortedList)
             return
         }
 
         val sorted = listModified.sortedWith(
-                compareByDescending<WalletData> { it.currencyData.fiatAmountRaw ?: BigDecimal.ZERO }
-                        .thenBy { it.currencyData.currencySymbol }
+                compareByDescending<WalletData> { it.currencyData.fiatAmount ?: BigDecimal.ZERO }
+                    .thenBy { it.currencyData.currency }
         )
         val sortedList = listOfNotNull(primaryBlockchainWallet, primaryTokenWallet) + sorted
         super.submitList(sortedList)
@@ -84,21 +87,20 @@ class WalletAdapter
             view.tv_currency.text = wallet.currencyData.currency
             view.tv_amount.text = wallet.currencyData.amount?.takeWhile { !it.isWhitespace() }
             view.tv_currency_symbol.text = wallet.currencyData.amount?.takeLastWhile { !it.isWhitespace() }
-            view.tv_amount_fiat.text = wallet.currencyData.fiatAmount
+            view.tv_amount_fiat.text = wallet.currencyData.fiatAmountFormatted
             view.tv_exchange_rate.text = wallet.fiatRateString
             view.card_wallet.setOnClickListener {
                 store.dispatch(WalletAction.MultiWallet.SelectWallet(wallet))
             }
-            val blockchain = wallet.currencyData.currencySymbol?.let { Blockchain.fromCurrency(it) }
-            if (blockchain != null && blockchain != Blockchain.Unknown) {
-                view.tv_token_letter.text = null
-                view.iv_currency.colorFilter = null
-                view.iv_currency.setImageResource(blockchain.getIconRes())
-            } else {
-                view.tv_token_letter.text = wallet.currencyData.currencySymbol?.take(1)
-                wallet.token?.getColor()?.let { view.iv_currency.setColorFilter(it) }
-                view.iv_currency.setImageResource(R.drawable.shape_circle)
-            }
+            val blockchain = wallet.currency?.blockchain
+            val token = (wallet.currency as? Currency.Token)?.token
+
+            Picasso.get().loadCurrenciesIcon(
+                imageView = view.iv_currency,
+                textView = view.tv_token_letter,
+                token = token, blockchain = blockchain
+            )
+
             when (wallet.currencyData.status) {
                 BalanceStatus.VerifiedOnline, BalanceStatus.SameCurrencyTransactionInProgress -> hideWarning()
                 BalanceStatus.Loading -> {
