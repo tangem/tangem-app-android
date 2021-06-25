@@ -53,6 +53,13 @@ val globalMiddleware: Middleware<AppState> = { dispatch, appState ->
                 is GlobalAction.SendFeedback -> {
                     store.state.globalState.feedbackManager?.send(action.emailData)
                 }
+                is GlobalAction.UpdateWalletSignedHashes -> {
+                    store.dispatch(WalletAction.Warnings.CheckRemainingSignatures(action.remainingSignatures))
+                }
+                is GlobalAction.UpdateFeedbackInfo -> {
+                    store.state.globalState.feedbackManager?.infoHolder
+                        ?.setWalletsInfo(action.walletManagers)
+                }
             }
             nextDispatch(action)
         }
