@@ -9,6 +9,8 @@ import com.tangem.tap.features.details.ui.DetailsFragment
 import com.tangem.tap.features.details.ui.DetailsSecurityFragment
 import com.tangem.tap.features.details.ui.twins.CreateTwinWalletFragment
 import com.tangem.tap.features.details.ui.twins.TwinWalletWarningFragment
+import com.tangem.tap.features.details.ui.walletconnect.QrScanFragment
+import com.tangem.tap.features.details.ui.walletconnect.WalletConnectSessionsFragment
 import com.tangem.tap.features.disclaimer.ui.DisclaimerFragment
 import com.tangem.tap.features.home.HomeFragment
 import com.tangem.tap.features.send.ui.SendFragment
@@ -50,5 +52,7 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
         AppScreen.TwinsOnboarding -> TwinsOnboardingFragment()
         AppScreen.AddTokens -> AddTokensFragment()
         AppScreen.WalletDetails -> WalletDetailsFragment()
+        AppScreen.WalletConnectSessions -> WalletConnectSessionsFragment()
+        AppScreen.QrScan -> QrScanFragment()
     }
 }
