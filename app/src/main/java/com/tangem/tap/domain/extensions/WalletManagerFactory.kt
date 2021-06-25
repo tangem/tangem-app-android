@@ -7,6 +7,7 @@ import com.tangem.commands.common.card.Card
 import com.tangem.commands.common.card.EllipticCurve
 import com.tangem.commands.wallet.CardWallet
 import com.tangem.common.extensions.hexToBytes
+import com.tangem.tap.domain.TapWorkarounds.isTestCard
 import com.tangem.tap.domain.tasks.ScanNoteResponse
 import com.tangem.tap.domain.twins.isTwinCard
 
@@ -19,28 +20,44 @@ fun WalletManagerFactory.makeWalletManagerForApp(
     val wallet = selectWallet(wallets)
     val publicKey = wallet?.publicKey ?: return null
     val curveToUse = wallet.curve ?: return null
-    return makeWalletManager(card.cardId, publicKey, blockchain, curveToUse)
+    return if (card.isTestCard) {
+        blockchain.getTestnetVersion()?.let {
+            makeWalletManager(card.cardId, publicKey, it, curveToUse)
+        }
+    } else {
+        makeWalletManager(card.cardId, publicKey, blockchain, curveToUse)
+    }
 }
 
 private fun selectWallet(wallets: List<CardWallet>): CardWallet? {
- return when (wallets.size) {
-     0 -> null
-     1 -> wallets[0]
-     else -> wallets.firstOrNull { it.curve == EllipticCurve.Secp256k1 } ?: wallets[0]
- }
+    return when (wallets.size) {
+        0 -> null
+        1 -> wallets[0]
+        else -> wallets.firstOrNull { it.curve == EllipticCurve.Secp256k1 } ?: wallets[0]
+    }
 }
 
 fun WalletManagerFactory.makeWalletManagersForApp(
     card: Card, blockchains: List<Blockchain>,
 ): List<WalletManager> {
-    return blockchains.mapNotNull { blockchain ->  makeWalletManagerForApp(card, blockchain) }
+    return if (card.isTestCard) {
+        blockchains.mapNotNull { blockchain ->
+            blockchain.getTestnetVersion()?.let { makeWalletManagerForApp(card, it) }
+        }
+    } else {
+        blockchains.mapNotNull { blockchain -> makeWalletManagerForApp(card, blockchain) }
+    }
 }
 
 fun WalletManagerFactory.makePrimaryWalletManager(
     data: ScanNoteResponse,
 ): WalletManager? {
     val card = data.card
-    val blockchain = card.getBlockchain()
+    val blockchain = if (card.isTestCard) {
+        card.getBlockchain()?.getTestnetVersion()
+    } else {
+        card.getBlockchain()
+    }
     val supportedCurves = blockchain?.getSupportedCurves() ?: return null
     val wallets = card.wallets.filter { wallet -> supportedCurves.contains(wallet.curve) }
     val wallet = selectWallet(wallets)
