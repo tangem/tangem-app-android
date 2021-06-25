@@ -93,42 +93,29 @@ class CurrenciesRepository(val context: Application) {
         }
     }
 
-    fun getPopularTokens(): List<Token> {
-        val json = context.assets.readJsonFileToString(POPULAR_TOKENS_FILE_NAME)
+    fun getPopularTokens(isTestNet: Boolean = false): List<Token> {
+        val fileName = if (isTestNet) TESTNET_TOKENS_FILE_NAME else POPULAR_TOKENS_FILE_NAME
+        val json = context.assets.readJsonFileToString(fileName)
         return tokensAdapter.fromJson(json)!!.map { it.toToken() }
     }
 
-    fun getBlockchains(cardFirmware: FirmwareVersion?): List<Blockchain> {
+    fun getBlockchains(cardFirmware: FirmwareVersion?, isTestNet: Boolean = false): List<Blockchain> {
         return if (cardFirmware == null || cardFirmware.major < 4) {
-            secp256k1Blockchains
+            Blockchain.secp256k1Blockchains(isTestNet)
         } else {
-            secp256k1Blockchains + ed25519Blockchains
+            Blockchain.secp256k1Blockchains(isTestNet) + Blockchain.ed25519OnlyBlockchains(isTestNet)
         }
     }
 
     companion object {
         private const val POPULAR_TOKENS_FILE_NAME = "erc20_tokens"
+        private const val TESTNET_TOKENS_FILE_NAME = "ethereum_tokens_testnet"
         private const val FILE_NAME_PREFIX_TOKENS = "tokens"
         private const val FILE_NAME_PREFIX_BLOCKCHAINS = "blockchains"
 
         fun getFileNameForTokens(cardId: String): String = "${FILE_NAME_PREFIX_TOKENS}_$cardId"
         fun getFileNameForBlockchains(cardId: String): String =
             "${FILE_NAME_PREFIX_BLOCKCHAINS}_$cardId"
-
-        private val secp256k1Blockchains = listOf(
-            Blockchain.Bitcoin,
-            Blockchain.BitcoinCash,
-            Blockchain.Binance,
-            Blockchain.BSC,
-            Blockchain.Litecoin,
-            Blockchain.XRP,
-            Blockchain.Tezos,
-            Blockchain.Ethereum,
-            Blockchain.RSK,
-            Blockchain.Polygon,
-            Blockchain.Dogecoin,
-        )
-        private val ed25519Blockchains = listOf(Blockchain.CardanoShelley, Blockchain.Stellar)
     }
 }
 
