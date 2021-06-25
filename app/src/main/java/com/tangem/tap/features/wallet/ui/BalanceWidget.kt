@@ -22,15 +22,15 @@ enum class BalanceStatus {
 }
 
 data class BalanceWidgetData(
-        val status: BalanceStatus? = null,
-        val currency: String? = null,
-        val currencySymbol: String? = null,
-        val amount: String? = null,
-        val fiatAmount: String? = null,
-        val fiatAmountRaw: BigDecimal? = null,
-        val token: TokenData? = null,
-        val amountToCreateAccount: String? = null,
-        val errorMessage: String? = null
+    val status: BalanceStatus? = null,
+    val currency: String? = null,
+    val currencySymbol: String? = null,
+    val amount: String? = null,
+    val fiatAmountFormatted: String? = null,
+    val fiatAmount: BigDecimal? = null,
+    val token: TokenData? = null,
+    val amountToCreateAccount: String? = null,
+    val errorMessage: String? = null
 )
 
 data class TokenData(
@@ -158,7 +158,7 @@ class BalanceWidget(
         fragment.tv_amount.text = if (showAmount) data.amount else ""
         if (showAmount) {
             fragment.tv_fiat_amount.show()
-            fragment.tv_fiat_amount.text = data.fiatAmount
+            fragment.tv_fiat_amount.text = data.fiatAmountFormatted
         }
     }
 }
