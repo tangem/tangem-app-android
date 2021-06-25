@@ -5,7 +5,6 @@ import com.tangem.tap.common.CurrencyConverter
 import com.tangem.tap.features.send.redux.*
 import com.tangem.tap.features.send.redux.states.IdStateHolder
 import com.tangem.tap.features.send.redux.states.SendState
-import com.tangem.tap.store
 import org.rekotlin.Action
 import java.math.BigDecimal
 
@@ -60,8 +59,7 @@ private class EmptyReducer : SendInternalReducer {
 private class PrepareSendScreenStatesReducer : SendInternalReducer {
     override fun handle(action: SendScreenAction, sendState: SendState): SendState {
         val prepareAction = action as PrepareSendScreen
-        val walletManager = action.walletManager
-                ?: store.state.globalState.scanNoteResponse!!.walletManager!!
+        val walletManager = action.walletManager!!
         val amountToExtract = prepareAction.tokenAmount ?: prepareAction.coinAmount!!
         val decimals = amountToExtract.decimals
 

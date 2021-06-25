@@ -1,5 +1,7 @@
 package com.tangem.tap.domain.configurable.warningMessage
 
+import android.view.View
+import androidx.annotation.StringRes
 import com.squareup.moshi.Json
 import com.tangem.blockchain.common.Blockchain
 
@@ -7,15 +9,17 @@ import com.tangem.blockchain.common.Blockchain
 * [REDACTED_AUTHOR]
  */
 data class WarningMessage(
-        val title: String,
-        val message: String,
-        val type: Type,
-        val priority: Priority,
-        val location: List<Location>,
-        private val blockchains: List<String>?,
-        val titleResId: Int? = null,
-        val messageResId: Int? = null,
-        val origin: Origin = Origin.Remote,
+    val title: String,
+    val message: String,
+    val type: Type,
+    val priority: Priority,
+    val location: List<Location>,
+    private val blockchains: List<String>?,
+    @StringRes val titleResId: Int? = null,
+    @StringRes val messageResId: Int? = null,
+    val origin: Origin = Origin.Remote,
+    @StringRes val buttonTextId: Int? = null,
+    val messageFormatArg: String? = null
 ) {
     val blockchainList: List<Blockchain>? by lazy {
         blockchains?.map { Blockchain.fromId(it.toUpperCase()) }
@@ -43,6 +47,7 @@ data class WarningMessage(
         Temporary,      // можно скрыть (кнопка ОК)
 
         AppRating
+
     }
 
     enum class Location {

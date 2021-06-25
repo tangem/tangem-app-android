@@ -9,8 +9,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.transition.TransitionInflater
-import com.tangem.blockchain.common.Blockchain
-import com.tangem.tap.MainActivity
+import com.squareup.picasso.Picasso
+import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.global.StateDialog
 import com.tangem.tap.common.redux.navigation.NavigationAction
@@ -24,6 +24,7 @@ import kotlinx.android.synthetic.main.fragment_details_twin_cards.*
 import kotlinx.android.synthetic.main.fragment_wallet_details.*
 import kotlinx.android.synthetic.main.fragment_wallet_details.toolbar
 import kotlinx.android.synthetic.main.item_currency_wallet.view.*
+import kotlinx.android.synthetic.main.item_popular_token.view.*
 import kotlinx.android.synthetic.main.layout_balance_error.*
 import kotlinx.android.synthetic.main.layout_balance_wallet_details.*
 import kotlinx.android.synthetic.main.layout_wallet_details.*
@@ -123,7 +124,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
             if (selectedWallet.currencyData.status != BalanceStatus.Loading) {
                 store.dispatch(WalletAction.LoadWallet(
                         selectedWallet.topUpState.allowed,
-                        selectedWallet.currencyData.currencySymbol
+                        selectedWallet.currency?.blockchain
                 ))
             }
         }
@@ -134,16 +135,12 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
     }
 
     private fun handleCurrencyIcon(wallet: WalletData) {
-        val blockchain = wallet.currencyData.currencySymbol?.let { Blockchain.fromCurrency(it) }
-        if (blockchain != null && blockchain != Blockchain.Unknown) {
-            tv_token_letter.text = null
-            iv_currency.colorFilter = null
-            iv_currency.setImageResource(blockchain.getIconRes())
-        } else {
-            tv_token_letter.text = wallet.currencyData.currencySymbol?.take(1)
-            wallet.token?.getColor()?.let { iv_currency.setColorFilter(it) }
-            iv_currency.setImageResource(R.drawable.shape_circle)
-        }
+        Picasso.get().loadCurrenciesIcon(
+            imageView = iv_currency,
+            textView = tv_token_letter,
+            blockchain = wallet.currency?.blockchain,
+            token = (wallet.currency as? Currency.Token)?.token
+        )
     }
 
 
@@ -154,7 +151,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
 
     private fun setupAddressCard(state: WalletData) {
         if (state.walletAddresses != null) {
-            if (state.shouldShowMultipleAddress() && state.blockchain != null) {
+            if (state.shouldShowMultipleAddress() && state.currency is Currency.Blockchain) {
                 (card_balance as? ViewGroup)?.beginDelayedTransition()
                 chip_group_address_type.show()
                 chip_group_address_type.fitChipsByGroupWidth()
@@ -164,7 +161,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
 
                 chip_group_address_type.setOnCheckedChangeListener { group, checkedId ->
                     if (checkedId == -1) return@setOnCheckedChangeListener
-                    val type = MultipleAddressUiHelper.idToType(checkedId, state.blockchain)
+                    val type = MultipleAddressUiHelper.idToType(checkedId, state.currency.blockchain)
                     type?.let { store.dispatch(WalletAction.ChangeSelectedAddress(type)) }
                 }
             } else {
@@ -184,13 +181,13 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
         if (state.state == ProgressState.Error) {
             if (state.error == ErrorType.NoInternetConnection) {
                 srl_wallet_details?.isRefreshing = false
-                (activity as? MainActivity)?.showSnackbar(
+                (activity as? SnackbarHandler)?.showSnackbar(
                         text = R.string.wallet_notification_no_internet,
                         buttonTitle = R.string.common_retry
                 ) { store.dispatch(WalletAction.LoadData) }
             }
         } else {
-            (activity as? MainActivity)?.dismissSnackbar()
+            (activity as? SnackbarHandler)?.dismissSnackbar()
         }
     }
 
@@ -260,7 +257,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
         tv_amount.text = if (showAmount) data.amount else ""
         if (showAmount) {
             tv_fiat_amount.show()
-            tv_fiat_amount.text = data.fiatAmount
+            tv_fiat_amount.text = data.fiatAmountFormatted
         }
     }
 

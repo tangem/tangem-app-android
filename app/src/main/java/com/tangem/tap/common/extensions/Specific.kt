@@ -22,14 +22,26 @@ fun BigDecimal.toFormattedString(
     return df.format(this)
 }
 
-fun BigDecimal.toFormattedCurrencyString(decimals: Int, currency: String): String {
-    return "${this.toFormattedString(decimals)} $currency"
+fun BigDecimal.toFormattedCurrencyString(
+    decimals: Int, currency: String, roundingMode: RoundingMode = RoundingMode.DOWN
+): String {
+    val formattedAmount = this.toFormattedString(decimals = decimals, roundingMode = roundingMode)
+    return "$formattedAmount $currency"
 }
 
-fun BigDecimal.toFiatString(rateValue: BigDecimal, fiatCurrencyName: FiatCurrencyName): String? {
+fun BigDecimal.toFiatString(rateValue: BigDecimal, fiatCurrencyName: FiatCurrencyName): String {
     var fiatValue = rateValue.multiply(this)
-    fiatValue = fiatValue.setScale(2, RoundingMode.DOWN)
+    fiatValue = fiatValue.setScale(2, RoundingMode.HALF_UP)
     return "≈ ${fiatCurrencyName}  $fiatValue"
+}
+
+fun BigDecimal.toFiatValue(rateValue: BigDecimal): BigDecimal {
+    val fiatValue = rateValue.multiply(this)
+    return fiatValue.setScale(2, RoundingMode.DOWN)
+}
+
+fun BigDecimal.toFormattedFiatValue(fiatCurrencyName: FiatCurrencyName): String {
+    return "≈ ${fiatCurrencyName}  $this"
 }
 
 fun FiatCurrency.toFormattedString(): String = "${this.name} (${this.symbol}) - ${this.sign}"

@@ -7,10 +7,12 @@ import androidx.annotation.StringRes
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.squareup.picasso.Picasso
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
+import com.tangem.tap.domain.tokens.CardCurrencies
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.store
 import com.tangem.wallet.R
@@ -20,7 +22,7 @@ import java.util.*
 
 class CurrenciesAdapter : ListAdapter<CurrencyListItem, RecyclerView.ViewHolder>(DiffUtilCallback) {
 
-    var addedCurrencies: List<CryptoCurrencyName> = emptyList()
+    var addedCurrencies: CardCurrencies? = null
 
     private var unfilteredList = listOf<CurrencyListItem>()
 
@@ -38,12 +40,18 @@ class CurrenciesAdapter : ListAdapter<CurrencyListItem, RecyclerView.ViewHolder>
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return when (viewType) {
-            0 -> TitleViewHolder(LayoutInflater.from(parent.context)
-                    .inflate(R.layout.item_currency_subtitle, parent, false))
-            1 -> CurrenciesViewHolder(LayoutInflater.from(parent.context)
-                    .inflate(R.layout.item_popular_token, parent, false))
-            else -> CurrenciesViewHolder(LayoutInflater.from(parent.context)
-                    .inflate(R.layout.item_popular_token, parent, false))
+            0 -> TitleViewHolder(
+                LayoutInflater.from(parent.context)
+                    .inflate(R.layout.item_currency_subtitle, parent, false)
+            )
+            1 -> CurrenciesViewHolder(
+                LayoutInflater.from(parent.context)
+                    .inflate(R.layout.item_popular_token, parent, false)
+            )
+            else -> CurrenciesViewHolder(
+                LayoutInflater.from(parent.context)
+                    .inflate(R.layout.item_popular_token, parent, false)
+            )
         }
     }
 
@@ -58,11 +66,11 @@ class CurrenciesAdapter : ListAdapter<CurrencyListItem, RecyclerView.ViewHolder>
 
     object DiffUtilCallback : DiffUtil.ItemCallback<CurrencyListItem>() {
         override fun areContentsTheSame(
-                oldItem: CurrencyListItem, newItem: CurrencyListItem
+            oldItem: CurrencyListItem, newItem: CurrencyListItem
         ) = oldItem == newItem
 
         override fun areItemsTheSame(
-                oldItem: CurrencyListItem, newItem: CurrencyListItem
+            oldItem: CurrencyListItem, newItem: CurrencyListItem
         ) = oldItem == newItem
     }
 
@@ -72,20 +80,23 @@ class CurrenciesAdapter : ListAdapter<CurrencyListItem, RecyclerView.ViewHolder>
         if (!query.isNullOrEmpty()) {
             val queryNormalized = query.toString().toLowerCase(Locale.US)
             list.addAll(
-                    unfilteredList.filter { element ->
-                        when (element) {
-                            is CurrencyListItem.BlockchainListItem -> {
-                                element.blockchain.currency.toLowerCase(Locale.US).contains(queryNormalized)
-                                        || element.blockchain.fullName.toLowerCase(Locale.US).contains(queryNormalized)
+                unfilteredList.filter { element ->
+                    when (element) {
+                        is CurrencyListItem.BlockchainListItem -> {
+                            element.blockchain.currency.toLowerCase(Locale.US)
+                                .contains(queryNormalized)
+                                    || element.blockchain.fullName.toLowerCase(Locale.US)
+                                .contains(queryNormalized)
 
-                            }
-                            is CurrencyListItem.TokenListItem -> {
-                                element.token.name.toLowerCase(Locale.US).contains(queryNormalized)
-                                        || element.token.symbol.toLowerCase(Locale.US).contains(queryNormalized)
-                            }
-                            else -> false
                         }
-                    })
+                        is CurrencyListItem.TokenListItem -> {
+                            element.token.name.toLowerCase(Locale.US).contains(queryNormalized)
+                                    || element.token.symbol.toLowerCase(Locale.US)
+                                .contains(queryNormalized)
+                        }
+                        else -> false
+                    }
+                })
         } else {
             list.addAll(unfilteredList)
         }
@@ -93,20 +104,22 @@ class CurrenciesAdapter : ListAdapter<CurrencyListItem, RecyclerView.ViewHolder>
     }
 
     class CurrenciesViewHolder(val view: View) :
-            RecyclerView.ViewHolder(view) {
-        fun bind(currency: CurrencyListItem, addedCurrencies: List<CryptoCurrencyName>) {
+        RecyclerView.ViewHolder(view) {
+        fun bind(currency: CurrencyListItem, addedCurrencies: CardCurrencies?) {
             when (currency) {
                 is CurrencyListItem.BlockchainListItem -> {
                     val blockchain = currency.blockchain
                     view.tv_currency_name.text = blockchain.fullName
                     view.tv_currency_symbol.text = blockchain.currency
-                    val isAdded = addedCurrencies.any { it == blockchain.currency }
+                    val isAdded = addedCurrencies?.blockchains?.contains(blockchain) == true
                     view.btn_add_token.show(!isAdded)
                     view.btn_token_added.show(isAdded)
 
-                    view.iv_currency.setImageResource(currency.blockchain.getIconRes())
-                    view.iv_currency.colorFilter = null
-                    view.tv_token_letter.text = null
+                    Picasso.get().loadCurrenciesIcon(
+                        imageView = view.iv_currency,
+                        textView = view.tv_token_letter,
+                        blockchain = blockchain, token = null
+                    )
 
                     view.btn_add_token.setOnClickListener {
                         store.dispatch(WalletAction.MultiWallet.AddBlockchain(blockchain))
@@ -119,14 +132,19 @@ class CurrenciesAdapter : ListAdapter<CurrencyListItem, RecyclerView.ViewHolder>
                     view.tv_currency_name.text = token.name
                     view.tv_currency_symbol.text = token.symbol
 
-                    val isAdded = addedCurrencies.any { it == token.symbol }
+                    val isAdded = addedCurrencies?.tokens
+                        ?.any {
+                            it.symbol == token.symbol && it.contractAddress == token.contractAddress
+                        } == true
+
                     view.btn_add_token.show(!isAdded)
                     view.btn_token_added.show(isAdded)
 
-                    view.iv_currency.setImageResource(R.drawable.shape_circle)
-                    view.iv_currency.setColorFilter(token.getColor())
-                    view.tv_token_letter.text = token.symbol.take(1)
-
+                    Picasso.get().loadCurrenciesIcon(
+                        imageView = view.iv_currency,
+                        textView = view.tv_token_letter,
+                        token = token, blockchain = Blockchain.Ethereum
+                    )
                     view.btn_add_token.setOnClickListener {
                         store.dispatch(WalletAction.MultiWallet.AddToken(token))
                         view.btn_add_token.hide()
@@ -138,7 +156,7 @@ class CurrenciesAdapter : ListAdapter<CurrencyListItem, RecyclerView.ViewHolder>
     }
 
     class TitleViewHolder(val view: View) :
-            RecyclerView.ViewHolder(view) {
+        RecyclerView.ViewHolder(view) {
         fun bind(title: CurrencyListItem.TitleListItem) {
             view.tv_subtitle.text = view.getString(title.titleResId).toUpperCase(Locale.US)
         }
@@ -152,7 +170,10 @@ sealed class CurrencyListItem {
     data class TitleListItem(@StringRes val titleResId: Int) : CurrencyListItem()
 
     companion object {
-        fun createListOfCurrencies(blockchains: List<Blockchain>, tokens: List<Token>): List<CurrencyListItem> {
+        fun createListOfCurrencies(
+            blockchains: List<Blockchain>,
+            tokens: List<Token>
+        ): List<CurrencyListItem> {
             val blockchainsTitle = R.string.add_tokens_subtitle_blockchains
             val tokensTitle = R.string.add_tokens_subtitle_tokens
             return listOf(TitleListItem(blockchainsTitle)) +

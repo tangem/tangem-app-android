@@ -12,13 +12,11 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.tangem.Log
 import com.tangem.TangemSdkLogger
-import com.tangem.blockchain.common.Amount
-import com.tangem.blockchain.common.AmountType
-import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.Wallet
+import com.tangem.blockchain.common.*
 import com.tangem.commands.common.card.Card
+import com.tangem.commands.wallet.WalletStatus
 import com.tangem.tap.common.extensions.stripZeroPlainString
-import com.tangem.tap.store
+import com.tangem.tap.domain.TapWorkarounds
 import timber.log.Timber
 import java.io.File
 import java.io.FileWriter
@@ -33,7 +31,6 @@ import java.util.*
 class FeedbackManager(
         val infoHolder: AdditionalEmailInfo,
         private val logCollector: TangemLogCollector,
-        private val email: String = "support@tangem.com",
 ) {
 
     private lateinit var activity: Activity
@@ -44,7 +41,19 @@ class FeedbackManager(
 
     fun send(emailData: EmailData) {
         val fileLog = if (emailData is ScanFailsEmail) createLogFile() else null
-        sendTo(email, emailData.subject, emailData.joinTogether(infoHolder), fileLog)
+        sendTo(
+            email = getSupportEmail(),
+            subject = emailData.subject, message = emailData.joinTogether(infoHolder),
+            fileLog = fileLog
+        )
+    }
+
+    private fun getSupportEmail(): String {
+        return if (TapWorkarounds.isStart2CoinIssuer(infoHolder.cardIssuer)) {
+            S2C_SUPPORT_EMAIL
+        } else {
+            DEFAULT_SUPPORT_EMAIL
+        }
     }
 
     private fun sendTo(email: String, subject: String, message: String, fileLog: File? = null) {
@@ -101,6 +110,11 @@ class FeedbackManager(
             null
         }
     }
+
+    companion object {
+        const val DEFAULT_SUPPORT_EMAIL = "support@tangem.com"
+        const val S2C_SUPPORT_EMAIL = "cardsupport@start2coin.com"
+    }
 }
 
 class TangemLogCollector : TangemSdkLogger {
@@ -124,6 +138,7 @@ class AdditionalEmailInfo {
             var blockchain: Blockchain = Blockchain.Unknown,
             var address: String = "",
             var explorerLink: String = "",
+            var host: String = "",
             //    var outputsCount: String = ""
             //    var transactionHex: String = ""
     )
@@ -133,6 +148,7 @@ class AdditionalEmailInfo {
     // card
     var cardId: String = ""
     var cardFirmwareVersion: String = ""
+    var cardIssuer: String = ""
 
     // wallets
     internal val walletsInfo = mutableListOf<EmailWalletInfo>()
@@ -161,24 +177,38 @@ class AdditionalEmailInfo {
     fun setCardInfo(card: Card) {
         cardId = card.cardId
         cardFirmwareVersion = card.firmwareVersion.version
-        signedHashesCount = card.walletSignedHashes?.toString() ?: "0"
+        cardIssuer = card.cardData?.issuerName ?: ""
+        signedHashesCount = card.wallets
+            .filter { it.status == WalletStatus.Loaded }
+            .joinToString(";") { "${it.curve?.curve} - ${it.signedHashes}" }
     }
 
-    fun setWalletsInfo(wallets: List<Wallet>) {
+    fun setWalletsInfo(walletManagers: List<WalletManager>) {
         walletsInfo.clear()
-        wallets.forEach { walletsInfo.add(EmailWalletInfo(it.blockchain, getAddress(it), getExploreUri(it))) }
+        walletManagers.forEach { manager ->
+            walletsInfo.add(
+                EmailWalletInfo(
+                    blockchain = manager.wallet.blockchain,
+                    address = getAddress(manager.wallet),
+                    explorerLink = getExploreUri(manager.wallet),
+                    host = manager.currentHost
+                )
+            )
+        }
     }
 
-    fun updateOnSendError(wallet: Wallet, amountToSend: Amount, feeAmount: Amount, destinationAddress: String) {
-        val amountState = store.state.sendState.amountState
-        onSendErrorWalletInfo = EmailWalletInfo(wallet.blockchain, getAddress(wallet), getExploreUri(wallet))
+    fun updateOnSendError(wallet: Wallet, host: String, amountToSend: Amount, feeAmount: Amount, destinationAddress: String) {
+        onSendErrorWalletInfo = EmailWalletInfo(
+            blockchain = wallet.blockchain,
+            address = getAddress(wallet),
+            explorerLink = getExploreUri(wallet),
+            host = host
+        )
 
         this.destinationAddress = destinationAddress
         amount = amountToSend.value?.stripZeroPlainString() ?: "0"
         fee = feeAmount.value?.stripZeroPlainString() ?: "0"
-        if (amountState.typeOfAmount is AmountType.Token) {
-            token = amountState.amountToExtract?.currencySymbol ?: ""
-        }
+        token = if (amountToSend.type is AmountType.Token) amountToSend.currencySymbol else ""
     }
 
     private fun getAddress(wallet: Wallet): String {
@@ -253,6 +283,7 @@ class SendTransactionFailedEmail(private val error: String) : EmailData {
             appendKeyValue("Error", error)
             appendKeyValue("Card ID", infoHolder.cardId)
             appendKeyValue("Blockchain", walletInfo.blockchain.fullName)
+            appendKeyValue("Host", walletInfo.host)
             appendKeyValue("Token", infoHolder.token)
             appendKeyValue("Source address", walletInfo.address)
             appendKeyValue("Destination address", infoHolder.destinationAddress)
@@ -262,6 +293,7 @@ class SendTransactionFailedEmail(private val error: String) : EmailData {
             appendKeyValue("OS version", infoHolder.osVersion)
             appendKeyValue("App version", infoHolder.appVersion)
             appendKeyValue("Firmware version", infoHolder.cardFirmwareVersion)
+            appendKeyValue("Signed hashes", infoHolder.signedHashesCount)
 //            appendKeyValue("Transaction HEX", infoHolder.transactionHex)
         }.toString()
     }
@@ -278,6 +310,7 @@ class FeedbackEmail : EmailData {
 
         infoHolder.walletsInfo.forEach {
             builder.appendKeyValue("Blockchain", it.blockchain.fullName)
+            builder.appendKeyValue("Host", it.host)
             builder.appendKeyValue("Wallet address", it.address)
             builder.appendKeyValue("Explorer link", it.explorerLink)
         }
@@ -289,6 +322,6 @@ class FeedbackEmail : EmailData {
     }
 }
 
-fun StringBuilder.appendKeyValue(key: String, value: String): StringBuilder {
-    return this.append("$key: $value\n")
+private fun StringBuilder.appendKeyValue(key: String, value: String): StringBuilder {
+    return if (value.isNotBlank()) this.append("$key: $value\n") else this
 }
