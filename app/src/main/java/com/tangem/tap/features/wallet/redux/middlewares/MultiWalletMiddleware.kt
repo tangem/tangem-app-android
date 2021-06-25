@@ -44,14 +44,14 @@ class MultiWalletMiddleware {
                 addTokens(action.tokens, walletState, globalState)
             }
             is WalletAction.MultiWallet.AddBlockchain -> {
-                if (walletState?.blockchains?.contains(action.blockchain) == true) return
-
                 globalState?.scanNoteResponse?.card?.let { card ->
                     currenciesRepository.saveAddedBlockchain(card.cardId, action.blockchain)
-                    globalState.tapWalletManager.walletManagerFactory
+                    if (walletState?.blockchains?.contains(action.blockchain) != true) {
+                        globalState.tapWalletManager.walletManagerFactory
                             .makeWalletManagerForApp(card, action.blockchain)?.let {
                                 store.dispatch(WalletAction.MultiWallet.AddWalletManagers(it))
                             }
+                    }
                 }
                 store.dispatch(WalletAction.LoadFiatRate(currency = Currency.Blockchain(action.blockchain)))
                 store.dispatch(WalletAction.LoadWallet(blockchain = action.blockchain))
@@ -87,12 +87,12 @@ class MultiWalletMiddleware {
                                 val wallet = walletManager.wallet
                                 val coinAmount = wallet.amounts[AmountType.Coin]?.value
                                 if (coinAmount != null && !coinAmount.isZero()) {
-                                    if (walletState?.getWalletData(wallet.blockchain) == null) {
-                                        scope.launch(Dispatchers.Main) {
+                                    scope.launch(Dispatchers.Main) {
+                                        if (walletState?.getWalletData(wallet.blockchain) == null) {
                                             store.dispatch(WalletAction.MultiWallet.AddWalletManagers(
-                                                    listOfNotNull(walletManager)))
+                                                listOfNotNull(walletManager)))
                                             store.dispatch(WalletAction.MultiWallet.AddBlockchain(
-                                                    wallet.blockchain
+                                                wallet.blockchain
                                             ))
                                             store.dispatch(WalletAction.LoadWallet.Success(wallet))
                                         }
@@ -118,6 +118,7 @@ class MultiWalletMiddleware {
                         when (result) {
                             is Result.Success -> {
                                 if (result.data.isNotEmpty()) {
+                                    currenciesRepository.saveAddedTokens(card.cardId, result.data)
                                     store.dispatch(
                                         WalletAction.MultiWallet.AddWalletManagers(
                                             walletManager
