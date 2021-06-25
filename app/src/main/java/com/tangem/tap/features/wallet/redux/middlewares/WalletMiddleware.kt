@@ -43,7 +43,6 @@ class WalletMiddleware {
                     is WalletAction.Warnings -> warningsMiddleware.handle(action, globalState)
                     is WalletAction.MultiWallet ->
                         multiWalletMiddleware.handle(action, walletState, globalState)
-
                     is WalletAction.LoadWallet -> {
                         scope.launch {
                             if (action.blockchain == null) {
