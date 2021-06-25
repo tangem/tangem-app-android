@@ -10,6 +10,7 @@ import com.tangem.tap.common.redux.global.FiatCurrencyName
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.currenciesRepository
 import com.tangem.tap.domain.TapWorkarounds.isStart2Coin
+import com.tangem.tap.domain.TapWorkarounds.isTestCard
 import com.tangem.tap.domain.configurable.config.ConfigManager
 import com.tangem.tap.domain.extensions.*
 import com.tangem.tap.domain.tasks.ScanNoteResponse
@@ -96,6 +97,7 @@ class TapWalletManager {
         withContext(Dispatchers.Main) {
             store.dispatch(WalletAction.ResetState)
             store.dispatch(GlobalAction.SaveScanNoteResponse(data))
+            store.dispatch(WalletAction.SetIfTestnetCard(data.card.isTestCard))
             store.dispatch(WalletAction.MultiWallet.SetIsMultiwalletAllowed(data.card.isMultiwalletAllowed))
             if (data.card.isTwinCard()) {
                 val secondCardId = TwinsHelper.getTwinsCardId(data.card.cardId)
