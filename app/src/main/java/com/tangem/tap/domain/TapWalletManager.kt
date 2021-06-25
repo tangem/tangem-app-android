@@ -6,24 +6,25 @@ import com.tangem.commands.common.card.CardStatus
 import com.tangem.commands.common.network.Result
 import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
-import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.common.redux.global.FiatCurrencyName
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.currenciesRepository
+import com.tangem.tap.domain.TapWorkarounds.isStart2Coin
 import com.tangem.tap.domain.configurable.config.ConfigManager
-import com.tangem.tap.domain.extensions.amountToCreateAccount
-import com.tangem.tap.domain.extensions.isNoAccountError
+import com.tangem.tap.domain.extensions.*
 import com.tangem.tap.domain.tasks.ScanNoteResponse
 import com.tangem.tap.domain.tokens.CardCurrencies
 import com.tangem.tap.domain.twins.TwinsHelper
 import com.tangem.tap.domain.twins.isTwinCard
 import com.tangem.tap.features.tokens.redux.TokensAction
+import com.tangem.tap.features.wallet.redux.Currency
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.tap.network.coinmarketcap.CoinMarketCapService
 import com.tangem.tap.store
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import java.math.BigDecimal
 
 
@@ -65,19 +66,23 @@ class TapWalletManager {
     }
 
     suspend fun loadFiatRate(fiatCurrency: FiatCurrencyName, wallet: Wallet) {
-        val currencyList = wallet.getTokens().map { it.symbol }.toMutableList()
-        currencyList.add(wallet.blockchain.currency)
-        loadFiatRate(fiatCurrency, currencyList)
+        Timber.d(wallet.getTokens().toString())
+        val currencies = wallet.getTokens()
+            .map { Currency.Token(it, wallet.blockchain) }
+            .plus(Currency.Blockchain(wallet.blockchain))
+        loadFiatRate(fiatCurrency, currencies)
     }
 
-    suspend fun loadFiatRate(fiatCurrency: FiatCurrencyName, cryptoCurrencyName: CryptoCurrencyName) {
-        val currencyList = listOf(cryptoCurrencyName)
-        loadFiatRate(fiatCurrency, currencyList)
+    suspend fun loadFiatRate(fiatCurrency: FiatCurrencyName, currency: Currency) {
+        val currencies = listOf(currency)
+        loadFiatRate(fiatCurrency, currencies)
     }
 
-    private suspend fun loadFiatRate(fiatCurrency: FiatCurrencyName, currencyList: List<CryptoCurrencyName>) {
-        val results = mutableListOf<Pair<CryptoCurrencyName, Result<BigDecimal>?>>()
-        currencyList.forEach { results.add(it to coinMarketCapService.getRate(it, fiatCurrency)) }
+    suspend fun loadFiatRate(fiatCurrency: FiatCurrencyName, currencies: List<Currency>) {
+        val results = mutableListOf<Pair<Currency, Result<BigDecimal>?>>()
+        currencies.forEach {
+            results.add(it to coinMarketCapService.getRate(it.currencySymbol, fiatCurrency))
+        }
         handleFiatRatesResult(results)
     }
 
@@ -85,7 +90,6 @@ class TapWalletManager {
         if (addAnalyticsEvent) {
             FirebaseAnalyticsHandler.triggerEvent(AnalyticsEvent.CARD_IS_SCANNED, data.card)
         }
-        TapWorkarounds.updateCard(data.card)
         store.state.globalState.feedbackManager?.infoHolder?.setCardInfo(data.card)
         updateConfigManager(data)
 
@@ -102,8 +106,10 @@ class TapWalletManager {
                     ))
                 }
             }
-            if (data.walletManager?.wallet?.blockchain == Blockchain.Ethereum ||
-                    data.walletManager?.wallet?.blockchain == Blockchain.EthereumTestnet) {
+
+            val blockchain = data.card.getBlockchain()
+            if (blockchain == Blockchain.Ethereum ||
+                    blockchain == Blockchain.EthereumTestnet) {
                 store.dispatch(TokensAction.LoadCardTokens)
             }
             loadData(data)
@@ -112,10 +118,11 @@ class TapWalletManager {
 
     private fun updateConfigManager(data: ScanNoteResponse) {
         val configManager = store.state.globalState.configManager
-        if (TapWorkarounds.isStart2Coin) {
+        val blockchain = data.card.getBlockchain()
+        if (data.card.isStart2Coin) {
             configManager?.turnOff(ConfigManager.isSendingToPayIdEnabled)
             configManager?.turnOff(ConfigManager.isTopUpEnabled)
-        } else if (data.walletManager?.wallet?.blockchain == Blockchain.Bitcoin
+        } else if (blockchain == Blockchain.Bitcoin
                 || data.card.cardData?.blockchainName == Blockchain.Bitcoin.id) {
             configManager?.resetToDefault(ConfigManager.isSendingToPayIdEnabled)
             configManager?.resetToDefault(ConfigManager.isTopUpEnabled)
@@ -128,82 +135,117 @@ class TapWalletManager {
     suspend fun loadData(data: ScanNoteResponse) {
         withContext(Dispatchers.Main) {
             val artworkId = data.verifyResponse?.artworkInfo?.id
-            if (data.walletManager != null) {
-                val config = store.state.globalState.configManager?.config ?: return@withContext
-
-                val primaryWalletManager = data.walletManager
-                val primaryBlockchain = data.walletManager.wallet.blockchain
-                val primaryTokenSymbol = data.card.cardData?.tokenSymbol
-                val primaryToken = primaryWalletManager.presetTokens.toList()
-                        .firstOrNull { it.symbol == primaryTokenSymbol }
-
-                store.dispatch(WalletAction.MultiWallet.SetPrimaryBlockchain(primaryBlockchain))
-                if (primaryToken != null) {
-                    store.dispatch(WalletAction.MultiWallet.SetPrimaryToken(primaryToken))
+            when {
+                data.card.getBlockchain() == Blockchain.Unknown && !data.card.isMultiwalletAllowed -> {
+                    store.dispatch(WalletAction.LoadData.Failure(TapError.UnknownBlockchain))
+                    store.dispatch(WalletAction.LoadArtwork(data.card, artworkId))
                 }
-                if (data.card.isMultiwalletAllowed) {
-                    loadMultiWalletData(data.card, primaryBlockchain, primaryWalletManager)
-                } else {
-                    store.dispatch(WalletAction.MultiWallet.AddWalletManagers(primaryWalletManager))
-                    store.dispatch(WalletAction.MultiWallet.AddBlockchains(listOf(primaryBlockchain)))
+                data.card.getStatus() == CardStatus.Empty ||
+                        (data.card.isTwinCard() && data.secondTwinPublicKey == null) -> {
+                    store.dispatch(WalletAction.EmptyWallet)
+                    store.dispatch(WalletAction.LoadArtwork(data.card, artworkId))
                 }
-                store.dispatch(WalletAction.SetArtworkId(data.verifyResponse?.artworkInfo?.id))
-                store.dispatch(WalletAction.LoadWallet(config.isTopUpEnabled))
-                store.dispatch(WalletAction.LoadArtwork(data.card, artworkId))
-                store.dispatch(WalletAction.LoadFiatRate())
-            } else if (data.card.status == CardStatus.Empty || data.card.isTwinCard()) {
-                store.dispatch(WalletAction.EmptyWallet)
-                store.dispatch(WalletAction.LoadArtwork(data.card, artworkId))
-            } else {
-                store.dispatch(WalletAction.LoadData.Failure(TapError.UnknownBlockchain))
-                store.dispatch(WalletAction.LoadArtwork(data.card, artworkId))
+                else -> {
+                    val config = store.state.globalState.configManager?.config ?: return@withContext
+
+                    val blockchain = data.card.getBlockchain()
+                    val primaryWalletManager = walletManagerFactory.makePrimaryWalletManager(data)
+
+                    if (blockchain != null && primaryWalletManager != null) {
+                        val primaryToken = data.card.getToken()
+
+                        store.dispatch(WalletAction.MultiWallet.SetPrimaryBlockchain(blockchain))
+                        if (primaryToken != null) {
+                            primaryWalletManager.addToken(primaryToken)
+                            store.dispatch(WalletAction.MultiWallet.SetPrimaryToken(primaryToken))
+                        }
+                        if (data.card.isMultiwalletAllowed) {
+                            loadMultiWalletData(data.card, blockchain, primaryWalletManager)
+                        } else {
+                            store.dispatch(WalletAction.MultiWallet.AddWalletManagers(primaryWalletManager))
+                            store.dispatch(WalletAction.MultiWallet.AddBlockchains(listOf(blockchain)))
+                        }
+
+                    } else {
+                        if (data.card.isMultiwalletAllowed) {
+                            loadMultiWalletData(data.card, blockchain, null)
+                        }
+                    }
+                    store.dispatch(WalletAction.SetArtworkId(data.verifyResponse?.artworkInfo?.id))
+                    store.dispatch(WalletAction.LoadWallet(config.isTopUpEnabled))
+                    store.dispatch(WalletAction.LoadArtwork(data.card, artworkId))
+                    store.dispatch(WalletAction.LoadFiatRate())
+                }
             }
             store.dispatch(WalletAction.Warnings.CheckIfNeeded)
         }
     }
 
     private fun loadMultiWalletData(
-            card: Card, primaryBlockchain: Blockchain, primaryWalletManager: WalletManager
+            card: Card, primaryBlockchain: Blockchain?, primaryWalletManager: WalletManager?
     ) {
-        val presetTokens = primaryWalletManager.presetTokens.toList()
+        val presetTokens = primaryWalletManager?.presetTokens ?: emptySet()
         val savedCurrencies = currenciesRepository.loadCardCurrencies(card.cardId)
 
         if (savedCurrencies == null) {
-            store.dispatch(WalletAction.MultiWallet.SaveCurrencies(
-                    CardCurrencies(
-                            blockchains = listOf(primaryBlockchain), tokens = presetTokens
-                    )))
-            store.dispatch(WalletAction.MultiWallet.AddWalletManagers(primaryWalletManager))
-            store.dispatch(WalletAction.MultiWallet.AddBlockchains(listOf(primaryBlockchain)))
-            store.dispatch(WalletAction.MultiWallet.AddTokens(presetTokens))
+            if (primaryBlockchain != null && primaryWalletManager != null) {
+                store.dispatch(WalletAction.MultiWallet.SaveCurrencies(
+                        CardCurrencies(
+                                blockchains = setOf(primaryBlockchain), tokens = presetTokens
+                        )))
+                store.dispatch(WalletAction.MultiWallet.AddWalletManagers(primaryWalletManager))
+                store.dispatch(WalletAction.MultiWallet.AddBlockchains(listOf(primaryBlockchain)))
+                store.dispatch(WalletAction.MultiWallet.AddTokens(presetTokens.toList()))
+            } else {
+                val blockchains = setOf(Blockchain.Bitcoin, Blockchain.Ethereum)
+                store.dispatch(WalletAction.MultiWallet.SaveCurrencies(
+                    CardCurrencies(blockchains = blockchains, tokens = emptySet())
+                ))
+                val walletManagers =
+                    walletManagerFactory.makeWalletManagersForApp(card, blockchains.toList())
+                store.dispatch(WalletAction.MultiWallet.AddWalletManagers(walletManagers))
+                store.dispatch(WalletAction.MultiWallet.AddBlockchains(blockchains.toList()))
+            }
             store.dispatch(WalletAction.MultiWallet.FindBlockchainsInUse(card, walletManagerFactory))
             store.dispatch(WalletAction.MultiWallet.FindTokensInUse)
         } else {
-            val blockchains = listOf(primaryBlockchain) + savedCurrencies.blockchains
-            val walletManagers = walletManagerFactory.makeWalletManagers(card, blockchains)
-            val tokens = presetTokens + savedCurrencies.tokens
+            val blockchains = savedCurrencies.blockchains.toList()
+            val walletManagers = if (
+                presetTokens.isNotEmpty() &&
+                primaryWalletManager != null && primaryBlockchain != null
+            ) {
+                val blockchainsWithoutPrimary = blockchains.filterNot { it == primaryBlockchain }
+                walletManagerFactory.makeWalletManagersForApp(card, blockchainsWithoutPrimary)
+                    .plus(primaryWalletManager)
+            } else {
+                walletManagerFactory.makeWalletManagersForApp(card, blockchains)
+            }
 
             store.dispatch(WalletAction.MultiWallet.AddWalletManagers(walletManagers))
             store.dispatch(WalletAction.MultiWallet.AddBlockchains(blockchains))
-            store.dispatch(WalletAction.MultiWallet.AddTokens(tokens))
-            store.dispatch(WalletAction.MultiWallet.FindTokensInUse)
+            store.dispatch(WalletAction.MultiWallet.AddTokens(savedCurrencies.tokens.toList()))
         }
     }
 
     suspend fun reloadData(data: ScanNoteResponse) {
         withContext(Dispatchers.Main) {
-            if (data.walletManager != null) {
-                if (!NetworkConnectivity.getInstance().isOnlineOrConnecting()) {
-                    store.dispatch(WalletAction.LoadData.Failure(TapError.NoInternetConnection))
-                    return@withContext
+            when {
+                data.card.getBlockchain() == Blockchain.Unknown && !data.card.isMultiwalletAllowed -> {
+                    store.dispatch(WalletAction.LoadData.Failure(TapError.UnknownBlockchain))
                 }
-                val config = store.state.globalState.configManager?.config ?: return@withContext
-                store.dispatch(WalletAction.LoadWallet(config.isTopUpEnabled))
-                store.dispatch(WalletAction.LoadFiatRate())
-            } else if (data.card.status == CardStatus.Empty || data.card.isTwinCard()) {
-                store.dispatch(WalletAction.EmptyWallet)
-            } else {
-                store.dispatch(WalletAction.LoadData.Failure(TapError.UnknownBlockchain))
+                data.card.getStatus() == CardStatus.Empty ||
+                        (data.card.isTwinCard() && data.secondTwinPublicKey == null) -> {
+                    store.dispatch(WalletAction.EmptyWallet)
+                }
+                else -> {
+                    if (!NetworkConnectivity.getInstance().isOnlineOrConnecting()) {
+                        store.dispatch(WalletAction.LoadData.Failure(TapError.NoInternetConnection))
+                        return@withContext
+                    }
+                    val config = store.state.globalState.configManager?.config ?: return@withContext
+                    store.dispatch(WalletAction.LoadWallet(config.isTopUpEnabled))
+                    store.dispatch(WalletAction.LoadFiatRate())
+                }
             }
         }
     }
@@ -235,7 +277,7 @@ class TapWalletManager {
         }
     }
 
-    private suspend fun handleFiatRatesResult(results: List<Pair<CryptoCurrencyName, Result<BigDecimal>?>>) {
+    private suspend fun handleFiatRatesResult(results: List<Pair<Currency, Result<BigDecimal>?>>) {
         withContext(Dispatchers.Main) {
             results.map {
                 when (it.second) {
