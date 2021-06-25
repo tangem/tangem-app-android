@@ -4,12 +4,15 @@ package com.tangem.tap.features.details.redux
 import com.tangem.commands.common.card.Card
 import com.tangem.commands.common.card.masks.Settings
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.domain.TapWorkarounds
+import com.tangem.tap.domain.TapWorkarounds.isStart2Coin
+import com.tangem.tap.domain.extensions.isWalletDataSupported
+import com.tangem.tap.domain.extensions.signedHashesCount
 import com.tangem.tap.domain.extensions.toSendableAmounts
 import com.tangem.tap.domain.twins.TwinsHelper
 import com.tangem.tap.domain.twins.isTwinCard
 import com.tangem.tap.features.details.redux.twins.CreateTwinWalletReducer
 import com.tangem.tap.features.details.redux.twins.CreateTwinWalletState
+import com.tangem.tap.features.wallet.models.toPendingTransactions
 import org.rekotlin.Action
 import java.util.*
 
@@ -82,9 +85,13 @@ private fun handlePrepareScreen(action: DetailsAction.PrepareScreen, state: Deta
 private fun handleEraseWallet(action: DetailsAction.EraseWallet, state: DetailsState): DetailsState {
     return when (action) {
         DetailsAction.EraseWallet.Check -> {
-            val notAllowedByCard = state.card?.settingsMask?.contains(Settings.ProhibitPurgeWallet) == true
+            val notAllowedByCard =
+                state.card?.settingsMask?.contains(Settings.ProhibitPurgeWallet) == true
+                        || state.card?.settingsMask?.contains(Settings.IsReusable) == false
+                        || state.card?.isWalletDataSupported == true
             val notEmpty = state.wallets.any {
-                !it.recentTransactions.isNullOrEmpty() || it.amounts.toSendableAmounts().isNotEmpty()
+                !it.recentTransactions.toPendingTransactions(it.address).isNullOrEmpty()
+                        || it.amounts.toSendableAmounts().isNotEmpty()
             }
             val eraseWalletState = when {
                 notAllowedByCard -> EraseWalletState.NotAllowedByCard
@@ -136,7 +143,7 @@ private fun handleSecurityAction(
 ): DetailsState {
     return when (action) {
         is DetailsAction.ManageSecurity.OpenSecurity -> {
-            if (TapWorkarounds.isStart2Coin) {
+            if (state.card?.isStart2Coin == true) {
                 return state.copy(securityScreenState = state.securityScreenState?.copy(
                         allowedOptions = EnumSet.of(SecurityOption.LongTap),
                         selectedOption = state.securityScreenState.currentOption
@@ -203,6 +210,5 @@ private fun prepareAllowedSecurityOptions(card: Card): EnumSet<SecurityOption> {
 private fun Card.toCardInfo(): CardInfo? {
     val cardId = this.cardId.chunked(4).joinToString(separator = " ")
     val issuer = this.cardData?.issuerName ?: return null
-    val signedHashes = this.walletSignedHashes ?: return null
-    return CardInfo(cardId, issuer, signedHashes)
-}
+    val signedHashes = this.signedHashesCount()
+    return CardInfo(cardId, issuer, signedHashes)}
