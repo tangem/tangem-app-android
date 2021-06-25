@@ -12,7 +12,7 @@ class CurrencyConverter(
         private val rateValue: BigDecimal,
         private val decimals: Int
 ) {
-    private val roundingMode = RoundingMode.DOWN
+    private val roundingMode = RoundingMode.HALF_UP
 
     fun toFiat(crypto: BigDecimal, fiatDecimals: Int = 2): BigDecimal {
         return toFiatUnscaled(crypto).setScale(fiatDecimals, roundingMode)
