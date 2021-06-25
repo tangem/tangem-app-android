@@ -2,7 +2,6 @@ package com.tangem.tap.features.wallet.ui
 
 import android.os.Bundle
 import android.view.Menu
-import android.view.Menu.NONE
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
@@ -16,6 +15,7 @@ import com.squareup.picasso.Picasso
 import com.tangem.tangem_sdk_new.extensions.dpToPx
 import com.tangem.tap.MainActivity
 import com.tangem.tap.common.extensions.show
+import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
@@ -106,7 +106,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         if (!state.shouldShowDetails) {
             toolbar.menu.removeItem(R.id.details_menu)
         } else if (toolbar.menu.findItem(R.id.details_menu) == null) {
-            toolbar.menu.add(R.menu.wallet, R.id.details_menu, NONE, R.string.details_title)
+            toolbar.inflateMenu(R.menu.wallet)
         }
 
         setupNoInternetHandling(state)
@@ -155,6 +155,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.details_menu -> {
+                store.dispatch(GlobalAction.UpdateFeedbackInfo(store.state.walletState.walletManagers))
                 store.state.globalState.scanNoteResponse?.let { scanNoteResponse ->
                     store.dispatch(DetailsAction.PrepareScreen(
                             scanNoteResponse.card, scanNoteResponse,
