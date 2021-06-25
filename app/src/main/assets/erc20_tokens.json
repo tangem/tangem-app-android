@@ -631,6 +631,13 @@
     },
     {
         "decimalCount" : 8,
+        "symbol" : "QCX",
+        "name" : "QuickX Protocol",
+        "contractAddress" : "0xf9e5af7b42d31d51677c75bbbd37c1986ec79aee",
+        "customIcon": "qcx"
+    },
+    {
+        "decimalCount" : 8,
         "symbol" : "QRL",
         "name" : "QRL",
         "contractAddress" : "0x697beac28B09E122C4332D163985e8a73121b97F"
@@ -874,6 +881,12 @@
         "symbol" : "WAX",
         "name" : "WAX",
         "contractAddress" : "0x39Bb259F66E1C59d5ABEF88375979b4D20D98022"
+    },
+    {
+        "decimalCount" : 18,
+        "symbol" : "WETH",
+        "name" : "Wrapped Ether",
+        "contractAddress" : "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2"
     },
     {
         "decimalCount" : 18,
