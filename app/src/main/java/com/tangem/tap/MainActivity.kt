@@ -2,8 +2,6 @@ package com.tangem.tap
 
 import android.content.Intent
 import android.content.pm.ActivityInfo
-import android.nfc.NfcAdapter
-import android.nfc.Tag
 import android.os.Bundle
 import android.util.Log
 import android.view.View
@@ -14,10 +12,14 @@ import com.tangem.Config
 import com.tangem.TangemSdk
 import com.tangem.commands.common.card.CardType
 import com.tangem.tangem_sdk_new.extensions.init
+import com.tangem.tap.common.DialogManager
+import com.tangem.tap.common.IntentHandler
+import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.redux.NotificationsHandler
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.TangemSdkManager
+import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_main.*
@@ -53,9 +55,11 @@ private fun initCoroutineExceptionHandler(): CoroutineExceptionHandler {
     }
 }
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), SnackbarHandler {
 
     private var snackbar: Snackbar? = null
+    private val dialogManager = DialogManager()
+    private val intentHandler = IntentHandler()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,43 +69,37 @@ class MainActivity : AppCompatActivity() {
         store.dispatch(NavigationAction.ActivityCreated(WeakReference(this)))
 
         tangemSdk = TangemSdk.init(
-                this, Config(cardFilter = CardFilter(EnumSet.allOf(CardType::class.java)))
+            this, Config(cardFilter = CardFilter(EnumSet.allOf(CardType::class.java)))
         )
         tangemSdkManager = TangemSdkManager(this)
+        store.dispatch(WalletConnectAction.RestoreSessions)
     }
 
     override fun onResume() {
         super.onResume()
         notificationsHandler = NotificationsHandler(fragment_container)
         if (supportFragmentManager.backStackEntryCount == 0 ||
-                store.state.globalState.scanNoteResponse == null) {
+            store.state.globalState.scanNoteResponse == null
+        ) {
             store.dispatch(HomeAction.CheckIfFirstLaunch)
             store.dispatch(NavigationAction.NavigateTo(AppScreen.Home))
         }
-        handleBackgroundScan(intent)
+        intentHandler.handleIntent(intent)
     }
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
-        handleBackgroundScan(intent)
+        intentHandler.handleIntent(intent)
     }
 
-    private fun handleBackgroundScan(intent: Intent?) {
-        if (intent != null && (NfcAdapter.ACTION_TECH_DISCOVERED == intent.action ||
-                        NfcAdapter.ACTION_NDEF_DISCOVERED == intent.action
-                        )) {
-            val tag = intent.getParcelableExtra<Tag>(NfcAdapter.EXTRA_TAG)
-            if (tag != null) {
-                intent.action = null
-                store.dispatch(NavigationAction.NavigateTo(AppScreen.Home))
-                store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
-                store.dispatch(HomeAction.ReadCard)
-            }
-        }
+    override fun onStart() {
+        super.onStart()
+        dialogManager.onStart(this)
     }
 
     override fun onStop() {
         notificationsHandler = null
+        dialogManager.onStop()
         super.onStop()
     }
 
@@ -110,11 +108,11 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
     }
 
-    fun showSnackbar(text: Int, buttonTitle: Int? = null, action: View.OnClickListener? = null) {
+    override fun showSnackbar(text: Int, buttonTitle: Int?, action: View.OnClickListener?) {
         if (snackbar != null) return
 
         snackbar = Snackbar.make(
-                fragment_container, getString(text), Snackbar.LENGTH_INDEFINITE
+            fragment_container, getString(text), Snackbar.LENGTH_INDEFINITE
         )
         if (buttonTitle != null && action != null) {
             snackbar?.setAction(getString(buttonTitle), action)
@@ -122,7 +120,7 @@ class MainActivity : AppCompatActivity() {
         snackbar?.show()
     }
 
-    fun dismissSnackbar() {
+    override fun dismissSnackbar() {
         snackbar?.dismiss()
         snackbar = null
     }
