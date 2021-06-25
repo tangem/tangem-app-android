@@ -19,5 +19,6 @@ fun Blockchain.getIconRes(): Int {
         Blockchain.Tezos -> R.drawable.ic_tezos
         Blockchain.XRP -> R.drawable.ic_xrp
         Blockchain.Stellar -> R.drawable.ic_stellar
+        else -> R.drawable.shape_circle
     }
 }
