@@ -5,6 +5,7 @@ import com.google.firebase.ktx.Firebase
 import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.google.firebase.remoteconfig.ktx.remoteConfigSettings
 import com.tangem.Log
+import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.tap.common.images.PicassoHelper
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.appReducer
@@ -15,6 +16,7 @@ import com.tangem.tap.domain.configurable.config.FeaturesRemoteLoader
 import com.tangem.tap.domain.configurable.warningMessage.RemoteWarningLoader
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.domain.tokens.CurrenciesRepository
+import com.tangem.tap.domain.walletconnect.WalletConnectRepository
 import com.tangem.tap.features.feedback.AdditionalEmailInfo
 import com.tangem.tap.features.feedback.FeedbackManager
 import com.tangem.tap.features.feedback.TangemLogCollector
@@ -32,6 +34,7 @@ val store = Store(
 )
 lateinit var preferencesStorage: PreferencesStorage
 lateinit var currenciesRepository: CurrenciesRepository
+lateinit var walletConnectRepository: WalletConnectRepository
 
 class TapApplication : Application() {
     override fun onCreate() {
@@ -52,9 +55,12 @@ class TapApplication : Application() {
         preferencesStorage = PreferencesStorage(this)
         PicassoHelper.initPicassoWithCaching(this)
         currenciesRepository = CurrenciesRepository(this)
+        walletConnectRepository = WalletConnectRepository(this)
 
         initFeedbackManager()
         loadConfigs()
+
+        BlockchainSdkRetrofitBuilder.enableNetworkLogging = BuildConfig.DEBUG
     }
 
     private fun loadConfigs() {
