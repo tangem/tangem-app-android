@@ -39,6 +39,7 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
         is WalletAction.MultiWallet -> newState = multiWalletReducer.reduce(action, newState)
 
         is WalletAction.ResetState -> newState = WalletState()
+        is WalletAction.SetIfTestnetCard -> newState = newState.copy(isTestnet = action.isTestnet)
         is WalletAction.EmptyWallet -> {
             val creatingWalletAllowed = !(newState.twinCardsState != null &&
                     newState.twinCardsState?.isCreatingTwinCardsAllowed != true)
