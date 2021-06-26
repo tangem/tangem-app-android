@@ -38,8 +38,8 @@ object FirebaseAnalyticsHandler : AnalyticsHandler {
         params[AnalyticsParam.ERROR_DESCRIPTION] = error.javaClass.simpleName
         params[AnalyticsParam.ERROR_KEY] = "TangemSdkError"
 
-        params.forEach { (key, value) ->
-            FirebaseCrashlytics.getInstance().setCustomKey(key.param, value)
+        params.forEach {
+            FirebaseCrashlytics.getInstance().setCustomKey(it.key.param, it.value)
         }
         val cardError = TangemSdk.map(error)
         FirebaseCrashlytics.getInstance().recordException(cardError)
@@ -55,10 +55,53 @@ object FirebaseAnalyticsHandler : AnalyticsHandler {
     private fun setData(card: Card?, blockchain: Blockchain?): Bundle {
         if (card == null) return bundleOf()
         return bundleOf(
-            AnalyticsParam.BLOCKCHAIN.param to (blockchain?.currency ?: card.cardData?.blockchainName),
+            AnalyticsParam.BLOCKCHAIN.param to (blockchain?.currency
+                ?: card.cardData?.blockchainName),
             AnalyticsParam.BATCH_ID.param to card.cardData?.batchId,
             AnalyticsParam.FIRMWARE.param to card.firmwareVersion.version
         )
+    }
+
+    fun logWcEvent(event: WcAnalyticsEvent) {
+        when (event) {
+            is WcAnalyticsEvent.Action -> {
+
+                Firebase.analytics.logEvent(
+                    AnalyticsEvent.WC_SUCCESS_RESPONSE.event, bundleOf(
+                        AnalyticsParam.WALLET_CONNECT_ACTION.param to event.action.name
+                    )
+                )
+            }
+            is WcAnalyticsEvent.Error -> {
+                mapOf(
+                    AnalyticsParam.WALLET_CONNECT_ACTION to event.action?.name,
+                    AnalyticsParam.ERROR_DESCRIPTION to event.error.message
+                )
+                    .filterNotNull()
+                    .forEach {
+                        FirebaseCrashlytics.getInstance().setCustomKey(it.key.param, it.value)
+                    }
+                FirebaseCrashlytics.getInstance().recordException(event.error)
+            }
+            is WcAnalyticsEvent.InvalidRequest ->
+                Firebase.analytics.logEvent(
+                    AnalyticsEvent.WC_INVALID_REQUEST.event, bundleOf(
+                        AnalyticsParam.WALLET_CONNECT_REQUEST.param to event.json
+                    )
+                )
+            is WcAnalyticsEvent.Session -> {
+                val analyticsEvent = when (event.event) {
+                    WcSessionEvent.Disconnect -> AnalyticsEvent.WC_SESSION_DISCONNECTED
+                    WcSessionEvent.Connect -> AnalyticsEvent.WC_NEW_SESSION
+                }
+                Firebase.analytics.logEvent(
+                    analyticsEvent.event, bundleOf(
+                        AnalyticsParam.WALLET_CONNECT_DAPP_URL.param to event.url
+                    )
+                )
+            }
+        }
+
     }
 
     enum class AnalyticsParam(val param: String) {
@@ -70,6 +113,9 @@ object FirebaseAnalyticsHandler : AnalyticsHandler {
         ERROR_CODE("error_code"),
         NEW_SECURITY_OPTION("new_security_option"),
         ERROR_KEY("Tangem SDK error key"),
+        WALLET_CONNECT_ACTION("wallet_connect_action"),
+        WALLET_CONNECT_REQUEST("wallet_connect_request"),
+        WALLET_CONNECT_DAPP_URL("wallet_connect_dapp_url"),
     }
 
     enum class ActionToLog(val key: String) {
@@ -83,4 +129,17 @@ object FirebaseAnalyticsHandler : AnalyticsHandler {
         PurgeWallet("purge_wallet"),
         WriteIssuerData("write_issuer_data"),
     }
-} 
+
+    enum class WcSessionEvent { Disconnect, Connect }
+
+    sealed class WcAnalyticsEvent {
+        data class Error(val error: Throwable, val action: WcAction?) :
+            WcAnalyticsEvent()
+
+        data class Session(val event: WcSessionEvent, val url: String?) : WcAnalyticsEvent()
+        data class Action(val action: WcAction) : WcAnalyticsEvent()
+        data class InvalidRequest(val json: String?) : WcAnalyticsEvent()
+    }
+
+    enum class WcAction { PersonalSign, SignTransaction, SendTransaction }
+}
