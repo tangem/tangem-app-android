@@ -1,7 +1,8 @@
-package com.tangem.tap.domain
+package com.tangem.tap.domain.topup
 
 import android.net.Uri
 import android.util.Base64
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
@@ -15,10 +16,20 @@ class TopUpHelper {
         private const val API_KEY_PATH = "?apiKey="
         private const val CURRENCY_PATH = "&currencyCode="
         private const val WALLET_ADDRESS_PATH = "&walletAddress="
-//        private const val REDIRECT_URL_PATH = "&redirectUrl="
+
+        //        private const val REDIRECT_URL_PATH = "&redirectUrl="
         private const val SIGNATURE_PATH = "&signature="
 
-        fun getUrl(cryptoCurrencyName: CryptoCurrencyName, walletAddress: String, apiKey: String, secretKey: String): String {
+        fun getUrl(
+            blockchain: Blockchain?,
+            cryptoCurrencyName: CryptoCurrencyName,
+            walletAddress: String,
+            apiKey: String,
+            secretKey: String,
+        ): String {
+            if (blockchain?.isTestnet() == true) {
+                return blockchain.getTestnetTopUpUrl() ?: ""
+            }
             val originalQuery = API_KEY_PATH + apiKey.urlEncode() +
                     CURRENCY_PATH + cryptoCurrencyName.urlEncode() +
                     WALLET_ADDRESS_PATH + walletAddress.urlEncode()
