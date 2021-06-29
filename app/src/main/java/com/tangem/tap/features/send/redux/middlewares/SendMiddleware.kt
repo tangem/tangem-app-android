@@ -1,6 +1,7 @@
 package com.tangem.tap.features.send.redux.middlewares
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics
+import com.tangem.TangemSdkError
 import com.tangem.blockchain.blockchains.stellar.StellarTransactionExtras
 import com.tangem.blockchain.blockchains.xrp.XrpTransactionBuilder
 import com.tangem.blockchain.common.*
@@ -127,7 +128,11 @@ private fun sendTransaction(
             when (result) {
                 is SimpleResult.Success -> {
                     tangemSdk.config.linkedTerminal = isLinkedTerminal
-                    FirebaseAnalyticsHandler.triggerEvent(AnalyticsEvent.TRANSACTION_IS_SENT, card)
+                    FirebaseAnalyticsHandler.triggerEvent(
+                        event = AnalyticsEvent.TRANSACTION_IS_SENT,
+                        card = card,
+                        blockchain = walletManager.wallet.blockchain
+                    )
                     dispatch(SendAction.SendSuccess)
                     dispatch(NavigationAction.PopBackTo())
                     scope.launch(Dispatchers.IO) {
@@ -178,6 +183,16 @@ private fun sendTransaction(
                                     dispatch(SendAction.SendError(TapError.XmlError.AssetAccountNotCreated))
                                 }
                                 else -> {
+                                    (result.error as? TangemSdkError)?.let { error ->
+                                        FirebaseAnalyticsHandler.logCardSdkError(
+                                            error,
+                                            FirebaseAnalyticsHandler.ActionToLog.SendTransaction,
+                                            mapOf(
+                                                FirebaseAnalyticsHandler.AnalyticsParam.BLOCKCHAIN
+                                                        to walletManager.wallet.blockchain.currency),
+                                            card = card,
+                                        )
+                                    }
                                     Timber.e(throwable)
                                     FirebaseCrashlytics.getInstance().recordException(throwable)
                                     dispatch(SendAction.SendError(TapError.CustomError(message)))
