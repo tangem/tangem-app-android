@@ -1,6 +1,5 @@
 package com.tangem.tap.domain.configurable.warningMessage
 
-import android.view.View
 import androidx.annotation.StringRes
 import com.squareup.moshi.Json
 import com.tangem.blockchain.common.Blockchain
@@ -46,7 +45,9 @@ data class WarningMessage(
         @Json(name = "temporary")
         Temporary,      // можно скрыть (кнопка ОК)
 
-        AppRating
+        AppRating,
+
+        TestCard
 
     }
 
