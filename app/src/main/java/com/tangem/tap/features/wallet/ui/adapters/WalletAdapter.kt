@@ -98,7 +98,7 @@ class WalletAdapter
             Picasso.get().loadCurrenciesIcon(
                 imageView = view.iv_currency,
                 textView = view.tv_token_letter,
-                token = token, blockchain = blockchain
+                token = token, blockchain = blockchain,
             )
 
             when (wallet.currencyData.status) {
