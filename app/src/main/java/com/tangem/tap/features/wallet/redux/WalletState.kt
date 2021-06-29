@@ -32,7 +32,8 @@ data class WalletState(
         val cardCurrency: CryptoCurrencyName? = null,
         val selectedWallet: Currency? = null,
         val primaryBlockchain: Blockchain? = null,
-        val primaryToken: Token? = null
+        val primaryToken: Token? = null,
+        val isTestnet: Boolean = false,
 ) : StateType {
 
     val primaryWallet = if (wallets.isNotEmpty()) wallets[0] else null
@@ -49,7 +50,9 @@ data class WalletState(
 
     fun getWalletManager(token: Token?): WalletManager? {
         if (token == null) return null
-        val ethereumWalletManager = walletManagers.find { it.wallet.blockchain == Blockchain.Ethereum }
+        val ethereumWalletManager = walletManagers
+            .find { it.wallet.blockchain == Blockchain.Ethereum ||
+                    it.wallet.blockchain == Blockchain.EthereumTestnet }
         return if (ethereumWalletManager?.presetTokens?.contains(token) == true) {
             ethereumWalletManager
         } else {
