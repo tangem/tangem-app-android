@@ -12,6 +12,7 @@ import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.common.extensions.isGreaterThan
 import com.tangem.tap.common.redux.global.GlobalState
+import com.tangem.tap.domain.TapWorkarounds.isTestCard
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.domain.extensions.getSingleWallet
@@ -84,6 +85,11 @@ class WarningsMiddleware {
     private fun showCardWarningsIfNeeded(globalState: GlobalState?) {
         globalState?.scanNoteResponse?.card?.let { card ->
             globalState.warningManager?.removeWarnings(WarningMessage.Origin.Local)
+            if (card.isTestCard) {
+                addWarningMessage(WarningMessagesManager.testCardWarning(), autoUpdate = true)
+                return@let
+            }
+
             showWarningLowRemainingSignaturesIfNeeded(card)
             if (card.getType() != CardType.Release) {
                 addWarningMessage(WarningMessagesManager.devCardWarning())
