@@ -156,6 +156,18 @@ class WarningMessagesManager(
             messageFormatArg = remainingSignatures.toString()
         )
 
+        fun testCardWarning(): WarningMessage = WarningMessage(
+            "",
+            "",
+            type = WarningMessage.Type.TestCard,
+            priority = WarningMessage.Priority.Critical,
+            listOf(WarningMessage.Location.MainScreen),
+            null,
+            R.string.alert_title,
+            R.string.warning_testnet_card_message,
+            WarningMessage.Origin.Local
+        )
+
         const val REMAINING_SIGNATURES_WARNING = 10
     }
 }
