@@ -1,7 +1,9 @@
 package com.tangem.tap.features.details.redux
 
+import com.tangem.TangemSdkError
 import com.tangem.commands.common.network.Result
 import com.tangem.common.CompletionResult
+import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
@@ -90,6 +92,15 @@ class DetailsMiddleware {
                                 is CompletionResult.Success -> {
                                     store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
                                 }
+                                is CompletionResult.Failure -> {
+                                    (result.error as? TangemSdkError)?.let { error ->
+                                        FirebaseAnalyticsHandler.logCardSdkError(
+                                            error,
+                                            FirebaseAnalyticsHandler.ActionToLog.PurgeWallet,
+                                            card = store.state.detailsState.card
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -148,8 +159,20 @@ class DetailsMiddleware {
                                     }
                                     store.dispatch(DetailsAction.ManageSecurity.SaveChanges.Success)
                                 }
-                                is CompletionResult.Failure, null ->
+                                is CompletionResult.Failure -> {
+                                    (result.error as? TangemSdkError)?.let { error ->
+                                        FirebaseAnalyticsHandler.logCardSdkError(
+                                            error = error,
+                                            actionToLog = FirebaseAnalyticsHandler.ActionToLog.ChangeSecOptions,
+                                            parameters = mapOf(
+                                                FirebaseAnalyticsHandler.AnalyticsParam.NEW_SECURITY_OPTION to
+                                                        (selectedOption?.name ?: "")
+                                            ),
+                                            card = store.state.detailsState.card
+                                        )
+                                    }
                                     store.dispatch(DetailsAction.ManageSecurity.SaveChanges.Failure)
+                                }
                             }
                         }
                     }
