@@ -50,7 +50,7 @@ android {
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
-        coreLibraryDesugaringEnabled true
+        coreLibraryDesugaringEnabled false
     }
     packagingOptions {
         exclude 'lib/x86_64/darwin/libscrypt.dylib'
