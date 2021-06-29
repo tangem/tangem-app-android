@@ -12,6 +12,7 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.domain.TapWorkarounds.isTestCard
 import com.tangem.tap.domain.extensions.makeWalletManagerForApp
 import com.tangem.tap.domain.isMultiwalletAllowed
 import com.tangem.tap.domain.walletconnect.WalletConnectManager
@@ -157,7 +158,7 @@ class WalletConnectMiddleware {
                             wcUri = wcUri,
                             wallet = WalletForSession(
                                 card.cardId, key.toHexString(),
-                                isTestNet = false
+                                isTestNet = card.isTestCard
                             ),
                         ))
                     }
