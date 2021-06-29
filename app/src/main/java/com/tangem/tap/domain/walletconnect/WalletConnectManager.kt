@@ -3,6 +3,7 @@ package com.tangem.tap.domain.walletconnect
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.hexToBytes
+import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.details.redux.walletconnect.*
@@ -16,10 +17,7 @@ import com.trustwallet.walletconnect.models.ethereum.WCEthereumTransaction
 import com.trustwallet.walletconnect.models.session.WCSession
 import com.trustwallet.walletconnect.models.session.WCSessionUpdate
 import kotlinx.coroutines.launch
-import okhttp3.Interceptor
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.Response
+import okhttp3.*
 import okhttp3.logging.HttpLoggingInterceptor
 import timber.log.Timber
 import java.util.*
@@ -136,6 +134,10 @@ class WalletConnectManager {
     }
 
     private fun onSessionClosed(session: WCSession) {
+        FirebaseAnalyticsHandler.logWcEvent(
+            FirebaseAnalyticsHandler.WcAnalyticsEvent.Session(
+                FirebaseAnalyticsHandler.WcSessionEvent.Disconnect, sessions[session]?.peerMeta?.url)
+        )
         sessions.remove(session)
         walletConnectRepository.removeSession(session)
         store.dispatchOnMain(WalletConnectAction.RemoveSession(session))
@@ -235,6 +237,10 @@ class WalletConnectManager {
                     store.dispatchOnMain(WalletConnectAction.AcceptOpeningSession(
                         sessionData))
                 }
+                FirebaseAnalyticsHandler.logWcEvent(
+                    FirebaseAnalyticsHandler.WcAnalyticsEvent.Session(
+                        FirebaseAnalyticsHandler.WcSessionEvent.Connect, peer.url)
+                )
             }
         }
         client.onSessionUpdate = { id: Long, update: WCSessionUpdate ->
@@ -244,6 +250,11 @@ class WalletConnectManager {
         }
         client.onEthSendTransaction = { id: Long, transaction: WCEthereumTransaction ->
             Timber.d("onEthSendTransaction: $transaction")
+            FirebaseAnalyticsHandler.logWcEvent(
+                FirebaseAnalyticsHandler.WcAnalyticsEvent.Action(
+                    FirebaseAnalyticsHandler.WcAction.SendTransaction
+                )
+            )
             sessions[client.session]?.toWalletConnectSession()?.let { sessionData ->
                 store.dispatchOnMain(WalletConnectAction.HandleTransactionRequest(
                     transaction = transaction,
@@ -256,6 +267,11 @@ class WalletConnectManager {
         }
         client.onEthSignTransaction = { id: Long, transaction: WCEthereumTransaction ->
             Timber.d("onEthSignTransaction: $transaction")
+            FirebaseAnalyticsHandler.logWcEvent(
+                FirebaseAnalyticsHandler.WcAnalyticsEvent.Action(
+                    FirebaseAnalyticsHandler.WcAction.SignTransaction
+                )
+            )
             sessions[client.session]?.toWalletConnectSession()?.let { sessionData ->
                 store.dispatchOnMain(WalletConnectAction.HandleTransactionRequest(
                     transaction = transaction,
@@ -267,6 +283,11 @@ class WalletConnectManager {
         }
         client.onEthSign = { id: Long, message: WCEthereumSignMessage ->
             Timber.d("onEthSign: $message")
+            FirebaseAnalyticsHandler.logWcEvent(
+                FirebaseAnalyticsHandler.WcAnalyticsEvent.Action(
+                    FirebaseAnalyticsHandler.WcAction.PersonalSign
+                )
+            )
             sessions[client.session]?.toWalletConnectSession()?.let { sessionData ->
                 store.dispatchOnMain(WalletConnectAction.HandlePersonalSignRequest(
                     message,
