@@ -27,7 +27,12 @@ object TapWorkarounds {
 
     }
 
+    val Card.isTestCard: Boolean
+        get() = cardData?.batchId == TEST_CARD_BATCH && cardId.startsWith(TEST_CARD_ID_STARTS_WITH)
+
     private const val START_2_COIN_ISSUER = "start2coin"
+    private const val TEST_CARD_BATCH = "99FF"
+    private const val TEST_CARD_ID_STARTS_WITH = "FF99"
 
     private val excludedBatches = listOf(
             "0027",
