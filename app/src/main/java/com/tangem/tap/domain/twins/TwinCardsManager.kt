@@ -2,12 +2,14 @@ package com.tangem.tap.domain.twins
 
 import com.tangem.KeyPair
 import com.tangem.Message
+import com.tangem.TangemSdkError
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
 import com.tangem.crypto.CryptoUtils
+import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.domain.tasks.ScanNoteResponse
 import com.tangem.tap.tangemSdkManager
 
@@ -28,7 +30,16 @@ class TwinCardsManager(private val scanNoteResponse: ScanNoteResponse) {
                 currentCardPublicKey = response.data.walletPublicKey.toHexString()
                 return SimpleResult.Success
             }
-            is CompletionResult.Failure -> return SimpleResult.failure(response.error)
+            is CompletionResult.Failure -> {
+                (response.error as? TangemSdkError)?.let { error ->
+                    FirebaseAnalyticsHandler.logCardSdkError(
+                        error,
+                        FirebaseAnalyticsHandler.ActionToLog.CreateWallet,
+                        card = scanNoteResponse.card
+                    )
+                }
+                return SimpleResult.failure(response.error)
+            }
         }
 
     }
@@ -48,7 +59,16 @@ class TwinCardsManager(private val scanNoteResponse: ScanNoteResponse) {
                 secondCardPublicKey = response.data.walletPublicKey.toHexString()
                 return SimpleResult.Success
             }
-            is CompletionResult.Failure -> return SimpleResult.failure(response.error)
+            is CompletionResult.Failure -> {
+                (response.error as? TangemSdkError)?.let { error ->
+                    FirebaseAnalyticsHandler.logCardSdkError(
+                        error,
+                        FirebaseAnalyticsHandler.ActionToLog.CreateWallet,
+                        card = scanNoteResponse.card
+                    )
+                }
+                return SimpleResult.failure(response.error)
+            }
         }
 
     }
@@ -60,7 +80,16 @@ class TwinCardsManager(private val scanNoteResponse: ScanNoteResponse) {
         )
         return when (response) {
             is CompletionResult.Success -> Result.Success(response.data)
-            is CompletionResult.Failure -> Result.failure(response.error)
+            is CompletionResult.Failure -> {
+                (response.error as? TangemSdkError)?.let { error ->
+                    FirebaseAnalyticsHandler.logCardSdkError(
+                        error,
+                        FirebaseAnalyticsHandler.ActionToLog.WriteIssuerData,
+                        card = scanNoteResponse.card
+                    )
+                }
+                Result.failure(response.error)
+            }
         }
     }
 
