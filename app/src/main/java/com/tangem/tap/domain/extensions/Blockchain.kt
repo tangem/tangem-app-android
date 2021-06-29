@@ -2,7 +2,6 @@ package com.tangem.tap.domain.extensions
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
-import com.tangem.commands.common.card.EllipticCurve
 import java.math.BigDecimal
 
 
@@ -24,19 +23,6 @@ fun Blockchain.amountToCreateAccount(token: Token? = null): Double? {
 
 fun Blockchain.minimalAmount(): BigDecimal {
     return 1.toBigDecimal().movePointLeft(decimals())
-}
-
-fun Blockchain.getSupportedCurves(): List<EllipticCurve>? {
-    return when (this) {
-        Blockchain.Unknown -> null
-        Blockchain.Bitcoin, Blockchain.BitcoinTestnet, Blockchain.BitcoinCash, Blockchain.Litecoin,
-        Blockchain.Ducatus, Blockchain.Ethereum, Blockchain.EthereumTestnet, Blockchain.RSK,
-        Blockchain.Binance, Blockchain.BinanceTestnet -> listOf(EllipticCurve.Secp256k1)
-        Blockchain.Tezos, Blockchain.XRP -> listOf(EllipticCurve.Secp256k1, EllipticCurve.Ed25519)
-        Blockchain.Cardano, Blockchain.CardanoShelley, Blockchain.Stellar ->
-            listOf(EllipticCurve.Ed25519)
-        else -> listOf(EllipticCurve.Secp256k1)
-    }
 }
 
 private const val NODL = "NODL"
