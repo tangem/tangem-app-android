@@ -99,6 +99,14 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
         val selectedWallet = state.getSelectedWalletData() ?: return
 
         tv_currency_title.text = selectedWallet.currencyData.currency
+        val currency = selectedWallet.currency
+         if (currency is Currency.Token) {
+             tv_currency_subtitle.text = currency.blockchain.tokenDisplayName()
+             tv_currency_subtitle.show()
+        } else {
+             tv_currency_subtitle.hide()
+         }
+
 
         showPendingTransactionsIfPresent(selectedWallet.pendingTransactions)
         setupAddressCard(selectedWallet)
