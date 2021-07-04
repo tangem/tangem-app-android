@@ -66,8 +66,10 @@ class MultiWalletMiddleware {
                 when (val currency = action.walletData.currency) {
                     is Currency.Blockchain -> {
                         cardId?.let {
-                            currenciesRepository.removeBlockchain(it,
-                                currency.blockchain)
+                            currenciesRepository.removeBlockchain(
+                                it,
+                                currency.blockchain
+                            )
                         }
                     }
                     is Currency.Token -> {
@@ -94,11 +96,16 @@ class MultiWalletMiddleware {
                                 if (coinAmount != null && !coinAmount.isZero()) {
                                     scope.launch(Dispatchers.Main) {
                                         if (walletState?.getWalletData(wallet.blockchain) == null) {
-                                            store.dispatch(WalletAction.MultiWallet.AddWalletManagers(
-                                                listOfNotNull(walletManager)))
-                                            store.dispatch(WalletAction.MultiWallet.AddBlockchain(
-                                                wallet.blockchain
-                                            ))
+                                            store.dispatch(
+                                                WalletAction.MultiWallet.AddWalletManagers(
+                                                    listOfNotNull(walletManager)
+                                                )
+                                            )
+                                            store.dispatch(
+                                                WalletAction.MultiWallet.AddBlockchain(
+                                                    wallet.blockchain
+                                                )
+                                            )
                                             store.dispatch(WalletAction.LoadWallet.Success(wallet))
                                         }
                                     }
@@ -136,7 +143,7 @@ class MultiWalletMiddleware {
                                     )
                                     store.dispatch(
                                         WalletAction.MultiWallet.AddTokens(
-                                            walletManager.presetTokens.toList()
+                                            walletManager.cardTokens.toList()
                                         )
                                     )
                                 }
@@ -160,12 +167,7 @@ class MultiWalletMiddleware {
             }
 
         store.dispatch(
-            WalletAction.LoadFiatRate(
-                currency = Currency.Token(
-                    token = token,
-                    blockchain = walletManager?.wallet?.blockchain ?: Blockchain.Ethereum
-                )
-            )
+            WalletAction.LoadFiatRate(currency = Currency.Token(token))
         )
 
         scope.launch {
@@ -189,15 +191,14 @@ class MultiWalletMiddleware {
             val walletManager = walletState?.getWalletManager(token)
                 ?: globalState.tapWalletManager.walletManagerFactory.makeWalletManagerForApp(
                     card = card,
-                    blockchain = if (card.isTestCard) Blockchain.EthereumTestnet else Blockchain.Ethereum
+                    blockchain = token.blockchain
                 )?.also { walletManager ->
                     store.dispatch(WalletAction.MultiWallet.AddWalletManagers(walletManager))
                     store.dispatch(WalletAction.MultiWallet.AddBlockchain(walletManager.wallet.blockchain))
                 }
-            store.dispatch(WalletAction.LoadFiatRate(currency = Currency.Token(
-                token = token,
-                blockchain = walletManager?.wallet?.blockchain ?: Blockchain.Ethereum
-            )))
+            store.dispatch(
+                WalletAction.LoadFiatRate(currency = Currency.Token(token))
+            )
             TokenWithManager(token, walletManager)
         }
         scope.launch {
