@@ -1,0 +1,1658 @@
+[
+    {
+        "symbol" : "BUSD",
+        "decimalCount" : 8,
+        "contractAddress" : "BUSD-BD1",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/BUSD-BD1/logo.png",
+        "name" : "Binance USD"
+    },
+    {
+        "symbol" : "BTCB",
+        "decimalCount" : 8,
+        "contractAddress" : "BTCB-1DE",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/BTCB-1DE/logo.png",
+        "name" : "Bitcoin BEP2"
+    },
+    {
+        "symbol" : "ADA",
+        "decimalCount" : 8,
+        "contractAddress" : "ADA-9F4",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/ADA-9F4/logo.png",
+        "name" : "CardanoBEP2"
+    },
+    {
+        "symbol" : "AERGO",
+        "decimalCount" : 8,
+        "contractAddress" : "AERGO-46B",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/AERGO-46B/logo.png",
+        "name" : "Aergo"
+    },
+    {
+        "symbol" : "ANKR",
+        "decimalCount" : 8,
+        "contractAddress" : "ANKR-E97",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/ANKR-E97/logo.png",
+        "name" : "ANKR"
+    },
+    {
+        "symbol" : "ARN",
+        "decimalCount" : 8,
+        "contractAddress" : "ARN-71B",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/ARN-71B/logo.png",
+        "name" : "Aeron"
+    },
+    {
+        "symbol" : "ARPA",
+        "decimalCount" : 8,
+        "contractAddress" : "ARPA-575",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/ARPA-575/logo.png",
+        "name" : "ARPA"
+    },
+    {
+        "symbol" : "BZNT",
+        "decimalCount" : 8,
+        "contractAddress" : "BZNT-464",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/BZNT-464/logo.png",
+        "name" : "Bezant Token"
+    },
+    {
+        "symbol" : "DAI",
+        "decimalCount" : 8,
+        "contractAddress" : "DAI-D75",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/DAI-D75/logo.png",
+        "name" : "DaiBEP2"
+    },
+    {
+        "symbol" : "ETH",
+        "decimalCount" : 8,
+        "contractAddress" : "ETH-1C9",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/ETH-1C9/logo.png",
+        "name" : "ETH BEP2"
+    },
+    {
+        "symbol" : "ART",
+        "decimalCount" : 8,
+        "contractAddress" : "ART-3C9",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/ART-3C9/logo.png",
+        "name" : "Maecenas ART Token"
+    },
+    {
+        "symbol" : "ATOM",
+        "decimalCount" : 8,
+        "contractAddress" : "ATOM-596",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/ATOM-596/logo.png",
+        "name" : "ATOMBEP2"
+    },
+    {
+        "symbol" : "ATP",
+        "decimalCount" : 8,
+        "contractAddress" : "ATP-38C",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/ATP-38C/logo.png",
+        "name" : "Atlas Protocol"
+    },
+    {
+        "symbol" : "CAKE",
+        "decimalCount" : 8,
+        "contractAddress" : "CAKE-435",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/CAKE-435/logo.png",
+        "name" : "PancakeSwap Token"
+    },
+    {
+        "symbol" : "CAN",
+        "decimalCount" : 8,
+        "contractAddress" : "CAN-677",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/CAN-677/logo.png",
+        "name" : "CanYaCoin"
+    },
+    {
+        "symbol" : "CAS",
+        "decimalCount" : 8,
+        "contractAddress" : "CAS-167",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/CAS-167/logo.png",
+        "name" : "CASHAA"
+    },
+    {
+        "symbol" : "CBIX",
+        "decimalCount" : 8,
+        "contractAddress" : "CBIX-3C9",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/CBIX-3C9/logo.png",
+        "name" : "Cubiex"
+    },
+    {
+        "symbol" : "CBM",
+        "decimalCount" : 8,
+        "contractAddress" : "CBM-4B2",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/CBM-4B2/logo.png",
+        "name" : "CryptoBonusMiles"
+    },
+    {
+        "symbol" : "CHZ",
+        "decimalCount" : 8,
+        "contractAddress" : "CHZ-ECD",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/CHZ-ECD/logo.png",
+        "name" : "Chiliz"
+    },
+    {
+        "symbol" : "CNNS",
+        "decimalCount" : 8,
+        "contractAddress" : "CNNS-E16",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/CNNS-E16/logo.png",
+        "name" : "Crypto Neo-value Neural System"
+    },
+    {
+        "symbol" : "COS",
+        "decimalCount" : 8,
+        "contractAddress" : "COS-2E4",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/COS-2E4/logo.png",
+        "name" : "Contentos"
+    },
+    {
+        "symbol" : "COTI",
+        "decimalCount" : 8,
+        "contractAddress" : "COTI-CBB",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/COTI-CBB/logo.png",
+        "name" : "COTI"
+    },
+    {
+        "symbol" : "COVA",
+        "decimalCount" : 8,
+        "contractAddress" : "COVA-218",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/COVA-218/logo.png",
+        "name" : "Covalent Token"
+    },
+    {
+        "symbol" : "CRPT",
+        "decimalCount" : 8,
+        "contractAddress" : "CRPT-8C9",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/CRPT-8C9/logo.png",
+        "name" : "Crypterium Token"
+    },
+    {
+        "symbol" : "IDRTB",
+        "decimalCount" : 8,
+        "contractAddress" : "IDRTB-178",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/IDRTB-178/logo.png",
+        "name" : "Rupiah Token"
+    },
+    {
+        "symbol" : "AVA",
+        "decimalCount" : 8,
+        "contractAddress" : "AVA-645",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/AVA-645/logo.png",
+        "name" : "Travala.com Token"
+    },
+    {
+        "symbol" : "AWC",
+        "decimalCount" : 8,
+        "contractAddress" : "AWC-986",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/AWC-986/logo.png",
+        "name" : "Atomic Wallet Token"
+    },
+    {
+        "symbol" : "AXPR",
+        "decimalCount" : 8,
+        "contractAddress" : "AXPR-777",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/AXPR-777/logo.png",
+        "name" : "AXPR.B"
+    },
+    {
+        "symbol" : "BAKE",
+        "decimalCount" : 8,
+        "contractAddress" : "BAKE-5E0",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/BAKE-5E0/logo.png",
+        "name" : "BakeryToken"
+    },
+    {
+        "symbol" : "BAND",
+        "decimalCount" : 8,
+        "contractAddress" : "BAND-34B",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/BAND-34B/logo.png",
+        "name" : "BandProtocolBEP2"
+    },
+    {
+        "symbol" : "BCH",
+        "decimalCount" : 8,
+        "contractAddress" : "BCH-1FD",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/BCH-1FD/logo.png",
+        "name" : "BCH BEP2"
+    },
+    {
+        "symbol" : "BCPT",
+        "decimalCount" : 8,
+        "contractAddress" : "BCPT-95A",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/BCPT-95A/logo.png",
+        "name" : "Blockmason Credit Protocol"
+    },
+    {
+        "symbol" : "BEAR",
+        "decimalCount" : 8,
+        "contractAddress" : "BEAR-14C",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/BEAR-14C/logo.png",
+        "name" : "3X Short Bitcoin Token"
+    },
+    {
+        "symbol" : "BET",
+        "decimalCount" : 8,
+        "contractAddress" : "BET-844",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/BET-844/logo.png",
+        "name" : "EOSBet Token"
+    },
+    {
+        "symbol" : "TAUDB",
+        "decimalCount" : 8,
+        "contractAddress" : "TAUDB-888",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/TAUDB-888/logo.png",
+        "name" : "TrueAUD"
+    },
+    {
+        "symbol" : "THKDB",
+        "decimalCount" : 8,
+        "contractAddress" : "THKDB-888",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/THKDB-888/logo.png",
+        "name" : "TrueHKD"
+    },
+    {
+        "symbol" : "TUSDB",
+        "decimalCount" : 8,
+        "contractAddress" : "TUSDB-888",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/TUSDB-888/logo.png",
+        "name" : "TrueUSD"
+    },
+    {
+        "symbol" : "USDSB",
+        "decimalCount" : 8,
+        "contractAddress" : "USDSB-1AC",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/USDSB-1AC/logo.png",
+        "name" : "USDS"
+    },
+    {
+        "symbol" : "USDT",
+        "decimalCount" : 8,
+        "contractAddress" : "USDT-6D8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/USDT-6D8/logo.png",
+        "name" : "USDTBEP2"
+    },
+    {
+        "symbol" : "BIFI",
+        "decimalCount" : 8,
+        "contractAddress" : "BIFI-290",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/BIFI-290/logo.png",
+        "name" : "beefy.finance"
+    },
+    {
+        "symbol" : "BKBT",
+        "decimalCount" : 8,
+        "contractAddress" : "BKBT-3A6",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/BKBT-3A6/logo.png",
+        "name" : "Bitwires Token"
+    },
+    {
+        "symbol" : "BLINK",
+        "decimalCount" : 8,
+        "contractAddress" : "BLINK-9C6",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/BLINK-9C6/logo.png",
+        "name" : "Blockmason Link"
+    },
+    {
+        "symbol" : "BOLT",
+        "decimalCount" : 8,
+        "contractAddress" : "BOLT-4C6",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/BOLT-4C6/logo.png",
+        "name" : "BOLT Token"
+    },
+    {
+        "symbol" : "BST2",
+        "decimalCount" : 8,
+        "contractAddress" : "BST2-2F2",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/BST2-2F2/logo.png",
+        "name" : "BOOSTO"
+    },
+    {
+        "symbol" : "BTTB",
+        "decimalCount" : 8,
+        "contractAddress" : "BTTB-D31",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/BTTB-D31/logo.png",
+        "name" : "BTTB"
+    },
+    {
+        "symbol" : "BULL",
+        "decimalCount" : 8,
+        "contractAddress" : "BULL-BE4",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/BULL-BE4/logo.png",
+        "name" : "3x Long Bitcoin Token"
+    },
+    {
+        "symbol" : "BURGER",
+        "decimalCount" : 8,
+        "contractAddress" : "BURGER-33A",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/BURGER-33A/logo.png",
+        "name" : "Burger Swap"
+    },
+    {
+        "symbol" : "CSM",
+        "decimalCount" : 8,
+        "contractAddress" : "CSM-734",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/CSM-734/logo.png",
+        "name" : "“Consentium”"
+    },
+    {
+        "symbol" : "DEFI",
+        "decimalCount" : 8,
+        "contractAddress" : "DEFI-FA5",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/DEFI-FA5/logo.png",
+        "name" : "DeFi Token"
+    },
+    {
+        "symbol" : "DOGE",
+        "decimalCount" : 8,
+        "contractAddress" : "DOGE-B67",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/DOGE-B67/logo.png",
+        "name" : "Dogecoin"
+    },
+    {
+        "symbol" : "DOS",
+        "decimalCount" : 8,
+        "contractAddress" : "DOS-120",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/DOS-120/logo.png",
+        "name" : "DOS Network Token"
+    },
+    {
+        "symbol" : "DOT",
+        "decimalCount" : 8,
+        "contractAddress" : "DOT-64C",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/DOT-64C/logo.png",
+        "name" : "PolkadotBEP2"
+    },
+    {
+        "symbol" : "DREP",
+        "decimalCount" : 8,
+        "contractAddress" : "DREP-7D2",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/DREP-7D2/logo.png",
+        "name" : "DREP"
+    },
+    {
+        "symbol" : "DUSK",
+        "decimalCount" : 8,
+        "contractAddress" : "DUSK-45E",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/DUSK-45E/logo.png",
+        "name" : "Dusk Network"
+    },
+    {
+        "symbol" : "EBST",
+        "decimalCount" : 8,
+        "contractAddress" : "EBST-783",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/EBST-783/logo.png",
+        "name" : "eBoost"
+    },
+    {
+        "symbol" : "ENTRP",
+        "decimalCount" : 8,
+        "contractAddress" : "ENTRP-C8D",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/ENTRP-C8D/logo.png",
+        "name" : "Hut34 Entropy"
+    },
+    {
+        "symbol" : "EOS",
+        "decimalCount" : 8,
+        "contractAddress" : "EOS-CDD",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/EOS-CDD/logo.png",
+        "name" : "EOS BEP2"
+    },
+    {
+        "symbol" : "EOSBEAR",
+        "decimalCount" : 8,
+        "contractAddress" : "EOSBEAR-721",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/EOSBEAR-721/logo.png",
+        "name" : "3X Short EOS Token"
+    },
+    {
+        "symbol" : "EOSBULL",
+        "decimalCount" : 8,
+        "contractAddress" : "EOSBULL-F0D",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/EOSBULL-F0D/logo.png",
+        "name" : "3X Long EOS Token"
+    },
+    {
+        "symbol" : "EQL",
+        "decimalCount" : 8,
+        "contractAddress" : "EQL-586",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/EQL-586/logo.png",
+        "name" : "EQUAL"
+    },
+    {
+        "symbol" : "ERD",
+        "decimalCount" : 8,
+        "contractAddress" : "ERD-D06",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/ERD-D06/logo.png",
+        "name" : "Elrond"
+    },
+    {
+        "symbol" : "ETHBEAR",
+        "decimalCount" : 8,
+        "contractAddress" : "ETHBEAR-B2B",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/ETHBEAR-B2B/logo.png",
+        "name" : "3X Short Ethereum Token"
+    },
+    {
+        "symbol" : "ETHBULL",
+        "decimalCount" : 8,
+        "contractAddress" : "ETHBULL-D33",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/ETHBULL-D33/logo.png",
+        "name" : "3X Long Ethereum Token"
+    },
+    {
+        "symbol" : "EVT",
+        "decimalCount" : 8,
+        "contractAddress" : "EVT-49B",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/EVT-49B/logo.png",
+        "name" : "everiToken"
+    },
+    {
+        "symbol" : "FRM",
+        "decimalCount" : 8,
+        "contractAddress" : "FRM-DE7",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/FRM-DE7/logo.png",
+        "name" : "Ferrum Network Token"
+    },
+    {
+        "symbol" : "FSN",
+        "decimalCount" : 8,
+        "contractAddress" : "FSN-E14",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/FSN-E14/logo.png",
+        "name" : "Fusion"
+    },
+    {
+        "symbol" : "FTM",
+        "decimalCount" : 8,
+        "contractAddress" : "FTM-A64",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/FTM-A64/logo.png",
+        "name" : "Fantom"
+    },
+    {
+        "symbol" : "GIV",
+        "decimalCount" : 8,
+        "contractAddress" : "GIV-94E",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/GIV-94E/logo.png",
+        "name" : "Givly Coin"
+    },
+    {
+        "symbol" : "GMAT",
+        "decimalCount" : 8,
+        "contractAddress" : "GMAT-FC8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/GMAT-FC8/logo.png",
+        "name" : "GoWithMi"
+    },
+    {
+        "symbol" : "GTO",
+        "decimalCount" : 8,
+        "contractAddress" : "GTO-908",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/GTO-908/logo.png",
+        "name" : "Gifto"
+    },
+    {
+        "symbol" : "HNST",
+        "decimalCount" : 8,
+        "contractAddress" : "HNST-3C9",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/HNST-3C9/logo.png",
+        "name" : "Honest"
+    },
+    {
+        "symbol" : "HYN",
+        "decimalCount" : 8,
+        "contractAddress" : "HYN-F21",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/HYN-F21/logo.png",
+        "name" : "Hyperion Token"
+    },
+    {
+        "symbol" : "INJ",
+        "decimalCount" : 8,
+        "contractAddress" : "INJ-FAE",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/INJ-FAE/logo.png",
+        "name" : "Injective Protocol"
+    },
+    {
+        "symbol" : "IRIS",
+        "decimalCount" : 8,
+        "contractAddress" : "IRIS-D88",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/IRIS-D88/logo.png",
+        "name" : "IRIS Network"
+    },
+    {
+        "symbol" : "KAT",
+        "decimalCount" : 8,
+        "contractAddress" : "KAT-7BB",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/KAT-7BB/logo.png",
+        "name" : "Kambria Token"
+    },
+    {
+        "symbol" : "LBA",
+        "decimalCount" : 8,
+        "contractAddress" : "LBA-340",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/LBA-340/logo.png",
+        "name" : "Lend-Borrow-Asset"
+    },
+    {
+        "symbol" : "LIT",
+        "decimalCount" : 8,
+        "contractAddress" : "LIT-099",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/LIT-099/logo.png",
+        "name" : "LITION"
+    },
+    {
+        "symbol" : "LOKI",
+        "decimalCount" : 8,
+        "contractAddress" : "LOKI-6A9",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/LOKI-6A9/logo.png",
+        "name" : "Loki"
+    },
+    {
+        "symbol" : "LTC",
+        "decimalCount" : 8,
+        "contractAddress" : "LTC-F07",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/LTC-F07/logo.png",
+        "name" : "LTC BEP2"
+    },
+    {
+        "symbol" : "LTO",
+        "decimalCount" : 8,
+        "contractAddress" : "LTO-BDF",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/LTO-BDF/logo.png",
+        "name" : "LTO Network"
+    },
+    {
+        "symbol" : "MATIC",
+        "decimalCount" : 8,
+        "contractAddress" : "MATIC-84A",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/MATIC-84A/logo.png",
+        "name" : "Matic Token"
+    },
+    {
+        "symbol" : "MDAB",
+        "decimalCount" : 8,
+        "contractAddress" : "MDAB-D42",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/MDAB-D42/logo.png",
+        "name" : "MDAB"
+    },
+    {
+        "symbol" : "MEETONE",
+        "decimalCount" : 8,
+        "contractAddress" : "MEETONE-031",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/MEETONE-031/logo.png",
+        "name" : "MEET.ONE"
+    },
+    {
+        "symbol" : "MITH",
+        "decimalCount" : 8,
+        "contractAddress" : "MITH-C76",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/MITH-C76/logo.png",
+        "name" : "Mithril"
+    },
+    {
+        "symbol" : "MITX",
+        "decimalCount" : 8,
+        "contractAddress" : "MITX-CAA",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/MITX-CAA/logo.png",
+        "name" : "Morpheus Infrastructure Token"
+    },
+    {
+        "symbol" : "MTV",
+        "decimalCount" : 8,
+        "contractAddress" : "MTV-4C6",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/MTV-4C6/logo.png",
+        "name" : "MultiVAC"
+    },
+    {
+        "symbol" : "MVL",
+        "decimalCount" : 8,
+        "contractAddress" : "MVL-7B0",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/MVL-7B0/logo.png",
+        "name" : "Mass Vehicle Ledger"
+    },
+    {
+        "symbol" : "MZK",
+        "decimalCount" : 8,
+        "contractAddress" : "MZK-2C7",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/MZK-2C7/logo.png",
+        "name" : "Muzika"
+    },
+    {
+        "symbol" : "NEW",
+        "decimalCount" : 8,
+        "contractAddress" : "NEW-09E",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/NEW-09E/logo.png",
+        "name" : "NEWTON"
+    },
+    {
+        "symbol" : "NEXO",
+        "decimalCount" : 8,
+        "contractAddress" : "NEXO-A84",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/NEXO-A84/logo.png",
+        "name" : "Nexo"
+    },
+    {
+        "symbol" : "NOIZB",
+        "decimalCount" : 8,
+        "contractAddress" : "NOIZB-878",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/NOIZB-878/logo.png",
+        "name" : "NOIZ Token"
+    },
+    {
+        "symbol" : "NOW",
+        "decimalCount" : 8,
+        "contractAddress" : "NOW-E68",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/NOW-E68/logo.png",
+        "name" : "NOW Token"
+    },
+    {
+        "symbol" : "NPXB",
+        "decimalCount" : 8,
+        "contractAddress" : "NPXB-1E8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/NPXB-1E8/logo.png",
+        "name" : "NPX Binance token"
+    },
+    {
+        "symbol" : "NPXSXEM",
+        "decimalCount" : 8,
+        "contractAddress" : "NPXSXEM-89C",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/NPXSXEM-89C/logo.png",
+        "name" : "Pundi X NEM"
+    },
+    {
+        "symbol" : "ONE",
+        "decimalCount" : 8,
+        "contractAddress" : "ONE-5F9",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/ONE-5F9/logo.png",
+        "name" : "Harmony.One"
+    },
+    {
+        "symbol" : "ONT",
+        "decimalCount" : 8,
+        "contractAddress" : "ONT-33D",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/ONT-33D/logo.png",
+        "name" : "ONTBEP2"
+    },
+    {
+        "symbol" : "PHB",
+        "decimalCount" : 8,
+        "contractAddress" : "PHB-2DF",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/PHB-2DF/logo.png",
+        "name" : "Red Pulse Phoenix Binance"
+    },
+    {
+        "symbol" : "PHV",
+        "decimalCount" : 8,
+        "contractAddress" : "PHV-4A1",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/PHV-4A1/logo.png",
+        "name" : "PathHive Network"
+    },
+    {
+        "symbol" : "PIBNB",
+        "decimalCount" : 8,
+        "contractAddress" : "PIBNB-43C",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/PIBNB-43C/logo.png",
+        "name" : "PCHAIN Token"
+    },
+    {
+        "symbol" : "PLG",
+        "decimalCount" : 8,
+        "contractAddress" : "PLG-D8D",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/PLG-D8D/logo.png",
+        "name" : "Pledge Coin"
+    },
+    {
+        "symbol" : "PVT",
+        "decimalCount" : 8,
+        "contractAddress" : "PVT-554",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/PVT-554/logo.png",
+        "name" : "Pivot Token"
+    },
+    {
+        "symbol" : "PYN",
+        "decimalCount" : 8,
+        "contractAddress" : "PYN-C37",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/PYN-C37/logo.png",
+        "name" : "paycentos"
+    },
+    {
+        "symbol" : "QBX",
+        "decimalCount" : 8,
+        "contractAddress" : "QBX-38C",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/QBX-38C/logo.png",
+        "name" : "qiibeeToken"
+    },
+    {
+        "symbol" : "RAVEN",
+        "decimalCount" : 8,
+        "contractAddress" : "RAVEN-F66",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/RAVEN-F66/logo.png",
+        "name" : "Raven Protocol"
+    },
+    {
+        "symbol" : "RUNE",
+        "decimalCount" : 8,
+        "contractAddress" : "RUNE-B1A",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/RUNE-B1A/logo.png",
+        "name" : "Rune"
+    },
+    {
+        "symbol" : "SHR",
+        "decimalCount" : 8,
+        "contractAddress" : "SHR-DB6",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/SHR-DB6/logo.png",
+        "name" : "ShareToken"
+    },
+    {
+        "symbol" : "SLV",
+        "decimalCount" : 8,
+        "contractAddress" : "SLV-986",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/SLV-986/logo.png",
+        "name" : "Silverway"
+    },
+    {
+        "symbol" : "SPNDB",
+        "decimalCount" : 8,
+        "contractAddress" : "SPNDB-916",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/SPNDB-916/logo.png",
+        "name" : "Spendcoin"
+    },
+    {
+        "symbol" : "STYL",
+        "decimalCount" : 8,
+        "contractAddress" : "STYL-65B",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/STYL-65B/logo.png",
+        "name" : "Yin Lang Music IP Token"
+    },
+    {
+        "symbol" : "SWINGBY",
+        "decimalCount" : 8,
+        "contractAddress" : "SWINGBY-888",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/SWINGBY-888/logo.png",
+        "name" : "Swingby Token"
+    },
+    {
+        "symbol" : "SWIPE.B",
+        "decimalCount" : 8,
+        "contractAddress" : "SWIPE.B-DC0",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/SWIPE.B-DC0/logo.png",
+        "name" : "SWIPE Token"
+    },
+    {
+        "symbol" : "SXP",
+        "decimalCount" : 8,
+        "contractAddress" : "SXP-CCC",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/SXP-CCC/logo.png",
+        "name" : "Swipe"
+    },
+    {
+        "symbol" : "TM2",
+        "decimalCount" : 8,
+        "contractAddress" : "TM2-0C4",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/TM2-0C4/logo.png",
+        "name" : "Traxia 2"
+    },
+    {
+        "symbol" : "TOMOB",
+        "decimalCount" : 8,
+        "contractAddress" : "TOMOB-4BC",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/TOMOB-4BC/logo.png",
+        "name" : "TomoChain"
+    },
+    {
+        "symbol" : "TOP",
+        "decimalCount" : 8,
+        "contractAddress" : "TOP-491",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/TOP-491/logo.png",
+        "name" : "TOP Network"
+    },
+    {
+        "symbol" : "TROY",
+        "decimalCount" : 8,
+        "contractAddress" : "TROY-9B8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/TROY-9B8/logo.png",
+        "name" : "TROY"
+    },
+    {
+        "symbol" : "TRUE",
+        "decimalCount" : 8,
+        "contractAddress" : "TRUE-D84",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/TRUE-D84/logo.png",
+        "name" : "TrueChain"
+    },
+    {
+        "symbol" : "TRXB",
+        "decimalCount" : 8,
+        "contractAddress" : "TRXB-2E6",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/TRXB-2E6/logo.png",
+        "name" : "TRXB"
+    },
+    {
+        "symbol" : "TWT",
+        "decimalCount" : 8,
+        "contractAddress" : "TWT-8C2",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/TWT-8C2/logo.png",
+        "name" : "Trust Wallet"
+    },
+    {
+        "symbol" : "UGAS",
+        "decimalCount" : 8,
+        "contractAddress" : "UGAS-B0C",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/UGAS-B0C/logo.png",
+        "name" : "Ultrain Coin"
+    },
+    {
+        "symbol" : "UND",
+        "decimalCount" : 8,
+        "contractAddress" : "UND-EBC",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/UND-EBC/logo.png",
+        "name" : "United Network Distribution"
+    },
+    {
+        "symbol" : "UPX",
+        "decimalCount" : 8,
+        "contractAddress" : "UPX-F3E",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/UPX-F3E/logo.png",
+        "name" : "UPX"
+    },
+    {
+        "symbol" : "VDX",
+        "decimalCount" : 8,
+        "contractAddress" : "VDX-A17",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/VDX-A17/logo.png",
+        "name" : "Vodi X"
+    },
+    {
+        "symbol" : "VIDT",
+        "decimalCount" : 8,
+        "contractAddress" : "VIDT-F53",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/VIDT-F53/logo.png",
+        "name" : "V-ID Token"
+    },
+    {
+        "symbol" : "VOTE",
+        "decimalCount" : 8,
+        "contractAddress" : "VOTE-FD4",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/VOTE-FD4/logo.png",
+        "name" : "Vote"
+    },
+    {
+        "symbol" : "WICC",
+        "decimalCount" : 8,
+        "contractAddress" : "WICC-01D",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/WICC-01D/logo.png",
+        "name" : "WaykiChain Coin"
+    },
+    {
+        "symbol" : "WINB",
+        "decimalCount" : 8,
+        "contractAddress" : "WINB-41F",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/WINB-41F/logo.png",
+        "name" : "WINB"
+    },
+    {
+        "symbol" : "WISH",
+        "decimalCount" : 8,
+        "contractAddress" : "WISH-2D5",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/WISH-2D5/logo.png",
+        "name" : "MyWish"
+    },
+    {
+        "symbol" : "WRX",
+        "decimalCount" : 8,
+        "contractAddress" : "WRX-ED1",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/WRX-ED1/logo.png",
+        "name" : "WazirX Token"
+    },
+    {
+        "symbol" : "XBASE",
+        "decimalCount" : 8,
+        "contractAddress" : "XBASE-CD2",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/XBASE-CD2/logo.png",
+        "name" : "Eterbase Coin"
+    },
+    {
+        "symbol" : "XRP",
+        "decimalCount" : 8,
+        "contractAddress" : "XRP-BF2",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/XRP-BF2/logo.png",
+        "name" : "XRP BEP2"
+    },
+    {
+        "symbol" : "XRPBEAR",
+        "decimalCount" : 8,
+        "contractAddress" : "XRPBEAR-00B",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/XRPBEAR-00B/logo.png",
+        "name" : "3X Short XRP Token"
+    },
+    {
+        "symbol" : "XRPBULL",
+        "decimalCount" : 8,
+        "contractAddress" : "XRPBULL-E7C",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/XRPBULL-E7C/logo.png",
+        "name" : "3X Long XRP Token"
+    },
+    {
+        "symbol" : "XTZ",
+        "decimalCount" : 8,
+        "contractAddress" : "XTZ-F7A",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/XTZ-F7A/logo.png",
+        "name" : "XTZ BEP2"
+    },
+    {
+        "symbol" : "XVS",
+        "decimalCount" : 8,
+        "contractAddress" : "XVS-795",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/XVS-795/logo.png",
+        "name" : "Venus"
+    },
+    {
+        "symbol" : "YFII",
+        "decimalCount" : 8,
+        "contractAddress" : "YFII-061",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/YFII-061/logo.png",
+        "name" : "YFIIBEP2"
+    },
+    {
+        "symbol" : "ZEBI",
+        "decimalCount" : 8,
+        "contractAddress" : "ZEBI-84F",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/ZEBI-84F/logo.png",
+        "name" : "ZEBI"
+    },
+    {
+        "symbol" : "ZEC",
+        "decimalCount" : 8,
+        "contractAddress" : "ZEC-93E",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        },
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/ZEC-93E/logo.png",
+        "name" : "ZECBEP2"
+    }
+]
