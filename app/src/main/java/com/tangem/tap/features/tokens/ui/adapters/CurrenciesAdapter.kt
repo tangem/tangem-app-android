@@ -11,7 +11,6 @@ import com.squareup.picasso.Picasso
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.tap.common.extensions.*
-import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.domain.tokens.CardCurrencies
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.store
@@ -175,11 +174,17 @@ sealed class CurrencyListItem {
             tokens: List<Token>
         ): List<CurrencyListItem> {
             val blockchainsTitle = R.string.add_tokens_subtitle_blockchains
-            val tokensTitle = R.string.add_tokens_subtitle_tokens
+            val ethereumTokensTitle = R.string.add_tokens_subtitle_ethereum_tokens
+            val bscTokensTitle = R.string.add_tokens_subtitle_bsc_tokens
+
+            val ethereumTokens = tokens.filter { it.blockchain == Blockchain.Ethereum }
+            val bscTokens = tokens.filter { it.blockchain == Blockchain.BSC }
             return listOf(TitleListItem(blockchainsTitle)) +
                     blockchains.map { BlockchainListItem(it) } +
-                    listOf(TitleListItem(tokensTitle)) +
-                    tokens.map { TokenListItem(it) }
+                    listOf(TitleListItem(ethereumTokensTitle)) +
+                    ethereumTokens.map { TokenListItem(it) } +
+                    listOf(TitleListItem(bscTokensTitle)) +
+                    bscTokens.map { TokenListItem(it) }
         }
     }
 }
