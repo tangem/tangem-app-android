@@ -13,8 +13,9 @@ fun Card.getToken(): Token? {
     val symbol = cardData?.tokenSymbol ?: return null
     val contractAddress = cardData?.tokenContractAddress ?: return null
     val decimals = cardData?.tokenDecimal ?: return null
+    val blockchain = cardData?.blockchainName?.let { Blockchain.fromId(it) } ?: return null
     if (symbol.isBlank() || contractAddress.isBlank()) return null
-    return Token(symbol, contractAddress, decimals)
+    return Token(symbol, symbol, contractAddress, decimals, blockchain) // TODO: change to constructor without tokenName
 }
 
 fun Card.getBlockchain(): Blockchain? {
