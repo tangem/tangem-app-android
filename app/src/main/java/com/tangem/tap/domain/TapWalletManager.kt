@@ -69,7 +69,7 @@ class TapWalletManager {
     suspend fun loadFiatRate(fiatCurrency: FiatCurrencyName, wallet: Wallet) {
         Timber.d(wallet.getTokens().toString())
         val currencies = wallet.getTokens()
-            .map { Currency.Token(it, wallet.blockchain) }
+            .map { Currency.Token(it) }
             .plus(Currency.Blockchain(wallet.blockchain))
         loadFiatRate(fiatCurrency, currencies)
     }
@@ -186,18 +186,18 @@ class TapWalletManager {
     private fun loadMultiWalletData(
             card: Card, primaryBlockchain: Blockchain?, primaryWalletManager: WalletManager?
     ) {
-        val presetTokens = primaryWalletManager?.presetTokens ?: emptySet()
+        val primaryTokens = primaryWalletManager?.cardTokens ?: emptySet()
         val savedCurrencies = currenciesRepository.loadCardCurrencies(card.cardId)
 
         if (savedCurrencies == null) {
             if (primaryBlockchain != null && primaryWalletManager != null) {
                 store.dispatch(WalletAction.MultiWallet.SaveCurrencies(
                         CardCurrencies(
-                                blockchains = setOf(primaryBlockchain), tokens = presetTokens
+                                blockchains = setOf(primaryBlockchain), tokens = primaryTokens
                         )))
                 store.dispatch(WalletAction.MultiWallet.AddWalletManagers(primaryWalletManager))
                 store.dispatch(WalletAction.MultiWallet.AddBlockchains(listOf(primaryBlockchain)))
-                store.dispatch(WalletAction.MultiWallet.AddTokens(presetTokens.toList()))
+                store.dispatch(WalletAction.MultiWallet.AddTokens(primaryTokens.toList()))
             } else {
                 val blockchains = setOf(Blockchain.Bitcoin, Blockchain.Ethereum)
                 store.dispatch(WalletAction.MultiWallet.SaveCurrencies(
@@ -213,7 +213,7 @@ class TapWalletManager {
         } else {
             val blockchains = savedCurrencies.blockchains.toList()
             val walletManagers = if (
-                presetTokens.isNotEmpty() &&
+                primaryTokens.isNotEmpty() &&
                 primaryWalletManager != null && primaryBlockchain != null
             ) {
                 val blockchainsWithoutPrimary = blockchains.filterNot { it == primaryBlockchain }
