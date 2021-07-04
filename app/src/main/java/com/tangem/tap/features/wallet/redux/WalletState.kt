@@ -50,19 +50,7 @@ data class WalletState(
 
     fun getWalletManager(token: Token?): WalletManager? {
         if (token == null) return null
-        val ethereumWalletManager = walletManagers
-            .find { it.wallet.blockchain == Blockchain.Ethereum ||
-                    it.wallet.blockchain == Blockchain.EthereumTestnet }
-        return if (ethereumWalletManager?.presetTokens?.contains(token) == true) {
-            ethereumWalletManager
-        } else {
-            val primaryWalletManager = walletManagers.find { it.wallet.blockchain == primaryBlockchain }
-            if (primaryWalletManager?.presetTokens?.contains(token) == true) {
-                primaryWalletManager
-            } else {
-                ethereumWalletManager
-            }
-        }
+        return walletManagers.find { it.wallet.blockchain == token.blockchain }
     }
 
     fun getWalletManager(currency: Currency?) : WalletManager? {
@@ -101,7 +89,7 @@ data class WalletState(
                     ?: return true
 
             if (walletData.currency is Currency.Blockchain &&
-                walletManager.presetTokens.isNotEmpty()
+                walletManager.cardTokens.isNotEmpty()
             ) {
                 return false
             }
@@ -233,9 +221,9 @@ sealed interface Currency {
     val currencySymbol: CryptoCurrencyName
 
     data class Token(
-        val token: com.tangem.blockchain.common.Token,
-        override val blockchain: com.tangem.blockchain.common.Blockchain
+        val token: com.tangem.blockchain.common.Token
     ) : Currency {
+        override val blockchain = token.blockchain
         override val currencySymbol: CryptoCurrencyName = token.symbol
     }
 
