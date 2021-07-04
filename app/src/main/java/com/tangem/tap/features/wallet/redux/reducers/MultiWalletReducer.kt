@@ -166,9 +166,6 @@ fun Token.toWallet(state: WalletState): WalletData? {
         walletAddresses = walletAddresses,
         mainButton = WalletMainButton.SendButton(false),
         topUpState = TopUpState(allowed = false),
-        currency = Currency.Token(
-            token = this,
-            blockchain = walletManager?.blockchain ?: Blockchain.Ethereum
-        )
+        currency = Currency.Token(this)
     )
 }
