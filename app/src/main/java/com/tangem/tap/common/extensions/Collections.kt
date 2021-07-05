@@ -9,3 +9,9 @@ fun <T> List<T>.containsAny(list: List<T>): Boolean {
     }
     return false
 }
+
+fun <T> MutableList<T>.removeBy(predicate: (T) -> Boolean): Boolean {
+    val toRemove = this.filter(predicate)
+    this.removeAll(toRemove)
+    return toRemove.isNotEmpty()
+}
