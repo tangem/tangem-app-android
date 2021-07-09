@@ -2,6 +2,7 @@ package com.tangem.tap.domain.tokens
 
 import android.app.Application
 import android.content.Context
+import com.squareup.moshi.Json
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Types
@@ -13,11 +14,14 @@ import com.tangem.tap.network.createMoshi
 
 class CurrenciesRepository(val context: Application) {
     private val moshi = createMoshi()
+    private val blockchainsAdapter: JsonAdapter<Set<Blockchain>> = moshi.adapter(
+        Types.newParameterizedType(Set::class.java, Blockchain::class.java)
+    )
     private val tokensAdapter: JsonAdapter<Set<TokenDao>> = moshi.adapter(
         Types.newParameterizedType(Set::class.java, TokenDao::class.java)
     )
-    private val blockchainsAdapter: JsonAdapter<Set<Blockchain>> = moshi.adapter(
-        Types.newParameterizedType(Set::class.java, Blockchain::class.java)
+    private val obsoleteTokensAdapter: JsonAdapter<Set<ObsoleteTokenDao>> = moshi.adapter(
+        Types.newParameterizedType(Set::class.java, ObsoleteTokenDao::class.java)
     )
 
     fun loadCardCurrencies(cardId: String): CardCurrencies? {
@@ -57,11 +61,20 @@ class CurrenciesRepository(val context: Application) {
     }
 
     private fun loadSavedTokens(cardId: String): Set<Token> {
+        val json = try {
+            context.readFileText(getFileNameForTokens(cardId))
+        } catch (exception: Exception) {
+            return emptySet()
+        }
+
         return try {
-            val json = context.readFileText(getFileNameForTokens(cardId))
             tokensAdapter.fromJson(json)!!.map { it.toToken() }.toSet()
         } catch (exception: Exception) {
-            emptySet()
+            try {
+                obsoleteTokensAdapter.fromJson(json)!!.map { it.toToken() }.toSet()
+            } catch (exception: Exception) {
+                emptySet()
+            }
         }
     }
 
@@ -94,12 +107,20 @@ class CurrenciesRepository(val context: Application) {
     }
 
     fun getPopularTokens(isTestNet: Boolean = false): List<Token> {
-        val fileName = if (isTestNet) TESTNET_TOKENS_FILE_NAME else POPULAR_TOKENS_FILE_NAME
-        val json = context.assets.readJsonFileToString(fileName)
-        return tokensAdapter.fromJson(json)!!.map { it.toToken() }
+        val ethereumTokensFileName =
+            if (isTestNet) ETHEREUM_TESTNET_TOKENS_FILE_NAME else ETHEREUM_TOKENS_FILE_NAME
+        val bscTokensFileName =
+            if (isTestNet) BSC_TESTNET_TOKENS_FILE_NAME else BSC_TOKENS_FILE_NAME
+        val ethereumTokensJson = context.assets.readJsonFileToString(ethereumTokensFileName)
+        val bscTokensJson = context.assets.readJsonFileToString(bscTokensFileName)
+        return tokensAdapter.fromJson(ethereumTokensJson)!!.map { it.toToken() } +
+                tokensAdapter.fromJson(bscTokensJson)!!.map { it.toToken() }
     }
 
-    fun getBlockchains(cardFirmware: FirmwareVersion?, isTestNet: Boolean = false): List<Blockchain> {
+    fun getBlockchains(
+        cardFirmware: FirmwareVersion?,
+        isTestNet: Boolean = false
+    ): List<Blockchain> {
         return if (cardFirmware == null || cardFirmware.major < 4) {
             Blockchain.secp256k1Blockchains(isTestNet)
         } else {
@@ -108,8 +129,10 @@ class CurrenciesRepository(val context: Application) {
     }
 
     companion object {
-        private const val POPULAR_TOKENS_FILE_NAME = "erc20_tokens"
-        private const val TESTNET_TOKENS_FILE_NAME = "ethereum_tokens_testnet"
+        private const val ETHEREUM_TOKENS_FILE_NAME = "ethereum_tokens"
+        private const val ETHEREUM_TESTNET_TOKENS_FILE_NAME = "ethereum_tokens_testnet"
+        private const val BSC_TOKENS_FILE_NAME = "bsc_tokens"
+        private const val BSC_TESTNET_TOKENS_FILE_NAME = "bsc_tokens_testnet"
         private const val FILE_NAME_PREFIX_TOKENS = "tokens"
         private const val FILE_NAME_PREFIX_BLOCKCHAINS = "blockchains"
 
@@ -119,29 +142,75 @@ class CurrenciesRepository(val context: Application) {
     }
 }
 
-
 @JsonClass(generateAdapter = true)
 data class TokenDao(
     val name: String,
     val symbol: String,
     val contractAddress: String,
     val decimalCount: Int,
+    @Json(name = "blockchain")
+    val blockchainDao: BlockchainDao
 ) {
     fun toToken(): Token {
-        return Token(name = name,
+        return Token(
+            name = name,
             symbol = symbol,
             contractAddress = contractAddress,
-            decimals = decimalCount)
+            decimals = decimalCount,
+            blockchain = blockchainDao.toBlockchain()
+        )
     }
 
     companion object {
         fun fromToken(token: Token): TokenDao {
-            return TokenDao(name = token.name,
+            return TokenDao(
+                name = token.name,
                 symbol = token.symbol,
                 contractAddress = token.contractAddress,
-                decimalCount = token.decimals)
-
+                decimalCount = token.decimals,
+                blockchainDao = BlockchainDao.fromBlockchain(token.blockchain)
+            )
         }
+    }
+}
+
+@JsonClass(generateAdapter = true)
+data class BlockchainDao(
+    @Json(name = "key")
+    val name: String,
+    @Json(name = "testnet")
+    val isTestNet: Boolean
+) {
+    fun toBlockchain(): Blockchain {
+        val blockchain = Blockchain.values().find { it.name.lowercase() == name.lowercase() }
+            ?: throw Exception("Invalid BlockchainDao")
+        return if (!isTestNet) blockchain else blockchain.getTestnetVersion()
+            ?: throw Exception("Invalid BlockchainDao")
+    }
+
+    companion object {
+        fun fromBlockchain(blockchain: Blockchain): BlockchainDao {
+            val name = blockchain.name.removeSuffix("Testnet").lowercase()
+            val isTestnet = blockchain.name.endsWith("Testnet")
+            return BlockchainDao(name, isTestnet)
+        }
+    }
+}
+
+@JsonClass(generateAdapter = true)
+data class ObsoleteTokenDao(
+    val name: String,
+    val symbol: String,
+    val contractAddress: String,
+    val decimalCount: Int,
+) {
+    fun toToken(): Token {
+        return Token(
+            name = name,
+            symbol = symbol,
+            contractAddress = contractAddress,
+            decimals = decimalCount
+        )
     }
 }
 
@@ -151,8 +220,10 @@ data class CardCurrenciesDao(
     val blockchains: Set<Blockchain>,
 ) {
     fun toCardCurrencies(): CardCurrencies {
-        return CardCurrencies(tokens = tokens.map { it.toToken() }.toSet(),
-            blockchains = blockchains)
+        return CardCurrencies(
+            tokens = tokens.map { it.toToken() }.toSet(),
+            blockchains = blockchains
+        )
     }
 
     companion object {
