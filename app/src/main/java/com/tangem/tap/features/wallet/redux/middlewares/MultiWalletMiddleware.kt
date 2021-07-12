@@ -160,7 +160,7 @@ class MultiWalletMiddleware {
         val walletManager = walletState?.getWalletManager(token)
             ?: globalState.tapWalletManager.walletManagerFactory.makeWalletManagerForApp(
                 card = card,
-                blockchain = Blockchain.Ethereum
+                blockchain = token.blockchain
             )?.also { walletManager ->
                 store.dispatch(WalletAction.MultiWallet.AddWalletManagers(walletManager))
                 store.dispatch(WalletAction.MultiWallet.AddBlockchain(walletManager.wallet.blockchain))
