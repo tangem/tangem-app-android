@@ -111,10 +111,16 @@ class CurrenciesRepository(val context: Application) {
             if (isTestNet) ETHEREUM_TESTNET_TOKENS_FILE_NAME else ETHEREUM_TOKENS_FILE_NAME
         val bscTokensFileName =
             if (isTestNet) BSC_TESTNET_TOKENS_FILE_NAME else BSC_TOKENS_FILE_NAME
+        val binanceTokensFileName =
+            if (isTestNet) BINANCE_TESTNET_TOKENS_FILE_NAME else BINANCE_TOKENS_FILE_NAME
+
         val ethereumTokensJson = context.assets.readJsonFileToString(ethereumTokensFileName)
         val bscTokensJson = context.assets.readJsonFileToString(bscTokensFileName)
+        val binanceTokensJson = context.assets.readJsonFileToString(binanceTokensFileName)
+
         return tokensAdapter.fromJson(ethereumTokensJson)!!.map { it.toToken() } +
-                tokensAdapter.fromJson(bscTokensJson)!!.map { it.toToken() }
+                tokensAdapter.fromJson(bscTokensJson)!!.map { it.toToken() } +
+                tokensAdapter.fromJson(binanceTokensJson)!!.map { it.toToken() }
     }
 
     fun getBlockchains(
@@ -133,6 +139,8 @@ class CurrenciesRepository(val context: Application) {
         private const val ETHEREUM_TESTNET_TOKENS_FILE_NAME = "ethereum_tokens_testnet"
         private const val BSC_TOKENS_FILE_NAME = "bsc_tokens"
         private const val BSC_TESTNET_TOKENS_FILE_NAME = "bsc_tokens_testnet"
+        private const val BINANCE_TOKENS_FILE_NAME = "binance_tokens"
+        private const val BINANCE_TESTNET_TOKENS_FILE_NAME = "binance_tokens_testnet"
         private const val FILE_NAME_PREFIX_TOKENS = "tokens"
         private const val FILE_NAME_PREFIX_BLOCKCHAINS = "blockchains"
 
