@@ -132,6 +132,7 @@ sealed class ReceiptAction : SendScreenAction {
 
 sealed class SendActionUi : SendScreenActionUi {
     data class SendAmountToRecipient(val messageForSigner: Message) : SendScreenActionUi
+    object CheckIfTransactionDataWasProvided : SendScreenActionUi
 }
 
 sealed class SendAction : SendScreenAction {
@@ -158,4 +159,11 @@ sealed class SendAction : SendScreenAction {
         object Update : SendAction()
         data class Set(val warningList: List<WarningMessage>) : SendAction()
     }
+
+    data class SendSpecificTransaction(
+        val sendAmount: String,
+        val destinationAddress: String,
+        val transactionId: String
+    ) : SendAction()
+
 }
