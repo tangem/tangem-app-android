@@ -50,7 +50,6 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                     WalletData(
                         currencyData = BalanceWidgetData(BalanceStatus.EmptyCard),
                         mainButton = WalletMainButton.CreateWalletButton(creatingWalletAllowed),
-                        topUpState = TopUpState(false)
                     )
                 )
             )
@@ -78,7 +77,6 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                         wallets = listOf(
                             WalletData(
                                 currencyData = BalanceWidgetData(BalanceStatus.UnknownBlockchain),
-                                topUpState = TopUpState(false)
                             )
                         )
                     )
@@ -95,6 +93,7 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
         is WalletAction.LoadWallet -> {
             if (action.blockchain == null) {
                 val wallets = newState.wallets.map { wallet ->
+
                     wallet.copy(
                         currencyData = wallet.currencyData.copy(
                             status = BalanceStatus.Loading,
@@ -102,15 +101,22 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                             currencySymbol = wallet.currencyData.currencySymbol,
                         ),
                         mainButton = WalletMainButton.SendButton(false),
-                        topUpState = TopUpState(
-                            allowed = action.allowTopUp
-                                ?: wallet.topUpState.allowed
+                        tradeCryptoState = TradeCryptoState(
+                            sellingAllowed = action.allowToSell ?: wallet.tradeCryptoState.sellingAllowed &&
+                                    state.walletState.tradeCryptoAllowed.availableToSell.contains(wallet.currencyData.currencySymbol),
+                            buyingAllowed = action.allowToBuy
+                                ?: wallet.tradeCryptoState.buyingAllowed
                         )
                     )
                 }
+                val tradeCryptoAllowed = TradeCryptoAvailability(
+                    sellingAllowed = action.allowToSell ?: false,
+                    buyingAllowed = action.allowToBuy ?: false
+                )
                 newState = newState.copy(
                     state = ProgressState.Loading,
-                    wallets = wallets
+                    wallets = wallets,
+                    tradeCryptoAllowed = tradeCryptoAllowed
                 )
             } else {
                 val walletManager = newState.getWalletManager(action.blockchain) ?: return newState
@@ -126,8 +132,11 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                                 currencySymbol = wallet.currencyData.currencySymbol,
                             ),
                             mainButton = WalletMainButton.SendButton(false),
-                            topUpState = TopUpState(
-                                allowed = action.allowTopUp ?: wallet.topUpState.allowed
+                            tradeCryptoState = TradeCryptoState(
+                                sellingAllowed = action.allowToSell ?: wallet.tradeCryptoState.sellingAllowed &&
+                                        state.walletState.tradeCryptoAllowed.availableToSell.contains(wallet.currencyData.currencySymbol),
+                                buyingAllowed = action.allowToBuy
+                                    ?: wallet.tradeCryptoState.buyingAllowed
                             )
                         )
                     }
@@ -172,7 +181,6 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                     status = BalanceStatus.Unreachable,
                     errorMessage = message
                 ),
-                topUpState = TopUpState(false)
             )
             val tokenWallets = action.wallet.getTokens()
                 .mapNotNull { newState.getWalletData(it) }
@@ -242,6 +250,9 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
         is WalletAction.ShowDialog.SignedHashesMultiWalletDialog -> {
             newState = newState.copy(walletDialog = WalletDialog.SignedHashesMultiWalletDialog)
         }
+        is WalletAction.ShowDialog.ChooseTradeActionDialog -> {
+            newState = newState.copy(walletDialog = WalletDialog.ChooseTradeActionDialog)
+        }
         is WalletAction.HideDialog -> {
             newState = newState.copy(walletDialog = null)
         }
@@ -251,7 +262,7 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
             )
         }
         is WalletAction.Send.Cancel -> newState = newState.copy(walletDialog = null)
-        is WalletAction.TopUpAction -> return newState
+        is WalletAction.TradeCryptoAction -> return newState
         is WalletAction.ChangeSelectedAddress -> {
             val selectedWalletData = newState.getWalletData(newState.selectedWallet)
 
