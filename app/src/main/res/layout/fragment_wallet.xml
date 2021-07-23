@@ -13,7 +13,7 @@
         style="@style/Widget.MaterialComponents.Toolbar.Surface"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/backgroundLightGray"
+        android:background="@color/toolbarColor"
         android:fitsSystemWindows="true"
         app:liftOnScroll="true">
 
