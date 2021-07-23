@@ -86,11 +86,9 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
 
         btn_share.setOnClickListener { store.dispatch(WalletAction.ShowDialog.QrCode) }
 
-        btn_top_up.setOnClickListener {
-            store.dispatch(
-                    WalletAction.TopUpAction.TopUp(requireContext(), R.color.backgroundLightGray)
-            )
-        }
+        btn_top_up.setOnClickListener { store.dispatch(WalletAction.TradeCryptoAction.Buy) }
+
+        btn_sell.setOnClickListener { store.dispatch(WalletAction.TradeCryptoAction.Sell) }
     }
 
     override fun newState(state: WalletState) {
@@ -131,8 +129,9 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
         srl_wallet_details.setOnRefreshListener {
             if (selectedWallet.currencyData.status != BalanceStatus.Loading) {
                 store.dispatch(WalletAction.LoadWallet(
-                        selectedWallet.topUpState.allowed,
-                        selectedWallet.currency?.blockchain
+                        allowToBuy = selectedWallet.tradeCryptoState.buyingAllowed,
+                        allowToSell = selectedWallet.tradeCryptoState.sellingAllowed,
+                        blockchain = selectedWallet.currency?.blockchain
                 ))
             }
         }
@@ -140,6 +139,9 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
         if (selectedWallet.currencyData.status != BalanceStatus.Loading) {
             srl_wallet_details.isRefreshing = false
         }
+
+        btn_top_up.isEnabled = selectedWallet.tradeCryptoState.buyingAllowed
+        btn_sell.show(selectedWallet.tradeCryptoState.sellingAllowed)
     }
 
     private fun handleCurrencyIcon(wallet: WalletData) {
