@@ -20,7 +20,7 @@ object TapWorkarounds {
         val cardData = this.cardData ?: return false
         val productMask = cardData.productMask
         val excludedBatch = excludedBatches.contains(cardData.batchId)
-        val excludedIssuerName = excludedIssuers.contains(cardData.issuerName?.toUpperCase(Locale.US))
+        val excludedIssuerName = excludedIssuers.contains(cardData.issuerName?.uppercase(Locale.ROOT))
         val excludedProductMask = (productMask != null && // product mask is on cards v2.30 and later
                 !productMask.contains(Product.Note) && !productMask.contains(Product.TwinCard))
         return excludedBatch || excludedIssuerName || excludedProductMask
