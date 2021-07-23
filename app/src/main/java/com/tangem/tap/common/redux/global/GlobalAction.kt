@@ -9,6 +9,7 @@ import com.tangem.tap.domain.tasks.ScanNoteResponse
 import com.tangem.tap.features.details.redux.SecurityOption
 import com.tangem.tap.features.feedback.EmailData
 import com.tangem.tap.features.feedback.FeedbackManager
+import com.tangem.tap.network.moonpay.MoonPayUserStatus
 import org.rekotlin.Action
 
 sealed class GlobalAction : Action {
@@ -43,4 +44,8 @@ sealed class GlobalAction : Action {
 
     data class ShowDialog(val stateDialog: StateDialog) : GlobalAction()
     object HideDialog : GlobalAction()
+
+    object GetMoonPayUserStatus : GlobalAction() {
+        data class Success(val moonPayUserStatus: MoonPayUserStatus) : GlobalAction()
+    }
 }
