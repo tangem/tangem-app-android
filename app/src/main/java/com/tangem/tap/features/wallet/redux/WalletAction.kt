@@ -25,7 +25,11 @@ sealed class WalletAction : Action {
     }
 
 
-    data class LoadWallet(val allowTopUp: Boolean? = null, val blockchain: Blockchain? = null) : WalletAction() {
+    data class LoadWallet(
+        val allowToSell: Boolean? = null, val allowToBuy: Boolean? = null,
+        val blockchain: Blockchain? = null,
+    ) :
+        WalletAction() {
         data class Success(val wallet: Wallet) : WalletAction()
         data class NoAccount(val wallet: Wallet, val amountToCreateAccount: String) : WalletAction()
         data class Failure(val wallet: Wallet, val errorMessage: String? = null) : WalletAction()
@@ -39,13 +43,16 @@ sealed class WalletAction : Action {
         data class AddWalletManagers(val walletManagers: List<WalletManager>) : MultiWallet() {
             constructor(walletManager: WalletManager) : this(listOf(walletManager))
         }
+
         data class AddBlockchain(val blockchain: Blockchain) : MultiWallet()
         data class AddBlockchains(val blockchains: List<Blockchain>) : MultiWallet()
         data class AddTokens(val tokens: List<Token>) : MultiWallet()
         data class AddToken(val token: Token) : MultiWallet()
         data class SaveCurrencies(val cardCurrencies: CardCurrencies) : MultiWallet()
         object FindTokensInUse : MultiWallet()
-        data class FindBlockchainsInUse(val card: Card, val factory: WalletManagerFactory) : MultiWallet()
+        data class FindBlockchainsInUse(val card: Card, val factory: WalletManagerFactory) :
+            MultiWallet()
+
         data class TokenLoaded(val amount: Amount, val token: Token) : MultiWallet()
         data class SelectWallet(val walletData: WalletData?) : MultiWallet()
         data class RemoveWallet(val walletData: WalletData) : MultiWallet()
@@ -69,6 +76,7 @@ sealed class WalletAction : Action {
             object SetNeverToShow : Warnings()
             object RemindLater : Warnings()
         }
+
         class CheckRemainingSignatures(val remainingSignatures: Int?) : Warnings()
     }
 
@@ -79,7 +87,7 @@ sealed class WalletAction : Action {
     }
 
     data class LoadFiatRate(
-            val wallet: Wallet? = null, val currency: Currency? = null
+        val wallet: Wallet? = null, val currency: Currency? = null,
     ) : WalletAction() {
         data class Success(val fiatRate: Pair<Currency, BigDecimal?>) : WalletAction()
         object Failure : WalletAction()
@@ -114,6 +122,7 @@ sealed class WalletAction : Action {
         object QrCode : WalletAction()
         object ScanFails : WalletAction()
         object SignedHashesMultiWalletDialog : WalletAction()
+        object ChooseTradeActionDialog : WalletAction()
     }
 
     object HideDialog : WalletAction()
@@ -123,8 +132,16 @@ sealed class WalletAction : Action {
     object CreateWallet : WalletAction()
     object EmptyWallet : WalletAction()
 
-    sealed class TopUpAction : WalletAction() {
-        data class TopUp(val context: Context, val toolbarColor: Int) : TopUpAction()
+    sealed class TradeCryptoAction : WalletAction() {
+        object Buy : TradeCryptoAction()
+        object Sell : TradeCryptoAction()
+        data class FinishSelling(val transactionId: String) : TradeCryptoAction()
+        data class SendCrypto(
+            val currencyId: String,
+            val amount: String,
+            val destinationAddress: String,
+            val transactionId: String
+        ) : TradeCryptoAction()
     }
 
     data class ChangeSelectedAddress(val type: AddressType) : WalletAction()
@@ -133,8 +150,8 @@ sealed class WalletAction : Action {
         object ShowOnboarding : TwinsAction()
         object SetOnboardingShown : TwinsAction()
         data class SetTwinCard(
-                val secondCardId: String, val number: TwinCardNumber,
-                val isCreatingTwinCardsAllowed: Boolean,
+            val secondCardId: String, val number: TwinCardNumber,
+            val isCreatingTwinCardsAllowed: Boolean,
         ) : TwinsAction()
     }
 }
