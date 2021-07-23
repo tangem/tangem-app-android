@@ -10,6 +10,8 @@ sealed class NavigationAction : Action {
 
     data class PopBackTo(val screen: AppScreen? = null) : NavigationAction()
 
+    data class OpenUrl(val url: String) : NavigationAction()
+
     data class ActivityCreated(val activity: WeakReference<FragmentActivity>) : NavigationAction()
     object ActivityDestroyed : NavigationAction()
 }
