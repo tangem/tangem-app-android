@@ -156,6 +156,12 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
         val til = fg.tilAddressOrPayId
         val parsedError = parseError(til.context, state.error)
 
+        til.isEnabled = state.inputIsEnabled
+        fg.imvPaste.show(state.inputIsEnabled)
+        fg.imvQrCode.show(state.inputIsEnabled)
+        fg.flPaste.show(state.inputIsEnabled)
+        fg.flQrCode.show(state.inputIsEnabled)
+
         val hintResId = if (state.sendingToPayIdEnabled) {
             R.string.send_destination_hint_address_payid
         } else {
@@ -198,6 +204,14 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
                 state.mainCurrency.currencySymbol,
                 state.viewBalanceValue)
         fg.tvBalance.update(balanceText)
+
+        fg.tilAmountToSend.isEnabled = state.inputIsEnabled
+
+        val imageRes = if (state.inputIsEnabled) R.drawable.ic_arrows_up_down else 0
+        fg.tvAmountCurrency.setCompoundDrawablesWithIntrinsicBounds(0, 0, imageRes, 0)
+        val textColor =  if (state.inputIsEnabled) R.color.blue else R.color.textGray
+        fg.tvAmountCurrency.setTextColor(fg.getColor(textColor))
+
     }
 
     private fun handleFeeState(fg: BaseStoreFragment, state: FeeState) {
