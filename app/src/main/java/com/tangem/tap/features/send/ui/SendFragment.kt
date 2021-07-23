@@ -71,6 +71,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         setupAmountLayout()
         setupFeeLayout()
         setupWarningMessages()
+        store.dispatch(SendActionUi.CheckIfTransactionDataWasProvided)
     }
 
     private fun initSendButtonStates() {
@@ -250,7 +251,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         val sp = requireContext().getSharedPreferences("SendScreen", Context.MODE_PRIVATE)
         val mainCurrency = sp.getString("mainCurrency", TapCurrency.DEFAULT_FIAT_CURRENCY)
         val foundType = MainCurrencyType.values()
-                .firstOrNull { it.name.toLowerCase() == mainCurrency!!.toLowerCase() }
+                .firstOrNull { it.name.equals(mainCurrency!!, ignoreCase = true) }
                 ?: MainCurrencyType.CRYPTO
         return foundType
     }
