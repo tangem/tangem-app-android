@@ -1,5 +1,7 @@
 <resources>
-    <string name="wallet_button_topup" translatable="false">Top Up</string>
+    <string name="wallet_button_buy" translatable="false">Buy</string>
+    <string name="wallet_button_sell" translatable="false">Sell</string>
+    <string name="wallet_button_trade" translatable="false">Trade</string>
     <string name="wallet_address_chip_default" translatable="false">Default</string>
     <string name="wallet_address_chip_compatibility" translatable="false">Compatibility</string>
     <string name="wallet_address_chip_legacy" translatable="false">Legacy</string>
@@ -160,4 +162,7 @@ this wallet.
     <string name="wallet_connect_error_timeout" translatable="false">Failed to establish WalletConnect session: timeout error. Please, try again later.</string>
 
     <string name="warning_testnet_card_message" translatable="false">This is a Testnet card. Don\'t accept it as a payment. This card must only be used for testing and development purposes.</string>
+
+
+    <string name="wallet_dialog_choose_trade_action" translatable="false">Do you want to buy or sell crypto?</string>
 </resources>
