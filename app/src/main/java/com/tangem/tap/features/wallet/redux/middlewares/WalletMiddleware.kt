@@ -28,7 +28,7 @@ import org.rekotlin.Action
 import org.rekotlin.Middleware
 
 class WalletMiddleware {
-    private val topUpMiddleware = TopUpMiddleware()
+    private val tradeCryptoMiddleware = TradeCryptoMiddleware()
     private val twinsMiddleware = TwinsMiddleware()
     private val warningsMiddleware = WarningsMiddleware()
     private val multiWalletMiddleware = MultiWalletMiddleware()
@@ -39,7 +39,7 @@ class WalletMiddleware {
                 val globalState = state()?.globalState
                 val walletState = state()?.walletState
                 when (action) {
-                    is WalletAction.TopUpAction -> topUpMiddleware.handle(action)
+                    is WalletAction.TradeCryptoAction -> tradeCryptoMiddleware.handle(action)
                     is WalletAction.TwinsAction -> twinsMiddleware.handle(action)
                     is WalletAction.Warnings -> warningsMiddleware.handle(action, globalState)
                     is WalletAction.MultiWallet ->
