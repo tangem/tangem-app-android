@@ -9,6 +9,7 @@ import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.common.redux.global.StateDialog
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.extensions.toSendableAmounts
+import com.tangem.tap.domain.topup.TradeCryptoHelper
 import com.tangem.tap.domain.twins.TwinCardNumber
 import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.models.toPendingTransactions
@@ -34,6 +35,7 @@ data class WalletState(
         val primaryBlockchain: Blockchain? = null,
         val primaryToken: Token? = null,
         val isTestnet: Boolean = false,
+        val tradeCryptoAllowed: TradeCryptoAvailability = TradeCryptoAvailability()
 ) : StateType {
 
     val primaryWallet = if (wallets.isNotEmpty()) wallets[0] else null
@@ -141,6 +143,7 @@ sealed class WalletDialog: StateDialog {
     data class SelectAmountToSendDialog(val amounts: List<Amount>?) : WalletDialog()
     object ScanFailsDialog : WalletDialog()
     object SignedHashesMultiWalletDialog : WalletDialog()
+    object ChooseTradeActionDialog : WalletDialog()
 }
 
 enum class ProgressState { Loading, Done, Error }
@@ -180,10 +183,15 @@ data class Artwork(
     }
 }
 
-data class TopUpState(
-        val allowed: Boolean = true,
-        val url: String? = null,
-        val redirectUrl: String? = null
+data class TradeCryptoState(
+    val sellingAllowed: Boolean = false,
+    val buyingAllowed: Boolean = false,
+)
+
+data class TradeCryptoAvailability(
+    val sellingAllowed: Boolean = false,
+    val buyingAllowed: Boolean = false,
+    val availableToSell: Set<String> = TradeCryptoHelper.AVAILABLE_TO_SELL,
 )
 
 data class TwinCardsState(
@@ -194,17 +202,17 @@ data class TwinCardsState(
 )
 
 data class WalletData(
-        val pendingTransactions: List<PendingTransaction> = emptyList(),
-        val hashesCountVerified: Boolean? = null,
-        val walletAddresses: WalletAddresses? = null,
-        val currencyData: BalanceWidgetData = BalanceWidgetData(),
-        val updatingWallet: Boolean = false,
-        val topUpState: TopUpState = TopUpState(),
-        val allowToSend: Boolean = true,
-        val fiatRateString: String? = null,
-        val fiatRate: BigDecimal? = null,
-        val mainButton: WalletMainButton = WalletMainButton.SendButton(false),
-        val currency: Currency? = null
+    val pendingTransactions: List<PendingTransaction> = emptyList(),
+    val hashesCountVerified: Boolean? = null,
+    val walletAddresses: WalletAddresses? = null,
+    val currencyData: BalanceWidgetData = BalanceWidgetData(),
+    val updatingWallet: Boolean = false,
+    val tradeCryptoState: TradeCryptoState = TradeCryptoState(),
+    val allowToSend: Boolean = true,
+    val fiatRateString: String? = null,
+    val fiatRate: BigDecimal? = null,
+    val mainButton: WalletMainButton = WalletMainButton.SendButton(false),
+    val currency: Currency? = null
 ) {
     fun shouldShowMultipleAddress(): Boolean {
         val listOfAddresses = walletAddresses?.list ?: return false
