@@ -9,6 +9,7 @@ import androidx.fragment.app.Fragment
 import androidx.transition.TransitionInflater
 import com.google.android.material.snackbar.Snackbar
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fragment_wallet.*
@@ -28,7 +29,14 @@ abstract class BaseStoreFragment(layoutId: Int) : Fragment(layoutId) {
         super.onCreate(savedInstanceState)
         activity?.onBackPressedDispatcher?.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                store.dispatch(NavigationAction.PopBackTo())
+                val externalTransactionData = store.state.sendState.externalTransactionData
+                if (externalTransactionData == null) {
+                    store.dispatch(NavigationAction.PopBackTo())
+                } else {
+                    store.dispatch(
+                        WalletAction.TradeCryptoAction.FinishSelling(externalTransactionData.transactionId)
+                    )
+                }
             }
         })
         val inflater = TransitionInflater.from(requireContext())
@@ -43,7 +51,7 @@ abstract class BaseStoreFragment(layoutId: Int) : Fragment(layoutId) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        toolbar.setNavigationOnClickListener { store.dispatch(NavigationAction.PopBackTo()) }
+        toolbar.setNavigationOnClickListener { activity?.onBackPressed() }
     }
 
     override fun onStart() {
