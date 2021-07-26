@@ -30,6 +30,11 @@ fun Fragment.getColor(@ColorRes colorRes: Int): Int {
     return ContextCompat.getColor(requireContext(), colorRes)
 }
 
+@ColorInt
+fun Context.getColorCompat(@ColorRes colorRes: Int): Int {
+    return ContextCompat.getColor(this, colorRes)
+}
+
 fun View.getString(@StringRes id: Int): String {
     return context.getString(id)
 }
