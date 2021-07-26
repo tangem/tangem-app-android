@@ -40,7 +40,8 @@ data class SendState(
         val receiptState: ReceiptState = ReceiptState(),
         val sendWarningsList: List<WarningMessage> = listOf(),
         val sendButtonState: SendButtonState = SendButtonState.DISABLED,
-        val dialog: StateDialog? = null
+        val dialog: StateDialog? = null,
+        val externalTransactionData: ExternalTransactionData? = null
 ) : SendScreenState {
 
     override val stateId: StateId = StateId.SEND_SCREEN
@@ -131,7 +132,8 @@ data class AmountState(
         val cursorAtTheSamePosition: Boolean = true,
         val maxLengthOfAmount: Int = 2,
         val decimalSeparator: String = ".",
-        val error: TapError? = null
+        val error: TapError? = null,
+        val inputIsEnabled: Boolean = true,
 ) : SendScreenState {
 
     override val stateId: StateId = StateId.AMOUNT
@@ -166,4 +168,12 @@ data class MainCurrency(
         val type: MainCurrencyType,
         val currencySymbol: String,
         val isEnabled: Boolean = true
+)
+
+data class ExternalTransactionData(
+    val amount: String,
+    val destinationAddress: String,
+    val transactionId: String,
+    val canAmountBeModified: Boolean = false,
+    val canDestinationAddressBeModified: Boolean = false
 )

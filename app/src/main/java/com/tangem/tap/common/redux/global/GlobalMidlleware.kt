@@ -1,14 +1,19 @@
 package com.tangem.tap.common.redux.global
 
 import com.tangem.TangemSdkError
+import com.tangem.commands.common.network.Result
 import com.tangem.common.CompletionResult
+import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.send.redux.SendAction
 import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.network.moonpay.MoonpayService
 import com.tangem.tap.preferencesStorage
+import com.tangem.tap.scope
 import com.tangem.tap.store
+import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
 
 val globalMiddleware: Middleware<AppState> = { dispatch, appState ->
@@ -59,6 +64,19 @@ val globalMiddleware: Middleware<AppState> = { dispatch, appState ->
                 is GlobalAction.UpdateFeedbackInfo -> {
                     store.state.globalState.feedbackManager?.infoHolder
                         ?.setWalletsInfo(action.walletManagers)
+                }
+                is GlobalAction.GetMoonPayUserStatus -> {
+                    val apiKey = appState()?.globalState?.configManager?.config?.moonPayApiKey
+                    if (apiKey != null) {
+                        scope.launch {
+                            val userStatusResponse = MoonpayService().getUserStatus(apiKey)
+                            if (userStatusResponse is Result.Success) {
+                                store.dispatchOnMain(
+                                    GlobalAction.GetMoonPayUserStatus.Success(userStatusResponse.data)
+                                )
+                            }
+                        }
+                    }
                 }
             }
             nextDispatch(action)
