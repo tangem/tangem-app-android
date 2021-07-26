@@ -2,8 +2,8 @@ apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
-apply plugin: 'com.google.firebase.crashlytics'
 apply plugin: 'com.google.gms.google-services'
+apply plugin: 'com.google.firebase.crashlytics'
 
 android {
     compileSdkVersion 30
@@ -37,7 +37,7 @@ android {
             buildConfigField 'String', 'CONFIG_ENVIRONMENT', '\"dev\"'
         }
         debug_beta {
-            initWith debug
+            initWith release
             versionNameSuffix "-beta"
             applicationIdSuffix ".debug"
             buildConfigField 'String', 'CONFIG_ENVIRONMENT', '\"prod\"'
