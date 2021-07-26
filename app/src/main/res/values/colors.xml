@@ -5,6 +5,8 @@
     <color name="colorSecondary">#0022D4</color>
     <color name="accent">#1ACE80</color>
 
+    <color name="toolbarColor">@color/backgroundLightGray</color>
+
     <color name="tapButtonColor">@color/accent</color>
     <color name="tapButtonDisabled">#661ACE80</color>
     <color name="tapButtonColorBlack">@color/darkGray6</color>

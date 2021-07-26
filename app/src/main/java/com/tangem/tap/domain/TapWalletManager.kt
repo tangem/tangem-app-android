@@ -174,7 +174,11 @@ class TapWalletManager {
                         }
                     }
                     store.dispatch(WalletAction.SetArtworkId(data.verifyResponse?.artworkInfo?.id))
-                    store.dispatch(WalletAction.LoadWallet(config.isTopUpEnabled))
+                    val moonPayUserStatus = store.state.globalState.moonPayUserStatus
+                    store.dispatch(WalletAction.LoadWallet(
+                        allowToBuy = config.isTopUpEnabled && moonPayUserStatus?.isBuyAllowed == true,
+                        allowToSell = config.isTopUpEnabled && moonPayUserStatus?.isSellAllowed == true,
+                    ))
                     store.dispatch(WalletAction.LoadArtwork(data.card, artworkId))
                     store.dispatch(WalletAction.LoadFiatRate())
                 }
@@ -245,7 +249,11 @@ class TapWalletManager {
                         return@withContext
                     }
                     val config = store.state.globalState.configManager?.config ?: return@withContext
-                    store.dispatch(WalletAction.LoadWallet(config.isTopUpEnabled))
+                    val moonpayUserStatus = store.state.globalState.moonPayUserStatus
+                    store.dispatch(WalletAction.LoadWallet(
+                        allowToBuy = config.isTopUpEnabled && moonpayUserStatus?.isBuyAllowed == true,
+                        allowToSell = config.isTopUpEnabled && moonpayUserStatus?.isSellAllowed == true,
+                    ))
                     store.dispatch(WalletAction.LoadFiatRate())
                 }
             }
