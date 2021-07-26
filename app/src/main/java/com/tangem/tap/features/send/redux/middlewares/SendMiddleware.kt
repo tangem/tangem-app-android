@@ -9,6 +9,7 @@ import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.commands.common.card.Card
 import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
+import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -20,6 +21,8 @@ import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.extensions.minimalAmount
 import com.tangem.tap.features.send.redux.*
 import com.tangem.tap.features.send.redux.FeeAction.RequestFee
+import com.tangem.tap.features.send.redux.states.ExternalTransactionData
+import com.tangem.tap.features.send.redux.states.MainCurrencyType
 import com.tangem.tap.features.send.redux.states.SendButtonState
 import com.tangem.tap.features.send.redux.states.TransactionExtrasState
 import com.tangem.tap.features.wallet.redux.WalletAction
@@ -49,6 +52,18 @@ val sendMiddleware: Middleware<AppState> = { dispatch, appState ->
                     verifyAndSendTransaction(action, appState(), dispatch)
                 is PrepareSendScreen -> setIfSendingToPayIdEnabled(appState(), dispatch)
                 is SendAction.Warnings.Update -> updateWarnings(dispatch)
+                is SendActionUi.CheckIfTransactionDataWasProvided -> {
+                    val transactionData = appState()?.sendState?.externalTransactionData
+                    if (transactionData != null) {
+                        store.dispatchOnMain(AddressPayIdVerifyAction.AddressVerification.SetWalletAddress(
+                            transactionData.destinationAddress, false
+                        ))
+                        store.dispatchOnMain(AmountActionUi.SetMainCurrency(MainCurrencyType.CRYPTO))
+                        store.dispatchOnMain(AmountActionUi.HandleUserInput(transactionData.amount))
+                        store.dispatchOnMain(AmountAction.SetAmount(transactionData.amount.toBigDecimal(),
+                            false))
+                    }
+                }
             }
             nextDispatch(action)
         }
@@ -76,8 +91,11 @@ private fun verifyAndSendTransaction(
                 dispatch(AmountAction.SetAmount(typedAmount.value!!.minus(reduceAmount), false))
                 dispatch(AmountActionUi.CheckAmountToSend)
             }, sendAllCallback = {
-                sendTransaction(action, walletManager, amountToSend, feeAmount, destinationAddress,
-                        sendState.transactionExtrasState, card, dispatch)
+                sendTransaction(
+                    action, walletManager, amountToSend, feeAmount, destinationAddress,
+                    sendState.transactionExtrasState, card, sendState.externalTransactionData,
+                    dispatch
+                )
             }, reduceAmount))
         }
         transactionErrors.isNotEmpty() -> {
@@ -85,7 +103,7 @@ private fun verifyAndSendTransaction(
         }
         else -> {
             sendTransaction(action, walletManager, amountToSend, feeAmount, destinationAddress,
-                    sendState.transactionExtrasState, card, dispatch)
+                    sendState.transactionExtrasState, card, sendState.externalTransactionData, dispatch)
         }
     }
 }
@@ -98,6 +116,7 @@ private fun sendTransaction(
         destinationAddress: String,
         transactionExtras: TransactionExtrasState,
         card: Card,
+        externalTransactionData: ExternalTransactionData?,
         dispatch: (Action) -> Unit,
 ) {
     dispatch(SendAction.ChangeSendButtonState(SendButtonState.PROGRESS))
@@ -134,7 +153,12 @@ private fun sendTransaction(
                         blockchain = walletManager.wallet.blockchain
                     )
                     dispatch(SendAction.SendSuccess)
-                    dispatch(NavigationAction.PopBackTo())
+
+                    if (externalTransactionData != null) {
+                        dispatch(WalletAction.TradeCryptoAction.FinishSelling(externalTransactionData.transactionId))
+                    } else {
+                        dispatch(NavigationAction.PopBackTo())
+                    }
                     scope.launch(Dispatchers.IO) {
                         withContext(Dispatchers.Main) {
                             dispatch(WalletAction.UpdateWallet(walletManager.wallet.blockchain))
