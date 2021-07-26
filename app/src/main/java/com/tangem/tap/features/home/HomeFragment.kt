@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.View
 import androidx.fragment.app.Fragment
 import androidx.transition.TransitionInflater
+import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.global.StateDialog
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.home.redux.HomeDialog
@@ -66,6 +67,8 @@ class HomeFragment : Fragment(R.layout.fragment_home), StoreSubscriber<HomeState
 
         btn_yes?.setOnClickListener { store.dispatch(HomeAction.ReadCard) }
         btn_shop?.setOnClickListener { store.dispatch(HomeAction.GoToShop(requireContext())) }
+
+        store.dispatch(GlobalAction.GetMoonPayUserStatus)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
