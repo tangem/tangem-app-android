@@ -73,6 +73,9 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
         is GlobalAction.HideDialog -> {
             globalState.copy(dialog = null)
         }
+        is GlobalAction.GetMoonPayUserStatus.Success -> {
+            globalState.copy(moonPayUserStatus = action.moonPayUserStatus)
+        }
         else -> globalState
     }
 }
