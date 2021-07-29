@@ -15,6 +15,7 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.toHexString
 import com.tangem.tap.domain.TapSdkError
 import com.tangem.tap.domain.TapWorkarounds.isExcluded
+import com.tangem.tap.domain.TapWorkarounds.isMultiCurrencyWallet
 import com.tangem.tap.domain.extensions.getSingleWallet
 import com.tangem.tap.domain.extensions.getStatus
 import com.tangem.tap.domain.twins.TwinCardsManager
@@ -23,6 +24,7 @@ import com.tangem.tap.store
 import com.tangem.tasks.PreflightReadCapable
 import com.tangem.tasks.PreflightReadSettings
 import com.tangem.tasks.ScanTask
+import com.tangem.wallet.R
 
 data class ScanNoteResponse(
         val card: Card,
@@ -147,6 +149,8 @@ class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteRespons
         if (card.isExcluded()) return TapSdkError.CardForDifferentApp
         if (card.status == CardStatus.Purged) return TangemSdkError.WalletIsPurged()
         if (card.status == CardStatus.NotPersonalized) return TangemSdkError.NotPersonalized()
+        // Disable new multi-currency HD wallet cards on the old version of the app
+        if (card.isMultiCurrencyWallet()) return UpdateAppToUseThisCard()
         return null
     }
 
@@ -157,3 +161,13 @@ class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteRespons
     }
 
 }
+
+class UpdateAppToUseThisCard : TangemError {
+    override val code: Int = 50005
+    override var customMessage: String = code.toString()
+    override val messageResId: Int
+        get() = R.string.error_update_app
+
+}
+
+
