@@ -1,5 +1,6 @@
 package com.tangem.tap.domain
 
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.commands.common.card.Card
 import com.tangem.commands.common.card.EllipticCurve
 import com.tangem.commands.common.card.masks.Product
@@ -35,6 +36,19 @@ object TapWorkarounds {
     fun Card.isMultiCurrencyWallet(): Boolean {
         return multiCurrencyWalletsBatches.contains(cardData?.batchId)
     }
+
+    val Card.noteCurrency: Blockchain?
+        get() {
+            return when (cardData?.batchId) {
+                "AB01" -> Blockchain.Bitcoin
+                "AB02" -> Blockchain.Ethereum
+                "AB03" -> Blockchain.Cardano
+                "AB04" -> Blockchain.Dogecoin
+                "AB05" -> Blockchain.Binance
+                "AB06" -> Blockchain.XRP
+                else -> null
+            }
+        }
 
     private const val START_2_COIN_ISSUER = "start2coin"
 
