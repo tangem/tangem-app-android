@@ -165,9 +165,7 @@ class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteRespons
 class UpdateAppToUseThisCard : TangemError {
     override val code: Int = 50005
     override var customMessage: String = code.toString()
-    override val messageResId: Int
-        get() = R.string.error_update_app
-
+    override val messageResId: Int = R.string.error_update_app
 }
 
 
