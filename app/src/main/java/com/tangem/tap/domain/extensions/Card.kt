@@ -8,6 +8,7 @@ import com.tangem.commands.common.card.CardStatus
 import com.tangem.commands.wallet.CardWallet
 import com.tangem.commands.wallet.WalletStatus
 import com.tangem.common.TangemSdkConstants
+import com.tangem.tap.domain.TapWorkarounds.noteCurrency
 
 fun Card.getToken(): Token? {
     val symbol = cardData?.tokenSymbol ?: return null
@@ -18,6 +19,7 @@ fun Card.getToken(): Token? {
 }
 
 fun Card.getBlockchain(): Blockchain? {
+    if (noteCurrency != null) return noteCurrency
     val blockchainName: String = cardData?.blockchainName ?: return null
     return Blockchain.fromId(blockchainName)
 }
