@@ -42,7 +42,7 @@ object TapWorkarounds {
             return when (cardData?.batchId) {
                 "AB01" -> Blockchain.Bitcoin
                 "AB02" -> Blockchain.Ethereum
-                "AB03" -> Blockchain.Cardano
+                "AB03" -> Blockchain.CardanoShelley
                 "AB04" -> Blockchain.Dogecoin
                 "AB05" -> Blockchain.Binance
                 "AB06" -> Blockchain.XRP
