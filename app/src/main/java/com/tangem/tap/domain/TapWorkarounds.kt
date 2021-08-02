@@ -1,8 +1,10 @@
 package com.tangem.tap.domain
 
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.commands.common.card.Card
 import com.tangem.commands.common.card.EllipticCurve
 import com.tangem.commands.common.card.masks.Product
+import com.tangem.tap.domain.TapWorkarounds.isNote
 import com.tangem.tap.domain.TapWorkarounds.isStart2Coin
 import com.tangem.tap.domain.extensions.getSingleWallet
 import java.util.*
@@ -27,6 +29,27 @@ object TapWorkarounds {
 
     }
 
+    fun Card.isNote(): Boolean {
+        return notesBatches.contains(cardData?.batchId)
+    }
+
+    fun Card.isMultiCurrencyWallet(): Boolean {
+        return multiCurrencyWalletsBatches.contains(cardData?.batchId)
+    }
+
+    val Card.noteCurrency: Blockchain?
+        get() {
+            return when (cardData?.batchId) {
+                "AB01" -> Blockchain.Bitcoin
+                "AB02" -> Blockchain.Ethereum
+                "AB03" -> Blockchain.CardanoShelley
+                "AB04" -> Blockchain.Dogecoin
+                "AB05" -> Blockchain.Binance
+                "AB06" -> Blockchain.XRP
+                else -> null
+            }
+        }
+
     private const val START_2_COIN_ISSUER = "start2coin"
 
     private val excludedBatches = listOf(
@@ -39,12 +62,24 @@ object TapWorkarounds {
     private val excludedIssuers = listOf(
             "TTM BANK"
     )
+
+    private val notesBatches = listOf(
+        "AB01",
+        "AB02",
+        "AB03",
+        "AB04",
+        "AB05",
+        "AB06",
+    )
+
+    private val multiCurrencyWalletsBatches = listOf("AC01")
 }
 
 val Card.isMultiwalletAllowed: Boolean
     get() {
         return cardData?.productMask?.contains(Product.TwinCard) != true
                 && !isStart2Coin
+                && !isNote()
                 && (firmwareVersion.major >= 4 ||
                 getSingleWallet()?.curve == EllipticCurve.Secp256k1)
     }
