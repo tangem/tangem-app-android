@@ -2,7 +2,7 @@ package com.tangem.tap.features.send.redux.middlewares
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Wallet
-import com.tangem.commands.common.network.Result
+import com.tangem.common.services.Result
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.PayIdManager
 import com.tangem.tap.domain.isPayIdSupported
