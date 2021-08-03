@@ -1,11 +1,11 @@
 package com.tangem.tap.domain.twins
 
-import com.tangem.KeyPair
 import com.tangem.Message
-import com.tangem.TangemSdkError
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.common.CompletionResult
+import com.tangem.common.KeyPair
+import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
 import com.tangem.crypto.CryptoUtils
@@ -27,7 +27,7 @@ class TwinCardsManager(private val scanNoteResponse: ScanNoteResponse) {
         )
         when (response) {
             is CompletionResult.Success -> {
-                currentCardPublicKey = response.data.walletPublicKey.toHexString()
+                currentCardPublicKey = response.data.wallet.publicKey.toHexString()
                 return SimpleResult.Success
             }
             is CompletionResult.Failure -> {
@@ -56,7 +56,7 @@ class TwinCardsManager(private val scanNoteResponse: ScanNoteResponse) {
         )
         when (response) {
             is CompletionResult.Success -> {
-                secondCardPublicKey = response.data.walletPublicKey.toHexString()
+                secondCardPublicKey = response.data.wallet.publicKey.toHexString()
                 return SimpleResult.Success
             }
             is CompletionResult.Failure -> {
