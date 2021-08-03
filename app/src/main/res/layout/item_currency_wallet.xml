@@ -152,12 +152,12 @@
                 android:id="@+id/tv_amount_fiat"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
                 android:textColor="@color/darkGray2"
                 android:textSize="14sp"
-                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintBottom_toBottomOf="@id/tv_exchange_rate"
+                app:layout_constraintTop_toTopOf="@id/tv_exchange_rate"
                 app:layout_constraintEnd_toEndOf="parent"
                 tools:text="0.43 USD" />
 
