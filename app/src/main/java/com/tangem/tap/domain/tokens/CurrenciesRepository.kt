@@ -8,7 +8,7 @@ import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Types
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
-import com.tangem.commands.common.card.FirmwareVersion
+import com.tangem.common.card.FirmwareVersion
 import com.tangem.tap.common.extensions.readJsonFileToString
 import com.tangem.tap.network.createMoshi
 
@@ -127,7 +127,7 @@ class CurrenciesRepository(val context: Application) {
         cardFirmware: FirmwareVersion?,
         isTestNet: Boolean = false
     ): List<Blockchain> {
-        return if (cardFirmware == null || cardFirmware.major < 4) {
+        return if (cardFirmware == null || cardFirmware < FirmwareVersion.MultiWalletAvailable) {
             Blockchain.secp256k1Blockchains(isTestNet)
         } else {
             Blockchain.secp256k1Blockchains(isTestNet) + Blockchain.ed25519OnlyBlockchains(isTestNet)
