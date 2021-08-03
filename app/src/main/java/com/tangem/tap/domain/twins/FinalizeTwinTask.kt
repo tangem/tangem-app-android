@@ -1,18 +1,17 @@
 package com.tangem.tap.domain.twins
 
-import com.tangem.CardSession
-import com.tangem.CardSessionRunnable
-import com.tangem.KeyPair
 import com.tangem.common.CompletionResult
+import com.tangem.common.KeyPair
+import com.tangem.common.core.CardSession
+import com.tangem.common.core.CardSessionRunnable
+import com.tangem.operations.PreflightReadMode
+import com.tangem.operations.PreflightReadTask
 import com.tangem.tap.domain.tasks.ScanNoteResponse
 import com.tangem.tap.domain.tasks.ScanNoteTask
-import com.tangem.tasks.PreflightReadSettings
-import com.tangem.tasks.PreflightReadTask
 
 class FinalizeTwinTask(
     private val twinPublicKey: ByteArray, private val issuerKeys: KeyPair,
 ) : CardSessionRunnable<ScanNoteResponse> {
-    override val requiresPin2 = true
 
     override fun run(
         session: CardSession,
@@ -21,7 +20,7 @@ class FinalizeTwinTask(
         WriteProtectedIssuerDataTask(twinPublicKey, issuerKeys).run(session) { result ->
             when (result) {
                 is CompletionResult.Success ->
-                    PreflightReadTask(PreflightReadSettings.FullCardRead).run(session) { readResult ->
+                    PreflightReadTask(PreflightReadMode.FullCardRead).run(session) { readResult ->
                         when (readResult) {
                             is CompletionResult.Success ->
                                 ScanNoteTask(readResult.data).run(session, callback)
