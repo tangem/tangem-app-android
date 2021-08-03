@@ -1,7 +1,7 @@
 package com.tangem.tap.domain.configurable.config
 
 import com.tangem.blockchain.common.BlockchainSdkConfig
-import com.tangem.tangem_sdk_new.ui.animation.VoidCallback
+import com.tangem.common.extensions.VoidCallback
 import com.tangem.tap.domain.configurable.Loader
 
 /**
