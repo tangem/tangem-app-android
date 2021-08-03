@@ -83,6 +83,8 @@ dependencies {
     // WebView
     implementation "androidx.browser:browser:1.3.0"
 
+    implementation 'com.jakewharton.timber:timber:4.7.1'
+
     //lifecycle
     implementation "androidx.lifecycle:lifecycle-runtime-ktx:2.3.1"
     implementation "androidx.lifecycle:lifecycle-common-java8:2.3.1"
