@@ -1,7 +1,7 @@
 package com.tangem.tap.domain
 
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.commands.common.network.Result
+import com.tangem.common.services.Result
 import com.tangem.tap.network.payid.PayIdVerifyService
 import com.tangem.tap.network.payid.VerifyPayIdResponse
 import kotlinx.coroutines.Dispatchers
