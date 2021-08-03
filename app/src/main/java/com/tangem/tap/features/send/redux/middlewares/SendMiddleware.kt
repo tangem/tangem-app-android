@@ -1,12 +1,12 @@
 package com.tangem.tap.features.send.redux.middlewares
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics
-import com.tangem.TangemSdkError
 import com.tangem.blockchain.blockchains.stellar.StellarTransactionExtras
 import com.tangem.blockchain.blockchains.xrp.XrpTransactionBuilder
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.extensions.SimpleResult
-import com.tangem.commands.common.card.Card
+import com.tangem.common.card.Card
+import com.tangem.common.core.TangemSdkError
 import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -136,9 +136,9 @@ private fun sendTransaction(
         ) { signResponse ->
             store.dispatch(
                 GlobalAction.UpdateWalletSignedHashes(
-                    walletSignedHashes = signResponse.walletSignedHashes,
-                    remainingSignatures = signResponse.walletRemainingSignatures,
-                    walletPublicKey = walletManager.wallet.publicKey
+                    walletSignedHashes = signResponse.totalSignedHashes,
+                    walletPublicKey = walletManager.wallet.publicKey,
+                    remainingSignatures = signResponse.remainingSignatures
                 )
             )
         }
@@ -150,7 +150,7 @@ private fun sendTransaction(
                     FirebaseAnalyticsHandler.triggerEvent(
                         event = AnalyticsEvent.TRANSACTION_IS_SENT,
                         card = card,
-                        blockchain = walletManager.wallet.blockchain
+                        blockchain = walletManager.wallet.blockchain.currency
                     )
                     dispatch(SendAction.SendSuccess)
 
