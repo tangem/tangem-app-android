@@ -21,6 +21,9 @@ sealed class GlobalAction : Action {
     }
 
     data class SaveScanNoteResponse(val scanNoteResponse: ScanNoteResponse) : GlobalAction()
+
+    data class SetIfCardVerifiedOnline(val verified: Boolean) : GlobalAction()
+
     data class ChangeAppCurrency(val appCurrency: FiatCurrencyName) : GlobalAction()
     object RestoreAppCurrency : GlobalAction() {
         data class Success(val appCurrency: FiatCurrencyName) : GlobalAction()
