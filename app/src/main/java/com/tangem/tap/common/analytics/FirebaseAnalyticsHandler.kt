@@ -5,13 +5,12 @@ import androidx.core.os.bundleOf
 import com.google.firebase.analytics.ktx.analytics
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.google.firebase.ktx.Firebase
-import com.tangem.TangemSdkError
-import com.tangem.blockchain.common.Blockchain
-import com.tangem.commands.common.card.Card
+import com.tangem.common.card.Card
+import com.tangem.common.core.TangemSdkError
 import com.tangem.tap.common.extensions.filterNotNull
 
 object FirebaseAnalyticsHandler : AnalyticsHandler {
-    override fun triggerEvent(event: AnalyticsEvent, card: Card?, blockchain: Blockchain?) {
+    override fun triggerEvent(event: AnalyticsEvent, card: Card?, blockchain: String?) {
         Firebase.analytics.logEvent(event.event, setData(card, blockchain))
     }
 
@@ -47,18 +46,17 @@ object FirebaseAnalyticsHandler : AnalyticsHandler {
 
     private fun getParamsFromCard(card: Card): Map<AnalyticsParam, String> {
         return mapOf(
-            AnalyticsParam.FIRMWARE to card.firmwareVersion.version,
-            AnalyticsParam.BATCH_ID to card.cardData?.batchId
+            AnalyticsParam.FIRMWARE to card.firmwareVersion.stringValue,
+            AnalyticsParam.BATCH_ID to card.batchId
         ).filterNotNull()
     }
 
-    private fun setData(card: Card?, blockchain: Blockchain?): Bundle {
+    private fun setData(card: Card?, blockchain: String?): Bundle {
         if (card == null) return bundleOf()
         return bundleOf(
-            AnalyticsParam.BLOCKCHAIN.param to (blockchain?.currency
-                ?: card.cardData?.blockchainName),
-            AnalyticsParam.BATCH_ID.param to card.cardData?.batchId,
-            AnalyticsParam.FIRMWARE.param to card.firmwareVersion.version
+            AnalyticsParam.BLOCKCHAIN.param to (blockchain),
+            AnalyticsParam.BATCH_ID.param to card.batchId,
+            AnalyticsParam.FIRMWARE.param to card.firmwareVersion.stringValue
         )
     }
 
