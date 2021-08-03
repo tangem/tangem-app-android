@@ -7,10 +7,7 @@ import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.snackbar.Snackbar
-import com.tangem.CardFilter
-import com.tangem.Config
 import com.tangem.TangemSdk
-import com.tangem.commands.common.card.CardType
 import com.tangem.tangem_sdk_new.extensions.init
 import com.tangem.tap.common.DialogManager
 import com.tangem.tap.common.IntentHandler
@@ -30,7 +27,6 @@ import kotlinx.coroutines.Job
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.lang.ref.WeakReference
-import java.util.*
 import kotlin.coroutines.CoroutineContext
 
 lateinit var tangemSdk: TangemSdk
@@ -68,10 +64,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler {
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
         store.dispatch(NavigationAction.ActivityCreated(WeakReference(this)))
 
-        tangemSdk = TangemSdk.init(
-            this, Config(cardFilter = CardFilter(EnumSet.allOf(CardType::class.java)))
-        )
-        tangemSdkManager = TangemSdkManager(this)
+        tangemSdk = TangemSdk.init(this, TangemSdkManager.config)
+        tangemSdkManager = TangemSdkManager(tangemSdk, this)
+
         store.dispatch(WalletConnectAction.RestoreSessions)
     }
 
