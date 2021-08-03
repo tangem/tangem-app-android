@@ -1,8 +1,8 @@
 package com.tangem.tap.features.details.redux.walletconnect
 
 import com.tangem.blockchain.common.*
-import com.tangem.commands.common.card.Card
 import com.tangem.common.CompletionResult
+import com.tangem.common.card.Card
 import com.tangem.common.extensions.toHexString
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
