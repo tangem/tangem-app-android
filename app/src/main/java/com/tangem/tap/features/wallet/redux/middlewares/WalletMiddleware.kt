@@ -3,13 +3,16 @@ package com.tangem.tap.features.wallet.redux.middlewares
 import android.content.Intent
 import android.net.Uri
 import androidx.core.content.ContextCompat
-import com.tangem.TangemSdkError
 import com.tangem.blockchain.common.*
 import com.tangem.common.CompletionResult
+import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.isZero
+import com.tangem.common.services.Result
+import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.common.extensions.copyToClipboard
+import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.shareText
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -153,6 +156,32 @@ class WalletMiddleware {
                                     }
                                 }
                             }
+                        }
+                    }
+                    is WalletAction.LoadCardInfo -> {
+                        scope.launch {
+                            val response = OnlineCardVerifier().getCardInfo(
+                                action.card.cardId, action.card.cardPublicKey
+                            )
+                            when (response) {
+                                is Result.Success -> {
+                                    store.dispatchOnMain(
+                                        WalletAction.SetArtworkId(response.data.artwork?.id)
+                                    )
+                                    store.dispatchOnMain(
+                                        WalletAction.LoadArtwork(action.card, response.data.artwork?.id)
+                                    )
+                                    store.dispatchOnMain(
+                                        GlobalAction.SetIfCardVerifiedOnline(response.data.passed)
+                                    )
+                                }
+                                is Result.Failure -> {
+                                    store.dispatchOnMain(
+                                        GlobalAction.SetIfCardVerifiedOnline(false)
+                                    )
+                                }
+                            }
+                            store.dispatchOnMain(WalletAction.Warnings.CheckIfNeeded)
                         }
                     }
                     is WalletAction.LoadData -> {
