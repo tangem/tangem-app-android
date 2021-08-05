@@ -36,7 +36,8 @@
         <item name="cornerRadius">@dimen/btn_corner_radius</item>
         <item name="android:fontFamily">@font/saira_semi_condensed_regular</item>
         <item name="android:layout_width">93dp</item>
-        <item name="android:layout_height">52dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:minHeight">52dp</item>
         <item name="elevation">3dp</item>
     </style>
 
