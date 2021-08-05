@@ -96,7 +96,6 @@ class SingleWalletView : WalletView {
     ) = with(fragment) {
         twinCardsState?.cardNumber?.let { cardNumber ->
             tv_twin_card_number.show()
-            iv_twin_card.show()
             val number = when (cardNumber) {
                 TwinCardNumber.First -> "1"
                 TwinCardNumber.Second -> "2"
@@ -106,7 +105,6 @@ class SingleWalletView : WalletView {
         }
         if (twinCardsState?.cardNumber == null) {
             tv_twin_card_number.hide()
-            iv_twin_card.hide()
         }
         if (twinCardsState?.showTwinOnboarding == true) {
             store.dispatch(NavigationAction.NavigateTo(AppScreen.TwinsOnboarding))
