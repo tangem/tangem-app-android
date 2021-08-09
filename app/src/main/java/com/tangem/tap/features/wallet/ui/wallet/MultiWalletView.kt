@@ -42,7 +42,6 @@ class MultiWalletView : WalletView {
 
     private fun showMultiWalletView(fragment: WalletFragment) = with(fragment) {
         tv_twin_card_number.hide()
-        iv_twin_card.hide()
         rv_pending_transaction.hide()
         l_card_balance.hide()
         l_address.hide()
