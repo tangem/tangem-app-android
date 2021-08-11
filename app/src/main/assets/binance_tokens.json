@@ -1654,5 +1654,1433 @@
         },
         "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/ZEC-93E/logo.png",
         "name" : "ZECBEP2"
+    },
+    {
+        "contractAddress": "NMX-7AFM",
+        "symbol": "NMX",
+        "name": "NOMINEX",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "GTMRS-D96M",
+        "symbol": "GTMRS",
+        "name": "Getmoders",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "DRC-FF4M",
+        "symbol": "DRC",
+        "name": "DARIK COIN",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "IMC-D5AM",
+        "symbol": "IMC",
+        "name": "IMC",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "JPIN-89AM",
+        "symbol": "JPIN",
+        "name": "JADEPIN",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "TBCC",
+        "symbol": "TBCC",
+        "name": "TBC",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "SZAR-952M",
+        "symbol": "SZAR",
+        "name": "SMART ZAR",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "SOUL-D11M",
+        "symbol": "SOUL",
+        "name": "CryptoSoul",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "VTBC-C26M",
+        "symbol": "VTBC",
+        "name": "TBCCVPN",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "LGVM-0F6M",
+        "symbol": "LGVM",
+        "name": "Longevium",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "JUV-FC7M",
+        "symbol": "JUV",
+        "name": "Juventus",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "KNB-9D6M",
+        "symbol": "KNB",
+        "name": "Kronobit",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "POLO-E0DM",
+        "symbol": "POLO",
+        "name": "MarcoPoloCoin",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "FIO-0CDM",
+        "symbol": "FIO",
+        "name": "FIO",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "BIR",
+        "symbol": "BIR",
+        "name": "BinanceIran",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "SBC-AF0M",
+        "symbol": "SBC",
+        "name": "SBCOIN",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "DPSC-CCBM",
+        "symbol": "DPSC",
+        "name": "DPASSCOIN",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "EPIC-066M",
+        "symbol": "EPIC",
+        "name": "EPIC",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "UBETS-619M",
+        "symbol": "UBETS",
+        "name": "UBETS Coin",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "JDXU-932M",
+        "symbol": "JDXU",
+        "name": "JDXUCoin",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "GMNG-084M",
+        "symbol": "GMNG",
+        "name": "GlobalGaming",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "BTC-992M",
+        "symbol": "BTC",
+        "name": "Bitcoin",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "ETH-EDDM",
+        "symbol": "ETH",
+        "name": "Ethereum",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "ANK-5D8M",
+        "symbol": "ANK",
+        "name": "AppleNetwork",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "FLGHT-96EM",
+        "symbol": "FLGHT",
+        "name": "TheFlight",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "YTC-6BFM",
+        "symbol": "YTC",
+        "name": "YouTubeCoin",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "MSV-114M",
+        "symbol": "MSV",
+        "name": "MoskvinInvest",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "AZBIT-A07M",
+        "symbol": "AZBIT",
+        "name": "AZbitCryptoExchange",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "BFT-321M",
+        "symbol": "BFT",
+        "name": "BitForexToken",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "LIBRA-D54M",
+        "symbol": "LIBRA",
+        "name": "FacebookCoin",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "ZANO-F71M",
+        "symbol": "ZANO",
+        "name": "Zano",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "BTS-FA7M",
+        "symbol": "BTS",
+        "name": "BTSentertainment",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "VNB-684M",
+        "symbol": "VNB",
+        "name": "VNNetwork",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "MKR-119M",
+        "symbol": "MKR",
+        "name": "Maker",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "XAV-3C5M",
+        "symbol": "XAV",
+        "name": "XAVIERCOIN",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "TSL-751M",
+        "symbol": "TSL",
+        "name": "TESLA",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "GRAM-6BBM",
+        "symbol": "GRAM",
+        "name": "TelegramOpenNetwork",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "ZENK-8BCM",
+        "symbol": "ZENK",
+        "name": "ZenKoin",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "STK70-882M",
+        "symbol": "STK70",
+        "name": "STK70",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "UBER-5D0M",
+        "symbol": "UBER",
+        "name": "UBER",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "CR7-A67M",
+        "symbol": "CR7",
+        "name": "CristianoRonaldoFanToken",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "ITTT-C65M",
+        "symbol": "ITTT",
+        "name": "IntuitiveToken",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "FNXS-983M",
+        "symbol": "FNXS",
+        "name": "FinanceX",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "ELT-61FM",
+        "symbol": "ELT",
+        "name": "ELITE",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "KODK-9ABM",
+        "symbol": "KODK",
+        "name": "EastmanKodakCompany",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "COMP-3C5M",
+        "symbol": "COMP",
+        "name": "Compound",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "CCT-AD7M",
+        "symbol": "CCT",
+        "name": "CryptoCompareToken",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "BNS-5ADM",
+        "symbol": "BNS",
+        "name": "BNSAFEER",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "10XDF-9FBM",
+        "symbol": "10XDF",
+        "name": "10xDeFiXy",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "RUBY-FFCM",
+        "symbol": "RUBY",
+        "name": "VNOvernight",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "BHC-3E8M",
+        "symbol": "BHC",
+        "name": "BillionHappiness",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "SAND-25CM",
+        "symbol": "SAND",
+        "name": "Sandbox",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "VNBIT-5D5M",
+        "symbol": "VNBIT",
+        "name": "VNBit",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "CVD-940M",
+        "symbol": "CVD",
+        "name": "Covid19",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "100X-0A2M",
+        "symbol": "100X",
+        "name": "100x",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "PLV-328M",
+        "symbol": "PLV",
+        "name": "PLAVNI",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "VOTE-692M",
+        "symbol": "VOTE",
+        "name": "Vote",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "NBTC-09BM",
+        "symbol": "NBTC",
+        "name": "NBTC",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "WEBIT-4D0M",
+        "symbol": "WEBIT",
+        "name": "WEBIT",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "BUSY-3AFM",
+        "symbol": "BUSY",
+        "name": "BusyProtocol",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "DEFIX-46FM",
+        "symbol": "DEFIX",
+        "name": "DefiX",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "200DX-985M",
+        "symbol": "200DX",
+        "name": "200DX",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "GOGH-510M",
+        "symbol": "GOGH",
+        "name": "Vincent",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "HOOTZ-CE2M",
+        "symbol": "HOOTZ",
+        "name": "Hootz",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "YFFI-7E4M",
+        "symbol": "YFFI",
+        "name": "YFFIfinance",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "YFII-7FBM",
+        "symbol": "YFII",
+        "name": "yearnfinanceII",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "TNH-2D6M",
+        "symbol": "TNH",
+        "name": "Tanhu",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "GOLD-42AM",
+        "symbol": "GOLD",
+        "name": "GOLD",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "CMW-CF8M",
+        "symbol": "CMW",
+        "name": "CMWLTD14",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "AMZN-2A5M",
+        "symbol": "AMZN",
+        "name": "Amazon",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "YFL-4CFM",
+        "symbol": "YFL",
+        "name": "YFLink",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "CUCAP-090M",
+        "symbol": "CUCAP",
+        "name": "CopperCommons",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "YETH-687M",
+        "symbol": "YETH",
+        "name": "YETH",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "XLS-A82M",
+        "symbol": "XLS",
+        "name": "Xwolfers",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "POKER-C92M",
+        "symbol": "POKER",
+        "name": "POKERSTARS",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "XCT",
+        "symbol": "XCT",
+        "name": "Citron",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "SIP",
+        "symbol": "SIP",
+        "name": "Arbitrx",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "KDC-4E4M",
+        "symbol": "KDC",
+        "name": "KingdomCasino",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "INNBC",
+        "symbol": "INNBC",
+        "name": "InnovativeBioresearchCoin",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "ODAEE-AD8M",
+        "symbol": "ODAEE",
+        "name": "ODAEE",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "CALTO-C51M",
+        "symbol": "CALTO",
+        "name": "caltechcasino",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "ZONIC-C26M",
+        "symbol": "ZONIC",
+        "name": "ZONIC",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "TAINO-CC7M",
+        "symbol": "TAINO",
+        "name": "TAINOCOIN",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "BZAR-188M",
+        "symbol": "BZAR",
+        "name": "Bitcoinrand",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "JSB-614M",
+        "symbol": "JSB",
+        "name": "JSB",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "BSATT-9F8M",
+        "symbol": "BSATT",
+        "name": "BinanceSATT",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "GOAL-A7EM",
+        "symbol": "GOAL",
+        "name": "GoalCoin",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "ALF-346M",
+        "symbol": "ALF",
+        "name": "AlfaBlock",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "GLXY-783M",
+        "symbol": "GLXY",
+        "name": "GalaxianCoin",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "FXP-BE7M",
+        "symbol": "FXP",
+        "name": "FXPay",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "ATM-95EM",
+        "symbol": "ATM",
+        "name": "Atletico Madrid",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "VRTN2-F89M",
+        "symbol": "VRTN2",
+        "name": "VINYL RECORDS TOKEN 2",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "STN-DB6M",
+        "symbol": "STN",
+        "name": "Saturno",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "TON-12EM",
+        "symbol": "TON",
+        "name": "Telegram Open Network",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "FLATS-9A4M",
+        "symbol": "FLATS",
+        "name": "FLAT EARTH",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "LTT-D42M",
+        "symbol": "LTT",
+        "name": "LiteTrader",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "FUTSWAP-8D1M",
+        "symbol": "FUTSWAP",
+        "name": "Futswap",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "IBAI-6FDM",
+        "symbol": "IBAI",
+        "name": "IBAI FAN TOKEN",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "BNGO-9D3M",
+        "symbol": "BNGO",
+        "name": "BINGO",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "STH-07AM",
+        "symbol": "STH",
+        "name": "SmartHoldem",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "WSB-63CM",
+        "symbol": "WSB",
+        "name": "WallStreetBets",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "XAQ-ABCM",
+        "symbol": "XAQ",
+        "name": "AQAQ",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "XCL-DAFM",
+        "symbol": "XCL",
+        "name": "CLICO",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "AGU-14FM",
+        "symbol": "AGU",
+        "name": "Aguacate Mini Token",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "GRPX-D25M",
+        "symbol": "GRPX",
+        "name": "Grapbox",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "SHIT-580M",
+        "symbol": "SHIT",
+        "name": "SHIT DIAMOND",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "SWAN-288M",
+        "symbol": "SWAN",
+        "name": "Swan Finance",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "TRS-182M",
+        "symbol": "TRS",
+        "name": "Traders",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "SZR-4F6M",
+        "symbol": "SZR",
+        "name": "Smart ZAR",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "TOD-442M",
+        "symbol": "TOD",
+        "name": "TOD COIN",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "WWWC-C3EM",
+        "symbol": "WWWC",
+        "name": "World Wide Wallet Coin",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "CFN-D88M",
+        "symbol": "CFN",
+        "name": "Cafeina Token",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "BZB-034M",
+        "symbol": "BZB",
+        "name": "One million BZE",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "CCSCEX-E2CM",
+        "symbol": "CCSCEX",
+        "name": "EXCHANGE",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "XOTL-247M",
+        "symbol": "XOTL",
+        "name": "Xolotl Token",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "UWIM-06AM",
+        "symbol": "UWIM",
+        "name": "UWIM",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "LEARN",
+        "symbol": "LEARN",
+        "name": "BinanceAcademyToken",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "IKA-105M",
+        "symbol": "IKA",
+        "name": "Mining",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
+    },
+    {
+        "contractAddress": "SCAM-914M",
+        "symbol": "SCAM",
+        "name": "SCAM",
+        "decimalCount": 8,
+        "type": "bep8",
+        "blockchain" : {
+            "key" : "binance",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
     }
 ]
