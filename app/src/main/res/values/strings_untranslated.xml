@@ -166,4 +166,6 @@ this wallet.
 
 
     <string name="wallet_dialog_choose_trade_action" translatable="false">Do you want to buy or sell crypto?</string>
+
+    <string name="error_update_app" translatable="false">Oops, the current version of the application is not ready to work with this card, please check for updates.</string>
 </resources>
