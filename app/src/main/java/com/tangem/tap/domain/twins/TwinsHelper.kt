@@ -1,10 +1,8 @@
 package com.tangem.tap.domain.twins
 
-import com.tangem.commands.common.card.Card
-import com.tangem.commands.common.card.CardStatus
-import com.tangem.commands.common.card.masks.Product
-import com.tangem.commands.wallet.WalletStatus
+import com.tangem.common.card.Card
 import com.tangem.tap.common.extensions.isEven
+import com.tangem.tap.domain.twins.TwinsHelper.Companion.getTwinCardNumber
 
 class TwinsHelper {
     companion object {
@@ -78,19 +76,9 @@ enum class TwinCardNumber(val number: Int) {
 }
 
 fun Card.isTwinCard(): Boolean {
-    return this.cardData?.productMask?.contains(Product.TwinCard) == true
+    return getTwinCardNumber(cardId) != null
 }
 
 fun Card.getTwinCardIdForUser(): String {
     return TwinsHelper.getTwinCardIdForUser(this.cardId)
-}
-
-fun Card.changeStatusToLoaded(): Card {
-    val wallets = wallets.map { it.copy(status = WalletStatus.Loaded) }
-    return copy(status = CardStatus.Loaded, wallets = wallets)
-}
-
-fun Card.changeStatusToEmpty(): Card {
-    val wallets = wallets.map { it.copy(status = WalletStatus.Empty) }
-    return copy(status = CardStatus.Empty, wallets = wallets)
 }

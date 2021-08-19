@@ -1,9 +1,8 @@
 package com.tangem.tap.domain
 
 import com.tangem.blockchain.common.*
-import com.tangem.commands.common.card.Card
-import com.tangem.commands.common.card.CardStatus
-import com.tangem.commands.common.network.Result
+import com.tangem.common.card.Card
+import com.tangem.common.services.Result
 import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.common.redux.global.FiatCurrencyName
@@ -89,7 +88,7 @@ class TapWalletManager {
 
     suspend fun onCardScanned(data: ScanNoteResponse, addAnalyticsEvent: Boolean = false) {
         if (addAnalyticsEvent) {
-            FirebaseAnalyticsHandler.triggerEvent(AnalyticsEvent.CARD_IS_SCANNED, data.card)
+            FirebaseAnalyticsHandler.triggerEvent(AnalyticsEvent.CARD_IS_SCANNED, data.card, data.walletData?.blockchain)
         }
         store.state.globalState.feedbackManager?.infoHolder?.setCardInfo(data.card)
         updateConfigManager(data)
@@ -109,7 +108,7 @@ class TapWalletManager {
                 }
             }
 
-            val blockchain = data.card.getBlockchain()
+            val blockchain = data.getBlockchain()
             if (blockchain == Blockchain.Ethereum ||
                     blockchain == Blockchain.EthereumTestnet) {
                 store.dispatch(TokensAction.LoadCardTokens)
@@ -120,12 +119,12 @@ class TapWalletManager {
 
     private fun updateConfigManager(data: ScanNoteResponse) {
         val configManager = store.state.globalState.configManager
-        val blockchain = data.card.getBlockchain()
+        val blockchain = data.getBlockchain()
         if (data.card.isStart2Coin) {
             configManager?.turnOff(ConfigManager.isSendingToPayIdEnabled)
             configManager?.turnOff(ConfigManager.isTopUpEnabled)
         } else if (blockchain == Blockchain.Bitcoin
-                || data.card.cardData?.blockchainName == Blockchain.Bitcoin.id) {
+                || data.walletData?.blockchain == Blockchain.Bitcoin.id) {
             configManager?.resetToDefault(ConfigManager.isSendingToPayIdEnabled)
             configManager?.resetToDefault(ConfigManager.isTopUpEnabled)
         } else {
@@ -136,25 +135,25 @@ class TapWalletManager {
 
     suspend fun loadData(data: ScanNoteResponse) {
         withContext(Dispatchers.Main) {
-            val artworkId = data.verifyResponse?.artworkInfo?.id
+
+            store.dispatch(WalletAction.LoadCardInfo(data.card))
+
             when {
-                data.card.getBlockchain() == Blockchain.Unknown && !data.card.isMultiwalletAllowed -> {
+                data.getBlockchain() == Blockchain.Unknown && !data.card.isMultiwalletAllowed -> {
                     store.dispatch(WalletAction.LoadData.Failure(TapError.UnknownBlockchain))
-                    store.dispatch(WalletAction.LoadArtwork(data.card, artworkId))
                 }
-                data.card.getStatus() == CardStatus.Empty ||
+                data.card.wallets.isEmpty() ||
                         (data.card.isTwinCard() && data.secondTwinPublicKey == null) -> {
                     store.dispatch(WalletAction.EmptyWallet)
-                    store.dispatch(WalletAction.LoadArtwork(data.card, artworkId))
                 }
                 else -> {
                     val config = store.state.globalState.configManager?.config ?: return@withContext
 
-                    val blockchain = data.card.getBlockchain()
+                    val blockchain = data.getBlockchain()
                     val primaryWalletManager = walletManagerFactory.makePrimaryWalletManager(data)
 
                     if (blockchain != null && primaryWalletManager != null) {
-                        val primaryToken = data.card.getToken()
+                        val primaryToken = data.getPrimaryToken()
 
                         store.dispatch(WalletAction.MultiWallet.SetPrimaryBlockchain(blockchain))
                         if (primaryToken != null) {
@@ -173,17 +172,14 @@ class TapWalletManager {
                             loadMultiWalletData(data.card, blockchain, null)
                         }
                     }
-                    store.dispatch(WalletAction.SetArtworkId(data.verifyResponse?.artworkInfo?.id))
                     val moonPayUserStatus = store.state.globalState.moonPayUserStatus
                     store.dispatch(WalletAction.LoadWallet(
                         allowToBuy = config.isTopUpEnabled && moonPayUserStatus?.isBuyAllowed == true,
                         allowToSell = config.isTopUpEnabled && moonPayUserStatus?.isSellAllowed == true,
                     ))
-                    store.dispatch(WalletAction.LoadArtwork(data.card, artworkId))
                     store.dispatch(WalletAction.LoadFiatRate())
                 }
             }
-            store.dispatch(WalletAction.Warnings.CheckIfNeeded)
         }
     }
 
@@ -236,10 +232,10 @@ class TapWalletManager {
     suspend fun reloadData(data: ScanNoteResponse) {
         withContext(Dispatchers.Main) {
             when {
-                data.card.getBlockchain() == Blockchain.Unknown && !data.card.isMultiwalletAllowed -> {
+                data.getBlockchain() == Blockchain.Unknown && !data.card.isMultiwalletAllowed -> {
                     store.dispatch(WalletAction.LoadData.Failure(TapError.UnknownBlockchain))
                 }
-                data.card.getStatus() == CardStatus.Empty ||
+                data.card.wallets.isEmpty() ||
                         (data.card.isTwinCard() && data.secondTwinPublicKey == null) -> {
                     store.dispatch(WalletAction.EmptyWallet)
                 }
