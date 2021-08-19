@@ -3,7 +3,7 @@ package com.tangem.tap.features.wallet.redux
 import android.content.Context
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.AddressType
-import com.tangem.commands.common.card.Card
+import com.tangem.common.card.Card
 import com.tangem.tap.common.redux.ErrorAction
 import com.tangem.tap.common.redux.NotificationAction
 import com.tangem.tap.domain.TapError
@@ -92,6 +92,8 @@ sealed class WalletAction : Action {
         data class Success(val fiatRate: Pair<Currency, BigDecimal?>) : WalletAction()
         object Failure : WalletAction()
     }
+
+    class LoadCardInfo(val card: Card) : WalletAction()
 
     data class LoadArtwork(val card: Card, val artworkId: String?) : WalletAction() {
         data class Success(val artwork: Artwork) : WalletAction()
