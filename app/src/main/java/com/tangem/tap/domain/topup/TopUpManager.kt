@@ -34,9 +34,9 @@ class TopUpManager {
         ) { signResponse ->
             store.dispatch(
                 GlobalAction.UpdateWalletSignedHashes(
-                    walletSignedHashes = signResponse.walletSignedHashes,
-                    remainingSignatures = signResponse.walletRemainingSignatures,
-                    walletPublicKey = walletManager.wallet.publicKey
+                    walletSignedHashes = signResponse.totalSignedHashes,
+                    walletPublicKey = walletManager.wallet.publicKey,
+                    remainingSignatures = signResponse.remainingSignatures
                 )
             )
         }
