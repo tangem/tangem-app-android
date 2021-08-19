@@ -126,7 +126,7 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
         }
 
         tv_security_title.setOnClickListener {
-            store.dispatch(DetailsAction.ManageSecurity.OpenSecurity)
+            store.dispatch(DetailsAction.ManageSecurity.CheckCurrentSecurityOption(state.card?.cardId))
         }
 
         val currentSecurity = when (state.securityScreenState?.currentOption) {
