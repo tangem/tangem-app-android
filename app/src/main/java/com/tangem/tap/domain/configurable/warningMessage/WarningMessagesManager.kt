@@ -1,7 +1,7 @@
 package com.tangem.tap.domain.configurable.warningMessage
 
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.tangem_sdk_new.ui.animation.VoidCallback
+import com.tangem.common.extensions.VoidCallback
 import com.tangem.tap.common.extensions.containsAny
 import com.tangem.tap.common.extensions.removeBy
 import com.tangem.wallet.R
