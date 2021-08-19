@@ -1,6 +1,6 @@
 package com.tangem.tap.common.analytics
 
-import com.tangem.TangemSdkError
+import com.tangem.common.core.TangemSdkError
 
 object TangemSdk {
 
@@ -31,17 +31,15 @@ object TangemSdk {
             is TangemSdkError.WalletNotFound -> TangemSdkError.WalletNotFound()
             is TangemSdkError.AlreadyPersonalized -> TangemSdkError.AlreadyPersonalized()
             is TangemSdkError.CannotBeDepersonalized -> TangemSdkError.CannotBeDepersonalized()
-            is TangemSdkError.Pin1Required -> TangemSdkError.Pin1Required()
+            is TangemSdkError.AccessCodeRequired -> TangemSdkError.AccessCodeRequired()
             is TangemSdkError.CardReadWrongWallet -> TangemSdkError.CardReadWrongWallet()
             is TangemSdkError.CardWithMaxZeroWallets -> TangemSdkError.CardWithMaxZeroWallets()
             is TangemSdkError.AlreadyCreated -> TangemSdkError.AlreadyCreated()
-            is TangemSdkError.WalletIndexExceedsMaxValue -> TangemSdkError.WalletIndexExceedsMaxValue()
             is TangemSdkError.MaxNumberOfWalletsCreated -> TangemSdkError.MaxNumberOfWalletsCreated()
-            is TangemSdkError.WalletIndexNotCorrect -> TangemSdkError.WalletIndexNotCorrect()
             is TangemSdkError.PurgeWalletProhibited -> TangemSdkError.PurgeWalletProhibited()
-            is TangemSdkError.Pin1CannotBeChanged -> TangemSdkError.Pin1CannotBeChanged()
-            is TangemSdkError.Pin2CannotBeChanged -> TangemSdkError.Pin2CannotBeChanged()
-            is TangemSdkError.Pin1CannotBeDefault -> TangemSdkError.Pin1CannotBeDefault()
+            is TangemSdkError.AccessCodeCannotBeChanged -> TangemSdkError.AccessCodeCannotBeChanged()
+            is TangemSdkError.PasscodeCannotBeChanged -> TangemSdkError.PasscodeCannotBeChanged()
+            is TangemSdkError.AccessCodeCannotBeDefault -> TangemSdkError.AccessCodeCannotBeDefault()
             is TangemSdkError.NoRemainingSignatures -> TangemSdkError.NoRemainingSignatures()
             is TangemSdkError.EmptyHashes -> TangemSdkError.EmptyHashes()
             is TangemSdkError.HashSizeMustBeEqual -> TangemSdkError.HashSizeMustBeEqual()
@@ -52,7 +50,7 @@ object TangemSdk {
             is TangemSdkError.NotPersonalized -> TangemSdkError.NotPersonalized()
             is TangemSdkError.NotActivated -> TangemSdkError.NotActivated()
             is TangemSdkError.WalletIsPurged -> TangemSdkError.WalletIsPurged()
-            is TangemSdkError.Pin2OrCvcRequired -> TangemSdkError.Pin2OrCvcRequired()
+            is TangemSdkError.PasscodeRequired -> TangemSdkError.PasscodeRequired()
             is TangemSdkError.VerificationFailed -> TangemSdkError.VerificationFailed()
             is TangemSdkError.DataSizeTooLarge -> TangemSdkError.DataSizeTooLarge()
             is TangemSdkError.MissingCounter -> TangemSdkError.MissingCounter()
@@ -60,8 +58,8 @@ object TangemSdk {
             is TangemSdkError.DataCannotBeWritten -> TangemSdkError.DataCannotBeWritten()
             is TangemSdkError.MissingIssuerPubicKey -> TangemSdkError.MissingIssuerPubicKey()
             is TangemSdkError.CardVerificationFailed -> TangemSdkError.CardVerificationFailed()
-            is TangemSdkError.WrongPin1 -> TangemSdkError.WrongPin1()
-            is TangemSdkError.WrongPin2 -> TangemSdkError.WrongPin2()
+            is TangemSdkError.WrongAccessCode -> TangemSdkError.WrongAccessCode()
+            is TangemSdkError.WrongPasscode -> TangemSdkError.WrongPasscode()
             is TangemSdkError.UnknownError -> TangemSdkError.UnknownError()
             is TangemSdkError.UserCancelled -> TangemSdkError.UserCancelled()
             is TangemSdkError.Busy -> TangemSdkError.Busy()
@@ -69,8 +67,14 @@ object TangemSdk {
             is TangemSdkError.WrongCardNumber -> TangemSdkError.WrongCardNumber()
             is TangemSdkError.WrongCardType -> TangemSdkError.WrongCardType()
             is TangemSdkError.CardError -> TangemSdkError.CardError()
-            is TangemSdkError.FirmwareNotSupported -> TangemSdkError.FirmwareNotSupported()
+            is TangemSdkError.NotSupportedFirmwareVersion -> TangemSdkError.NotSupportedFirmwareVersion()
             is TangemSdkError.WalletError -> TangemSdkError.WalletError()
+            is TangemSdkError.WalletCannotBeCreated -> TangemSdkError.WalletCannotBeCreated()
+            is TangemSdkError.UnsupportedCurve -> TangemSdkError.UnsupportedCurve()
+            is TangemSdkError.UnsupportedWalletConfig -> TangemSdkError.UnsupportedWalletConfig()
+            is TangemSdkError.CryptoUtilsError -> TangemSdkError.CryptoUtilsError()
+            is TangemSdkError.NetworkError -> TangemSdkError.NetworkError(error.customMessage)
+            is TangemSdkError.ExceptionError -> TangemSdkError.ExceptionError(error.throwable)
         }
     }
 
