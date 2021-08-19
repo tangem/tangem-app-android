@@ -1,8 +1,8 @@
 package com.tangem.tap.common.redux.global
 
-import com.tangem.TangemSdkError
-import com.tangem.commands.common.network.Result
 import com.tangem.common.CompletionResult
+import com.tangem.common.core.TangemSdkError
+import com.tangem.common.services.Result
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
