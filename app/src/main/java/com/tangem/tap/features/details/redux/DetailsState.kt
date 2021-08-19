@@ -2,7 +2,7 @@ package com.tangem.tap.features.details.redux
 
 import android.net.Uri
 import com.tangem.blockchain.common.Wallet
-import com.tangem.commands.common.card.Card
+import com.tangem.common.card.Card
 import com.tangem.tap.common.entities.Button
 import com.tangem.tap.common.entities.TapCurrency.Companion.DEFAULT_FIAT_CURRENCY
 import com.tangem.tap.common.redux.global.FiatCurrencyName
