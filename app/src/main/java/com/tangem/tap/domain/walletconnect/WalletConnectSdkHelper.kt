@@ -1,7 +1,6 @@
 package com.tangem.tap.domain.walletconnect
 
 import com.tangem.Message
-import com.tangem.TangemSdkError
 import com.tangem.blockchain.blockchains.ethereum.EthereumGasLoader
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.blockchains.ethereum.EthereumUtils
@@ -11,10 +10,10 @@ import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.TransactionSender
 import com.tangem.blockchain.extensions.*
-import com.tangem.commands.SignCommand
-import com.tangem.commands.wallet.WalletIndex
 import com.tangem.common.CompletionResult
+import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.hexToBytes
+import com.tangem.operations.sign.SignHashCommand
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.common.extensions.toFormattedString
 import com.tangem.tap.features.details.redux.walletconnect.*
@@ -150,9 +149,9 @@ class WalletConnectSdkHelper {
             gasLimit = null
         ) ?: return null
 
-        val command = SignCommand(
-            hashes = arrayOf(dataToSign.hash),
-            walletIndex = WalletIndex.PublicKey(data.walletManager.wallet.publicKey)
+        val command = SignHashCommand(
+            hash = dataToSign.hash,
+            walletPublicKey = data.walletManager.wallet.publicKey
         )
         val result = tangemSdkManager.runTaskAsync(command, initialMessage = Message())
         return when (result) {
@@ -210,13 +209,10 @@ class WalletConnectSdkHelper {
 
     suspend fun signPersonalMessage(hashToSign: ByteArray, wallet: WalletForSession): String? {
         val publicKey = wallet.walletPublicKey.hexToBytes()
-        val command = SignCommand(
-            arrayOf(hashToSign),
-            WalletIndex.PublicKey(publicKey))
+        val command = SignHashCommand(hashToSign, publicKey)
         return when (val result = tangemSdkManager.runTaskAsync(command, wallet.cardId)) {
             is CompletionResult.Success -> {
-                val hash = result.data.signatures.first()
-
+                val hash = result.data.signature
                 return EthereumUtils.prepareSignedMessageData(
                     hash, hashToSign, publicKey
                 )
