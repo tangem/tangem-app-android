@@ -1,8 +1,6 @@
 package com.tangem.tap.common.redux.global
 
-import com.tangem.commands.wallet.WalletIndex
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.features.details.redux.SecurityOption
 import org.rekotlin.Action
 
 fun globalReducer(action: Action, state: AppState): GlobalState {
@@ -30,29 +28,11 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
             globalState.copy(configManager = action.configManager)
         }
         is GlobalAction.SetWarningManager -> globalState.copy(warningManager = action.warningManager)
-        is GlobalAction.UpdateSecurityOptions -> {
-            val card = when (action.securityOption) {
-                SecurityOption.LongTap -> globalState.scanNoteResponse?.card?.copy(
-                    isPin1Default = true, isPin2Default = true
-                )
-                SecurityOption.PassCode -> globalState.scanNoteResponse?.card?.copy(
-                    isPin1Default = true, isPin2Default = false
-                )
-                SecurityOption.AccessCode -> globalState.scanNoteResponse?.card?.copy(
-                    isPin1Default = false, isPin2Default = true
-                )
-            }
-            if (card != null) {
-                globalState.copy(scanNoteResponse = globalState.scanNoteResponse?.copy(card = card))
-            } else {
-                globalState
-            }
-        }
         is GlobalAction.UpdateWalletSignedHashes -> {
             val wallet = globalState.scanNoteResponse?.card
-                ?.wallet(WalletIndex.PublicKey(action.walletPublicKey))
+                ?.wallet(action.walletPublicKey)
                 ?.copy(
-                    signedHashes = action.walletSignedHashes,
+                    totalSignedHashes = action.walletSignedHashes,
                     remainingSignatures = action.remainingSignatures
                 )
             val card = globalState.scanNoteResponse?.card
@@ -76,6 +56,9 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
         is GlobalAction.GetMoonPayUserStatus.Success -> {
             globalState.copy(moonPayUserStatus = action.moonPayUserStatus)
         }
+        is GlobalAction.SetIfCardVerifiedOnline ->
+            globalState.copy(cardVerifiedOnline = action.verified)
+
         else -> globalState
     }
 }
