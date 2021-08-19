@@ -3,9 +3,9 @@ package com.tangem.tap.domain.extensions
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.WalletManagerFactory
-import com.tangem.commands.common.card.Card
-import com.tangem.commands.common.card.EllipticCurve
-import com.tangem.commands.wallet.CardWallet
+import com.tangem.common.card.Card
+import com.tangem.common.card.CardWallet
+import com.tangem.common.card.EllipticCurve
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.tap.domain.TapWorkarounds.isTestCard
 import com.tangem.tap.domain.tasks.ScanNoteResponse
@@ -54,9 +54,9 @@ fun WalletManagerFactory.makePrimaryWalletManager(
 ): WalletManager? {
     val card = data.card
     val blockchain = if (card.isTestCard) {
-        card.getBlockchain()?.getTestnetVersion()
+        data.getBlockchain()?.getTestnetVersion()
     } else {
-        card.getBlockchain()
+        data.getBlockchain()
     }
     val supportedCurves = blockchain?.getSupportedCurves() ?: return null
     val wallets = card.wallets.filter { wallet -> supportedCurves.contains(wallet.curve) }
