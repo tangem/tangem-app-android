@@ -1,9 +1,10 @@
 package com.tangem.tap.features.details.redux
 
-import com.tangem.TangemSdkError
-import com.tangem.commands.common.network.Result
 import com.tangem.common.CompletionResult
+import com.tangem.common.core.TangemSdkError
+import com.tangem.common.services.Result
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
+import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
@@ -83,10 +84,9 @@ class DetailsMiddleware {
                     store.dispatch(NavigationAction.PopBackTo())
                 }
                 is DetailsAction.EraseWallet.Confirm -> {
+                    val card =  store.state.detailsState.card ?: return
                     scope.launch {
-                        val result = tangemSdkManager.eraseWallet(
-                                store.state.detailsState.card?.cardId
-                        )
+                        val result = tangemSdkManager.eraseWallet(card)
                         withContext(Dispatchers.Main) {
                             when (result) {
                                 is CompletionResult.Success -> {
@@ -124,6 +124,21 @@ class DetailsMiddleware {
     class ManageSecurityMiddleware {
         fun handle(action: DetailsAction.ManageSecurity) {
             when (action) {
+                is DetailsAction.ManageSecurity.CheckCurrentSecurityOption -> {
+                    scope.launch {
+                        when (val response = tangemSdkManager.checkUserCodes(action.cardId)) {
+                            is CompletionResult.Success -> {
+                                store.dispatchOnMain(
+                                    DetailsAction.ManageSecurity.SetCurrentOption(response.data)
+                                )
+                                store.dispatchOnMain(DetailsAction.ManageSecurity.OpenSecurity)
+                            }
+                            is CompletionResult.Failure -> {
+
+                            }
+                        }
+                    }
+                }
                 is DetailsAction.ManageSecurity.OpenSecurity -> {
                     store.dispatch(NavigationAction.NavigateTo(AppScreen.DetailsSecurity))
                 }
