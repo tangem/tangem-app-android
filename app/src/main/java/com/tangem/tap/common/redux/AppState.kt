@@ -39,7 +39,7 @@ data class AppState(
                     logMiddleware, navigationMiddleware, notificationsMiddleware, globalMiddleware,
                     HomeMiddleware().homeMiddleware,
                     WalletMiddleware().walletMiddleware,
-                    sendMiddleware,
+                    SendMiddleware().sendMiddleware,
                     DetailsMiddleware().detailsMiddleware,
                     DisclaimerMiddleware().disclaimerMiddleware,
                     TokensMiddleware().tokensMiddleware,
