@@ -54,7 +54,7 @@ class CreateSecondTwinWalletTask(
                     session.environment.card = session.environment.card?.changeStatusToLoaded()
 
                     WriteProtectedIssuerDataTask(
-                            firstPublicKey.hexToBytes(), TwinCardsManager.issuerKeys
+                            firstPublicKey.hexToBytes(), issuerKeys
                     ).run(session) { writeResult ->
                         when (writeResult) {
                             is CompletionResult.Success -> callback(result)
