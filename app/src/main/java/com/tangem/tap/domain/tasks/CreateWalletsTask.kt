@@ -33,7 +33,7 @@ class CreateWalletsTask(curves: List<EllipticCurve> = emptyList()) : CardSession
             callback: (result: CompletionResult<Card>) -> Unit
     ) {
 
-        CreateWalletCommand(curve, false).run(session) { result ->
+        CreateWalletCommand(curve).run(session) { result ->
             when (result) {
                 is CompletionResult.Success -> {
                     if (index == curves.lastIndex) {
