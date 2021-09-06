@@ -216,10 +216,7 @@ data class WalletData(
 ) {
     fun shouldShowMultipleAddress(): Boolean {
         val listOfAddresses = walletAddresses?.list ?: return false
-        return (currency?.blockchain == Blockchain.Bitcoin ||
-                currency?.blockchain == Blockchain.BitcoinTestnet ||
-                currency?.blockchain == Blockchain.CardanoShelley) &&
-                listOfAddresses.size > 1
+        return listOfAddresses.size > 1
     }
 }
 
