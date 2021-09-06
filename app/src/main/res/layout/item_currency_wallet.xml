@@ -56,7 +56,7 @@
 
             <TextView
                 android:id="@+id/tv_currency"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
                 android:paddingStart="16dp"
@@ -65,9 +65,20 @@
                 android:textSize="17sp"
                 android:textStyle="bold"
                 app:layout_constraintStart_toEndOf="@id/iv_currency"
+                android:ellipsize="end"
+                android:maxLines="1"
                 app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintEnd_toEndOf="@id/vertical_guideline"
                 app:layout_constraintBottom_toBottomOf="@id/guideline"
                 tools:text="Bitcoin" />
+
+            <androidx.constraintlayout.widget.Guideline
+                android:id="@+id/vertical_guideline"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintGuide_percent="0.5" />
 
             <TextView
                 android:id="@+id/tv_exchange_rate"
@@ -126,7 +137,7 @@
                 android:textStyle="bold"
                 app:layout_constraintEnd_toStartOf="@id/tv_currency_symbol"
                 app:layout_constraintHorizontal_weight="1"
-                app:layout_constraintStart_toEndOf="@id/tv_currency"
+                app:layout_constraintStart_toEndOf="@id/vertical_guideline"
                 app:layout_constraintTop_toTopOf="parent"
                 tools:text="3 588" />
 
