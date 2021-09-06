@@ -21,7 +21,7 @@ class CreateWalletAndRescanTask : CardSessionRunnable<Card> {
         val firmwareVersion = card.firmwareVersion
 
         val task = if (firmwareVersion < FirmwareVersion.MultiWalletAvailable) {
-            CreateWalletCommand(card.supportedCurves.first(), false)
+            CreateWalletCommand(card.supportedCurves.first())
         } else {
             CreateWalletsTask()
         }
