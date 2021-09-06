@@ -6,6 +6,7 @@ import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
+import com.tangem.tap.common.extensions.readAssetAsString
 import com.tangem.tap.domain.configurable.Loader
 import timber.log.Timber
 
@@ -22,8 +23,8 @@ class FeaturesLocalLoader(
             val featureAdapter: JsonAdapter<FeatureModel> = moshi.adapter(FeatureModel::class.java)
             val valuesAdapter: JsonAdapter<ConfigValueModel> = moshi.adapter(ConfigValueModel::class.java)
 
-            val jsonFeatures = readAssetAsString(Loader.featuresName)
-            val jsonConfigValues = readAssetAsString(Loader.configValuesName)
+            val jsonFeatures = context.readAssetAsString(Loader.featuresName)
+            val jsonConfigValues = context.readAssetAsString(Loader.configValuesName)
 
             ConfigModel(featureAdapter.fromJson(jsonFeatures), valuesAdapter.fromJson(jsonConfigValues))
         } catch (ex: Exception) {
@@ -31,10 +32,6 @@ class FeaturesLocalLoader(
             ConfigModel.empty()
         }
         onComplete(config)
-    }
-
-    private fun readAssetAsString(fileName: String): String {
-        return context.assets.open("$fileName.json").bufferedReader().readText()
     }
 }
 
