@@ -1,9 +1,12 @@
 package com.tangem.tap.common.extensions
 
+import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
+import com.tangem.common.extensions.VoidCallback
 import com.tangem.tap.common.redux.navigation.AppScreen
+import com.tangem.tap.common.redux.navigation.FragmentShareTransition
 import com.tangem.tap.features.details.ui.DetailsConfirmFragment
 import com.tangem.tap.features.details.ui.DetailsFragment
 import com.tangem.tap.features.details.ui.DetailsSecurityFragment
@@ -18,13 +21,26 @@ import com.tangem.tap.features.tokens.ui.AddTokensFragment
 import com.tangem.tap.features.wallet.ui.TwinsOnboardingFragment
 import com.tangem.tap.features.wallet.ui.WalletDetailsFragment
 import com.tangem.tap.features.wallet.ui.WalletFragment
-import com.tangem.tap.features.wallet.ui.dialogs.TwinsOnboardingFragment
 import com.tangem.wallet.R
 
-fun FragmentActivity.openFragment(screen: AppScreen, addToBackStack: Boolean = true) {
+fun FragmentActivity.openFragment(
+        screen: AppScreen,
+        addToBackstack: Boolean,
+        fgShareTransition: FragmentShareTransition? = null
+) {
     val transaction = this.supportFragmentManager.beginTransaction()
-    transaction.replace(R.id.fragment_container, fragmentFactory(screen), screen.name)
-    if (addToBackStack && screen != AppScreen.Home) transaction.addToBackStack(null)
+    val fragment = fragmentFactory(screen)
+    fgShareTransition?.apply {
+        fragment.sharedElementEnterTransition = enterTransitionSet
+        fragment.sharedElementReturnTransition = exitTransitionSet
+        shareElements.forEach { shareElement ->
+            shareElement.wView.get()?.let { view ->
+                transaction.addSharedElement(view, shareElement.name)
+            }
+        }
+    }
+    transaction.replace(R.id.fragment_container, fragment, screen.name)
+    if (addToBackstack && screen != AppScreen.Home) transaction.addToBackStack(null)
     transaction.commitAllowingStateLoss()
 }
 
@@ -38,6 +54,15 @@ fun FragmentActivity.getPreviousScreen(): AppScreen? {
     val tag = this.supportFragmentManager.getBackStackEntryAt(indexOfLastFragment).name
     return tag?.let { AppScreen.valueOf(tag) }
 }
+
+fun FragmentActivity.addOnBackPressedDispatcher(
+        isEnabled: Boolean = true,
+        onBackPressed: VoidCallback
+): OnBackPressedCallback = (object : OnBackPressedCallback(isEnabled) {
+    override fun handleOnBackPressed() {
+        onBackPressed()
+    }
+}).also { this.onBackPressedDispatcher.addCallback(it) }
 
 private fun fragmentFactory(screen: AppScreen): Fragment {
     return when (screen) {
