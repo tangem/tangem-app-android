@@ -2,6 +2,7 @@ package com.tangem.tap.domain.twins
 
 import com.tangem.Message
 import com.tangem.common.CompletionResult
+import com.tangem.common.KeyPair
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
@@ -13,6 +14,7 @@ import com.tangem.tap.domain.extensions.getSingleWallet
 
 class CreateSecondTwinWalletTask(
         private val firstPublicKey: String,
+        private val issuerKeys: KeyPair,
         private val preparingMessage: Message,
         private val creatingWalletMessage: Message
 ) : CardSessionRunnable<CreateWalletResponse> {
@@ -36,13 +38,13 @@ class CreateSecondTwinWalletTask(
 
     private fun finishTask(session: CardSession, callback: (result: CompletionResult<CreateWalletResponse>) -> Unit) {
         session.setInitialMessage(creatingWalletMessage)
-        CreateWalletCommand(EllipticCurve.Secp256k1, false).run(session) { result ->
+        CreateWalletCommand(EllipticCurve.Secp256k1).run(session) { result ->
             when (result) {
                 is CompletionResult.Success -> {
                     session.environment.card = session.environment.card?.updateWallet(result.data.wallet)
 
                     WriteProtectedIssuerDataTask(
-                            firstPublicKey.hexToBytes(), TwinCardsManager.issuerKeys
+                            firstPublicKey.hexToBytes(), issuerKeys
                     ).run(session) { writeResult ->
                         when (writeResult) {
                             is CompletionResult.Success -> callback(result)
