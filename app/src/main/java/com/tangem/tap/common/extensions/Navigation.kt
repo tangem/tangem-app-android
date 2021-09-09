@@ -15,6 +15,7 @@ import com.tangem.tap.features.disclaimer.ui.DisclaimerFragment
 import com.tangem.tap.features.home.HomeFragment
 import com.tangem.tap.features.send.ui.SendFragment
 import com.tangem.tap.features.tokens.ui.AddTokensFragment
+import com.tangem.tap.features.wallet.ui.TwinsOnboardingFragment
 import com.tangem.tap.features.wallet.ui.WalletDetailsFragment
 import com.tangem.tap.features.wallet.ui.WalletFragment
 import com.tangem.tap.features.wallet.ui.dialogs.TwinsOnboardingFragment
