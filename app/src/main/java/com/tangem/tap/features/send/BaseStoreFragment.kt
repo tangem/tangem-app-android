@@ -37,7 +37,7 @@ abstract class BaseStoreFragment(layoutId: Int) : Fragment(layoutId) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        toolbar.setNavigationOnClickListener { activity?.onBackPressed() }
+        toolbar?.setNavigationOnClickListener { activity?.onBackPressed() }
     }
 
     override fun onStart() {
