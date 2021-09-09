@@ -9,19 +9,15 @@ import com.tangem.operations.PreflightReadMode
 import com.tangem.operations.PreflightReadTask
 import com.tangem.operations.wallet.CreateWalletCommand
 
-class CreateWalletsTask(curves: List<EllipticCurve> = emptyList()) : CardSessionRunnable<Card> {
+class CreateWalletsTask(curves: List<EllipticCurve>? = null) : CardSessionRunnable<Card> {
 
-    private val curves = if (curves.isEmpty()) {
-        listOf(
-                EllipticCurve.Secp256k1,
-                EllipticCurve.Ed25519,
-                EllipticCurve.Secp256r1,
-        )
-    } else {
-        curves
-    }
+    private val curves = curves ?: listOf(
+            EllipticCurve.Secp256k1,
+            EllipticCurve.Ed25519,
+            EllipticCurve.Secp256r1,
+    )
 
-    var index = 0
+    private var index = 0
 
     override fun run(session: CardSession, callback: (result: CompletionResult<Card>) -> Unit) {
         val curve = curves[index]
