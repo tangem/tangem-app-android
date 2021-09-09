@@ -7,6 +7,8 @@ fun Card.getSingleWallet(): CardWallet? {
     return wallets.firstOrNull()
 }
 
+fun Card.hasWallets(): Boolean = wallets.isNotEmpty()
+
 fun Card.hasSignedHashes(): Boolean {
     return wallets.any { it.totalSignedHashes ?: 0 > 0 }
 }
