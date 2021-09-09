@@ -116,20 +116,8 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
             }
         }
 
-        when (state.sendButtonState) {
-            SendButtonState.ENABLED -> {
-                fg.btnSend.isEnabled = true
-                sendFragment.sendBtn.changeState(ProgressState.None)
-            }
-            SendButtonState.DISABLED -> {
-                fg.btnSend.isEnabled = false
-                sendFragment.sendBtn.changeState(ProgressState.None)
-            }
-            SendButtonState.PROGRESS -> {
-                fg.btnSend.isEnabled = true
-                sendFragment.sendBtn.changeState(ProgressState.Progress())
-            }
-        }
+        sendFragment.sendBtn.changeState(state.sendButtonState.progressState)
+        sendFragment.sendBtn.mainView.isEnabled = state.sendButtonState.enabled
 
         val rv = fg.rv_warning_messages
         val adapter = rv.adapter as? WarningMessagesAdapter ?: return
