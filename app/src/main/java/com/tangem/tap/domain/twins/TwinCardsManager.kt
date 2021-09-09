@@ -102,11 +102,11 @@ class TwinCardsManager(private val scanNoteResponse: ScanNoteResponse) {
         )
 
         fun verifyTwinPublicKey(issuerData: ByteArray, cardWalletPublicKey: ByteArray?): Boolean {
-            if (issuerData.size < 65) return false
+            if (issuerData.size < 65 || cardWalletPublicKey == null) return false
+
             val publicKey = issuerData.sliceArray(0 until 65)
             val signedKey = issuerData.sliceArray(65 until issuerData.size)
-            return (cardWalletPublicKey != null &&
-                    CryptoUtils.verify(cardWalletPublicKey, publicKey, signedKey))
+            return CryptoUtils.verify(cardWalletPublicKey, publicKey, signedKey)
         }
     }
 }
