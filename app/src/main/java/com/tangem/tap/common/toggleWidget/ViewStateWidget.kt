@@ -1,5 +1,7 @@
 package com.tangem.tap.common.toggleWidget
 
+import android.view.View
+
 
 /**
 [REDACTED_AUTHOR]
@@ -7,6 +9,7 @@ package com.tangem.tap.common.toggleWidget
 interface WidgetState
 
 interface ViewStateWidget {
+    val mainView: View
     fun changeState(state: WidgetState)
 }
 
