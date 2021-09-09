@@ -23,7 +23,7 @@ import com.tangem.tap.features.send.redux.*
 import com.tangem.tap.features.send.redux.FeeAction.RequestFee
 import com.tangem.tap.features.send.redux.states.ExternalTransactionData
 import com.tangem.tap.features.send.redux.states.MainCurrencyType
-import com.tangem.tap.features.send.redux.states.SendButtonState
+import com.tangem.tap.features.send.redux.states.ButtonState
 import com.tangem.tap.features.send.redux.states.TransactionExtrasState
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.scope
@@ -121,7 +121,7 @@ private fun sendTransaction(
         externalTransactionData: ExternalTransactionData?,
         dispatch: (Action) -> Unit,
 ) {
-    dispatch(SendAction.ChangeSendButtonState(SendButtonState.PROGRESS))
+    dispatch(SendAction.ChangeSendButtonState(ButtonState.PROGRESS))
     var txData = walletManager.createTransaction(amountToSend, feeAmount, destinationAddress)
 
     transactionExtras.xlmMemo?.memo?.let { txData = txData.copy(extras = StellarTransactionExtras(it)) }
@@ -236,7 +236,7 @@ private fun sendTransaction(
                     }
                 }
             }
-            dispatch(SendAction.ChangeSendButtonState(SendButtonState.ENABLED))
+            dispatch(SendAction.ChangeSendButtonState(ButtonState.ENABLED))
         }
     }
 }
