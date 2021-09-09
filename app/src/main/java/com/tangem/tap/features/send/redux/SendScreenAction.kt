@@ -11,7 +11,7 @@ import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.features.send.redux.states.FeeType
 import com.tangem.tap.features.send.redux.states.MainCurrencyType
-import com.tangem.tap.features.send.redux.states.SendButtonState
+import com.tangem.tap.features.send.redux.states.ButtonState
 import com.tangem.wallet.R
 import org.rekotlin.Action
 import java.math.BigDecimal
@@ -137,7 +137,7 @@ sealed class SendActionUi : SendScreenActionUi {
 
 sealed class SendAction : SendScreenAction {
 
-    data class ChangeSendButtonState(val state: SendButtonState) : SendAction()
+    data class ChangeSendButtonState(val state: ButtonState) : SendAction()
     object SendSuccess : SendAction(), ToastNotificationAction {
         override val messageResource: Int = R.string.send_transaction_success
     }
