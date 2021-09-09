@@ -7,7 +7,7 @@ import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.Card
-import com.tangem.common.card.EllipticCurve
+import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.card.WalletData
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
@@ -18,13 +18,11 @@ import com.tangem.operations.ScanTask
 import com.tangem.operations.issuerAndUserData.ReadIssuerDataCommand
 import com.tangem.tap.domain.TapSdkError
 import com.tangem.tap.domain.TapWorkarounds.isExcluded
-import com.tangem.tap.domain.TapWorkarounds.isMultiCurrencyWallet
 import com.tangem.tap.domain.TapWorkarounds.noteCurrency
 import com.tangem.tap.domain.extensions.getSingleWallet
 import com.tangem.tap.domain.twins.TwinCardsManager
 import com.tangem.tap.domain.twins.isTwinCard
 import com.tangem.tap.store
-import com.tangem.wallet.R
 
 data class ScanNoteResponse(
     val card: Card,
@@ -71,7 +69,7 @@ class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteRespons
 
                     if (card.isTwinCard()) {
                         dealWithTwinCard(card, session, callback)
-                    } else if (card.firmwareVersion.major >= 4) {
+                    } else if (card.firmwareVersion >= FirmwareVersion.MultiWalletAvailable) {
                         createMissingWalletsIfNeeded(card, session, callback)
                     } else {
                         callback(CompletionResult.Success(
@@ -88,14 +86,13 @@ class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteRespons
     ) {
         val walletData = session.environment.walletData
         if (card.wallets.isEmpty()) {
-            callback(CompletionResult.Success(
-                ScanNoteResponse(card, walletData)
-            ))
+            callback(CompletionResult.Success(ScanNoteResponse(card, walletData)))
             return
         }
 
         val curvesPresent = card.wallets.map { it.curve }
-        val curvesToCreate = EllipticCurve.values().subtract(curvesPresent)
+//        val curvesToCreate = EllipticCurve.values().subtract(curvesPresent)
+        val curvesToCreate = card.supportedCurves.subtract(curvesPresent)
 
         if (curvesToCreate.isEmpty()) {
             callback(CompletionResult.Success(ScanNoteResponse(card, walletData)))
