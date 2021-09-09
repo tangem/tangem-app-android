@@ -1,5 +1,8 @@
 package com.tangem.tap.domain.twins
 
+import android.content.Context
+import com.squareup.moshi.JsonAdapter
+import com.squareup.moshi.Types
 import com.tangem.Message
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
@@ -10,10 +13,12 @@ import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
 import com.tangem.crypto.CryptoUtils
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
+import com.tangem.tap.common.extensions.readAssetAsString
 import com.tangem.tap.domain.tasks.ScanNoteResponse
+import com.tangem.tap.network.createMoshi
 import com.tangem.tap.tangemSdkManager
 
-class TwinCardsManager(private val scanNoteResponse: ScanNoteResponse) {
+class TwinCardsManager(private val scanNoteResponse: ScanNoteResponse, context: Context) {
 
     private val currentCardId: String = scanNoteResponse.card.cardId
     private val secondCardId: String? = TwinsHelper.getTwinsCardId(currentCardId)
@@ -21,9 +26,13 @@ class TwinCardsManager(private val scanNoteResponse: ScanNoteResponse) {
     private var currentCardPublicKey: String? = null
     private var secondCardPublicKey: String? = null
 
+    private val issuerKeyPair: KeyPair = getIssuerKeys(
+        context, scanNoteResponse.card.issuer.publicKey.toHexString()
+    )
+
     suspend fun createFirstWallet(message: Message): SimpleResult {
         val response = tangemSdkManager.runTaskAsync(
-                CreateFirstTwinWalletTask(), currentCardId, message
+            CreateFirstTwinWalletTask(), currentCardId, message
         )
         when (response) {
             is CompletionResult.Success -> {
@@ -46,13 +55,17 @@ class TwinCardsManager(private val scanNoteResponse: ScanNoteResponse) {
 
 
     suspend fun createSecondWallet(
-            initialMessage: Message,
-            preparingMessage: Message,
-            creatingWalletMessage: Message
+        initialMessage: Message,
+        preparingMessage: Message,
+        creatingWalletMessage: Message,
     ): SimpleResult {
         val response = tangemSdkManager.runTaskAsync(
-                CreateSecondTwinWalletTask(currentCardPublicKey!!, preparingMessage, creatingWalletMessage),
-                secondCardId, initialMessage
+            CreateSecondTwinWalletTask(
+                firstPublicKey = currentCardPublicKey!!,
+                issuerKeys = issuerKeyPair,
+                preparingMessage = preparingMessage,
+                creatingWalletMessage = creatingWalletMessage),
+            secondCardId, initialMessage
         )
         when (response) {
             is CompletionResult.Success -> {
@@ -75,8 +88,8 @@ class TwinCardsManager(private val scanNoteResponse: ScanNoteResponse) {
 
     suspend fun complete(message: Message): Result<ScanNoteResponse> {
         val response = tangemSdkManager.runTaskAsync(
-                FinalizeTwinTask(secondCardPublicKey!!.hexToBytes(), issuerKeys),
-                currentCardId, message
+            FinalizeTwinTask(secondCardPublicKey!!.hexToBytes(), issuerKeyPair),
+            currentCardId, message
         )
         return when (response) {
             is CompletionResult.Success -> Result.Success(response.data)
@@ -94,13 +107,6 @@ class TwinCardsManager(private val scanNoteResponse: ScanNoteResponse) {
     }
 
     companion object {
-        val issuerKeys = KeyPair(
-                privateKey = "F9F4C50636C9E6FC65F92655BD5C21C85A5F6A34DCD0F1E75FCEA1980FE242F5".hexToBytes(),
-                publicKey = ("048196AA4B410AC44A3B9CCE18E7BE226AEA070ACC83A9CF67540F" +
-                        "AC49AF25129F6A538A28AD6341358E3C4F9963064F" +
-                        "7E365372A651D374E5C23CDD37FD099BF2").hexToBytes()
-        )
-
         fun verifyTwinPublicKey(issuerData: ByteArray, cardWalletPublicKey: ByteArray?): Boolean {
             if (issuerData.size < 65 || cardWalletPublicKey == null) return false
 
@@ -108,5 +114,30 @@ class TwinCardsManager(private val scanNoteResponse: ScanNoteResponse) {
             val signedKey = issuerData.sliceArray(65 until issuerData.size)
             return CryptoUtils.verify(cardWalletPublicKey, publicKey, signedKey)
         }
+
+        private fun getIssuerKeys(context: Context, publicKey: String): KeyPair {
+            val issuer = getIssuers(context).first { it.publicKey == publicKey }
+            return KeyPair(
+                publicKey = issuer.publicKey.hexToBytes(),
+                privateKey = issuer.privateKey.hexToBytes()
+            )
+        }
+
+        private fun getAdapter(): JsonAdapter<List<Issuer>> {
+            return createMoshi().adapter(
+                Types.newParameterizedType(List::class.java, Issuer::class.java)
+            )
+        }
+
+        private fun getIssuers(context: Context): List<Issuer> {
+            val file = context.readAssetAsString("tangem-app-config/issuers")
+            return getAdapter().fromJson(file)!!
+        }
     }
 }
+
+private class Issuer(
+    val id: String,
+    val privateKey: String,
+    val publicKey: String,
+)
