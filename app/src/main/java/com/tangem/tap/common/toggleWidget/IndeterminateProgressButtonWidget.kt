@@ -23,6 +23,8 @@ open class IndeterminateProgressButtonWidget(
         changeState(initialState)
     }
 
+    override val mainView: View = button
+
     override fun changeState(state: WidgetState) {
         val progressState = state as? ProgressState ?: return
 
