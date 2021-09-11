@@ -1,5 +1,6 @@
 package com.tangem.tap.features.details.redux
 
+import android.content.Context
 import com.tangem.Message
 import com.tangem.blockchain.common.Wallet
 import com.tangem.commands.common.card.Card
@@ -62,7 +63,9 @@ sealed class DetailsAction : Action {
             object Confirm : CreateTwinWalletAction()
         }
 
-        data class LaunchFirstStep(val message: Message) : CreateTwinWalletAction() {
+        data class LaunchFirstStep(
+            val message: Message, val context: Context
+        ) : CreateTwinWalletAction() {
             object Success : CreateTwinWalletAction()
             object Failure : CreateTwinWalletAction()
         }
