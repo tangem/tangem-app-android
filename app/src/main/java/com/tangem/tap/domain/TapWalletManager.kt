@@ -98,11 +98,10 @@ class TapWalletManager {
             store.dispatch(GlobalAction.SaveScanNoteResponse(data))
             store.dispatch(WalletAction.MultiWallet.SetIsMultiwalletAllowed(data.card.isMultiwalletAllowed))
             if (data.card.isTwinCard()) {
-                val secondCardId = TwinsHelper.getTwinsCardId(data.card.cardId)
                 val cardNumber = TwinsHelper.getTwinCardNumber(data.card.cardId)
-                if (secondCardId != null && cardNumber != null) {
+                if (cardNumber != null) {
                     store.dispatch(WalletAction.TwinsAction.SetTwinCard(
-                            secondCardId, cardNumber, isCreatingTwinCardsAllowed = true
+                            cardNumber, isCreatingTwinCardsAllowed = true
                     ))
                 }
             }
