@@ -3,6 +3,7 @@ package com.tangem.tap.domain.twins
 import com.tangem.CardSession
 import com.tangem.CardSessionRunnable
 import com.tangem.Message
+import com.tangem.TangemSdkError
 import com.tangem.commands.wallet.CreateWalletResponse
 import com.tangem.commands.wallet.PurgeWalletCommand
 import com.tangem.common.CompletionResult
@@ -14,13 +15,24 @@ import com.tangem.tasks.CreateWalletTask
 
 class CreateSecondTwinWalletTask(
         private val firstPublicKey: String,
+        private val firstCardId: String,
         private val preparingMessage: Message,
         private val creatingWalletMessage: Message
 ) : CardSessionRunnable<CreateWalletResponse> {
     override val requiresPin2 = true
 
+
+
     override fun run(session: CardSession, callback: (result: CompletionResult<CreateWalletResponse>) -> Unit) {
-        if (session.environment.card?.getSingleWallet()?.publicKey != null) {
+        val card = session.environment.card
+
+        if (card?.getSingleWallet()?.publicKey != null) {
+
+            if (!card.cardId.startsWith(TwinsHelper.getPairCardSeries(firstCardId) ?: "")) {
+                callback(CompletionResult.Failure(TangemSdkError.WrongCardType()))
+                return
+            }
+
             session.setInitialMessage(preparingMessage)
             PurgeWalletCommand(TangemSdkConstants.getDefaultWalletIndex()).run(session) { response ->
                 when (response) {
