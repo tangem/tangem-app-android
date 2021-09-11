@@ -1,9 +1,6 @@
 package com.tangem.tap.domain.twins
 
-import com.tangem.CardSession
-import com.tangem.CardSessionRunnable
-import com.tangem.Message
-import com.tangem.TangemSdkError
+import com.tangem.*
 import com.tangem.commands.wallet.CreateWalletResponse
 import com.tangem.commands.wallet.PurgeWalletCommand
 import com.tangem.common.CompletionResult
@@ -14,10 +11,11 @@ import com.tangem.tap.domain.extensions.getSingleWallet
 import com.tangem.tasks.CreateWalletTask
 
 class CreateSecondTwinWalletTask(
-        private val firstPublicKey: String,
-        private val firstCardId: String,
-        private val preparingMessage: Message,
-        private val creatingWalletMessage: Message
+    private val firstPublicKey: String,
+    private val firstCardId: String,
+    private val issuerKeys: KeyPair,
+    private val preparingMessage: Message,
+    private val creatingWalletMessage: Message
 ) : CardSessionRunnable<CreateWalletResponse> {
     override val requiresPin2 = true
 
@@ -56,7 +54,7 @@ class CreateSecondTwinWalletTask(
                     session.environment.card = session.environment.card?.changeStatusToLoaded()
 
                     WriteProtectedIssuerDataTask(
-                            firstPublicKey.hexToBytes(), TwinCardsManager.issuerKeys
+                            firstPublicKey.hexToBytes(), issuerKeys
                     ).run(session) { writeResult ->
                         when (writeResult) {
                             is CompletionResult.Success -> callback(result)
