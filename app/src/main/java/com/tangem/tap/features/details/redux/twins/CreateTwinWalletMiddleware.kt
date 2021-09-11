@@ -49,7 +49,7 @@ class CreateTwinWalletMiddleware {
             }
             is DetailsAction.CreateTwinWalletAction.LaunchFirstStep -> {
                 store.state.globalState.scanNoteResponse?.let {
-                    twinsManager = TwinCardsManager(it)
+                    twinsManager = TwinCardsManager(it, action.context)
                 }
                 scope.launch {
                     val result = twinsManager?.createFirstWallet(action.message)
