@@ -6,7 +6,6 @@ import com.tangem.blockchain.common.address.AddressType
 import com.tangem.commands.common.card.Card
 import com.tangem.tap.common.redux.ErrorAction
 import com.tangem.tap.common.redux.NotificationAction
-import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.tokens.CardCurrencies
@@ -132,7 +131,7 @@ sealed class WalletAction : Action {
         object ShowOnboarding : TwinsAction()
         object SetOnboardingShown : TwinsAction()
         data class SetTwinCard(
-                val secondCardId: String, val number: TwinCardNumber,
+                val number: TwinCardNumber,
                 val isCreatingTwinCardsAllowed: Boolean,
         ) : TwinsAction()
     }
