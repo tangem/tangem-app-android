@@ -94,7 +94,10 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     override fun newState(state: WalletState) {
         if (activity == null) return
 
-        if (state.isMultiwalletAllowed && walletView is SingleWalletView) {
+        if (state.isMultiwalletAllowed &&
+            state.primaryWallet?.currencyData?.status != BalanceStatus.EmptyCard &&
+            walletView is SingleWalletView
+        ) {
             walletView = MultiWalletView()
             walletView.changeWalletView(this)
         } else if (!state.isMultiwalletAllowed && walletView is MultiWalletView) {
