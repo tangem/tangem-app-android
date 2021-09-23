@@ -13,18 +13,27 @@ private fun internalReduce(action: Action, state: AppState): HomeState {
 
     if (action !is HomeAction) return state.homeState
 
-    var homeState = state.homeState
+    var state = state.homeState
     when (action) {
-        is HomeAction.CheckIfFirstLaunch.Result -> {
-            homeState = homeState.copy(firstLaunch = action.firstLaunch)
+        is HomeAction.SetFragmentShareTransition -> {
+            state = state.copy(shareTransition = action.shareTransition)
+        }
+        is HomeAction.SetTermsOfUseState -> {
+            state = state.copy(isDisclaimerAccepted = action.isDisclaimerAccepted)
+        }
+        is HomeAction.SetOpenUrl -> {
+            state = state.copy(openUrl = action.url)
+        }
+        is HomeAction.ChangeScanCardButtonState -> {
+            state = state.copy(btnScanState = action.state)
         }
         is HomeAction.ShowDialog.ScanFails -> {
-            homeState = homeState.copy(dialog = HomeDialog.ScanFailsDialog)
+            state = state.copy(dialog = HomeDialog.ScanFailsDialog)
         }
         is HomeAction.HideDialog -> {
-            homeState = homeState.copy(dialog = null)
+            state = state.copy(dialog = null)
         }
     }
 
-    return homeState
+    return state
 }

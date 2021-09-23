@@ -2,6 +2,9 @@ package com.tangem.tap.common.redux.global
 
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.CompletionResult
+import com.tangem.common.core.TangemError
+import com.tangem.tap.common.redux.DebugErrorAction
+import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.configurable.config.ConfigManager
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
@@ -13,6 +16,14 @@ import com.tangem.tap.network.moonpay.MoonPayUserStatus
 import org.rekotlin.Action
 
 sealed class GlobalAction : Action {
+
+    data class DebugShowError(override val error: TapError) : GlobalAction(), DebugErrorAction
+
+    data class ReadCard(
+        val onSuccess: (suspend (ScanNoteResponse) -> Unit)? = null,
+        val onFailure: (suspend (TangemError) -> Unit)? = null,
+        val messageResId: Int? = null,
+    ) : GlobalAction()
 
     object ScanFailsCounter {
         data class ChooseBehavior(val result: CompletionResult<ScanNoteResponse>) : GlobalAction()
