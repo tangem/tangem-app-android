@@ -22,7 +22,7 @@ import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.domain.tasks.CreateWalletAndRescanTask
 import com.tangem.tap.domain.tasks.ScanNoteResponse
 import com.tangem.tap.domain.tasks.ScanNoteTask
-import com.tangem.tap.domain.twins.isTwinCard
+import com.tangem.tap.domain.twins.isTangemTwin
 import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -35,16 +35,22 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         analyticsHandler: AnalyticsHandler, messageRes: Int? = null,
     ): CompletionResult<ScanNoteResponse> {
         analyticsHandler.triggerEvent(AnalyticsEvent.READY_TO_SCAN, null)
-        val result = runTaskAsyncReturnOnMain(ScanNoteTask(),
-            initialMessage = Message(
-                context.getString(messageRes ?: R.string.initial_message_scan_header)
-            ))
-        if (result is CompletionResult.Failure) {
+
+        return runTaskAsyncReturnOnMain(
+            ScanNoteTask(),
+            initialMessage = Message(context.getString(messageRes ?: R.string.initial_message_scan_header))
+        ).also { sendScanFailuresToAnalytics(analyticsHandler, it) }
+    }
+
+    private fun sendScanFailuresToAnalytics(
+        analyticsHandler: AnalyticsHandler,
+        result: CompletionResult<ScanNoteResponse>
+    ) {
+        if (result is CompletionResult.Failure && result.error is TangemSdkError) {
             (result.error as? TangemSdkError)?.let { error ->
                 analyticsHandler.logCardSdkError(error, FirebaseAnalyticsHandler.ActionToLog.Scan)
             }
         }
-        return result
     }
 
     suspend fun createWallet(cardId: String?): CompletionResult<Card> {
@@ -106,7 +112,7 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
     }
 
     fun changeDisplayedCardIdNumbersCount(card: Card) {
-        tangemSdk.config.cardIdDisplayedNumbersCount = if (card.isTwinCard()) 4 else null
+        tangemSdk.config.cardIdDisplayedNumbersCount = if (card.isTangemTwin()) 4 else null
     }
 
     companion object {
