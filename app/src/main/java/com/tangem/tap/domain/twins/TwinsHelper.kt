@@ -75,7 +75,7 @@ enum class TwinCardNumber(val number: Int) {
     }
 }
 
-fun Card.isTwinCard(): Boolean {
+fun Card.isTangemTwin(): Boolean {
     return getTwinCardNumber(cardId) != null
 }
 
