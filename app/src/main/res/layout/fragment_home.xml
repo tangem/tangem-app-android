@@ -2,95 +2,126 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    app:layoutDescription="@xml/fragment_welcome_scene">
 
-    <ImageView
-        android:id="@+id/iv_home_card"
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/imv_back_card"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="73dp"
-        android:layout_marginEnd="77dp"
-        android:elevation="3dp"
-        android:src="@drawable/ic_card_home"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-    <ImageView
-        android:id="@+id/iv_home_circle"
-        android:layout_width="374dp"
-        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:elevation="0dp"
         android:scaleType="fitXY"
-        android:src="@drawable/ic_ellipse_4"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        android:src="@drawable/ic_home_card_back"
+        android:translationY="-55dp"
+        app:layout_constraintEnd_toEndOf="@+id/imv_front_card"
+        app:layout_constraintStart_toStartOf="@+id/imv_front_card"
+        app:layout_constraintTop_toBottomOf="@+id/imv_front_card" />
 
-
-    <ImageView
-        android:layout_width="88dp"
-        android:layout_height="26dp"
-        android:layout_marginTop="120dp"
-        android:layout_marginEnd="50dp"
-        android:elevation="3dp"
-        android:scaleType="fitXY"
-        android:src="@drawable/ic_tangem_logo"
-        app:layout_constraintEnd_toEndOf="@id/iv_home_card"
-        app:layout_constraintTop_toTopOf="@+id/iv_home_card" />
-
-    <ImageView
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/imv_front_card"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="153dp"
-        android:layout_marginEnd="50dp"
-        android:elevation="3dp"
+        android:layout_marginTop="48dp"
+        android:elevation="1dp"
         android:scaleType="fitXY"
-        android:src="@drawable/ic_dots"
-        app:layout_constraintEnd_toEndOf="@id/iv_home_card"
-        app:layout_constraintTop_toTopOf="@+id/iv_home_card" />
+        android:src="@drawable/ic_home_card_front"
+        android:transitionName="imv_front_card"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.496"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/view" />
 
     <TextView
-        android:id="@+id/tv_home_description"
-        android:layout_width="match_parent"
+        android:id="@+id/tv_home_header"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="100dp"
-        android:paddingStart="30dp"
-        android:paddingEnd="30dp"
-        android:text="@string/home_welcome"
-        android:textColor="@color/darkGray6"
-        android:textSize="29sp"
-        app:layout_constraintTop_toBottomOf="@id/iv_home_card" />
+        android:layout_marginBottom="14dp"
+        android:fontFamily="sans-serif-medium"
+        android:text="@string/home_welcome_header"
+        android:textColor="#060606"
+        android:textSize="24sp"
+        app:layout_constraintBottom_toTopOf="@+id/tv_home_body"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.508"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <TextView
+        android:id="@+id/tv_home_body"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="32dp"
+        android:layout_marginBottom="50dp"
+        android:text="@string/home_welcome_body"
+        android:textAlignment="center"
+        android:textColor="#686868"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toTopOf="@+id/fl_scan_card_container"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+    <FrameLayout
+        android:id="@+id/fl_scan_card_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:clipToPadding="false"
+        app:layout_constraintBottom_toTopOf="@+id/btn_get_new_card"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_scan_card"
+            style="@style/TapButton"
+            android:layout_width="295dp"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            android:text="@string/home_button_scan" />
+
+        <ProgressBar
+            android:id="@+id/progress"
+            android:layout_width="35dp"
+            android:layout_height="35dp"
+            android:layout_gravity="center"
+            android:elevation="18dp"
+            android:indeterminate="true"
+            android:indeterminateTint="@color/backgroundLightGray"
+            android:translationY="-4dp" />
+
+    </FrameLayout>
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_shop"
-        style="@style/TapBlackButton"
-        android:layout_width="0dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginBottom="33dp"
-        android:text="@string/common_no"
-        app:icon="@drawable/ic_shop"
+        android:id="@+id/btn_get_new_card"
+        style="@style/Widget.AppCompat.Button.Borderless"
+        android:layout_width="295dp"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="32dp"
+        android:insetTop="0dp"
+        android:insetBottom="0dp"
+        android:text="@string/home_button_get_new_card"
+        android:textAllCaps="false"
+        android:textColor="@color/tapButtonColorBlack"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/guideline"
-        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
 
     <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guideline"
+        android:id="@+id/guideline2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
+        android:orientation="horizontal"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintGuide_percent="0.37" />
+        app:layout_constraintGuide_percent="0.5"
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_yes"
-        style="@style/TapButtonWithIcon"
-        android:layout_width="0dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="33dp"
-        android:text="@string/home_button_yes"
-        app:icon="@drawable/ic_send"
-        app:layout_constraintBottom_toBottomOf="parent"
+    <View
+        android:id="@+id/view"
+        android:layout_width="wrap_content"
+        android:layout_height="20dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/guideline" />
+        app:layout_constraintHorizontal_bias="0.498"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
