@@ -2,6 +2,9 @@ package com.tangem.tap.common.redux.navigation
 
 import android.view.View
 import androidx.fragment.app.FragmentActivity
+import androidx.transition.ChangeBounds
+import androidx.transition.ChangeImageTransform
+import androidx.transition.ChangeTransform
 import androidx.transition.TransitionSet
 import org.rekotlin.Action
 import java.lang.ref.WeakReference
@@ -28,3 +31,13 @@ data class FragmentShareTransition(
 )
 
 data class ShareElement(val wView: WeakReference<View>, val name: String)
+
+//TODO: remove transition example
+class DetailsTransition : TransitionSet() {
+    init {
+        ordering = ORDERING_TOGETHER;
+        addTransition(ChangeBounds())
+                .addTransition(ChangeTransform())
+                .addTransition(ChangeImageTransform())
+    }
+}
