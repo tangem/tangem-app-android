@@ -2,12 +2,11 @@ package com.tangem.tap.features.wallet.redux.reducers
 
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Wallet
-import com.tangem.common.extensions.toHexString
-import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.FiatCurrencyName
 import com.tangem.tap.domain.TapError
+import com.tangem.tap.domain.extensions.getArtworkUrl
 import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.domain.twins.TwinCardNumber
 import com.tangem.tap.features.wallet.redux.*
@@ -215,29 +214,12 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
         is WalletAction.LoadFiatRate.Success ->
             newState = setNewFiatRate(action.fiatRate, state.globalState.appCurrency, newState)
         is WalletAction.LoadArtwork -> {
-            val cardId = action.card.cardId
-            val cardPublicKey = action.card.cardPublicKey.toHexString()
-            val artworkUrl = when {
-                action.artworkId != null -> {
-                    OnlineCardVerifier.getUrlForArtwork(cardId, cardPublicKey, action.artworkId)
-                }
-                action.card.cardId.startsWith(Artwork.SERGIO_CARD_ID) -> {
-                    Artwork.SERGIO_CARD_URL
-                }
-                action.card.cardId.startsWith(Artwork.MARTA_CARD_ID) -> {
-                    Artwork.MARTA_CARD_URL
-                }
-                newState.twinCardsState?.cardNumber != null -> {
-                    when (newState.twinCardsState?.cardNumber) {
+            val artworkUrl = action.card.getArtworkUrl(action.artworkId)
+                    ?: when (newState.twinCardsState?.cardNumber) {
                         TwinCardNumber.First -> Artwork.TWIN_CARD_1
                         TwinCardNumber.Second -> Artwork.TWIN_CARD_2
-                        null -> Artwork.DEFAULT_IMG_URL
+                        else -> Artwork.DEFAULT_IMG_URL
                     }
-                }
-                else -> {
-                    Artwork.DEFAULT_IMG_URL
-                }
-            }
             newState = newState.copy(cardImage = Artwork(artworkId = artworkUrl))
         }
         is WalletAction.ShowDialog.QrCode -> {
