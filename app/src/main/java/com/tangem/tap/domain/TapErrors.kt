@@ -21,6 +21,7 @@ sealed class TapError(
 ) : Throwable(), TapErrors, ArgError {
 
     object UnknownError : TapError(R.string.send_error_unknown)
+    object ScanCardError : TapError(R.string.scan_card_error)
     data class CustomError(val customMessage: String) : TapError(R.string.common_custom_string, listOf(customMessage))
     object PayIdAlreadyCreated : TapError(R.string.wallet_create_payid_error_already_created)
     object PayIdCreatingError : TapError(R.string.wallet_create_payid_error_message)
@@ -38,8 +39,8 @@ sealed class TapError(
     object DustChange : TapError(R.string.send_error_dust_change)
     data class CreateAccountUnderfunded(override val args: List<Any>) : TapError(R.string.send_error_no_target_account)
 
-    sealed class XmlError  {
-        object AssetAccountNotCreated: TapError(R.string.send_error_no_account_xlm)
+    sealed class XmlError {
+        object AssetAccountNotCreated : TapError(R.string.send_error_no_account_xlm)
     }
 
     data class ValidateTransactionErrors(
