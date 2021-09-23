@@ -17,7 +17,6 @@ import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.TangemSdkManager
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
-import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -73,10 +72,11 @@ class MainActivity : AppCompatActivity(), SnackbarHandler {
     override fun onResume() {
         super.onResume()
         notificationsHandler = NotificationsHandler(fragment_container)
-        if (supportFragmentManager.backStackEntryCount == 0 ||
-            store.state.globalState.scanNoteResponse == null
-        ) {
-            store.dispatch(HomeAction.CheckIfFirstLaunch)
+
+        val backStackIsEmpty = supportFragmentManager.backStackEntryCount == 0
+        val isScannedBefore = store.state.globalState.scanNoteResponse != null
+        val isOnboardingStarted = store.state.onboardingState.onboardingData?.scanNoteResponse != null
+        if ((backStackIsEmpty || isScannedBefore) && !isOnboardingStarted) {
             store.dispatch(NavigationAction.NavigateTo(AppScreen.Home))
         }
         intentHandler.handleIntent(intent)
@@ -107,7 +107,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler {
         if (snackbar != null) return
 
         snackbar = Snackbar.make(
-            fragment_container, getString(text), Snackbar.LENGTH_INDEFINITE
+                fragment_container, getString(text), Snackbar.LENGTH_INDEFINITE
         )
         if (buttonTitle != null && action != null) {
             snackbar?.setAction(getString(buttonTitle), action)
