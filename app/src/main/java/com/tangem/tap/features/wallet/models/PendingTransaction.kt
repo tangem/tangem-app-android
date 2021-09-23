@@ -3,6 +3,7 @@ package com.tangem.tap.features.wallet.models
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.TransactionStatus
+import com.tangem.blockchain.common.Wallet
 import com.tangem.tap.common.extensions.toFormattedString
 
 data class PendingTransaction(
@@ -57,4 +58,12 @@ fun TransactionData.toPendingTransactionForToken(token: Token, walletAddress: St
 
 fun List<TransactionData>.toPendingTransactionsForToken(token: Token, walletAddress: String): List<PendingTransaction> {
     return this.mapNotNull { it.toPendingTransactionForToken(token, walletAddress) }
+}
+
+fun Wallet.getPendingTransactions(): List<PendingTransaction> {
+    return recentTransactions.toPendingTransactions(address)
+}
+
+fun Wallet.hasPendingTransactions(): Boolean {
+    return recentTransactions.toPendingTransactions(address).isNotEmpty()
 }
