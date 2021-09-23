@@ -15,3 +15,10 @@ fun <T> MutableList<T>.removeBy(predicate: (T) -> Boolean): Boolean {
     this.removeAll(toRemove)
     return toRemove.isNotEmpty()
 }
+
+fun <T> MutableList<T>.replaceBy(item: T, predicate: (T) -> Boolean) {
+    val toRemove = this.filter(predicate)
+    val indexes = toRemove.map { indexOf(it) }
+    this.removeAll(toRemove)
+    indexes.forEach { this.add(it, item) }
+}
