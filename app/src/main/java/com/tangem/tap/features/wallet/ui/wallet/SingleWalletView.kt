@@ -107,7 +107,7 @@ class SingleWalletView : WalletView {
             tv_twin_card_number.hide()
         }
         if (twinCardsState?.showTwinOnboarding == true) {
-            store.dispatch(NavigationAction.NavigateTo(AppScreen.TwinsOnboarding))
+            store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingTwins))
         }
 
 
