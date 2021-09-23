@@ -15,7 +15,7 @@ import com.tangem.tap.domain.extensions.*
 import com.tangem.tap.domain.tasks.ScanNoteResponse
 import com.tangem.tap.domain.tokens.CardCurrencies
 import com.tangem.tap.domain.twins.TwinsHelper
-import com.tangem.tap.domain.twins.isTwinCard
+import com.tangem.tap.domain.twins.isTangemTwin
 import com.tangem.tap.features.tokens.redux.TokensAction
 import com.tangem.tap.features.wallet.redux.Currency
 import com.tangem.tap.features.wallet.redux.WalletAction
@@ -98,7 +98,7 @@ class TapWalletManager {
             store.dispatch(GlobalAction.SaveScanNoteResponse(data))
             store.dispatch(WalletAction.SetIfTestnetCard(data.card.isTestCard))
             store.dispatch(WalletAction.MultiWallet.SetIsMultiwalletAllowed(data.card.isMultiwalletAllowed))
-            if (data.card.isTwinCard()) {
+            if (data.card.isTangemTwin()) {
                 val secondCardId = TwinsHelper.getTwinsCardId(data.card.cardId)
                 val cardNumber = TwinsHelper.getTwinCardNumber(data.card.cardId)
                 if (secondCardId != null && cardNumber != null) {
@@ -143,7 +143,7 @@ class TapWalletManager {
                     store.dispatch(WalletAction.LoadData.Failure(TapError.UnknownBlockchain))
                 }
                 data.card.wallets.isEmpty() ||
-                        (data.card.isTwinCard() && data.secondTwinPublicKey == null) -> {
+                        (data.card.isTangemTwin() && data.secondTwinPublicKey == null) -> {
                     store.dispatch(WalletAction.EmptyWallet)
                 }
                 else -> {
@@ -152,7 +152,7 @@ class TapWalletManager {
                     val blockchain = data.getBlockchain()
                     val primaryWalletManager = walletManagerFactory.makePrimaryWalletManager(data)
 
-                    if (blockchain != null && primaryWalletManager != null) {
+                    if (blockchain != Blockchain.Unknown && primaryWalletManager != null) {
                         val primaryToken = data.getPrimaryToken()
 
                         store.dispatch(WalletAction.MultiWallet.SetPrimaryBlockchain(blockchain))
@@ -236,7 +236,7 @@ class TapWalletManager {
                     store.dispatch(WalletAction.LoadData.Failure(TapError.UnknownBlockchain))
                 }
                 data.card.wallets.isEmpty() ||
-                        (data.card.isTwinCard() && data.secondTwinPublicKey == null) -> {
+                        (data.card.isTangemTwin() && data.secondTwinPublicKey == null) -> {
                     store.dispatch(WalletAction.EmptyWallet)
                 }
                 else -> {
