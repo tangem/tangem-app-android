@@ -12,7 +12,7 @@ import com.tangem.tap.features.disclaimer.redux.DisclaimerMiddleware
 import com.tangem.tap.features.disclaimer.redux.DisclaimerState
 import com.tangem.tap.features.home.redux.HomeMiddleware
 import com.tangem.tap.features.home.redux.HomeState
-import com.tangem.tap.features.send.redux.middlewares.sendMiddleware
+import com.tangem.tap.features.send.redux.middlewares.SendMiddleware
 import com.tangem.tap.features.send.redux.states.SendState
 import com.tangem.tap.features.tokens.redux.TokensMiddleware
 import com.tangem.tap.features.tokens.redux.TokensState
