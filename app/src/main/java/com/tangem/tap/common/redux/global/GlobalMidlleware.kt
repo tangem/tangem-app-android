@@ -3,6 +3,7 @@ package com.tangem.tap.common.redux.global
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.services.Result
+import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
@@ -13,10 +14,19 @@ import com.tangem.tap.network.moonpay.MoonpayService
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
+import com.tangem.tap.tangemSdkManager
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.rekotlin.Middleware
 
-val globalMiddleware: Middleware<AppState> = { dispatch, appState ->
+class GlobalMiddleware {
+    companion object {
+        val handler = globalMiddlewareHandler
+    }
+}
+
+private val globalMiddlewareHandler: Middleware<AppState> = { dispatch, appState ->
     { nextDispatch ->
         { action ->
             when (action) {
@@ -74,6 +84,21 @@ val globalMiddleware: Middleware<AppState> = { dispatch, appState ->
                                 store.dispatchOnMain(
                                     GlobalAction.GetMoonPayUserStatus.Success(userStatusResponse.data)
                                 )
+                            }
+                        }
+                    }
+                }
+                is GlobalAction.ReadCard -> {
+                    scope.launch {
+                        val result = tangemSdkManager.scanNote(FirebaseAnalyticsHandler, action.messageResId)
+                        withContext(Dispatchers.Main) {
+                            store.dispatch(GlobalAction.ScanFailsCounter.ChooseBehavior(result))
+                            when (result) {
+                                is CompletionResult.Success -> {
+                                    tangemSdkManager.changeDisplayedCardIdNumbersCount(result.data.card)
+                                    action.onSuccess?.invoke(result.data)
+                                }
+                                is CompletionResult.Failure -> action.onFailure?.invoke(result.error)
                             }
                         }
                     }
