@@ -7,7 +7,7 @@ import com.tangem.common.extensions.isZero
 import com.tangem.tap.common.CurrencyConverter
 import com.tangem.tap.common.entities.IndeterminateProgressButton
 import com.tangem.tap.common.entities.TapCurrency
-import com.tangem.tap.common.redux.global.StateDialog
+import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.text.DecimalDigitsInputFilter
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
