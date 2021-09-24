@@ -36,6 +36,7 @@ fun FragmentActivity.openFragment(
     fgShareTransition?.apply {
         fragment.sharedElementEnterTransition = enterTransitionSet
         fragment.sharedElementReturnTransition = exitTransitionSet
+        transaction.setReorderingAllowed(true)
         shareElements.forEach { shareElement ->
             shareElement.wView.get()?.let { view ->
                 transaction.addSharedElement(view, shareElement.name)
