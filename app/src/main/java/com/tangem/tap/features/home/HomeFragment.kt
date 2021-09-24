@@ -10,11 +10,12 @@ import androidx.transition.TransitionInflater
 import com.tangem.tap.common.extensions.safeStartActivity
 import com.tangem.tap.common.extensions.toast
 import com.tangem.tap.common.redux.global.StateDialog
-import com.tangem.tap.common.redux.navigation.DetailsTransition
 import com.tangem.tap.common.redux.navigation.FragmentShareTransition
 import com.tangem.tap.common.redux.navigation.ShareElement
 import com.tangem.tap.common.toggleWidget.IndeterminateProgressButtonWidget
 import com.tangem.tap.common.toggleWidget.ViewStateWidget
+import com.tangem.tap.common.transitions.FrontCardEnterTransition
+import com.tangem.tap.common.transitions.FrontCardExitTransition
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.home.redux.HomeDialog
 import com.tangem.tap.features.home.redux.HomeState
@@ -40,9 +41,11 @@ class HomeFragment : Fragment(R.layout.fragment_home), StoreSubscriber<HomeState
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val transitionViews = mutableListOf<ShareElement>()
-        transitionViews.add(ShareElement(WeakReference(imv_front_card), imv_front_card.transitionName))
-        val shareTransition = FragmentShareTransition(transitionViews, DetailsTransition(), DetailsTransition())
+        val shareTransition = FragmentShareTransition(
+                listOf(ShareElement(WeakReference(imv_front_card), imv_front_card.transitionName)),
+                FrontCardEnterTransition(),
+                FrontCardExitTransition()
+        )
 
         store.dispatch(HomeAction.SetFragmentShareTransition(shareTransition))
         store.dispatch(HomeAction.Init)
