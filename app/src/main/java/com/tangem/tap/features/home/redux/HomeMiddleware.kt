@@ -61,7 +61,8 @@ private fun launchOnboardingService() {
     service.onReadyToProceed = {
         store.dispatch(OnboardingAction.SetData(it))
         changeButtonState(ButtonState.ENABLED)
-        store.dispatch(NavigationAction.NavigateTo(it.onboardingScreen))
+        val sharedTransition = store.state.homeState.shareTransition
+        store.dispatch(NavigationAction.NavigateTo(it.onboardingScreen, fragmentShareTransition = sharedTransition))
     }
 
     service.onFailedToProceedToOnboardingCase = {
