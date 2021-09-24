@@ -23,6 +23,7 @@ class PicassoHelper {
         private fun getOkHttpForPicasso(application: Application): OkHttpClient {
             val okHttpBuilder = OkHttpClient.Builder()
             okHttpBuilder.cache(Cache(File(application.filesDir, "artworks"), Long.MAX_VALUE))
+            okHttpBuilder.callTimeout(15000, TimeUnit.MILLISECONDS)
             okHttpBuilder.addInterceptor { chain ->
                 val cacheControl = CacheControl.Builder()
                         .maxStale(KEEP_CACHE_MAX_DAYS, TimeUnit.DAYS)
