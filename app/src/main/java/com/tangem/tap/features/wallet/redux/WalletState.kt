@@ -5,8 +5,9 @@ import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.blockchain.extensions.isAboveZero
 import com.tangem.tap.common.entities.Button
+import com.tangem.tap.common.extensions.toQrCode
+import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
-import com.tangem.tap.common.redux.global.StateDialog
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.extensions.toSendableAmounts
 import com.tangem.tap.domain.topup.TradeCryptoHelper
@@ -141,7 +142,6 @@ sealed class WalletDialog: StateDialog {
     ) : WalletDialog()
 
     data class SelectAmountToSendDialog(val amounts: List<Amount>?) : WalletDialog()
-    object ScanFailsDialog : WalletDialog()
     object SignedHashesMultiWalletDialog : WalletDialog()
     object ChooseTradeActionDialog : WalletDialog()
 }
@@ -165,8 +165,9 @@ data class AddressData(
         val type: AddressType,
         val shareUrl: String,
         val exploreUrl: String,
-        val qrCode: Bitmap? = null
-)
+) {
+    val qrCode: Bitmap by lazy { shareUrl.toQrCode() }
+}
 
 data class Artwork(
         val artworkId: String,
