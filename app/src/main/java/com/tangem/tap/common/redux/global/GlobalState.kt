@@ -1,6 +1,7 @@
 package com.tangem.tap.common.redux.global
 
 import com.tangem.tap.common.entities.TapCurrency.Companion.DEFAULT_FIAT_CURRENCY
+import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.domain.PayIdManager
 import com.tangem.tap.domain.TapWalletManager
 import com.tangem.tap.domain.configurable.config.ConfigManager
@@ -28,6 +29,3 @@ data class GlobalState(
 
 typealias CryptoCurrencyName = String
 typealias FiatCurrencyName = String
-
-
-interface StateDialog
