@@ -232,9 +232,6 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                 )
             )
         }
-        is WalletAction.ShowDialog.ScanFails -> {
-            newState = newState.copy(walletDialog = WalletDialog.ScanFailsDialog)
-        }
         is WalletAction.ShowDialog.SignedHashesMultiWalletDialog -> {
             newState = newState.copy(walletDialog = WalletDialog.SignedHashesMultiWalletDialog)
         }
@@ -276,30 +273,34 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
 fun createAddressList(wallet: Wallet?, walletAddresses: WalletAddresses? = null): WalletAddresses? {
     if (wallet == null) return null
 
+    val listOfAddressData = wallet.createAddressesData()
+    // restore a selected wallet address
+    var indexOfSelectedWallet = 0
+    walletAddresses?.let {
+        val index =
+                listOfAddressData.indexOfFirst { it.address == walletAddresses.selectedAddress.address }
+        if (index != -1) indexOfSelectedWallet = index
+    }
+    return WalletAddresses(listOfAddressData[indexOfSelectedWallet], listOfAddressData)
+}
+
+fun Wallet.createAddressesData(): List<AddressData> {
     val listOfAddressData = mutableListOf<AddressData>()
     // put a defaultAddress at the first place
-    wallet.addresses.forEach {
+    addresses.forEach {
         val addressData = AddressData(
-            it.value,
-            it.type,
-            wallet.getShareUri(it.value),
-            wallet.getExploreUrl(it.value)
+                it.value,
+                it.type,
+                getShareUri(it.value),
+                getExploreUrl(it.value)
         )
-        if (it.type == wallet.blockchain.defaultAddressType()) {
+        if (it.type == blockchain.defaultAddressType()) {
             listOfAddressData.add(0, addressData)
         } else {
             listOfAddressData.add(addressData)
         }
     }
-
-    // restore a selected wallet address
-    var indexOfSelectedWallet = 0
-    walletAddresses?.let {
-        val index =
-            listOfAddressData.indexOfFirst { it.address == walletAddresses.selectedAddress.address }
-        if (index != -1) indexOfSelectedWallet = index
-    }
-    return WalletAddresses(listOfAddressData[indexOfSelectedWallet], listOfAddressData)
+    return listOfAddressData
 }
 
 private fun handleCheckSignedHashesActions(
