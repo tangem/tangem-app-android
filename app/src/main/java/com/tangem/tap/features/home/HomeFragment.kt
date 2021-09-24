@@ -41,7 +41,7 @@ class HomeFragment : Fragment(R.layout.fragment_home), StoreSubscriber<HomeState
         super.onViewCreated(view, savedInstanceState)
 
         val transitionViews = mutableListOf<ShareElement>()
-        transitionViews.add(ShareElement(WeakReference(imv_front_card), "imv_front_card"))
+        transitionViews.add(ShareElement(WeakReference(imv_front_card), imv_front_card.transitionName))
         val shareTransition = FragmentShareTransition(transitionViews, DetailsTransition(), DetailsTransition())
 
         store.dispatch(HomeAction.SetFragmentShareTransition(shareTransition))
