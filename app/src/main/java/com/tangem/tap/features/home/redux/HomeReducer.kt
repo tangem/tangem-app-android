@@ -21,17 +21,8 @@ private fun internalReduce(action: Action, state: AppState): HomeState {
         is HomeAction.SetTermsOfUseState -> {
             state = state.copy(isDisclaimerAccepted = action.isDisclaimerAccepted)
         }
-        is HomeAction.SetOpenUrl -> {
-            state = state.copy(openUrl = action.url)
-        }
         is HomeAction.ChangeScanCardButtonState -> {
             state = state.copy(btnScanState = action.state)
-        }
-        is HomeAction.ShowDialog.ScanFails -> {
-            state = state.copy(dialog = HomeDialog.ScanFailsDialog)
-        }
-        is HomeAction.HideDialog -> {
-            state = state.copy(dialog = null)
         }
     }
 
