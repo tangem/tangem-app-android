@@ -1,6 +1,7 @@
 package com.tangem.tap.features.home.redux
 
 import com.tangem.tap.common.entities.IndeterminateProgressButton
+import com.tangem.tap.common.extensions.dispatchOpenUrl
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
@@ -38,7 +39,7 @@ private val homeMiddleware: Middleware<AppState> = { dispatch, state ->
                         launchOnboardingService()
                     }
                 }
-                is HomeAction.GoToShop -> store.dispatch(HomeAction.SetOpenUrl(HomeMiddleware.CARD_SHOP_URI))
+                is HomeAction.GoToShop -> store.dispatchOpenUrl(HomeMiddleware.CARD_SHOP_URI)
             }
             next(action)
         }

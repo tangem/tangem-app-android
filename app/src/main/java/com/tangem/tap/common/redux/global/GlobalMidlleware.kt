@@ -4,10 +4,11 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.services.Result
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
+import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
-import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.send.redux.SendAction
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.network.moonpay.MoonpayService
@@ -37,8 +38,7 @@ private val globalMiddlewareHandler: Middleware<AppState> = { dispatch, appState
                             if (action.result.error is TangemSdkError.UserCancelled) {
                                 store.dispatch(GlobalAction.ScanFailsCounter.Increment)
                                 if (store.state.globalState.scanCardFailsCounter >= 2) {
-                                    store.dispatch(HomeAction.ShowDialog.ScanFails)
-                                    store.dispatch(WalletAction.ShowDialog.ScanFails)
+                                    store.dispatchDialogShow(AppDialog.ScanFailsDialog)
                                 }
                             } else {
                                 store.dispatch(GlobalAction.ScanFailsCounter.Reset)
