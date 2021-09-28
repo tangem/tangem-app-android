@@ -48,7 +48,7 @@ class UsedCardsPrefStorage(
         return findCardInfo(cardId)?.isActivationStarted ?: false
     }
 
-    fun activated(cardId: String) {
+    fun activate(cardId: String) {
         val restoredList = restore()
         val foundItem = findCardInfo(cardId, restoredList)?.copy(isActivated = true)
                 ?: UsedCardInfo(cardId, isActivated = true)
