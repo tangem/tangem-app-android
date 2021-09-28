@@ -49,11 +49,11 @@ class OnboardingService(
 
         if (!card.isTangemNote() && !card.isTangemWallet() && !card.isTangemTwin()) {
             if (hasWallets) {
-                cardInfoStorage.activated(card.cardId)
+                cardInfoStorage.activate(card.cardId)
                 onFailedToProceedToOnboardingCase?.invoke(response)
                 return
             } else {
-                cardInfoStorage.activated(card.cardId) // вызвать только после того, как был создан кошелек
+                cardInfoStorage.activate(card.cardId) // вызвать только после того, как был создан кошелек
                 onboardingDataLinker.navigateTo = AppScreen.OnboardingOther
             }
         }
