@@ -8,6 +8,7 @@ import com.tangem.tap.common.entities.Button
 import com.tangem.tap.common.extensions.toQrCode
 import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
+import com.tangem.tap.common.toggleWidget.WidgetState
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.extensions.toSendableAmounts
 import com.tangem.tap.domain.topup.TradeCryptoHelper
@@ -146,7 +147,7 @@ sealed class WalletDialog: StateDialog {
     object ChooseTradeActionDialog : WalletDialog()
 }
 
-enum class ProgressState { Loading, Done, Error }
+enum class ProgressState: WidgetState { Loading, Done, Error }
 
 enum class ErrorType { NoInternetConnection }
 
