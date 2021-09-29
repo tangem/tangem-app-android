@@ -12,8 +12,3 @@ interface ViewStateWidget {
     val mainView: View
     fun changeState(state: WidgetState)
 }
-
-sealed class ProgressState : WidgetState {
-    object None : ProgressState()
-    data class Progress(val progress: Int = 0) : ProgressState()
-}
