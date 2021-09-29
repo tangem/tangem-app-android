@@ -10,7 +10,6 @@ import androidx.core.text.bold
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.getMessageString
 import com.tangem.tap.common.text.DecimalDigitsInputFilter
-import com.tangem.tap.common.toggleWidget.ProgressState
 import com.tangem.tap.domain.MultiMessageError
 import com.tangem.tap.domain.assembleErrors
 import com.tangem.tap.features.send.BaseStoreFragment
