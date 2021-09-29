@@ -5,6 +5,7 @@ import android.view.View
 import com.google.android.material.button.MaterialButton
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
+import com.tangem.tap.features.wallet.redux.ProgressState
 
 /**
 [REDACTED_AUTHOR]
@@ -12,7 +13,7 @@ import com.tangem.tap.common.extensions.show
 open class IndeterminateProgressButtonWidget(
         private val button: MaterialButton,
         private val progress: View,
-        initialState: ProgressState = ProgressState.None
+        initialState: ProgressState = ProgressState.Done
 ) : ViewStateWidget {
 
     private var initialButtonText: CharSequence = button.text
@@ -29,8 +30,8 @@ open class IndeterminateProgressButtonWidget(
         val progressState = state as? ProgressState ?: return
 
         when (progressState) {
-            is ProgressState.None -> switchToNone()
-            is ProgressState.Progress -> switchToProgress()
+            ProgressState.Done, ProgressState.Error -> switchToNone()
+            ProgressState.Loading -> switchToProgress()
         }
     }
 
