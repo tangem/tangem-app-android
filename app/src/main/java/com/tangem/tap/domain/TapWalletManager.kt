@@ -5,6 +5,8 @@ import com.tangem.common.card.Card
 import com.tangem.common.services.Result
 import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
+import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
+import com.tangem.tap.common.extensions.loadWalletData
 import com.tangem.tap.common.redux.global.FiatCurrencyName
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.currenciesRepository
@@ -38,13 +40,7 @@ class TapWalletManager {
             by lazy { WalletManagerFactory(blockchainSdkConfig) }
 
     suspend fun loadWalletData(walletManager: WalletManager) {
-        val result = try {
-            walletManager.update()
-            Result.Success(walletManager.wallet)
-        } catch (exception: Exception) {
-            Result.Failure(exception)
-        }
-        handleUpdateWalletResult(result, walletManager)
+        handleUpdateWalletResult(walletManager.loadWalletData(), walletManager)
     }
 
     suspend fun updateWallet(walletManager: WalletManager) {
@@ -261,23 +257,23 @@ class TapWalletManager {
             when (result) {
                 is Result.Success -> store.dispatch(WalletAction.LoadWallet.Success(result.data))
                 is Result.Failure -> {
-                    if (!NetworkConnectivity.getInstance().isOnlineOrConnecting()) {
-                        store.dispatch(WalletAction.LoadData.Failure(TapError.NoInternetConnection))
-                        return@withContext
-                    }
-                    val error = result.error
-                    val blockchain = walletManager.wallet.blockchain
-                    if (error != null && blockchain.isNoAccountError(error)) {
-                        val token = walletManager.wallet.getFirstToken()
-                        val amountToCreateAccount = blockchain.amountToCreateAccount(token)
-                        if (amountToCreateAccount != null) {
-                            store.dispatch(WalletAction.LoadWallet.NoAccount(
-                                    walletManager.wallet,
-                                    amountToCreateAccount.toString()))
-                            return@withContext
+                    val error = (result.error as? TapError) ?: TapError.UnknownError
+                    when (error) {
+                        TapError.NoInternetConnection -> {
+                            store.dispatch(WalletAction.LoadData.Failure(error))
+                        }
+                        is TapError.NoAccount -> {
+                            store.dispatch(WalletAction.LoadWallet
+                                    .NoAccount(walletManager.wallet, error.amountToCreateAccount))
+                        }
+                        is TapError.CustomError -> {
+                            store.dispatch(WalletAction.LoadWallet
+                                    .Failure(walletManager.wallet, error.customMessage))
+                        }
+                        else -> {
+                            store.dispatchDebugErrorNotification(error)
                         }
                     }
-                    store.dispatch(WalletAction.LoadWallet.Failure(walletManager.wallet, result.error?.localizedMessage))
                 }
             }
         }
