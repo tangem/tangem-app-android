@@ -16,6 +16,7 @@ import com.tangem.common.extensions.toHexString
 import com.tangem.tap.domain.TapSdkError
 import com.tangem.tap.domain.TapWorkarounds.isExcluded
 import com.tangem.tap.domain.TapWorkarounds.isMultiCurrencyWallet
+import com.tangem.tap.domain.TapWorkarounds.isNote
 import com.tangem.tap.domain.extensions.getSingleWallet
 import com.tangem.tap.domain.extensions.getStatus
 import com.tangem.tap.domain.twins.TwinCardsManager
@@ -149,8 +150,8 @@ class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteRespons
         if (card.isExcluded()) return TapSdkError.CardForDifferentApp
         if (card.status == CardStatus.Purged) return TangemSdkError.WalletIsPurged()
         if (card.status == CardStatus.NotPersonalized) return TangemSdkError.NotPersonalized()
-        // Disable new multi-currency HD wallet cards on the old version of the app
-        if (card.isMultiCurrencyWallet()) return UpdateAppToUseThisCard()
+        // Disable new cards on the old version of the app // TODO: remove when cards are supported
+        if (card.isMultiCurrencyWallet() || card.isNote()) return UpdateAppToUseThisCard()
         return null
     }
 
