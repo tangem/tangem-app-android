@@ -1,6 +1,5 @@
 package com.tangem.tap.features.onboarding.products.wallet.redux
 
-import com.tangem.tap.features.onboarding.redux.OnboardingStep
 import org.rekotlin.StateType
 
 /**
@@ -10,6 +9,6 @@ data class OnboardingWalletState(
     val any: String? = null
 ) : StateType
 
-enum class OnboardingWalletStep : OnboardingStep {
+enum class OnboardingWalletStep {
     None, CreateWallet, TopUpWallet, Backup, Done
 }
