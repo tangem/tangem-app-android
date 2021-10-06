@@ -6,8 +6,7 @@ import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.global.GlobalState
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectDialog
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.*
-import com.tangem.tap.features.onboarding.products.note.OnboardingAddressInfoDialog
-import com.tangem.tap.features.onboarding.redux.OnboardingAction
+import com.tangem.tap.features.onboarding.AddressInfoBottomSheetDialog
 import com.tangem.tap.features.wallet.ui.dialogs.ScanFailsDialog
 import com.tangem.tap.store
 import com.tangem.wallet.R
@@ -43,6 +42,7 @@ class DialogManager : StoreSubscriber<GlobalState> {
 
         dialog = when (state.dialog) {
             is AppDialog.ScanFailsDialog -> ScanFailsDialog.create(context)
+            is AppDialog.AddressInfoDialog -> AddressInfoBottomSheetDialog(state.dialog, context)
             is WalletConnectDialog.UnsupportedCard ->
                 SimpleAlertDialog.create(
                         titleRes = R.string.wallet_connect,
@@ -71,9 +71,6 @@ class DialogManager : StoreSubscriber<GlobalState> {
                 TransactionDialog.create(state.dialog.dialogData, context)
             is WalletConnectDialog.PersonalSign ->
                 PersonalSignDialog.create(state.dialog.data, context)
-            is OnboardingAction.Dialog.AddressInfo -> {
-                OnboardingAddressInfoDialog(state.dialog, context)
-            }
             else -> null
         }
         dialog?.show()

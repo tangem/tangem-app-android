@@ -10,6 +10,12 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
     val globalState = state.globalState
 
     return when (action) {
+        is GlobalAction.Onboarding.Activate -> {
+            globalState.copy(onboardingService = action.onboardingService)
+        }
+        is GlobalAction.Onboarding.Deactivate -> {
+            globalState.copy(onboardingService = null)
+        }
         is GlobalAction.ScanFailsCounter.Increment -> {
             globalState.copy(scanCardFailsCounter = globalState.scanCardFailsCounter + 1)
         }
