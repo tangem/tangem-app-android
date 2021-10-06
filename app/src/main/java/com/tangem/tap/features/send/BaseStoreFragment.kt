@@ -24,7 +24,10 @@ abstract class BaseStoreFragment(layoutId: Int) : Fragment(layoutId) {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        configureTransitions()
+    }
 
+    protected open fun configureTransitions() {
         val inflater = TransitionInflater.from(requireContext())
         enterTransition = inflater.inflateTransition(R.transition.slide_right)
         exitTransition = inflater.inflateTransition(R.transition.fade)
