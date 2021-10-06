@@ -16,7 +16,7 @@ fun Blockchain.isNoAccountError(exception: Throwable): Boolean {
 fun Blockchain.amountToCreateAccount(token: Token? = null): Double? {
     return when (this) {
         Blockchain.Stellar -> if (token?.symbol == NODL) 1.5 else 1.toDouble()
-        Blockchain.XRP -> 20.toDouble()
+        Blockchain.XRP -> 10.toDouble()
         else -> null
     }
 }
