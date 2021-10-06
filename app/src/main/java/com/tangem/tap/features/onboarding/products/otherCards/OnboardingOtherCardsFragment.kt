@@ -1,30 +1,19 @@
-package com.tangem.tap.features.onboarding.products.old
+package com.tangem.tap.features.onboarding.products.otherCards
 
 import android.os.Bundle
 import android.view.View
 import androidx.transition.TransitionInflater
-import com.tangem.tap.common.extensions.addOnBackPressedDispatcher
-import com.tangem.tap.common.redux.navigation.NavigationAction
-import com.tangem.tap.features.onboarding.redux.OnboardingAction
-import com.tangem.tap.features.onboarding.redux.OnboardingOtherCardsState
-import com.tangem.tap.features.onboarding.redux.OnboardingOtherStep
 import com.tangem.tap.features.send.BaseStoreFragment
-import com.tangem.tap.store
 import com.tangem.wallet.R
 import org.rekotlin.StoreSubscriber
 
 /**
 [REDACTED_AUTHOR]
  */
-class OnboardingOtherCardsFragment : BaseStoreFragment(R.layout.fragment_onboarding), StoreSubscriber<OnboardingOtherCardsState> {
+class OnboardingOtherCardsFragment : BaseStoreFragment(R.layout.fragment_onboarding_main), StoreSubscriber<OnboardingOtherCardsState> {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        activity?.addOnBackPressedDispatcher {
-            store.dispatch(NavigationAction.PopBackTo())
-            store.dispatch(OnboardingAction.SetInitialStepOfScreen(OnboardingOtherStep.Done))
-        }
 
         val inflater = TransitionInflater.from(requireContext())
         enterTransition = inflater.inflateTransition(R.transition.fade)
@@ -48,3 +37,5 @@ class OnboardingOtherCardsFragment : BaseStoreFragment(R.layout.fragment_onboard
 
     }
 }
+
+class OnboardingOtherCardsState {}
