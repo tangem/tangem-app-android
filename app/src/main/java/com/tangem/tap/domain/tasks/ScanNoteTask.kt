@@ -67,7 +67,7 @@ class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteRespons
 
                     if (card.isTangemTwin()) {
                         dealWithTwinCard(card, session, callback)
-                    } else if (card.firmwareVersion >= FirmwareVersion.MultiWalletAvailable) {
+                    } else if (!card.isTangemNote() && card.firmwareVersion >= FirmwareVersion.MultiWalletAvailable) {
                         createMissingWalletsIfNeeded(card, session, callback)
                     } else {
                         callback(CompletionResult.Success(

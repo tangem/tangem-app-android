@@ -15,6 +15,7 @@ import com.tangem.tap.features.home.redux.HomeState
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fragment_home.*
+import kotlinx.android.synthetic.main.layout_onboarding_bottom_action_views.*
 import org.rekotlin.StoreSubscriber
 import java.lang.ref.WeakReference
 
@@ -40,10 +41,15 @@ class HomeFragment : Fragment(R.layout.fragment_home), StoreSubscriber<HomeState
         store.dispatch(HomeAction.SetFragmentShareTransition(shareTransition))
         store.dispatch(HomeAction.Init)
 
-        btn_scan_card?.setOnClickListener { store.dispatch(HomeAction.ReadCard) }
-        btn_get_new_card?.setOnClickListener { store.dispatch(HomeAction.GoToShop) }
+        tv_header.setText(R.string.home_welcome_header)
+        tv_body.setText(R.string.home_welcome_body)
 
-        btnScanCard = IndeterminateProgressButtonWidget(btn_scan_card, progress)
+        btn_main_action.setText(R.string.home_button_scan)
+        btn_main_action.setOnClickListener { store.dispatch(HomeAction.ReadCard) }
+        btn_alternative_action.setText(R.string.home_button_get_new_card)
+        btn_alternative_action.setOnClickListener { store.dispatch(HomeAction.GoToShop) }
+
+        btnScanCard = IndeterminateProgressButtonWidget(btn_main_action, progress)
     }
 
     override fun onStart() {
