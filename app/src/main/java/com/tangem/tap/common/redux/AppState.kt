@@ -16,8 +16,6 @@ import com.tangem.tap.features.onboarding.products.note.redux.OnboardingNoteMidd
 import com.tangem.tap.features.onboarding.products.note.redux.OnboardingNoteState
 import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletMiddleware
 import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletState
-import com.tangem.tap.features.onboarding.redux.OnboardingMiddleware
-import com.tangem.tap.features.onboarding.redux.OnboardingState
 import com.tangem.tap.features.send.redux.middlewares.SendMiddleware
 import com.tangem.tap.features.send.redux.states.SendState
 import com.tangem.tap.features.tokens.redux.TokensMiddleware
@@ -31,7 +29,6 @@ data class AppState(
     val navigationState: NavigationState = NavigationState(),
     val globalState: GlobalState = GlobalState(),
     val homeState: HomeState = HomeState(),
-    val onboardingState: OnboardingState = OnboardingState(),
     val onboardingNoteState: OnboardingNoteState = OnboardingNoteState(),
     val onboardingWalletState: OnboardingWalletState = OnboardingWalletState(),
     val walletState: WalletState = WalletState(),
@@ -48,7 +45,6 @@ data class AppState(
                     logMiddleware, navigationMiddleware, notificationsMiddleware,
                     GlobalMiddleware.handler,
                     HomeMiddleware.handler,
-                    OnboardingMiddleware.handler,
                     OnboardingNoteMiddleware.handler,
                     OnboardingWalletMiddleware.handler,
                     WalletMiddleware().walletMiddleware,
