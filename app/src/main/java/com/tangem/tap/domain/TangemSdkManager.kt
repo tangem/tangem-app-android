@@ -1,5 +1,6 @@
 package com.tangem.tap.domain
 
+import CreateProductWalletAndRescanTask
 import android.content.Context
 import com.tangem.Message
 import com.tangem.TangemSdk
@@ -22,6 +23,7 @@ import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.domain.tasks.CreateWalletAndRescanTask
 import com.tangem.tap.domain.tasks.ScanNoteResponse
 import com.tangem.tap.domain.tasks.ScanNoteTask
+import com.tangem.tap.domain.tasks.product.ScanProductTask
 import com.tangem.tap.domain.twins.isTangemTwin
 import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
@@ -31,8 +33,10 @@ import kotlin.coroutines.suspendCoroutine
 
 class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Context) {
 
+    @Deprecated("Use can product")
     suspend fun scanNote(
-        analyticsHandler: AnalyticsHandler, messageRes: Int? = null,
+        analyticsHandler: AnalyticsHandler,
+        messageRes: Int? = null,
     ): CompletionResult<ScanNoteResponse> {
         analyticsHandler.triggerEvent(AnalyticsEvent.READY_TO_SCAN, null)
 
@@ -40,6 +44,21 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
             ScanNoteTask(),
             initialMessage = Message(context.getString(messageRes ?: R.string.initial_message_scan_header))
         ).also { sendScanFailuresToAnalytics(analyticsHandler, it) }
+    }
+
+    suspend fun scanProduct(
+        analyticsHandler: AnalyticsHandler,
+        messageRes: Int? = null,
+    ): CompletionResult<ScanNoteResponse> {
+        analyticsHandler.triggerEvent(AnalyticsEvent.READY_TO_SCAN, null)
+
+        val message = Message(context.getString(messageRes ?: R.string.initial_message_scan_header))
+        return runTaskAsyncReturnOnMain(ScanProductTask(), null, message)
+                .also { sendScanFailuresToAnalytics(analyticsHandler, it) }
+    }
+
+    suspend fun createProductWallet(cardId: String?): CompletionResult<Card> {
+        return runTaskAsync(CreateProductWalletAndRescanTask(), cardId, Message(context.getString(R.string.initial_message_create_wallet_body)))
     }
 
     private fun sendScanFailuresToAnalytics(
