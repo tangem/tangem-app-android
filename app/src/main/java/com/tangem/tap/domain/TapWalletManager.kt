@@ -6,7 +6,7 @@ import com.tangem.common.services.Result
 import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
-import com.tangem.tap.common.extensions.loadWalletData
+import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.redux.global.FiatCurrencyName
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.currenciesRepository
@@ -40,22 +40,17 @@ class TapWalletManager {
             by lazy { WalletManagerFactory(blockchainSdkConfig) }
 
     suspend fun loadWalletData(walletManager: WalletManager) {
-        handleUpdateWalletResult(walletManager.loadWalletData(), walletManager)
+        handleUpdateWalletResult(walletManager.safeUpdate(), walletManager)
     }
 
     suspend fun updateWallet(walletManager: WalletManager) {
-        val result = try {
-            walletManager.update()
-            Result.Success(walletManager.wallet)
-        } catch (exception: Exception) {
-            Result.Failure(exception)
-        }
+        val result = walletManager.safeUpdate()
         withContext(Dispatchers.Main) {
             when (result) {
                 is Result.Success ->
                     store.dispatch(WalletAction.UpdateWallet.Success(result.data))
                 is Result.Failure ->
-                    store.dispatch(WalletAction.UpdateWallet.Failure(result.error?.localizedMessage))
+                    store.dispatch(WalletAction.UpdateWallet.Failure(result.error.localizedMessage))
             }
         }
 
@@ -262,11 +257,11 @@ class TapWalletManager {
                         TapError.NoInternetConnection -> {
                             store.dispatch(WalletAction.LoadData.Failure(error))
                         }
-                        is TapError.NoAccount -> {
+                        is TapError.WalletManagerUpdate.NoAccountError -> {
                             store.dispatch(WalletAction.LoadWallet
-                                    .NoAccount(walletManager.wallet, error.amountToCreateAccount))
+                                    .NoAccount(walletManager.wallet, error.customMessage))
                         }
-                        is TapError.CustomError -> {
+                        is TapError.WalletManagerUpdate.InternalError -> {
                             store.dispatch(WalletAction.LoadWallet
                                     .Failure(walletManager.wallet, error.customMessage))
                         }
