@@ -12,7 +12,7 @@ import com.tangem.tap.network.NetworkConnectivity
 /**
 [REDACTED_AUTHOR]
  */
-suspend fun WalletManager.loadWalletData(): Result<Wallet> = try {
+suspend fun WalletManager.safeUpdate(): Result<Wallet> = try {
     update()
     Result.Success(wallet)
 } catch (exception: Exception) {
@@ -23,10 +23,10 @@ suspend fun WalletManager.loadWalletData(): Result<Wallet> = try {
         val amountToCreateAccount = blockchain.amountToCreateAccount(wallet.getFirstToken())
 
         if (blockchain.isNoAccountError(exception) && amountToCreateAccount != null) {
-            Result.Failure(TapError.NoAccount(amountToCreateAccount.toString()))
+            Result.Failure(TapError.WalletManagerUpdate.NoAccountError(amountToCreateAccount.toString()))
         } else {
             val message = exception.localizedMessage ?: "Unknown exception during WalletManager update"
-            Result.Failure(TapError.CustomError(message))
+            Result.Failure(TapError.WalletManagerUpdate.InternalError(message))
         }
     }
 }
