@@ -9,8 +9,8 @@ import java.lang.ref.WeakReference
 sealed class NavigationAction : Action {
     data class NavigateTo(
         val screen: AppScreen,
-        val addToBackstack: Boolean = true,
-        val fragmentShareTransition: FragmentShareTransition? = null
+        val fragmentShareTransition: FragmentShareTransition? = null,
+        val addToBackstack: Boolean = true
     ) : NavigationAction()
 
     data class PopBackTo(val screen: AppScreen? = null) : NavigationAction()
