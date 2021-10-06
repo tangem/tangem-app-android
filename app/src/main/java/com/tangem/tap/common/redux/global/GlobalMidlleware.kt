@@ -6,6 +6,7 @@ import com.tangem.common.services.Result
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.extensions.withMainContext
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
@@ -16,9 +17,7 @@ import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.rekotlin.Middleware
 
 class GlobalMiddleware {
@@ -73,7 +72,7 @@ private val globalMiddlewareHandler: Middleware<AppState> = { dispatch, appState
                 }
                 is GlobalAction.UpdateFeedbackInfo -> {
                     store.state.globalState.feedbackManager?.infoHolder
-                        ?.setWalletsInfo(action.walletManagers)
+                            ?.setWalletsInfo(action.walletManagers)
                 }
                 is GlobalAction.GetMoonPayUserStatus -> {
                     val apiKey = appState()?.globalState?.configManager?.config?.moonPayApiKey
@@ -82,7 +81,7 @@ private val globalMiddlewareHandler: Middleware<AppState> = { dispatch, appState
                             val userStatusResponse = MoonpayService().getUserStatus(apiKey)
                             if (userStatusResponse is Result.Success) {
                                 store.dispatchOnMain(
-                                    GlobalAction.GetMoonPayUserStatus.Success(userStatusResponse.data)
+                                        GlobalAction.GetMoonPayUserStatus.Success(userStatusResponse.data)
                                 )
                             }
                         }
@@ -90,9 +89,9 @@ private val globalMiddlewareHandler: Middleware<AppState> = { dispatch, appState
                 }
                 is GlobalAction.ReadCard -> {
                     scope.launch {
-                        val result = tangemSdkManager.scanNote(FirebaseAnalyticsHandler, action.messageResId)
-                        withContext(Dispatchers.Main) {
-                            store.dispatch(GlobalAction.ScanFailsCounter.ChooseBehavior(result))
+                        val result = tangemSdkManager.scanProduct(FirebaseAnalyticsHandler, action.messageResId)
+                        store.dispatch(GlobalAction.ScanFailsCounter.ChooseBehavior(result))
+                        withMainContext {
                             when (result) {
                                 is CompletionResult.Success -> {
                                     tangemSdkManager.changeDisplayedCardIdNumbersCount(result.data.card)
