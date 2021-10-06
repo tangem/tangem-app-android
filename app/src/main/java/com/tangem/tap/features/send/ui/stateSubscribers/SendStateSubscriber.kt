@@ -172,7 +172,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
                     val messageList = multiError.assembleErrors().map { getMessageString(context, it.first, it.second) }
                     multiError.builder(messageList)
                 }
-                else -> context.getString(state.error.localizedMessage)
+                else -> context.getString(state.error.messageResource)
             }
             fg.tilAmountToSend.enableError(true, message)
         } else {
