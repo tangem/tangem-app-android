@@ -182,6 +182,8 @@ data class Artwork(
         const val MARTA_CARD_ID = "BC02"
         const val TWIN_CARD_1 = "https://app.tangem.com/cards/card_tg085.png"
         const val TWIN_CARD_2 = "https://app.tangem.com/cards/card_tg086.png"
+
+        const val TEMP_CARDANO = "https://verify.tangem.com/card/artwork?artworkId=card_ru039&CID=CB19000000040976&publicKey=0416E29423A6CC77CD07CBA52873E8F6F894B1AFB18EB3688ACC2C8D8E5AC84B80B0BA1B17B85E578E47044CE96BCFF3FB4499FA4941CAD3C1EF300A492B5B9659"
     }
 }
 

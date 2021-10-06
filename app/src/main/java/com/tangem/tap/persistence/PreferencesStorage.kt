@@ -102,13 +102,16 @@ class AppRatingLaunchObserver(
     private val K_FUNDS_FOUND_DATE = "fundsFoundDate"
     private val K_USER_WAS_INTERACT_WITH_RATING = "userWasInteractWithRating"
 
+    private val FUNDS_FOUND_DATE_UNDEFINED = -1L
     private val deferShowing = 20
     private val firstShowing = 3
     private var fundsFoundDate: Calendar? = null
 
     init {
-        val dateTimeMs = preferences.getLong(K_FUNDS_FOUND_DATE, -1)
-        if (dateTimeMs > 0) fundsFoundDate = Calendar.getInstance().apply { timeInMillis = dateTimeMs }
+        val msWhenFundsWasFound = preferences.getLong(K_FUNDS_FOUND_DATE, FUNDS_FOUND_DATE_UNDEFINED)
+        if (msWhenFundsWasFound != FUNDS_FOUND_DATE_UNDEFINED) {
+            fundsFoundDate = Calendar.getInstance().apply { timeInMillis = msWhenFundsWasFound }
+        }
     }
 
     fun foundWalletWithFunds() {

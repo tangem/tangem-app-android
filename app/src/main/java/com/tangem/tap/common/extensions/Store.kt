@@ -3,6 +3,7 @@ package com.tangem.tap.common.extensions
 import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.domain.TapError
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import kotlinx.coroutines.Dispatchers
@@ -29,6 +30,27 @@ fun Store<*>.dispatchNotification(resId: Int) {
 fun Store<*>.dispatchToastNotification(resId: Int) {
     scope.launch(Dispatchers.Main) {
         store.dispatch(GlobalAction.ShowToastNotification(resId))
+    }
+}
+
+
+fun Store<*>.dispatchErrorNotification(error: TapError) {
+    scope.launch(Dispatchers.Main) {
+        store.dispatch(GlobalAction.ShowErrorNotification(error))
+    }
+}
+
+/**
+ * @param fatal used to indicate errors that should not normally have occurred
+ */
+fun Store<*>.dispatchDebugErrorNotification(message: String, fatal: Boolean = false) {
+    val prefix = if (fatal) "FATAL ERROR: " else "DEBUG ERROR: "
+    dispatchDebugErrorNotification(TapError.CustomError("$prefix $message"))
+}
+
+fun Store<*>.dispatchDebugErrorNotification(error: TapError) {
+    scope.launch(Dispatchers.Main) {
+        store.dispatch(GlobalAction.DebugShowErrorNotification(error))
     }
 }
 
