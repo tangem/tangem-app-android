@@ -75,8 +75,8 @@ class MainActivity : AppCompatActivity(), SnackbarHandler {
 
         val backStackIsEmpty = supportFragmentManager.backStackEntryCount == 0
         val isScannedBefore = store.state.globalState.scanNoteResponse != null
-        val isOnboardingStarted = store.state.onboardingState.onboardingData?.scanNoteResponse != null
-        if ((backStackIsEmpty || isScannedBefore) && !isOnboardingStarted) {
+        val isOnboardingServiceActive = store.state.globalState.onboardingService != null
+        if (backStackIsEmpty || (!isOnboardingServiceActive && !isScannedBefore)) {
             store.dispatch(NavigationAction.NavigateTo(AppScreen.Home))
         }
         intentHandler.handleIntent(intent)
