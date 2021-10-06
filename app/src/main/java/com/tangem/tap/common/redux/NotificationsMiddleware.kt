@@ -84,7 +84,7 @@ private fun handleNotificationAction(action: Action) {
                 }
                 else -> {
                     val args = (action.error as? ArgError)?.args ?: listOf()
-                    notificationsHandler?.showNotification(action.error.localizedMessage, args)
+                    notificationsHandler?.showNotification(action.error.messageResource, args)
                 }
             }
         }
