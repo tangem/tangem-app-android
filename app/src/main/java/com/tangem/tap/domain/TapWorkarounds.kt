@@ -60,6 +60,8 @@ object TapWorkarounds {
     )
 }
 
+val DELAY_SDK_DIALOG_CLOSE = 1400L
+
 val Card.isMultiwalletAllowed: Boolean
     get() {
         return !isTangemTwin() && !isStart2Coin && !isTangemNote()
