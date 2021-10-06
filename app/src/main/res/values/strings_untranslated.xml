@@ -191,6 +191,7 @@ this wallet.
     <string name="onboarding_done_header" translatable="false">Done!</string>
     <string name="onboarding_done_body" translatable="false">Your crypto card is activated and ready to be used</string>
     <string name="onboarding_done_button_continue" translatable="false">Continue</string>
+    <string name="onboarding_balance_title" translatable="false">Balance</string>
 
     <string name="onboarding_error_create_primary_wallet" translatable="false">Internal error: can\'t create wallet manager</string>
 
