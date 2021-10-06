@@ -17,7 +17,7 @@ import com.tangem.tap.features.details.ui.walletconnect.WalletConnectSessionsFra
 import com.tangem.tap.features.disclaimer.ui.DisclaimerFragment
 import com.tangem.tap.features.home.HomeFragment
 import com.tangem.tap.features.onboarding.products.note.OnboardingNoteFragment
-import com.tangem.tap.features.onboarding.products.old.OnboardingOtherCardsFragment
+import com.tangem.tap.features.onboarding.products.otherCards.OnboardingOtherCardsFragment
 import com.tangem.tap.features.onboarding.products.wallet.OnboardingWalletFragment
 import com.tangem.tap.features.send.ui.SendFragment
 import com.tangem.tap.features.tokens.ui.AddTokensFragment
