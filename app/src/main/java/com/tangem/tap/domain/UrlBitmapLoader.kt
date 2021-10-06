@@ -39,8 +39,8 @@ open class DownloadTarget(
         protectedFromGarbageCollectorTargets.remove(this)
     }
 
-    override fun onBitmapFailed(e: java.lang.Exception?, errorDrawable: Drawable?) {
-        callback.invoke(Result.Failure(e))
+    override fun onBitmapFailed(e: Exception?, errorDrawable: Drawable?) {
+        callback.invoke(Result.Failure(e ?: Exception("Unknown exception")))
         protectedFromGarbageCollectorTargets.remove(this)
     }
 
