@@ -3,7 +3,7 @@ package com.tangem.tap.persistence
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import com.tangem.common.json.MoshiJsonConverter
-import com.tangem.tap.common.extensions.replaceBy
+import com.tangem.tap.common.extensions.replaceByOrAdd
 import timber.log.Timber
 
 /**
@@ -48,16 +48,12 @@ class UsedCardsPrefStorage(
         return findCardInfo(cardId)?.isActivationStarted ?: false
     }
 
-    fun activate(cardId: String) {
+    fun activationFinished(cardId: String) {
         val restoredList = restore()
-        val foundItem = findCardInfo(cardId, restoredList)?.copy(isActivated = true)
-                ?: UsedCardInfo(cardId, isActivated = true)
+        val foundItem = findCardInfo(cardId, restoredList)?.copy(isActivationStarted = false)
+                ?: UsedCardInfo(cardId, isActivationStarted = false)
 
         save(foundItem, restoredList)
-    }
-
-    fun wasActivated(cardId: String): Boolean {
-        return findCardInfo(cardId)?.isActivated ?: false
     }
 
     private fun findCardInfo(cardId: String, list: MutableList<UsedCardInfo>? = null): UsedCardInfo? {
@@ -68,7 +64,7 @@ class UsedCardsPrefStorage(
     private fun save(usedCardInfo: UsedCardInfo?, usedCardsInfo: MutableList<UsedCardInfo>) {
         val info = usedCardInfo ?: return
 
-        usedCardsInfo.replaceBy(info) { it.cardId == info.cardId }
+        usedCardsInfo.replaceByOrAdd(info) { it.cardId == info.cardId }
         save(usedCardsInfo)
     }
 
@@ -86,13 +82,13 @@ class UsedCardsPrefStorage(
     private fun restore(): MutableList<UsedCardInfo> {
         val json = preferences.getString(USED_CARDS_INFO, null) ?: return mutableListOf()
         return try {
-            jsonConverter.fromJson(json)!!
+            jsonConverter.fromJson(json, jsonConverter.typedList(UsedCardInfo::class.java))!!
         } catch (ex: Exception) {
             preferences.edit(true) { remove(USED_CARDS_INFO) }
             mutableListOf()
         }
     }
-    
+
     companion object {
         private const val USED_CARDS_INFO = "usedCardsInfo"
         private const val SCANNED_CARDS_IDS_KEY = "scannedCardIds"
@@ -103,5 +99,4 @@ private data class UsedCardInfo(
     val cardId: String,
     val isScanned: Boolean = false,
     val isActivationStarted: Boolean = false,
-    val isActivated: Boolean = false,
 )
