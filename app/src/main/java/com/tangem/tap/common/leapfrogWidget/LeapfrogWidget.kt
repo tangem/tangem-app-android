@@ -127,6 +127,15 @@ class LeapfrogWidget(
         return leapViews.firstOrNull { it.currentPosition == position }?.view
     }
 
+    fun getState(): LeapfrogWidgetState = LeapfrogWidgetState(isFolded, leapViews.map { it.getState() })
+
+    fun applyState(state: LeapfrogWidgetState) {
+        isFolded = state.isFolded
+        state.leapViewStates.forEach { state ->
+            leapViews.firstOrNull { it.index == state.index }?.applyState(state)
+        }
+    }
+
     private fun viewIsFullFledged(): Boolean = parentContainer.childCount > 1
 
     private fun canFoldUnfold(): Boolean {
@@ -162,6 +171,11 @@ class LeapfrogWidget(
     private fun leapInProgress(): Boolean = leapProgress != 100
     private fun leapBackInProgress(): Boolean = leapBackProgress != 100
 }
+
+data class LeapfrogWidgetState(
+    val isFolded: Boolean,
+    val leapViewStates: List<LeapViewState>
+)
 
 class PropertyCalculator(
     val elevationFactor: Float = 1f,
