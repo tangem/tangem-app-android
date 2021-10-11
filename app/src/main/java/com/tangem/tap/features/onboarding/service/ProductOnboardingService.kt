@@ -1,10 +1,7 @@
 package com.tangem.tap.features.onboarding.service
 
 import android.util.Log
-import com.tangem.blockchain.common.AmountType
-import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.WalletManager
-import com.tangem.blockchain.common.WalletManagerFactory
+import com.tangem.blockchain.common.*
 import com.tangem.common.card.Card
 import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.isZero
@@ -159,7 +156,7 @@ abstract class ProductOnboardingService(
                     OnboardingWalletBalance.criticalError(customError)
                 } else {
                     val balance = if (valueOfAmount.isZero()) {
-                        OnboardingWalletBalance.done(valueOfAmount, hasForIncomingTransactions(), currency)
+                        OnboardingWalletBalance.done(valueOfAmount, hasForIncomingTransactions(wallet), currency)
                     } else {
                         OnboardingWalletBalance.done(valueOfAmount, false, currency)
                     }
@@ -188,8 +185,8 @@ abstract class ProductOnboardingService(
         cardInfoStorage.activationFinished(scanResponse.card.cardId)
     }
 
-    protected open suspend fun hasForIncomingTransactions(): Boolean {
-        return false
+    protected open suspend fun hasForIncomingTransactions(wallet: Wallet): Boolean {
+        return wallet.recentTransactions.isNotEmpty()
     }
 
     protected open fun tryToProceed() {
