@@ -25,24 +25,29 @@ import android.view.animation.LinearInterpolator
 
 typealias ProgressListener = (Int) -> Unit
 
-fun AnimatorSet.createProgressListener(duration: Long, listener: ProgressListener?): Animator {
+fun createProgressListener(duration: Long, listener: ProgressListener?): Animator {
     val valueAnimator = ValueAnimator.ofInt(0, 100)
     valueAnimator.duration = duration
     valueAnimator.addUpdateListener { listener?.invoke((it.animatedValue as? Int) ?: 0) }
     return valueAnimator
 }
 
-fun View.initAnimation(animDuration: Long, properties: Properties): AnimatorSet {
-    elevation = properties.elevationEnd
-    scaleX = properties.scaleEnd
-    scaleY = properties.scaleEnd
-
+fun View.unfoldAnimation(animDuration: Long, properties: AnimationProperties): AnimatorSet {
     val translate = ObjectAnimator.ofFloat(this, View.TRANSLATION_Y, properties.yTranslationStart, properties.yTranslationEnd)
     translate.duration = animDuration
     return AnimatorSet().apply { playTogether(translate) }
 }
 
-fun View.leapAnimation(animDuration: Long, properties: Properties, overLift: Float): AnimatorSet {
+fun View.foldAnimation(animDuration: Long, properties: AnimationProperties): AnimatorSet {
+    val translate = ObjectAnimator.ofFloat(this, View.TRANSLATION_Y, properties.yTranslationStart, properties.yTranslationEnd)
+    translate.duration = animDuration
+
+    return AnimatorSet().apply {
+        playSequentially(translate)
+    }
+}
+
+fun View.leapAnimation(animDuration: Long, properties: AnimationProperties, overLift: Float): AnimatorSet {
     val halfDuration = animDuration / 2
 
     val upTo = (height.toFloat() + properties.yTranslationStart + overLift) * -1
@@ -80,7 +85,7 @@ fun View.leapAnimation(animDuration: Long, properties: Properties, overLift: Flo
     }
 }
 
-fun View.leapBackAnimation(animDuration: Long, properties: Properties, calculator: PropertyCalculator): AnimatorSet {
+fun View.leapBackAnimation(animDuration: Long, properties: AnimationProperties, calculator: PropertyCalculator): AnimatorSet {
     val halfDuration = animDuration / 2
 
     val upTo = ((height).toFloat() - calculator.yTranslationFactor) * -1
@@ -117,7 +122,7 @@ fun View.leapBackAnimation(animDuration: Long, properties: Properties, calculato
     }
 }
 
-fun View.pullUpAnimation(leapDuration: Long, properties: Properties): AnimatorSet {
+fun View.pullUpAnimation(leapDuration: Long, properties: AnimationProperties): AnimatorSet {
     val pullDuration = leapDuration / 2
     val delayDuration = leapDuration / 2
 
@@ -135,7 +140,7 @@ fun View.pullUpAnimation(leapDuration: Long, properties: Properties): AnimatorSe
     }
 }
 
-fun View.pullDownAnimation(leapDuration: Long, properties: Properties): AnimatorSet {
+fun View.pullDownAnimation(leapDuration: Long, properties: AnimationProperties): AnimatorSet {
     val pullDuration = leapDuration / 2
     val delayDuration = leapDuration / 4
 
