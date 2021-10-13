@@ -8,7 +8,7 @@ import com.tangem.common.card.CardWallet
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.tap.domain.TapWorkarounds.isTestCard
-import com.tangem.tap.domain.tasks.ScanNoteResponse
+import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.domain.twins.isTangemTwin
 
 fun WalletManagerFactory.makeWalletManagerForApp(
@@ -50,7 +50,7 @@ fun WalletManagerFactory.makeWalletManagersForApp(
 }
 
 fun WalletManagerFactory.makePrimaryWalletManager(
-    data: ScanNoteResponse,
+    data: ScanResponse,
 ): WalletManager? {
     val card = data.card
     val blockchain = if (card.isTestCard) {

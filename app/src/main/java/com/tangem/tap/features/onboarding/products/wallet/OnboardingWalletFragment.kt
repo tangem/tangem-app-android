@@ -32,6 +32,7 @@ class OnboardingWalletFragment : BaseStoreFragment(R.layout.fragment_onboarding_
                 oldState.onboardingWalletState == newState.onboardingWalletState
             }.select { it.onboardingWalletState }
         }
+        storeSubscribersList.add(this)
     }
 
     override fun newState(state: OnboardingWalletState) {

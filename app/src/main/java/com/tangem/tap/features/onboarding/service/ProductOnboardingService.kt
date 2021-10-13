@@ -16,7 +16,7 @@ import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.UrlBitmapLoader
 import com.tangem.tap.domain.extensions.getArtworkUrl
 import com.tangem.tap.domain.extensions.makePrimaryWalletManager
-import com.tangem.tap.domain.tasks.ScanNoteResponse
+import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.domain.topup.TradeCryptoHelper
 import com.tangem.tap.features.wallet.redux.AddressData
 import com.tangem.tap.features.wallet.redux.Artwork
@@ -37,7 +37,7 @@ import kotlin.coroutines.suspendCoroutine
  */
 interface OnboardingService {
     val fromScreen: AppScreen
-    val scanResponse: ScanNoteResponse
+    val scanResponse: ScanResponse
 
     //    val cardInfoStorage: UsedCardsPrefStorage
     var walletManager: WalletManager?
@@ -141,7 +141,7 @@ abstract class ProductOnboardingService(
 
         val walletManager = walletManager ?: walletManagerFactory.makePrimaryWalletManager(scanResponse).guard {
             val customError = TapError.CustomError("Loading cancelled. Cause: wallet manager didn't created")
-            loadedBalance = OnboardingWalletBalance.error(customError)
+            withMainContext { loadedBalance = OnboardingWalletBalance.error(customError) }
             return loadedBalance
         }
 
@@ -178,7 +178,6 @@ abstract class ProductOnboardingService(
 
     override fun activationStarted() {
         cardInfoStorage.activationStarted(scanResponse.card.cardId)
-
     }
 
     override fun activationFinished() {

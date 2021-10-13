@@ -21,9 +21,9 @@ import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.extensions.minimalAmount
 import com.tangem.tap.features.send.redux.*
 import com.tangem.tap.features.send.redux.FeeAction.RequestFee
+import com.tangem.tap.features.send.redux.states.ButtonState
 import com.tangem.tap.features.send.redux.states.ExternalTransactionData
 import com.tangem.tap.features.send.redux.states.MainCurrencyType
-import com.tangem.tap.features.send.redux.states.ButtonState
 import com.tangem.tap.features.send.redux.states.TransactionExtrasState
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.scope
@@ -77,7 +77,7 @@ private fun verifyAndSendTransaction(
 ) {
     val sendState = appState?.sendState ?: return
     val walletManager = sendState.walletManager ?: return
-    val card = appState.globalState.scanNoteResponse?.card ?: return
+    val card = appState.globalState.scanResponse?.card ?: return
     val destinationAddress = sendState.addressPayIdState.destinationWalletAddress ?: return
     val typedAmount = sendState.amountState.amountToExtract ?: return
     val feeAmount = sendState.feeState.currentFee ?: return
