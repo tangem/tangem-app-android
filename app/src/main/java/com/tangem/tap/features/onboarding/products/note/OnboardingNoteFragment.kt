@@ -19,6 +19,7 @@ import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.layout_onboarding_bottom_action_views.*
 import kotlinx.android.synthetic.main.layout_onboarding_note.*
+import kotlinx.android.synthetic.main.view_onboarding_progress.*
 import kotlinx.android.synthetic.main.view_onboarding_tv_balance.*
 
 /**
@@ -50,6 +51,7 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
                 oldState.onboardingNoteState == newState.onboardingNoteState
             }.select { it.onboardingNoteState }
         }
+        storeSubscribersList.add(this)
     }
 
     override fun newState(state: OnboardingNoteState) {
@@ -147,7 +149,7 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
         tv_body.setText(R.string.onboarding_done_body)
 
         imv_card_background.setBackgroundDrawable(requireContext().getDrawableCompat(R.drawable.shape_rectangle_rounded_8))
-        updateConstraints(R.layout.lp_onboarding_done)
+        updateConstraints(R.layout.lp_onboarding_done_activation)
     }
 
     private fun updateConstraints(@LayoutRes layoutId: Int) {
