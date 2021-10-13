@@ -133,7 +133,7 @@ class WalletConnectMiddleware {
 
     private fun handleScanCard(wcUri: String) {
         scope.launch {
-            val result = tangemSdkManager.scanNote(
+            val result = tangemSdkManager.scanProduct(
                 FirebaseAnalyticsHandler,
                 R.string.wallet_connect_scan_card_message
             )
@@ -174,7 +174,7 @@ class WalletConnectMiddleware {
     private fun getWalletManager(card: Card): WalletManager? {
         val factory = store.state.globalState.tapWalletManager.walletManagerFactory
 
-        return if (store.state.globalState.scanNoteResponse?.card?.cardId == card.cardId) {
+        return if (store.state.globalState.scanResponse?.card?.cardId == card.cardId) {
             store.state.walletState.getWalletManager(Blockchain.Ethereum)
                 ?: factory.makeWalletManagerForApp(card, Blockchain.Ethereum)
                     ?.also { walletManager ->
