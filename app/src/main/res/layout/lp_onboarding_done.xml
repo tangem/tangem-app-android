@@ -6,9 +6,8 @@
     android:layout_height="match_parent"
     android:visibility="visible">
 
-    <ProgressBar
-        android:id="@+id/pb_state"
-        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+    <include
+        layout="@layout/view_onboarding_progress"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="32dp"
@@ -26,6 +25,7 @@
         android:layout_marginStart="32dp"
         android:layout_marginTop="67dp"
         android:layout_marginEnd="32dp"
+        android:visibility="gone"
         android:background="@drawable/shape_rectangle_rounded_8"
         android:backgroundTint="@color/lightGray0"
         android:elevation="0dp"
@@ -42,7 +42,7 @@
         android:src="@drawable/card_placeholder"
         android:transitionName="imv_front_card"
         android:translationY="-30dp"
-        android:visibility="visible"
+        android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.495"
         app:layout_constraintStart_toStartOf="parent"
@@ -54,6 +54,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@+id/imv_card_background"
         app:layout_constraintEnd_toEndOf="@+id/imv_card_background"
         app:layout_constraintStart_toStartOf="@+id/imv_card_background"
@@ -64,7 +65,7 @@
         layout="@layout/view_onboarding_refresh_balance"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:visibility="invisible"
+        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@+id/imv_card_background"
         app:layout_constraintEnd_toEndOf="@+id/imv_card_background"
         app:layout_constraintStart_toStartOf="@+id/imv_card_background"
@@ -72,12 +73,12 @@
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/imv_activation_success"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_width="142dp"
+        android:layout_height="142dp"
+        android:layout_marginTop="100dp"
         android:src="@drawable/ic_activation_success"
-        app:layout_constraintBottom_toBottomOf="@+id/imv_card_background"
-        app:layout_constraintEnd_toEndOf="@+id/imv_card_background"
-        app:layout_constraintStart_toStartOf="@+id/imv_card_background"
-        app:layout_constraintTop_toBottomOf="@+id/imv_card_background" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/pb_state" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
