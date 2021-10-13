@@ -40,7 +40,7 @@ class WarningsMiddleware {
             }
             is WalletAction.Warnings.CheckHashesCount.CheckHashesCountOnline -> checkHashesCountOnline()
             is WalletAction.Warnings.CheckHashesCount.SaveCardId -> {
-                val cardId = globalState?.scanNoteResponse?.card?.cardId
+                val cardId = globalState?.scanResponse?.card?.cardId
                 cardId?.let { preferencesStorage.usedCardsPrefStorage.scanned(it) }
             }
             is WalletAction.Warnings.AppRating.RemindLater -> {
@@ -81,7 +81,7 @@ class WarningsMiddleware {
     }
 
     private fun showCardWarningsIfNeeded(globalState: GlobalState?) {
-        globalState?.scanNoteResponse?.card?.let { card ->
+        globalState?.scanResponse?.card?.let { card ->
             globalState.warningManager?.removeWarnings(WarningMessage.Origin.Local)
             if (card.isTestCard) {
                 addWarningMessage(WarningMessagesManager.testCardWarning(), autoUpdate = true)
@@ -149,7 +149,7 @@ class WarningsMiddleware {
         if (store.state.walletState.hashesCountVerified != false) return
         if (!NetworkConnectivity.getInstance().isOnlineOrConnecting()) return
 
-        val card = store.state.globalState.scanNoteResponse?.card
+        val card = store.state.globalState.scanResponse?.card
         if (card == null || preferencesStorage.usedCardsPrefStorage.wasScanned(card.cardId)) return
 
         if (card.isTangemTwin() || card.isMultiwalletAllowed) return
