@@ -54,7 +54,7 @@ private fun handleNoteAction(action: Action) {
         }
         is OnboardingNoteAction.CreateWallet -> {
             scope.launch {
-                val result = tangemSdkManager.createProductWallet(service.scanResponse.card.cardId)
+                val result = tangemSdkManager.createProductWallet(service.scanResponse)
                 withMainContext {
                     when (result) {
                         is CompletionResult.Success -> {
