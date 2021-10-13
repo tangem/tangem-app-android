@@ -123,19 +123,12 @@ private class ScanTwinProcessor : ProductCommandProcessor<ScanResponse> {
                         callback(CompletionResult.Success(ScanResponse(card, ProductType.Twin, null)))
                         return@run
                     }
-                    val verified = TwinCardsManager.verifyTwinPublicKey(
-                            readDataResult.data.issuerData, publicKey
-                    )
+                    val verified = TwinCardsManager.verifyTwinPublicKey(readDataResult.data.issuerData, publicKey)
                     if (verified) {
                         val twinPublicKey = readDataResult.data.issuerData.sliceArray(0 until 65)
-                        callback(CompletionResult.Success(
-                                ScanResponse(
-                                        card,
-                                        ProductType.Twin,
-                                        session.environment.walletData,
-                                        twinPublicKey.toHexString())
-                        ))
-                        return@run
+                        val walletData = session.environment.walletData
+                        val response = ScanResponse(card, ProductType.Twin, walletData, twinPublicKey.toHexString())
+                        callback(CompletionResult.Success(response))
                     } else {
                         callback(CompletionResult.Success(ScanResponse(card, ProductType.Twin, null)))
                     }
