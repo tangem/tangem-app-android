@@ -48,7 +48,7 @@ private fun internalReduce(action: Action, state: AppState): DetailsState {
 private fun handlePrepareScreen(action: DetailsAction.PrepareScreen, state: DetailsState): DetailsState {
     val twinsState = if (action.card.isTangemTwin()) {
         CreateTwinWalletState(
-                scanResponse = action.scanNoteResponse,
+                scanResponse = action.scanResponse,
                 twinCardNumber = TwinsHelper.getTwinCardNumber(action.card.cardId),
                 createTwinWallet = null,
                 showAlert = false,
