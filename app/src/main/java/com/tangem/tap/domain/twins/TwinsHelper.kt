@@ -2,7 +2,6 @@ package com.tangem.tap.domain.twins
 
 import com.tangem.common.card.Card
 import com.tangem.tap.common.extensions.isEven
-import com.tangem.tap.domain.twins.TwinsHelper.Companion.getTwinCardNumber
 
 class TwinsHelper {
     companion object {
@@ -53,16 +52,16 @@ class TwinsHelper {
 
 private fun String.calculateLuhn(): Int {
     val checksum = this.reversed()
-        .mapIndexed { index, c ->
-            val digit = if (c in '0'..'9') c - '0' else c - 'A'
-            if (!index.isEven()) {
-                digit
-            } else {
-                val newDigit = digit * 2
-                if (newDigit >= 10) newDigit - 9 else newDigit
-            }
-        }.sum()
-        .rem(10)
+            .mapIndexed { index, c ->
+                val digit = if (c in '0'..'9') c - '0' else c - 'A'
+                if (!index.isEven()) {
+                    digit
+                } else {
+                    val newDigit = digit * 2
+                    if (newDigit >= 10) newDigit - 9 else newDigit
+                }
+            }.sum()
+            .rem(10)
     return (10 - checksum) % 10
 }
 
@@ -76,7 +75,15 @@ enum class TwinCardNumber(val number: Int) {
 }
 
 fun Card.isTangemTwin(): Boolean {
-    return getTwinCardNumber(cardId) != null
+    return TwinsHelper.getTwinCardNumber(cardId) != null
+}
+
+fun Card.getTwinCardNumber(): TwinCardNumber? {
+    return TwinsHelper.getTwinCardNumber(this.cardId)
+}
+
+fun Card.getTwinsCardId(): String? {
+    return TwinsHelper.getTwinsCardId(this.cardId)
 }
 
 fun Card.getTwinCardIdForUser(): String {
