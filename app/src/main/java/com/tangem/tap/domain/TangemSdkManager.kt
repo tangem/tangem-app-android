@@ -21,9 +21,8 @@ import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.AnalyticsHandler
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.domain.tasks.CreateWalletAndRescanTask
-import com.tangem.tap.domain.tasks.ScanNoteResponse
-import com.tangem.tap.domain.tasks.ScanNoteTask
 import com.tangem.tap.domain.tasks.product.ScanProductTask
+import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.domain.twins.isTangemTwin
 import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
@@ -33,23 +32,10 @@ import kotlin.coroutines.suspendCoroutine
 
 class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Context) {
 
-    @Deprecated("Use can product")
-    suspend fun scanNote(
-        analyticsHandler: AnalyticsHandler,
-        messageRes: Int? = null,
-    ): CompletionResult<ScanNoteResponse> {
-        analyticsHandler.triggerEvent(AnalyticsEvent.READY_TO_SCAN, null)
-
-        return runTaskAsyncReturnOnMain(
-            ScanNoteTask(),
-            initialMessage = Message(context.getString(messageRes ?: R.string.initial_message_scan_header))
-        ).also { sendScanFailuresToAnalytics(analyticsHandler, it) }
-    }
-
     suspend fun scanProduct(
         analyticsHandler: AnalyticsHandler,
         messageRes: Int? = null,
-    ): CompletionResult<ScanNoteResponse> {
+    ): CompletionResult<ScanResponse> {
         analyticsHandler.triggerEvent(AnalyticsEvent.READY_TO_SCAN, null)
 
         val message = Message(context.getString(messageRes ?: R.string.initial_message_scan_header))
@@ -57,13 +43,17 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
                 .also { sendScanFailuresToAnalytics(analyticsHandler, it) }
     }
 
-    suspend fun createProductWallet(cardId: String?): CompletionResult<Card> {
-        return runTaskAsync(CreateProductWalletAndRescanTask(), cardId, Message(context.getString(R.string.initial_message_create_wallet_body)))
+    suspend fun createProductWallet(scanResponse: ScanResponse): CompletionResult<Card> {
+        return runTaskAsync(
+                CreateProductWalletAndRescanTask(scanResponse.productType),
+                scanResponse.card.cardId,
+                Message(context.getString(R.string.initial_message_create_wallet_body))
+        )
     }
 
     private fun sendScanFailuresToAnalytics(
         analyticsHandler: AnalyticsHandler,
-        result: CompletionResult<ScanNoteResponse>
+        result: CompletionResult<ScanResponse>
     ) {
         if (result is CompletionResult.Failure && result.error is TangemSdkError) {
             (result.error as? TangemSdkError)?.let { error ->
