@@ -14,7 +14,7 @@ import com.tangem.tap.domain.TapWorkarounds.isStart2Coin
 import com.tangem.tap.domain.TapWorkarounds.isTestCard
 import com.tangem.tap.domain.configurable.config.ConfigManager
 import com.tangem.tap.domain.extensions.*
-import com.tangem.tap.domain.tasks.ScanNoteResponse
+import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.domain.tokens.CardCurrencies
 import com.tangem.tap.domain.twins.TwinsHelper
 import com.tangem.tap.domain.twins.isTangemTwin
@@ -77,7 +77,7 @@ class TapWalletManager {
         handleFiatRatesResult(results)
     }
 
-    suspend fun onCardScanned(data: ScanNoteResponse, addAnalyticsEvent: Boolean = false) {
+    suspend fun onCardScanned(data: ScanResponse, addAnalyticsEvent: Boolean = false) {
         if (addAnalyticsEvent) {
             FirebaseAnalyticsHandler.triggerEvent(AnalyticsEvent.CARD_IS_SCANNED, data.card, data.walletData?.blockchain)
         }
@@ -108,7 +108,7 @@ class TapWalletManager {
         }
     }
 
-    private fun updateConfigManager(data: ScanNoteResponse) {
+    private fun updateConfigManager(data: ScanResponse) {
         val configManager = store.state.globalState.configManager
         val blockchain = data.getBlockchain()
         if (data.card.isStart2Coin) {
@@ -124,7 +124,7 @@ class TapWalletManager {
         }
     }
 
-    suspend fun loadData(data: ScanNoteResponse) {
+    suspend fun loadData(data: ScanResponse) {
         withContext(Dispatchers.Main) {
 
             store.dispatch(WalletAction.LoadCardInfo(data.card))
@@ -220,7 +220,7 @@ class TapWalletManager {
         }
     }
 
-    suspend fun reloadData(data: ScanNoteResponse) {
+    suspend fun reloadData(data: ScanResponse) {
         withContext(Dispatchers.Main) {
             when {
                 data.getBlockchain() == Blockchain.Unknown && !data.card.isMultiwalletAllowed -> {
