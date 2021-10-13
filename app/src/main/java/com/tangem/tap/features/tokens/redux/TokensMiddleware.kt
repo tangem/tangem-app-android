@@ -14,7 +14,7 @@ class TokensMiddleware {
             { action ->
                 when (action) {
                     is TokensAction.LoadCurrencies -> {
-                        val card = state()?.globalState?.scanNoteResponse?.card
+                        val card = state()?.globalState?.scanResponse?.card
                         val isTestcard = card?.isTestCard ?: false
                         val tokens = currenciesRepository.getPopularTokens(isTestcard)
                         val blockchains = currenciesRepository.getBlockchains(
