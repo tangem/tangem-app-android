@@ -51,6 +51,7 @@ abstract class BaseStoreFragment(layoutId: Int) : Fragment(layoutId) {
 
     override fun onStop() {
         storeSubscribersList.forEach { store.unsubscribe(it) }
+        storeSubscribersList.clear()
         super.onStop()
     }
 
