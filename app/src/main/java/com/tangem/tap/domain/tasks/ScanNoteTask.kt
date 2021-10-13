@@ -1,56 +1,29 @@
 package com.tangem.tap.domain.tasks
 
 import com.tangem.*
-import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.Token
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.Card
 import com.tangem.common.card.FirmwareVersion
-import com.tangem.common.card.WalletData
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.TangemError
 import com.tangem.common.extensions.toHexString
-import com.tangem.operations.CommandResponse
 import com.tangem.operations.ScanTask
 import com.tangem.operations.issuerAndUserData.ReadIssuerDataCommand
+import com.tangem.tap.domain.ProductType
 import com.tangem.tap.domain.TapSdkError
-import com.tangem.tap.domain.TapWorkarounds.getTangemNoteBlockchain
 import com.tangem.tap.domain.TapWorkarounds.isExcluded
 import com.tangem.tap.domain.TapWorkarounds.isTangemNote
 import com.tangem.tap.domain.extensions.getSingleWallet
+import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.domain.twins.TwinCardsManager
 import com.tangem.tap.domain.twins.isTangemTwin
 
-data class ScanNoteResponse(
-    val card: Card,
-    val walletData: WalletData?,
-    val secondTwinPublicKey: String? = null,
-) : CommandResponse {
-
-    fun getBlockchain(): Blockchain {
-        if (card.isTangemNote()) return card.getTangemNoteBlockchain() ?: return Blockchain.Unknown
-        val blockchainName: String = walletData?.blockchain ?: return Blockchain.Unknown
-        return Blockchain.fromId(blockchainName)
-    }
-
-    fun getPrimaryToken(): Token? {
-        val cardToken = walletData?.token ?: return null
-        return Token(
-            cardToken.name,
-            cardToken.symbol,
-            cardToken.contractAddress,
-            cardToken.decimals,
-            Blockchain.fromId(walletData.blockchain)
-        )
-    }
-}
-
-class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteResponse> {
+class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanResponse> {
 
     override fun run(
         session: CardSession,
-        callback: (result: CompletionResult<ScanNoteResponse>) -> Unit,
+        callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
         ScanTask().run(session) { result ->
             when (result) {
@@ -71,7 +44,7 @@ class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteRespons
                         createMissingWalletsIfNeeded(card, session, callback)
                     } else {
                         callback(CompletionResult.Success(
-                            ScanNoteResponse(card, session.environment.walletData)))
+                                ScanResponse(card, ProductType.Other, session.environment.walletData)))
                     }
                 }
             }
@@ -80,11 +53,11 @@ class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteRespons
 
     private fun createMissingWalletsIfNeeded(
         card: Card, session: CardSession,
-        callback: (result: CompletionResult<ScanNoteResponse>) -> Unit,
+        callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
         val walletData = session.environment.walletData
         if (card.wallets.isEmpty()) {
-            callback(CompletionResult.Success(ScanNoteResponse(card, walletData)))
+            callback(CompletionResult.Success(ScanResponse(card, ProductType.Other, walletData)))
             return
         }
 
@@ -93,14 +66,14 @@ class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteRespons
         val curvesToCreate = card.supportedCurves.subtract(curvesPresent)
 
         if (curvesToCreate.isEmpty()) {
-            callback(CompletionResult.Success(ScanNoteResponse(card, walletData)))
+            callback(CompletionResult.Success(ScanResponse(card, ProductType.Other, walletData)))
             return
         }
 
         CreateWalletsTask(curvesToCreate.toList()).run(session) { result ->
             when (result) {
                 is CompletionResult.Success ->
-                    callback(CompletionResult.Success(ScanNoteResponse(result.data, walletData)))
+                    callback(CompletionResult.Success(ScanResponse(result.data, ProductType.Other, walletData)))
                 is CompletionResult.Failure -> callback(CompletionResult.Failure(result.error))
             }
         }
@@ -109,34 +82,35 @@ class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteRespons
 
     private fun dealWithTwinCard(
         card: Card, session: CardSession,
-        callback: (result: CompletionResult<ScanNoteResponse>) -> Unit,
+        callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
         ReadIssuerDataCommand().run(session) { readDataResult ->
             when (readDataResult) {
                 is CompletionResult.Success -> {
                     val publicKey = card.getSingleWallet()?.publicKey
                     if (publicKey == null) {
-                        callback(CompletionResult.Success(ScanNoteResponse(card, null)))
+                        callback(CompletionResult.Success(ScanResponse(card, ProductType.Other, null)))
                         return@run
                     }
                     val verified = TwinCardsManager.verifyTwinPublicKey(
-                        readDataResult.data.issuerData, publicKey
+                            readDataResult.data.issuerData, publicKey
                     )
                     if (verified) {
                         val twinPublicKey = readDataResult.data.issuerData.sliceArray(0 until 65)
                         callback(CompletionResult.Success(
-                            ScanNoteResponse(
-                                card = card,
-                                walletData = session.environment.walletData,
-                                secondTwinPublicKey = twinPublicKey.toHexString())
+                                ScanResponse(
+                                        card = card,
+                                        ProductType.Other,
+                                        walletData = session.environment.walletData,
+                                        secondTwinPublicKey = twinPublicKey.toHexString())
                         ))
                         return@run
                     } else {
-                        callback(CompletionResult.Success(ScanNoteResponse(card, null)))
+                        callback(CompletionResult.Success(ScanResponse(card, ProductType.Other, null)))
                     }
                 }
                 is CompletionResult.Failure ->
-                    callback(CompletionResult.Success(ScanNoteResponse(card, null)))
+                    callback(CompletionResult.Success(ScanResponse(card, ProductType.Other, null)))
             }
         }
     }
