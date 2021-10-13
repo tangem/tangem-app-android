@@ -9,6 +9,7 @@ import com.tangem.operations.PreflightReadMode
 import com.tangem.operations.PreflightReadTask
 import com.tangem.operations.wallet.CreateWalletCommand
 
+@Deprecated("Use CreateProductWalletsResponse instead")
 class CreateWalletsTask(curves: List<EllipticCurve>? = null) : CardSessionRunnable<Card> {
 
     private val curves = curves ?: listOf(
@@ -25,8 +26,8 @@ class CreateWalletsTask(curves: List<EllipticCurve>? = null) : CardSessionRunnab
     }
 
     private fun createWallet(
-            curve: EllipticCurve, session: CardSession,
-            callback: (result: CompletionResult<Card>) -> Unit
+        curve: EllipticCurve, session: CardSession,
+        callback: (result: CompletionResult<Card>) -> Unit
     ) {
 
         CreateWalletCommand(curve).run(session) { result ->
@@ -44,13 +45,5 @@ class CreateWalletsTask(curves: List<EllipticCurve>? = null) : CardSessionRunnab
                 }
             }
         }
-    }
-}
-
-private fun EllipticCurve.toWalletIndex(): Int {
-    return when (this) {
-        EllipticCurve.Secp256k1 -> 0
-        EllipticCurve.Ed25519 -> 1
-        EllipticCurve.Secp256r1 -> 2
     }
 }
