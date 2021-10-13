@@ -7,7 +7,7 @@ import com.tangem.tap.domain.TapWorkarounds.isStart2Coin
 import com.tangem.tap.domain.extensions.isWalletDataSupported
 import com.tangem.tap.domain.extensions.signedHashesCount
 import com.tangem.tap.domain.extensions.toSendableAmounts
-import com.tangem.tap.domain.twins.TwinsHelper
+import com.tangem.tap.domain.twins.getTwinCardNumber
 import com.tangem.tap.domain.twins.isTangemTwin
 import com.tangem.tap.features.details.redux.twins.CreateTwinWalletReducer
 import com.tangem.tap.features.details.redux.twins.CreateTwinWalletState
@@ -49,7 +49,7 @@ private fun handlePrepareScreen(action: DetailsAction.PrepareScreen, state: Deta
     val twinsState = if (action.card.isTangemTwin()) {
         CreateTwinWalletState(
                 scanResponse = action.scanResponse,
-                twinCardNumber = TwinsHelper.getTwinCardNumber(action.card.cardId),
+                twinCardNumber = action.card.getTwinCardNumber(),
                 createTwinWallet = null,
                 showAlert = false,
                 allowRecreatingWallet = action.isCreatingTwinWalletAllowed
