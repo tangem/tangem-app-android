@@ -6,9 +6,8 @@
     android:layout_height="match_parent"
     android:visibility="visible">
 
-    <ProgressBar
-        android:id="@+id/pb_state"
-        style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+    <include
+        layout="@layout/view_onboarding_progress"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="32dp"
