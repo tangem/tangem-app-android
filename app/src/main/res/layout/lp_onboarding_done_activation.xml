@@ -20,31 +20,32 @@
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/imv_card_background"
-        android:layout_width="236dp"
-        android:layout_height="236dp"
-        android:adjustViewBounds="true"
-        android:background="@drawable/shape_circle"
+        android:layout_width="match_parent"
+        android:layout_height="200dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="67dp"
+        android:layout_marginEnd="32dp"
+        android:background="@drawable/shape_rectangle_rounded_8"
         android:backgroundTint="@color/lightGray0"
         android:elevation="0dp"
         android:scaleType="fitCenter"
-        app:layout_constraintBottom_toBottomOf="@+id/imv_front_card"
-        app:layout_constraintEnd_toEndOf="@+id/imv_front_card"
-        app:layout_constraintStart_toStartOf="@+id/imv_front_card"
-        app:layout_constraintTop_toTopOf="@+id/imv_front_card" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/pb_state" />
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/imv_front_card"
-        android:layout_width="296dp"
-        android:layout_height="186dp"
-        android:layout_marginStart="32dp"
-        android:layout_marginTop="106dp"
-        android:layout_marginEnd="32dp"
+        android:layout_width="140dp"
+        android:layout_height="88dp"
+        android:scaleType="fitXY"
         android:src="@drawable/card_placeholder"
         android:transitionName="imv_front_card"
+        android:translationY="-30dp"
+        android:visibility="visible"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.495"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="@+id/imv_card_background" />
 
     <include
         android:id="@+id/onboarding_tv_balance"
@@ -52,7 +53,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginTop="32dp"
-        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="@+id/imv_card_background"
         app:layout_constraintEnd_toEndOf="@+id/imv_card_background"
         app:layout_constraintStart_toStartOf="@+id/imv_card_background"
@@ -63,11 +63,10 @@
         layout="@layout/view_onboarding_refresh_balance"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:elevation="1dp"
-        android:visibility="gone"
+        android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="@+id/imv_card_background"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="@+id/imv_card_background"
+        app:layout_constraintStart_toStartOf="@+id/imv_card_background"
         app:layout_constraintTop_toBottomOf="@+id/imv_card_background" />
 
     <androidx.appcompat.widget.AppCompatImageView
@@ -75,7 +74,6 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:src="@drawable/ic_activation_success"
-        android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="@+id/imv_card_background"
         app:layout_constraintEnd_toEndOf="@+id/imv_card_background"
         app:layout_constraintStart_toStartOf="@+id/imv_card_background"
