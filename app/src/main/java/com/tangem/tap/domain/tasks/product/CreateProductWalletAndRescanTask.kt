@@ -1,6 +1,7 @@
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.Card
 import com.tangem.common.card.EllipticCurve
+import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.TangemSdkError
@@ -9,19 +10,25 @@ import com.tangem.operations.PreflightReadMode
 import com.tangem.operations.PreflightReadTask
 import com.tangem.operations.wallet.CreateWalletCommand
 import com.tangem.operations.wallet.CreateWalletResponse
+import com.tangem.tap.domain.ProductType
 import com.tangem.tap.domain.TapWorkarounds.getTangemNoteBlockchain
-import com.tangem.tap.domain.TapWorkarounds.isTangemNote
-import com.tangem.tap.domain.TapWorkarounds.isTangemWallet
+import com.tangem.tap.domain.tasks.product.CreateProductWalletsTask
 import com.tangem.tap.domain.tasks.product.ProductCommandProcessor
-import com.tangem.tap.domain.twins.isTangemTwin
+import com.tangem.tap.domain.tasks.product.getCurvesForNonCreatedWallets
 
 /**
 [REDACTED_AUTHOR]
  */
-class CreateProductWalletAndRescanTask : CardSessionRunnable<Card> {
+class CreateProductWalletAndRescanTask(
+    private val type: ProductType,
+) : CardSessionRunnable<Card> {
 
     override fun run(session: CardSession, callback: (result: CompletionResult<Card>) -> Unit) {
-        CreateProductWalletTask().run(session) { result ->
+        val card = session.environment.card.guard {
+            callback(CompletionResult.Failure(TangemSdkError.CardError()))
+            return
+        }
+        CreateProductWalletTask(card, type).run(session) { result ->
             when (result) {
                 is CompletionResult.Success -> PreflightReadTask(PreflightReadMode.FullCardRead).run(session, callback)
                 is CompletionResult.Failure -> callback(CompletionResult.Failure(result.error))
@@ -30,18 +37,16 @@ class CreateProductWalletAndRescanTask : CardSessionRunnable<Card> {
     }
 }
 
-private class CreateProductWalletTask : CardSessionRunnable<CreateWalletResponse> {
+private class CreateProductWalletTask(
+    private val card: Card,
+    private val type: ProductType,
+) : CardSessionRunnable<CreateWalletResponse> {
 
     override fun run(session: CardSession, callback: (result: CompletionResult<CreateWalletResponse>) -> Unit) {
-        val card = session.environment.card.guard {
-            callback(CompletionResult.Failure(TangemSdkError.CardError()))
-            return
-        }
-
-        val commandProcessor = when {
-            card.isTangemNote() -> CreateWalletTangemNote()
-            card.isTangemTwin() -> CreateWalletTangemTwin()
-            card.isTangemWallet() -> CreateWalletTangemWallet()
+        val commandProcessor = when (type) {
+            ProductType.Note -> CreateWalletTangemNote()
+            ProductType.Twin -> throw UnsupportedOperationException("Use the TwinCardsManager to create a wallet")
+            ProductType.Wallet -> CreateWalletTangemWallet()
             else -> CreateWalletOtherCards()
         }
         commandProcessor.proceed(card, session, callback)
@@ -86,53 +91,28 @@ private class CreateWalletTangemWallet : ProductCommandProcessor<CreateWalletRes
         session: CardSession,
         callback: (result: CompletionResult<CreateWalletResponse>) -> Unit
     ) {
-        throw UnsupportedOperationException()
-    }
-}
-
-private class CreateWalletTangemTwin : ProductCommandProcessor<CreateWalletResponse> {
-    override fun proceed(
-        card: Card,
-        session: CardSession,
-        callback: (result: CompletionResult<CreateWalletResponse>) -> Unit
-    ) {
-        throw UnsupportedOperationException()
+        //TODO:
     }
 }
 
 private class CreateWalletOtherCards : ProductCommandProcessor<CreateWalletResponse> {
 
-    private var index = 0
-
-    private val curves = EllipticCurve.values().toList()
-
     override fun proceed(
         card: Card,
         session: CardSession,
         callback: (result: CompletionResult<CreateWalletResponse>) -> Unit
     ) {
-        val curve = curves[index]
-        createWallet(curve, session, callback)
-    }
+        val firmwareVersion = card.firmwareVersion
+        val task = if (firmwareVersion < FirmwareVersion.MultiWalletAvailable) {
+            CreateProductWalletsTask(listOf(card.supportedCurves.first()))
+        } else {
+            CreateProductWalletsTask(card.getCurvesForNonCreatedWallets())
+        }
 
-    private fun createWallet(
-        curve: EllipticCurve,
-        session: CardSession,
-        callback: (result: CompletionResult<CreateWalletResponse>) -> Unit
-    ) {
-        CreateWalletCommand(curve).run(session) { result ->
+        task.run(session) { result ->
             when (result) {
-                is CompletionResult.Success -> {
-                    if (index == curves.lastIndex) {
-                        callback(CompletionResult.Success(result.data))
-                        return@run
-                    }
-                    index += 1
-                    createWallet(curves[index], session, callback)
-                }
-                is CompletionResult.Failure -> {
-                    callback(CompletionResult.Failure(result.error))
-                }
+                is CompletionResult.Success -> callback(CompletionResult.Success(result.data.createWalletResponses[0]))
+                is CompletionResult.Failure -> callback(CompletionResult.Failure(result.error))
             }
         }
     }

@@ -11,6 +11,7 @@ import com.tangem.operations.PreflightReadMode
 import com.tangem.operations.PreflightReadTask
 import com.tangem.operations.wallet.CreateWalletCommand
 
+@Deprecated("Use CreateProductWalletAndRescanTask instead")
 class CreateWalletAndRescanTask : CardSessionRunnable<Card> {
 
     override fun run(session: CardSession, callback: (result: CompletionResult<Card>) -> Unit) {
