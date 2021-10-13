@@ -16,7 +16,8 @@ import com.tangem.tap.domain.configurable.config.ConfigManager
 import com.tangem.tap.domain.extensions.*
 import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.domain.tokens.CardCurrencies
-import com.tangem.tap.domain.twins.TwinsHelper
+import com.tangem.tap.domain.twins.getTwinCardNumber
+import com.tangem.tap.domain.twins.getTwinsCardId
 import com.tangem.tap.domain.twins.isTangemTwin
 import com.tangem.tap.features.tokens.redux.TokensAction
 import com.tangem.tap.features.wallet.redux.Currency
@@ -90,8 +91,8 @@ class TapWalletManager {
             store.dispatch(WalletAction.SetIfTestnetCard(data.card.isTestCard))
             store.dispatch(WalletAction.MultiWallet.SetIsMultiwalletAllowed(data.card.isMultiwalletAllowed))
             if (data.card.isTangemTwin()) {
-                val secondCardId = TwinsHelper.getTwinsCardId(data.card.cardId)
-                val cardNumber = TwinsHelper.getTwinCardNumber(data.card.cardId)
+                val secondCardId = data.card.getTwinsCardId()
+                val cardNumber = data.card.getTwinCardNumber()
                 if (secondCardId != null && cardNumber != null) {
                     store.dispatch(WalletAction.TwinsAction.SetTwinCard(
                             secondCardId, cardNumber, isCreatingTwinCardsAllowed = true
