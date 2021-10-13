@@ -3,6 +3,7 @@ package com.tangem.tap.features.home.redux
 import com.tangem.tap.common.entities.IndeterminateProgressButton
 import com.tangem.tap.common.extensions.dispatchErrorNotification
 import com.tangem.tap.common.extensions.dispatchOpenUrl
+import com.tangem.tap.common.extensions.withMainContext
 import com.tangem.tap.common.post
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -10,7 +11,7 @@ import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.domain.TapWalletManager
-import com.tangem.tap.domain.tasks.ScanNoteResponse
+import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.features.onboarding.service.OnboardingHelper
 import com.tangem.tap.features.send.redux.states.ButtonState
 import com.tangem.tap.features.wallet.redux.ProgressState
@@ -56,11 +57,11 @@ private fun handleReadCard() {
             store.dispatch(HomeAction.ChangeScanCardButtonState(btnState))
         }
 
-        fun proceedToWalletScreen(tapWalletManager: TapWalletManager, scanResponse: ScanNoteResponse) {
-            changeButtonState(ButtonState.ENABLED)
+        fun proceedToWalletScreen(tapWalletManager: TapWalletManager, scanResponse: ScanResponse) {
             scope.launch {
                 tapWalletManager.onCardScanned(scanResponse)
                 delay(DELAY_SDK_DIALOG_CLOSE)
+                withMainContext { changeButtonState(ButtonState.ENABLED) }
                 store.dispatch(NavigationAction.NavigateTo(AppScreen.Wallet))
             }
         }

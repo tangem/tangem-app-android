@@ -7,7 +7,7 @@ import com.tangem.common.card.Card
 import com.tangem.operations.pins.CheckUserCodesResponse
 import com.tangem.tap.common.redux.NotificationAction
 import com.tangem.tap.common.redux.global.FiatCurrencyName
-import com.tangem.tap.domain.tasks.ScanNoteResponse
+import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.domain.termsOfUse.CardTou
 import com.tangem.tap.domain.twins.TwinCardNumber
 import com.tangem.tap.features.details.redux.twins.CreateTwinWallet
@@ -18,13 +18,13 @@ import org.rekotlin.Action
 sealed class DetailsAction : Action {
 
     data class PrepareScreen(
-            val card: Card,
-            val scanNoteResponse: ScanNoteResponse,
-            val wallets: List<Wallet>,
-            val isCreatingTwinWalletAllowed: Boolean?,
-            val cardTou: CardTou,
-            val fiatCurrencyName: FiatCurrencyName,
-            val fiatCurrencies: List<FiatCurrencyName>? = null,
+        val card: Card,
+        val scanResponse: ScanResponse,
+        val wallets: List<Wallet>,
+        val isCreatingTwinWalletAllowed: Boolean?,
+        val cardTou: CardTou,
+        val fiatCurrencyName: FiatCurrencyName,
+        val fiatCurrencies: List<FiatCurrencyName>? = null,
     ) : DetailsAction()
 
     object ShowDisclaimer : DetailsAction()
@@ -81,7 +81,7 @@ sealed class DetailsAction : Action {
         }
 
         data class LaunchThirdStep(val message: Message) : CreateTwinWalletAction() {
-            data class Success(val scanNoteResponse: ScanNoteResponse) : CreateTwinWalletAction()
+            data class Success(val scanResponse: ScanResponse) : CreateTwinWalletAction()
             object Failure : CreateTwinWalletAction()
         }
     }
