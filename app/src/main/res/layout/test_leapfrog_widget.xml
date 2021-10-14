@@ -11,16 +11,13 @@
     <androidx.appcompat.widget.AppCompatImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/ic_home_front_card" />
+        android:tint="@color/colorPrimary"
+        android:src="@drawable/card_placeholder" />
 
     <androidx.appcompat.widget.AppCompatImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:src="@drawable/ic_home_front_card" />
-
-    <androidx.appcompat.widget.AppCompatImageView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:src="@drawable/ic_home_front_card" />
+        android:tint="@color/accent"
+        android:src="@drawable/card_placeholder" />
 
 </FrameLayout>
