@@ -212,8 +212,8 @@ data class LeapfrogWidgetState(
 
 class PropertyCalculator(
     val elevationFactor: Float = 1f,
-    val decreaseScaleFactor: Float = 0.2f,
-    val yTranslationFactor: Float = -40f,
+    val decreaseScaleFactor: Float = 0.1f,
+    val yTranslationFactor: Float = 20f,
     val decreaseOverLiftingFactor: Float = 0.85f,
 ) {
     // 0 view it is view on the top of stack, but it is last in parent.children
