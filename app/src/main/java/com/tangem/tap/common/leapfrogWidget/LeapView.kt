@@ -12,35 +12,33 @@ class LeapView(
     private val maximalPosition: Int,
     private val calculator: PropertyCalculator,
 ) {
-    var currentProperties: AnimationProperties
+    var state: LeapViewState
         private set
 
-    var currentPosition: Int = position
-        private set
-    var previousPosition: Int = position
-        private set
+    val initialState: LeapViewState
 
     init {
         val initialProperties = createInitialProperty(position)
-        currentProperties = AnimationProperties.from(initialProperties, initialProperties)
-        initView(initialProperties)
+        state = LeapViewState(index, position, position, initialProperties)
+        initialState = state.copy()
     }
 
-    private fun initView(properties: Properties) {
-        view.elevation = properties.elevation
-        view.translationY = properties.yTranslation
-        view.scaleX = properties.scale
-        view.scaleY = properties.scale
-//        initialProperties.hasForeground
+    fun initView() {
+        applyState(initialState)
     }
 
     fun leap(): LeapFrogAnimation {
-        previousPosition = currentPosition
-        currentPosition = when (previousPosition) {
+        val previousPosition = state.currentPosition
+        val currentPosition = when (previousPosition) {
             0 -> maximalPosition
-            else -> currentPosition - 1
+            else -> state.currentPosition - 1
         }
-        updateProperties(createLeapAnimationProperty(previousPosition, currentPosition))
+
+        state = state.copy(
+            currentPosition = currentPosition,
+            previousPosition = previousPosition,
+            properties = createLeapAnimationProperty(previousPosition, currentPosition)
+        )
 
         return when {
             previousPosition == 0 && currentPosition == maximalPosition -> LeapFrogAnimation.LEAP
@@ -49,12 +47,16 @@ class LeapView(
     }
 
     fun leapBack(): LeapFrogAnimation {
-        previousPosition = currentPosition
-        currentPosition = when (previousPosition) {
+        val previousPosition = state.currentPosition
+        val currentPosition = when (previousPosition) {
             maximalPosition -> 0
-            else -> currentPosition + 1
+            else -> state.currentPosition + 1
         }
-        updateProperties(createLeapAnimationProperty(previousPosition, currentPosition))
+        state = state.copy(
+            currentPosition = currentPosition,
+            previousPosition = previousPosition,
+            properties = createLeapAnimationProperty(previousPosition, currentPosition)
+        )
 
         return when {
             previousPosition == maximalPosition && currentPosition == 0 -> LeapFrogAnimation.LEAP
@@ -63,66 +65,60 @@ class LeapView(
     }
 
     fun fold() {
-        updateProperties(currentProperties.toFold())
+        state = state.copy(properties = state.properties.toFold()
+        )
     }
 
     fun unfold() {
-        updateProperties(currentProperties.toUnfold(calculator))
-    }
-
-    fun getState(): LeapViewState {
-        return LeapViewState(index, currentPosition, previousPosition, currentProperties)
+        state = state.copy(properties = state.properties.toUnfold(calculator))
     }
 
     fun applyState(state: LeapViewState) {
-        previousPosition = state.previousPosition
-        currentPosition = state.currentPosition
-        updateProperties(state.properties)
-        initView(state.properties.endProperties())
+        this.state = state
+        setProperties(this.state.properties)
     }
 
-    private fun updateProperties(properties: AnimationProperties) {
-        currentProperties = properties
+    private fun setProperties(properties: LeapViewProperties) {
+        view.elevation = properties.elevationEnd
+        view.translationY = properties.yTranslation
+        view.scaleX = properties.scale
+        view.scaleY = properties.scale
+//        initialProperties.hasForeground
     }
 
-    private fun createInitialProperty(endPosition: Int): Properties {
-        return Properties(
-                endPosition,
-                calculator.scale(endPosition),
-                calculator.elevation(endPosition, maximalPosition + 1),
-                calculator.yTranslation(0),
-                calculator.hasForeground(endPosition),
+    private fun createInitialProperty(endPosition: Int): LeapViewProperties {
+        return LeapViewProperties(
+            endPosition,
+            endPosition,
+            calculator.scale(endPosition),
+            calculator.elevation(endPosition, maximalPosition + 1),
+            calculator.elevation(endPosition, maximalPosition + 1),
+            calculator.yTranslation(0),
+            calculator.hasForeground(endPosition),
         )
     }
 
-    private fun createLeapAnimationProperty(startPosition: Int, endPosition: Int): AnimationProperties {
-        return AnimationProperties(
-                startPosition,
-                endPosition,
-                calculator.scale(startPosition),
-                calculator.scale(endPosition),
-                calculator.elevation(startPosition, maximalPosition + 1),
-                calculator.elevation(endPosition, maximalPosition + 1),
-                calculator.yTranslation(startPosition),
-                calculator.yTranslation(endPosition),
-                calculator.hasForeground(startPosition),
-                calculator.hasForeground(endPosition),
+    private fun createLeapAnimationProperty(startPosition: Int, endPosition: Int): LeapViewProperties {
+        return LeapViewProperties(
+            startPosition,
+            endPosition,
+            calculator.scale(endPosition),
+            calculator.elevation(startPosition, maximalPosition + 1),
+            calculator.elevation(endPosition, maximalPosition + 1),
+            calculator.yTranslation(endPosition),
+            calculator.hasForeground(endPosition),
         )
     }
 
-    private fun AnimationProperties.toUnfold(calculator: PropertyCalculator): AnimationProperties {
-        val start = this.yTranslationEnd
-        val end = calculator.yTranslation(this.positionEnd)
-        return this.copy(yTranslationStart = start, yTranslationEnd = end)
+    private fun LeapViewProperties.toUnfold(calculator: PropertyCalculator): LeapViewProperties {
+        return this.copy(yTranslation = calculator.yTranslation(this.positionEnd))
     }
 
-    private fun AnimationProperties.toFold(): AnimationProperties {
-        val start = this.yTranslationEnd
-        val end = 0f
-        return this.copy(yTranslationStart = start, yTranslationEnd = end)
+    private fun LeapViewProperties.toFold(): LeapViewProperties {
+        return this.copy(yTranslation = 0f)
     }
 
-    override fun toString(): String = "index: $index, position: $currentPosition, code: ${view.hashCode()}"
+    override fun toString(): String = "index: $index, position: ${state.currentPosition}, code: ${view.hashCode()}"
 
 }
 
@@ -130,62 +126,19 @@ data class LeapViewState(
     val index: Int,
     val currentPosition: Int,
     val previousPosition: Int,
-    val properties: AnimationProperties
+    val properties: LeapViewProperties
 )
 
 enum class LeapFrogAnimation {
     LEAP, PULL
 }
 
-data class Properties(
-    val position: Int,
+data class LeapViewProperties(
+    val positionStart: Int,
+    val positionEnd: Int,
     val scale: Float,
-    val elevation: Float,
+    val elevationStart: Float,
+    val elevationEnd: Float,
     val yTranslation: Float,
     val hasForeground: Boolean,
 )
-
-data class AnimationProperties(
-    val positionStart: Int,
-    val positionEnd: Int,
-    val scaleStart: Float,
-    val scaleEnd: Float,
-    val elevationStart: Float,
-    val elevationEnd: Float,
-    val yTranslationStart: Float,
-    val yTranslationEnd: Float,
-    val hasForegroundStart: Boolean,
-    val hasForegroundEnd: Boolean,
-) {
-
-    fun endProperties(): Properties {
-        return Properties(
-                positionEnd,
-                scaleEnd,
-                elevationEnd,
-                yTranslationEnd,
-                hasForegroundEnd,
-        )
-    }
-
-    override fun toString(): String {
-        return """
-            scaleStart: $scaleStart, scaleEnd: $scaleEnd, 
-            elevationStart: $elevationStart, elevationEnd: $elevationEnd, 
-            yTranslationStart: $yTranslationStart, yTranslationEnd: $yTranslationEnd, 
-            hasForegroundStart : $hasForegroundStart, hasForegroundEnd: $hasForegroundEnd, 
-        """.trimIndent()
-    }
-
-    companion object {
-        fun from(start: Properties, end: Properties): AnimationProperties {
-            return AnimationProperties(
-                    start.position, end.position,
-                    start.scale, end.scale,
-                    start.elevation, end.elevation,
-                    start.yTranslation, end.yTranslation,
-                    start.hasForeground, end.hasForeground
-            )
-        }
-    }
-}
