@@ -2,7 +2,6 @@ package com.tangem.tap.features.onboarding.products.otherCards.redux
 
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.features.onboarding.service.OnboardingOtherCardsService
 import org.rekotlin.Action
 
 class OnboardingOtherCardsReducer {
@@ -15,18 +14,11 @@ private fun internalReduce(action: Action, appState: AppState): OnboardingOtherC
     var state = appState.onboardingOtherCardsState
 
     when (action) {
-        is GlobalAction.Onboarding.Activate -> {
-            if (action.onboardingService is OnboardingOtherCardsService) {
-                val service = action.onboardingService
-                state = state.copy(
-                        onboardingService = service,
-                        artworkBitmap = service.getArtwork().value?.artwork,
-                        showConfetti = false
-                )
-            }
-        }
-        GlobalAction.Onboarding.Deactivate -> {
+        is GlobalAction.Onboarding.Start -> {
             state = OnboardingOtherCardsState()
+        }
+        is OnboardingOtherCardsAction.SetArtworkUrl -> {
+            state = state.copy(cardArtwork = action.artwork)
         }
         is OnboardingOtherCardsAction.SetStepOfScreen -> {
             if (action.step != state.currentStep && state.steps.contains(action.step)) {
