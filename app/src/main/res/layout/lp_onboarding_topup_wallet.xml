@@ -38,7 +38,7 @@
         android:layout_width="140dp"
         android:layout_height="88dp"
         android:scaleType="fitXY"
-        android:src="@drawable/card_placeholder"
+        android:src="@drawable/ic_home_front_card"
         android:transitionName="imv_front_card"
         android:translationY="-30dp"
         android:visibility="visible"
