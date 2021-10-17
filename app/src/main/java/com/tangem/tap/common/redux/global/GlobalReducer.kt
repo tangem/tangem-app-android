@@ -1,6 +1,8 @@
 package com.tangem.tap.common.redux.global
 
 import com.tangem.tap.common.redux.AppState
+import com.tangem.tap.features.onboarding.OnboardingManager
+import com.tangem.tap.preferencesStorage
 import org.rekotlin.Action
 
 fun globalReducer(action: Action, state: AppState): GlobalState {
@@ -10,11 +12,13 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
     val globalState = state.globalState
 
     return when (action) {
-        is GlobalAction.Onboarding.Activate -> {
-            globalState.copy(onboardingService = action.onboardingService)
+        is GlobalAction.Onboarding.Start -> {
+            val usedCardsPrefStorage = preferencesStorage.usedCardsPrefStorage
+            val onboardingState = OnboardingManager(action.scanResponse, action.fromScreen, usedCardsPrefStorage)
+            globalState.copy(onboardingManager = onboardingState)
         }
-        is GlobalAction.Onboarding.Deactivate -> {
-            globalState.copy(onboardingService = null)
+        is GlobalAction.Onboarding.Stop -> {
+            globalState.copy(onboardingManager = null)
         }
         is GlobalAction.ScanFailsCounter.Increment -> {
             globalState.copy(scanCardFailsCounter = globalState.scanCardFailsCounter + 1)
@@ -36,11 +40,11 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
         is GlobalAction.SetWarningManager -> globalState.copy(warningManager = action.warningManager)
         is GlobalAction.UpdateWalletSignedHashes -> {
             val wallet = globalState.scanResponse?.card
-                ?.wallet(action.walletPublicKey)
-                ?.copy(
-                    totalSignedHashes = action.walletSignedHashes,
-                    remainingSignatures = action.remainingSignatures
-                )
+                    ?.wallet(action.walletPublicKey)
+                    ?.copy(
+                        totalSignedHashes = action.walletSignedHashes,
+                        remainingSignatures = action.remainingSignatures
+                    )
             val card = globalState.scanResponse?.card
             wallet?.let { globalState.scanResponse.card.updateWallet(wallet) }
 
