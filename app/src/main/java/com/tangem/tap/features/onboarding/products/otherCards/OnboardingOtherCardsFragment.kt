@@ -10,6 +10,7 @@ import androidx.transition.TransitionManager
 import com.tangem.tap.common.extensions.getDrawableCompat
 import com.tangem.tap.common.transitions.InternalNoteLayoutTransition
 import com.tangem.tap.features.onboarding.products.BaseOnboardingFragment
+import com.tangem.tap.features.onboarding.products.note.swapToBitmapDrawable
 import com.tangem.tap.features.onboarding.products.otherCards.redux.OnboardingOtherCardsAction
 import com.tangem.tap.features.onboarding.products.otherCards.redux.OnboardingOtherCardsState
 import com.tangem.tap.features.onboarding.products.otherCards.redux.OnboardingOtherCardsStep
@@ -29,6 +30,7 @@ class OnboardingOtherCardsFragment : BaseOnboardingFragment<OnboardingOtherCards
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        store.dispatch(OnboardingOtherCardsAction.LoadCardArtwork)
         store.dispatch(OnboardingOtherCardsAction.DetermineStepOfScreen)
     }
 
@@ -45,7 +47,7 @@ class OnboardingOtherCardsFragment : BaseOnboardingFragment<OnboardingOtherCards
         if (activity == null) return
         if (state.currentStep == OnboardingOtherCardsStep.None) return
 
-        state.artworkBitmap?.let { imv_front_card.setImageBitmap(it) }
+        state.cardArtwork?.let { imv_front_card.swapToBitmapDrawable(it.artwork) }
         pb_state.max = state.steps.size - 1
         pb_state.progress = state.progress
 
