@@ -8,13 +8,14 @@ import com.tangem.tap.domain.configurable.config.ConfigManager
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.features.feedback.FeedbackManager
-import com.tangem.tap.features.onboarding.service.ProductOnboardingService
+import com.tangem.tap.features.onboarding.OnboardingManager
 import com.tangem.tap.network.coinmarketcap.CoinMarketCapService
 import com.tangem.tap.network.moonpay.MoonPayUserStatus
 import org.rekotlin.StateType
 
 data class GlobalState(
     val scanResponse: ScanResponse? = null,
+    val onboardingManager: OnboardingManager? = null,
     val cardVerifiedOnline: Boolean = false,
     val tapWalletManager: TapWalletManager = TapWalletManager(),
     val payIdManager: PayIdManager = PayIdManager(),
@@ -26,7 +27,6 @@ data class GlobalState(
     val scanCardFailsCounter: Int = 0,
     val dialog: StateDialog? = null,
     val moonPayUserStatus: MoonPayUserStatus? = null,
-    val onboardingService: ProductOnboardingService? = null,
 ) : StateType
 
 typealias CryptoCurrencyName = String
