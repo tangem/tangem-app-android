@@ -87,7 +87,7 @@ private val globalMiddlewareHandler: Middleware<AppState> = { dispatch, appState
                         }
                     }
                 }
-                is GlobalAction.ReadCard -> {
+                is GlobalAction.ScanCard -> {
                     scope.launch {
                         val result = tangemSdkManager.scanProduct(FirebaseAnalyticsHandler, action.messageResId)
                         store.dispatch(GlobalAction.ScanFailsCounter.ChooseBehavior(result))
