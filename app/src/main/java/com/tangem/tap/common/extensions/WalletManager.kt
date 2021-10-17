@@ -7,7 +7,11 @@ import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.amountToCreateAccount
 import com.tangem.tap.domain.extensions.isNoAccountError
 import com.tangem.tap.domain.getFirstToken
+import com.tangem.tap.domain.topup.TradeCryptoHelper
+import com.tangem.tap.features.wallet.redux.AddressData
+import com.tangem.tap.features.wallet.redux.reducers.createAddressesData
 import com.tangem.tap.network.NetworkConnectivity
+import com.tangem.tap.store
 
 /**
 [REDACTED_AUTHOR]
@@ -29,4 +33,27 @@ suspend fun WalletManager.safeUpdate(): Result<Wallet> = try {
             Result.Failure(TapError.WalletManagerUpdate.InternalError(message))
         }
     }
+}
+
+fun WalletManager?.getToUpUrl(): String? {
+    val wallet = this?.wallet ?: return null
+    val config = store.state.globalState.configManager?.config ?: return null
+    val defaultAddress = wallet.address
+
+    return TradeCryptoHelper.getUrl(
+        TradeCryptoHelper.Action.Buy,
+        wallet.blockchain,
+        wallet.blockchain.currency,
+        defaultAddress,
+        config.moonPayApiKey,
+        config.moonPayApiSecretKey
+    )
+}
+
+fun WalletManager?.getAddressData(): AddressData? {
+    val wallet = this?.wallet ?: return null
+
+    val addressDataList = wallet.createAddressesData()
+    return if (addressDataList.isEmpty()) null
+    else addressDataList[0]
 }
