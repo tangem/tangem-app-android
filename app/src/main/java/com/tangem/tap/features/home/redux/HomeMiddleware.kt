@@ -1,24 +1,19 @@
 package com.tangem.tap.features.home.redux
 
 import com.tangem.tap.common.entities.IndeterminateProgressButton
-import com.tangem.tap.common.extensions.dispatchErrorNotification
 import com.tangem.tap.common.extensions.dispatchOpenUrl
-import com.tangem.tap.common.extensions.withMainContext
 import com.tangem.tap.common.post
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
+import com.tangem.tap.common.redux.navigation.FragmentShareTransition
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.DELAY_SDK_DIALOG_CLOSE
-import com.tangem.tap.domain.TapWalletManager
-import com.tangem.tap.domain.tasks.product.ScanResponse
-import com.tangem.tap.features.onboarding.service.OnboardingHelper
+import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.features.send.redux.states.ButtonState
-import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
 
@@ -52,55 +47,30 @@ private fun handleReadCard() {
     if (!preferencesStorage.wasDisclaimerAccepted()) {
         store.dispatch(NavigationAction.NavigateTo(AppScreen.Disclaimer))
     } else {
-        fun changeButtonState(state: ButtonState) {
-            val btnState = IndeterminateProgressButton(state)
-            store.dispatch(HomeAction.ChangeScanCardButtonState(btnState))
-        }
-
-        fun proceedToWalletScreen(tapWalletManager: TapWalletManager, scanResponse: ScanResponse) {
-            scope.launch {
-                tapWalletManager.onCardScanned(scanResponse)
-                delay(DELAY_SDK_DIALOG_CLOSE)
-                withMainContext { changeButtonState(ButtonState.ENABLED) }
-                store.dispatch(NavigationAction.NavigateTo(AppScreen.Wallet))
-            }
-        }
         changeButtonState(ButtonState.PROGRESS)
-
-        store.dispatch(GlobalAction.ReadCard({ scanResponse ->
-            val tapWalletManager = store.state.globalState.tapWalletManager
-            if (!OnboardingHelper.isOnboardingCase(scanResponse)) {
-                proceedToWalletScreen(tapWalletManager, scanResponse)
-                return@ReadCard
+        store.dispatch(GlobalAction.ScanCard({ scanResponse ->
+            if (OnboardingHelper.isOnboardingCase(scanResponse)) {
+                val navigateTo = OnboardingHelper.whereToNavigate(scanResponse)
+                store.dispatch(GlobalAction.Onboarding.Start(scanResponse, AppScreen.Home))
+                navigateTo(navigateTo, store.state.homeState.shareTransition)
+            } else {
+                scope.launch { store.state.globalState.tapWalletManager.onCardScanned(scanResponse) }
+                navigateTo(AppScreen.Wallet, null)
             }
-
-            val service = OnboardingHelper.createService(
-                    AppScreen.Home,
-                    scanResponse,
-                    tapWalletManager.walletManagerFactory
-            )
-            if (service == null) {
-                proceedToWalletScreen(tapWalletManager, scanResponse)
-                return@ReadCard
-            }
-
-            service.onInitializationProgress = {
-                when (it) {
-                    ProgressState.Loading -> changeButtonState(ButtonState.PROGRESS)
-                    ProgressState.Done -> changeButtonState(ButtonState.ENABLED)
-                    ProgressState.Error -> changeButtonState(ButtonState.ENABLED)
-                }
-            }
-            service.onInitialized = {
-                store.dispatch(GlobalAction.Onboarding.Activate(service))
-                store.dispatch(NavigationAction.NavigateTo(it, store.state.homeState.shareTransition))
-            }
-            service.onError = {
-                store.dispatchErrorNotification(it)
-            }
-            post(DELAY_SDK_DIALOG_CLOSE) { service.initializeOnboarding() }
         }, {
             changeButtonState(ButtonState.ENABLED)
         }))
+    }
+}
+
+private fun changeButtonState(state: ButtonState) {
+    val btnState = IndeterminateProgressButton(state)
+    store.dispatch(HomeAction.ChangeScanCardButtonState(btnState))
+}
+
+private fun navigateTo(screen: AppScreen, transition: FragmentShareTransition?) {
+    post(DELAY_SDK_DIALOG_CLOSE) {
+        changeButtonState(ButtonState.ENABLED)
+        store.dispatch(NavigationAction.NavigateTo(screen, transition))
     }
 }
