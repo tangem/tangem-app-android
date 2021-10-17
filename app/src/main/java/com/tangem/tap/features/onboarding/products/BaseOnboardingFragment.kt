@@ -24,7 +24,7 @@ abstract class BaseOnboardingFragment<T> : BaseStoreFragment(R.layout.fragment_o
     protected var fromScreen: AppScreen? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
-        fromScreen = store.state.globalState.onboardingService?.fromScreen
+        fromScreen = store.state.globalState.onboardingManager?.fromScreen
 
         super.onCreate(savedInstanceState)
     }
