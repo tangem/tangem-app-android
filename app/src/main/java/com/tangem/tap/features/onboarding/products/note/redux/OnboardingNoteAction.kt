@@ -1,6 +1,8 @@
 package com.tangem.tap.features.onboarding.products.note.redux
 
-import com.tangem.tap.features.onboarding.service.OnboardingWalletBalance
+import com.tangem.blockchain.common.WalletManager
+import com.tangem.tap.features.onboarding.OnboardingWalletBalance
+import com.tangem.tap.features.wallet.redux.Artwork
 import org.rekotlin.Action
 
 /**
@@ -9,11 +11,14 @@ import org.rekotlin.Action
 sealed class OnboardingNoteAction : Action {
     // from user, ui
     data class SetResources(val resources: AndroidResources) : OnboardingNoteAction()
+    object LoadCardArtwork : OnboardingNoteAction()
     object CreateWallet : OnboardingNoteAction()
     object TopUp : OnboardingNoteAction()
     object ShowAddressInfoDialog : OnboardingNoteAction()
 
     // from redux
+    class SetArtworkUrl(val artwork: Artwork) : OnboardingNoteAction()
+    data class SetWalletManager(val walletManager: WalletManager) : OnboardingNoteAction()
     object DetermineStepOfScreen : OnboardingNoteAction()
     object Done : OnboardingNoteAction()
 
