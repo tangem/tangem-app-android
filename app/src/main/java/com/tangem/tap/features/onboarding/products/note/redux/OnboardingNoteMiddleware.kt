@@ -16,6 +16,7 @@ import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.DispatchFunction
@@ -104,6 +105,7 @@ private fun handleNoteAction(action: Action, dispatch: DispatchFunction) {
                 walletManager
             }
 
+            val isLoadedBefore = noteState.walletBalance.state != ProgressState.Loading
             val balanceIsLoading = noteState.walletBalance.copy(
                 state = ProgressState.Loading,
                 error = null,
@@ -114,6 +116,7 @@ private fun handleNoteAction(action: Action, dispatch: DispatchFunction) {
             scope.launch {
                 val loadedBalance = onboardingManager.updateBalance(walletManager)
                 loadedBalance.criticalError?.let { store.dispatchErrorNotification(it) }
+                delay(if (isLoadedBefore) 0 else 300)
                 withMainContext { store.dispatch(OnboardingNoteAction.Balance.Set(loadedBalance)) }
             }
 
