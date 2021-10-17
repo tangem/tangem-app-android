@@ -4,6 +4,7 @@ import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemError
 import com.tangem.tap.common.redux.*
+import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.configurable.config.ConfigManager
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
@@ -12,7 +13,6 @@ import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.features.details.redux.SecurityOption
 import com.tangem.tap.features.feedback.EmailData
 import com.tangem.tap.features.feedback.FeedbackManager
-import com.tangem.tap.features.onboarding.service.ProductOnboardingService
 import com.tangem.tap.network.moonpay.MoonPayUserStatus
 import org.rekotlin.Action
 
@@ -29,11 +29,11 @@ sealed class GlobalAction : Action {
     object HideDialog : GlobalAction()
 
     sealed class Onboarding {
-        data class Activate(val onboardingService: ProductOnboardingService) : GlobalAction()
-        object Deactivate : GlobalAction()
+        data class Start(val scanResponse: ScanResponse, val fromScreen: AppScreen) : GlobalAction()
+        object Stop : GlobalAction()
     }
 
-    data class ReadCard(
+    data class ScanCard(
         val onSuccess: ((ScanResponse) -> Unit)? = null,
         val onFailure: ((TangemError) -> Unit)? = null,
         val messageResId: Int? = null,

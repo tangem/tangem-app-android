@@ -1,7 +1,6 @@
 package com.tangem.tap.domain.twins
 
 import com.tangem.common.card.Card
-import com.tangem.tap.common.extensions.isEven
 
 class TwinsHelper {
     companion object {
@@ -21,22 +20,6 @@ class TwinsHelper {
             }
         }
 
-        fun getTwinsCardId(cardId: String): String? {
-            val cardIdWithNewSeries = when (getTwinCardNumber(cardId) ?: return null) {
-                TwinCardNumber.First -> {
-                    val index = if (cardId.startsWith(firstCardSeries[0])) 0 else 1
-                    cardId.replace(firstCardSeries[index], secondCardSeries[index])
-                }
-                TwinCardNumber.Second -> {
-                    val index = if (cardId.startsWith(secondCardSeries[0])) 0 else 1
-                    cardId.replace(secondCardSeries[index], firstCardSeries[index])
-                }
-            }
-            val cardIdWithoutChecksum = cardIdWithNewSeries.dropLast(1)
-            val checkSum = cardIdWithoutChecksum.calculateLuhn()
-            return cardIdWithoutChecksum + checkSum
-        }
-
         fun getTwinCardIdForUser(cardId: String): String {
             if (cardId.length < 16) return cardId
 
@@ -48,21 +31,6 @@ class TwinsHelper {
         private val firstCardSeries = listOf("CB61", "CB64")
         private val secondCardSeries = listOf("CB62", "CB65")
     }
-}
-
-private fun String.calculateLuhn(): Int {
-    val checksum = this.reversed()
-            .mapIndexed { index, c ->
-                val digit = if (c in '0'..'9') c - '0' else c - 'A'
-                if (!index.isEven()) {
-                    digit
-                } else {
-                    val newDigit = digit * 2
-                    if (newDigit >= 10) newDigit - 9 else newDigit
-                }
-            }.sum()
-            .rem(10)
-    return (10 - checksum) % 10
 }
 
 enum class TwinCardNumber(val number: Int) {
@@ -80,10 +48,6 @@ fun Card.isTangemTwin(): Boolean {
 
 fun Card.getTwinCardNumber(): TwinCardNumber? {
     return TwinsHelper.getTwinCardNumber(this.cardId)
-}
-
-fun Card.getTwinsCardId(): String? {
-    return TwinsHelper.getTwinsCardId(this.cardId)
 }
 
 fun Card.getTwinCardIdForUser(): String {
