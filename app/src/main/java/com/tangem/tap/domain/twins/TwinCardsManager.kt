@@ -21,7 +21,8 @@ import com.tangem.tap.tangemSdkManager
 class TwinCardsManager(private val scanResponse: ScanResponse, context: Context) {
 
     private val currentCardId: String = scanResponse.card.cardId
-    private val secondCardId: String? = TwinsHelper.getTwinsCardId(currentCardId)
+//    private val secondCardId: String? = TwinsHelper.getTwinsCardId(currentCardId)
+    private val secondCardId: String? = null
 
     private var currentCardPublicKey: String? = null
     private var secondCardPublicKey: String? = null
