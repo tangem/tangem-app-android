@@ -14,7 +14,7 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
     return when (action) {
         is GlobalAction.Onboarding.Start -> {
             val usedCardsPrefStorage = preferencesStorage.usedCardsPrefStorage
-            val onboardingState = OnboardingManager(action.scanResponse, action.fromScreen, usedCardsPrefStorage)
+            val onboardingState = OnboardingManager(action.scanResponse, usedCardsPrefStorage)
             globalState.copy(onboardingManager = onboardingState)
         }
         is GlobalAction.Onboarding.Stop -> {
