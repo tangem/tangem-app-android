@@ -11,10 +11,9 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="32dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="@dimen/onboarding_progress_margin_top"
         android:layout_marginEnd="32dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
@@ -25,11 +24,11 @@
         android:layout_marginStart="32dp"
         android:layout_marginTop="67dp"
         android:layout_marginEnd="32dp"
-        android:visibility="gone"
         android:background="@drawable/shape_rectangle_rounded_8"
         android:backgroundTint="@color/lightGray0"
         android:elevation="0dp"
         android:scaleType="fitCenter"
+        android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/pb_state" />
@@ -44,7 +43,6 @@
         android:translationY="-30dp"
         android:visibility="gone"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.495"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/imv_card_background" />
 
@@ -75,7 +73,7 @@
         android:id="@+id/imv_activation_success"
         android:layout_width="142dp"
         android:layout_height="142dp"
-        android:layout_marginTop="100dp"
+        android:layout_marginTop="@dimen/onboarding_card_margin_top"
         android:src="@drawable/ic_activation_success"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"

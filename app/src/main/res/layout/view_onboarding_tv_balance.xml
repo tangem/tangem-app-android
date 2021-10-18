@@ -1,16 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:gravity="center"
+    android:orientation="vertical"
     android:paddingStart="16dp"
-    android:paddingEnd="16dp"
-    android:orientation="vertical">
+    android:paddingEnd="16dp">
 
     <TextView
         android:id="@+id/tv_balance"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:fontFamily="sans-serif-medium"
         android:text="@string/onboarding_balance_title"
         android:textAllCaps="true"
         android:textColor="#ABABAB"
@@ -18,10 +20,10 @@
 
     <TextView
         android:id="@+id/tv_balance_value"
-        style="@style/TextViewOnboarding.Header"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text=""
-        android:textSize="28dp" />
+        android:textSize="28sp"
+        android:textStyle="bold"
+        tools:text="0.000 BTC" />
 
 </androidx.appcompat.widget.LinearLayoutCompat>
