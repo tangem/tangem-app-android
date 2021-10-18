@@ -18,8 +18,8 @@ private fun internalReduce(action: Action, state: AppState): HomeState {
         is HomeAction.SetFragmentShareTransition -> {
             state = state.copy(shareTransition = action.shareTransition)
         }
-        is HomeAction.SetTermsOfUseState -> {
-            state = state.copy(isDisclaimerAccepted = action.isDisclaimerAccepted)
+        is HomeAction.ShouldScanCardOnResume -> {
+            state = state.copy(shouldScanCardOnResume = action.shouldScanCard)
         }
         is HomeAction.ChangeScanCardButtonState -> {
             state = state.copy(btnScanState = action.state)
