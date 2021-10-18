@@ -6,7 +6,7 @@ import com.tangem.tap.features.send.redux.states.ButtonState
 import org.rekotlin.StateType
 
 data class HomeState(
-    val isDisclaimerAccepted: Boolean = false,
+    val shouldScanCardOnResume: Boolean = false,
     val shareTransition: FragmentShareTransition? = null,
     val btnScanState: IndeterminateProgressButton = IndeterminateProgressButton(ButtonState.ENABLED),
 ) : StateType
