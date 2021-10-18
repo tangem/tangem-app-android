@@ -59,14 +59,20 @@ class MainActivity : AppCompatActivity(), SnackbarHandler {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        systemActions()
         store.state.globalState.feedbackManager?.updateAcivity(this)
-        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
         store.dispatch(NavigationAction.ActivityCreated(WeakReference(this)))
 
         tangemSdk = TangemSdk.init(this, TangemSdkManager.config)
         tangemSdkManager = TangemSdkManager(tangemSdk, this)
 
         store.dispatch(WalletConnectAction.RestoreSessions)
+    }
+
+    private fun systemActions() {
+        // makes the status bar text dark
+        window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
     }
 
     override fun onResume() {
@@ -107,7 +113,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler {
         if (snackbar != null) return
 
         snackbar = Snackbar.make(
-                fragment_container, getString(text), Snackbar.LENGTH_INDEFINITE
+            fragment_container, getString(text), Snackbar.LENGTH_INDEFINITE
         )
         if (buttonTitle != null && action != null) {
             snackbar?.setAction(getString(buttonTitle), action)
