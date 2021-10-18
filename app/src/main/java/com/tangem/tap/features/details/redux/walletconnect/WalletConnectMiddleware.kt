@@ -1,11 +1,10 @@
 package com.tangem.tap.features.details.redux.walletconnect
 
 import com.tangem.blockchain.common.*
-import com.tangem.common.CompletionResult
 import com.tangem.common.card.Card
+import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.toHexString
 import com.tangem.tap.*
-import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.getFromClipboard
 import com.tangem.tap.common.redux.AppState
@@ -18,9 +17,6 @@ import com.tangem.tap.domain.isMultiwalletAllowed
 import com.tangem.tap.domain.walletconnect.WalletConnectManager
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.wallet.R
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import org.rekotlin.Middleware
 
 class WalletConnectMiddleware {
@@ -132,43 +128,29 @@ class WalletConnectMiddleware {
     }
 
     private fun handleScanCard(wcUri: String) {
-        scope.launch {
-            val result = tangemSdkManager.scanProduct(
-                FirebaseAnalyticsHandler,
-                R.string.wallet_connect_scan_card_message
-            )
-            withContext(Dispatchers.Main) {
-                when (result) {
-                    is CompletionResult.Success -> {
-                        val card = result.data.card
-
-                        if (!card.isMultiwalletAllowed) {
-                            store.dispatchOnMain(WalletConnectAction.UnsupportedCard)
-                            return@withContext
-                        }
-
-                        val walletManager = getWalletManager(card)
-                        if (walletManager == null) {
-                            store.dispatchOnMain(WalletConnectAction.UnsupportedCard)
-                            return@withContext
-                        }
-
-                        val key = walletManager.wallet.publicKey
-                        store.dispatchOnMain(WalletConnectAction.OpenSession(
-                            wcUri = wcUri,
-                            wallet = WalletForSession(
-                                card.cardId, key.toHexString(),
-                                isTestNet = card.isTestCard
-                            ),
-                        ))
-                    }
-                    is CompletionResult.Failure ->
-                        store.dispatchOnMain(WalletConnectAction.FailureEstablishingSession(
-                            null
-                        ))
-                }
+        store.dispatch(GlobalAction.ScanCard({ scanResponse ->
+            val card = scanResponse.card
+            if (!card.isMultiwalletAllowed) {
+                store.dispatchOnMain(WalletConnectAction.UnsupportedCard)
+                return@ScanCard
             }
-        }
+
+            val walletManager = getWalletManager(card).guard {
+                store.dispatchOnMain(WalletConnectAction.UnsupportedCard)
+                return@ScanCard
+            }
+
+            val key = walletManager.wallet.publicKey
+            store.dispatchOnMain(WalletConnectAction.OpenSession(
+                wcUri = wcUri,
+                wallet = WalletForSession(
+                    card.cardId, key.toHexString(),
+                    isTestNet = card.isTestCard
+                ),
+            ))
+        }, {
+            store.dispatchOnMain(WalletConnectAction.FailureEstablishingSession(null))
+        }, R.string.wallet_connect_scan_card_message))
     }
 
     private fun getWalletManager(card: Card): WalletManager? {
