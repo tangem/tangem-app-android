@@ -2,8 +2,8 @@ package com.tangem.tap.features.home
 
 import android.os.Bundle
 import android.view.View
-import androidx.fragment.app.Fragment
 import androidx.transition.TransitionInflater
+import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.redux.navigation.FragmentShareTransition
 import com.tangem.tap.common.redux.navigation.ShareElement
 import com.tangem.tap.common.toggleWidget.IndeterminateProgressButtonWidget
@@ -12,16 +12,19 @@ import com.tangem.tap.common.transitions.FrontCardEnterTransition
 import com.tangem.tap.common.transitions.FrontCardExitTransition
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.home.redux.HomeState
+import com.tangem.tap.features.onboarding.products.BaseOnboardingFragment
 import com.tangem.tap.store
 import com.tangem.wallet.R
-import kotlinx.android.synthetic.main.fragment_home.*
+import kotlinx.android.synthetic.main.fragment_onboarding_main.*
 import kotlinx.android.synthetic.main.layout_onboarding_bottom_action_views.*
-import org.rekotlin.StoreSubscriber
+import kotlinx.android.synthetic.main.layout_onboarding_home.*
 import java.lang.ref.WeakReference
 
-class HomeFragment : Fragment(R.layout.fragment_home), StoreSubscriber<HomeState> {
+class HomeFragment : BaseOnboardingFragment<HomeState>() {
 
     private lateinit var btnScanCard: ViewStateWidget
+
+    override fun getOnboardingTopContainerId(): Int = R.layout.layout_onboarding_home
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -33,10 +36,11 @@ class HomeFragment : Fragment(R.layout.fragment_home), StoreSubscriber<HomeState
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        toolbar.hide()
         val shareTransition = FragmentShareTransition(
-                listOf(ShareElement(WeakReference(imv_front_card), imv_front_card.transitionName)),
-                FrontCardEnterTransition(),
-                FrontCardExitTransition()
+            listOf(ShareElement(WeakReference(imv_front_card), imv_front_card.transitionName)),
+            FrontCardEnterTransition(),
+            FrontCardExitTransition()
         )
 
         store.dispatch(HomeAction.SetFragmentShareTransition(shareTransition))
@@ -52,20 +56,13 @@ class HomeFragment : Fragment(R.layout.fragment_home), StoreSubscriber<HomeState
         btnScanCard = IndeterminateProgressButtonWidget(btn_main_action, progress)
     }
 
-    override fun onStart() {
-        super.onStart()
+    override fun subscribeToStore() {
         store.subscribe(this) { state ->
             state.skipRepeats { oldState, newState ->
                 oldState.homeState == newState.homeState
             }.select { it.homeState }
         }
     }
-
-    override fun onStop() {
-        super.onStop()
-        store.unsubscribe(this)
-    }
-
 
     override fun newState(state: HomeState) {
         if (activity == null) return
