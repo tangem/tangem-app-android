@@ -9,7 +9,6 @@ import com.tangem.operations.attestation.CardVerifyAndGetInfo
 import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.tap.common.extensions.isPositive
 import com.tangem.tap.common.extensions.safeUpdate
-import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.UrlBitmapLoader
 import com.tangem.tap.domain.extensions.getOrLoadCardArtworkUrl
@@ -29,7 +28,6 @@ import kotlin.coroutines.suspendCoroutine
  */
 class OnboardingManager(
     var scanResponse: ScanResponse,
-    val fromScreen: AppScreen,
     val usedCardsPrefStorage: UsedCardsPrefStorage,
 ) {
 
