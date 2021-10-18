@@ -16,6 +16,7 @@ import com.tangem.tap.features.onboarding.products.otherCards.redux.OnboardingOt
 import com.tangem.tap.features.onboarding.products.otherCards.redux.OnboardingOtherCardsStep
 import com.tangem.tap.store
 import com.tangem.wallet.R
+import kotlinx.android.synthetic.main.fragment_onboarding_main.*
 import kotlinx.android.synthetic.main.layout_onboarding_bottom_action_views.*
 import kotlinx.android.synthetic.main.layout_onboarding_note.*
 import kotlinx.android.synthetic.main.view_onboarding_progress.*
@@ -30,6 +31,7 @@ class OnboardingOtherCardsFragment : BaseOnboardingFragment<OnboardingOtherCards
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        toolbar.setTitle(R.string.onboarding_title)
         store.dispatch(OnboardingOtherCardsAction.LoadCardArtwork)
         store.dispatch(OnboardingOtherCardsAction.DetermineStepOfScreen)
     }
