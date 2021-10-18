@@ -34,9 +34,11 @@
 
     <color name="lightGray0">#F3F3F3</color>
     <color name="lightGray1">#F8F8FB</color>
+    <color name="lightGray2">#DADADF</color>
+    <color name="lightGray3">#D0D0D5</color>
     <color name="lightGray4">#C7C7CC</color>
     <color name="lightGray5">#D1D1D6</color>
-    <color name="lightGray6">#F2F2F7</color>
+    <color name="lightGray6">#C9C9CD</color>
 
     <color name="separatorGrey1">#1F000000</color>
     <color name="separatorGrey2">#14212121</color>
