@@ -27,6 +27,7 @@ class HomeFragment : Fragment(R.layout.fragment_home), StoreSubscriber<HomeState
         super.onCreate(savedInstanceState)
         val inflater = TransitionInflater.from(requireContext())
         exitTransition = inflater.inflateTransition(R.transition.fade)
+        store.dispatch(HomeAction.Init)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -39,7 +40,6 @@ class HomeFragment : Fragment(R.layout.fragment_home), StoreSubscriber<HomeState
         )
 
         store.dispatch(HomeAction.SetFragmentShareTransition(shareTransition))
-        store.dispatch(HomeAction.Init)
 
         tv_header.setText(R.string.home_welcome_header)
         tv_body.setText(R.string.home_welcome_body)
