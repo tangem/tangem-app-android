@@ -22,10 +22,10 @@ import com.tangem.tap.domain.extensions.toSendableAmounts
 import com.tangem.tap.domain.twins.TwinsHelper
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.twins.CreateTwinWallet
+import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.send.redux.PrepareSendScreen
 import com.tangem.tap.features.wallet.redux.*
 import com.tangem.tap.network.NetworkStateChanged
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.Middleware
@@ -145,18 +145,8 @@ class WalletMiddleware {
 
                     }
                     is WalletAction.Scan -> {
-                        scope.launch {
-                            val result = tangemSdkManager.scanProduct(FirebaseAnalyticsHandler)
-                            scope.launch(Dispatchers.Main) {
-                                store.dispatch(GlobalAction.ScanFailsCounter.ChooseBehavior(result))
-                                when (result) {
-                                    is CompletionResult.Success -> {
-                                        tangemSdkManager.changeDisplayedCardIdNumbersCount(result.data.card)
-                                        globalState?.tapWalletManager?.onCardScanned(result.data, true)
-                                    }
-                                }
-                            }
-                        }
+                        store.dispatch(HomeAction.ShouldScanCardOnResume(true))
+                        store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
                     }
                     is WalletAction.LoadCardInfo -> {
                         scope.launch {
