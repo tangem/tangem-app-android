@@ -58,7 +58,7 @@ private fun handleReadCard() {
         store.dispatch(GlobalAction.ScanCard({ scanResponse ->
             if (OnboardingHelper.isOnboardingCase(scanResponse)) {
                 val navigateTo = OnboardingHelper.whereToNavigate(scanResponse)
-                store.dispatch(GlobalAction.Onboarding.Start(scanResponse, AppScreen.Home))
+                store.dispatch(GlobalAction.Onboarding.Start(scanResponse))
                 navigateTo(navigateTo, store.state.homeState.shareTransition)
             } else {
                 scope.launch { store.state.globalState.tapWalletManager.onCardScanned(scanResponse) }
