@@ -4,7 +4,6 @@ import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemError
 import com.tangem.tap.common.redux.*
-import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.configurable.config.ConfigManager
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
@@ -29,7 +28,7 @@ sealed class GlobalAction : Action {
     object HideDialog : GlobalAction()
 
     sealed class Onboarding {
-        data class Start(val scanResponse: ScanResponse, val fromScreen: AppScreen) : GlobalAction()
+        data class Start(val scanResponse: ScanResponse) : GlobalAction()
         object Stop : GlobalAction()
     }
 
