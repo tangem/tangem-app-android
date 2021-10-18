@@ -3,6 +3,7 @@ package com.tangem.tap.features.home.redux
 import com.tangem.tap.common.entities.IndeterminateProgressButton
 import com.tangem.tap.common.extensions.dispatchOpenUrl
 import com.tangem.tap.common.post
+import com.tangem.tap.common.postUi
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
@@ -34,6 +35,12 @@ private val homeMiddleware: Middleware<AppState> = { dispatch, state ->
                     store.dispatch(GlobalAction.RestoreAppCurrency)
                     store.dispatch(GlobalAction.GetMoonPayUserStatus)
                     store.dispatch(HomeAction.SetTermsOfUseState(preferencesStorage.wasDisclaimerAccepted()))
+                }
+                is HomeAction.ShouldScanCardOnResume -> {
+                    if (action.shouldScanCard) {
+                        store.dispatch(HomeAction.ShouldScanCardOnResume(false))
+                        postUi(700) { store.dispatch(HomeAction.ReadCard) }
+                    }
                 }
                 is HomeAction.ReadCard -> handleReadCard()
                 is HomeAction.GoToShop -> store.dispatchOpenUrl(HomeMiddleware.CARD_SHOP_URI)
