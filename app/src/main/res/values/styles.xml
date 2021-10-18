@@ -26,21 +26,43 @@
         <item name="colorControlNormal">#e34b1c</item>
     </style>
 
-    <style name="TapButton">
+    <style name="BaseTapButton">
         <item name="android:insetTop">0dp</item>
         <item name="android:insetBottom">0dp</item>
-        <item name="android:textSize">15sp</item>
-        <item name="android:textStyle">bold</item>
         <item name="android:textColor">@color/btn_tap_text_color</item>
         <item name="android:textAllCaps">false</item>
         <item name="android:letterSpacing">0</item>
         <item name="android:backgroundTint">@color/selector_btn_green</item>
         <item name="cornerRadius">@dimen/btn_corner_radius</item>
-        <item name="android:fontFamily">@font/saira_semi_condensed_regular</item>
+    </style>
+
+    <style name="TapButton" parent="BaseTapButton">
         <item name="android:layout_width">93dp</item>
-        <item name="android:layout_height">wrap_content</item>
         <item name="android:minHeight">52dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:fontFamily">@font/saira_semi_condensed_regular</item>
         <item name="elevation">3dp</item>
+    </style>
+
+    <style name="OnboardingButton" parent="BaseTapButton">
+        <item name="android:layout_width">204dp</item>
+        <item name="android:layout_height">48dp</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="elevation">2dp</item>
+    </style>
+
+    <style name="TapButtonText" parent="@style/Widget.MaterialComponents.Button.TextButton">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:minWidth">204dp</item>
+        <item name="android:layout_height">58dp</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:letterSpacing">0</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:textColor">#060606</item>
+        <item name="cornerRadius">@dimen/btn_corner_radius</item>
     </style>
 
     <style name="TapButtonWithIcon" parent="TapButton">
@@ -77,3 +99,10 @@
         <item name="android:textSize">16sp</item>
     </style>
 </resources>
+
+    <!--    android:fontFamily="sans-serif"           // roboto regular  -->
+    <!--    android:fontFamily="sans-serif-light"     // roboto light  -->
+    <!--    android:fontFamily="sans-serif-condensed" // roboto condensed  -->
+    <!--    android:fontFamily="sans-serif-black"     // roboto black  -->
+    <!--    android:fontFamily="sans-serif-thin"      // roboto thin (android 4.2)  -->
+    <!--    android:fontFamily="sans-serif-medium"    // roboto medium (android 5.0)  -->
