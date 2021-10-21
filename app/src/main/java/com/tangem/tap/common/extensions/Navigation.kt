@@ -10,26 +10,26 @@ import com.tangem.tap.common.redux.navigation.FragmentShareTransition
 import com.tangem.tap.features.details.ui.DetailsConfirmFragment
 import com.tangem.tap.features.details.ui.DetailsFragment
 import com.tangem.tap.features.details.ui.DetailsSecurityFragment
-import com.tangem.tap.features.details.ui.twins.CreateTwinWalletFragment
-import com.tangem.tap.features.details.ui.twins.TwinWalletWarningFragment
 import com.tangem.tap.features.details.ui.walletconnect.QrScanFragment
 import com.tangem.tap.features.details.ui.walletconnect.WalletConnectSessionsFragment
 import com.tangem.tap.features.disclaimer.ui.DisclaimerFragment
 import com.tangem.tap.features.home.HomeFragment
 import com.tangem.tap.features.onboarding.products.note.OnboardingNoteFragment
 import com.tangem.tap.features.onboarding.products.otherCards.OnboardingOtherCardsFragment
+import com.tangem.tap.features.onboarding.products.twins.OnboardingTwinsFragment
 import com.tangem.tap.features.onboarding.products.wallet.OnboardingWalletFragment
 import com.tangem.tap.features.send.ui.SendFragment
 import com.tangem.tap.features.tokens.ui.AddTokensFragment
-import com.tangem.tap.features.wallet.ui.OnboardingTwinsFragment
+import com.tangem.tap.features.twins.ui.CreateTwinWalletFragment
+import com.tangem.tap.features.twins.ui.TwinWalletWarningFragment
 import com.tangem.tap.features.wallet.ui.WalletDetailsFragment
 import com.tangem.tap.features.wallet.ui.WalletFragment
 import com.tangem.wallet.R
 
 fun FragmentActivity.openFragment(
-        screen: AppScreen,
-        addToBackstack: Boolean,
-        fgShareTransition: FragmentShareTransition? = null
+    screen: AppScreen,
+    addToBackstack: Boolean,
+    fgShareTransition: FragmentShareTransition? = null
 ) {
     val transaction = this.supportFragmentManager.beginTransaction()
     val fragment = fragmentFactory(screen)
@@ -60,8 +60,8 @@ fun FragmentActivity.getPreviousScreen(): AppScreen? {
 }
 
 fun FragmentActivity.addOnBackPressedDispatcher(
-        isEnabled: Boolean = true,
-        onBackPressed: VoidCallback
+    isEnabled: Boolean = true,
+    onBackPressed: VoidCallback
 ): OnBackPressedCallback = (object : OnBackPressedCallback(isEnabled) {
     override fun handleOnBackPressed() {
         onBackPressed()
