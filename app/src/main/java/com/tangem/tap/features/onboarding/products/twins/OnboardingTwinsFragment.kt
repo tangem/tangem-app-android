@@ -1,4 +1,4 @@
-package com.tangem.tap.features.wallet.ui
+package com.tangem.tap.features.onboarding.products.twins
 
 import android.os.Bundle
 import android.view.View
@@ -6,17 +6,21 @@ import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import androidx.transition.TransitionInflater
 import com.squareup.picasso.Picasso
+import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
+import com.tangem.tap.common.extensions.withMainContext
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.twins.TwinsHelper
 import com.tangem.tap.features.wallet.redux.Artwork
 import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.wallet.R
-import kotlinx.android.synthetic.main.fragment_twin_cards.*
+import kotlinx.android.synthetic.main.fragment_twin_cards_welcome.*
 import kotlinx.android.synthetic.main.layout_twin_cards.*
+import kotlinx.coroutines.launch
 
-class OnboardingTwinsFragment : Fragment(R.layout.fragment_twin_cards) {
+class OnboardingTwinsFragment : Fragment(R.layout.fragment_twin_cards_welcome) {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,8 +61,15 @@ class OnboardingTwinsFragment : Fragment(R.layout.fragment_twin_cards) {
 
     private fun setOnClickListeners() {
         btn_continue.setOnClickListener {
-            store.dispatch(NavigationAction.NavigateTo(AppScreen.Wallet))
+            scope.launch {
+                val global = store.state.globalState
+                val scanResponse = global.onboardingManager?.scanResponse ?: return@launch
+                global.tapWalletManager.onCardScanned(scanResponse)
+                withMainContext {
+                    store.dispatchDebugErrorNotification("Делаем онбоардинг")
+                    store.dispatch(NavigationAction.NavigateTo(AppScreen.Wallet))
+                }
+            }
         }
     }
-
 }
