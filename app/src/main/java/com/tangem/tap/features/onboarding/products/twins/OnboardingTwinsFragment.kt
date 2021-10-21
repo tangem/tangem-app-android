@@ -11,8 +11,8 @@ import com.tangem.tap.common.extensions.withMainContext
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.twins.TwinsHelper
+import com.tangem.tap.features.twins.redux.TwinCardsAction
 import com.tangem.tap.features.wallet.redux.Artwork
-import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.wallet.R
@@ -37,9 +37,9 @@ class OnboardingTwinsFragment : Fragment(R.layout.fragment_twin_cards_welcome) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        store.dispatch(WalletAction.TwinsAction.SetOnboardingShown)
+        store.dispatch(TwinCardsAction.SetOnboardingShown)
 
-        val secondCardId = store.state.walletState.twinCardsState?.secondCardId ?: ""
+        val secondCardId = store.state.twinCardsState.secondCardId ?: ""
         val secondTwinCardId = TwinsHelper.getTwinCardIdForUser(secondCardId)
         val text = getString(R.string.twins_onboarding_description_format, secondTwinCardId)
         tv_twin_cards_description_1.text = text
