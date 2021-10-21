@@ -7,6 +7,7 @@ import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.extensions.toSendableAmounts
 import com.tangem.tap.domain.twins.TwinCardsManager
+import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import kotlinx.coroutines.Dispatchers
@@ -16,7 +17,7 @@ import org.rekotlin.Action
 import org.rekotlin.DispatchFunction
 import org.rekotlin.Middleware
 
-class CreateTwinWalletMiddleware {
+class TwinCardsMiddleware {
     companion object {
         val handler = twinsWalletMiddleware
     }
@@ -34,40 +35,47 @@ private val twinsWalletMiddleware: Middleware<AppState> = { dispatch, state ->
 private var twinsManager: TwinCardsManager? = null
 
 private fun handle(action: Action, dispatch: DispatchFunction) {
-    val action = action as? CreateTwinWalletAction ?: return
+    val action = action as? TwinCardsAction ?: return
 
+    val twinCardsState = store.state.twinCardsState
     when (action) {
-        is CreateTwinWalletAction.ShowWarning -> {
-            val wallet = store.state.detailsState.wallets.firstOrNull()
+        is TwinCardsAction.SetTwinCard -> {
+            val showOnboarding = !preferencesStorage.wasTwinsOnboardingShown()
+            if (showOnboarding) store.dispatch(TwinCardsAction.ShowOnboarding)
+        }
+        TwinCardsAction.SetOnboardingShown -> {
+            preferencesStorage.saveTwinsOnboardingShown()
+        }
+        is TwinCardsAction.CreateWallet.Create -> {
+            val wallet = store.state.walletState.walletManagers.map { it.wallet }.firstOrNull()
             if (wallet == null) {
                 store.dispatch(NavigationAction.NavigateTo(AppScreen.CreateTwinWalletWarning))
                 return
             }
             val notEmpty = wallet.recentTransactions.isNotEmpty() || wallet.amounts.toSendableAmounts().isNotEmpty()
             if (notEmpty) {
-                store.dispatch(CreateTwinWalletAction.NotEmpty)
+                store.dispatch(TwinCardsAction.CreateWallet.NotEmpty)
             } else {
                 store.dispatch(NavigationAction.NavigateTo(AppScreen.CreateTwinWalletWarning))
             }
         }
-        is CreateTwinWalletAction.Proceed ->
+        is TwinCardsAction.CreateWallet.Proceed -> {
             store.dispatch(NavigationAction.NavigateTo(AppScreen.CreateTwinWallet))
-        is CreateTwinWalletAction.Cancel -> {
-
-            val step = store.state.detailsState.createTwinWalletState?.step
-            if (step != null && step != CreateTwinWalletStep.FirstStep
-            ) {
-                store.dispatch(CreateTwinWalletAction.ShowAlert)
+        }
+        is TwinCardsAction.CreateWallet.Cancel -> {
+            val step = twinCardsState.createWalletState?.step
+            if (step != null && step != CreateTwinWalletStep.FirstStep) {
+                store.dispatch(TwinCardsAction.CreateWallet.ShowAlert)
             } else {
                 twinsManager = null
                 store.dispatch(NavigationAction.PopBackTo())
             }
         }
-        is CreateTwinWalletAction.Cancel.Confirm -> {
+        is TwinCardsAction.CreateWallet.Cancel.Confirm -> {
             twinsManager = null
             store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
         }
-        is CreateTwinWalletAction.LaunchFirstStep -> {
+        is TwinCardsAction.CreateWallet.LaunchFirstStep -> {
             store.state.globalState.scanResponse?.let {
                 twinsManager = TwinCardsManager(it, action.context)
             }
@@ -76,62 +84,59 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
                 withContext(Dispatchers.Main) {
                     when (result) {
                         SimpleResult.Success ->
-                            store.dispatch(CreateTwinWalletAction.LaunchFirstStep.Success)
+                            store.dispatch(TwinCardsAction.CreateWallet.LaunchFirstStep.Success)
                         is SimpleResult.Failure ->
-                            store.dispatch(CreateTwinWalletAction.LaunchFirstStep.Failure)
+                            store.dispatch(TwinCardsAction.CreateWallet.LaunchFirstStep.Failure)
                     }
                 }
             }
         }
-        CreateTwinWalletAction.LaunchFirstStep.Success -> {
+        TwinCardsAction.CreateWallet.LaunchFirstStep.Success -> {
 
         }
-        CreateTwinWalletAction.LaunchFirstStep.Failure -> {
+        TwinCardsAction.CreateWallet.LaunchFirstStep.Failure -> {
 
         }
-        is CreateTwinWalletAction.LaunchSecondStep ->
+        is TwinCardsAction.CreateWallet.LaunchSecondStep ->
             scope.launch {
                 val result = twinsManager?.createSecondWallet(action.initialMessage,
                     action.preparingMessage, action.creatingWalletMessage)
                 withContext(Dispatchers.Main) {
                     when (result) {
                         SimpleResult.Success ->
-                            store.dispatch(CreateTwinWalletAction.LaunchSecondStep.Success)
+                            store.dispatch(TwinCardsAction.CreateWallet.LaunchSecondStep.Success)
                         is SimpleResult.Failure ->
-                            store.dispatch(CreateTwinWalletAction.LaunchSecondStep.Failure)
+                            store.dispatch(TwinCardsAction.CreateWallet.LaunchSecondStep.Failure)
                     }
                 }
             }
-        CreateTwinWalletAction.LaunchSecondStep.Success -> {
+        TwinCardsAction.CreateWallet.LaunchSecondStep.Success -> {
 
         }
-        CreateTwinWalletAction.LaunchSecondStep.Failure -> {
+        TwinCardsAction.CreateWallet.LaunchSecondStep.Failure -> {
 
         }
-        is CreateTwinWalletAction.LaunchThirdStep -> {
+        is TwinCardsAction.CreateWallet.LaunchThirdStep -> {
             scope.launch {
                 val result = twinsManager?.complete(action.message)
                 withContext(Dispatchers.Main) {
                     when (result) {
                         is Result.Success ->
-                            store.dispatch(
-                                CreateTwinWalletAction
-                                        .LaunchThirdStep.Success(result.data)
-                            )
+                            store.dispatch(TwinCardsAction.CreateWallet.LaunchThirdStep.Success(result.data))
                         is Result.Failure ->
-                            store.dispatch(CreateTwinWalletAction.LaunchThirdStep.Failure)
+                            store.dispatch(TwinCardsAction.CreateWallet.LaunchThirdStep.Failure)
                     }
                 }
             }
         }
-        is CreateTwinWalletAction.LaunchThirdStep.Success -> {
+        is TwinCardsAction.CreateWallet.LaunchThirdStep.Success -> {
             scope.launch {
                 store.state.globalState.tapWalletManager.onCardScanned(action.scanResponse)
             }
             store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
             store.dispatch(NavigationAction.NavigateTo(AppScreen.Wallet))
         }
-        CreateTwinWalletAction.LaunchThirdStep.Failure -> {
+        TwinCardsAction.CreateWallet.LaunchThirdStep.Failure -> {
 
         }
     }
