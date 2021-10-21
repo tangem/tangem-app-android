@@ -9,7 +9,6 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
-import com.tangem.tap.features.details.redux.twins.CreateTwinWalletMiddleware
 import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.network.coinmarketcap.CoinMarketCapService
@@ -26,7 +25,6 @@ class DetailsMiddleware {
     private val eraseWalletMiddleware = EraseWalletMiddleware()
     private val appCurrencyMiddleware = AppCurrencyMiddleware()
     private val manageSecurityMiddleware = ManageSecurityMiddleware()
-    private val twinWalletMiddleware = CreateTwinWalletMiddleware()
     val detailsMiddleware: Middleware<AppState> = { dispatch, state ->
         { next ->
             { action ->
@@ -35,7 +33,6 @@ class DetailsMiddleware {
                     is DetailsAction.EraseWallet -> eraseWalletMiddleware.handle(action)
                     is DetailsAction.AppCurrencyAction -> appCurrencyMiddleware.handle(action)
                     is DetailsAction.ManageSecurity -> manageSecurityMiddleware.handle(action)
-                    is DetailsAction.CreateTwinWalletAction -> twinWalletMiddleware.handle(action)
                     is DetailsAction.ShowDisclaimer -> {
                         store.dispatch(DisclaimerAction.ShowAcceptedDisclaimer)
                         store.dispatch(NavigationAction.NavigateTo(AppScreen.Disclaimer))
@@ -84,7 +81,7 @@ class DetailsMiddleware {
                     store.dispatch(NavigationAction.PopBackTo())
                 }
                 is DetailsAction.EraseWallet.Confirm -> {
-                    val card =  store.state.detailsState.card ?: return
+                    val card = store.state.detailsState.card ?: return
                     scope.launch {
                         val result = tangemSdkManager.eraseWallet(card)
                         withContext(Dispatchers.Main) {
