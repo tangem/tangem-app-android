@@ -11,19 +11,17 @@ import com.tangem.common.services.Result
 import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
-import com.tangem.tap.common.extensions.copyToClipboard
-import com.tangem.tap.common.extensions.dispatchOnMain
-import com.tangem.tap.common.extensions.shareText
+import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.extensions.toSendableAmounts
 import com.tangem.tap.domain.twins.TwinsHelper
-import com.tangem.tap.features.details.redux.DetailsAction
-import com.tangem.tap.features.details.redux.twins.CreateTwinWallet
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.send.redux.PrepareSendScreen
+import com.tangem.tap.features.twins.redux.CreateTwinWallet
+import com.tangem.tap.features.twins.redux.CreateTwinWalletAction
 import com.tangem.tap.features.wallet.redux.*
 import com.tangem.tap.network.NetworkStateChanged
 import kotlinx.coroutines.launch
@@ -87,7 +85,7 @@ class WalletMiddleware {
                                     globalState?.tapWalletManager?.loadFiatRate(
                                         fiatCurrency = globalState.appCurrency,
                                         currencies = walletState?.wallets?.mapNotNull { it.currency }
-                                            ?: emptyList()
+                                                ?: emptyList()
                                     )
                                 }
                             }
@@ -95,16 +93,15 @@ class WalletMiddleware {
                     }
                     is WalletAction.CreateWallet -> {
                         if (walletState?.twinCardsState != null) {
-                            store.dispatch(DetailsAction.CreateTwinWalletAction.ShowWarning(
-                                    globalState?.scanResponse?.card?.cardId?.let {
-                                        TwinsHelper.getTwinCardNumber(it)
-                                    },
-                                    CreateTwinWallet.CreateWallet
-                            ))
+                            val cardId = globalState?.scanResponse?.card?.cardId
+                            val twinCardNumber = cardId?.let { TwinsHelper.getTwinCardNumber(it) }
+                            store.dispatch(
+                                CreateTwinWalletAction.ShowWarning(twinCardNumber, CreateTwinWallet.CreateWallet)
+                            )
                         } else {
                             scope.launch {
                                 val result = tangemSdkManager.createWallet(
-                                        globalState?.scanResponse?.card?.cardId
+                                    globalState?.scanResponse?.card?.cardId
                                 )
                                 when (result) {
                                     is CompletionResult.Success -> {
@@ -236,12 +233,12 @@ class WalletMiddleware {
                 when (currency) {
                     is Currency.Blockchain -> {
                         val amountToSend = amounts?.find { it.currencySymbol == currency.blockchain.currency }
-                            ?: return WalletAction.Send.ChooseCurrency(amounts)
+                                ?: return WalletAction.Send.ChooseCurrency(amounts)
                         PrepareSendScreen(amountToSend, selectedWalletData.fiatRate, walletManager)
                     }
                     is Currency.Token -> {
                         val amountToSend = amounts?.find { it.currencySymbol == currency.token.symbol }
-                            ?: return WalletAction.Send.ChooseCurrency(amounts)
+                                ?: return WalletAction.Send.ChooseCurrency(amounts)
                         prepareSendActionForToken(amountToSend, state, selectedWalletData, wallet, walletManager)
                     }
                 }
@@ -257,8 +254,8 @@ class WalletMiddleware {
     }
 
     private fun prepareSendActionForToken(
-            amount: Amount, state: WalletState?, selectedWalletData: WalletData?, wallet: Wallet?,
-            walletManager: WalletManager?
+        amount: Amount, state: WalletState?, selectedWalletData: WalletData?, wallet: Wallet?,
+        walletManager: WalletManager?
     ): PrepareSendScreen {
         val coinRate = state?.getWalletData(wallet?.blockchain)?.fiatRate
         val tokenRate = if (state?.isMultiwalletAllowed == true) {
@@ -267,7 +264,7 @@ class WalletMiddleware {
             selectedWalletData?.currencyData?.token?.fiatRate
         }
         return PrepareSendScreen(
-                wallet?.amounts?.get(AmountType.Coin), coinRate, walletManager,
-                amount, tokenRate)
+            wallet?.amounts?.get(AmountType.Coin), coinRate, walletManager,
+            amount, tokenRate)
     }
 }
