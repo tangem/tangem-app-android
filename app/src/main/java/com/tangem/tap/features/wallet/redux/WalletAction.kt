@@ -9,7 +9,6 @@ import com.tangem.tap.common.redux.NotificationAction
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.tokens.CardCurrencies
-import com.tangem.tap.domain.twins.TwinCardNumber
 import com.tangem.wallet.R
 import org.rekotlin.Action
 import java.math.BigDecimal
@@ -147,12 +146,4 @@ sealed class WalletAction : Action {
 
     data class ChangeSelectedAddress(val type: AddressType) : WalletAction()
 
-    sealed class TwinsAction : WalletAction() {
-        object ShowOnboarding : TwinsAction()
-        object SetOnboardingShown : TwinsAction()
-        data class SetTwinCard(
-            val secondCardId: String?, val number: TwinCardNumber,
-            val isCreatingTwinCardsAllowed: Boolean,
-        ) : TwinsAction()
-    }
 }
