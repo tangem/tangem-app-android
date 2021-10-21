@@ -45,7 +45,7 @@ private class CreateProductWalletTask(
     override fun run(session: CardSession, callback: (result: CompletionResult<CreateWalletResponse>) -> Unit) {
         val commandProcessor = when (type) {
             ProductType.Note -> CreateWalletTangemNote()
-            ProductType.Twin -> throw UnsupportedOperationException("Use the TwinCardsManager to create a wallet")
+            ProductType.Twins -> throw UnsupportedOperationException("Use the TwinCardsManager to create a wallet")
             ProductType.Wallet -> CreateWalletTangemWallet()
             else -> CreateWalletOtherCards()
         }
