@@ -7,9 +7,6 @@ import com.tangem.tap.domain.TapWorkarounds.isStart2Coin
 import com.tangem.tap.domain.extensions.isWalletDataSupported
 import com.tangem.tap.domain.extensions.signedHashesCount
 import com.tangem.tap.domain.extensions.toSendableAmounts
-import com.tangem.tap.domain.twins.getTwinCardNumber
-import com.tangem.tap.domain.twins.isTangemTwin
-import com.tangem.tap.features.twins.redux.CreateTwinWalletState
 import com.tangem.tap.features.wallet.models.hasPendingTransactions
 import org.rekotlin.Action
 import java.util.*
@@ -42,26 +39,12 @@ private fun internalReduce(action: Action, state: AppState): DetailsState {
 }
 
 private fun handlePrepareScreen(action: DetailsAction.PrepareScreen, state: DetailsState): DetailsState {
-    val twinsState = if (action.card.isTangemTwin()) {
-        CreateTwinWalletState(
-            scanResponse = action.scanResponse,
-            twinCardNumber = action.card.getTwinCardNumber(),
-            createTwinWallet = null,
-            showAlert = false,
-            allowRecreatingWallet = action.isCreatingTwinWalletAllowed
-        )
-    } else {
-        null
-    }
-
     return DetailsState(
-        card = action.card, wallets = action.wallets,
-        cardInfo = action.card.toCardInfo(),
-        appCurrencyState = AppCurrencyState(
-            action.fiatCurrencyName
-        ),
-        createTwinWalletState = twinsState,
-        cardTermsOfUseUrl = action.cardTou.getUrl(action.card)
+        card = action.scanResponse.card,
+        wallets = action.wallets,
+        cardInfo = action.scanResponse.card.toCardInfo(),
+        appCurrencyState = AppCurrencyState(action.fiatCurrencyName),
+        cardTermsOfUseUrl = action.cardTou.getUrl(action.scanResponse.card)
     )
 }
 
