@@ -12,39 +12,49 @@ import com.tangem.tap.common.toggleWidget.WidgetState
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.extensions.toSendableAmounts
 import com.tangem.tap.domain.topup.TradeCryptoHelper
-import com.tangem.tap.domain.twins.TwinCardNumber
+import com.tangem.tap.features.twins.redux.TwinCardsState
 import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.models.toPendingTransactions
 import com.tangem.tap.features.wallet.models.toPendingTransactionsForToken
+import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.store
 import org.rekotlin.StateType
 import java.math.BigDecimal
+import kotlin.properties.ReadOnlyProperty
 
 data class WalletState(
-        val state: ProgressState = ProgressState.Done,
-        val error: ErrorType? = null,
-        val cardImage: Artwork? = null,
-        val hashesCountVerified: Boolean? = null,
-        val walletDialog: StateDialog? = null,
-        val twinCardsState: TwinCardsState? = null,
-        val mainWarningsList: List<WarningMessage> = mutableListOf(),
-        val wallets: List<WalletData> = emptyList(),
-        val walletManagers: List<WalletManager> = emptyList(),
-        val isMultiwalletAllowed: Boolean = false,
-        val cardCurrency: CryptoCurrencyName? = null,
-        val selectedWallet: Currency? = null,
-        val primaryBlockchain: Blockchain? = null,
-        val primaryToken: Token? = null,
-        val isTestnet: Boolean = false,
-        val tradeCryptoAllowed: TradeCryptoAvailability = TradeCryptoAvailability()
+    val state: ProgressState = ProgressState.Done,
+    val error: ErrorType? = null,
+    val cardImage: Artwork? = null,
+    val hashesCountVerified: Boolean? = null,
+    val walletDialog: StateDialog? = null,
+    val mainWarningsList: List<WarningMessage> = mutableListOf(),
+    val wallets: List<WalletData> = emptyList(),
+    val walletManagers: List<WalletManager> = emptyList(),
+    val isMultiwalletAllowed: Boolean = false,
+    val cardCurrency: CryptoCurrencyName? = null,
+    val selectedWallet: Currency? = null,
+    val primaryBlockchain: Blockchain? = null,
+    val primaryToken: Token? = null,
+    val isTestnet: Boolean = false,
+    val tradeCryptoAllowed: TradeCryptoAvailability = TradeCryptoAvailability()
 ) : StateType {
+
+    // if you do not delegate - the application crashes on startup,
+    // because twinCardsState has not been created yet
+    val twinCardsState: TwinCardsState by ReadOnlyProperty<Any, TwinCardsState> { thisRef, property ->
+        store.state.twinCardsState
+    }
+
+    val isTangemTwins: Boolean
+        get() = store.state.globalState.scanResponse?.isTangemTwins() == true
 
     val primaryWallet = if (wallets.isNotEmpty()) wallets[0] else null
 
     val shouldShowDetails: Boolean =
-            primaryWallet?.currencyData?.status != com.tangem.tap.features.wallet.ui.BalanceStatus.EmptyCard &&
-                    primaryWallet?.currencyData?.status != com.tangem.tap.features.wallet.ui.BalanceStatus.UnknownBlockchain
+            primaryWallet?.currencyData?.status != BalanceStatus.EmptyCard &&
+                    primaryWallet?.currencyData?.status != BalanceStatus.UnknownBlockchain
 
     val blockchains: List<Blockchain>
         get() = walletManagers.map { it.wallet.blockchain }
@@ -57,16 +67,16 @@ data class WalletState(
         return walletManagers.find { it.wallet.blockchain == token.blockchain }
     }
 
-    fun getWalletManager(currency: Currency?) : WalletManager? {
+    fun getWalletManager(currency: Currency?): WalletManager? {
         if (currency?.blockchain == null) return null
         return walletManagers.find { it.wallet.blockchain == currency.blockchain }
     }
 
-    fun getWalletManager(blockchain: Blockchain) : WalletManager? {
+    fun getWalletManager(blockchain: Blockchain): WalletManager? {
         return walletManagers.find { it.wallet.blockchain == blockchain }
     }
 
-    fun getWalletData(currency: Currency?) : WalletData? {
+    fun getWalletData(currency: Currency?): WalletData? {
         if (currency == null) return null
         return wallets.find { it.currency == currency }
     }
@@ -93,7 +103,7 @@ data class WalletState(
                     ?: return true
 
             if (walletData.currency is Currency.Blockchain &&
-                walletManager.cardTokens.isNotEmpty()
+                    walletManager.cardTokens.isNotEmpty()
             ) {
                 return false
             }
@@ -105,9 +115,9 @@ data class WalletState(
                         wallet.amounts.toSendableAmounts().isEmpty()
             } else if (walletData.currency is Currency.Token) (
                     return wallet.recentTransactions.toPendingTransactionsForToken(
-                            walletData.currency.token, wallet.address).isEmpty()
+                        walletData.currency.token, wallet.address).isEmpty()
                             && wallet.amounts[AmountType.Token(token = walletData.currency.token)]
-                        ?.isAboveZero() != true
+                            ?.isAboveZero() != true
                     )
         }
         return false
@@ -137,9 +147,9 @@ data class WalletState(
     }
 }
 
-sealed class WalletDialog: StateDialog {
+sealed class WalletDialog : StateDialog {
     data class QrDialog(
-            val qrCode: Bitmap?, val shareUrl: String?, val currencyName: CryptoCurrencyName?
+        val qrCode: Bitmap?, val shareUrl: String?, val currencyName: CryptoCurrencyName?
     ) : WalletDialog()
 
     data class SelectAmountToSendDialog(val amounts: List<Amount>?) : WalletDialog()
@@ -147,7 +157,7 @@ sealed class WalletDialog: StateDialog {
     object ChooseTradeActionDialog : WalletDialog()
 }
 
-enum class ProgressState: WidgetState { Loading, Done, Error }
+enum class ProgressState : WidgetState { Loading, Done, Error }
 
 enum class ErrorType { NoInternetConnection }
 
@@ -157,22 +167,22 @@ sealed class WalletMainButton(enabled: Boolean) : Button(enabled) {
 }
 
 data class WalletAddresses(
-        val selectedAddress: AddressData,
-        val list: List<AddressData>
+    val selectedAddress: AddressData,
+    val list: List<AddressData>
 )
 
 data class AddressData(
-        val address: String,
-        val type: AddressType,
-        val shareUrl: String,
-        val exploreUrl: String,
+    val address: String,
+    val type: AddressType,
+    val shareUrl: String,
+    val exploreUrl: String,
 ) {
     val qrCode: Bitmap by lazy { shareUrl.toQrCode() }
 }
 
 data class Artwork(
-        val artworkId: String,
-        val artwork: Bitmap? = null
+    val artworkId: String,
+    val artwork: Bitmap? = null
 ) {
     companion object {
         const val DEFAULT_IMG_URL = "https://app.tangem.com/cards/card_default.png"
@@ -196,13 +206,6 @@ data class TradeCryptoAvailability(
     val sellingAllowed: Boolean = false,
     val buyingAllowed: Boolean = false,
     val availableToSell: Set<String> = TradeCryptoHelper.AVAILABLE_TO_SELL,
-)
-
-data class TwinCardsState(
-        val secondCardId: String?,
-        val cardNumber: TwinCardNumber?,
-        val showTwinOnboarding: Boolean,
-        val isCreatingTwinCardsAllowed: Boolean
 )
 
 data class WalletData(
