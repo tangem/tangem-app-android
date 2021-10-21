@@ -17,8 +17,8 @@ import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.features.details.redux.SecurityOption
 import com.tangem.tap.features.feedback.FeedbackEmail
-import com.tangem.tap.features.twins.redux.CreateTwinWallet
-import com.tangem.tap.features.twins.redux.CreateTwinWalletAction
+import com.tangem.tap.features.twins.redux.CreateTwinWalletMode
+import com.tangem.tap.features.twins.redux.TwinCardsAction
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fragment_details.*
@@ -91,12 +91,15 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
             startActivity(intent)
         }
 
-        if (state.createTwinWalletState != null) {
-            if (state.createTwinWalletState.allowRecreatingWallet == true) {
+        if (state.isTangemTwins) {
+            if (state.twinCardsState.isCreatingTwinCardsAllowed) {
                 tv_erase_wallet.show()
                 tv_erase_wallet.text = getText(R.string.details_row_title_twins_recreate)
                 tv_erase_wallet.setOnClickListener {
-                    store.dispatch(CreateTwinWalletAction.ShowWarning(null, CreateTwinWallet.RecreateWallet))
+                    store.dispatch(TwinCardsAction.CreateWallet.Create(
+                        state.twinCardsState.cardNumber!!,
+                        CreateTwinWalletMode.RecreateWallet
+                    ))
                 }
             } else {
                 tv_erase_wallet.hide()
