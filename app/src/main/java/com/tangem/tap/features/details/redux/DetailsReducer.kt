@@ -9,8 +9,7 @@ import com.tangem.tap.domain.extensions.signedHashesCount
 import com.tangem.tap.domain.extensions.toSendableAmounts
 import com.tangem.tap.domain.twins.getTwinCardNumber
 import com.tangem.tap.domain.twins.isTangemTwin
-import com.tangem.tap.features.details.redux.twins.CreateTwinWalletReducer
-import com.tangem.tap.features.details.redux.twins.CreateTwinWalletState
+import com.tangem.tap.features.twins.redux.CreateTwinWalletState
 import com.tangem.tap.features.wallet.models.hasPendingTransactions
 import org.rekotlin.Action
 import java.util.*
@@ -38,9 +37,6 @@ private fun internalReduce(action: Action, state: AppState): DetailsState {
         is DetailsAction.ManageSecurity -> {
             handleSecurityAction(action, detailsState)
         }
-        is DetailsAction.CreateTwinWalletAction -> {
-            CreateTwinWalletReducer.handle(action, detailsState)
-        }
         else -> detailsState
     }
 }
@@ -48,24 +44,24 @@ private fun internalReduce(action: Action, state: AppState): DetailsState {
 private fun handlePrepareScreen(action: DetailsAction.PrepareScreen, state: DetailsState): DetailsState {
     val twinsState = if (action.card.isTangemTwin()) {
         CreateTwinWalletState(
-                scanResponse = action.scanResponse,
-                twinCardNumber = action.card.getTwinCardNumber(),
-                createTwinWallet = null,
-                showAlert = false,
-                allowRecreatingWallet = action.isCreatingTwinWalletAllowed
+            scanResponse = action.scanResponse,
+            twinCardNumber = action.card.getTwinCardNumber(),
+            createTwinWallet = null,
+            showAlert = false,
+            allowRecreatingWallet = action.isCreatingTwinWalletAllowed
         )
     } else {
         null
     }
 
     return DetailsState(
-            card = action.card, wallets = action.wallets,
-            cardInfo = action.card.toCardInfo(),
-            appCurrencyState = AppCurrencyState(
-                    action.fiatCurrencyName
-            ),
-            createTwinWalletState = twinsState,
-            cardTermsOfUseUrl = action.cardTou.getUrl(action.card)
+        card = action.card, wallets = action.wallets,
+        cardInfo = action.card.toCardInfo(),
+        appCurrencyState = AppCurrencyState(
+            action.fiatCurrencyName
+        ),
+        createTwinWalletState = twinsState,
+        cardTermsOfUseUrl = action.cardTou.getUrl(action.card)
     )
 }
 
@@ -99,7 +95,7 @@ private fun handleEraseWallet(action: DetailsAction.EraseWallet, state: DetailsS
 }
 
 private fun handleAppCurrencyAction(
-        action: DetailsAction.AppCurrencyAction, state: DetailsState
+    action: DetailsAction.AppCurrencyAction, state: DetailsState
 ): DetailsState {
     return when (action) {
         is DetailsAction.AppCurrencyAction.SetCurrencies -> {
@@ -113,9 +109,9 @@ private fun handleAppCurrencyAction(
         }
         is DetailsAction.AppCurrencyAction.SelectAppCurrency -> {
             state.copy(
-                    appCurrencyState = state.appCurrencyState.copy(
-                            fiatCurrencyName = action.fiatCurrencyName, showAppCurrencyDialog = false
-                    )
+                appCurrencyState = state.appCurrencyState.copy(
+                    fiatCurrencyName = action.fiatCurrencyName, showAppCurrencyDialog = false
+                )
             )
         }
         else -> state
@@ -123,7 +119,7 @@ private fun handleAppCurrencyAction(
 }
 
 private fun handleSecurityAction(
-        action: DetailsAction.ManageSecurity, state: DetailsState
+    action: DetailsAction.ManageSecurity, state: DetailsState
 ): DetailsState {
     return when (action) {
         is DetailsAction.ManageSecurity.SetCurrentOption -> {
@@ -143,8 +139,8 @@ private fun handleSecurityAction(
         is DetailsAction.ManageSecurity.OpenSecurity -> {
             if (state.card?.isStart2Coin == true) {
                 return state.copy(securityScreenState = state.securityScreenState?.copy(
-                        allowedOptions = EnumSet.of(SecurityOption.LongTap),
-                        selectedOption = state.securityScreenState.currentOption
+                    allowedOptions = EnumSet.of(SecurityOption.LongTap),
+                    selectedOption = state.securityScreenState.currentOption
                 ))
             }
 
@@ -152,13 +148,13 @@ private fun handleSecurityAction(
                 state.card, state.securityScreenState?.currentOption
             )
             state.copy(securityScreenState = state.securityScreenState?.copy(
-                    allowedOptions = allowedSecurityOptions,
-                    selectedOption = state.securityScreenState.currentOption
+                allowedOptions = allowedSecurityOptions,
+                selectedOption = state.securityScreenState.currentOption
             ))
         }
         is DetailsAction.ManageSecurity.SelectOption -> {
             state.copy(securityScreenState = state.securityScreenState?.copy(
-                    selectedOption = action.option
+                selectedOption = action.option
             ))
         }
         is DetailsAction.ManageSecurity.ConfirmSelection -> {
@@ -172,10 +168,10 @@ private fun handleSecurityAction(
         is DetailsAction.ManageSecurity.SaveChanges.Success -> {
             // Setting options to show only LongTap from now on
             state.copy(
-                    securityScreenState = state.securityScreenState?.copy(
-                            currentOption = state.securityScreenState.selectedOption,
-                            allowedOptions = EnumSet.of(SecurityOption.LongTap)
-                    ))
+                securityScreenState = state.securityScreenState?.copy(
+                    currentOption = state.securityScreenState.selectedOption,
+                    allowedOptions = EnumSet.of(SecurityOption.LongTap)
+                ))
         }
 
         else -> state
@@ -205,4 +201,5 @@ private fun Card.toCardInfo(): CardInfo? {
     val cardId = this.cardId.chunked(4).joinToString(separator = " ")
     val issuer = this.issuer.name
     val signedHashes = this.signedHashesCount()
-    return CardInfo(cardId, issuer, signedHashes)}
+    return CardInfo(cardId, issuer, signedHashes)
+}
