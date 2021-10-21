@@ -24,7 +24,7 @@ import com.tangem.tap.domain.TapWorkarounds.isExcluded
 import com.tangem.tap.domain.TapWorkarounds.isTangemNote
 import com.tangem.tap.domain.TapWorkarounds.isTangemWallet
 import com.tangem.tap.domain.extensions.getSingleWallet
-import com.tangem.tap.domain.twins.TwinCardsManager
+import com.tangem.tap.domain.twins.TwinsHelper
 import com.tangem.tap.domain.twins.isTangemTwin
 
 data class ScanResponse(
@@ -43,12 +43,16 @@ data class ScanResponse(
     fun getPrimaryToken(): Token? {
         val cardToken = walletData?.token ?: return null
         return Token(
-                cardToken.name,
-                cardToken.symbol,
-                cardToken.contractAddress,
-                cardToken.decimals,
-                Blockchain.fromId(walletData.blockchain)
+            cardToken.name,
+            cardToken.symbol,
+            cardToken.contractAddress,
+            cardToken.decimals,
+            Blockchain.fromId(walletData.blockchain)
         )
+    }
+
+    fun twinsIsTwinned(): Boolean {
+        return walletData != null && secondTwinPublicKey != null
     }
 }
 
@@ -120,21 +124,21 @@ private class ScanTwinProcessor : ProductCommandProcessor<ScanResponse> {
                 is CompletionResult.Success -> {
                     val publicKey = card.getSingleWallet()?.publicKey
                     if (publicKey == null) {
-                        callback(CompletionResult.Success(ScanResponse(card, ProductType.Twin, null)))
+                        callback(CompletionResult.Success(ScanResponse(card, ProductType.Twins, null)))
                         return@run
                     }
-                    val verified = TwinCardsManager.verifyTwinPublicKey(readDataResult.data.issuerData, publicKey)
+                    val verified = TwinsHelper.verifyTwinPublicKey(readDataResult.data.issuerData, publicKey)
                     if (verified) {
                         val twinPublicKey = readDataResult.data.issuerData.sliceArray(0 until 65)
                         val walletData = session.environment.walletData
-                        val response = ScanResponse(card, ProductType.Twin, walletData, twinPublicKey.toHexString())
+                        val response = ScanResponse(card, ProductType.Twins, walletData, twinPublicKey.toHexString())
                         callback(CompletionResult.Success(response))
                     } else {
-                        callback(CompletionResult.Success(ScanResponse(card, ProductType.Twin, null)))
+                        callback(CompletionResult.Success(ScanResponse(card, ProductType.Twins, null)))
                     }
                 }
                 is CompletionResult.Failure ->
-                    callback(CompletionResult.Success(ScanResponse(card, ProductType.Twin, null)))
+                    callback(CompletionResult.Success(ScanResponse(card, ProductType.Twins, null)))
             }
         }
     }
