@@ -1,4 +1,4 @@
-package com.tangem.tap.features.details.ui.twins
+package com.tangem.tap.features.twins.ui
 
 import android.app.Dialog
 import android.os.Bundle
@@ -11,17 +11,17 @@ import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.squareup.picasso.Picasso
 import com.tangem.Message
 import com.tangem.tap.domain.twins.TwinCardNumber
-import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
-import com.tangem.tap.features.details.redux.twins.CreateTwinWallet
-import com.tangem.tap.features.details.redux.twins.CreateTwinWalletStep
+import com.tangem.tap.features.twins.redux.CreateTwinWallet
+import com.tangem.tap.features.twins.redux.CreateTwinWalletAction
+import com.tangem.tap.features.twins.redux.CreateTwinWalletStep
 import com.tangem.tap.features.wallet.redux.Artwork
 import com.tangem.tap.store
 import com.tangem.wallet.R
-import kotlinx.android.synthetic.main.fragment_details_twin_cards.*
+import kotlinx.android.synthetic.main.fragment_twin_cards_create.*
 import org.rekotlin.StoreSubscriber
 
-class CreateTwinWalletFragment : Fragment(R.layout.fragment_details_twin_cards),
+class CreateTwinWalletFragment : Fragment(R.layout.fragment_twin_cards_create),
         StoreSubscriber<DetailsState> {
 
     private var dialog: Dialog? = null
@@ -30,7 +30,7 @@ class CreateTwinWalletFragment : Fragment(R.layout.fragment_details_twin_cards),
         super.onCreate(savedInstanceState)
         activity?.onBackPressedDispatcher?.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
-                store.dispatch(DetailsAction.CreateTwinWalletAction.Cancel)
+                store.dispatch(CreateTwinWalletAction.Cancel)
             }
         })
         val inflater = TransitionInflater.from(requireContext())
@@ -56,7 +56,7 @@ class CreateTwinWalletFragment : Fragment(R.layout.fragment_details_twin_cards),
         super.onViewCreated(view, savedInstanceState)
 
         toolbar.setNavigationOnClickListener {
-            store.dispatch(DetailsAction.CreateTwinWalletAction.Cancel)
+            store.dispatch(CreateTwinWalletAction.Cancel)
         }
 
         Picasso.get()
@@ -96,7 +96,7 @@ class CreateTwinWalletFragment : Fragment(R.layout.fragment_details_twin_cards),
                 v_step_2.setBackgroundColor(defaultColor)
                 v_step_3.setBackgroundColor(defaultColor)
                 btn_tap.setOnClickListener {
-                    store.dispatch(DetailsAction.CreateTwinWalletAction.LaunchFirstStep(
+                    store.dispatch(CreateTwinWalletAction.LaunchFirstStep(
                         Message(getString(
                             R.string.details_twins_recreate_title_format,
                             twinCardNumberString
@@ -105,7 +105,7 @@ class CreateTwinWalletFragment : Fragment(R.layout.fragment_details_twin_cards),
                     ))
                 }
                 btn_tap.text = getString(R.string.details_twins_recreate_button_format,
-                        twinCardNumber.number.toString())
+                    twinCardNumber.number.toString())
                 twinCardNumberString
             }
             CreateTwinWalletStep.SecondStep -> {
@@ -117,10 +117,10 @@ class CreateTwinWalletFragment : Fragment(R.layout.fragment_details_twin_cards),
                 v_step_2.setBackgroundColor(selectedColor)
                 v_step_3.setBackgroundColor(defaultColor)
                 btn_tap.setOnClickListener {
-                    store.dispatch(DetailsAction.CreateTwinWalletAction.LaunchSecondStep(
-                            Message(getString(R.string.details_twins_recreate_title_format, twinCardNumberString)),
-                            Message(getString(R.string.details_twins_recreate_title_preparing)),
-                            Message(getString(R.string.details_twins_recreate_title_creating_wallet)),
+                    store.dispatch(CreateTwinWalletAction.LaunchSecondStep(
+                        Message(getString(R.string.details_twins_recreate_title_format, twinCardNumberString)),
+                        Message(getString(R.string.details_twins_recreate_title_preparing)),
+                        Message(getString(R.string.details_twins_recreate_title_creating_wallet)),
                     ))
                 }
                 btn_tap.text = getString(R.string.details_twins_recreate_button_format, "2")
@@ -135,10 +135,10 @@ class CreateTwinWalletFragment : Fragment(R.layout.fragment_details_twin_cards),
                 v_step_2.setBackgroundColor(selectedColor)
                 v_step_3.setBackgroundColor(selectedColor)
                 btn_tap.setOnClickListener {
-                    store.dispatch(DetailsAction.CreateTwinWalletAction.LaunchThirdStep(
-                            Message(getString(
-                                    R.string.details_twins_recreate_title_format, twinCardNumberString)
-                            )
+                    store.dispatch(CreateTwinWalletAction.LaunchThirdStep(
+                        Message(getString(
+                            R.string.details_twins_recreate_title_format, twinCardNumberString)
+                        )
                     ))
                 }
                 btn_tap.text = getString(R.string.details_twins_recreate_button_format, twinCardNumberString)
@@ -154,13 +154,13 @@ class CreateTwinWalletFragment : Fragment(R.layout.fragment_details_twin_cards),
                 dialog = MaterialAlertDialogBuilder(requireContext())
                         .setMessage(R.string.details_twins_recreate_alert)
                         .setPositiveButton(R.string.common_ok) { _, _ ->
-                            store.dispatch(DetailsAction.CreateTwinWalletAction.Cancel.Confirm)
+                            store.dispatch(CreateTwinWalletAction.Cancel.Confirm)
                         }
                         .setNegativeButton(R.string.common_cancel) { _, _ ->
                             dialog?.cancel()
                         }
                         .setOnCancelListener {
-                            store.dispatch(DetailsAction.CreateTwinWalletAction.HideAlert)
+                            store.dispatch(CreateTwinWalletAction.HideAlert)
                         }
                         .create()
                 dialog?.show()
