@@ -1,7 +1,6 @@
 package com.tangem.tap.features.details.redux
 
 import com.tangem.blockchain.common.Wallet
-import com.tangem.common.card.Card
 import com.tangem.operations.pins.CheckUserCodesResponse
 import com.tangem.tap.common.redux.NotificationAction
 import com.tangem.tap.common.redux.global.FiatCurrencyName
@@ -14,10 +13,8 @@ import org.rekotlin.Action
 sealed class DetailsAction : Action {
 
     data class PrepareScreen(
-        val card: Card,
         val scanResponse: ScanResponse,
         val wallets: List<Wallet>,
-        val isCreatingTwinWalletAllowed: Boolean?,
         val cardTou: CardTou,
         val fiatCurrencyName: FiatCurrencyName,
         val fiatCurrencies: List<FiatCurrencyName>? = null,

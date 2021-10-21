@@ -22,7 +22,8 @@ import com.tangem.tap.features.send.redux.middlewares.SendMiddleware
 import com.tangem.tap.features.send.redux.states.SendState
 import com.tangem.tap.features.tokens.redux.TokensMiddleware
 import com.tangem.tap.features.tokens.redux.TokensState
-import com.tangem.tap.features.twins.redux.CreateTwinWalletMiddleware
+import com.tangem.tap.features.twins.redux.TwinCardsMiddleware
+import com.tangem.tap.features.twins.redux.TwinCardsState
 import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.redux.middlewares.WalletMiddleware
 import org.rekotlin.Middleware
@@ -36,6 +37,7 @@ data class AppState(
     val onboardingWalletState: OnboardingWalletState = OnboardingWalletState(),
     val onboardingOtherCardsState: OnboardingOtherCardsState = OnboardingOtherCardsState(),
     val walletState: WalletState = WalletState(),
+    val twinCardsState: TwinCardsState = TwinCardsState(),
     val sendState: SendState = SendState(),
     val detailsState: DetailsState = DetailsState(),
     val disclaimerState: DisclaimerState = DisclaimerState(),
@@ -53,7 +55,7 @@ data class AppState(
                 OnboardingWalletMiddleware.handler,
                 OnboardingOtherCardsMiddleware.handler,
                 WalletMiddleware().walletMiddleware,
-                CreateTwinWalletMiddleware.handler,
+                TwinCardsMiddleware.handler,
                 SendMiddleware().sendMiddleware,
                 DetailsMiddleware().detailsMiddleware,
                 DisclaimerMiddleware().disclaimerMiddleware,
