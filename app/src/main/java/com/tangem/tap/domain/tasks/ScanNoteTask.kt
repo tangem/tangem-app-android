@@ -16,7 +16,7 @@ import com.tangem.tap.domain.TapWorkarounds.isExcluded
 import com.tangem.tap.domain.TapWorkarounds.isTangemNote
 import com.tangem.tap.domain.extensions.getSingleWallet
 import com.tangem.tap.domain.tasks.product.ScanResponse
-import com.tangem.tap.domain.twins.TwinCardsManager
+import com.tangem.tap.domain.twins.TwinsHelper
 import com.tangem.tap.domain.twins.isTangemTwin
 
 class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanResponse> {
@@ -92,7 +92,7 @@ class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanResponse> {
                         callback(CompletionResult.Success(ScanResponse(card, ProductType.Other, null)))
                         return@run
                     }
-                    val verified = TwinCardsManager.verifyTwinPublicKey(
+                    val verified = TwinsHelper.verifyTwinPublicKey(
                             readDataResult.data.issuerData, publicKey
                     )
                     if (verified) {
