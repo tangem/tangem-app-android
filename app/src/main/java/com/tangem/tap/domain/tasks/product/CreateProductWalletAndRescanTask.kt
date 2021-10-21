@@ -64,7 +64,7 @@ private class CreateWalletTangemNote : ProductCommandProcessor<CreateWalletRespo
             return
         }
 
-        val curvesSupportedByBlockchain = card.getTangemNoteBlockchain()?.getSupportedCurves()
+        val curvesSupportedByBlockchain = getTangemNoteBlockchain(card)?.getSupportedCurves()
         if (curvesSupportedByBlockchain == null || curvesSupportedByBlockchain.isEmpty()) {
             callback(CompletionResult.Failure(TangemSdkError.CardError()))
             return
