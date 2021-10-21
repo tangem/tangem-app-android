@@ -11,7 +11,6 @@ import com.tangem.common.KeyPair
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
-import com.tangem.crypto.CryptoUtils
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.common.extensions.readAssetAsString
 import com.tangem.tap.domain.tasks.product.ScanResponse
@@ -21,7 +20,8 @@ import com.tangem.tap.tangemSdkManager
 class TwinCardsManager(private val scanResponse: ScanResponse, context: Context) {
 
     private val currentCardId: String = scanResponse.card.cardId
-//    private val secondCardId: String? = TwinsHelper.getTwinsCardId(currentCardId)
+
+    //    private val secondCardId: String? = TwinsHelper.getTwinsCardId(currentCardId)
     private val secondCardId: String? = null
 
     private var currentCardPublicKey: String? = null
@@ -108,14 +108,6 @@ class TwinCardsManager(private val scanResponse: ScanResponse, context: Context)
     }
 
     companion object {
-        fun verifyTwinPublicKey(issuerData: ByteArray, cardWalletPublicKey: ByteArray?): Boolean {
-            if (issuerData.size < 65 || cardWalletPublicKey == null) return false
-
-            val publicKey = issuerData.sliceArray(0 until 65)
-            val signedKey = issuerData.sliceArray(65 until issuerData.size)
-            return CryptoUtils.verify(cardWalletPublicKey, publicKey, signedKey)
-        }
-
         private fun getIssuerKeys(context: Context, publicKey: String): KeyPair {
             val issuer = getIssuers(context).first { it.publicKey == publicKey }
             return KeyPair(
