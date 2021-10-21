@@ -6,10 +6,12 @@ import com.tangem.common.card.Card
 import com.tangem.tap.common.entities.Button
 import com.tangem.tap.common.entities.TapCurrency.Companion.DEFAULT_FIAT_CURRENCY
 import com.tangem.tap.common.redux.global.FiatCurrencyName
-import com.tangem.tap.features.twins.redux.CreateTwinWalletState
+import com.tangem.tap.features.twins.redux.TwinCardsState
 import com.tangem.tap.network.coinmarketcap.FiatCurrency
+import com.tangem.tap.store
 import org.rekotlin.StateType
 import java.util.*
+import kotlin.properties.ReadOnlyProperty
 
 data class DetailsState(
     val card: Card? = null,
@@ -19,9 +21,18 @@ data class DetailsState(
     val eraseWalletState: EraseWalletState? = null,
     val confirmScreenState: ConfirmScreenState? = null,
     val securityScreenState: SecurityScreenState? = null,
-    val createTwinWalletState: CreateTwinWalletState? = null,
     val cardTermsOfUseUrl: Uri? = null,
-) : StateType
+) : StateType {
+
+    // if you do not delegate - the application crashes on startup,
+    // because twinCardsState has not been created yet
+    val twinCardsState: TwinCardsState by ReadOnlyProperty<Any, TwinCardsState> { thisRef, property ->
+        store.state.twinCardsState
+    }
+
+    val isTangemTwins: Boolean
+        get() = store.state.globalState.scanResponse?.isTangemTwins() == true
+}
 
 data class CardInfo(
     val cardId: String,
