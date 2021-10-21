@@ -22,6 +22,7 @@ import com.tangem.tap.features.send.redux.middlewares.SendMiddleware
 import com.tangem.tap.features.send.redux.states.SendState
 import com.tangem.tap.features.tokens.redux.TokensMiddleware
 import com.tangem.tap.features.tokens.redux.TokensState
+import com.tangem.tap.features.twins.redux.CreateTwinWalletMiddleware
 import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.redux.middlewares.WalletMiddleware
 import org.rekotlin.Middleware
@@ -45,18 +46,19 @@ data class AppState(
     companion object {
         fun getMiddleware(): List<Middleware<AppState>> {
             return listOf(
-                    logMiddleware, navigationMiddleware, notificationsMiddleware,
-                    GlobalMiddleware.handler,
-                    HomeMiddleware.handler,
-                    OnboardingNoteMiddleware.handler,
-                    OnboardingWalletMiddleware.handler,
-                    OnboardingOtherCardsMiddleware.handler,
-                    WalletMiddleware().walletMiddleware,
-                    SendMiddleware().sendMiddleware,
-                    DetailsMiddleware().detailsMiddleware,
-                    DisclaimerMiddleware().disclaimerMiddleware,
-                    TokensMiddleware().tokensMiddleware,
-                    WalletConnectMiddleware().walletConnectMiddleware
+                logMiddleware, navigationMiddleware, notificationsMiddleware,
+                GlobalMiddleware.handler,
+                HomeMiddleware.handler,
+                OnboardingNoteMiddleware.handler,
+                OnboardingWalletMiddleware.handler,
+                OnboardingOtherCardsMiddleware.handler,
+                WalletMiddleware().walletMiddleware,
+                CreateTwinWalletMiddleware.handler,
+                SendMiddleware().sendMiddleware,
+                DetailsMiddleware().detailsMiddleware,
+                DisclaimerMiddleware().disclaimerMiddleware,
+                TokensMiddleware().tokensMiddleware,
+                WalletConnectMiddleware().walletConnectMiddleware
             )
         }
     }
