@@ -1,4 +1,4 @@
-package com.tangem.tap.features.details.redux.twins
+package com.tangem.tap.features.twins.redux
 
 import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.domain.twins.TwinCardNumber
