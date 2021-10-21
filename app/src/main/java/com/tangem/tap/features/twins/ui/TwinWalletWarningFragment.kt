@@ -7,8 +7,8 @@ import androidx.fragment.app.Fragment
 import androidx.transition.TransitionInflater
 import com.squareup.picasso.Picasso
 import com.tangem.tap.common.redux.navigation.NavigationAction
-import com.tangem.tap.features.twins.redux.CreateTwinWallet
-import com.tangem.tap.features.twins.redux.CreateTwinWalletAction
+import com.tangem.tap.features.twins.redux.CreateTwinWalletMode
+import com.tangem.tap.features.twins.redux.TwinCardsAction
 import com.tangem.tap.features.wallet.redux.Artwork
 import com.tangem.tap.store
 import com.tangem.wallet.R
@@ -31,15 +31,15 @@ class TwinWalletWarningFragment : Fragment(R.layout.fragment_twin_cards_warning)
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        val createTwinWallet = store.state.detailsState.createTwinWalletState?.createTwinWallet
-        if (createTwinWallet == CreateTwinWallet.CreateWallet) {
+        val createTwinWallet = store.state.twinCardsState.createWalletState?.mode
+        if (createTwinWallet == CreateTwinWalletMode.CreateWallet) {
             tv_twin_cards_description.text = getText(R.string.details_twins_recreate_subtitle)
-        } else if (createTwinWallet == CreateTwinWallet.RecreateWallet) {
+        } else if (createTwinWallet == CreateTwinWalletMode.RecreateWallet) {
             tv_twin_cards_description.text = getText(R.string.details_twins_recreate_warning)
         }
 
         btn_cancel.setOnClickListener { store.dispatch(NavigationAction.PopBackTo()) }
-        btn_start.setOnClickListener { store.dispatch(CreateTwinWalletAction.Proceed) }
+        btn_start.setOnClickListener { store.dispatch(TwinCardsAction.CreateWallet.Proceed) }
         Picasso.get()
                 .load(Artwork.TWIN_CARD_1)
                 .placeholder(R.drawable.card_placeholder)

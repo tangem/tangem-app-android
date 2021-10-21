@@ -51,6 +51,7 @@ enum class TwinCardNumber(val number: Int) {
     }
 }
 
+@Deprecated("Use ScanResponse.isTangemTwin")
 fun Card.isTangemTwin(): Boolean {
     return TwinsHelper.getTwinCardNumber(cardId) != null
 }

@@ -10,6 +10,7 @@ import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.twins.TwinCardNumber
+import com.tangem.tap.features.twins.redux.TwinCardsState
 import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.redux.*
 import com.tangem.tap.features.wallet.ui.BalanceWidget
@@ -71,7 +72,7 @@ class SingleWalletView : WalletView {
         state.primaryWallet ?: return
 
         setupTwinCards(state.twinCardsState, fragment)
-        setupButtons(state.primaryWallet, state.twinCardsState != null, fragment)
+        setupButtons(state.primaryWallet, state.isTangemTwins, fragment)
         setupAddressCard(state.primaryWallet, fragment)
         showPendingTransactionsIfPresent(state.primaryWallet.pendingTransactions)
         setupBalance(state, state.primaryWallet)
@@ -87,7 +88,7 @@ class SingleWalletView : WalletView {
     private fun setupBalance(state: WalletState, primaryWallet: WalletData) {
         fragment?.apply {
             this.l_balance.show()
-            BalanceWidget(this, primaryWallet.currencyData, state.twinCardsState != null).setup()
+            BalanceWidget(this, primaryWallet.currencyData, state.isTangemTwins).setup()
         }
     }
 
