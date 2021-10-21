@@ -17,11 +17,10 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.extensions.toSendableAmounts
-import com.tangem.tap.domain.twins.TwinsHelper
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.send.redux.PrepareSendScreen
-import com.tangem.tap.features.twins.redux.CreateTwinWallet
-import com.tangem.tap.features.twins.redux.CreateTwinWalletAction
+import com.tangem.tap.features.twins.redux.CreateTwinWalletMode
+import com.tangem.tap.features.twins.redux.TwinCardsAction
 import com.tangem.tap.features.wallet.redux.*
 import com.tangem.tap.network.NetworkStateChanged
 import kotlinx.coroutines.launch
@@ -31,7 +30,6 @@ import org.rekotlin.Middleware
 
 class WalletMiddleware {
     private val tradeCryptoMiddleware = TradeCryptoMiddleware()
-    private val twinsMiddleware = TwinsMiddleware()
     private val warningsMiddleware = WarningsMiddleware()
     private val multiWalletMiddleware = MultiWalletMiddleware()
 
@@ -50,7 +48,6 @@ class WalletMiddleware {
 
         when (action) {
             is WalletAction.TradeCryptoAction -> tradeCryptoMiddleware.handle(action)
-            is WalletAction.TwinsAction -> twinsMiddleware.handle(action)
             is WalletAction.Warnings -> warningsMiddleware.handle(action, globalState)
             is WalletAction.MultiWallet -> multiWalletMiddleware.handle(action, walletState, globalState)
             is WalletAction.LoadWallet -> {
@@ -99,12 +96,11 @@ class WalletMiddleware {
                 }
             }
             is WalletAction.CreateWallet -> {
-                if (walletState.twinCardsState != null) {
-                    val cardId = globalState.scanResponse?.card?.cardId
-                    val twinCardNumber = cardId?.let { TwinsHelper.getTwinCardNumber(it) }
-                    store.dispatch(
-                        CreateTwinWalletAction.ShowWarning(twinCardNumber, CreateTwinWallet.CreateWallet)
-                    )
+                if (walletState.isTangemTwins) {
+                    store.dispatch(TwinCardsAction.CreateWallet.Create(
+                        walletState.twinCardsState.cardNumber!!,
+                        CreateTwinWalletMode.CreateWallet
+                    ))
                 } else {
                     scope.launch {
                         val result = tangemSdkManager.createWallet(
