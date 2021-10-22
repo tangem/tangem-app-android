@@ -10,7 +10,7 @@ import org.rekotlin.StateType
  */
 data class OnboardingNoteState(
     val walletManager: WalletManager? = null,
-    val resources: AndroidResources = AndroidResources(),
+    val resources: OnboardingNoteResources = OnboardingNoteResources(),
     // UI
     val cardArtwork: Artwork? = null,
     val walletBalance: OnboardingWalletBalance = OnboardingWalletBalance.loading(),
@@ -27,10 +27,10 @@ enum class OnboardingNoteStep {
     None, CreateWallet, TopUpWallet, Done
 }
 
-data class AndroidResources(
-    val strings: OnboardingStringResources = OnboardingStringResources()
-)
-
-data class OnboardingStringResources(
-    val addressWasCopied: Int = -1
-)
+data class OnboardingNoteResources(
+    val strings: Strings = Strings()
+) {
+    data class Strings(
+        val addressWasCopied: Int = -1
+    )
+}
