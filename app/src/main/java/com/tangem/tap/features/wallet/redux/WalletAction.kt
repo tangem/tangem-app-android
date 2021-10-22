@@ -152,8 +152,8 @@ sealed class WalletAction : Action {
         object ShowOnboarding : TwinsAction()
         object SetOnboardingShown : TwinsAction()
         data class SetTwinCard(
-            val secondCardId: String, val number: TwinCardNumber,
-            val isCreatingTwinCardsAllowed: Boolean,
+                val number: TwinCardNumber,
+                val isCreatingTwinCardsAllowed: Boolean,
         ) : TwinsAction()
     }
 }
