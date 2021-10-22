@@ -172,12 +172,16 @@ private fun handleSecurityAction(
             state.copy(confirmScreenState = confirmScreenState)
         }
         is DetailsAction.ManageSecurity.SaveChanges.Success -> {
-            // Setting options to show only LongTap from now on
+            // Setting options to show only LongTap from now on for non-twins
             state.copy(
-                    securityScreenState = state.securityScreenState?.copy(
-                            currentOption = state.securityScreenState.selectedOption,
-                            allowedOptions = EnumSet.of(SecurityOption.LongTap)
-                    ))
+                securityScreenState = state.securityScreenState?.copy(
+                    currentOption = state.securityScreenState.selectedOption,
+                    allowedOptions = state.card?.let {
+                        prepareAllowedSecurityOptions(
+                            it, state.securityScreenState.selectedOption
+                        )
+                    } ?: EnumSet.of(SecurityOption.LongTap)
+                ))
         }
 
         else -> state
@@ -188,8 +192,11 @@ private fun prepareAllowedSecurityOptions(
     card: Card?, currentSecurityOption: SecurityOption?
 ): EnumSet<SecurityOption> {
     val prohibitDefaultPin = card?.settings?.isRemovingAccessCodeAllowed != true
-
     val allowedSecurityOptions = EnumSet.noneOf(SecurityOption::class.java)
+
+    if (card?.isTwinCard() == true) {
+        allowedSecurityOptions.add(SecurityOption.PassCode)
+    }
     if ((currentSecurityOption == SecurityOption.LongTap) || !prohibitDefaultPin) {
         allowedSecurityOptions.add(SecurityOption.LongTap)
     }
