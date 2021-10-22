@@ -64,7 +64,6 @@ private fun handlePrepareScreen(action: DetailsAction.PrepareScreen, state: Deta
             appCurrencyState = AppCurrencyState(
                     action.fiatCurrencyName
             ),
-            securityScreenState = SecurityScreenState(currentOption = securityOption),
             createTwinWalletState = twinsState,
             cardTermsOfUseUrl = action.cardTou.getUrl(action.card)
     )
@@ -174,14 +173,15 @@ private fun handleSecurityAction(
         }
         is DetailsAction.ManageSecurity.SaveChanges.Success -> {
             // Setting options to show only LongTap from now on for non-twins
-            val currentOption = state.securityScreenState?.selectedOption
             state.copy(
-                    securityScreenState = state.securityScreenState?.copy(
-                            currentOption = currentOption,
-                            allowedOptions = state.card?.let {
-                                prepareAllowedSecurityOptions(it, currentOption) }
-                                ?: EnumSet.of(SecurityOption.LongTap)
-                    ))
+                securityScreenState = state.securityScreenState?.copy(
+                    currentOption = state.securityScreenState.selectedOption,
+                    allowedOptions = state.card?.let {
+                        prepareAllowedSecurityOptions(
+                            it, state.securityScreenState.selectedOption
+                        )
+                    } ?: EnumSet.of(SecurityOption.LongTap)
+                ))
         }
 
         else -> state
