@@ -65,5 +65,5 @@ fun Wallet.getPendingTransactions(): List<PendingTransaction> {
 }
 
 fun Wallet.hasPendingTransactions(): Boolean {
-    return recentTransactions.toPendingTransactions(address).isNotEmpty()
+    return getPendingTransactions().isNotEmpty()
 }
