@@ -13,6 +13,7 @@ import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.UrlBitmapLoader
 import com.tangem.tap.domain.extensions.getOrLoadCardArtworkUrl
 import com.tangem.tap.domain.tasks.product.ScanResponse
+import com.tangem.tap.features.wallet.models.hasPendingTransactions
 import com.tangem.tap.features.wallet.redux.Artwork
 import com.tangem.tap.features.wallet.redux.Currency
 import com.tangem.tap.features.wallet.redux.ProgressState
@@ -64,7 +65,7 @@ class OnboardingManager(
                 } else {
                     val currency = Currency.Blockchain(walletManager.wallet.blockchain)
                     val balance = if (valueOfAmount.isZero()) {
-                        OnboardingWalletBalance.done(valueOfAmount, wallet.recentTransactions.isNotEmpty(), currency)
+                        OnboardingWalletBalance.done(valueOfAmount, wallet.hasPendingTransactions(), currency)
                     } else {
                         OnboardingWalletBalance.done(valueOfAmount, false, currency)
                     }
