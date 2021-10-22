@@ -39,7 +39,7 @@ class TwinWalletWarningFragment : Fragment(R.layout.fragment_twin_cards_warning)
         }
 
         btn_cancel.setOnClickListener { store.dispatch(NavigationAction.PopBackTo()) }
-        btn_start.setOnClickListener { store.dispatch(TwinCardsAction.CreateWallet.Proceed) }
+        btn_start.setOnClickListener { store.dispatch(TwinCardsAction.ProceedToCreateWallet) }
         Picasso.get()
                 .load(Artwork.TWIN_CARD_1)
                 .placeholder(R.drawable.card_placeholder)
