@@ -9,7 +9,6 @@ import com.tangem.common.card.EllipticCurve
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.tap.domain.TapWorkarounds.isTestCard
 import com.tangem.tap.domain.tasks.product.ScanResponse
-import com.tangem.tap.domain.twins.isTangemTwin
 
 fun WalletManagerFactory.makeWalletManagerForApp(
     card: Card,
@@ -65,7 +64,7 @@ fun WalletManagerFactory.makePrimaryWalletManager(
     val publicKey = wallet?.publicKey ?: return null
     val curveToUse = wallet.curve
 
-    return if (card.isTangemTwin() && data.secondTwinPublicKey != null) {
+    return if (data.isTangemTwins() && data.secondTwinPublicKey != null) {
         makeMultisigWalletManager(
             cardId = card.cardId,
             walletPublicKey = publicKey, pairPublicKey = data.secondTwinPublicKey.hexToBytes(),
