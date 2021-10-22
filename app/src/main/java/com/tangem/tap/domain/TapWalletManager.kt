@@ -16,9 +16,7 @@ import com.tangem.tap.domain.configurable.config.ConfigManager
 import com.tangem.tap.domain.extensions.*
 import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.domain.tokens.CardCurrencies
-import com.tangem.tap.domain.twins.getTwinCardNumber
 import com.tangem.tap.features.tokens.redux.TokensAction
-import com.tangem.tap.features.twins.redux.TwinCardsAction
 import com.tangem.tap.features.wallet.redux.Currency
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.network.NetworkConnectivity
@@ -82,20 +80,13 @@ class TapWalletManager {
             FirebaseAnalyticsHandler.triggerEvent(AnalyticsEvent.CARD_IS_SCANNED, data.card, data.walletData?.blockchain)
         }
         store.state.globalState.feedbackManager?.infoHolder?.setCardInfo(data.card)
-        val configManager = store.state.globalState.configManager
-        updateConfigManager(configManager, data)
+        updateConfigManager(data)
 
         withContext(Dispatchers.Main) {
             store.dispatch(WalletAction.ResetState)
             store.dispatch(GlobalAction.SaveScanNoteResponse(data))
             store.dispatch(WalletAction.SetIfTestnetCard(data.card.isTestCard))
             store.dispatch(WalletAction.MultiWallet.SetIsMultiwalletAllowed(data.card.isMultiwalletAllowed))
-            if (data.isTangemTwins()) {
-                data.card.getTwinCardNumber()?.let {
-                    val isCreatingTwinsAllowed = configManager?.config?.isCreatingTwinCardsAllowed ?: false
-                    store.dispatch(TwinCardsAction.SetTwinCard(it, null, isCreatingTwinsAllowed))
-                }
-            }
 
             val blockchain = data.getBlockchain()
             if (blockchain == Blockchain.Ethereum ||
@@ -106,7 +97,8 @@ class TapWalletManager {
         }
     }
 
-    private fun updateConfigManager(configManager: ConfigManager?, data: ScanResponse) {
+    private fun updateConfigManager(data: ScanResponse) {
+        val configManager = store.state.globalState.configManager
         val blockchain = data.getBlockchain()
         if (data.card.isStart2Coin) {
             configManager?.turnOff(ConfigManager.isSendingToPayIdEnabled)
