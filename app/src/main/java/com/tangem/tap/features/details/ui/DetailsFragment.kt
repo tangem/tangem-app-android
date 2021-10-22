@@ -12,7 +12,6 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.twins.getTwinCardIdForUser
-import com.tangem.tap.domain.twins.isTangemTwin
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.features.details.redux.SecurityOption
@@ -69,8 +68,8 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
 
 
         if (state.cardInfo != null) {
-            val cardId = if (state.card?.isTangemTwin() == true) {
-                state.card.getTwinCardIdForUser()
+            val cardId = if (state.isTangemTwins) {
+                state.card?.getTwinCardIdForUser()
             } else {
                 state.cardInfo.cardId
             }
@@ -79,8 +78,8 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
             tv_signed_hashes.text = state.cardInfo.signedHashes.toString()
         }
 
-        tv_signed_hashes.show(state.card?.isTangemTwin() != true)
-        tv_signed_hashes_title.show(state.card?.isTangemTwin() != true)
+        tv_signed_hashes.show(!state.isTangemTwins)
+        tv_signed_hashes_title.show(!state.isTangemTwins)
 
         tv_disclaimer.setOnClickListener { store.dispatch(DetailsAction.ShowDisclaimer) }
 
