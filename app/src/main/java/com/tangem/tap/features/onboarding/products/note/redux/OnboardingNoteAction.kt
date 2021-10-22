@@ -10,7 +10,7 @@ import org.rekotlin.Action
  */
 sealed class OnboardingNoteAction : Action {
     // from user, ui
-    data class SetResources(val resources: AndroidResources) : OnboardingNoteAction()
+    data class SetResources(val resources: OnboardingNoteResources) : OnboardingNoteAction()
     object LoadCardArtwork : OnboardingNoteAction()
     object CreateWallet : OnboardingNoteAction()
     object TopUp : OnboardingNoteAction()

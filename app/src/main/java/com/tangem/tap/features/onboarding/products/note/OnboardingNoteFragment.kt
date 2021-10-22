@@ -19,7 +19,10 @@ import com.tangem.tap.common.postUi
 import com.tangem.tap.common.toggleWidget.RefreshBalanceWidget
 import com.tangem.tap.common.transitions.InternalNoteLayoutTransition
 import com.tangem.tap.features.onboarding.products.BaseOnboardingFragment
-import com.tangem.tap.features.onboarding.products.note.redux.*
+import com.tangem.tap.features.onboarding.products.note.redux.OnboardingNoteAction
+import com.tangem.tap.features.onboarding.products.note.redux.OnboardingNoteResources
+import com.tangem.tap.features.onboarding.products.note.redux.OnboardingNoteState
+import com.tangem.tap.features.onboarding.products.note.redux.OnboardingNoteStep
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fragment_onboarding_main.*
@@ -43,14 +46,14 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
 
         toolbar.setTitle(R.string.onboarding_title)
         btnRefreshBalanceWidget = RefreshBalanceWidget(onboarding_main_container)
-        val resources = AndroidResources(
-            OnboardingStringResources(
+
+        val resources = OnboardingNoteResources(
+            OnboardingNoteResources.Strings(
                 R.string.copy_toast_msg
             )
         )
-
-        store.dispatch(OnboardingNoteAction.LoadCardArtwork)
         store.dispatch(OnboardingNoteAction.SetResources(resources))
+        store.dispatch(OnboardingNoteAction.LoadCardArtwork)
         store.dispatch(OnboardingNoteAction.DetermineStepOfScreen)
     }
 

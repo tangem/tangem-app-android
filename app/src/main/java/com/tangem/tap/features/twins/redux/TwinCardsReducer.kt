@@ -12,52 +12,49 @@ class TwinCardsReducer {
 private fun internalReduce(action: Action, state: AppState): TwinCardsState {
     if (action !is TwinCardsAction) return state.twinCardsState
 
-    val twinCardsState = state.twinCardsState
+    val state = state.twinCardsState
     return when (action) {
+        is TwinCardsAction.SetResources -> {
+            state.copy(resources = action.resources)
+        }
         is TwinCardsAction.SetTwinCard -> {
-            twinCardsState.copy(
+            state.copy(
                 cardNumber = action.number,
                 secondCardId = action.secondCardId,
-                showTwinOnboarding = state.twinCardsState.showTwinOnboarding,
+                showTwinOnboarding = state.showTwinOnboarding,
                 isCreatingTwinCardsAllowed = action.isCreatingTwinCardsAllowed,
             )
         }
+        is TwinCardsAction.CardsManager.Set -> {
+            state.copy(twinCardsManager = action.manager)
+        }
+        TwinCardsAction.CardsManager.Release -> {
+            state.copy(twinCardsManager = null)
+        }
         is TwinCardsAction.ShowOnboarding -> {
-            state.twinCardsState.copy(showTwinOnboarding = true)
+            state.copy(showTwinOnboarding = true)
         }
         is TwinCardsAction.SetOnboardingShown -> {
-            twinCardsState.copy(showTwinOnboarding = false)
+            state.copy(showTwinOnboarding = false)
         }
-        is TwinCardsAction.CreateWallet.Create -> {
-            val prevState = twinCardsState.createWalletState
-            twinCardsState.copy(createWalletState = CreateTwinWalletState(
+        is TwinCardsAction.Wallet.Create -> {
+            val prevState = state.createWalletState
+            state.copy(createWalletState = CreateTwinWalletState(
                 prevState?.scanResponse,
                 prevState?.number ?: action.number,
                 prevState?.mode ?: action.createTwinWalletMode,
             ))
         }
-        TwinCardsAction.CreateWallet.LaunchFirstStep.Success -> {
-            twinCardsState.copy(createWalletState = twinCardsState.createWalletState?.copy(
+        TwinCardsAction.Wallet.LaunchFirstStep.Success -> {
+            state.copy(createWalletState = state.createWalletState?.copy(
                 step = CreateTwinWalletStep.SecondStep
             ))
         }
-        TwinCardsAction.CreateWallet.LaunchSecondStep.Success ->
-            twinCardsState.copy(createWalletState = twinCardsState.createWalletState?.copy(
+        TwinCardsAction.Wallet.LaunchSecondStep.Success ->
+            state.copy(createWalletState = state.createWalletState?.copy(
                 step = CreateTwinWalletStep.ThirdStep
             ))
-        TwinCardsAction.CreateWallet.ShowAlert -> twinCardsState
-        TwinCardsAction.CreateWallet.HideAlert -> twinCardsState
-        is TwinCardsAction.CreateWallet.Proceed -> twinCardsState
-        TwinCardsAction.CreateWallet.NotEmpty -> twinCardsState
-        TwinCardsAction.CreateWallet.Cancel -> twinCardsState
-        TwinCardsAction.CreateWallet.Cancel.Confirm -> twinCardsState
-        is TwinCardsAction.CreateWallet.LaunchFirstStep -> twinCardsState
-        TwinCardsAction.CreateWallet.LaunchFirstStep.Failure -> twinCardsState
-        is TwinCardsAction.CreateWallet.LaunchSecondStep -> twinCardsState
-        TwinCardsAction.CreateWallet.LaunchSecondStep.Failure -> twinCardsState
-        is TwinCardsAction.CreateWallet.LaunchThirdStep -> twinCardsState
-        is TwinCardsAction.CreateWallet.LaunchThirdStep.Success -> twinCardsState
-        TwinCardsAction.CreateWallet.LaunchThirdStep.Failure -> twinCardsState
+        else -> state
     }
 
 }
