@@ -17,8 +17,8 @@ import com.tangem.tap.domain.TapWorkarounds.isTangemNote
 import com.tangem.tap.domain.extensions.getSingleWallet
 import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.domain.twins.TwinsHelper
-import com.tangem.tap.domain.twins.isTangemTwin
 
+@Deprecated("Use ScanProductTask instead")
 class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanResponse> {
 
     override fun run(
@@ -38,13 +38,13 @@ class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanResponse> {
                         return@run
                     }
 
-                    if (card.isTangemTwin()) {
+                    if (TwinsHelper.getTwinCardNumber(card.cardId) != null) {
                         dealWithTwinCard(card, session, callback)
                     } else if (!isTangemNote(card) && card.firmwareVersion >= FirmwareVersion.MultiWalletAvailable) {
                         createMissingWalletsIfNeeded(card, session, callback)
                     } else {
                         callback(CompletionResult.Success(
-                                ScanResponse(card, ProductType.Other, session.environment.walletData)))
+                            ScanResponse(card, ProductType.Other, session.environment.walletData)))
                     }
                 }
             }
@@ -93,16 +93,16 @@ class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanResponse> {
                         return@run
                     }
                     val verified = TwinsHelper.verifyTwinPublicKey(
-                            readDataResult.data.issuerData, publicKey
+                        readDataResult.data.issuerData, publicKey
                     )
                     if (verified) {
                         val twinPublicKey = readDataResult.data.issuerData.sliceArray(0 until 65)
                         callback(CompletionResult.Success(
-                                ScanResponse(
-                                        card = card,
-                                        ProductType.Other,
-                                        walletData = session.environment.walletData,
-                                        secondTwinPublicKey = twinPublicKey.toHexString())
+                            ScanResponse(
+                                card = card,
+                                ProductType.Other,
+                                walletData = session.environment.walletData,
+                                secondTwinPublicKey = twinPublicKey.toHexString())
                         ))
                         return@run
                     } else {
