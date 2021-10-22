@@ -64,6 +64,7 @@ private fun handlePrepareScreen(action: DetailsAction.PrepareScreen, state: Deta
             appCurrencyState = AppCurrencyState(
                     action.fiatCurrencyName
             ),
+            securityScreenState = SecurityScreenState(currentOption = securityOption),
             createTwinWalletState = twinsState,
             cardTermsOfUseUrl = action.cardTou.getUrl(action.card)
     )
@@ -172,11 +173,14 @@ private fun handleSecurityAction(
             state.copy(confirmScreenState = confirmScreenState)
         }
         is DetailsAction.ManageSecurity.SaveChanges.Success -> {
-            // Setting options to show only LongTap from now on
+            // Setting options to show only LongTap from now on for non-twins
+            val currentOption = state.securityScreenState?.selectedOption
             state.copy(
                     securityScreenState = state.securityScreenState?.copy(
-                            currentOption = state.securityScreenState.selectedOption,
-                            allowedOptions = EnumSet.of(SecurityOption.LongTap)
+                            currentOption = currentOption,
+                            allowedOptions = state.card?.let {
+                                prepareAllowedSecurityOptions(it, currentOption) }
+                                ?: EnumSet.of(SecurityOption.LongTap)
                     ))
         }
 
@@ -188,8 +192,11 @@ private fun prepareAllowedSecurityOptions(
     card: Card?, currentSecurityOption: SecurityOption?
 ): EnumSet<SecurityOption> {
     val prohibitDefaultPin = card?.settings?.isRemovingAccessCodeAllowed != true
-
     val allowedSecurityOptions = EnumSet.noneOf(SecurityOption::class.java)
+
+    if (card?.isTwinCard() == true) {
+        allowedSecurityOptions.add(SecurityOption.PassCode)
+    }
     if ((currentSecurityOption == SecurityOption.LongTap) || !prohibitDefaultPin) {
         allowedSecurityOptions.add(SecurityOption.LongTap)
     }
