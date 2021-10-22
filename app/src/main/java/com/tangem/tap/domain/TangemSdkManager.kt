@@ -23,7 +23,6 @@ import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.domain.tasks.CreateWalletAndRescanTask
 import com.tangem.tap.domain.tasks.product.ScanProductTask
 import com.tangem.tap.domain.tasks.product.ScanResponse
-import com.tangem.tap.domain.twins.isTangemTwin
 import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -45,9 +44,9 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
 
     suspend fun createProductWallet(scanResponse: ScanResponse): CompletionResult<Card> {
         return runTaskAsync(
-                CreateProductWalletAndRescanTask(scanResponse.productType),
-                scanResponse.card.cardId,
-                Message(context.getString(R.string.initial_message_create_wallet_body))
+            CreateProductWalletAndRescanTask(scanResponse.productType),
+            scanResponse.card.cardId,
+            Message(context.getString(R.string.initial_message_create_wallet_body))
         )
     }
 
@@ -105,13 +104,13 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
     suspend fun <T : CommandResponse> runTaskAsync(
         runnable: CardSessionRunnable<T>, cardId: String? = null, initialMessage: Message? = null,
     ): CompletionResult<T> =
-        withContext(Dispatchers.Main) {
-            suspendCoroutine { continuation ->
-                tangemSdk.startSessionWithRunnable(runnable, cardId, initialMessage) { result ->
-                    continuation.resume(result)
+            withContext(Dispatchers.Main) {
+                suspendCoroutine { continuation ->
+                    tangemSdk.startSessionWithRunnable(runnable, cardId, initialMessage) { result ->
+                        continuation.resume(result)
+                    }
                 }
             }
-        }
 
     private suspend fun <T : CommandResponse> runTaskAsyncReturnOnMain(
         runnable: CardSessionRunnable<T>, cardId: String? = null, initialMessage: Message? = null,
@@ -120,8 +119,8 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         return withContext(Dispatchers.Main) { result }
     }
 
-    fun changeDisplayedCardIdNumbersCount(card: Card) {
-        tangemSdk.config.cardIdDisplayedNumbersCount = if (card.isTangemTwin()) 4 else null
+    fun changeDisplayedCardIdNumbersCount(scanResponse: ScanResponse) {
+        tangemSdk.config.cardIdDisplayedNumbersCount = if (scanResponse.isTangemTwins()) 4 else null
     }
 
     companion object {
