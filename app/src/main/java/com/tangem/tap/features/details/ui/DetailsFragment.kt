@@ -95,7 +95,7 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
                 tv_erase_wallet.show()
                 tv_erase_wallet.text = getText(R.string.details_row_title_twins_recreate)
                 tv_erase_wallet.setOnClickListener {
-                    store.dispatch(TwinCardsAction.CreateWallet.Create(
+                    store.dispatch(TwinCardsAction.Wallet.Create(
                         state.twinCardsState.cardNumber!!,
                         CreateTwinWalletMode.RecreateWallet
                     ))
