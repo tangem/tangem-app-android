@@ -97,7 +97,7 @@ class WalletMiddleware {
             }
             is WalletAction.CreateWallet -> {
                 if (walletState.isTangemTwins) {
-                    store.dispatch(TwinCardsAction.CreateWallet.Create(
+                    store.dispatch(TwinCardsAction.Wallet.Create(
                         walletState.twinCardsState.cardNumber!!,
                         CreateTwinWalletMode.CreateWallet
                     ))
