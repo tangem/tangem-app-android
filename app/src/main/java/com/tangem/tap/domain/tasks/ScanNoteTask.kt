@@ -20,6 +20,7 @@ import com.tangem.tap.domain.TapSdkError
 import com.tangem.tap.domain.TapWorkarounds.isExcluded
 import com.tangem.tap.domain.TapWorkarounds.isMultiCurrencyWallet
 import com.tangem.tap.domain.TapWorkarounds.noteCurrency
+import com.tangem.tap.domain.TapWorkarounds.isNote
 import com.tangem.tap.domain.extensions.getSingleWallet
 import com.tangem.tap.domain.twins.TwinCardsManager
 import com.tangem.tap.domain.twins.isTwinCard
@@ -31,7 +32,6 @@ data class ScanNoteResponse(
     val walletData: WalletData?,
     val secondTwinPublicKey: String? = null,
 ) : CommandResponse {
-
     fun getBlockchain(): Blockchain? {
         if (card.noteCurrency != null) return card.noteCurrency
         val blockchainName: String = walletData?.blockchain ?: return null
@@ -148,14 +148,14 @@ class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanNoteRespons
 
     private fun getErrorIfExcludedCard(card: Card): TangemError? {
         if (card.isExcluded()) return TapSdkError.CardForDifferentApp
-        // Disable new multi-currency HD wallet cards on the old version of the app
-        if (card.isMultiCurrencyWallet()) return UpdateAppToUseThisCard()
+        // Disable new cards on the old version of the app // TODO: remove when cards are supported
+        if (card.isMultiCurrencyWallet() || card.isNote()) return UpdateAppToUseThisCard()
         return null
     }
 
     private fun getWalletManagerFactory(): WalletManagerFactory {
         val blockchainSdkConfig = store.state.globalState.configManager?.config
-            ?.blockchainSdkConfig ?: BlockchainSdkConfig()
+                ?.blockchainSdkConfig ?: BlockchainSdkConfig()
         return WalletManagerFactory(blockchainSdkConfig)
     }
 
