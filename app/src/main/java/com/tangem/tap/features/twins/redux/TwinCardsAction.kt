@@ -1,62 +1,62 @@
 package com.tangem.tap.features.twins.redux
 
-import android.content.Context
 import com.tangem.Message
-import com.tangem.tap.common.redux.NotificationAction
+import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.domain.tasks.product.ScanResponse
+import com.tangem.tap.domain.twins.AssetReader
 import com.tangem.tap.domain.twins.TwinCardNumber
-import com.tangem.wallet.R
+import com.tangem.tap.domain.twins.TwinCardsManager
 import org.rekotlin.Action
 
 /**
 [REDACTED_AUTHOR]
  */
 sealed class TwinCardsAction : Action {
-    object ShowOnboarding : TwinCardsAction()
-    object SetOnboardingShown : TwinCardsAction()
+
+    data class SetResources(val resources: TwinCardsResources) : TwinCardsAction()
+
     data class SetTwinCard(
         val number: TwinCardNumber,
         val secondCardId: String?,
         val isCreatingTwinCardsAllowed: Boolean,
     ) : TwinCardsAction()
 
-    sealed class CreateWallet : TwinCardsAction() {
+    sealed class CardsManager {
+        data class Set(val manager: TwinCardsManager) : TwinCardsAction()
+        object Release : TwinCardsAction()
+    }
+
+    object ShowOnboarding : TwinCardsAction()
+    object SetOnboardingShown : TwinCardsAction()
+    object ProceedToCreateWallet : TwinCardsAction()
+
+    sealed class Wallet : TwinCardsAction() {
+        object HandleOnBackPressed : TwinCardsAction()
+
         data class Create(
             val number: TwinCardNumber,
             val createTwinWalletMode: CreateTwinWalletMode
-        ) : CreateWallet()
+        ) : TwinCardsAction()
 
-        object NotEmpty : CreateWallet(), NotificationAction {
-            override val messageResource = R.string.details_notification_erase_wallet_not_possible
-        }
-
-        object ShowAlert : CreateWallet()
-        object HideAlert : CreateWallet()
-        object Proceed : CreateWallet()
-
-        object Cancel : CreateWallet() {
-            object Confirm : CreateWallet()
-        }
+        data class InterruptDialog(val interrupt: () -> Unit) : TwinCardsAction(), StateDialog
 
         data class LaunchFirstStep(
-            val message: Message, val context: Context
-        ) : CreateWallet() {
-            object Success : CreateWallet()
-            object Failure : CreateWallet()
+            val initialMessage: Message,
+            val reader: AssetReader
+        ) : TwinCardsAction() {
+            object Success : TwinCardsAction()
         }
 
         data class LaunchSecondStep(
             val initialMessage: Message,
             val preparingMessage: Message,
             val creatingWalletMessage: Message,
-        ) : CreateWallet() {
-            object Success : CreateWallet()
-            object Failure : CreateWallet()
+        ) : TwinCardsAction() {
+            object Success : TwinCardsAction()
         }
 
-        data class LaunchThirdStep(val message: Message) : CreateWallet() {
-            data class Success(val scanResponse: ScanResponse) : CreateWallet()
-            object Failure : CreateWallet()
+        data class LaunchThirdStep(val message: Message) : TwinCardsAction() {
+            data class Success(val scanResponse: ScanResponse) : TwinCardsAction()
         }
     }
 }
