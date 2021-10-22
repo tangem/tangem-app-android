@@ -1,6 +1,5 @@
 package com.tangem.tap.domain.twins
 
-import android.content.Context
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Types
 import com.tangem.Message
@@ -12,24 +11,21 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
-import com.tangem.tap.common.extensions.readAssetAsString
 import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.network.createMoshi
 import com.tangem.tap.tangemSdkManager
 
-class TwinCardsManager(private val scanResponse: ScanResponse, context: Context) {
+class TwinCardsManager(private val scanResponse: ScanResponse, assetReader: AssetReader) {
 
     private val currentCardId: String = scanResponse.card.cardId
 
-    //    private val secondCardId: String? = TwinsHelper.getTwinsCardId(currentCardId)
+    //    private val secondCardId: Strings? = TwinsHelper.getTwinsCardId(currentCardId)
     private val secondCardId: String? = null
 
     private var currentCardPublicKey: String? = null
     private var secondCardPublicKey: String? = null
 
-    private val issuerKeyPair: KeyPair = getIssuerKeys(
-        context, scanResponse.card.issuer.publicKey.toHexString()
-    )
+    private val issuerKeyPair: KeyPair = getIssuerKeys(assetReader, scanResponse.card.issuer.publicKey.toHexString())
 
     suspend fun createFirstWallet(message: Message): SimpleResult {
         val response = tangemSdkManager.runTaskAsync(
@@ -108,8 +104,8 @@ class TwinCardsManager(private val scanResponse: ScanResponse, context: Context)
     }
 
     companion object {
-        private fun getIssuerKeys(context: Context, publicKey: String): KeyPair {
-            val issuer = getIssuers(context).first { it.publicKey == publicKey }
+        private fun getIssuerKeys(reader: AssetReader, publicKey: String): KeyPair {
+            val issuer = getIssuers(reader).first { it.publicKey == publicKey }
             return KeyPair(
                 publicKey = issuer.publicKey.hexToBytes(),
                 privateKey = issuer.privateKey.hexToBytes()
@@ -122,11 +118,15 @@ class TwinCardsManager(private val scanResponse: ScanResponse, context: Context)
             )
         }
 
-        private fun getIssuers(context: Context): List<Issuer> {
-            val file = context.readAssetAsString("tangem-app-config/issuers")
+        private fun getIssuers(reader: AssetReader): List<Issuer> {
+            val file = reader.readAssetAsString("tangem-app-config/issuers")
             return getAdapter().fromJson(file)!!
         }
     }
+}
+
+interface AssetReader {
+    fun readAssetAsString(name: String): String
 }
 
 private class Issuer(
