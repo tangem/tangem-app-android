@@ -17,7 +17,6 @@ import com.tangem.tap.domain.extensions.*
 import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.domain.tokens.CardCurrencies
 import com.tangem.tap.domain.twins.getTwinCardNumber
-import com.tangem.tap.domain.twins.isTangemTwin
 import com.tangem.tap.features.tokens.redux.TokensAction
 import com.tangem.tap.features.twins.redux.TwinCardsAction
 import com.tangem.tap.features.wallet.redux.Currency
@@ -91,7 +90,7 @@ class TapWalletManager {
             store.dispatch(GlobalAction.SaveScanNoteResponse(data))
             store.dispatch(WalletAction.SetIfTestnetCard(data.card.isTestCard))
             store.dispatch(WalletAction.MultiWallet.SetIsMultiwalletAllowed(data.card.isMultiwalletAllowed))
-            if (data.card.isTangemTwin()) {
+            if (data.isTangemTwins()) {
                 data.card.getTwinCardNumber()?.let {
                     val isCreatingTwinsAllowed = configManager?.config?.isCreatingTwinCardsAllowed ?: false
                     store.dispatch(TwinCardsAction.SetTwinCard(it, null, isCreatingTwinsAllowed))
@@ -233,7 +232,7 @@ class TapWalletManager {
     private fun getActionIfUnknownBlockchainOrEmptyWallet(data: ScanResponse): WalletAction? {
         return when {
             // check order is important
-            data.card.isTangemTwin() && !data.twinsIsTwinned() -> {
+            data.isTangemTwins() && !data.twinsIsTwinned() -> {
                 WalletAction.EmptyWallet
             }
             data.getBlockchain() == Blockchain.Unknown && !data.card.isMultiwalletAllowed -> {
