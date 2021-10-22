@@ -22,6 +22,19 @@ class TwinsHelper {
             }
         }
 
+        fun getPairCardSeries(cardId: String): String? {
+            return when (getTwinCardNumber(cardId) ?: return null) {
+                TwinCardNumber.First -> {
+                    val index = firstCardSeries.indexOf(cardId.take(4))
+                    secondCardSeries[index]
+                }
+                TwinCardNumber.Second -> {
+                    val index = secondCardSeries.indexOf(cardId.take(4))
+                    firstCardSeries[index]
+                }
+            }
+        }
+
         fun getTwinsCardId(cardId: String): String? {
             val cardIdWithNewSeries = when (getTwinCardNumber(cardId) ?: return null) {
                 TwinCardNumber.First -> {
