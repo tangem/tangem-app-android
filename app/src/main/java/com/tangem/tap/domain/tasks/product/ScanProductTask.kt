@@ -24,7 +24,6 @@ import com.tangem.tap.domain.TapWorkarounds.getTangemNoteBlockchain
 import com.tangem.tap.domain.TapWorkarounds.isExcluded
 import com.tangem.tap.domain.extensions.getSingleWallet
 import com.tangem.tap.domain.twins.TwinsHelper
-import com.tangem.tap.domain.twins.isTangemTwin
 
 data class ScanResponse(
     val card: Card,
@@ -55,13 +54,7 @@ data class ScanResponse(
     fun isTangemTwins(): Boolean = productType == ProductType.Twins
     fun isTangemOtherCards(): Boolean = productType == ProductType.Other
 
-    fun twinsIsTwinned(): Boolean {
-        return card.isTangemTwin() && walletData != null && secondTwinPublicKey != null
-    }
-}
-
-private fun Card.isTangemTwin(): Boolean {
-    return TwinsHelper.getTwinCardNumber(cardId) != null
+    fun twinsIsTwinned(): Boolean = card.isTangemTwins() && walletData != null && secondTwinPublicKey != null
 }
 
 class ScanProductTask(val card: Card? = null) : CardSessionRunnable<ScanResponse> {
@@ -83,7 +76,7 @@ class ScanProductTask(val card: Card? = null) : CardSessionRunnable<ScanResponse
 
                     val commandProcessor = when {
                         TapWorkarounds.isTangemNote(card) -> ScanNoteProcessor()
-                        TwinsHelper.getTwinCardNumber(card.cardId) != null -> ScanTwinProcessor()
+                        card.isTangemTwins() -> ScanTwinProcessor()
                         TapWorkarounds.isTangemWallet(card) -> ScanWalletProcessor()
                         else -> ScanOtherCardsProcessor()
                     }
@@ -100,6 +93,8 @@ class ScanProductTask(val card: Card? = null) : CardSessionRunnable<ScanResponse
         return null
     }
 }
+
+private fun Card.isTangemTwins(): Boolean = TwinsHelper.getTwinCardNumber(cardId) != null
 
 private class ScanNoteProcessor : ProductCommandProcessor<ScanResponse> {
     override fun proceed(
