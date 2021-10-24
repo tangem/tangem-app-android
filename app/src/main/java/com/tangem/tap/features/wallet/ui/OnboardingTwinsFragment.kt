@@ -8,7 +8,6 @@ import androidx.transition.TransitionInflater
 import com.squareup.picasso.Picasso
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
-import com.tangem.tap.domain.twins.TwinsHelper
 import com.tangem.tap.features.wallet.redux.Artwork
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.store
@@ -34,10 +33,9 @@ class OnboardingTwinsFragment : Fragment(R.layout.fragment_twin_cards) {
         super.onViewCreated(view, savedInstanceState)
 
         store.dispatch(WalletAction.TwinsAction.SetOnboardingShown)
-
-        val secondCardId = store.state.walletState.twinCardsState?.secondCardId ?: ""
-        val secondTwinCardId = TwinsHelper.getTwinCardIdForUser(secondCardId)
-        val text = getString(R.string.twins_onboarding_description_format, secondTwinCardId)
+        val secondTwinNumber =
+            store.state.walletState.twinCardsState?.cardNumber?.pairNumber()?.number ?: ""
+        val text = getString(R.string.twins_onboarding_description_format, secondTwinNumber)
         tv_twin_cards_description_1.text = text
 
         setOnClickListeners()
