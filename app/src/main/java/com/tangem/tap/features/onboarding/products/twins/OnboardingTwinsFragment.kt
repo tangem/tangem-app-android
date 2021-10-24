@@ -10,7 +10,6 @@ import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.withMainContext
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
-import com.tangem.tap.domain.twins.TwinsHelper
 import com.tangem.tap.features.twins.redux.TwinCardsAction
 import com.tangem.tap.features.wallet.redux.Artwork
 import com.tangem.tap.scope
@@ -37,9 +36,8 @@ class OnboardingTwinsFragment : Fragment(R.layout.fragment_twin_cards_welcome) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        store.dispatch(TwinCardsAction.SetOnboardingShown))
-        val secondTwinNumber =
-                store.state.twinCardsState?.cardNumber?.pairNumber()?.number ?: ""
+        store.dispatch(TwinCardsAction.SetOnboardingShown)
+        val secondTwinNumber = store.state.twinCardsState.cardNumber?.pairNumber()?.number ?: ""
         val text = getString(R.string.twins_onboarding_description_format, secondTwinNumber)
         tv_twin_cards_description_1.text = text
 
