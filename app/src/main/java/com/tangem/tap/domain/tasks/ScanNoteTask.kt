@@ -1,8 +1,6 @@
 package com.tangem.tap.domain.tasks
 
 import com.tangem.*
-import com.tangem.blockchain.common.BlockchainSdkConfig
-import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.Card
 import com.tangem.common.card.FirmwareVersion
@@ -123,11 +121,4 @@ class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanResponse> {
 //        if (card.isMultiCurrencyWallet()) return UpdateAppToUseThisCard()
         return null
     }
-
-    private fun getWalletManagerFactory(): WalletManagerFactory {
-        val blockchainSdkConfig = store.state.globalState.configManager?.config
-                ?.blockchainSdkConfig ?: BlockchainSdkConfig()
-        return WalletManagerFactory(blockchainSdkConfig)
-    }
-
 }
