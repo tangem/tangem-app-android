@@ -1,6 +1,8 @@
 package com.tangem.tap.domain.tasks
 
 import com.tangem.*
+import com.tangem.blockchain.common.BlockchainSdkConfig
+import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.Card
 import com.tangem.common.card.FirmwareVersion
@@ -18,6 +20,7 @@ import com.tangem.tap.domain.extensions.getSingleWallet
 import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.domain.twins.TwinCardsManager
 import com.tangem.tap.domain.twins.isTangemTwin
+import com.tangem.tap.store
 
 class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanResponse> {
 
@@ -118,7 +121,6 @@ class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanResponse> {
     private fun getErrorIfExcludedCard(card: Card): TangemError? {
         if (card.isExcluded()) return TapSdkError.CardForDifferentApp
         // Disable new cards on the old version of the app // TODO: remove when cards are supported
-        if (card.isMultiCurrencyWallet() || card.isNote()) return UpdateAppToUseThisCard()
         // Disable new multi-currency HD wallet cards on the old version of the app
 //        if (card.isMultiCurrencyWallet()) return UpdateAppToUseThisCard()
         return null
