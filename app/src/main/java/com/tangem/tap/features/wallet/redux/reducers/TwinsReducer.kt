@@ -10,7 +10,6 @@ class TwinsReducer {
             is WalletAction.TwinsAction.SetTwinCard -> {
                 state.copy(
                         twinCardsState = TwinCardsState(
-                                secondCardId = action.secondCardId,
                                 cardNumber = action.number,
                                 showTwinOnboarding = state.twinCardsState?.showTwinOnboarding
                                         ?: false,
@@ -21,7 +20,7 @@ class TwinsReducer {
             is WalletAction.TwinsAction.ShowOnboarding -> {
                 state.copy(
                         twinCardsState = state.twinCardsState?.copy(showTwinOnboarding = true)
-                                ?: TwinCardsState(null, null,
+                                ?: TwinCardsState(cardNumber = null,
                                         showTwinOnboarding = true,
                                         isCreatingTwinCardsAllowed = false)
                 )
