@@ -61,7 +61,7 @@ class WalletConnectSdkHelper {
 
         val decimals = blockchain.decimals()
 
-        val value = transaction.value?.hexToBigDecimal()
+        val value = (transaction.value ?: "0").hexToBigDecimal()
             ?.movePointLeft(decimals) ?: return null
 
         val gasPrice = transaction.gasPrice?.hexToBigDecimal()
