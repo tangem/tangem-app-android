@@ -91,7 +91,7 @@ class TapWalletManager {
             store.dispatch(WalletAction.MultiWallet.SetIsMultiwalletAllowed(data.card.isMultiwalletAllowed))
             if (data.card.isTangemTwin()) {
                 data.card.getTwinCardNumber()?.let {
-                    store.dispatch(WalletAction.TwinsAction.SetTwinCard(null, it, true))
+                    store.dispatch(WalletAction.TwinsAction.SetTwinCard(it, true))
                 }
             }
 
