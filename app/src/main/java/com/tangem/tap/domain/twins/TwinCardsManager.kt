@@ -65,9 +65,7 @@ class TwinCardsManager(private val scanResponse: ScanResponse, context: Context)
             preparingMessage = preparingMessage,
             creatingWalletMessage = creatingWalletMessage
         )
-        val response = tangemSdkManager.runTaskAsync(
-                task, null, initialMessage
-        )
+        val response = tangemSdkManager.runTaskAsync(task, null, initialMessage)
         when (response) {
             is CompletionResult.Success -> {
                 secondCardPublicKey = response.data.wallet.publicKey.toHexString()
@@ -114,14 +112,6 @@ class TwinCardsManager(private val scanResponse: ScanResponse, context: Context)
             val publicKey = issuerData.sliceArray(0 until 65)
             val signedKey = issuerData.sliceArray(65 until issuerData.size)
             return CryptoUtils.verify(cardWalletPublicKey, publicKey, signedKey)
-        }
-
-        fun verifyTwinPublicKey(issuerData: ByteArray, cardWalletPublicKey: ByteArray?): Boolean {
-            if (issuerData.size < 65) return false
-            val publicKey = issuerData.sliceArray(0 until 65)
-            val signedKey = issuerData.sliceArray(65 until issuerData.size)
-            return (cardWalletPublicKey != null &&
-                    CryptoUtils.verify(cardWalletPublicKey, publicKey, signedKey))
         }
 
         private fun getIssuerKeys(context: Context, publicKey: String): KeyPair {
