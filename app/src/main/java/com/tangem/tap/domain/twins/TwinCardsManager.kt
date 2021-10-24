@@ -21,8 +21,6 @@ import com.tangem.tap.tangemSdkManager
 class TwinCardsManager(private val scanResponse: ScanResponse, context: Context) {
 
     private val currentCardId: String = scanResponse.card.cardId
-//    private val secondCardId: String? = TwinsHelper.getTwinsCardId(currentCardId)
-    private val secondCardId: String? = null
 
     private var currentCardPublicKey: String? = null
     private var secondCardPublicKey: String? = null
@@ -60,13 +58,15 @@ class TwinCardsManager(private val scanResponse: ScanResponse, context: Context)
         preparingMessage: Message,
         creatingWalletMessage: Message,
     ): SimpleResult {
+        val task = CreateSecondTwinWalletTask(
+            firstPublicKey = currentCardPublicKey!!,
+            firstCardId = currentCardId,
+            issuerKeys = issuerKeyPair,
+            preparingMessage = preparingMessage,
+            creatingWalletMessage = creatingWalletMessage
+        )
         val response = tangemSdkManager.runTaskAsync(
-            CreateSecondTwinWalletTask(
-                firstPublicKey = currentCardPublicKey!!,
-                issuerKeys = issuerKeyPair,
-                preparingMessage = preparingMessage,
-                creatingWalletMessage = creatingWalletMessage),
-            secondCardId, initialMessage
+                task, null, initialMessage
         )
         when (response) {
             is CompletionResult.Success -> {
@@ -114,6 +114,14 @@ class TwinCardsManager(private val scanResponse: ScanResponse, context: Context)
             val publicKey = issuerData.sliceArray(0 until 65)
             val signedKey = issuerData.sliceArray(65 until issuerData.size)
             return CryptoUtils.verify(cardWalletPublicKey, publicKey, signedKey)
+        }
+
+        fun verifyTwinPublicKey(issuerData: ByteArray, cardWalletPublicKey: ByteArray?): Boolean {
+            if (issuerData.size < 65) return false
+            val publicKey = issuerData.sliceArray(0 until 65)
+            val signedKey = issuerData.sliceArray(65 until issuerData.size)
+            return (cardWalletPublicKey != null &&
+                    CryptoUtils.verify(cardWalletPublicKey, publicKey, signedKey))
         }
 
         private fun getIssuerKeys(context: Context, publicKey: String): KeyPair {

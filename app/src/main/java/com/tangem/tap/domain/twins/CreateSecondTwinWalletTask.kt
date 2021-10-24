@@ -6,6 +6,7 @@ import com.tangem.common.KeyPair
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
+import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.operations.wallet.CreateWalletCommand
 import com.tangem.operations.wallet.CreateWalletResponse
@@ -13,14 +14,21 @@ import com.tangem.operations.wallet.PurgeWalletCommand
 import com.tangem.tap.domain.extensions.getSingleWallet
 
 class CreateSecondTwinWalletTask(
-        private val firstPublicKey: String,
-        private val issuerKeys: KeyPair,
-        private val preparingMessage: Message,
-        private val creatingWalletMessage: Message
+    private val firstPublicKey: String,
+    private val firstCardId: String,
+    private val issuerKeys: KeyPair,
+    private val preparingMessage: Message,
+    private val creatingWalletMessage: Message
 ) : CardSessionRunnable<CreateWalletResponse> {
     override fun run(session: CardSession, callback: (result: CompletionResult<CreateWalletResponse>) -> Unit) {
-        val publicKey = session.environment.card?.getSingleWallet()?.publicKey
+        val card = session.environment.card
+        val publicKey = card?.getSingleWallet()?.publicKey
         if (publicKey != null) {
+            if (!card.cardId.startsWith(TwinsHelper.getPairCardSeries(firstCardId) ?: "")) {
+                callback(CompletionResult.Failure(TangemSdkError.WrongCardType()))
+                return
+            }
+
             session.setInitialMessage(preparingMessage)
             PurgeWalletCommand(publicKey).run(session) { response ->
                 when (response) {
