@@ -17,7 +17,7 @@ private fun internalReduce(action: Action, appState: AppState): OnboardingNoteSt
         is GlobalAction.Onboarding.Start -> {
             state = OnboardingNoteState()
         }
-        is OnboardingNoteAction.SetArtworkUrl -> {
+        is OnboardingNoteAction.SetArtwork -> {
             state = state.copy(cardArtwork = action.artwork)
         }
         is OnboardingNoteAction.SetWalletManager -> {
