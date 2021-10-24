@@ -10,7 +10,6 @@ import androidx.transition.TransitionManager
 import com.tangem.tap.common.extensions.getDrawableCompat
 import com.tangem.tap.common.transitions.InternalNoteLayoutTransition
 import com.tangem.tap.features.onboarding.products.BaseOnboardingFragment
-import com.tangem.tap.features.onboarding.products.note.swapToBitmapDrawable
 import com.tangem.tap.features.onboarding.products.otherCards.redux.OnboardingOtherCardsAction
 import com.tangem.tap.features.onboarding.products.otherCards.redux.OnboardingOtherCardsState
 import com.tangem.tap.features.onboarding.products.otherCards.redux.OnboardingOtherCardsStep
