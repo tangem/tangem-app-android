@@ -17,7 +17,7 @@ sealed class OnboardingNoteAction : Action {
     object ShowAddressInfoDialog : OnboardingNoteAction()
 
     // from redux
-    class SetArtworkUrl(val artwork: Artwork) : OnboardingNoteAction()
+    class SetArtwork(val artwork: Artwork) : OnboardingNoteAction()
     data class SetWalletManager(val walletManager: WalletManager) : OnboardingNoteAction()
     object DetermineStepOfScreen : OnboardingNoteAction()
     object Done : OnboardingNoteAction()
