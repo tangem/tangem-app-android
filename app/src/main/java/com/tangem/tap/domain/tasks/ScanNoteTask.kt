@@ -117,8 +117,17 @@ class ScanNoteTask(val card: Card? = null) : CardSessionRunnable<ScanResponse> {
 
     private fun getErrorIfExcludedCard(card: Card): TangemError? {
         if (card.isExcluded()) return TapSdkError.CardForDifferentApp
+        // Disable new cards on the old version of the app // TODO: remove when cards are supported
+        if (card.isMultiCurrencyWallet() || card.isNote()) return UpdateAppToUseThisCard()
         // Disable new multi-currency HD wallet cards on the old version of the app
 //        if (card.isMultiCurrencyWallet()) return UpdateAppToUseThisCard()
         return null
     }
+
+    private fun getWalletManagerFactory(): WalletManagerFactory {
+        val blockchainSdkConfig = store.state.globalState.configManager?.config
+                ?.blockchainSdkConfig ?: BlockchainSdkConfig()
+        return WalletManagerFactory(blockchainSdkConfig)
+    }
+
 }
