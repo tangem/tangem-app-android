@@ -19,9 +19,6 @@ class TwinCardsManager(private val scanResponse: ScanResponse, assetReader: Asse
 
     private val currentCardId: String = scanResponse.card.cardId
 
-    //    private val secondCardId: Strings? = TwinsHelper.getTwinsCardId(currentCardId)
-    private val secondCardId: String? = null
-
     private var currentCardPublicKey: String? = null
     private var secondCardPublicKey: String? = null
 
@@ -56,14 +53,14 @@ class TwinCardsManager(private val scanResponse: ScanResponse, assetReader: Asse
         preparingMessage: Message,
         creatingWalletMessage: Message,
     ): SimpleResult {
-        val response = tangemSdkManager.runTaskAsync(
-            CreateSecondTwinWalletTask(
-                firstPublicKey = currentCardPublicKey!!,
-                issuerKeys = issuerKeyPair,
-                preparingMessage = preparingMessage,
-                creatingWalletMessage = creatingWalletMessage),
-            secondCardId, initialMessage
+        val task = CreateSecondTwinWalletTask(
+            firstPublicKey = currentCardPublicKey!!,
+            firstCardId = currentCardId,
+            issuerKeys = issuerKeyPair,
+            preparingMessage = preparingMessage,
+            creatingWalletMessage = creatingWalletMessage
         )
+        val response = tangemSdkManager.runTaskAsync(task, null, initialMessage)
         when (response) {
             is CompletionResult.Success -> {
                 secondCardPublicKey = response.data.wallet.publicKey.toHexString()
