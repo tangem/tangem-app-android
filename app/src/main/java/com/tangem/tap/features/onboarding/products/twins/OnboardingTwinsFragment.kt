@@ -37,11 +37,10 @@ class OnboardingTwinsFragment : Fragment(R.layout.fragment_twin_cards_welcome) {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        store.dispatch(TwinCardsAction.SetOnboardingShown)
-
-        val secondCardId = store.state.twinCardsState.secondCardId ?: ""
-        val secondTwinCardId = TwinsHelper.getTwinCardIdForUser(secondCardId)
-        val text = getString(R.string.twins_onboarding_description_format, secondTwinCardId)
+        store.dispatch(TwinCardsAction.SetOnboardingShown))
+        val secondTwinNumber =
+                store.state.twinCardsState?.cardNumber?.pairNumber()?.number ?: ""
+        val text = getString(R.string.twins_onboarding_description_format, secondTwinNumber)
         tv_twin_cards_description_1.text = text
 
         setOnClickListeners()
