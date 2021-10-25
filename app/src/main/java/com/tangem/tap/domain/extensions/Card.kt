@@ -1,49 +1,71 @@
 package com.tangem.tap.domain.extensions
 
-import com.tangem.FirmwareConstraints
-import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.Token
-import com.tangem.commands.common.card.Card
-import com.tangem.commands.common.card.CardStatus
-import com.tangem.commands.wallet.CardWallet
-import com.tangem.commands.wallet.WalletStatus
-import com.tangem.common.TangemSdkConstants
-import com.tangem.tap.domain.TapWorkarounds.noteCurrency
-
-fun Card.getToken(): Token? {
-    val symbol = cardData?.tokenSymbol ?: return null
-    val contractAddress = cardData?.tokenContractAddress ?: return null
-    val decimals = cardData?.tokenDecimal ?: return null
-    if (symbol.isBlank() || contractAddress.isBlank()) return null
-    return Token(symbol, contractAddress, decimals)
-}
-
-fun Card.getBlockchain(): Blockchain? {
-    if (noteCurrency != null) return noteCurrency
-    val blockchainName: String = cardData?.blockchainName ?: return null
-    return Blockchain.fromId(blockchainName)
-}
+import com.tangem.common.card.Card
+import com.tangem.common.card.CardWallet
+import com.tangem.common.extensions.toHexString
+import com.tangem.common.services.Result
+import com.tangem.operations.attestation.CardVerifyAndGetInfo
+import com.tangem.operations.attestation.OnlineCardVerifier
+import com.tangem.tap.domain.twins.TwinCardNumber
+import com.tangem.tap.domain.twins.getTwinCardNumber
+import com.tangem.tap.features.wallet.redux.Artwork
 
 fun Card.getSingleWallet(): CardWallet? {
-    return wallet(TangemSdkConstants.getDefaultWalletIndex())
+    return wallets.firstOrNull()
 }
 
-fun Card.getStatus(): CardStatus {
-    if (firmwareVersion < FirmwareConstraints.AvailabilityVersions.walletData) return status!!
+fun Card.hasWallets(): Boolean = wallets.isNotEmpty()
 
-    return if (wallets.any { it.status == WalletStatus.Loaded }) {
-        CardStatus.Loaded
-    } else {
-        CardStatus.Empty
-    }
-}
+fun Card.hasNoWallets(): Boolean = wallets.isEmpty()
+
+fun Card.hasSingleWallet(): Boolean = wallets.size == 1
 
 fun Card.hasSignedHashes(): Boolean {
-    return wallets.any { it.status == WalletStatus.Loaded && it.signedHashes ?: 0 > 0 }
+    return wallets.any { it.totalSignedHashes ?: 0 > 0 }
 }
 
 fun Card.signedHashesCount(): Int {
-    return wallets.map { it.signedHashes ?: 0 }.sum()
+    return wallets.map { it.totalSignedHashes ?: 0 }.sum()
+}
+
+suspend fun Card.getOrLoadCardArtworkUrl(cardInfo: Result<CardVerifyAndGetInfo.Response.Item>? = null): String {
+    fun ifAnyError(): String {
+        return when {
+            cardId.startsWith(Artwork.SERGIO_CARD_ID) -> Artwork.SERGIO_CARD_URL
+            cardId.startsWith(Artwork.MARTA_CARD_ID) -> Artwork.MARTA_CARD_URL
+            else -> {
+                when (getTwinCardNumber()) {
+                    TwinCardNumber.First -> Artwork.TWIN_CARD_1
+                    TwinCardNumber.Second -> Artwork.TWIN_CARD_2
+                    else -> Artwork.DEFAULT_IMG_URL
+                }
+            }
+        }
+    }
+
+    val cardInfoResult = cardInfo ?: OnlineCardVerifier().getCardInfo(cardId, cardPublicKey)
+    return when (cardInfoResult) {
+        is Result.Success -> {
+            val artworkId = cardInfoResult.data.artwork?.id
+            if (artworkId == null || artworkId.isEmpty()) {
+                ifAnyError()
+            } else {
+                OnlineCardVerifier.getUrlForArtwork(cardId, cardPublicKey.toHexString(), artworkId)
+            }
+        }
+        is Result.Failure -> ifAnyError()
+    }
+}
+
+fun Card.getArtworkUrl(artworkId: String?): String? {
+    return when {
+        artworkId != null -> {
+            OnlineCardVerifier.getUrlForArtwork(cardId, cardPublicKey.toHexString(), artworkId)
+        }
+        cardId.startsWith(Artwork.SERGIO_CARD_ID) -> Artwork.SERGIO_CARD_URL
+        cardId.startsWith(Artwork.MARTA_CARD_ID) -> Artwork.MARTA_CARD_URL
+        else -> null
+    }
 }
 
 val Card.remainingSignatures: Int?
