@@ -7,11 +7,11 @@ import com.tangem.tap.domain.TapWorkarounds.isStart2Coin
 import com.tangem.tap.domain.extensions.isWalletDataSupported
 import com.tangem.tap.domain.extensions.signedHashesCount
 import com.tangem.tap.domain.extensions.toSendableAmounts
-import com.tangem.tap.domain.twins.TwinsHelper
-import com.tangem.tap.domain.twins.isTwinCard
+import com.tangem.tap.domain.twins.getTwinCardNumber
+import com.tangem.tap.domain.twins.isTangemTwin
 import com.tangem.tap.features.details.redux.twins.CreateTwinWalletReducer
 import com.tangem.tap.features.details.redux.twins.CreateTwinWalletState
-import com.tangem.tap.features.wallet.models.toPendingTransactions
+import com.tangem.tap.features.wallet.models.hasPendingTransactions
 import org.rekotlin.Action
 import java.util.*
 
@@ -46,10 +46,10 @@ private fun internalReduce(action: Action, state: AppState): DetailsState {
 }
 
 private fun handlePrepareScreen(action: DetailsAction.PrepareScreen, state: DetailsState): DetailsState {
-    val twinsState = if (action.card.isTwinCard()) {
+    val twinsState = if (action.card.isTangemTwin()) {
         CreateTwinWalletState(
-                scanResponse = action.scanNoteResponse,
-                twinCardNumber = TwinsHelper.getTwinCardNumber(action.card.cardId),
+                scanResponse = action.scanResponse,
+                twinCardNumber = action.card.getTwinCardNumber(),
                 createTwinWallet = null,
                 showAlert = false,
                 allowRecreatingWallet = action.isCreatingTwinWalletAllowed
@@ -72,12 +72,10 @@ private fun handlePrepareScreen(action: DetailsAction.PrepareScreen, state: Deta
 private fun handleEraseWallet(action: DetailsAction.EraseWallet, state: DetailsState): DetailsState {
     return when (action) {
         DetailsAction.EraseWallet.Check -> {
-            val notAllowedByCard =
-                state.card?.settings?.isPermanentWallet == true
-                        || state.card?.isWalletDataSupported == true
+            val notAllowedByAnyWallet = state.card?.wallets?.any { it.settings.isPermanent } ?: false
+            val notAllowedByCard = notAllowedByAnyWallet || state.card?.isWalletDataSupported == true
             val notEmpty = state.wallets.any {
-                !it.recentTransactions.toPendingTransactions(it.address).isNullOrEmpty()
-                        || it.amounts.toSendableAmounts().isNotEmpty()
+                it.hasPendingTransactions() || it.amounts.toSendableAmounts().isNotEmpty()
             }
             val eraseWalletState = when {
                 notAllowedByCard -> EraseWalletState.NotAllowedByCard
@@ -191,10 +189,11 @@ private fun handleSecurityAction(
 private fun prepareAllowedSecurityOptions(
     card: Card?, currentSecurityOption: SecurityOption?
 ): EnumSet<SecurityOption> {
-    val prohibitDefaultPin = card?.settings?.isRemovingAccessCodeAllowed != true
+    val prohibitDefaultPin = card?.settings?.isResettingUserCodesAllowed != true
+
     val allowedSecurityOptions = EnumSet.noneOf(SecurityOption::class.java)
 
-    if (card?.isTwinCard() == true) {
+    if (card?.isTangemTwin() == true) {
         allowedSecurityOptions.add(SecurityOption.PassCode)
     }
     if ((currentSecurityOption == SecurityOption.LongTap) || !prohibitDefaultPin) {
