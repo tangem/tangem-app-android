@@ -5,8 +5,10 @@ import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.blockchain.extensions.isAboveZero
 import com.tangem.tap.common.entities.Button
+import com.tangem.tap.common.extensions.toQrCode
+import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
-import com.tangem.tap.common.redux.global.StateDialog
+import com.tangem.tap.common.toggleWidget.WidgetState
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.extensions.toSendableAmounts
 import com.tangem.tap.domain.topup.TradeCryptoHelper
@@ -141,12 +143,11 @@ sealed class WalletDialog: StateDialog {
     ) : WalletDialog()
 
     data class SelectAmountToSendDialog(val amounts: List<Amount>?) : WalletDialog()
-    object ScanFailsDialog : WalletDialog()
     object SignedHashesMultiWalletDialog : WalletDialog()
     object ChooseTradeActionDialog : WalletDialog()
 }
 
-enum class ProgressState { Loading, Done, Error }
+enum class ProgressState: WidgetState { Loading, Done, Error }
 
 enum class ErrorType { NoInternetConnection }
 
@@ -165,8 +166,9 @@ data class AddressData(
         val type: AddressType,
         val shareUrl: String,
         val exploreUrl: String,
-        val qrCode: Bitmap? = null
-)
+) {
+    val qrCode: Bitmap by lazy { shareUrl.toQrCode() }
+}
 
 data class Artwork(
         val artworkId: String,
@@ -180,6 +182,8 @@ data class Artwork(
         const val MARTA_CARD_ID = "BC02"
         const val TWIN_CARD_1 = "https://app.tangem.com/cards/card_tg085.png"
         const val TWIN_CARD_2 = "https://app.tangem.com/cards/card_tg086.png"
+
+        const val TEMP_CARDANO = "https://verify.tangem.com/card/artwork?artworkId=card_ru039&CID=CB19000000040976&publicKey=0416E29423A6CC77CD07CBA52873E8F6F894B1AFB18EB3688ACC2C8D8E5AC84B80B0BA1B17B85E578E47044CE96BCFF3FB4499FA4941CAD3C1EF300A492B5B9659"
     }
 }
 
