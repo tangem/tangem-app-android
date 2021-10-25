@@ -12,7 +12,7 @@ import androidx.transition.TransitionInflater
 import com.squareup.picasso.Picasso
 import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.extensions.*
-import com.tangem.tap.common.redux.global.StateDialog
+import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.redux.*
@@ -86,11 +86,9 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
 
         btn_share.setOnClickListener { store.dispatch(WalletAction.ShowDialog.QrCode) }
 
-        btn_top_up.setOnClickListener {
-            store.dispatch(
-                    WalletAction.TopUpAction.TopUp(requireContext(), R.color.backgroundLightGray)
-            )
-        }
+        btn_top_up.setOnClickListener { store.dispatch(WalletAction.TradeCryptoAction.Buy) }
+
+        btn_sell.setOnClickListener { store.dispatch(WalletAction.TradeCryptoAction.Sell) }
     }
 
     override fun newState(state: WalletState) {
@@ -99,6 +97,14 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
         val selectedWallet = state.getSelectedWalletData() ?: return
 
         tv_currency_title.text = selectedWallet.currencyData.currency
+        val currency = selectedWallet.currency
+         if (currency is Currency.Token) {
+             tv_currency_subtitle.text = currency.blockchain.tokenDisplayName()
+             tv_currency_subtitle.show()
+        } else {
+             tv_currency_subtitle.hide()
+         }
+
 
         showPendingTransactionsIfPresent(selectedWallet.pendingTransactions)
         setupAddressCard(selectedWallet)
@@ -123,8 +129,9 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
         srl_wallet_details.setOnRefreshListener {
             if (selectedWallet.currencyData.status != BalanceStatus.Loading) {
                 store.dispatch(WalletAction.LoadWallet(
-                        selectedWallet.topUpState.allowed,
-                        selectedWallet.currency?.blockchain
+                        allowToBuy = selectedWallet.tradeCryptoState.buyingAllowed,
+                        allowToSell = selectedWallet.tradeCryptoState.sellingAllowed,
+                        blockchain = selectedWallet.currency?.blockchain
                 ))
             }
         }
@@ -132,6 +139,9 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
         if (selectedWallet.currencyData.status != BalanceStatus.Loading) {
             srl_wallet_details.isRefreshing = false
         }
+
+        btn_top_up.isEnabled = selectedWallet.tradeCryptoState.buyingAllowed
+        btn_sell.show(selectedWallet.tradeCryptoState.sellingAllowed)
     }
 
     private fun handleCurrencyIcon(wallet: WalletData) {
