@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/onboarding_main_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:visibility="visible">
+
+    <include
+        layout="@layout/view_onboarding_progress"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="@dimen/onboarding_progress_margin_top"
+        android:layout_marginEnd="32dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/imv_card_background"
+        android:layout_width="236dp"
+        android:layout_height="236dp"
+        android:adjustViewBounds="true"
+        android:background="@drawable/shape_circle"
+        android:backgroundTint="@color/lightGray0"
+        android:elevation="0dp"
+        android:scaleType="fitCenter"
+        app:layout_constraintBottom_toBottomOf="@+id/imv_front_card"
+        app:layout_constraintEnd_toEndOf="@+id/imv_front_card"
+        app:layout_constraintStart_toStartOf="@+id/imv_front_card"
+        app:layout_constraintTop_toTopOf="@+id/imv_front_card" />
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/imv_front_card"
+        android:layout_width="296dp"
+        android:layout_height="186dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="@dimen/onboarding_card_margin_top"
+        android:layout_marginEnd="32dp"
+        android:src="@drawable/ic_home_front_card"
+        android:transitionName="imv_front_card"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <include
+        android:id="@+id/onboarding_tv_balance"
+        layout="@layout/view_onboarding_tv_balance"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="32dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/imv_card_background"
+        app:layout_constraintEnd_toEndOf="@+id/imv_card_background"
+        app:layout_constraintStart_toStartOf="@+id/imv_card_background"
+        app:layout_constraintTop_toTopOf="@+id/imv_card_background" />
+
+    <include
+        android:id="@+id/btn_refresh_balance"
+        layout="@layout/view_onboarding_refresh_balance"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:elevation="1dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="@+id/imv_card_background"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/imv_card_background" />
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/imv_activation_success"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_activation_success"
+        android:visibility="invisible"
+        app:layout_constraintBottom_toBottomOf="@+id/imv_card_background"
+        app:layout_constraintEnd_toEndOf="@+id/imv_card_background"
+        app:layout_constraintStart_toStartOf="@+id/imv_card_background"
+        app:layout_constraintTop_toBottomOf="@+id/imv_card_background" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

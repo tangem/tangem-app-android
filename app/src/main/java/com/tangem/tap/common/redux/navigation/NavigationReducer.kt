@@ -27,5 +27,6 @@ private fun internalReduce(action: Action, state: AppState): NavigationState {
         }
         is NavigationAction.ActivityCreated -> navState.copy(activity = navigationAction.activity)
         is NavigationAction.ActivityDestroyed -> navState.copy(activity = null)
+        else -> navState
     }
 }
