@@ -6,7 +6,7 @@ import android.view.ViewGroup
 import android.widget.Button
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.tangem.tap.common.extensions.*
-import com.tangem.tap.common.redux.global.StateDialog
+import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.twins.TwinCardNumber
@@ -107,7 +107,7 @@ class SingleWalletView : WalletView {
             tv_twin_card_number.hide()
         }
         if (twinCardsState?.showTwinOnboarding == true) {
-            store.dispatch(NavigationAction.NavigateTo(AppScreen.TwinsOnboarding))
+            store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingTwins))
         }
 
 
@@ -247,9 +247,6 @@ class SingleWalletView : WalletView {
                 if (dialog == null) dialog = AmountToSendDialog(context).apply {
                     this.show(walletDialog.amounts)
                 }
-            }
-            is WalletDialog.ScanFailsDialog -> {
-                if (dialog == null) dialog = ScanFailsDialog.create(context).apply { show() }
             }
             is WalletDialog.SignedHashesMultiWalletDialog -> {
                 if (dialog == null) {
