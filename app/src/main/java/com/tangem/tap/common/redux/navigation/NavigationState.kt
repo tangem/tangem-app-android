@@ -5,12 +5,19 @@ import org.rekotlin.StateType
 import java.lang.ref.WeakReference
 
 data class NavigationState(
-    val backStack: List<AppScreen> = listOf(AppScreen.Home),
-    val activity: WeakReference<FragmentActivity>? = null
+        val backStack: List<AppScreen> = listOf(AppScreen.Home),
+        val activity: WeakReference<FragmentActivity>? = null
 ) : StateType
 
 enum class AppScreen {
-    Home, Wallet, WalletDetails, Send, Details, DetailsConfirm, DetailsSecurity, Disclaimer,
-    CreateTwinWalletWarning, CreateTwinWallet, TwinsOnboarding, AddTokens, WalletConnectSessions,
+    Home,
+    Disclaimer,
+    OnboardingNote, OnboardingWallet, OnboardingTwins, OnboardingOther,
+    Wallet, WalletDetails,
+    Send,
+    Details, DetailsConfirm, DetailsSecurity,
+    CreateTwinWalletWarning, CreateTwinWallet,
+    AddTokens,
+    WalletConnectSessions,
     QrScan
 }

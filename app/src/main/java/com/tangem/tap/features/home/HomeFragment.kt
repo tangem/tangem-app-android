@@ -1,26 +1,62 @@
 package com.tangem.tap.features.home
 
-import android.app.Dialog
 import android.os.Bundle
 import android.view.View
-import androidx.fragment.app.Fragment
 import androidx.transition.TransitionInflater
-import com.tangem.tap.common.redux.global.StateDialog
+import com.tangem.tap.common.extensions.hide
+import com.tangem.tap.common.redux.navigation.FragmentShareTransition
+import com.tangem.tap.common.redux.navigation.ShareElement
+import com.tangem.tap.common.toggleWidget.IndeterminateProgressButtonWidget
+import com.tangem.tap.common.toggleWidget.ViewStateWidget
+import com.tangem.tap.common.transitions.FrontCardEnterTransition
+import com.tangem.tap.common.transitions.FrontCardExitTransition
 import com.tangem.tap.features.home.redux.HomeAction
-import com.tangem.tap.features.home.redux.HomeDialog
 import com.tangem.tap.features.home.redux.HomeState
-import com.tangem.tap.features.wallet.ui.dialogs.ScanFailsDialog
+import com.tangem.tap.features.onboarding.products.BaseOnboardingFragment
 import com.tangem.tap.store
 import com.tangem.wallet.R
-import kotlinx.android.synthetic.main.fragment_home.*
-import org.rekotlin.StoreSubscriber
+import kotlinx.android.synthetic.main.fragment_onboarding_main.*
+import kotlinx.android.synthetic.main.layout_onboarding_bottom_action_views.*
+import kotlinx.android.synthetic.main.layout_onboarding_home.*
+import java.lang.ref.WeakReference
 
-class HomeFragment : Fragment(R.layout.fragment_home), StoreSubscriber<HomeState> {
+class HomeFragment : BaseOnboardingFragment<HomeState>() {
 
-    private var dialog: Dialog? = null
+    private lateinit var btnScanCard: ViewStateWidget
 
-    override fun onStart() {
-        super.onStart()
+    override fun getOnboardingTopContainerId(): Int = R.layout.layout_onboarding_home
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        val inflater = TransitionInflater.from(requireContext())
+        exitTransition = inflater.inflateTransition(R.transition.fade)
+        store.dispatch(HomeAction.Init)
+    }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        toolbar.hide()
+        val shareTransition = FragmentShareTransition(
+            listOf(ShareElement(WeakReference(imv_front_card), imv_front_card.transitionName)),
+            FrontCardEnterTransition(),
+            FrontCardExitTransition()
+        )
+
+        store.dispatch(HomeAction.SetFragmentShareTransition(shareTransition))
+
+        tv_header.setText(R.string.home_welcome_header)
+        tv_body.setText(R.string.home_welcome_body)
+
+        btn_main_action.setText(R.string.home_button_scan)
+        btn_main_action.setOnClickListener { store.dispatch(HomeAction.ReadCard) }
+        btn_alternative_action.setText(R.string.home_button_get_new_card)
+        btn_alternative_action.setOnClickListener { store.dispatch(HomeAction.GoToShop) }
+
+        btnScanCard = IndeterminateProgressButtonWidget(btn_main_action, progress)
+    }
+
+    override fun subscribeToStore() {
         store.subscribe(this) { state ->
             state.skipRepeats { oldState, newState ->
                 oldState.homeState == newState.homeState
@@ -28,49 +64,15 @@ class HomeFragment : Fragment(R.layout.fragment_home), StoreSubscriber<HomeState
         }
     }
 
-    override fun onStop() {
-        super.onStop()
-        store.unsubscribe(this)
-    }
-
-
     override fun newState(state: HomeState) {
         if (activity == null) return
-        if (state.firstLaunch) {
-            tv_home_description.text = getText(R.string.home_welcome)
-            btn_shop.text = getText(R.string.common_no)
-            btn_yes.text = getText(R.string.home_button_yes)
-        } else {
-            tv_home_description.text = getText(R.string.home_welcome_back)
-            btn_shop.text = getText(R.string.home_button_shop)
-            btn_yes.text = getText(R.string.home_button_scan)
-        }
-        handleDialog(state.dialog)
+
+        btnScanCard.changeState(state.btnScanState.progressState)
+        btnScanCard.mainView.isEnabled = state.btnScanState.enabled
     }
 
-    private fun handleDialog(stateDialog: StateDialog?) {
-        when (stateDialog) {
-            is HomeDialog.ScanFailsDialog -> {
-                if (dialog == null) dialog = ScanFailsDialog.create(requireContext()).apply { show() }
-            }
-            else -> {
-                dialog?.dismiss()
-                dialog = null
-            }
-        }
-    }
-
-
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-
-        btn_yes?.setOnClickListener { store.dispatch(HomeAction.ReadCard) }
-        btn_shop?.setOnClickListener { store.dispatch(HomeAction.GoToShop(requireContext())) }
-    }
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        val inflater = TransitionInflater.from(requireContext())
-        exitTransition = inflater.inflateTransition(R.transition.fade)
+    override fun onDestroyView() {
+        store.dispatch(HomeAction.SetFragmentShareTransition(null))
+        super.onDestroyView()
     }
 }

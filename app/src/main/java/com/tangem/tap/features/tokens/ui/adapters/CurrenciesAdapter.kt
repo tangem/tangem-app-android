@@ -10,8 +10,10 @@ import androidx.recyclerview.widget.RecyclerView
 import com.squareup.picasso.Picasso
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
-import com.tangem.tap.common.extensions.*
-import com.tangem.tap.common.redux.global.CryptoCurrencyName
+import com.tangem.tap.common.extensions.getString
+import com.tangem.tap.common.extensions.hide
+import com.tangem.tap.common.extensions.loadCurrenciesIcon
+import com.tangem.tap.common.extensions.show
 import com.tangem.tap.domain.tokens.CardCurrencies
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.store
@@ -84,17 +86,18 @@ class CurrenciesAdapter : ListAdapter<CurrencyListItem, RecyclerView.ViewHolder>
                     when (element) {
                         is CurrencyListItem.BlockchainListItem -> {
                             element.blockchain.currency.toLowerCase(Locale.US)
-                                .contains(queryNormalized)
-                                    || element.blockchain.fullName.toLowerCase(Locale.US)
-                                .contains(queryNormalized)
+                                .contains(queryNormalized) ||
+                                    element.blockchain.fullName.toLowerCase(Locale.US)
+                                        .contains(queryNormalized)
 
                         }
                         is CurrencyListItem.TokenListItem -> {
-                            element.token.name.toLowerCase(Locale.US).contains(queryNormalized)
-                                    || element.token.symbol.toLowerCase(Locale.US)
-                                .contains(queryNormalized)
+                            element.token.name.toLowerCase(Locale.US)
+                                .contains(queryNormalized) ||
+                                    element.token.symbol.toLowerCase(Locale.US)
+                                        .contains(queryNormalized)
                         }
-                        else -> false
+                        is CurrencyListItem.TitleListItem -> true
                     }
                 })
         } else {
@@ -143,7 +146,7 @@ class CurrenciesAdapter : ListAdapter<CurrencyListItem, RecyclerView.ViewHolder>
                     Picasso.get().loadCurrenciesIcon(
                         imageView = view.iv_currency,
                         textView = view.tv_token_letter,
-                        token = token, blockchain = Blockchain.Ethereum
+                        token = token, blockchain = token.blockchain
                     )
                     view.btn_add_token.setOnClickListener {
                         store.dispatch(WalletAction.MultiWallet.AddToken(token))
@@ -175,11 +178,21 @@ sealed class CurrencyListItem {
             tokens: List<Token>
         ): List<CurrencyListItem> {
             val blockchainsTitle = R.string.add_tokens_subtitle_blockchains
-            val tokensTitle = R.string.add_tokens_subtitle_tokens
+            val ethereumTokensTitle = R.string.add_tokens_subtitle_ethereum_tokens
+            val bscTokensTitle = R.string.add_tokens_subtitle_bsc_tokens
+            val binanceTokensTitle = R.string.add_tokens_subtitle_binance_tokens
+
+            val ethereumTokens = tokens.filter { it.blockchain == Blockchain.Ethereum }
+            val bscTokens = tokens.filter { it.blockchain == Blockchain.BSC }
+            val binanceTokens = tokens.filter { it.blockchain == Blockchain.Binance }
             return listOf(TitleListItem(blockchainsTitle)) +
                     blockchains.map { BlockchainListItem(it) } +
-                    listOf(TitleListItem(tokensTitle)) +
-                    tokens.map { TokenListItem(it) }
+                    listOf(TitleListItem(ethereumTokensTitle)) +
+                    ethereumTokens.map { TokenListItem(it) } +
+                    listOf(TitleListItem(bscTokensTitle)) +
+                    bscTokens.map { TokenListItem(it) } +
+                    listOf(TitleListItem(binanceTokensTitle)) +
+                    binanceTokens.map { TokenListItem(it) }
         }
     }
 }
