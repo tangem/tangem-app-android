@@ -20,7 +20,7 @@
         android:id="@+id/v_token_background"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:background="@color/backgroundGray"
+        android:background="@color/backgroundLightGray"
         app:layout_constraintTop_toBottomOf="@id/tv_token_title"
         app:layout_constraintBottom_toBottomOf="@id/tv_token_fiat_amount"/>
 
