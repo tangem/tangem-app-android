@@ -2,7 +2,7 @@ package com.tangem.tap.features.details.redux.walletconnect
 
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.WalletManager
-import com.tangem.tap.common.redux.global.StateDialog
+import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.PersonalSignDialogData
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.TransactionRequestDialogData
 import com.trustwallet.walletconnect.models.WCPeerMeta
