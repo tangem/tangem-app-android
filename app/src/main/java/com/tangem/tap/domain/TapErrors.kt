@@ -16,12 +16,13 @@ interface MultiMessageError : TapErrors {
 }
 
 sealed class TapError(
-        @StringRes val localizedMessage: Int,
-        override val args: List<Any>? = null
+    @StringRes val messageResource: Int,
+    override val args: List<Any>? = null
 ) : Throwable(), TapErrors, ArgError {
 
     object UnknownError : TapError(R.string.send_error_unknown)
-    data class CustomError(val customMessage: String) : TapError(R.string.common_custom_string, listOf(customMessage))
+    open class CustomError(val customMessage: String) : TapError(R.string.common_custom_string, listOf(customMessage))
+    object ScanCardError : TapError(R.string.scan_card_error)
     object PayIdAlreadyCreated : TapError(R.string.wallet_create_payid_error_already_created)
     object PayIdCreatingError : TapError(R.string.wallet_create_payid_error_message)
     object PayIdEmptyField : TapError(R.string.wallet_create_payid_empty)
@@ -38,8 +39,13 @@ sealed class TapError(
     object DustChange : TapError(R.string.send_error_dust_change)
     data class CreateAccountUnderfunded(override val args: List<Any>) : TapError(R.string.send_error_no_target_account)
 
-    sealed class XmlError  {
-        object AssetAccountNotCreated: TapError(R.string.send_error_no_account_xlm)
+    sealed class XmlError {
+        object AssetAccountNotCreated : TapError(R.string.send_error_no_account_xlm)
+    }
+
+    sealed class WalletManagerUpdate {
+        class NoAccountError(amountToCreateAccount: String): CustomError(amountToCreateAccount)
+        class InternalError(message: String): CustomError(message)
     }
 
     data class ValidateTransactionErrors(
@@ -60,7 +66,7 @@ fun TapErrors.assembleErrors(): MutableList<Pair<Int, List<Any>?>> {
     val idList = mutableListOf<Pair<Int, List<Any>?>>()
     when (this) {
         is MultiMessageError -> this.errorList.forEach { idList.addAll(it.assembleErrors()) }
-        is TapError -> idList.add(Pair(this.localizedMessage, this.args))
+        is TapError -> idList.add(Pair(this.messageResource, this.args))
     }
     return idList
 }
