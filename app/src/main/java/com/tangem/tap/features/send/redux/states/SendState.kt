@@ -5,8 +5,9 @@ import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.extensions.isZero
 import com.tangem.tap.common.CurrencyConverter
+import com.tangem.tap.common.entities.IndeterminateProgressButton
 import com.tangem.tap.common.entities.TapCurrency
-import com.tangem.tap.common.redux.global.StateDialog
+import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.text.DecimalDigitsInputFilter
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
@@ -39,7 +40,7 @@ data class SendState(
         val feeState: FeeState = FeeState(),
         val receiptState: ReceiptState = ReceiptState(),
         val sendWarningsList: List<WarningMessage> = listOf(),
-        val sendButtonState: SendButtonState = SendButtonState.DISABLED,
+        val sendButtonState: IndeterminateProgressButton = IndeterminateProgressButton(ButtonState.DISABLED),
         val dialog: StateDialog? = null,
         val externalTransactionData: ExternalTransactionData? = null
 ) : SendScreenState {
@@ -87,7 +88,7 @@ data class SendState(
         }
     }
 
-    fun getButtonState(): SendButtonState = if (isReadyToSend()) SendButtonState.ENABLED else SendButtonState.DISABLED
+    fun getButtonState(): ButtonState = if (isReadyToSend()) ButtonState.ENABLED else ButtonState.DISABLED
 
     fun getTotalAmountToSend(value: BigDecimal = amountState.amountToSendCrypto): BigDecimal {
         val needToExtractFee = amountState.isCoinAmount() && feeState.feeIsIncluded
@@ -117,7 +118,7 @@ data class SendState(
     }
 }
 
-enum class SendButtonState {
+enum class ButtonState {
     ENABLED, DISABLED, PROGRESS
 }
 

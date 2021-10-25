@@ -58,6 +58,9 @@ class DisclaimerFragment : Fragment(R.layout.fragment_disclaimer),
     override fun newState(state: DisclaimerState) {
         if (activity == null) return
 
-        if (state.accepted) btn_accept.hide()
+        if (state.accepted) {
+            half_transparent_overlay.hide()
+            btn_accept.hide()
+        }
     }
 }
