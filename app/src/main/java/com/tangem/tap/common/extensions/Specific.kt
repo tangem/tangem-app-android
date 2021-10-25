@@ -37,7 +37,7 @@ fun BigDecimal.toFiatString(rateValue: BigDecimal, fiatCurrencyName: FiatCurrenc
 
 fun BigDecimal.toFiatValue(rateValue: BigDecimal): BigDecimal {
     val fiatValue = rateValue.multiply(this)
-    return fiatValue.setScale(2, RoundingMode.DOWN)
+    return fiatValue.setScale(2, RoundingMode.HALF_UP)
 }
 
 fun BigDecimal.toFormattedFiatValue(fiatCurrencyName: FiatCurrencyName): String {
