@@ -1,5 +1,9 @@
 <resources>
-    <string name="wallet_button_topup" translatable="false">Top Up</string>
+    <string name="scan_card_error" translatable="false">Scan card failed. Try again</string>
+
+    <string name="wallet_button_buy" translatable="false">Buy</string>
+    <string name="wallet_button_sell" translatable="false">Sell</string>
+    <string name="wallet_button_trade" translatable="false">Trade</string>
     <string name="wallet_address_chip_default" translatable="false">Default</string>
     <string name="wallet_address_chip_compatibility" translatable="false">Compatibility</string>
     <string name="wallet_address_chip_legacy" translatable="false">Legacy</string>
@@ -93,7 +97,9 @@ this wallet.
     <string name="details_row_title_manage_tokens" translatable="false">Manage tokens</string>
 
     <string name="add_tokens_subtitle_blockchains" translatable="false">Blockchains</string>
-    <string name="add_tokens_subtitle_tokens" translatable="false">Ethereum Tokens</string>
+    <string name="add_tokens_subtitle_ethereum_tokens" translatable="false">Ethereum tokens</string>
+    <string name="add_tokens_subtitle_bsc_tokens" translatable="false">Binance Smart Chain tokens</string>
+    <string name="add_tokens_subtitle_binance_tokens" translatable="false">Binance Chain tokens</string>
     <string name="wallet_address_button_copy" translatable="false">Copy</string>
     <string name="wallet_address_button_share" translatable="false">Share</string>
     <string name="wallet_button_add_tokens" translatable="false">+ Add tokens</string>
@@ -156,6 +162,37 @@ this wallet.
     <string name="wallet_connect_scanner_error_no_ethereum_wallet" translatable="false">This card can’t be used to establish WalletConnect session</string>
     <string name="wallet_connect_could_not_complete" translatable="false">The operation couldn\'t be completed</string>
     <string name="wallet_connect_same_wcuri" translatable="false">The operation couldn\'t be completed. \n\nYou have already established a WalletConnect session with this parameters.</string>
+    <string name="wallet_connect_error_timeout" translatable="false">Failed to establish WalletConnect session: timeout error. Please, try again later.</string>
+
+    <string name="warning_testnet_card_message" translatable="false">This is a Testnet card. Don\'t accept it as a payment. This card must only be used for testing and development purposes.</string>
+
+
+    <string name="wallet_dialog_choose_trade_action" translatable="false">Do you want to buy or sell crypto?</string>
 
     <string name="error_update_app" translatable="false">Oops, the current version of the application is not ready to work with this card, please check for updates.</string>
+
+    <!--  Onboarding  -->
+    <string name="home_welcome_header" translatable="false">Welcome to Tangem</string>
+    <string name="home_welcome_body" translatable="false">The safest way to buy, use and\n store cryptocurrency</string>
+    <string name="home_button_get_new_card" translatable="false">Get a new card</string>
+
+    <string name="onboarding_title" translatable="false">Activating card</string>
+    <string name="onboarding_button_what_does_it_mean" translatable="false">What does it mean?</string>
+    <string name="onboarding_create_wallet_header" translatable="false">Create a wallet</string>
+    <string name="onboarding_create_wallet_body" translatable="false">Let’s generate all the keys on your card and create a secure wallet</string>
+    <string name="onboarding_create_wallet_button_create_wallet" translatable="false">Create wallet</string>
+
+    <string name="onboarding_top_up_header" translatable="false">Top up your wallet</string>
+    <string name="onboarding_top_up_body" translatable="false">To get started, simply top up the card with any amount</string>
+    <string name="onboarding_top_up_button_but_crypto" translatable="false">Buy crypto</string>
+    <string name="onboarding_top_up_button_show_wallet_address" translatable="false">Show the wallet’s address</string>
+    <string name="onboarding_dialog_wallet_address" translatable="false">Scan the address to top up your wallet</string>
+
+    <string name="onboarding_done_header" translatable="false">Done!</string>
+    <string name="onboarding_done_body" translatable="false">Your crypto card is activated and ready to be used</string>
+    <string name="onboarding_done_button_continue" translatable="false">Continue</string>
+    <string name="onboarding_balance_title" translatable="false">Balance</string>
+
+    <string name="onboarding_error_create_primary_wallet" translatable="false">Internal error: can\'t create wallet manager</string>
+
 </resources>
