@@ -51,6 +51,7 @@
                 android:id="@+id/etAmountToSend"
                 android:layout_width="match_parent"
                 android:layout_height="82dp"
+                android:background="@color/backgroundLightGray"
                 android:fontFamily="sans-serif-light"
                 android:inputType="numberDecimal"
                 android:paddingStart="0dp"
