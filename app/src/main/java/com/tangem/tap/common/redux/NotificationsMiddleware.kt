@@ -9,6 +9,7 @@ import com.tangem.tap.domain.MultiMessageError
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.assembleErrors
 import com.tangem.tap.notificationsHandler
+import com.tangem.wallet.BuildConfig
 import org.rekotlin.Action
 import org.rekotlin.Middleware
 import java.lang.ref.WeakReference
@@ -63,23 +64,29 @@ fun getMessageString(context: Context, message: Int, args: List<Any>?): String {
 val notificationsMiddleware: Middleware<AppState> = { dispatch, state ->
     { next ->
         { action ->
-            when (action) {
-                is NotificationAction -> notificationsHandler?.showNotification(action.messageResource)
-                is ToastNotificationAction -> notificationsHandler?.showToastNotification(action.messageResource)
-                is ErrorAction -> {
-                    when (action.error) {
-                        is MultiMessageError -> {
-                            val multiError = action.error as MultiMessageError
-                            notificationsHandler?.showNotification(multiError.assembleErrors(), multiError.builder)
-                        }
-                        else -> {
-                            val args = (action.error as? ArgError)?.args ?: listOf()
-                            notificationsHandler?.showNotification(action.error.localizedMessage, args)
-                        }
-                    }
+            handleNotificationAction(action)
+            next(action)
+        }
+    }
+}
+
+private fun handleNotificationAction(action: Action) {
+    if (action is Debug && !BuildConfig.DEBUG) return
+
+    when (action) {
+        is NotificationAction -> notificationsHandler?.showNotification(action.messageResource)
+        is ToastNotificationAction -> notificationsHandler?.showToastNotification(action.messageResource)
+        is ErrorAction -> {
+            when (action.error) {
+                is MultiMessageError -> {
+                    val multiError = action.error as MultiMessageError
+                    notificationsHandler?.showNotification(multiError.assembleErrors(), multiError.builder)
+                }
+                else -> {
+                    val args = (action.error as? ArgError)?.args ?: listOf()
+                    notificationsHandler?.showNotification(action.error.messageResource, args)
                 }
             }
-            next(action)
         }
     }
 }
@@ -95,3 +102,9 @@ interface NotificationAction : Action {
 interface ErrorAction : Action {
     val error: TapError
 }
+
+// Processed only in the debug builds
+interface Debug
+interface DebugNotification : Debug, NotificationAction
+interface DebugToastNotification : Debug, ToastNotificationAction
+interface DebugErrorAction : Debug, ErrorAction

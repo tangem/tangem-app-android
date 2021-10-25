@@ -2,7 +2,9 @@ package com.tangem.tap.features.send.redux.reducers
 
 import com.tangem.blockchain.common.AmountType
 import com.tangem.tap.common.CurrencyConverter
+import com.tangem.tap.common.entities.IndeterminateProgressButton
 import com.tangem.tap.features.send.redux.*
+import com.tangem.tap.features.send.redux.states.ExternalTransactionData
 import com.tangem.tap.features.send.redux.states.IdStateHolder
 import com.tangem.tap.features.send.redux.states.SendState
 import org.rekotlin.Action
@@ -40,15 +42,37 @@ class SendScreenReducer {
 private class SendReducer : SendInternalReducer {
     override fun handle(action: SendScreenAction, sendState: SendState): SendState {
         val result = when (action) {
-            is SendAction.ChangeSendButtonState -> sendState.copy(sendButtonState = action.state)
+            is SendAction.ChangeSendButtonState -> {
+                sendState.copy(sendButtonState = IndeterminateProgressButton(action.state))
+            }
             is SendAction.Dialog.TezosWarningDialog -> sendState.copy(dialog = action)
             is SendAction.Dialog.SendTransactionFails -> sendState.copy(dialog = action)
             is SendAction.Dialog.Hide -> sendState.copy(dialog = null)
             is SendAction.Warnings.Set -> sendState.copy(sendWarningsList = action.warningList)
+            is SendAction.SendSpecificTransaction ->
+                handleSendSpecificTransactionAction(action, sendState)
             else -> return sendState
         }
 
         return updateLastState(result, result)
+    }
+
+    private fun handleSendSpecificTransactionAction(
+        action: SendAction.SendSpecificTransaction, state: SendState
+    ): SendState {
+        return state.copy(
+            externalTransactionData =
+            ExternalTransactionData(action.sendAmount, action.destinationAddress, action.transactionId),
+            feeState = state.feeState.copy(
+                includeFeeSwitcherIsEnabled = false
+            ),
+            amountState = state.amountState.copy(
+                inputIsEnabled = false
+            ),
+            addressPayIdState = state.addressPayIdState.copy(
+                inputIsEnabled = false
+            ),
+        )
     }
 }
 

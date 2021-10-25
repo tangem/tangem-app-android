@@ -13,8 +13,7 @@ import androidx.core.content.FileProvider
 import com.tangem.Log
 import com.tangem.TangemSdkLogger
 import com.tangem.blockchain.common.*
-import com.tangem.commands.common.card.Card
-import com.tangem.commands.wallet.WalletStatus
+import com.tangem.common.card.Card
 import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.domain.TapWorkarounds
 import timber.log.Timber
@@ -176,11 +175,10 @@ class AdditionalEmailInfo {
 
     fun setCardInfo(card: Card) {
         cardId = card.cardId
-        cardFirmwareVersion = card.firmwareVersion.version
-        cardIssuer = card.cardData?.issuerName ?: ""
+        cardFirmwareVersion = card.firmwareVersion.stringValue
+        cardIssuer = card.issuer.name
         signedHashesCount = card.wallets
-            .filter { it.status == WalletStatus.Loaded }
-            .joinToString(";") { "${it.curve?.curve} - ${it.signedHashes}" }
+            .joinToString(";") { "${it.curve?.curve} - ${it.totalSignedHashes}" }
     }
 
     fun setWalletsInfo(walletManagers: List<WalletManager>) {
