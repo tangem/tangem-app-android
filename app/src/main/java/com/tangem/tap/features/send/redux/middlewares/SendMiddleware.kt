@@ -21,9 +21,9 @@ import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.extensions.minimalAmount
 import com.tangem.tap.features.send.redux.*
 import com.tangem.tap.features.send.redux.FeeAction.RequestFee
+import com.tangem.tap.features.send.redux.states.ButtonState
 import com.tangem.tap.features.send.redux.states.ExternalTransactionData
 import com.tangem.tap.features.send.redux.states.MainCurrencyType
-import com.tangem.tap.features.send.redux.states.SendButtonState
 import com.tangem.tap.features.send.redux.states.TransactionExtrasState
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.scope
@@ -41,41 +41,43 @@ import java.util.*
 /**
 [REDACTED_AUTHOR]
  */
-val sendMiddleware: Middleware<AppState> = { dispatch, appState ->
-    { nextDispatch ->
-        { action ->
-            when (action) {
-                is AddressPayIdActionUi -> AddressPayIdMiddleware().handle(action, appState(), dispatch)
-                is AmountActionUi -> AmountMiddleware().handle(action, appState(), dispatch)
-                is RequestFee -> RequestFeeMiddleware().handle(appState(), dispatch)
-                is SendActionUi.SendAmountToRecipient ->
-                    verifyAndSendTransaction(action, appState(), dispatch)
-                is PrepareSendScreen -> setIfSendingToPayIdEnabled(appState(), dispatch)
-                is SendAction.Warnings.Update -> updateWarnings(dispatch)
-                is SendActionUi.CheckIfTransactionDataWasProvided -> {
-                    val transactionData = appState()?.sendState?.externalTransactionData
-                    if (transactionData != null) {
-                        store.dispatchOnMain(AddressPayIdVerifyAction.AddressVerification.SetWalletAddress(
-                            transactionData.destinationAddress, false
-                        ))
-                        store.dispatchOnMain(AmountActionUi.SetMainCurrency(MainCurrencyType.CRYPTO))
-                        store.dispatchOnMain(AmountActionUi.HandleUserInput(transactionData.amount))
-                        store.dispatchOnMain(AmountAction.SetAmount(transactionData.amount.toBigDecimal(),
-                            false))
+class SendMiddleware {
+    val sendMiddleware: Middleware<AppState> = { dispatch, appState ->
+        { nextDispatch ->
+            { action ->
+                when (action) {
+                    is AddressPayIdActionUi -> AddressPayIdMiddleware().handle(action, appState(), dispatch)
+                    is AmountActionUi -> AmountMiddleware().handle(action, appState(), dispatch)
+                    is RequestFee -> RequestFeeMiddleware().handle(appState(), dispatch)
+                    is SendActionUi.SendAmountToRecipient ->
+                        verifyAndSendTransaction(action, appState(), dispatch)
+                    is PrepareSendScreen -> setIfSendingToPayIdEnabled(appState(), dispatch)
+                    is SendAction.Warnings.Update -> updateWarnings(dispatch)
+                    is SendActionUi.CheckIfTransactionDataWasProvided -> {
+                        val transactionData = appState()?.sendState?.externalTransactionData
+                        if (transactionData != null) {
+                            store.dispatchOnMain(AddressPayIdVerifyAction.AddressVerification.SetWalletAddress(
+                                    transactionData.destinationAddress, false
+                            ))
+                            store.dispatchOnMain(AmountActionUi.SetMainCurrency(MainCurrencyType.CRYPTO))
+                            store.dispatchOnMain(AmountActionUi.HandleUserInput(transactionData.amount))
+                            store.dispatchOnMain(AmountAction.SetAmount(transactionData.amount.toBigDecimal(),
+                                    false))
+                        }
                     }
                 }
+                nextDispatch(action)
             }
-            nextDispatch(action)
         }
     }
-}
 
+}
 private fun verifyAndSendTransaction(
         action: SendActionUi.SendAmountToRecipient, appState: AppState?, dispatch: (Action) -> Unit,
 ) {
     val sendState = appState?.sendState ?: return
     val walletManager = sendState.walletManager ?: return
-    val card = appState.globalState.scanNoteResponse?.card ?: return
+    val card = appState.globalState.scanResponse?.card ?: return
     val destinationAddress = sendState.addressPayIdState.destinationWalletAddress ?: return
     val typedAmount = sendState.amountState.amountToExtract ?: return
     val feeAmount = sendState.feeState.currentFee ?: return
@@ -119,7 +121,7 @@ private fun sendTransaction(
         externalTransactionData: ExternalTransactionData?,
         dispatch: (Action) -> Unit,
 ) {
-    dispatch(SendAction.ChangeSendButtonState(SendButtonState.PROGRESS))
+    dispatch(SendAction.ChangeSendButtonState(ButtonState.PROGRESS))
     var txData = walletManager.createTransaction(amountToSend, feeAmount, destinationAddress)
 
     transactionExtras.xlmMemo?.memo?.let { txData = txData.copy(extras = StellarTransactionExtras(it)) }
@@ -234,7 +236,7 @@ private fun sendTransaction(
                     }
                 }
             }
-            dispatch(SendAction.ChangeSendButtonState(SendButtonState.ENABLED))
+            dispatch(SendAction.ChangeSendButtonState(ButtonState.ENABLED))
         }
     }
 }
