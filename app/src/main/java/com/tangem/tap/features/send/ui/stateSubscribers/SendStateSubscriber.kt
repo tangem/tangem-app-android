@@ -10,7 +10,6 @@ import androidx.core.text.bold
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.getMessageString
 import com.tangem.tap.common.text.DecimalDigitsInputFilter
-import com.tangem.tap.common.toggleWidget.ProgressState
 import com.tangem.tap.domain.MultiMessageError
 import com.tangem.tap.domain.assembleErrors
 import com.tangem.tap.features.send.BaseStoreFragment
@@ -116,20 +115,8 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
             }
         }
 
-        when (state.sendButtonState) {
-            SendButtonState.ENABLED -> {
-                fg.btnSend.isEnabled = true
-                sendFragment.sendBtn.changeState(ProgressState.None)
-            }
-            SendButtonState.DISABLED -> {
-                fg.btnSend.isEnabled = false
-                sendFragment.sendBtn.changeState(ProgressState.None)
-            }
-            SendButtonState.PROGRESS -> {
-                fg.btnSend.isEnabled = true
-                sendFragment.sendBtn.changeState(ProgressState.Progress())
-            }
-        }
+        sendFragment.sendBtn.changeState(state.sendButtonState.progressState)
+        sendFragment.sendBtn.mainView.isEnabled = state.sendButtonState.enabled
 
         val rv = fg.rv_warning_messages
         val adapter = rv.adapter as? WarningMessagesAdapter ?: return
@@ -156,6 +143,12 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
         val til = fg.tilAddressOrPayId
         val parsedError = parseError(til.context, state.error)
 
+        til.isEnabled = state.inputIsEnabled
+        fg.imvPaste.show(state.inputIsEnabled)
+        fg.imvQrCode.show(state.inputIsEnabled)
+        fg.flPaste.show(state.inputIsEnabled)
+        fg.flQrCode.show(state.inputIsEnabled)
+
         val hintResId = if (state.sendingToPayIdEnabled) {
             R.string.send_destination_hint_address_payid
         } else {
@@ -179,7 +172,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
                     val messageList = multiError.assembleErrors().map { getMessageString(context, it.first, it.second) }
                     multiError.builder(messageList)
                 }
-                else -> context.getString(state.error.localizedMessage)
+                else -> context.getString(state.error.messageResource)
             }
             fg.tilAmountToSend.enableError(true, message)
         } else {
@@ -198,6 +191,14 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
                 state.mainCurrency.currencySymbol,
                 state.viewBalanceValue)
         fg.tvBalance.update(balanceText)
+
+        fg.tilAmountToSend.isEnabled = state.inputIsEnabled
+
+        val imageRes = if (state.inputIsEnabled) R.drawable.ic_arrows_up_down else 0
+        fg.tvAmountCurrency.setCompoundDrawablesWithIntrinsicBounds(0, 0, imageRes, 0)
+        val textColor =  if (state.inputIsEnabled) R.color.blue else R.color.textGray
+        fg.tvAmountCurrency.setTextColor(fg.getColor(textColor))
+
     }
 
     private fun handleFeeState(fg: BaseStoreFragment, state: FeeState) {
