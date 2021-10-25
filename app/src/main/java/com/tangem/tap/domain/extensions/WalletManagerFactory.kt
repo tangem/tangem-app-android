@@ -8,8 +8,8 @@ import com.tangem.common.card.CardWallet
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.tap.domain.TapWorkarounds.isTestCard
-import com.tangem.tap.domain.tasks.ScanNoteResponse
-import com.tangem.tap.domain.twins.isTwinCard
+import com.tangem.tap.domain.tasks.product.ScanResponse
+import com.tangem.tap.domain.twins.isTangemTwin
 
 fun WalletManagerFactory.makeWalletManagerForApp(
     card: Card,
@@ -50,20 +50,22 @@ fun WalletManagerFactory.makeWalletManagersForApp(
 }
 
 fun WalletManagerFactory.makePrimaryWalletManager(
-    data: ScanNoteResponse,
+    data: ScanResponse,
 ): WalletManager? {
     val card = data.card
     val blockchain = if (card.isTestCard) {
-        data.getBlockchain()?.getTestnetVersion()
+        data.getBlockchain().getTestnetVersion()
     } else {
         data.getBlockchain()
     }
     val supportedCurves = blockchain?.getSupportedCurves() ?: return null
+
     val wallets = card.wallets.filter { wallet -> supportedCurves.contains(wallet.curve) }
     val wallet = selectWallet(wallets)
     val publicKey = wallet?.publicKey ?: return null
-    val curveToUse = wallet.curve ?: return null
-    return if (card.isTwinCard() && data.secondTwinPublicKey != null) {
+    val curveToUse = wallet.curve
+
+    return if (card.isTangemTwin() && data.secondTwinPublicKey != null) {
         makeMultisigWalletManager(
             cardId = card.cardId,
             walletPublicKey = publicKey, pairPublicKey = data.secondTwinPublicKey.hexToBytes(),
