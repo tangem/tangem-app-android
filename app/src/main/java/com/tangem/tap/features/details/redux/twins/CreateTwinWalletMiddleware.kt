@@ -48,7 +48,7 @@ class CreateTwinWalletMiddleware {
                 store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
             }
             is DetailsAction.CreateTwinWalletAction.LaunchFirstStep -> {
-                store.state.globalState.scanNoteResponse?.let {
+                store.state.globalState.scanResponse?.let {
                     twinsManager = TwinCardsManager(it, action.context)
                 }
                 scope.launch {
@@ -106,7 +106,7 @@ class CreateTwinWalletMiddleware {
             }
             is DetailsAction.CreateTwinWalletAction.LaunchThirdStep.Success -> {
                 scope.launch {
-                    store.state.globalState.tapWalletManager.onCardScanned(action.scanNoteResponse)
+                    store.state.globalState.tapWalletManager.onCardScanned(action.scanResponse)
                 }
                 store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
                 store.dispatch(NavigationAction.NavigateTo(AppScreen.Wallet))
