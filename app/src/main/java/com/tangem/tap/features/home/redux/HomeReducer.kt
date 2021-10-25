@@ -13,18 +13,18 @@ private fun internalReduce(action: Action, state: AppState): HomeState {
 
     if (action !is HomeAction) return state.homeState
 
-    var homeState = state.homeState
+    var state = state.homeState
     when (action) {
-        is HomeAction.CheckIfFirstLaunch.Result -> {
-            homeState = homeState.copy(firstLaunch = action.firstLaunch)
+        is HomeAction.SetFragmentShareTransition -> {
+            state = state.copy(shareTransition = action.shareTransition)
         }
-        is HomeAction.ShowDialog.ScanFails -> {
-            homeState = homeState.copy(dialog = HomeDialog.ScanFailsDialog)
+        is HomeAction.ShouldScanCardOnResume -> {
+            state = state.copy(shouldScanCardOnResume = action.shouldScanCard)
         }
-        is HomeAction.HideDialog -> {
-            homeState = homeState.copy(dialog = null)
+        is HomeAction.ChangeScanCardButtonState -> {
+            state = state.copy(btnScanState = action.state)
         }
     }
 
-    return homeState
+    return state
 }
