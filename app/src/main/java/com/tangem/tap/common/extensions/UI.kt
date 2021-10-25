@@ -5,6 +5,7 @@ import android.content.*
 import android.content.res.Resources
 import android.graphics.drawable.Drawable
 import android.os.Build
+import android.os.Bundle
 import android.util.TypedValue
 import android.view.View
 import android.view.ViewGroup
@@ -16,6 +17,7 @@ import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.google.android.material.card.MaterialCardView
+import com.tangem.common.extensions.VoidCallback
 
 fun Fragment.getDrawable(@DrawableRes drawableResId: Int): Drawable? {
     return ContextCompat.getDrawable(requireContext(), drawableResId)
@@ -28,6 +30,11 @@ fun Context.getDrawableCompat(@DrawableRes drawableResId: Int): Drawable? {
 @ColorInt
 fun Fragment.getColor(@ColorRes colorRes: Int): Int {
     return ContextCompat.getColor(requireContext(), colorRes)
+}
+
+@ColorInt
+fun Context.getColorCompat(@ColorRes colorRes: Int): Int {
+    return ContextCompat.getColor(this, colorRes)
 }
 
 fun View.getString(@StringRes id: Int): String {
@@ -71,8 +78,8 @@ fun Context.dpToPixels(dp: Int): Int =
                 TypedValue.COMPLEX_UNIT_DIP, dp.toFloat(), this.resources.displayMetrics
         ).toInt()
 
-tailrec fun Context?.getActivity(): Activity? = this as? Activity ?:
-    (this as? ContextWrapper)?.baseContext?.getActivity()
+tailrec fun Context?.getActivity(): Activity? = this as? Activity
+        ?: (this as? ContextWrapper)?.baseContext?.getActivity()
 
 fun MaterialCardView.setMargins(
         marginLeftDp: Int = 16,
@@ -136,4 +143,19 @@ fun Context.shareText(text: String) {
 
 fun Fragment.shareText(text: String) {
     requireContext().shareText(text)
+}
+
+fun Context.safeStartActivity(
+        intent: Intent,
+        options: Bundle? = null,
+        fallback: ((ActivityNotFoundException) -> Unit)? = null,
+        finally: VoidCallback? = null
+) {
+    try {
+        this.startActivity(intent, options)
+    } catch (ex: ActivityNotFoundException) {
+        fallback?.invoke(ex)
+    } finally {
+        finally?.invoke()
+    }
 }
