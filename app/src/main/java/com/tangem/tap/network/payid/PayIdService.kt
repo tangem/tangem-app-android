@@ -1,8 +1,8 @@
 package com.tangem.tap.network.payid
 
 import com.squareup.moshi.JsonClass
-import com.tangem.commands.common.network.Result
-import com.tangem.commands.common.network.performRequest
+import com.tangem.common.services.Result
+import com.tangem.common.services.performRequest
 import com.tangem.tap.network.createRetrofitInstance
 import retrofit2.Retrofit
 

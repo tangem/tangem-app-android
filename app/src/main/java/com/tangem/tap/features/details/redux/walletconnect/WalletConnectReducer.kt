@@ -28,6 +28,7 @@ class WalletConnectReducer {
 
                 is WalletConnectAction.UnsupportedCard -> state.copy(loading = false)
                 is WalletConnectAction.RefuseOpeningSession -> state.copy(loading = false)
+                is WalletConnectAction.OpeningSessionTimeout -> state.copy(loading = false)
                 is WalletConnectAction.FailureEstablishingSession -> state.copy(loading = false)
 
                 else -> state
