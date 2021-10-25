@@ -2,6 +2,7 @@ package com.tangem.tap.features.tokens.redux
 
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.currenciesRepository
+import com.tangem.tap.domain.TapWorkarounds.isTestCard
 import com.tangem.tap.features.tokens.ui.adapters.CurrencyListItem
 import com.tangem.tap.store
 import org.rekotlin.Middleware
@@ -13,9 +14,13 @@ class TokensMiddleware {
             { action ->
                 when (action) {
                     is TokensAction.LoadCurrencies -> {
-                        val cardFirmware = state()?.globalState?.scanNoteResponse?.card?.firmwareVersion
-                        val tokens = currenciesRepository.getPopularTokens()
-                        val blockchains = currenciesRepository.getBlockchains(cardFirmware)
+                        val card = state()?.globalState?.scanResponse?.card
+                        val isTestcard = card?.isTestCard ?: false
+                        val tokens = currenciesRepository.getPopularTokens(isTestcard)
+                        val blockchains = currenciesRepository.getBlockchains(
+                            cardFirmware = card?.firmwareVersion,
+                            isTestNet = isTestcard
+                        )
                         val currencies = CurrencyListItem.createListOfCurrencies(
                                 blockchains, tokens
                         )
