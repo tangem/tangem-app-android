@@ -1,5 +1,6 @@
 package com.tangem.tap.domain
 
+import CreateProductWalletAndRescanTask
 import android.content.Context
 import com.tangem.Message
 import com.tangem.TangemSdk
@@ -20,9 +21,9 @@ import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.AnalyticsHandler
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.domain.tasks.CreateWalletAndRescanTask
-import com.tangem.tap.domain.tasks.ScanNoteResponse
-import com.tangem.tap.domain.tasks.ScanNoteTask
-import com.tangem.tap.domain.twins.isTwinCard
+import com.tangem.tap.domain.tasks.product.ScanProductTask
+import com.tangem.tap.domain.tasks.product.ScanResponse
+import com.tangem.tap.domain.twins.isTangemTwin
 import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -31,20 +32,34 @@ import kotlin.coroutines.suspendCoroutine
 
 class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Context) {
 
-    suspend fun scanNote(
-        analyticsHandler: AnalyticsHandler, messageRes: Int? = null,
-    ): CompletionResult<ScanNoteResponse> {
+    suspend fun scanProduct(
+        analyticsHandler: AnalyticsHandler,
+        messageRes: Int? = null,
+    ): CompletionResult<ScanResponse> {
         analyticsHandler.triggerEvent(AnalyticsEvent.READY_TO_SCAN, null)
-        val result = runTaskAsyncReturnOnMain(ScanNoteTask(),
-            initialMessage = Message(
-                context.getString(messageRes ?: R.string.initial_message_scan_header)
-            ))
-        if (result is CompletionResult.Failure) {
+
+        val message = Message(context.getString(messageRes ?: R.string.initial_message_scan_header))
+        return runTaskAsyncReturnOnMain(ScanProductTask(), null, message)
+                .also { sendScanFailuresToAnalytics(analyticsHandler, it) }
+    }
+
+    suspend fun createProductWallet(scanResponse: ScanResponse): CompletionResult<Card> {
+        return runTaskAsync(
+                CreateProductWalletAndRescanTask(scanResponse.productType),
+                scanResponse.card.cardId,
+                Message(context.getString(R.string.initial_message_create_wallet_body))
+        )
+    }
+
+    private fun sendScanFailuresToAnalytics(
+        analyticsHandler: AnalyticsHandler,
+        result: CompletionResult<ScanResponse>
+    ) {
+        if (result is CompletionResult.Failure && result.error is TangemSdkError) {
             (result.error as? TangemSdkError)?.let { error ->
                 analyticsHandler.logCardSdkError(error, FirebaseAnalyticsHandler.ActionToLog.Scan)
             }
         }
-        return result
     }
 
     suspend fun createWallet(cardId: String?): CompletionResult<Card> {
@@ -106,7 +121,7 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
     }
 
     fun changeDisplayedCardIdNumbersCount(card: Card) {
-        tangemSdk.config.cardIdDisplayedNumbersCount = if (card.isTwinCard()) 4 else null
+        tangemSdk.config.cardIdDisplayedNumbersCount = if (card.isTangemTwin()) 4 else null
     }
 
     companion object {
