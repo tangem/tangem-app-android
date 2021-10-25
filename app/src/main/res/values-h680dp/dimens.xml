@@ -1,0 +1,9 @@
+<resources>
+
+    <dimen name="home_back_card_translationY">-10dp</dimen>
+    <dimen name="home_front_card_translationY">0dp</dimen>
+    <dimen name="onboarding_progress_margin_top">16dp</dimen>
+    <dimen name="onboarding_card_margin_top">106dp</dimen>
+    <dimen name="onboarding_square_background_margin_top">67dp</dimen>
+
+</resources>
