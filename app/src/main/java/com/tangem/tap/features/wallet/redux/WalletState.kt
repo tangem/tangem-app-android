@@ -5,10 +5,13 @@ import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.blockchain.extensions.isAboveZero
 import com.tangem.tap.common.entities.Button
+import com.tangem.tap.common.extensions.toQrCode
+import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
-import com.tangem.tap.common.redux.global.StateDialog
+import com.tangem.tap.common.toggleWidget.WidgetState
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.extensions.toSendableAmounts
+import com.tangem.tap.domain.topup.TradeCryptoHelper
 import com.tangem.tap.domain.twins.TwinCardNumber
 import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.models.toPendingTransactions
@@ -32,7 +35,9 @@ data class WalletState(
         val cardCurrency: CryptoCurrencyName? = null,
         val selectedWallet: Currency? = null,
         val primaryBlockchain: Blockchain? = null,
-        val primaryToken: Token? = null
+        val primaryToken: Token? = null,
+        val isTestnet: Boolean = false,
+        val tradeCryptoAllowed: TradeCryptoAvailability = TradeCryptoAvailability()
 ) : StateType {
 
     val primaryWallet = if (wallets.isNotEmpty()) wallets[0] else null
@@ -49,17 +54,7 @@ data class WalletState(
 
     fun getWalletManager(token: Token?): WalletManager? {
         if (token == null) return null
-        val ethereumWalletManager = walletManagers.find { it.wallet.blockchain == Blockchain.Ethereum }
-        return if (ethereumWalletManager?.presetTokens?.contains(token) == true) {
-            ethereumWalletManager
-        } else {
-            val primaryWalletManager = walletManagers.find { it.wallet.blockchain == primaryBlockchain }
-            if (primaryWalletManager?.presetTokens?.contains(token) == true) {
-                primaryWalletManager
-            } else {
-                ethereumWalletManager
-            }
-        }
+        return walletManagers.find { it.wallet.blockchain == token.blockchain }
     }
 
     fun getWalletManager(currency: Currency?) : WalletManager? {
@@ -98,7 +93,7 @@ data class WalletState(
                     ?: return true
 
             if (walletData.currency is Currency.Blockchain &&
-                walletManager.presetTokens.isNotEmpty()
+                walletManager.cardTokens.isNotEmpty()
             ) {
                 return false
             }
@@ -148,11 +143,11 @@ sealed class WalletDialog: StateDialog {
     ) : WalletDialog()
 
     data class SelectAmountToSendDialog(val amounts: List<Amount>?) : WalletDialog()
-    object ScanFailsDialog : WalletDialog()
     object SignedHashesMultiWalletDialog : WalletDialog()
+    object ChooseTradeActionDialog : WalletDialog()
 }
 
-enum class ProgressState { Loading, Done, Error }
+enum class ProgressState: WidgetState { Loading, Done, Error }
 
 enum class ErrorType { NoInternetConnection }
 
@@ -171,8 +166,9 @@ data class AddressData(
         val type: AddressType,
         val shareUrl: String,
         val exploreUrl: String,
-        val qrCode: Bitmap? = null
-)
+) {
+    val qrCode: Bitmap by lazy { shareUrl.toQrCode() }
+}
 
 data class Artwork(
         val artworkId: String,
@@ -186,13 +182,20 @@ data class Artwork(
         const val MARTA_CARD_ID = "BC02"
         const val TWIN_CARD_1 = "https://app.tangem.com/cards/card_tg085.png"
         const val TWIN_CARD_2 = "https://app.tangem.com/cards/card_tg086.png"
+
+        const val TEMP_CARDANO = "https://verify.tangem.com/card/artwork?artworkId=card_ru039&CID=CB19000000040976&publicKey=0416E29423A6CC77CD07CBA52873E8F6F894B1AFB18EB3688ACC2C8D8E5AC84B80B0BA1B17B85E578E47044CE96BCFF3FB4499FA4941CAD3C1EF300A492B5B9659"
     }
 }
 
-data class TopUpState(
-        val allowed: Boolean = true,
-        val url: String? = null,
-        val redirectUrl: String? = null
+data class TradeCryptoState(
+    val sellingAllowed: Boolean = false,
+    val buyingAllowed: Boolean = false,
+)
+
+data class TradeCryptoAvailability(
+    val sellingAllowed: Boolean = false,
+    val buyingAllowed: Boolean = false,
+    val availableToSell: Set<String> = TradeCryptoHelper.AVAILABLE_TO_SELL,
 )
 
 data class TwinCardsState(
@@ -202,24 +205,21 @@ data class TwinCardsState(
 )
 
 data class WalletData(
-        val pendingTransactions: List<PendingTransaction> = emptyList(),
-        val hashesCountVerified: Boolean? = null,
-        val walletAddresses: WalletAddresses? = null,
-        val currencyData: BalanceWidgetData = BalanceWidgetData(),
-        val updatingWallet: Boolean = false,
-        val topUpState: TopUpState = TopUpState(),
-        val allowToSend: Boolean = true,
-        val fiatRateString: String? = null,
-        val fiatRate: BigDecimal? = null,
-        val mainButton: WalletMainButton = WalletMainButton.SendButton(false),
-        val currency: Currency? = null
+    val pendingTransactions: List<PendingTransaction> = emptyList(),
+    val hashesCountVerified: Boolean? = null,
+    val walletAddresses: WalletAddresses? = null,
+    val currencyData: BalanceWidgetData = BalanceWidgetData(),
+    val updatingWallet: Boolean = false,
+    val tradeCryptoState: TradeCryptoState = TradeCryptoState(),
+    val allowToSend: Boolean = true,
+    val fiatRateString: String? = null,
+    val fiatRate: BigDecimal? = null,
+    val mainButton: WalletMainButton = WalletMainButton.SendButton(false),
+    val currency: Currency? = null
 ) {
     fun shouldShowMultipleAddress(): Boolean {
         val listOfAddresses = walletAddresses?.list ?: return false
-        return (currency?.blockchain == Blockchain.Bitcoin ||
-                currency?.blockchain == Blockchain.BitcoinTestnet ||
-                currency?.blockchain == Blockchain.CardanoShelley) &&
-                listOfAddresses.size > 1
+        return listOfAddresses.size > 1
     }
 }
 
@@ -229,9 +229,9 @@ sealed interface Currency {
     val currencySymbol: CryptoCurrencyName
 
     data class Token(
-        val token: com.tangem.blockchain.common.Token,
-        override val blockchain: com.tangem.blockchain.common.Blockchain
+        val token: com.tangem.blockchain.common.Token
     ) : Currency {
+        override val blockchain = token.blockchain
         override val currencySymbol: CryptoCurrencyName = token.symbol
     }
 
