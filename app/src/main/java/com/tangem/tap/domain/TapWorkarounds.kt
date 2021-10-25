@@ -4,10 +4,10 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.card.Card
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.card.FirmwareVersion
-import com.tangem.tap.domain.TapWorkarounds.isNote
 import com.tangem.tap.domain.TapWorkarounds.isStart2Coin
+import com.tangem.tap.domain.TapWorkarounds.isTangemNote
 import com.tangem.tap.domain.extensions.getSingleWallet
-import com.tangem.tap.domain.twins.isTwinCard
+import com.tangem.tap.domain.twins.isTangemTwin
 import java.util.*
 
 object TapWorkarounds {
@@ -28,26 +28,10 @@ object TapWorkarounds {
         return excludedBatch || excludedIssuerName
     }
 
-    fun Card.isNote(): Boolean {
-        return notesBatches.contains(batchId)
-    }
+    fun Card.isTangemNote(): Boolean = tangemNoteBatches.contains(batchId)
+    fun Card.isTangemWallet(): Boolean = tangemWalletBatches.contains(batchId)
 
-    fun Card.isMultiCurrencyWallet(): Boolean {
-        return multiCurrencyWalletsBatches.contains(batchId)
-    }
-
-    val Card.noteCurrency: Blockchain?
-        get() {
-            return when (batchId) {
-                "AB01" -> Blockchain.Bitcoin
-                "AB02" -> Blockchain.Ethereum
-                "AB03" -> Blockchain.CardanoShelley
-                "AB04" -> Blockchain.Dogecoin
-                "AB05" -> Blockchain.Binance
-                "AB06" -> Blockchain.XRP
-                else -> null
-            }
-        }
+    fun Card.getTangemNoteBlockchain(): Blockchain? = tangemNoteBatches[batchId]
 
     private const val START_2_COIN_ISSUER = "start2coin"
     private const val TEST_CARD_BATCH = "99FF"
@@ -64,21 +48,23 @@ object TapWorkarounds {
             "TTM BANK"
     )
 
-    private val notesBatches = listOf(
-        "AB01",
-        "AB02",
-        "AB03",
-        "AB04",
-        "AB05",
-        "AB06",
-    )
+    private val tangemWalletBatches = listOf("AC01")
 
-    private val multiCurrencyWalletsBatches = listOf("AC01")
+    private val tangemNoteBatches = mapOf(
+            "AB01" to Blockchain.Bitcoin,
+            "AB02" to Blockchain.Ethereum,
+            "AB03" to Blockchain.CardanoShelley,
+            "AB04" to Blockchain.Dogecoin,
+            "AB05" to Blockchain.Binance,
+            "AB06" to Blockchain.XRP,
+    )
 }
+
+val DELAY_SDK_DIALOG_CLOSE = 1400L
 
 val Card.isMultiwalletAllowed: Boolean
     get() {
-        return !isTwinCard() && !isStart2Coin && !isNote()
+        return !isTangemTwin() && !isStart2Coin && !isTangemNote()
                 && (firmwareVersion >= FirmwareVersion.MultiWalletAvailable ||
                 getSingleWallet()?.curve == EllipticCurve.Secp256k1)
     }
