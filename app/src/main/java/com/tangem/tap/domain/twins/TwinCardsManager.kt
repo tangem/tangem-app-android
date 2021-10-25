@@ -14,19 +14,19 @@ import com.tangem.common.extensions.toHexString
 import com.tangem.crypto.CryptoUtils
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.common.extensions.readAssetAsString
-import com.tangem.tap.domain.tasks.ScanNoteResponse
+import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.network.createMoshi
 import com.tangem.tap.tangemSdkManager
 
-class TwinCardsManager(private val scanNoteResponse: ScanNoteResponse, context: Context) {
+class TwinCardsManager(private val scanResponse: ScanResponse, context: Context) {
 
-    private val currentCardId: String = scanNoteResponse.card.cardId
+    private val currentCardId: String = scanResponse.card.cardId
 
     private var currentCardPublicKey: String? = null
     private var secondCardPublicKey: String? = null
 
     private val issuerKeyPair: KeyPair = getIssuerKeys(
-        context, scanNoteResponse.card.issuer.publicKey.toHexString()
+        context, scanResponse.card.issuer.publicKey.toHexString()
     )
 
     suspend fun createFirstWallet(message: Message): SimpleResult {
@@ -43,7 +43,7 @@ class TwinCardsManager(private val scanNoteResponse: ScanNoteResponse, context: 
                     FirebaseAnalyticsHandler.logCardSdkError(
                         error,
                         FirebaseAnalyticsHandler.ActionToLog.CreateWallet,
-                        card = scanNoteResponse.card
+                        card = scanResponse.card
                     )
                 }
                 return SimpleResult.failure(response.error)
@@ -65,9 +65,7 @@ class TwinCardsManager(private val scanNoteResponse: ScanNoteResponse, context: 
             preparingMessage = preparingMessage,
             creatingWalletMessage = creatingWalletMessage
         )
-        val response = tangemSdkManager.runTaskAsync(
-                task, null, initialMessage
-        )
+        val response = tangemSdkManager.runTaskAsync(task, null, initialMessage)
         when (response) {
             is CompletionResult.Success -> {
                 secondCardPublicKey = response.data.wallet.publicKey.toHexString()
@@ -78,7 +76,7 @@ class TwinCardsManager(private val scanNoteResponse: ScanNoteResponse, context: 
                     FirebaseAnalyticsHandler.logCardSdkError(
                         error,
                         FirebaseAnalyticsHandler.ActionToLog.CreateWallet,
-                        card = scanNoteResponse.card
+                        card = scanResponse.card
                     )
                 }
                 return SimpleResult.failure(response.error)
@@ -87,7 +85,7 @@ class TwinCardsManager(private val scanNoteResponse: ScanNoteResponse, context: 
 
     }
 
-    suspend fun complete(message: Message): Result<ScanNoteResponse> {
+    suspend fun complete(message: Message): Result<ScanResponse> {
         val response = tangemSdkManager.runTaskAsync(
             FinalizeTwinTask(secondCardPublicKey!!.hexToBytes(), issuerKeyPair),
             currentCardId, message
@@ -99,7 +97,7 @@ class TwinCardsManager(private val scanNoteResponse: ScanNoteResponse, context: 
                     FirebaseAnalyticsHandler.logCardSdkError(
                         error,
                         FirebaseAnalyticsHandler.ActionToLog.WriteIssuerData,
-                        card = scanNoteResponse.card
+                        card = scanResponse.card
                     )
                 }
                 Result.failure(response.error)
@@ -109,11 +107,11 @@ class TwinCardsManager(private val scanNoteResponse: ScanNoteResponse, context: 
 
     companion object {
         fun verifyTwinPublicKey(issuerData: ByteArray, cardWalletPublicKey: ByteArray?): Boolean {
-            if (issuerData.size < 65) return false
+            if (issuerData.size < 65 || cardWalletPublicKey == null) return false
+
             val publicKey = issuerData.sliceArray(0 until 65)
             val signedKey = issuerData.sliceArray(65 until issuerData.size)
-            return (cardWalletPublicKey != null &&
-                    CryptoUtils.verify(cardWalletPublicKey, publicKey, signedKey))
+            return CryptoUtils.verify(cardWalletPublicKey, publicKey, signedKey)
         }
 
         private fun getIssuerKeys(context: Context, publicKey: String): KeyPair {
