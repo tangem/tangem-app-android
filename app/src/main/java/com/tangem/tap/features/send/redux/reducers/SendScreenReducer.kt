@@ -2,6 +2,7 @@ package com.tangem.tap.features.send.redux.reducers
 
 import com.tangem.blockchain.common.AmountType
 import com.tangem.tap.common.CurrencyConverter
+import com.tangem.tap.common.entities.IndeterminateProgressButton
 import com.tangem.tap.features.send.redux.*
 import com.tangem.tap.features.send.redux.states.ExternalTransactionData
 import com.tangem.tap.features.send.redux.states.IdStateHolder
@@ -41,7 +42,9 @@ class SendScreenReducer {
 private class SendReducer : SendInternalReducer {
     override fun handle(action: SendScreenAction, sendState: SendState): SendState {
         val result = when (action) {
-            is SendAction.ChangeSendButtonState -> sendState.copy(sendButtonState = action.state)
+            is SendAction.ChangeSendButtonState -> {
+                sendState.copy(sendButtonState = IndeterminateProgressButton(action.state))
+            }
             is SendAction.Dialog.TezosWarningDialog -> sendState.copy(dialog = action)
             is SendAction.Dialog.SendTransactionFails -> sendState.copy(dialog = action)
             is SendAction.Dialog.Hide -> sendState.copy(dialog = null)
