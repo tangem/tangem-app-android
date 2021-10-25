@@ -31,6 +31,8 @@ sealed class WalletConnectAction : Action {
 
     object RefuseOpeningSession : WalletConnectAction()
 
+    data class OpeningSessionTimeout(val session: WCSession) : WalletConnectAction()
+
     data class AcceptOpeningSession(val session: WalletConnectSession) : WalletConnectAction()
 
     data class ApproveSession(
@@ -40,7 +42,6 @@ sealed class WalletConnectAction : Action {
     }
 
     data class FailureEstablishingSession(val session: WCSession?) : WalletConnectAction()
-
 
     data class SetSessionsRestored(val sessions: List<WalletConnectSession>) :
         WalletConnectAction()
