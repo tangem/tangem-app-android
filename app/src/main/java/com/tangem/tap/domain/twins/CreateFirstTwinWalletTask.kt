@@ -1,34 +1,34 @@
 package com.tangem.tap.domain.twins
 
-import com.tangem.CardSession
-import com.tangem.CardSessionRunnable
-import com.tangem.commands.wallet.CreateWalletResponse
-import com.tangem.commands.wallet.PurgeWalletCommand
 import com.tangem.common.CompletionResult
-import com.tangem.common.TangemSdkConstants
-import com.tangem.tap.domain.extensions.getDefaultWalletIndex
+import com.tangem.common.card.EllipticCurve
+import com.tangem.common.core.CardSession
+import com.tangem.common.core.CardSessionRunnable
+import com.tangem.operations.wallet.CreateWalletCommand
+import com.tangem.operations.wallet.CreateWalletResponse
+import com.tangem.operations.wallet.PurgeWalletCommand
 import com.tangem.tap.domain.extensions.getSingleWallet
-import com.tangem.tasks.CreateWalletTask
 
 class CreateFirstTwinWalletTask : CardSessionRunnable<CreateWalletResponse> {
-    override val requiresPin2 = false
-
     override fun run(
         session: CardSession,
         callback: (result: CompletionResult<CreateWalletResponse>) -> Unit,
     ) {
-        if (session.environment.card?.getSingleWallet()?.publicKey != null) {
-            PurgeWalletCommand(TangemSdkConstants.getDefaultWalletIndex()).run(session) { response ->
+        val publicKey = session.environment.card?.getSingleWallet()?.publicKey
+        if (publicKey != null) {
+            PurgeWalletCommand(publicKey).run(session) { response ->
                 when (response) {
                     is CompletionResult.Success -> {
-                        session.environment.card = session.environment.card?.changeStatusToEmpty()
-                        CreateWalletTask().run(session) { callback(it) }
+                        session.environment.card = session.environment.card?.setWallets(emptyList())
+                        CreateWalletCommand(EllipticCurve.Secp256k1)
+                            .run(session) { callback(it) }
                     }
                     is CompletionResult.Failure -> callback(CompletionResult.Failure(response.error))
                 }
             }
         } else {
-            CreateWalletTask().run(session) { callback(it) }
+            CreateWalletCommand(EllipticCurve.Secp256k1)
+                .run(session) { callback(it) }
         }
     }
 }
