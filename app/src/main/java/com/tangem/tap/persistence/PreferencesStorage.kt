@@ -19,10 +19,13 @@ class PreferencesStorage(applicationContext: Application) {
     private val preferences: SharedPreferences = applicationContext.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
 
     val appRatingLaunchObserver: AppRatingLaunchObserver
+    val usedCardsPrefStorage: UsedCardsPrefStorage
 
     init {
         incrementLaunchCounter()
         appRatingLaunchObserver = AppRatingLaunchObserver(preferences, getCountOfLaunches())
+        usedCardsPrefStorage = UsedCardsPrefStorage(preferences)
+        usedCardsPrefStorage.migrate()
     }
 
     private val fiatCurrenciesAdapter: JsonAdapter<List<FiatCurrency>> by lazy {
@@ -54,19 +57,10 @@ class PreferencesStorage(applicationContext: Application) {
 
     fun getCountOfLaunches(): Int = preferences.getInt(APP_LAUNCH_COUNT_KEY, 1)
 
-    fun saveScannedCardId(cardId: String) {
-        val scannedCardsIds: String = restoreScannedCardIds()
-        if (!scannedCardsIds.contains(cardId)) {
-            preferences.edit().putString(SCANNED_CARDS_IDS_KEY, "$scannedCardsIds$cardId, ").apply()
-        }
-    }
-
+    @Deprecated("Use UsedCardsPrefStorage instead")
     fun wasCardScannedBefore(cardId: String): Boolean {
-        return restoreScannedCardIds().contains(cardId)
+        return usedCardsPrefStorage.wasScanned(cardId)
     }
-
-    private fun restoreScannedCardIds(): String =
-            preferences.getString(SCANNED_CARDS_IDS_KEY, "") ?: ""
 
     fun saveDisclaimerAccepted() {
         preferences.edit().putBoolean(DISCLAIMER_ACCEPTED_KEY, true).apply()
@@ -93,7 +87,6 @@ class PreferencesStorage(applicationContext: Application) {
         private const val PREFERENCES_NAME = "tapPrefs"
         private const val APP_CURRENCY_KEY = "appCurrency"
         private const val FIAT_CURRENCIES_KEY = "fiatCurrencies"
-        private const val SCANNED_CARDS_IDS_KEY = "scannedCardIds"
         private const val DISCLAIMER_ACCEPTED_KEY = "disclaimerAccepted"
         private const val TWINS_ONBOARDING_SHOWN_KEY = "twinsOnboardingShown"
         private const val APP_LAUNCH_COUNT_KEY = "launchCount"
@@ -102,20 +95,23 @@ class PreferencesStorage(applicationContext: Application) {
 }
 
 class AppRatingLaunchObserver(
-        private val preferences: SharedPreferences,
-        private val launchCounts: Int,
+    private val preferences: SharedPreferences,
+    private val launchCounts: Int,
 ) {
     private val K_SHOW_RATING_AT_LAUNCH_COUNT = "showRatingDialogAtLaunchCount"
     private val K_FUNDS_FOUND_DATE = "fundsFoundDate"
     private val K_USER_WAS_INTERACT_WITH_RATING = "userWasInteractWithRating"
 
+    private val FUNDS_FOUND_DATE_UNDEFINED = -1L
     private val deferShowing = 20
     private val firstShowing = 3
     private var fundsFoundDate: Calendar? = null
 
     init {
-        val dateTimeMs = preferences.getLong(K_FUNDS_FOUND_DATE, -1)
-        if (dateTimeMs > 0) fundsFoundDate = Calendar.getInstance().apply { timeInMillis = dateTimeMs }
+        val msWhenFundsWasFound = preferences.getLong(K_FUNDS_FOUND_DATE, FUNDS_FOUND_DATE_UNDEFINED)
+        if (msWhenFundsWasFound != FUNDS_FOUND_DATE_UNDEFINED) {
+            fundsFoundDate = Calendar.getInstance().apply { timeInMillis = msWhenFundsWasFound }
+        }
     }
 
     fun foundWalletWithFunds() {
