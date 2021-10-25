@@ -1,4 +1,4 @@
-package com.tangem.tap.features.wallet.ui.dialogs
+package com.tangem.tap.features.wallet.ui
 
 import android.os.Bundle
 import android.view.View
@@ -15,7 +15,7 @@ import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fragment_twin_cards.*
 import kotlinx.android.synthetic.main.layout_twin_cards.*
 
-class TwinsOnboardingFragment : Fragment(R.layout.fragment_twin_cards) {
+class OnboardingTwinsFragment : Fragment(R.layout.fragment_twin_cards) {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
