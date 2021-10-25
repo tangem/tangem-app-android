@@ -12,7 +12,8 @@ data class AddressPayIdState(
         val error: AddressPayIdVerifyAction.Error? = null,
         val truncateHandler: ((String) -> String)? = null,
         val sendingToPayIdEnabled: Boolean = false,
-        val pasteIsEnabled: Boolean = false
+        val pasteIsEnabled: Boolean = false,
+        val inputIsEnabled: Boolean = true
 ) : SendScreenState {
 
     override val stateId: StateId = StateId.ADDRESS_PAY_ID
