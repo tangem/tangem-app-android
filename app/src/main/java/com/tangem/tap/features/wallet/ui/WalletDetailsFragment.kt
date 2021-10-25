@@ -12,7 +12,7 @@ import androidx.transition.TransitionInflater
 import com.squareup.picasso.Picasso
 import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.extensions.*
-import com.tangem.tap.common.redux.global.StateDialog
+import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.redux.*

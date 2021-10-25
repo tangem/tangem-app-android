@@ -9,19 +9,16 @@ import com.tangem.operations.PreflightReadMode
 import com.tangem.operations.PreflightReadTask
 import com.tangem.operations.wallet.CreateWalletCommand
 
-class CreateWalletsTask(curves: List<EllipticCurve> = emptyList()) : CardSessionRunnable<Card> {
+@Deprecated("Use CreateProductWalletsResponse instead")
+class CreateWalletsTask(curves: List<EllipticCurve>? = null) : CardSessionRunnable<Card> {
 
-    private val curves = if (curves.isEmpty()) {
-        listOf(
-                EllipticCurve.Secp256k1,
-                EllipticCurve.Ed25519,
-                EllipticCurve.Secp256r1,
-        )
-    } else {
-        curves
-    }
+    private val curves = curves ?: listOf(
+            EllipticCurve.Secp256k1,
+            EllipticCurve.Ed25519,
+            EllipticCurve.Secp256r1,
+    )
 
-    var index = 0
+    private var index = 0
 
     override fun run(session: CardSession, callback: (result: CompletionResult<Card>) -> Unit) {
         val curve = curves[index]
@@ -29,8 +26,8 @@ class CreateWalletsTask(curves: List<EllipticCurve> = emptyList()) : CardSession
     }
 
     private fun createWallet(
-            curve: EllipticCurve, session: CardSession,
-            callback: (result: CompletionResult<Card>) -> Unit
+        curve: EllipticCurve, session: CardSession,
+        callback: (result: CompletionResult<Card>) -> Unit
     ) {
 
         CreateWalletCommand(curve).run(session) { result ->
@@ -48,13 +45,5 @@ class CreateWalletsTask(curves: List<EllipticCurve> = emptyList()) : CardSession
                 }
             }
         }
-    }
-}
-
-private fun EllipticCurve.toWalletIndex(): Int {
-    return when (this) {
-        EllipticCurve.Secp256k1 -> 0
-        EllipticCurve.Ed25519 -> 1
-        EllipticCurve.Secp256r1 -> 2
     }
 }
