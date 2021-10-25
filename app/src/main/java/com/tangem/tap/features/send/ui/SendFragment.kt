@@ -7,6 +7,7 @@ import android.text.method.DigitsKeyListener
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
+import androidx.activity.OnBackPressedCallback
 import androidx.core.view.postDelayed
 import androidx.core.widget.addTextChangedListener
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -20,6 +21,7 @@ import com.tangem.tap.common.entities.TapCurrency
 import com.tangem.tap.common.extensions.getFromClipboard
 import com.tangem.tap.common.extensions.setOnImeActionListener
 import com.tangem.tap.common.qrCodeScan.ScanQrCodeActivity
+import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.common.snackBar.MaxAmountSnackbar
 import com.tangem.tap.common.text.truncateMiddleWith
 import com.tangem.tap.common.toggleWidget.*
@@ -31,6 +33,7 @@ import com.tangem.tap.features.send.redux.FeeActionUi.*
 import com.tangem.tap.features.send.redux.states.FeeType
 import com.tangem.tap.features.send.redux.states.MainCurrencyType
 import com.tangem.tap.features.send.ui.stateSubscribers.SendStateSubscriber
+import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.ui.adapters.SpacesItemDecoration
 import com.tangem.tap.features.wallet.ui.adapters.WarningMessagesAdapter
 import com.tangem.tap.mainScope
@@ -59,6 +62,23 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
 
     private val sendSubscriber = SendStateSubscriber(this)
     private lateinit var keyboardObserver: KeyboardObserver
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        activity?.onBackPressedDispatcher?.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                val externalTransactionData = store.state.sendState.externalTransactionData
+                if (externalTransactionData == null) {
+                    store.dispatch(NavigationAction.PopBackTo())
+                } else {
+                    store.dispatch(
+                        WalletAction.TradeCryptoAction.FinishSelling(externalTransactionData.transactionId)
+                    )
+                }
+            }
+        })
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
