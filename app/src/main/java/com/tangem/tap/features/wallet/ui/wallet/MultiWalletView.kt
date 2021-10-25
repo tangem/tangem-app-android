@@ -4,7 +4,7 @@ import android.app.Dialog
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
-import com.tangem.tap.common.redux.global.StateDialog
+import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.tokens.redux.TokensAction
@@ -14,7 +14,6 @@ import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.WalletFragment
 import com.tangem.tap.features.wallet.ui.adapters.WalletAdapter
-import com.tangem.tap.features.wallet.ui.dialogs.ScanFailsDialog
 import com.tangem.tap.features.wallet.ui.dialogs.SignedHashesWarningDialog
 import com.tangem.tap.store
 import com.tangem.wallet.R
@@ -42,7 +41,6 @@ class MultiWalletView : WalletView {
 
     private fun showMultiWalletView(fragment: WalletFragment) = with(fragment) {
         tv_twin_card_number.hide()
-        iv_twin_card.hide()
         rv_pending_transaction.hide()
         l_card_balance.hide()
         l_address.hide()
@@ -135,9 +133,6 @@ class MultiWalletView : WalletView {
         val fragment = fragment ?: return
         val context = fragment.context ?: return
         when (walletDialog) {
-            is WalletDialog.ScanFailsDialog -> {
-                if (dialog == null) dialog = ScanFailsDialog.create(context).apply { show() }
-            }
             is WalletDialog.SignedHashesMultiWalletDialog -> {
                 if (dialog == null) {
                     dialog = SignedHashesWarningDialog.create(context).apply { show() }
