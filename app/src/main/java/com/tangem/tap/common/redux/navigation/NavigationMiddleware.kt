@@ -13,7 +13,11 @@ val navigationMiddleware: Middleware<AppState> = { dispatch, state ->
                 val navState = state()?.navigationState
                 when (action) {
                     is NavigationAction.NavigateTo -> {
-                        navState?.activity?.get()?.openFragment(action.screen, action.addToBackstack)
+                        navState?.activity?.get()?.openFragment(
+                                action.screen,
+                                action.addToBackstack,
+                                action.fragmentShareTransition
+                        )
                     }
                     is NavigationAction.PopBackTo -> {
                         if (action.screen == AppScreen.Home) {
