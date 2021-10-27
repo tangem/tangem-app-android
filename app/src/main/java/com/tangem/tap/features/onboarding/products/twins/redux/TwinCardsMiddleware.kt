@@ -72,7 +72,6 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
         if (twinCardsState.mode == CreateTwinWalletMode.CreateWallet) {
             onboardingManager?.activationFinished(getScanResponse().card.cardId)
             twinCardsState.pairCardId?.let { onboardingManager?.activationFinished(it) }
-
         }
     }
 
@@ -121,23 +120,9 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
         }
         is TwinCardsAction.SetStepOfScreen -> {
             when (action.step) {
-                TwinCardsStep.WelcomeOnly -> {
-                    preferencesStorage.saveTwinsOnboardingShown()
-                }
-                TwinCardsStep.Welcome -> {
-                    preferencesStorage.saveTwinsOnboardingShown()
-                }
-                TwinCardsStep.Warning -> {
-                }
-                TwinCardsStep.CreateFirstWallet -> {
-                }
-                TwinCardsStep.CreateSecondWallet -> {
-                }
-                TwinCardsStep.CreateThirdWallet -> {
-                }
-                TwinCardsStep.TopUpWallet -> {
-                    store.dispatch(TwinCardsAction.Balance.Update)
-                }
+                TwinCardsStep.WelcomeOnly -> preferencesStorage.saveTwinsOnboardingShown()
+                TwinCardsStep.Welcome -> preferencesStorage.saveTwinsOnboardingShown()
+                TwinCardsStep.TopUpWallet -> store.dispatch(TwinCardsAction.Balance.Update)
                 TwinCardsStep.Done -> {
                     finishCardActivation()
                     postUi(500) { store.dispatch(TwinCardsAction.Confetti.Show) }
@@ -200,7 +185,6 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
                 }
             }
         }
-
         is TwinCardsAction.Balance.Update -> {
             val walletManager = if (twinCardsState.walletManager != null) {
                 twinCardsState.walletManager
