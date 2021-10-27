@@ -23,6 +23,7 @@ import com.tangem.tap.common.transitions.InternalNoteLayoutTransition
 import com.tangem.tap.domain.twins.AssetReader
 import com.tangem.tap.domain.twins.TwinCardNumber
 import com.tangem.tap.domain.twins.TwinsCardWidget
+import com.tangem.tap.features.addBackPressHandler
 import com.tangem.tap.features.onboarding.products.BaseOnboardingFragment
 import com.tangem.tap.features.onboarding.products.twins.redux.CreateTwinWalletMode
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
@@ -73,6 +74,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        addBackPressHandler(this)
 
         reconfigureLayoutForTwins()
         twinsWidget = TwinsCardWidget(LeapfrogWidget(cards_container)) { 250f }
