@@ -1,26 +1,26 @@
-package com.tangem.tap.features.send
+package com.tangem.tap.features
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.widget.Toolbar
 import androidx.fragment.app.Fragment
 import androidx.transition.TransitionInflater
 import com.google.android.material.snackbar.Snackbar
+import com.tangem.common.extensions.VoidCallback
+import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.store
 import com.tangem.wallet.R
-import kotlinx.android.synthetic.main.fragment_wallet.*
-import org.rekotlin.StoreSubscriber
 
 /**
 [REDACTED_AUTHOR]
  */
-abstract class BaseStoreFragment(layoutId: Int) : Fragment(layoutId) {
-
-    abstract fun subscribeToStore()
+abstract class BaseFragment(layoutId: Int) : Fragment(layoutId), FragmentOnBackPressedHandler {
 
     protected lateinit var mainView: View
-    protected val storeSubscribersList = mutableListOf<StoreSubscriber<*>>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -40,26 +40,32 @@ abstract class BaseStoreFragment(layoutId: Int) : Fragment(layoutId) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        toolbar?.setNavigationOnClickListener { activity?.onBackPressed() }
+        addBackPressHandler(this)
     }
 
-    override fun onStart() {
-        super.onStart()
-        subscribeToStore()
+    override fun handleOnBackPressed() {
+        store.dispatch(NavigationAction.PopBackTo())
     }
 
-
-    override fun onStop() {
-        storeSubscribersList.forEach { store.unsubscribe(it) }
-        storeSubscribersList.clear()
-        super.onStop()
-    }
-
-    fun showRetrySnackbar(message: String, action: () -> Unit) {
+    fun showRetrySnackbar(message: String, action: VoidCallback) {
         val snackbar = Snackbar.make(mainView, message, Snackbar.LENGTH_INDEFINITE)
         snackbar.setAction(getString(R.string.common_retry)) {
             snackbar.dismiss()
             action()
         }.show()
     }
+}
+
+interface FragmentOnBackPressedHandler {
+    fun handleOnBackPressed()
+}
+
+@SuppressLint("FragmentBackPressedCallback")
+fun Fragment.addBackPressHandler(handler: FragmentOnBackPressedHandler) {
+    activity?.onBackPressedDispatcher?.addCallback(this, object : OnBackPressedCallback(true) {
+        override fun handleOnBackPressed() {
+            handler.handleOnBackPressed()
+        }
+    })
+    view?.findViewById<Toolbar>(R.id.toolbar)?.setNavigationOnClickListener { activity?.onBackPressed() }
 }
