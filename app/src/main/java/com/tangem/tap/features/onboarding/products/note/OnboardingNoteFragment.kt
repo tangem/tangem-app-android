@@ -19,6 +19,7 @@ import com.tangem.tap.common.postUi
 import com.tangem.tap.common.redux.navigation.ShareElement
 import com.tangem.tap.common.toggleWidget.RefreshBalanceWidget
 import com.tangem.tap.common.transitions.InternalNoteLayoutTransition
+import com.tangem.tap.features.addBackPressHandler
 import com.tangem.tap.features.onboarding.products.BaseOnboardingFragment
 import com.tangem.tap.features.onboarding.products.note.redux.OnboardingNoteAction
 import com.tangem.tap.features.onboarding.products.note.redux.OnboardingNoteState
@@ -49,6 +50,7 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        addBackPressHandler(this)
 
         imv_front_card.transitionName = ShareElement.imvFrontCard
         startPostponedEnterTransition()
