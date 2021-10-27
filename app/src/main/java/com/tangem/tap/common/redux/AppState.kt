@@ -16,14 +16,14 @@ import com.tangem.tap.features.onboarding.products.note.redux.OnboardingNoteMidd
 import com.tangem.tap.features.onboarding.products.note.redux.OnboardingNoteState
 import com.tangem.tap.features.onboarding.products.otherCards.redux.OnboardingOtherCardsMiddleware
 import com.tangem.tap.features.onboarding.products.otherCards.redux.OnboardingOtherCardsState
+import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsMiddleware
+import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
 import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletMiddleware
 import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletState
 import com.tangem.tap.features.send.redux.middlewares.SendMiddleware
 import com.tangem.tap.features.send.redux.states.SendState
 import com.tangem.tap.features.tokens.redux.TokensMiddleware
 import com.tangem.tap.features.tokens.redux.TokensState
-import com.tangem.tap.features.twins.redux.TwinCardsMiddleware
-import com.tangem.tap.features.twins.redux.TwinCardsState
 import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.redux.middlewares.WalletMiddleware
 import org.rekotlin.Middleware
