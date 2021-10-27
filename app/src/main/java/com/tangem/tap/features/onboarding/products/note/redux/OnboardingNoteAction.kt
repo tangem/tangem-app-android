@@ -1,6 +1,7 @@
 package com.tangem.tap.features.onboarding.products.note.redux
 
 import com.tangem.blockchain.common.WalletManager
+import com.tangem.tap.domain.TapError
 import com.tangem.tap.features.onboarding.OnboardingWalletBalance
 import com.tangem.tap.features.wallet.redux.Artwork
 import org.rekotlin.Action
@@ -26,6 +27,7 @@ sealed class OnboardingNoteAction : Action {
     sealed class Balance {
         object Update : OnboardingNoteAction()
         data class Set(val balance: OnboardingWalletBalance) : OnboardingNoteAction()
+        data class SetNonCriticalError(val error: TapError?) : OnboardingNoteAction()
     }
 
     sealed class Confetti {
