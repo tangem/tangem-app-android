@@ -12,6 +12,7 @@
         android:id="@+id/tv_balance"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:elevation="0dp"
         android:fontFamily="sans-serif-medium"
         android:text="@string/onboarding_balance_title"
         android:textAllCaps="true"

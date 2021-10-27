@@ -150,8 +150,8 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     private fun setupCardImage(cardImage: Artwork?) {
         Picasso.get()
                 .load(cardImage?.artworkId)
-                .placeholder(R.drawable.card_placeholder)
-                ?.error(R.drawable.card_placeholder)
+                .placeholder(R.drawable.card_placeholder_black)
+                ?.error(R.drawable.card_placeholder_black)
                 ?.into(iv_card)
     }
 
