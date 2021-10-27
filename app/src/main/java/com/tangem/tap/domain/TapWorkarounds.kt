@@ -58,7 +58,7 @@ object TapWorkarounds {
             "AB02" to Blockchain.Ethereum,
             "AB03" to Blockchain.CardanoShelley,
             "AB04" to Blockchain.Dogecoin,
-            "AB05" to Blockchain.Binance,
+            "AB05" to Blockchain.BSC,
             "AB06" to Blockchain.XRP,
     )
 }
