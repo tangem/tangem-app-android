@@ -12,6 +12,7 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.hasWallets
 import com.tangem.tap.domain.extensions.makePrimaryWalletManager
+import com.tangem.tap.features.wallet.redux.Currency
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.scope
 import com.tangem.tap.store
@@ -107,6 +108,7 @@ private fun handleNoteAction(action: Action, dispatch: DispatchFunction) {
 
             val isLoadedBefore = noteState.walletBalance.state != ProgressState.Loading
             val balanceIsLoading = noteState.walletBalance.copy(
+                currency = Currency.Blockchain(walletManager.wallet.blockchain),
                 state = ProgressState.Loading,
                 error = null,
                 criticalError = null
@@ -128,7 +130,7 @@ private fun handleNoteAction(action: Action, dispatch: DispatchFunction) {
         }
         is OnboardingNoteAction.ShowAddressInfoDialog -> {
             val addressData = noteState.walletManager?.getAddressData() ?: return
-            val addressWasCopied = noteState.resources.strings.addressWasCopied
+            val addressWasCopied = globalState.resources.strings.addressWasCopied
             val appDialog = AppDialog.AddressInfoDialog(
                 addressData,
                 onCopyAddress = { store.dispatchToastNotification(addressWasCopied) },
@@ -143,7 +145,7 @@ private fun handleNoteAction(action: Action, dispatch: DispatchFunction) {
         OnboardingNoteAction.Done -> {
             store.dispatch(GlobalAction.Onboarding.Stop)
             scope.launch {
-                globalState.tapWalletManager.onCardScanned(scanResponse)
+                store.onCardScanned(scanResponse)
                 store.dispatch(NavigationAction.NavigateTo(AppScreen.Wallet))
             }
         }
