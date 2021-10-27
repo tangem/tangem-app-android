@@ -5,12 +5,13 @@ import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.TransactionStatus
 import com.tangem.blockchain.common.Wallet
 import com.tangem.tap.common.extensions.toFormattedString
+import com.tangem.tap.domain.extensions.toSendableAmounts
 
 data class PendingTransaction(
-        val address: String?,
-        val amount: String?,
-        val currency: String,
-        val type: PendingTransactionType
+    val address: String?,
+    val amount: String?,
+    val currency: String,
+    val type: PendingTransactionType
 )
 
 enum class PendingTransactionType { Incoming, Outgoing, Unknown }
@@ -36,10 +37,10 @@ fun TransactionData.toPendingTransaction(walletAddress: String): PendingTransact
     }
 
     return PendingTransaction(
-            if (address == "unknown") null else address,
-            this.amount.value?.toFormattedString(amount.decimals),
-            this.amount.currencySymbol,
-            type
+        if (address == "unknown") null else address,
+        this.amount.value?.toFormattedString(amount.decimals),
+        this.amount.currencySymbol,
+        type
     )
 }
 
@@ -66,4 +67,8 @@ fun Wallet.getPendingTransactions(): List<PendingTransaction> {
 
 fun Wallet.hasPendingTransactions(): Boolean {
     return getPendingTransactions().isNotEmpty()
+}
+
+fun Wallet.hasSendableAmountsOrPendingTransactions(): Boolean {
+    return hasPendingTransactions() || amounts.toSendableAmounts().isNotEmpty()
 }
