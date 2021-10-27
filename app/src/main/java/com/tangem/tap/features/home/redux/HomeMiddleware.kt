@@ -2,6 +2,8 @@ package com.tangem.tap.features.home.redux
 
 import com.tangem.tap.common.entities.IndeterminateProgressButton
 import com.tangem.tap.common.extensions.dispatchOpenUrl
+import com.tangem.tap.common.extensions.onCardScanned
+import com.tangem.tap.common.extensions.withMainContext
 import com.tangem.tap.common.post
 import com.tangem.tap.common.postUi
 import com.tangem.tap.common.redux.AppState
@@ -10,10 +12,10 @@ import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.FragmentShareTransition
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.DELAY_SDK_DIALOG_CLOSE
-import com.tangem.tap.domain.twins.getTwinCardNumber
 import com.tangem.tap.features.onboarding.OnboardingHelper
+import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
+import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsStep
 import com.tangem.tap.features.send.redux.states.ButtonState
-import com.tangem.tap.features.twins.redux.TwinCardsAction
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
@@ -58,21 +60,24 @@ private fun handleReadCard() {
     } else {
         changeButtonState(ButtonState.PROGRESS)
         store.dispatch(GlobalAction.ScanCard({ scanResponse ->
-            if (scanResponse.isTangemTwins()) {
-                scanResponse.card.getTwinCardNumber()?.let {
-                    val configManager = store.state.globalState.configManager
-                    val isCreatingTwinsAllowed = configManager?.config?.isCreatingTwinCardsAllowed ?: false
-                    store.dispatch(TwinCardsAction.SetTwinCard(it, null, isCreatingTwinsAllowed))
-                }
-            }
+            store.dispatch(TwinCardsAction.IfTwinsPrepareState(scanResponse))
 
             if (OnboardingHelper.isOnboardingCase(scanResponse)) {
                 val navigateTo = OnboardingHelper.whereToNavigate(scanResponse)
                 store.dispatch(GlobalAction.Onboarding.Start(scanResponse))
                 navigateTo(navigateTo, store.state.homeState.shareTransition)
             } else {
-                scope.launch { store.state.globalState.tapWalletManager.onCardScanned(scanResponse) }
-                navigateTo(AppScreen.Wallet, null)
+                scope.launch {
+                    store.onCardScanned(scanResponse)
+                    withMainContext {
+                        if (scanResponse.twinsIsTwinned() && !preferencesStorage.wasTwinsOnboardingShown()) {
+                            store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.WelcomeOnly))
+                            navigateTo(AppScreen.OnboardingTwins, store.state.homeState.shareTransition)
+                        } else {
+                            navigateTo(AppScreen.Wallet, null)
+                        }
+                    }
+                }
             }
         }, {
             changeButtonState(ButtonState.ENABLED)
