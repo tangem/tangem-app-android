@@ -11,8 +11,8 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
-import com.tangem.tap.features.onboarding.twins.redux.CreateTwinWalletMode
-import com.tangem.tap.features.onboarding.twins.redux.TwinCardsAction
+import com.tangem.tap.features.onboarding.products.twins.redux.CreateTwinWalletMode
+import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.features.wallet.models.hasSendableAmountsOrPendingTransactions
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.network.coinmarketcap.CoinMarketCapService
