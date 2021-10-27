@@ -25,6 +25,7 @@ import com.tangem.tap.common.snackBar.MaxAmountSnackbar
 import com.tangem.tap.common.text.truncateMiddleWith
 import com.tangem.tap.common.toggleWidget.*
 import com.tangem.tap.features.BaseStoreFragment
+import com.tangem.tap.features.addBackPressHandler
 import com.tangem.tap.features.send.redux.*
 import com.tangem.tap.features.send.redux.AddressPayIdActionUi.*
 import com.tangem.tap.features.send.redux.AmountActionUi.*
@@ -64,6 +65,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        addBackPressHandler(this)
 
         etAmountToSend = view.findViewById(R.id.etAmountToSend)
 
