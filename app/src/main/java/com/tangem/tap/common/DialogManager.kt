@@ -7,8 +7,8 @@ import com.tangem.tap.common.redux.global.GlobalState
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectDialog
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.*
 import com.tangem.tap.features.onboarding.AddressInfoBottomSheetDialog
-import com.tangem.tap.features.twins.redux.TwinCardsAction
-import com.tangem.tap.features.twins.ui.dialog.CreateWalletInterruptDialog
+import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
+import com.tangem.tap.features.onboarding.products.twins.ui.dialog.CreateWalletInterruptDialog
 import com.tangem.tap.features.wallet.ui.dialogs.ScanFailsDialog
 import com.tangem.tap.store
 import com.tangem.wallet.R
@@ -45,7 +45,7 @@ class DialogManager : StoreSubscriber<GlobalState> {
         dialog = when (state.dialog) {
             is AppDialog.ScanFailsDialog -> ScanFailsDialog.create(context)
             is AppDialog.AddressInfoDialog -> AddressInfoBottomSheetDialog(state.dialog, context)
-            is TwinCardsAction.Wallet.InterruptDialog -> CreateWalletInterruptDialog.create(state.dialog, context)
+            is TwinCardsAction.Wallet.ShowInterruptDialog -> CreateWalletInterruptDialog.create(state.dialog, context)
             is WalletConnectDialog.UnsupportedCard ->
                 SimpleAlertDialog.create(
                     titleRes = R.string.wallet_connect,
