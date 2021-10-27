@@ -38,11 +38,6 @@ abstract class BaseFragment(layoutId: Int) : Fragment(layoutId), FragmentOnBackP
         return mainView
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        addBackPressHandler(this)
-    }
-
     override fun handleOnBackPressed() {
         store.dispatch(NavigationAction.PopBackTo())
     }
