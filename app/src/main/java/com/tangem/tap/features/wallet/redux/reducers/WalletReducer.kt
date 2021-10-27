@@ -38,13 +38,12 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
         is WalletAction.ResetState -> newState = WalletState()
         is WalletAction.SetIfTestnetCard -> newState = newState.copy(isTestnet = action.isTestnet)
         is WalletAction.EmptyWallet -> {
-            val creatingWalletAllowed = state.twinCardsState.isCreatingTwinCardsAllowed
             newState = newState.copy(
                 state = ProgressState.Done,
                 wallets = listOf(
                     WalletData(
                         currencyData = BalanceWidgetData(BalanceStatus.EmptyCard),
-                        mainButton = WalletMainButton.CreateWalletButton(creatingWalletAllowed),
+                        mainButton = WalletMainButton.CreateWalletButton(true),
                     )
                 )
             )
