@@ -19,8 +19,6 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.extensions.toSendableAmounts
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.send.redux.PrepareSendScreen
-import com.tangem.tap.features.twins.redux.CreateTwinWalletMode
-import com.tangem.tap.features.twins.redux.TwinCardsAction
 import com.tangem.tap.features.wallet.redux.*
 import com.tangem.tap.network.NetworkStateChanged
 import kotlinx.coroutines.launch
@@ -96,31 +94,22 @@ class WalletMiddleware {
                 }
             }
             is WalletAction.CreateWallet -> {
-                if (walletState.isTangemTwins) {
-                    store.dispatch(TwinCardsAction.Wallet.Create(
-                        walletState.twinCardsState.cardNumber!!,
-                        CreateTwinWalletMode.CreateWallet
-                    ))
-                } else {
-                    scope.launch {
-                        val result = tangemSdkManager.createWallet(
-                            globalState.scanResponse?.card?.cardId
-                        )
-                        when (result) {
-                            is CompletionResult.Success -> {
-                                val scanNoteResponse = globalState.scanResponse?.copy(card = result.data)
-                                scanNoteResponse?.let {
-                                    globalState.tapWalletManager.onCardScanned(scanNoteResponse)
-                                }
-                            }
-                            is CompletionResult.Failure -> {
-                                (result.error as? TangemSdkError)?.let { error ->
-                                    FirebaseAnalyticsHandler.logCardSdkError(
-                                        error,
-                                        FirebaseAnalyticsHandler.ActionToLog.CreateWallet,
-                                        card = store.state.detailsState.card
-                                    )
-                                }
+                scope.launch {
+                    val result = tangemSdkManager.createWallet(
+                        globalState.scanResponse?.card?.cardId
+                    )
+                    when (result) {
+                        is CompletionResult.Success -> {
+                            val scanNoteResponse = globalState.scanResponse?.copy(card = result.data)
+                            scanNoteResponse?.let { store.onCardScanned(scanNoteResponse) }
+                        }
+                        is CompletionResult.Failure -> {
+                            (result.error as? TangemSdkError)?.let { error ->
+                                FirebaseAnalyticsHandler.logCardSdkError(
+                                    error,
+                                    FirebaseAnalyticsHandler.ActionToLog.CreateWallet,
+                                    card = store.state.detailsState.card
+                                )
                             }
                         }
                     }
