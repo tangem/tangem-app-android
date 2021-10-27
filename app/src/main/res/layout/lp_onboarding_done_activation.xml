@@ -7,6 +7,11 @@
     android:visibility="visible">
 
     <include
+        android:id="@+id/onboarding_twins_welcome_bg"
+        layout="@layout/view_bg_twins_welcome"
+        android:visibility="gone" />
+
+    <include
         layout="@layout/view_onboarding_progress"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -37,13 +42,44 @@
         android:layout_width="140dp"
         android:layout_height="88dp"
         android:scaleType="fitXY"
-        android:src="@drawable/ic_home_front_card"
-        android:transitionName="imv_front_card"
+        android:src="@drawable/card_placeholder_black"
         android:translationY="-30dp"
         android:visibility="visible"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/imv_card_background" />
+
+    <FrameLayout
+        android:id="@+id/cards_container"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="@dimen/onboarding_card_margin_top"
+        android:clipChildren="false"
+        android:layout_marginEnd="32dp"
+        android:src="@drawable/card_placeholder_black"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/imv_twin_back_card"
+            android:layout_width="328dp"
+            android:layout_height="174dp"
+            android:layout_gravity="center"
+            android:scaleType="fitXY"
+            android:src="@drawable/card_placeholder_white" />
+
+        <androidx.appcompat.widget.AppCompatImageView
+            android:id="@+id/imv_twin_front_card"
+            android:layout_width="328dp"
+            android:layout_height="174dp"
+            android:layout_gravity="center"
+            android:scaleType="fitXY"
+            android:src="@drawable/card_placeholder_black" />
+
+    </FrameLayout>
 
     <include
         android:id="@+id/onboarding_tv_balance"
