@@ -181,6 +181,7 @@
 
     <string name="onboarding_top_up_header" translatable="false">Top up your wallet</string>
     <string name="onboarding_top_up_body" translatable="false">To get started, simply top up the card with any amount</string>
+    <string name="onboarding_top_up_body_no_account_error" translatable="false">To get started, simply top up the wallet with more than %s %s.</string>
     <string name="onboarding_top_up_button_but_crypto" translatable="false">Buy crypto</string>
     <string name="onboarding_top_up_button_show_wallet_address" translatable="false">Show the wallet’s address</string>
     <string name="onboarding_dialog_wallet_address" translatable="false">Scan the address to top up your wallet</string>
