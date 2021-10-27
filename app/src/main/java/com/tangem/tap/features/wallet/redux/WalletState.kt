@@ -12,7 +12,7 @@ import com.tangem.tap.common.toggleWidget.WidgetState
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.extensions.toSendableAmounts
 import com.tangem.tap.domain.topup.TradeCryptoHelper
-import com.tangem.tap.features.twins.redux.TwinCardsState
+import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
 import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.models.toPendingTransactions
 import com.tangem.tap.features.wallet.models.toPendingTransactionsForToken
