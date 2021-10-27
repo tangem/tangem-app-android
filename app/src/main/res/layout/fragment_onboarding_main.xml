@@ -41,7 +41,7 @@
 
         <include
             android:id="@+id/onboarding_action_container"
-            layout="@layout/layout_onboarding_bottom_action_views"
+            layout="@layout/layout_onboarding_container_bottom"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1" />
