@@ -26,6 +26,9 @@ private fun internalReduce(action: Action, appState: AppState): OnboardingNoteSt
         is OnboardingNoteAction.Balance.Set -> {
             state = state.copy(walletBalance = action.balance)
         }
+        is OnboardingNoteAction.Balance.SetNonCriticalError -> {
+            state = state.copy(balanceNonCriticalError = action.error)
+        }
         is OnboardingNoteAction.SetStepOfScreen -> {
             if (action.step != state.currentStep && state.steps.contains(action.step)) {
                 state = state.copy(currentStep = action.step)
