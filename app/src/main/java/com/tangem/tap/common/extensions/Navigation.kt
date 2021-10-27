@@ -16,12 +16,10 @@ import com.tangem.tap.features.disclaimer.ui.DisclaimerFragment
 import com.tangem.tap.features.home.HomeFragment
 import com.tangem.tap.features.onboarding.products.note.OnboardingNoteFragment
 import com.tangem.tap.features.onboarding.products.otherCards.OnboardingOtherCardsFragment
-import com.tangem.tap.features.onboarding.products.twins.OnboardingTwinsFragment
+import com.tangem.tap.features.onboarding.products.twins.ui.TwinsCardsFragment
 import com.tangem.tap.features.onboarding.products.wallet.OnboardingWalletFragment
 import com.tangem.tap.features.send.ui.SendFragment
 import com.tangem.tap.features.tokens.ui.AddTokensFragment
-import com.tangem.tap.features.twins.ui.CreateTwinWalletFragment
-import com.tangem.tap.features.twins.ui.TwinWalletWarningFragment
 import com.tangem.tap.features.wallet.ui.WalletDetailsFragment
 import com.tangem.tap.features.wallet.ui.WalletFragment
 import com.tangem.wallet.R
@@ -39,7 +37,7 @@ fun FragmentActivity.openFragment(
         transaction.setReorderingAllowed(true)
         shareElements.forEach { shareElement ->
             shareElement.wView.get()?.let { view ->
-                transaction.addSharedElement(view, shareElement.name)
+                transaction.addSharedElement(view, shareElement.elementName)
             }
         }
     }
@@ -70,10 +68,11 @@ fun FragmentActivity.addOnBackPressedDispatcher(
 
 private fun fragmentFactory(screen: AppScreen): Fragment {
     return when (screen) {
+//        AppScreen.Home -> TestLeapfrogFragment()
         AppScreen.Home -> HomeFragment()
         AppScreen.OnboardingNote -> OnboardingNoteFragment()
         AppScreen.OnboardingWallet -> OnboardingWalletFragment()
-        AppScreen.OnboardingTwins -> OnboardingTwinsFragment()
+        AppScreen.OnboardingTwins -> TwinsCardsFragment()
         AppScreen.OnboardingOther -> OnboardingOtherCardsFragment()
         AppScreen.Wallet -> WalletFragment()
         AppScreen.Send -> SendFragment()
@@ -81,8 +80,6 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
         AppScreen.DetailsConfirm -> DetailsConfirmFragment()
         AppScreen.DetailsSecurity -> DetailsSecurityFragment()
         AppScreen.Disclaimer -> DisclaimerFragment()
-        AppScreen.CreateTwinWalletWarning -> TwinWalletWarningFragment()
-        AppScreen.CreateTwinWallet -> CreateTwinWalletFragment()
         AppScreen.AddTokens -> AddTokensFragment()
         AppScreen.WalletDetails -> WalletDetailsFragment()
         AppScreen.WalletConnectSessions -> WalletConnectSessionsFragment()

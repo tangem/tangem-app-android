@@ -6,7 +6,7 @@ import com.tangem.common.card.Card
 import com.tangem.tap.common.entities.Button
 import com.tangem.tap.common.entities.TapCurrency.Companion.DEFAULT_FIAT_CURRENCY
 import com.tangem.tap.common.redux.global.FiatCurrencyName
-import com.tangem.tap.features.onboarding.twins.redux.TwinCardsState
+import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
 import com.tangem.tap.network.coinmarketcap.FiatCurrency
 import com.tangem.tap.store
 import org.rekotlin.StateType
