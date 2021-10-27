@@ -23,6 +23,9 @@ sealed class GlobalAction : Action {
     data class ShowErrorNotification(override val error: TapError) : GlobalAction(), ErrorAction
     data class DebugShowErrorNotification(override val error: TapError) : GlobalAction(), DebugErrorAction
 
+    // android resources
+    data class SetResources(val resources: AndroidResources) : GlobalAction()
+
     // dialogs
     data class ShowDialog(val stateDialog: StateDialog) : GlobalAction()
     object HideDialog : GlobalAction()
