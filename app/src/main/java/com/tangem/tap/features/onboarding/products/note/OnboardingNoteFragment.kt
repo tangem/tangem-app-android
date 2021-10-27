@@ -15,7 +15,6 @@ import com.tangem.tangem_sdk_new.extensions.fadeIn
 import com.tangem.tangem_sdk_new.extensions.fadeOut
 import com.tangem.tap.common.extensions.getDrawableCompat
 import com.tangem.tap.common.extensions.stripZeroPlainString
-import com.tangem.tap.common.postUi
 import com.tangem.tap.common.redux.navigation.ShareElement
 import com.tangem.tap.common.toggleWidget.RefreshBalanceWidget
 import com.tangem.tap.common.transitions.InternalNoteLayoutTransition
@@ -137,14 +136,22 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
         }
 
         tv_header.setText(R.string.onboarding_top_up_header)
-        tv_body.setText(R.string.onboarding_top_up_body)
+        if (state.balanceNonCriticalError == null) {
+            tv_body.setText(R.string.onboarding_top_up_body)
+        } else {
+            state.walletBalance.amountToCreateAccount?.let { amount ->
+                val tvBodyMessage = getString(
+                    R.string.onboarding_top_up_body_no_account_error,
+                    amount, state.walletBalance.currency.currencySymbol
+                )
+                tv_body.text = tvBodyMessage
+            }
+        }
 
         btnRefreshBalanceWidget.changeState(state.walletBalance.state)
         if (btnRefreshBalanceWidget.isShowing != true) {
-            postUi(300) {
-                btnRefreshBalanceWidget.mainView.setOnClickListener {
-                    store.dispatch(OnboardingNoteAction.Balance.Update)
-                }
+            btnRefreshBalanceWidget.mainView.setOnClickListener {
+                store.dispatch(OnboardingNoteAction.Balance.Update)
             }
         }
         imv_card_background.setBackgroundDrawable(requireContext().getDrawableCompat(R.drawable.shape_rectangle_rounded_8))
