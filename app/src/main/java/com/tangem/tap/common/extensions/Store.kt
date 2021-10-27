@@ -4,6 +4,7 @@ import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.TapError
+import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import kotlinx.coroutines.Dispatchers
@@ -15,6 +16,10 @@ fun Store<*>.dispatchOnMain(action: Action) {
     scope.launch(Dispatchers.Main) {
         store.dispatch(action)
     }
+}
+
+suspend fun Store<*>.onCardScanned(scanResponse: ScanResponse) {
+    store.state.globalState.tapWalletManager.onCardScanned(scanResponse)
 }
 
 fun Store<*>.dispatchOpenUrl(url: String) {
