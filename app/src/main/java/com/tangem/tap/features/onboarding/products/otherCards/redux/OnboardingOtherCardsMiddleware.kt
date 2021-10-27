@@ -1,6 +1,7 @@
 package com.tangem.tap.features.onboarding.products.otherCards.redux
 
 import com.tangem.common.CompletionResult
+import com.tangem.tap.common.extensions.onCardScanned
 import com.tangem.tap.common.extensions.withMainContext
 import com.tangem.tap.common.postUi
 import com.tangem.tap.common.redux.AppState
@@ -83,7 +84,7 @@ private fun handleOtherCardsAction(action: Action, dispatch: DispatchFunction) {
         OnboardingOtherCardsAction.Done -> {
             store.dispatch(GlobalAction.Onboarding.Stop)
             scope.launch {
-                globalState.tapWalletManager.onCardScanned(onboardingManager.scanResponse)
+                store.onCardScanned(onboardingManager.scanResponse)
                 store.dispatch(NavigationAction.NavigateTo(AppScreen.Wallet))
             }
         }
