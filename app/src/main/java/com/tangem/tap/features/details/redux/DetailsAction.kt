@@ -6,6 +6,7 @@ import com.tangem.tap.common.redux.NotificationAction
 import com.tangem.tap.common.redux.global.FiatCurrencyName
 import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.domain.termsOfUse.CardTou
+import com.tangem.tap.domain.twins.TwinCardNumber
 import com.tangem.tap.network.coinmarketcap.FiatCurrency
 import com.tangem.wallet.R
 import org.rekotlin.Action
@@ -21,7 +22,7 @@ sealed class DetailsAction : Action {
     ) : DetailsAction()
 
     object ShowDisclaimer : DetailsAction()
-
+    data class ReCreateTwinsWallet(val number: TwinCardNumber) : DetailsAction()
 
     sealed class EraseWallet : DetailsAction() {
         object Check : EraseWallet()
