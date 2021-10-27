@@ -4,44 +4,45 @@ import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Types
 import com.tangem.Message
 import com.tangem.blockchain.extensions.Result
-import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.common.CompletionResult
 import com.tangem.common.KeyPair
+import com.tangem.common.card.Card
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
+import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.network.createMoshi
 import com.tangem.tap.tangemSdkManager
 
-class TwinCardsManager(private val scanResponse: ScanResponse, assetReader: AssetReader) {
+class TwinCardsManager(private val card: Card, assetReader: AssetReader) {
 
-    private val currentCardId: String = scanResponse.card.cardId
+    private val currentCardId: String = card.cardId
 
     private var currentCardPublicKey: String? = null
     private var secondCardPublicKey: String? = null
 
-    private val issuerKeyPair: KeyPair = getIssuerKeys(assetReader, scanResponse.card.issuer.publicKey.toHexString())
+    private val issuerKeyPair: KeyPair = getIssuerKeys(assetReader, card.issuer.publicKey.toHexString())
 
-    suspend fun createFirstWallet(message: Message): SimpleResult {
+    suspend fun createFirstWallet(message: Message): CompletionResult<CreateWalletResponse> {
         val response = tangemSdkManager.runTaskAsync(
             CreateFirstTwinWalletTask(), currentCardId, message
         )
         when (response) {
             is CompletionResult.Success -> {
                 currentCardPublicKey = response.data.wallet.publicKey.toHexString()
-                return SimpleResult.Success
+                return response
             }
             is CompletionResult.Failure -> {
                 (response.error as? TangemSdkError)?.let { error ->
                     FirebaseAnalyticsHandler.logCardSdkError(
                         error,
                         FirebaseAnalyticsHandler.ActionToLog.CreateWallet,
-                        card = scanResponse.card
+                        card = card
                     )
                 }
-                return SimpleResult.failure(response.error)
+                return response
             }
         }
 
@@ -52,7 +53,7 @@ class TwinCardsManager(private val scanResponse: ScanResponse, assetReader: Asse
         initialMessage: Message,
         preparingMessage: Message,
         creatingWalletMessage: Message,
-    ): SimpleResult {
+    ): CompletionResult<CreateWalletResponse> {
         val task = CreateSecondTwinWalletTask(
             firstPublicKey = currentCardPublicKey!!,
             firstCardId = currentCardId,
@@ -64,20 +65,18 @@ class TwinCardsManager(private val scanResponse: ScanResponse, assetReader: Asse
         when (response) {
             is CompletionResult.Success -> {
                 secondCardPublicKey = response.data.wallet.publicKey.toHexString()
-                return SimpleResult.Success
             }
             is CompletionResult.Failure -> {
                 (response.error as? TangemSdkError)?.let { error ->
                     FirebaseAnalyticsHandler.logCardSdkError(
                         error,
                         FirebaseAnalyticsHandler.ActionToLog.CreateWallet,
-                        card = scanResponse.card
+                        card = card
                     )
                 }
-                return SimpleResult.failure(response.error)
             }
         }
-
+        return response
     }
 
     suspend fun complete(message: Message): Result<ScanResponse> {
@@ -92,7 +91,7 @@ class TwinCardsManager(private val scanResponse: ScanResponse, assetReader: Asse
                     FirebaseAnalyticsHandler.logCardSdkError(
                         error,
                         FirebaseAnalyticsHandler.ActionToLog.WriteIssuerData,
-                        card = scanResponse.card
+                        card = card
                     )
                 }
                 Result.failure(response.error)
