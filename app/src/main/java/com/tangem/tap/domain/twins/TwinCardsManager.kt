@@ -26,14 +26,9 @@ class TwinCardsManager(private val card: Card, assetReader: AssetReader) {
     private val issuerKeyPair: KeyPair = getIssuerKeys(assetReader, card.issuer.publicKey.toHexString())
 
     suspend fun createFirstWallet(message: Message): CompletionResult<CreateWalletResponse> {
-        val response = tangemSdkManager.runTaskAsync(
-            CreateFirstTwinWalletTask(), currentCardId, message
-        )
+        val response = tangemSdkManager.runTaskAsync(CreateFirstTwinWalletTask(), currentCardId, message)
         when (response) {
-            is CompletionResult.Success -> {
-                currentCardPublicKey = response.data.wallet.publicKey.toHexString()
-                return response
-            }
+            is CompletionResult.Success -> currentCardPublicKey = response.data.wallet.publicKey.toHexString()
             is CompletionResult.Failure -> {
                 (response.error as? TangemSdkError)?.let { error ->
                     FirebaseAnalyticsHandler.logCardSdkError(
@@ -42,12 +37,10 @@ class TwinCardsManager(private val card: Card, assetReader: AssetReader) {
                         card = card
                     )
                 }
-                return response
             }
         }
-
+        return response
     }
-
 
     suspend fun createSecondWallet(
         initialMessage: Message,
