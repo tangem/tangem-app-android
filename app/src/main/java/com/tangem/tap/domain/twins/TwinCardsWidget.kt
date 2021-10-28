@@ -5,6 +5,7 @@ import android.animation.ObjectAnimator
 import android.animation.PropertyValuesHolder
 import android.view.View
 import androidx.core.animation.doOnEnd
+import com.tangem.common.extensions.VoidCallback
 import com.tangem.tap.common.leapfrogWidget.LeapView
 import com.tangem.tap.common.leapfrogWidget.LeapViewState
 import com.tangem.tap.common.leapfrogWidget.LeapfrogWidget
@@ -17,47 +18,60 @@ class TwinsCardWidget(
     val getTopOfAnchorViewForActivateState: () -> Float
 ) {
 
+    var state: TwinCardsWidgetState? = null
+        private set
+
+    private val animationDuration = 300L
+
     init {
         if (leapfrogWidget.getViewsCount() != 2) throw UnsupportedOperationException()
     }
 
-    fun toWelcome(animate: Boolean = true, onEnd: () -> Unit = {}) {
-        val animator = createAnimator(animate, onEnd)
+    fun toWelcome(animate: Boolean = true, onEnd: VoidCallback = {}) {
+        if (state == TwinCardsWidgetState.Welcome) return
+
+        state = TwinCardsWidgetState.Welcome
+        val animator = createAnimator(animate)
         animator.playTogether(
             createAnimator(TwinCardNumber.First, createWelcomeProperties(TwinCardNumber.First)),
             createAnimator(TwinCardNumber.Second, createWelcomeProperties(TwinCardNumber.Second))
         )
-        leapfrogWidget.fold { animator.start() }
+        animator.doOnEnd { onEnd() }
+        leapfrogWidget.fold(animate) { animator.start() }
     }
 
-    fun toLeapfrog(animate: Boolean = true, onEnd: () -> Unit = {}) {
-        val animator = createAnimator(animate, onEnd)
+    fun toLeapfrog(animate: Boolean = true, onEnd: VoidCallback = {}) {
+        if (state == TwinCardsWidgetState.Leapfrog) return
+
+        state = TwinCardsWidgetState.Leapfrog
+        val animator = createAnimator(animate)
         animator.playTogether(
             createAnimator(TwinCardNumber.First, createLeapfrogProperties(TwinCardNumber.First)),
             createAnimator(TwinCardNumber.Second, createLeapfrogProperties(TwinCardNumber.Second))
         )
-        leapfrogWidget.fold {
-            animator.doOnEnd {
-                leapfrogWidget.initViews()
-                leapfrogWidget.unfold()
-            }
-            animator.start()
+        animator.doOnEnd {
+            leapfrogWidget.initViews()
+            leapfrogWidget.unfold(animate, onEnd)
         }
+        animator.start()
     }
 
-    fun toActivate(animate: Boolean = true, onEnd: () -> Unit = {}) {
-        val animator = createAnimator(animate, onEnd)
+    fun toActivate(animate: Boolean = true, onEnd: VoidCallback = {}) {
+        if (state == TwinCardsWidgetState.Activate) return
+
+        state = TwinCardsWidgetState.Activate
+        val animator = createAnimator(animate)
         animator.playTogether(
             createAnimator(TwinCardNumber.First, createActivateProperties(TwinCardNumber.First)),
             createAnimator(TwinCardNumber.Second, createActivateProperties(TwinCardNumber.Second))
         )
+        animator.doOnEnd { onEnd() }
         animator.start()
     }
 
-    private fun createAnimator(animate: Boolean, onEnd: () -> Unit): AnimatorSet {
+    private fun createAnimator(animate: Boolean): AnimatorSet {
         return AnimatorSet().apply {
-            duration = if (animate) 400 else 0
-            doOnEnd { onEnd() }
+            duration = if (animate) animationDuration else 0
         }
     }
 
@@ -72,20 +86,20 @@ class TwinsCardWidget(
         return when (cardNumber) {
             TwinCardNumber.First -> {
                 TwinsCardProperties(
-                    xTranslation = -180f,
-                    yTranslation = -350f,
+                    xTranslation = -120f,
+                    yTranslation = -220f,
                     rotation = -3f,
                     elevation = 1f,
-                    scale = 1.1f,
+                    scale = 1f,
                 )
             }
             TwinCardNumber.Second -> {
                 TwinsCardProperties(
-                    xTranslation = 180f,
-                    yTranslation = 10f,
+                    xTranslation = 170f,
+                    yTranslation = 170f,
                     rotation = -3f,
                     elevation = 0f,
-                    scale = 1.1f,
+                    scale = 1f,
                 )
             }
         }
@@ -108,7 +122,7 @@ class TwinsCardWidget(
             xTranslation = twinProperties.xTranslation,
             yTranslation = twinProperties.yTranslation - topOfAnchorView,
             rotation = 0f,
-            scale = twinProperties.scale - 0.4f,
+            scale = twinProperties.scale - 0.5f,
         )
     }
 
@@ -118,6 +132,10 @@ class TwinsCardWidget(
             TwinCardNumber.Second -> leapfrogWidget.getViewByPosition(1)
         }
     }
+}
+
+enum class TwinCardsWidgetState {
+    Welcome, Leapfrog, Activate
 }
 
 private data class TwinsCardProperties(
