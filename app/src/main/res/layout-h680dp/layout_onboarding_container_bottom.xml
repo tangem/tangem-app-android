@@ -7,6 +7,7 @@
     android:clipChildren="false">
 
     <androidx.appcompat.widget.LinearLayoutCompat
+        android:id="@+id/linearLayoutCompat"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="16dp"
@@ -37,6 +38,7 @@
             android:layout_marginStart="64dp"
             android:layout_marginTop="10dp"
             android:layout_marginEnd="64dp"
+            android:minLines="3"
             app:layout_constraintBottom_toTopOf="@+id/fl_scan_card_container"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
@@ -44,6 +46,20 @@
             tools:text="This one that you are holding in your hands and the other one with number xxxxxxxxxxxx." />
 
     </androidx.appcompat.widget.LinearLayoutCompat>
+
+    <androidx.appcompat.widget.AppCompatCheckBox
+        android:id="@+id/chb_understand"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/alert_button_i_understand"
+        android:textStyle="bold"
+        android:visibility="gone"
+        app:buttonTint="@color/accent"
+        app:layout_constraintBottom_toTopOf="@+id/fl_scan_card_container"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/linearLayoutCompat"
+        tools:visibility="visible" />
 
     <FrameLayout
         android:id="@+id/fl_scan_card_container"
