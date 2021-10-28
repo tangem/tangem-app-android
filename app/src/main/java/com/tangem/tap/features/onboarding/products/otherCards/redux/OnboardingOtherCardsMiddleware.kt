@@ -44,8 +44,8 @@ private fun handleOtherCardsAction(action: Action, dispatch: DispatchFunction) {
     when (action) {
         is OnboardingOtherCardsAction.LoadCardArtwork -> {
             scope.launch {
-                val artwork = onboardingManager.loadArtwork()
-                withMainContext { store.dispatch(OnboardingOtherCardsAction.SetArtwork(artwork)) }
+                val artworkUrl = onboardingManager.loadArtworkUrl()
+                withMainContext { store.dispatch(OnboardingOtherCardsAction.SetArtworkUrl(artworkUrl)) }
             }
         }
         is OnboardingOtherCardsAction.DetermineStepOfScreen -> {
