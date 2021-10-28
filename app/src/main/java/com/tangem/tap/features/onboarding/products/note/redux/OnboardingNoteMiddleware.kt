@@ -9,6 +9,7 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.domain.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.hasWallets
 import com.tangem.tap.domain.extensions.makePrimaryWalletManager
@@ -50,8 +51,8 @@ private fun handleNoteAction(action: Action, dispatch: DispatchFunction) {
     when (action) {
         is OnboardingNoteAction.LoadCardArtwork -> {
             scope.launch {
-                val artwork = onboardingManager.loadArtwork()
-                withMainContext { store.dispatch(OnboardingNoteAction.SetArtwork(artwork)) }
+                val artworkUrl = onboardingManager.loadArtworkUrl()
+                withMainContext { store.dispatch(OnboardingNoteAction.SetArtworkUrl(artworkUrl)) }
             }
         }
         is OnboardingNoteAction.DetermineStepOfScreen -> {
@@ -69,7 +70,7 @@ private fun handleNoteAction(action: Action, dispatch: DispatchFunction) {
                 }
                 OnboardingNoteStep.Done -> {
                     onboardingManager.activationFinished(card.cardId)
-                    postUi(500) { store.dispatch(OnboardingNoteAction.Confetti.Show) }
+                    postUi(DELAY_SDK_DIALOG_CLOSE) { store.dispatch(OnboardingNoteAction.Confetti.Show) }
                 }
             }
         }
@@ -117,10 +118,11 @@ private fun handleNoteAction(action: Action, dispatch: DispatchFunction) {
 
             scope.launch {
                 val loadedBalance = onboardingManager.updateBalance(walletManager)
-                loadedBalance.criticalError?.let { store.dispatchErrorNotification(it) }
                 delay(if (isLoadedBefore) 0 else 300)
+                loadedBalance.criticalError?.let { store.dispatchErrorNotification(it) }
                 withMainContext {
                     store.dispatch(OnboardingNoteAction.Balance.Set(loadedBalance))
+                    store.dispatch(OnboardingNoteAction.Balance.SetCriticalError(loadedBalance.criticalError))
                     store.dispatch(OnboardingNoteAction.Balance.SetNonCriticalError(loadedBalance.error))
                 }
             }
@@ -148,7 +150,7 @@ private fun handleNoteAction(action: Action, dispatch: DispatchFunction) {
             store.dispatch(GlobalAction.Onboarding.Stop)
             scope.launch {
                 store.onCardScanned(scanResponse)
-                store.dispatch(NavigationAction.NavigateTo(AppScreen.Wallet))
+                withMainContext { store.dispatch(NavigationAction.NavigateTo(AppScreen.Wallet)) }
             }
         }
     }
