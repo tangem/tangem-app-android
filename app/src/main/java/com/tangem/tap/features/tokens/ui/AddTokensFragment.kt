@@ -18,7 +18,6 @@ import com.tangem.tap.mainScope
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fragment_add_tokens.*
-import kotlinx.android.synthetic.main.fragment_details_twin_cards.toolbar
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
 import org.rekotlin.StoreSubscriber

@@ -28,10 +28,13 @@ object TapWorkarounds {
         return excludedBatch || excludedIssuerName
     }
 
-    fun Card.isTangemNote(): Boolean = tangemNoteBatches.contains(batchId)
-    fun Card.isTangemWallet(): Boolean = tangemWalletBatches.contains(batchId)
+    @Deprecated("Use ScanResponse.isTangemNote")
+    fun isTangemNote(card: Card): Boolean = tangemNoteBatches.contains(card.batchId)
 
-    fun Card.getTangemNoteBlockchain(): Blockchain? = tangemNoteBatches[batchId]
+    @Deprecated("Use ScanResponse.isTangemWallet")
+    fun isTangemWallet(card: Card): Boolean = tangemWalletBatches.contains(card.batchId)
+
+    fun getTangemNoteBlockchain(card: Card): Blockchain? = tangemNoteBatches[card.batchId]
 
     private const val START_2_COIN_ISSUER = "start2coin"
     private const val TEST_CARD_BATCH = "99FF"
@@ -55,7 +58,7 @@ object TapWorkarounds {
             "AB02" to Blockchain.Ethereum,
             "AB03" to Blockchain.CardanoShelley,
             "AB04" to Blockchain.Dogecoin,
-            "AB05" to Blockchain.Binance,
+            "AB05" to Blockchain.BSC,
             "AB06" to Blockchain.XRP,
     )
 }
@@ -64,7 +67,7 @@ val DELAY_SDK_DIALOG_CLOSE = 1400L
 
 val Card.isMultiwalletAllowed: Boolean
     get() {
-        return !isTangemTwin() && !isStart2Coin && !isTangemNote()
+        return !isTangemTwin() && !isStart2Coin && !isTangemNote(this)
                 && (firmwareVersion >= FirmwareVersion.MultiWalletAvailable ||
                 getSingleWallet()?.curve == EllipticCurve.Secp256k1)
     }
