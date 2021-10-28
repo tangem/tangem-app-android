@@ -12,7 +12,7 @@ import com.tangem.tap.common.redux.getMessageString
 import com.tangem.tap.common.text.DecimalDigitsInputFilter
 import com.tangem.tap.domain.MultiMessageError
 import com.tangem.tap.domain.assembleErrors
-import com.tangem.tap.features.send.BaseStoreFragment
+import com.tangem.tap.features.BaseStoreFragment
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.Error
 import com.tangem.tap.features.send.redux.FeeAction
 import com.tangem.tap.features.send.redux.SendAction
@@ -188,15 +188,15 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
         (fg as? SendFragment)?.saveMainCurrency(state.mainCurrency.type)
 
         val balanceText = fg.getString(R.string.send_balance_subtitle_format,
-                state.mainCurrency.currencySymbol,
-                state.viewBalanceValue)
+            state.mainCurrency.currencySymbol,
+            state.viewBalanceValue)
         fg.tvBalance.update(balanceText)
 
         fg.tilAmountToSend.isEnabled = state.inputIsEnabled
 
         val imageRes = if (state.inputIsEnabled) R.drawable.ic_arrows_up_down else 0
         fg.tvAmountCurrency.setCompoundDrawablesWithIntrinsicBounds(0, 0, imageRes, 0)
-        val textColor =  if (state.inputIsEnabled) R.color.blue else R.color.textGray
+        val textColor = if (state.inputIsEnabled) R.color.blue else R.color.textGray
         fg.tvAmountCurrency.setTextColor(fg.getColor(textColor))
 
     }
@@ -245,7 +245,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
                 totalLayout.tvTotalValue.update("${roughOrEmpty(receipt.totalFiat)} ${receipt.symbols.fiat}")
 
                 val willSent = getString(R.string.send_total_subtitle_format,
-                        receipt.willSentCrypto, receipt.symbols.crypto)
+                    receipt.willSentCrypto, receipt.symbols.crypto)
                 totalLayout.tvWillBeSentValue.update(willSent)
 
             }
@@ -277,9 +277,9 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
                 totalLayout.tvTotalValue.update("${roughOrEmpty(receipt.totalFiat)} ${receipt.symbols.fiat}")
 
                 val willSent = getString(
-                        R.string.send_total_subtitle_asset_format,
-                        receipt.symbols.token ?: "", receipt.willSentToken,
-                        receipt.symbols.crypto, receipt.willSentFeeCoin
+                    R.string.send_total_subtitle_asset_format,
+                    receipt.symbols.token ?: "", receipt.willSentToken,
+                    receipt.symbols.crypto, receipt.willSentFeeCoin
                 )
                 totalLayout.tvWillBeSentValue.update(willSent)
             }
