@@ -12,6 +12,7 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.hasWallets
 import com.tangem.tap.domain.extensions.makePrimaryWalletManager
+import com.tangem.tap.features.wallet.redux.Currency
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.scope
 import com.tangem.tap.store
@@ -50,7 +51,7 @@ private fun handleNoteAction(action: Action, dispatch: DispatchFunction) {
         is OnboardingNoteAction.LoadCardArtwork -> {
             scope.launch {
                 val artwork = onboardingManager.loadArtwork()
-                withMainContext { store.dispatch(OnboardingNoteAction.SetArtworkUrl(artwork)) }
+                withMainContext { store.dispatch(OnboardingNoteAction.SetArtwork(artwork)) }
             }
         }
         is OnboardingNoteAction.DetermineStepOfScreen -> {
@@ -107,6 +108,7 @@ private fun handleNoteAction(action: Action, dispatch: DispatchFunction) {
 
             val isLoadedBefore = noteState.walletBalance.state != ProgressState.Loading
             val balanceIsLoading = noteState.walletBalance.copy(
+                currency = Currency.Blockchain(walletManager.wallet.blockchain),
                 state = ProgressState.Loading,
                 error = null,
                 criticalError = null
@@ -117,9 +119,11 @@ private fun handleNoteAction(action: Action, dispatch: DispatchFunction) {
                 val loadedBalance = onboardingManager.updateBalance(walletManager)
                 loadedBalance.criticalError?.let { store.dispatchErrorNotification(it) }
                 delay(if (isLoadedBefore) 0 else 300)
-                withMainContext { store.dispatch(OnboardingNoteAction.Balance.Set(loadedBalance)) }
+                withMainContext {
+                    store.dispatch(OnboardingNoteAction.Balance.Set(loadedBalance))
+                    store.dispatch(OnboardingNoteAction.Balance.SetNonCriticalError(loadedBalance.error))
+                }
             }
-
         }
         is OnboardingNoteAction.Balance.Set -> {
             if (action.balance.balanceIsToppedUp()) {
@@ -128,7 +132,7 @@ private fun handleNoteAction(action: Action, dispatch: DispatchFunction) {
         }
         is OnboardingNoteAction.ShowAddressInfoDialog -> {
             val addressData = noteState.walletManager?.getAddressData() ?: return
-            val addressWasCopied = noteState.resources.strings.addressWasCopied
+            val addressWasCopied = globalState.resources.strings.addressWasCopied
             val appDialog = AppDialog.AddressInfoDialog(
                 addressData,
                 onCopyAddress = { store.dispatchToastNotification(addressWasCopied) },
@@ -143,7 +147,7 @@ private fun handleNoteAction(action: Action, dispatch: DispatchFunction) {
         OnboardingNoteAction.Done -> {
             store.dispatch(GlobalAction.Onboarding.Stop)
             scope.launch {
-                globalState.tapWalletManager.onCardScanned(scanResponse)
+                store.onCardScanned(scanResponse)
                 store.dispatch(NavigationAction.NavigateTo(AppScreen.Wallet))
             }
         }
