@@ -15,6 +15,7 @@ data class OnboardingNoteState(
     val cardArtwork: Artwork? = null,
     val walletBalance: OnboardingWalletBalance = OnboardingWalletBalance.loading(),
     val balanceNonCriticalError: TapError? = null,
+    val balanceCriticalError: TapError? = null,
     val currentStep: OnboardingNoteStep = OnboardingNoteStep.None,
     val steps: List<OnboardingNoteStep> = OnboardingNoteStep.values().toList(),
     val showConfetti: Boolean = false,
