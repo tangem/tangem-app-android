@@ -114,11 +114,6 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
     override fun newState(state: TwinCardsState) {
         if (activity == null) return
 
-//        toolbar.title = when (state.mode) {
-//            CreateTwinWalletMode.CreateWallet -> getText(R.string.wallet_button_create_wallet)
-//            CreateTwinWalletMode.RecreateWallet -> getText(R.string.twins_recreate_toolbar)
-//        }
-
         pb_state.max = state.steps.size - 1
         pb_state.progress = state.progress
 
@@ -141,9 +136,13 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
     private fun setBalance(state: TwinCardsState) {
         if (state.walletBalance.currency.blockchain == Blockchain.Unknown) return
 
-        val balanceValue = state.walletBalance.value.stripZeroPlainString()
-        val currency = state.walletBalance.currency.currencySymbol
-        tv_balance_value.text = "$balanceValue $currency"
+        if (state.balanceCriticalError == null) {
+            val balanceValue = state.walletBalance.value.stripZeroPlainString()
+            val currency = state.walletBalance.currency.currencySymbol
+            tv_balance_value.text = "$balanceValue $currency"
+        } else {
+            tv_balance_value.text = "–"
+        }
     }
 
     private fun setupWelcomeOnlyState(state: TwinCardsState) {
