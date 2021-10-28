@@ -41,30 +41,31 @@ class RefreshBalanceWidget(
         val progressState = state as? ProgressState ?: return
 
         val currentStateByView = getState()
-
-        if (progressState == currentStateByView) return
+        when {
+            currentStateByView == progressState -> return
+            currentStateByView == ProgressState.Done -> if (progressState == ProgressState.Error) return
+        }
 
         animateState(progressState)
         viewSwitcher.showNext()
-
     }
 
     private fun animateState(state: ProgressState) {
         when (state) {
             ProgressState.Done, ProgressState.Error -> {
                 progressViewAnimation?.cancel()
+                progressViewAnimation = null
             }
             ProgressState.Loading -> {
-                val animation = RotateAnimation(
-                        0f, 360f,
-                        Animation.RELATIVE_TO_SELF, 0.5f,
-                        Animation.RELATIVE_TO_SELF, 0.5f
+                progressViewAnimation = RotateAnimation(
+                    0f, 360f,
+                    Animation.RELATIVE_TO_SELF, 0.5f,
+                    Animation.RELATIVE_TO_SELF, 0.5f
                 )
-                animation.duration = 700
-                animation.interpolator = AccelerateInterpolator()
-                animation.repeatCount = -1
-                arrowView.startAnimation(animation)
-                progressViewAnimation = animation
+                progressViewAnimation?.duration = 700
+                progressViewAnimation?.interpolator = AccelerateInterpolator()
+                progressViewAnimation?.repeatCount = -1
+                progressViewAnimation?.let { arrowView.startAnimation(it) }
             }
         }
     }
@@ -88,10 +89,10 @@ class RefreshBalanceWidget(
 class ShowAnimation : AnimationSet(true) {
     init {
         addAnimation(ScaleAnimation(
-                0f, 1f,
-                0f, 1f,
-                Animation.RELATIVE_TO_SELF, 0.5f,
-                Animation.RELATIVE_TO_SELF, 0.5f)
+            0f, 1f,
+            0f, 1f,
+            Animation.RELATIVE_TO_SELF, 0.5f,
+            Animation.RELATIVE_TO_SELF, 0.5f)
         )
         addAnimation(AlphaAnimation(0f, 1f))
         duration = 300
