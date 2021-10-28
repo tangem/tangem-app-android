@@ -6,6 +6,7 @@ import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.FrameLayout
 import androidx.core.animation.doOnEnd
 import androidx.core.view.children
+import com.tangem.common.extensions.VoidCallback
 import com.tangem.tangem_sdk_new.extensions.dpToPx
 
 /**
@@ -15,18 +16,15 @@ class LeapfrogWidget(
     private val parentContainer: FrameLayout,
     private val calculator: PropertyCalculator = PropertyCalculator(),
 ) {
-    private val foldAnimationDuration = 500L
-    private val leapAnimationDuration = 800L
-    private val leapBackAnimationDuration = 800L
+    private val foldAnimationDuration = 300L
+    private val leapAnimationDuration = 500L
+    private val leapBackAnimationDuration = 500L
 
     private val leapViews = mutableListOf<LeapView>()
 
     private var foldUnfoldProgress: Int = 100
     private var leapProgress: Int = 100
     private var leapBackProgress: Int = 100
-
-    var isFolded: Boolean = true
-        private set
 
     init {
         calculator.setTranslationConverter { parentContainer.dpToPx(it) }
@@ -43,12 +41,11 @@ class LeapfrogWidget(
      * Apply initial properties to the views
      */
     fun initViews() {
-        isFolded = true
         leapViews.forEach { it.initView() }
     }
 
-    fun fold(onEnd: () -> Unit = {}) {
-        val animator = foldAnimator()
+    fun fold(animate: Boolean = true, onEnd: VoidCallback = {}) {
+        val animator = foldAnimator(animate)
         if (animator == null) {
             onEnd()
         } else {
@@ -57,8 +54,8 @@ class LeapfrogWidget(
         }
     }
 
-    fun unfold(onEnd: () -> Unit = {}) {
-        val animator = unfoldAnimator()
+    fun unfold(animate: Boolean = true, onEnd: VoidCallback = {}) {
+        val animator = unfoldAnimator(animate)
         if (animator == null) {
             onEnd()
         } else {
@@ -67,33 +64,31 @@ class LeapfrogWidget(
         }
     }
 
-    fun foldAnimator(): Animator? {
-        if (!canFoldUnfold() || isFolded) return null
+    fun foldAnimator(animate: Boolean = true): Animator? {
+        if (!canFoldUnfold()) return null
 
-        return createFoldUnfoldAnimator(true, foldAnimationDuration)
+        return createFoldUnfoldAnimator(true, animate, foldAnimationDuration)
     }
 
-    fun unfoldAnimator(): Animator? {
-        if (!canFoldUnfold() || !isFolded) return null
+    fun unfoldAnimator(animate: Boolean = true): Animator? {
+        if (!canFoldUnfold()) return null
 
-        return createFoldUnfoldAnimator(false, foldAnimationDuration)
+        return createFoldUnfoldAnimator(false, animate, foldAnimationDuration)
     }
 
-    private fun createFoldUnfoldAnimator(isFoldAnimation: Boolean, duration: Long): Animator {
+    private fun createFoldUnfoldAnimator(isFoldAnimation: Boolean, animate: Boolean, duration: Long): Animator {
         val animatorsList = mutableListOf<Animator>()
+        val animateDuration = if (animate) duration else 0
         leapViews.forEach {
             if (isFoldAnimation) {
                 it.fold()
-                animatorsList.add(it.view.foldAnimation(duration, it.state.properties))
+                animatorsList.add(it.view.foldAnimation(animateDuration, it.state.properties))
             } else {
                 it.unfold()
-                animatorsList.add(it.view.unfoldAnimation(duration, it.state.properties))
+                animatorsList.add(it.view.unfoldAnimation(animateDuration, it.state.properties))
             }
         }
-        animatorsList.add(createProgressListener(duration) {
-            foldUnfoldProgress = it
-            if (it == 100) isFolded = isFoldAnimation
-        })
+        animatorsList.add(createProgressListener(animateDuration) { foldUnfoldProgress = it })
 
         val animator = AnimatorSet()
         animator.interpolator = AccelerateDecelerateInterpolator()
@@ -101,13 +96,13 @@ class LeapfrogWidget(
         return animator
     }
 
-    fun leap(onEnd: () -> Unit = {}) {
+    fun leap(animate: Boolean = true, onEnd: VoidCallback = {}) {
         if (!canLeap()) {
             onEnd()
             return
         }
 
-        val duration = leapAnimationDuration
+        val duration = if (animate) leapAnimationDuration else 0
         val animatorsList = mutableListOf<Animator>()
         leapViews.forEach {
             when (it.leap()) {
@@ -128,13 +123,13 @@ class LeapfrogWidget(
         animator.start()
     }
 
-    fun leapBack(onEnd: () -> Unit = {}) {
+    fun leapBack(animate: Boolean = true, onEnd: VoidCallback = {}) {
         if (!canLeapBack()) {
             onEnd()
             return
         }
 
-        val duration = leapBackAnimationDuration
+        val duration = if (animate) leapBackAnimationDuration else 0
         val animatorsList = mutableListOf<Animator>()
         leapViews.forEach {
             when (it.leapBack()) {
@@ -160,12 +155,11 @@ class LeapfrogWidget(
 
     fun getViewByPosition(position: Int): LeapView = leapViews.first { it.state.currentPosition == position }
 
-    fun getState(): LeapfrogWidgetState = LeapfrogWidgetState(isFolded, leapViews.map { it.state })
+    fun getState(): LeapfrogWidgetState = LeapfrogWidgetState(leapViews.map { it.state })
 
     fun applyState(state: LeapfrogWidgetState) {
-        isFolded = state.isFolded
-        state.leapViewStates.forEach { state ->
-            leapViews.firstOrNull { it.index == state.index }?.applyState(state)
+        state.leapViewStates.forEach { viewState ->
+            leapViews.firstOrNull { it.index == viewState.index }?.applyState(viewState)
         }
     }
 
@@ -183,7 +177,6 @@ class LeapfrogWidget(
     private fun canLeap(): Boolean {
         return when {
             !viewIsFullFledged() -> false
-            isFolded -> false
             leapBackInProgress() -> false
             leapProgress < 70 -> false
             else -> true
@@ -193,7 +186,6 @@ class LeapfrogWidget(
     private fun canLeapBack(): Boolean {
         return when {
             !viewIsFullFledged() -> false
-            isFolded -> false
             leapInProgress() -> false
             leapBackProgress < 70 -> false
             else -> true
@@ -206,14 +198,13 @@ class LeapfrogWidget(
 }
 
 data class LeapfrogWidgetState(
-    val isFolded: Boolean,
     val leapViewStates: List<LeapViewState>
 )
 
 class PropertyCalculator(
     val elevationFactor: Float = 1f,
-    val decreaseScaleFactor: Float = 0.1f,
-    val yTranslationFactor: Float = 20f,
+    val decreaseScaleFactor: Float = 0.15f,
+    val yTranslationFactor: Float = 35f,
     val decreaseOverLiftingFactor: Float = 0.85f,
 ) {
     // 0 view it is view on the top of stack, but it is last in parent.children
