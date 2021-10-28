@@ -25,7 +25,6 @@ class WalletReducer {
 private fun internalReduce(action: Action, state: AppState): WalletState {
 
     val multiWalletReducer = MultiWalletReducer()
-    val twinsReducer = TwinsReducer()
     val onWalletLoadedReducer = OnWalletLoadedReducer()
 
     if (action !is WalletAction) return state.walletState
@@ -34,21 +33,17 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
 
     when (action) {
         is WalletAction.Warnings -> newState = handleCheckSignedHashesActions(action, newState)
-        is WalletAction.TwinsAction -> newState = twinsReducer.reduce(action, newState)
         is WalletAction.MultiWallet -> newState = multiWalletReducer.reduce(action, newState)
 
         is WalletAction.ResetState -> newState = WalletState()
         is WalletAction.SetIfTestnetCard -> newState = newState.copy(isTestnet = action.isTestnet)
         is WalletAction.EmptyWallet -> {
-            val creatingWalletAllowed = !(newState.twinCardsState != null &&
-                    newState.twinCardsState?.isCreatingTwinCardsAllowed != true)
-
             newState = newState.copy(
                 state = ProgressState.Done,
                 wallets = listOf(
                     WalletData(
                         currencyData = BalanceWidgetData(BalanceStatus.EmptyCard),
-                        mainButton = WalletMainButton.CreateWalletButton(creatingWalletAllowed),
+                        mainButton = WalletMainButton.CreateWalletButton(true),
                     )
                 )
             )
@@ -215,7 +210,7 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
             newState = setNewFiatRate(action.fiatRate, state.globalState.appCurrency, newState)
         is WalletAction.LoadArtwork -> {
             val artworkUrl = action.card.getArtworkUrl(action.artworkId)
-                    ?: when (newState.twinCardsState?.cardNumber) {
+                    ?: when (state.twinCardsState.cardNumber) {
                         TwinCardNumber.First -> Artwork.TWIN_CARD_1
                         TwinCardNumber.Second -> Artwork.TWIN_CARD_2
                         else -> Artwork.DEFAULT_IMG_URL

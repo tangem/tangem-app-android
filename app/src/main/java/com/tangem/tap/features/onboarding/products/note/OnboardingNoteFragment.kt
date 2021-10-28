@@ -15,16 +15,19 @@ import com.tangem.tangem_sdk_new.extensions.fadeIn
 import com.tangem.tangem_sdk_new.extensions.fadeOut
 import com.tangem.tap.common.extensions.getDrawableCompat
 import com.tangem.tap.common.extensions.stripZeroPlainString
-import com.tangem.tap.common.postUi
+import com.tangem.tap.common.redux.navigation.ShareElement
 import com.tangem.tap.common.toggleWidget.RefreshBalanceWidget
 import com.tangem.tap.common.transitions.InternalNoteLayoutTransition
+import com.tangem.tap.features.addBackPressHandler
 import com.tangem.tap.features.onboarding.products.BaseOnboardingFragment
-import com.tangem.tap.features.onboarding.products.note.redux.*
+import com.tangem.tap.features.onboarding.products.note.redux.OnboardingNoteAction
+import com.tangem.tap.features.onboarding.products.note.redux.OnboardingNoteState
+import com.tangem.tap.features.onboarding.products.note.redux.OnboardingNoteStep
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fragment_onboarding_main.*
-import kotlinx.android.synthetic.main.layout_onboarding_bottom_action_views.*
-import kotlinx.android.synthetic.main.layout_onboarding_note.*
+import kotlinx.android.synthetic.main.layout_onboarding_container_bottom.*
+import kotlinx.android.synthetic.main.layout_onboarding_container_top.*
 import kotlinx.android.synthetic.main.view_onboarding_progress.*
 import kotlinx.android.synthetic.main.view_onboarding_tv_balance.*
 
@@ -33,24 +36,28 @@ import kotlinx.android.synthetic.main.view_onboarding_tv_balance.*
  */
 class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
 
-    private lateinit var btnRefreshBalanceWidget: RefreshBalanceWidget
-    private var currentStep: OnboardingNoteStep = OnboardingNoteStep.None
+    private var previousStep: OnboardingNoteStep = OnboardingNoteStep.None
 
-    override fun getOnboardingTopContainerId(): Int = R.layout.layout_onboarding_note
+    private lateinit var btnRefreshBalanceWidget: RefreshBalanceWidget
+
+    override fun getOnboardingTopContainerId(): Int = R.layout.layout_onboarding_container_top
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        postponeEnterTransition()
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        addBackPressHandler(this)
+
+        imv_front_card.transitionName = ShareElement.imvFrontCard
+        startPostponedEnterTransition()
 
         toolbar.setTitle(R.string.onboarding_title)
         btnRefreshBalanceWidget = RefreshBalanceWidget(onboarding_main_container)
-        val resources = AndroidResources(
-            OnboardingStringResources(
-                R.string.copy_toast_msg
-            )
-        )
 
         store.dispatch(OnboardingNoteAction.LoadCardArtwork)
-        store.dispatch(OnboardingNoteAction.SetResources(resources))
         store.dispatch(OnboardingNoteAction.DetermineStepOfScreen)
     }
 
@@ -78,7 +85,7 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
         }
         setBalance(state)
         showConfetti(state.showConfetti)
-        currentStep = state.currentStep
+        previousStep = state.currentStep
     }
 
     private fun setBalance(state: OnboardingNoteState) {
@@ -129,14 +136,22 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
         }
 
         tv_header.setText(R.string.onboarding_top_up_header)
-        tv_body.setText(R.string.onboarding_top_up_body)
+        if (state.balanceNonCriticalError == null) {
+            tv_body.setText(R.string.onboarding_top_up_body)
+        } else {
+            state.walletBalance.amountToCreateAccount?.let { amount ->
+                val tvBodyMessage = getString(
+                    R.string.onboarding_top_up_body_no_account_error,
+                    amount, state.walletBalance.currency.currencySymbol
+                )
+                tv_body.text = tvBodyMessage
+            }
+        }
 
         btnRefreshBalanceWidget.changeState(state.walletBalance.state)
         if (btnRefreshBalanceWidget.isShowing != true) {
-            postUi(300) {
-                btnRefreshBalanceWidget.mainView.setOnClickListener {
-                    store.dispatch(OnboardingNoteAction.Balance.Update)
-                }
+            btnRefreshBalanceWidget.mainView.setOnClickListener {
+                store.dispatch(OnboardingNoteAction.Balance.Update)
             }
         }
         imv_card_background.setBackgroundDrawable(requireContext().getDrawableCompat(R.drawable.shape_rectangle_rounded_8))
@@ -163,7 +178,7 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
     }
 
     private fun updateConstraints(currentStep: OnboardingNoteStep, @LayoutRes layoutId: Int) {
-        if (this.currentStep == currentStep) return
+        if (this.previousStep == currentStep) return
 
         val constraintSet = ConstraintSet()
         constraintSet.clone(requireContext(), layoutId)

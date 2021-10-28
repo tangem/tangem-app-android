@@ -4,13 +4,16 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.services.Result
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
+import com.tangem.tap.common.extensions.dispatchNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
-import com.tangem.tap.features.details.redux.twins.CreateTwinWalletMiddleware
 import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
+import com.tangem.tap.features.onboarding.products.twins.redux.CreateTwinWalletMode
+import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
+import com.tangem.tap.features.wallet.models.hasSendableAmountsOrPendingTransactions
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.network.coinmarketcap.CoinMarketCapService
 import com.tangem.tap.preferencesStorage
@@ -26,7 +29,6 @@ class DetailsMiddleware {
     private val eraseWalletMiddleware = EraseWalletMiddleware()
     private val appCurrencyMiddleware = AppCurrencyMiddleware()
     private val manageSecurityMiddleware = ManageSecurityMiddleware()
-    private val twinWalletMiddleware = CreateTwinWalletMiddleware()
     val detailsMiddleware: Middleware<AppState> = { dispatch, state ->
         { next ->
             { action ->
@@ -35,10 +37,24 @@ class DetailsMiddleware {
                     is DetailsAction.EraseWallet -> eraseWalletMiddleware.handle(action)
                     is DetailsAction.AppCurrencyAction -> appCurrencyMiddleware.handle(action)
                     is DetailsAction.ManageSecurity -> manageSecurityMiddleware.handle(action)
-                    is DetailsAction.CreateTwinWalletAction -> twinWalletMiddleware.handle(action)
                     is DetailsAction.ShowDisclaimer -> {
                         store.dispatch(DisclaimerAction.ShowAcceptedDisclaimer)
                         store.dispatch(NavigationAction.NavigateTo(AppScreen.Disclaimer))
+                    }
+                    is DetailsAction.ReCreateTwinsWallet -> {
+                        val wallet = store.state.walletState.walletManagers.map { it.wallet }.firstOrNull()
+                        if (wallet == null) {
+                            store.dispatch(TwinCardsAction.SetMode(CreateTwinWalletMode.RecreateWallet))
+                            store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingTwins))
+                        } else {
+                            if (wallet.hasSendableAmountsOrPendingTransactions()) {
+                                val walletIsNotEmpty = store.state.globalState.resources.strings.walletIsNotEmpty
+                                store.dispatchNotification(walletIsNotEmpty)
+                            } else {
+                                store.dispatch(TwinCardsAction.SetMode(CreateTwinWalletMode.RecreateWallet))
+                                store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingTwins))
+                            }
+                        }
                     }
                 }
                 next(action)
@@ -84,7 +100,7 @@ class DetailsMiddleware {
                     store.dispatch(NavigationAction.PopBackTo())
                 }
                 is DetailsAction.EraseWallet.Confirm -> {
-                    val card =  store.state.detailsState.card ?: return
+                    val card = store.state.detailsState.card ?: return
                     scope.launch {
                         val result = tangemSdkManager.eraseWallet(card)
                         withContext(Dispatchers.Main) {
