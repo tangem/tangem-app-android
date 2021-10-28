@@ -27,6 +27,7 @@ sealed class OnboardingNoteAction : Action {
     sealed class Balance {
         object Update : OnboardingNoteAction()
         data class Set(val balance: OnboardingWalletBalance) : OnboardingNoteAction()
+        data class SetCriticalError(val error: TapError?) : OnboardingNoteAction()
         data class SetNonCriticalError(val error: TapError?) : OnboardingNoteAction()
     }
 

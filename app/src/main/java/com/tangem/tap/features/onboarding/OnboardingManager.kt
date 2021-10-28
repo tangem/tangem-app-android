@@ -20,6 +20,7 @@ import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.persistence.UsedCardsPrefStorage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import timber.log.Timber
 import java.math.BigDecimal
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -76,7 +77,10 @@ class OnboardingManager(
                 when (error) {
                     is TapError.WalletManagerUpdate.NoAccountError -> OnboardingWalletBalance.error(error)
                     // NoInternetConnection, WalletManagerUpdate.InternalError
-                    else -> OnboardingWalletBalance.criticalError(error)
+                    else -> {
+                        Timber.e(error.localizedMessage)
+                        OnboardingWalletBalance.criticalError(TapError.WalletManagerUpdate.BlockchainIsUnreachableTryLater)
+                    }
                 }
             }
         }

@@ -91,9 +91,13 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
     private fun setBalance(state: OnboardingNoteState) {
         if (state.walletBalance.currency.blockchain == Blockchain.Unknown) return
 
-        val balanceValue = state.walletBalance.value.stripZeroPlainString()
-        val currency = state.walletBalance.currency.currencySymbol
-        tv_balance_value.text = "$balanceValue $currency"
+        if (state.balanceCriticalError == null) {
+            val balanceValue = state.walletBalance.value.stripZeroPlainString()
+            val currency = state.walletBalance.currency.currencySymbol
+            tv_balance_value.text = "$balanceValue $currency"
+        } else {
+            tv_balance_value.text = "–"
+        }
     }
 
     private fun setupNoneState(state: OnboardingNoteState) {
