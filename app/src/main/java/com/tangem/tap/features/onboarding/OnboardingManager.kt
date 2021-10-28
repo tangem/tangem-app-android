@@ -55,7 +55,7 @@ class OnboardingManager(
     }
 
     suspend fun updateBalance(walletManager: WalletManager): OnboardingWalletBalance {
-        return when (val result = walletManager.safeUpdate()) {
+        val balance = when (val result = walletManager.safeUpdate()) {
             is Result.Success -> {
                 val wallet = walletManager.wallet
                 val valueOfAmount = wallet.amounts[AmountType.Coin]?.value
@@ -63,11 +63,10 @@ class OnboardingManager(
                     val customError = TapError.CustomError("Amount is NULL")
                     OnboardingWalletBalance.criticalError(customError)
                 } else {
-                    val currency = Currency.Blockchain(walletManager.wallet.blockchain)
                     val balance = if (valueOfAmount.isZero()) {
-                        OnboardingWalletBalance.done(valueOfAmount, wallet.hasPendingTransactions(), currency)
+                        OnboardingWalletBalance.done(valueOfAmount, wallet.hasPendingTransactions())
                     } else {
-                        OnboardingWalletBalance.done(valueOfAmount, false, currency)
+                        OnboardingWalletBalance.done(valueOfAmount, false)
                     }
                     balance
                 }
@@ -81,6 +80,8 @@ class OnboardingManager(
                 }
             }
         }
+
+        return balance.copy(currency = Currency.Blockchain(walletManager.wallet.blockchain))
     }
 
     fun activationStarted(cardId: String) {
@@ -122,7 +123,10 @@ data class OnboardingWalletBalance(
             state = ProgressState.Loading
         )
 
-        fun done(value: BigDecimal, hasTransactions: Boolean, currency: Currency.Blockchain): OnboardingWalletBalance =
-                OnboardingWalletBalance(value, currency, hasTransactions, ProgressState.Done)
+        fun done(value: BigDecimal, hasTransactions: Boolean): OnboardingWalletBalance = OnboardingWalletBalance(
+            value,
+            hasIncomingTransaction = hasTransactions,
+            state = ProgressState.Done
+        )
     }
 }
