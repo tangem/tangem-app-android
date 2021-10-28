@@ -16,6 +16,8 @@ import com.tangem.tap.features.onboarding.products.note.redux.OnboardingNoteMidd
 import com.tangem.tap.features.onboarding.products.note.redux.OnboardingNoteState
 import com.tangem.tap.features.onboarding.products.otherCards.redux.OnboardingOtherCardsMiddleware
 import com.tangem.tap.features.onboarding.products.otherCards.redux.OnboardingOtherCardsState
+import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsMiddleware
+import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
 import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletMiddleware
 import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletState
 import com.tangem.tap.features.send.redux.middlewares.SendMiddleware
@@ -35,6 +37,7 @@ data class AppState(
     val onboardingWalletState: OnboardingWalletState = OnboardingWalletState(),
     val onboardingOtherCardsState: OnboardingOtherCardsState = OnboardingOtherCardsState(),
     val walletState: WalletState = WalletState(),
+    val twinCardsState: TwinCardsState = TwinCardsState(),
     val sendState: SendState = SendState(),
     val detailsState: DetailsState = DetailsState(),
     val disclaimerState: DisclaimerState = DisclaimerState(),
@@ -45,18 +48,19 @@ data class AppState(
     companion object {
         fun getMiddleware(): List<Middleware<AppState>> {
             return listOf(
-                    logMiddleware, navigationMiddleware, notificationsMiddleware,
-                    GlobalMiddleware.handler,
-                    HomeMiddleware.handler,
-                    OnboardingNoteMiddleware.handler,
-                    OnboardingWalletMiddleware.handler,
-                    OnboardingOtherCardsMiddleware.handler,
-                    WalletMiddleware().walletMiddleware,
-                    SendMiddleware().sendMiddleware,
-                    DetailsMiddleware().detailsMiddleware,
-                    DisclaimerMiddleware().disclaimerMiddleware,
-                    TokensMiddleware().tokensMiddleware,
-                    WalletConnectMiddleware().walletConnectMiddleware
+                logMiddleware, navigationMiddleware, notificationsMiddleware,
+                GlobalMiddleware.handler,
+                HomeMiddleware.handler,
+                OnboardingNoteMiddleware.handler,
+                OnboardingWalletMiddleware.handler,
+                OnboardingOtherCardsMiddleware.handler,
+                WalletMiddleware().walletMiddleware,
+                TwinCardsMiddleware.handler,
+                SendMiddleware().sendMiddleware,
+                DetailsMiddleware().detailsMiddleware,
+                DisclaimerMiddleware().disclaimerMiddleware,
+                TokensMiddleware().tokensMiddleware,
+                WalletConnectMiddleware().walletConnectMiddleware
             )
         }
     }
