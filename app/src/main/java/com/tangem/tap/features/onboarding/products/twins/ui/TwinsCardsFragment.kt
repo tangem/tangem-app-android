@@ -84,11 +84,13 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
 
         Picasso.get()
                 .load(Artwork.TWIN_CARD_1)
+                .error(R.drawable.card_placeholder_black)
                 .placeholder(R.drawable.card_placeholder_black)
                 ?.into(imv_twin_front_card)
 
         Picasso.get()
                 .load(Artwork.TWIN_CARD_2)
+                .error(R.drawable.card_placeholder_white)
                 .placeholder(R.drawable.card_placeholder_white)
                 ?.into(imv_twin_back_card)
     }
