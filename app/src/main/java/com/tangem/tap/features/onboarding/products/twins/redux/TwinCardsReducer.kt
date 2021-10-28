@@ -29,7 +29,10 @@ private fun internalReduce(action: Action, state: AppState): TwinCardsState {
             }
         }
         is TwinCardsAction.SetMode -> {
-            state = state.copy(mode = action.mode)
+            state = state.copy(
+                mode = action.mode,
+                userWasUnderstandIfWalletRecreate = false,
+            )
         }
         is TwinCardsAction.SetStepOfScreen -> {
             state = state.copy(currentStep = action.step)
