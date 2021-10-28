@@ -1,6 +1,5 @@
 package com.tangem.tap.features.onboarding.products.otherCards.redux
 
-import com.tangem.tap.features.wallet.redux.Artwork
 import org.rekotlin.Action
 
 /**
@@ -12,7 +11,7 @@ sealed class OnboardingOtherCardsAction : Action {
     object CreateWallet : OnboardingOtherCardsAction()
 
     // from redux
-    class SetArtwork(val artwork: Artwork) : OnboardingOtherCardsAction()
+    class SetArtworkUrl(val artworkUrl: String) : OnboardingOtherCardsAction()
     object DetermineStepOfScreen : OnboardingOtherCardsAction()
     object Done : OnboardingOtherCardsAction()
 
