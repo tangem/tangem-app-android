@@ -14,24 +14,21 @@
 
     <string name="twins_onboarding_title" translatable="false">Tangem Twin</string>
     <string name="twins_onboarding_subtitle" translatable="false">One wallet. Two cards.</string>
-    <string name="twins_onboarding_description_format" translatable="false">This one that you are holding in your hands
-and the other one with number %s.\n\nBoth cards can be used to extract funds from
-this wallet.
-</string>
+    <string name="twins_onboarding_description_format" translatable="false">This one that you are holding in your handsand the other one with number #%s.</string>
 
     <string name="wallet_twins_chip_format" translatable="false">Card %s of 2</string>
 
     <string name="details_row_title_twins_recreate" translatable="false">Re-create twin wallet</string>
-    <string name="details_twins_recreate_warning" translatable="false">This action is irreversible. You will not have access to the old wallet.\nThe wallet re-creation procedure consists of three steps. You must complete it to the end, otherwise you will have to start from the beginning.</string>
-    <string name="details_twins_recreate_toolbar" translatable="false">Re-create wallet</string>
-    <string name="details_twins_recreate_step_format" translatable="false">Step %s</string>
-    <string name="details_twins_recreate_title_format" translatable="false">Tap the #%s twin card</string>
-    <string name="details_twins_recreate_title_preparing" translatable="false">Preparing card</string>
-    <string name="details_twins_recreate_title_creating_wallet" translatable="false">Creating wallet</string>
-    <string name="details_twins_recreate_subtitle" translatable="false">The wallet creation procedure consists of three steps. You must complete it to the end, otherwise you will have to start from the beginning.</string>
-    <string name="details_twins_recreate_button_format" translatable="false">Tap the card #%s</string>
-    <string name="details_twins_recreate_alert" translatable="false">You have already started the process of recreating twin wallet. If you interrupt it, you won\'t be able to use your twin cards until you start it again and complete recreating the wallet.</string>
     <string name="details_row_title_card_tou" translatable="false">Card terms of use</string>
+
+    <string name="twins_recreate_toolbar" translatable="false">Tangem Twin</string>
+    <string name="twins_recreate_warning" translatable="false">This action is irreversible. You will not have access to the old wallet.</string>
+    <string name="twins_recreate_title_format" translatable="false">Tap the #%s twin card</string>
+    <string name="twins_recreate_title_preparing" translatable="false">Preparing card</string>
+    <string name="twins_recreate_title_creating_wallet" translatable="false">Creating wallet</string>
+    <string name="twins_recreate_subtitle" translatable="false">The wallet creation procedure consists of three steps. You must complete it to the end, otherwise you will have to start from the beginning.</string>
+    <string name="twins_recreate_button_format" translatable="false">Tap the card #%s</string>
+    <string name="twins_recreate_alert" translatable="false">You have already started the process of recreating twin wallet. If you interrupt it, you won\'t be able to use your twin cards until you start it again and complete recreating the wallet.</string>
 
     <string name="notification_twins_recreate_success" translatable="false">The twin address was successfully created</string>
 
@@ -184,14 +181,17 @@ this wallet.
 
     <string name="onboarding_top_up_header" translatable="false">Top up your wallet</string>
     <string name="onboarding_top_up_body" translatable="false">To get started, simply top up the card with any amount</string>
+    <string name="onboarding_top_up_body_no_account_error" translatable="false">To get started, simply top up the wallet with more than %s %s.</string>
     <string name="onboarding_top_up_button_but_crypto" translatable="false">Buy crypto</string>
     <string name="onboarding_top_up_button_show_wallet_address" translatable="false">Show the wallet’s address</string>
     <string name="onboarding_dialog_wallet_address" translatable="false">Scan the address to top up your wallet</string>
 
-    <string name="onboarding_done_header" translatable="false">Done!</string>
+    <string name="onboarding_done_header" translatable="false">Success!</string>
     <string name="onboarding_done_body" translatable="false">Your crypto card is activated and ready to be used</string>
     <string name="onboarding_done_button_continue" translatable="false">Continue</string>
     <string name="onboarding_balance_title" translatable="false">Balance</string>
+
+    <string name="onboarding_twins_interrupt_warning" translatable="false">If the process of re-creating the wallet gets interrupted in any way, you’ll have to start over.</string>
 
     <string name="onboarding_error_create_primary_wallet" translatable="false">Internal error: can\'t create wallet manager</string>
 
