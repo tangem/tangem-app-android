@@ -5,7 +5,7 @@ import android.view.View
 import com.tangem.tap.common.extensions.inflate
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.transitions.HomeToOnboardingTransition
-import com.tangem.tap.features.send.BaseStoreFragment
+import com.tangem.tap.features.BaseStoreFragment
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fragment_onboarding_main.*
 import kotlinx.android.synthetic.main.view_confetti.*
@@ -15,11 +15,6 @@ import org.rekotlin.StoreSubscriber
 [REDACTED_AUTHOR]
  */
 abstract class BaseOnboardingFragment<T> : BaseStoreFragment(R.layout.fragment_onboarding_main), StoreSubscriber<T> {
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        configureTransitions()
-    }
 
     override fun configureTransitions() {
         enterTransition = HomeToOnboardingTransition()
