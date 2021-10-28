@@ -21,6 +21,7 @@ class PicassoHelper {
                     .downloader(OkHttp3Downloader(getOkHttpForPicasso(application)))
                     .build()
             picasso.isLoggingEnabled = BuildConfig.DEBUG
+            picasso.setIndicatorsEnabled(BuildConfig.DEBUG)
             Picasso.setSingletonInstance(picasso)
         }
 
