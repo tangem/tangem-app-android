@@ -14,6 +14,7 @@ data class Config(
     val blockchainSdkConfig: BlockchainSdkConfig = BlockchainSdkConfig(),
     val isSendingToPayIdEnabled: Boolean = true,
     val isTopUpEnabled: Boolean = false,
+    @Deprecated("Not relevant since version 3.23")
     val isCreatingTwinCardsAllowed: Boolean = false
 )
 
@@ -50,10 +51,10 @@ class ConfigManager(
     fun resetToDefault(name: String) {
         when (name) {
             isSendingToPayIdEnabled -> config =
-                config.copy(isSendingToPayIdEnabled = defaultConfig.isSendingToPayIdEnabled)
+                    config.copy(isSendingToPayIdEnabled = defaultConfig.isSendingToPayIdEnabled)
             isTopUpEnabled -> config = config.copy(isTopUpEnabled = defaultConfig.isTopUpEnabled)
             isCreatingTwinCardsAllowed -> config =
-                config.copy(isCreatingTwinCardsAllowed = defaultConfig.isCreatingTwinCardsAllowed)
+                    config.copy(isCreatingTwinCardsAllowed = defaultConfig.isCreatingTwinCardsAllowed)
         }
     }
 
