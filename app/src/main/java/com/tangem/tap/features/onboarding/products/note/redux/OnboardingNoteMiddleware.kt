@@ -51,8 +51,8 @@ private fun handleNoteAction(action: Action, dispatch: DispatchFunction) {
     when (action) {
         is OnboardingNoteAction.LoadCardArtwork -> {
             scope.launch {
-                val artwork = onboardingManager.loadArtwork()
-                withMainContext { store.dispatch(OnboardingNoteAction.SetArtwork(artwork)) }
+                val artworkUrl = onboardingManager.loadArtworkUrl()
+                withMainContext { store.dispatch(OnboardingNoteAction.SetArtworkUrl(artworkUrl)) }
             }
         }
         is OnboardingNoteAction.DetermineStepOfScreen -> {

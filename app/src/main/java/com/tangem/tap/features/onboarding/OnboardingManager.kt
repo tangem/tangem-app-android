@@ -10,20 +10,14 @@ import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.tap.common.extensions.isPositive
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.domain.TapError
-import com.tangem.tap.domain.UrlBitmapLoader
 import com.tangem.tap.domain.extensions.getOrLoadCardArtworkUrl
 import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.features.wallet.models.hasPendingTransactions
-import com.tangem.tap.features.wallet.redux.Artwork
 import com.tangem.tap.features.wallet.redux.Currency
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.persistence.UsedCardsPrefStorage
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.math.BigDecimal
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 
 /**
 [REDACTED_AUTHOR]
@@ -36,24 +30,31 @@ class OnboardingManager(
     var cardInfo: Result<CardVerifyAndGetInfo.Response.Item>? = null
         private set
 
-    suspend fun loadArtwork(): Artwork {
-        cardInfo = OnlineCardVerifier().getCardInfo(scanResponse.card.cardId, scanResponse.card.cardPublicKey)
-        return loadArtwork(scanResponse.card.getOrLoadCardArtworkUrl(cardInfo))
+    suspend fun loadArtworkUrl(): String {
+        val cardInfo = cardInfo
+                ?: OnlineCardVerifier().getCardInfo(scanResponse.card.cardId, scanResponse.card.cardPublicKey)
+        this.cardInfo = cardInfo
+        return scanResponse.card.getOrLoadCardArtworkUrl(cardInfo)
     }
 
-    suspend fun loadArtwork(url: String): Artwork {
-        return withContext(Dispatchers.Main) {
-            suspendCoroutine { continuation ->
-                UrlBitmapLoader().loadBitmap(url) {
-                    val result = when (it) {
-                        is Result.Success -> Artwork(url, it.data)
-                        is Result.Failure -> Artwork(url, null)
-                    }
-                    continuation.resume(result)
-                }
-            }
-        }
-    }
+//    suspend fun loadArtwork(): Artwork {
+//        cardInfo = OnlineCardVerifier().getCardInfo(scanResponse.card.cardId, scanResponse.card.cardPublicKey)
+//        return loadArtwork(scanResponse.card.getOrLoadCardArtworkUrl(cardInfo))
+//    }
+//
+//    suspend fun loadArtwork(url: String): Artwork {
+//        return withContext(Dispatchers.Main) {
+//            suspendCoroutine { continuation ->
+//                UrlBitmapLoader().loadBitmap(url) {
+//                    val result = when (it) {
+//                        is Result.Success -> Artwork(url, it.data)
+//                        is Result.Failure -> Artwork(url, null)
+//                    }
+//                    continuation.resume(result)
+//                }
+//            }
+//        }
+//    }
 
     suspend fun updateBalance(walletManager: WalletManager): OnboardingWalletBalance {
         val balance = when (val result = walletManager.safeUpdate()) {
