@@ -20,9 +20,7 @@ import com.tangem.tap.features.wallet.ui.adapters.PendingTransactionsAdapter
 import com.tangem.tap.features.wallet.ui.dialogs.AmountToSendDialog
 import com.tangem.tap.store
 import com.tangem.wallet.R
-import kotlinx.android.synthetic.main.fragment_details_twin_cards.*
 import kotlinx.android.synthetic.main.fragment_wallet_details.*
-import kotlinx.android.synthetic.main.fragment_wallet_details.toolbar
 import kotlinx.android.synthetic.main.item_currency_wallet.view.*
 import kotlinx.android.synthetic.main.item_popular_token.view.*
 import kotlinx.android.synthetic.main.layout_balance_error.*
@@ -98,12 +96,12 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
 
         tv_currency_title.text = selectedWallet.currencyData.currency
         val currency = selectedWallet.currency
-         if (currency is Currency.Token) {
-             tv_currency_subtitle.text = currency.blockchain.tokenDisplayName()
-             tv_currency_subtitle.show()
+        if (currency is Currency.Token) {
+            tv_currency_subtitle.text = currency.blockchain.tokenDisplayName()
+            tv_currency_subtitle.show()
         } else {
-             tv_currency_subtitle.hide()
-         }
+            tv_currency_subtitle.hide()
+        }
 
 
         showPendingTransactionsIfPresent(selectedWallet.pendingTransactions)
@@ -129,9 +127,9 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
         srl_wallet_details.setOnRefreshListener {
             if (selectedWallet.currencyData.status != BalanceStatus.Loading) {
                 store.dispatch(WalletAction.LoadWallet(
-                        allowToBuy = selectedWallet.tradeCryptoState.buyingAllowed,
-                        allowToSell = selectedWallet.tradeCryptoState.sellingAllowed,
-                        blockchain = selectedWallet.currency?.blockchain
+                    allowToBuy = selectedWallet.tradeCryptoState.buyingAllowed,
+                    allowToSell = selectedWallet.tradeCryptoState.sellingAllowed,
+                    blockchain = selectedWallet.currency?.blockchain
                 ))
             }
         }
@@ -180,8 +178,8 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
             tv_address.text = state.walletAddresses.selectedAddress.address
             tv_explore?.setOnClickListener {
                 store.dispatch(WalletAction.ExploreAddress(
-                        state.walletAddresses.selectedAddress.exploreUrl,
-                        requireContext()))
+                    state.walletAddresses.selectedAddress.exploreUrl,
+                    requireContext()))
             }
             iv_qr_code.setImageBitmap(state.walletAddresses.selectedAddress.shareUrl.toQrCode())
         }
@@ -192,8 +190,8 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
             if (state.error == ErrorType.NoInternetConnection) {
                 srl_wallet_details?.isRefreshing = false
                 (activity as? SnackbarHandler)?.showSnackbar(
-                        text = R.string.wallet_notification_no_internet,
-                        buttonTitle = R.string.common_retry
+                    text = R.string.wallet_notification_no_internet,
+                    buttonTitle = R.string.common_retry
                 ) { store.dispatch(WalletAction.LoadData) }
             }
         } else {
@@ -249,8 +247,8 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
                 tv_error_title.text = getText(R.string.wallet_error_no_account)
                 tv_error_descriptions.text =
                         getString(
-                                R.string.wallet_error_no_account_subtitle_format,
-                                data.amountToCreateAccount, data.currencySymbol
+                            R.string.wallet_error_no_account_subtitle_format,
+                            data.amountToCreateAccount, data.currencySymbol
                         )
             }
         }
