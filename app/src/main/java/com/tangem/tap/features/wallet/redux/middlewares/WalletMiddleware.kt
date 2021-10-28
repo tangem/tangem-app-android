@@ -147,7 +147,7 @@ class WalletMiddleware {
                                 WalletAction.LoadArtwork(action.card, response.data.artwork?.id),
                                 GlobalAction.SetIfCardVerifiedOnline(response.data.passed)
                             )
-                            actionList.forEach { store.dispatch(it) }
+                            withMainContext { actionList.forEach { store.dispatch(it) } }
                         }
                         is Result.Failure -> {
                             store.dispatchOnMain(GlobalAction.SetIfCardVerifiedOnline(false))
