@@ -3,8 +3,8 @@ package com.tangem.tap.features.onboarding.products.wallet
 import android.os.Bundle
 import android.view.View
 import androidx.transition.TransitionInflater
+import com.tangem.tap.features.BaseStoreFragment
 import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletState
-import com.tangem.tap.features.send.BaseStoreFragment
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import org.rekotlin.StoreSubscriber
