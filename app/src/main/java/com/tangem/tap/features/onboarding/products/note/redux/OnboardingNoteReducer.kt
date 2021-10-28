@@ -26,6 +26,9 @@ private fun internalReduce(action: Action, appState: AppState): OnboardingNoteSt
         is OnboardingNoteAction.Balance.Set -> {
             state = state.copy(walletBalance = action.balance)
         }
+        is OnboardingNoteAction.Balance.SetCriticalError -> {
+            state = state.copy(balanceCriticalError = action.error)
+        }
         is OnboardingNoteAction.Balance.SetNonCriticalError -> {
             state = state.copy(balanceNonCriticalError = action.error)
         }
