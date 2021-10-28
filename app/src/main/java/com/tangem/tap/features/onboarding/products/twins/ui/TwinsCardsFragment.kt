@@ -77,18 +77,20 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
         addBackPressHandler(this)
 
         reconfigureLayoutForTwins()
-        twinsWidget = TwinsCardWidget(LeapfrogWidget(cards_container)) { 250f }
+        twinsWidget = TwinsCardWidget(LeapfrogWidget(cards_container)) { 285f }
         btnRefreshBalanceWidget = RefreshBalanceWidget(onboarding_main_container)
 
         toolbar.title = getText(R.string.twins_recreate_toolbar)
 
         Picasso.get()
                 .load(Artwork.TWIN_CARD_1)
+                .error(R.drawable.card_placeholder_black)
                 .placeholder(R.drawable.card_placeholder_black)
                 ?.into(imv_twin_front_card)
 
         Picasso.get()
                 .load(Artwork.TWIN_CARD_2)
+                .error(R.drawable.card_placeholder_white)
                 .placeholder(R.drawable.card_placeholder_white)
                 ?.into(imv_twin_back_card)
     }
@@ -114,11 +116,6 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
     override fun newState(state: TwinCardsState) {
         if (activity == null) return
 
-//        toolbar.title = when (state.mode) {
-//            CreateTwinWalletMode.CreateWallet -> getText(R.string.wallet_button_create_wallet)
-//            CreateTwinWalletMode.RecreateWallet -> getText(R.string.twins_recreate_toolbar)
-//        }
-
         pb_state.max = state.steps.size - 1
         pb_state.progress = state.progress
 
@@ -141,9 +138,13 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
     private fun setBalance(state: TwinCardsState) {
         if (state.walletBalance.currency.blockchain == Blockchain.Unknown) return
 
-        val balanceValue = state.walletBalance.value.stripZeroPlainString()
-        val currency = state.walletBalance.currency.currencySymbol
-        tv_balance_value.text = "$balanceValue $currency"
+        if (state.balanceCriticalError == null) {
+            val balanceValue = state.walletBalance.value.stripZeroPlainString()
+            val currency = state.walletBalance.currency.currencySymbol
+            tv_balance_value.text = "$balanceValue $currency"
+        } else {
+            tv_balance_value.text = "–"
+        }
     }
 
     private fun setupWelcomeOnlyState(state: TwinCardsState) {
@@ -287,6 +288,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
             store.dispatch(TwinCardsAction.TopUp)
         }
 
+        btn_alternative_action.isVisible = true
         btn_alternative_action.setText(R.string.onboarding_top_up_button_show_wallet_address)
         btn_alternative_action.setOnClickListener {
             store.dispatch(TwinCardsAction.ShowAddressInfoDialog)
