@@ -212,7 +212,11 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
                 val loadedBalance = onboardingManager?.updateBalance(walletManager) ?: return@launch
                 loadedBalance.criticalError?.let { store.dispatchErrorNotification(it) }
                 delay(if (isLoadedBefore) 0 else 300)
-                withMainContext { store.dispatch(TwinCardsAction.Balance.Set(loadedBalance)) }
+                withMainContext {
+                    store.dispatch(TwinCardsAction.Balance.Set(loadedBalance))
+                    store.dispatch(TwinCardsAction.Balance.SetCriticalError(loadedBalance.criticalError))
+                    store.dispatch(TwinCardsAction.Balance.SetNonCriticalError(loadedBalance.error))
+                }
             }
 
         }
