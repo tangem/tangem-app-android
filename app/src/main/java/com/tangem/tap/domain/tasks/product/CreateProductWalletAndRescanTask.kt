@@ -45,7 +45,7 @@ private class CreateProductWalletTask(
     override fun run(session: CardSession, callback: (result: CompletionResult<CreateWalletResponse>) -> Unit) {
         val commandProcessor = when (type) {
             ProductType.Note -> CreateWalletTangemNote()
-            ProductType.Twin -> throw UnsupportedOperationException("Use the TwinCardsManager to create a wallet")
+            ProductType.Twins -> throw UnsupportedOperationException("Use the TwinCardsManager to create a wallet")
             ProductType.Wallet -> CreateWalletTangemWallet()
             else -> CreateWalletOtherCards()
         }
@@ -64,7 +64,7 @@ private class CreateWalletTangemNote : ProductCommandProcessor<CreateWalletRespo
             return
         }
 
-        val curvesSupportedByBlockchain = card.getTangemNoteBlockchain()?.getSupportedCurves()
+        val curvesSupportedByBlockchain = getTangemNoteBlockchain(card)?.getSupportedCurves()
         if (curvesSupportedByBlockchain == null || curvesSupportedByBlockchain.isEmpty()) {
             callback(CompletionResult.Failure(TangemSdkError.CardError()))
             return

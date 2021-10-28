@@ -17,17 +17,17 @@ private fun internalReduce(action: Action, appState: AppState): OnboardingNoteSt
         is GlobalAction.Onboarding.Start -> {
             state = OnboardingNoteState()
         }
-        is OnboardingNoteAction.SetArtworkUrl -> {
+        is OnboardingNoteAction.SetArtwork -> {
             state = state.copy(cardArtwork = action.artwork)
         }
         is OnboardingNoteAction.SetWalletManager -> {
             state = state.copy(walletManager = action.walletManager)
         }
-        is OnboardingNoteAction.SetResources -> {
-            state = state.copy(resources = action.resources)
-        }
         is OnboardingNoteAction.Balance.Set -> {
             state = state.copy(walletBalance = action.balance)
+        }
+        is OnboardingNoteAction.Balance.SetNonCriticalError -> {
+            state = state.copy(balanceNonCriticalError = action.error)
         }
         is OnboardingNoteAction.SetStepOfScreen -> {
             if (action.step != state.currentStep && state.steps.contains(action.step)) {
