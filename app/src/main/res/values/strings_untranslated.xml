@@ -14,7 +14,7 @@
 
     <string name="twins_onboarding_title" translatable="false">Tangem Twin</string>
     <string name="twins_onboarding_subtitle" translatable="false">One wallet. Two cards.</string>
-    <string name="twins_onboarding_description_format" translatable="false">This one that you are holding in your handsand the other one with number #%s.</string>
+    <string name="twins_onboarding_description_format" translatable="false">This one that you are holding in your hands and the other one with number #%s.</string>
 
     <string name="wallet_twins_chip_format" translatable="false">Card %s of 2</string>
 
@@ -194,5 +194,7 @@
     <string name="onboarding_twins_interrupt_warning" translatable="false">If the process of re-creating the wallet gets interrupted in any way, you’ll have to start over.</string>
 
     <string name="onboarding_error_create_primary_wallet" translatable="false">Internal error: can\'t create wallet manager</string>
+    <string name="wallet_balance_blockchain_unreachable_try_later" translatable="false">Blockchain is unreachable. Try later</string>
+
 
 </resources>
