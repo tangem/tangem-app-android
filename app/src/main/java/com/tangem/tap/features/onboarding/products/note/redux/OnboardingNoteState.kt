@@ -1,6 +1,7 @@
 package com.tangem.tap.features.onboarding.products.note.redux
 
 import com.tangem.blockchain.common.WalletManager
+import com.tangem.tap.domain.TapError
 import com.tangem.tap.features.onboarding.OnboardingWalletBalance
 import com.tangem.tap.features.wallet.redux.Artwork
 import org.rekotlin.StateType
@@ -10,10 +11,10 @@ import org.rekotlin.StateType
  */
 data class OnboardingNoteState(
     val walletManager: WalletManager? = null,
-    val resources: AndroidResources = AndroidResources(),
     // UI
     val cardArtwork: Artwork? = null,
     val walletBalance: OnboardingWalletBalance = OnboardingWalletBalance.loading(),
+    val balanceNonCriticalError: TapError? = null,
     val currentStep: OnboardingNoteStep = OnboardingNoteStep.None,
     val steps: List<OnboardingNoteStep> = OnboardingNoteStep.values().toList(),
     val showConfetti: Boolean = false,
@@ -26,11 +27,3 @@ data class OnboardingNoteState(
 enum class OnboardingNoteStep {
     None, CreateWallet, TopUpWallet, Done
 }
-
-data class AndroidResources(
-    val strings: OnboardingStringResources = OnboardingStringResources()
-)
-
-data class OnboardingStringResources(
-    val addressWasCopied: Int = -1
-)
