@@ -7,7 +7,6 @@ import android.text.method.DigitsKeyListener
 import android.view.View
 import android.view.inputmethod.EditorInfo
 import android.widget.EditText
-import androidx.activity.OnBackPressedCallback
 import androidx.core.view.postDelayed
 import androidx.core.widget.addTextChangedListener
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -25,7 +24,8 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.common.snackBar.MaxAmountSnackbar
 import com.tangem.tap.common.text.truncateMiddleWith
 import com.tangem.tap.common.toggleWidget.*
-import com.tangem.tap.features.send.BaseStoreFragment
+import com.tangem.tap.features.BaseStoreFragment
+import com.tangem.tap.features.addBackPressHandler
 import com.tangem.tap.features.send.redux.*
 import com.tangem.tap.features.send.redux.AddressPayIdActionUi.*
 import com.tangem.tap.features.send.redux.AmountActionUi.*
@@ -63,25 +63,9 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
     private val sendSubscriber = SendStateSubscriber(this)
     private lateinit var keyboardObserver: KeyboardObserver
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-
-        activity?.onBackPressedDispatcher?.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                val externalTransactionData = store.state.sendState.externalTransactionData
-                if (externalTransactionData == null) {
-                    store.dispatch(NavigationAction.PopBackTo())
-                } else {
-                    store.dispatch(
-                        WalletAction.TradeCryptoAction.FinishSelling(externalTransactionData.transactionId)
-                    )
-                }
-            }
-        })
-    }
-
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        addBackPressHandler(this)
 
         etAmountToSend = view.findViewById(R.id.etAmountToSend)
 
@@ -97,7 +81,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
     private fun initSendButtonStates() {
         btnSend.setOnClickListener {
             store.dispatch(SendActionUi.SendAmountToRecipient(
-                    Message(getString(R.string.initial_message_sign_header))
+                Message(getString(R.string.initial_message_sign_header))
             ))
         }
         sendBtn = IndeterminateProgressButtonWidget(btnSend, progress)
@@ -124,8 +108,8 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         }
         imvQrCode.setOnClickListener {
             startActivityForResult(
-                    Intent(requireContext(), ScanQrCodeActivity::class.java),
-                    ScanQrCodeActivity.SCAN_QR_REQUEST_CODE
+                Intent(requireContext(), ScanQrCodeActivity::class.java),
+                ScanQrCodeActivity.SCAN_QR_REQUEST_CODE
             )
         }
     }
@@ -279,6 +263,17 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
     fun saveMainCurrency(type: MainCurrencyType) {
         val sp = requireContext().getSharedPreferences("SendScreen", Context.MODE_PRIVATE)
         sp.edit().putString("mainCurrency", type.name).apply()
+    }
+
+    override fun handleOnBackPressed() {
+        val externalTransactionData = store.state.sendState.externalTransactionData
+        if (externalTransactionData == null) {
+            store.dispatch(NavigationAction.PopBackTo())
+        } else {
+            store.dispatch(
+                WalletAction.TradeCryptoAction.FinishSelling(externalTransactionData.transactionId)
+            )
+        }
     }
 
     override fun onDestroy() {
