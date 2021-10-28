@@ -138,8 +138,8 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
             if (state.error == ErrorType.NoInternetConnection) {
                 srl_wallet_details?.isRefreshing = false
                 (activity as? MainActivity)?.showSnackbar(
-                        text = R.string.wallet_notification_no_internet,
-                        buttonTitle = R.string.common_retry
+                    text = R.string.wallet_notification_no_internet,
+                    buttonTitle = R.string.common_retry
                 ) { store.dispatch(WalletAction.LoadData) }
             }
         } else {
@@ -150,8 +150,8 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     private fun setupCardImage(cardImage: Artwork?) {
         Picasso.get()
                 .load(cardImage?.artworkId)
-                .placeholder(R.drawable.card_placeholder)
-                ?.error(R.drawable.card_placeholder)
+                .placeholder(R.drawable.card_placeholder_black)
+                ?.error(R.drawable.card_placeholder_black)
                 ?.into(iv_card)
     }
 
@@ -161,11 +161,10 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
                 store.dispatch(GlobalAction.UpdateFeedbackInfo(store.state.walletState.walletManagers))
                 store.state.globalState.scanResponse?.let { scanNoteResponse ->
                     store.dispatch(DetailsAction.PrepareScreen(
-                            scanNoteResponse.card, scanNoteResponse,
-                            store.state.walletState.walletManagers.map { it.wallet },
-                            store.state.globalState.configManager?.config?.isCreatingTwinCardsAllowed,
-                            CardTou(),
-                            store.state.globalState.appCurrency
+                        scanNoteResponse,
+                        store.state.walletState.walletManagers.map { it.wallet },
+                        CardTou(),
+                        store.state.globalState.appCurrency
                     ))
                     store.dispatch(NavigationAction.NavigateTo(AppScreen.Details))
                     true
