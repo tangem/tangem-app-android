@@ -1,10 +1,19 @@
 package com.tangem.tap.domain.twins
 
 import com.tangem.common.card.Card
+import com.tangem.crypto.CryptoUtils
 
 class TwinsHelper {
     companion object {
         const val TWIN_FILE_NAME = "TwinPublicKey"
+
+        fun verifyTwinPublicKey(issuerData: ByteArray, cardWalletPublicKey: ByteArray?): Boolean {
+            if (issuerData.size < 65 || cardWalletPublicKey == null) return false
+
+            val publicKey = issuerData.sliceArray(0 until 65)
+            val signedKey = issuerData.sliceArray(65 until issuerData.size)
+            return CryptoUtils.verify(cardWalletPublicKey, publicKey, signedKey)
+        }
 
         fun getTwinCardNumber(cardId: String): TwinCardNumber? {
             return when {
@@ -55,6 +64,7 @@ enum class TwinCardNumber(val number: Int) {
     }
 }
 
+@Deprecated("Use ScanResponse.isTangemTwin")
 fun Card.isTangemTwin(): Boolean {
     return TwinsHelper.getTwinCardNumber(cardId) != null
 }

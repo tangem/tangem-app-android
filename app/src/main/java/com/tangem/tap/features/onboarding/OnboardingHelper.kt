@@ -12,14 +12,28 @@ import com.tangem.tap.preferencesStorage
 class OnboardingHelper {
     companion object {
 
-        fun isOnboardingCase(response: ScanResponse): Boolean = if (response.card.hasWallets())
-            preferencesStorage.usedCardsPrefStorage.activationIsStarted(response.card.cardId) else true
+        fun isOnboardingCase(response: ScanResponse): Boolean {
+            val cardInfoStorage = preferencesStorage.usedCardsPrefStorage
+            return when {
+                response.productType == ProductType.Twins -> {
+                    if (!response.twinsIsTwinned()) {
+                        true
+                    } else {
+                        cardInfoStorage.activationIsStarted(response.card.cardId)
+                    }
+                }
+                response.card.hasWallets() -> {
+                    cardInfoStorage.activationIsStarted(response.card.cardId)
+                }
+                else -> true
+            }
+        }
 
         fun whereToNavigate(scanResponse: ScanResponse): AppScreen {
             return when (scanResponse.productType) {
                 ProductType.Note -> AppScreen.OnboardingNote
                 ProductType.Wallet -> AppScreen.OnboardingWallet
-                ProductType.Twin -> AppScreen.OnboardingTwins
+                ProductType.Twins -> AppScreen.OnboardingTwins
                 ProductType.Other -> AppScreen.OnboardingOther
             }
         }

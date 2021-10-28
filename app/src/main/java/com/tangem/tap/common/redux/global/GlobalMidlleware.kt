@@ -47,7 +47,7 @@ private val globalMiddlewareHandler: Middleware<AppState> = { dispatch, appState
                 }
                 is GlobalAction.RestoreAppCurrency -> {
                     store.dispatch(GlobalAction.RestoreAppCurrency.Success(
-                            preferencesStorage.getAppCurrency()
+                        preferencesStorage.getAppCurrency()
                     ))
                 }
                 is GlobalAction.HideWarningMessage -> {
@@ -81,7 +81,7 @@ private val globalMiddlewareHandler: Middleware<AppState> = { dispatch, appState
                             val userStatusResponse = MoonpayService().getUserStatus(apiKey)
                             if (userStatusResponse is Result.Success) {
                                 store.dispatchOnMain(
-                                        GlobalAction.GetMoonPayUserStatus.Success(userStatusResponse.data)
+                                    GlobalAction.GetMoonPayUserStatus.Success(userStatusResponse.data)
                                 )
                             }
                         }
@@ -94,7 +94,7 @@ private val globalMiddlewareHandler: Middleware<AppState> = { dispatch, appState
                         withMainContext {
                             when (result) {
                                 is CompletionResult.Success -> {
-                                    tangemSdkManager.changeDisplayedCardIdNumbersCount(result.data.card)
+                                    tangemSdkManager.changeDisplayedCardIdNumbersCount(result.data)
                                     action.onSuccess?.invoke(result.data)
                                 }
                                 is CompletionResult.Failure -> action.onFailure?.invoke(result.error)
