@@ -11,13 +11,12 @@
     <androidx.appcompat.widget.AppCompatImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:tint="@color/colorPrimary"
-        android:src="@drawable/card_placeholder" />
+        android:src="@drawable/card_placeholder_black"
+        android:tint="@color/colorPrimary" />
 
     <androidx.appcompat.widget.AppCompatImageView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:tint="@color/accent"
-        android:src="@drawable/card_placeholder" />
+        android:src="@drawable/card_placeholder_black" />
 
 </FrameLayout>
