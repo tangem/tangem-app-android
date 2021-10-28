@@ -77,7 +77,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
         addBackPressHandler(this)
 
         reconfigureLayoutForTwins()
-        twinsWidget = TwinsCardWidget(LeapfrogWidget(cards_container)) { 250f }
+        twinsWidget = TwinsCardWidget(LeapfrogWidget(cards_container)) { 285f }
         btnRefreshBalanceWidget = RefreshBalanceWidget(onboarding_main_container)
 
         toolbar.title = getText(R.string.twins_recreate_toolbar)
