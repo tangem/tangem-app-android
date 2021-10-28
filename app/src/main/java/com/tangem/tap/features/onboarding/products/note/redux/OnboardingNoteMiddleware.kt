@@ -9,6 +9,7 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.domain.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.hasWallets
 import com.tangem.tap.domain.extensions.makePrimaryWalletManager
@@ -69,7 +70,7 @@ private fun handleNoteAction(action: Action, dispatch: DispatchFunction) {
                 }
                 OnboardingNoteStep.Done -> {
                     onboardingManager.activationFinished(card.cardId)
-                    postUi(500) { store.dispatch(OnboardingNoteAction.Confetti.Show) }
+                    postUi(DELAY_SDK_DIALOG_CLOSE) { store.dispatch(OnboardingNoteAction.Confetti.Show) }
                 }
             }
         }
@@ -148,7 +149,7 @@ private fun handleNoteAction(action: Action, dispatch: DispatchFunction) {
             store.dispatch(GlobalAction.Onboarding.Stop)
             scope.launch {
                 store.onCardScanned(scanResponse)
-                store.dispatch(NavigationAction.NavigateTo(AppScreen.Wallet))
+                withMainContext { store.dispatch(NavigationAction.NavigateTo(AppScreen.Wallet)) }
             }
         }
     }
