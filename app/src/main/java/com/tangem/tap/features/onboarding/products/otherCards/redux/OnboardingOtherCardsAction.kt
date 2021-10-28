@@ -12,7 +12,7 @@ sealed class OnboardingOtherCardsAction : Action {
     object CreateWallet : OnboardingOtherCardsAction()
 
     // from redux
-    class SetArtworkUrl(val artwork: Artwork) : OnboardingOtherCardsAction()
+    class SetArtwork(val artwork: Artwork) : OnboardingOtherCardsAction()
     object DetermineStepOfScreen : OnboardingOtherCardsAction()
     object Done : OnboardingOtherCardsAction()
 
