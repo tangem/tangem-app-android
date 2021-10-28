@@ -17,7 +17,7 @@ import com.tangem.tap.domain.extensions.getSingleWallet
 import com.tangem.tap.domain.extensions.hasSignedHashes
 import com.tangem.tap.domain.extensions.remainingSignatures
 import com.tangem.tap.domain.isMultiwalletAllowed
-import com.tangem.tap.domain.twins.isTangemTwin
+import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.tap.preferencesStorage
@@ -51,12 +51,12 @@ class WarningsMiddleware {
             }
             is WalletAction.Warnings.CheckRemainingSignatures -> {
                 if (action.remainingSignatures != null &&
-                    action.remainingSignatures <= WarningMessagesManager.REMAINING_SIGNATURES_WARNING
+                        action.remainingSignatures <= WarningMessagesManager.REMAINING_SIGNATURES_WARNING
                 ) {
                     store.state.globalState.warningManager
-                        ?.removeWarnings(
-                            messageRes = R.string.warning_low_signatures_format
-                        )
+                            ?.removeWarnings(
+                                messageRes = R.string.warning_low_signatures_format
+                            )
                     addWarningMessage(
                         warning =
                         WarningMessagesManager.remainingSignaturesNotEnough(action.remainingSignatures),
@@ -81,7 +81,8 @@ class WarningsMiddleware {
     }
 
     private fun showCardWarningsIfNeeded(globalState: GlobalState?) {
-        globalState?.scanResponse?.card?.let { card ->
+        globalState?.scanResponse?.let { scanResponse ->
+            val card = scanResponse.card
             globalState.warningManager?.removeWarnings(WarningMessage.Origin.Local)
             if (card.isTestCard) {
                 addWarningMessage(WarningMessagesManager.testCardWarning(), autoUpdate = true)
@@ -92,7 +93,7 @@ class WarningsMiddleware {
             if (card.firmwareVersion.type != FirmwareVersion.FirmwareType.Release) {
                 addWarningMessage(WarningMessagesManager.devCardWarning())
             } else if (!preferencesStorage.usedCardsPrefStorage.wasScanned(card.cardId)) {
-                checkIfWarningNeeded(card)?.let { warning -> addWarningMessage(warning) }
+                checkIfWarningNeeded(scanResponse)?.let { warning -> addWarningMessage(warning) }
             }
             if (card.firmwareVersion.type == FirmwareVersion.FirmwareType.Release) {
                 if (!globalState.cardVerifiedOnline) {
@@ -106,7 +107,7 @@ class WarningsMiddleware {
     private fun showWarningLowRemainingSignaturesIfNeeded(card: Card) {
         val remainingSignatures = card.remainingSignatures
         if (remainingSignatures != null &&
-            remainingSignatures <= WarningMessagesManager.REMAINING_SIGNATURES_WARNING
+                remainingSignatures <= WarningMessagesManager.REMAINING_SIGNATURES_WARNING
         ) {
             addWarningMessage(
                 WarningMessagesManager.remainingSignaturesNotEnough(
@@ -117,12 +118,12 @@ class WarningsMiddleware {
     }
 
     private fun checkIfWarningNeeded(
-        card: Card,
+        scanResponse: ScanResponse,
     ): WarningMessage? {
-        if (card.isTangemTwin()) return null
+        if (scanResponse.isTangemTwins()) return null
 
-        if (card.isMultiwalletAllowed) {
-            return if (card.hasSignedHashes()) {
+        if (scanResponse.card.isMultiwalletAllowed) {
+            return if (scanResponse.card.hasSignedHashes()) {
                 WarningMessagesManager.signedHashesMultiWalletWarning()
             } else {
                 store.dispatch(WalletAction.Warnings.CheckHashesCount.SaveCardId)
@@ -133,7 +134,7 @@ class WarningsMiddleware {
         val validator = store.state.walletState.walletManagers.firstOrNull()
                 as? SignatureCountValidator
         return if (validator == null) {
-            if (card.hasSignedHashes()) {
+            if (scanResponse.card.hasSignedHashes()) {
                 WarningMessagesManager.alreadySignedHashesWarning()
             } else {
                 store.dispatch(WalletAction.Warnings.CheckHashesCount.SaveCardId)
@@ -149,10 +150,11 @@ class WarningsMiddleware {
         if (store.state.walletState.hashesCountVerified != false) return
         if (!NetworkConnectivity.getInstance().isOnlineOrConnecting()) return
 
-        val card = store.state.globalState.scanResponse?.card
+        val scanResponse = store.state.globalState.scanResponse
+        val card = scanResponse?.card
         if (card == null || preferencesStorage.usedCardsPrefStorage.wasScanned(card.cardId)) return
 
-        if (card.isTangemTwin() || card.isMultiwalletAllowed) return
+        if (scanResponse.isTangemTwins() || card.isMultiwalletAllowed) return
 
         val validator = store.state.walletState.walletManagers.firstOrNull()
                 as? SignatureCountValidator
