@@ -46,6 +46,8 @@ sealed class TapError(
     sealed class WalletManagerUpdate {
         class NoAccountError(amountToCreateAccount: String): CustomError(amountToCreateAccount)
         class InternalError(message: String): CustomError(message)
+        object BlockchainIsUnreachable: TapError(R.string.wallet_balance_blockchain_unreachable)
+        object BlockchainIsUnreachableTryLater: TapError(R.string.wallet_balance_blockchain_unreachable_try_later)
     }
 
     data class ValidateTransactionErrors(
