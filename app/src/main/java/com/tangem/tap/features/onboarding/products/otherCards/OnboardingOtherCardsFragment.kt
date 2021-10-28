@@ -7,12 +7,12 @@ import androidx.annotation.LayoutRes
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.view.isVisible
 import androidx.transition.TransitionManager
+import com.squareup.picasso.Picasso
 import com.tangem.tap.common.extensions.getDrawableCompat
 import com.tangem.tap.common.redux.navigation.ShareElement
 import com.tangem.tap.common.transitions.InternalNoteLayoutTransition
 import com.tangem.tap.features.addBackPressHandler
 import com.tangem.tap.features.onboarding.products.BaseOnboardingFragment
-import com.tangem.tap.features.onboarding.products.note.swapToBitmapDrawable
 import com.tangem.tap.features.onboarding.products.otherCards.redux.OnboardingOtherCardsAction
 import com.tangem.tap.features.onboarding.products.otherCards.redux.OnboardingOtherCardsState
 import com.tangem.tap.features.onboarding.products.otherCards.redux.OnboardingOtherCardsStep
@@ -60,7 +60,12 @@ class OnboardingOtherCardsFragment : BaseOnboardingFragment<OnboardingOtherCards
         if (activity == null) return
         if (state.currentStep == OnboardingOtherCardsStep.None) return
 
-        state.cardArtwork?.let { imv_front_card.swapToBitmapDrawable(it.artwork) }
+        Picasso.get()
+                .load(state.cardArtworkUrl)
+                .error(R.drawable.card_placeholder_black)
+                .placeholder(R.drawable.card_placeholder_black)
+                ?.into(imv_front_card)
+
         pb_state.max = state.steps.size - 1
         pb_state.progress = state.progress
 

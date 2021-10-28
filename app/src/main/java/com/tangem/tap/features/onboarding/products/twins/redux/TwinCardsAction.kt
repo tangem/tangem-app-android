@@ -4,6 +4,7 @@ import com.tangem.Message
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.extensions.VoidCallback
 import com.tangem.tap.common.redux.StateDialog
+import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.domain.twins.AssetReader
 import com.tangem.tap.domain.twins.TwinCardsManager
@@ -55,6 +56,8 @@ sealed class TwinCardsAction : Action {
     sealed class Balance {
         object Update : TwinCardsAction()
         data class Set(val balance: OnboardingWalletBalance) : TwinCardsAction()
+        data class SetCriticalError(val error: TapError?) : TwinCardsAction()
+        data class SetNonCriticalError(val error: TapError?) : TwinCardsAction()
     }
 
     sealed class Confetti {
