@@ -3,7 +3,6 @@ package com.tangem.tap.features.onboarding.products.note.redux
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.features.onboarding.OnboardingWalletBalance
-import com.tangem.tap.features.wallet.redux.Artwork
 import org.rekotlin.StateType
 
 /**
@@ -12,7 +11,7 @@ import org.rekotlin.StateType
 data class OnboardingNoteState(
     val walletManager: WalletManager? = null,
     // UI
-    val cardArtwork: Artwork? = null,
+    val cardArtworkUrl: String? = null,
     val walletBalance: OnboardingWalletBalance = OnboardingWalletBalance.loading(),
     val balanceNonCriticalError: TapError? = null,
     val balanceCriticalError: TapError? = null,
