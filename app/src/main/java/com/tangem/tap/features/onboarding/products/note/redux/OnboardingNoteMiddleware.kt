@@ -118,10 +118,11 @@ private fun handleNoteAction(action: Action, dispatch: DispatchFunction) {
 
             scope.launch {
                 val loadedBalance = onboardingManager.updateBalance(walletManager)
-                loadedBalance.criticalError?.let { store.dispatchErrorNotification(it) }
                 delay(if (isLoadedBefore) 0 else 300)
+                loadedBalance.criticalError?.let { store.dispatchErrorNotification(it) }
                 withMainContext {
                     store.dispatch(OnboardingNoteAction.Balance.Set(loadedBalance))
+                    store.dispatch(OnboardingNoteAction.Balance.SetCriticalError(loadedBalance.criticalError))
                     store.dispatch(OnboardingNoteAction.Balance.SetNonCriticalError(loadedBalance.error))
                 }
             }
