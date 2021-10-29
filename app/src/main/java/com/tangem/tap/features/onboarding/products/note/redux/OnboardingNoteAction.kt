@@ -3,7 +3,6 @@ package com.tangem.tap.features.onboarding.products.note.redux
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.features.onboarding.OnboardingWalletBalance
-import com.tangem.tap.features.wallet.redux.Artwork
 import org.rekotlin.Action
 
 /**
@@ -17,7 +16,7 @@ sealed class OnboardingNoteAction : Action {
     object ShowAddressInfoDialog : OnboardingNoteAction()
 
     // from redux
-    class SetArtwork(val artwork: Artwork) : OnboardingNoteAction()
+    class SetArtworkUrl(val artworkUrl: String) : OnboardingNoteAction()
     data class SetWalletManager(val walletManager: WalletManager) : OnboardingNoteAction()
     object DetermineStepOfScreen : OnboardingNoteAction()
     object Done : OnboardingNoteAction()
@@ -27,6 +26,7 @@ sealed class OnboardingNoteAction : Action {
     sealed class Balance {
         object Update : OnboardingNoteAction()
         data class Set(val balance: OnboardingWalletBalance) : OnboardingNoteAction()
+        data class SetCriticalError(val error: TapError?) : OnboardingNoteAction()
         data class SetNonCriticalError(val error: TapError?) : OnboardingNoteAction()
     }
 
