@@ -1,19 +1,14 @@
 package com.tangem.tap.features.feedback
 
 import android.app.Activity
-import android.content.ActivityNotFoundException
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Build
-import androidx.core.app.ShareCompat
-import androidx.core.content.ContextCompat
-import androidx.core.content.FileProvider
 import com.tangem.Log
 import com.tangem.TangemSdkLogger
 import com.tangem.blockchain.common.*
 import com.tangem.common.card.Card
+import com.tangem.tap.common.extensions.sendEmail
 import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.domain.TapWorkarounds
 import timber.log.Timber
@@ -28,23 +23,26 @@ import java.util.*
 [REDACTED_AUTHOR]
  */
 class FeedbackManager(
-        val infoHolder: AdditionalEmailInfo,
-        private val logCollector: TangemLogCollector,
+    val infoHolder: AdditionalEmailInfo,
+    private val logCollector: TangemLogCollector,
 ) {
 
     private lateinit var activity: Activity
 
-    fun updateAcivity(activity: Activity) {
+    fun updateActivity(activity: Activity) {
         this.activity = activity
     }
 
-    fun send(emailData: EmailData) {
+    fun send(emailData: EmailData, onFail: ((Exception) -> Unit)? = null) {
+        if (!this::activity.isInitialized) return
+
         emailData.prepare(infoHolder)
         val fileLog = if (emailData is ScanFailsEmail) createLogFile() else null
-        sendTo(
+        activity.sendEmail(
             email = getSupportEmail(),
             subject = emailData.subject, message = emailData.joinTogether(infoHolder),
-            fileLog = fileLog
+            file = fileLog,
+            onFail = onFail
         )
     }
 
@@ -54,42 +52,6 @@ class FeedbackManager(
         } else {
             DEFAULT_SUPPORT_EMAIL
         }
-    }
-
-    private fun sendTo(email: String, subject: String, message: String, fileLog: File? = null) {
-        val emailFilterIntent = Intent(Intent.ACTION_SENDTO, Uri.parse("mailto:"))
-        val originalIntentResults = activity.packageManager.queryIntentActivities(emailFilterIntent, 0)
-        val emailFilterIntentResults = activity.packageManager.queryIntentActivities(emailFilterIntent, 0)
-        val targetedIntents = originalIntentResults
-                .filter { originalResult ->
-                    emailFilterIntentResults.any {
-                        originalResult.activityInfo.packageName == it.activityInfo.packageName
-                    }
-                }
-                .map {
-                    createEmailShareIntent(email, subject, message, fileLog).apply {
-                        setPackage(it.activityInfo.packageName)
-                    }
-                }
-                .toMutableList()
-        try {
-            val chooserIntent = Intent.createChooser(targetedIntents.removeAt(0), "Send mail...")
-            chooserIntent.putExtra(Intent.EXTRA_INITIAL_INTENTS, targetedIntents.toTypedArray())
-            chooserIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            ContextCompat.startActivity(activity, chooserIntent, null)
-        } catch (ex: ActivityNotFoundException) {
-            Timber.e(ex)
-        }
-    }
-
-    private fun createEmailShareIntent(recipient: String, subject: String, text: String, file: File? = null): Intent {
-        val builder = ShareCompat.IntentBuilder.from(activity)
-                .setType("message/rfc822")
-                .setEmailTo(arrayOf(recipient))
-                .setSubject(subject)
-                .setText(text)
-        file?.let { builder.setStream(FileProvider.getUriForFile(activity, "${activity.packageName}.provider", it)) }
-        return builder.intent
     }
 
     private fun createLogFile(): File? {
@@ -135,12 +97,12 @@ class TangemLogCollector : TangemSdkLogger {
 
 class AdditionalEmailInfo {
     class EmailWalletInfo(
-            var blockchain: Blockchain = Blockchain.Unknown,
-            var address: String = "",
-            var explorerLink: String = "",
-            var host: String = "",
-            //    var outputsCount: String = ""
-            //    var transactionHex: String = ""
+        var blockchain: Blockchain = Blockchain.Unknown,
+        var address: String = "",
+        var explorerLink: String = "",
+        var host: String = "",
+        //    var outputsCount: String = ""
+        //    var transactionHex: String = ""
     )
 
     var appVersion: String = ""
@@ -179,7 +141,7 @@ class AdditionalEmailInfo {
         cardFirmwareVersion = card.firmwareVersion.stringValue
         cardIssuer = card.issuer.name
         signedHashesCount = card.wallets
-            .joinToString(";") { "${it.curve?.curve} - ${it.totalSignedHashes}" }
+                .joinToString(";") { "${it.curve?.curve} - ${it.totalSignedHashes}" }
     }
 
     fun setWalletsInfo(walletManagers: List<WalletManager>) {
@@ -239,10 +201,18 @@ interface EmailData {
 
     fun prepare(infoHolder: AdditionalEmailInfo) {}
 
+    fun appendDelimiter(builder: StringBuilder) {
+        builder.append("----------\n")
+    }
+
+    fun appendBlankLine(builder: StringBuilder) {
+        builder.append("\n")
+    }
+
     fun createOptionalMessage(infoHolder: AdditionalEmailInfo): String
 
     fun joinTogether(infoHolder: AdditionalEmailInfo): String {
-        return "$mainMessage\n\n\n\n\n" +
+        return "$mainMessage\n\n\n\n" +
                 "Following information is optional. You can erase it if you don’t want to share it.\n" +
                 createOptionalMessage(infoHolder)
     }
@@ -257,6 +227,7 @@ class RateCanBeBetterEmail : EmailData {
         return StringBuilder().apply {
             appendKeyValue("Card ID", infoHolder.cardId)
             appendKeyValue("Blockchain", walletInfo.blockchain.fullName)
+            appendBlankLine(this)
             appendKeyValue("Phone model", infoHolder.phoneModel)
             appendKeyValue("OS version", infoHolder.osVersion)
             appendKeyValue("App version", infoHolder.appVersion)
@@ -269,6 +240,7 @@ class ScanFailsEmail : EmailData {
     override val mainMessage: String = "Please tell us what card do you have?"
     override fun createOptionalMessage(infoHolder: AdditionalEmailInfo): String {
         return StringBuilder().apply {
+            appendBlankLine(this)
             appendKeyValue("Phone model", infoHolder.phoneModel)
             appendKeyValue("OS version", infoHolder.osVersion)
             appendKeyValue("App version", infoHolder.appVersion)
@@ -284,6 +256,7 @@ class SendTransactionFailedEmail(private val error: String) : EmailData {
         return StringBuilder().apply {
             appendKeyValue("Error", error)
             appendKeyValue("Card ID", infoHolder.cardId)
+            appendDelimiter(this)
             appendKeyValue("Blockchain", walletInfo.blockchain.fullName)
             appendKeyValue("Host", walletInfo.host)
             appendKeyValue("Token", infoHolder.token)
@@ -291,6 +264,7 @@ class SendTransactionFailedEmail(private val error: String) : EmailData {
             appendKeyValue("Destination address", infoHolder.destinationAddress)
             appendKeyValue("Amount", infoHolder.amount)
             appendKeyValue("Fee", infoHolder.fee)
+            appendBlankLine(this)
             appendKeyValue("Phone model", infoHolder.phoneModel)
             appendKeyValue("OS version", infoHolder.osVersion)
             appendKeyValue("App version", infoHolder.appVersion)
@@ -326,11 +300,14 @@ class FeedbackEmail : EmailData {
         builder.appendKeyValue("Signed hashes", infoHolder.signedHashesCount)
 
         infoHolder.walletsInfo.forEach {
+            appendDelimiter(builder)
             builder.appendKeyValue("Blockchain", it.blockchain.fullName)
             builder.appendKeyValue("Host", it.host)
             builder.appendKeyValue("Wallet address", it.address)
             builder.appendKeyValue("Explorer link", it.explorerLink)
         }
+        appendBlankLine(builder)
+
 //            appendKeyValue("Outputs count", infoHolder.outputsCount)
         builder.appendKeyValue("Phone model", infoHolder.phoneModel)
         builder.appendKeyValue("OS version", infoHolder.osVersion)
