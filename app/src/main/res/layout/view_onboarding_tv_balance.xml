@@ -14,15 +14,21 @@
         android:layout_height="wrap_content"
         android:elevation="0dp"
         android:fontFamily="sans-serif-medium"
+        android:letterSpacing="0.036"
         android:text="@string/onboarding_balance_title"
         android:textAllCaps="true"
         android:textColor="#ABABAB"
         android:textSize="14sp" />
 
+    <View
+        android:layout_width="wrap_content"
+        android:layout_height="4dp" />
+
     <TextView
         android:id="@+id/tv_balance_value"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:letterSpacing="0.036"
         android:textSize="28sp"
         android:textStyle="bold"
         tools:text="0.000 BTC" />
