@@ -174,7 +174,7 @@
     <string name="home_button_get_new_card" translatable="false">Get a new card</string>
 
     <string name="onboarding_title" translatable="false">Activating card</string>
-    <string name="onboarding_button_what_does_it_mean" translatable="false">What does it mean?</string>
+    <string name="onboarding_button_what_does_it_mean" translatable="false">How it works?</string>
     <string name="onboarding_create_wallet_header" translatable="false">Create a wallet</string>
     <string name="onboarding_create_wallet_body" translatable="false">Let’s generate all the keys on your card and create a secure wallet</string>
     <string name="onboarding_create_wallet_button_create_wallet" translatable="false">Create wallet</string>

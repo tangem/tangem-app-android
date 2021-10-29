@@ -132,6 +132,8 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
 
         imv_card_background.setBackgroundDrawable(requireContext().getDrawableCompat(R.drawable.shape_circle))
         updateConstraints(state.currentStep, R.layout.lp_onboarding_create_wallet)
+
+        btn_alternative_action.isVisible = false // temporary
     }
 
     private fun setupTopUpWalletState(state: OnboardingNoteState) {
@@ -140,6 +142,7 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
             store.dispatch(OnboardingNoteAction.TopUp)
         }
 
+        btn_alternative_action.isVisible = true
         btn_alternative_action.setText(R.string.onboarding_top_up_button_show_wallet_address)
         btn_alternative_action.setOnClickListener {
             store.dispatch(OnboardingNoteAction.ShowAddressInfoDialog)
