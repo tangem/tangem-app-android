@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:translationY="-50dp">
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/bg_circle_large"
+        android:layout_width="670dp"
+        android:layout_height="670dp"
+        android:src="@drawable/shape_circle_home_screen"
+        android:translationX="160dp"
+        android:translationY="-175dp" />
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/bg_circle_medium"
+        android:layout_width="650dp"
+        android:layout_height="650dp"
+        android:src="@drawable/shape_circle"
+        android:tint="@color/backgroundWhite"
+        android:translationX="170dp"
+        android:translationY="-165dp" />
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/bg_circle_small"
+        android:layout_width="590dp"
+        android:layout_height="590dp"
+        android:src="@drawable/shape_circle_home_screen"
+        android:translationX="192dp"
+        android:translationY="-132dp" />
+
+</FrameLayout>
