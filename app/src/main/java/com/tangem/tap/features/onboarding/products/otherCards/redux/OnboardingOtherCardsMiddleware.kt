@@ -44,8 +44,8 @@ private fun handleOtherCardsAction(action: Action, dispatch: DispatchFunction) {
     when (action) {
         is OnboardingOtherCardsAction.LoadCardArtwork -> {
             scope.launch {
-                val artwork = onboardingManager.loadArtwork()
-                withMainContext { store.dispatch(OnboardingOtherCardsAction.SetArtwork(artwork)) }
+                val artworkUrl = onboardingManager.loadArtworkUrl()
+                withMainContext { store.dispatch(OnboardingOtherCardsAction.SetArtworkUrl(artworkUrl)) }
             }
         }
         is OnboardingOtherCardsAction.DetermineStepOfScreen -> {
@@ -58,7 +58,7 @@ private fun handleOtherCardsAction(action: Action, dispatch: DispatchFunction) {
         is OnboardingOtherCardsAction.SetStepOfScreen -> {
             if (action.step == OnboardingOtherCardsStep.Done) {
                 onboardingManager.activationFinished(card.cardId)
-                postUi(500) { store.dispatch(OnboardingOtherCardsAction.Confetti.Show) }
+                postUi(200) { store.dispatch(OnboardingOtherCardsAction.Confetti.Show) }
             }
         }
         is OnboardingOtherCardsAction.CreateWallet -> {
@@ -85,7 +85,7 @@ private fun handleOtherCardsAction(action: Action, dispatch: DispatchFunction) {
             store.dispatch(GlobalAction.Onboarding.Stop)
             scope.launch {
                 store.onCardScanned(onboardingManager.scanResponse)
-                store.dispatch(NavigationAction.NavigateTo(AppScreen.Wallet))
+                withMainContext { store.dispatch(NavigationAction.NavigateTo(AppScreen.Wallet)) }
             }
         }
     }
