@@ -87,6 +87,8 @@ class OnboardingOtherCardsFragment : BaseOnboardingFragment<OnboardingOtherCards
 
         imv_card_background.setBackgroundDrawable(requireContext().getDrawableCompat(R.drawable.shape_circle))
         updateConstraints(R.layout.lp_onboarding_create_wallet)
+
+        btn_alternative_action.isVisible = false // temporary
     }
 
     private fun setupDoneState(state: OnboardingOtherCardsState) {
