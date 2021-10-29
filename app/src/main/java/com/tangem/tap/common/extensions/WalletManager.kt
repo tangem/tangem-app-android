@@ -29,7 +29,7 @@ suspend fun WalletManager.safeUpdate(): Result<Wallet> = try {
         if (blockchain.isNoAccountError(exception) && amountToCreateAccount != null) {
             Result.Failure(TapError.WalletManagerUpdate.NoAccountError(amountToCreateAccount.toString()))
         } else {
-            val message = exception.localizedMessage ?: "Unknown exception during WalletManager update"
+            val message = exception.localizedMessage ?: "An error has occurred. Try later"
             Result.Failure(TapError.WalletManagerUpdate.InternalError(message))
         }
     }
