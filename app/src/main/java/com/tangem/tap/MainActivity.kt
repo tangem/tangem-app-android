@@ -62,7 +62,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         systemActions()
-        store.state.globalState.feedbackManager?.updateAcivity(this)
+        store.state.globalState.feedbackManager?.updateActivity(this)
         store.dispatch(NavigationAction.ActivityCreated(WeakReference(this)))
 
         tangemSdk = TangemSdk.init(this, TangemSdkManager.config)
