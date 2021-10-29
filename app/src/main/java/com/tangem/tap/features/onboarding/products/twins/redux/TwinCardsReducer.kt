@@ -29,7 +29,10 @@ private fun internalReduce(action: Action, state: AppState): TwinCardsState {
             }
         }
         is TwinCardsAction.SetMode -> {
-            state = state.copy(mode = action.mode)
+            state = state.copy(
+                mode = action.mode,
+                userWasUnderstandIfWalletRecreate = false,
+            )
         }
         is TwinCardsAction.SetStepOfScreen -> {
             state = state.copy(currentStep = action.step)
@@ -51,6 +54,12 @@ private fun internalReduce(action: Action, state: AppState): TwinCardsState {
         }
         is TwinCardsAction.Balance.Set -> {
             state = state.copy(walletBalance = action.balance)
+        }
+        is TwinCardsAction.Balance.SetCriticalError -> {
+            state = state.copy(balanceCriticalError = action.error)
+        }
+        is TwinCardsAction.Balance.SetNonCriticalError -> {
+            state = state.copy(balanceNonCriticalError = action.error)
         }
         is TwinCardsAction.Confetti.Show -> {
             state = state.copy(showConfetti = true)
