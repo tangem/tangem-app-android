@@ -102,6 +102,9 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
 
         imv_twin_front_card.transitionName = ShareElement.imvFrontCard
         imv_twin_back_card.transitionName = ShareElement.imvBackCard
+
+        // if don't this, the bg_circle_... is overflow the app_bar
+        app_bar.bringToFront()
     }
 
     override fun subscribeToStore() {
@@ -158,6 +161,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
     private fun setupWelcomeState(state: TwinCardsState, mainAction: Action) {
         twinsWidget.toWelcome(false) { startPostponedEnterTransition() }
 
+        onboarding_twins_welcome_bg.show()
         pb_state.hide()
 
         tv_header.setText(R.string.twins_onboarding_subtitle)
@@ -169,6 +173,8 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
 
     private fun setupWarningState(state: TwinCardsState) {
         twinsWidget.toWelcome(false) { startPostponedEnterTransition() }
+
+        onboarding_twins_welcome_bg.hide()
         pb_state.hide()
         chb_understand.show()
 
@@ -186,6 +192,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
     }
 
     private fun setupCreateFirstWalletState(state: TwinCardsState) {
+        onboarding_twins_welcome_bg.hide()
         bg_circle_large.hide()
         bg_circle_medium.hide()
         bg_circle_min.hide()
