@@ -39,6 +39,7 @@ class FeedbackManager(
     }
 
     fun send(emailData: EmailData) {
+        emailData.prepare(infoHolder)
         val fileLog = if (emailData is ScanFailsEmail) createLogFile() else null
         sendTo(
             email = getSupportEmail(),
@@ -235,6 +236,9 @@ class AdditionalEmailInfo {
 interface EmailData {
     val subject: String
     val mainMessage: String
+
+    fun prepare(infoHolder: AdditionalEmailInfo) {}
+
     fun createOptionalMessage(infoHolder: AdditionalEmailInfo): String
 
     fun joinTogether(infoHolder: AdditionalEmailInfo): String {
@@ -298,8 +302,23 @@ class SendTransactionFailedEmail(private val error: String) : EmailData {
 }
 
 class FeedbackEmail : EmailData {
-    override val subject: String = "Tangem Tap feedback"
-    override val mainMessage: String = "Hi Tangem,"
+    override val subject: String
+        get() = if (isS2CCard) s2cSubject else tangemSubject
+    override val mainMessage: String
+        get() = if (isS2CCard) s2cMainMessage else tangemMainMessage
+
+    private val tangemSubject = "Tangem Tap feedback"
+    private val tangemMainMessage = "Hi Tangem,"
+
+    private val s2cSubject = "Feedback"
+    private val s2cMainMessage = "Hi support team,"
+
+    private var isS2CCard = false
+
+    override fun prepare(infoHolder: AdditionalEmailInfo) {
+        isS2CCard = TapWorkarounds.isStart2CoinIssuer(infoHolder.cardIssuer)
+    }
+
     override fun createOptionalMessage(infoHolder: AdditionalEmailInfo): String {
         val builder = StringBuilder()
         builder.appendKeyValue("Card ID", infoHolder.cardId)
