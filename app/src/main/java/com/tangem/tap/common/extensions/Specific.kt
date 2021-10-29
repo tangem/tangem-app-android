@@ -23,9 +23,17 @@ fun BigDecimal.toFormattedString(
 }
 
 fun BigDecimal.toFormattedCurrencyString(
-    decimals: Int, currency: String, roundingMode: RoundingMode = RoundingMode.DOWN
+    decimals: Int, currency: String, roundingMode: RoundingMode = RoundingMode.DOWN,
+    limitNumberOfDecimals: Boolean = true
 ): String {
-    val formattedAmount = this.toFormattedString(decimals = decimals, roundingMode = roundingMode)
+    val decimalsForRounding = if (limitNumberOfDecimals){
+        if (decimals > 8) 8 else decimals
+    } else {
+        decimals
+    }
+    val formattedAmount = this.toFormattedString(
+        decimals = decimalsForRounding, roundingMode = roundingMode
+    )
     return "$formattedAmount $currency"
 }
 
