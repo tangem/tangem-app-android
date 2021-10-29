@@ -10,6 +10,7 @@ import androidx.annotation.LayoutRes
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.view.isVisible
 import androidx.transition.TransitionManager
+import com.squareup.picasso.Picasso
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.tangem_sdk_new.extensions.fadeIn
 import com.tangem.tangem_sdk_new.extensions.fadeOut
@@ -73,7 +74,12 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
     override fun newState(state: OnboardingNoteState) {
         if (activity == null) return
 
-        state.cardArtwork?.let { imv_front_card.swapToBitmapDrawable(it.artwork) }
+        Picasso.get()
+                .load(state.cardArtworkUrl)
+                .error(R.drawable.card_placeholder_black)
+                .placeholder(R.drawable.card_placeholder_black)
+                ?.into(imv_front_card)
+
         pb_state.max = state.steps.size - 1
         pb_state.progress = state.progress
 
@@ -91,9 +97,13 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
     private fun setBalance(state: OnboardingNoteState) {
         if (state.walletBalance.currency.blockchain == Blockchain.Unknown) return
 
-        val balanceValue = state.walletBalance.value.stripZeroPlainString()
-        val currency = state.walletBalance.currency.currencySymbol
-        tv_balance_value.text = "$balanceValue $currency"
+        if (state.balanceCriticalError == null) {
+            val balanceValue = state.walletBalance.value.stripZeroPlainString()
+            val currency = state.walletBalance.currency.currencySymbol
+            tv_balance_value.text = "$balanceValue $currency"
+        } else {
+            tv_balance_value.text = "–"
+        }
     }
 
     private fun setupNoneState(state: OnboardingNoteState) {
