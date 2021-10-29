@@ -17,8 +17,8 @@ private fun internalReduce(action: Action, appState: AppState): OnboardingOtherC
         is GlobalAction.Onboarding.Start -> {
             state = OnboardingOtherCardsState()
         }
-        is OnboardingOtherCardsAction.SetArtwork -> {
-            state = state.copy(cardArtwork = action.artwork)
+        is OnboardingOtherCardsAction.SetArtworkUrl -> {
+            state = state.copy(cardArtworkUrl = action.artworkUrl)
         }
         is OnboardingOtherCardsAction.SetStepOfScreen -> {
             if (action.step != state.currentStep && state.steps.contains(action.step)) {
