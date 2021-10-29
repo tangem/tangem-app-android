@@ -21,7 +21,7 @@ class ScanFailsDialog {
                 setPositiveButton(R.string.alert_button_request_support) { _, _ ->
                     store.dispatch(GlobalAction.SendFeedback(ScanFailsEmail()))
                 }
-                setNegativeButton(R.string.common_cancel) { _, _ -> }
+                setNeutralButton(R.string.alert_troubleshooting_scan_card_ok) { _, _ -> }
                 setOnDismissListener { store.dispatchDialogHide() }
             }.create()
         }
