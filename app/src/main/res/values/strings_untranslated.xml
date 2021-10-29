@@ -57,6 +57,7 @@
     <string name="alert_failed_to_send_transaction_message" translatable="false">Reason: %s. Do you want to send feedback?</string>
     <string name="alert_troubleshooting_scan_card_title" translatable="false">Are you having difficulty scanning your card?</string>
     <string name="alert_troubleshooting_scan_card_message" translatable="false">Please try to tap the card exactly as shown in the animation or request support.</string>
+    <string name="alert_troubleshooting_scan_card_ok" translatable="false">I\'m okay</string>
     <string name="alert_button_try_again" translatable="false">Try again</string>
     <string name="alert_button_request_support" translatable="false">Request support</string>
     <string name="alert_button_send_feedback" translatable="false">Send feedback</string>
