@@ -36,7 +36,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="64dp"
-            android:layout_marginTop="10dp"
+            android:layout_marginTop="14dp"
             android:layout_marginEnd="64dp"
             android:minLines="3"
             app:layout_constraintBottom_toTopOf="@+id/fl_scan_card_container"
