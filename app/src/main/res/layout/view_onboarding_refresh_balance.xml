@@ -4,7 +4,6 @@
     android:id="@+id/btn_refresh_balance"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:background="?attr/selectableItemBackgroundBorderless"
     android:clickable="true"
     android:focusable="true">
 
