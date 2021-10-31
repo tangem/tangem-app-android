@@ -37,7 +37,6 @@ import kotlinx.android.synthetic.main.layout_onboarding_container_top.*
 import kotlinx.android.synthetic.main.view_bg_twins_welcome.*
 import kotlinx.android.synthetic.main.view_onboarding_progress.*
 import kotlinx.android.synthetic.main.view_onboarding_tv_balance.*
-import org.rekotlin.Action
 
 class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
 
@@ -150,14 +149,17 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
     }
 
     private fun setupWelcomeOnlyState(state: TwinCardsState) {
-        setupWelcomeState(state, NavigationAction.NavigateTo(AppScreen.Wallet))
+        setupWelcomeState(state) {
+            store.dispatch(NavigationAction.NavigateTo(AppScreen.Wallet))
+            store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.None))
+        }
     }
 
     private fun setupWelcomeState(state: TwinCardsState) {
-        setupWelcomeState(state, TwinCardsAction.SetStepOfScreen(TwinCardsStep.CreateFirstWallet))
+        setupWelcomeState(state) { store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.CreateFirstWallet)) }
     }
 
-    private fun setupWelcomeState(state: TwinCardsState, mainAction: Action) {
+    private fun setupWelcomeState(state: TwinCardsState, mainAction: VoidCallback) {
         twinsWidget.toWelcome(false) { startPostponedEnterTransition() }
 
         onboarding_twins_welcome_bg.show()
@@ -167,7 +169,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
         tv_body.text = getString(R.string.twins_onboarding_description_format, state.cardNumber?.pairIndexNumber())
 
         btn_main_action.setText(R.string.common_continue)
-        btn_main_action.setOnClickListener { store.dispatch(mainAction) }
+        btn_main_action.setOnClickListener { mainAction() }
     }
 
     private fun setupWarningState(state: TwinCardsState) {
