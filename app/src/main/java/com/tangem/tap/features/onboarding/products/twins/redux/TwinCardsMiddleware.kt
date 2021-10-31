@@ -178,7 +178,16 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
                     is Result.Success -> {
                         updateScanResponse(result.data)
                         delay(DELAY_SDK_DIALOG_CLOSE)
-                        withMainContext { store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.TopUpWallet)) }
+                        withMainContext {
+                            when (twinCardsState.mode) {
+                                CreateTwinWalletMode.CreateWallet -> {
+                                    store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.TopUpWallet))
+                                }
+                                CreateTwinWalletMode.RecreateWallet -> {
+                                    store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.Done))
+                                }
+                            }
+                        }
                     }
                     is Result.Failure -> {
                     }
