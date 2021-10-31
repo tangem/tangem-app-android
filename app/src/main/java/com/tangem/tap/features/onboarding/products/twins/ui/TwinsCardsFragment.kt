@@ -14,7 +14,6 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.VoidCallback
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.leapfrogWidget.LeapfrogWidget
-import com.tangem.tap.common.postUi
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.common.redux.navigation.ShareElement
@@ -290,15 +289,24 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
             }
         }
 
-        btn_main_action.setText(R.string.onboarding_top_up_button_but_crypto)
-        btn_main_action.setOnClickListener {
-            store.dispatch(TwinCardsAction.TopUp)
-        }
+        if (state.isBuyAllowed) {
+            btn_main_action.setText(R.string.onboarding_top_up_button_but_crypto)
+            btn_main_action.setOnClickListener {
+                store.dispatch(TwinCardsAction.TopUp)
+            }
 
-        btn_alternative_action.isVisible = true
-        btn_alternative_action.setText(R.string.onboarding_top_up_button_show_wallet_address)
-        btn_alternative_action.setOnClickListener {
-            store.dispatch(TwinCardsAction.ShowAddressInfoDialog)
+            btn_alternative_action.isVisible = true
+            btn_alternative_action.setText(R.string.onboarding_top_up_button_show_wallet_address)
+            btn_alternative_action.setOnClickListener {
+                store.dispatch(TwinCardsAction.ShowAddressInfoDialog)
+            }
+        } else {
+            btn_main_action.setText(R.string.onboarding_button_receive_crypto)
+            btn_main_action.setOnClickListener {
+                store.dispatch(TwinCardsAction.ShowAddressInfoDialog)
+            }
+
+            btn_alternative_action.isVisible = false
         }
 
         tv_header.setText(R.string.onboarding_top_up_header)
@@ -306,13 +314,10 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
 
         btnRefreshBalanceWidget.changeState(state.walletBalance.state)
         if (btnRefreshBalanceWidget.isShowing != true) {
-            postUi(300) {
-                btnRefreshBalanceWidget.mainView.setOnClickListener {
-                    store.dispatch(TwinCardsAction.Balance.Update)
-                }
+            btnRefreshBalanceWidget.mainView.setOnClickListener {
+                store.dispatch(TwinCardsAction.Balance.Update)
             }
         }
-
         imv_card_background.setBackgroundDrawable(requireContext().getDrawableCompat(R.drawable.shape_rectangle_rounded_8))
         updateConstraints(state.currentStep, R.layout.lp_onboarding_topup_wallet_twins)
     }
