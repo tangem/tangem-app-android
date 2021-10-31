@@ -176,6 +176,8 @@
 
     <string name="onboarding_title" translatable="false">Activating card</string>
     <string name="onboarding_button_what_does_it_mean" translatable="false">How it works?</string>
+    <string name="onboarding_button_receive_crypto" translatable="false">Receive crypto</string>
+
     <string name="onboarding_create_wallet_header" translatable="false">Create a wallet</string>
     <string name="onboarding_create_wallet_body" translatable="false">Let’s generate all the keys on your card and create a secure wallet</string>
     <string name="onboarding_create_wallet_button_create_wallet" translatable="false">Create wallet</string>
@@ -195,6 +197,7 @@
     <string name="onboarding_twins_interrupt_warning" translatable="false">If the process of re-creating the wallet gets interrupted in any way, you’ll have to start over.</string>
 
     <string name="onboarding_error_create_primary_wallet" translatable="false">Internal error: can\'t create wallet manager</string>
+
     <string name="wallet_balance_blockchain_unreachable_try_later" translatable="false">Blockchain is unreachable. Try later</string>
 
 
