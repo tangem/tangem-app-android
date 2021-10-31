@@ -193,6 +193,8 @@
     <string name="onboarding_done_body" translatable="false">Your crypto card is activated and ready to be used</string>
     <string name="onboarding_done_button_continue" translatable="false">Continue</string>
     <string name="onboarding_balance_title" translatable="false">Balance</string>
+    <string name="address_qr_code_message_format" translatable="false">Send only %s (%s) to this address. Sending any other currency will result in its irreversible loss.</string>
+    <string name="address_qr_code_message_token_format" translatable="false">Send only %s (%s) from %@snetwork to this address. Sending any other currency will result in its irreversible loss.</string>
 
     <string name="onboarding_twins_interrupt_warning" translatable="false">If the process of re-creating the wallet gets interrupted in any way, you’ll have to start over.</string>
 
