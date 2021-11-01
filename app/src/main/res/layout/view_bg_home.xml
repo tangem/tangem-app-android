@@ -9,6 +9,7 @@
         android:layout_width="670dp"
         android:layout_height="670dp"
         android:src="@drawable/shape_circle_home_screen"
+        android:transitionName="bg_circle_large"
         android:translationX="160dp"
         android:translationY="-175dp" />
 
@@ -18,14 +19,16 @@
         android:layout_height="650dp"
         android:src="@drawable/shape_circle"
         android:tint="@color/backgroundWhite"
+        android:transitionName="bg_circle_medium"
         android:translationX="170dp"
         android:translationY="-165dp" />
 
     <androidx.appcompat.widget.AppCompatImageView
-        android:id="@+id/bg_circle_small"
+        android:id="@+id/bg_circle_min"
         android:layout_width="590dp"
         android:layout_height="590dp"
         android:src="@drawable/shape_circle_home_screen"
+        android:transitionName="bg_circle_min"
         android:translationX="192dp"
         android:translationY="-132dp" />
 
