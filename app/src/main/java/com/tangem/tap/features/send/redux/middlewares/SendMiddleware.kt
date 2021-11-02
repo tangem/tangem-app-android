@@ -254,7 +254,7 @@ fun extractErrorsForAmountField(errors: EnumSet<TransactionError>): EnumSet<Tran
                 showIntoAmountField.add(it)
             }
             TransactionError.TotalExceedsBalance -> {
-                val notAcceptable = listOf(TransactionError.FeeExceedsBalance, TransactionError.FeeExceedsBalance)
+                val notAcceptable = listOf(TransactionError.AmountExceedsBalance, TransactionError.FeeExceedsBalance)
                 if (!showIntoAmountField.containsAll(notAcceptable)) showIntoAmountField.add(it)
             }
             TransactionError.InvalidAmountValue -> showIntoAmountField.add(it)
