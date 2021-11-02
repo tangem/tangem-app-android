@@ -101,7 +101,7 @@ class WalletMiddleware {
                     when (result) {
                         is CompletionResult.Success -> {
                             val scanNoteResponse = globalState.scanResponse?.copy(card = result.data)
-                            scanNoteResponse?.let { store.onCardScanned(scanNoteResponse) }
+                            scanNoteResponse?.let { store.onCardScanned(scanNoteResponse, false) }
                         }
                         is CompletionResult.Failure -> {
                             (result.error as? TangemSdkError)?.let { error ->
