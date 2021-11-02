@@ -18,8 +18,8 @@ fun Store<*>.dispatchOnMain(action: Action) {
     }
 }
 
-suspend fun Store<*>.onCardScanned(scanResponse: ScanResponse) {
-    store.state.globalState.tapWalletManager.onCardScanned(scanResponse)
+suspend fun Store<*>.onCardScanned(scanResponse: ScanResponse, addAnalytics: Boolean = true) {
+    store.state.globalState.tapWalletManager.onCardScanned(scanResponse, addAnalytics)
 }
 
 fun Store<*>.dispatchOpenUrl(url: String) {
