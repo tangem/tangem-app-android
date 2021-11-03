@@ -127,8 +127,6 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
         srl_wallet_details.setOnRefreshListener {
             if (selectedWallet.currencyData.status != BalanceStatus.Loading) {
                 store.dispatch(WalletAction.LoadWallet(
-                    allowToBuy = selectedWallet.tradeCryptoState.buyingAllowed,
-                    allowToSell = selectedWallet.tradeCryptoState.sellingAllowed,
                     blockchain = selectedWallet.currency?.blockchain
                 ))
             }
