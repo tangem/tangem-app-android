@@ -38,15 +38,6 @@ class TradeCryptoHelper {
 
         private const val TRANSACTION_RECEIPT_PATH = "transaction_receipt?transactionId="
 
-        val AVAILABLE_TO_BUY: Set<String> = setOf(
-        "ZRX", "AAVE", "ALGO", "AXS", "BAT", "BNB", "BUSD", "BTC", "BCH", "BTT", "ADA", "CELO", "CUSD", "LINK", "CHZ", "COMP", "ATOM", "DAI", "DASH", "MANA", "DGB", "DOGE", "EGLD",
-        "ENJ", "EOS", "ETC", "ETH", "KETH", "RINKETH", "FIL", "HBAR", "MIOTA", "KAVA", "KLAY", "LBC", "LTC", "LUNA", "MKR", "OM", "MATIC", "NANO", "NEAR", "XEM", "NEO", "NIM", "OKB",
-        "OMG", "ONG", "ONT", "DOT", "QTUM", "RVN", "RFUEL", "KEY", "SRM", "SOL", "XLM", "STMX", "SNX", "KRT", "UST", "USDT", "XTZ", "RUNE", "SAND", "TOMO", "AVA", "TRX", "TUSD", "UNI",
-        "USDC", "UTK", "VET", "WAXP", "WBTC", "XRP", "ZEC", "ZIL"
-        )
-
-        val AVAILABLE_TO_SELL: Set<String> = setOf("BTC", "ETH", "BCH")
-
         fun getUrl(
             action: Action,
             blockchain: Blockchain?,
