@@ -300,9 +300,11 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        if (store.state.walletState.canBeRemoved(store.state.walletState.getSelectedWalletData())) {
-            inflater.inflate(R.menu.wallet_details, menu)
-        }
+        inflater.inflate(R.menu.wallet_details, menu)
+        val walletCanBeRemoved = store.state.walletState.canBeRemoved(
+            store.state.walletState.getSelectedWalletData()
+        )
+        menu.getItem(0).isEnabled = walletCanBeRemoved
     }
 
 }
