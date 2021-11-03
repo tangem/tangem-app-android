@@ -26,7 +26,7 @@ data class OnboardingNoteState(
         get() = steps.indexOf(currentStep)
 
     val isBuyAllowed: Boolean by ReadOnlyProperty<Any, Boolean> { thisRef, property ->
-        store.state.globalState.moonPayUserStatus?.isBuyAllowed ?: false
+        store.state.globalState.moonpayStatus?.isBuyAllowed ?: false
     }
 }
 
