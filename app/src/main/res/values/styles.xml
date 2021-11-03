@@ -20,6 +20,14 @@
         <item name="actionMenuTextColor">@android:color/white</item>
     </style>
 
+    <!-- Toolbar - overrides the menu text color to use a selector that responds to whether it's enabled or not -->
+    <style name="ThemeOverlay.MyTheme.Toolbar" parent="ThemeOverlay.MaterialComponents.Toolbar.Surface">
+        <!-- Color used in the icons of menu actions (i.e. non-overflow menu items). This is just convention, this will affect anything that uses ?attr/colorControlNormal) -->
+        <item name="colorControlNormal">@color/menu_item_color</item>
+        <!-- Color used in the text of menu actions (i.e. non-overflow menu items) -->
+        <item name="actionMenuTextColor">@color/menu_item_color</item>
+    </style>
+
     <!-- EditText -->
     <style name="StyledEditText" parent="TextAppearance.MaterialComponents.Body1">
         <item name="colorControlNormal">#e34b1c</item>

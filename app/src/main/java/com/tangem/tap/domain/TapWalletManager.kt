@@ -157,22 +157,22 @@ class TapWalletManager {
     private fun loadMultiWalletData(
         card: Card, primaryBlockchain: Blockchain?, primaryWalletManager: WalletManager?
     ) {
-        val primaryTokens = primaryWalletManager?.cardTokens ?: emptySet()
+        val primaryTokens = primaryWalletManager?.cardTokens?.toList() ?: emptyList()
         val savedCurrencies = currenciesRepository.loadCardCurrencies(card.cardId)
 
         if (savedCurrencies == null) {
             if (primaryBlockchain != null && primaryWalletManager != null) {
                 store.dispatch(WalletAction.MultiWallet.SaveCurrencies(
                     CardCurrencies(
-                        blockchains = setOf(primaryBlockchain), tokens = primaryTokens
+                        blockchains = listOf(primaryBlockchain), tokens = primaryTokens
                     )))
                 store.dispatch(WalletAction.MultiWallet.AddWalletManagers(primaryWalletManager))
                 store.dispatch(WalletAction.MultiWallet.AddBlockchains(listOf(primaryBlockchain)))
                 store.dispatch(WalletAction.MultiWallet.AddTokens(primaryTokens.toList()))
             } else {
-                val blockchains = setOf(Blockchain.Bitcoin, Blockchain.Ethereum)
+                val blockchains = listOf(Blockchain.Bitcoin, Blockchain.Ethereum)
                 store.dispatch(WalletAction.MultiWallet.SaveCurrencies(
-                    CardCurrencies(blockchains = blockchains, tokens = emptySet())
+                    CardCurrencies(blockchains = blockchains, tokens = emptyList())
                 ))
                 val walletManagers =
                         walletManagerFactory.makeWalletManagersForApp(card, blockchains.toList())
