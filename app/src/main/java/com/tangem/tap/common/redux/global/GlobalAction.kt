@@ -12,7 +12,7 @@ import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.features.details.redux.SecurityOption
 import com.tangem.tap.features.feedback.EmailData
 import com.tangem.tap.features.feedback.FeedbackManager
-import com.tangem.tap.network.moonpay.MoonPayUserStatus
+import com.tangem.tap.network.moonpay.MoonpayStatus
 import org.rekotlin.Action
 
 sealed class GlobalAction : Action {
@@ -72,7 +72,7 @@ sealed class GlobalAction : Action {
     data class SendFeedback(val emailData: EmailData) : GlobalAction()
     data class UpdateFeedbackInfo(val walletManagers: List<WalletManager>) : GlobalAction()
 
-    object GetMoonPayUserStatus : GlobalAction() {
-        data class Success(val moonPayUserStatus: MoonPayUserStatus) : GlobalAction()
+    object GetMoonPayStatus : GlobalAction() {
+        data class Success(val moonPayStatus: MoonpayStatus) : GlobalAction()
     }
 }
