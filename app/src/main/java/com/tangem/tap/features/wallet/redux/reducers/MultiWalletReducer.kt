@@ -38,11 +38,6 @@ class MultiWalletReducer {
                             walletAddresses = createAddressList(wallet),
                             mainButton = WalletMainButton.SendButton(false),
                             currency = Currency.Blockchain(blockchain),
-                            tradeCryptoState = TradeCryptoState(
-                                sellingAllowed = state.tradeCryptoAllowed.sellingAllowed &&
-                                        state.tradeCryptoAllowed.availableToSell.contains(blockchain.currency),
-                                buyingAllowed = state.tradeCryptoAllowed.buyingAllowed
-                            )
                     )
                 }
 
@@ -67,11 +62,6 @@ class MultiWalletReducer {
                         walletAddresses = createAddressList(wallet),
                         mainButton = WalletMainButton.SendButton(false),
                         currency = Currency.Blockchain(action.blockchain),
-                        tradeCryptoState = TradeCryptoState(
-                            sellingAllowed = state.tradeCryptoAllowed.sellingAllowed &&
-                                    state.tradeCryptoAllowed.availableToSell.contains(action.blockchain.currency),
-                            buyingAllowed = state.tradeCryptoAllowed.buyingAllowed
-                        )
                 )
                 val newState = state.copy(wallets = state.replaceWalletInWallets(walletData))
                 if (wallet != null && wallet.amounts[AmountType.Coin]?.value != null) {
@@ -173,10 +163,5 @@ fun Token.toWallet(state: WalletState): WalletData? {
         walletAddresses = walletAddresses,
         mainButton = WalletMainButton.SendButton(false),
         currency = Currency.Token(this),
-        tradeCryptoState = TradeCryptoState(
-            sellingAllowed = state.tradeCryptoAllowed.sellingAllowed &&
-                    state.tradeCryptoAllowed.availableToSell.contains(this.symbol),
-            buyingAllowed = state.tradeCryptoAllowed.buyingAllowed
-        )
     )
 }
