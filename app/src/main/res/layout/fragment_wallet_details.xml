@@ -23,6 +23,7 @@
             android:layout_height="?attr/actionBarSize"
             app:menu="@menu/wallet_details"
             app:navigationIcon="@drawable/ic_baseline_arrow_back_24"
+            android:theme="@style/ThemeOverlay.MyTheme.Toolbar"
             app:title=" " />
 
     </com.google.android.material.appbar.AppBarLayout>
