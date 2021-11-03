@@ -84,7 +84,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
 
         btn_share.setOnClickListener { store.dispatch(WalletAction.ShowDialog.QrCode) }
 
-        btn_top_up.setOnClickListener { store.dispatch(WalletAction.TradeCryptoAction.Buy) }
+        btn_trade.setOnClickListener { store.dispatch(WalletAction.TradeCryptoAction.Buy) }
 
         btn_sell.setOnClickListener { store.dispatch(WalletAction.TradeCryptoAction.Sell) }
     }
@@ -138,7 +138,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
             srl_wallet_details.isRefreshing = false
         }
 
-        btn_top_up.isEnabled = selectedWallet.tradeCryptoState.buyingAllowed
+        btn_trade.isEnabled = selectedWallet.tradeCryptoState.buyingAllowed
         btn_sell.show(selectedWallet.tradeCryptoState.sellingAllowed)
     }
 
@@ -286,7 +286,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.meny_remove -> {
+            R.id.menu_remove -> {
                 store.state.walletState.getSelectedWalletData()?.let { walletData ->
                     store.dispatch(WalletAction.MultiWallet.RemoveWallet(walletData))
                     store.dispatch(WalletAction.MultiWallet.SelectWallet(null))
@@ -300,9 +300,11 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        if (store.state.walletState.canBeRemoved(store.state.walletState.getSelectedWalletData())) {
-            inflater.inflate(R.menu.wallet_details, menu)
-        }
+        inflater.inflate(R.menu.wallet_details, menu)
+        val walletCanBeRemoved = store.state.walletState.canBeRemoved(
+            store.state.walletState.getSelectedWalletData()
+        )
+        menu.getItem(0).isEnabled = walletCanBeRemoved
     }
 
 }
