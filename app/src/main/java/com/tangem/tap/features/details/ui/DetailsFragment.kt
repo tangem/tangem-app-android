@@ -10,6 +10,7 @@ import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.domain.isMultiwalletAllowed
 import com.tangem.tap.domain.twins.getTwinCardIdForUser
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
@@ -112,6 +113,7 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
             store.dispatch(GlobalAction.SendFeedback(FeedbackEmail()))
         }
 
+        tv_wallet_connect.show(state.card?.isMultiwalletAllowed == true)
         tv_wallet_connect.setOnClickListener {
             store.dispatch(NavigationAction.NavigateTo(AppScreen.WalletConnectSessions))
         }
