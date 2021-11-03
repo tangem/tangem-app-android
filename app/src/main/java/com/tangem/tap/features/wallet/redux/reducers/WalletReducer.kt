@@ -96,21 +96,18 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                         ),
                         mainButton = WalletMainButton.SendButton(false),
                         tradeCryptoState = TradeCryptoState(
-                            sellingAllowed = action.allowToSell ?: wallet.tradeCryptoState.sellingAllowed &&
-                                    state.walletState.tradeCryptoAllowed.availableToSell.contains(wallet.currencyData.currencySymbol),
-                            buyingAllowed = action.allowToBuy
-                                ?: wallet.tradeCryptoState.buyingAllowed
+                            sellingAllowed = action.moonpayStatus?.availableToSell?.contains(
+                                wallet.currencyData.currencySymbol
+                            ) ?: wallet.tradeCryptoState.sellingAllowed,
+                            buyingAllowed = action.moonpayStatus?.availableToBuy?.contains(
+                                wallet.currencyData.currencySymbol
+                            ) ?: wallet.tradeCryptoState.buyingAllowed
                         )
                     )
                 }
-                val tradeCryptoAllowed = TradeCryptoAvailability(
-                    sellingAllowed = action.allowToSell ?: false,
-                    buyingAllowed = action.allowToBuy ?: false
-                )
                 newState = newState.copy(
                     state = ProgressState.Loading,
                     wallets = wallets,
-                    tradeCryptoAllowed = tradeCryptoAllowed
                 )
             } else {
                 val walletManager = newState.getWalletManager(action.blockchain) ?: return newState
@@ -127,10 +124,12 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                             ),
                             mainButton = WalletMainButton.SendButton(false),
                             tradeCryptoState = TradeCryptoState(
-                                sellingAllowed = action.allowToSell ?: wallet.tradeCryptoState.sellingAllowed &&
-                                        state.walletState.tradeCryptoAllowed.availableToSell.contains(wallet.currencyData.currencySymbol),
-                                buyingAllowed = action.allowToBuy
-                                    ?: wallet.tradeCryptoState.buyingAllowed
+                                sellingAllowed = action.moonpayStatus?.availableToSell?.contains(
+                                    wallet.currencyData.currencySymbol
+                                ) ?: wallet.tradeCryptoState.sellingAllowed,
+                                buyingAllowed = action.moonpayStatus?.availableToBuy?.contains(
+                                    wallet.currencyData.currencySymbol
+                                ) ?: wallet.tradeCryptoState.buyingAllowed
                             )
                         )
                     }
