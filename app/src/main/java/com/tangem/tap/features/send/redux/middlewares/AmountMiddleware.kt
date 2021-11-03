@@ -68,9 +68,9 @@ class AmountMiddleware {
         } else {
             val amountErrors = extractErrorsForAmountField(transactionErrors)
             if (amountErrors.isNotEmpty()) {
+                transactionErrors.removeAll(amountErrors)
                 dispatch(AmountAction.SetAmountError(createValidateTransactionError(amountErrors, walletManager)))
             }
-            transactionErrors.removeAll(amountErrors)
             if (transactionErrors.isNotEmpty()) {
                 dispatch(SendAction.SendError(createValidateTransactionError(transactionErrors, walletManager)))
             }
@@ -84,7 +84,7 @@ class AmountMiddleware {
 
         dispatch(AmountAction.SetAmount(sendState.amountState.balanceCrypto, false))
         if (sendState.amountState.isCoinAmount()) {
-            dispatch(FeeAction.ChangeLayoutVisibility(main = true, controls = true, chipGroup = true))
+            dispatch(FeeAction.ChangeLayoutVisibility(main = true, controls = true))
             dispatch(FeeActionUi.ChangeIncludeFee(true))
         }
 
