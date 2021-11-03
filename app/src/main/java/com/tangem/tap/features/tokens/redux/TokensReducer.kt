@@ -33,7 +33,7 @@ private fun internalReduce(action: Action, state: AppState): TokensState {
 }
 
 private fun List<WalletData>.toCardCurrencies(): CardCurrencies {
-    val tokens = mapNotNull { (it.currency as? Currency.Token)?.token }.toSet()
-    val blockchains = mapNotNull { (it.currency as? Currency.Blockchain)?.blockchain }.toSet()
+    val tokens = mapNotNull { (it.currency as? Currency.Token)?.token }.distinct()
+    val blockchains = mapNotNull { (it.currency as? Currency.Blockchain)?.blockchain }.distinct()
     return CardCurrencies(tokens = tokens, blockchains = blockchains)
 }
