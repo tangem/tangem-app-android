@@ -145,11 +145,8 @@ class TapWalletManager {
                     loadMultiWalletData(data.card, blockchain, null)
                 }
             }
-            val moonPayUserStatus = store.state.globalState.moonPayUserStatus
-            store.dispatch(WalletAction.LoadWallet(
-                allowToBuy = config.isTopUpEnabled && moonPayUserStatus?.isBuyAllowed == true,
-                allowToSell = config.isTopUpEnabled && moonPayUserStatus?.isSellAllowed == true,
-            ))
+            val moonPayStatus = store.state.globalState.moonpayStatus
+            store.dispatch(WalletAction.LoadWallet(moonPayStatus))
             store.dispatch(WalletAction.LoadFiatRate())
         }
     }
@@ -212,11 +209,8 @@ class TapWalletManager {
             }
 
             val config = store.state.globalState.configManager?.config ?: return@withContext
-            val moonpayUserStatus = store.state.globalState.moonPayUserStatus
-            store.dispatch(WalletAction.LoadWallet(
-                allowToBuy = config.isTopUpEnabled && moonpayUserStatus?.isBuyAllowed == true,
-                allowToSell = config.isTopUpEnabled && moonpayUserStatus?.isSellAllowed == true,
-            ))
+            val moonPayStatus = store.state.globalState.moonpayStatus
+            store.dispatch(WalletAction.LoadWallet(moonPayStatus))
             store.dispatch(WalletAction.LoadFiatRate())
         }
     }
