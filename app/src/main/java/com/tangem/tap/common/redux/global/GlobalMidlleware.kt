@@ -74,14 +74,14 @@ private val globalMiddlewareHandler: Middleware<AppState> = { dispatch, appState
                     store.state.globalState.feedbackManager?.infoHolder
                             ?.setWalletsInfo(action.walletManagers)
                 }
-                is GlobalAction.GetMoonPayUserStatus -> {
+                is GlobalAction.GetMoonPayStatus -> {
                     val apiKey = appState()?.globalState?.configManager?.config?.moonPayApiKey
                     if (apiKey != null) {
                         scope.launch {
-                            val userStatusResponse = MoonpayService().getUserStatus(apiKey)
-                            if (userStatusResponse is Result.Success) {
+                            val moonpayStatus = MoonpayService().getMoonpayStatus(apiKey)
+                            if (moonpayStatus is Result.Success) {
                                 store.dispatchOnMain(
-                                    GlobalAction.GetMoonPayUserStatus.Success(userStatusResponse.data)
+                                    GlobalAction.GetMoonPayStatus.Success(moonpayStatus.data)
                                 )
                             }
                         }
