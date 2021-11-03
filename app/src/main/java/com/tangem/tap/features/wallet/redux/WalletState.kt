@@ -11,7 +11,6 @@ import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.common.toggleWidget.WidgetState
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.extensions.toSendableAmounts
-import com.tangem.tap.domain.topup.TradeCryptoHelper
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
 import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.models.toPendingTransactions
@@ -38,7 +37,6 @@ data class WalletState(
     val primaryBlockchain: Blockchain? = null,
     val primaryToken: Token? = null,
     val isTestnet: Boolean = false,
-    val tradeCryptoAllowed: TradeCryptoAvailability = TradeCryptoAvailability()
 ) : StateType {
 
     // if you do not delegate - the application crashes on startup,
@@ -219,12 +217,6 @@ data class Artwork(
 data class TradeCryptoState(
     val sellingAllowed: Boolean = false,
     val buyingAllowed: Boolean = false,
-)
-
-data class TradeCryptoAvailability(
-    val sellingAllowed: Boolean = false,
-    val buyingAllowed: Boolean = false,
-    val availableToSell: Set<String> = TradeCryptoHelper.AVAILABLE_TO_SELL,
 )
 
 data class WalletData(
