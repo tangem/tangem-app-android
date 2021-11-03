@@ -132,12 +132,31 @@ data class WalletState(
 
     fun replaceWalletInWallets(walletData: WalletData?): List<WalletData> {
         if (walletData == null) return wallets
-        return wallets.filter { it.currencyData.currency != walletData.currencyData.currency } + walletData
+        var changed = false
+        val updatedWallets = wallets.map {
+            if (it.currencyData.currency == walletData.currencyData.currency) {
+                changed = true
+                walletData
+            } else {
+                it
+            }
+        }
+        return if (changed) updatedWallets else wallets + walletData
     }
 
     fun replaceSomeWallets(newWallets: List<WalletData>): List<WalletData> {
-        val currencies = newWallets.map { it.currencyData.currency }
-        return wallets.filter { !currencies.contains(it.currencyData.currency) } + newWallets
+        val remainingWallets: MutableList<WalletData> = newWallets.toMutableList()
+        val updatedWallets =  wallets.map { wallet ->
+            val newWallet = newWallets
+                .firstOrNull { wallet.currencyData.currency == it.currencyData.currency }
+            if (newWallet == null) {
+                wallet
+            } else {
+                remainingWallets.remove(newWallet)
+                newWallet
+            }
+        }
+        return updatedWallets + remainingWallets
     }
 
     fun addWalletManagers(newWalletManagers: List<WalletManager>): WalletState {
