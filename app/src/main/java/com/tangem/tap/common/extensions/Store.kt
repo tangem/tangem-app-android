@@ -26,6 +26,10 @@ fun Store<*>.dispatchOpenUrl(url: String) {
     store.dispatch(NavigationAction.OpenUrl(url))
 }
 
+fun Store<*>.dispatchShare(url: String) {
+    store.dispatch(NavigationAction.Share(url))
+}
+
 fun Store<*>.dispatchNotification(resId: Int) {
     scope.launch(Dispatchers.Main) {
         store.dispatch(GlobalAction.ShowNotification(resId))
