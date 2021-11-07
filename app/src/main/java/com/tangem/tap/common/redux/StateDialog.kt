@@ -13,6 +13,6 @@ sealed class AppDialog : StateDialog {
     data class AddressInfoDialog(
         val addressData: AddressData,
         val onCopyAddress: VoidCallback,
-        val onExploreAddress: VoidCallback
+        val onShareAddress: VoidCallback
     ) : AppDialog()
 }
