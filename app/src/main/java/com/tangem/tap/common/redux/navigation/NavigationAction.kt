@@ -15,6 +15,8 @@ sealed class NavigationAction : Action {
 
     data class OpenUrl(val url: String) : NavigationAction()
 
+    data class Share(val data: String) : NavigationAction()
+
     data class ActivityCreated(val activity: WeakReference<FragmentActivity>) : NavigationAction()
     object ActivityDestroyed : NavigationAction()
 }
