@@ -37,8 +37,8 @@ class AddressInfoBottomSheetDialog(
             context.copyToClipboard(data.address)
             stateDialog.onCopyAddress()
         }
-        btn_fl_explore.setOnClickListener {
-            stateDialog.onExploreAddress()
+        btn_fl_share.setOnClickListener {
+            stateDialog.onShareAddress()
         }
     }
 }

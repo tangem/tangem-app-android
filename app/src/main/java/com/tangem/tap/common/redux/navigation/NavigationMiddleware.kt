@@ -3,6 +3,7 @@ package com.tangem.tap.common.redux.navigation
 import com.tangem.tap.common.CustomTabsManager
 import com.tangem.tap.common.extensions.openFragment
 import com.tangem.tap.common.extensions.popBackTo
+import com.tangem.tap.common.extensions.shareText
 import com.tangem.tap.common.redux.AppState
 import org.rekotlin.Middleware
 
@@ -29,6 +30,11 @@ val navigationMiddleware: Middleware<AppState> = { dispatch, state ->
                     is NavigationAction.OpenUrl -> {
                         navState?.activity?.get()?.let {
                             CustomTabsManager().openUrl(action.url, it)
+                        }
+                    }
+                    is NavigationAction.Share -> {
+                        navState?.activity?.get()?.let {
+                            it.shareText(action.data)
                         }
                     }
                 }
