@@ -95,14 +95,7 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                             currencySymbol = wallet.currencyData.currencySymbol,
                         ),
                         mainButton = WalletMainButton.SendButton(false),
-                        tradeCryptoState = TradeCryptoState(
-                            sellingAllowed = action.moonpayStatus?.availableToSell?.contains(
-                                wallet.currencyData.currencySymbol
-                            ) ?: wallet.tradeCryptoState.sellingAllowed,
-                            buyingAllowed = action.moonpayStatus?.availableToBuy?.contains(
-                                wallet.currencyData.currencySymbol
-                            ) ?: wallet.tradeCryptoState.buyingAllowed
-                        )
+                        tradeCryptoState = TradeCryptoState.from(action.moonpayStatus, wallet)
                     )
                 }
                 newState = newState.copy(
@@ -123,14 +116,7 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                                 currencySymbol = wallet.currencyData.currencySymbol,
                             ),
                             mainButton = WalletMainButton.SendButton(false),
-                            tradeCryptoState = TradeCryptoState(
-                                sellingAllowed = action.moonpayStatus?.availableToSell?.contains(
-                                    wallet.currencyData.currencySymbol
-                                ) ?: wallet.tradeCryptoState.sellingAllowed,
-                                buyingAllowed = action.moonpayStatus?.availableToBuy?.contains(
-                                    wallet.currencyData.currencySymbol
-                                ) ?: wallet.tradeCryptoState.buyingAllowed
-                            )
+                            tradeCryptoState = TradeCryptoState.from(action.moonpayStatus, wallet)
                         )
                     }
                 val wallets = newState.replaceSomeWallets(newWallets)
