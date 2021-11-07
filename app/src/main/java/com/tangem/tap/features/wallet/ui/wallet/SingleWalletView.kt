@@ -164,11 +164,11 @@ class SingleWalletView : WalletView {
             allowedToBuy && !allowedToSell -> R.drawable.ic_arrow_up_short_btn
             !allowedToBuy && allowedToSell -> R.drawable.ic_arrow_down_short_button
             allowedToBuy && allowedToSell -> R.drawable.ic_arrows_up_down_short_btn
-            else ->  R.string.wallet_button_trade
+            else -> null
         }
         with(fragment) {
             btn_trade.text = getText(text)
-            btn_trade.setCompoundDrawablesWithIntrinsicBounds(0,  icon, 0, 0)
+            btn_trade.setCompoundDrawablesWithIntrinsicBounds(0,  icon ?: 0, 0, 0)
             btn_trade.setOnClickListener { if (action != null) store.dispatch(action) }
         }
     }
