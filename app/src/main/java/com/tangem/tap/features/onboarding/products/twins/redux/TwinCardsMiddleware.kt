@@ -243,7 +243,7 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
             val appDialog = AppDialog.AddressInfoDialog(
                 addressData,
                 onCopyAddress = { store.dispatchToastNotification(addressWasCopied) },
-                onExploreAddress = { store.dispatchOpenUrl(addressData.exploreUrl) }
+                onShareAddress = { store.dispatchShare(addressData.shareUrl) }
             )
             store.dispatchDialogShow(appDialog)
         }
