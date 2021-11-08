@@ -2,10 +2,10 @@ package com.tangem.tap.features.onboarding.products.twins.redux
 
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.tap.domain.TapError
+import com.tangem.tap.domain.extensions.buyIsAllowed
 import com.tangem.tap.domain.twins.TwinCardNumber
 import com.tangem.tap.domain.twins.TwinCardsManager
 import com.tangem.tap.features.onboarding.OnboardingWalletBalance
-import com.tangem.tap.features.onboarding.products.note.redux.canBuy
 import com.tangem.tap.store
 import org.rekotlin.StateType
 import kotlin.properties.ReadOnlyProperty
@@ -57,7 +57,7 @@ data class TwinCardsState(
         get() = currentStep == TwinCardsStep.CreateSecondWallet || currentStep == TwinCardsStep.CreateThirdWallet
 
     val isBuyAllowed: Boolean by ReadOnlyProperty<Any, Boolean> { thisRef, property ->
-        store.state.globalState.moonpayStatus?.canBuy(walletBalance) ?: false
+        store.state.globalState.moonpayStatus?.buyIsAllowed(walletBalance.currency.blockchain) ?: false
     }
 }
 
