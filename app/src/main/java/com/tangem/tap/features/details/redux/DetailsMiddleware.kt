@@ -100,7 +100,7 @@ class DetailsMiddleware {
                     store.dispatch(NavigationAction.PopBackTo())
                 }
                 is DetailsAction.EraseWallet.Confirm -> {
-                    val card = store.state.detailsState.card ?: return
+                    val card = store.state.detailsState.scanResponse?.card ?: return
                     scope.launch {
                         val result = tangemSdkManager.eraseWallet(card)
                         withContext(Dispatchers.Main) {
@@ -113,7 +113,7 @@ class DetailsMiddleware {
                                         FirebaseAnalyticsHandler.logCardSdkError(
                                             error,
                                             FirebaseAnalyticsHandler.ActionToLog.PurgeWallet,
-                                            card = store.state.detailsState.card
+                                            card = store.state.detailsState.scanResponse?.card
                                         )
                                     }
                                 }
@@ -170,7 +170,7 @@ class DetailsMiddleware {
                     }
                 }
                 is DetailsAction.ManageSecurity.SaveChanges -> {
-                    val cardId = store.state.detailsState.card?.cardId
+                    val cardId = store.state.detailsState.scanResponse?.card?.cardId
                     val selectedOption = store.state.detailsState.securityScreenState?.selectedOption
                     scope.launch {
                         val result = when (selectedOption) {
@@ -199,7 +199,7 @@ class DetailsMiddleware {
                                                 FirebaseAnalyticsHandler.AnalyticsParam.NEW_SECURITY_OPTION to
                                                         (selectedOption?.name ?: "")
                                             ),
-                                            card = store.state.detailsState.card
+                                            card = store.state.detailsState.scanResponse?.card
                                         )
                                     }
                                     store.dispatch(DetailsAction.ManageSecurity.SaveChanges.Failure)
