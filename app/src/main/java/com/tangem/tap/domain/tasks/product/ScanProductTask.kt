@@ -11,6 +11,8 @@ import com.tangem.common.card.WalletData
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.TangemError
+import com.tangem.common.core.TangemSdkError
+import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.toHexString
 import com.tangem.operations.CommandResponse
 import com.tangem.operations.PreflightReadMode
@@ -63,26 +65,32 @@ class ScanProductTask(val card: Card? = null) : CardSessionRunnable<ScanResponse
         session: CardSession,
         callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
-        ScanTask().run(session) { result ->
-            when (result) {
-                is CompletionResult.Success -> {
-                    val card = this.card ?: result.data
+        val card = this.card ?: session.environment.card.guard {
+            callback(CompletionResult.Failure(TangemSdkError.MissingPreflightRead()))
+            return
+        }
 
-                    val error = getErrorIfExcludedCard(card)
-                    if (error != null) {
-                        callback(CompletionResult.Failure(error))
-                        return@run
-                    }
+        val error = getErrorIfExcludedCard(card)
+        if (error != null) {
+            callback(CompletionResult.Failure(error))
+            return
+        }
 
-                    val commandProcessor = when {
-                        TapWorkarounds.isTangemNote(card) -> ScanNoteProcessor()
-                        card.isTangemTwins() -> ScanTwinProcessor()
-                        TapWorkarounds.isTangemWallet(card) -> ScanWalletProcessor()
-                        else -> ScanOtherCardsProcessor()
+        val commandProcessor = when {
+            TapWorkarounds.isTangemNote(card) -> ScanNoteProcessor()
+            card.isTangemTwins() -> ScanTwinProcessor()
+            TapWorkarounds.isTangemWallet(card) -> ScanWalletProcessor()
+            else -> ScanOtherCardsProcessor()
+        }
+        commandProcessor.proceed(card, session) { processorResult ->
+            when (processorResult) {
+                is CompletionResult.Success -> ScanTask().run(session) { scanTaskResult ->
+                    when (scanTaskResult) {
+                        is CompletionResult.Success -> callback(CompletionResult.Success(processorResult.data))
+                        is CompletionResult.Failure -> callback(CompletionResult.Failure(scanTaskResult.error))
                     }
-                    commandProcessor.proceed(card, session, callback)
                 }
-                is CompletionResult.Failure -> callback(CompletionResult.Failure(result.error))
+                is CompletionResult.Failure -> callback(CompletionResult.Failure(processorResult.error))
             }
         }
     }
