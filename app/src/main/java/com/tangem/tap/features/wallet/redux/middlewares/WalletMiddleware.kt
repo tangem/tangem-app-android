@@ -53,9 +53,9 @@ class WalletMiddleware {
             is WalletAction.LoadWallet -> {
                 scope.launch {
                     if (action.blockchain == null) {
-                        walletState.walletManagers.map { walletManager ->
-                            globalState.tapWalletManager.loadWalletData(walletManager)
-                        }
+                            walletState.walletManagers.map { walletManager ->
+                                async { globalState.tapWalletManager.loadWalletData(walletManager) }
+                            }.awaitAll()
                     } else {
                         val walletManager = walletState.getWalletManager(action.blockchain)
                         walletManager?.let { globalState.tapWalletManager.loadWalletData(it) }
