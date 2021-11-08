@@ -10,6 +10,8 @@ import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.common.toggleWidget.WidgetState
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
+import com.tangem.tap.domain.extensions.buyIsAllowed
+import com.tangem.tap.domain.extensions.sellIsAllowed
 import com.tangem.tap.domain.extensions.toSendableAmounts
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
 import com.tangem.tap.features.wallet.models.PendingTransaction
@@ -17,6 +19,7 @@ import com.tangem.tap.features.wallet.models.toPendingTransactions
 import com.tangem.tap.features.wallet.models.toPendingTransactionsForToken
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
+import com.tangem.tap.network.moonpay.MoonpayStatus
 import com.tangem.tap.store
 import org.rekotlin.StateType
 import java.math.BigDecimal
@@ -144,9 +147,9 @@ data class WalletState(
 
     fun replaceSomeWallets(newWallets: List<WalletData>): List<WalletData> {
         val remainingWallets: MutableList<WalletData> = newWallets.toMutableList()
-        val updatedWallets =  wallets.map { wallet ->
+        val updatedWallets = wallets.map { wallet ->
             val newWallet = newWallets
-                .firstOrNull { wallet.currencyData.currency == it.currencyData.currency }
+                    .firstOrNull { wallet.currencyData.currency == it.currencyData.currency }
             if (newWallet == null) {
                 wallet
             } else {
@@ -217,7 +220,16 @@ data class Artwork(
 data class TradeCryptoState(
     val sellingAllowed: Boolean = false,
     val buyingAllowed: Boolean = false,
-)
+) {
+    companion object {
+        fun from(moonpayStatus: MoonpayStatus?, walletData: WalletData): TradeCryptoState {
+            val status = moonpayStatus ?: return walletData.tradeCryptoState
+            val blockchain = walletData.currency?.blockchain ?: return walletData.tradeCryptoState
+
+            return TradeCryptoState(status.sellIsAllowed(blockchain), status.buyIsAllowed(blockchain))
+        }
+    }
+}
 
 data class WalletData(
     val pendingTransactions: List<PendingTransaction> = emptyList(),
