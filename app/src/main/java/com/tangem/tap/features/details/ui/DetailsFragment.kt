@@ -67,7 +67,7 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
 
         if (state.cardInfo != null) {
             val cardId = if (state.isTangemTwins) {
-                state.card?.getTwinCardIdForUser()
+                state.scanResponse?.card?.getTwinCardIdForUser()
             } else {
                 state.cardInfo.cardId
             }
@@ -113,13 +113,15 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
             store.dispatch(GlobalAction.SendFeedback(FeedbackEmail()))
         }
 
-        tv_wallet_connect.show(state.card?.isMultiwalletAllowed == true)
+        tv_wallet_connect.show(state.scanResponse?.card?.isMultiwalletAllowed == true)
         tv_wallet_connect.setOnClickListener {
             store.dispatch(NavigationAction.NavigateTo(AppScreen.WalletConnectSessions))
         }
 
         tv_security_title.setOnClickListener {
-            store.dispatch(DetailsAction.ManageSecurity.CheckCurrentSecurityOption(state.card?.cardId))
+            store.dispatch(DetailsAction.ManageSecurity.CheckCurrentSecurityOption(
+                state.scanResponse?.card?.cardId
+            ))
         }
 
         val currentSecurity = when (state.securityScreenState?.currentOption) {
