@@ -41,7 +41,7 @@ private fun internalReduce(action: Action, state: AppState): DetailsState {
 
 private fun handlePrepareScreen(action: DetailsAction.PrepareScreen, state: DetailsState): DetailsState {
     return DetailsState(
-        card = action.scanResponse.card,
+        scanResponse = action.scanResponse,
         wallets = action.wallets,
         cardInfo = action.scanResponse.card.toCardInfo(),
         appCurrencyState = AppCurrencyState(action.fiatCurrencyName),
@@ -52,8 +52,10 @@ private fun handlePrepareScreen(action: DetailsAction.PrepareScreen, state: Deta
 private fun handleEraseWallet(action: DetailsAction.EraseWallet, state: DetailsState): DetailsState {
     return when (action) {
         DetailsAction.EraseWallet.Check -> {
-            val notAllowedByAnyWallet = state.card?.wallets?.any { it.settings.isPermanent } ?: false
-            val notAllowedByCard = notAllowedByAnyWallet || state.card?.isWalletDataSupported == true
+            val card = state.scanResponse?.card
+            val notAllowedByAnyWallet = card?.wallets?.any { it.settings.isPermanent } ?: false
+            val notAllowedByCard = notAllowedByAnyWallet ||
+                    (card?.isWalletDataSupported == true && !state.scanResponse.isTangemNote())
             val notEmpty = state.wallets.any {
                 it.hasPendingTransactions() || it.amounts.toSendableAmounts().isNotEmpty()
             }
@@ -121,7 +123,9 @@ private fun handleSecurityAction(
             state.copy(securityScreenState = SecurityScreenState(currentOption = securityOption))
         }
         is DetailsAction.ManageSecurity.OpenSecurity -> {
-            if (state.card?.isStart2Coin == true) {
+            if (state.scanResponse?.card?.isStart2Coin == true ||
+                state.scanResponse?.isTangemNote() == true
+            ) {
                 return state.copy(securityScreenState = state.securityScreenState?.copy(
                     allowedOptions = EnumSet.of(SecurityOption.LongTap),
                     selectedOption = state.securityScreenState.currentOption
@@ -129,7 +133,7 @@ private fun handleSecurityAction(
             }
 
             val allowedSecurityOptions = prepareAllowedSecurityOptions(
-                state.card, state.securityScreenState?.currentOption
+                state.scanResponse?.card, state.securityScreenState?.currentOption
             )
             state.copy(securityScreenState = state.securityScreenState?.copy(
                 allowedOptions = allowedSecurityOptions,
@@ -154,7 +158,7 @@ private fun handleSecurityAction(
             state.copy(
                 securityScreenState = state.securityScreenState?.copy(
                     currentOption = state.securityScreenState.selectedOption,
-                    allowedOptions = state.card?.let {
+                    allowedOptions = state.scanResponse?.card?.let {
                         prepareAllowedSecurityOptions(
                             it, state.securityScreenState.selectedOption
                         )
@@ -189,7 +193,7 @@ private fun prepareAllowedSecurityOptions(
 }
 
 
-private fun Card.toCardInfo(): CardInfo? {
+private fun Card.toCardInfo(): CardInfo {
     val cardId = this.cardId.chunked(4).joinToString(separator = " ")
     val issuer = this.issuer.name
     val signedHashes = this.signedHashesCount()
