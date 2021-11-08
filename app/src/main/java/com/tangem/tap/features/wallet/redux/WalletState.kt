@@ -135,7 +135,7 @@ data class WalletState(
         if (walletData == null) return wallets
         var changed = false
         val updatedWallets = wallets.map {
-            if (it.currencyData.currency == walletData.currencyData.currency) {
+            if (it.currency == walletData.currency) {
                 changed = true
                 walletData
             } else {
@@ -149,7 +149,7 @@ data class WalletState(
         val remainingWallets: MutableList<WalletData> = newWallets.toMutableList()
         val updatedWallets = wallets.map { wallet ->
             val newWallet = newWallets
-                    .firstOrNull { wallet.currencyData.currency == it.currencyData.currency }
+                    .firstOrNull { wallet.currency == it.currency }
             if (newWallet == null) {
                 wallet
             } else {
