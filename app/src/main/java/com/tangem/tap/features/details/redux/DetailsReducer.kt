@@ -123,7 +123,9 @@ private fun handleSecurityAction(
             state.copy(securityScreenState = SecurityScreenState(currentOption = securityOption))
         }
         is DetailsAction.ManageSecurity.OpenSecurity -> {
-            if (state.card?.isStart2Coin == true) {
+            if (state.scanResponse?.card?.isStart2Coin == true ||
+                state.scanResponse?.isTangemNote() == true
+            ) {
                 return state.copy(securityScreenState = state.securityScreenState?.copy(
                     allowedOptions = EnumSet.of(SecurityOption.LongTap),
                     selectedOption = state.securityScreenState.currentOption
