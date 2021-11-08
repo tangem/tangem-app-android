@@ -21,6 +21,8 @@ import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.send.redux.PrepareSendScreen
 import com.tangem.tap.features.wallet.redux.*
 import com.tangem.tap.network.NetworkStateChanged
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.DispatchFunction
@@ -51,9 +53,9 @@ class WalletMiddleware {
             is WalletAction.LoadWallet -> {
                 scope.launch {
                     if (action.blockchain == null) {
-                        walletState.walletManagers.map { walletManager ->
-                            globalState.tapWalletManager.loadWalletData(walletManager)
-                        }
+                            walletState.walletManagers.map { walletManager ->
+                                async { globalState.tapWalletManager.loadWalletData(walletManager) }
+                            }.awaitAll()
                     } else {
                         val walletManager = walletState.getWalletManager(action.blockchain)
                         walletManager?.let { globalState.tapWalletManager.loadWalletData(it) }
@@ -108,7 +110,7 @@ class WalletMiddleware {
                                 FirebaseAnalyticsHandler.logCardSdkError(
                                     error,
                                     FirebaseAnalyticsHandler.ActionToLog.CreateWallet,
-                                    card = store.state.detailsState.card
+                                    card = store.state.detailsState.scanResponse?.card
                                 )
                             }
                         }
