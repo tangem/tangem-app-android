@@ -14,6 +14,7 @@ import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.features.onboarding.getQRReceiveMessage
 import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.redux.*
 import com.tangem.tap.features.wallet.ui.adapters.PendingTransactionsAdapter
@@ -180,6 +181,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
                     requireContext()))
             }
             iv_qr_code.setImageBitmap(state.walletAddresses.selectedAddress.shareUrl.toQrCode())
+            tv_recieve_message.text = getQRReceiveMessage(tv_recieve_message.context, state.currency)
         }
     }
 
