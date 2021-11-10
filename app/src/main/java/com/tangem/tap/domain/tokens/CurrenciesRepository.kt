@@ -120,7 +120,10 @@ class CurrenciesRepository(val context: Application) {
 
         return tokensAdapter.fromJson(ethereumTokensJson)!!.map { it.toToken() } +
                 tokensAdapter.fromJson(bscTokensJson)!!.map { it.toToken() } +
-                tokensAdapter.fromJson(binanceTokensJson)!!.map { it.toToken() }
+                tokensAdapter.fromJson(binanceTokensJson)!!.mapNotNull {
+                    // temporary exclude Binance BEP-8 tokens
+                    if (it.type != null && it.type != BINANCE_TOKEN_TYPE_BEP8) it.toToken() else null
+                }
     }
 
     fun getBlockchains(
@@ -144,6 +147,8 @@ class CurrenciesRepository(val context: Application) {
         private const val FILE_NAME_PREFIX_TOKENS = "tokens"
         private const val FILE_NAME_PREFIX_BLOCKCHAINS = "blockchains"
 
+        private const val BINANCE_TOKEN_TYPE_BEP8 = "bep8"
+
         fun getFileNameForTokens(cardId: String): String = "${FILE_NAME_PREFIX_TOKENS}_$cardId"
         fun getFileNameForBlockchains(cardId: String): String =
             "${FILE_NAME_PREFIX_BLOCKCHAINS}_$cardId"
@@ -157,7 +162,8 @@ data class TokenDao(
     val contractAddress: String,
     val decimalCount: Int,
     @Json(name = "blockchain")
-    val blockchainDao: BlockchainDao
+    val blockchainDao: BlockchainDao,
+    val type: String? = null
 ) {
     fun toToken(): Token {
         return Token(
