@@ -168,10 +168,6 @@ data class WalletState(
 }
 
 sealed class WalletDialog : StateDialog {
-    data class QrDialog(
-        val qrCode: Bitmap?, val shareUrl: String?, val currencyName: CryptoCurrencyName?
-    ) : WalletDialog()
-
     data class SelectAmountToSendDialog(val amounts: List<Amount>?) : WalletDialog()
     object SignedHashesMultiWalletDialog : WalletDialog()
     object ChooseTradeActionDialog : WalletDialog()
