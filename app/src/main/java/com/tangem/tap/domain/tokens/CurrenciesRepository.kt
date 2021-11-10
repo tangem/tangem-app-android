@@ -122,7 +122,7 @@ class CurrenciesRepository(val context: Application) {
                 tokensAdapter.fromJson(bscTokensJson)!!.map { it.toToken() } +
                 tokensAdapter.fromJson(binanceTokensJson)!!.mapNotNull {
                     // temporary exclude Binance BEP-8 tokens
-                    if (it.type != null && it.type != BINANCE_TOKEN_TYPE_BEP8) it.toToken() else null
+                    if (it.type != null && it.type == BINANCE_TOKEN_TYPE_BEP8) null else it.toToken()
                 }
     }
 
