@@ -140,7 +140,9 @@ class SingleWalletView : WalletView {
                 store.dispatch(WalletAction.CopyAddress(addressString, fragment.requireContext()))
             }
         }
-        btn_show_qr.setOnClickListener { store.dispatch(WalletAction.ShowDialog.QrCode) }
+        btn_show_qr.setOnClickListener {
+            store.dispatch(WalletAction.ShowDialog.QrCode)
+        }
 
         setupTradeButton(fragment, state.tradeCryptoState)
     }
