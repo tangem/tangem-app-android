@@ -105,7 +105,8 @@ class MultiWalletReducer {
                                 }
                         ),
                         pendingTransactions = pendingTransactions.removeUnknownTransactions(),
-                        mainButton = WalletMainButton.SendButton(sendButtonEnabled)
+                        mainButton = WalletMainButton.SendButton(sendButtonEnabled),
+                        currency = Currency.Token(action.token)
                 )
                 val wallets = state.replaceWalletInWallets(newTokenWalletData)
                 state.copy(wallets = wallets)
