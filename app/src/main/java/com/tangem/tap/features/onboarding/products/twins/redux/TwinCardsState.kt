@@ -57,7 +57,7 @@ data class TwinCardsState(
         get() = currentStep == TwinCardsStep.CreateSecondWallet || currentStep == TwinCardsStep.CreateThirdWallet
 
     val isBuyAllowed: Boolean by ReadOnlyProperty<Any, Boolean> { thisRef, property ->
-        store.state.globalState.moonpayStatus?.buyIsAllowed(walletBalance.currency.blockchain) ?: false
+        store.state.globalState.moonpayStatus?.buyIsAllowed(walletBalance.currency) ?: false
     }
 }
 
