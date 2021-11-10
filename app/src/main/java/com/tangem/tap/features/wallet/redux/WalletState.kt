@@ -160,6 +160,14 @@ data class WalletState(
         return updatedWallets + remainingWallets
     }
 
+    fun updateTradeCryptoState(moonpayStatus: MoonpayStatus?, walletData: WalletData): WalletData {
+        return walletData.copy(tradeCryptoState = TradeCryptoState.from(moonpayStatus, walletData))
+    }
+
+    fun updateTradeCryptoState(moonpayStatus: MoonpayStatus?, walletDataList: List<WalletData>): List<WalletData> {
+        return walletDataList.map { it.copy(tradeCryptoState = TradeCryptoState.from(moonpayStatus, it)) }
+    }
+
     fun addWalletManagers(newWalletManagers: List<WalletManager>): WalletState {
         val updatedWalletManagers = this.walletManagers +
                 newWalletManagers.filterNot { this.blockchains.contains(it.wallet.blockchain) }
@@ -220,9 +228,9 @@ data class TradeCryptoState(
     companion object {
         fun from(moonpayStatus: MoonpayStatus?, walletData: WalletData): TradeCryptoState {
             val status = moonpayStatus ?: return walletData.tradeCryptoState
-            val blockchain = walletData.currency?.blockchain ?: return walletData.tradeCryptoState
+            val currency = walletData.currency
 
-            return TradeCryptoState(status.sellIsAllowed(blockchain), status.buyIsAllowed(blockchain))
+            return TradeCryptoState(status.sellIsAllowed(currency), status.buyIsAllowed(currency))
         }
     }
 }
