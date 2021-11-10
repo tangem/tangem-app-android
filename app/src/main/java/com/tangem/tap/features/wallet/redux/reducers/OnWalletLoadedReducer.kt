@@ -10,10 +10,7 @@ import com.tangem.tap.common.extensions.toFormattedFiatValue
 import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.features.wallet.models.removeUnknownTransactions
 import com.tangem.tap.features.wallet.models.toPendingTransactions
-import com.tangem.tap.features.wallet.redux.Currency
-import com.tangem.tap.features.wallet.redux.ProgressState
-import com.tangem.tap.features.wallet.redux.WalletMainButton
-import com.tangem.tap.features.wallet.redux.WalletState
+import com.tangem.tap.features.wallet.redux.*
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.features.wallet.ui.TokenData
@@ -22,18 +19,18 @@ import java.math.RoundingMode
 
 class OnWalletLoadedReducer {
 
-    fun reduce(wallet: Wallet, walletState: WalletState, topUpAllowed: Boolean? = null): WalletState {
+    fun reduce(wallet: Wallet, walletState: WalletState): WalletState {
         return if (!walletState.isMultiwalletAllowed) {
-            onSingleWalletLoaded(wallet, walletState, topUpAllowed)
+            onSingleWalletLoaded(wallet, walletState)
         } else {
-            onMultiWalletLoaded(wallet, walletState, topUpAllowed)
+            onMultiWalletLoaded(wallet, walletState)
         }
     }
 
-    private fun onMultiWalletLoaded(
-            wallet: Wallet, walletState: WalletState, topUpAllowed: Boolean? = null
-    ): WalletState {
+    private fun onMultiWalletLoaded(wallet: Wallet, walletState: WalletState): WalletState {
         val fiatCurrencySymbol = store.state.globalState.appCurrency
+        val moonpayStatus = store.state.globalState.moonpayStatus
+
         val amount = wallet.amounts[AmountType.Coin]?.value
         if (walletState.getWalletData(wallet.blockchain) == null) {
             return walletState
@@ -64,7 +61,8 @@ class OnWalletLoadedReducer {
                 ),
                 pendingTransactions = pendingTransactions.removeUnknownTransactions(),
                 mainButton = WalletMainButton.SendButton(sendButtonEnabled),
-                currency = Currency.Blockchain(wallet.blockchain)
+                currency = Currency.Blockchain(wallet.blockchain),
+                tradeCryptoState = TradeCryptoState.from(moonpayStatus, walletData)
         )
 
         val tokens = wallet.getTokens().mapNotNull { token ->
@@ -88,7 +86,9 @@ class OnWalletLoadedReducer {
                             fiatAmountFormatted = tokenFiatAmount?.toFormattedFiatValue(fiatCurrencySymbol)
                     ),
                     pendingTransactions = tokenPendingTransactions.removeUnknownTransactions(),
-                    mainButton = WalletMainButton.SendButton(sendButtonEnabled)
+                    mainButton = WalletMainButton.SendButton(sendButtonEnabled),
+                    tradeCryptoState = TradeCryptoState.from(moonpayStatus, tokenWalletData)
+
             )
         }
         val newWallets = (tokens + newWalletData).mapNotNull { it }
@@ -104,12 +104,12 @@ class OnWalletLoadedReducer {
         )
     }
 
-    private fun onSingleWalletLoaded(
-            wallet: Wallet, walletState: WalletState, topUpAllowed: Boolean? = null
-    ): WalletState {
+    private fun onSingleWalletLoaded(wallet: Wallet, walletState: WalletState): WalletState {
         if (wallet.blockchain != walletState.primaryBlockchain) return walletState
 
         val fiatCurrencySymbol = store.state.globalState.appCurrency
+        val moonpayStatus = store.state.globalState.moonpayStatus
+
         val token = wallet.getFirstToken()
         val tokenData = if (token != null) {
             val tokenAmount = wallet.getTokenAmount(token)
@@ -155,7 +155,8 @@ class OnWalletLoadedReducer {
                         fiatAmount = fiatAmountRaw
                 ),
                 pendingTransactions = pendingTransactions.removeUnknownTransactions(),
-                mainButton = WalletMainButton.SendButton(sendButtonEnabled)
+                mainButton = WalletMainButton.SendButton(sendButtonEnabled),
+                tradeCryptoState = TradeCryptoState.from(moonpayStatus, walletState.primaryWallet)
         )
         val wallets = walletData?.let { listOf(walletData) } ?: emptyList()
         return walletState.copy(
