@@ -4,7 +4,10 @@ import android.content.Context
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.tangem.tap.common.extensions.copyToClipboard
 import com.tangem.tap.common.extensions.dispatchDialogHide
+import com.tangem.tap.common.extensions.dispatchShare
+import com.tangem.tap.common.extensions.dispatchToastNotification
 import com.tangem.tap.common.redux.AppDialog
+import com.tangem.tap.features.wallet.redux.Currency
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.dialog_onboarding_address_info.*
@@ -35,10 +38,31 @@ class AddressInfoBottomSheetDialog(
         tv_address.text = data.address
         btn_fl_copy_address.setOnClickListener {
             context.copyToClipboard(data.address)
-            stateDialog.onCopyAddress()
+            store.dispatchToastNotification(R.string.copy_toast_msg)
         }
         btn_fl_share.setOnClickListener {
-            stateDialog.onShareAddress()
+            store.dispatchShare(data.shareUrl)
+        }
+        tv_recieve_message.text = getQRReceiveMessage(tv_recieve_message.context, stateDialog.currency)
+    }
+}
+
+fun getQRReceiveMessage(context: Context, currency: Currency): String {
+    return when (currency) {
+        is Currency.Blockchain -> {
+            context.getString(
+                R.string.address_qr_code_message_format,
+                currency.blockchain.fullName,
+                currency.currencySymbol
+            )
+        }
+        is Currency.Token -> {
+            context.getString(
+                R.string.address_qr_code_message_token_format,
+                currency.token.name,
+                currency.currencySymbol,
+                currency.blockchain.fullName
+            )
         }
     }
 }

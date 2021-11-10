@@ -3,7 +3,10 @@ package com.tangem.tap.features.wallet.redux.reducers
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Wallet
-import com.tangem.tap.common.extensions.*
+import com.tangem.tap.common.extensions.toFiatString
+import com.tangem.tap.common.extensions.toFiatValue
+import com.tangem.tap.common.extensions.toFormattedCurrencyString
+import com.tangem.tap.common.extensions.toFormattedFiatValue
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.FiatCurrencyName
 import com.tangem.tap.domain.TapError
@@ -204,16 +207,6 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                         else -> Artwork.DEFAULT_IMG_URL
                     }
             newState = newState.copy(cardImage = Artwork(artworkId = artworkUrl))
-        }
-        is WalletAction.ShowDialog.QrCode -> {
-            val selectedWalletData = newState.getWalletData(newState.selectedWallet)
-            newState = newState.copy(
-                walletDialog = WalletDialog.QrDialog(
-                    selectedWalletData?.walletAddresses?.selectedAddress?.shareUrl?.toQrCode(),
-                    selectedWalletData?.walletAddresses?.selectedAddress?.shareUrl,
-                    selectedWalletData?.currencyData?.currency
-                )
-            )
         }
         is WalletAction.ShowDialog.SignedHashesMultiWalletDialog -> {
             newState = newState.copy(walletDialog = WalletDialog.SignedHashesMultiWalletDialog)
