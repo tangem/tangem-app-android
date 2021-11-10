@@ -3,12 +3,15 @@ package com.tangem.tap.features.wallet.redux.reducers
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Wallet
 import com.tangem.common.extensions.isZero
-import com.tangem.tap.common.extensions.*
+import com.tangem.tap.common.extensions.toFiatString
+import com.tangem.tap.common.extensions.toFiatValue
+import com.tangem.tap.common.extensions.toFormattedCurrencyString
+import com.tangem.tap.common.extensions.toFormattedFiatValue
 import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.features.wallet.models.removeUnknownTransactions
 import com.tangem.tap.features.wallet.models.toPendingTransactions
+import com.tangem.tap.features.wallet.redux.Currency
 import com.tangem.tap.features.wallet.redux.ProgressState
-import com.tangem.tap.features.wallet.redux.WalletData
 import com.tangem.tap.features.wallet.redux.WalletMainButton
 import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.ui.BalanceStatus
@@ -49,9 +52,9 @@ class OnWalletLoadedReducer {
             BalanceStatus.VerifiedOnline
         }
         val walletData = walletState.getWalletData(wallet.blockchain)
-                ?: WalletData()
-        val fiatAmount = walletData.fiatRate?.let { amount?.toFiatValue(it) }
-        val newWalletData = walletData.copy(
+
+        val fiatAmount = walletData?.fiatRate?.let { amount?.toFiatValue(it) }
+        val newWalletData = walletData?.copy(
                 currencyData = walletData.currencyData.copy(
                         status = balanceStatus, currency = wallet.blockchain.fullName,
                         currencySymbol = wallet.blockchain.currency,
@@ -60,7 +63,8 @@ class OnWalletLoadedReducer {
                         fiatAmountFormatted = fiatAmount?.toFormattedFiatValue(fiatCurrencySymbol)
                 ),
                 pendingTransactions = pendingTransactions.removeUnknownTransactions(),
-                mainButton = WalletMainButton.SendButton(sendButtonEnabled)
+                mainButton = WalletMainButton.SendButton(sendButtonEnabled),
+                currency = Currency.Blockchain(wallet.blockchain)
         )
 
         val tokens = wallet.getTokens().mapNotNull { token ->
@@ -87,7 +91,8 @@ class OnWalletLoadedReducer {
                     mainButton = WalletMainButton.SendButton(sendButtonEnabled)
             )
         }
-        val wallets = walletState.replaceSomeWallets((tokens + newWalletData))
+        val newWallets = (tokens + newWalletData).mapNotNull { it }
+        val wallets = walletState.replaceSomeWallets((newWallets))
 
         val state = if (wallets.any { it.currencyData.status == BalanceStatus.Loading }) {
             ProgressState.Loading
