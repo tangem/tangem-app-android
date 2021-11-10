@@ -1,6 +1,7 @@
 package com.tangem.tap.features.wallet.redux.reducers
 
 import com.tangem.blockchain.common.AmountType
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Wallet
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppState
@@ -44,6 +45,7 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                     WalletData(
                         currencyData = BalanceWidgetData(BalanceStatus.EmptyCard),
                         mainButton = WalletMainButton.CreateWalletButton(true),
+                        currency = Currency.Blockchain(Blockchain.Unknown)
                     )
                 )
             )
@@ -71,6 +73,7 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                         wallets = listOf(
                             WalletData(
                                 currencyData = BalanceWidgetData(BalanceStatus.UnknownBlockchain),
+                                currency = Currency.Blockchain(Blockchain.Unknown)
                             )
                         )
                     )
