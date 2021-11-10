@@ -281,8 +281,8 @@ class FeedbackEmail : EmailData {
     override val mainMessage: String
         get() = if (isS2CCard) s2cMainMessage else tangemMainMessage
 
-    private val tangemSubject = "Tangem Tap feedback"
-    private val tangemMainMessage = "Hi Tangem,"
+    private val tangemSubject = "Tangem feedback"
+    private val tangemMainMessage = "Hi support team,"
 
     private val s2cSubject = "Feedback"
     private val s2cMainMessage = "Hi support team,"
