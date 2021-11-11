@@ -199,10 +199,12 @@
     <string name="address_qr_code_message_token_format" translatable="false">Send only %s (%s) from %s network to this address. Sending any other currency will result in its irreversible loss.</string>
 
     <string name="onboarding_twins_interrupt_warning" translatable="false">If the process of re-creating the wallet gets interrupted in any way, you’ll have to start over.</string>
+    <string name="onboarding_twin_exit_warning" translatable="false">The twinning process is partly complete. You can’t exit it now.</string>
 
     <string name="onboarding_error_create_primary_wallet" translatable="false">Internal error: can\'t create wallet manager</string>
 
     <string name="wallet_balance_blockchain_unreachable_try_later" translatable="false">Blockchain is unreachable. Try later</string>
 
+    <string name="warning_button_ok" translatable="false">Ok, Got it!</string>
 
 </resources>
