@@ -7,6 +7,7 @@ import android.text.SpannableStringBuilder
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.text.bold
+import com.tangem.common.extensions.remove
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.getMessageString
 import com.tangem.tap.common.text.DecimalDigitsInputFilter
@@ -187,9 +188,13 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
         fg.tvAmountCurrency.update(state.mainCurrency.currencySymbol)
         (fg as? SendFragment)?.saveMainCurrency(state.mainCurrency.type)
 
-        val balanceText = fg.getString(R.string.send_balance_subtitle_format,
-            state.mainCurrency.currencySymbol,
-            state.viewBalanceValue)
+        val balanceText = when (state.mainCurrency.type) {
+            MainCurrencyType.FIAT -> fg.getString(R.string.send_balance_subtitle_format,
+                state.viewBalanceValue, state.mainCurrency.currencySymbol).remove(":")
+            MainCurrencyType.CRYPTO -> fg.getString(R.string.send_balance_subtitle_format,
+                state.mainCurrency.currencySymbol, state.viewBalanceValue)
+        }
+
         fg.tvBalance.update(balanceText)
 
         fg.tilAmountToSend.isEnabled = state.inputIsEnabled
