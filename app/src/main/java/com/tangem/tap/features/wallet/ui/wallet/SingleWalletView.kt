@@ -140,7 +140,9 @@ class SingleWalletView : WalletView {
                 store.dispatch(WalletAction.CopyAddress(addressString, fragment.requireContext()))
             }
         }
-        btn_show_qr.setOnClickListener { store.dispatch(WalletAction.ShowDialog.QrCode) }
+        btn_show_qr.setOnClickListener {
+            store.dispatch(WalletAction.ShowDialog.QrCode)
+        }
 
         setupTradeButton(fragment, state.tradeCryptoState)
     }
@@ -242,15 +244,6 @@ class SingleWalletView : WalletView {
     private fun handleDialogs(walletDialog: StateDialog?, fragment: WalletFragment) {
         val context = fragment.context ?: return
         when (walletDialog) {
-            is WalletDialog.QrDialog -> {
-                if (walletDialog.qrCode != null && walletDialog.shareUrl != null) {
-                    if (dialog == null) dialog = QrDialog(context).apply {
-                        this.showQr(
-                                walletDialog.qrCode, walletDialog.shareUrl, walletDialog.currencyName
-                        )
-                    }
-                }
-            }
             is WalletDialog.SelectAmountToSendDialog -> {
                 if (dialog == null) dialog = AmountToSendDialog(context).apply {
                     this.show(walletDialog.amounts)
