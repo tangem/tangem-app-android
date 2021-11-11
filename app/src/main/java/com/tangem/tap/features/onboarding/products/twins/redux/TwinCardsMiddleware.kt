@@ -239,12 +239,7 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
         is TwinCardsAction.ShowAddressInfoDialog -> {
             val addressData = twinCardsState.walletManager?.getAddressData() ?: return
 
-            val addressWasCopied = globalState.resources.strings.addressWasCopied
-            val appDialog = AppDialog.AddressInfoDialog(
-                addressData,
-                onCopyAddress = { store.dispatchToastNotification(addressWasCopied) },
-                onShareAddress = { store.dispatchShare(addressData.shareUrl) }
-            )
+            val appDialog = AppDialog.AddressInfoDialog(twinCardsState.walletBalance.currency, addressData)
             store.dispatchDialogShow(appDialog)
         }
         is TwinCardsAction.TopUp -> {
