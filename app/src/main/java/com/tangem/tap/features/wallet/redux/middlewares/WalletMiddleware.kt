@@ -12,6 +12,7 @@ import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.common.extensions.*
+import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
@@ -192,6 +193,13 @@ class WalletMiddleware {
                 if (newAction is PrepareSendScreen) {
                     store.dispatch(NavigationAction.NavigateTo(AppScreen.Send))
                 }
+            }
+            is WalletAction.ShowDialog.QrCode -> {
+                val selectedWalletData = walletState.getWalletData(walletState.selectedWallet) ?: return
+                val selectedAddressData = selectedWalletData.walletAddresses?.selectedAddress ?: return
+
+                val currency = selectedWalletData.currency
+                store.dispatchDialogShow(AppDialog.AddressInfoDialog(currency, selectedAddressData))
             }
         }
     }
