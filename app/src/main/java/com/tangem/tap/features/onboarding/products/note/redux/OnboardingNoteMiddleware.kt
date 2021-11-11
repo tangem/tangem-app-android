@@ -134,12 +134,8 @@ private fun handleNoteAction(action: Action, dispatch: DispatchFunction) {
         }
         is OnboardingNoteAction.ShowAddressInfoDialog -> {
             val addressData = noteState.walletManager?.getAddressData() ?: return
-            val addressWasCopied = globalState.resources.strings.addressWasCopied
-            val appDialog = AppDialog.AddressInfoDialog(
-                addressData,
-                onCopyAddress = { store.dispatchToastNotification(addressWasCopied) },
-                onShareAddress = { store.dispatchShare(addressData.shareUrl) }
-            )
+
+            val appDialog = AppDialog.AddressInfoDialog(noteState.walletBalance.currency, addressData)
             store.dispatchDialogShow(appDialog)
         }
         is OnboardingNoteAction.TopUp -> {
