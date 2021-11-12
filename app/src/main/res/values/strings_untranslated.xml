@@ -29,6 +29,7 @@
     <string name="twins_recreate_subtitle" translatable="false">The wallet creation procedure consists of three steps. You must complete it to the end, otherwise you will have to start from the beginning.</string>
     <string name="twins_recreate_button_format" translatable="false">Tap the card #%s</string>
     <string name="twins_recreate_alert" translatable="false">You have already started the process of recreating twin wallet. If you interrupt it, you won\'t be able to use your twin cards until you start it again and complete recreating the wallet.</string>
+    <string name="twins_wrong_card_error" translatable="false">You\'ve tapped the same card. To create twin wallet you need to tap a second twin card.</string>
 
     <string name="notification_twins_recreate_success" translatable="false">The twin address was successfully created</string>
 
@@ -90,6 +91,7 @@
     <string name="custom_token_token_symbol_input_placeholder" translatable="false">ex. USDC</string>
     <string name="add_token_added" translatable="false">Added</string>
     <string name="remove_token" translatable="false">Remove token</string>
+    <string name="token_icon" translatable="false">Token icon</string>
 
     //Details
     <string name="details_section_title_blockchain" translatable="false">Blockchain</string>
@@ -198,10 +200,12 @@
     <string name="address_qr_code_message_token_format" translatable="false">Send only %s (%s) from %s network to this address. Sending any other currency will result in its irreversible loss.</string>
 
     <string name="onboarding_twins_interrupt_warning" translatable="false">If the process of re-creating the wallet gets interrupted in any way, you’ll have to start over.</string>
+    <string name="onboarding_twin_exit_warning" translatable="false">The twinning process is partly complete. You can’t exit it now.</string>
 
     <string name="onboarding_error_create_primary_wallet" translatable="false">Internal error: can\'t create wallet manager</string>
 
     <string name="wallet_balance_blockchain_unreachable_try_later" translatable="false">Blockchain is unreachable. Try later</string>
 
+    <string name="warning_button_ok" translatable="false">Ok, Got it!</string>
 
 </resources>
