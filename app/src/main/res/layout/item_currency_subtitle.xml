@@ -2,6 +2,7 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/cl_subtitle_container"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:paddingBottom="10dp"
@@ -19,5 +20,20 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:text="BLOCKCHAINS" />
+
+    <ImageView
+        android:id="@+id/iv_toggle_sublist_visibility"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:textAllCaps="true"
+        android:textColor="@color/darkGray1"
+        android:textSize="13sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@id/tv_subtitle"
+        app:layout_constraintBottom_toBottomOf="@id/tv_subtitle"
+        tools:src="@drawable/ic_arrow_angle_right" />
+
 
 </androidx.constraintlayout.widget.ConstraintLayout>
