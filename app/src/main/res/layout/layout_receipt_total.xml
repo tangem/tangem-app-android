@@ -45,10 +45,10 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end"
-            android:gravity="end"
             android:layout_marginTop="4dp"
-            tools:text="@string/send_total_subtitle_format"
-            android:textColor="@color/darkGray1" />
+            android:gravity="end"
+            android:textColor="@color/darkGray1"
+            tools:text="123.29837729 ADA 39487593.109342039402938049 will be sent" />
 
     </LinearLayout>
 
