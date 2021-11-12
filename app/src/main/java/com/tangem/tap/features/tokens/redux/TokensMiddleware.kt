@@ -3,7 +3,6 @@ package com.tangem.tap.features.tokens.redux
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.currenciesRepository
 import com.tangem.tap.domain.TapWorkarounds.isTestCard
-import com.tangem.tap.features.tokens.ui.adapters.CurrencyListItem
 import com.tangem.tap.store
 import org.rekotlin.Middleware
 
