@@ -91,6 +91,7 @@
     <string name="custom_token_token_symbol_input_placeholder" translatable="false">ex. USDC</string>
     <string name="add_token_added" translatable="false">Added</string>
     <string name="remove_token" translatable="false">Remove token</string>
+    <string name="token_icon" translatable="false">Token icon</string>
 
     //Details
     <string name="details_section_title_blockchain" translatable="false">Blockchain</string>
