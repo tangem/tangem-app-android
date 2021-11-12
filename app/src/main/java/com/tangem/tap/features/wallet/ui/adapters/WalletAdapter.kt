@@ -63,7 +63,7 @@ class WalletAdapter
             view.card_wallet.setOnClickListener {
                 store.dispatch(WalletAction.MultiWallet.SelectWallet(wallet))
             }
-            val blockchain = wallet.currency?.blockchain
+            val blockchain = wallet.currency.blockchain
             val token = (wallet.currency as? Currency.Token)?.token
 
             Picasso.get().loadCurrenciesIcon(
