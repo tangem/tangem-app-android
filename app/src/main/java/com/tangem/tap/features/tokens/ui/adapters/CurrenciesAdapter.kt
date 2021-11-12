@@ -164,17 +164,14 @@ class CurrenciesAdapter : ListAdapter<CurrencyListItem, RecyclerView.ViewHolder>
 
             if (title.blockchain != null) {
                 view.cl_subtitle_container.setOnClickListener {
+                    val rotation = if (title.isContentShown) -90f else 0f
                     store.dispatch(TokensAction.ToggleShowTokensForBlockchain(
                         title.isContentShown, title.blockchain
                     ))
+                    view.iv_toggle_sublist_visibility.animate().rotation(rotation)
                 }
                 view.iv_toggle_sublist_visibility.show()
-                val imageRes = if (title.isContentShown) {
-                    R.drawable.ic_arrow_angle_down
-                } else {
-                    R.drawable.ic_arrow_angle_right
-                }
-                view.iv_toggle_sublist_visibility.setImageResource(imageRes)
+                view.iv_toggle_sublist_visibility.setImageResource(R.drawable.ic_arrow_angle_down)
             } else {
                 view.iv_toggle_sublist_visibility.hide()
             }
