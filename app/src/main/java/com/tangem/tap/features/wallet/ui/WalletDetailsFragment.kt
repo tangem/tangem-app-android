@@ -145,7 +145,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
         Picasso.get().loadCurrenciesIcon(
             imageView = iv_currency,
             textView = tv_token_letter,
-            blockchain = wallet.currency?.blockchain,
+            blockchain = wallet.currency.blockchain,
             token = (wallet.currency as? Currency.Token)?.token
         )
     }
