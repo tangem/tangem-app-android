@@ -6,12 +6,13 @@ import com.tangem.common.KeyPair
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
-import com.tangem.common.core.TangemSdkError
+import com.tangem.common.core.TangemError
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.operations.wallet.CreateWalletCommand
 import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.operations.wallet.PurgeWalletCommand
 import com.tangem.tap.domain.extensions.getSingleWallet
+import com.tangem.wallet.R
 
 class CreateSecondTwinWalletTask(
     private val firstPublicKey: String,
@@ -25,7 +26,7 @@ class CreateSecondTwinWalletTask(
         val publicKey = card?.getSingleWallet()?.publicKey
         if (publicKey != null) {
             if (!card.cardId.startsWith(TwinsHelper.getPairCardSeries(firstCardId) ?: "")) {
-                callback(CompletionResult.Failure(TangemSdkError.WrongCardType()))
+                callback(CompletionResult.Failure(WrongTwinCard()))
                 return
             }
 
@@ -64,5 +65,11 @@ class CreateSecondTwinWalletTask(
                 is CompletionResult.Failure -> callback(CompletionResult.Failure(result.error))
             }
         }
+    }
+
+    private class WrongTwinCard : TangemError {
+        override val code: Int = 50005
+        override var customMessage: String = code.toString()
+        override val messageResId = R.string.twins_wrong_card_error
     }
 }
