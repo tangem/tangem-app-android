@@ -114,6 +114,7 @@ class AdditionalEmailInfo {
 
     // wallets
     internal val walletsInfo = mutableListOf<EmailWalletInfo>()
+    internal val tokens = mutableMapOf<Blockchain, Collection<Token>>()
     internal var onSendErrorWalletInfo: EmailWalletInfo? = null
     var signedHashesCount: String = ""
 
@@ -146,6 +147,7 @@ class AdditionalEmailInfo {
 
     fun setWalletsInfo(walletManagers: List<WalletManager>) {
         walletsInfo.clear()
+        tokens.clear()
         walletManagers.forEach { manager ->
             walletsInfo.add(
                 EmailWalletInfo(
@@ -155,6 +157,9 @@ class AdditionalEmailInfo {
                     host = manager.currentHost
                 )
             )
+            if (manager.cardTokens.isNotEmpty()) {
+                tokens[manager.wallet.blockchain] = manager.cardTokens
+            }
         }
     }
 
@@ -306,6 +311,14 @@ class FeedbackEmail : EmailData {
             builder.appendKeyValue("Wallet address", it.address)
             builder.appendKeyValue("Explorer link", it.explorerLink)
         }
+        appendBlankLine(builder)
+
+        infoHolder.tokens.forEach { tokens ->
+            appendDelimiter(builder)
+            builder.appendKeyValue("Blockchain", tokens.key.fullName)
+            builder.appendKeyValue("Tokens", tokens.value.map { "${it.name} - ${it.symbol}" }.toString())
+        }
+        appendDelimiter(builder)
         appendBlankLine(builder)
 
 //            appendKeyValue("Outputs count", infoHolder.outputsCount)
