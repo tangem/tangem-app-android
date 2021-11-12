@@ -42,12 +42,12 @@ class CurrenciesRepository(val context: Application) {
     }
 
     fun saveAddedTokens(cardId: String, tokens: Collection<Token>) {
-        saveTokens(cardId, loadSavedTokens(cardId) + tokens)
+        saveTokens(cardId, loadSavedTokens(cardId) + tokens.distinct())
     }
 
     fun saveAddedBlockchain(cardId: String, blockchain: Blockchain) {
         val blockchains = loadSavedBlockchains(cardId) + blockchain
-        saveBlockchains(cardId, blockchains)
+        saveBlockchains(cardId, blockchains.distinct())
     }
 
     fun removeToken(cardId: String, token: Token) {
@@ -79,7 +79,7 @@ class CurrenciesRepository(val context: Application) {
     }
 
     private fun saveTokens(cardId: String, tokens: List<Token>) {
-        val json = tokensAdapter.toJson(tokens.map { TokenDao.fromToken(it) }.distinct())
+        val json = tokensAdapter.toJson(tokens.distinct().map { TokenDao.fromToken(it) })
         context.rewriteFile(json, getFileNameForTokens(cardId))
     }
 
@@ -93,7 +93,7 @@ class CurrenciesRepository(val context: Application) {
     }
 
     private fun saveBlockchains(cardId: String, blockchains: List<Blockchain>) {
-        val json = blockchainsAdapter.toJson(blockchains)
+        val json = blockchainsAdapter.toJson(blockchains.distinct())
         context.rewriteFile(json, getFileNameForBlockchains(cardId))
     }
 

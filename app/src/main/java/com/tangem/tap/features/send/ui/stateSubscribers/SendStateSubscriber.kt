@@ -7,6 +7,7 @@ import android.text.SpannableStringBuilder
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.text.bold
+import com.tangem.common.extensions.remove
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.getMessageString
 import com.tangem.tap.common.text.DecimalDigitsInputFilter
@@ -64,19 +65,20 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
         }
         showView(fg.xlmMemoContainer, infoState.xlmMemo)
         showView(fg.xrpDestinationTagContainer, infoState.xrpDestinationTag)
+        showView(fg.binanceMemoContainer, infoState.binanceMemo)
 
         infoState.xlmMemo?.let {
-            fg.etMemo.inputType = when (it.selectedMemoType) {
+            fg.etXlmMemo.inputType = when (it.selectedMemoType) {
                 XlmMemoType.TEXT -> InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
                 XlmMemoType.ID -> InputType.TYPE_CLASS_NUMBER
             }
-            if (!it.viewFieldValue.isFromUserInput) fg.etMemo.setText(it.viewFieldValue.value)
+            if (!it.viewFieldValue.isFromUserInput) fg.etXlmMemo.setText(it.viewFieldValue.value)
             if (it.error != null) {
                 if (it.error == TransactionExtraError.INVALID_XLM_MEMO) {
-                    fg.tilMemo.error = fg.getText(R.string.send_error_invalid_memo_id)
+                    fg.tilXlmMemo.error = fg.getText(R.string.send_error_invalid_memo_id)
                 }
             } else {
-                fg.tilMemo.error = null
+                fg.tilXlmMemo.error = null
             }
         }
         infoState.xrpDestinationTag?.let {
@@ -89,6 +91,18 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
             }
             if (!it.viewFieldValue.isFromUserInput) {
                 fg.etDestinationTag.setText(it.viewFieldValue.value)
+            }
+        }
+        infoState.binanceMemo?.let {
+            if (infoState.binanceMemo.error != null) {
+                if (infoState.binanceMemo.error == TransactionExtraError.INVALID_BINANCE_MEMO) {
+                    fg.tilBinanceMemo.error = fg.getText(R.string.send_error_invalid_memo_id)
+                }
+            } else {
+                fg.tilBinanceMemo.error = null
+            }
+            if (!it.viewFieldValue.isFromUserInput) {
+                fg.etBinanceMemo.setText(it.viewFieldValue.value)
             }
         }
     }
@@ -187,9 +201,13 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
         fg.tvAmountCurrency.update(state.mainCurrency.currencySymbol)
         (fg as? SendFragment)?.saveMainCurrency(state.mainCurrency.type)
 
-        val balanceText = fg.getString(R.string.send_balance_subtitle_format,
-            state.mainCurrency.currencySymbol,
-            state.viewBalanceValue)
+        val balanceText = when (state.mainCurrency.type) {
+            MainCurrencyType.FIAT -> fg.getString(R.string.send_balance_subtitle_format,
+                state.viewBalanceValue, state.mainCurrency.currencySymbol).remove(":")
+            MainCurrencyType.CRYPTO -> fg.getString(R.string.send_balance_subtitle_format,
+                state.mainCurrency.currencySymbol, state.viewBalanceValue)
+        }
+
         fg.tvBalance.update(balanceText)
 
         fg.tilAmountToSend.isEnabled = state.inputIsEnabled
