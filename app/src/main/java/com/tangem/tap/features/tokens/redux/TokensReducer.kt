@@ -33,12 +33,12 @@ private fun internalReduce(action: Action, state: AppState): TokensState {
             if (action.isShown) {
                 val shownCurrencies = tokensState.shownCurrencies
                     .removeTokensForBlockchain(action.blockchain)
-                    .toggleHeaderContentShownValue(action.blockchain)
+                    shownCurrencies.toggleHeaderContentShownValue(action.blockchain)
                 tokensState.copy(shownCurrencies = shownCurrencies)
             } else {
                 val shownCurrencies = tokensState.shownCurrencies
                     .addTokensForBlockchain(action.blockchain, tokensState.currencies)
-                    .toggleHeaderContentShownValue(action.blockchain)
+                    shownCurrencies.toggleHeaderContentShownValue(action.blockchain)
                 tokensState.copy(shownCurrencies = shownCurrencies)
             }
         }
