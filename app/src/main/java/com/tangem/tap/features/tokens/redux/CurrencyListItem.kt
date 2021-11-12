@@ -10,7 +10,7 @@ sealed class CurrencyListItem {
     data class BlockchainListItem(val blockchain: Blockchain) : CurrencyListItem()
     data class TitleListItem(
         @StringRes val titleResId: Int,
-        val isContentShown: Boolean = true,
+        var isContentShown: Boolean = true,
         val blockchain: Blockchain? = null,
     ) : CurrencyListItem()
 
@@ -57,13 +57,10 @@ fun List<CurrencyListItem>.addTokensForBlockchain(
     return this.toMutableList().apply { addAll(indexToInsert, tokensToAdd) }
 }
 
-fun List<CurrencyListItem>.toggleHeaderContentShownValue(
-    blockchain: Blockchain
-): List<CurrencyListItem> {
-    val indexOfTitle = indexOfFirst {
-        it is CurrencyListItem.TitleListItem && it.blockchain == blockchain
+fun List<CurrencyListItem>.toggleHeaderContentShownValue(blockchain: Blockchain) {
+    map {
+        if (it is CurrencyListItem.TitleListItem && it.blockchain == blockchain) {
+            it.isContentShown = !it.isContentShown
+        }
     }
-    val title = this[indexOfTitle] as CurrencyListItem.TitleListItem
-    val updatedTitle = title.copy(isContentShown = !title.isContentShown)
-    return this.toMutableList().apply { set(indexOfTitle, updatedTitle) }
 }
