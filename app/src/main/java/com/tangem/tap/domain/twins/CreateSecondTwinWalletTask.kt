@@ -30,7 +30,7 @@ class CreateSecondTwinWalletTask(
                 return
             }
 
-            session.setInitialMessage(preparingMessage)
+            session.setMessage(preparingMessage)
             PurgeWalletCommand(publicKey).run(session) { response ->
                 when (response) {
                     is CompletionResult.Success -> {
@@ -46,7 +46,7 @@ class CreateSecondTwinWalletTask(
     }
 
     private fun finishTask(session: CardSession, callback: (result: CompletionResult<CreateWalletResponse>) -> Unit) {
-        session.setInitialMessage(creatingWalletMessage)
+        session.setMessage(creatingWalletMessage)
         CreateWalletCommand(EllipticCurve.Secp256k1).run(session) { result ->
             when (result) {
                 is CompletionResult.Success -> {
