@@ -9,29 +9,17 @@
 
     <TextView
         android:id="@+id/tv_currency"
-        android:layout_width="0dp"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:ellipsize="end"
-        android:maxLines="1"
         android:paddingStart="16dp"
         android:paddingTop="16dp"
         android:paddingEnd="16dp"
         android:textColor="@color/darkGray6"
         android:textSize="20sp"
         android:textStyle="bold"
-        app:layout_constraintEnd_toStartOf="@+id/tv_amount"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         tools:text="Binance Smart Chain Optimal" />
-
-    <androidx.constraintlayout.widget.Guideline
-        android:id="@+id/guideline2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintGuide_percent="0.45"
-        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/tv_status_verified"
@@ -102,27 +90,24 @@
 
     <TextView
         android:id="@+id/tv_amount"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginEnd="16dp"
         android:ellipsize="end"
-        android:gravity="end"
-        android:maxEms="12"
-        android:maxLength="12"
+        android:gravity="end|bottom"
         android:maxLines="1"
         android:textColor="@color/darkGray6"
         android:textSize="20sp"
         android:textStyle="bold"
-        android:visibility="visible"
         app:autoSizeMaxTextSize="20sp"
         app:autoSizeMinTextSize="12sp"
         app:autoSizeStepGranularity="1sp"
         app:autoSizeTextType="uniform"
         app:layout_constraintBottom_toBottomOf="@id/tv_currency"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="@+id/guideline2"
-        tools:text="111230.98123128293475943 BTC" />
+        app:layout_constraintHorizontal_weight="1"
+        app:layout_constraintStart_toEndOf="@id/tv_currency"
+        tools:text="0.43 BTC" />
 
     <TextView
         android:id="@+id/tv_fiat_amount"
@@ -194,7 +179,8 @@
         app:layout_constraintHorizontal_bias="1"
         app:layout_constraintStart_toEndOf="@id/tv_base_currency"
         app:layout_constraintTop_toBottomOf="@id/v_divider"
-        tools:text="0.00434143 ETH" />
+        tools:text="0.00434143 ETH"
+        />
 
     <androidx.constraintlayout.widget.Group
         android:id="@+id/group_base_currency"
