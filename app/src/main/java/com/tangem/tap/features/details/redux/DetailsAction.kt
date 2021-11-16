@@ -1,6 +1,7 @@
 package com.tangem.tap.features.details.redux
 
 import com.tangem.blockchain.common.Wallet
+import com.tangem.common.card.Card
 import com.tangem.operations.pins.CheckUserCodesResponse
 import com.tangem.tap.common.redux.NotificationAction
 import com.tangem.tap.common.redux.global.FiatCurrencyName
@@ -50,7 +51,7 @@ sealed class DetailsAction : Action {
     }
 
     sealed class ManageSecurity : DetailsAction() {
-        data class CheckCurrentSecurityOption(val cardId: String?) : ManageSecurity()
+        data class CheckCurrentSecurityOption(val card: Card) : ManageSecurity()
         data class SetCurrentOption(val userCodes: CheckUserCodesResponse) : ManageSecurity()
         object OpenSecurity : ManageSecurity()
         data class SelectOption(val option: SecurityOption) : ManageSecurity()
