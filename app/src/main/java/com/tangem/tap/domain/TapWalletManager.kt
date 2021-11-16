@@ -97,7 +97,7 @@ class TapWalletManager {
         }
     }
 
-    private fun updateConfigManager(data: ScanResponse) {
+    fun updateConfigManager(data: ScanResponse) {
         val configManager = store.state.globalState.configManager
         val blockchain = data.getBlockchain()
         if (data.card.isStart2Coin) {
@@ -208,7 +208,6 @@ class TapWalletManager {
                 return@withContext
             }
 
-            val config = store.state.globalState.configManager?.config ?: return@withContext
             val moonPayStatus = store.state.globalState.moonpayStatus
             store.dispatch(WalletAction.LoadWallet(moonPayStatus))
             store.dispatch(WalletAction.LoadFiatRate())
