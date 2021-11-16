@@ -38,7 +38,7 @@ android {
         }
         debug_beta {
             initWith release
-            debuggable true
+            debuggable false
             versionNameSuffix "-beta"
             applicationIdSuffix ".debug"
             buildConfigField 'String', 'CONFIG_ENVIRONMENT', '\"prod\"'
