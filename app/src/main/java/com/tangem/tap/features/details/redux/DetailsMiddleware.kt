@@ -1,8 +1,10 @@
 package com.tangem.tap.features.details.redux
 
 import com.tangem.common.CompletionResult
+import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.services.Result
+import com.tangem.operations.pins.CheckUserCodesResponse
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.common.extensions.dispatchNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -141,16 +143,22 @@ class DetailsMiddleware {
         fun handle(action: DetailsAction.ManageSecurity) {
             when (action) {
                 is DetailsAction.ManageSecurity.CheckCurrentSecurityOption -> {
-                    scope.launch {
-                        when (val response = tangemSdkManager.checkUserCodes(action.cardId)) {
-                            is CompletionResult.Success -> {
-                                store.dispatchOnMain(
-                                    DetailsAction.ManageSecurity.SetCurrentOption(response.data)
-                                )
-                                store.dispatchOnMain(DetailsAction.ManageSecurity.OpenSecurity)
-                            }
-                            is CompletionResult.Failure -> {
-
+                    if (action.card.firmwareVersion >= FirmwareVersion.IsAccessCodeStatusAvailable) {
+                        // for a card that meets this condition, we can get these statuses from it
+                        val simulatedResponse = CheckUserCodesResponse(
+                            action.card.isAccessCodeSet, action.card.isPasscodeSet ?: false
+                        )
+                        store.dispatch(DetailsAction.ManageSecurity.SetCurrentOption(simulatedResponse))
+                        store.dispatch(DetailsAction.ManageSecurity.OpenSecurity)
+                    } else {
+                        scope.launch {
+                            when (val response = tangemSdkManager.checkUserCodes(action.card.cardId)) {
+                                is CompletionResult.Success -> {
+                                    store.dispatchOnMain(DetailsAction.ManageSecurity.SetCurrentOption(response.data))
+                                    store.dispatchOnMain(DetailsAction.ManageSecurity.OpenSecurity)
+                                }
+                                is CompletionResult.Failure -> {
+                                }
                             }
                         }
                     }
@@ -197,7 +205,7 @@ class DetailsMiddleware {
                                             actionToLog = FirebaseAnalyticsHandler.ActionToLog.ChangeSecOptions,
                                             parameters = mapOf(
                                                 FirebaseAnalyticsHandler.AnalyticsParam.NEW_SECURITY_OPTION to
-                                                        (selectedOption?.name ?: "")
+                                                    (selectedOption?.name ?: "")
                                             ),
                                             card = store.state.detailsState.scanResponse?.card
                                         )
