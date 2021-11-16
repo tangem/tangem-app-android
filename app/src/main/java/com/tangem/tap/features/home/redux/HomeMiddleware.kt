@@ -60,6 +60,7 @@ private fun handleReadCard() {
     } else {
         changeButtonState(ButtonState.PROGRESS)
         store.dispatch(GlobalAction.ScanCard({ scanResponse ->
+            store.state.globalState.tapWalletManager.updateConfigManager(scanResponse)
             store.dispatch(TwinCardsAction.IfTwinsPrepareState(scanResponse))
 
             if (OnboardingHelper.isOnboardingCase(scanResponse)) {
