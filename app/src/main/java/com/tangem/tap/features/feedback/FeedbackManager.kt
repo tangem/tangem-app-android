@@ -256,15 +256,19 @@ class ScanFailsEmail : EmailData {
 class SendTransactionFailedEmail(private val error: String) : EmailData {
     override val subject: String = "Can’t send a transaction"
     override val mainMessage: String = "Please tell us more about your issue. Every small detail can help."
+
     override fun createOptionalMessage(infoHolder: AdditionalEmailInfo): String {
         val walletInfo = infoHolder.onSendErrorWalletInfo ?: AdditionalEmailInfo.EmailWalletInfo()
         return StringBuilder().apply {
-            appendKeyValue("Error", error)
             appendKeyValue("Card ID", infoHolder.cardId)
+            appendKeyValue("Firmware version", infoHolder.cardFirmwareVersion)
+            appendKeyValue("Signed hashes", infoHolder.signedHashesCount)
             appendDelimiter(this)
             appendKeyValue("Blockchain", walletInfo.blockchain.fullName)
             appendKeyValue("Host", walletInfo.host)
             appendKeyValue("Token", infoHolder.token)
+            appendKeyValue("Error", error)
+            appendDelimiter(this)
             appendKeyValue("Source address", walletInfo.address)
             appendKeyValue("Destination address", infoHolder.destinationAddress)
             appendKeyValue("Amount", infoHolder.amount)
@@ -273,8 +277,6 @@ class SendTransactionFailedEmail(private val error: String) : EmailData {
             appendKeyValue("Phone model", infoHolder.phoneModel)
             appendKeyValue("OS version", infoHolder.osVersion)
             appendKeyValue("App version", infoHolder.appVersion)
-            appendKeyValue("Firmware version", infoHolder.cardFirmwareVersion)
-            appendKeyValue("Signed hashes", infoHolder.signedHashesCount)
 //            appendKeyValue("Transaction HEX", infoHolder.transactionHex)
         }.toString()
     }
