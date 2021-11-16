@@ -119,9 +119,7 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
         }
 
         tv_security_title.setOnClickListener {
-            store.dispatch(DetailsAction.ManageSecurity.CheckCurrentSecurityOption(
-                state.scanResponse?.card?.cardId
-            ))
+            store.dispatch(DetailsAction.ManageSecurity.CheckCurrentSecurityOption(state.scanResponse!!.card))
         }
 
         val currentSecurity = when (state.securityScreenState?.currentOption) {
@@ -133,7 +131,7 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
         currentSecurity?.let { tv_security.text = getString(it) }
 
         if (state.appCurrencyState.showAppCurrencyDialog &&
-                !state.appCurrencyState.fiatCurrencies.isNullOrEmpty()) {
+            !state.appCurrencyState.fiatCurrencies.isNullOrEmpty()) {
             currencySelectionDialog.show(
                 state.appCurrencyState.fiatCurrencies,
                 state.appCurrencyState.fiatCurrencyName,
