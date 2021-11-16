@@ -3,11 +3,13 @@ package com.tangem.tap.domain.extensions
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.tap.features.wallet.redux.Currency
 import com.tangem.tap.network.moonpay.MoonpayStatus
+import com.tangem.tap.store
 
 /**
 [REDACTED_AUTHOR]
  */
 fun MoonpayStatus.buyIsAllowed(currency: Currency): Boolean {
+    if (store.state.globalState.configManager?.config?.isTopUpEnabled == false) return false
     if (!isBuyAllowed) return false
 
     return when (currency) {
@@ -23,6 +25,7 @@ fun MoonpayStatus.buyIsAllowed(currency: Currency): Boolean {
 }
 
 fun MoonpayStatus.sellIsAllowed(currency: Currency): Boolean {
+    if (store.state.globalState.configManager?.config?.isTopUpEnabled == false) return false
     if (!isSellAllowed) return false
 
     return when (currency) {
