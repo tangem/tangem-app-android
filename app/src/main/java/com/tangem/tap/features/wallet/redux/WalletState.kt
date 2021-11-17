@@ -251,6 +251,7 @@ data class WalletData(
     fun shouldShowMultipleAddress(): Boolean {
         val listOfAddresses = walletAddresses?.list ?: return false
         return listOfAddresses.size > 1
+                && currency.blockchain != Blockchain.Litecoin //TODO: remove this after fixing sending from Segwit for Litecoin
     }
 }
 
