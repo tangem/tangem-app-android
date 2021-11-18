@@ -43,24 +43,28 @@ class IntentHandler {
     }
 
     private fun handleSellCurrencyCallback(intent: Intent?) {
-        val transactionID =
-            intent?.data?.getQueryParameter(TradeCryptoHelper.TRANSACTION_ID_PARAM) ?: return
-        val currency =
-            intent.data?.getQueryParameter(TradeCryptoHelper.CURRENCY_CODE_PARAM) ?: return
-        val amount =
-            intent.data?.getQueryParameter(TradeCryptoHelper.CURRENCY_AMOUNT_PARAM) ?: return
-        val destinationAddress =
-            intent.data?.getQueryParameter(TradeCryptoHelper.DEPOSIT_WALLET_ADDRESS_PARAM)
-                ?: return
+        try {
+            val transactionID =
+                intent?.data?.getQueryParameter(TradeCryptoHelper.TRANSACTION_ID_PARAM) ?: return
+            val currency =
+                intent.data?.getQueryParameter(TradeCryptoHelper.CURRENCY_CODE_PARAM) ?: return
+            val amount =
+                intent.data?.getQueryParameter(TradeCryptoHelper.CURRENCY_AMOUNT_PARAM) ?: return
+            val destinationAddress =
+                intent.data?.getQueryParameter(TradeCryptoHelper.DEPOSIT_WALLET_ADDRESS_PARAM)
+                    ?: return
 
-        Timber.d("MoonPay Sell: $amount $currency to $destinationAddress")
+            Timber.d("MoonPay Sell: $amount $currency to $destinationAddress")
 
-        store.dispatch(WalletAction.TradeCryptoAction.SendCrypto(
-            currencyId = currency,
-            amount = amount,
-            destinationAddress = destinationAddress,
-            transactionId = transactionID
-        ))
+            store.dispatch(WalletAction.TradeCryptoAction.SendCrypto(
+                currencyId = currency,
+                amount = amount,
+                destinationAddress = destinationAddress,
+                transactionId = transactionID
+            ))
+        } catch (exception: Exception) {
+            Timber.d("Not Moonpay URL")
+        }
     }
 
 
