@@ -1,12 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.appcompat.widget.LinearLayoutCompat xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:gravity="center"
-    android:orientation="vertical"
-    android:paddingStart="16dp"
-    android:paddingEnd="16dp">
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
 
     <TextView
         android:id="@+id/tv_balance"
@@ -18,19 +15,40 @@
         android:text="@string/onboarding_balance_title"
         android:textAllCaps="true"
         android:textColor="#ABABAB"
-        android:textSize="14sp" />
-
-    <View
-        android:layout_width="wrap_content"
-        android:layout_height="4dp" />
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
         android:id="@+id/tv_balance_value"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:ellipsize="end"
+        android:letterSpacing="0.036"
+        android:maxLength="12"
+        android:maxLines="1"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toStartOf="@+id/tv_balance_currency"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintHorizontal_chainStyle="packed"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_balance"
+        tools:text="01234890.0126789" />
+
+    <TextView
+        android:id="@+id/tv_balance_currency"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:letterSpacing="0.036"
         android:textSize="28sp"
         android:textStyle="bold"
-        tools:text="0.000 BTC" />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/tv_balance_value"
+        app:layout_constraintTop_toBottomOf="@id/tv_balance"
+        tools:text="BTC" />
 
-</androidx.appcompat.widget.LinearLayoutCompat>
+</androidx.constraintlayout.widget.ConstraintLayout>
