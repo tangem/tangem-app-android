@@ -1,6 +1,7 @@
 package com.tangem.tap.features.send.redux.middlewares
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics
+import com.tangem.blockchain.blockchains.binance.BinanceTransactionExtras
 import com.tangem.blockchain.blockchains.stellar.StellarTransactionExtras
 import com.tangem.blockchain.blockchains.xrp.XrpTransactionBuilder
 import com.tangem.blockchain.common.*
@@ -126,6 +127,7 @@ private fun sendTransaction(
     var txData = walletManager.createTransaction(amountToSend, feeAmount, destinationAddress)
 
     transactionExtras.xlmMemo?.memo?.let { txData = txData.copy(extras = StellarTransactionExtras(it)) }
+    transactionExtras.binanceMemo?.memo?.let { txData = txData.copy(extras = BinanceTransactionExtras(it.toString())) }
     transactionExtras.xrpDestinationTag?.tag?.let { txData = txData.copy(extras = XrpTransactionBuilder.XrpTransactionExtras(it)) }
 
     scope.launch {
@@ -163,9 +165,9 @@ private fun sendTransaction(
         }
         val result = (walletManager as TransactionSender).send(txData, signer)
         withContext(Dispatchers.Main) {
+            tangemSdk.config.linkedTerminal = isLinkedTerminal
             when (result) {
                 is SimpleResult.Success -> {
-                    tangemSdk.config.linkedTerminal = isLinkedTerminal
                     FirebaseAnalyticsHandler.triggerEvent(
                         event = AnalyticsEvent.TRANSACTION_IS_SENT,
                         card = card,
