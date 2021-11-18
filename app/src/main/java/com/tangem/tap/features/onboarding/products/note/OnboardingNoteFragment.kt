@@ -99,10 +99,11 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
 
         if (state.balanceCriticalError == null) {
             val balanceValue = state.walletBalance.value.stripZeroPlainString()
-            val currency = state.walletBalance.currency.currencySymbol
-            tv_balance_value.text = "$balanceValue $currency"
+            tv_balance_value.text = balanceValue
+            tv_balance_currency.text = state.walletBalance.currency.currencySymbol
         } else {
             tv_balance_value.text = "–"
+            tv_balance_currency.text = ""
         }
     }
 
