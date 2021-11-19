@@ -7,13 +7,13 @@ import android.text.SpannableStringBuilder
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.text.bold
+import com.tangem.common.extensions.remove
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.getMessageString
 import com.tangem.tap.common.text.DecimalDigitsInputFilter
-import com.tangem.tap.common.toggleWidget.ProgressState
 import com.tangem.tap.domain.MultiMessageError
 import com.tangem.tap.domain.assembleErrors
-import com.tangem.tap.features.send.BaseStoreFragment
+import com.tangem.tap.features.BaseStoreFragment
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.Error
 import com.tangem.tap.features.send.redux.FeeAction
 import com.tangem.tap.features.send.redux.SendAction
@@ -65,19 +65,20 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
         }
         showView(fg.xlmMemoContainer, infoState.xlmMemo)
         showView(fg.xrpDestinationTagContainer, infoState.xrpDestinationTag)
+        showView(fg.binanceMemoContainer, infoState.binanceMemo)
 
         infoState.xlmMemo?.let {
-            fg.etMemo.inputType = when (it.selectedMemoType) {
+            fg.etXlmMemo.inputType = when (it.selectedMemoType) {
                 XlmMemoType.TEXT -> InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
                 XlmMemoType.ID -> InputType.TYPE_CLASS_NUMBER
             }
-            if (!it.viewFieldValue.isFromUserInput) fg.etMemo.setText(it.viewFieldValue.value)
+            if (!it.viewFieldValue.isFromUserInput) fg.etXlmMemo.setText(it.viewFieldValue.value)
             if (it.error != null) {
                 if (it.error == TransactionExtraError.INVALID_XLM_MEMO) {
-                    fg.tilMemo.error = fg.getText(R.string.send_error_invalid_memo_id)
+                    fg.tilXlmMemo.error = fg.getText(R.string.send_error_invalid_memo_id)
                 }
             } else {
-                fg.tilMemo.error = null
+                fg.tilXlmMemo.error = null
             }
         }
         infoState.xrpDestinationTag?.let {
@@ -90,6 +91,18 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
             }
             if (!it.viewFieldValue.isFromUserInput) {
                 fg.etDestinationTag.setText(it.viewFieldValue.value)
+            }
+        }
+        infoState.binanceMemo?.let {
+            if (infoState.binanceMemo.error != null) {
+                if (infoState.binanceMemo.error == TransactionExtraError.INVALID_BINANCE_MEMO) {
+                    fg.tilBinanceMemo.error = fg.getText(R.string.send_error_invalid_memo_id)
+                }
+            } else {
+                fg.tilBinanceMemo.error = null
+            }
+            if (!it.viewFieldValue.isFromUserInput) {
+                fg.etBinanceMemo.setText(it.viewFieldValue.value)
             }
         }
     }
@@ -116,20 +129,8 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
             }
         }
 
-        when (state.sendButtonState) {
-            SendButtonState.ENABLED -> {
-                fg.btnSend.isEnabled = true
-                sendFragment.sendBtn.changeState(ProgressState.None)
-            }
-            SendButtonState.DISABLED -> {
-                fg.btnSend.isEnabled = false
-                sendFragment.sendBtn.changeState(ProgressState.None)
-            }
-            SendButtonState.PROGRESS -> {
-                fg.btnSend.isEnabled = true
-                sendFragment.sendBtn.changeState(ProgressState.Progress())
-            }
-        }
+        sendFragment.sendBtn.changeState(state.sendButtonState.progressState)
+        sendFragment.sendBtn.mainView.isEnabled = state.sendButtonState.enabled
 
         val rv = fg.rv_warning_messages
         val adapter = rv.adapter as? WarningMessagesAdapter ?: return
@@ -156,6 +157,12 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
         val til = fg.tilAddressOrPayId
         val parsedError = parseError(til.context, state.error)
 
+        til.isEnabled = state.inputIsEnabled
+        fg.imvPaste.show(state.inputIsEnabled)
+        fg.imvQrCode.show(state.inputIsEnabled)
+        fg.flPaste.show(state.inputIsEnabled)
+        fg.flQrCode.show(state.inputIsEnabled)
+
         val hintResId = if (state.sendingToPayIdEnabled) {
             R.string.send_destination_hint_address_payid
         } else {
@@ -179,7 +186,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
                     val messageList = multiError.assembleErrors().map { getMessageString(context, it.first, it.second) }
                     multiError.builder(messageList)
                 }
-                else -> context.getString(state.error.localizedMessage)
+                else -> context.getString(state.error.messageResource)
             }
             fg.tilAmountToSend.enableError(true, message)
         } else {
@@ -194,10 +201,22 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
         fg.tvAmountCurrency.update(state.mainCurrency.currencySymbol)
         (fg as? SendFragment)?.saveMainCurrency(state.mainCurrency.type)
 
-        val balanceText = fg.getString(R.string.send_balance_subtitle_format,
-                state.mainCurrency.currencySymbol,
-                state.viewBalanceValue)
+        val balanceText = when (state.mainCurrency.type) {
+            MainCurrencyType.FIAT -> fg.getString(R.string.send_balance_subtitle_format,
+                state.viewBalanceValue, state.mainCurrency.currencySymbol).remove(":")
+            MainCurrencyType.CRYPTO -> fg.getString(R.string.send_balance_subtitle_format,
+                state.mainCurrency.currencySymbol, state.viewBalanceValue)
+        }
+
         fg.tvBalance.update(balanceText)
+
+        fg.tilAmountToSend.isEnabled = state.inputIsEnabled
+
+        val imageRes = if (state.inputIsEnabled) R.drawable.ic_arrows_up_down else 0
+        fg.tvAmountCurrency.setCompoundDrawablesWithIntrinsicBounds(0, 0, imageRes, 0)
+        val textColor = if (state.inputIsEnabled) R.color.blue else R.color.textGray
+        fg.tvAmountCurrency.setTextColor(fg.getColor(textColor))
+
     }
 
     private fun handleFeeState(fg: BaseStoreFragment, state: FeeState) {
@@ -244,7 +263,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
                 totalLayout.tvTotalValue.update("${roughOrEmpty(receipt.totalFiat)} ${receipt.symbols.fiat}")
 
                 val willSent = getString(R.string.send_total_subtitle_format,
-                        receipt.willSentCrypto, receipt.symbols.crypto)
+                    receipt.willSentCrypto, receipt.symbols.crypto)
                 totalLayout.tvWillBeSentValue.update(willSent)
 
             }
@@ -276,9 +295,9 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
                 totalLayout.tvTotalValue.update("${roughOrEmpty(receipt.totalFiat)} ${receipt.symbols.fiat}")
 
                 val willSent = getString(
-                        R.string.send_total_subtitle_asset_format,
-                        receipt.symbols.token ?: "", receipt.willSentToken,
-                        receipt.symbols.crypto, receipt.willSentFeeCoin
+                    R.string.send_total_subtitle_asset_format,
+                    receipt.symbols.token ?: "", receipt.willSentToken,
+                    receipt.symbols.crypto, receipt.willSentFeeCoin
                 )
                 totalLayout.tvWillBeSentValue.update(willSent)
             }
