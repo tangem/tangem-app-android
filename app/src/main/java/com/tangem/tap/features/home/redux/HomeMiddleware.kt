@@ -37,7 +37,7 @@ private val homeMiddleware: Middleware<AppState> = { dispatch, state ->
             when (action) {
                 is HomeAction.Init -> {
                     store.dispatch(GlobalAction.RestoreAppCurrency)
-                    store.dispatch(GlobalAction.GetMoonPayUserStatus)
+                    store.dispatch(GlobalAction.GetMoonPayStatus)
                     store.dispatch(HomeAction.SetTermsOfUseState(preferencesStorage.wasDisclaimerAccepted()))
                 }
                 is HomeAction.ShouldScanCardOnResume -> {
@@ -60,6 +60,7 @@ private fun handleReadCard() {
     } else {
         changeButtonState(ButtonState.PROGRESS)
         store.dispatch(GlobalAction.ScanCard({ scanResponse ->
+            store.state.globalState.tapWalletManager.updateConfigManager(scanResponse)
             store.dispatch(TwinCardsAction.IfTwinsPrepareState(scanResponse))
 
             if (OnboardingHelper.isOnboardingCase(scanResponse)) {
