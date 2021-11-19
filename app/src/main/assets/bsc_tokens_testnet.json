@@ -1,0 +1,99 @@
+[
+    {
+        "decimalCount" : 18,
+        "symbol" : "BUSD",
+        "name" : "Binance-Peg BUSD Token",
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/smartchain/assets/0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56/logo.png",
+        "contractAddress" : "0xed24fc36d5ee211ea25a80239fb8c4cfd80f12ee",
+        "blockchain" : {
+          "key" : "bsc",
+          "curve" : "secp256k1",
+          "testnet" : true
+        }
+    },
+    {
+        "decimalCount" : 18,
+        "symbol" : "ETH",
+        "name" : "Ethereum Token",
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/smartchain/assets/0x2170Ed0880ac9A755fd29B2688956BD959F933F8/logo.png",
+        "contractAddress" : "0xd66c6b4f0be8ce5b39d52e0fd1344c389929b378",
+        "blockchain" : {
+          "key" : "bsc",
+          "curve" : "secp256k1",
+          "testnet" : true
+        }
+    },
+    {
+        "decimalCount" : 18,
+        "symbol" : "BTCB",
+        "name" : "Binance-Peg BTCB Token",
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/smartchain/assets/0x7130d2A12B9BCbFAe4f2634d864A1Ee1Ce3Ead9c/logo.png",
+        "contractAddress" : "0x6ce8da28e2f864420840cf74474eff5fd80e65b8",
+        "blockchain" : {
+          "key" : "bsc",
+          "curve" : "secp256k1",
+          "testnet" : true
+        }
+    },
+    {
+        "decimalCount" : 18,
+        "symbol" : "USDT",
+        "name" : "Binance-Peg Tether USD",
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/smartchain/assets/0x55d398326f99059fF775485246999027B3197955/logo.png",
+        "contractAddress" : "0x337610d27c682e347c9cd60bd4b3b107c9d34ddd",
+        "blockchain" : {
+          "key" : "bsc",
+          "curve" : "secp256k1",
+          "testnet" : true
+        }
+    },
+    {
+        "decimalCount" : 18,
+        "symbol" : "USDT",
+        "name" : "Tether USD",
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/smartchain/assets/0x55d398326f99059fF775485246999027B3197955/logo.png",
+        "contractAddress" : "0x7ef95a0fee0dd31b22626fa2e10ee6a223f8a684",
+        "blockchain" : {
+          "key" : "bsc",
+          "curve" : "secp256k1",
+          "testnet" : true
+        }
+    },
+    {
+        "decimalCount" : 18,
+        "symbol" : "XRP",
+        "name" : "Binance-Peg XRP",
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/smartchain/assets/0x1D2F0da169ceB9fC7B3144628dB156f3F6c60dBE/logo.png",
+        "contractAddress" : "0xa83575490d7df4e2f47b7d38ef351a2722ca45b9",
+        "blockchain" : {
+          "key" : "bsc",
+          "curve" : "secp256k1",
+          "testnet" : true
+        }
+    },
+    {
+        "decimalCount" : 18,
+        "symbol" : "DAI",
+        "name" : "Binance-Peg Dai Token",
+        "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/smartchain/assets/0x1AF3F329e8BE154074D8769D1FFa4eE058B1DBc3/logo.png",
+        "contractAddress" : "0xec5dcb5dbf4b114c9d0f65bccab49ec54f6a0867",
+        "blockchain" : {
+          "key" : "bsc",
+          "curve" : "secp256k1",
+          "testnet" : true
+        }
+    },
+    {
+        "decimalCount" : 18,
+        "symbol" : "USDC",
+        "name" : "Binance-Peg USDC Token",
+        "customIconUrl" : "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png",
+        "contractAddress" : "0x64544969ed7ebf5f083679233325356ebe738930",
+        "blockchain" : {
+          "key" : "bsc",
+          "curve" : "secp256k1",
+          "testnet" : true
+        }
+    }
+]
+ 

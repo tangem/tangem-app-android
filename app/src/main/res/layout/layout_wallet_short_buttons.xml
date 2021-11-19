@@ -9,6 +9,7 @@
         android:id="@+id/btn_scan_short"
         style="@style/TapBlackButton"
         android:layout_width="0dp"
+        android:layout_height="52dp"
         android:layout_marginStart="16dp"
         android:layout_marginTop="30dp"
         android:layout_marginBottom="33dp"
@@ -17,21 +18,22 @@
         android:paddingTop="7dp"
         android:text="@string/wallet_button_scan"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/btn_top_up"
+        app:layout_constraintEnd_toStartOf="@id/btn_trade"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintVertical_bias="1" />
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_top_up"
+        android:id="@+id/btn_trade"
         style="@style/TapButton"
         android:layout_width="0dp"
+        android:layout_height="52dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="30dp"
         android:layout_marginBottom="33dp"
-        android:drawableTop="@drawable/ic_arrow_up_short_btn"
+        android:drawableTop="@drawable/ic_arrows_up_down_short_btn"
         android:gravity="bottom|center_horizontal"
         android:paddingTop="1dp"
-        android:text="@string/wallet_button_topup"
+        android:text="@string/wallet_button_trade"
         app:drawableTint="@android:color/white"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toStartOf="@+id/btn_confirm_short"
@@ -42,6 +44,7 @@
         android:id="@+id/btn_confirm_short"
         style="@style/TapButton"
         android:layout_width="0dp"
+        android:layout_height="52dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="30dp"
         android:layout_marginEnd="16dp"
@@ -52,7 +55,7 @@
         android:text="@string/wallet_button_send"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/btn_top_up"
+        app:layout_constraintStart_toEndOf="@+id/btn_trade"
         app:layout_constraintVertical_bias="1" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
