@@ -45,7 +45,7 @@ class FeeReducer : SendInternalReducer {
                 state.copy(
                         mainLayoutIsVisible = getVisibility(state.mainLayoutIsVisible, action.main),
                         controlsLayoutIsVisible = getVisibility(state.controlsLayoutIsVisible, action.controls),
-                        feeChipGroupIsVisible = getVisibility(state.mainLayoutIsVisible, action.chipGroup)
+                        feeChipGroupIsVisible = getVisibility(state.feeChipGroupIsVisible, action.chipGroup)
                 )
             }
             is FeeAction.FeeCalculation.SetFeeResult -> {
