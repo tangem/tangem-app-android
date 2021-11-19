@@ -1,16 +1,17 @@
 package com.tangem.tap.features.send.redux.middlewares
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics
+import com.tangem.blockchain.blockchains.binance.BinanceTransactionExtras
 import com.tangem.blockchain.blockchains.stellar.StellarTransactionExtras
 import com.tangem.blockchain.blockchains.xrp.XrpTransactionBuilder
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.common.card.Card
 import com.tangem.common.core.TangemSdkError
+import com.tangem.common.services.Result
 import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
-import com.tangem.tap.common.extensions.dispatchOnMain
-import com.tangem.tap.common.extensions.stripZeroPlainString
+import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.NavigationAction
@@ -57,12 +58,12 @@ class SendMiddleware {
                         val transactionData = appState()?.sendState?.externalTransactionData
                         if (transactionData != null) {
                             store.dispatchOnMain(AddressPayIdVerifyAction.AddressVerification.SetWalletAddress(
-                                    transactionData.destinationAddress, false
+                                transactionData.destinationAddress, false
                             ))
                             store.dispatchOnMain(AmountActionUi.SetMainCurrency(MainCurrencyType.CRYPTO))
                             store.dispatchOnMain(AmountActionUi.HandleUserInput(transactionData.amount))
                             store.dispatchOnMain(AmountAction.SetAmount(transactionData.amount.toBigDecimal(),
-                                    false))
+                                false))
                         }
                     }
                 }
@@ -72,8 +73,9 @@ class SendMiddleware {
     }
 
 }
+
 private fun verifyAndSendTransaction(
-        action: SendActionUi.SendAmountToRecipient, appState: AppState?, dispatch: (Action) -> Unit,
+    action: SendActionUi.SendAmountToRecipient, appState: AppState?, dispatch: (Action) -> Unit,
 ) {
     val sendState = appState?.sendState ?: return
     val walletManager = sendState.walletManager ?: return
@@ -105,30 +107,47 @@ private fun verifyAndSendTransaction(
         }
         else -> {
             sendTransaction(action, walletManager, amountToSend, feeAmount, destinationAddress,
-                    sendState.transactionExtrasState, card, sendState.externalTransactionData, dispatch)
+                sendState.transactionExtrasState, card, sendState.externalTransactionData, dispatch)
         }
     }
 }
 
 private fun sendTransaction(
-        action: SendActionUi.SendAmountToRecipient,
-        walletManager: WalletManager,
-        amountToSend: Amount,
-        feeAmount: Amount,
-        destinationAddress: String,
-        transactionExtras: TransactionExtrasState,
-        card: Card,
-        externalTransactionData: ExternalTransactionData?,
-        dispatch: (Action) -> Unit,
+    action: SendActionUi.SendAmountToRecipient,
+    walletManager: WalletManager,
+    amountToSend: Amount,
+    feeAmount: Amount,
+    destinationAddress: String,
+    transactionExtras: TransactionExtrasState,
+    card: Card,
+    externalTransactionData: ExternalTransactionData?,
+    dispatch: (Action) -> Unit,
 ) {
     dispatch(SendAction.ChangeSendButtonState(ButtonState.PROGRESS))
     var txData = walletManager.createTransaction(amountToSend, feeAmount, destinationAddress)
 
     transactionExtras.xlmMemo?.memo?.let { txData = txData.copy(extras = StellarTransactionExtras(it)) }
+    transactionExtras.binanceMemo?.memo?.let { txData = txData.copy(extras = BinanceTransactionExtras(it.toString())) }
     transactionExtras.xrpDestinationTag?.tag?.let { txData = txData.copy(extras = XrpTransactionBuilder.XrpTransactionExtras(it)) }
 
     scope.launch {
-        walletManager.update()
+        val updateWalletResult = walletManager.safeUpdate()
+        if (updateWalletResult is Result.Failure) {
+            when (val error = updateWalletResult.error) {
+                is TapError -> store.dispatchErrorNotification(error)
+                else -> {
+                    val tapError = if (error.message == null) {
+                        TapError.UnknownError
+                    } else {
+                        TapError.CustomError(error.message!!)
+                    }
+                    store.dispatchErrorNotification(tapError)
+                }
+            }
+            withMainContext { dispatch(SendAction.ChangeSendButtonState(ButtonState.ENABLED)) }
+            return@launch
+        }
+
         val isLinkedTerminal = tangemSdk.config.linkedTerminal
         if (card.isStart2Coin) {
             tangemSdk.config.linkedTerminal = false
@@ -146,9 +165,9 @@ private fun sendTransaction(
         }
         val result = (walletManager as TransactionSender).send(txData, signer)
         withContext(Dispatchers.Main) {
+            tangemSdk.config.linkedTerminal = isLinkedTerminal
             when (result) {
                 is SimpleResult.Success -> {
-                    tangemSdk.config.linkedTerminal = isLinkedTerminal
                     FirebaseAnalyticsHandler.triggerEvent(
                         event = AnalyticsEvent.TRANSACTION_IS_SENT,
                         card = card,
@@ -254,7 +273,7 @@ fun extractErrorsForAmountField(errors: EnumSet<TransactionError>): EnumSet<Tran
                 showIntoAmountField.add(it)
             }
             TransactionError.TotalExceedsBalance -> {
-                val notAcceptable = listOf(TransactionError.FeeExceedsBalance, TransactionError.FeeExceedsBalance)
+                val notAcceptable = listOf(TransactionError.AmountExceedsBalance, TransactionError.FeeExceedsBalance)
                 if (!showIntoAmountField.containsAll(notAcceptable)) showIntoAmountField.add(it)
             }
             TransactionError.InvalidAmountValue -> showIntoAmountField.add(it)
