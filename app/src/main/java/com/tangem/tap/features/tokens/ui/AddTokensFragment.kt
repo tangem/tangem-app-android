@@ -73,7 +73,7 @@ class AddTokensFragment : Fragment(R.layout.fragment_add_tokens),
     override fun newState(state: TokensState) {
         if (activity == null) return
         viewAdapter.addedCurrencies = state.addedCurrencies
-        viewAdapter.submitUnfilteredList(state.currencies)
+        viewAdapter.submitUnfilteredList(state.shownCurrencies)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {

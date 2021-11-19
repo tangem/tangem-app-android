@@ -140,14 +140,14 @@ class SingleWalletView : WalletView {
                 store.dispatch(WalletAction.CopyAddress(addressString, fragment.requireContext()))
             }
         }
-        btn_show_qr.setOnClickListener { store.dispatch(WalletAction.ShowDialog.QrCode) }
-
-        btn_top_up.setOnClickListener {
-           tradeCryptoAction(state.tradeCryptoState)
+        btn_show_qr.setOnClickListener {
+            store.dispatch(WalletAction.ShowDialog.QrCode)
         }
+
+        setupTradeButton(fragment, state.tradeCryptoState)
     }
 
-    private fun tradeCryptoAction(tradeCryptoState: TradeCryptoState) {
+    private fun setupTradeButton(fragment: WalletFragment, tradeCryptoState: TradeCryptoState) {
         val allowedToBuy = tradeCryptoState.buyingAllowed
         val allowedToSell = tradeCryptoState.sellingAllowed
         val action = when {
@@ -156,7 +156,23 @@ class SingleWalletView : WalletView {
             allowedToBuy && allowedToSell -> WalletAction.ShowDialog.ChooseTradeActionDialog
             else -> null
         }
-        if (action != null) store.dispatch(action)
+        val text = when {
+            allowedToBuy && !allowedToSell -> R.string.wallet_button_buy
+            !allowedToBuy && allowedToSell -> R.string.wallet_button_sell
+            allowedToBuy && allowedToSell -> R.string.wallet_button_trade
+            else ->  R.string.wallet_button_trade
+        }
+        val icon = when {
+            allowedToBuy && !allowedToSell -> R.drawable.ic_arrow_up_short_btn
+            !allowedToBuy && allowedToSell -> R.drawable.ic_arrow_down_short_button
+            allowedToBuy && allowedToSell -> R.drawable.ic_arrows_up_down_short_btn
+            else -> null
+        }
+        with(fragment) {
+            btn_trade.text = getText(text)
+            btn_trade.setCompoundDrawablesWithIntrinsicBounds(0,  icon ?: 0, 0, 0)
+            btn_trade.setOnClickListener { if (action != null) store.dispatch(action) }
+        }
     }
 
     private fun setupButtonsType(state: WalletData, fragment: WalletFragment) = with(fragment) {
@@ -228,15 +244,6 @@ class SingleWalletView : WalletView {
     private fun handleDialogs(walletDialog: StateDialog?, fragment: WalletFragment) {
         val context = fragment.context ?: return
         when (walletDialog) {
-            is WalletDialog.QrDialog -> {
-                if (walletDialog.qrCode != null && walletDialog.shareUrl != null) {
-                    if (dialog == null) dialog = QrDialog(context).apply {
-                        this.showQr(
-                                walletDialog.qrCode, walletDialog.shareUrl, walletDialog.currencyName
-                        )
-                    }
-                }
-            }
             is WalletDialog.SelectAmountToSendDialog -> {
                 if (dialog == null) dialog = AmountToSendDialog(context).apply {
                     this.show(walletDialog.amounts)
