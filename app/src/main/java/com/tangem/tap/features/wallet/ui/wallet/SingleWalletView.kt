@@ -6,20 +6,16 @@ import android.view.ViewGroup
 import android.widget.Button
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.tangem.tap.common.extensions.*
-import com.tangem.tap.common.redux.global.StateDialog
-import com.tangem.tap.common.redux.navigation.AppScreen
-import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.domain.twins.TwinCardNumber
+import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
 import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.redux.*
 import com.tangem.tap.features.wallet.ui.BalanceWidget
 import com.tangem.tap.features.wallet.ui.MultipleAddressUiHelper
 import com.tangem.tap.features.wallet.ui.WalletFragment
 import com.tangem.tap.features.wallet.ui.adapters.PendingTransactionsAdapter
-import com.tangem.tap.features.wallet.ui.dialogs.AmountToSendDialog
-import com.tangem.tap.features.wallet.ui.dialogs.QrDialog
-import com.tangem.tap.features.wallet.ui.dialogs.ScanFailsDialog
-import com.tangem.tap.features.wallet.ui.dialogs.SignedHashesWarningDialog
+import com.tangem.tap.features.wallet.ui.dialogs.*
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.card_balance.*
@@ -74,7 +70,7 @@ class SingleWalletView : WalletView {
         state.primaryWallet ?: return
 
         setupTwinCards(state.twinCardsState, fragment)
-        setupButtons(state.primaryWallet, state.twinCardsState != null, fragment)
+        setupButtons(state.primaryWallet, state.isTangemTwins, fragment)
         setupAddressCard(state.primaryWallet, fragment)
         showPendingTransactionsIfPresent(state.primaryWallet.pendingTransactions)
         setupBalance(state, state.primaryWallet)
@@ -90,16 +86,15 @@ class SingleWalletView : WalletView {
     private fun setupBalance(state: WalletState, primaryWallet: WalletData) {
         fragment?.apply {
             this.l_balance.show()
-            BalanceWidget(this, primaryWallet.currencyData, state.twinCardsState != null).setup()
+            BalanceWidget(this, primaryWallet.currencyData, state.isTangemTwins).setup()
         }
     }
 
     private fun setupTwinCards(
-            twinCardsState: TwinCardsState?, fragment: WalletFragment
+        twinCardsState: TwinCardsState?, fragment: WalletFragment
     ) = with(fragment) {
         twinCardsState?.cardNumber?.let { cardNumber ->
             tv_twin_card_number.show()
-            iv_twin_card.show()
             val number = when (cardNumber) {
                 TwinCardNumber.First -> "1"
                 TwinCardNumber.Second -> "2"
@@ -109,13 +104,7 @@ class SingleWalletView : WalletView {
         }
         if (twinCardsState?.cardNumber == null) {
             tv_twin_card_number.hide()
-            iv_twin_card.hide()
         }
-        if (twinCardsState?.showTwinOnboarding == true) {
-            store.dispatch(NavigationAction.NavigateTo(AppScreen.TwinsOnboarding))
-        }
-
-
     }
 
     private fun setupButtons(
@@ -124,12 +113,17 @@ class SingleWalletView : WalletView {
 
         setupButtonsType(state, fragment)
 
-        val btnConfirm = if (state.topUpState.allowed) {
+        val btnConfirm = if (state.tradeCryptoState.sellingAllowed ||
+            state.tradeCryptoState.buyingAllowed
+        ) {
             btn_confirm_short
         } else {
             btn_confirm_long
         }
-        val btnScan = if (state.topUpState.allowed) {
+
+        val btnScan = if (state.tradeCryptoState.sellingAllowed ||
+            state.tradeCryptoState.buyingAllowed
+        ) {
             btn_scan_short
         } else {
             btn_scan_long
@@ -146,17 +140,45 @@ class SingleWalletView : WalletView {
                 store.dispatch(WalletAction.CopyAddress(addressString, fragment.requireContext()))
             }
         }
-        btn_show_qr.setOnClickListener { store.dispatch(WalletAction.ShowDialog.QrCode) }
+        btn_show_qr.setOnClickListener {
+            store.dispatch(WalletAction.ShowDialog.QrCode)
+        }
 
-        btn_top_up.setOnClickListener {
-            store.dispatch(
-                    WalletAction.TopUpAction.TopUp(fragment.requireContext(), R.color.backgroundLightGray)
-            )
+        setupTradeButton(fragment, state.tradeCryptoState)
+    }
+
+    private fun setupTradeButton(fragment: WalletFragment, tradeCryptoState: TradeCryptoState) {
+        val allowedToBuy = tradeCryptoState.buyingAllowed
+        val allowedToSell = tradeCryptoState.sellingAllowed
+        val action = when {
+            allowedToBuy && !allowedToSell -> WalletAction.TradeCryptoAction.Buy
+            !allowedToBuy && allowedToSell -> WalletAction.TradeCryptoAction.Sell
+            allowedToBuy && allowedToSell -> WalletAction.ShowDialog.ChooseTradeActionDialog
+            else -> null
+        }
+        val text = when {
+            allowedToBuy && !allowedToSell -> R.string.wallet_button_buy
+            !allowedToBuy && allowedToSell -> R.string.wallet_button_sell
+            allowedToBuy && allowedToSell -> R.string.wallet_button_trade
+            else ->  R.string.wallet_button_trade
+        }
+        val icon = when {
+            allowedToBuy && !allowedToSell -> R.drawable.ic_arrow_up_short_btn
+            !allowedToBuy && allowedToSell -> R.drawable.ic_arrow_down_short_button
+            allowedToBuy && allowedToSell -> R.drawable.ic_arrows_up_down_short_btn
+            else -> null
+        }
+        with(fragment) {
+            btn_trade.text = getText(text)
+            btn_trade.setCompoundDrawablesWithIntrinsicBounds(0,  icon ?: 0, 0, 0)
+            btn_trade.setOnClickListener { if (action != null) store.dispatch(action) }
         }
     }
 
     private fun setupButtonsType(state: WalletData, fragment: WalletFragment) = with(fragment) {
-        if (state.topUpState.allowed) {
+        if (state.tradeCryptoState.sellingAllowed ||
+            state.tradeCryptoState.buyingAllowed
+        ) {
             l_buttons_long.hide()
             l_buttons_short.show()
         } else {
@@ -222,27 +244,18 @@ class SingleWalletView : WalletView {
     private fun handleDialogs(walletDialog: StateDialog?, fragment: WalletFragment) {
         val context = fragment.context ?: return
         when (walletDialog) {
-            is WalletDialog.QrDialog -> {
-                if (walletDialog.qrCode != null && walletDialog.shareUrl != null) {
-                    if (dialog == null) dialog = QrDialog(context).apply {
-                        this.showQr(
-                                walletDialog.qrCode, walletDialog.shareUrl, walletDialog.currencyName
-                        )
-                    }
-                }
-            }
             is WalletDialog.SelectAmountToSendDialog -> {
                 if (dialog == null) dialog = AmountToSendDialog(context).apply {
                     this.show(walletDialog.amounts)
                 }
             }
-            is WalletDialog.ScanFailsDialog -> {
-                if (dialog == null) dialog = ScanFailsDialog.create(context).apply { show() }
-            }
             is WalletDialog.SignedHashesMultiWalletDialog -> {
                 if (dialog == null) {
                     dialog = SignedHashesWarningDialog.create(context).apply { show() }
                 }
+            }
+            is WalletDialog.ChooseTradeActionDialog -> {
+                if (dialog == null) dialog = ChooseTradeActionDialog(context).apply { show() }
             }
             null -> {
                 dialog?.dismiss()
