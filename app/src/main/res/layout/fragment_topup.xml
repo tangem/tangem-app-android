@@ -11,7 +11,7 @@
         android:layout_height="?attr/actionBarSize"
         app:layout_constraintTop_toTopOf="parent"
         app:navigationIcon="@drawable/ic_close"
-        app:title="@string/wallet_button_topup" />
+        app:title="@string/wallet_button_buy" />
 
     <WebView
         android:id="@+id/web_view"
