@@ -28,17 +28,15 @@
         android:id="@+id/cl_details_confirm"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="33dp"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <androidx.core.widget.NestedScrollView
             android:id="@+id/sv_wallet"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
             android:fillViewport="true"
             android:overScrollMode="never"
-            app:layout_constraintBottom_toTopOf="@id/btn_accept">
+            app:layout_constraintBottom_toBottomOf="parent">
 
             <TextView
                 android:id="@+id/tv_warning_description"
@@ -47,7 +45,7 @@
                 android:layout_marginTop="22dp"
                 android:paddingStart="16dp"
                 android:paddingEnd="24dp"
-                android:paddingBottom="40dp"
+                android:paddingBottom="120dp"
                 android:text="@string/disclaimer_text"
                 android:textAlignment="textStart"
                 android:textSize="16sp" />
@@ -62,18 +60,27 @@
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintGuide_percent="0.37" />
 
+        <View
+            android:id="@+id/half_transparent_overlay"
+            android:layout_width="match_parent"
+            android:layout_height="100dp"
+            android:background="@drawable/bg_half_transparent_overlay"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_accept"
             style="@style/TapButtonWithIcon"
             android:layout_width="0dp"
             android:layout_marginStart="7dp"
-            android:layout_marginTop="30dp"
             android:layout_marginEnd="16dp"
             android:text="@string/common_accept"
             app:icon="@drawable/ic_send"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/guideline" />
+            app:layout_constraintStart_toEndOf="@+id/guideline"
+            android:layout_marginBottom="24dp" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 

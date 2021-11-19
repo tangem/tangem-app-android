@@ -25,8 +25,8 @@ class DisclaimerFragment : Fragment(R.layout.fragment_disclaimer),
             }
         })
         val inflater = TransitionInflater.from(requireContext())
-        enterTransition = inflater.inflateTransition(R.transition.slide_right)
-        exitTransition = inflater.inflateTransition(R.transition.fade)
+        enterTransition = inflater.inflateTransition(android.R.transition.slide_bottom)
+        exitTransition = inflater.inflateTransition(android.R.transition.slide_top)
     }
 
     override fun onStart() {
@@ -58,6 +58,9 @@ class DisclaimerFragment : Fragment(R.layout.fragment_disclaimer),
     override fun newState(state: DisclaimerState) {
         if (activity == null) return
 
-        if (state.accepted) btn_accept.hide()
+        if (state.accepted) {
+            half_transparent_overlay.hide()
+            btn_accept.hide()
+        }
     }
 }
