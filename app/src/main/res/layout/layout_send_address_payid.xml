@@ -140,7 +140,7 @@
 <!--            </com.google.android.material.chip.ChipGroup>-->
 
             <com.google.android.material.textfield.TextInputLayout
-                android:id="@+id/tilMemo"
+                android:id="@+id/tilXlmMemo"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:hint="@string/send_extras_hint_memo"
@@ -148,7 +148,7 @@
                 app:errorIconDrawable="@null">
 
                 <com.google.android.material.textfield.TextInputEditText
-                    android:id="@+id/etMemo"
+                    android:id="@+id/etXlmMemo"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@color/backgroundLightGray"
@@ -162,6 +162,38 @@
             </com.google.android.material.textfield.TextInputLayout>
 
         </LinearLayout>
+
+        <FrameLayout
+            android:id="@+id/binanceMemoContainer"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/tilBinanceMemo"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/send_extras_hint_memo"
+                app:boxBackgroundColor="@color/backgroundLightGray"
+                app:errorIconDrawable="@null">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/etBinanceMemo"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:background="@color/backgroundLightGray"
+                    android:ellipsize="end"
+                    android:inputType="number"
+                    android:paddingStart="0dp"
+                    android:paddingEnd="0dp"
+                    android:singleLine="true"
+                    android:textSize="16sp"
+                    tools:text="123" />
+
+            </com.google.android.material.textfield.TextInputLayout>
+
+        </FrameLayout>
 
         <FrameLayout
             android:id="@+id/xrpDestinationTagContainer"
