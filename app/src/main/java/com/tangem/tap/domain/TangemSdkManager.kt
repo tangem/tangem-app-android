@@ -125,6 +125,8 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
 
     companion object {
         val config = Config(
+            linkedTerminal = true,
+            allowUntrustedCards = true,
             filter = CardFilter(
                 allowedCardTypes = FirmwareVersion.FirmwareType.values().toList()
             )

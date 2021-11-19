@@ -14,7 +14,8 @@ class TransactionExtrasReducer : SendInternalReducer {
         return when (action) {
             is Prepare -> handleInitialization(action, sendState)
             Release -> handleRelease(action, sendState)
-            is XlmMemo -> handleMemo(action, sendState, sendState.transactionExtrasState)
+            is XlmMemo -> handleXlmMemo(action, sendState, sendState.transactionExtrasState)
+            is BinanceMemo -> handleBinanceMemo(action, sendState, sendState.transactionExtrasState)
             is XrpDestinationTag -> handleXrpTag(action, sendState, sendState.transactionExtrasState)
             else -> sendState
         }
@@ -40,6 +41,7 @@ class TransactionExtrasReducer : SendInternalReducer {
                 }
             }
             Blockchain.Stellar -> TransactionExtrasState(xlmMemo = XlmMemoState())
+            Blockchain.Binance -> TransactionExtrasState(binanceMemo = BinanceMemoState())
             else -> emptyResult
         }
         return updateLastState(sendState.copy(transactionExtrasState = result), result)
@@ -50,7 +52,7 @@ class TransactionExtrasReducer : SendInternalReducer {
         return updateLastState(sendState.copy(transactionExtrasState = result), result)
     }
 
-    private fun handleMemo(
+    private fun handleXlmMemo(
             action: XlmMemo,
             sendState: SendState,
             infoState: TransactionExtrasState,
@@ -89,6 +91,26 @@ class TransactionExtrasReducer : SendInternalReducer {
                     null -> memo
                 }
                 infoState.copy(xlmMemo = memo)
+            }
+        }
+        return updateLastState(sendState.copy(transactionExtrasState = result), result)
+    }
+
+    private fun handleBinanceMemo(
+        action: BinanceMemo,
+        sendState: SendState,
+        infoState: TransactionExtrasState,
+    ): SendState {
+        val result = when (action) {
+            is BinanceMemo.HandleUserInput -> {
+                val tag = action.data.toBigIntegerOrNull()
+                if (tag != null) {
+                    val input = InputViewValue(action.data, true)
+                    val tagState = BinanceMemoState(input, tag)
+                    infoState.copy(binanceMemo = tagState)
+                } else {
+                    infoState
+                }
             }
         }
         return updateLastState(sendState.copy(transactionExtrasState = result), result)
