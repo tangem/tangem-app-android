@@ -12,6 +12,7 @@ import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.common.extensions.*
+import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
@@ -21,6 +22,8 @@ import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.send.redux.PrepareSendScreen
 import com.tangem.tap.features.wallet.redux.*
 import com.tangem.tap.network.NetworkStateChanged
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.DispatchFunction
@@ -51,9 +54,9 @@ class WalletMiddleware {
             is WalletAction.LoadWallet -> {
                 scope.launch {
                     if (action.blockchain == null) {
-                        walletState.walletManagers.map { walletManager ->
-                            globalState.tapWalletManager.loadWalletData(walletManager)
-                        }
+                            walletState.walletManagers.map { walletManager ->
+                                async { globalState.tapWalletManager.loadWalletData(walletManager) }
+                            }.awaitAll()
                     } else {
                         val walletManager = walletState.getWalletManager(action.blockchain)
                         walletManager?.let { globalState.tapWalletManager.loadWalletData(it) }
@@ -101,14 +104,14 @@ class WalletMiddleware {
                     when (result) {
                         is CompletionResult.Success -> {
                             val scanNoteResponse = globalState.scanResponse?.copy(card = result.data)
-                            scanNoteResponse?.let { store.onCardScanned(scanNoteResponse) }
+                            scanNoteResponse?.let { store.onCardScanned(scanNoteResponse, false) }
                         }
                         is CompletionResult.Failure -> {
                             (result.error as? TangemSdkError)?.let { error ->
                                 FirebaseAnalyticsHandler.logCardSdkError(
                                     error,
                                     FirebaseAnalyticsHandler.ActionToLog.CreateWallet,
-                                    card = store.state.detailsState.card
+                                    card = store.state.detailsState.scanResponse?.card
                                 )
                             }
                         }
@@ -190,6 +193,13 @@ class WalletMiddleware {
                 if (newAction is PrepareSendScreen) {
                     store.dispatch(NavigationAction.NavigateTo(AppScreen.Send))
                 }
+            }
+            is WalletAction.ShowDialog.QrCode -> {
+                val selectedWalletData = walletState.getWalletData(walletState.selectedWallet) ?: return
+                val selectedAddressData = selectedWalletData.walletAddresses?.selectedAddress ?: return
+
+                val currency = selectedWalletData.currency
+                store.dispatchDialogShow(AppDialog.AddressInfoDialog(currency, selectedAddressData))
             }
         }
     }
