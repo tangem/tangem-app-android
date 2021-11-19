@@ -1,18 +1,14 @@
 package com.tangem.tap.features.details.redux
 
 
-import com.tangem.commands.common.card.Card
-import com.tangem.commands.common.card.masks.Settings
+import com.tangem.common.card.Card
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.TapWorkarounds.isStart2Coin
 import com.tangem.tap.domain.extensions.isWalletDataSupported
 import com.tangem.tap.domain.extensions.signedHashesCount
 import com.tangem.tap.domain.extensions.toSendableAmounts
-import com.tangem.tap.domain.twins.TwinsHelper
-import com.tangem.tap.domain.twins.isTwinCard
-import com.tangem.tap.features.details.redux.twins.CreateTwinWalletReducer
-import com.tangem.tap.features.details.redux.twins.CreateTwinWalletState
-import com.tangem.tap.features.wallet.models.toPendingTransactions
+import com.tangem.tap.domain.twins.isTangemTwin
+import com.tangem.tap.features.wallet.models.hasPendingTransactions
 import org.rekotlin.Action
 import java.util.*
 
@@ -39,59 +35,29 @@ private fun internalReduce(action: Action, state: AppState): DetailsState {
         is DetailsAction.ManageSecurity -> {
             handleSecurityAction(action, detailsState)
         }
-        is DetailsAction.CreateTwinWalletAction -> {
-            CreateTwinWalletReducer.handle(action, detailsState)
-        }
         else -> detailsState
     }
 }
 
 private fun handlePrepareScreen(action: DetailsAction.PrepareScreen, state: DetailsState): DetailsState {
-    val securityOption = when {
-        action.card.isPin1Default == false -> {
-            SecurityOption.AccessCode
-        }
-        action.card.isPin2Default == false -> {
-            SecurityOption.PassCode
-        }
-        else -> {
-            SecurityOption.LongTap
-        }
-    }
-    val twinsState = if (action.card.isTwinCard()) {
-        CreateTwinWalletState(
-                scanResponse = action.scanNoteResponse,
-                twinCardNumber = TwinsHelper.getTwinCardNumber(action.card.cardId),
-                createTwinWallet = null,
-                showAlert = false,
-                allowRecreatingWallet = action.isCreatingTwinWalletAllowed
-        )
-    } else {
-        null
-    }
-
     return DetailsState(
-            card = action.card, wallets = action.wallets,
-            cardInfo = action.card.toCardInfo(),
-            appCurrencyState = AppCurrencyState(
-                    action.fiatCurrencyName
-            ),
-            securityScreenState = SecurityScreenState(currentOption = securityOption),
-            createTwinWalletState = twinsState,
-            cardTermsOfUseUrl = action.cardTou.getUrl(action.card)
+        scanResponse = action.scanResponse,
+        wallets = action.wallets,
+        cardInfo = action.scanResponse.card.toCardInfo(),
+        appCurrencyState = AppCurrencyState(action.fiatCurrencyName),
+        cardTermsOfUseUrl = action.cardTou.getUrl(action.scanResponse.card)
     )
 }
 
 private fun handleEraseWallet(action: DetailsAction.EraseWallet, state: DetailsState): DetailsState {
     return when (action) {
         DetailsAction.EraseWallet.Check -> {
-            val notAllowedByCard =
-                state.card?.settingsMask?.contains(Settings.ProhibitPurgeWallet) == true
-                        || state.card?.settingsMask?.contains(Settings.IsReusable) == false
-                        || state.card?.isWalletDataSupported == true
+            val card = state.scanResponse?.card
+            val notAllowedByAnyWallet = card?.wallets?.any { it.settings.isPermanent } ?: false
+            val notAllowedByCard = notAllowedByAnyWallet ||
+                    (card?.isWalletDataSupported == true && !state.scanResponse.isTangemNote())
             val notEmpty = state.wallets.any {
-                !it.recentTransactions.toPendingTransactions(it.address).isNullOrEmpty()
-                        || it.amounts.toSendableAmounts().isNotEmpty()
+                it.hasPendingTransactions() || it.amounts.toSendableAmounts().isNotEmpty()
             }
             val eraseWalletState = when {
                 notAllowedByCard -> EraseWalletState.NotAllowedByCard
@@ -115,7 +81,7 @@ private fun handleEraseWallet(action: DetailsAction.EraseWallet, state: DetailsS
 }
 
 private fun handleAppCurrencyAction(
-        action: DetailsAction.AppCurrencyAction, state: DetailsState
+    action: DetailsAction.AppCurrencyAction, state: DetailsState
 ): DetailsState {
     return when (action) {
         is DetailsAction.AppCurrencyAction.SetCurrencies -> {
@@ -129,9 +95,9 @@ private fun handleAppCurrencyAction(
         }
         is DetailsAction.AppCurrencyAction.SelectAppCurrency -> {
             state.copy(
-                    appCurrencyState = state.appCurrencyState.copy(
-                            fiatCurrencyName = action.fiatCurrencyName, showAppCurrencyDialog = false
-                    )
+                appCurrencyState = state.appCurrencyState.copy(
+                    fiatCurrencyName = action.fiatCurrencyName, showAppCurrencyDialog = false
+                )
             )
         }
         else -> state
@@ -139,31 +105,44 @@ private fun handleAppCurrencyAction(
 }
 
 private fun handleSecurityAction(
-        action: DetailsAction.ManageSecurity, state: DetailsState
+    action: DetailsAction.ManageSecurity, state: DetailsState
 ): DetailsState {
     return when (action) {
-        is DetailsAction.ManageSecurity.OpenSecurity -> {
-            if (state.card?.isStart2Coin == true) {
-                return state.copy(securityScreenState = state.securityScreenState?.copy(
-                        allowedOptions = EnumSet.of(SecurityOption.LongTap),
-                        selectedOption = state.securityScreenState.currentOption
-                ))
+        is DetailsAction.ManageSecurity.SetCurrentOption -> {
+            val securityOption = when {
+                action.userCodes.isAccessCodeSet -> {
+                    SecurityOption.AccessCode
+                }
+                action.userCodes.isPasscodeSet -> {
+                    SecurityOption.PassCode
+                }
+                else -> {
+                    SecurityOption.LongTap
+                }
             }
-            if (state.card?.isPin2Default == null) {
+            state.copy(securityScreenState = SecurityScreenState(currentOption = securityOption))
+        }
+        is DetailsAction.ManageSecurity.OpenSecurity -> {
+            if (state.scanResponse?.card?.isStart2Coin == true ||
+                state.scanResponse?.isTangemNote() == true
+            ) {
                 return state.copy(securityScreenState = state.securityScreenState?.copy(
-                        allowedOptions = EnumSet.noneOf(SecurityOption::class.java)
+                    allowedOptions = EnumSet.of(SecurityOption.LongTap),
+                    selectedOption = state.securityScreenState.currentOption
                 ))
             }
 
-            val allowedSecurityOptions = prepareAllowedSecurityOptions(state.card)
+            val allowedSecurityOptions = prepareAllowedSecurityOptions(
+                state.scanResponse?.card, state.securityScreenState?.currentOption
+            )
             state.copy(securityScreenState = state.securityScreenState?.copy(
-                    allowedOptions = allowedSecurityOptions,
-                    selectedOption = state.securityScreenState.currentOption
+                allowedOptions = allowedSecurityOptions,
+                selectedOption = state.securityScreenState.currentOption
             ))
         }
         is DetailsAction.ManageSecurity.SelectOption -> {
             state.copy(securityScreenState = state.securityScreenState?.copy(
-                    selectedOption = action.option
+                selectedOption = action.option
             ))
         }
         is DetailsAction.ManageSecurity.ConfirmSelection -> {
@@ -176,48 +155,47 @@ private fun handleSecurityAction(
         }
         is DetailsAction.ManageSecurity.SaveChanges.Success -> {
             // Setting options to show only LongTap from now on for non-twins
-            val card = if (state.card?.isTwinCard() == true) {
-                state.card
-            } else {
-                state.card?.copy(isPin1Default = true, isPin2Default = true)
-            }
             state.copy(
-                    card = card,
-                    securityScreenState = state.securityScreenState?.copy(
-                            currentOption = state.securityScreenState.selectedOption,
-                            allowedOptions = card?.let { prepareAllowedSecurityOptions(it) }
-                                ?: EnumSet.of(SecurityOption.LongTap)
-                    ))
+                securityScreenState = state.securityScreenState?.copy(
+                    currentOption = state.securityScreenState.selectedOption,
+                    allowedOptions = state.scanResponse?.card?.let {
+                        prepareAllowedSecurityOptions(
+                            it, state.securityScreenState.selectedOption
+                        )
+                    } ?: EnumSet.of(SecurityOption.LongTap)
+                ))
         }
 
         else -> state
     }
 }
 
-private fun prepareAllowedSecurityOptions(card: Card): EnumSet<SecurityOption> {
-    val prohibitDefaultPin = card.settingsMask?.contains(Settings.ProhibitDefaultPIN1) == true
-    val isDefaultPin1 = card.isPin1Default != false
-    val isDefaultPin2 = card.isPin2Default != false
+private fun prepareAllowedSecurityOptions(
+    card: Card?, currentSecurityOption: SecurityOption?
+): EnumSet<SecurityOption> {
+    val prohibitDefaultPin = card?.settings?.isResettingUserCodesAllowed != true
 
     val allowedSecurityOptions = EnumSet.noneOf(SecurityOption::class.java)
-    if (card.isTwinCard()) {
+
+    if (card?.isTangemTwin() == true) {
         allowedSecurityOptions.add(SecurityOption.PassCode)
     }
-    if ((isDefaultPin1 && isDefaultPin2) || !prohibitDefaultPin) {
+    if ((currentSecurityOption == SecurityOption.LongTap) || !prohibitDefaultPin) {
         allowedSecurityOptions.add(SecurityOption.LongTap)
     }
-    if (!isDefaultPin1) {
+    if (currentSecurityOption == SecurityOption.AccessCode) {
         allowedSecurityOptions.add(SecurityOption.AccessCode)
     }
-    if (!isDefaultPin2) {
+    if (currentSecurityOption == SecurityOption.PassCode) {
         allowedSecurityOptions.add(SecurityOption.PassCode)
     }
     return allowedSecurityOptions
 }
 
 
-private fun Card.toCardInfo(): CardInfo? {
+private fun Card.toCardInfo(): CardInfo {
     val cardId = this.cardId.chunked(4).joinToString(separator = " ")
-    val issuer = this.cardData?.issuerName ?: return null
+    val issuer = this.issuer.name
     val signedHashes = this.signedHashesCount()
-    return CardInfo(cardId, issuer, signedHashes)}
+    return CardInfo(cardId, issuer, signedHashes)
+}
