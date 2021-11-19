@@ -10,14 +10,16 @@ import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.common.toggleWidget.WidgetState
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
+import com.tangem.tap.domain.extensions.buyIsAllowed
+import com.tangem.tap.domain.extensions.sellIsAllowed
 import com.tangem.tap.domain.extensions.toSendableAmounts
-import com.tangem.tap.domain.topup.TradeCryptoHelper
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
 import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.models.toPendingTransactions
 import com.tangem.tap.features.wallet.models.toPendingTransactionsForToken
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
+import com.tangem.tap.network.moonpay.MoonpayStatus
 import com.tangem.tap.store
 import org.rekotlin.StateType
 import java.math.BigDecimal
@@ -38,7 +40,6 @@ data class WalletState(
     val primaryBlockchain: Blockchain? = null,
     val primaryToken: Token? = null,
     val isTestnet: Boolean = false,
-    val tradeCryptoAllowed: TradeCryptoAvailability = TradeCryptoAvailability()
 ) : StateType {
 
     // if you do not delegate - the application crashes on startup,
@@ -132,12 +133,39 @@ data class WalletState(
 
     fun replaceWalletInWallets(walletData: WalletData?): List<WalletData> {
         if (walletData == null) return wallets
-        return wallets.filter { it.currencyData.currency != walletData.currencyData.currency } + walletData
+        var changed = false
+        val updatedWallets = wallets.map {
+            if (it.currency == walletData.currency) {
+                changed = true
+                walletData
+            } else {
+                it
+            }
+        }
+        return if (changed) updatedWallets else wallets + walletData
     }
 
     fun replaceSomeWallets(newWallets: List<WalletData>): List<WalletData> {
-        val currencies = newWallets.map { it.currencyData.currency }
-        return wallets.filter { !currencies.contains(it.currencyData.currency) } + newWallets
+        val remainingWallets: MutableList<WalletData> = newWallets.toMutableList()
+        val updatedWallets = wallets.map { wallet ->
+            val newWallet = newWallets
+                    .firstOrNull { wallet.currency == it.currency }
+            if (newWallet == null) {
+                wallet
+            } else {
+                remainingWallets.remove(newWallet)
+                newWallet
+            }
+        }
+        return updatedWallets + remainingWallets
+    }
+
+    fun updateTradeCryptoState(moonpayStatus: MoonpayStatus?, walletData: WalletData): WalletData {
+        return walletData.copy(tradeCryptoState = TradeCryptoState.from(moonpayStatus, walletData))
+    }
+
+    fun updateTradeCryptoState(moonpayStatus: MoonpayStatus?, walletDataList: List<WalletData>): List<WalletData> {
+        return walletDataList.map { it.copy(tradeCryptoState = TradeCryptoState.from(moonpayStatus, it)) }
     }
 
     fun addWalletManagers(newWalletManagers: List<WalletManager>): WalletState {
@@ -148,10 +176,6 @@ data class WalletState(
 }
 
 sealed class WalletDialog : StateDialog {
-    data class QrDialog(
-        val qrCode: Bitmap?, val shareUrl: String?, val currencyName: CryptoCurrencyName?
-    ) : WalletDialog()
-
     data class SelectAmountToSendDialog(val amounts: List<Amount>?) : WalletDialog()
     object SignedHashesMultiWalletDialog : WalletDialog()
     object ChooseTradeActionDialog : WalletDialog()
@@ -200,13 +224,16 @@ data class Artwork(
 data class TradeCryptoState(
     val sellingAllowed: Boolean = false,
     val buyingAllowed: Boolean = false,
-)
+) {
+    companion object {
+        fun from(moonpayStatus: MoonpayStatus?, walletData: WalletData): TradeCryptoState {
+            val status = moonpayStatus ?: return walletData.tradeCryptoState
+            val currency = walletData.currency
 
-data class TradeCryptoAvailability(
-    val sellingAllowed: Boolean = false,
-    val buyingAllowed: Boolean = false,
-    val availableToSell: Set<String> = TradeCryptoHelper.AVAILABLE_TO_SELL,
-)
+            return TradeCryptoState(status.sellIsAllowed(currency), status.buyIsAllowed(currency))
+        }
+    }
+}
 
 data class WalletData(
     val pendingTransactions: List<PendingTransaction> = emptyList(),
@@ -219,7 +246,7 @@ data class WalletData(
     val fiatRateString: String? = null,
     val fiatRate: BigDecimal? = null,
     val mainButton: WalletMainButton = WalletMainButton.SendButton(false),
-    val currency: Currency? = null
+    val currency: Currency
 ) {
     fun shouldShowMultipleAddress(): Boolean {
         val listOfAddresses = walletAddresses?.list ?: return false
