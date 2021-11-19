@@ -80,6 +80,7 @@ class ConfigManager(
             moonPayApiKey = values.moonPayApiKey,
             moonPayApiSecretKey = values.moonPayApiSecretKey,
             blockchainSdkConfig = BlockchainSdkConfig(
+                blockchairApiKey = values.blockchairApiKey,
                 blockchairAuthorizationToken = values.blockchairAuthorizationToken,
                 blockcypherTokens = values.blockcypherTokens,
                 infuraProjectId = values.infuraProjectId
@@ -90,6 +91,7 @@ class ConfigManager(
             moonPayApiKey = values.moonPayApiKey,
             moonPayApiSecretKey = values.moonPayApiSecretKey,
             blockchainSdkConfig = BlockchainSdkConfig(
+                blockchairApiKey = values.blockchairApiKey,
                 blockchairAuthorizationToken = values.blockchairAuthorizationToken,
                 blockcypherTokens = values.blockcypherTokens,
                 infuraProjectId = values.infuraProjectId
