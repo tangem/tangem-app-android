@@ -7,20 +7,18 @@ import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.snackbar.Snackbar
-import com.tangem.CardFilter
-import com.tangem.Config
 import com.tangem.TangemSdk
-import com.tangem.commands.common.card.CardType
 import com.tangem.tangem_sdk_new.extensions.init
 import com.tangem.tap.common.DialogManager
 import com.tangem.tap.common.IntentHandler
 import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.redux.NotificationsHandler
+import com.tangem.tap.common.redux.global.AndroidResources
+import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.TangemSdkManager
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
-import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -30,7 +28,6 @@ import kotlinx.coroutines.Job
 import java.io.PrintWriter
 import java.io.StringWriter
 import java.lang.ref.WeakReference
-import java.util.*
 import kotlin.coroutines.CoroutineContext
 
 lateinit var tangemSdk: TangemSdk
@@ -64,24 +61,40 @@ class MainActivity : AppCompatActivity(), SnackbarHandler {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        store.state.globalState.feedbackManager?.updateAcivity(this)
-        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT;
+        systemActions()
+        store.state.globalState.feedbackManager?.updateActivity(this)
         store.dispatch(NavigationAction.ActivityCreated(WeakReference(this)))
 
-        tangemSdk = TangemSdk.init(
-            this, Config(cardFilter = CardFilter(EnumSet.allOf(CardType::class.java)))
-        )
-        tangemSdkManager = TangemSdkManager(this)
+        tangemSdk = TangemSdk.init(this, TangemSdkManager.config)
+        tangemSdkManager = TangemSdkManager(tangemSdk, this)
+
+        store.dispatch(GlobalAction.SetResources(getAndroidResources()))
         store.dispatch(WalletConnectAction.RestoreSessions)
+    }
+
+    private fun getAndroidResources(): AndroidResources {
+        return AndroidResources(
+            AndroidResources.RString(
+                R.string.copy_toast_msg,
+                R.string.details_notification_erase_wallet_not_possible
+            )
+        )
+    }
+
+    private fun systemActions() {
+        // makes the status bar text dark
+        window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+        requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
     }
 
     override fun onResume() {
         super.onResume()
         notificationsHandler = NotificationsHandler(fragment_container)
-        if (supportFragmentManager.backStackEntryCount == 0 ||
-            store.state.globalState.scanNoteResponse == null
-        ) {
-            store.dispatch(HomeAction.CheckIfFirstLaunch)
+
+        val backStackIsEmpty = supportFragmentManager.backStackEntryCount == 0
+        val isScannedBefore = store.state.globalState.scanResponse != null
+        val isOnboardingServiceActive = store.state.globalState.onboardingManager != null
+        if (backStackIsEmpty || (!isOnboardingServiceActive && !isScannedBefore)) {
             store.dispatch(NavigationAction.NavigateTo(AppScreen.Home))
         }
         intentHandler.handleIntent(intent)
