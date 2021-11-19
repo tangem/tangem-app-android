@@ -61,6 +61,7 @@ sealed class TapSdkError(override val messageResId: Int?) : Throwable(), TangemE
     override var customMessage: String = code.toString()
 
     object CardForDifferentApp : TapSdkError(R.string.alert_unsupported_card)
+    object CardNotSupportedByRelease : TapSdkError(R.string.error_update_app)
 }
 
 
