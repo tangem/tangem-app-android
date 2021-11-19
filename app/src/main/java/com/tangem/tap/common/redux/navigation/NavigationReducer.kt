@@ -20,12 +20,12 @@ private fun internalReduce(action: Action, state: AppState): NavigationState {
             navState.copy(backStack = navState.backStack + navigationAction.screen)
         }
         is NavigationAction.PopBackTo -> {
-            val screen =
-                    navigationAction.screen ?: navState.activity?.get()?.getPreviousScreen()
+            val screen = navigationAction.screen ?: navState.activity?.get()?.getPreviousScreen()
             val index = navState.backStack.lastIndexOf(screen) + 1
             state.navigationState.copy(backStack = navState.backStack.subList(0, index))
         }
         is NavigationAction.ActivityCreated -> navState.copy(activity = navigationAction.activity)
         is NavigationAction.ActivityDestroyed -> navState.copy(activity = null)
+        else -> navState
     }
 }
