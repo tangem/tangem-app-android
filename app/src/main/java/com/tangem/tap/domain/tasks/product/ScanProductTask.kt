@@ -24,6 +24,7 @@ import com.tangem.tap.domain.TapSdkError
 import com.tangem.tap.domain.TapWorkarounds
 import com.tangem.tap.domain.TapWorkarounds.getTangemNoteBlockchain
 import com.tangem.tap.domain.TapWorkarounds.isExcluded
+import com.tangem.tap.domain.TapWorkarounds.isNotSupportedInThatRelease
 import com.tangem.tap.domain.extensions.getSingleWallet
 import com.tangem.tap.domain.twins.TwinsHelper
 
@@ -97,6 +98,7 @@ class ScanProductTask(val card: Card? = null) : CardSessionRunnable<ScanResponse
 
     private fun getErrorIfExcludedCard(card: Card): TangemError? {
         if (card.isExcluded()) return TapSdkError.CardForDifferentApp
+        if (card.isNotSupportedInThatRelease()) return TapSdkError.CardNotSupportedByRelease
 
         return null
     }
