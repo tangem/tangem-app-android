@@ -28,6 +28,11 @@ object TapWorkarounds {
         return excludedBatch || excludedIssuerName
     }
 
+    fun Card.isNotSupportedInThatRelease():Boolean {
+        return tangemWalletBatches.contains(batchId)
+
+    }
+
     @Deprecated("Use ScanResponse.isTangemNote")
     fun isTangemNote(card: Card): Boolean = tangemNoteBatches.contains(card.batchId)
 
