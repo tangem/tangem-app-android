@@ -13,7 +13,7 @@
         style="@style/Widget.MaterialComponents.Toolbar.Surface"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/backgroundLightGray"
+        android:background="@color/toolbarColor"
         android:fitsSystemWindows="true"
         app:liftOnScroll="true">
 
@@ -58,42 +58,36 @@
                     android:elevation="3dp"
                     android:maxHeight="215dp"
                     android:scaleType="fitCenter"
-                    android:src="@drawable/card_placeholder"
+                    android:src="@drawable/card_placeholder_black"
                     app:layout_constraintTop_toTopOf="parent" />
-
-                <ImageView
-                    android:id="@+id/iv_twin_card"
-                    android:layout_width="100dp"
-                    android:layout_height="30dp"
-                    android:layout_marginStart="25dp"
-                    android:elevation="3dp"
-                    android:src="@drawable/shape_chip"
-                    app:layout_constraintBottom_toBottomOf="@id/iv_card"
-                    app:layout_constraintStart_toStartOf="@id/iv_card"
-                    app:layout_constraintTop_toBottomOf="@id/iv_card" />
 
                 <TextView
                     android:id="@+id/tv_twin_card_number"
-                    android:layout_width="0dp"
-                    android:layout_height="0dp"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:minHeight="30dp"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:paddingTop="4dp"
+                    android:paddingBottom="4dp"
                     android:elevation="3dp"
                     android:gravity="center"
+                    android:layout_marginStart="25dp"
                     android:textColor="@color/buttonGray"
                     android:textSize="14sp"
                     android:textStyle="bold"
-                    app:layout_constraintBottom_toBottomOf="@id/iv_twin_card"
-                    app:layout_constraintEnd_toEndOf="@id/iv_twin_card"
-                    app:layout_constraintStart_toStartOf="@id/iv_twin_card"
-                    app:layout_constraintTop_toTopOf="@id/iv_twin_card"
+                    android:background="@drawable/shape_chip"
+                    app:layout_constraintBottom_toBottomOf="@id/iv_card"
+                    app:layout_constraintStart_toStartOf="@id/iv_card"
+                    app:layout_constraintTop_toBottomOf="@id/iv_card"
                     tools:text="Card 2 of 2" />
-
 
                 <androidx.constraintlayout.widget.Barrier
                     android:id="@+id/barrier"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     app:barrierDirection="bottom"
-                    app:constraint_referenced_ids="iv_card,iv_twin_card" />
+                    app:constraint_referenced_ids="iv_card,tv_twin_card_number" />
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rv_warning_messages"
@@ -190,7 +184,8 @@
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_scan_multiwallet"
                     style="@style/TapBlackButton"
-                    android:layout_width="100dp"
+                    android:layout_width="wrap_content"
+                    android:minWidth="100dp"
                     android:layout_marginStart="16dp"
                     android:layout_marginTop="30dp"
                     android:layout_marginBottom="33dp"
