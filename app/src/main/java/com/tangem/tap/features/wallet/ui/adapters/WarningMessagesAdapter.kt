@@ -73,7 +73,7 @@ class WarningMessageVH(val view: View) : RecyclerView.ViewHolder(view) {
     }
 
     private fun setupControlButtons(warning: WarningMessage) = when (warning.type) {
-        WarningMessage.Type.Permanent -> {
+        WarningMessage.Type.Permanent, WarningMessage.Type.TestCard -> {
             view.group_controls_temporary.hide()
             view.group_controls_rating.hide()
         }

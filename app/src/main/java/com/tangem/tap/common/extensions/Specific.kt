@@ -23,9 +23,17 @@ fun BigDecimal.toFormattedString(
 }
 
 fun BigDecimal.toFormattedCurrencyString(
-    decimals: Int, currency: String, roundingMode: RoundingMode = RoundingMode.DOWN
+    decimals: Int, currency: String, roundingMode: RoundingMode = RoundingMode.DOWN,
+    limitNumberOfDecimals: Boolean = true
 ): String {
-    val formattedAmount = this.toFormattedString(decimals = decimals, roundingMode = roundingMode)
+    val decimalsForRounding = if (limitNumberOfDecimals){
+        if (decimals > 8) 8 else decimals
+    } else {
+        decimals
+    }
+    val formattedAmount = this.toFormattedString(
+        decimals = decimalsForRounding, roundingMode = roundingMode
+    )
     return "$formattedAmount $currency"
 }
 
@@ -37,7 +45,7 @@ fun BigDecimal.toFiatString(rateValue: BigDecimal, fiatCurrencyName: FiatCurrenc
 
 fun BigDecimal.toFiatValue(rateValue: BigDecimal): BigDecimal {
     val fiatValue = rateValue.multiply(this)
-    return fiatValue.setScale(2, RoundingMode.DOWN)
+    return fiatValue.setScale(2, RoundingMode.HALF_UP)
 }
 
 fun BigDecimal.toFormattedFiatValue(fiatCurrencyName: FiatCurrencyName): String {
