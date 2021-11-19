@@ -24,24 +24,26 @@
         app:layout_constraintTop_toBottomOf="@+id/pseudo_toolbar" />
 
     <TextView
-        android:id="@+id/tv_scan_address"
+        android:id="@+id/tv_recieve_message"
         style="@style/TextViewOnboarding.Body"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="30dp"
-        android:text="@string/onboarding_dialog_wallet_address"
+        android:layout_marginStart="40dp"
+        android:layout_marginEnd="40dp"
         android:textAlignment="center"
         android:textAllCaps="false"
-        app:layout_constraintEnd_toEndOf="@+id/imv_qr_code"
-        app:layout_constraintStart_toStartOf="@+id/imv_qr_code"
-        app:layout_constraintTop_toBottomOf="@+id/imv_qr_code" />
+        app:layout_constraintBottom_toTopOf="@+id/guideline3"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/imv_qr_code"
+        tools:text="@string/address_qr_code_message_token_format" />
 
     <androidx.constraintlayout.widget.Guideline
         android:id="@+id/guideline3"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        app:layout_constraintGuide_percent="0.8047809" />
+        app:layout_constraintGuide_percent="0.8" />
 
     <FrameLayout
         android:id="@+id/btn_fl_copy_address"
@@ -53,7 +55,7 @@
         android:backgroundTint="@color/lightGray0"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
-        app:layout_constraintEnd_toStartOf="@+id/btn_fl_explore"
+        app:layout_constraintEnd_toStartOf="@+id/btn_fl_share"
         app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="@+id/guideline3">
@@ -83,6 +85,7 @@
             <androidx.appcompat.widget.AppCompatImageView
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:background="?selectableItemBackgroundBorderless"
                 android:src="@drawable/ic_copy_green" />
 
         </androidx.appcompat.widget.LinearLayoutCompat>
@@ -90,7 +93,7 @@
 
 
     <FrameLayout
-        android:id="@+id/btn_fl_explore"
+        android:id="@+id/btn_fl_share"
         android:layout_width="wrap_content"
         android:layout_height="40dp"
         android:layout_marginEnd="32dp"
@@ -104,11 +107,12 @@
         app:layout_constraintTop_toTopOf="@+id/guideline3">
 
         <androidx.appcompat.widget.AppCompatImageView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
             android:layout_gravity="center"
             android:background="?selectableItemBackgroundBorderless"
-            android:src="@drawable/ic_share_green" />
+            android:src="@drawable/ic_share_chip"
+            android:tint="@color/accent" />
 
     </FrameLayout>
 

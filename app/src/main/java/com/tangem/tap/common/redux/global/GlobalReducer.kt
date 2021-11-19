@@ -2,6 +2,7 @@ package com.tangem.tap.common.redux.global
 
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.onboarding.OnboardingManager
+import com.tangem.tap.network.moonpay.MoonpayStatus
 import com.tangem.tap.preferencesStorage
 import org.rekotlin.Action
 
@@ -42,20 +43,14 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
         }
         is GlobalAction.SetWarningManager -> globalState.copy(warningManager = action.warningManager)
         is GlobalAction.UpdateWalletSignedHashes -> {
-            val wallet = globalState.scanResponse?.card
-                    ?.wallet(action.walletPublicKey)
-                    ?.copy(
-                        totalSignedHashes = action.walletSignedHashes,
-                        remainingSignatures = action.remainingSignatures
-                    )
-            val card = globalState.scanResponse?.card
-            wallet?.let { globalState.scanResponse.card.updateWallet(wallet) }
+            val card = globalState.scanResponse?.card ?: return globalState
+            val wallet = card.wallet(action.walletPublicKey) ?: return globalState
 
-            if (card != null) {
-                globalState.copy(scanResponse = globalState.scanResponse.copy(card = card))
-            } else {
-                globalState
-            }
+            val newCardInstance = card.updateWallet(wallet.copy(
+                totalSignedHashes = action.walletSignedHashes,
+                remainingSignatures = action.remainingSignatures
+            ))
+            globalState.copy(scanResponse = globalState.scanResponse.copy(card = newCardInstance))
         }
         is GlobalAction.SetFeedbackManager -> {
             globalState.copy(feedbackManager = action.feedbackManager)
@@ -66,8 +61,19 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
         is GlobalAction.HideDialog -> {
             globalState.copy(dialog = null)
         }
-        is GlobalAction.GetMoonPayUserStatus.Success -> {
-            globalState.copy(moonPayUserStatus = action.moonPayUserStatus)
+        is GlobalAction.GetMoonPayStatus.Success -> {
+            val fiatExchangeIsEnabled = globalState.configManager?.config?.isTopUpEnabled ?: false
+            val moonpayStatus = if (fiatExchangeIsEnabled) {
+                action.moonPayStatus
+            } else {
+                MoonpayStatus(
+                    isBuyAllowed = false,
+                    isSellAllowed = false,
+                    availableToBuy = emptyList(),
+                    availableToSell = emptyList()
+                )
+            }
+            globalState.copy(moonpayStatus = moonpayStatus)
         }
         is GlobalAction.SetIfCardVerifiedOnline ->
             globalState.copy(cardVerifiedOnline = action.verified)
