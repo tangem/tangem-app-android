@@ -15,9 +15,8 @@ class CreateWalletInterruptDialog {
     companion object {
         fun create(state: TwinCardsAction.Wallet.ShowInterruptDialog, context: Context): AlertDialog {
             return MaterialAlertDialogBuilder(context)
-                    .setMessage(R.string.twins_recreate_alert)
-                    .setPositiveButton(R.string.common_ok) { _, _ -> state.onOk() }
-                    .setNegativeButton(R.string.common_cancel) { _, _ -> }
+                    .setMessage(R.string.onboarding_twin_exit_warning)
+                    .setPositiveButton(R.string.warning_button_ok) { _, _ -> }
                     .setOnDismissListener { store.dispatchDialogHide() }
                     .create()
         }

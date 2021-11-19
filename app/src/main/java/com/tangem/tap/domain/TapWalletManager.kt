@@ -24,7 +24,6 @@ import com.tangem.tap.network.coinmarketcap.CoinMarketCapService
 import com.tangem.tap.store
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import timber.log.Timber
 import java.math.BigDecimal
 
 
@@ -55,7 +54,6 @@ class TapWalletManager {
     }
 
     suspend fun loadFiatRate(fiatCurrency: FiatCurrencyName, wallet: Wallet) {
-        Timber.d(wallet.getTokens().toString())
         val currencies = wallet.getTokens()
                 .map { Currency.Token(it) }
                 .plus(Currency.Blockchain(wallet.blockchain))
@@ -97,7 +95,7 @@ class TapWalletManager {
         }
     }
 
-    private fun updateConfigManager(data: ScanResponse) {
+    fun updateConfigManager(data: ScanResponse) {
         val configManager = store.state.globalState.configManager
         val blockchain = data.getBlockchain()
         if (data.card.isStart2Coin) {
@@ -121,7 +119,6 @@ class TapWalletManager {
                 return@withContext
             }
 
-            val config = store.state.globalState.configManager?.config ?: return@withContext
             val blockchain = data.getBlockchain()
             val primaryWalletManager = walletManagerFactory.makePrimaryWalletManager(data)
 
@@ -145,11 +142,8 @@ class TapWalletManager {
                     loadMultiWalletData(data.card, blockchain, null)
                 }
             }
-            val moonPayUserStatus = store.state.globalState.moonPayUserStatus
-            store.dispatch(WalletAction.LoadWallet(
-                allowToBuy = config.isTopUpEnabled && moonPayUserStatus?.isBuyAllowed == true,
-                allowToSell = config.isTopUpEnabled && moonPayUserStatus?.isSellAllowed == true,
-            ))
+            val moonPayStatus = store.state.globalState.moonpayStatus
+            store.dispatch(WalletAction.LoadWallet(moonPayStatus))
             store.dispatch(WalletAction.LoadFiatRate())
         }
     }
@@ -157,22 +151,22 @@ class TapWalletManager {
     private fun loadMultiWalletData(
         card: Card, primaryBlockchain: Blockchain?, primaryWalletManager: WalletManager?
     ) {
-        val primaryTokens = primaryWalletManager?.cardTokens ?: emptySet()
+        val primaryTokens = primaryWalletManager?.cardTokens?.toList() ?: emptyList()
         val savedCurrencies = currenciesRepository.loadCardCurrencies(card.cardId)
 
         if (savedCurrencies == null) {
             if (primaryBlockchain != null && primaryWalletManager != null) {
                 store.dispatch(WalletAction.MultiWallet.SaveCurrencies(
                     CardCurrencies(
-                        blockchains = setOf(primaryBlockchain), tokens = primaryTokens
+                        blockchains = listOf(primaryBlockchain), tokens = primaryTokens
                     )))
                 store.dispatch(WalletAction.MultiWallet.AddWalletManagers(primaryWalletManager))
                 store.dispatch(WalletAction.MultiWallet.AddBlockchains(listOf(primaryBlockchain)))
                 store.dispatch(WalletAction.MultiWallet.AddTokens(primaryTokens.toList()))
             } else {
-                val blockchains = setOf(Blockchain.Bitcoin, Blockchain.Ethereum)
+                val blockchains = listOf(Blockchain.Bitcoin, Blockchain.Ethereum)
                 store.dispatch(WalletAction.MultiWallet.SaveCurrencies(
-                    CardCurrencies(blockchains = blockchains, tokens = emptySet())
+                    CardCurrencies(blockchains = blockchains, tokens = emptyList())
                 ))
                 val walletManagers =
                         walletManagerFactory.makeWalletManagersForApp(card, blockchains.toList())
@@ -211,12 +205,8 @@ class TapWalletManager {
                 return@withContext
             }
 
-            val config = store.state.globalState.configManager?.config ?: return@withContext
-            val moonpayUserStatus = store.state.globalState.moonPayUserStatus
-            store.dispatch(WalletAction.LoadWallet(
-                allowToBuy = config.isTopUpEnabled && moonpayUserStatus?.isBuyAllowed == true,
-                allowToSell = config.isTopUpEnabled && moonpayUserStatus?.isSellAllowed == true,
-            ))
+            val moonPayStatus = store.state.globalState.moonpayStatus
+            store.dispatch(WalletAction.LoadWallet(moonPayStatus))
             store.dispatch(WalletAction.LoadFiatRate())
         }
     }

@@ -1,7 +1,7 @@
 package com.tangem.tap.features.tokens.redux
 
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
-import com.tangem.tap.features.tokens.ui.adapters.CurrencyListItem
 import com.tangem.tap.features.wallet.redux.WalletData
 import org.rekotlin.Action
 
@@ -17,5 +17,6 @@ sealed class TokensAction : Action {
 
     data class SetAddedCurrencies(val wallets: List<WalletData>) : TokensAction()
 
+    data class ToggleShowTokensForBlockchain(val isShown: Boolean, val blockchain: Blockchain) : TokensAction()
 
 }

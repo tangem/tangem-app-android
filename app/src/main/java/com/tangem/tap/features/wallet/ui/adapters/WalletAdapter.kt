@@ -18,7 +18,6 @@ import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.item_currency_wallet.view.*
-import java.math.BigDecimal
 
 class WalletAdapter
     : ListAdapter<WalletData, WalletAdapter.WalletsViewHolder>(DiffUtilCallback) {
@@ -28,36 +27,8 @@ class WalletAdapter
     }
 
     fun submitList(list: List<WalletData>, primaryBlockchain: Blockchain?, primaryToken: Token? = null) {
-        val listModified = list.toMutableList()
-        val primaryBlockchainWallet = when (
-            val index = listModified.indexOfFirst {
-                (it.currency as? Currency.Blockchain)?.blockchain == primaryBlockchain
-            }
-        ) {
-            -1 -> null
-            else -> listModified.removeAt(index)
-        }
-
-
-        val primaryTokenWallet = if (primaryToken == null) null else when (
-            val index = listModified.indexOfFirst { (it.currency as? Currency.Token)?.token == primaryToken }
-        ) {
-            -1 -> null
-            else -> listModified.removeAt(index)
-        }
-
-        if (list.all { it.currencyData.fiatAmountFormatted == null }) {
-            val sortedList = listOfNotNull(primaryBlockchainWallet, primaryTokenWallet) + listModified
-            super.submitList(sortedList)
-            return
-        }
-
-        val sorted = listModified.sortedWith(
-                compareByDescending<WalletData> { it.currencyData.fiatAmount ?: BigDecimal.ZERO }
-                    .thenBy { it.currencyData.currency }
-        )
-        val sortedList = listOfNotNull(primaryBlockchainWallet, primaryTokenWallet) + sorted
-        super.submitList(sortedList)
+        // We used this method to sort the list of currencies. Sorting is disabled for now.
+        super.submitList(list)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): WalletsViewHolder {
@@ -92,7 +63,7 @@ class WalletAdapter
             view.card_wallet.setOnClickListener {
                 store.dispatch(WalletAction.MultiWallet.SelectWallet(wallet))
             }
-            val blockchain = wallet.currency?.blockchain
+            val blockchain = wallet.currency.blockchain
             val token = (wallet.currency as? Currency.Token)?.token
 
             Picasso.get().loadCurrenciesIcon(

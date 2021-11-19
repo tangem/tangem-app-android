@@ -19,6 +19,7 @@ import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
+import timber.log.Timber
 
 class GlobalMiddleware {
     companion object {
@@ -74,15 +75,16 @@ private val globalMiddlewareHandler: Middleware<AppState> = { dispatch, appState
                     store.state.globalState.feedbackManager?.infoHolder
                             ?.setWalletsInfo(action.walletManagers)
                 }
-                is GlobalAction.GetMoonPayUserStatus -> {
+                is GlobalAction.GetMoonPayStatus -> {
                     val apiKey = appState()?.globalState?.configManager?.config?.moonPayApiKey
                     if (apiKey != null) {
                         scope.launch {
-                            val userStatusResponse = MoonpayService().getUserStatus(apiKey)
-                            if (userStatusResponse is Result.Success) {
-                                store.dispatchOnMain(
-                                    GlobalAction.GetMoonPayUserStatus.Success(userStatusResponse.data)
-                                )
+                            val result = MoonpayService().getMoonpayStatus(apiKey)
+                            when (result) {
+                                is Result.Success -> {
+                                    store.dispatchOnMain(GlobalAction.GetMoonPayStatus.Success(result.data))
+                                }
+                                is Result.Failure -> Timber.e(result.error)
                             }
                         }
                     }

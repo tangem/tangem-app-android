@@ -178,7 +178,16 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
                     is Result.Success -> {
                         updateScanResponse(result.data)
                         delay(DELAY_SDK_DIALOG_CLOSE)
-                        withMainContext { store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.TopUpWallet)) }
+                        withMainContext {
+                            when (twinCardsState.mode) {
+                                CreateTwinWalletMode.CreateWallet -> {
+                                    store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.TopUpWallet))
+                                }
+                                CreateTwinWalletMode.RecreateWallet -> {
+                                    store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.Done))
+                                }
+                            }
+                        }
                     }
                     is Result.Failure -> {
                     }
@@ -230,12 +239,7 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
         is TwinCardsAction.ShowAddressInfoDialog -> {
             val addressData = twinCardsState.walletManager?.getAddressData() ?: return
 
-            val addressWasCopied = globalState.resources.strings.addressWasCopied
-            val appDialog = AppDialog.AddressInfoDialog(
-                addressData,
-                onCopyAddress = { store.dispatchToastNotification(addressWasCopied) },
-                onExploreAddress = { store.dispatchOpenUrl(addressData.exploreUrl) }
-            )
+            val appDialog = AppDialog.AddressInfoDialog(twinCardsState.walletBalance.currency, addressData)
             store.dispatchDialogShow(appDialog)
         }
         is TwinCardsAction.TopUp -> {

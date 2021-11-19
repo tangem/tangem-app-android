@@ -5,7 +5,6 @@ import androidx.appcompat.app.AlertDialog
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.feedback.SendTransactionFailedEmail
 import com.tangem.tap.features.send.redux.SendAction
-import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.store
 import com.tangem.wallet.R
 
@@ -23,7 +22,7 @@ class SendTransactionFailsDialog {
                     store.dispatch(GlobalAction.SendFeedback(SendTransactionFailedEmail(dialog.errorMessage)))
                 }
                 setPositiveButton(R.string.common_no) { _, _ -> }
-                setOnDismissListener { store.dispatch(WalletAction.HideDialog) }
+                setOnDismissListener { store.dispatch(SendAction.Dialog.Hide) }
             }.create()
         }
     }

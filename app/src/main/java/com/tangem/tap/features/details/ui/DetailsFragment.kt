@@ -10,6 +10,7 @@ import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.domain.isMultiwalletAllowed
 import com.tangem.tap.domain.twins.getTwinCardIdForUser
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
@@ -66,7 +67,7 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
 
         if (state.cardInfo != null) {
             val cardId = if (state.isTangemTwins) {
-                state.card?.getTwinCardIdForUser()
+                state.scanResponse?.card?.getTwinCardIdForUser()
             } else {
                 state.cardInfo.cardId
             }
@@ -112,12 +113,13 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
             store.dispatch(GlobalAction.SendFeedback(FeedbackEmail()))
         }
 
+        tv_wallet_connect.show(state.scanResponse?.card?.isMultiwalletAllowed == true)
         tv_wallet_connect.setOnClickListener {
             store.dispatch(NavigationAction.NavigateTo(AppScreen.WalletConnectSessions))
         }
 
         tv_security_title.setOnClickListener {
-            store.dispatch(DetailsAction.ManageSecurity.CheckCurrentSecurityOption(state.card?.cardId))
+            store.dispatch(DetailsAction.ManageSecurity.CheckCurrentSecurityOption(state.scanResponse!!.card))
         }
 
         val currentSecurity = when (state.securityScreenState?.currentOption) {
@@ -129,7 +131,7 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
         currentSecurity?.let { tv_security.text = getString(it) }
 
         if (state.appCurrencyState.showAppCurrencyDialog &&
-                !state.appCurrencyState.fiatCurrencies.isNullOrEmpty()) {
+            !state.appCurrencyState.fiatCurrencies.isNullOrEmpty()) {
             currencySelectionDialog.show(
                 state.appCurrencyState.fiatCurrencies,
                 state.appCurrencyState.fiatCurrencyName,
