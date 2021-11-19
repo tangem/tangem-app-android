@@ -58,6 +58,10 @@ sealed class TransactionExtrasAction : SendScreenActionUi {
         data class HandleUserInput(val data: String) : XlmMemo()
     }
 
+    sealed class BinanceMemo : TransactionExtrasAction() {
+        data class HandleUserInput(val data: String) : BinanceMemo()
+    }
+
     sealed class XrpDestinationTag : TransactionExtrasAction() {
         data class HandleUserInput(val data: String) : XrpDestinationTag()
     }
