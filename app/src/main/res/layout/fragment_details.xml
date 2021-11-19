@@ -44,26 +44,45 @@
             android:layout_marginBottom="33dp">
 
             <TextView
+                android:id="@+id/tv_card_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingBottom="4dp"
+                android:text="@string/details_section_title_card"
+                android:textAllCaps="true"
+                android:textColor="@color/colorSecondary"
+                android:textSize="13sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/separatorGrey2"
+                app:layout_constraintTop_toBottomOf="@id/tv_card_title" />
+
+            <TextView
                 android:id="@+id/tv_card_id_title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:paddingTop="7dp"
                 android:paddingBottom="7dp"
                 android:text="@string/details_row_title_cid"
                 android:textColor="@color/darkGray6"
                 android:textSize="16sp"
-
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
+                app:layout_constraintTop_toBottomOf="@id/tv_card_title" />
 
             <TextView
                 android:id="@+id/tv_card_id"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:paddingTop="7dp"
                 android:paddingBottom="7dp"
                 android:textColor="@color/darkGray1"
                 android:textSize="16sp"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_card_title"
                 tools:text="0000 0000 0000 0000" />
 
             <TextView
@@ -115,33 +134,47 @@
                 tools:text="48 hashes" />
 
             <TextView
-                android:id="@+id/tv_disclaimer"
+                android:id="@+id/tv_security"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:drawablePadding="15dp"
+                android:paddingTop="7dp"
+                android:paddingBottom="7dp"
+                android:textColor="@color/darkGray1"
+                android:textSize="16sp"
+                app:drawableEndCompat="@drawable/ic_angle_bracket_right"
+                app:drawableTint="@color/darkGray1"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_signed_hashes_title"
+                tools:text="Long Tap" />
+
+            <TextView
+                android:id="@+id/tv_security_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="7dp"
+                android:paddingBottom="7dp"
+                android:text="@string/details_row_title_manage_security"
+                android:textColor="@color/darkGray6"
+                android:textSize="16sp"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_signed_hashes" />
+
+
+            <TextView
+                android:id="@+id/tv_erase_wallet"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:drawablePadding="15dp"
                 android:paddingTop="7dp"
                 android:paddingBottom="7dp"
-                android:text="@string/disclaimer_title"
+                android:text="@string/details_row_title_erase_wallet"
                 android:textColor="@color/darkGray6"
                 android:textSize="16sp"
                 app:drawableEndCompat="@drawable/ic_angle_bracket_right"
+                app:drawableTint="@color/darkGray1"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_signed_hashes_title" />
-
-            <TextView
-                android:id="@+id/tv_card_tou"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:drawablePadding="15dp"
-                android:paddingTop="7dp"
-                android:paddingBottom="10dp"
-                android:text="@string/details_row_title_card_tou"
-                android:textColor="@color/darkGray6"
-                android:textSize="16sp"
-                android:visibility="gone"
-                app:drawableEndCompat="@drawable/ic_angle_bracket_right"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_disclaimer" />
+                app:layout_constraintTop_toBottomOf="@id/tv_security_title" />
 
             <TextView
                 android:id="@+id/tv_settings_title"
@@ -149,18 +182,19 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="22dp"
                 android:paddingBottom="4dp"
-                android:text="@string/details_section_title_settings"
+                android:text="@string/details_section_title_app"
                 android:textAllCaps="true"
                 android:textColor="@color/colorSecondary"
                 android:textSize="13sp"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_card_tou" />
+                app:layout_constraintTop_toBottomOf="@id/tv_erase_wallet" />
 
             <View
                 android:layout_width="match_parent"
                 android:layout_height="1dp"
                 android:background="@color/separatorGrey2"
                 app:layout_constraintTop_toBottomOf="@id/tv_settings_title" />
+
 
             <TextView
                 android:id="@+id/tv_app_currency"
@@ -171,6 +205,7 @@
                 android:textColor="@color/darkGray1"
                 android:textSize="16sp"
                 app:drawableEndCompat="@drawable/ic_angle_bracket_right"
+                app:drawableTint="@color/darkGray1"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tv_settings_title"
                 tools:text="USD" />
@@ -188,6 +223,37 @@
                 app:layout_constraintTop_toBottomOf="@id/tv_settings_title" />
 
             <TextView
+                android:id="@+id/tv_disclaimer"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:drawablePadding="15dp"
+                android:paddingTop="7dp"
+                android:paddingBottom="7dp"
+                android:text="@string/disclaimer_title"
+                android:textColor="@color/darkGray6"
+                android:textSize="16sp"
+                app:drawableEndCompat="@drawable/ic_angle_bracket_right"
+                app:drawableTint="@color/darkGray1"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_app_currency_title" />
+
+            <TextView
+                android:id="@+id/tv_card_tou"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:drawablePadding="15dp"
+                android:paddingTop="7dp"
+                android:paddingBottom="10dp"
+                android:text="@string/details_row_title_card_tou"
+                android:textColor="@color/darkGray6"
+                android:textSize="16sp"
+                android:visibility="gone"
+                app:drawableEndCompat="@drawable/ic_angle_bracket_right"
+                app:drawableTint="@color/darkGray1"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_disclaimer" />
+
+            <TextView
                 android:id="@+id/tv_send_feedback"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -197,8 +263,9 @@
                 android:textColor="@color/darkGray6"
                 android:textSize="16sp"
                 app:drawableEndCompat="@drawable/ic_angle_bracket_right"
+                app:drawableTint="@color/darkGray1"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_app_currency_title" />
+                app:layout_constraintTop_toBottomOf="@id/tv_card_tou" />
 
             <TextView
                 android:id="@+id/tv_wallet_connect"
@@ -210,75 +277,9 @@
                 android:textColor="@color/darkGray6"
                 android:textSize="16sp"
                 app:drawableEndCompat="@drawable/ic_angle_bracket_right"
+                app:drawableTint="@color/darkGray1"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tv_send_feedback" />
-
-            <androidx.constraintlayout.widget.Barrier
-                android:id="@+id/barrier"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                app:barrierDirection="bottom"
-                app:constraint_referenced_ids="tv_wallet_connect,tv_send_feedback" />
-
-            <TextView
-                android:id="@+id/tv_card_title"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="22dp"
-                android:paddingBottom="4dp"
-                android:text="@string/details_section_title_card"
-                android:textAllCaps="true"
-                android:textColor="@color/colorSecondary"
-                android:textSize="13sp"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/barrier" />
-
-            <View
-                android:layout_width="match_parent"
-                android:layout_height="1dp"
-                android:background="@color/separatorGrey2"
-                app:layout_constraintTop_toBottomOf="@id/tv_card_title" />
-
-            <TextView
-                android:id="@+id/tv_security"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:drawablePadding="15dp"
-                android:paddingTop="7dp"
-                android:paddingBottom="7dp"
-                android:textColor="@color/darkGray1"
-                android:textSize="16sp"
-                app:drawableEndCompat="@drawable/ic_angle_bracket_right"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_card_title"
-                tools:text="Long Tap" />
-
-            <TextView
-                android:id="@+id/tv_security_title"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:paddingTop="7dp"
-                android:paddingBottom="7dp"
-                android:text="@string/details_row_title_manage_security"
-                android:textColor="@color/darkGray6"
-                android:textSize="16sp"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_card_title" />
-
-
-            <TextView
-                android:id="@+id/tv_erase_wallet"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:drawablePadding="15dp"
-                android:paddingTop="7dp"
-                android:paddingBottom="7dp"
-                android:text="@string/details_row_title_erase_wallet"
-                android:textColor="@color/darkGray6"
-                android:textSize="16sp"
-                app:drawableEndCompat="@drawable/ic_angle_bracket_right"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_security_title" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 
