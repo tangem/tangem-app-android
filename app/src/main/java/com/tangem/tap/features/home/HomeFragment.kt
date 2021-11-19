@@ -18,6 +18,7 @@ import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fragment_onboarding_main.*
 import kotlinx.android.synthetic.main.layout_onboarding_container_bottom.*
 import kotlinx.android.synthetic.main.layout_onboarding_home_top.*
+import kotlinx.android.synthetic.main.view_bg_home.*
 
 class HomeFragment : BaseOnboardingFragment<HomeState>() {
 
@@ -39,7 +40,10 @@ class HomeFragment : BaseOnboardingFragment<HomeState>() {
         val shareTransition = FragmentShareTransition(
             listOf(
                 ShareElement(imv_front_card, ShareElement.imvFrontCard),
-                ShareElement(imv_back_card, ShareElement.imvBackCard)
+                ShareElement(imv_back_card, ShareElement.imvBackCard),
+                ShareElement(bg_circle_large),
+                ShareElement(bg_circle_medium),
+                ShareElement(bg_circle_min),
             ),
             FrontCardEnterTransition(),
             FrontCardExitTransition()
