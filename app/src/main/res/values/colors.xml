@@ -5,6 +5,8 @@
     <color name="colorSecondary">#0022D4</color>
     <color name="accent">#1ACE80</color>
 
+    <color name="toolbarColor">@color/backgroundLightGray</color>
+
     <color name="tapButtonColor">@color/accent</color>
     <color name="tapButtonDisabled">#661ACE80</color>
     <color name="tapButtonColorBlack">@color/darkGray6</color>
@@ -14,6 +16,7 @@
     <color name="error">#C4291C</color>
     <color name="warning">#FFB71B</color>
 
+    <color name="white">#FFFFFF</color>
     <color name="darkGray1">#8E8E93</color>
     <color name="darkGray2">#636366</color>
     <color name="darkGray3">#48484A</color>
@@ -21,7 +24,7 @@
     <color name="darkGray5">#2C2C2E</color>
     <color name="darkGray6">#1C1C1E</color>
 
-    <color name="backgroundGray">#F9F9FA</color>
+    <color name="backgroundWhite">#FFFFFF</color>
     <color name="backgroundLightGray">#F9F9F9</color>
     <color name="buttonGray">#F4F5F6</color>
     <color name="textGray">#DE000000</color>
@@ -29,10 +32,13 @@
     <color name="twins_dark">#14181D</color>
 
 
+    <color name="lightGray0">#F3F3F3</color>
     <color name="lightGray1">#F8F8FB</color>
+    <color name="lightGray2">#DADADF</color>
+    <color name="lightGray3">#D0D0D5</color>
     <color name="lightGray4">#C7C7CC</color>
     <color name="lightGray5">#D1D1D6</color>
-    <color name="lightGray6">#F2F2F7</color>
+    <color name="lightGray6">#C9C9CD</color>
 
     <color name="separatorGrey1">#1F000000</color>
     <color name="separatorGrey2">#14212121</color>
@@ -42,6 +48,8 @@
     <color name="blue2">#1F50FF</color>
     <color name="blue3">#CBE4FF</color>
     <color name="blue_pale">#E0E6FA</color>
+
+    <color name="tint">#55000000</color>
 
     <color name="warning_info">#1C1C1E</color>
     <color name="warning_warning">#FFB71B</color>
