@@ -1,12 +1,13 @@
 package com.tangem.tap.domain
 
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.commands.common.card.Card
-import com.tangem.commands.common.card.EllipticCurve
-import com.tangem.commands.common.card.masks.Product
-import com.tangem.tap.domain.TapWorkarounds.isNote
+import com.tangem.common.card.Card
+import com.tangem.common.card.EllipticCurve
+import com.tangem.common.card.FirmwareVersion
 import com.tangem.tap.domain.TapWorkarounds.isStart2Coin
+import com.tangem.tap.domain.TapWorkarounds.isTangemNote
 import com.tangem.tap.domain.extensions.getSingleWallet
+import com.tangem.tap.domain.twins.isTangemTwin
 import java.util.*
 
 object TapWorkarounds {
@@ -16,41 +17,28 @@ object TapWorkarounds {
     }
 
     val Card.isStart2Coin: Boolean
-        get() = isStart2CoinIssuer(cardData?.issuerName)
+        get() = isStart2CoinIssuer(issuer.name)
+
+    val Card.isTestCard: Boolean
+        get() = batchId == TEST_CARD_BATCH && cardId.startsWith(TEST_CARD_ID_STARTS_WITH)
 
     fun Card.isExcluded(): Boolean {
-        val cardData = this.cardData ?: return false
-        val productMask = cardData.productMask
-        val excludedBatch = excludedBatches.contains(cardData.batchId)
-        val excludedIssuerName = excludedIssuers.contains(cardData.issuerName?.toUpperCase(Locale.US))
-        val excludedProductMask = (productMask != null && // product mask is on cards v2.30 and later
-                !productMask.contains(Product.Note) && !productMask.contains(Product.TwinCard))
-        return excludedBatch || excludedIssuerName || excludedProductMask
-
+        val excludedBatch = excludedBatches.contains(batchId)
+        val excludedIssuerName = excludedIssuers.contains(issuer.name.uppercase(Locale.ROOT))
+        return excludedBatch || excludedIssuerName
     }
 
-    fun Card.isNote(): Boolean {
-        return notesBatches.contains(cardData?.batchId)
-    }
+    @Deprecated("Use ScanResponse.isTangemNote")
+    fun isTangemNote(card: Card): Boolean = tangemNoteBatches.contains(card.batchId)
 
-    fun Card.isMultiCurrencyWallet(): Boolean {
-        return multiCurrencyWalletsBatches.contains(cardData?.batchId)
-    }
+    @Deprecated("Use ScanResponse.isTangemWallet")
+    fun isTangemWallet(card: Card): Boolean = tangemWalletBatches.contains(card.batchId)
 
-    val Card.noteCurrency: Blockchain?
-        get() {
-            return when (cardData?.batchId) {
-                "AB01" -> Blockchain.Bitcoin
-                "AB02" -> Blockchain.Ethereum
-                "AB03" -> Blockchain.CardanoShelley
-                "AB04" -> Blockchain.Dogecoin
-                "AB05" -> Blockchain.Binance
-                "AB06" -> Blockchain.XRP
-                else -> null
-            }
-        }
+    fun getTangemNoteBlockchain(card: Card): Blockchain? = tangemNoteBatches[card.batchId]
 
     private const val START_2_COIN_ISSUER = "start2coin"
+    private const val TEST_CARD_BATCH = "99FF"
+    private const val TEST_CARD_ID_STARTS_WITH = "FF99"
 
     private val excludedBatches = listOf(
             "0027",
@@ -63,23 +51,23 @@ object TapWorkarounds {
             "TTM BANK"
     )
 
-    private val notesBatches = listOf(
-        "AB01",
-        "AB02",
-        "AB03",
-        "AB04",
-        "AB05",
-        "AB06",
-    )
+    private val tangemWalletBatches = listOf("AC01")
 
-    private val multiCurrencyWalletsBatches = listOf("AC01")
+    private val tangemNoteBatches = mapOf(
+            "AB01" to Blockchain.Bitcoin,
+            "AB02" to Blockchain.Ethereum,
+            "AB03" to Blockchain.CardanoShelley,
+            "AB04" to Blockchain.Dogecoin,
+            "AB05" to Blockchain.BSC,
+            "AB06" to Blockchain.XRP,
+    )
 }
+
+val DELAY_SDK_DIALOG_CLOSE = 1400L
 
 val Card.isMultiwalletAllowed: Boolean
     get() {
-        return cardData?.productMask?.contains(Product.TwinCard) != true
-                && !isStart2Coin
-                && !isNote()
-                && (firmwareVersion.major >= 4 ||
+        return !isTangemTwin() && !isStart2Coin && !isTangemNote(this)
+                && (firmwareVersion >= FirmwareVersion.MultiWalletAvailable ||
                 getSingleWallet()?.curve == EllipticCurve.Secp256k1)
     }
