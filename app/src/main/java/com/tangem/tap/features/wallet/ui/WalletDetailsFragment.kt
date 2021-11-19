@@ -14,6 +14,7 @@ import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.features.onboarding.getQRReceiveMessage
 import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.redux.*
 import com.tangem.tap.features.wallet.ui.adapters.PendingTransactionsAdapter
@@ -84,7 +85,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
 
         btn_share.setOnClickListener { store.dispatch(WalletAction.ShowDialog.QrCode) }
 
-        btn_top_up.setOnClickListener { store.dispatch(WalletAction.TradeCryptoAction.Buy) }
+        btn_trade.setOnClickListener { store.dispatch(WalletAction.TradeCryptoAction.Buy) }
 
         btn_sell.setOnClickListener { store.dispatch(WalletAction.TradeCryptoAction.Sell) }
     }
@@ -127,8 +128,6 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
         srl_wallet_details.setOnRefreshListener {
             if (selectedWallet.currencyData.status != BalanceStatus.Loading) {
                 store.dispatch(WalletAction.LoadWallet(
-                    allowToBuy = selectedWallet.tradeCryptoState.buyingAllowed,
-                    allowToSell = selectedWallet.tradeCryptoState.sellingAllowed,
                     blockchain = selectedWallet.currency?.blockchain
                 ))
             }
@@ -138,7 +137,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
             srl_wallet_details.isRefreshing = false
         }
 
-        btn_top_up.isEnabled = selectedWallet.tradeCryptoState.buyingAllowed
+        btn_trade.isEnabled = selectedWallet.tradeCryptoState.buyingAllowed
         btn_sell.show(selectedWallet.tradeCryptoState.sellingAllowed)
     }
 
@@ -146,7 +145,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
         Picasso.get().loadCurrenciesIcon(
             imageView = iv_currency,
             textView = tv_token_letter,
-            blockchain = wallet.currency?.blockchain,
+            blockchain = wallet.currency.blockchain,
             token = (wallet.currency as? Currency.Token)?.token
         )
     }
@@ -182,6 +181,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
                     requireContext()))
             }
             iv_qr_code.setImageBitmap(state.walletAddresses.selectedAddress.shareUrl.toQrCode())
+            tv_recieve_message.text = getQRReceiveMessage(tv_recieve_message.context, state.currency)
         }
     }
 
@@ -286,7 +286,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.meny_remove -> {
+            R.id.menu_remove -> {
                 store.state.walletState.getSelectedWalletData()?.let { walletData ->
                     store.dispatch(WalletAction.MultiWallet.RemoveWallet(walletData))
                     store.dispatch(WalletAction.MultiWallet.SelectWallet(null))
@@ -300,9 +300,11 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        if (store.state.walletState.canBeRemoved(store.state.walletState.getSelectedWalletData())) {
-            inflater.inflate(R.menu.wallet_details, menu)
-        }
+        inflater.inflate(R.menu.wallet_details, menu)
+        val walletCanBeRemoved = store.state.walletState.canBeRemoved(
+            store.state.walletState.getSelectedWalletData()
+        )
+        menu.getItem(0).isEnabled = walletCanBeRemoved
     }
 
 }

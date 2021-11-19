@@ -115,7 +115,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
     }
 
     private fun setupTransactionExtrasLayout() {
-        etMemo.inputtedTextAsFlow()
+        etXlmMemo.inputtedTextAsFlow()
                 .debounce(400)
                 .filter {
                     val info = store.state.sendState.transactionExtrasState
@@ -132,6 +132,15 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
                 }
                 .onEach { store.dispatch(TransactionExtrasAction.XrpDestinationTag.HandleUserInput(it)) }
                 .launchIn(mainScope)
+
+        etBinanceMemo.inputtedTextAsFlow()
+            .debounce(400)
+            .filter {
+                val info = store.state.sendState.transactionExtrasState
+                info.binanceMemo?.viewFieldValue?.value != it
+            }
+            .onEach { store.dispatch(TransactionExtrasAction.BinanceMemo.HandleUserInput(it)) }
+            .launchIn(mainScope)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {

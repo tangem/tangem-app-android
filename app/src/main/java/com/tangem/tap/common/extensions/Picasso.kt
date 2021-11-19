@@ -15,9 +15,8 @@ fun Picasso.loadCurrenciesIcon(
     imageView: ImageView,
     textView: TextView,
     token: Token? = null,
-    blockchain: Blockchain?,
+    blockchain: Blockchain,
 ) {
-    val blockchain = blockchain ?: Blockchain.Ethereum
 
     val url = if (token != null) {
         IconsUtil.getTokenIconUri(blockchain, token)
