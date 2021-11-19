@@ -23,6 +23,7 @@
             android:layout_height="?attr/actionBarSize"
             app:menu="@menu/wallet_details"
             app:navigationIcon="@drawable/ic_baseline_arrow_back_24"
+            android:theme="@style/ThemeOverlay.MyTheme.Toolbar"
             app:title=" " />
 
     </com.google.android.material.appbar.AppBarLayout>
@@ -131,7 +132,7 @@
                     app:constraint_referenced_ids="l_wallet_details,card_pending_transaction_warning" />
 
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_top_up"
+                    android:id="@+id/btn_trade"
                     style="@style/TapButtonWithIcon"
                     android:layout_width="0dp"
                     android:layout_marginStart="16dp"
@@ -151,7 +152,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     app:barrierDirection="end"
-                    app:constraint_referenced_ids="btn_top_up, btn_sell" />
+                    app:constraint_referenced_ids="btn_trade, btn_sell" />
 
                 <androidx.constraintlayout.widget.Barrier
                     android:id="@+id/barrier_right_button"
@@ -172,7 +173,7 @@
                     app:icon="@drawable/ic_arrow_down"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintHorizontal_chainStyle="packed"
-                    app:layout_constraintStart_toEndOf="@id/btn_top_up"
+                    app:layout_constraintStart_toEndOf="@id/btn_trade"
                     app:layout_constraintEnd_toStartOf="@id/btn_confirm"
                     app:layout_constraintTop_toBottomOf="@id/barrier"
                     app:layout_constraintVertical_bias="1" />
