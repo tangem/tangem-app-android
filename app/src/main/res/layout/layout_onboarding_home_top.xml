@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/onboarding_main_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clipChildren="false">
+
+    <include layout="@layout/view_bg_home" />
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/imv_back_card"
+        android:layout_width="215dp"
+        android:layout_height="130dp"
+        android:layout_marginStart="24dp"
+        android:elevation="0dp"
+        android:rotation="-21"
+        android:scaleType="fitXY"
+        android:src="@drawable/card_placeholder_white"
+        android:translationY="@dimen/home_back_card_translationY"
+        app:layout_constraintEnd_toEndOf="@+id/imv_front_card"
+        app:layout_constraintStart_toStartOf="@+id/imv_front_card"
+        app:layout_constraintTop_toBottomOf="@+id/imv_front_card" />
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/imv_front_card"
+        android:layout_width="250dp"
+        android:layout_height="150dp"
+        android:elevation="1dp"
+        android:rotation="-3"
+        android:scaleType="fitXY"
+        android:src="@drawable/card_placeholder_black"
+        android:translationY="@dimen/home_front_card_translationY"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>
