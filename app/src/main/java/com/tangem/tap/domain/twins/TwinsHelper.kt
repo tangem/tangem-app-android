@@ -1,14 +1,19 @@
 package com.tangem.tap.domain.twins
 
-import com.tangem.commands.common.card.Card
-import com.tangem.commands.common.card.CardStatus
-import com.tangem.commands.common.card.masks.Product
-import com.tangem.commands.wallet.WalletStatus
-import com.tangem.tap.common.extensions.isEven
+import com.tangem.common.card.Card
+import com.tangem.crypto.CryptoUtils
 
 class TwinsHelper {
     companion object {
         const val TWIN_FILE_NAME = "TwinPublicKey"
+
+        fun verifyTwinPublicKey(issuerData: ByteArray, cardWalletPublicKey: ByteArray?): Boolean {
+            if (issuerData.size < 65 || cardWalletPublicKey == null) return false
+
+            val publicKey = issuerData.sliceArray(0 until 65)
+            val signedKey = issuerData.sliceArray(65 until issuerData.size)
+            return CryptoUtils.verify(cardWalletPublicKey, publicKey, signedKey)
+        }
 
         fun getTwinCardNumber(cardId: String): TwinCardNumber? {
             return when {
@@ -37,22 +42,6 @@ class TwinsHelper {
             }
         }
 
-        fun getTwinsCardId(cardId: String): String? {
-            val cardIdWithNewSeries = when (getTwinCardNumber(cardId) ?: return null) {
-                TwinCardNumber.First -> {
-                    val index = if (cardId.startsWith(firstCardSeries[0])) 0 else 1
-                    cardId.replace(firstCardSeries[index], secondCardSeries[index])
-                }
-                TwinCardNumber.Second -> {
-                    val index = if (cardId.startsWith(secondCardSeries[0])) 0 else 1
-                    cardId.replace(secondCardSeries[index], firstCardSeries[index])
-                }
-            }
-            val cardIdWithoutChecksum = cardIdWithNewSeries.dropLast(1)
-            val checkSum = cardIdWithoutChecksum.calculateLuhn()
-            return cardIdWithoutChecksum + checkSum
-        }
-
         fun getTwinCardIdForUser(cardId: String): String {
             if (cardId.length < 16) return cardId
 
@@ -66,21 +55,6 @@ class TwinsHelper {
     }
 }
 
-private fun String.calculateLuhn(): Int {
-    val checksum = this.reversed()
-        .mapIndexed { index, c ->
-            val digit = if (c in '0'..'9') c - '0' else c - 'A'
-            if (!index.isEven()) {
-                digit
-            } else {
-                val newDigit = digit * 2
-                if (newDigit >= 10) newDigit - 9 else newDigit
-            }
-        }.sum()
-        .rem(10)
-    return (10 - checksum) % 10
-}
-
 enum class TwinCardNumber(val number: Int) {
     First(1), Second(2);
 
@@ -90,20 +64,15 @@ enum class TwinCardNumber(val number: Int) {
     }
 }
 
-fun Card.isTwinCard(): Boolean {
-    return this.cardData?.productMask?.contains(Product.TwinCard) == true
+@Deprecated("Use ScanResponse.isTangemTwin")
+fun Card.isTangemTwin(): Boolean {
+    return TwinsHelper.getTwinCardNumber(cardId) != null
+}
+
+fun Card.getTwinCardNumber(): TwinCardNumber? {
+    return TwinsHelper.getTwinCardNumber(this.cardId)
 }
 
 fun Card.getTwinCardIdForUser(): String {
     return TwinsHelper.getTwinCardIdForUser(this.cardId)
-}
-
-fun Card.changeStatusToLoaded(): Card {
-    val wallets = wallets.map { it.copy(status = WalletStatus.Loaded) }
-    return copy(status = CardStatus.Loaded, wallets = wallets)
-}
-
-fun Card.changeStatusToEmpty(): Card {
-    val wallets = wallets.map { it.copy(status = WalletStatus.Empty) }
-    return copy(status = CardStatus.Empty, wallets = wallets)
 }
