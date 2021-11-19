@@ -17,7 +17,8 @@
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
-            android:layout_height="76dp">
+            android:layout_height="wrap_content"
+            android:minHeight="76dp">
 
             <ImageView
                 android:id="@+id/iv_currency"
@@ -46,50 +47,94 @@
                 app:layout_constraintTop_toTopOf="@id/iv_currency"
                 tools:text="J" />
 
+            <androidx.constraintlayout.widget.Guideline
+                android:id="@+id/guideline"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                app:layout_constraintGuide_percent="0.5" />
+
             <TextView
                 android:id="@+id/tv_currency"
-                android:layout_width="wrap_content"
-                android:layout_height="24dp"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
+                android:layout_marginEnd="16dp"
+                android:ellipsize="end"
+                android:maxLines="1"
                 android:paddingStart="16dp"
                 android:paddingEnd="2dp"
                 android:textColor="@color/darkGray6"
                 android:textSize="17sp"
                 android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="@id/guideline"
+                app:layout_constraintEnd_toStartOf="@+id/tv_amount"
                 app:layout_constraintStart_toEndOf="@id/iv_currency"
                 app:layout_constraintTop_toTopOf="parent"
-                tools:text="Bitcoin" />
+                tools:text="Binance Smart Chain Optimal" />
+
+            <androidx.constraintlayout.widget.Guideline
+                android:id="@+id/guideline2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintGuide_percent="0.45"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <TextView
+                android:id="@+id/tv_amount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:layout_marginEnd="4dp"
+                android:ellipsize="end"
+                android:gravity="end"
+                android:maxEms="12"
+                android:maxLength="12"
+                android:maxLines="1"
+                android:textColor="@color/darkGray6"
+                android:textSize="17sp"
+                android:textStyle="bold"
+                android:visibility="visible"
+                app:layout_constraintEnd_toStartOf="@+id/tv_currency_symbol"
+                app:layout_constraintHorizontal_bias="1.0"
+                app:layout_constraintStart_toStartOf="@+id/guideline2"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="1234567890.1234567890" />
 
             <TextView
                 android:id="@+id/tv_exchange_rate"
                 android:layout_width="wrap_content"
-                android:layout_height="20dp"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
-                android:layout_marginBottom="16dp"
                 android:textColor="@color/darkGray2"
                 android:textSize="14sp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toEndOf="@id/iv_currency"
+                app:layout_constraintTop_toTopOf="@id/guideline"
                 tools:text="USD 3 588" />
 
             <TextView
                 android:id="@+id/tv_status_error_message"
                 android:layout_width="wrap_content"
-                android:layout_height="20dp"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
-                android:layout_marginBottom="16dp"
                 android:textColor="@color/warning"
                 android:textSize="14sp"
                 android:visibility="gone"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toEndOf="@id/iv_currency" />
+                app:layout_constraintStart_toEndOf="@id/iv_currency"
+                app:layout_constraintTop_toTopOf="@id/guideline" />
 
             <TextView
                 android:id="@+id/tv_status_loading"
                 android:layout_width="wrap_content"
-                android:layout_height="20dp"
+                android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
                 android:drawablePadding="5dp"
                 android:paddingStart="16dp"
@@ -102,52 +147,32 @@
                 app:layout_constraintStart_toStartOf="parent" />
 
             <TextView
-                android:id="@+id/tv_amount"
-                android:layout_width="0dp"
-                android:layout_height="24dp"
-                android:ellipsize="end"
-                android:gravity="end"
-                android:maxLines="1"
-                android:layout_marginStart="2dp"
-                android:layout_marginTop="16dp"
-                android:textColor="@color/darkGray6"
-                android:textSize="17sp"
-                android:textStyle="bold"
-                app:layout_constraintEnd_toStartOf="@id/tv_currency_symbol"
-                app:layout_constraintHorizontal_weight="1"
-                app:layout_constraintStart_toEndOf="@id/tv_currency"
-                app:layout_constraintTop_toTopOf="parent"
-                tools:text="3 588" />
-
-            <TextView
                 android:id="@+id/tv_currency_symbol"
                 android:layout_width="wrap_content"
-                android:layout_height="24dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:layout_marginEnd="16dp"
                 android:gravity="end"
                 android:maxLines="1"
-                android:layout_marginStart="4dp"
-                android:layout_marginEnd="16dp"
-                android:layout_marginTop="16dp"
                 android:textColor="@color/darkGray6"
                 android:textSize="17sp"
                 android:textStyle="bold"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_weight="1"
-                app:layout_constraintStart_toEndOf="@id/tv_amount"
                 app:layout_constraintTop_toTopOf="parent"
                 tools:text="BTC" />
 
             <TextView
                 android:id="@+id/tv_amount_fiat"
                 android:layout_width="wrap_content"
-                android:layout_height="20dp"
-                android:layout_marginBottom="16dp"
+                android:layout_height="wrap_content"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
                 android:textColor="@color/darkGray2"
                 android:textSize="14sp"
-                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintBottom_toBottomOf="@id/tv_exchange_rate"
                 app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="@id/tv_exchange_rate"
                 tools:text="0.43 USD" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
