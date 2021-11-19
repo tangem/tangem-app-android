@@ -5,16 +5,20 @@ import android.nfc.NfcAdapter
 import android.nfc.Tag
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.domain.topup.TradeCryptoHelper
 import com.tangem.tap.domain.walletconnect.WalletConnectManager
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.home.redux.HomeAction
+import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.store
+import timber.log.Timber
 
 class IntentHandler {
 
     fun handleIntent(intent: Intent?) {
         handleBackgroundScan(intent)
         handleWalletConnectLink(intent)
+        handleSellCurrencyCallback(intent)
     }
 
     private fun handleBackgroundScan(intent: Intent?) {
@@ -37,5 +41,31 @@ class IntentHandler {
             store.dispatch(WalletConnectAction.HandleDeepLink(intent.data?.toString()))
         }
     }
+
+    private fun handleSellCurrencyCallback(intent: Intent?) {
+        try {
+            val transactionID =
+                intent?.data?.getQueryParameter(TradeCryptoHelper.TRANSACTION_ID_PARAM) ?: return
+            val currency =
+                intent.data?.getQueryParameter(TradeCryptoHelper.CURRENCY_CODE_PARAM) ?: return
+            val amount =
+                intent.data?.getQueryParameter(TradeCryptoHelper.CURRENCY_AMOUNT_PARAM) ?: return
+            val destinationAddress =
+                intent.data?.getQueryParameter(TradeCryptoHelper.DEPOSIT_WALLET_ADDRESS_PARAM)
+                    ?: return
+
+            Timber.d("MoonPay Sell: $amount $currency to $destinationAddress")
+
+            store.dispatch(WalletAction.TradeCryptoAction.SendCrypto(
+                currencyId = currency,
+                amount = amount,
+                destinationAddress = destinationAddress,
+                transactionId = transactionID
+            ))
+        } catch (exception: Exception) {
+            Timber.d("Not Moonpay URL")
+        }
+    }
+
 
 }

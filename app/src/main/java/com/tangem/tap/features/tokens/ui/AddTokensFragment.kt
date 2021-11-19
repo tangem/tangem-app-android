@@ -18,7 +18,6 @@ import com.tangem.tap.mainScope
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fragment_add_tokens.*
-import kotlinx.android.synthetic.main.fragment_details_twin_cards.toolbar
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
 import org.rekotlin.StoreSubscriber
@@ -74,7 +73,7 @@ class AddTokensFragment : Fragment(R.layout.fragment_add_tokens),
     override fun newState(state: TokensState) {
         if (activity == null) return
         viewAdapter.addedCurrencies = state.addedCurrencies
-        viewAdapter.submitUnfilteredList(state.currencies)
+        viewAdapter.submitUnfilteredList(state.shownCurrencies)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
