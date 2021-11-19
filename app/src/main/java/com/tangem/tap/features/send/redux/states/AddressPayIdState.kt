@@ -12,7 +12,8 @@ data class AddressPayIdState(
         val error: AddressPayIdVerifyAction.Error? = null,
         val truncateHandler: ((String) -> String)? = null,
         val sendingToPayIdEnabled: Boolean = false,
-        val pasteIsEnabled: Boolean = false
+        val pasteIsEnabled: Boolean = false,
+        val inputIsEnabled: Boolean = true
 ) : SendScreenState {
 
     override val stateId: StateId = StateId.ADDRESS_PAY_ID
@@ -26,6 +27,7 @@ data class AddressPayIdState(
 
 data class TransactionExtrasState(
         val xlmMemo: XlmMemoState? = null,
+        val binanceMemo: BinanceMemoState? = null,
         val xrpDestinationTag: XrpDestinationTagState? = null
 ) : IdStateHolder {
     override val stateId: StateId = StateId.TRANSACTION_EXTRAS
@@ -53,6 +55,16 @@ data class XlmMemoState(
     }
 }
 
+data class BinanceMemoState(
+    val viewFieldValue: InputViewValue = InputViewValue(""),
+    val memo: BigInteger? = null,
+    val error: TransactionExtraError? = null
+    ) {
+    companion object {
+        val MAX_NUMBER: BigInteger = BigInteger("FFFFFFFFFFFFFFFF", 16)
+    }
+}
+
 // tag must contains only digits
 data class XrpDestinationTagState(
         val viewFieldValue: InputViewValue = InputViewValue(""),
@@ -66,5 +78,6 @@ data class XrpDestinationTagState(
 
 enum class TransactionExtraError {
     INVALID_DESTINATION_TAG,
-    INVALID_XLM_MEMO
+    INVALID_XLM_MEMO,
+    INVALID_BINANCE_MEMO
 }
