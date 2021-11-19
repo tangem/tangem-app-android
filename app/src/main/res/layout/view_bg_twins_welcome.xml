@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/bg_circle_large"
+        android:layout_width="736dp"
+        android:layout_height="609dp"
+        android:alpha="0.4"
+        android:scaleType="fitXY"
+        android:src="@drawable/shape_circle"
+        android:tint="#DEDEE0"
+        android:transitionName="bg_circle_large"
+        android:translationX="-272dp"
+        android:translationY="-200dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/bg_circle_medium"
+        android:layout_width="651dp"
+        android:layout_height="569dp"
+        android:alpha="0.4"
+        android:scaleType="fitXY"
+        android:src="@drawable/shape_circle"
+        android:tint="#DCDCDC"
+        android:transitionName="bg_circle_medium"
+        android:translationX="-254dp"
+        android:translationY="-269dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/bg_circle_min"
+        android:layout_width="712dp"
+        android:layout_height="591dp"
+        android:alpha="0.4"
+        android:scaleType="fitXY"
+        android:src="@drawable/shape_circle"
+        android:tint="#D9D9D9"
+        android:transitionName="bg_circle_min"
+        android:translationX="-394dp"
+        android:translationY="-411dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+</FrameLayout>
