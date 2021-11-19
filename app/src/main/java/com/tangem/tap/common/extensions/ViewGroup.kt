@@ -1,6 +1,7 @@
 package com.tangem.tap.common.extensions
 
 import android.view.LayoutInflater
+import android.view.View
 import android.view.ViewGroup
 import android.view.ViewParent
 import androidx.core.view.forEach
@@ -15,11 +16,8 @@ import timber.log.Timber
 /**
 [REDACTED_AUTHOR]
  */
-fun ViewGroup.inflate(viewToInflate: Int, rootView: ViewGroup?, parent: ViewGroup) {
-    if (rootView == null) {
-        val inflatedView = LayoutInflater.from(context).inflate(viewToInflate, rootView)
-        parent.addView(inflatedView)
-    }
+fun ViewGroup.inflate(viewToInflate: Int, attachToRoot: Boolean = false): View {
+    return LayoutInflater.from(context).inflate(viewToInflate, this, attachToRoot)
 }
 
 fun ViewParent?.beginDelayedTransition(transition: Transition = AutoTransition()) {
