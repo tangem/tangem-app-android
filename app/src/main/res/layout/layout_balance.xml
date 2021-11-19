@@ -19,7 +19,7 @@
         android:textStyle="bold"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:text="Bitcoin" />
+        tools:text="Binance Smart Chain Optimal" />
 
     <TextView
         android:id="@+id/tv_status_verified"
@@ -94,7 +94,7 @@
         android:layout_height="wrap_content"
         android:layout_marginEnd="16dp"
         android:ellipsize="end"
-        android:gravity="end"
+        android:gravity="end|bottom"
         android:maxLines="1"
         android:textColor="@color/darkGray6"
         android:textSize="20sp"
