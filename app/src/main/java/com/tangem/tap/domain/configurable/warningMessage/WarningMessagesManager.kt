@@ -1,7 +1,7 @@
 package com.tangem.tap.domain.configurable.warningMessage
 
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.tangem_sdk_new.ui.animation.VoidCallback
+import com.tangem.common.extensions.VoidCallback
 import com.tangem.tap.common.extensions.containsAny
 import com.tangem.tap.common.extensions.removeBy
 import com.tangem.wallet.R
@@ -155,6 +155,18 @@ class WarningMessagesManager(
             messageResId = R.string.warning_low_signatures_format,
             origin = WarningMessage.Origin.Local,
             messageFormatArg = remainingSignatures.toString()
+        )
+
+        fun testCardWarning(): WarningMessage = WarningMessage(
+            "",
+            "",
+            type = WarningMessage.Type.TestCard,
+            priority = WarningMessage.Priority.Critical,
+            listOf(WarningMessage.Location.MainScreen),
+            null,
+            R.string.alert_title,
+            R.string.warning_testnet_card_message,
+            WarningMessage.Origin.Local
         )
 
         const val REMAINING_SIGNATURES_WARNING = 10

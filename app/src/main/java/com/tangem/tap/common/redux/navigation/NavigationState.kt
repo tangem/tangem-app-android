@@ -10,7 +10,13 @@ data class NavigationState(
 ) : StateType
 
 enum class AppScreen {
-    Home, Wallet, WalletDetails, Send, Details, DetailsConfirm, DetailsSecurity, Disclaimer,
-    CreateTwinWalletWarning, CreateTwinWallet, TwinsOnboarding, AddTokens, WalletConnectSessions,
+    Home,
+    Disclaimer,
+    OnboardingNote, OnboardingWallet, OnboardingTwins, OnboardingOther,
+    Wallet, WalletDetails,
+    Send,
+    Details, DetailsConfirm, DetailsSecurity,
+    AddTokens,
+    WalletConnectSessions,
     QrScan
 }

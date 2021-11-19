@@ -3,16 +3,17 @@ package com.tangem.tap.features.tokens.ui.adapters
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.annotation.StringRes
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.squareup.picasso.Picasso
-import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.Token
-import com.tangem.tap.common.extensions.*
-import com.tangem.tap.common.redux.global.CryptoCurrencyName
+import com.tangem.tap.common.extensions.getString
+import com.tangem.tap.common.extensions.hide
+import com.tangem.tap.common.extensions.loadCurrenciesIcon
+import com.tangem.tap.common.extensions.show
 import com.tangem.tap.domain.tokens.CardCurrencies
+import com.tangem.tap.features.tokens.redux.CurrencyListItem
+import com.tangem.tap.features.tokens.redux.TokensAction
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.store
 import com.tangem.wallet.R
@@ -66,11 +67,11 @@ class CurrenciesAdapter : ListAdapter<CurrencyListItem, RecyclerView.ViewHolder>
 
     object DiffUtilCallback : DiffUtil.ItemCallback<CurrencyListItem>() {
         override fun areContentsTheSame(
-            oldItem: CurrencyListItem, newItem: CurrencyListItem
+            oldItem: CurrencyListItem, newItem: CurrencyListItem,
         ) = oldItem == newItem
 
         override fun areItemsTheSame(
-            oldItem: CurrencyListItem, newItem: CurrencyListItem
+            oldItem: CurrencyListItem, newItem: CurrencyListItem,
         ) = oldItem == newItem
     }
 
@@ -84,17 +85,18 @@ class CurrenciesAdapter : ListAdapter<CurrencyListItem, RecyclerView.ViewHolder>
                     when (element) {
                         is CurrencyListItem.BlockchainListItem -> {
                             element.blockchain.currency.toLowerCase(Locale.US)
-                                .contains(queryNormalized)
-                                    || element.blockchain.fullName.toLowerCase(Locale.US)
-                                .contains(queryNormalized)
+                                .contains(queryNormalized) ||
+                                    element.blockchain.fullName.toLowerCase(Locale.US)
+                                        .contains(queryNormalized)
 
                         }
                         is CurrencyListItem.TokenListItem -> {
-                            element.token.name.toLowerCase(Locale.US).contains(queryNormalized)
-                                    || element.token.symbol.toLowerCase(Locale.US)
-                                .contains(queryNormalized)
+                            element.token.name.toLowerCase(Locale.US)
+                                .contains(queryNormalized) ||
+                                    element.token.symbol.toLowerCase(Locale.US)
+                                        .contains(queryNormalized)
                         }
-                        else -> false
+                        is CurrencyListItem.TitleListItem -> true
                     }
                 })
         } else {
@@ -143,7 +145,7 @@ class CurrenciesAdapter : ListAdapter<CurrencyListItem, RecyclerView.ViewHolder>
                     Picasso.get().loadCurrenciesIcon(
                         imageView = view.iv_currency,
                         textView = view.tv_token_letter,
-                        token = token, blockchain = Blockchain.Ethereum
+                        token = token, blockchain = token.blockchain
                     )
                     view.btn_add_token.setOnClickListener {
                         store.dispatch(WalletAction.MultiWallet.AddToken(token))
@@ -158,28 +160,21 @@ class CurrenciesAdapter : ListAdapter<CurrencyListItem, RecyclerView.ViewHolder>
     class TitleViewHolder(val view: View) :
         RecyclerView.ViewHolder(view) {
         fun bind(title: CurrencyListItem.TitleListItem) {
-            view.tv_subtitle.text = view.getString(title.titleResId).toUpperCase(Locale.US)
-        }
-    }
-}
+            view.tv_subtitle.text = view.getString(title.titleResId).uppercase()
 
-
-sealed class CurrencyListItem {
-    data class TokenListItem(val token: Token) : CurrencyListItem()
-    data class BlockchainListItem(val blockchain: Blockchain) : CurrencyListItem()
-    data class TitleListItem(@StringRes val titleResId: Int) : CurrencyListItem()
-
-    companion object {
-        fun createListOfCurrencies(
-            blockchains: List<Blockchain>,
-            tokens: List<Token>
-        ): List<CurrencyListItem> {
-            val blockchainsTitle = R.string.add_tokens_subtitle_blockchains
-            val tokensTitle = R.string.add_tokens_subtitle_tokens
-            return listOf(TitleListItem(blockchainsTitle)) +
-                    blockchains.map { BlockchainListItem(it) } +
-                    listOf(TitleListItem(tokensTitle)) +
-                    tokens.map { TokenListItem(it) }
+            if (title.blockchain != null) {
+                view.cl_subtitle_container.setOnClickListener {
+                    val rotation = if (title.isContentShown) -90f else 0f
+                    store.dispatch(TokensAction.ToggleShowTokensForBlockchain(
+                        title.isContentShown, title.blockchain
+                    ))
+                    view.iv_toggle_sublist_visibility.animate().rotation(rotation)
+                }
+                view.iv_toggle_sublist_visibility.show()
+                view.iv_toggle_sublist_visibility.setImageResource(R.drawable.ic_arrow_angle_down)
+            } else {
+                view.iv_toggle_sublist_visibility.hide()
+            }
         }
     }
 }

@@ -5,13 +5,13 @@ import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.tap.common.redux.ErrorAction
+import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.redux.ToastNotificationAction
-import com.tangem.tap.common.redux.global.StateDialog
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
+import com.tangem.tap.features.send.redux.states.ButtonState
 import com.tangem.tap.features.send.redux.states.FeeType
 import com.tangem.tap.features.send.redux.states.MainCurrencyType
-import com.tangem.tap.features.send.redux.states.SendButtonState
 import com.tangem.wallet.R
 import org.rekotlin.Action
 import java.math.BigDecimal
@@ -56,6 +56,10 @@ sealed class TransactionExtrasAction : SendScreenActionUi {
     sealed class XlmMemo : TransactionExtrasAction() {
   //        data class ChangeSelectedMemo(val memoType: XlmMemoType) : XlmMemo()
         data class HandleUserInput(val data: String) : XlmMemo()
+    }
+
+    sealed class BinanceMemo : TransactionExtrasAction() {
+        data class HandleUserInput(val data: String) : BinanceMemo()
     }
 
     sealed class XrpDestinationTag : TransactionExtrasAction() {
@@ -132,11 +136,12 @@ sealed class ReceiptAction : SendScreenAction {
 
 sealed class SendActionUi : SendScreenActionUi {
     data class SendAmountToRecipient(val messageForSigner: Message) : SendScreenActionUi
+    object CheckIfTransactionDataWasProvided : SendScreenActionUi
 }
 
 sealed class SendAction : SendScreenAction {
 
-    data class ChangeSendButtonState(val state: SendButtonState) : SendAction()
+    data class ChangeSendButtonState(val state: ButtonState) : SendAction()
     object SendSuccess : SendAction(), ToastNotificationAction {
         override val messageResource: Int = R.string.send_transaction_success
     }
@@ -158,4 +163,11 @@ sealed class SendAction : SendScreenAction {
         object Update : SendAction()
         data class Set(val warningList: List<WarningMessage>) : SendAction()
     }
+
+    data class SendSpecificTransaction(
+        val sendAmount: String,
+        val destinationAddress: String,
+        val transactionId: String
+    ) : SendAction()
+
 }

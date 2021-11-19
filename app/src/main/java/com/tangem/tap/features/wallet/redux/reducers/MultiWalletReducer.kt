@@ -1,7 +1,6 @@
 package com.tangem.tap.features.wallet.redux.reducers
 
 import com.tangem.blockchain.common.AmountType
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.common.extensions.isZero
 import com.tangem.tap.common.extensions.toFiatString
@@ -38,8 +37,7 @@ class MultiWalletReducer {
                             ),
                             walletAddresses = createAddressList(wallet),
                             mainButton = WalletMainButton.SendButton(false),
-                            topUpState = TopUpState(allowed = false),
-                            currency = Currency.Blockchain(blockchain)
+                            currency = Currency.Blockchain(blockchain),
                     )
                 }
 
@@ -63,8 +61,7 @@ class MultiWalletReducer {
                         ),
                         walletAddresses = createAddressList(wallet),
                         mainButton = WalletMainButton.SendButton(false),
-                        topUpState = TopUpState(allowed = false),
-                        currency = Currency.Blockchain(action.blockchain)
+                        currency = Currency.Blockchain(action.blockchain),
                 )
                 val newState = state.copy(wallets = state.replaceWalletInWallets(walletData))
                 if (wallet != null && wallet.amounts[AmountType.Coin]?.value != null) {
@@ -108,7 +105,8 @@ class MultiWalletReducer {
                                 }
                         ),
                         pendingTransactions = pendingTransactions.removeUnknownTransactions(),
-                        mainButton = WalletMainButton.SendButton(sendButtonEnabled)
+                        mainButton = WalletMainButton.SendButton(sendButtonEnabled),
+                        currency = Currency.Token(action.token)
                 )
                 val wallets = state.replaceWalletInWallets(newTokenWalletData)
                 state.copy(wallets = wallets)
@@ -165,10 +163,6 @@ fun Token.toWallet(state: WalletState): WalletData? {
         ),
         walletAddresses = walletAddresses,
         mainButton = WalletMainButton.SendButton(false),
-        topUpState = TopUpState(allowed = false),
-        currency = Currency.Token(
-            token = this,
-            blockchain = walletManager?.blockchain ?: Blockchain.Ethereum
-        )
+        currency = Currency.Token(this),
     )
 }
