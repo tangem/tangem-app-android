@@ -14,14 +14,14 @@ import com.tangem.tap.network.createMoshi
 
 class CurrenciesRepository(val context: Application) {
     private val moshi = createMoshi()
-    private val blockchainsAdapter: JsonAdapter<Set<Blockchain>> = moshi.adapter(
-        Types.newParameterizedType(Set::class.java, Blockchain::class.java)
+    private val blockchainsAdapter: JsonAdapter<List<Blockchain>> = moshi.adapter(
+        Types.newParameterizedType(List::class.java, Blockchain::class.java)
     )
-    private val tokensAdapter: JsonAdapter<Set<TokenDao>> = moshi.adapter(
-        Types.newParameterizedType(Set::class.java, TokenDao::class.java)
+    private val tokensAdapter: JsonAdapter<List<TokenDao>> = moshi.adapter(
+        Types.newParameterizedType(List::class.java, TokenDao::class.java)
     )
-    private val obsoleteTokensAdapter: JsonAdapter<Set<ObsoleteTokenDao>> = moshi.adapter(
-        Types.newParameterizedType(Set::class.java, ObsoleteTokenDao::class.java)
+    private val obsoleteTokensAdapter: JsonAdapter<List<ObsoleteTokenDao>> = moshi.adapter(
+        Types.newParameterizedType(List::class.java, ObsoleteTokenDao::class.java)
     )
 
     fun loadCardCurrencies(cardId: String): CardCurrencies? {
@@ -42,58 +42,58 @@ class CurrenciesRepository(val context: Application) {
     }
 
     fun saveAddedTokens(cardId: String, tokens: Collection<Token>) {
-        saveTokens(cardId, loadSavedTokens(cardId) + tokens)
+        saveTokens(cardId, loadSavedTokens(cardId) + tokens.distinct())
     }
 
     fun saveAddedBlockchain(cardId: String, blockchain: Blockchain) {
         val blockchains = loadSavedBlockchains(cardId) + blockchain
-        saveBlockchains(cardId, blockchains)
+        saveBlockchains(cardId, blockchains.distinct())
     }
 
     fun removeToken(cardId: String, token: Token) {
-        val tokens = loadSavedTokens(cardId).filterNot { it == token }.toSet()
+        val tokens = loadSavedTokens(cardId).filterNot { it == token }
         saveTokens(cardId, tokens)
     }
 
     fun removeBlockchain(cardId: String, blockchain: Blockchain) {
-        val blockchains = loadSavedBlockchains(cardId).filterNot { it == blockchain }.toSet()
+        val blockchains = loadSavedBlockchains(cardId).filterNot { it == blockchain }
         saveBlockchains(cardId, blockchains)
     }
 
-    private fun loadSavedTokens(cardId: String): Set<Token> {
+    private fun loadSavedTokens(cardId: String): List<Token> {
         val json = try {
             context.readFileText(getFileNameForTokens(cardId))
         } catch (exception: Exception) {
-            return emptySet()
+            return emptyList()
         }
 
         return try {
-            tokensAdapter.fromJson(json)!!.map { it.toToken() }.toSet()
+            tokensAdapter.fromJson(json)!!.map { it.toToken() }
         } catch (exception: Exception) {
             try {
-                obsoleteTokensAdapter.fromJson(json)!!.map { it.toToken() }.toSet()
+                obsoleteTokensAdapter.fromJson(json)!!.map { it.toToken() }
             } catch (exception: Exception) {
-                emptySet()
+                emptyList()
             }
         }
     }
 
-    private fun saveTokens(cardId: String, tokens: Set<Token>) {
-        val json = tokensAdapter.toJson(tokens.map { TokenDao.fromToken(it) }.toSet())
+    private fun saveTokens(cardId: String, tokens: List<Token>) {
+        val json = tokensAdapter.toJson(tokens.distinct().map { TokenDao.fromToken(it) })
         context.rewriteFile(json, getFileNameForTokens(cardId))
     }
 
-    private fun loadSavedBlockchains(cardId: String): Set<Blockchain> {
+    private fun loadSavedBlockchains(cardId: String): List<Blockchain> {
         return try {
             val json = context.readFileText(getFileNameForBlockchains(cardId))
-            blockchainsAdapter.fromJson(json) ?: emptySet()
+            blockchainsAdapter.fromJson(json) ?: emptyList()
         } catch (exception: Exception) {
-            emptySet()
+            emptyList()
         }
     }
 
-    private fun saveBlockchains(cardId: String, blockchains: Set<Blockchain>) {
-        val json = blockchainsAdapter.toJson(blockchains)
+    private fun saveBlockchains(cardId: String, blockchains: List<Blockchain>) {
+        val json = blockchainsAdapter.toJson(blockchains.distinct())
         context.rewriteFile(json, getFileNameForBlockchains(cardId))
     }
 
@@ -120,7 +120,10 @@ class CurrenciesRepository(val context: Application) {
 
         return tokensAdapter.fromJson(ethereumTokensJson)!!.map { it.toToken() } +
                 tokensAdapter.fromJson(bscTokensJson)!!.map { it.toToken() } +
-                tokensAdapter.fromJson(binanceTokensJson)!!.map { it.toToken() }
+                tokensAdapter.fromJson(binanceTokensJson)!!.mapNotNull {
+                    // temporary exclude Binance BEP-8 tokens
+                    if (it.type != null && it.type == BINANCE_TOKEN_TYPE_BEP8) null else it.toToken()
+                }
     }
 
     fun getBlockchains(
@@ -144,6 +147,8 @@ class CurrenciesRepository(val context: Application) {
         private const val FILE_NAME_PREFIX_TOKENS = "tokens"
         private const val FILE_NAME_PREFIX_BLOCKCHAINS = "blockchains"
 
+        private const val BINANCE_TOKEN_TYPE_BEP8 = "bep8"
+
         fun getFileNameForTokens(cardId: String): String = "${FILE_NAME_PREFIX_TOKENS}_$cardId"
         fun getFileNameForBlockchains(cardId: String): String =
             "${FILE_NAME_PREFIX_BLOCKCHAINS}_$cardId"
@@ -157,7 +162,8 @@ data class TokenDao(
     val contractAddress: String,
     val decimalCount: Int,
     @Json(name = "blockchain")
-    val blockchainDao: BlockchainDao
+    val blockchainDao: BlockchainDao,
+    val type: String? = null
 ) {
     fun toToken(): Token {
         return Token(
@@ -224,12 +230,12 @@ data class ObsoleteTokenDao(
 
 @JsonClass(generateAdapter = true)
 data class CardCurrenciesDao(
-    val tokens: Set<TokenDao>,
-    val blockchains: Set<Blockchain>,
+    val tokens: List<TokenDao>,
+    val blockchains: List<Blockchain>,
 ) {
     fun toCardCurrencies(): CardCurrencies {
         return CardCurrencies(
-            tokens = tokens.map { it.toToken() }.toSet(),
+            tokens = tokens.map { it.toToken() }.distinct(),
             blockchains = blockchains
         )
     }
@@ -237,7 +243,7 @@ data class CardCurrenciesDao(
     companion object {
         fun fromCardCurrencies(cardCurrencies: CardCurrencies): CardCurrenciesDao {
             return CardCurrenciesDao(
-                tokens = cardCurrencies.tokens.map { TokenDao.fromToken(it) }.toSet(),
+                tokens = cardCurrencies.tokens.map { TokenDao.fromToken(it) }.distinct(),
                 blockchains = cardCurrencies.blockchains
             )
         }
@@ -245,6 +251,6 @@ data class CardCurrenciesDao(
 }
 
 data class CardCurrencies(
-    val tokens: Set<Token>,
-    val blockchains: Set<Blockchain>,
+    val tokens: List<Token>,
+    val blockchains: List<Blockchain>,
 )
