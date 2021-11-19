@@ -14,7 +14,6 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.VoidCallback
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.leapfrogWidget.LeapfrogWidget
-import com.tangem.tap.common.postUi
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.common.redux.navigation.ShareElement
@@ -38,7 +37,6 @@ import kotlinx.android.synthetic.main.layout_onboarding_container_top.*
 import kotlinx.android.synthetic.main.view_bg_twins_welcome.*
 import kotlinx.android.synthetic.main.view_onboarding_progress.*
 import kotlinx.android.synthetic.main.view_onboarding_tv_balance.*
-import org.rekotlin.Action
 
 class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
 
@@ -102,6 +100,9 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
 
         imv_twin_front_card.transitionName = ShareElement.imvFrontCard
         imv_twin_back_card.transitionName = ShareElement.imvBackCard
+
+        // if don't this, the bg_circle_... is overflow the app_bar
+        app_bar.bringToFront()
     }
 
     override fun subscribeToStore() {
@@ -140,35 +141,42 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
 
         if (state.balanceCriticalError == null) {
             val balanceValue = state.walletBalance.value.stripZeroPlainString()
-            val currency = state.walletBalance.currency.currencySymbol
-            tv_balance_value.text = "$balanceValue $currency"
+            tv_balance_value.text = balanceValue
+            tv_balance_currency.text = state.walletBalance.currency.currencySymbol
         } else {
             tv_balance_value.text = "–"
+            tv_balance_currency.text = ""
         }
     }
 
     private fun setupWelcomeOnlyState(state: TwinCardsState) {
-        setupWelcomeState(state, NavigationAction.NavigateTo(AppScreen.Wallet))
+        setupWelcomeState(state) {
+            store.dispatch(NavigationAction.NavigateTo(AppScreen.Wallet))
+            store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.None))
+        }
     }
 
     private fun setupWelcomeState(state: TwinCardsState) {
-        setupWelcomeState(state, TwinCardsAction.SetStepOfScreen(TwinCardsStep.CreateFirstWallet))
+        setupWelcomeState(state) { store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.CreateFirstWallet)) }
     }
 
-    private fun setupWelcomeState(state: TwinCardsState, mainAction: Action) {
+    private fun setupWelcomeState(state: TwinCardsState, mainAction: VoidCallback) {
         twinsWidget.toWelcome(false) { startPostponedEnterTransition() }
 
+        onboarding_twins_welcome_bg.show()
         pb_state.hide()
 
         tv_header.setText(R.string.twins_onboarding_subtitle)
         tv_body.text = getString(R.string.twins_onboarding_description_format, state.cardNumber?.pairIndexNumber())
 
         btn_main_action.setText(R.string.common_continue)
-        btn_main_action.setOnClickListener { store.dispatch(mainAction) }
+        btn_main_action.setOnClickListener { mainAction() }
     }
 
     private fun setupWarningState(state: TwinCardsState) {
         twinsWidget.toWelcome(false) { startPostponedEnterTransition() }
+
+        onboarding_twins_welcome_bg.hide()
         pb_state.hide()
         chb_understand.show()
 
@@ -186,6 +194,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
     }
 
     private fun setupCreateFirstWalletState(state: TwinCardsState) {
+        onboarding_twins_welcome_bg.hide()
         bg_circle_large.hide()
         bg_circle_medium.hide()
         bg_circle_min.hide()
@@ -283,15 +292,24 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
             }
         }
 
-        btn_main_action.setText(R.string.onboarding_top_up_button_but_crypto)
-        btn_main_action.setOnClickListener {
-            store.dispatch(TwinCardsAction.TopUp)
-        }
+        if (state.isBuyAllowed) {
+            btn_main_action.setText(R.string.onboarding_top_up_button_but_crypto)
+            btn_main_action.setOnClickListener {
+                store.dispatch(TwinCardsAction.TopUp)
+            }
 
-        btn_alternative_action.isVisible = true
-        btn_alternative_action.setText(R.string.onboarding_top_up_button_show_wallet_address)
-        btn_alternative_action.setOnClickListener {
-            store.dispatch(TwinCardsAction.ShowAddressInfoDialog)
+            btn_alternative_action.isVisible = true
+            btn_alternative_action.setText(R.string.onboarding_top_up_button_show_wallet_address)
+            btn_alternative_action.setOnClickListener {
+                store.dispatch(TwinCardsAction.ShowAddressInfoDialog)
+            }
+        } else {
+            btn_main_action.setText(R.string.onboarding_button_receive_crypto)
+            btn_main_action.setOnClickListener {
+                store.dispatch(TwinCardsAction.ShowAddressInfoDialog)
+            }
+
+            btn_alternative_action.isVisible = false
         }
 
         tv_header.setText(R.string.onboarding_top_up_header)
@@ -299,13 +317,10 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
 
         btnRefreshBalanceWidget.changeState(state.walletBalance.state)
         if (btnRefreshBalanceWidget.isShowing != true) {
-            postUi(300) {
-                btnRefreshBalanceWidget.mainView.setOnClickListener {
-                    store.dispatch(TwinCardsAction.Balance.Update)
-                }
+            btnRefreshBalanceWidget.mainView.setOnClickListener {
+                store.dispatch(TwinCardsAction.Balance.Update)
             }
         }
-
         imv_card_background.setBackgroundDrawable(requireContext().getDrawableCompat(R.drawable.shape_rectangle_rounded_8))
         updateConstraints(state.currentStep, R.layout.lp_onboarding_topup_wallet_twins)
     }

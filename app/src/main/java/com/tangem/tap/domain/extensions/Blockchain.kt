@@ -15,7 +15,7 @@ fun Blockchain.isNoAccountError(exception: Throwable): Boolean {
 
 fun Blockchain.amountToCreateAccount(token: Token? = null): BigDecimal? {
     return when (this) {
-        Blockchain.Stellar -> if (token?.symbol == NODL) BigDecimal(1.5) else BigDecimal.ZERO
+        Blockchain.Stellar -> if (token?.symbol == NODL) BigDecimal(1.5) else BigDecimal.ONE
         Blockchain.XRP -> BigDecimal(10)
         else -> null
     }
