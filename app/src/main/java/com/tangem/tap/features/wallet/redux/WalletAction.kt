@@ -9,6 +9,7 @@ import com.tangem.tap.common.redux.NotificationAction
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.tokens.CardCurrencies
+import com.tangem.tap.network.moonpay.MoonpayStatus
 import com.tangem.wallet.R
 import org.rekotlin.Action
 import java.math.BigDecimal
@@ -25,7 +26,7 @@ sealed class WalletAction : Action {
 
 
     data class LoadWallet(
-        val allowToSell: Boolean? = null, val allowToBuy: Boolean? = null,
+        val moonpayStatus: MoonpayStatus? = null,
         val blockchain: Blockchain? = null,
     ) :
         WalletAction() {
