@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/btn_refresh_balance"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:clickable="true"
+    android:focusable="true">
+
+    <androidx.appcompat.widget.AppCompatImageView
+        android:id="@+id/imv_bg_circle"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:src="@drawable/shape_refresh_button" />
+
+    <ViewSwitcher
+        android:id="@+id/switcher_refresh_arrow_to_progress"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center">
+
+        <FrameLayout
+            android:id="@+id/fl_arrow_refresh_container"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center">
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/imv_arrow_refresh"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:layout_gravity="center"
+                android:src="@drawable/ic_arrow_refresh" />
+        </FrameLayout>
+
+        <com.google.android.material.progressindicator.CircularProgressIndicator
+            android:id="@+id/imv_progress"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="center"
+            android:indeterminate="true"
+            app:indicatorColor="@android:color/black"
+            app:indicatorSize="23dp"
+            app:trackThickness="1.8dp" />
+
+        <!--        <ProgressBar-->
+        <!--            android:id="@+id/imv_progress"-->
+        <!--            android:layout_width="30dp"-->
+        <!--            android:layout_height="30dp"-->
+        <!--            android:indeterminateTint="@android:color/black"-->
+        <!--            android:indeterminate="true" />-->
+
+        <!--        <androidx.appcompat.widget.AppCompatImageView-->
+        <!--            android:id="@+id/imv_progress"-->
+        <!--            android:layout_width="30dp"-->
+        <!--            android:layout_height="30dp"-->
+        <!--            android:layout_gravity="center"-->
+        <!--            android:src="@drawable/ic_progress_balance" />-->
+
+    </ViewSwitcher>
+</FrameLayout>
