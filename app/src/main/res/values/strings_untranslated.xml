@@ -1,5 +1,9 @@
 <resources>
-    <string name="wallet_button_topup" translatable="false">Top Up</string>
+    <string name="scan_card_error" translatable="false">Scan card failed. Try again</string>
+
+    <string name="wallet_button_buy" translatable="false">Buy</string>
+    <string name="wallet_button_sell" translatable="false">Sell</string>
+    <string name="wallet_button_trade" translatable="false">Trade</string>
     <string name="wallet_address_chip_default" translatable="false">Default</string>
     <string name="wallet_address_chip_compatibility" translatable="false">Compatibility</string>
     <string name="wallet_address_chip_legacy" translatable="false">Legacy</string>
@@ -10,24 +14,22 @@
 
     <string name="twins_onboarding_title" translatable="false">Tangem Twin</string>
     <string name="twins_onboarding_subtitle" translatable="false">One wallet. Two cards.</string>
-    <string name="twins_onboarding_description_format" translatable="false">This one that you are holding in your hands
-and the other one with number %s.\n\nBoth cards can be used to extract funds from
-this wallet.
-</string>
+    <string name="twins_onboarding_description_format" translatable="false">This one that you are holding in your hands and the other one with number #%s.</string>
 
     <string name="wallet_twins_chip_format" translatable="false">Card %s of 2</string>
 
     <string name="details_row_title_twins_recreate" translatable="false">Re-create twin wallet</string>
-    <string name="details_twins_recreate_warning" translatable="false">This action is irreversible. You will not have access to the old wallet.\nThe wallet re-creation procedure consists of three steps. You must complete it to the end, otherwise you will have to start from the beginning.</string>
-    <string name="details_twins_recreate_toolbar" translatable="false">Re-create wallet</string>
-    <string name="details_twins_recreate_step_format" translatable="false">Step %s</string>
-    <string name="details_twins_recreate_title_format" translatable="false">Tap the #%s twin card</string>
-    <string name="details_twins_recreate_title_preparing" translatable="false">Preparing card</string>
-    <string name="details_twins_recreate_title_creating_wallet" translatable="false">Creating wallet</string>
-    <string name="details_twins_recreate_subtitle" translatable="false">The wallet creation procedure consists of three steps. You must complete it to the end, otherwise you will have to start from the beginning.</string>
-    <string name="details_twins_recreate_button_format" translatable="false">Tap the card #%s</string>
-    <string name="details_twins_recreate_alert" translatable="false">You have already started the process of recreating twin wallet. If you interrupt it, you won\'t be able to use your twin cards until you start it again and complete recreating the wallet.</string>
     <string name="details_row_title_card_tou" translatable="false">Card terms of use</string>
+
+    <string name="twins_recreate_toolbar" translatable="false">Tangem Twin</string>
+    <string name="twins_recreate_warning" translatable="false">This action is irreversible. You will not have access to the old wallet.</string>
+    <string name="twins_recreate_title_format" translatable="false">Tap the #%s twin card</string>
+    <string name="twins_recreate_title_preparing" translatable="false">Preparing card</string>
+    <string name="twins_recreate_title_creating_wallet" translatable="false">Creating wallet</string>
+    <string name="twins_recreate_subtitle" translatable="false">The wallet creation procedure consists of three steps. You must complete it to the end, otherwise you will have to start from the beginning.</string>
+    <string name="twins_recreate_button_format" translatable="false">Tap the card #%s</string>
+    <string name="twins_recreate_alert" translatable="false">You have already started the process of recreating twin wallet. If you interrupt it, you won\'t be able to use your twin cards until you start it again and complete recreating the wallet.</string>
+    <string name="twins_wrong_card_error" translatable="false">You\'ve tapped the same card. To create twin wallet you need to tap a second twin card.</string>
 
     <string name="notification_twins_recreate_success" translatable="false">The twin address was successfully created</string>
 
@@ -56,6 +58,7 @@ this wallet.
     <string name="alert_failed_to_send_transaction_message" translatable="false">Reason: %s. Do you want to send feedback?</string>
     <string name="alert_troubleshooting_scan_card_title" translatable="false">Are you having difficulty scanning your card?</string>
     <string name="alert_troubleshooting_scan_card_message" translatable="false">Please try to tap the card exactly as shown in the animation or request support.</string>
+    <string name="alert_troubleshooting_scan_card_ok" translatable="false">I\'m okay</string>
     <string name="alert_button_try_again" translatable="false">Try again</string>
     <string name="alert_button_request_support" translatable="false">Request support</string>
     <string name="alert_button_send_feedback" translatable="false">Send feedback</string>
@@ -87,13 +90,17 @@ this wallet.
     <string name="custom_token_name_input_placeholder" translatable="false">ex. USD Coin</string>
     <string name="custom_token_token_symbol_input_placeholder" translatable="false">ex. USDC</string>
     <string name="add_token_added" translatable="false">Added</string>
+    <string name="remove_token" translatable="false">Remove token</string>
+    <string name="token_icon" translatable="false">Token icon</string>
 
     //Details
     <string name="details_section_title_blockchain" translatable="false">Blockchain</string>
     <string name="details_row_title_manage_tokens" translatable="false">Manage tokens</string>
 
     <string name="add_tokens_subtitle_blockchains" translatable="false">Blockchains</string>
-    <string name="add_tokens_subtitle_tokens" translatable="false">Ethereum Tokens</string>
+    <string name="add_tokens_subtitle_ethereum_tokens" translatable="false">Ethereum tokens</string>
+    <string name="add_tokens_subtitle_bsc_tokens" translatable="false">Binance Smart Chain tokens</string>
+    <string name="add_tokens_subtitle_binance_tokens" translatable="false">Binance Chain tokens</string>
     <string name="wallet_address_button_copy" translatable="false">Copy</string>
     <string name="wallet_address_button_share" translatable="false">Share</string>
     <string name="wallet_button_add_tokens" translatable="false">+ Add tokens</string>
@@ -156,6 +163,49 @@ this wallet.
     <string name="wallet_connect_scanner_error_no_ethereum_wallet" translatable="false">This card can’t be used to establish WalletConnect session</string>
     <string name="wallet_connect_could_not_complete" translatable="false">The operation couldn\'t be completed</string>
     <string name="wallet_connect_same_wcuri" translatable="false">The operation couldn\'t be completed. \n\nYou have already established a WalletConnect session with this parameters.</string>
+    <string name="wallet_connect_error_timeout" translatable="false">Failed to establish WalletConnect session: timeout error. Please, try again later.</string>
+
+    <string name="warning_testnet_card_message" translatable="false">This is a Testnet card. Don\'t accept it as a payment. This card must only be used for testing and development purposes.</string>
+
+
+    <string name="wallet_dialog_choose_trade_action" translatable="false">Do you want to buy or sell crypto?</string>
 
     <string name="error_update_app" translatable="false">Oops, the current version of the application is not ready to work with this card, please check for updates.</string>
+
+    <!--  Onboarding  -->
+    <string name="home_welcome_header" translatable="false">Welcome to Tangem</string>
+    <string name="home_welcome_body" translatable="false">The safest way to buy, use and\n store cryptocurrency</string>
+    <string name="home_button_get_new_card" translatable="false">Get a new card</string>
+
+    <string name="onboarding_title" translatable="false">Activating card</string>
+    <string name="onboarding_button_what_does_it_mean" translatable="false">How it works?</string>
+    <string name="onboarding_button_receive_crypto" translatable="false">Receive crypto</string>
+
+    <string name="onboarding_create_wallet_header" translatable="false">Create a wallet</string>
+    <string name="onboarding_create_wallet_body" translatable="false">Let’s generate all the keys on your card and create a secure wallet</string>
+    <string name="onboarding_create_wallet_button_create_wallet" translatable="false">Create wallet</string>
+
+    <string name="onboarding_top_up_header" translatable="false">Top up your wallet</string>
+    <string name="onboarding_top_up_body" translatable="false">To get started, simply top up the card with any amount</string>
+    <string name="onboarding_top_up_body_no_account_error" translatable="false">To get started, simply top up the wallet with more than %s %s.</string>
+    <string name="onboarding_top_up_button_but_crypto" translatable="false">Buy crypto</string>
+    <string name="onboarding_top_up_button_show_wallet_address" translatable="false">Show the wallet’s address</string>
+    <string name="onboarding_dialog_wallet_address" translatable="false">Scan the address to top up your wallet</string>
+
+    <string name="onboarding_done_header" translatable="false">Success!</string>
+    <string name="onboarding_done_body" translatable="false">Your crypto card is activated and ready to be used</string>
+    <string name="onboarding_done_button_continue" translatable="false">Continue</string>
+    <string name="onboarding_balance_title" translatable="false">Balance</string>
+    <string name="address_qr_code_message_format" translatable="false">Send only %s (%s) to this address. Sending any other currency will result in its irreversible loss.</string>
+    <string name="address_qr_code_message_token_format" translatable="false">Send only %s (%s) from %s network to this address. Sending any other currency will result in its irreversible loss.</string>
+
+    <string name="onboarding_twins_interrupt_warning" translatable="false">If the process of re-creating the wallet gets interrupted in any way, you’ll have to start over.</string>
+    <string name="onboarding_twin_exit_warning" translatable="false">The twinning process is partly complete. You can’t exit it now.</string>
+
+    <string name="onboarding_error_create_primary_wallet" translatable="false">Internal error: can\'t create wallet manager</string>
+
+    <string name="wallet_balance_blockchain_unreachable_try_later" translatable="false">Blockchain is unreachable. Try later</string>
+
+    <string name="warning_button_ok" translatable="false">Ok, Got it!</string>
+
 </resources>
