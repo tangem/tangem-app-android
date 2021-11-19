@@ -1,17 +1,33 @@
 package com.tangem.tap.common.redux.global
 
-import com.tangem.TangemSdkError
 import com.tangem.common.CompletionResult
+import com.tangem.common.core.TangemSdkError
+import com.tangem.common.services.Result
+import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
+import com.tangem.tap.common.extensions.dispatchDialogShow
+import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.extensions.withMainContext
+import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
-import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.send.redux.SendAction
 import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.network.moonpay.MoonpayService
 import com.tangem.tap.preferencesStorage
+import com.tangem.tap.scope
 import com.tangem.tap.store
+import com.tangem.tap.tangemSdkManager
+import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
+import timber.log.Timber
 
-val globalMiddleware: Middleware<AppState> = { dispatch, appState ->
+class GlobalMiddleware {
+    companion object {
+        val handler = globalMiddlewareHandler
+    }
+}
+
+private val globalMiddlewareHandler: Middleware<AppState> = { dispatch, appState ->
     { nextDispatch ->
         { action ->
             when (action) {
@@ -22,8 +38,7 @@ val globalMiddleware: Middleware<AppState> = { dispatch, appState ->
                             if (action.result.error is TangemSdkError.UserCancelled) {
                                 store.dispatch(GlobalAction.ScanFailsCounter.Increment)
                                 if (store.state.globalState.scanCardFailsCounter >= 2) {
-                                    store.dispatch(HomeAction.ShowDialog.ScanFails)
-                                    store.dispatch(WalletAction.ShowDialog.ScanFails)
+                                    store.dispatchDialogShow(AppDialog.ScanFailsDialog)
                                 }
                             } else {
                                 store.dispatch(GlobalAction.ScanFailsCounter.Reset)
@@ -33,7 +48,7 @@ val globalMiddleware: Middleware<AppState> = { dispatch, appState ->
                 }
                 is GlobalAction.RestoreAppCurrency -> {
                     store.dispatch(GlobalAction.RestoreAppCurrency.Success(
-                            preferencesStorage.getAppCurrency()
+                        preferencesStorage.getAppCurrency()
                     ))
                 }
                 is GlobalAction.HideWarningMessage -> {
@@ -58,7 +73,36 @@ val globalMiddleware: Middleware<AppState> = { dispatch, appState ->
                 }
                 is GlobalAction.UpdateFeedbackInfo -> {
                     store.state.globalState.feedbackManager?.infoHolder
-                        ?.setWalletsInfo(action.walletManagers)
+                            ?.setWalletsInfo(action.walletManagers)
+                }
+                is GlobalAction.GetMoonPayStatus -> {
+                    val apiKey = appState()?.globalState?.configManager?.config?.moonPayApiKey
+                    if (apiKey != null) {
+                        scope.launch {
+                            val result = MoonpayService().getMoonpayStatus(apiKey)
+                            when (result) {
+                                is Result.Success -> {
+                                    store.dispatchOnMain(GlobalAction.GetMoonPayStatus.Success(result.data))
+                                }
+                                is Result.Failure -> Timber.e(result.error)
+                            }
+                        }
+                    }
+                }
+                is GlobalAction.ScanCard -> {
+                    scope.launch {
+                        val result = tangemSdkManager.scanProduct(FirebaseAnalyticsHandler, action.messageResId)
+                        store.dispatch(GlobalAction.ScanFailsCounter.ChooseBehavior(result))
+                        withMainContext {
+                            when (result) {
+                                is CompletionResult.Success -> {
+                                    tangemSdkManager.changeDisplayedCardIdNumbersCount(result.data)
+                                    action.onSuccess?.invoke(result.data)
+                                }
+                                is CompletionResult.Failure -> action.onFailure?.invoke(result.error)
+                            }
+                        }
+                    }
                 }
             }
             nextDispatch(action)

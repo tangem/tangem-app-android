@@ -1,10 +1,8 @@
 package com.tangem.tap.features.details.redux.walletconnect
 
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.WalletManager
-import com.tangem.common.extensions.hexToBytes
-import com.tangem.tap.common.redux.global.StateDialog
+import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.PersonalSignDialogData
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.TransactionRequestDialogData
 import com.trustwallet.walletconnect.models.WCPeerMeta
@@ -30,11 +28,6 @@ data class WalletForSession(
 ) {
     val chainId
         get() = if (isTestNet) 4 else 1
-
-    fun getAddress(): String {
-        val blockchain = if (isTestNet) Blockchain.EthereumTestnet else Blockchain.Ethereum
-        return blockchain.makeAddresses(walletPublicKey.hexToBytes()).first().value
-    }
 }
 
 
@@ -42,6 +35,7 @@ sealed class WalletConnectDialog : StateDialog {
     data class ClipboardOrScanQr(val clipboardUri: String) : WalletConnectDialog()
     object UnsupportedCard : WalletConnectDialog()
     object OpeningSessionRejected : WalletConnectDialog()
+    object SessionTimeout : WalletConnectDialog()
     data class ApproveWcSession(val session: WalletConnectSession) : WalletConnectDialog()
     data class RequestTransaction(val dialogData: TransactionRequestDialogData) :
         WalletConnectDialog()
