@@ -6,17 +6,15 @@ import android.view.View
 import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import androidx.transition.TransitionInflater
-import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.domain.isMultiwalletAllowed
 import com.tangem.tap.domain.twins.getTwinCardIdForUser
-import com.tangem.tap.domain.twins.isTwinCard
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.features.details.redux.SecurityOption
-import com.tangem.tap.features.details.redux.twins.CreateTwinWallet
 import com.tangem.tap.features.feedback.FeedbackEmail
 import com.tangem.tap.store
 import com.tangem.wallet.R
@@ -68,8 +66,8 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
 
 
         if (state.cardInfo != null) {
-            val cardId = if (state.card?.isTwinCard() == true) {
-                state.card.getTwinCardIdForUser()
+            val cardId = if (state.isTangemTwins) {
+                state.scanResponse?.card?.getTwinCardIdForUser()
             } else {
                 state.cardInfo.cardId
             }
@@ -78,8 +76,8 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
             tv_signed_hashes.text = state.cardInfo.signedHashes.toString()
         }
 
-        tv_signed_hashes.show(state.card?.isTwinCard() != true)
-        tv_signed_hashes_title.show(state.card?.isTwinCard() != true)
+        tv_signed_hashes.show(!state.isTangemTwins)
+        tv_signed_hashes_title.show(!state.isTangemTwins)
 
         tv_disclaimer.setOnClickListener { store.dispatch(DetailsAction.ShowDisclaimer) }
 
@@ -90,17 +88,11 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
             startActivity(intent)
         }
 
-        if (state.createTwinWalletState != null) {
-            if (state.createTwinWalletState.allowRecreatingWallet == true) {
-                tv_erase_wallet.show()
-                tv_erase_wallet.text = getText(R.string.details_row_title_twins_recreate)
-                tv_erase_wallet.setOnClickListener {
-                    store.dispatch(DetailsAction.CreateTwinWalletAction.ShowWarning(
-                            null, CreateTwinWallet.RecreateWallet
-                    ))
-                }
-            } else {
-                tv_erase_wallet.hide()
+        if (state.isTangemTwins) {
+            tv_erase_wallet.show()
+            tv_erase_wallet.text = getText(R.string.details_row_title_twins_recreate)
+            tv_erase_wallet.setOnClickListener {
+                store.dispatch(DetailsAction.ReCreateTwinsWallet(state.twinCardsState.cardNumber!!))
             }
         } else {
             tv_erase_wallet.show()
@@ -121,12 +113,13 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
             store.dispatch(GlobalAction.SendFeedback(FeedbackEmail()))
         }
 
+        tv_wallet_connect.show(state.scanResponse?.card?.isMultiwalletAllowed == true)
         tv_wallet_connect.setOnClickListener {
             store.dispatch(NavigationAction.NavigateTo(AppScreen.WalletConnectSessions))
         }
 
         tv_security_title.setOnClickListener {
-            store.dispatch(DetailsAction.ManageSecurity.OpenSecurity)
+            store.dispatch(DetailsAction.ManageSecurity.CheckCurrentSecurityOption(state.scanResponse!!.card))
         }
 
         val currentSecurity = when (state.securityScreenState?.currentOption) {
@@ -138,11 +131,11 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
         currentSecurity?.let { tv_security.text = getString(it) }
 
         if (state.appCurrencyState.showAppCurrencyDialog &&
-                !state.appCurrencyState.fiatCurrencies.isNullOrEmpty()) {
+            !state.appCurrencyState.fiatCurrencies.isNullOrEmpty()) {
             currencySelectionDialog.show(
-                    state.appCurrencyState.fiatCurrencies,
-                    state.appCurrencyState.fiatCurrencyName,
-                    requireContext()
+                state.appCurrencyState.fiatCurrencies,
+                state.appCurrencyState.fiatCurrencyName,
+                requireContext()
             )
         } else {
             currencySelectionDialog.clear()
