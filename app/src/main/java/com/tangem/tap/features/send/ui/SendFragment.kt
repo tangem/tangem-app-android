@@ -20,10 +20,12 @@ import com.tangem.tap.common.entities.TapCurrency
 import com.tangem.tap.common.extensions.getFromClipboard
 import com.tangem.tap.common.extensions.setOnImeActionListener
 import com.tangem.tap.common.qrCodeScan.ScanQrCodeActivity
+import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.common.snackBar.MaxAmountSnackbar
 import com.tangem.tap.common.text.truncateMiddleWith
 import com.tangem.tap.common.toggleWidget.*
-import com.tangem.tap.features.send.BaseStoreFragment
+import com.tangem.tap.features.BaseStoreFragment
+import com.tangem.tap.features.addBackPressHandler
 import com.tangem.tap.features.send.redux.*
 import com.tangem.tap.features.send.redux.AddressPayIdActionUi.*
 import com.tangem.tap.features.send.redux.AmountActionUi.*
@@ -31,6 +33,7 @@ import com.tangem.tap.features.send.redux.FeeActionUi.*
 import com.tangem.tap.features.send.redux.states.FeeType
 import com.tangem.tap.features.send.redux.states.MainCurrencyType
 import com.tangem.tap.features.send.ui.stateSubscribers.SendStateSubscriber
+import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.ui.adapters.SpacesItemDecoration
 import com.tangem.tap.features.wallet.ui.adapters.WarningMessagesAdapter
 import com.tangem.tap.mainScope
@@ -62,6 +65,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        addBackPressHandler(this)
 
         etAmountToSend = view.findViewById(R.id.etAmountToSend)
 
@@ -71,12 +75,13 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         setupAmountLayout()
         setupFeeLayout()
         setupWarningMessages()
+        store.dispatch(SendActionUi.CheckIfTransactionDataWasProvided)
     }
 
     private fun initSendButtonStates() {
         btnSend.setOnClickListener {
             store.dispatch(SendActionUi.SendAmountToRecipient(
-                    Message(getString(R.string.initial_message_sign_header))
+                Message(getString(R.string.initial_message_sign_header))
             ))
         }
         sendBtn = IndeterminateProgressButtonWidget(btnSend, progress)
@@ -103,14 +108,14 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         }
         imvQrCode.setOnClickListener {
             startActivityForResult(
-                    Intent(requireContext(), ScanQrCodeActivity::class.java),
-                    ScanQrCodeActivity.SCAN_QR_REQUEST_CODE
+                Intent(requireContext(), ScanQrCodeActivity::class.java),
+                ScanQrCodeActivity.SCAN_QR_REQUEST_CODE
             )
         }
     }
 
     private fun setupTransactionExtrasLayout() {
-        etMemo.inputtedTextAsFlow()
+        etXlmMemo.inputtedTextAsFlow()
                 .debounce(400)
                 .filter {
                     val info = store.state.sendState.transactionExtrasState
@@ -127,6 +132,15 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
                 }
                 .onEach { store.dispatch(TransactionExtrasAction.XrpDestinationTag.HandleUserInput(it)) }
                 .launchIn(mainScope)
+
+        etBinanceMemo.inputtedTextAsFlow()
+            .debounce(400)
+            .filter {
+                val info = store.state.sendState.transactionExtrasState
+                info.binanceMemo?.viewFieldValue?.value != it
+            }
+            .onEach { store.dispatch(TransactionExtrasAction.BinanceMemo.HandleUserInput(it)) }
+            .launchIn(mainScope)
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -250,7 +264,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         val sp = requireContext().getSharedPreferences("SendScreen", Context.MODE_PRIVATE)
         val mainCurrency = sp.getString("mainCurrency", TapCurrency.DEFAULT_FIAT_CURRENCY)
         val foundType = MainCurrencyType.values()
-                .firstOrNull { it.name.toLowerCase() == mainCurrency!!.toLowerCase() }
+                .firstOrNull { it.name.equals(mainCurrency!!, ignoreCase = true) }
                 ?: MainCurrencyType.CRYPTO
         return foundType
     }
@@ -258,6 +272,17 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
     fun saveMainCurrency(type: MainCurrencyType) {
         val sp = requireContext().getSharedPreferences("SendScreen", Context.MODE_PRIVATE)
         sp.edit().putString("mainCurrency", type.name).apply()
+    }
+
+    override fun handleOnBackPressed() {
+        val externalTransactionData = store.state.sendState.externalTransactionData
+        if (externalTransactionData == null) {
+            store.dispatch(NavigationAction.PopBackTo())
+        } else {
+            store.dispatch(
+                WalletAction.TradeCryptoAction.FinishSelling(externalTransactionData.transactionId)
+            )
+        }
     }
 
     override fun onDestroy() {
