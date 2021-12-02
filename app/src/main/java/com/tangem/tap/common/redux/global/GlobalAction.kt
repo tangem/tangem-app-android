@@ -31,7 +31,7 @@ sealed class GlobalAction : Action {
     object HideDialog : GlobalAction()
 
     sealed class Onboarding {
-        data class Start(val scanResponse: ScanResponse) : GlobalAction()
+        data class Start(val scanResponse: ScanResponse, val fromHomeScreen: Boolean = true) : GlobalAction()
         object Stop : GlobalAction()
     }
 
