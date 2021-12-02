@@ -68,7 +68,7 @@ class CurrenciesRepository(val context: Application) {
         }
 
         return try {
-            tokensAdapter.fromJson(json)!!.map { it.toToken() }
+            tokensAdapter.fromJson(json)!!.map { it.toToken() }.distinct()
         } catch (exception: Exception) {
             try {
                 obsoleteTokensAdapter.fromJson(json)!!.map { it.toToken() }
@@ -86,7 +86,7 @@ class CurrenciesRepository(val context: Application) {
     private fun loadSavedBlockchains(cardId: String): List<Blockchain> {
         return try {
             val json = context.readFileText(getFileNameForBlockchains(cardId))
-            blockchainsAdapter.fromJson(json) ?: emptyList()
+            blockchainsAdapter.fromJson(json)?.distinct() ?: emptyList()
         } catch (exception: Exception) {
             emptyList()
         }
