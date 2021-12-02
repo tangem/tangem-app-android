@@ -18,6 +18,7 @@ import com.tangem.tap.features.onboarding.products.otherCards.redux.OnboardingOt
 import com.tangem.tap.features.onboarding.products.otherCards.redux.OnboardingOtherCardsState
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsMiddleware
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
+import com.tangem.tap.features.onboarding.products.wallet.redux.BackupMiddleware
 import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletMiddleware
 import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletState
 import com.tangem.tap.features.send.redux.middlewares.SendMiddleware
@@ -60,7 +61,8 @@ data class AppState(
                 DetailsMiddleware().detailsMiddleware,
                 DisclaimerMiddleware().disclaimerMiddleware,
                 TokensMiddleware().tokensMiddleware,
-                WalletConnectMiddleware().walletConnectMiddleware
+                WalletConnectMiddleware().walletConnectMiddleware,
+                BackupMiddleware().backupMiddleware
             )
         }
     }
