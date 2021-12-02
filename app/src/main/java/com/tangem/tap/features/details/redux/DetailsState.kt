@@ -22,6 +22,7 @@ data class DetailsState(
     val confirmScreenState: ConfirmScreenState? = null,
     val securityScreenState: SecurityScreenState? = null,
     val cardTermsOfUseUrl: Uri? = null,
+    val createBackupAllowed: Boolean = false,
 ) : StateType {
 
     // if you do not delegate - the application crashes on startup,
