@@ -89,20 +89,24 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
         }
 
         if (state.isTangemTwins) {
-            tv_erase_wallet.show()
-            tv_erase_wallet.text = getText(R.string.details_row_title_twins_recreate)
-            tv_erase_wallet.setOnClickListener {
+            tv_reset_to_factory.show()
+            tv_reset_to_factory.text = getText(R.string.details_row_title_twins_recreate)
+            tv_reset_to_factory.setOnClickListener {
                 store.dispatch(DetailsAction.ReCreateTwinsWallet(state.twinCardsState.cardNumber!!))
             }
         } else {
-            tv_erase_wallet.show()
-            tv_erase_wallet.text = getText(R.string.details_row_title_erase_wallet)
-            tv_erase_wallet.setOnClickListener {
-                store.dispatch(DetailsAction.EraseWallet.Check)
-                store.dispatch(DetailsAction.EraseWallet.Proceed)
+            tv_reset_to_factory.show()
+            tv_reset_to_factory.text = getText(R.string.details_row_title_reset_factory_settings)
+            tv_reset_to_factory.setOnClickListener {
+                store.dispatch(DetailsAction.ResetToFactory.Check)
+                store.dispatch(DetailsAction.ResetToFactory.Proceed)
             }
         }
 
+        tv_create_backup.show(state.createBackupAllowed)
+        tv_create_backup.setOnClickListener {
+            store.dispatch(DetailsAction.CreateBackup)
+        }
 
         tv_app_currency.text = state.appCurrencyState.fiatCurrencyName
 
