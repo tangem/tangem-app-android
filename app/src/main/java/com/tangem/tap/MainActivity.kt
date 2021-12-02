@@ -8,6 +8,7 @@ import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.google.android.material.snackbar.Snackbar
 import com.tangem.TangemSdk
+import com.tangem.operations.backup.BackupService
 import com.tangem.tangem_sdk_new.extensions.init
 import com.tangem.tap.common.DialogManager
 import com.tangem.tap.common.IntentHandler
@@ -32,6 +33,7 @@ import kotlin.coroutines.CoroutineContext
 
 lateinit var tangemSdk: TangemSdk
 lateinit var tangemSdkManager: TangemSdkManager
+lateinit var backupService: BackupService
 var notificationsHandler: NotificationsHandler? = null
 
 private val coroutineContext: CoroutineContext
@@ -67,6 +69,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler {
 
         tangemSdk = TangemSdk.init(this, TangemSdkManager.config)
         tangemSdkManager = TangemSdkManager(tangemSdk, this)
+        backupService = BackupService.init(tangemSdk, this)
 
         store.dispatch(GlobalAction.SetResources(getAndroidResources()))
         store.dispatch(WalletConnectAction.RestoreSessions)
@@ -94,7 +97,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler {
         val backStackIsEmpty = supportFragmentManager.backStackEntryCount == 0
         val isScannedBefore = store.state.globalState.scanResponse != null
         val isOnboardingServiceActive = store.state.globalState.onboardingManager != null
-        if (backStackIsEmpty || (!isOnboardingServiceActive && !isScannedBefore)) {
+        if (backStackIsEmpty && (!isOnboardingServiceActive && !isScannedBefore)) {
             store.dispatch(NavigationAction.NavigateTo(AppScreen.Home))
         }
         intentHandler.handleIntent(intent)
