@@ -55,4 +55,7 @@
     <color name="warning_warning">#FFB71B</color>
     <color name="warning_critical">#CA0F03</color>
 
+    <color name="gray_button">#EFEFF0</color>
+
+    <color name="menu_accent_color">#18C077</color>
 </resources>
