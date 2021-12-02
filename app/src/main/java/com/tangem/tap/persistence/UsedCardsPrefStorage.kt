@@ -45,7 +45,7 @@ class UsedCardsPrefStorage(
     }
 
     fun activationIsStarted(cardId: String): Boolean {
-        return findCardInfo(cardId)?.isActivationStarted ?: false
+        return findCardInfo(cardId)?.isActivationStarted ?: true
     }
 
     fun activationFinished(cardId: String) {
