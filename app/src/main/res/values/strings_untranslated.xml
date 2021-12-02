@@ -16,7 +16,7 @@
     <string name="twins_onboarding_subtitle" translatable="false">One wallet. Two cards.</string>
     <string name="twins_onboarding_description_format" translatable="false">This one that you are holding in your hands and the other one with number #%s.</string>
 
-    <string name="wallet_twins_chip_format" translatable="false">Card %s of 2</string>
+    <string name="wallet_twins_chip_format" translatable="false">Card %1d of %2d</string>
 
     <string name="details_row_title_twins_recreate" translatable="false">Re-create twin wallet</string>
     <string name="details_row_title_card_tou" translatable="false">Card terms of use</string>
@@ -207,5 +207,90 @@
     <string name="wallet_balance_blockchain_unreachable_try_later" translatable="false">Blockchain is unreachable. Try later</string>
 
     <string name="warning_button_ok" translatable="false">Ok, Got it!</string>
+
+    <string name="onboarding_success" translatable="false">Success!</string>
+    <string name="onboarding_getting_started" translatable="false">Getting started</string>
+
+    <string name="onboarding_button_backup_now" translatable="false">Backup now</string>
+    <string name="onboarding_button_get_backup_card" translatable="false">Get a backup card</string>
+    <string name="onboarding_button_skip_backup" translatable="false">Skip for later</string>
+    <string name="onboarding_button_finalize_backup" translatable="false">Finalize the backup process</string>
+    <string name="onboarding_button_add_backup_card" translatable="false">+ Add backup card</string>
+    <string name="onboarding_button_backup_card_format" translatable="false">Scan the card #%d</string>
+    <string name="onboarding_button_scan_origin_card" translatable="false">Scan primary card</string>
+    <string name="onboarding_button_buy_more_cards" translatable="false">Buy more cards</string>
+
+    <string name="onboarding_title_backup_card" translatable="false">Backup your wallet</string>
+    <string name="onboarding_title_no_backup_cards" translatable="false">No backup cards</string>
+    <string name="onboarding_title_scan_origin_card" translatable="false">Prepare your card</string>
+    <string name="onboarding_title_one_backup_card" translatable="false">One backup card added</string>
+    <string name="onboarding_title_two_backup_cards" translatable="false">Two backup cards added</string>
+    <string name="onboarding_title_backup_card_format" translatable="false">Backup card #%d</string>
+
+    <string name="onboarding_subtitle_backup_card" translatable="false">You can backup your keys up to two other blank wallet cards</string>
+    <string name="onboarding_subtitle_no_backup_cards" translatable="false">To start the backup process add up to two cards</string>
+    <string name="onboarding_subtitle_scan_origin_card_format" translatable="false">Prepare the primary card with number %s</string>
+    <string name="onboarding_subtitle_scan_origin_card" translatable="false">Prepare the primary card</string>
+    <string name="onboarding_subtitle_one_backup_card" translatable="false">You can add one more card or finalize the backup process</string>
+    <string name="onboarding_subtitle_two_backup_cards" translatable="false">Max number of cards added. Finalize the backup process</string>
+    <string name="onboarding_subtitle_backup_warning" translatable="false">If the process of backup gets interrupted in any way you’ll have to start over</string>
+
+    <string name="onboarding_alert_message_not_max_backup_cards_added" translatable="false">You’ve added one backup card. When backup process is finished you can’t add more backup cards. If you have one more card, add it in backup, otherwise you can buy it in shop. Do you like to continue backup process?</string>
+
+    <string name="onboarding_access_code_intro_title" translatable="false">Create Access Code</string>
+    <string name="onboarding_access_code_repeat_code_title" translatable="false">Re-enter your Access Code</string>
+    <string name="onboarding_access_code_feature_1_title" translatable="false">Protect</string>
+    <string name="onboarding_access_code_feature_2_title" translatable="false">Personalize</string>
+    <string name="onboarding_access_code_feature_3_title" translatable="false">Restore</string>
+    <string name="onboarding_access_code_feature_1_description" translatable="false">You have to setup a single access code to protect all yor wallets.</string>
+    <string name="onboarding_access_code_feature_2_description" translatable="false">You can set an individual access code on each card later.</string>
+    <string name="onboarding_access_code_feature_3_description" translatable="false">The access code can be restored with a linked card, don’t keep all cards at one place.</string>
+    <string name="onboarding_access_code_hint" translatable="false">Choose any word, phrase, or number you want as your access code.</string>
+    <string name="onboarding_access_code_too_short" translatable="false">Access code must be at least 4 characters long</string>
+    <string name="onboarding_access_codes_doesnt_match" translatable="false">Entered access code didn\'t match initial access code</string>
+
+    <string name="common_create" translatable="false">Create</string>
+    <string name="common_submit" translatable="false">Submit</string>
+    <string name="onboarding_subtitle_success_backup" translatable="false">You have created 2 backup cards, and now these cards are ready for use.</string>
+    <string name="onboarding_navbar_title_creating_backup" translatable="false">Creating a backup</string>
+    <string name="onboarding_backup_exit_warning" translatable="false">The backup process is partly complete. You can’t exit it now.</string>
+
+    <string name="onboarding_wallet_info_title_first" translatable="false">Backup wallet</string>
+    <string name="onboarding_wallet_info_title_second" translatable="false">Identical cards</string>
+    <string name="onboarding_wallet_info_title_third" translatable="false">Access code</string>
+    <string name="onboarding_wallet_info_title_fourth" translatable="false">Access code restore</string>
+
+    <string name="onboarding_wallet_info_subtitle_first" translatable="false">You can backup your keys up to two other blank Tangem Wallet cards.</string>
+    <string name="onboarding_wallet_info_subtitle_second" translatable="false">All the backup cards can be used as full-functoinal with the identical keys.</string>
+    <string name="onboarding_wallet_info_subtitle_third" translatable="false">You will be able to set an access code to protect your wallets.</string>
+    <string name="onboarding_wallet_info_subtitle_fourth" translatable="false">Access code can be restored with one of backup cards.</string>
+
+    <string name="onboarding_subtitle_success_tangem_wallet_onboarding" translatable="false">Your Tangem Wallet card is configured and ready for use.</string>
+    <string name="onboarding_subtitle_success_backup_one_card" translatable="false">You have created 1 backup card, and now this card are ready for use.</string>
+    <string name="common_origin_card" translatable="false">Primary Card</string>
+    <string name="onboarding_alert_i_understand" translatable="false">I understand</string>
+
+    <string name="details_row_title_backup_status" translatable="false">Backup status</string>
+    <string name="details_backup_status_format_active" translatable="false">Active. Backup cards count: %d</string>
+    <string name="details_backup_status_format_linked" translatable="false">Linked. Backup cards count: %d</string>
+    <string name="details_backup_status_no_backup" translatable="false">No backup</string>
+    <string name="details_row_title_create_backup" translatable="false">Create backup</string>
+    <string name="welcome_interrupted_backup_alert_message" translatable="false">You have an interrupted backup. Do you want to resume?</string>
+    <string name="welcome_interrupted_backup_alert_resume" translatable="false">Yes, resume</string>
+    <string name="welcome_interrupted_backup_alert_discard" translatable="false">Discard</string>
+    <string name="welcome_interrupted_backup_discard_title" translatable="false">This is an irreversible action</string>
+    <string name="welcome_interrupted_backup_discard_message" translatable="false">If you will discard the backup now, then you will have to reset the cards to factory settings to start over again</string>
+    <string name="welcome_interrupted_backup_discard_resume" translatable="false">Resume backup</string>
+    <string name="welcome_interrupted_backup_discard_discard" translatable="false">Discard</string>
+    <string name="onboarding_title_prepare_origin" translatable="false">Primary card</string>
+    <string name="onboarding_button_backup_origin" translatable="false">Scan the primary card</string>
+    <string name="onboarding_button_continue_wallet" translatable="false">Continue to my wallet</string>
+    <string name="card_label_number_format" translatable="false">Card %1s of %2s</string>
+    <string name="send_title_currency_format" translatable="false">Sending %s</string>
+    <string name="onboarding_subtitle_scan_backup_card_format" translatable="false">Prepare the backup card with number %s</string>
+    <string name="onboarding_subtitle_scan_primary_card_format" translatable="false">Prepare the primary card with number %s</string>
+    <string name="details_row_title_reset_factory_settings" translatable="false">Reset to factory settings</string>
+    <string name="details_row_title_reset_factory_settings_warning" translatable="false">This action is irreversible. If, after resetting the card, someone sends funds to it, then you will not be able to withdraw them.</string>
+
 
 </resources>
