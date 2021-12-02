@@ -2,6 +2,7 @@ package com.tangem.tap.features.wallet.ui.wallet
 
 import android.app.Dialog
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.tangem.common.card.Card
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.redux.StateDialog
@@ -49,7 +50,21 @@ class MultiWalletView : WalletView {
         btn_scan_multiwallet?.show()
         rv_multiwallet.show()
         btn_add_token.show()
+        setupWalletCardNumber(fragment)
     }
+
+    private fun setupWalletCardNumber(fragment: WalletFragment) = with(fragment) {
+        val card = store.state.globalState.scanResponse?.card
+        if (card?.backupStatus?.isActive == true) {
+            val cardCount = (card.backupStatus as Card.BackupStatus.Active).cardCount + 1
+            tv_twin_card_number.show()
+            tv_twin_card_number.text =
+                getString(R.string.wallet_twins_chip_format, 1, cardCount)
+        } else {
+            tv_twin_card_number.hide()
+        }
+    }
+
 
     private fun setupButtons(fragment: WalletFragment) = with(fragment) {
         btn_scan_multiwallet?.setOnClickListener { store.dispatch(WalletAction.Scan) }

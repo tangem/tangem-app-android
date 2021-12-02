@@ -160,21 +160,35 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tv_signed_hashes" />
 
-
             <TextView
-                android:id="@+id/tv_erase_wallet"
+                android:id="@+id/tv_create_backup"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:drawablePadding="15dp"
                 android:paddingTop="7dp"
                 android:paddingBottom="7dp"
-                android:text="@string/details_row_title_erase_wallet"
+                android:text="@string/details_row_title_create_backup"
                 android:textColor="@color/darkGray6"
                 android:textSize="16sp"
                 app:drawableEndCompat="@drawable/ic_angle_bracket_right"
                 app:drawableTint="@color/darkGray1"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tv_security_title" />
+
+            <TextView
+                android:id="@+id/tv_reset_to_factory"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:drawablePadding="15dp"
+                android:paddingTop="7dp"
+                android:paddingBottom="7dp"
+                android:text="@string/details_row_title_reset_factory_settings"
+                android:textColor="@color/darkGray6"
+                android:textSize="16sp"
+                app:drawableEndCompat="@drawable/ic_angle_bracket_right"
+                app:drawableTint="@color/darkGray1"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_create_backup" />
 
             <TextView
                 android:id="@+id/tv_settings_title"
@@ -187,7 +201,7 @@
                 android:textColor="@color/colorSecondary"
                 android:textSize="13sp"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_erase_wallet" />
+                app:layout_constraintTop_toBottomOf="@id/tv_reset_to_factory" />
 
             <View
                 android:layout_width="match_parent"
