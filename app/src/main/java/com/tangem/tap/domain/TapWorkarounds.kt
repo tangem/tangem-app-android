@@ -29,8 +29,7 @@ object TapWorkarounds {
     }
 
     fun Card.isNotSupportedInThatRelease():Boolean {
-        return tangemWalletBatches.contains(batchId)
-
+        return false
     }
 
     @Deprecated("Use ScanResponse.isTangemNote")
