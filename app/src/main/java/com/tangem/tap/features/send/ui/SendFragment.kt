@@ -285,8 +285,12 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         }
     }
 
-    override fun onDestroy() {
+    override fun onDestroyView() {
         keyboardObserver.unregisterListener()
+        super.onDestroyView()
+    }
+
+    override fun onDestroy() {
         store.dispatch(ReleaseSendState)
         super.onDestroy()
     }
