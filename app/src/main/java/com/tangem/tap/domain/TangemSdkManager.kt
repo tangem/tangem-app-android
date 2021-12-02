@@ -16,11 +16,11 @@ import com.tangem.operations.CommandResponse
 import com.tangem.operations.pins.CheckUserCodesCommand
 import com.tangem.operations.pins.CheckUserCodesResponse
 import com.tangem.operations.pins.SetUserCodeCommand
-import com.tangem.operations.wallet.PurgeWalletCommand
 import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.AnalyticsHandler
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.domain.tasks.CreateWalletAndRescanTask
+import com.tangem.tap.domain.tasks.product.ResetToFactorySettingsTask
 import com.tangem.tap.domain.tasks.product.ScanProductTask
 import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.wallet.R
@@ -66,11 +66,11 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
             initialMessage = Message(context.getString(R.string.initial_message_create_wallet_body)))
     }
 
-    suspend fun eraseWallet(card: Card): CompletionResult<SuccessResponse> {
+    suspend fun resetToFactorySettings(card: Card): CompletionResult<Card> {
         return runTaskAsyncReturnOnMain(
-            PurgeWalletCommand(card.wallets.first().publicKey),
+            ResetToFactorySettingsTask(),
             card.cardId,
-            initialMessage = Message(context.getString(R.string.initial_message_purge_wallet_body)))
+            initialMessage = Message(context.getString(R.string.details_row_title_reset_factory_settings)))
     }
 
     suspend fun setPasscode(cardId: String?): CompletionResult<SuccessResponse> {
