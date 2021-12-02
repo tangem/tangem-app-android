@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/iv_access_code_icon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="25dp"
+        android:src="@drawable/ic_access_code"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:layout_marginTop="20dp"
+        android:id="@+id/tv_feature_1_title"
+        style="@style/title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/onboarding_access_code_feature_1_title"
+        android:textAlignment="center"
+        app:layout_constraintStart_toStartOf="@id/tv_feature_1_description"
+        app:layout_constraintTop_toBottomOf="@id/iv_access_code_icon" />
+
+    <ImageView
+        android:id="@+id/iv_feature_1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="46dp"
+        android:layout_marginTop="8dp"
+        android:src="@drawable/ic_feature_1"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_feature_1_title" />
+
+    <TextView
+        android:id="@+id/tv_feature_1_description"
+        style="@style/description"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="46dp"
+        android:text="@string/onboarding_access_code_feature_1_description"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/iv_feature_1"
+        app:layout_constraintTop_toBottomOf="@id/tv_feature_1_title" />
+
+    <TextView
+        android:id="@+id/tv_feature_2_title"
+        style="@style/title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:text="@string/onboarding_access_code_feature_2_title"
+        android:textAlignment="center"
+        app:layout_constraintStart_toStartOf="@id/tv_feature_1_description"
+        app:layout_constraintTop_toBottomOf="@id/tv_feature_1_description" />
+
+    <ImageView
+        android:id="@+id/iv_feature_2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="46dp"
+        android:layout_marginTop="8dp"
+        android:src="@drawable/ic_feature_2"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_feature_2_title" />
+
+    <TextView
+        android:id="@+id/tv_feature_2_description"
+        style="@style/description"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="46dp"
+        android:text="@string/onboarding_access_code_feature_2_description"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/iv_feature_2"
+        app:layout_constraintTop_toBottomOf="@id/tv_feature_2_title" />
+
+    <TextView
+        android:id="@+id/tv_feature_3_title"
+        style="@style/title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="30dp"
+        android:text="@string/onboarding_access_code_feature_3_title"
+        android:textAlignment="center"
+        app:layout_constraintStart_toStartOf="@id/tv_feature_3_description"
+        app:layout_constraintTop_toBottomOf="@id/tv_feature_2_description" />
+
+    <ImageView
+        android:id="@+id/iv_feature_3"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="46dp"
+        android:layout_marginTop="8dp"
+        android:src="@drawable/ic_feature_3"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tv_feature_3_title" />
+
+    <TextView
+        android:id="@+id/tv_feature_3_description"
+        style="@style/description"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="46dp"
+        android:text="@string/onboarding_access_code_feature_3_description"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@id/iv_feature_3"
+        app:layout_constraintTop_toBottomOf="@id/tv_feature_3_title" />
+
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/btn_access_code_create"
+        style="@style/TapButton"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="78dp"
+        android:layout_marginEnd="78dp"
+        android:layout_marginBottom="92dp"
+        android:text="@string/common_create"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
