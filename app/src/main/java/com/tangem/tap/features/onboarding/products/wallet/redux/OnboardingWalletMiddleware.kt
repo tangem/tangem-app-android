@@ -112,11 +112,18 @@ private fun handleWalletAction(action: Action) {
             store.dispatch(newAction)
         }
         OnboardingWalletAction.OnBackPressed -> {
-            if (walletState.backupState.backupStep is BackupStep.WriteBackupCard ||
-                walletState.backupState.backupStep is BackupStep.WritePrimaryCard) {
-                store.dispatch(GlobalAction.ShowDialog(BackupDialog.BackupInProgress))
-            } else {
-                store.dispatch(NavigationAction.PopBackTo())
+            when (walletState.backupState.backupStep) {
+                BackupStep.InitBackup, BackupStep.Finished -> store.dispatch(NavigationAction.PopBackTo())
+                BackupStep.ScanOriginCard, BackupStep.AddBackupCards, BackupStep.EnterAccessCode,
+                BackupStep.ReenterAccessCode, BackupStep.SetAccessCode,
+                -> {
+                    store.dispatch(BackupAction.DiscardBackup)
+                    store.dispatch(NavigationAction.PopBackTo())
+                }
+                is BackupStep.WriteBackupCard, BackupStep.WritePrimaryCard ->
+                    store.dispatch(GlobalAction.ShowDialog(BackupDialog.BackupInProgress))
+
+
             }
         }
     }
@@ -188,9 +195,9 @@ class BackupMiddleware {
                         backupService.proceedBackup { result ->
                             when (result) {
                                 is CompletionResult.Success -> {
-                                        store.dispatchOnMain(
-                                            BackupAction.PrepareToWriteBackupCard(1)
-                                        )
+                                    store.dispatchOnMain(
+                                        BackupAction.PrepareToWriteBackupCard(1)
+                                    )
                                 }
                                 is CompletionResult.Failure -> {
                                 }
