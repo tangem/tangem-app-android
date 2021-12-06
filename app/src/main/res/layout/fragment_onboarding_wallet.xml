@@ -78,30 +78,27 @@
 
             <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/imv_second_backup_card"
-                android:layout_width="296dp"
-                android:layout_height="186dp"
-                android:scaleType="fitXY"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:src="@drawable/card_placeholder_black"
+                android:src="@drawable/card_placeholder_new"
                 android:visibility="gone"
                 />
 
             <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/imv_first_backup_card"
-                android:layout_width="296dp"
-                android:layout_height="186dp"
-                android:scaleType="fitXY"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:src="@drawable/card_placeholder_black"
+                android:src="@drawable/card_placeholder_new"
                 android:visibility="gone"/>
 
             <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/imv_front_card"
-                android:layout_width="296dp"
-                android:layout_height="186dp"
-                android:scaleType="fitXY"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:src="@drawable/card_placeholder_black"
+                android:src="@drawable/card_placeholder_new"
                 android:transitionName="imv_front_card"
                 />
 
