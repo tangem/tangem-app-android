@@ -115,15 +115,13 @@ private fun handleWalletAction(action: Action) {
             when (walletState.backupState.backupStep) {
                 BackupStep.InitBackup, BackupStep.Finished -> store.dispatch(NavigationAction.PopBackTo())
                 BackupStep.ScanOriginCard, BackupStep.AddBackupCards, BackupStep.EnterAccessCode,
-                BackupStep.ReenterAccessCode, BackupStep.SetAccessCode,
+                BackupStep.ReenterAccessCode, BackupStep.SetAccessCode, BackupStep.WritePrimaryCard
                 -> {
                     store.dispatch(BackupAction.DiscardBackup)
                     store.dispatch(NavigationAction.PopBackTo())
                 }
-                is BackupStep.WriteBackupCard, BackupStep.WritePrimaryCard ->
+                is BackupStep.WriteBackupCard ->
                     store.dispatch(GlobalAction.ShowDialog(BackupDialog.BackupInProgress))
-
-
             }
         }
     }
