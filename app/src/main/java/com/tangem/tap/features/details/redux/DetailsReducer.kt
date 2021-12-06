@@ -190,6 +190,7 @@ private fun prepareAllowedSecurityOptions(
 
     if (card?.isTangemTwin() == true) {
         allowedSecurityOptions.add(SecurityOption.PassCode)
+        allowedSecurityOptions.add(SecurityOption.LongTap)
     }
     if ((currentSecurityOption == SecurityOption.LongTap) || !prohibitDefaultPin) {
         allowedSecurityOptions.add(SecurityOption.LongTap)
