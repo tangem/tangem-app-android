@@ -184,16 +184,10 @@ private fun handleSecurityAction(
 private fun prepareAllowedSecurityOptions(
     card: Card?, currentSecurityOption: SecurityOption?,
 ): EnumSet<SecurityOption> {
-    val prohibitDefaultPin = card?.settings?.isResettingUserCodesAllowed != true
-
-    val allowedSecurityOptions = EnumSet.noneOf(SecurityOption::class.java)
+    val allowedSecurityOptions = EnumSet.of(SecurityOption.LongTap)
 
     if (card?.isTangemTwin() == true) {
         allowedSecurityOptions.add(SecurityOption.PassCode)
-        allowedSecurityOptions.add(SecurityOption.LongTap)
-    }
-    if ((currentSecurityOption == SecurityOption.LongTap) || !prohibitDefaultPin) {
-        allowedSecurityOptions.add(SecurityOption.LongTap)
     }
     if (currentSecurityOption == SecurityOption.AccessCode) {
         allowedSecurityOptions.add(SecurityOption.AccessCode)
