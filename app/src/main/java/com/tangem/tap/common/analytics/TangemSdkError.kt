@@ -103,6 +103,7 @@ object TangemSdk {
             is TangemSdkError.FilesDisabled -> TangemSdkError.FilesDisabled()
             is TangemSdkError.HDWalletDisabled -> TangemSdkError.HDWalletDisabled()
             is TangemSdkError.WrongInteractionMode -> TangemSdkError.WrongInteractionMode()
+            is TangemSdkError.IssuerSignatureLoadingFailed -> TangemSdkError.IssuerSignatureLoadingFailed()
         }
     }
 
