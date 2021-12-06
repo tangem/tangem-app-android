@@ -68,7 +68,6 @@ fun FragmentActivity.addOnBackPressedDispatcher(
 
 private fun fragmentFactory(screen: AppScreen): Fragment {
     return when (screen) {
-//        AppScreen.Home -> TestLeapfrogFragment()
         AppScreen.Home -> HomeFragment()
         AppScreen.OnboardingNote -> OnboardingNoteFragment()
         AppScreen.OnboardingWallet -> OnboardingWalletFragment()
