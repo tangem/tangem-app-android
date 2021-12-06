@@ -103,11 +103,10 @@ private fun handleWalletAction(action: Action) {
         }
         OnboardingWalletAction.ProceedBackup -> {
             val newAction = when (val backupState = backupService.currentState) {
-                BackupService.State.Preparing -> BackupAction.IntroduceBackup
                 BackupService.State.FinalizingPrimaryCard -> BackupAction.PrepareToWritePrimaryCard
                 is BackupService.State.FinalizingBackupCard ->
                     BackupAction.PrepareToWriteBackupCard(backupState.index)
-                BackupService.State.Finished -> BackupAction.FinishBackup
+                else -> BackupAction.IntroduceBackup
             }
             store.dispatch(newAction)
         }
@@ -115,15 +114,13 @@ private fun handleWalletAction(action: Action) {
             when (walletState.backupState.backupStep) {
                 BackupStep.InitBackup, BackupStep.Finished -> store.dispatch(NavigationAction.PopBackTo())
                 BackupStep.ScanOriginCard, BackupStep.AddBackupCards, BackupStep.EnterAccessCode,
-                BackupStep.ReenterAccessCode, BackupStep.SetAccessCode,
+                BackupStep.ReenterAccessCode, BackupStep.SetAccessCode, BackupStep.WritePrimaryCard
                 -> {
                     store.dispatch(BackupAction.DiscardBackup)
                     store.dispatch(NavigationAction.PopBackTo())
                 }
-                is BackupStep.WriteBackupCard, BackupStep.WritePrimaryCard ->
+                is BackupStep.WriteBackupCard ->
                     store.dispatch(GlobalAction.ShowDialog(BackupDialog.BackupInProgress))
-
-
             }
         }
     }
