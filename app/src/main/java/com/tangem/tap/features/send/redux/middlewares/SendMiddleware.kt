@@ -15,6 +15,7 @@ import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.domain.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.domain.TangemSigner
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.TapWorkarounds.isStart2Coin
@@ -152,9 +153,8 @@ private fun sendTransaction(
         if (card.isStart2Coin) {
             tangemSdk.config.linkedTerminal = false
         }
-        val signer = TangemSigner(
-            tangemSdk = tangemSdk, initialMessage = action.messageForSigner
-        ) { signResponse ->
+
+        val signer = TangemSigner(tangemSdk, action.messageForSigner) { signResponse ->
             store.dispatch(
                 GlobalAction.UpdateWalletSignedHashes(
                     walletSignedHashes = signResponse.totalSignedHashes,
@@ -163,10 +163,22 @@ private fun sendTransaction(
                 )
             )
         }
-        val result = (walletManager as TransactionSender).send(txData, signer)
+
+        val sendResult = try {
+            (walletManager as TransactionSender).send(txData, signer)
+        } catch (ex: Exception) {
+            FirebaseCrashlytics.getInstance().recordException(ex)
+            delay(DELAY_SDK_DIALOG_CLOSE)
+            withMainContext {
+                dispatch(SendAction.ChangeSendButtonState(ButtonState.ENABLED))
+                store.dispatchErrorNotification(TapError.CustomError(ex.localizedMessage ?: "Unknown error"))
+            }
+            return@launch
+        }
+
         withContext(Dispatchers.Main) {
             tangemSdk.config.linkedTerminal = isLinkedTerminal
-            when (result) {
+            when (sendResult) {
                 is SimpleResult.Success -> {
                     FirebaseAnalyticsHandler.triggerEvent(
                         event = AnalyticsEvent.TRANSACTION_IS_SENT,
@@ -191,20 +203,18 @@ private fun sendTransaction(
                     }
                 }
                 is SimpleResult.Failure -> {
-                    when (result.error) {
+                    when (sendResult.error) {
                         is CreateAccountUnderfunded -> {
-                            val error = result.error as CreateAccountUnderfunded
+                            val error = sendResult.error as CreateAccountUnderfunded
                             val reserve = error.minReserve.value?.stripZeroPlainString() ?: "0"
                             val symbol = error.minReserve.currencySymbol
                             dispatch(SendAction.SendError(TapError.CreateAccountUnderfunded(listOf(reserve, symbol))))
                         }
                         is SendException -> {
-                            result.error?.let {
-                                FirebaseCrashlytics.getInstance().recordException(it)
-                            }
+                            sendResult.error?.let { FirebaseCrashlytics.getInstance().recordException(it) }
                         }
                         is Throwable -> {
-                            val throwable = result.error as Throwable
+                            val throwable = sendResult.error as Throwable
                             val message = throwable.message
                             val infoHolder = store.state.globalState.feedbackManager?.infoHolder
                             when {
@@ -228,13 +238,13 @@ private fun sendTransaction(
                                     dispatch(SendAction.SendError(TapError.XmlError.AssetAccountNotCreated))
                                 }
                                 else -> {
-                                    (result.error as? TangemSdkError)?.let { error ->
+                                    (sendResult.error as? TangemSdkError)?.let { error ->
                                         FirebaseAnalyticsHandler.logCardSdkError(
                                             error,
                                             FirebaseAnalyticsHandler.ActionToLog.SendTransaction,
                                             mapOf(
                                                 FirebaseAnalyticsHandler.AnalyticsParam.BLOCKCHAIN
-                                                        to walletManager.wallet.blockchain.currency),
+                                                    to walletManager.wallet.blockchain.currency),
                                             card = card,
                                         )
                                     }
@@ -303,7 +313,7 @@ fun createValidateTransactionError(errorList: EnumSet<TransactionError>, walletM
 
 private fun setIfSendingToPayIdEnabled(appState: AppState?, dispatch: (Action) -> Unit) {
     val isSendingToPayIdEnabled =
-            appState?.globalState?.configManager?.config?.isSendingToPayIdEnabled ?: false
+        appState?.globalState?.configManager?.config?.isSendingToPayIdEnabled ?: false
     dispatch(AddressPayIdActionUi.ChangePayIdState(isSendingToPayIdEnabled))
 }
 
