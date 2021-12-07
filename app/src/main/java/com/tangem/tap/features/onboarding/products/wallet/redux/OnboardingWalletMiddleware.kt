@@ -38,7 +38,7 @@ private val onboardingWalletMiddleware: Middleware<AppState> = { dispatch, state
 private fun handleWalletAction(action: Action) {
     if (action !is OnboardingWalletAction) return
     val globalState = store.state.globalState
-    val onboardingManager = globalState.onboardingManager
+    val onboardingManager = globalState.onboardingState.onboardingManager
 
     val scanResponse = onboardingManager?.scanResponse
     val card = scanResponse?.card
@@ -73,7 +73,8 @@ private fun handleWalletAction(action: Action) {
                     when (result) {
                         is CompletionResult.Success -> {
                             //here we must use updated scanResponse after createWallet & derivation
-                            val updatedResponse = globalState.onboardingManager.scanResponse.copy(card = result.data)
+                            val updatedResponse =
+                                globalState.onboardingState.onboardingManager.scanResponse.copy(card = result.data)
                             onboardingManager.scanResponse = updatedResponse
                             onboardingManager.activationStarted(updatedResponse.card.cardId)
                             store.dispatch(OnboardingWalletAction.ProceedBackup)
@@ -134,7 +135,7 @@ private fun updateScanResponseAfterBackup(
     scanResponse: ScanResponse, backupState: BackupState
 ): ScanResponse {
     val card = if (backupState.backupStep == BackupStep.Finished) {
-        val cardsCount = backupState.backupCardsNumber + 1
+        val cardsCount = backupState.backupCardsNumber
         scanResponse.card.copy(
             backupStatus = Card.BackupStatus.Active(cardCount = cardsCount),
             isAccessCodeSet = true
@@ -250,6 +251,7 @@ class BackupMiddleware {
                         }
                     }
                     is BackupAction.ResumeBackup -> {
+                        store.dispatch(GlobalAction.Onboarding.Start(null, true))
                         store.dispatch(OnboardingWalletAction.ProceedBackup)
                         store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingWallet))
                     }
