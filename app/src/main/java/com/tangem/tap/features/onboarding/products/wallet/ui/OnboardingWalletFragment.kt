@@ -175,6 +175,9 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
         imv_first_backup_card.show()
         imv_second_backup_card.show()
 
+        accessCodeDialog?.dismiss()
+        accessCodeDialog = null
+
         layout_buttons_add_cards.show()
         layout_buttons_common.hide()
         if (state.backupCardsNumber < state.maxBackupCards) {
@@ -218,7 +221,7 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
             dismissWithAnimation = true
             create()
             setOnCancelListener {
-
+                store.dispatch(BackupAction.OnAccessCodeDialogClosed)
             }
             show()
             showInfoScreen()
