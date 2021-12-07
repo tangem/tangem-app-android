@@ -5,8 +5,8 @@ import com.tangem.common.card.EllipticCurve
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
 import com.tangem.operations.CommandResponse
-import com.tangem.operations.wallet.CreateWalletCommand
 import com.tangem.operations.wallet.CreateWalletResponse
+import com.tangem.operations.wallet.CreateWalletTask
 
 /**
 [REDACTED_AUTHOR]
@@ -31,8 +31,7 @@ class CreateWalletsTask(
         session: CardSession,
         callback: (result: CompletionResult<CreateWalletsResponse>) -> Unit
     ) {
-
-        CreateWalletCommand(curve).run(session) { result ->
+        CreateWalletTask(curve).run(session) { result ->
             when (result) {
                 is CompletionResult.Success -> {
                     createdWalletsResponses.add(result.data)
