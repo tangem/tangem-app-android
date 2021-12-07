@@ -139,7 +139,7 @@ private class ScanWalletProcessor(
         session: CardSession,
         callback: (result: CompletionResult<ScanResponse>) -> Unit
     ) {
-        val derivationPaths = collectDerivationPaths(card)
+        val derivationPaths = collectDerivationPaths(card)?.distinct()
         val wallet = card.wallets.firstOrNull { it.curve == EllipticCurve.Secp256k1 }
 
         if (derivationPaths.isNullOrEmpty() || wallet == null || wallet.chainCode == null) {
