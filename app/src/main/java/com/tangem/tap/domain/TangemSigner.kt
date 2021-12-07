@@ -3,6 +3,7 @@ package com.tangem.tap.domain
 import com.tangem.Message
 import com.tangem.TangemSdk
 import com.tangem.blockchain.common.TransactionSigner
+import com.tangem.blockchain.common.Wallet
 import com.tangem.common.CompletionResult
 import com.tangem.tap.domain.tasks.SignHashTask
 import com.tangem.tap.domain.tasks.SignHashesTask
@@ -15,13 +16,9 @@ class TangemSigner(
     private val signerCallback: (TangemSignerResponse) -> Unit,
 ) : TransactionSigner {
 
-    override suspend fun sign(
-        hash: ByteArray,
-        cardId: String,
-        walletPublicKey: ByteArray,
-    ): CompletionResult<ByteArray> =
-        suspendCoroutine { continuation ->
-            val command = SignHashTask(hash, walletPublicKey)
+    override suspend fun sign(hash: ByteArray, cardId: String, publicKey: Wallet.PublicKey): CompletionResult<ByteArray> {
+        return suspendCoroutine { continuation ->
+            val command = SignHashTask(hash, publicKey.seedKey)
             tangemSdk.startSessionWithRunnable(
                 runnable = command,
                 cardId = cardId,
@@ -42,15 +39,11 @@ class TangemSigner(
                 }
             }
         }
+    }
 
-
-    override suspend fun sign(
-        hashes: List<ByteArray>,
-        cardId: String,
-        walletPublicKey: ByteArray,
-    ): CompletionResult<List<ByteArray>> =
-        suspendCoroutine { continuation ->
-            val task = SignHashesTask(hashes, walletPublicKey)
+    override suspend fun sign(hashes: List<ByteArray>, cardId: String, publicKey: Wallet.PublicKey): CompletionResult<List<ByteArray>> {
+        return suspendCoroutine { continuation ->
+            val task = SignHashesTask(hashes, publicKey.seedKey)
             tangemSdk.startSessionWithRunnable(
                 runnable = task,
                 cardId = cardId,
@@ -71,6 +64,7 @@ class TangemSigner(
                 }
             }
         }
+    }
 }
 
 data class TangemSignerResponse(
