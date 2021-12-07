@@ -10,8 +10,8 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.guard
 import com.tangem.operations.derivation.DeriveWalletPublicKeysTask
 import com.tangem.operations.derivation.ExtendedPublicKeyList
-import com.tangem.operations.wallet.CreateWalletCommand
 import com.tangem.operations.wallet.CreateWalletResponse
+import com.tangem.operations.wallet.CreateWalletTask
 import com.tangem.tap.common.extensions.toMapKey
 import com.tangem.tap.domain.ProductType
 import com.tangem.tap.domain.TapWorkarounds.getTangemNoteBlockchain
@@ -74,7 +74,7 @@ private class CreateWalletTangemNote : ProductCommandProcessor<CreateWalletRespo
             } else {
                 intersectCurves[0]
             }
-            CreateWalletCommand(curve).run(session, callback)
+            CreateWalletTask(curve).run(session, callback)
         }
     }
 }
