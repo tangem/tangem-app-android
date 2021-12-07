@@ -2,7 +2,6 @@ package com.tangem.tap.domain.walletconnect
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.guard
-import com.tangem.common.extensions.hexToBytes
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -97,10 +96,9 @@ class WalletConnectManager {
         val activeData = sessions[session] ?: return
         removeSimilarSessions(activeData)
 
+        val accounts = listOf(Blockchain.Ethereum.makeAddresses(activeData.wallet.walletPublicKey).first().value)
         val approved = activeData.client.approveSession(
-            accounts = listOf(Blockchain.Ethereum.makeAddresses(
-                activeData.wallet.walletPublicKey.hexToBytes()).first().value
-            ),
+            accounts = accounts,
             chainId = activeData.wallet.chainId
         )
         if (approved) {
