@@ -12,6 +12,7 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.extensions.hasWallets
+import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.home.redux.HomeMiddleware
 import com.tangem.tap.features.onboarding.products.note.redux.OnboardingNoteAction
@@ -98,7 +99,9 @@ private fun handleWalletAction(action: Action) {
                 store.dispatch(NavigationAction.PopBackTo())
                 store.dispatch(HomeAction.ReadCard)
             } else {
-                scope.launch { globalState.tapWalletManager.onCardScanned(scanResponse) }
+                val backupState = store.state.onboardingWalletState.backupState
+                val updatedScanResponse = updateScanResponseAfterBackup(scanResponse, backupState)
+                scope.launch { globalState.tapWalletManager.onCardScanned(updatedScanResponse) }
                 store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Wallet))
             }
         }
@@ -125,6 +128,21 @@ private fun handleWalletAction(action: Action) {
             }
         }
     }
+}
+
+private fun updateScanResponseAfterBackup(
+    scanResponse: ScanResponse, backupState: BackupState
+): ScanResponse {
+    val card = if (backupState.backupStep == BackupStep.Finished) {
+        val cardsCount = backupState.backupCardsNumber + 1
+        scanResponse.card.copy(
+            backupStatus = Card.BackupStatus.Active(cardCount = cardsCount),
+            isAccessCodeSet = true
+        )
+    } else {
+        scanResponse.card
+    }
+    return scanResponse.copy(card = card)
 }
 
 class BackupMiddleware {
@@ -239,7 +257,6 @@ class BackupMiddleware {
                         store.dispatch(BackupAction.FinishBackup)
                     }
                 }
-
                 next(action)
             }
         }
