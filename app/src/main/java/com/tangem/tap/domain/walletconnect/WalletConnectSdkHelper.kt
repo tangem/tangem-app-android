@@ -5,14 +5,12 @@ import com.tangem.blockchain.blockchains.ethereum.EthereumGasLoader
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.blockchains.ethereum.EthereumUtils
 import com.tangem.blockchain.blockchains.ethereum.EthereumUtils.Companion.toKeccak
-import com.tangem.blockchain.common.Amount
-import com.tangem.blockchain.common.AmountType
-import com.tangem.blockchain.common.TransactionData
-import com.tangem.blockchain.common.TransactionSender
+import com.tangem.blockchain.common.*
 import com.tangem.blockchain.extensions.*
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.hexToBytes
+import com.tangem.crypto.CryptoUtils
 import com.tangem.operations.sign.SignHashCommand
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.common.extensions.toFormattedString
@@ -36,9 +34,14 @@ class WalletConnectSdkHelper {
         type: WcTransactionType,
     ): WcTransactionData? {
         val factory = store.state.globalState.tapWalletManager.walletManagerFactory
+        val publicKey = Wallet.PublicKey(
+            session.wallet.walletPublicKey,
+            session.wallet.derivedPublicKey,
+            session.wallet.derivationPath,
+        )
         val walletManager = factory.makeEthereumWalletManager(
             session.wallet.cardId,
-            session.wallet.walletPublicKey.hexToBytes(),
+            publicKey,
             emptyList(),
             isTestNet = session.wallet.isTestNet
         ) ?: return null
@@ -151,7 +154,7 @@ class WalletConnectSdkHelper {
 
         val command = SignHashCommand(
             hash = dataToSign.hash,
-            walletPublicKey = data.walletManager.wallet.publicKey
+            walletPublicKey = data.walletManager.wallet.publicKey.seedKey
         )
         val result = tangemSdkManager.runTaskAsync(command, initialMessage = Message())
         return when (result) {
@@ -208,13 +211,13 @@ class WalletConnectSdkHelper {
     }
 
     suspend fun signPersonalMessage(hashToSign: ByteArray, wallet: WalletForSession): String? {
-        val publicKey = wallet.walletPublicKey.hexToBytes()
+        val publicKey = wallet.walletPublicKey
         val command = SignHashCommand(hashToSign, publicKey)
         return when (val result = tangemSdkManager.runTaskAsync(command, wallet.cardId)) {
             is CompletionResult.Success -> {
                 val hash = result.data.signature
                 return EthereumUtils.prepareSignedMessageData(
-                    hash, hashToSign, publicKey
+                    hash, hashToSign, CryptoUtils.decompressPublicKey(wallet.walletPublicKey)
                 )
             }
             is CompletionResult.Failure -> {
