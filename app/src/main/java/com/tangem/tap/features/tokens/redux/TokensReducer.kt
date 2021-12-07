@@ -17,6 +17,7 @@ private fun internalReduce(action: Action, state: AppState): TokensState {
 
     val tokensState = state.tokensState
     return when (action) {
+        is TokensAction.ResetState -> TokensState()
         is TokensAction.LoadCurrencies.Success -> {
             tokensState.copy(currencies = action.currencies, shownCurrencies = action.currencies)
         }
@@ -33,14 +34,24 @@ private fun internalReduce(action: Action, state: AppState): TokensState {
             if (action.isShown) {
                 val shownCurrencies = tokensState.shownCurrencies
                     .removeTokensForBlockchain(action.blockchain)
-                    shownCurrencies.toggleHeaderContentShownValue(action.blockchain)
+                shownCurrencies.toggleHeaderContentShownValue(action.blockchain)
                 tokensState.copy(shownCurrencies = shownCurrencies)
             } else {
                 val shownCurrencies = tokensState.shownCurrencies
                     .addTokensForBlockchain(action.blockchain, tokensState.currencies)
-                    shownCurrencies.toggleHeaderContentShownValue(action.blockchain)
+                shownCurrencies.toggleHeaderContentShownValue(action.blockchain)
                 tokensState.copy(shownCurrencies = shownCurrencies)
             }
+        }
+        is TokensAction.TokensList.AddBlockchain -> {
+            val candidates = tokensState.candidateToAdd.toMutableSet()
+            candidates.add(CurrencyListItem.BlockchainListItem(action.blockchain))
+            tokensState.copy(candidateToAdd = candidates.toList())
+        }
+        is TokensAction.TokensList.AddToken -> {
+            val candidates = tokensState.candidateToAdd.toMutableSet()
+            candidates.add(CurrencyListItem.TokenListItem(action.token))
+            tokensState.copy(candidateToAdd = candidates.toList())
         }
         else -> tokensState
     }
