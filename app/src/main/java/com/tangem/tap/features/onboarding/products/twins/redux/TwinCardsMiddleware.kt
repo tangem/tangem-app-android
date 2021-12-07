@@ -45,7 +45,7 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
     val action = action as? TwinCardsAction ?: return
 
     val globalState = store.state.globalState
-    val onboardingManager = globalState.onboardingManager
+    val onboardingManager = globalState.onboardingState.onboardingManager
     val twinCardsState = store.state.twinCardsState
 
     fun getScanResponse(): ScanResponse {
