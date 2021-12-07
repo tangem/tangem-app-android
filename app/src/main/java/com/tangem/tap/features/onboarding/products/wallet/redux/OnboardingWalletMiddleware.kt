@@ -134,7 +134,7 @@ private fun handleWalletAction(action: Action) {
 private fun updateScanResponseAfterBackup(
     scanResponse: ScanResponse, backupState: BackupState
 ): ScanResponse {
-    val card = if (backupState.backupStep == BackupStep.Finished) {
+    val card = if (backupState.backupCardsNumber > 0) {
         val cardsCount = backupState.backupCardsNumber
         scanResponse.card.copy(
             backupStatus = Card.BackupStatus.Active(cardCount = cardsCount),
