@@ -3,6 +3,7 @@ package com.tangem.tap.common.redux.global
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.services.Result
+import com.tangem.tap.*
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -13,10 +14,6 @@ import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.features.send.redux.SendAction
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.network.moonpay.MoonpayService
-import com.tangem.tap.preferencesStorage
-import com.tangem.tap.scope
-import com.tangem.tap.store
-import com.tangem.tap.tangemSdkManager
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
 import timber.log.Timber
@@ -91,7 +88,12 @@ private val globalMiddlewareHandler: Middleware<AppState> = { dispatch, appState
                 }
                 is GlobalAction.ScanCard -> {
                     scope.launch {
-                        val result = tangemSdkManager.scanProduct(FirebaseAnalyticsHandler, action.messageResId)
+                        val result = tangemSdkManager.scanProduct(
+                            FirebaseAnalyticsHandler,
+                            currenciesRepository,
+                            action.shouldDeriveWC,
+                            action.messageResId
+                        )
                         store.dispatch(GlobalAction.ScanFailsCounter.ChooseBehavior(result))
                         withMainContext {
                             when (result) {
