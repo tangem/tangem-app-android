@@ -1,5 +1,7 @@
 package com.tangem.tap.features.tokens.redux
 
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.Token
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.EllipticCurve
 import com.tangem.tap.common.extensions.dispatchErrorNotification
@@ -11,6 +13,7 @@ import com.tangem.tap.currenciesRepository
 import com.tangem.tap.domain.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.TapWorkarounds.isTestCard
+import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.scope
 import com.tangem.tap.store
@@ -68,7 +71,6 @@ class TokensMiddleware {
 
     private fun handleSaveChanges(action: TokensAction.TokensList.SaveChanges) {
         val scanResponse = store.state.globalState.scanResponse ?: return
-        val wallet = scanResponse.card.wallets.firstOrNull { it.curve == EllipticCurve.Secp256k1 } ?: return
 
         val candidatesToAdd = store.state.tokensState.candidateToAdd
         if (candidatesToAdd.isEmpty()) return
@@ -79,8 +81,24 @@ class TokensMiddleware {
             .map { it.token }
         if (blockchains.isEmpty() && tokens.isEmpty()) return
 
-        val derivationPathsCandidates = (blockchains + tokens.map { it.blockchain })
-            .distinct().mapNotNull { it.derivationPath() }
+        if (scanResponse.isTangemWallet()) {
+            deriveMissingBlockchains(scanResponse, blockchains, tokens)
+        } else {
+            submitAdd(blockchains, tokens)
+            store.dispatch(NavigationAction.PopBackTo())
+        }
+    }
+
+    private fun deriveMissingBlockchains(
+        scanResponse: ScanResponse,
+        blockchains: List<Blockchain>,
+        tokens: List<Token>
+    ) {
+        val wallet = scanResponse.card.wallets.firstOrNull { it.curve == EllipticCurve.Secp256k1 } ?: return
+
+        val tokenBlockchains = tokens.map { it.blockchain }
+        val derivationPathsCandidates = (blockchains + tokenBlockchains).distinct()
+            .mapNotNull { it.derivationPath() }
 
         val mapKeyOfWalletPublicKey = wallet.publicKey.toMapKey()
         val alreadyDerivedKeys = scanResponse.derivedKeys[mapKeyOfWalletPublicKey]?.toMutableList() ?: mutableListOf()
@@ -97,13 +115,9 @@ class TokensMiddleware {
                     val updatedScanResponse = scanResponse.copy(
                         derivedKeys = mapOf(mapKeyOfWalletPublicKey to alreadyDerivedKeys.toList())
                     )
-
                     store.dispatch(GlobalAction.SaveScanNoteResponse(updatedScanResponse))
+                    submitAdd(blockchains, tokens)
 
-                    val actions = blockchains.map { WalletAction.MultiWallet.AddBlockchain(it) } + tokens.map {
-                        WalletAction.MultiWallet.AddToken(it)
-                    }
-                    actions.forEach { store.dispatch(it) }
                     delay(DELAY_SDK_DIALOG_CLOSE)
                     store.dispatch(NavigationAction.PopBackTo())
                 }
@@ -112,5 +126,13 @@ class TokensMiddleware {
                 }
             }
         }
+    }
+
+    private fun submitAdd(blockchains: List<Blockchain>, tokens: List<Token>) {
+        (blockchains.map {
+            WalletAction.MultiWallet.AddBlockchain(it)
+        } + tokens.map {
+            WalletAction.MultiWallet.AddToken(it)
+        }).forEach { store.dispatch(it) }
     }
 }
