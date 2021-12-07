@@ -8,8 +8,8 @@ import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.TangemError
 import com.tangem.common.extensions.hexToBytes
-import com.tangem.operations.wallet.CreateWalletCommand
 import com.tangem.operations.wallet.CreateWalletResponse
+import com.tangem.operations.wallet.CreateWalletTask
 import com.tangem.operations.wallet.PurgeWalletCommand
 import com.tangem.tap.domain.extensions.getSingleWallet
 import com.tangem.wallet.R
@@ -47,7 +47,7 @@ class CreateSecondTwinWalletTask(
 
     private fun finishTask(session: CardSession, callback: (result: CompletionResult<CreateWalletResponse>) -> Unit) {
         session.setMessage(creatingWalletMessage)
-        CreateWalletCommand(EllipticCurve.Secp256k1).run(session) { result ->
+        CreateWalletTask(EllipticCurve.Secp256k1).run(session) { result ->
             when (result) {
                 is CompletionResult.Success -> {
                     session.environment.card = session.environment.card?.updateWallet(result.data.wallet)
