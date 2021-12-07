@@ -14,11 +14,16 @@ import com.tangem.common.core.TangemError
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.toHexString
+import com.tangem.common.hdWallet.DerivationPath
+import com.tangem.common.hdWallet.ExtendedPublicKey
 import com.tangem.operations.CommandResponse
 import com.tangem.operations.PreflightReadMode
 import com.tangem.operations.PreflightReadTask
 import com.tangem.operations.ScanTask
+import com.tangem.operations.derivation.DeriveWalletPublicKeysTask
 import com.tangem.operations.issuerAndUserData.ReadIssuerDataCommand
+import com.tangem.tap.common.extensions.ByteArrayKey
+import com.tangem.tap.common.extensions.toMapKey
 import com.tangem.tap.domain.ProductType
 import com.tangem.tap.domain.TapSdkError
 import com.tangem.tap.domain.TapWorkarounds
@@ -26,6 +31,7 @@ import com.tangem.tap.domain.TapWorkarounds.getTangemNoteBlockchain
 import com.tangem.tap.domain.TapWorkarounds.isExcluded
 import com.tangem.tap.domain.TapWorkarounds.isNotSupportedInThatRelease
 import com.tangem.tap.domain.extensions.getSingleWallet
+import com.tangem.tap.domain.tokens.CurrenciesRepository
 import com.tangem.tap.domain.twins.TwinsHelper
 
 data class ScanResponse(
@@ -33,6 +39,7 @@ data class ScanResponse(
     val productType: ProductType,
     val walletData: WalletData?,
     val secondTwinPublicKey: String? = null,
+    val derivedKeys: Map<KeyWalletPublicKey, List<ExtendedPublicKey>> = mapOf()
 ) : CommandResponse {
 
     fun getBlockchain(): Blockchain {
@@ -60,7 +67,13 @@ data class ScanResponse(
     fun twinsIsTwinned(): Boolean = card.isTangemTwins() && walletData != null && secondTwinPublicKey != null
 }
 
-class ScanProductTask(val card: Card? = null) : CardSessionRunnable<ScanResponse> {
+typealias KeyWalletPublicKey = ByteArrayKey
+
+class ScanProductTask(
+    val card: Card? = null,
+    private val currenciesRepository: CurrenciesRepository?,
+    private val shouldDeriveWC: Boolean
+) : CardSessionRunnable<ScanResponse> {
 
     override fun run(
         session: CardSession,
@@ -80,7 +93,7 @@ class ScanProductTask(val card: Card? = null) : CardSessionRunnable<ScanResponse
         val commandProcessor = when {
             TapWorkarounds.isTangemNote(card) -> ScanNoteProcessor()
             card.isTangemTwins() -> ScanTwinProcessor()
-            TapWorkarounds.isTangemWallet(card) -> ScanWalletProcessor()
+            TapWorkarounds.isTangemWallet(card) -> ScanWalletProcessor(currenciesRepository, shouldDeriveWC)
             else -> ScanOtherCardsProcessor()
         }
         commandProcessor.proceed(card, session) { processorResult ->
@@ -116,13 +129,60 @@ private class ScanNoteProcessor : ProductCommandProcessor<ScanResponse> {
     }
 }
 
-private class ScanWalletProcessor : ProductCommandProcessor<ScanResponse> {
+private class ScanWalletProcessor(
+    private val currenciesRepository: CurrenciesRepository?,
+    private val shouldDeriveWC: Boolean
+) : ProductCommandProcessor<ScanResponse> {
+
     override fun proceed(
         card: Card,
         session: CardSession,
         callback: (result: CompletionResult<ScanResponse>) -> Unit
     ) {
-        callback(CompletionResult.Success(ScanResponse(card, ProductType.Wallet, session.environment.walletData)))
+        val derivationPaths = collectDerivationPaths(card)
+        val wallet = card.wallets.firstOrNull { it.curve == EllipticCurve.Secp256k1 }
+
+        if (derivationPaths.isNullOrEmpty() || wallet == null || wallet.chainCode == null) {
+            callback(CompletionResult.Success(ScanResponse(card, ProductType.Wallet, session.environment.walletData)))
+            return
+        }
+
+        DeriveWalletPublicKeysTask(wallet.publicKey, derivationPaths).run(session) { result ->
+            when (result) {
+                is CompletionResult.Success -> {
+                    val derivedKeys = mapOf(wallet.publicKey.toMapKey() to result.data)
+                    val response = ScanResponse(
+                        card,
+                        ProductType.Wallet,
+                        session.environment.walletData,
+                        derivedKeys = derivedKeys
+                    )
+                    callback(CompletionResult.Success(response))
+
+                }
+                is CompletionResult.Failure -> callback(CompletionResult.Failure(result.error))
+            }
+        }
+    }
+
+    private fun collectDerivationPaths(card: Card): List<DerivationPath>? {
+        val currenciesRepository = currenciesRepository ?: return null
+        val cardCurrencies = currenciesRepository.loadCardCurrencies(card.cardId)
+
+        val blockchainsToDerive = if (cardCurrencies == null) {
+            mutableListOf(Blockchain.Bitcoin, Blockchain.Ethereum)
+        } else {
+            val tokenBlockchains = cardCurrencies.tokens.map { it.blockchain }
+            (cardCurrencies.blockchains + tokenBlockchains).toMutableList()
+        }
+
+        if (shouldDeriveWC) {
+            blockchainsToDerive.addAll(listOf(Blockchain.Ethereum, Blockchain.Binance, Blockchain.EthereumTestnet))
+        }
+
+        return blockchainsToDerive.toSet()
+            .filter { it.getSupportedCurves()?.contains(EllipticCurve.Secp256k1) == true }
+            .mapNotNull { it.derivationPath() }
     }
 }
 
@@ -174,7 +234,7 @@ private class ScanOtherCardsProcessor : ProductCommandProcessor<ScanResponse> {
             return
         }
 
-        CreateProductWalletsTask(curvesToCreate).run(session) { result ->
+        CreateWalletsTask(curvesToCreate).run(session) { result ->
             when (result) {
                 is CompletionResult.Success -> {
                     PreflightReadTask(PreflightReadMode.FullCardRead, card.cardId).run(session) { readResult ->

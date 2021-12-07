@@ -10,6 +10,7 @@ data class TokensState(
         val addedCurrencies: CardCurrencies? = null,
         val currencies: List<CurrencyListItem> = emptyList(),
         val shownCurrencies: List<CurrencyListItem> = emptyList(),
+        val candidateToAdd: List<CurrencyListItem> = emptyList(),
 ) : StateType
 
 data class TokenWithAmount(
