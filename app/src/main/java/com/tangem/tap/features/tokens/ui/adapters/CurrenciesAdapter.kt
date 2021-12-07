@@ -14,7 +14,6 @@ import com.tangem.tap.common.extensions.show
 import com.tangem.tap.domain.tokens.CardCurrencies
 import com.tangem.tap.features.tokens.redux.CurrencyListItem
 import com.tangem.tap.features.tokens.redux.TokensAction
-import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.item_currency_subtitle.view.*
@@ -86,15 +85,15 @@ class CurrenciesAdapter : ListAdapter<CurrencyListItem, RecyclerView.ViewHolder>
                         is CurrencyListItem.BlockchainListItem -> {
                             element.blockchain.currency.toLowerCase(Locale.US)
                                 .contains(queryNormalized) ||
-                                    element.blockchain.fullName.toLowerCase(Locale.US)
-                                        .contains(queryNormalized)
+                                element.blockchain.fullName.toLowerCase(Locale.US)
+                                    .contains(queryNormalized)
 
                         }
                         is CurrencyListItem.TokenListItem -> {
                             element.token.name.toLowerCase(Locale.US)
                                 .contains(queryNormalized) ||
-                                    element.token.symbol.toLowerCase(Locale.US)
-                                        .contains(queryNormalized)
+                                element.token.symbol.toLowerCase(Locale.US)
+                                    .contains(queryNormalized)
                         }
                         is CurrencyListItem.TitleListItem -> true
                     }
@@ -105,17 +104,16 @@ class CurrenciesAdapter : ListAdapter<CurrencyListItem, RecyclerView.ViewHolder>
         submitList(list)
     }
 
-    class CurrenciesViewHolder(val view: View) :
-        RecyclerView.ViewHolder(view) {
+    class CurrenciesViewHolder(val view: View) : RecyclerView.ViewHolder(view) {
+
         fun bind(currency: CurrencyListItem, addedCurrencies: CardCurrencies?) {
             when (currency) {
                 is CurrencyListItem.BlockchainListItem -> {
                     val blockchain = currency.blockchain
                     view.tv_currency_name.text = blockchain.fullName
                     view.tv_currency_symbol.text = blockchain.currency
-                    val isAdded = addedCurrencies?.blockchains?.contains(blockchain) == true
-                    view.btn_add_token.show(!isAdded)
-                    view.btn_token_added.show(isAdded)
+                    currency.isAdded = addedCurrencies?.blockchains?.contains(blockchain) == true
+                    modifyAddTokenButton(currency)
 
                     Picasso.get().loadCurrenciesIcon(
                         imageView = view.iv_currency,
@@ -124,9 +122,9 @@ class CurrenciesAdapter : ListAdapter<CurrencyListItem, RecyclerView.ViewHolder>
                     )
 
                     view.btn_add_token.setOnClickListener {
-                        store.dispatch(WalletAction.MultiWallet.AddBlockchain(blockchain))
-                        view.btn_add_token.hide()
-                        view.btn_token_added.show()
+                        store.dispatch(TokensAction.TokensList.AddBlockchain(blockchain))
+                        currency.isAdded = !currency.isAdded
+                        modifyAddTokenButton(currency)
                     }
                 }
                 is CurrencyListItem.TokenListItem -> {
@@ -134,13 +132,11 @@ class CurrenciesAdapter : ListAdapter<CurrencyListItem, RecyclerView.ViewHolder>
                     view.tv_currency_name.text = token.name
                     view.tv_currency_symbol.text = token.symbol
 
-                    val isAdded = addedCurrencies?.tokens
+                    currency.isAdded = addedCurrencies?.tokens
                         ?.any {
                             it.symbol == token.symbol && it.contractAddress == token.contractAddress
                         } == true
-
-                    view.btn_add_token.show(!isAdded)
-                    view.btn_token_added.show(isAdded)
+                    modifyAddTokenButton(currency)
 
                     Picasso.get().loadCurrenciesIcon(
                         imageView = view.iv_currency,
@@ -148,11 +144,21 @@ class CurrenciesAdapter : ListAdapter<CurrencyListItem, RecyclerView.ViewHolder>
                         token = token, blockchain = token.blockchain
                     )
                     view.btn_add_token.setOnClickListener {
-                        store.dispatch(WalletAction.MultiWallet.AddToken(token))
-                        view.btn_add_token.hide()
-                        view.btn_token_added.show()
+                        store.dispatch(TokensAction.TokensList.AddToken(token))
+                        currency.isAdded = !currency.isAdded
+                        modifyAddTokenButton(currency)
                     }
                 }
+            }
+        }
+
+        private fun modifyAddTokenButton(currency: CurrencyListItem) {
+            if (currency.isLock) {
+                view.btn_add_token.isEnabled = false
+            } else {
+                val text = if (currency.isAdded) R.string.add_token_added else R.string.common_add
+                view.btn_add_token.setText(text)
+                view.btn_add_token.isEnabled = !currency.isAdded
             }
         }
     }
