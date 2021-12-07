@@ -11,17 +11,17 @@ import com.tangem.operations.wallet.CreateWalletResponse
 /**
 [REDACTED_AUTHOR]
  */
-class CreateProductWalletsResponse(
+class CreateWalletsResponse(
     val createWalletResponses: List<CreateWalletResponse>
 ) : CommandResponse
 
-class CreateProductWalletsTask(
+class CreateWalletsTask(
     private val curves: List<EllipticCurve>,
-) : CardSessionRunnable<CreateProductWalletsResponse> {
+) : CardSessionRunnable<CreateWalletsResponse> {
 
     private val createdWalletsResponses = mutableListOf<CreateWalletResponse>()
 
-    override fun run(session: CardSession, callback: (result: CompletionResult<CreateProductWalletsResponse>) -> Unit) {
+    override fun run(session: CardSession, callback: (result: CompletionResult<CreateWalletsResponse>) -> Unit) {
         val curve = curves[createdWalletsResponses.size]
         createWallet(curve, session, callback)
     }
@@ -29,7 +29,7 @@ class CreateProductWalletsTask(
     private fun createWallet(
         curve: EllipticCurve,
         session: CardSession,
-        callback: (result: CompletionResult<CreateProductWalletsResponse>) -> Unit
+        callback: (result: CompletionResult<CreateWalletsResponse>) -> Unit
     ) {
 
         CreateWalletCommand(curve).run(session) { result ->
@@ -37,7 +37,7 @@ class CreateProductWalletsTask(
                 is CompletionResult.Success -> {
                     createdWalletsResponses.add(result.data)
                     if (createdWalletsResponses.size == curves.size) {
-                        callback(CompletionResult.Success(CreateProductWalletsResponse(createdWalletsResponses)))
+                        callback(CompletionResult.Success(CreateWalletsResponse(createdWalletsResponses)))
                         return@run
                     }
                     createWallet(curves[createdWalletsResponses.size], session, callback)
