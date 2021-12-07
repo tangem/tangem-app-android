@@ -164,22 +164,28 @@ class WalletConnectMiddleware {
         val card = scanResponse.card
         val factory = store.state.globalState.tapWalletManager.walletManagerFactory
 
+        val wcBlockchain = if (scanResponse.card.isTestCard) {
+            Blockchain.EthereumTestnet
+        } else {
+            Blockchain.Ethereum
+        }
+
         return if (store.state.globalState.scanResponse?.card?.cardId == card.cardId) {
-            store.state.walletState.getWalletManager(Blockchain.Ethereum)
-                ?: factory.makeWalletManagerForApp(scanResponse, Blockchain.Ethereum)
+            store.state.walletState.getWalletManager(wcBlockchain)
+                ?: factory.makeWalletManagerForApp(scanResponse, wcBlockchain)
                     ?.also { walletManager ->
                         store.dispatch(WalletAction.MultiWallet.AddWalletManagers(walletManager))
                         store.dispatch(WalletAction.MultiWallet.AddBlockchain(walletManager.wallet.blockchain))
                     }
         } else {
             if (currenciesRepository.loadCardCurrencies(card.cardId)?.blockchains?.contains(
-                    Blockchain.Ethereum) == true
+                    wcBlockchain) == true
             ) {
-                factory.makeWalletManagerForApp(scanResponse, Blockchain.Ethereum)
+                factory.makeWalletManagerForApp(scanResponse, wcBlockchain)
             } else {
-                factory.makeWalletManagerForApp(scanResponse, Blockchain.Ethereum)
+                factory.makeWalletManagerForApp(scanResponse, wcBlockchain)
                     ?.also {
-                        currenciesRepository.saveAddedBlockchain(card.cardId, Blockchain.Ethereum)
+                        currenciesRepository.saveAddedBlockchain(card.cardId, wcBlockchain)
                     }
             }
         }
