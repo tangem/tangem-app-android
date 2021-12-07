@@ -39,7 +39,10 @@ class BackupReducer {
         ): BackupState {
 
             return when (action) {
-                BackupAction.IntroduceBackup -> BackupState(backupStep = BackupStep.InitBackup)
+                BackupAction.IntroduceBackup -> BackupState(
+                    backupStep = BackupStep.InitBackup,
+                    canSkipBackup = state.canSkipBackup
+                )
 
                 BackupAction.StartBackup -> state.copy(backupStep = BackupStep.ScanOriginCard)
 
