@@ -158,7 +158,7 @@ private fun sendTransaction(
             store.dispatch(
                 GlobalAction.UpdateWalletSignedHashes(
                     walletSignedHashes = signResponse.totalSignedHashes,
-                    walletPublicKey = walletManager.wallet.publicKey,
+                    walletPublicKey = walletManager.wallet.publicKey.seedKey,
                     remainingSignatures = signResponse.remainingSignatures
                 )
             )
