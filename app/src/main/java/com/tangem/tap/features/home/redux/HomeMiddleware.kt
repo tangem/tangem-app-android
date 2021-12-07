@@ -28,7 +28,7 @@ class HomeMiddleware {
         val handler = homeMiddleware
 
         const val CARD_SHOP_URI =
-                "https://shop.tangem.com/?afmc=1i&utm_campaign=1i&utm_source=leaddyno&utm_medium=affiliate"
+            "https://shop.tangem.com/?afmc=1i&utm_campaign=1i&utm_source=leaddyno&utm_medium=affiliate"
     }
 }
 
@@ -61,7 +61,7 @@ private fun handleReadCard() {
         store.dispatch(NavigationAction.NavigateTo(AppScreen.Disclaimer))
     } else {
         changeButtonState(ButtonState.PROGRESS)
-        store.dispatch(GlobalAction.ScanCard({ scanResponse ->
+        store.dispatch(GlobalAction.ScanCard(false, { scanResponse ->
             store.state.globalState.tapWalletManager.updateConfigManager(scanResponse)
             store.dispatch(TwinCardsAction.IfTwinsPrepareState(scanResponse))
 
