@@ -107,6 +107,10 @@ class BackupReducer {
                     )
                 }
 
+                BackupAction.OnAccessCodeDialogClosed -> {
+                    state.copy(backupStep = BackupStep.AddBackupCards)
+                }
+
                 BackupAction.WritePrimaryCard -> state
                 is BackupAction.WriteBackupCard -> state
                 is BackupAction.SaveAccessCodeConfirmation -> state
