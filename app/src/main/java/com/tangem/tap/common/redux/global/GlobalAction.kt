@@ -36,6 +36,7 @@ sealed class GlobalAction : Action {
     }
 
     data class ScanCard(
+        val shouldDeriveWC: Boolean,
         val onSuccess: ((ScanResponse) -> Unit)? = null,
         val onFailure: ((TangemError) -> Unit)? = null,
         val messageResId: Int? = null,
