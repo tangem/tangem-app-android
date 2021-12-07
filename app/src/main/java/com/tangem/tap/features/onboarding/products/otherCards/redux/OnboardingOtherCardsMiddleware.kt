@@ -37,7 +37,7 @@ private val onboardingOtherCardsMiddleware: Middleware<AppState> = { dispatch, s
 private fun handleOtherCardsAction(action: Action, dispatch: DispatchFunction) {
     if (action !is OnboardingOtherCardsAction) return
     val globalState = store.state.globalState
-    val onboardingManager = globalState.onboardingManager ?: return
+    val onboardingManager = globalState.onboardingState.onboardingManager ?: return
 
     val card = onboardingManager.scanResponse.card
 
