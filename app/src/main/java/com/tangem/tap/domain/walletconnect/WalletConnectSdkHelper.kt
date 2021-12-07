@@ -10,6 +10,7 @@ import com.tangem.blockchain.extensions.*
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.hexToBytes
+import com.tangem.crypto.CryptoUtils
 import com.tangem.operations.sign.SignHashCommand
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.common.extensions.toFormattedString
@@ -216,7 +217,7 @@ class WalletConnectSdkHelper {
             is CompletionResult.Success -> {
                 val hash = result.data.signature
                 return EthereumUtils.prepareSignedMessageData(
-                    hash, hashToSign, publicKey
+                    hash, hashToSign, CryptoUtils.decompressPublicKey(wallet.walletPublicKey)
                 )
             }
             is CompletionResult.Failure -> {
