@@ -71,7 +71,8 @@ private fun handleWalletAction(action: Action) {
                 withMainContext {
                     when (result) {
                         is CompletionResult.Success -> {
-                            val updatedResponse = scanResponse.copy(card = result.data)
+                            //here we must use updated scanResponse after createWallet & derivation
+                            val updatedResponse = globalState.onboardingManager.scanResponse.copy(card = result.data)
                             onboardingManager.scanResponse = updatedResponse
                             onboardingManager.activationStarted(updatedResponse.card.cardId)
                             store.dispatch(OnboardingWalletAction.ProceedBackup)
