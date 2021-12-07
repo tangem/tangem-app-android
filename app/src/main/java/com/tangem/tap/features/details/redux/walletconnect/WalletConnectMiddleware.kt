@@ -1,9 +1,7 @@
 package com.tangem.tap.features.details.redux.walletconnect
 
 import com.tangem.blockchain.common.*
-import com.tangem.common.card.Card
 import com.tangem.common.extensions.guard
-import com.tangem.common.extensions.toHexString
 import com.tangem.tap.*
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.getFromClipboard
@@ -14,6 +12,7 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.TapWorkarounds.isTestCard
 import com.tangem.tap.domain.extensions.makeWalletManagerForApp
 import com.tangem.tap.domain.isMultiwalletAllowed
+import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.domain.walletconnect.WalletConnectManager
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.wallet.R
@@ -128,24 +127,32 @@ class WalletConnectMiddleware {
     }
 
     private fun handleScanCard(wcUri: String) {
-        store.dispatch(GlobalAction.ScanCard({ scanResponse ->
+        store.dispatch(GlobalAction.ScanCard(true, { scanResponse ->
             val card = scanResponse.card
             if (!card.isMultiwalletAllowed) {
                 store.dispatchOnMain(WalletConnectAction.UnsupportedCard)
                 return@ScanCard
             }
 
-            val walletManager = getWalletManager(card).guard {
+            val walletManager = getWalletManager(scanResponse).guard {
                 store.dispatchOnMain(WalletConnectAction.UnsupportedCard)
                 return@ScanCard
             }
 
-            val key = walletManager.wallet.publicKey
+            val wallet = walletManager.wallet
+            val derivedKey = if (wallet.publicKey.blockchainKey.contentEquals(wallet.publicKey.seedKey)) {
+                null
+            } else {
+                walletManager.wallet.publicKey.blockchainKey
+            }
             store.dispatchOnMain(WalletConnectAction.OpenSession(
                 wcUri = wcUri,
                 wallet = WalletForSession(
-                    card.cardId, key.toHexString(),
-                    isTestNet = card.isTestCard
+                    card.cardId,
+                    wallet.publicKey.seedKey,
+                    derivedKey,
+                    wallet.publicKey.derivationPath,
+                    card.isTestCard
                 ),
             ))
         }, {
@@ -153,26 +160,32 @@ class WalletConnectMiddleware {
         }, R.string.wallet_connect_scan_card_message))
     }
 
-    private fun getWalletManager(card: Card): WalletManager? {
+    private fun getWalletManager(scanResponse: ScanResponse): WalletManager? {
+        val card = scanResponse.card
         val factory = store.state.globalState.tapWalletManager.walletManagerFactory
 
+        val wcBlockchain = if (scanResponse.card.isTestCard) {
+            Blockchain.EthereumTestnet
+        } else {
+            Blockchain.Ethereum
+        }
+
         return if (store.state.globalState.scanResponse?.card?.cardId == card.cardId) {
-            store.state.walletState.getWalletManager(Blockchain.Ethereum)
-                ?: factory.makeWalletManagerForApp(card, Blockchain.Ethereum)
+            store.state.walletState.getWalletManager(wcBlockchain)
+                ?: factory.makeWalletManagerForApp(scanResponse, wcBlockchain)
                     ?.also { walletManager ->
                         store.dispatch(WalletAction.MultiWallet.AddWalletManagers(walletManager))
                         store.dispatch(WalletAction.MultiWallet.AddBlockchain(walletManager.wallet.blockchain))
                     }
         } else {
             if (currenciesRepository.loadCardCurrencies(card.cardId)?.blockchains?.contains(
-                    Blockchain.Ethereum) == true
+                    wcBlockchain) == true
             ) {
-                factory.makeWalletManagerForApp(card, Blockchain.Ethereum)
+                factory.makeWalletManagerForApp(scanResponse, wcBlockchain)
             } else {
-                factory.makeWalletManagerForApp(card,
-                    Blockchain.Ethereum)
+                factory.makeWalletManagerForApp(scanResponse, wcBlockchain)
                     ?.also {
-                        currenciesRepository.saveAddedBlockchain(card.cardId, Blockchain.Ethereum)
+                        currenciesRepository.saveAddedBlockchain(card.cardId, wcBlockchain)
                     }
             }
         }
