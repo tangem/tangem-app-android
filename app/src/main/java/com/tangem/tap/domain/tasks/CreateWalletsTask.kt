@@ -7,9 +7,9 @@ import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
 import com.tangem.operations.PreflightReadMode
 import com.tangem.operations.PreflightReadTask
-import com.tangem.operations.wallet.CreateWalletCommand
+import com.tangem.operations.wallet.CreateWalletTask
 
-@Deprecated("Use CreateProductWalletsResponse instead")
+@Deprecated("Use CreateProductWalletTask instead")
 class CreateWalletsTask(curves: List<EllipticCurve>? = null) : CardSessionRunnable<Card> {
 
     private val curves = curves ?: listOf(
@@ -30,7 +30,7 @@ class CreateWalletsTask(curves: List<EllipticCurve>? = null) : CardSessionRunnab
         callback: (result: CompletionResult<Card>) -> Unit
     ) {
 
-        CreateWalletCommand(curve).run(session) { result ->
+        CreateWalletTask(curve).run(session) { result ->
             when (result) {
                 is CompletionResult.Success -> {
                     if (index == curves.lastIndex) {
