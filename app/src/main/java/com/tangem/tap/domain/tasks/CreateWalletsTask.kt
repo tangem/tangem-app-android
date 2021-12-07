@@ -9,7 +9,7 @@ import com.tangem.operations.PreflightReadMode
 import com.tangem.operations.PreflightReadTask
 import com.tangem.operations.wallet.CreateWalletCommand
 
-@Deprecated("Use CreateProductWalletsResponse instead")
+@Deprecated("Use CreateProductWalletTask instead")
 class CreateWalletsTask(curves: List<EllipticCurve>? = null) : CardSessionRunnable<Card> {
 
     private val curves = curves ?: listOf(
