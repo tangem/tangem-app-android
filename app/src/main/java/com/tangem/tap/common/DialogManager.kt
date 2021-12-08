@@ -10,8 +10,8 @@ import com.tangem.tap.features.onboarding.AddressInfoBottomSheetDialog
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.features.onboarding.products.twins.ui.dialog.CreateWalletInterruptDialog
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupDialog
+import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.AddMoreBackupCardsDialog
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.BackupInProgressDialog
-import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.BuyMoreBackupCardsDialog
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.ConfirmDiscardingBackupDialog
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.UnfinishedBackupFoundDialog
 import com.tangem.tap.features.wallet.ui.dialogs.ScanFailsDialog
@@ -79,7 +79,7 @@ class DialogManager : StoreSubscriber<GlobalState> {
                 TransactionDialog.create(state.dialog.dialogData, context)
             is WalletConnectDialog.PersonalSign ->
                 PersonalSignDialog.create(state.dialog.data, context)
-            is BackupDialog.BuyMoreBackupCards -> BuyMoreBackupCardsDialog.create(context)
+            is BackupDialog.AddMoreBackupCards -> AddMoreBackupCardsDialog.create(context)
             is BackupDialog.BackupInProgress -> BackupInProgressDialog.create(context)
             is BackupDialog.UnfinishedBackupFound -> UnfinishedBackupFoundDialog.create(context)
             is BackupDialog.ConfirmDiscardingBackup -> ConfirmDiscardingBackupDialog.create(context)
