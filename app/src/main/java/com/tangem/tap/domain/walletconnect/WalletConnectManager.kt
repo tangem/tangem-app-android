@@ -96,7 +96,8 @@ class WalletConnectManager {
         val activeData = sessions[session] ?: return
         removeSimilarSessions(activeData)
 
-        val accounts = listOf(Blockchain.Ethereum.makeAddresses(activeData.wallet.walletPublicKey).first().value)
+        val key = activeData.wallet.derivedPublicKey ?: activeData.wallet.walletPublicKey
+        val accounts = listOf(Blockchain.Ethereum.makeAddresses(key).first().value)
         val approved = activeData.client.approveSession(
             accounts = accounts,
             chainId = activeData.wallet.chainId
