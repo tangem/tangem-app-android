@@ -218,7 +218,7 @@
     <string name="onboarding_button_add_backup_card" translatable="false">+ Add backup card</string>
     <string name="onboarding_button_backup_card_format" translatable="false">Scan the card #%d</string>
     <string name="onboarding_button_scan_origin_card" translatable="false">Scan primary card</string>
-    <string name="onboarding_button_buy_more_cards" translatable="false">Buy more cards</string>
+    <string name="onboarding_button_add_more_cards" translatable="false">Add more cards</string>
 
     <string name="onboarding_title_backup_card" translatable="false">Backup your wallet</string>
     <string name="onboarding_title_no_backup_cards" translatable="false">No backup cards</string>
