@@ -61,20 +61,24 @@ class AddTokensFragment : Fragment(R.layout.fragment_add_tokens),
 
         (activity as? AppCompatActivity)?.setSupportActionBar(toolbar)
         toolbar.setNavigationOnClickListener { activity?.onBackPressed() }
-        btn_tokens_save_changes.setOnClickListener { store.dispatch(TokensAction.TokensList.SaveChanges)}
         setupPopularTokensRecyclerView()
+        btn_tokens_save_changes.setOnClickListener {
+            store.dispatch(TokensAction.SaveChanges(viewAdapter.getAddedItems()))
+        }
     }
 
     private fun setupPopularTokensRecyclerView() {
         viewAdapter = CurrenciesAdapter()
+        viewAdapter.setOnItemAddListener {
+            btn_tokens_save_changes.isEnabled = viewAdapter.getAddedItems().isNotEmpty()
+        }
+
         rv_popular_tokens.layoutManager = LinearLayoutManager(context)
         rv_popular_tokens.adapter = viewAdapter
     }
 
     override fun newState(state: TokensState) {
         if (activity == null) return
-
-        btn_tokens_save_changes.isEnabled = state.candidateToAdd.isNotEmpty()
 
         viewAdapter.addedCurrencies = state.addedCurrencies
         viewAdapter.submitUnfilteredList(state.shownCurrencies)
