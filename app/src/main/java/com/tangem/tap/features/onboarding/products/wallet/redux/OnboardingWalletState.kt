@@ -74,7 +74,7 @@ sealed class BackupStep {
 }
 
 sealed class BackupDialog: StateDialog {
-    object BuyMoreBackupCards : StateDialog
+    object AddMoreBackupCards : StateDialog
     object BackupInProgress : StateDialog
     object UnfinishedBackupFound : StateDialog
     object ConfirmDiscardingBackup : StateDialog
