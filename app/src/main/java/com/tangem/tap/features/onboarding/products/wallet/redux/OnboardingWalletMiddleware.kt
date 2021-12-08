@@ -176,7 +176,7 @@ class BackupMiddleware {
                     }
                     is BackupAction.FinishAddingBackupCards -> {
                         if (backupService.addedBackupCardsCount == 1) {
-                            store.dispatchOnMain(GlobalAction.ShowDialog(BackupDialog.BuyMoreBackupCards))
+                            store.dispatchOnMain(GlobalAction.ShowDialog(BackupDialog.AddMoreBackupCards))
                         }
                         if (backupService.addedBackupCardsCount == 2) {
                             store.dispatchOnMain(BackupAction.ShowAccessCodeInfoScreen)
