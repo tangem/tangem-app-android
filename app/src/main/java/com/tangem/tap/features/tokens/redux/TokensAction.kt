@@ -21,9 +21,5 @@ sealed class TokensAction : Action {
 
     data class ToggleShowTokensForBlockchain(val isShown: Boolean, val blockchain: Blockchain) : TokensAction()
 
-    sealed class TokensList : TokensAction() {
-        data class AddBlockchain(val blockchain: Blockchain) : TokensList()
-        data class AddToken(val token: Token) : TokensList()
-        object SaveChanges : TokensList()
-    }
+    data class SaveChanges(val addedItems: List<CurrencyListItem>) : TokensAction()
 }
