@@ -4,6 +4,7 @@ import com.tangem.blockchain.common.*
 import com.tangem.blockchain.extensions.Result
 import com.tangem.common.extensions.isZero
 import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.redux.global.GlobalState
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
@@ -180,9 +181,17 @@ class MultiWalletMiddleware {
         scope.launch {
             when (val result = walletManager?.addToken(token)) {
                 is Result.Success -> {
-                    store.dispatchOnMain(
-                        WalletAction.MultiWallet.TokenLoaded(amount = result.data, token = token)
-                    )
+                    store.dispatchOnMain(WalletAction.MultiWallet.TokenLoaded(result.data, token))
+                }
+                is Result.Failure -> {
+                    when (val result = walletManager.safeUpdate()) {
+                        is com.tangem.common.services.Result.Success -> {
+                            val tokenAmount = result.data.getTokenAmount(token) ?: return@launch
+                            store.dispatchOnMain(WalletAction.MultiWallet.TokenLoaded(tokenAmount, token))
+                        }
+                        is com.tangem.common.services.Result.Failure -> {
+                        }
+                    }
                 }
             }
         }
@@ -213,11 +222,17 @@ class MultiWalletMiddleware {
             tokensWithManagers.forEach {
                 when (val result = it.walletManager?.addToken(it.token)) {
                     is Result.Success -> {
-                        store.dispatchOnMain(
-                            WalletAction.MultiWallet.TokenLoaded(
-                                amount = result.data, token = it.token
-                            )
-                        )
+                        store.dispatchOnMain(WalletAction.MultiWallet.TokenLoaded(result.data, it.token))
+                    }
+                    is Result.Failure -> {
+                        when (val result = it.walletManager.safeUpdate()) {
+                            is com.tangem.common.services.Result.Success -> {
+                                val tokenAmount = result.data.getTokenAmount(it.token) ?: return@launch
+                                store.dispatchOnMain(WalletAction.MultiWallet.TokenLoaded(tokenAmount, it.token))
+                            }
+                            is com.tangem.common.services.Result.Failure -> {
+                            }
+                        }
                     }
                 }
             }
