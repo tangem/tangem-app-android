@@ -24,12 +24,6 @@ private fun internalReduce(action: Action, state: AppState): TokensState {
         is TokensAction.SetAddedCurrencies -> {
             tokensState.copy(addedCurrencies = action.wallets.toCardCurrencies())
         }
-        is TokensAction.LoadCardTokens.Success -> {
-            tokensState.copy(addedTokens = LinkedHashSet(
-                action.tokens.map { TokenWithAmount(it, null) }
-            ))
-        }
-
         is TokensAction.ToggleShowTokensForBlockchain -> {
             if (action.isShown) {
                 val shownCurrencies = tokensState.shownCurrencies
