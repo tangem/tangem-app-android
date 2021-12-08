@@ -103,7 +103,6 @@ class TapWalletManager {
         }
     }
 
-    
     suspend fun loadData(data: ScanResponse) {
         withContext(Dispatchers.Main) {
             store.dispatch(WalletAction.LoadCardInfo(data.card))
