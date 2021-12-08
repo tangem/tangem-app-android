@@ -14,8 +14,8 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.extensions.hasWallets
 import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.features.home.redux.HomeAction
-import com.tangem.tap.features.home.redux.HomeMiddleware
 import com.tangem.tap.features.onboarding.products.note.redux.OnboardingNoteAction
+import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletMiddleware.Companion.BUY_WALLET_URL
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.Middleware
@@ -23,6 +23,8 @@ import org.rekotlin.Middleware
 class OnboardingWalletMiddleware {
     companion object {
         val handler = onboardingWalletMiddleware
+
+        const val BUY_WALLET_URL = "https://wallet.tangem.com/"
     }
 }
 
@@ -172,7 +174,7 @@ class BackupMiddleware {
                         }
                     }
                     is BackupAction.GoToShop -> {
-                        store.dispatchOpenUrl(HomeMiddleware.CARD_SHOP_URI)
+                        store.dispatchOpenUrl(BUY_WALLET_URL)
                     }
                     is BackupAction.FinishAddingBackupCards -> {
                         if (backupService.addedBackupCardsCount == 1) {
