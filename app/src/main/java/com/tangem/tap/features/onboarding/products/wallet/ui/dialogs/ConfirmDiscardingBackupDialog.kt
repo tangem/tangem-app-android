@@ -17,7 +17,7 @@ class ConfirmDiscardingBackupDialog {
                     store.dispatch(BackupAction.ResumeBackup)
                 }
                 setNegativeButton(R.string.welcome_interrupted_backup_discard_discard) { _, _ ->
-                    store.dispatch(BackupAction.DiscardBackup)
+                    store.dispatch(BackupAction.DiscardSavedBackup)
                 }
                 setOnDismissListener {
                     store.dispatch(GlobalAction.HideDialog)
