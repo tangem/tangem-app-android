@@ -113,7 +113,7 @@ private class CreateWalletTangemWallet : ProductCommandProcessor<CreateWalletRes
 }
 // [REDACTED_TODO_COMMENT]
 private fun updateDerivedKeys(wallet: CardWallet, derivedKeys: ExtendedPublicKeyList) {
-    val onboardingManager = store.state.globalState.onboardingManager ?: return
+    val onboardingManager = store.state.globalState.onboardingState.onboardingManager ?: return
     onboardingManager.scanResponse = onboardingManager.scanResponse.copy(
         derivedKeys = mapOf(wallet.publicKey.toMapKey() to derivedKeys)
     )
