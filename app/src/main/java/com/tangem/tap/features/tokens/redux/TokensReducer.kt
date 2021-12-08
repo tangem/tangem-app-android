@@ -43,16 +43,6 @@ private fun internalReduce(action: Action, state: AppState): TokensState {
                 tokensState.copy(shownCurrencies = shownCurrencies)
             }
         }
-        is TokensAction.TokensList.AddBlockchain -> {
-            val candidates = tokensState.candidateToAdd.toMutableSet()
-            candidates.add(CurrencyListItem.BlockchainListItem(action.blockchain))
-            tokensState.copy(candidateToAdd = candidates.toList())
-        }
-        is TokensAction.TokensList.AddToken -> {
-            val candidates = tokensState.candidateToAdd.toMutableSet()
-            candidates.add(CurrencyListItem.TokenListItem(action.token))
-            tokensState.copy(candidateToAdd = candidates.toList())
-        }
         else -> tokensState
     }
 }
