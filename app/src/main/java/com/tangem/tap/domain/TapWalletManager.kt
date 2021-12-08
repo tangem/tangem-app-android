@@ -15,7 +15,6 @@ import com.tangem.tap.domain.configurable.config.ConfigManager
 import com.tangem.tap.domain.extensions.*
 import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.domain.tokens.CardCurrencies
-import com.tangem.tap.features.tokens.redux.TokensAction
 import com.tangem.tap.features.wallet.redux.Currency
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.network.NetworkConnectivity
@@ -84,12 +83,6 @@ class TapWalletManager {
             store.dispatch(GlobalAction.SaveScanNoteResponse(data))
             store.dispatch(WalletAction.SetIfTestnetCard(data.card.isTestCard))
             store.dispatch(WalletAction.MultiWallet.SetIsMultiwalletAllowed(data.card.isMultiwalletAllowed))
-
-            val blockchain = data.getBlockchain()
-            if (blockchain == Blockchain.Ethereum ||
-                    blockchain == Blockchain.EthereumTestnet) {
-                store.dispatch(TokensAction.LoadCardTokens)
-            }
             loadData(data)
         }
     }
