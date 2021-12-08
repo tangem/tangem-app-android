@@ -103,19 +103,6 @@ class TapWalletManager {
         }
     }
 
-    /**
-     * В этот метод попадаем после
-     * - TapWalletManager.onCardScanned
-     * - NetworkStateChanged
-     *
-     * WalletAction.LoadData -> {
-     *      WalletDetailsFragment -> setOnRefreshListener
-     *      WalletDetailsFragment ->
-     *              Retry из setupNoInternetHandling (если есть кошельки -> loadData(), если нет -> reloadData())
-     *      DetailsWalletFragment ->
-     *              Retry из setupNoInternetHandling (если есть кошельки -> loadData(), если нет -> reloadData())
-     * }
-     */
     suspend fun loadData(data: ScanResponse) {
         withContext(Dispatchers.Main) {
             store.dispatch(WalletAction.LoadCardInfo(data.card))
