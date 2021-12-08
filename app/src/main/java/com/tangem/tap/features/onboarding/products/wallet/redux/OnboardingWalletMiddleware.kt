@@ -14,8 +14,8 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.extensions.hasWallets
 import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.features.home.redux.HomeAction
-import com.tangem.tap.features.home.redux.HomeMiddleware
 import com.tangem.tap.features.onboarding.products.note.redux.OnboardingNoteAction
+import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletMiddleware.Companion.BUY_WALLET_URL
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.Middleware
@@ -23,6 +23,8 @@ import org.rekotlin.Middleware
 class OnboardingWalletMiddleware {
     companion object {
         val handler = onboardingWalletMiddleware
+
+        const val BUY_WALLET_URL = "https://wallet.tangem.com/"
     }
 }
 
@@ -143,129 +145,138 @@ class BackupMiddleware {
     val backupMiddleware: Middleware<AppState> = { dispatch, state ->
         { next ->
             { action ->
-                val backupState = state()?.onboardingWalletState?.backupState
-                when (action) {
-                    is BackupAction.StartBackup -> {
-                        backupService.discardSavedBackup()
-                    }
-                    is BackupAction.ScanPrimaryCard -> {
-                        backupService.readPrimaryCard { result ->
-                            when (result) {
-                                is CompletionResult.Success -> {
-                                    store.dispatchOnMain(BackupAction.StartAddingBackupCards)
-                                }
-                                is CompletionResult.Failure -> {
-                                }
-                            }
-                        }
-                    }
-                    is BackupAction.AddBackupCard -> {
-                        backupService.addBackupCard { result ->
-                            when (result) {
-                                is CompletionResult.Success -> {
-                                    store.dispatchOnMain(BackupAction.AddBackupCard.Success)
-                                }
-                                is CompletionResult.Failure -> {
-
-                                }
-                            }
-                        }
-                    }
-                    is BackupAction.GoToShop -> {
-                        store.dispatchOpenUrl(HomeMiddleware.CARD_SHOP_URI)
-                    }
-                    is BackupAction.FinishAddingBackupCards -> {
-                        if (backupService.addedBackupCardsCount == 1) {
-                            store.dispatchOnMain(GlobalAction.ShowDialog(BackupDialog.BuyMoreBackupCards))
-                        }
-                        if (backupService.addedBackupCardsCount == 2) {
-                            store.dispatchOnMain(BackupAction.ShowAccessCodeInfoScreen)
-                        }
-                    }
-                    is BackupAction.CheckAccessCode -> {
-                        if (action.accessCode.length < 4) {
-                            store.dispatch(BackupAction.SetAccessCodeError(
-                                AccessCodeError.CodeTooShort
-                            ))
-                        } else {
-                            store.dispatch(BackupAction.SaveFirstAccessCode(action.accessCode))
-                        }
-                    }
-                    is BackupAction.SaveAccessCodeConfirmation -> {
-                        if (action.accessCodeConfirmation == backupState?.accessCode) {
-                            backupService.setAccessCode(action.accessCodeConfirmation)
-                            store.dispatch(BackupAction.PrepareToWritePrimaryCard)
-                        } else {
-                            store.dispatch(BackupAction.SetAccessCodeError(
-                                AccessCodeError.CodesDoNotMatch
-                            ))
-                        }
-                    }
-                    is BackupAction.WritePrimaryCard -> {
-                        backupService.proceedBackup { result ->
-                            when (result) {
-                                is CompletionResult.Success -> {
-                                    store.dispatchOnMain(
-                                        BackupAction.PrepareToWriteBackupCard(1)
-                                    )
-                                }
-                                is CompletionResult.Failure -> {
-                                }
-                            }
-                        }
-                    }
-                    is BackupAction.WriteBackupCard -> {
-                        backupService.proceedBackup { result ->
-                            when (result) {
-                                is CompletionResult.Success -> {
-                                    if (backupService.currentState == BackupService.State.Finished) {
-                                        store.dispatchOnMain(BackupAction.FinishBackup)
-                                    } else {
-                                        store.dispatchOnMain(
-                                            BackupAction.PrepareToWriteBackupCard(action.cardNumber + 1)
-                                        )
-                                    }
-                                }
-                                is CompletionResult.Failure -> {
-
-                                }
-                            }
-                        }
-                    }
-                    is BackupAction.FinishBackup -> {
-                        (listOf(backupState?.primaryCardId,
-                            store.state.globalState.onboardingState.onboardingManager?.scanResponse?.card?.cardId) +
-                                backupState?.backupCardIds as List<String>)
-                            .distinct().filterNotNull()
-                            .forEach { cardId ->
-                                preferencesStorage.usedCardsPrefStorage.activationFinished(cardId)
-                            }
-                    }
-                    is BackupAction.DiscardBackup -> {
-                        backupService.discardSavedBackup()
-                    }
-                    is BackupAction.DiscardSavedBackup -> {
-                        backupService.primaryCardId?.let {
-                            preferencesStorage.usedCardsPrefStorage.activationFinished(it)
-                        }
-                        backupService.discardSavedBackup()
-                    }
-                    is BackupAction.CheckForUnfinishedBackup -> {
-                        if (backupService.hasIncompletedBackup) {
-                            store.dispatch(GlobalAction.ShowDialog(BackupDialog.UnfinishedBackupFound))
-                        }
-                    }
-                    is BackupAction.ResumeBackup -> {
-                        store.dispatch(GlobalAction.Onboarding.Start(null, true))
-                        store.dispatch(OnboardingWalletAction.ProceedBackup)
-                        store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingWallet))
-                    }
-                    is BackupAction.DismissBackup -> {
-                        store.dispatch(BackupAction.FinishBackup)
-                    }
-                }
+                if (action is BackupAction) handleBackupAction(action)
                 next(action)
             }
+        }
+    }
+}
+
+private fun handleBackupAction(action: BackupAction) {
+    val backupState = store.state.onboardingWalletState.backupState
+
+    val globalState = store.state.globalState
+    val onboardingManager = globalState.onboardingState.onboardingManager
+
+    val scanResponse = onboardingManager?.scanResponse
+    val card = scanResponse?.card
+
+    when (action) {
+        is BackupAction.StartBackup -> {
+            backupService.discardSavedBackup()
+        }
+        is BackupAction.ScanPrimaryCard -> {
+            backupService.readPrimaryCard(cardId = card?.cardId) { result ->
+                when (result) {
+                    is CompletionResult.Success -> {
+                        store.dispatchOnMain(BackupAction.StartAddingBackupCards)
+                    }
+                    is CompletionResult.Failure -> {
+                    }
+                }
+            }
+        }
+        is BackupAction.AddBackupCard -> {
+            backupService.addBackupCard { result ->
+                when (result) {
+                    is CompletionResult.Success -> {
+                        store.dispatchOnMain(BackupAction.AddBackupCard.Success)
+                    }
+                    is CompletionResult.Failure -> {
+
+                    }
+                }
+            }
+        }
+        is BackupAction.GoToShop -> {
+            store.dispatchOpenUrl(BUY_WALLET_URL)
+        }
+        is BackupAction.FinishAddingBackupCards -> {
+            if (backupService.addedBackupCardsCount == 1) {
+                store.dispatchOnMain(GlobalAction.ShowDialog(BackupDialog.AddMoreBackupCards))
+            }
+            if (backupService.addedBackupCardsCount == 2) {
+                store.dispatchOnMain(BackupAction.ShowAccessCodeInfoScreen)
+            }
+        }
+        is BackupAction.CheckAccessCode -> {
+            if (action.accessCode.length < 4) {
+                store.dispatch(BackupAction.SetAccessCodeError(
+                    AccessCodeError.CodeTooShort
+                ))
+            } else {
+                store.dispatch(BackupAction.SaveFirstAccessCode(action.accessCode))
+            }
+        }
+        is BackupAction.SaveAccessCodeConfirmation -> {
+            if (action.accessCodeConfirmation == backupState.accessCode) {
+                backupService.setAccessCode(action.accessCodeConfirmation)
+                store.dispatch(BackupAction.PrepareToWritePrimaryCard)
+            } else {
+                store.dispatch(BackupAction.SetAccessCodeError(
+                    AccessCodeError.CodesDoNotMatch
+                ))
+            }
+        }
+        is BackupAction.WritePrimaryCard -> {
+            backupService.proceedBackup { result ->
+                when (result) {
+                    is CompletionResult.Success -> {
+                        store.dispatchOnMain(
+                            BackupAction.PrepareToWriteBackupCard(1)
+                        )
+                    }
+                    is CompletionResult.Failure -> {
+                    }
+                }
+            }
+        }
+        is BackupAction.WriteBackupCard -> {
+            backupService.proceedBackup { result ->
+                when (result) {
+                    is CompletionResult.Success -> {
+                        if (backupService.currentState == BackupService.State.Finished) {
+                            store.dispatchOnMain(BackupAction.FinishBackup)
+                        } else {
+                            store.dispatchOnMain(
+                                BackupAction.PrepareToWriteBackupCard(action.cardNumber + 1)
+                            )
+                        }
+                    }
+                    is CompletionResult.Failure -> {
+
+                    }
+                }
+            }
+        }
+        is BackupAction.FinishBackup -> {
+            (listOf(backupState.primaryCardId, card?.cardId) + backupState.backupCardIds)
+                .distinct().filterNotNull()
+                .forEach { cardId ->
+                    preferencesStorage.usedCardsPrefStorage.activationFinished(cardId)
+                }
+        }
+        is BackupAction.DiscardBackup -> {
+            backupService.discardSavedBackup()
+        }
+        is BackupAction.DiscardSavedBackup -> {
+            backupService.primaryCardId?.let {
+                preferencesStorage.usedCardsPrefStorage.activationFinished(it)
+            }
+            backupService.discardSavedBackup()
+        }
+        is BackupAction.CheckForUnfinishedBackup -> {
+            if (backupService.hasIncompletedBackup) {
+                store.dispatch(GlobalAction.ShowDialog(BackupDialog.UnfinishedBackupFound))
+            }
+        }
+        is BackupAction.ResumeBackup -> {
+            store.dispatch(GlobalAction.Onboarding.Start(null, true))
+            store.dispatch(OnboardingWalletAction.ProceedBackup)
+            store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingWallet))
+        }
+        is BackupAction.DismissBackup -> {
+            store.dispatch(BackupAction.FinishBackup)
         }
     }
 }
