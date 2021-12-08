@@ -17,8 +17,8 @@ import com.tangem.tap.common.leapfrogWidget.LeapfrogWidget
 import com.tangem.tap.common.postUi
 import com.tangem.tap.features.FragmentOnBackPressedHandler
 import com.tangem.tap.features.addBackPressHandler
-import com.tangem.tap.features.home.redux.HomeMiddleware
 import com.tangem.tap.features.onboarding.products.wallet.redux.*
+import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletMiddleware.Companion.BUY_WALLET_URL
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.AccessCodeDialog
 import com.tangem.tap.store
 import com.tangem.wallet.R
@@ -363,7 +363,7 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.shop_menu -> {
-                store.dispatchOpenUrl(HomeMiddleware.CARD_SHOP_URI)
+                store.dispatchOpenUrl(BUY_WALLET_URL)
                 true
             }
             else -> super.onOptionsItemSelected(item)
