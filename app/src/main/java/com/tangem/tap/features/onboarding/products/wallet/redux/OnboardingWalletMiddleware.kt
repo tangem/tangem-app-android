@@ -89,13 +89,6 @@ private fun handleWalletAction(action: Action) {
         OnboardingWalletAction.FinishOnboarding -> {
             store.dispatch(GlobalAction.Onboarding.Stop)
 
-            (listOf(walletState.backupState.primaryCardId) +
-                    walletState.backupState.backupCardIds + scanResponse?.card?.cardId)
-                .distinct().filterNotNull()
-                .forEach { cardId ->
-                    preferencesStorage.usedCardsPrefStorage.activationFinished(cardId)
-                }
-
             if (scanResponse == null) {
                 store.dispatch(NavigationAction.PopBackTo())
                 store.dispatch(HomeAction.ReadCard)
@@ -119,7 +112,7 @@ private fun handleWalletAction(action: Action) {
             when (walletState.backupState.backupStep) {
                 BackupStep.InitBackup, BackupStep.Finished -> store.dispatch(NavigationAction.PopBackTo())
                 BackupStep.ScanOriginCard, BackupStep.AddBackupCards, BackupStep.EnterAccessCode,
-                BackupStep.ReenterAccessCode, BackupStep.SetAccessCode, BackupStep.WritePrimaryCard
+                BackupStep.ReenterAccessCode, BackupStep.SetAccessCode, BackupStep.WritePrimaryCard,
                 -> {
                     store.dispatch(BackupAction.DiscardBackup)
                     store.dispatch(NavigationAction.PopBackTo())
@@ -132,7 +125,7 @@ private fun handleWalletAction(action: Action) {
 }
 
 private fun updateScanResponseAfterBackup(
-    scanResponse: ScanResponse, backupState: BackupState
+    scanResponse: ScanResponse, backupState: BackupState,
 ): ScanResponse {
     val card = if (backupState.backupCardsNumber > 0) {
         val cardsCount = backupState.backupCardsNumber
@@ -240,9 +233,21 @@ class BackupMiddleware {
                         }
                     }
                     is BackupAction.FinishBackup -> {
-//                        store.dispatch(OnboardingWalletAction.Done)
+                        (listOf(backupState?.primaryCardId,
+                            store.state.globalState.onboardingState.onboardingManager?.scanResponse?.card?.cardId) +
+                                backupState?.backupCardIds as List<String>)
+                            .distinct().filterNotNull()
+                            .forEach { cardId ->
+                                preferencesStorage.usedCardsPrefStorage.activationFinished(cardId)
+                            }
                     }
                     is BackupAction.DiscardBackup -> {
+                        backupService.discardSavedBackup()
+                    }
+                    is BackupAction.DiscardSavedBackup -> {
+                        backupService.primaryCardId?.let {
+                            preferencesStorage.usedCardsPrefStorage.activationFinished(it)
+                        }
                         backupService.discardSavedBackup()
                     }
                     is BackupAction.CheckForUnfinishedBackup -> {
