@@ -165,7 +165,6 @@
             android:layout_height="wrap_content"
             android:visibility="gone"
             app:layout_constraintHorizontal_bias="0.504"
-            app:layout_constraintBottom_toTopOf="@id/layout_buttons_common"
             app:flow_verticalBias="0"
             app:layout_constraintTop_toTopOf="@+id/guideline2"
             android:layout_marginBottom="8dp"/>
@@ -173,7 +172,7 @@
         <com.google.android.material.tabs.TabLayout
             android:id="@+id/tab_layout_backup_info"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="10dp"
             android:background="@color/backgroundLightGray"
             android:visibility="gone"
             app:layout_constraintStart_toStartOf="parent"
@@ -192,7 +191,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:layout_constraintBottom_toBottomOf="parent"
-
             />
 
         <include
@@ -209,7 +207,7 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintGuide_percent="0.55"
+            app:layout_constraintGuide_percent="0.60"
             app:layout_constraintTop_toTopOf="parent" />
 
 
