@@ -140,7 +140,6 @@ class TapWalletManager {
         }
     }
 
-    @Deprecated("")
     private fun loadMultiWalletData(
         scanResponse: ScanResponse, primaryBlockchain: Blockchain?, primaryWalletManager: WalletManager?
     ) {
