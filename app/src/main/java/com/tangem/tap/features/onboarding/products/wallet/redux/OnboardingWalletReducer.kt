@@ -126,6 +126,7 @@ class BackupReducer {
                 BackupAction.CheckForUnfinishedBackup -> state
                 BackupAction.DiscardBackup -> state
                 BackupAction.ResumeBackup -> state
+                BackupAction.DiscardSavedBackup -> state
             }
 
         }
