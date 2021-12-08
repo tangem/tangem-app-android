@@ -154,7 +154,8 @@ class WalletConnectSdkHelper {
 
         val command = SignHashCommand(
             hash = dataToSign.hash,
-            walletPublicKey = data.walletManager.wallet.publicKey.seedKey
+            walletPublicKey = data.walletManager.wallet.publicKey.seedKey,
+            derivationPath = data.walletManager.wallet.publicKey.derivationPath
         )
         val result = tangemSdkManager.runTaskAsync(command, initialMessage = Message())
         return when (result) {
@@ -211,13 +212,13 @@ class WalletConnectSdkHelper {
     }
 
     suspend fun signPersonalMessage(hashToSign: ByteArray, wallet: WalletForSession): String? {
-        val publicKey = wallet.walletPublicKey
-        val command = SignHashCommand(hashToSign, publicKey)
+        val key = wallet.derivedPublicKey ?: wallet.walletPublicKey
+        val command = SignHashCommand(hashToSign, wallet.walletPublicKey, wallet.derivationPath)
         return when (val result = tangemSdkManager.runTaskAsync(command, wallet.cardId)) {
             is CompletionResult.Success -> {
                 val hash = result.data.signature
                 return EthereumUtils.prepareSignedMessageData(
-                    hash, hashToSign, CryptoUtils.decompressPublicKey(wallet.walletPublicKey)
+                    hash, hashToSign, CryptoUtils.decompressPublicKey(key)
                 )
             }
             is CompletionResult.Failure -> {
