@@ -29,7 +29,7 @@ class TokensMiddleware {
             { action ->
                 when (action) {
                     is TokensAction.LoadCurrencies -> handleLoadCurrencies(action)
-                    is TokensAction.TokensList.SaveChanges -> handleSaveChanges(action)
+                    is TokensAction.SaveChanges -> handleSaveChanges(action)
                 }
                 next(action)
             }
@@ -69,10 +69,10 @@ class TokensMiddleware {
         store.dispatch(TokensAction.LoadCurrencies.Success(currencies))
     }
 
-    private fun handleSaveChanges(action: TokensAction.TokensList.SaveChanges) {
+    private fun handleSaveChanges(action: TokensAction.SaveChanges) {
         val scanResponse = store.state.globalState.scanResponse ?: return
 
-        val candidatesToAdd = store.state.tokensState.candidateToAdd
+        val candidatesToAdd = action.addedItems
         if (candidatesToAdd.isEmpty()) return
 
         val blockchains = candidatesToAdd.filterIsInstance<CurrencyListItem.BlockchainListItem>()
