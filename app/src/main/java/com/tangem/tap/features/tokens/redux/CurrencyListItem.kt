@@ -6,8 +6,12 @@ import com.tangem.blockchain.common.Token
 import com.tangem.wallet.R
 
 sealed class CurrencyListItem {
+    var isAdded: Boolean = false
+    var isLock: Boolean = false
+
     data class TokenListItem(val token: Token) : CurrencyListItem()
     data class BlockchainListItem(val blockchain: Blockchain) : CurrencyListItem()
+
     data class TitleListItem(
         @StringRes val titleResId: Int,
         var isContentShown: Boolean = true,
