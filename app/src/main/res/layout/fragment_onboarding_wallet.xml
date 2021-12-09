@@ -78,30 +78,27 @@
 
             <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/imv_second_backup_card"
-                android:layout_width="296dp"
-                android:layout_height="186dp"
-                android:scaleType="fitXY"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:src="@drawable/card_placeholder_black"
+                android:src="@drawable/card_placeholder_new"
                 android:visibility="gone"
                 />
 
             <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/imv_first_backup_card"
-                android:layout_width="296dp"
-                android:layout_height="186dp"
-                android:scaleType="fitXY"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:src="@drawable/card_placeholder_black"
+                android:src="@drawable/card_placeholder_new"
                 android:visibility="gone"/>
 
             <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/imv_front_card"
-                android:layout_width="296dp"
-                android:layout_height="186dp"
-                android:scaleType="fitXY"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:src="@drawable/card_placeholder_black"
+                android:src="@drawable/card_placeholder_new"
                 android:transitionName="imv_front_card"
                 />
 
@@ -168,15 +165,14 @@
             android:layout_height="wrap_content"
             android:visibility="gone"
             app:layout_constraintHorizontal_bias="0.504"
-            app:layout_constraintBottom_toTopOf="@id/layout_buttons_common"
             app:flow_verticalBias="0"
             app:layout_constraintTop_toTopOf="@+id/guideline2"
-            android:layout_marginBottom="12dp"/>
+            android:layout_marginBottom="8dp"/>
 
         <com.google.android.material.tabs.TabLayout
             android:id="@+id/tab_layout_backup_info"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            android:layout_height="10dp"
             android:background="@color/backgroundLightGray"
             android:visibility="gone"
             app:layout_constraintStart_toStartOf="parent"
@@ -195,7 +191,6 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:layout_constraintBottom_toBottomOf="parent"
-
             />
 
         <include
