@@ -9,6 +9,8 @@
         <item name="android:windowDrawsSystemBarBackgrounds">true</item>
         <item name="android:windowActionBarOverlay">true</item>
         <item name="android:windowContentOverlay">@null</item>
+        <item name="actionMenuTextColor">@color/menu_accent_color</item>
+
     </style>
 
     <style name="AppTheme" parent="BaseAppTheme" />
@@ -28,9 +30,18 @@
         <item name="actionMenuTextColor">@color/menu_item_color</item>
     </style>
 
+    <style name="ThemeOverlay.MyTheme.Toolbar.AccentColorMenu" parent="ThemeOverlay.MaterialComponents.Toolbar.Surface">
+        <item name="actionMenuTextColor">@color/accent</item>
+    </style>
+
     <!-- EditText -->
     <style name="StyledEditText" parent="TextAppearance.MaterialComponents.Body1">
         <item name="colorControlNormal">#e34b1c</item>
+    </style>
+
+    <style name="EditTextThemeOverlay" parent="ThemeOverlay.AppCompat">
+        <item name="colorAccent">@color/accent</item>
+        <item name="colorPrimary">@color/accent</item>
     </style>
 
     <style name="BaseTapButton">
@@ -54,7 +65,8 @@
     </style>
 
     <style name="OnboardingButton" parent="BaseTapButton">
-        <item name="android:layout_width">204dp</item>
+        <item name="android:minWidth">204dp</item>
+        <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">48dp</item>
         <item name="android:textSize">16sp</item>
         <item name="android:fontFamily">sans-serif-medium</item>
@@ -107,6 +119,34 @@
         <item name="android:textSize">16sp</item>
         <item name="android:lineSpacingExtra">4sp</item>
     </style>
+    <style name="heading">
+        <item name="android:textSize">24sp</item>
+        <item name="android:textColor">#060606</item>
+    </style>
+
+    <style name="title">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">#060606</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="description">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">#686868</item>
+    </style>
+
+    <style name="DescriptionBig">
+        <item name="android:textSize">16sp</item>
+        <item name="android:textColor">#686868</item>
+    </style>
+
+
+    <style name="DialogStyle" parent="Theme.Design.Light.BottomSheetDialog">
+        <item name="android:windowIsFloating">false</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:windowSoftInputMode">adjustResize</item>
+    </style>
+
 </resources>
 
     <!--    android:fontFamily="sans-serif"           // roboto regular  -->
