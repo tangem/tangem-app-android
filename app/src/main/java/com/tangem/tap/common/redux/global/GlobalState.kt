@@ -15,7 +15,7 @@ import org.rekotlin.StateType
 
 data class GlobalState(
     val scanResponse: ScanResponse? = null,
-    val onboardingManager: OnboardingManager? = null,
+    val onboardingState: OnboardingState = OnboardingState(),
     val cardVerifiedOnline: Boolean = false,
     val tapWalletManager: TapWalletManager = TapWalletManager(),
     val payIdManager: PayIdManager = PayIdManager(),
@@ -32,12 +32,17 @@ data class GlobalState(
 
 
 data class AndroidResources(
-    val strings: RString = RString()
+    val strings: RString = RString(),
 ) {
     data class RString(
         val addressWasCopied: Int = -1,
-        val walletIsNotEmpty: Int = -1
+        val walletIsNotEmpty: Int = -1,
     )
 }
 typealias CryptoCurrencyName = String
 typealias FiatCurrencyName = String
+
+data class OnboardingState(
+    val onboardingStarted: Boolean = false,
+    val onboardingManager: OnboardingManager? = null,
+)
