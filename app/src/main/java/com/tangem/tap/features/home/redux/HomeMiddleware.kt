@@ -15,6 +15,7 @@ import com.tangem.tap.domain.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsStep
+import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
 import com.tangem.tap.features.send.redux.states.ButtonState
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
@@ -26,8 +27,7 @@ class HomeMiddleware {
     companion object {
         val handler = homeMiddleware
 
-        const val CARD_SHOP_URI =
-                "https://shop.tangem.com/?afmc=1i&utm_campaign=1i&utm_source=leaddyno&utm_medium=affiliate"
+        const val CARD_SHOP_URI = "http://cards.tangem.com/"
     }
 }
 
@@ -39,6 +39,7 @@ private val homeMiddleware: Middleware<AppState> = { dispatch, state ->
                     store.dispatch(GlobalAction.RestoreAppCurrency)
                     store.dispatch(GlobalAction.GetMoonPayStatus)
                     store.dispatch(HomeAction.SetTermsOfUseState(preferencesStorage.wasDisclaimerAccepted()))
+                    store.dispatch(BackupAction.CheckForUnfinishedBackup)
                 }
                 is HomeAction.ShouldScanCardOnResume -> {
                     if (action.shouldScanCard) {
@@ -59,7 +60,7 @@ private fun handleReadCard() {
         store.dispatch(NavigationAction.NavigateTo(AppScreen.Disclaimer))
     } else {
         changeButtonState(ButtonState.PROGRESS)
-        store.dispatch(GlobalAction.ScanCard({ scanResponse ->
+        store.dispatch(GlobalAction.ScanCard(false, { scanResponse ->
             store.state.globalState.tapWalletManager.updateConfigManager(scanResponse)
             store.dispatch(TwinCardsAction.IfTwinsPrepareState(scanResponse))
 
