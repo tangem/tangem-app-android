@@ -72,13 +72,14 @@ dependencies {
     implementation 'androidx.fragment:fragment-ktx:1.3.6'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.1'
     implementation 'com.google.android.material:material:1.4.0'
+    implementation "androidx.core:core-ktx:1.6.0"
     implementation 'com.google.android.play:core:1.10.2'
     implementation 'com.google.android.play:core-ktx:1.8.1'
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.1.5'
 
-    implementation 'com.tangem:blockchain:develop-48'
-    implementation 'com.tangem.tangem-sdk-kotlin:core:develop-95'
-    implementation 'com.tangem.tangem-sdk-kotlin:android:develop-95'
+    implementation 'com.tangem:blockchain:develop-51'
+    implementation 'com.tangem.tangem-sdk-kotlin:core:develop-106'
+    implementation 'com.tangem.tangem-sdk-kotlin:android:develop-106'
 
     // WebView
     implementation "androidx.browser:browser:1.3.0"
