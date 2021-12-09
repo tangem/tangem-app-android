@@ -12,6 +12,7 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.transition.TransitionInflater
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.features.tokens.redux.TokensAction
 import com.tangem.tap.features.tokens.redux.TokensState
 import com.tangem.tap.features.tokens.ui.adapters.CurrenciesAdapter
 import com.tangem.tap.mainScope
@@ -57,30 +58,35 @@ class AddTokensFragment : Fragment(R.layout.fragment_add_tokens),
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
         (activity as? AppCompatActivity)?.setSupportActionBar(toolbar)
         toolbar.setNavigationOnClickListener { activity?.onBackPressed() }
         setupPopularTokensRecyclerView()
+        btn_tokens_save_changes.setOnClickListener {
+            store.dispatch(TokensAction.SaveChanges(viewAdapter.getAddedItems()))
+        }
     }
-
 
     private fun setupPopularTokensRecyclerView() {
         viewAdapter = CurrenciesAdapter()
+        viewAdapter.setOnItemAddListener {
+            btn_tokens_save_changes.isEnabled = viewAdapter.getAddedItems().isNotEmpty()
+        }
+
         rv_popular_tokens.layoutManager = LinearLayoutManager(context)
         rv_popular_tokens.adapter = viewAdapter
     }
 
-
     override fun newState(state: TokensState) {
         if (activity == null) return
+
         viewAdapter.addedCurrencies = state.addedCurrencies
         viewAdapter.submitUnfilteredList(state.shownCurrencies)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
-            R.id.menu_search -> {
-                true
-            }
+            R.id.menu_search -> true
             else -> super.onOptionsItemSelected(item)
         }
     }
@@ -100,6 +106,11 @@ class AddTokensFragment : Fragment(R.layout.fragment_add_tokens),
                 }
                 .launchIn(mainScope)
         return super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    override fun onDestroy() {
+        store.dispatch(TokensAction.ResetState)
+        super.onDestroy()
     }
 }
 
