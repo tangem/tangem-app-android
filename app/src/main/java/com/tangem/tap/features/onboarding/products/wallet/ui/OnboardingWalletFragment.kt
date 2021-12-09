@@ -10,20 +10,19 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.tabs.TabLayoutMediator
 import com.tangem.common.CardIdFormatter
 import com.tangem.common.core.CardIdDisplayFormat
-import com.tangem.tap.common.extensions.addOnBackPressedDispatcher
 import com.tangem.tap.common.extensions.dispatchOpenUrl
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.leapfrogWidget.LeapfrogWidget
 import com.tangem.tap.common.postUi
-import com.tangem.tap.features.home.redux.HomeMiddleware
+import com.tangem.tap.features.FragmentOnBackPressedHandler
+import com.tangem.tap.features.addBackPressHandler
 import com.tangem.tap.features.onboarding.products.wallet.redux.*
+import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletMiddleware.Companion.BUY_WALLET_URL
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.AccessCodeDialog
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fragment_onboarding_wallet.*
-import kotlinx.android.synthetic.main.fragment_onboarding_wallet.toolbar
-import kotlinx.android.synthetic.main.fragment_wallet_details.*
 import kotlinx.android.synthetic.main.layout_onboarding_buttons_add_cards.*
 import kotlinx.android.synthetic.main.layout_onboarding_buttons_common.*
 import kotlinx.android.synthetic.main.view_confetti.*
@@ -31,7 +30,7 @@ import kotlinx.android.synthetic.main.view_onboarding_progress.*
 import org.rekotlin.StoreSubscriber
 
 class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
-    StoreSubscriber<OnboardingWalletState> {
+    StoreSubscriber<OnboardingWalletState>, FragmentOnBackPressedHandler {
 
     private var accessCodeDialog: AccessCodeDialog? = null
     private lateinit var cardsWidget: BackupCardsWidget
@@ -40,11 +39,6 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
         super.onCreate(savedInstanceState)
         postponeEnterTransition()
         setHasOptionsMenu(true)
-
-
-        activity?.addOnBackPressedDispatcher {
-            store.dispatch(OnboardingWalletAction.OnBackPressed)
-        }
 
         val inflater = TransitionInflater.from(requireContext())
         enterTransition = inflater.inflateTransition(R.transition.fade)
@@ -68,7 +62,7 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
         store.dispatch(OnboardingWalletAction.Init)
         toolbar.setNavigationOnClickListener { activity?.onBackPressed() }
 
-//        store.dispatch(OnboardingWalletAction.LoadArtwork)
+        addBackPressHandler(this)
     }
 
     override fun onStart() {
@@ -181,6 +175,9 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
         imv_first_backup_card.show()
         imv_second_backup_card.show()
 
+        accessCodeDialog?.dismiss()
+        accessCodeDialog = null
+
         layout_buttons_add_cards.show()
         layout_buttons_common.hide()
         if (state.backupCardsNumber < state.maxBackupCards) {
@@ -224,7 +221,7 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
             dismissWithAnimation = true
             create()
             setOnCancelListener {
-
+                store.dispatch(BackupAction.OnAccessCodeDialogClosed)
             }
             show()
             showInfoScreen()
@@ -366,7 +363,7 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.shop_menu -> {
-                store.dispatchOpenUrl(HomeMiddleware.CARD_SHOP_URI)
+                store.dispatchOpenUrl(BUY_WALLET_URL)
                 true
             }
             else -> super.onOptionsItemSelected(item)
@@ -380,5 +377,9 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
         val shopMenuShouldBeVisible =
             backupStep == BackupStep.ScanOriginCard || backupStep == BackupStep.AddBackupCards
         menu.getItem(0).isVisible = shopMenuShouldBeVisible
+    }
+
+    override fun handleOnBackPressed() {
+        store.dispatch(OnboardingWalletAction.OnBackPressed)
     }
 }
