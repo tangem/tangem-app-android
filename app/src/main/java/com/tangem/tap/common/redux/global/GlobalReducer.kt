@@ -17,12 +17,16 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
             globalState.copy(resources = action.resources)
         }
         is GlobalAction.Onboarding.Start -> {
-            val usedCardsPrefStorage = preferencesStorage.usedCardsPrefStorage
-            val onboardingState = OnboardingManager(action.scanResponse, usedCardsPrefStorage)
-            globalState.copy(onboardingManager = onboardingState)
+            val onboardingManager = if (action.scanResponse != null) {
+                val usedCardsPrefStorage = preferencesStorage.usedCardsPrefStorage
+                 OnboardingManager(action.scanResponse, usedCardsPrefStorage)
+            } else {
+                null
+            }
+            globalState.copy(onboardingState = OnboardingState(true, onboardingManager))
         }
         is GlobalAction.Onboarding.Stop -> {
-            globalState.copy(onboardingManager = null)
+            globalState.copy(onboardingState = OnboardingState(false))
         }
         is GlobalAction.ScanFailsCounter.Increment -> {
             globalState.copy(scanCardFailsCounter = globalState.scanCardFailsCounter + 1)
