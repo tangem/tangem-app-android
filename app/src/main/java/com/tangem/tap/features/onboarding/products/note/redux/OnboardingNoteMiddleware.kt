@@ -42,7 +42,7 @@ private val onboardingNoteMiddleware: Middleware<AppState> = { dispatch, state -
 private fun handleNoteAction(action: Action, dispatch: DispatchFunction) {
     if (action !is OnboardingNoteAction) return
     val globalState = store.state.globalState
-    val onboardingManager = globalState.onboardingManager ?: return
+    val onboardingManager = globalState.onboardingState.onboardingManager ?: return
 
     val scanResponse = onboardingManager.scanResponse
     val card = onboardingManager.scanResponse.card
