@@ -40,7 +40,7 @@ class ResetToFactorySettingsTask() : CardSessionRunnable<Card> {
     ) {
 
         val backupStatus = session.environment.card?.backupStatus
-        if (backupStatus == null && backupStatus == Card.BackupStatus.NoBackup) {
+        if (backupStatus == null || backupStatus == Card.BackupStatus.NoBackup) {
             callback(CompletionResult.Success(session.environment.card!!))
             return
         }
