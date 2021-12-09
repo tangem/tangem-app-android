@@ -31,11 +31,12 @@ sealed class GlobalAction : Action {
     object HideDialog : GlobalAction()
 
     sealed class Onboarding {
-        data class Start(val scanResponse: ScanResponse, val fromHomeScreen: Boolean = true) : GlobalAction()
+        data class Start(val scanResponse: ScanResponse?, val fromHomeScreen: Boolean = true) : GlobalAction()
         object Stop : GlobalAction()
     }
 
     data class ScanCard(
+        val shouldDeriveWC: Boolean,
         val onSuccess: ((ScanResponse) -> Unit)? = null,
         val onFailure: ((TangemError) -> Unit)? = null,
         val messageResId: Int? = null,
