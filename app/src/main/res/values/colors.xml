@@ -10,7 +10,7 @@
     <color name="tapButtonColor">@color/accent</color>
     <color name="tapButtonDisabled">#661ACE80</color>
     <color name="tapButtonColorBlack">@color/darkGray6</color>
-    <color name="tapButtonBlackDisabled">#661C1C1E</color>
+    <color name="tapButtonBlackDisabled">#6A6A6A</color>
 
     <color name="success">#5AC461</color>
     <color name="error">#C4291C</color>
@@ -55,4 +55,7 @@
     <color name="warning_warning">#FFB71B</color>
     <color name="warning_critical">#CA0F03</color>
 
+    <color name="gray_button">#EFEFF0</color>
+
+    <color name="menu_accent_color">#18C077</color>
 </resources>

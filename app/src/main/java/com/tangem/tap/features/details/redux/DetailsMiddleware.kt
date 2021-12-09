@@ -36,7 +36,7 @@ class DetailsMiddleware {
             { action ->
                 when (action) {
                     is DetailsAction.PrepareScreen -> prepareData()
-                    is DetailsAction.EraseWallet -> eraseWalletMiddleware.handle(action)
+                    is DetailsAction.ResetToFactory -> eraseWalletMiddleware.handle(action)
                     is DetailsAction.AppCurrencyAction -> appCurrencyMiddleware.handle(action)
                     is DetailsAction.ManageSecurity -> manageSecurityMiddleware.handle(action)
                     is DetailsAction.ShowDisclaimer -> {
@@ -56,6 +56,12 @@ class DetailsMiddleware {
                                 store.dispatch(TwinCardsAction.SetMode(CreateTwinWalletMode.RecreateWallet))
                                 store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingTwins))
                             }
+                        }
+                    }
+                    is DetailsAction.CreateBackup -> {
+                        store.state.detailsState.scanResponse?.let {
+                            store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingWallet))
+                            store.dispatch(GlobalAction.Onboarding.Start(it, fromHomeScreen = false))
                         }
                     }
                 }
@@ -86,25 +92,25 @@ class DetailsMiddleware {
     }
 
     class EraseWalletMiddleware() {
-        fun handle(action: DetailsAction.EraseWallet) {
+        fun handle(action: DetailsAction.ResetToFactory) {
             when (action) {
-                is DetailsAction.EraseWallet.Proceed -> {
+                is DetailsAction.ResetToFactory.Proceed -> {
                     when (store.state.detailsState.eraseWalletState) {
                         EraseWalletState.Allowed ->
                             store.dispatch(NavigationAction.NavigateTo(AppScreen.DetailsConfirm))
                         EraseWalletState.NotAllowedByCard ->
-                            store.dispatch(DetailsAction.EraseWallet.Proceed.NotAllowedByCard)
+                            store.dispatch(DetailsAction.ResetToFactory.Proceed.NotAllowedByCard)
                         EraseWalletState.NotEmpty ->
-                            store.dispatch(DetailsAction.EraseWallet.Proceed.NotEmpty)
+                            store.dispatch(DetailsAction.ResetToFactory.Proceed.NotEmpty)
                     }
                 }
-                is DetailsAction.EraseWallet.Cancel -> {
+                is DetailsAction.ResetToFactory.Cancel -> {
                     store.dispatch(NavigationAction.PopBackTo())
                 }
-                is DetailsAction.EraseWallet.Confirm -> {
+                is DetailsAction.ResetToFactory.Confirm -> {
                     val card = store.state.detailsState.scanResponse?.card ?: return
                     scope.launch {
-                        val result = tangemSdkManager.eraseWallet(card)
+                        val result = tangemSdkManager.resetToFactorySettings(card)
                         withContext(Dispatchers.Main) {
                             when (result) {
                                 is CompletionResult.Success -> {
