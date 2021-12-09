@@ -1,7 +1,9 @@
 package com.tangem.tap.features.details.redux.walletconnect
 
+import com.squareup.moshi.JsonClass
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.WalletManager
+import com.tangem.common.hdWallet.DerivationPath
 import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.PersonalSignDialogData
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.TransactionRequestDialogData
@@ -21,9 +23,12 @@ data class WalletConnectSession(
     val peerMeta: WCPeerMeta,
 )
 
+@JsonClass(generateAdapter = true)
 data class WalletForSession(
     val cardId: String,
-    val walletPublicKey: String,
+    val walletPublicKey: ByteArray,
+    val derivedPublicKey: ByteArray?,
+    val derivationPath: DerivationPath?,
     val isTestNet: Boolean = false,
 ) {
     val chainId
