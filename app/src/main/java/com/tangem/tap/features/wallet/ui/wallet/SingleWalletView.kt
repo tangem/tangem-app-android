@@ -96,11 +96,11 @@ class SingleWalletView : WalletView {
         twinCardsState?.cardNumber?.let { cardNumber ->
             tv_twin_card_number.show()
             val number = when (cardNumber) {
-                TwinCardNumber.First -> "1"
-                TwinCardNumber.Second -> "2"
+                TwinCardNumber.First -> 1
+                TwinCardNumber.Second -> 2
             }
             tv_twin_card_number.text =
-                    this.getString(R.string.wallet_twins_chip_format, number)
+                    this.getString(R.string.wallet_twins_chip_format, number, 2)
         }
         if (twinCardsState?.cardNumber == null) {
             tv_twin_card_number.hide()
