@@ -7,7 +7,7 @@ import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
 import com.tangem.tap.store
 import com.tangem.wallet.R
 
-class BuyMoreBackupCardsDialog {
+class AddMoreBackupCardsDialog {
         companion object {
             fun create(context: Context): AlertDialog {
                 return AlertDialog.Builder(context).apply {
@@ -16,8 +16,8 @@ class BuyMoreBackupCardsDialog {
                     setPositiveButton(R.string.common_continue) { _, _ ->
                         store.dispatch(BackupAction.ShowAccessCodeInfoScreen)
                     }
-                    setNegativeButton(R.string.onboarding_button_buy_more_cards) { _, _ ->
-                        store.dispatch(BackupAction.GoToShop)
+                    setNegativeButton(R.string.onboarding_button_add_more_cards) { _, _ ->
+
                     }
                     setOnDismissListener {
                         store.dispatch(GlobalAction.HideDialog)
