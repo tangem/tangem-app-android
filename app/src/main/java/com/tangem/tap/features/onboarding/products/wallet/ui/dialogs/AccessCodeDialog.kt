@@ -33,6 +33,7 @@ class AccessCodeDialog(context: Context) : BottomSheetDialog(context) {
 
     fun showInfoScreen() {
         behavior.state = BottomSheetBehavior.STATE_EXPANDED
+        access_code_title.text = context.getText(R.string.onboarding_access_code_intro_title)
         layout_backup_access_code_info.show()
         layout_backup_access_code_submit.hide()
         btn_access_code_create.setOnClickListener {
@@ -43,6 +44,7 @@ class AccessCodeDialog(context: Context) : BottomSheetDialog(context) {
     fun showEnterAccessCode() {
         layout_backup_access_code_info.hide()
         layout_backup_access_code_submit.show()
+        access_code_title.text = context.getText(R.string.onboarding_access_code_intro_title)
         btn_access_code_submit.text = context.getText(R.string.common_continue)
         btn_access_code_submit.setOnClickListener {
             store.dispatch(BackupAction.CheckAccessCode(et_access_code.text.toString()))
@@ -52,6 +54,7 @@ class AccessCodeDialog(context: Context) : BottomSheetDialog(context) {
     fun showReenterAccessCode() {
         layout_backup_access_code_info.hide()
         layout_backup_access_code_submit.show()
+        access_code_title.text = context.getText(R.string.onboarding_access_code_repeat_code_title)
         et_access_code.setText("")
         btn_access_code_submit.text = context.getText(R.string.common_submit)
         btn_access_code_submit.setOnClickListener {
