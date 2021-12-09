@@ -25,23 +25,25 @@ sealed class DetailsAction : Action {
     object ShowDisclaimer : DetailsAction()
     data class ReCreateTwinsWallet(val number: TwinCardNumber) : DetailsAction()
 
-    sealed class EraseWallet : DetailsAction() {
-        object Check : EraseWallet()
-        object Proceed : EraseWallet() {
-            object NotAllowedByCard : EraseWallet(), NotificationAction {
+    sealed class ResetToFactory : DetailsAction() {
+        object Check : ResetToFactory()
+        object Proceed : ResetToFactory() {
+            object NotAllowedByCard : ResetToFactory(), NotificationAction {
                 override val messageResource = R.string.error_purge_prohibited
             }
 
-            object NotEmpty : EraseWallet(), NotificationAction {
+            object NotEmpty : ResetToFactory(), NotificationAction {
                 override val messageResource = R.string.details_notification_erase_wallet_not_possible
             }
         }
 
-        object Confirm : EraseWallet()
-        object Cancel : EraseWallet()
-        object Failure : EraseWallet()
-        object Success : EraseWallet()
+        object Confirm : ResetToFactory()
+        object Cancel : ResetToFactory()
+        object Failure : ResetToFactory()
+        object Success : ResetToFactory()
     }
+
+    object CreateBackup : DetailsAction()
 
     sealed class AppCurrencyAction : DetailsAction() {
         data class SetCurrencies(val currencies: List<FiatCurrency>) : AppCurrencyAction()
