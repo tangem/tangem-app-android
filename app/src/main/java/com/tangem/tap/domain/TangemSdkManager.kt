@@ -1,6 +1,6 @@
 package com.tangem.tap.domain
 
-import CreateProductWalletAndRescanTask
+import CreateProductWalletTask
 import android.content.Context
 import com.tangem.Message
 import com.tangem.TangemSdk
@@ -12,7 +12,10 @@ import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.Config
 import com.tangem.common.core.TangemSdkError
+import com.tangem.common.hdWallet.DerivationPath
 import com.tangem.operations.CommandResponse
+import com.tangem.operations.derivation.DeriveWalletPublicKeysTask
+import com.tangem.operations.derivation.ExtendedPublicKeyList
 import com.tangem.operations.pins.CheckUserCodesCommand
 import com.tangem.operations.pins.CheckUserCodesResponse
 import com.tangem.operations.pins.SetUserCodeCommand
@@ -23,6 +26,7 @@ import com.tangem.tap.domain.tasks.CreateWalletAndRescanTask
 import com.tangem.tap.domain.tasks.product.ResetToFactorySettingsTask
 import com.tangem.tap.domain.tasks.product.ScanProductTask
 import com.tangem.tap.domain.tasks.product.ScanResponse
+import com.tangem.tap.domain.tokens.CurrenciesRepository
 import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -33,18 +37,20 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
 
     suspend fun scanProduct(
         analyticsHandler: AnalyticsHandler,
+        currenciesRepository: CurrenciesRepository,
+        shouldDeriveWC: Boolean,
         messageRes: Int? = null,
     ): CompletionResult<ScanResponse> {
         analyticsHandler.triggerEvent(AnalyticsEvent.READY_TO_SCAN, null)
 
         val message = Message(context.getString(messageRes ?: R.string.initial_message_scan_header))
-        return runTaskAsyncReturnOnMain(ScanProductTask(), null, message)
-                .also { sendScanFailuresToAnalytics(analyticsHandler, it) }
+        return runTaskAsyncReturnOnMain(ScanProductTask(null, currenciesRepository, shouldDeriveWC), null, message)
+            .also { sendScanFailuresToAnalytics(analyticsHandler, it) }
     }
 
     suspend fun createProductWallet(scanResponse: ScanResponse): CompletionResult<Card> {
         return runTaskAsync(
-            CreateProductWalletAndRescanTask(scanResponse.productType),
+            CreateProductWalletTask(scanResponse.productType),
             scanResponse.card.cardId,
             Message(context.getString(R.string.initial_message_create_wallet_body))
         )
@@ -64,6 +70,14 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
     suspend fun createWallet(cardId: String?): CompletionResult<Card> {
         return runTaskAsyncReturnOnMain(CreateWalletAndRescanTask(), cardId,
             initialMessage = Message(context.getString(R.string.initial_message_create_wallet_body)))
+    }
+
+    suspend fun derivePublicKeys(
+        cardId: String,
+        walletPublicKey: ByteArray,
+        derivationPaths: List<DerivationPath>
+    ): CompletionResult<ExtendedPublicKeyList> {
+        return runTaskAsyncReturnOnMain(DeriveWalletPublicKeysTask(walletPublicKey, derivationPaths), cardId)
     }
 
     suspend fun resetToFactorySettings(card: Card): CompletionResult<Card> {
@@ -104,13 +118,13 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
     suspend fun <T : CommandResponse> runTaskAsync(
         runnable: CardSessionRunnable<T>, cardId: String? = null, initialMessage: Message? = null,
     ): CompletionResult<T> =
-            withContext(Dispatchers.Main) {
-                suspendCoroutine { continuation ->
-                    tangemSdk.startSessionWithRunnable(runnable, cardId, initialMessage) { result ->
-                        continuation.resume(result)
-                    }
+        withContext(Dispatchers.Main) {
+            suspendCoroutine { continuation ->
+                tangemSdk.startSessionWithRunnable(runnable, cardId, initialMessage) { result ->
+                    continuation.resume(result)
                 }
             }
+        }
 
     private suspend fun <T : CommandResponse> runTaskAsyncReturnOnMain(
         runnable: CardSessionRunnable<T>, cardId: String? = null, initialMessage: Message? = null,
