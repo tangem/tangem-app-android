@@ -51,6 +51,7 @@ sealed class BackupAction : Action {
     data class SaveFirstAccessCode(val accessCode: String) : BackupAction()
     object ShowReenterAccessCodeScreen : BackupAction()
     data class SaveAccessCodeConfirmation(val accessCodeConfirmation: String) : BackupAction()
+    object OnAccessCodeDialogClosed : BackupAction()
 
     data class PrepareToWriteBackupCard(val cardNumber: Int) : BackupAction()
     data class WriteBackupCard(val cardNumber: Int) : BackupAction()
@@ -60,6 +61,7 @@ sealed class BackupAction : Action {
 
     object FinishBackup : BackupAction()
     object DiscardBackup : BackupAction()
+    object DiscardSavedBackup : BackupAction()
     object ResumeBackup : BackupAction()
 
 }
