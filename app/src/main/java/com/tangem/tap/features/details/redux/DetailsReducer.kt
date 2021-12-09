@@ -26,7 +26,7 @@ private fun internalReduce(action: Action, state: AppState): DetailsState {
         is DetailsAction.PrepareScreen -> {
             handlePrepareScreen(action, detailsState)
         }
-        is DetailsAction.EraseWallet -> {
+        is DetailsAction.ResetToFactory -> {
             handleEraseWallet(action, detailsState)
         }
         is DetailsAction.AppCurrencyAction -> {
@@ -39,23 +39,34 @@ private fun internalReduce(action: Action, state: AppState): DetailsState {
     }
 }
 
-private fun handlePrepareScreen(action: DetailsAction.PrepareScreen, state: DetailsState): DetailsState {
+private fun handlePrepareScreen(
+    action: DetailsAction.PrepareScreen,
+    state: DetailsState,
+): DetailsState {
+    val backupIsActive = action.scanResponse.card.backupStatus?.isActive ?: false
+
     return DetailsState(
         scanResponse = action.scanResponse,
         wallets = action.wallets,
         cardInfo = action.scanResponse.card.toCardInfo(),
         appCurrencyState = AppCurrencyState(action.fiatCurrencyName),
-        cardTermsOfUseUrl = action.cardTou.getUrl(action.scanResponse.card)
+        cardTermsOfUseUrl = action.cardTou.getUrl(action.scanResponse.card),
+        createBackupAllowed = action.scanResponse.isTangemWallet() && !backupIsActive,
     )
 }
 
-private fun handleEraseWallet(action: DetailsAction.EraseWallet, state: DetailsState): DetailsState {
+private fun handleEraseWallet(
+    action: DetailsAction.ResetToFactory,
+    state: DetailsState,
+): DetailsState {
     return when (action) {
-        DetailsAction.EraseWallet.Check -> {
+        DetailsAction.ResetToFactory.Check -> {
             val card = state.scanResponse?.card
             val notAllowedByAnyWallet = card?.wallets?.any { it.settings.isPermanent } ?: false
             val notAllowedByCard = notAllowedByAnyWallet ||
-                    (card?.isWalletDataSupported == true && !state.scanResponse.isTangemNote())
+                    (card?.isWalletDataSupported == true &&
+                            (!state.scanResponse.isTangemNote() && !state.scanResponse.isTangemWallet()))
+
             val notEmpty = state.wallets.any {
                 it.hasPendingTransactions() || it.amounts.toSendableAmounts().isNotEmpty()
             }
@@ -66,22 +77,22 @@ private fun handleEraseWallet(action: DetailsAction.EraseWallet, state: DetailsS
             }
             state.copy(eraseWalletState = eraseWalletState)
         }
-        DetailsAction.EraseWallet.Proceed -> {
+        DetailsAction.ResetToFactory.Proceed -> {
             if (state.eraseWalletState == EraseWalletState.Allowed) {
                 state.copy(confirmScreenState = ConfirmScreenState.EraseWallet)
             } else {
                 state
             }
         }
-        DetailsAction.EraseWallet.Cancel -> state.copy(eraseWalletState = null)
-        DetailsAction.EraseWallet.Failure -> state.copy(eraseWalletState = null)
-        DetailsAction.EraseWallet.Success -> state.copy(eraseWalletState = null)
+        DetailsAction.ResetToFactory.Cancel -> state.copy(eraseWalletState = null)
+        DetailsAction.ResetToFactory.Failure -> state.copy(eraseWalletState = null)
+        DetailsAction.ResetToFactory.Success -> state.copy(eraseWalletState = null)
         else -> state
     }
 }
 
 private fun handleAppCurrencyAction(
-    action: DetailsAction.AppCurrencyAction, state: DetailsState
+    action: DetailsAction.AppCurrencyAction, state: DetailsState,
 ): DetailsState {
     return when (action) {
         is DetailsAction.AppCurrencyAction.SetCurrencies -> {
@@ -105,7 +116,7 @@ private fun handleAppCurrencyAction(
 }
 
 private fun handleSecurityAction(
-    action: DetailsAction.ManageSecurity, state: DetailsState
+    action: DetailsAction.ManageSecurity, state: DetailsState,
 ): DetailsState {
     return when (action) {
         is DetailsAction.ManageSecurity.SetCurrentOption -> {
@@ -123,18 +134,18 @@ private fun handleSecurityAction(
             state.copy(securityScreenState = SecurityScreenState(currentOption = securityOption))
         }
         is DetailsAction.ManageSecurity.OpenSecurity -> {
-            if (state.scanResponse?.card?.isStart2Coin == true ||
-                state.scanResponse?.isTangemNote() == true
-            ) {
-                return state.copy(securityScreenState = state.securityScreenState?.copy(
-                    allowedOptions = EnumSet.of(SecurityOption.LongTap),
-                    selectedOption = state.securityScreenState.currentOption
-                ))
+            val allowedSecurityOptions = when {
+                state.scanResponse?.card?.isStart2Coin == true ||
+                        state.scanResponse?.isTangemNote() == true -> {
+                    EnumSet.of(SecurityOption.LongTap)
+                }
+                state.scanResponse?.isTangemWallet() == true -> {
+                    EnumSet.of(state.securityScreenState?.currentOption)
+                }
+                else -> prepareAllowedSecurityOptions(
+                    state.scanResponse?.card, state.securityScreenState?.currentOption
+                )
             }
-
-            val allowedSecurityOptions = prepareAllowedSecurityOptions(
-                state.scanResponse?.card, state.securityScreenState?.currentOption
-            )
             state.copy(securityScreenState = state.securityScreenState?.copy(
                 allowedOptions = allowedSecurityOptions,
                 selectedOption = state.securityScreenState.currentOption
@@ -171,17 +182,12 @@ private fun handleSecurityAction(
 }
 
 private fun prepareAllowedSecurityOptions(
-    card: Card?, currentSecurityOption: SecurityOption?
+    card: Card?, currentSecurityOption: SecurityOption?,
 ): EnumSet<SecurityOption> {
-    val prohibitDefaultPin = card?.settings?.isResettingUserCodesAllowed != true
-
-    val allowedSecurityOptions = EnumSet.noneOf(SecurityOption::class.java)
+    val allowedSecurityOptions = EnumSet.of(SecurityOption.LongTap)
 
     if (card?.isTangemTwin() == true) {
         allowedSecurityOptions.add(SecurityOption.PassCode)
-    }
-    if ((currentSecurityOption == SecurityOption.LongTap) || !prohibitDefaultPin) {
-        allowedSecurityOptions.add(SecurityOption.LongTap)
     }
     if (currentSecurityOption == SecurityOption.AccessCode) {
         allowedSecurityOptions.add(SecurityOption.AccessCode)
