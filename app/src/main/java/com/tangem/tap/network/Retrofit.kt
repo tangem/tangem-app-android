@@ -4,6 +4,7 @@ import com.squareup.moshi.FromJson
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.ToJson
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import com.tangem.common.json.TangemSdkAdapter
 import com.tangem.wallet.BuildConfig
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
@@ -41,7 +42,10 @@ fun createMoshiConverterFactory(): Converter.Factory = MoshiConverterFactory.cre
 
 fun createMoshi(): Moshi = Moshi.Builder()
         .add(BigDecimalAdapter)
-        .add(KotlinJsonAdapterFactory()).build()
+        .add(KotlinJsonAdapterFactory())
+        .add(TangemSdkAdapter.DerivationPathAdapter())
+        .add(TangemSdkAdapter.DerivationNodeAdapter())
+        .build()
 
 private fun createHttpLoggingInterceptor(): HttpLoggingInterceptor {
     val logging = HttpLoggingInterceptor()
