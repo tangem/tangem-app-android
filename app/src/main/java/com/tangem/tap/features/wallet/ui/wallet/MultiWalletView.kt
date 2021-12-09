@@ -55,7 +55,7 @@ class MultiWalletView : WalletView {
 
     private fun setupWalletCardNumber(fragment: WalletFragment) = with(fragment) {
         val card = store.state.globalState.scanResponse?.card
-        if (card?.backupStatus?.isActive == true) {
+        if (card?.backupStatus is Card.BackupStatus.Active) {
             val cardCount = (card.backupStatus as Card.BackupStatus.Active).cardCount + 1
             tv_twin_card_number.show()
             tv_twin_card_number.text =
