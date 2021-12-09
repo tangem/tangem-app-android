@@ -9,7 +9,7 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.guard
 import com.tangem.operations.PreflightReadMode
 import com.tangem.operations.PreflightReadTask
-import com.tangem.operations.wallet.CreateWalletCommand
+import com.tangem.operations.wallet.CreateWalletTask
 
 @Deprecated("Use CreateProductWalletAndRescanTask instead")
 class CreateWalletAndRescanTask : CardSessionRunnable<Card> {
@@ -22,7 +22,7 @@ class CreateWalletAndRescanTask : CardSessionRunnable<Card> {
         val firmwareVersion = card.firmwareVersion
 
         val task = if (firmwareVersion < FirmwareVersion.MultiWalletAvailable) {
-            CreateWalletCommand(card.supportedCurves.first())
+            CreateWalletTask(card.supportedCurves.first())
         } else {
             CreateWalletsTask()
         }
