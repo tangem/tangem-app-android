@@ -20,6 +20,8 @@ import com.tangem.operations.CommandResponse
 import com.tangem.operations.PreflightReadMode
 import com.tangem.operations.PreflightReadTask
 import com.tangem.operations.ScanTask
+import com.tangem.operations.backup.PrimaryCard
+import com.tangem.operations.backup.StartPrimaryCardLinkingTask
 import com.tangem.operations.derivation.DeriveWalletPublicKeysTask
 import com.tangem.operations.issuerAndUserData.ReadIssuerDataCommand
 import com.tangem.tap.common.extensions.ByteArrayKey
@@ -33,13 +35,15 @@ import com.tangem.tap.domain.TapWorkarounds.isNotSupportedInThatRelease
 import com.tangem.tap.domain.extensions.getSingleWallet
 import com.tangem.tap.domain.tokens.CurrenciesRepository
 import com.tangem.tap.domain.twins.TwinsHelper
+import com.tangem.tap.preferencesStorage
 
 data class ScanResponse(
     val card: Card,
     val productType: ProductType,
     val walletData: WalletData?,
     val secondTwinPublicKey: String? = null,
-    val derivedKeys: Map<KeyWalletPublicKey, List<ExtendedPublicKey>> = mapOf()
+    val derivedKeys: Map<KeyWalletPublicKey, List<ExtendedPublicKey>> = mapOf(),
+    val primaryCard: PrimaryCard? = null
 ) : CommandResponse {
 
     fun getBlockchain(): Blockchain {
@@ -134,7 +138,34 @@ private class ScanWalletProcessor(
     private val shouldDeriveWC: Boolean
 ) : ProductCommandProcessor<ScanResponse> {
 
+    var primaryCard: PrimaryCard? = null
+
     override fun proceed(
+        card: Card,
+        session: CardSession,
+        callback: (result: CompletionResult<ScanResponse>) -> Unit
+    ) {
+        val activationIsFinished = preferencesStorage.usedCardsPrefStorage.isActivationFinished(card.cardId)
+
+        if (card.backupStatus?.isActive != true && !activationIsFinished && card.wallets.isNotEmpty()) {
+            StartPrimaryCardLinkingTask().run(session) { linkingResult ->
+                when (linkingResult) {
+                    is CompletionResult.Success -> {
+                        primaryCard = linkingResult.data
+                        deriveKeysIfNeeded(card, session, callback)
+                    }
+                    is CompletionResult.Failure -> {
+                        deriveKeysIfNeeded(card, session, callback)
+                    }
+                }
+            }
+        } else {
+            deriveKeysIfNeeded(card, session, callback)
+        }
+
+    }
+
+    private fun deriveKeysIfNeeded(
         card: Card,
         session: CardSession,
         callback: (result: CompletionResult<ScanResponse>) -> Unit
@@ -143,7 +174,12 @@ private class ScanWalletProcessor(
         val wallet = card.wallets.firstOrNull { it.curve == EllipticCurve.Secp256k1 }
 
         if (derivationPaths.isNullOrEmpty() || wallet == null || wallet.chainCode == null) {
-            callback(CompletionResult.Success(ScanResponse(card, ProductType.Wallet, session.environment.walletData)))
+            callback(CompletionResult.Success(ScanResponse(
+                card = card,
+                productType = ProductType.Wallet,
+                walletData = session.environment.walletData,
+                primaryCard = primaryCard
+            )))
             return
         }
 
@@ -152,10 +188,11 @@ private class ScanWalletProcessor(
                 is CompletionResult.Success -> {
                     val derivedKeys = mapOf(wallet.publicKey.toMapKey() to result.data)
                     val response = ScanResponse(
-                        card,
-                        ProductType.Wallet,
-                        session.environment.walletData,
-                        derivedKeys = derivedKeys
+                        card = card,
+                        productType = ProductType.Wallet,
+                        walletData = session.environment.walletData,
+                        derivedKeys = derivedKeys,
+                        primaryCard = primaryCard
                     )
                     callback(CompletionResult.Success(response))
 
