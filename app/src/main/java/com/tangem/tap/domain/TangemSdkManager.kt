@@ -1,6 +1,7 @@
 package com.tangem.tap.domain
 
 import CreateProductWalletTask
+import CreateProductWalletTaskResponse
 import android.content.Context
 import com.tangem.Message
 import com.tangem.TangemSdk
@@ -48,7 +49,9 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
             .also { sendScanFailuresToAnalytics(analyticsHandler, it) }
     }
 
-    suspend fun createProductWallet(scanResponse: ScanResponse): CompletionResult<Card> {
+    suspend fun createProductWallet(
+        scanResponse: ScanResponse
+    ): CompletionResult<CreateProductWalletTaskResponse> {
         return runTaskAsync(
             CreateProductWalletTask(scanResponse.productType),
             scanResponse.card.cardId,
