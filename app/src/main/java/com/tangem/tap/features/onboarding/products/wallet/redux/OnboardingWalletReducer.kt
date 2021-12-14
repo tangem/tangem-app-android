@@ -44,7 +44,7 @@ class BackupReducer {
                     canSkipBackup = state.canSkipBackup
                 )
 
-                BackupAction.StartBackup -> state.copy(backupStep = BackupStep.ScanOriginCard)
+                BackupAction.StartAddingPrimaryCard -> state.copy(backupStep = BackupStep.ScanOriginCard)
 
                 BackupAction.StartAddingBackupCards -> {
                     state.copy(backupStep = BackupStep.AddBackupCards)
@@ -127,6 +127,7 @@ class BackupReducer {
                 BackupAction.DiscardBackup -> state
                 BackupAction.ResumeBackup -> state
                 BackupAction.DiscardSavedBackup -> state
+                BackupAction.StartBackup -> state
             }
 
         }
