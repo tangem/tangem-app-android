@@ -5,6 +5,7 @@ import android.view.View
 import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import androidx.transition.TransitionInflater
+import com.tangem.common.card.Card
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.details.redux.DetailsAction
@@ -72,6 +73,9 @@ class DetailsSecurityFragment : Fragment(R.layout.fragment_details_security),
                             ?: EnumSet.noneOf(SecurityOption::class.java)
             )
         }
+        tv_access_code_unavailable_disclaimer.show(
+            state.scanResponse?.card?.backupStatus == Card.BackupStatus.NoBackup
+        )
     }
 
     private fun selectSecurityOption(securityOption: SecurityOption?) {
