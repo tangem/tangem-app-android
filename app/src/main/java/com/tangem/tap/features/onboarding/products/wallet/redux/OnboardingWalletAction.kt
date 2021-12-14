@@ -25,6 +25,8 @@ sealed class BackupAction : Action {
     object IntroduceBackup : BackupAction()
     object StartBackup : BackupAction()
     object DismissBackup : BackupAction()
+
+    object StartAddingPrimaryCard : BackupAction()
     object ScanPrimaryCard : BackupAction()
 
     object CheckForUnfinishedBackup : BackupAction()
