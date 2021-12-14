@@ -15,7 +15,6 @@ import com.tangem.tap.domain.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsStep
-import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
 import com.tangem.tap.features.send.redux.states.ButtonState
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
@@ -39,7 +38,6 @@ private val homeMiddleware: Middleware<AppState> = { dispatch, state ->
                     store.dispatch(GlobalAction.RestoreAppCurrency)
                     store.dispatch(GlobalAction.GetMoonPayStatus)
                     store.dispatch(HomeAction.SetTermsOfUseState(preferencesStorage.wasDisclaimerAccepted()))
-                    store.dispatch(BackupAction.CheckForUnfinishedBackup)
                 }
                 is HomeAction.ShouldScanCardOnResume -> {
                     if (action.shouldScanCard) {
