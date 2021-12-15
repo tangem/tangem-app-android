@@ -51,7 +51,7 @@ private fun handlePrepareScreen(
         cardInfo = action.scanResponse.card.toCardInfo(),
         appCurrencyState = AppCurrencyState(action.fiatCurrencyName),
         cardTermsOfUseUrl = action.cardTou.getUrl(action.scanResponse.card),
-        createBackupAllowed = action.scanResponse.isTangemWallet() && !backupIsActive,
+        createBackupAllowed = action.scanResponse.card.backupStatus == Card.BackupStatus.NoBackup,
     )
 }
 
@@ -65,7 +65,7 @@ private fun handleEraseWallet(
             val notAllowedByAnyWallet = card?.wallets?.any { it.settings.isPermanent } ?: false
             val notAllowedByCard = notAllowedByAnyWallet ||
                     (card?.isWalletDataSupported == true &&
-                            (!state.scanResponse.isTangemNote() && !state.scanResponse.isTangemWallet()))
+                            (!state.scanResponse.isTangemNote() && !state.scanResponse.supportsBackup()))
 
             val notEmpty = state.wallets.any {
                 it.hasPendingTransactions() || it.amounts.toSendableAmounts().isNotEmpty()
@@ -139,7 +139,7 @@ private fun handleSecurityAction(
                         state.scanResponse?.isTangemNote() == true -> {
                     EnumSet.of(SecurityOption.LongTap)
                 }
-                state.scanResponse?.isTangemWallet() == true -> {
+                state.scanResponse?.supportsBackup() == true -> {
                     EnumSet.of(state.securityScreenState?.currentOption)
                 }
                 else -> prepareAllowedSecurityOptions(
