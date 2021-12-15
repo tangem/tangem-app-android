@@ -45,7 +45,7 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         analyticsHandler.triggerEvent(AnalyticsEvent.READY_TO_SCAN, null)
 
         val message = Message(context.getString(messageRes ?: R.string.initial_message_scan_header))
-        return runTaskAsyncReturnOnMain(ScanProductTask(null, currenciesRepository, shouldDeriveWC), null, message)
+        return runTaskAsyncReturnOnMain(ScanProductTask(null, currenciesRepository), null, message)
             .also { sendScanFailuresToAnalytics(analyticsHandler, it) }
     }
 
