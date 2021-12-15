@@ -110,7 +110,14 @@ private fun handleWalletAction(action: Action) {
                 BackupService.State.FinalizingPrimaryCard -> BackupAction.PrepareToWritePrimaryCard
                 is BackupService.State.FinalizingBackupCard ->
                     BackupAction.PrepareToWriteBackupCard(backupState.index)
-                else -> BackupAction.IntroduceBackup
+                else -> {
+                    val url = if (card?.issuer?.name?.lowercase()?.contains("tangem") == true) {
+                        BUY_WALLET_URL
+                    } else {
+                        null
+                    }
+                    BackupAction.IntroduceBackup(url)
+                }
             }
             store.dispatch(newAction)
         }
