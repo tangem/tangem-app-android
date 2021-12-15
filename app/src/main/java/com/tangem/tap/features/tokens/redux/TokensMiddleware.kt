@@ -46,7 +46,7 @@ class TokensMiddleware {
             isTestNet = isTestcard
         )
         val currencies = CurrencyListItem.createListOfCurrencies(blockchains, tokens).toMutableList()
-        if (scanResponse.isTangemWallet()) {
+        if (scanResponse.supportsHdWallet()) {
             currencies.forEach {
                 when (it) {
                     is CurrencyListItem.TitleListItem -> {
@@ -81,7 +81,7 @@ class TokensMiddleware {
             .map { it.token }
         if (blockchains.isEmpty() && tokens.isEmpty()) return
 
-        if (scanResponse.isTangemWallet()) {
+        if (scanResponse.supportsHdWallet()) {
             deriveMissingBlockchains(scanResponse, blockchains, tokens)
         } else {
             submitAdd(blockchains, tokens)
