@@ -15,15 +15,16 @@ import com.tangem.common.core.Config
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.hdWallet.DerivationPath
 import com.tangem.operations.CommandResponse
-import com.tangem.operations.derivation.DeriveWalletPublicKeysTask
-import com.tangem.operations.derivation.ExtendedPublicKeyList
 import com.tangem.operations.pins.CheckUserCodesCommand
 import com.tangem.operations.pins.CheckUserCodesResponse
 import com.tangem.operations.pins.SetUserCodeCommand
 import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.AnalyticsHandler
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
+import com.tangem.tap.common.extensions.ByteArrayKey
 import com.tangem.tap.domain.tasks.CreateWalletAndRescanTask
+import com.tangem.tap.domain.tasks.DerivationTask
+import com.tangem.tap.domain.tasks.DerivationTaskResponse
 import com.tangem.tap.domain.tasks.product.ResetToFactorySettingsTask
 import com.tangem.tap.domain.tasks.product.ScanProductTask
 import com.tangem.tap.domain.tasks.product.ScanResponse
@@ -77,10 +78,9 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
 
     suspend fun derivePublicKeys(
         cardId: String,
-        walletPublicKey: ByteArray,
-        derivationPaths: List<DerivationPath>
-    ): CompletionResult<ExtendedPublicKeyList> {
-        return runTaskAsyncReturnOnMain(DeriveWalletPublicKeysTask(walletPublicKey, derivationPaths), cardId)
+        derivations: Map<ByteArrayKey, List<DerivationPath>>
+    ): CompletionResult<DerivationTaskResponse> {
+        return runTaskAsyncReturnOnMain(DerivationTask(derivations), cardId)
     }
 
     suspend fun resetToFactorySettings(card: Card): CompletionResult<Card> {
