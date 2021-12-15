@@ -32,9 +32,12 @@ class OnboardingHelper {
         fun whereToNavigate(scanResponse: ScanResponse): AppScreen {
             return when (scanResponse.productType) {
                 ProductType.Note -> AppScreen.OnboardingNote
-                ProductType.Wallet -> AppScreen.OnboardingWallet
+                ProductType.Wallet -> if (scanResponse.card.settings.isBackupAllowed) {
+                    AppScreen.OnboardingWallet
+                } else {
+                    AppScreen.OnboardingOther
+                }
                 ProductType.Twins -> AppScreen.OnboardingTwins
-                ProductType.Other -> AppScreen.OnboardingOther
             }
         }
     }
