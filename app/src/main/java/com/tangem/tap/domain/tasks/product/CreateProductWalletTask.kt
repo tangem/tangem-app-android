@@ -2,7 +2,6 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.Card
 import com.tangem.common.card.EllipticCurve
-import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.TangemSdkError
@@ -45,8 +44,7 @@ class CreateProductWalletTask(
         val commandProcessor = when (type) {
             ProductType.Note -> CreateWalletTangemNote()
             ProductType.Twins -> throw UnsupportedOperationException("Use the TwinCardsManager to create a wallet")
-            ProductType.Wallet -> CreateWalletTangemWallet()
-            else -> CreateWalletOtherCards()
+            else -> CreateWalletTangemWallet()
         }
         commandProcessor.proceed(card, session) {
             when (it) {
@@ -106,13 +104,27 @@ private class CreateWalletTangemWallet : ProductCommandProcessor<CreateProductWa
         session: CardSession,
         callback: (result: CompletionResult<CreateProductWalletTaskResponse>) -> Unit,
     ) {
-        val supportedCurves = setOf(EllipticCurve.Secp256k1, EllipticCurve.Ed25519)
-        val curves = card.getCurvesForNonCreatedWallets().intersect(supportedCurves).toList()
+        val curves = card.getCurvesForNonCreatedWallets()
         CreateWalletsTask(curves).run(session) { result ->
             when (result) {
                 is CompletionResult.Success -> {
                     createWalletResponse = result.data.createWalletResponses[0]
-                    linkPrimaryCard(card, session, callback)
+                    when {
+                        card.settings.isBackupAllowed -> {
+                            linkPrimaryCard(session, callback)
+                        }
+                        card.settings.isHDWalletAllowed -> {
+                            deriveKeys(session, callback)
+                        }
+                        else -> {
+                            callback(
+                                CompletionResult.Success(
+                                    CreateProductWalletTaskResponse(card = session.environment.card!!)
+                                )
+                            )
+                        }
+                    }
+
                 }
                 is CompletionResult.Failure -> callback(CompletionResult.Failure(result.error))
             }
@@ -120,7 +132,6 @@ private class CreateWalletTangemWallet : ProductCommandProcessor<CreateProductWa
     }
 
     private fun linkPrimaryCard(
-        card: Card,
         session: CardSession,
         callback: (result: CompletionResult<CreateProductWalletTaskResponse>) -> Unit,
     ) {
@@ -128,7 +139,7 @@ private class CreateWalletTangemWallet : ProductCommandProcessor<CreateProductWa
             when (result) {
                 is CompletionResult.Success -> {
                     primaryCard = result.data
-                    deriveKeys(card, session, callback)
+                    deriveKeys(session, callback)
                 }
                 is CompletionResult.Failure -> {
                     callback(CompletionResult.Failure(result.error))
@@ -138,7 +149,6 @@ private class CreateWalletTangemWallet : ProductCommandProcessor<CreateProductWa
     }
 
     private fun deriveKeys(
-        card: Card,
         session: CardSession,
         callback: (result: CompletionResult<CreateProductWalletTaskResponse>) -> Unit,
     ) {
@@ -149,42 +159,34 @@ private class CreateWalletTangemWallet : ProductCommandProcessor<CreateProductWa
             return
         }
 
+        if (derivationPaths.isNullOrEmpty()) {
+            callback(
+                CompletionResult.Success(
+                    CreateProductWalletTaskResponse(
+                        card = session.environment.card!!, primaryCard = primaryCard
+                    )
+                )
+            )
+            return
+        }
+
         DeriveWalletPublicKeysTask(response.wallet.publicKey, derivationPaths)
             .run(session) { result ->
                 when (result) {
                     is CompletionResult.Success -> {
                         val derivedKeys = mapOf(response.wallet.publicKey.toMapKey() to result.data)
-                        callback(CompletionResult.Success(CreateProductWalletTaskResponse(
-                            card = session.environment.card!!,
-                            derivedKeys = derivedKeys,
-                            primaryCard = primaryCard
-                        )))
+                        callback(
+                            CompletionResult.Success(
+                                CreateProductWalletTaskResponse(
+                                    card = session.environment.card!!,
+                                    derivedKeys = derivedKeys,
+                                    primaryCard = primaryCard
+                                )
+                            )
+                        )
                     }
                     is CompletionResult.Failure -> callback(CompletionResult.Failure(result.error))
                 }
             }
-    }
-}
-
-private class CreateWalletOtherCards : ProductCommandProcessor<CreateWalletResponse> {
-
-    override fun proceed(
-        card: Card,
-        session: CardSession,
-        callback: (result: CompletionResult<CreateWalletResponse>) -> Unit,
-    ) {
-        val firmwareVersion = card.firmwareVersion
-        val task = if (firmwareVersion < FirmwareVersion.MultiWalletAvailable) {
-            CreateWalletsTask(listOf(card.supportedCurves.first()))
-        } else {
-            CreateWalletsTask(card.getCurvesForNonCreatedWallets())
-        }
-
-        task.run(session) { result ->
-            when (result) {
-                is CompletionResult.Success -> callback(CompletionResult.Success(result.data.createWalletResponses[0]))
-                is CompletionResult.Failure -> callback(CompletionResult.Failure(result.error))
-            }
-        }
     }
 }
