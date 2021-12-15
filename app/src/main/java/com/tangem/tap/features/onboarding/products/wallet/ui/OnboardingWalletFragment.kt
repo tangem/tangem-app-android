@@ -148,18 +148,9 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
     }
 
     private fun showScanOriginCard(state: BackupState) {
-
-        toolbar.title = getText(R.string.onboarding_navbar_title_creating_backup)
+        prepareBackupView()
 
         cardsWidget.toFolded()
-
-        tv_header.show()
-        tv_body.show()
-        view_pager_backup_info.hide()
-        tab_layout_backup_info.hide()
-
-        imv_first_backup_card.show()
-        imv_second_backup_card.show()
 
         tv_header.text = getText(R.string.onboarding_title_scan_origin_card)
         tv_body.text = getString(
@@ -171,9 +162,20 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
         btn_main_action.setOnClickListener { store.dispatch(BackupAction.ScanPrimaryCard) }
     }
 
-    private fun showAddBackupCards(state: BackupState) {
+    private fun prepareBackupView() {
+        toolbar.title = getText(R.string.onboarding_navbar_title_creating_backup)
+
+        tv_header.show()
+        tv_body.show()
+        view_pager_backup_info.hide()
+        tab_layout_backup_info.hide()
+
         imv_first_backup_card.show()
         imv_second_backup_card.show()
+    }
+
+    private fun showAddBackupCards(state: BackupState) {
+        prepareBackupView()
 
         accessCodeDialog?.dismiss()
         accessCodeDialog = null
@@ -190,11 +192,12 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
 
         when (state.backupCardsNumber) {
             0 -> {
-                cardsWidget.toFan()
+                cardsWidget.toFan() {
+                    cardsWidget.getFirstBackupCardView().animate().alpha(0.6f).setDuration(200)
+                    cardsWidget.getSecondBackupCardView().animate().alpha(0.2f).setDuration(200)
+                }
                 tv_header.text = getText(R.string.onboarding_title_no_backup_cards)
                 tv_body.text = getText(R.string.onboarding_subtitle_no_backup_cards)
-                cardsWidget.getFirstBackupCardView().alpha = 0.6f
-                cardsWidget.getSecondBackupCardView().alpha = 0.2f
             }
             1 -> {
                 tv_header.text = getText(R.string.onboarding_title_one_backup_card)
@@ -283,10 +286,6 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
 
         cardsWidget.toLeapfrog()
 
-//        imv_front_card.alpha = 1f
-//        imv_first_backup_card.alpha = 1f
-//        imv_second_backup_card.alpha = 1f
-
         btn_alternative_action.hide()
     }
 
@@ -373,9 +372,12 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.shop, menu)
 
-        val backupStep = store.state.onboardingWalletState.backupState.backupStep
+        val backupState = store.state.onboardingWalletState.backupState
+        val backupStep = backupState.backupStep
+
         val shopMenuShouldBeVisible =
-            backupStep == BackupStep.ScanOriginCard || backupStep == BackupStep.AddBackupCards
+            (backupStep == BackupStep.ScanOriginCard || backupStep == BackupStep.AddBackupCards) &&
+                    backupState.buyAdditionalCardsUrl != null
         menu.getItem(0).isVisible = shopMenuShouldBeVisible
     }
 
