@@ -218,7 +218,6 @@ interface EmailData {
 
     fun joinTogether(infoHolder: AdditionalEmailInfo): String {
         return "$mainMessage\n\n\n\n" +
-                "Following information is optional. You can erase it if you don’t want to share it.\n" +
                 createOptionalMessage(infoHolder)
     }
 }
