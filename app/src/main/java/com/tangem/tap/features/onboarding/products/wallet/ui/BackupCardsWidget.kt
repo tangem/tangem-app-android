@@ -15,7 +15,13 @@ class BackupCardsWidget(
     val getTopOfAnchorViewForActivateState: () -> Float,
 ) {
 
+    var currentState: WidgetState? = null
+
     fun toWelcome(animate: Boolean = true, onEnd: () -> Unit = {}) {
+        if (currentState == WidgetState.WELCOME) return
+
+        currentState = WidgetState.WELCOME
+
         val animator = createAnimator(animate, onEnd)
         animator.playTogether(
             createAnimator(BackupCardType.ORIGIN, createWelcomeProperties(BackupCardType.ORIGIN)),
@@ -26,6 +32,10 @@ class BackupCardsWidget(
     }
 
     fun toFolded(animate: Boolean = true, onEnd: () -> Unit = {}) {
+        if (currentState == WidgetState.FOLDED) return
+
+        currentState = WidgetState.FOLDED
+
         val animator = createAnimator(animate, onEnd)
         animator.playTogether(
             createAnimator(BackupCardType.ORIGIN, createLeapfrogProperties(BackupCardType.ORIGIN)),
@@ -36,6 +46,10 @@ class BackupCardsWidget(
     }
 
     fun toFan(animate: Boolean = true, onEnd: () -> Unit = {}) {
+        if (currentState == WidgetState.FAN) return
+
+        currentState = WidgetState.FAN
+
         val animator = createAnimator(animate, onEnd)
         animator.playTogether(
             createAnimator(BackupCardType.ORIGIN, createFanProperties(BackupCardType.ORIGIN)),
@@ -46,6 +60,8 @@ class BackupCardsWidget(
     }
 
     fun toLeapfrog(animate: Boolean = true, onEnd: () -> Unit = {}) {
+        currentState = WidgetState.LEAPFROG
+
         val animator = createAnimator(animate, onEnd)
         animator.playTogether(
             createAnimator(BackupCardType.ORIGIN, createLeapfrogProperties(BackupCardType.ORIGIN)),
@@ -60,15 +76,6 @@ class BackupCardsWidget(
             animator.start()
         }
     }
-//
-//    fun toActivate(animate: Boolean = true, onEnd: () -> Unit = {}) {
-//        val animator = createAnimator(animate, onEnd)
-//        animator.playTogether(
-//            createAnimator(TwinCardNumber.First, createActivateProperties(TwinCardNumber.First)),
-//            createAnimator(TwinCardNumber.Second, createActivateProperties(TwinCardNumber.Second))
-//        )
-//        animator.start()
-//    }
 
     private fun createAnimator(animate: Boolean, onEnd: () -> Unit): AnimatorSet {
         return AnimatorSet().apply {
@@ -196,6 +203,8 @@ class BackupCardsWidget(
     fun getSecondBackupCardView(): ImageView {
         return getLeapViewByCardNumber(BackupCardType.SECOND_BACKUP).view as ImageView
     }
+
+    enum class WidgetState { WELCOME, FOLDED, FAN, LEAPFROG }
 }
 
 
