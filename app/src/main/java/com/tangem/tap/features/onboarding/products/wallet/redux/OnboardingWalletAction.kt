@@ -22,7 +22,7 @@ sealed class OnboardingWalletAction : Action {
 sealed class BackupAction : Action {
 
     object DetermineBackupStep : BackupAction()
-    object IntroduceBackup : BackupAction()
+    data class IntroduceBackup(val buyCardsUrl: String? = null) : BackupAction()
     object StartBackup : BackupAction()
     object DismissBackup : BackupAction()
 
