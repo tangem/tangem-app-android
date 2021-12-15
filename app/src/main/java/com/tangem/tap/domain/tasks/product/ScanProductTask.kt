@@ -22,7 +22,6 @@ import com.tangem.operations.PreflightReadTask
 import com.tangem.operations.ScanTask
 import com.tangem.operations.backup.PrimaryCard
 import com.tangem.operations.backup.StartPrimaryCardLinkingTask
-import com.tangem.operations.derivation.DeriveWalletPublicKeysTask
 import com.tangem.operations.issuerAndUserData.ReadIssuerDataCommand
 import com.tangem.tap.common.extensions.ByteArrayKey
 import com.tangem.tap.common.extensions.toMapKey
@@ -32,7 +31,9 @@ import com.tangem.tap.domain.TapWorkarounds
 import com.tangem.tap.domain.TapWorkarounds.getTangemNoteBlockchain
 import com.tangem.tap.domain.TapWorkarounds.isExcluded
 import com.tangem.tap.domain.TapWorkarounds.isNotSupportedInThatRelease
+import com.tangem.tap.domain.extensions.getPrimaryCurve
 import com.tangem.tap.domain.extensions.getSingleWallet
+import com.tangem.tap.domain.tasks.DerivationTask
 import com.tangem.tap.domain.tokens.CurrenciesRepository
 import com.tangem.tap.domain.twins.TwinsHelper
 import com.tangem.tap.preferencesStorage
@@ -237,10 +238,8 @@ private class ScanWalletProcessor(
         session: CardSession,
         callback: (result: CompletionResult<ScanResponse>) -> Unit
     ) {
-        val derivationPaths = collectDerivationPaths(card)?.distinct()
-        val wallet = card.wallets.firstOrNull { it.curve == EllipticCurve.Secp256k1 }
-
-        if (derivationPaths.isNullOrEmpty() || wallet == null || wallet.chainCode == null) {
+        val derivations = collectDerivations(card)
+        if (derivations.isEmpty()) {
             callback(
                 CompletionResult.Success(
                     ScanResponse(
@@ -254,15 +253,14 @@ private class ScanWalletProcessor(
             return
         }
 
-        DeriveWalletPublicKeysTask(wallet.publicKey, derivationPaths).run(session) { result ->
+        DerivationTask(derivations).run(session) { result ->
             when (result) {
                 is CompletionResult.Success -> {
-                    val derivedKeys = mapOf(wallet.publicKey.toMapKey() to result.data)
                     val response = ScanResponse(
                         card = card,
                         productType = ProductType.Wallet,
                         walletData = session.environment.walletData,
-                        derivedKeys = derivedKeys,
+                        derivedKeys = result.data.entries,
                         primaryCard = primaryCard
                     )
                     callback(CompletionResult.Success(response))
@@ -273,8 +271,8 @@ private class ScanWalletProcessor(
         }
     }
 
-    private fun collectDerivationPaths(card: Card): List<DerivationPath>? {
-        val currenciesRepository = currenciesRepository ?: return null
+    private fun getBlockchainsToDerive(card: Card): List<Blockchain> {
+        val currenciesRepository = currenciesRepository ?: return emptyList()
         val cardCurrencies = currenciesRepository.loadCardCurrencies(card.cardId)
 
         val blockchainsToDerive = if (cardCurrencies == null) {
@@ -293,10 +291,31 @@ private class ScanWalletProcessor(
                 )
             )
         }
+        return blockchainsToDerive.distinct()
+    }
 
-        return blockchainsToDerive.toSet()
-            .filter { it.getSupportedCurves()?.contains(EllipticCurve.Secp256k1) == true }
-            .mapNotNull { it.derivationPath() }
+    private fun collectDerivations(card: Card): Map<ByteArrayKey, List<DerivationPath>> {
+        val blockchains = getBlockchainsToDerive(card)
+        val derivations = mutableMapOf<ByteArrayKey, List<DerivationPath>>()
+
+        blockchains.forEach { blockchain ->
+            val curve = blockchain.getPrimaryCurve()
+
+            val wallet = card.wallets.firstOrNull { it.curve == curve } ?: return@forEach
+            if (wallet.chainCode == null) return@forEach
+
+            val key = wallet.publicKey.toMapKey()
+            val path = blockchain.derivationPath()
+            if (path != null) {
+                val addedDerivations = derivations[key]
+                if (addedDerivations != null) {
+                    derivations[key] = addedDerivations + path
+                } else {
+                    derivations[key] = listOf(path)
+                }
+            }
+        }
+        return derivations
     }
 }
 
