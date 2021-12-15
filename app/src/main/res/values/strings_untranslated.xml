@@ -292,5 +292,6 @@
     <string name="details_row_title_reset_factory_settings" translatable="false">Reset to factory settings</string>
     <string name="details_row_title_reset_factory_settings_warning" translatable="false">This action is irreversible. If, after resetting the card, someone sends funds to it, then you will not be able to withdraw them.</string>
 
+    <string name="details_manage_security_access_code_disclaimer" translatable="false">Access code is available only for cards with a backup.</string>
 
 </resources>
