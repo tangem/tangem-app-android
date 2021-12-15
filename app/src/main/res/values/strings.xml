@@ -109,7 +109,7 @@
     <string name="alert_old_device_this_card">You may experience NFC problems with some iPhone 7/7+ during the extraction</string>
     <string name="alert_card_signed_transactions">This card has been already topped up and signed transactions in the past. Consider immediate withdrawal of all funds if you have received this card from an untrusted source.</string>
     <string name="alert_title">Warning</string>
-    <string name="alert_unsupported_card">This card it is not designed to work with Tangem</string>
+    <string name="alert_unsupported_card">This card is not designed to work with this app</string>
     <string name="alert_developer_card">The card you scanned is a development card. Don’t accept it as a payment</string>
     <string name="alert_old_card">Tangem cards manufactured before September 2019 cannot currently be extracted with an iPhone. We’re working hard with Apple to make it possible in future versions of iOS.</string>
 
