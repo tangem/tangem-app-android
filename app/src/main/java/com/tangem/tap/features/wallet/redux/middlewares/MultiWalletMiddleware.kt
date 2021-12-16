@@ -85,7 +85,7 @@ class MultiWalletMiddleware {
             }
             is WalletAction.MultiWallet.FindBlockchainsInUse -> {
                 val scanResponse = globalState.scanResponse ?: return
-                if (scanResponse.isTangemWallet()) return
+                if (scanResponse.supportsHdWallet()) return
 
                 val cardFirmware = scanResponse.card.firmwareVersion
                 val blockchains = currenciesRepository.getBlockchains(cardFirmware)
@@ -125,7 +125,7 @@ class MultiWalletMiddleware {
             }
             is WalletAction.MultiWallet.FindTokensInUse -> {
                 val scanResponse = globalState.scanResponse ?: return
-                if (scanResponse.isTangemWallet()) return
+                if (scanResponse.supportsHdWallet()) return
 
                 val walletFactory = tapWalletManager.walletManagerFactory
                 val card = scanResponse.card
