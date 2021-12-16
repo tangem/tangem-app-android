@@ -80,7 +80,7 @@ private fun handleNoteAction(action: Action, dispatch: DispatchFunction) {
                 withMainContext {
                     when (result) {
                         is CompletionResult.Success -> {
-                            val updatedResponse = scanResponse.copy(card = result.data)
+                            val updatedResponse = scanResponse.copy(card = result.data.card)
                             onboardingManager.scanResponse = updatedResponse
                             onboardingManager.activationStarted(updatedResponse.card.cardId)
                             store.dispatch(OnboardingNoteAction.SetStepOfScreen(OnboardingNoteStep.TopUpWallet))
