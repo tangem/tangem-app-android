@@ -67,7 +67,9 @@ private fun handleOtherCardsAction(action: Action, dispatch: DispatchFunction) {
                 withMainContext {
                     when (result) {
                         is CompletionResult.Success -> {
-                            val updatedResponse = onboardingManager.scanResponse.copy(card = result.data)
+                            val updatedResponse = onboardingManager.scanResponse.copy(
+                                card = result.data.card
+                            )
                             onboardingManager.scanResponse = updatedResponse
                             onboardingManager.activationStarted(updatedResponse.card.cardId)
 
