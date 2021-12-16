@@ -7,7 +7,7 @@ import com.tangem.wallet.R
 
 sealed class CurrencyListItem {
     var isAdded: Boolean = false
-    var isLock: Boolean = false
+    var isLocked: Boolean = false
 
     data class TokenListItem(val token: Token) : CurrencyListItem()
     data class BlockchainListItem(val blockchain: Blockchain) : CurrencyListItem()
