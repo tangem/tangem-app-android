@@ -76,7 +76,11 @@ private fun handleWalletAction(action: Action) {
                         is CompletionResult.Success -> {
                             //here we must use updated scanResponse after createWallet & derivation
                             val updatedResponse =
-                                globalState.onboardingState.onboardingManager.scanResponse.copy(card = result.data)
+                                globalState.onboardingState.onboardingManager.scanResponse.copy(
+                                    card = result.data.card,
+                                    derivedKeys = result.data.derivedKeys,
+                                    primaryCard = result.data.primaryCard
+                                )
                             onboardingManager.scanResponse = updatedResponse
                             onboardingManager.activationStarted(updatedResponse.card.cardId)
                             store.dispatch(OnboardingWalletAction.ProceedBackup)
@@ -106,7 +110,14 @@ private fun handleWalletAction(action: Action) {
                 BackupService.State.FinalizingPrimaryCard -> BackupAction.PrepareToWritePrimaryCard
                 is BackupService.State.FinalizingBackupCard ->
                     BackupAction.PrepareToWriteBackupCard(backupState.index)
-                else -> BackupAction.IntroduceBackup
+                else -> {
+                    val url = if (card?.issuer?.name?.lowercase()?.contains("tangem") == true) {
+                        BUY_WALLET_URL
+                    } else {
+                        null
+                    }
+                    BackupAction.IntroduceBackup(url)
+                }
             }
             store.dispatch(newAction)
         }
@@ -164,6 +175,13 @@ private fun handleBackupAction(action: BackupAction) {
     when (action) {
         is BackupAction.StartBackup -> {
             backupService.discardSavedBackup()
+            val primaryCard = scanResponse?.primaryCard
+            if (primaryCard != null) {
+                backupService.setPrimaryCard(primaryCard)
+                store.dispatch(BackupAction.StartAddingBackupCards)
+            } else {
+                store.dispatch(BackupAction.StartAddingPrimaryCard)
+            }
         }
         is BackupAction.ScanPrimaryCard -> {
             backupService.readPrimaryCard(cardId = card?.cardId) { result ->
