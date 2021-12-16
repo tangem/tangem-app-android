@@ -10,6 +10,7 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.SuccessResponse
 import com.tangem.common.card.Card
 import com.tangem.common.card.FirmwareVersion
+import com.tangem.common.core.CardIdDisplayFormat
 import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.Config
 import com.tangem.common.core.TangemSdkError
@@ -137,7 +138,11 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
     }
 
     fun changeDisplayedCardIdNumbersCount(scanResponse: ScanResponse) {
-        tangemSdk.config.cardIdDisplayedNumbersCount = if (scanResponse.isTangemTwins()) 4 else null
+        tangemSdk.config.cardIdDisplayFormat = if (scanResponse.isTangemTwins()) {
+            CardIdDisplayFormat.LastLunh(4)
+        } else {
+            CardIdDisplayFormat.Full
+        }
     }
 
     companion object {
