@@ -2,6 +2,7 @@ package com.tangem.tap.domain.extensions
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
+import com.tangem.common.card.EllipticCurve
 import java.math.BigDecimal
 
 
@@ -23,6 +24,20 @@ fun Blockchain.amountToCreateAccount(token: Token? = null): BigDecimal? {
 
 fun Blockchain.minimalAmount(): BigDecimal {
     return 1.toBigDecimal().movePointLeft(decimals())
+}
+
+fun Blockchain.getPrimaryCurve(): EllipticCurve? {
+    return when {
+        getSupportedCurves().contains(EllipticCurve.Secp256k1) -> {
+            EllipticCurve.Secp256k1
+        }
+        getSupportedCurves().contains(EllipticCurve.Ed25519) -> {
+            EllipticCurve.Ed25519
+        }
+        else -> {
+            null
+        }
+    }
 }
 
 private const val NODL = "NODL"
