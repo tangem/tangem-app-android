@@ -2,6 +2,7 @@ package com.tangem.tap.features.details.redux.walletconnect
 
 import android.app.Activity
 import com.tangem.tap.common.redux.NotificationAction
+import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.wallet.R
 import com.trustwallet.walletconnect.models.ethereum.WCEthereumSignMessage
 import com.trustwallet.walletconnect.models.ethereum.WCEthereumTransaction
@@ -27,13 +28,16 @@ sealed class WalletConnectAction : Action {
     data class OpenSession(
         val wcUri: String,
         val wallet: WalletForSession,
+        val scanResponse: ScanResponse
     ) : WalletConnectAction()
 
     object RefuseOpeningSession : WalletConnectAction()
 
     data class OpeningSessionTimeout(val session: WCSession) : WalletConnectAction()
 
-    data class AcceptOpeningSession(val session: WalletConnectSession) : WalletConnectAction()
+    data class AcceptOpeningSession(
+        val session: WalletConnectSession, val chainId: Int?,
+    ) : WalletConnectAction()
 
     data class ApproveSession(
         val session: WCSession,
