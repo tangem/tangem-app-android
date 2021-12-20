@@ -16,6 +16,9 @@ class WalletConnectReducer {
                         sessions = state.sessions + action.session
                     )
                 }
+                is  WalletConnectAction.OpenSession -> {
+                    state.copy(scanResponse = action.scanResponse)
+                }
                 is WalletConnectAction.SetSessionsRestored ->
                     WalletConnectState(sessions = action.sessions)
 
