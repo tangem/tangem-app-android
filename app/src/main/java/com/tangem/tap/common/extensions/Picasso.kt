@@ -32,6 +32,9 @@ fun Picasso.loadCurrenciesIcon(
         token?.symbol == QCX -> {
             this.load(R.drawable.ic_qcx)?.into(imageView)
         }
+        token?.symbol == VOYR -> {
+            this.load(R.drawable.ic_voyr)?.into(imageView)
+        }
         url != null -> {
             if (token != null) {
                 setTokenImage(imageView, textView, token)
@@ -60,6 +63,7 @@ fun Picasso.loadCurrenciesIcon(
 }
 
 private const val QCX = "QCX"
+private const val VOYR = "VOYRME"
 
 private fun setOfflineCurrencyImage(
     imageView: ImageView,
