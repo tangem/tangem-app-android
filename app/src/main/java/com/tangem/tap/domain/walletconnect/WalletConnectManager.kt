@@ -60,6 +60,15 @@ class WalletConnectManager {
         setupConnectionTimeoutCheck(session)
     }
 
+    fun updateSession(session: WalletConnectSession) {
+        val updatedSession = sessions[session.session]?.copy(
+            wallet = session.wallet
+        )
+        if (updatedSession != null) {
+            sessions[session.session] = updatedSession
+        }
+    }
+
     private fun setupConnectionTimeoutCheck(session: WCSession) {
         scope.launch {
             delay(20_000)
@@ -81,7 +90,7 @@ class WalletConnectManager {
                     client = WCClient(httpClient = okHttpClient),
                     session = session.session,
                     peerMeta = session.peerMeta,
-                    wallet = session.wallet
+                    wallet = session.wallet,
                 )
                     .also {
                         setListeners(it.client)
@@ -96,11 +105,12 @@ class WalletConnectManager {
         val activeData = sessions[session] ?: return
         removeSimilarSessions(activeData)
 
-        val key = activeData.wallet.derivedPublicKey ?: activeData.wallet.walletPublicKey
-        val accounts = listOf(Blockchain.Ethereum.makeAddresses(key).first().value)
+        val key = activeData.wallet.derivedPublicKey ?: activeData.wallet.walletPublicKey ?: return
+        val blockchain = activeData.wallet.getBlockchainForSession()
+        val accounts = listOf(blockchain.makeAddresses(key).first().value)
         val approved = activeData.client.approveSession(
             accounts = accounts,
-            chainId = activeData.wallet.chainId
+            chainId = blockchain.getChainId() ?: Blockchain.Ethereum.getChainId()!!
         )
         if (approved) {
             val walletConnectSession = WalletConnectSession(
@@ -119,7 +129,7 @@ class WalletConnectManager {
 
     fun removeSimilarSessions(activeData: WalletConnectActiveData) {
         val sessionsToRemove = sessions.filter {
-            it.value.wallet.walletPublicKey == activeData.wallet.walletPublicKey
+            it.value.wallet.walletPublicKey?.equals(activeData.wallet.walletPublicKey) == true
                     && it.value.peerMeta?.url == activeData.peerMeta?.url
                     && it.value.session != activeData.session
         }
@@ -246,7 +256,9 @@ class WalletConnectManager {
                 val sessionData = data.toWalletConnectSession()
                 sessionData?.let {
                     store.dispatchOnMain(WalletConnectAction.AcceptOpeningSession(
-                        sessionData))
+                        session = sessionData,
+                        chainId = client.chainId?.toIntOrNull()
+                    ))
                 }
                 FirebaseAnalyticsHandler.logWcEvent(
                     FirebaseAnalyticsHandler.WcAnalyticsEvent.Session(
