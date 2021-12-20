@@ -35,17 +35,16 @@ class WalletConnectSdkHelper {
     ): WcTransactionData? {
         val factory = store.state.globalState.tapWalletManager.walletManagerFactory
         val publicKey = Wallet.PublicKey(
-            session.wallet.walletPublicKey,
+            session.wallet.walletPublicKey ?: return null,
             session.wallet.derivedPublicKey,
             session.wallet.derivationPath,
         )
-        val walletManager = factory.makeEthereumWalletManager(
-            session.wallet.cardId,
-            publicKey,
-            emptyList(),
-            isTestNet = session.wallet.isTestNet
-        ) ?: return null
-
+        val blockchain = session.wallet.getBlockchainForSession()
+        val walletManager = factory.makeWalletManager(
+                session.wallet.cardId,
+                blockchain,
+                publicKey
+            ) ?: return null
 
         try {
             walletManager.update()
@@ -53,8 +52,6 @@ class WalletConnectSdkHelper {
             Timber.e(exception)
             return null
         }
-
-        val blockchain = walletManager.wallet.blockchain
 
         val balance =
             walletManager.wallet.amounts[AmountType.Coin]?.value ?: return null
@@ -213,12 +210,12 @@ class WalletConnectSdkHelper {
 
     suspend fun signPersonalMessage(hashToSign: ByteArray, wallet: WalletForSession): String? {
         val key = wallet.derivedPublicKey ?: wallet.walletPublicKey
-        val command = SignHashCommand(hashToSign, wallet.walletPublicKey, wallet.derivationPath)
+        val command = SignHashCommand(hashToSign, wallet.walletPublicKey!!, wallet.derivationPath)
         return when (val result = tangemSdkManager.runTaskAsync(command, wallet.cardId)) {
             is CompletionResult.Success -> {
                 val hash = result.data.signature
                 return EthereumUtils.prepareSignedMessageData(
-                    hash, hashToSign, CryptoUtils.decompressPublicKey(key)
+                    hash, hashToSign, CryptoUtils.decompressPublicKey(key!!)
                 )
             }
             is CompletionResult.Failure -> {
