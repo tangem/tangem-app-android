@@ -778,5 +778,16 @@
             "curve" : "secp256k1",
             "testnet" : false
         }
+    },
+    {
+        "decimalCount" : 18,
+        "symbol" : "VOYRME",
+        "name" : "VOYR",
+        "contractAddress" : "0x33a887Cf76383be39DC51786e8f641c9D6665D84",
+        "blockchain" : {
+            "key" : "bsc",
+            "curve" : "secp256k1",
+            "testnet" : false
+        }
     }
 ]
