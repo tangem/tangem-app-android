@@ -196,7 +196,7 @@ class CurrenciesAdapter : ListAdapter<CurrencyListItem, RecyclerView.ViewHolder>
         }
 
         private fun modifyAddTokenButton(currency: CurrencyListItem) {
-            if (currency.isLock) {
+            if (currency.isLocked) {
                 view.btn_add_token.setText(R.string.common_add)
                 view.btn_add_token.isEnabled = false
             } else {

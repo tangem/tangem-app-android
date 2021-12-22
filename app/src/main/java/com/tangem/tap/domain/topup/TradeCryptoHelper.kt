@@ -38,6 +38,8 @@ class TradeCryptoHelper {
 
         private const val TRANSACTION_RECEIPT_PATH = "transaction_receipt?transactionId="
 
+        private const val BASE_CURRENCY_USD = "USD"
+
         fun getUrl(
             action: Action,
             blockchain: Blockchain?,
@@ -56,6 +58,7 @@ class TradeCryptoHelper {
                     baseUrl = BASE_URL_BUY
                     originalQuery = API_KEY_PATH + apiKey.urlEncode() +
                             CURRENCY_PATH + cryptoCurrencyName.urlEncode() +
+                            BASE_CURRENCY_PATH + BASE_CURRENCY_USD.urlEncode() +
                             WALLET_ADDRESS_PATH + walletAddress.urlEncode() +
                             REDIRECT_URL_PATH + REDIRECT_URL_BUY.urlEncode()
                 }
