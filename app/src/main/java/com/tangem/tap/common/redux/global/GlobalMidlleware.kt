@@ -94,8 +94,8 @@ private val globalMiddlewareHandler: Middleware<AppState> = { dispatch, appState
                             action.shouldDeriveWC,
                             action.messageResId
                         )
-                        store.dispatch(GlobalAction.ScanFailsCounter.ChooseBehavior(result))
                         withMainContext {
+                            store.dispatch(GlobalAction.ScanFailsCounter.ChooseBehavior(result))
                             when (result) {
                                 is CompletionResult.Success -> {
                                     tangemSdkManager.changeDisplayedCardIdNumbersCount(result.data)
