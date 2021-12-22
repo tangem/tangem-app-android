@@ -4,5 +4,6 @@ package com.tangem.tap.domain
 [REDACTED_AUTHOR]
  */
 enum class ProductType {
-    Note, Wallet, Twins, Other
+    Note, Twins, Wallet
+
 }
