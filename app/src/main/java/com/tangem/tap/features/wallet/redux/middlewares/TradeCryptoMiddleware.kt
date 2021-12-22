@@ -58,12 +58,12 @@ class TradeCryptoMiddleware {
         }
 
         val url = TradeCryptoHelper.getUrl(
-            exchangeAction,
-            currency?.blockchain,
-            currencySymbol,
-            defaultAddress,
-            config.moonPayApiKey,
-            config.moonPayApiSecretKey
+            action = exchangeAction,
+            blockchain = currency?.blockchain,
+            cryptoCurrencyName = currencySymbol,
+            walletAddress = defaultAddress,
+            apiKey = config.moonPayApiKey,
+            secretKey = config.moonPayApiSecretKey
         )
         Timber.d("Moonpay $exchangeAction URL: $url")
         store.dispatchOnMain(NavigationAction.OpenUrl(url))
