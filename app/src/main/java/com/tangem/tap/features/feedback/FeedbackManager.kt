@@ -40,7 +40,7 @@ class FeedbackManager(
         val fileLog = if (emailData is ScanFailsEmail) createLogFile() else null
         activity.sendEmail(
             email = getSupportEmail(),
-            subject = emailData.subject, message = emailData.joinTogether(infoHolder),
+            subject = emailData.subject, message = emailData.joinTogether(infoHolder, emailData !is ScanFailsEmail),
             file = fileLog,
             onFail = onFail
         )
@@ -216,9 +216,14 @@ interface EmailData {
 
     fun createOptionalMessage(infoHolder: AdditionalEmailInfo): String
 
-    fun joinTogether(infoHolder: AdditionalEmailInfo): String {
+    fun joinTogether(infoHolder: AdditionalEmailInfo, allowToErasePhoneInfo: Boolean): String {
+        val allowToErasePhoneInfoDisclaimer = if (allowToErasePhoneInfo) {
+            "Following information is optional. You can erase it if you don’t want to share it.\n\n"
+        } else {
+            ""
+        }
         return "$mainMessage\n\n\n\n" +
-                "Following information is optional. You can erase it if you don’t want to share it.\n" +
+                allowToErasePhoneInfoDisclaimer +
                 createOptionalMessage(infoHolder)
     }
 }
