@@ -1,6 +1,7 @@
 package com.tangem.tap.domain
 
 import CreateProductWalletTask
+import CreateProductWalletTaskResponse
 import android.content.Context
 import com.tangem.Message
 import com.tangem.TangemSdk
@@ -9,20 +10,22 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.SuccessResponse
 import com.tangem.common.card.Card
 import com.tangem.common.card.FirmwareVersion
+import com.tangem.common.core.CardIdDisplayFormat
 import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.Config
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.hdWallet.DerivationPath
 import com.tangem.operations.CommandResponse
-import com.tangem.operations.derivation.DeriveWalletPublicKeysTask
-import com.tangem.operations.derivation.ExtendedPublicKeyList
 import com.tangem.operations.pins.CheckUserCodesCommand
 import com.tangem.operations.pins.CheckUserCodesResponse
 import com.tangem.operations.pins.SetUserCodeCommand
 import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.AnalyticsHandler
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
+import com.tangem.tap.common.extensions.ByteArrayKey
 import com.tangem.tap.domain.tasks.CreateWalletAndRescanTask
+import com.tangem.tap.domain.tasks.DerivationTask
+import com.tangem.tap.domain.tasks.DerivationTaskResponse
 import com.tangem.tap.domain.tasks.product.ResetToFactorySettingsTask
 import com.tangem.tap.domain.tasks.product.ScanProductTask
 import com.tangem.tap.domain.tasks.product.ScanResponse
@@ -44,11 +47,13 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         analyticsHandler.triggerEvent(AnalyticsEvent.READY_TO_SCAN, null)
 
         val message = Message(context.getString(messageRes ?: R.string.initial_message_scan_header))
-        return runTaskAsyncReturnOnMain(ScanProductTask(null, currenciesRepository, shouldDeriveWC), null, message)
+        return runTaskAsyncReturnOnMain(ScanProductTask(null, currenciesRepository), null, message)
             .also { sendScanFailuresToAnalytics(analyticsHandler, it) }
     }
 
-    suspend fun createProductWallet(scanResponse: ScanResponse): CompletionResult<Card> {
+    suspend fun createProductWallet(
+        scanResponse: ScanResponse
+    ): CompletionResult<CreateProductWalletTaskResponse> {
         return runTaskAsync(
             CreateProductWalletTask(scanResponse.productType),
             scanResponse.card.cardId,
@@ -74,10 +79,9 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
 
     suspend fun derivePublicKeys(
         cardId: String,
-        walletPublicKey: ByteArray,
-        derivationPaths: List<DerivationPath>
-    ): CompletionResult<ExtendedPublicKeyList> {
-        return runTaskAsyncReturnOnMain(DeriveWalletPublicKeysTask(walletPublicKey, derivationPaths), cardId)
+        derivations: Map<ByteArrayKey, List<DerivationPath>>
+    ): CompletionResult<DerivationTaskResponse> {
+        return runTaskAsyncReturnOnMain(DerivationTask(derivations), cardId)
     }
 
     suspend fun resetToFactorySettings(card: Card): CompletionResult<Card> {
@@ -134,7 +138,11 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
     }
 
     fun changeDisplayedCardIdNumbersCount(scanResponse: ScanResponse) {
-        tangemSdk.config.cardIdDisplayedNumbersCount = if (scanResponse.isTangemTwins()) 4 else null
+        tangemSdk.config.cardIdDisplayFormat = if (scanResponse.isTangemTwins()) {
+            CardIdDisplayFormat.LastLunh(4)
+        } else {
+            CardIdDisplayFormat.Full
+        }
     }
 
     companion object {
