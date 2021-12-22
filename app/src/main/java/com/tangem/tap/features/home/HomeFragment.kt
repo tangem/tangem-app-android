@@ -13,6 +13,7 @@ import com.tangem.tap.common.transitions.FrontCardExitTransition
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.home.redux.HomeState
 import com.tangem.tap.features.onboarding.products.BaseOnboardingFragment
+import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fragment_onboarding_main.*
@@ -35,6 +36,8 @@ class HomeFragment : BaseOnboardingFragment<HomeState>() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+
+        store.dispatch(BackupAction.CheckForUnfinishedBackup)
 
         toolbar.hide()
         val shareTransition = FragmentShareTransition(
