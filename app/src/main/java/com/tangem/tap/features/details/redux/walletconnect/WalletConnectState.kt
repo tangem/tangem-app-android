@@ -89,6 +89,12 @@ sealed class WalletConnectDialog : StateDialog {
         WalletConnectDialog()
 
     data class PersonalSign(val data: PersonalSignDialogData) : WalletConnectDialog()
+    data class BnbTransactionDialog(val data: BinanceMessageData,
+                                    val session: WCSession,
+                                    val sessionId: Long,
+                                    val cardId: String,
+                                    val dAppName: String
+    ) : WalletConnectDialog()
 }
 
 data class WcTransactionData(
@@ -102,7 +108,7 @@ data class WcTransactionData(
 
 enum class WcTransactionType {
     EthSignTransaction,
-    EthSendTransaction,
+    EthSendTransaction
 }
 
 data class WcPersonalSignData(
@@ -112,3 +118,28 @@ data class WcPersonalSignData(
     val dialogData: PersonalSignDialogData,
 
     )
+
+sealed class BinanceMessageData(
+    val address: String,
+    val data: ByteArray,
+) {
+    class Trade(
+        val tradeData: List<TradeData>,
+        address: String,
+        data: ByteArray,
+    ) : BinanceMessageData(address, data)
+
+    class Transfer(
+        val outputAddress: String,
+        val amount: String,
+        address: String,
+        data: ByteArray,
+    ) : BinanceMessageData(address, data)
+}
+
+data class TradeData(
+    val price: String,
+    val quantity: String,
+    val amount: String,
+    val symbol: String
+)
