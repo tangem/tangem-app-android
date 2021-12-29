@@ -12,6 +12,7 @@ import com.tangem.tap.domain.TapWorkarounds.isTestCard
 import com.tangem.tap.domain.extensions.makeWalletManagerForApp
 import com.tangem.tap.domain.isMultiwalletAllowed
 import com.tangem.tap.domain.tasks.product.ScanResponse
+import com.tangem.tap.domain.walletconnect.BnbHelper
 import com.tangem.tap.domain.walletconnect.WalletConnectManager
 import com.tangem.tap.domain.walletconnect.WalletConnectNetworkUtils
 import com.tangem.tap.features.wallet.redux.WalletAction
@@ -135,6 +136,39 @@ class WalletConnectMiddleware {
                     }
                     is WalletConnectAction.SignMessage -> {
                         walletConnectManager.sendSignedMessage(action.session)
+                    }
+                    is WalletConnectAction.BinanceTransaction.Trade -> {
+                        val messageData = BnbHelper.createMessageData(action.order)
+                        store.dispatchOnMain(
+                            GlobalAction.ShowDialog(
+                                WalletConnectDialog.BnbTransactionDialog(
+                                    data = messageData,
+                                    session = action.sessionData.session,
+                                    sessionId = action.id,
+                                    cardId = action.sessionData.wallet.cardId,
+                                    dAppName = action.sessionData.peerMeta.name
+                                )
+                            )
+                        )
+                    }
+                    is WalletConnectAction.BinanceTransaction.Transfer -> {
+                        val messageData = BnbHelper.createMessageData(action.order)
+                        store.dispatchOnMain(
+                            GlobalAction.ShowDialog(
+                                WalletConnectDialog.BnbTransactionDialog(
+                                    data = messageData,
+                                    session = action.sessionData.session,
+                                    sessionId = action.id,
+                                    cardId = action.sessionData.wallet.cardId,
+                                    dAppName = action.sessionData.peerMeta.name
+                                )
+                            )
+                        )
+                    }
+                    is WalletConnectAction.BinanceTransaction.Sign -> {
+                        walletConnectManager.signBnb(
+                            action.id, action.data, action.sessionData
+                        )
                     }
                 }
                 next(action)
