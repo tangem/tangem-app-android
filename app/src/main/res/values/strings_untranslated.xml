@@ -294,4 +294,21 @@
 
     <string name="details_manage_security_access_code_disclaimer" translatable="false">Access code is available only for cards with a backup.</string>
 
+
+
+    <string name="wallet_connect_bnb_transaction_signed" translatable="false">The BNB transaction has been successfully signed and sent to the Dapp</string>
+    <string name="wallet_connect_bnb_sign_message" translatable="false">Dapp %s, requesting to\n
+sign BNB transaction with\n
+Card: %s\n
+\n
+%s</string>
+    <string name="wallet_connect_bnb_transaction_message" translatable="false">Transaction details:\n
+From: %s\n
+To: %s\n
+Amount: %s</string>
+    <string name="wallet_connect_bnb_trade_order_message" translatable="false">Trade order for %s\n
+Price: %s\n
+Amount to receive: %s\n
+Amount to pay: %s</string>
+
 </resources>
