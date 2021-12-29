@@ -4,6 +4,8 @@ import android.app.Activity
 import com.tangem.tap.common.redux.NotificationAction
 import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.wallet.R
+import com.trustwallet.walletconnect.models.binance.WCBinanceTradeOrder
+import com.trustwallet.walletconnect.models.binance.WCBinanceTransferOrder
 import com.trustwallet.walletconnect.models.ethereum.WCEthereumSignMessage
 import com.trustwallet.walletconnect.models.ethereum.WCEthereumTransaction
 import com.trustwallet.walletconnect.models.session.WCSession
@@ -82,5 +84,21 @@ sealed class WalletConnectAction : Action {
 
     object NotifyCameraPermissionIsRequired : WalletConnectAction(), NotificationAction {
         override val messageResource = R.string.common_camera_denied_alert_message
+    }
+
+    object BinanceTransaction : WalletConnectAction() {
+        data class Trade(
+            val id: Long, val order: WCBinanceTradeOrder,
+            val sessionData: WalletConnectSession,
+        ) : WalletConnectAction()
+
+        data class Transfer(
+            val id: Long, val order: WCBinanceTransferOrder,
+            val sessionData: WalletConnectSession,
+        ) : WalletConnectAction()
+
+        data class Sign(
+            val id: Long, val data: ByteArray, val sessionData: WCSession,
+            ) : WalletConnectAction()
     }
 }
