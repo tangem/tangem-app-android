@@ -11,10 +11,7 @@ import com.tangem.tap.store
 import com.tangem.tap.walletConnectRepository
 import com.trustwallet.walletconnect.WCClient
 import com.trustwallet.walletconnect.models.WCPeerMeta
-import com.trustwallet.walletconnect.models.binance.WCBinanceCancelOrder
-import com.trustwallet.walletconnect.models.binance.WCBinanceTradeOrder
-import com.trustwallet.walletconnect.models.binance.WCBinanceTransferOrder
-import com.trustwallet.walletconnect.models.binance.WCBinanceTxConfirmParam
+import com.trustwallet.walletconnect.models.binance.*
 import com.trustwallet.walletconnect.models.ethereum.WCEthereumSignMessage
 import com.trustwallet.walletconnect.models.ethereum.WCEthereumTransaction
 import com.trustwallet.walletconnect.models.session.WCSession
@@ -26,6 +23,17 @@ import okhttp3.logging.HttpLoggingInterceptor
 import timber.log.Timber
 import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.collections.MutableMap
+import kotlin.collections.filter
+import kotlin.collections.first
+import kotlin.collections.forEach
+import kotlin.collections.get
+import kotlin.collections.listOf
+import kotlin.collections.map
+import kotlin.collections.mutableMapOf
+import kotlin.collections.set
+import kotlin.collections.toMap
+import kotlin.collections.toMutableMap
 
 class WalletConnectManager {
 
@@ -400,6 +408,29 @@ class WalletConnectManager {
             val session = client.session
             if (session != null) {
                 onSessionClosed(session)
+            }
+        }
+        client.onCustomRequest = { id: Long, data: String ->
+            Timber.d("Custom Request")
+            Timber.d(data)
+
+            val message = EthSignHelper.tryToParseEthTypedMessage(data)
+            if (message != null) {
+                Timber.d("onEthSign_v4: $message")
+                FirebaseAnalyticsHandler.logWcEvent(
+                    FirebaseAnalyticsHandler.WcAnalyticsEvent.Action(
+                        FirebaseAnalyticsHandler.WcAction.PersonalSign
+                    )
+                )
+                sessions[client.session]?.toWalletConnectSession()?.let { sessionData ->
+                    store.dispatchOnMain(
+                        WalletConnectAction.HandlePersonalSignRequest(
+                            message,
+                            sessionData,
+                            id
+                        )
+                    )
+                }
             }
         }
     }
