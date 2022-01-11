@@ -132,7 +132,7 @@ class MultiWalletMiddleware {
                 val walletManager = walletState?.getWalletManager(Blockchain.Ethereum)
                     ?: walletFactory.makeWalletManagerForApp(scanResponse, Blockchain.Ethereum)
 
-                val tokenFinder = walletManager as TokenFinder
+                val tokenFinder = walletManager as? TokenFinder ?: return
                 scope.launch {
                     val result = tokenFinder.findTokens()
                     withContext(Dispatchers.Main) {
