@@ -212,8 +212,15 @@ class WalletConnectSdkHelper {
         session: WalletConnectSession,
         id: Long,
     ): WcPersonalSignData {
-        val messageData = message.data.removePrefix(HEX_PREFIX).hexToBytes()
-        val messageString = message.data.hexToAscii() ?: message.data
+        val messageData =
+            try {
+                message.data.removePrefix(HEX_PREFIX).hexToBytes()
+            } catch (exception: Exception) {
+                message.data.asciiToHex()!!.hexToBytes()
+            }
+        val messageString = message.data.hexToAscii()
+            ?: EthSignHelper.tryToParseEthTypedMessageString(message.data)
+            ?: message.data
 
         val prefixData = (ETH_MESSAGE_PREFIX + messageData.size.toString()).toByteArray()
         val hashToSign = (prefixData + messageData).toKeccak()
@@ -235,12 +242,23 @@ class WalletConnectSdkHelper {
     }
 
     private fun String.hexToAscii(): String? {
-        return removePrefix(HEX_PREFIX).hexToBytes()
-            .map {
-                val char = it.toInt().toChar()
-                if (char.isAscii()) char else return null
-            }
-            .joinToString("")
+        return try {
+            removePrefix(HEX_PREFIX).hexToBytes()
+                .map {
+                    val char = it.toInt().toChar()
+                    if (char.isAscii()) char else return null
+                }
+                .joinToString("")
+        } catch (exception: Exception) {
+            return null
+        }
+    }
+
+    private fun String.asciiToHex(): String? {
+        return map {
+            if (!it.isAscii()) return null
+            Integer.toHexString(it.code)
+        }.joinToString("")
     }
 
     suspend fun signPersonalMessage(hashToSign: ByteArray, wallet: WalletForSession): String? {
