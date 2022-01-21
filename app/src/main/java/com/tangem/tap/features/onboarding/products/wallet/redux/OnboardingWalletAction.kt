@@ -1,7 +1,6 @@
 package com.tangem.tap.features.onboarding.products.wallet.redux
 
 import android.graphics.Bitmap
-import com.tangem.tap.features.wallet.redux.Artwork
 import org.rekotlin.Action
 
 sealed class OnboardingWalletAction : Action {
@@ -14,7 +13,7 @@ sealed class OnboardingWalletAction : Action {
     object ProceedBackup : OnboardingWalletAction()
 
     object LoadArtwork : OnboardingWalletAction()
-    class SetArtworkUrl(val artwork: Artwork) : OnboardingWalletAction()
+    class SetArtworkUrl(val artworkUrl: String?) : OnboardingWalletAction()
 
     object OnBackPressed : OnboardingWalletAction()
 }
