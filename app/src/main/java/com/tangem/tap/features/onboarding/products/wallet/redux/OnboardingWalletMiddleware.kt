@@ -14,8 +14,8 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.extensions.hasWallets
 import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.features.home.redux.HomeAction
-import com.tangem.tap.features.onboarding.products.note.redux.OnboardingNoteAction
 import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletMiddleware.Companion.BUY_WALLET_URL
+import com.tangem.tap.features.wallet.redux.Artwork
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.Middleware
@@ -61,11 +61,16 @@ private fun handleWalletAction(action: Action) {
             }
             store.dispatch(action)
         }
-        is OnboardingNoteAction.LoadCardArtwork -> {
-//            scope.launch {
-//                val artwork = onboardingManager.loadArtwork()
-//                store.dispatchOnMain(OnboardingWalletAction.SetArtworkUrl(artwork))
-//            }
+        is OnboardingWalletAction.LoadArtwork -> {
+            scope.launch {
+                val artwork = onboardingManager?.loadArtworkUrl()
+                val cardArtwork = if (artwork == Artwork.DEFAULT_IMG_URL) {
+                    null
+                } else {
+                    artwork
+                }
+                store.dispatchOnMain(OnboardingWalletAction.SetArtworkUrl(cardArtwork))
+            }
         }
         is OnboardingWalletAction.CreateWallet -> {
             scope.launch {
