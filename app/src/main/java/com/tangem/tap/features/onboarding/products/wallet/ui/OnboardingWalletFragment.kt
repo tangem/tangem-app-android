@@ -2,12 +2,14 @@ package com.tangem.tap.features.onboarding.products.wallet.ui
 
 import android.os.Bundle
 import android.view.*
+import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.transition.TransitionInflater
 import androidx.transition.TransitionManager
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.tabs.TabLayoutMediator
+import com.squareup.picasso.Picasso
 import com.tangem.common.CardIdFormatter
 import com.tangem.common.core.CardIdDisplayFormat
 import com.tangem.tap.common.extensions.dispatchOpenUrl
@@ -62,6 +64,8 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
         store.dispatch(OnboardingWalletAction.Init)
         toolbar.setNavigationOnClickListener { activity?.onBackPressed() }
 
+        store.dispatch(OnboardingWalletAction.LoadArtwork)
+
         addBackPressHandler(this)
     }
 
@@ -84,7 +88,10 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
 
         requireActivity().invalidateOptionsMenu()
 
-        state.artwork?.artwork?.let { imv_front_card.setImageBitmap(it) }
+        loadImageIntoImageView(state.cardArtworkUrl, imv_front_card)
+        loadImageIntoImageView(state.cardArtworkUrl, imv_first_backup_card)
+        loadImageIntoImageView(state.cardArtworkUrl, imv_second_backup_card)
+
         pb_state.max = 6
         pb_state.progress = state.getProgressStep()
 
@@ -97,6 +104,14 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
 
             }
         }
+    }
+
+    private fun loadImageIntoImageView(url: String?, view: ImageView) {
+        Picasso.get()
+            .load(url)
+            .error(R.drawable.card_placeholder_black)
+            .placeholder(R.drawable.card_placeholder_black)
+            ?.into(view)
     }
 
     private fun setupCreateWalletState() {
