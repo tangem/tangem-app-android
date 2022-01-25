@@ -2,7 +2,6 @@ package com.tangem.tap.features.onboarding.products.wallet.redux
 
 import android.graphics.Bitmap
 import com.tangem.tap.common.redux.StateDialog
-import com.tangem.tap.features.wallet.redux.Artwork
 import org.rekotlin.StateType
 
 /**
@@ -11,7 +10,7 @@ import org.rekotlin.StateType
 data class OnboardingWalletState(
     val step: OnboardingWalletStep = OnboardingWalletStep.None,
     val backupState: BackupState = BackupState(),
-    val artwork: Artwork? = null,
+    val cardArtworkUrl: String? = null,
     val showConfetti: Boolean = false,
 ) : StateType {
 
