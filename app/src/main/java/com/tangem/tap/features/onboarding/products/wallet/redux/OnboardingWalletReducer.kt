@@ -24,7 +24,7 @@ private fun internalReduce(action: Action, appState: AppState): OnboardingWallet
             OnboardingWalletState(step = OnboardingWalletStep.CreateWallet)
         is OnboardingWalletAction.ProceedBackup -> state.copy(step = OnboardingWalletStep.Backup)
         is OnboardingWalletAction.SetArtworkUrl -> {
-            state.copy(artwork = action.artwork)
+            state.copy(cardArtworkUrl = action.artworkUrl)
         }
         is OnboardingWalletAction.Done -> state.copy(step = OnboardingWalletStep.Done)
         else -> state
