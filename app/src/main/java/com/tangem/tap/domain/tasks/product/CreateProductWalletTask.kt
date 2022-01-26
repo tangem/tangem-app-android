@@ -6,16 +6,16 @@ import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.guard
-import com.tangem.common.hdWallet.ExtendedPublicKey
+import com.tangem.common.extensions.toMapKey
 import com.tangem.operations.CommandResponse
 import com.tangem.operations.backup.PrimaryCard
 import com.tangem.operations.backup.StartPrimaryCardLinkingTask
+import com.tangem.operations.derivation.DeriveMultipleWalletPublicKeysTask
+import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.operations.wallet.CreateWalletTask
-import com.tangem.tap.common.extensions.toMapKey
 import com.tangem.tap.domain.ProductType
 import com.tangem.tap.domain.TapWorkarounds.getTangemNoteBlockchain
-import com.tangem.tap.domain.tasks.DerivationTask
 import com.tangem.tap.domain.tasks.product.CreateWalletsTask
 import com.tangem.tap.domain.tasks.product.KeyWalletPublicKey
 import com.tangem.tap.domain.tasks.product.ProductCommandProcessor
@@ -24,7 +24,7 @@ import com.tangem.tap.domain.tasks.product.getCurvesForNonCreatedWallets
 
 data class CreateProductWalletTaskResponse(
     val card: Card,
-    val derivedKeys: Map<KeyWalletPublicKey, List<ExtendedPublicKey>> = mapOf(),
+    val derivedKeys: Map<KeyWalletPublicKey, ExtendedPublicKeysMap> = mapOf(),
     val primaryCard: PrimaryCard? = null
 ) : CommandResponse
 
@@ -170,7 +170,7 @@ private class CreateWalletTangemWallet : ProductCommandProcessor<CreateProductWa
             return
         }
 
-        DerivationTask(mapOf(response.wallet.publicKey.toMapKey() to derivationPaths))
+        DeriveMultipleWalletPublicKeysTask(mapOf(response.wallet.publicKey.toMapKey() to derivationPaths))
             .run(session) { result ->
                 when (result) {
                     is CompletionResult.Success -> {

@@ -5,6 +5,8 @@ import android.view.View
 import android.widget.FrameLayout
 import androidx.fragment.app.Fragment
 import androidx.transition.TransitionInflater
+import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.LeapfrogWidget
+import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.LeapfrogWidgetState
 import com.tangem.tap.domain.twins.TwinsCardWidget
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.test_leapfrog_fragment.*
