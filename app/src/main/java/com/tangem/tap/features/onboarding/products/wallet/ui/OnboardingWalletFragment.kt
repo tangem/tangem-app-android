@@ -12,7 +12,6 @@ import com.google.android.material.tabs.TabLayoutMediator
 import com.squareup.picasso.Picasso
 import com.tangem.common.CardIdFormatter
 import com.tangem.common.core.CardIdDisplayFormat
-import com.tangem.tap.common.extensions.dispatchOpenUrl
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.leapfrogWidget.LeapfrogWidget
@@ -20,7 +19,6 @@ import com.tangem.tap.common.postUi
 import com.tangem.tap.features.FragmentOnBackPressedHandler
 import com.tangem.tap.features.addBackPressHandler
 import com.tangem.tap.features.onboarding.products.wallet.redux.*
-import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletMiddleware.Companion.BUY_WALLET_URL
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.AccessCodeDialog
 import com.tangem.tap.store
 import com.tangem.wallet.R
@@ -377,7 +375,7 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.shop_menu -> {
-                store.dispatchOpenUrl(BUY_WALLET_URL)
+                store.dispatch(BackupAction.GoToShop)
                 true
             }
             else -> super.onOptionsItemSelected(item)
