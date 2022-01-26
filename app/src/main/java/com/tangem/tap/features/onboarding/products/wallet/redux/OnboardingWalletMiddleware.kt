@@ -4,6 +4,9 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.card.Card
 import com.tangem.operations.backup.BackupService
 import com.tangem.tap.*
+import com.tangem.tap.common.analytics.AnalyticsEvent
+import com.tangem.tap.common.analytics.AnalyticsParam
+import com.tangem.tap.common.analytics.GetCardSourceParams
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchOpenUrl
 import com.tangem.tap.common.extensions.withMainContext
@@ -212,7 +215,13 @@ private fun handleBackupAction(action: BackupAction) {
             }
         }
         is BackupAction.GoToShop -> {
-            store.dispatchOpenUrl(BUY_WALLET_URL)
+            backupState.buyAdditionalCardsUrl?.let { url ->
+                store.dispatchOpenUrl(url)
+                store.state.globalState.analyticsHandlers?.triggerEvent(
+                    event = AnalyticsEvent.GET_CARD,
+                    params = mapOf(AnalyticsParam.SOURCE.param to GetCardSourceParams.ONBOARDING.param)
+                )
+            }
         }
         is BackupAction.FinishAddingBackupCards -> {
             if (backupService.addedBackupCardsCount == 1) {
