@@ -7,7 +7,6 @@ import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.common.card.Card
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.tap.common.analytics.AnalyticsEvent
-import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.common.extensions.isGreaterThan
 import com.tangem.tap.common.redux.global.GlobalState
 import com.tangem.tap.domain.TapWorkarounds.isTestCard
@@ -75,7 +74,7 @@ class WarningsMiddleware {
             preferencesStorage.appRatingLaunchObserver.foundWalletWithFunds()
         }
         if (preferencesStorage.appRatingLaunchObserver.isReadyToShow()) {
-            FirebaseAnalyticsHandler.triggerEvent(AnalyticsEvent.APP_RATING_DISPLAYED)
+            store.state.globalState.analyticsHandlers?.triggerEvent(AnalyticsEvent.APP_RATING_DISPLAYED)
             addWarningMessage(WarningMessagesManager.appRatingWarning(), true)
         }
     }
