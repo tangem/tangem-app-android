@@ -11,6 +11,7 @@ data class Config(
     val coinMarketCapKey: String = "f6622117-c043-47a0-8975-9d673ce484de",
     val moonPayApiKey: String = "pk_test_kc90oYTANy7UQdBavDKGfL4K9l6VEPE",
     val moonPayApiSecretKey: String = "sk_test_V8w4M19LbDjjYOt170s0tGuvXAgyEb1C",
+    val appsFlyerDevKey: String = "",
     val blockchainSdkConfig: BlockchainSdkConfig = BlockchainSdkConfig(),
     val isSendingToPayIdEnabled: Boolean = true,
     val isTopUpEnabled: Boolean = false,
@@ -84,7 +85,8 @@ class ConfigManager(
                 blockchairAuthorizationToken = values.blockchairAuthorizationToken,
                 blockcypherTokens = values.blockcypherTokens,
                 infuraProjectId = values.infuraProjectId
-            )
+            ),
+            appsFlyerDevKey = values.appsFlyerDevKey,
         )
         defaultConfig = defaultConfig.copy(
             coinMarketCapKey = values.coinMarketCapKey,
@@ -95,7 +97,8 @@ class ConfigManager(
                 blockchairAuthorizationToken = values.blockchairAuthorizationToken,
                 blockcypherTokens = values.blockcypherTokens,
                 infuraProjectId = values.infuraProjectId
-            )
+            ),
+            appsFlyerDevKey = values.appsFlyerDevKey,
         )
     }
 
