@@ -1,5 +1,6 @@
 package com.tangem.tap.common.redux.global
 
+import com.tangem.tap.common.analytics.AnalyticsHandler
 import com.tangem.tap.common.entities.TapCurrency.Companion.DEFAULT_FIAT_CURRENCY
 import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.domain.PayIdManager
@@ -28,6 +29,7 @@ data class GlobalState(
     val dialog: StateDialog? = null,
     val moonpayStatus: MoonpayStatus? = null,
     val resources: AndroidResources = AndroidResources(),
+    val analyticsHandlers: AnalyticsHandler? = null,
 ) : StateType
 
 
