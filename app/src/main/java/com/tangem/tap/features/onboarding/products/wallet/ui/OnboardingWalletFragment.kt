@@ -12,9 +12,10 @@ import com.google.android.material.tabs.TabLayoutMediator
 import com.squareup.picasso.Picasso
 import com.tangem.common.CardIdFormatter
 import com.tangem.common.core.CardIdDisplayFormat
+import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.LeapfrogWidget
+import com.tangem.tap.common.extensions.dispatchOpenUrl
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
-import com.tangem.tap.common.leapfrogWidget.LeapfrogWidget
 import com.tangem.tap.common.postUi
 import com.tangem.tap.features.FragmentOnBackPressedHandler
 import com.tangem.tap.features.addBackPressHandler
