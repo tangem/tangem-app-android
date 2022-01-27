@@ -130,7 +130,11 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
             }
         }
         is TwinCardsAction.Wallet.LaunchFirstStep -> {
-            val manager = TwinCardsManager(getScanResponse().card, action.reader)
+            val manager = TwinCardsManager(
+                card = getScanResponse().card,
+                assetReader = action.reader,
+                analyticsHandler = store.state.globalState.analyticsHandlers
+            )
             store.dispatch(TwinCardsAction.CardsManager.Set(manager))
 
             scope.launch {
