@@ -8,7 +8,7 @@ import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.calculateSha256
 import com.tangem.common.extensions.guard
-import com.tangem.common.files.FileHashHelper
+import com.tangem.operations.files.FileHashHelper
 import com.tangem.operations.issuerAndUserData.ReadIssuerDataCommand
 import com.tangem.operations.issuerAndUserData.ReadIssuerDataResponse
 import com.tangem.operations.issuerAndUserData.WriteIssuerDataCommand
