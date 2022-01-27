@@ -13,7 +13,6 @@ import com.squareup.picasso.Picasso
 import com.tangem.common.CardIdFormatter
 import com.tangem.common.core.CardIdDisplayFormat
 import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.LeapfrogWidget
-import com.tangem.tap.common.extensions.dispatchOpenUrl
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.postUi
@@ -326,7 +325,7 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
         tv_header.text =
             getString(R.string.onboarding_title_backup_card_format, cardNumber)
         tv_body.text = getString(
-            R.string.onboarding_subtitle_scan_primary_card_format,
+            R.string.onboarding_subtitle_scan_backup_card_format,
             cardIdFormatter.getFormattedCardId(state.backupCardIds[cardNumber - 1])
         )
         btn_main_action.text = getString(
