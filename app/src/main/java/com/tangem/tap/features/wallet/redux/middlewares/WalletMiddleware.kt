@@ -10,7 +10,7 @@ import com.tangem.common.extensions.isZero
 import com.tangem.common.services.Result
 import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.tap.*
-import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
+import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
@@ -104,13 +104,13 @@ class WalletMiddleware {
                     when (result) {
                         is CompletionResult.Success -> {
                             val scanNoteResponse = globalState.scanResponse?.copy(card = result.data)
-                            scanNoteResponse?.let { store.onCardScanned(scanNoteResponse, false) }
+                            scanNoteResponse?.let { store.onCardScanned(scanNoteResponse) }
                         }
                         is CompletionResult.Failure -> {
                             (result.error as? TangemSdkError)?.let { error ->
-                                FirebaseAnalyticsHandler.logCardSdkError(
+                                store.state.globalState.analyticsHandlers?.logCardSdkError(
                                     error,
-                                    FirebaseAnalyticsHandler.ActionToLog.CreateWallet,
+                                    Analytics.ActionToLog.CreateWallet,
                                     card = store.state.detailsState.scanResponse?.card
                                 )
                             }
