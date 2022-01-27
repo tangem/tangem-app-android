@@ -1,5 +1,8 @@
 package com.tangem.tap.features.home.redux
 
+import com.tangem.tap.common.analytics.AnalyticsEvent
+import com.tangem.tap.common.analytics.AnalyticsParam
+import com.tangem.tap.common.analytics.GetCardSourceParams
 import com.tangem.tap.common.entities.IndeterminateProgressButton
 import com.tangem.tap.common.extensions.dispatchOpenUrl
 import com.tangem.tap.common.extensions.onCardScanned
@@ -46,7 +49,13 @@ private val homeMiddleware: Middleware<AppState> = { dispatch, state ->
                     }
                 }
                 is HomeAction.ReadCard -> handleReadCard()
-                is HomeAction.GoToShop -> store.dispatchOpenUrl(HomeMiddleware.CARD_SHOP_URI)
+                is HomeAction.GoToShop -> {
+                    store.dispatchOpenUrl(HomeMiddleware.CARD_SHOP_URI)
+                    store.state.globalState.analyticsHandlers?.triggerEvent(
+                        event = AnalyticsEvent.GET_CARD,
+                        params = mapOf(AnalyticsParam.SOURCE.param to GetCardSourceParams.WELCOME.param)
+                    )
+                }
             }
             next(action)
         }
