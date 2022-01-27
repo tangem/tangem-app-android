@@ -5,7 +5,8 @@ import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.services.Result
 import com.tangem.operations.pins.CheckUserCodesResponse
-import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
+import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.AnalyticsParam
 import com.tangem.tap.common.extensions.dispatchNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
@@ -118,9 +119,9 @@ class DetailsMiddleware {
                                 }
                                 is CompletionResult.Failure -> {
                                     (result.error as? TangemSdkError)?.let { error ->
-                                        FirebaseAnalyticsHandler.logCardSdkError(
+                                        store.state.globalState.analyticsHandlers?.logCardSdkError(
                                             error,
-                                            FirebaseAnalyticsHandler.ActionToLog.PurgeWallet,
+                                            Analytics.ActionToLog.PurgeWallet,
                                             card = store.state.detailsState.scanResponse?.card
                                         )
                                     }
@@ -206,11 +207,11 @@ class DetailsMiddleware {
                                 }
                                 is CompletionResult.Failure -> {
                                     (result.error as? TangemSdkError)?.let { error ->
-                                        FirebaseAnalyticsHandler.logCardSdkError(
+                                        store.state.globalState.analyticsHandlers?.logCardSdkError(
                                             error = error,
-                                            actionToLog = FirebaseAnalyticsHandler.ActionToLog.ChangeSecOptions,
+                                            actionToLog = Analytics.ActionToLog.ChangeSecOptions,
                                             parameters = mapOf(
-                                                FirebaseAnalyticsHandler.AnalyticsParam.NEW_SECURITY_OPTION to
+                                                AnalyticsParam.NEW_SECURITY_OPTION to
                                                     (selectedOption?.name ?: "")
                                             ),
                                             card = store.state.detailsState.scanResponse?.card
