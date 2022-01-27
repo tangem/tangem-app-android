@@ -22,6 +22,7 @@ import com.tangem.operations.derivation.DeriveMultipleWalletPublicKeysTask
 import com.tangem.operations.pins.CheckUserCodesCommand
 import com.tangem.operations.pins.CheckUserCodesResponse
 import com.tangem.operations.pins.SetUserCodeCommand
+import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.AnalyticsHandler
 import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
@@ -39,16 +40,15 @@ import kotlin.coroutines.suspendCoroutine
 class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Context) {
 
     suspend fun scanProduct(
-        analyticsHandler: AnalyticsHandler,
+        analyticsHandler: AnalyticsHandler?,
         currenciesRepository: CurrenciesRepository,
-        shouldDeriveWC: Boolean,
         messageRes: Int? = null,
     ): CompletionResult<ScanResponse> {
-        analyticsHandler.triggerEvent(AnalyticsEvent.READY_TO_SCAN, null)
+        analyticsHandler?.triggerEvent(AnalyticsEvent.READY_TO_SCAN, null)
 
         val message = Message(context.getString(messageRes ?: R.string.initial_message_scan_header))
         return runTaskAsyncReturnOnMain(ScanProductTask(null, currenciesRepository), null, message)
-            .also { sendScanFailuresToAnalytics(analyticsHandler, it) }
+            .also { sendScanResultsToAnalytics(analyticsHandler, it) }
     }
 
     suspend fun createProductWallet(
@@ -61,14 +61,24 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         )
     }
 
-    private fun sendScanFailuresToAnalytics(
-        analyticsHandler: AnalyticsHandler,
+    private fun sendScanResultsToAnalytics(
+        analyticsHandler: AnalyticsHandler?,
         result: CompletionResult<ScanResponse>
     ) {
-        if (result is CompletionResult.Failure && result.error is TangemSdkError) {
-            (result.error as? TangemSdkError)?.let { error ->
-                analyticsHandler.logCardSdkError(error, FirebaseAnalyticsHandler.ActionToLog.Scan)
-            }
+        when (result) {
+            is CompletionResult.Success ->
+                analyticsHandler?.triggerEvent(
+                    event = AnalyticsEvent.CARD_IS_SCANNED,
+                    card = result.data.card,
+                    blockchain = result.data.walletData?.blockchain
+                )
+            is CompletionResult.Failure ->
+                (result.error as? TangemSdkError)?.let { error ->
+                    analyticsHandler?.logCardSdkError(
+                        error = error,
+                        actionToLog = Analytics.ActionToLog.Scan
+                    )
+                }
         }
     }
 
