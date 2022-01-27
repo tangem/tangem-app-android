@@ -192,6 +192,7 @@
             app:tabBackground="@drawable/selector_tabs_dots"
             app:tabIndicator="@null"
             app:tabPaddingStart="8dp"
+            android:layout_marginBottom="16dp"
             app:tabPaddingEnd="8dp"
             app:tabGravity="center"/>
 
