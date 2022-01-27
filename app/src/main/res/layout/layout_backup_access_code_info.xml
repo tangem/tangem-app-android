@@ -122,7 +122,7 @@
         android:layout_marginStart="78dp"
         android:layout_marginEnd="78dp"
         android:layout_marginBottom="92dp"
-        android:text="@string/common_create"
+        android:text="@string/common_continue"
         android:textSize="16sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
