@@ -110,6 +110,9 @@ dependencies {
     implementation 'com.google.firebase:firebase-config-ktx'
     implementation 'com.google.firebase:firebase-analytics-ktx'
 
+    // AppsFlyer
+    implementation 'com.appsflyer:af-android-sdk:6.5.1'
+
     // WalletConnect
     implementation 'com.github.salomonbrys.kotson:kotson:2.5.0'
 
