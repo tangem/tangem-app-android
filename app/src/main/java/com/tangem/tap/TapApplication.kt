@@ -1,11 +1,13 @@
 package com.tangem.tap
 
 import android.app.Application
+import com.appsflyer.AppsFlyerLib
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.google.firebase.remoteconfig.ktx.remoteConfigSettings
 import com.tangem.Log
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
+import com.tangem.tap.common.analytics.GlobalAnalyticsHandler
 import com.tangem.tap.common.images.PicassoHelper
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.appReducer
@@ -28,9 +30,9 @@ import org.rekotlin.Store
 import timber.log.Timber
 
 val store = Store(
-        reducer = ::appReducer,
-        middleware = AppState.getMiddleware(),
-        state = AppState()
+    reducer = ::appReducer,
+    middleware = AppState.getMiddleware(),
+    state = AppState()
 )
 lateinit var preferencesStorage: PreferencesStorage
 lateinit var currenciesRepository: CurrenciesRepository
@@ -61,6 +63,8 @@ class TapApplication : Application() {
         loadConfigs()
 
         BlockchainSdkRetrofitBuilder.enableNetworkLogging = BuildConfig.DEBUG
+
+        initAppsFlyer()
     }
 
     private fun loadConfigs() {
@@ -81,5 +85,13 @@ class TapApplication : Application() {
         Log.addLogger(logWriter)
 
         store.dispatch(GlobalAction.SetFeedbackManager(FeedbackManager(infoHolder, logWriter)))
+    }
+
+    private fun initAppsFlyer() {
+        val devKey = store.state.globalState.configManager?.config?.appsFlyerDevKey ?: return
+        AppsFlyerLib.getInstance().init(devKey, null, this)
+        AppsFlyerLib.getInstance().start(this)
+        val analyticsHandler = GlobalAnalyticsHandler.createDefaultAnalyticHandlers(this)
+        store.dispatch(GlobalAction.SetAnanlyticHandlers(analyticsHandler))
     }
 }
