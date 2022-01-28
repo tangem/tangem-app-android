@@ -60,7 +60,7 @@ class BackupReducer {
                     state.copy(backupStep = BackupStep.SetAccessCode)
                 }
                 BackupAction.ShowEnterAccessCodeScreen -> {
-                    state.copy(backupStep = BackupStep.EnterAccessCode)
+                    state.copy(backupStep = BackupStep.EnterAccessCode, accessCodeError = null)
                 }
                 is BackupAction.SaveFirstAccessCode -> {
                     state.copy(
