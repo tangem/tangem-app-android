@@ -15,7 +15,6 @@ import com.tangem.common.core.CardIdDisplayFormat
 import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.LeapfrogWidget
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
-import com.tangem.tap.common.postUi
 import com.tangem.tap.features.FragmentOnBackPressedHandler
 import com.tangem.tap.features.addBackPressHandler
 import com.tangem.tap.features.onboarding.products.wallet.redux.*
@@ -253,15 +252,11 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
     private fun showEnterAccessCode(state: BackupState) {
         accessCodeDialog?.showEnterAccessCode()
         accessCodeDialog?.showError(state.accessCodeError)
-        postUi(2000) { store.dispatch(BackupAction.SetAccessCodeError(null)) }
-
     }
 
     private fun showReenterAccessCode(state: BackupState) {
         accessCodeDialog?.showReenterAccessCode()
         accessCodeDialog?.showError(state.accessCodeError)
-        postUi(2000) { store.dispatch(BackupAction.SetAccessCodeError(null)) }
-
     }
 
     private fun showWritePrimaryCard(state: BackupState) {
@@ -350,7 +345,7 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
         tab_layout_backup_info.hide()
 
         tv_body.text = text
-        btn_main_action.text = getText(R.string.common_continue)
+        btn_main_action.text = getText(R.string.onboarding_button_continue_wallet)
         btn_alternative_action.hide()
         btn_main_action.setOnClickListener {
             lav_confetti.cancelAnimation()
