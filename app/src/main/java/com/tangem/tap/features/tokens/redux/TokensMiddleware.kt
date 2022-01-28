@@ -32,7 +32,7 @@ class TokensMiddleware {
         { next ->
             { action ->
                 when (action) {
-                    is TokensAction.LoadCurrencies -> handleLoadCurrencies(action)
+                    is TokensAction.LoadCurrencies -> handleLoadCurrencies()
                     is TokensAction.SaveChanges -> handleSaveChanges(action)
                 }
                 next(action)
@@ -40,7 +40,7 @@ class TokensMiddleware {
         }
     }
 
-    private fun handleLoadCurrencies(action: TokensAction.LoadCurrencies) {
+    private fun handleLoadCurrencies() {
         val scanResponse = store.state.globalState.scanResponse ?: return
         val isTestcard = scanResponse.card.isTestCard
 
@@ -48,7 +48,7 @@ class TokensMiddleware {
         val blockchains = currenciesRepository.getBlockchains(
             cardFirmware = scanResponse.card.firmwareVersion,
             isTestNet = isTestcard
-        )
+        ).sortedBy { it.fullName }
         val currencies =
             CurrencyListItem.createListOfCurrencies(blockchains, tokens).toMutableList()
         store.dispatch(TokensAction.LoadCurrencies.Success(currencies))
