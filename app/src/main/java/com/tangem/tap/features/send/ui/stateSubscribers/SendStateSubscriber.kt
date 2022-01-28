@@ -137,6 +137,11 @@ class SendStateSubscriber(fragment: BaseStoreFragment) : FragmentStateSubscriber
 
         adapter.submitList(state.sendWarningsList)
         rv.show(state.sendWarningsList.isNotEmpty())
+
+        fg.toolbar.title = fg.getString(
+            R.string.send_title_currency_format,
+            state.amountState.mainCurrency.currencySymbol
+        )
     }
 
     private fun handleAddressPayIdState(fg: BaseStoreFragment, state: AddressPayIdState) {
