@@ -237,11 +237,13 @@ private fun handleBackupAction(action: BackupAction) {
                     AccessCodeError.CodeTooShort
                 ))
             } else {
+                store.dispatch(BackupAction.SetAccessCodeError(null))
                 store.dispatch(BackupAction.SaveFirstAccessCode(action.accessCode))
             }
         }
         is BackupAction.SaveAccessCodeConfirmation -> {
             if (action.accessCodeConfirmation == backupState.accessCode) {
+                store.dispatch(BackupAction.SetAccessCodeError(null))
                 backupService.setAccessCode(action.accessCodeConfirmation)
                 store.dispatch(BackupAction.PrepareToWritePrimaryCard)
             } else {
