@@ -205,13 +205,13 @@ private fun sendTransaction(
                 }
                 is SimpleResult.Failure -> {
                     when (sendResult.error) {
-                        is CreateAccountUnderfunded -> {
-                            val error = sendResult.error as CreateAccountUnderfunded
+                        is BlockchainSdkError.CreateAccountUnderfunded -> {
+                            val error = sendResult.error as BlockchainSdkError.CreateAccountUnderfunded
                             val reserve = error.minReserve.value?.stripZeroPlainString() ?: "0"
                             val symbol = error.minReserve.currencySymbol
                             dispatch(SendAction.SendError(TapError.CreateAccountUnderfunded(listOf(reserve, symbol))))
                         }
-                        is SendException -> {
+                        is BlockchainSdkError.SendException -> {
                             sendResult.error?.let { FirebaseCrashlytics.getInstance().recordException(it) }
                         }
                         is Throwable -> {
