@@ -311,4 +311,6 @@ Price: %s\n
 Amount to receive: %s\n
 Amount to pay: %s</string>
 
+    <string name="solana_rent_warning" translatable="false">Solana network charges a rent of %s every 2 days. Accounts that can’t afford the rent are purged from the network. Deposit your account with more than %s to use it for free.</string>
+
 </resources>
