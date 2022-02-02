@@ -11,6 +11,8 @@ import com.tangem.blockchain.common.Token
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.json.MoshiJsonConverter
 import com.tangem.tap.common.extensions.readJsonFileToString
+import com.tangem.tap.domain.extensions.getCustomIconUrl
+import com.tangem.tap.domain.extensions.setCustomIconUrl
 import com.tangem.tap.network.createMoshi
 
 class CurrenciesRepository(val context: Application) {
@@ -183,6 +185,7 @@ data class TokenDao(
     val decimalCount: Int,
     @Json(name = "blockchain")
     val blockchainDao: BlockchainDao,
+    val customIconUrl: String? = null,
     val type: String? = null
 ) {
     fun toToken(): Token {
@@ -192,7 +195,9 @@ data class TokenDao(
             contractAddress = contractAddress,
             decimals = decimalCount,
             blockchain = blockchainDao.toBlockchain()
-        )
+        ).apply {
+            customIconUrl?.let { this.setCustomIconUrl(it) }
+        }
     }
 
     companion object {
@@ -202,7 +207,8 @@ data class TokenDao(
                 symbol = token.symbol,
                 contractAddress = token.contractAddress,
                 decimalCount = token.decimals,
-                blockchainDao = BlockchainDao.fromBlockchain(token.blockchain)
+                blockchainDao = BlockchainDao.fromBlockchain(token.blockchain),
+                customIconUrl = token.getCustomIconUrl()
             )
         }
     }
