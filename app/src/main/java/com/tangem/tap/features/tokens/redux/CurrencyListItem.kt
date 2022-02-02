@@ -51,7 +51,7 @@ sealed class CurrencyListItem {
 
 fun List<CurrencyListItem>.removeTokensForBlockchain(blockchain: Blockchain): List<CurrencyListItem> {
     return filterNot {
-        it is CurrencyListItem.TokenListItem && it.token.blockchain == blockchain
+        it is CurrencyListItem.TokenListItem && it.isTheSameOrTestnetBlockchain(blockchain)
     }
 }
 
@@ -59,18 +59,31 @@ fun List<CurrencyListItem>.addTokensForBlockchain(
     blockchain: Blockchain, fullCurrenciesList: List<CurrencyListItem>,
 ): List<CurrencyListItem> {
     val tokensToAdd = fullCurrenciesList.filter {
-        it is CurrencyListItem.TokenListItem && it.token.blockchain == blockchain
+        it is CurrencyListItem.TokenListItem && it.isTheSameOrTestnetBlockchain(blockchain)
     }
     val indexToInsert = indexOfFirst {
-        it is CurrencyListItem.TitleListItem && it.blockchain == blockchain
+        it is CurrencyListItem.TitleListItem && it.isTheSameOrTestnetBlockchain(blockchain)
     } + 1
     return this.toMutableList().apply { addAll(indexToInsert, tokensToAdd) }
 }
 
 fun List<CurrencyListItem>.toggleHeaderContentShownValue(blockchain: Blockchain) {
     map {
-        if (it is CurrencyListItem.TitleListItem && it.blockchain == blockchain) {
+        if (it is CurrencyListItem.TitleListItem && it.isTheSameOrTestnetBlockchain(blockchain)) {
             it.isContentShown = !it.isContentShown
         }
     }
+}
+
+// if you do not check the testNet blockchains, it will not collapse
+private fun CurrencyListItem.isTheSameOrTestnetBlockchain(blockchain: Blockchain): Boolean {
+    return when (this) {
+        is CurrencyListItem.TitleListItem -> this.blockchain?.isTheSameOrTestnetBlockchain(blockchain) ?: false
+        is CurrencyListItem.BlockchainListItem -> this.blockchain.isTheSameOrTestnetBlockchain(blockchain)
+        is CurrencyListItem.TokenListItem -> this.token.blockchain.isTheSameOrTestnetBlockchain(blockchain)
+    }
+}
+
+private fun Blockchain.isTheSameOrTestnetBlockchain(blockchain: Blockchain): Boolean {
+    return this == blockchain || this == blockchain.getTestnetVersion()
 }
