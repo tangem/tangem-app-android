@@ -42,7 +42,7 @@
             app:layout_constraintTop_toTopOf="parent" />
 
         <TextView
-            android:id="@+id/tv_rent_warning_title"
+            android:id="@+id/tv_warning"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Warning"
@@ -64,7 +64,7 @@
             android:paddingStart="16dp"
             android:paddingEnd="16dp"
             android:textAlignment="center"
-            app:layout_constraintTop_toBottomOf="@id/tv_rent_warning_title"
+            app:layout_constraintTop_toBottomOf="@id/tv_warning"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"/>
 
