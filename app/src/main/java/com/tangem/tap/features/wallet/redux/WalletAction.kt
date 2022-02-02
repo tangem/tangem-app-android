@@ -146,4 +146,5 @@ sealed class WalletAction : Action {
 
     data class ChangeSelectedAddress(val type: AddressType) : WalletAction()
 
+    data class SetWalletRent(val blockchain: Blockchain, val minRent: String, val rentExempt: String): WalletAction()
 }
