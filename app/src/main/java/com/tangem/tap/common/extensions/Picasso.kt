@@ -1,6 +1,7 @@
 package com.tangem.tap.common.extensions
 
 import android.graphics.PorterDuff
+import android.net.Uri
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.core.content.ContextCompat
@@ -9,6 +10,7 @@ import com.squareup.picasso.Picasso
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.IconsUtil
 import com.tangem.blockchain.common.Token
+import com.tangem.tap.domain.extensions.getCustomIconUrl
 import com.tangem.wallet.R
 
 fun Picasso.loadCurrenciesIcon(
@@ -19,7 +21,7 @@ fun Picasso.loadCurrenciesIcon(
 ) {
 
     val url = if (token != null) {
-        IconsUtil.getTokenIconUri(blockchain, token)
+        token.getCustomIconUrl()?.let { Uri.parse(it) } ?: IconsUtil.getTokenIconUri(blockchain, token)
     } else {
         IconsUtil.getBlockchainIconUri(blockchain)
     }
