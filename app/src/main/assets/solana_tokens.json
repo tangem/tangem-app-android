@@ -1,0 +1,519 @@
+[
+  {
+    "decimalCount": 9,
+    "symbol": "SOLAPE",
+    "name": "SolAPE Finance",
+    "contractAddress": "GHvFFSZ9BctWsEc5nujR1MTmmJWY7tgQz2AXE6WVFtGN",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 1,
+    "symbol": "FLOOF",
+    "name": "FLOOF",
+    "contractAddress": "3jzdrXXKxwkBk82u2eCWASZLCKoZs1LQTg87HBEAmBJw",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 9,
+    "symbol": "MNDE",
+    "name": "Marinade",
+    "contractAddress": "MNDEFzGvMt87ueuHvVU9VcTqsAP5b3fTGPsHuuPA5ey",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 6,
+    "symbol": "BTC",
+    "name": "Wrapped BTC",
+    "contractAddress": "9n4nbM75f5Ui33ZbPYXn59EwSgE8CGsHtAeTH5YFeJ9E",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 8,
+    "symbol": "TWT",
+    "name": "Trust Wallet",
+    "contractAddress": "HZNpqL7RT9gxf9eWoWsWzC5DfjzQ41XTQgEA7p3VzaaD",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 9,
+    "symbol": "CCAI",
+    "name": "Cryptocurrencies.Ai",
+    "contractAddress": "E5ndSkaB17Dm7CsD22dvcjfrYSDLCxFcMd6z8ddCk5wp",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 6,
+    "symbol": "ETH",
+    "name": "Wrapped ETH",
+    "contractAddress": "2FPyTwcZLUg1MDrwsyoP4D6s1tM7hAkHYRjkNb5w6Pxk",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 6,
+    "symbol": "XRP",
+    "name": "Wrapped XRP",
+    "contractAddress": "Ga2AXHpfAF6mv2ekZwcsJFqu7wB4NV331qNH7fW9Nst8",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 5,
+    "symbol": "KIN",
+    "name": "Kin",
+    "contractAddress": "kinXdEcpDQeHPEuQnqmUgtYykqKGVFq6CeVX5iAHJq6",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 9,
+    "symbol": "mSOL",
+    "name": "Marinade staked",
+    "contractAddress": "mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 9,
+    "symbol": "GENE",
+    "name": "Genopets",
+    "contractAddress": "GENEtH5amGSi8kHAtQoezp1XEXwZJ8vcuePYnXdKrMYz",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 9,
+    "symbol": "MM",
+    "name": "Million",
+    "contractAddress": "FiCiuX9DetEE89PgRAU1hmoptnem8b1fkpEq8PGYTYkd",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 9,
+    "symbol": "DFL",
+    "name": "DeFi Land",
+    "contractAddress": "DFL1zNkaGPWm1BqAVqRjCZvHmwTFrEaJtbzJWgseoNJh",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 6,
+    "symbol": "CAVE",
+    "name": "Crypto Cavemen",
+    "contractAddress": "4SZjjNABoqhbd4hnapbvoEPEqT8mnNkfbEoAwALf1V8t",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 6,
+    "symbol": "FTT",
+    "name": "Wrapped FTX",
+    "contractAddress": "AGFEad2et2ZJif9jaGpdMixQqvW5i81aBdvKe7PHNfz3",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 9,
+    "symbol": "SOL",
+    "name": "Wrapped SOL",
+    "contractAddress": "So11111111111111111111111111111111111111112",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 8,
+    "symbol": "ATLAS",
+    "name": "Star Atlas",
+    "contractAddress": "ATLASXmbPQxBUYbxPsV97usA3fPQYEqzQBUHgiFCUsXx",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 4,
+    "symbol": "BRZ",
+    "name": "Brazilian Digital Token",
+    "contractAddress": "FtgGSFADXBtroxq8VCausXRr2of47QBf5AS1NtZCu4GD",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 6,
+    "symbol": "USDC",
+    "name": "USD Coin",
+    "contractAddress": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 6,
+    "symbol": "SLIM",
+    "name": "Solanium",
+    "contractAddress": "xxxxa1sKNGwFtw2kFn8XauW9xq8hBZ5kVtcSesTT9fW",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 6,
+    "symbol": "USDT",
+    "name": "Wrapped USDT",
+    "contractAddress": "BQcdHdAQW1hczDbBi9hiegXAR7A98Q9jx3X3iBBBDiq4",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 9,
+    "symbol": "HOLD",
+    "name": "Holdana",
+    "contractAddress": "8GQsW3f7mdwfjqJon2myADcBsSsRjpXmxHYDG8q1pvV6",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 6,
+    "symbol": "MAPS",
+    "name": "Maps.me",
+    "contractAddress": "MAPS41MDahZ9QdKXhVa4dWB9RuyfV4XqhyAZ8XcYepb",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 6,
+    "symbol": "SRM",
+    "name": "Serum",
+    "contractAddress": "SRMuApVNdxXokk5GT7XD5cUUgXMBCoAz2LHeuAoKWRt",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 9,
+    "symbol": "JET",
+    "name": "Jet Protocol",
+    "contractAddress": "JET6zMJWkCN9tpRT2v2jfAmm5VnQFDpUBCyaKojmGtz",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 9,
+    "symbol": "STNK",
+    "name": "Stonks",
+    "contractAddress": "43VWkd99HjqkhFTZbWBpMpRhjG469nWa7x7uEsgSH7We",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 9,
+    "symbol": "SKEM",
+    "name": "SKEM",
+    "contractAddress": "3x7UeXDF4imKSKnizK9mYyx1M5bTNzpeALfPeB8S6XT9",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 6,
+    "symbol": "MEDIA",
+    "name": "Media Network",
+    "contractAddress": "ETAtLmCmsoiEEKfNrHKJ2kYy3MoABhU6NQvpSfij5tDs",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 9,
+    "symbol": "ROPE",
+    "name": "Rope Token",
+    "contractAddress": "8PMHT4swUMtBzgHnh5U564N5sjPSiUz2cjEQzFnnP1Fo",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 8,
+    "symbol": "POLIS",
+    "name": "Star Atlas DAO",
+    "contractAddress": "poLisWXnNRwC6oBu1vHiuKQzFjGL4XDSu4g9qjz9qVk",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 6,
+    "symbol": "RAY",
+    "name": "Raydium",
+    "contractAddress": "4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 6,
+    "symbol": "Wrapped FRONT",
+    "name": "Wrapped FRONT",
+    "contractAddress": "9S4t2NEAiJVMvPdRYKVrfJpBafPBLtvbvyS3DecojQHw",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 6,
+    "symbol": "USDC",
+    "name": "Wrapped USDC",
+    "contractAddress": "BXXkv6z8ykpG1yuvUDPgh732wzVHB69RnB9YgSYh3itW",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 6,
+    "symbol": "USDT",
+    "name": "USDT",
+    "contractAddress": "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 6,
+    "symbol": "ORCA",
+    "name": "Orca",
+    "contractAddress": "orcaEKTdK7LKz57vaAYr9QeNsVEPfiu6QeMU1kektZE",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 6,
+    "symbol": "LIQ",
+    "name": "LIQ Protocol",
+    "contractAddress": "4wjPQJ6PrkC4dHhYghwJzGBVP78DkBzA2U3kHoFNBuhj",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 6,
+    "symbol": "WOOF",
+    "name": "WOOFENOMICS",
+    "contractAddress": "9nEqaUcb16sQ3Tn1psbkWqyhPdLmfHWjKGymREjsAgTE",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 9,
+    "symbol": "STEP",
+    "name": "Step Finance",
+    "contractAddress": "StepAscQoEioFxxWGnh2sLBDFp9d8rvKz2Yp39iDpyT",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 9,
+    "symbol": "FOUR",
+    "name": "The 4th Pillar Token",
+    "contractAddress": "DAtU322C23YpoZyWBm8szk12QyqHa9rUQe1EYXzbm1JE",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 6,
+    "symbol": "OXY",
+    "name": "Oxygen Protocol",
+    "contractAddress": "z3dn17yLaGMKffVogeFHQ9zWVcXgqgf3PQnDsNs2g6M",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 7,
+    "symbol": "ISLAMI",
+    "name": "ISLAMICOIN",
+    "contractAddress": "HG2FnifX1WPY6UvnkXnMx2kAt4E4Ssu6DZ2aiB5RmLHo",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 9,
+    "symbol": "AURY",
+    "name": "Aurory",
+    "contractAddress": "AURYydfxJib1ZkTir1Jn1J9ECYUtjb6rKQVmtYaixWPP",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 6,
+    "symbol": "COPE",
+    "name": "COPE",
+    "contractAddress": "8HGyAAB1yoM1ttS7pXjHMa3dukTFGQggnFFH3hJZgzQh",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 6,
+    "symbol": "FIDA",
+    "name": "Bonfida",
+    "contractAddress": "EchesyfXePKdLtoiZSL8pBe8Myagyy8ZRqsACNCFGnvp",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 6,
+    "symbol": "wCCX",
+    "name": "Wrapped Conceal",
+    "contractAddress": "CzqJTjTp3R9opDHmzF5Gy1G2NKDHEyMufa4Keiju4PLu",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 0,
+    "symbol": "XCOPE",
+    "name": "XCOPE",
+    "contractAddress": "3K6rftdAaQYMPunrtNRHgnK2UAtjm2JwyT2oCiTDouYE",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  },
+  {
+    "decimalCount": 6,
+    "symbol": "MNGO",
+    "name": "Mango Markets",
+    "contractAddress": "MangoCzJ36AjZyKwVj3VnYU4GTonjfVEnJmvvWaxLac",
+    "blockchain": {
+      "key": "solana",
+      "curve": "ed25519",
+      "testnet": false
+    }
+  }
+]
