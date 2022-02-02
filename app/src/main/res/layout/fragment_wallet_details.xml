@@ -21,9 +21,9 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
+            android:theme="@style/ThemeOverlay.MyTheme.Toolbar"
             app:menu="@menu/wallet_details"
             app:navigationIcon="@drawable/ic_baseline_arrow_back_24"
-            android:theme="@style/ThemeOverlay.MyTheme.Toolbar"
             app:title=" " />
 
     </com.google.android.material.appbar.AppBarLayout>
@@ -45,7 +45,6 @@
                 android:id="@+id/cl_wallet"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
-
 
                 <TextView
                     android:id="@+id/tv_currency_title"
@@ -79,7 +78,6 @@
                     app:barrierDirection="bottom"
                     app:constraint_referenced_ids="tv_currency_subtitle,tv_currency_title" />
 
-
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rv_pending_transaction"
                     android:layout_width="match_parent"
@@ -100,6 +98,18 @@
                     android:layout_marginTop="16dp"
                     app:layout_constraintTop_toBottomOf="@id/rv_pending_transaction" />
 
+                <include
+                    android:id="@+id/l_rent_warning"
+                    layout="@layout/layout_wallet_details_rent"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="16dp"
+                    android:visibility="visible"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/l_wallet_details" />
 
                 <com.google.android.material.card.MaterialCardView
                     android:id="@+id/card_pending_transaction_warning"
@@ -131,22 +141,6 @@
                     app:barrierDirection="bottom"
                     app:constraint_referenced_ids="l_wallet_details,card_pending_transaction_warning" />
 
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_trade"
-                    style="@style/TapButtonWithIcon"
-                    android:layout_width="0dp"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginTop="30dp"
-                    android:layout_marginEnd="4dp"
-                    android:layout_marginBottom="33dp"
-                    android:text="@string/wallet_button_buy"
-                    app:icon="@drawable/ic_arrow_up"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@+id/btn_sell"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/barrier"
-                    app:layout_constraintVertical_bias="1" />
-
                 <androidx.constraintlayout.widget.Barrier
                     android:id="@+id/barrier_left_button"
                     android:layout_width="wrap_content"
@@ -162,6 +156,22 @@
                     app:constraint_referenced_ids="btn_sell, btn_confirm" />
 
                 <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_trade"
+                    style="@style/TapButtonWithIcon"
+                    android:layout_width="0dp"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="30dp"
+                    android:layout_marginEnd="4dp"
+                    android:layout_marginBottom="33dp"
+                    android:text="@string/wallet_button_buy"
+                    app:icon="@drawable/ic_arrow_up"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@+id/btn_sell"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/l_rent_warning"
+                    app:layout_constraintVertical_bias="1" />
+
+                <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_sell"
                     style="@style/TapButtonWithIcon"
                     android:layout_width="0dp"
@@ -172,10 +182,10 @@
                     android:text="@string/wallet_button_sell"
                     app:icon="@drawable/ic_arrow_down"
                     app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toStartOf="@id/btn_confirm"
                     app:layout_constraintHorizontal_chainStyle="packed"
                     app:layout_constraintStart_toEndOf="@id/btn_trade"
-                    app:layout_constraintEnd_toStartOf="@id/btn_confirm"
-                    app:layout_constraintTop_toBottomOf="@id/barrier"
+                    app:layout_constraintTop_toBottomOf="@+id/l_rent_warning"
                     app:layout_constraintVertical_bias="1" />
 
                 <com.google.android.material.button.MaterialButton
@@ -187,12 +197,11 @@
                     android:layout_marginEnd="16dp"
                     android:layout_marginBottom="33dp"
                     android:text="@string/wallet_button_send"
-                    app:layout_constraintStart_toEndOf="@id/btn_sell"
                     app:icon="@drawable/ic_send"
                     app:layout_constraintBottom_toBottomOf="parent"
-
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/barrier"
+                    app:layout_constraintStart_toEndOf="@id/btn_sell"
+                    app:layout_constraintTop_toBottomOf="@+id/l_rent_warning"
                     app:layout_constraintVertical_bias="1" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
