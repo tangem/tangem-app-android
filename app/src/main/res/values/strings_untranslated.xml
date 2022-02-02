@@ -101,6 +101,7 @@
     <string name="add_tokens_subtitle_ethereum_tokens" translatable="false">Ethereum tokens</string>
     <string name="add_tokens_subtitle_bsc_tokens" translatable="false">Binance Smart Chain tokens</string>
     <string name="add_tokens_subtitle_binance_tokens" translatable="false">Binance Chain tokens</string>
+    <string name="add_tokens_subtitle_avalanche_tokens" translatable="false">Avalanche C-Chain tokens</string>
     <string name="wallet_address_button_copy" translatable="false">Copy</string>
     <string name="wallet_address_button_share" translatable="false">Share</string>
     <string name="wallet_button_add_tokens" translatable="false">+ Add tokens</string>
