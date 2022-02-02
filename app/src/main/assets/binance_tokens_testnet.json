@@ -6,7 +6,7 @@
     "blockchain" : {
       "key" : "binance",
       "curve" : "secp256k1",
-      "testnet" : false
+      "testnet" : true
     },
     "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/MATIC-84A/logo.png",
     "name" : "Hemster - 452"
