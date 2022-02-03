@@ -1,10 +1,12 @@
 package com.tangem.tap.features.wallet.redux.middlewares
 
+import com.tangem.blockchain.blockchains.solana.RentProvider
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.extensions.Result
 import com.tangem.common.extensions.isZero
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.safeUpdate
+import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.common.redux.global.GlobalState
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
@@ -31,6 +33,7 @@ class MultiWalletMiddleware {
         when (action) {
             is WalletAction.MultiWallet.AddWalletManagers -> {
                 globalState.feedbackManager?.infoHolder?.setWalletsInfo(action.walletManagers)
+                action.walletManagers.forEach { checkForRentWarning(it) }
             }
             is WalletAction.MultiWallet.SelectWallet -> {
                 if (action.walletData != null) {
@@ -132,7 +135,7 @@ class MultiWalletMiddleware {
                 val walletManager = walletState?.getWalletManager(Blockchain.Ethereum)
                     ?: walletFactory.makeWalletManagerForApp(scanResponse, Blockchain.Ethereum)
 
-                val tokenFinder = walletManager as TokenFinder
+                val tokenFinder = walletManager as? TokenFinder ?: return
                 scope.launch {
                     val result = tokenFinder.findTokens()
                     withContext(Dispatchers.Main) {
@@ -193,6 +196,26 @@ class MultiWalletMiddleware {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    private fun checkForRentWarning(walletManager: WalletManager) {
+        val rentProvider = walletManager as? RentProvider ?: return
+
+        scope.launch {
+            when (val result = rentProvider.minimalBalanceForRentExemption()) {
+                is Result.Success -> {
+                    val currency = walletManager.wallet.blockchain.currency
+                    val minRent = ("${rentProvider.rentAmount().stripZeroPlainString()} $currency")
+                    val rentExempt = ("${result.data.stripZeroPlainString()} $currency")
+                    store.dispatchOnMain(WalletAction.SetWalletRent(
+                        blockchain = walletManager.wallet.blockchain,
+                        minRent = minRent,
+                        rentExempt = rentExempt
+                    ))
+                }
+                is Result.Failure -> {}
             }
         }
     }
