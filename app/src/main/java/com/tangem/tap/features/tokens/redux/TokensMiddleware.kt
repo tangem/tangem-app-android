@@ -4,11 +4,11 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.EllipticCurve
+import com.tangem.common.extensions.ByteArrayKey
+import com.tangem.common.extensions.toMapKey
 import com.tangem.common.hdWallet.DerivationPath
-import com.tangem.common.hdWallet.ExtendedPublicKey
-import com.tangem.tap.common.extensions.ByteArrayKey
+import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.tap.common.extensions.dispatchErrorNotification
-import com.tangem.tap.common.extensions.toMapKey
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.NavigationAction
@@ -32,7 +32,7 @@ class TokensMiddleware {
         { next ->
             { action ->
                 when (action) {
-                    is TokensAction.LoadCurrencies -> handleLoadCurrencies(action)
+                    is TokensAction.LoadCurrencies -> handleLoadCurrencies()
                     is TokensAction.SaveChanges -> handleSaveChanges(action)
                 }
                 next(action)
@@ -40,7 +40,7 @@ class TokensMiddleware {
         }
     }
 
-    private fun handleLoadCurrencies(action: TokensAction.LoadCurrencies) {
+    private fun handleLoadCurrencies() {
         val scanResponse = store.state.globalState.scanResponse ?: return
         val isTestcard = scanResponse.card.isTestCard
 
@@ -48,7 +48,7 @@ class TokensMiddleware {
         val blockchains = currenciesRepository.getBlockchains(
             cardFirmware = scanResponse.card.firmwareVersion,
             isTestNet = isTestcard
-        )
+        ).sortedBy { it.fullName }
         val currencies =
             CurrencyListItem.createListOfCurrencies(blockchains, tokens).toMutableList()
         store.dispatch(TokensAction.LoadCurrencies.Success(currencies))
@@ -94,14 +94,14 @@ class TokensMiddleware {
                 is CompletionResult.Success -> {
                     val newDerivedKeys = result.data.entries
                     val updatedDerivedKeys =
-                        mutableMapOf<KeyWalletPublicKey, List<ExtendedPublicKey>>()
+                        mutableMapOf<KeyWalletPublicKey, ExtendedPublicKeysMap>()
 
                     newDerivedKeys.forEach { entry ->
                         val derivationData = derivationDataList.find {
                             it.mapKeyOfWalletPublicKey == entry.key
                         } ?: return@forEach
                         updatedDerivedKeys[entry.key] =
-                            derivationData.alreadyDerivedKeys + entry.value.toList()
+                            ExtendedPublicKeysMap(derivationData.alreadyDerivedKeys + entry.value)
                     }
 
                     val updatedScanResponse = scanResponse.copy(
@@ -133,9 +133,9 @@ class TokensMiddleware {
             .mapNotNull { it.derivationPath() }
 
         val mapKeyOfWalletPublicKey = wallet.publicKey.toMapKey()
-        val alreadyDerivedKeys =
-            scanResponse.derivedKeys[mapKeyOfWalletPublicKey]?.toMutableList() ?: mutableListOf()
-        val alreadyDerivedPaths = alreadyDerivedKeys.map { it.derivationPath }
+        val alreadyDerivedKeys: ExtendedPublicKeysMap =
+            scanResponse.derivedKeys[mapKeyOfWalletPublicKey] ?: ExtendedPublicKeysMap(emptyMap())
+        val alreadyDerivedPaths = alreadyDerivedKeys.keys.toList()
 
         val toDerive = derivationPathsCandidates.filterNot { alreadyDerivedPaths.contains(it) }
         return DerivationData(
@@ -147,7 +147,7 @@ class TokensMiddleware {
 
     private class DerivationData(
         val derivations: Pair<ByteArrayKey, List<DerivationPath>>,
-        val alreadyDerivedKeys: List<ExtendedPublicKey>,
+        val alreadyDerivedKeys: ExtendedPublicKeysMap,
         val mapKeyOfWalletPublicKey: ByteArrayKey
     )
 

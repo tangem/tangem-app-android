@@ -2,8 +2,6 @@ package com.tangem.tap.domain
 
 import com.tangem.blockchain.common.*
 import com.tangem.common.services.Result
-import com.tangem.tap.common.analytics.AnalyticsEvent
-import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.redux.global.FiatCurrencyName
@@ -71,10 +69,7 @@ class TapWalletManager {
         handleFiatRatesResult(results)
     }
 
-    suspend fun onCardScanned(data: ScanResponse, addAnalyticsEvent: Boolean = false) {
-        if (addAnalyticsEvent) {
-            FirebaseAnalyticsHandler.triggerEvent(AnalyticsEvent.CARD_IS_SCANNED, data.card, data.walletData?.blockchain)
-        }
+    suspend fun onCardScanned(data: ScanResponse) {
         store.state.globalState.feedbackManager?.infoHolder?.setCardInfo(data.card)
         updateConfigManager(data)
 
