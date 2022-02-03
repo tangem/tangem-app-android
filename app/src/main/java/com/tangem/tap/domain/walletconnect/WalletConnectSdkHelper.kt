@@ -10,9 +10,10 @@ import com.tangem.blockchain.extensions.*
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.hexToBytes
+import com.tangem.common.extensions.toHexString
 import com.tangem.crypto.CryptoUtils
 import com.tangem.operations.sign.SignHashCommand
-import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
+import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.extensions.toFormattedString
 import com.tangem.tap.features.details.redux.walletconnect.*
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.PersonalSignDialogData
@@ -33,20 +34,8 @@ class WalletConnectSdkHelper {
         id: Long,
         type: WcTransactionType,
     ): WcTransactionData? {
-        val factory = store.state.globalState.tapWalletManager.walletManagerFactory
-        val publicKey = Wallet.PublicKey(
-            session.wallet.walletPublicKey,
-            session.wallet.derivedPublicKey,
-            session.wallet.derivationPath,
-        )
-        val walletManager = factory.makeEthereumWalletManager(
-            session.wallet.cardId,
-            publicKey,
-            emptyList(),
-            isTestNet = session.wallet.isTestNet
-        ) ?: return null
 
-
+        val walletManager = getWalletManager(session) ?: return null
         try {
             walletManager.update()
         } catch (exception: Exception) {
@@ -54,15 +43,14 @@ class WalletConnectSdkHelper {
             return null
         }
 
-        val blockchain = walletManager.wallet.blockchain
-
+        val wallet = walletManager.wallet
         val balance =
-            walletManager.wallet.amounts[AmountType.Coin]?.value ?: return null
+            wallet.amounts[AmountType.Coin]?.value ?: return null
 
         val gas = transaction.gas?.hexToBigDecimal()
             ?: transaction.gasLimit?.hexToBigDecimal() ?: return null
 
-        val decimals = blockchain.decimals()
+        val decimals = wallet.blockchain.decimals()
 
         val value = (transaction.value ?: "0").hexToBigDecimal()
             ?.movePointLeft(decimals) ?: return null
@@ -82,8 +70,8 @@ class WalletConnectSdkHelper {
         val total = value + fee
 
         val transactionData = TransactionData(
-            amount = Amount(value, blockchain),
-            fee = Amount(fee, blockchain),
+            amount = Amount(value, wallet.blockchain),
+            fee = Amount(fee, wallet.blockchain),
             sourceAddress = transaction.from,
             destinationAddress = transaction.to!!,
             extras = EthereumTransactionExtras(
@@ -115,6 +103,21 @@ class WalletConnectSdkHelper {
         )
     }
 
+    private fun getWalletManager(session: WalletConnectSession): WalletManager? {
+        val factory = store.state.globalState.tapWalletManager.walletManagerFactory
+        val publicKey = Wallet.PublicKey(
+            session.wallet.walletPublicKey ?: return null,
+            session.wallet.derivedPublicKey,
+            session.wallet.derivationPath,
+        )
+        val blockchain = session.wallet.getBlockchainForSession()
+        return factory.makeWalletManager(
+            session.wallet.cardId,
+            blockchain,
+            publicKey
+        )
+    }
+
     suspend fun completeTransaction(data: WcTransactionData): String? {
         return when (data.type) {
             WcTransactionType.EthSendTransaction -> sendTransaction(data)
@@ -133,9 +136,9 @@ class WalletConnectSdkHelper {
             }
             is SimpleResult.Failure -> {
                 (result.error as? TangemSdkError)?.let { error ->
-                    FirebaseAnalyticsHandler.logCardSdkError(
+                    store.state.globalState.analyticsHandlers?.logCardSdkError(
                         error,
-                        FirebaseAnalyticsHandler.ActionToLog.WalletConnectTransaction,
+                        Analytics.ActionToLog.WalletConnectTransaction,
                     )
                 }
                 Timber.e(result.error)
@@ -164,9 +167,38 @@ class WalletConnectSdkHelper {
             }
             is CompletionResult.Failure -> {
                 (result.error as? TangemSdkError)?.let { error ->
-                    FirebaseAnalyticsHandler.logCardSdkError(
+                    store.state.globalState.analyticsHandlers?.logCardSdkError(
                         error,
-                        FirebaseAnalyticsHandler.ActionToLog.WalletConnectSign,
+                        Analytics.ActionToLog.WalletConnectSign,
+                    )
+                }
+                Timber.e(result.error.customMessage)
+                null
+            }
+        }
+    }
+
+    suspend fun signBnbTransaction(data: ByteArray, session: WalletConnectActiveData): String? {
+        val command = SignHashCommand(
+            hash = data,
+            walletPublicKey = session.wallet.walletPublicKey ?: return null,
+            derivationPath = session.wallet.derivationPath
+        )
+        val result = tangemSdkManager.runTaskAsync(command, initialMessage = Message())
+        return when (result) {
+            is CompletionResult.Success -> {
+                val key = session.wallet.derivedPublicKey
+                    ?: session.wallet.walletPublicKey
+                getBnbResultString(
+                    key.toHexString(),
+                    result.data.signature.toHexString()
+                )
+            }
+            is CompletionResult.Failure -> {
+                (result.error as? TangemSdkError)?.let { error ->
+                    store.state.globalState.analyticsHandlers?.logCardSdkError(
+                        error,
+                        Analytics.ActionToLog.WalletConnectTransaction,
                     )
                 }
                 Timber.e(result.error.customMessage)
@@ -180,8 +212,15 @@ class WalletConnectSdkHelper {
         session: WalletConnectSession,
         id: Long,
     ): WcPersonalSignData {
-        val messageData = message.data.removePrefix(HEX_PREFIX).hexToBytes()
-        val messageString = message.data.hexToAscii() ?: message.data
+        val messageData =
+            try {
+                message.data.removePrefix(HEX_PREFIX).hexToBytes()
+            } catch (exception: Exception) {
+                message.data.asciiToHex()!!.hexToBytes()
+            }
+        val messageString = message.data.hexToAscii()
+            ?: EthSignHelper.tryToParseEthTypedMessageString(message.data)
+            ?: message.data
 
         val prefixData = (ETH_MESSAGE_PREFIX + messageData.size.toString()).toByteArray()
         val hashToSign = (prefixData + messageData).toKeccak()
@@ -203,29 +242,40 @@ class WalletConnectSdkHelper {
     }
 
     private fun String.hexToAscii(): String? {
-        return removePrefix(HEX_PREFIX).hexToBytes()
-            .map {
-                val char = it.toInt().toChar()
-                if (char.isAscii()) char else return null
-            }
-            .joinToString("")
+        return try {
+            removePrefix(HEX_PREFIX).hexToBytes()
+                .map {
+                    val char = it.toInt().toChar()
+                    if (char.isAscii()) char else return null
+                }
+                .joinToString("")
+        } catch (exception: Exception) {
+            return null
+        }
+    }
+
+    private fun String.asciiToHex(): String? {
+        return map {
+            if (!it.isAscii()) return null
+            Integer.toHexString(it.code)
+        }.joinToString("")
     }
 
     suspend fun signPersonalMessage(hashToSign: ByteArray, wallet: WalletForSession): String? {
         val key = wallet.derivedPublicKey ?: wallet.walletPublicKey
-        val command = SignHashCommand(hashToSign, wallet.walletPublicKey, wallet.derivationPath)
+        val command = SignHashCommand(hashToSign, wallet.walletPublicKey!!, wallet.derivationPath)
         return when (val result = tangemSdkManager.runTaskAsync(command, wallet.cardId)) {
             is CompletionResult.Success -> {
                 val hash = result.data.signature
                 return EthereumUtils.prepareSignedMessageData(
-                    hash, hashToSign, CryptoUtils.decompressPublicKey(key)
+                    hash, hashToSign, CryptoUtils.decompressPublicKey(key!!)
                 )
             }
             is CompletionResult.Failure -> {
                 (result.error as? TangemSdkError)?.let { error ->
-                    FirebaseAnalyticsHandler.logCardSdkError(
+                    store.state.globalState.analyticsHandlers?.logCardSdkError(
                         error,
-                        FirebaseAnalyticsHandler.ActionToLog.WalletConnectSign,
+                        Analytics.ActionToLog.WalletConnectSign,
                     )
                 }
                 Timber.e(result.error.customMessage)
@@ -237,5 +287,8 @@ class WalletConnectSdkHelper {
     companion object {
         private const val ETH_MESSAGE_PREFIX = "\u0019Ethereum Signed Message:\n"
         private const val HEX_PREFIX = "0x"
+        fun getBnbResultString(publicKey: String, signature: String): String {
+            return "{\"signature\":\"$signature\",\"publicKey\":\"$publicKey\"}"
+        }
     }
 }
