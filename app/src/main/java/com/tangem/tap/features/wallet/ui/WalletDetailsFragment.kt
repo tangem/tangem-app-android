@@ -10,6 +10,7 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.transition.TransitionInflater
 import com.squareup.picasso.Picasso
+import com.tangem.common.extensions.guard
 import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.StateDialog
@@ -27,6 +28,8 @@ import kotlinx.android.synthetic.main.item_popular_token.view.*
 import kotlinx.android.synthetic.main.layout_balance_error.*
 import kotlinx.android.synthetic.main.layout_balance_wallet_details.*
 import kotlinx.android.synthetic.main.layout_wallet_details.*
+import kotlinx.android.synthetic.main.layout_wallet_details.card_balance
+import kotlinx.android.synthetic.main.layout_wallet_details_rent.*
 import org.rekotlin.StoreSubscriber
 
 class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreSubscriber<WalletState> {
@@ -124,11 +127,12 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
 
         handleDialogs(state.walletDialog)
         handleCurrencyIcon(selectedWallet)
+        handleWalletRent(selectedWallet.walletRent)
 
         srl_wallet_details.setOnRefreshListener {
             if (selectedWallet.currencyData.status != BalanceStatus.Loading) {
                 store.dispatch(WalletAction.LoadWallet(
-                    blockchain = selectedWallet.currency?.blockchain
+                    blockchain = selectedWallet.currency.blockchain
                 ))
             }
         }
@@ -139,6 +143,18 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
 
         btn_trade.isEnabled = selectedWallet.tradeCryptoState.buyingAllowed
         btn_sell.show(selectedWallet.tradeCryptoState.sellingAllowed)
+    }
+
+    private fun handleWalletRent(rent: WalletRent?) {
+        val rent = rent.guard {
+            l_rent_warning.hide()
+            return
+        }
+
+        val warningMessage = requireContext().getString(
+            R.string.solana_rent_warning, rent.minRentValue, rent.rentExemptValue)
+        tv_rent_warning_message.text = warningMessage
+        l_rent_warning.show()
     }
 
     private fun handleCurrencyIcon(wallet: WalletData) {
