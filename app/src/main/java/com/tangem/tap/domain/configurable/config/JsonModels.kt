@@ -19,6 +19,7 @@ class ConfigValueModel(
         val blockchairAuthorizationToken: String?,
         val blockcypherTokens: Set<String>?,
         val infuraProjectId: String?,
+        val appsFlyerDevKey: String,
 )
 
 class ConfigModel(val features: FeatureModel?, val configValues: ConfigValueModel?) {

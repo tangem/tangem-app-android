@@ -6,14 +6,6 @@ import com.tangem.common.card.EllipticCurve
 import java.math.BigDecimal
 
 
-fun Blockchain.isNoAccountError(exception: Throwable): Boolean {
-    return when (this) {
-        Blockchain.Stellar, Blockchain.XRP ->
-            exception.message?.contains("Account not found") == true
-        else -> false
-    }
-}
-
 fun Blockchain.amountToCreateAccount(token: Token? = null): BigDecimal? {
     return when (this) {
         Blockchain.Stellar -> if (token?.symbol == NODL) BigDecimal(1.5) else BigDecimal.ONE
