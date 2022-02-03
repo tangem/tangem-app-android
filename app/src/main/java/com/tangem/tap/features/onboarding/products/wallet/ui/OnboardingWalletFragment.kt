@@ -2,23 +2,22 @@ package com.tangem.tap.features.onboarding.products.wallet.ui
 
 import android.os.Bundle
 import android.view.*
+import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.transition.TransitionInflater
 import androidx.transition.TransitionManager
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.tabs.TabLayoutMediator
+import com.squareup.picasso.Picasso
 import com.tangem.common.CardIdFormatter
 import com.tangem.common.core.CardIdDisplayFormat
-import com.tangem.tap.common.extensions.dispatchOpenUrl
+import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.LeapfrogWidget
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
-import com.tangem.tap.common.leapfrogWidget.LeapfrogWidget
-import com.tangem.tap.common.postUi
 import com.tangem.tap.features.FragmentOnBackPressedHandler
 import com.tangem.tap.features.addBackPressHandler
 import com.tangem.tap.features.onboarding.products.wallet.redux.*
-import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletMiddleware.Companion.BUY_WALLET_URL
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.AccessCodeDialog
 import com.tangem.tap.store
 import com.tangem.wallet.R
@@ -62,6 +61,8 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
         store.dispatch(OnboardingWalletAction.Init)
         toolbar.setNavigationOnClickListener { activity?.onBackPressed() }
 
+        store.dispatch(OnboardingWalletAction.LoadArtwork)
+
         addBackPressHandler(this)
     }
 
@@ -84,7 +85,10 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
 
         requireActivity().invalidateOptionsMenu()
 
-        state.artwork?.artwork?.let { imv_front_card.setImageBitmap(it) }
+        loadImageIntoImageView(state.cardArtworkUrl, imv_front_card)
+        loadImageIntoImageView(state.cardArtworkUrl, imv_first_backup_card)
+        loadImageIntoImageView(state.cardArtworkUrl, imv_second_backup_card)
+
         pb_state.max = 6
         pb_state.progress = state.getProgressStep()
 
@@ -97,6 +101,14 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
 
             }
         }
+    }
+
+    private fun loadImageIntoImageView(url: String?, view: ImageView) {
+        Picasso.get()
+            .load(url)
+            .error(R.drawable.card_placeholder_black)
+            .placeholder(R.drawable.card_placeholder_black)
+            ?.into(view)
     }
 
     private fun setupCreateWalletState() {
@@ -240,15 +252,11 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
     private fun showEnterAccessCode(state: BackupState) {
         accessCodeDialog?.showEnterAccessCode()
         accessCodeDialog?.showError(state.accessCodeError)
-        postUi(2000) { store.dispatch(BackupAction.SetAccessCodeError(null)) }
-
     }
 
     private fun showReenterAccessCode(state: BackupState) {
         accessCodeDialog?.showReenterAccessCode()
         accessCodeDialog?.showError(state.accessCodeError)
-        postUi(2000) { store.dispatch(BackupAction.SetAccessCodeError(null)) }
-
     }
 
     private fun showWritePrimaryCard(state: BackupState) {
@@ -312,7 +320,7 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
         tv_header.text =
             getString(R.string.onboarding_title_backup_card_format, cardNumber)
         tv_body.text = getString(
-            R.string.onboarding_subtitle_scan_primary_card_format,
+            R.string.onboarding_subtitle_scan_backup_card_format,
             cardIdFormatter.getFormattedCardId(state.backupCardIds[cardNumber - 1])
         )
         btn_main_action.text = getString(
@@ -337,7 +345,7 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
         tab_layout_backup_info.hide()
 
         tv_body.text = text
-        btn_main_action.text = getText(R.string.common_continue)
+        btn_main_action.text = getText(R.string.onboarding_button_continue_wallet)
         btn_alternative_action.hide()
         btn_main_action.setOnClickListener {
             lav_confetti.cancelAnimation()
@@ -362,7 +370,7 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.shop_menu -> {
-                store.dispatchOpenUrl(BUY_WALLET_URL)
+                store.dispatch(BackupAction.GoToShop)
                 true
             }
             else -> super.onOptionsItemSelected(item)
