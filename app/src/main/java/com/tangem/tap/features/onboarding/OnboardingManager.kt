@@ -37,25 +37,6 @@ class OnboardingManager(
         return scanResponse.card.getOrLoadCardArtworkUrl(cardInfo)
     }
 
-//    suspend fun loadArtwork(): Artwork {
-//        cardInfo = OnlineCardVerifier().getCardInfo(scanResponse.card.cardId, scanResponse.card.cardPublicKey)
-//        return loadArtwork(scanResponse.card.getOrLoadCardArtworkUrl(cardInfo))
-//    }
-//
-//    suspend fun loadArtwork(url: String): Artwork {
-//        return withContext(Dispatchers.Main) {
-//            suspendCoroutine { continuation ->
-//                UrlBitmapLoader().loadBitmap(url) {
-//                    val result = when (it) {
-//                        is Result.Success -> Artwork(url, it.data)
-//                        is Result.Failure -> Artwork(url, null)
-//                    }
-//                    continuation.resume(result)
-//                }
-//            }
-//        }
-//    }
-
     suspend fun updateBalance(walletManager: WalletManager): OnboardingWalletBalance {
         val balance = when (val result = walletManager.safeUpdate()) {
             is Result.Success -> {
