@@ -136,7 +136,7 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
             BackupStep.ReenterAccessCode -> showReenterAccessCode(state)
             is BackupStep.WritePrimaryCard -> showWritePrimaryCard(state)
             is BackupStep.WriteBackupCard -> showWriteBackupCard(state)
-            BackupStep.Finished -> showSuccess(state)
+            BackupStep.Finished -> showSuccess()
         }
     }
 
@@ -194,11 +194,10 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
 
         layout_buttons_add_cards.show()
         layout_buttons_common.hide()
+        btn_add_card.text = getText(R.string.onboarding_button_add_backup_card)
         if (state.backupCardsNumber < state.maxBackupCards) {
-            btn_add_card.text = getText(R.string.onboarding_button_add_backup_card)
             btn_add_card.setOnClickListener { store.dispatch(BackupAction.AddBackupCard) }
         } else {
-            btn_add_card.text = "You hit the maximum"
             btn_add_card.isEnabled = false
         }
 
@@ -331,20 +330,15 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
         btn_main_action.setOnClickListener { store.dispatch(BackupAction.WriteBackupCard(cardNumber)) }
     }
 
-    private fun showSuccess(state: BackupState) {
+    private fun showSuccess() {
         tv_header.text = getText(R.string.onboarding_done_header)
-        val text = when (state.backupCardsNumber) {
-            1 -> getText(R.string.onboarding_subtitle_success_backup_one_card)
-            2 -> getText(R.string.onboarding_subtitle_success_backup)
-            else -> getText(R.string.onboarding_subtitle_success_tangem_wallet_onboarding)
-        }
 
         tv_header.show()
         tv_body.show()
         view_pager_backup_info.hide()
         tab_layout_backup_info.hide()
 
-        tv_body.text = text
+        tv_body.text = getText(R.string.onboarding_subtitle_success_tangem_wallet_onboarding)
         btn_main_action.text = getText(R.string.onboarding_button_continue_wallet)
         btn_alternative_action.hide()
         btn_main_action.setOnClickListener {
