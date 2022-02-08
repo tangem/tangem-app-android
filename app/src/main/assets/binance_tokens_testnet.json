@@ -1,14 +1,9 @@
 [
   {
-    "symbol" : "HEM",
-    "decimalCount" : 8,
-    "contractAddress" : "HEM-452",
-    "blockchain" : {
-      "key" : "binance",
-      "curve" : "secp256k1",
-      "testnet" : true
-    },
-    "customIconUrl" : "https://assets.trustwalletapp.com/blockchains/binance/assets/MATIC-84A/logo.png",
-    "name" : "Hemster - 452"
+    "decimalCount": 8,
+    "customIconUrl": "https:\/\/assets.trustwalletapp.com\/blockchains\/binance\/assets\/MATIC-84A\/logo.png",
+    "symbol": "HEM",
+    "name": "Hemster - 452",
+    "contractAddress": "HEM-452"
   }
 ]
