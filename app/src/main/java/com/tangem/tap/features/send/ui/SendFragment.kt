@@ -298,7 +298,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
 
 @ExperimentalCoroutinesApi
 fun EditText.inputtedTextAsFlow(): Flow<String> = callbackFlow {
-    val watcher = addTextChangedListener { editable -> offer(editable?.toString() ?: "") }
+    val watcher = addTextChangedListener { editable -> trySend(editable?.toString() ?: "") }
     awaitClose { removeTextChangedListener(watcher) }
 }
 
