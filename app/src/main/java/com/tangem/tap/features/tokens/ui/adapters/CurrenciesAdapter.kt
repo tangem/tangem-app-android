@@ -100,6 +100,7 @@ class CurrenciesAdapter : ListAdapter<CurrencyListItem, RecyclerView.ViewHolder>
         val list = mutableListOf<CurrencyListItem>()
 
         if (!query.isNullOrEmpty()) {
+            store.dispatch(TokensAction.OpenAllTokens)
             val queryNormalized = query.toString().toLowerCase(Locale.US)
             list.addAll(
                 unfilteredList.filter { element ->
@@ -214,17 +215,29 @@ class CurrenciesAdapter : ListAdapter<CurrencyListItem, RecyclerView.ViewHolder>
 
             if (title.blockchain != null) {
                 view.cl_subtitle_container.setOnClickListener {
-                    val rotation = if (title.isContentShown) -90f else 0f
+                    val rotation = if (title.isContentShown) -90f else 90f
                     store.dispatch(TokensAction.ToggleShowTokensForBlockchain(
                         title.isContentShown, title.blockchain
                     ))
-                    view.iv_toggle_sublist_visibility.animate().rotation(rotation)
+                    view.iv_toggle_sublist_visibility.animate().rotation(rotation).withEndAction {
+                        showArrow(view, title.isContentShown)
+                    }
                 }
-                view.iv_toggle_sublist_visibility.show()
-                view.iv_toggle_sublist_visibility.setImageResource(R.drawable.ic_arrow_angle_down)
+                showArrow(view, title.isContentShown)
             } else {
                 view.iv_toggle_sublist_visibility.hide()
             }
+        }
+
+        private fun showArrow(view: View, isContentShown: Boolean) {
+            view.iv_toggle_sublist_visibility.show()
+            val drawable = if (isContentShown) {
+                R.drawable.ic_arrow_angle_down
+            } else {
+                R.drawable.ic_arrow_angle_right
+            }
+            view.iv_toggle_sublist_visibility.setImageResource(drawable)
+            view.iv_toggle_sublist_visibility.rotation = 0f
         }
     }
 }
