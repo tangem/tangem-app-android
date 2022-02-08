@@ -1,0 +1,868 @@
+[
+  {
+    "decimalCount": 8,
+    "customIconUrl": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/polygon/assets/0x71B821aa52a49F32EEd535fCA6Eb5aa130085978/logo.png",
+    "symbol": "0XBTC",
+    "name": "0xBitcoin",
+    "contractAddress": "0x71b821aa52a49f32eed535fca6eb5aa130085978"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x111111111117dc0aa78b770fa6a738034120c302.png",
+    "symbol": "1INCH",
+    "name": "1inch",
+    "contractAddress": "0x9c2c5fd7b07e95ee044ddeba0e97a665f142394f"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/polygon/assets/0x48cBc913dE09317dF2365e6827Df50dA083701D5/logo.png",
+    "symbol": "FOUR",
+    "name": "4thpillar technologies",
+    "contractAddress": "0x48cbc913de09317df2365e6827df50da083701d5"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x034b2090b579228482520c589dbD397c53Fc51cC.png",
+    "symbol": "VISION",
+    "name": "APY.vision",
+    "contractAddress": "0x034b2090b579228482520c589dbd397c53fc51cc"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://wallet-asset.matic.network/img/tokens/aave.svg",
+    "symbol": "AAVE",
+    "name": "Aave",
+    "contractAddress": "0xd6df932a45c0f255f85145f286ea0b292b21c90b"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x7d1afa7b718fb893db30a3abc0cfc608aacfebb0.png",
+    "symbol": "AMWMATIC",
+    "name": "Aave Polygon WMATIC",
+    "contractAddress": "0x8df3aad3a84da6b69a4da8aec3ea40d9091b2ac4"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://polygonscan.com/token/images/aavegotchighst_32.png",
+    "symbol": "GHST",
+    "name": "Aavegotchi",
+    "contractAddress": "0x385eeac5cb85a38a9a07a70c73e0a3271cfb54a7"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/polygon/assets/0xc3FdbadC7c795EF1D6Ba111e06fF8F16A20Ea539/logo.png",
+    "symbol": "ADDY",
+    "name": "Adamant",
+    "contractAddress": "0xc3fdbadc7c795ef1d6ba111e06ff8f16a20ea539"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0xcae72a7a0fd9046cf6b165ca54c9e3a3872109e0.png",
+    "symbol": "$ANRX",
+    "name": "AnRKey X",
+    "contractAddress": "0x554f074d9ccda8f483d1812d4874cbebd682644e"
+  },
+  {
+    "decimalCount": 18,
+    "symbol": "ANY",
+    "name": "Anyswap",
+    "contractAddress": "0x6ab6d61428fde76768d7b45d8bfeec19c6ef91a8"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/polygon/assets/0x5d47bAbA0d66083C52009271faF3F50DCc01023C/logo.png",
+    "symbol": "BANANA",
+    "name": "ApeSwap Finance",
+    "contractAddress": "0x5d47baba0d66083c52009271faf3f50dcc01023c"
+  },
+  {
+    "decimalCount": 0,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0xdacd69347de42babfaecd09dc88958378780fb62.png",
+    "symbol": "ATRI",
+    "name": "Atari",
+    "contractAddress": "0xb140665dde25c644c6b418e417c930de8a8a6ac9"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/polygon/assets/0x76e63a3E7Ba1e2E61D3DA86a87479f983dE89a7E/logo.png",
+    "symbol": "OMEN",
+    "name": "Augury Finance",
+    "contractAddress": "0x76e63a3e7ba1e2e61d3da86a87479f983de89a7e"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x7f426F6Dc648e50464a0392E60E1BB465a67E9cf.png",
+    "symbol": "AUTO",
+    "name": "Auto",
+    "contractAddress": "0x7f426f6dc648e50464a0392e60e1bb465a67e9cf"
+  },
+  {
+    "decimalCount": 4,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0xc813ea5e3b48bebeedb796ab42a30c5599b01740.png",
+    "symbol": "NIOX",
+    "name": "Autonio",
+    "contractAddress": "0xad684e79ce4b6d464f2ff7c3fd51646892e24b96"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x340d2bde5eb28c1eed91b2f790723e3b160613b7.png",
+    "symbol": "VEE",
+    "name": "BLOCKv",
+    "contractAddress": "0xf1c1a3c2481a3a8a3f173a9ab5ade275292a6fa3"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0xb683d83a532e2cb7dfa5275eed3698436371cc9f.png",
+    "symbol": "BTU",
+    "name": "BTU Protocol",
+    "contractAddress": "0xfdc26cda2d2440d0e83cd1dee8e8be48405806dc"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://wallet-asset.matic.network/img/tokens/bal.svg",
+    "symbol": "BAL",
+    "name": "Balancer",
+    "contractAddress": "0x9a71012b13ca4d3d0cdc72a177df3ef03b0e76a3"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x2d94AA3e47d9D5024503Ca8491fcE9A2fB4DA198.png",
+    "symbol": "BANK",
+    "name": "Bankless DAO",
+    "contractAddress": "0xdb7cb471dd0b49b29cab4a1c14d070f27216a0ab"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x0d8775f648430679a709e98d2b0cb6250d2887ef.png",
+    "symbol": "BAT",
+    "name": "Basic Attention Token",
+    "contractAddress": "0x3cef98bb43d732e2f285ee605a8158cde967d219"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0xFbdd194376de19a88118e84E279b977f165d01b8.png",
+    "symbol": "BIFI",
+    "name": "Beefy.Finance",
+    "contractAddress": "0xfbdd194376de19a88118e84e279b977f165d01b8"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://wallet-asset.matic.network/img/tokens/busd.svg",
+    "symbol": "BUSD",
+    "name": "Binance USD",
+    "contractAddress": "0xdab529f40e671a1d4bf91361c21bf9f0c9712ab7"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/polygon/assets/0x229b1b6C23ff8953D663C4cBB519717e323a0a84/logo.png",
+    "symbol": "BLOK",
+    "name": "Bloktopia",
+    "contractAddress": "0x229b1b6c23ff8953d663c4cbb519717e323a0a84"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x491604c0fdf08347dd1fa4ee062a822a5dd06b5d.png",
+    "symbol": "CTSI",
+    "name": "Cartesi",
+    "contractAddress": "0x2727ab1c2d22170abc9b595177b2d5c6e1ab7b7b"
+  },
+  {
+    "decimalCount": 4,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0xaaaebe6fe48e54f431b0c390cfaf0b017d09d42d.png",
+    "symbol": "CEL",
+    "name": "Celsius Network",
+    "contractAddress": "0xd85d1e945766fea5eda9103f918bd915fbca63e6"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://wallet-asset.matic.network/img/tokens/link.svg",
+    "symbol": "LINK",
+    "name": "Chainlink",
+    "contractAddress": "0x53e0bca35ec356bd5dddfebbd1fc0fd03fabad39"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/polygon/assets/0xE33dC9d2D7D64c1e23467aC7eD7F8eF56d0a8d66/logo.png",
+    "symbol": "CHERRY",
+    "name": "CherryPick",
+    "contractAddress": "0xe33dc9d2d7d64c1e23467ac7ed7f8ef56d0a8d66"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x9b31bb425D8263fA1b8B9d090b83CF0C31665355.png",
+    "symbol": "CPD",
+    "name": "CoinsPaid",
+    "contractAddress": "0x1ce4a2c355f0dcc24e32a9af19f1836d6f4f98ae"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0xc00e94cb662c3520282e6f5717214004a7f26888.png",
+    "symbol": "COMP",
+    "name": "Compound",
+    "contractAddress": "0x8505b9d2254a7ae468c0e9dd10ccea3a837aef5c"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/polygon/assets/0x172370d5Cd63279eFa6d502DAB29171933a610AF/logo.png",
+    "symbol": "CRV",
+    "name": "Curve DAO Token",
+    "contractAddress": "0x172370d5cd63279efa6d502dab29171933a610af"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x63b4f3e3fa4e438698ce330e365e831f7ccd1ef4.png",
+    "symbol": "CFI",
+    "name": "CyberFi",
+    "contractAddress": "0xecf8f2fa183b1c4d2a269bf98a54fce86c812d3e"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0xfa6de2697d59e88ed7fc4dfe5a33dac43565ea41.png",
+    "symbol": "DEFI5",
+    "name": "DEFI Top 5 Index",
+    "contractAddress": "0x42435f467d33e5c4146a4e8893976ef12bbce762"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/polygon/assets/0xDE12c7959E1a72bbe8a5f7A1dc8f8EeF9Ab011B3/logo.png",
+    "symbol": "DEI",
+    "name": "DEI Token",
+    "contractAddress": "0xde12c7959e1a72bbe8a5f7a1dc8f8eef9ab011b3"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/polygon/assets/0xDE5ed76E7c05eC5e4572CfC88d1ACEA165109E44/logo.png",
+    "symbol": "DEUS",
+    "name": "DEUS Finance",
+    "contractAddress": "0xde5ed76e7c05ec5e4572cfc88d1acea165109e44"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x43dfc4159d86f3a37a5a4b3d4580b888ad7d4ddd.png",
+    "symbol": "DODO",
+    "name": "DODO",
+    "contractAddress": "0xe4bf2864ebec7b7fdf6eeca9bacae7cdfdaffe78"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://wallet-asset.matic.network/img/tokens/dai.svg",
+    "symbol": "DAI",
+    "name": "Dai",
+    "contractAddress": "0x8f3cf7ad23cd3cadbd9735aff958023239c6a063"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x1494ca1f11d487c2bbe4543e90080aeba4ba3c2b.png",
+    "symbol": "DPI",
+    "name": "DeFi Pulse Index",
+    "contractAddress": "0x85955046df4668e1dd369d2de9f3aeb98dd2a369"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/polygon/assets/0xef938b6da8576a896f6E0321ef80996F4890f9c4/logo.png",
+    "symbol": "DG",
+    "name": "Decentral Games",
+    "contractAddress": "0xef938b6da8576a896f6e0321ef80996f4890f9c4"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x0f5d2fb29fb7d3cfee444a200298f468908cc942.png",
+    "symbol": "MANA",
+    "name": "Decentraland",
+    "contractAddress": "0xa1c57f48f0deb89f569dfbe6e2b7f46d33606fd4"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/polygon/assets/0xC168E40227E4ebD8C1caE80F7a55a4F0e6D66C97/logo.png",
+    "symbol": "DFYN",
+    "name": "Dfyn Network",
+    "contractAddress": "0xc168e40227e4ebd8c1cae80f7a55a4f0e6d66c97"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0xB9638272aD6998708de56BBC0A290a1dE534a578.png",
+    "symbol": "IQ",
+    "name": "Everipedia",
+    "contractAddress": "0xb9638272ad6998708de56bbc0a290a1de534a578"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0xee573a945b01b788b9287ce062a0cfc15be9fd86.png",
+    "symbol": "XED",
+    "name": "Exeedme",
+    "contractAddress": "0x2fe8733dcb25bfbba79292294347415417510067"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0xfffffffff15abf397da76f1dcc1a1604f45126db.png",
+    "symbol": "FSW",
+    "name": "Falconswap",
+    "contractAddress": "0xad5dc12e88c6534eea8cfe2265851d9d4a1472ad"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x853d955aCEf822Db058eb8505911ED77F175b99e.png",
+    "symbol": "FRAX",
+    "name": "Frax",
+    "contractAddress": "0x45c32fa6df82ead1e2ef74d17b76547eddfaff89"
+  },
+  {
+    "decimalCount": 18,
+    "symbol": "FXS",
+    "name": "Frax Share",
+    "contractAddress": "0x1a3acf6d19267e2d3e7f898f42803e90c9219062"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0xf8c3527cc04340b208c854e985240c02f7b7793f.png",
+    "symbol": "FRONT",
+    "name": "Frontier",
+    "contractAddress": "0xa3ed22eee92a3872709823a6970069e12a4540eb"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/polygon/assets/0xcf32822ff397Ef82425153a9dcb726E5fF61DCA7/logo.png",
+    "symbol": "GMEE",
+    "name": "GAMEE",
+    "contractAddress": "0xcf32822ff397ef82425153a9dcb726e5ff61dca7"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x7075cAB6bCCA06613e2d071bd918D1a0241379E2.png",
+    "symbol": "GFARM2",
+    "name": "Gains Farm",
+    "contractAddress": "0x7075cab6bcca06613e2d071bd918d1a0241379e2"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x8d1566569d5b695d44a9a234540f68D393cDC40D.png",
+    "symbol": "GAME",
+    "name": "GameCredits",
+    "contractAddress": "0x8d1566569d5b695d44a9a234540f68d393cdc40d"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/polygon/assets/0x3f6b3595ecF70735D3f48D69b09C4E4506DB3F47/logo.png",
+    "symbol": "GAMER",
+    "name": "GameStation",
+    "contractAddress": "0x3f6b3595ecf70735d3f48d69b09c4e4506db3f47"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0xbea98c05eeae2f3bc8c3565db7551eb738c8ccab.png",
+    "symbol": "GYSR",
+    "name": "Geyser",
+    "contractAddress": "0xc48f61a288a08f1b80c2edd74652e1276b6a168c"
+  },
+  {
+    "decimalCount": 8,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x2b591e99afe9f32eaa6214f7b7629768c40eeb39.png",
+    "symbol": "HEX",
+    "name": "HEX",
+    "contractAddress": "0x23d29d30e35c5e8d321e1dc9a8a61bfd846d4c5c"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x0954906da0bf32d5479e25f46056d22f08464cab.png",
+    "symbol": "INDEX",
+    "name": "Index Cooperative",
+    "contractAddress": "0xfbd8a3b908e764dbcd51e27992464b4432a1132b"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/polygon/assets/0xD86b5923F3AD7b585eD81B448170ae026c65ae9a/logo.png",
+    "symbol": "IRON",
+    "name": "Iron",
+    "contractAddress": "0xd86b5923f3ad7b585ed81b448170ae026c65ae9a"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x6AE7Dfc73E0dDE2aa99ac063DcF7e8A63265108c.png",
+    "symbol": "JPYC",
+    "name": "JPY Coin",
+    "contractAddress": "0x6ae7dfc73e0dde2aa99ac063dcf7e8a63265108c"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x8a9c67fee641579deba04928c4bc45f66e26343a.png",
+    "symbol": "JRT",
+    "name": "Jarvis Reward Token",
+    "contractAddress": "0x596ebe76e2db4470966ea395b0d063ac6197a8c5"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0xdd974d5c2e2928dea5f71b9825b8b646686bd200.png",
+    "symbol": "KNC",
+    "name": "Kyber Network Crystal",
+    "contractAddress": "0x1c954e8fe737f99f68fa1ccda3e51ebdb291948c"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x5f98805a4e8be255a32880fdec7f6728c6568ba0.png",
+    "symbol": "LUSD",
+    "name": "Liquity USD",
+    "contractAddress": "0x23001f892c0c82b79303edc9b9033cd190bb21c7"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/polygon/assets/0xa3Fa99A148fA48D14Ed51d610c367C61876997F1/logo.png",
+    "symbol": "MIMATIC",
+    "name": "MAI",
+    "contractAddress": "0xa3fa99a148fa48d14ed51d610c367c61876997f1"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x3593d125a4f7849a1b059e64f4517a86dd60c95d.png",
+    "symbol": "OM",
+    "name": "MANTRA DAO",
+    "contractAddress": "0xc3ec80343d2bae2f8e680fdadde7c17e71e114ea"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0xb4d930279552397bba2ee473229f89ec245bc365.png",
+    "symbol": "MAHA",
+    "name": "MahaDAO",
+    "contractAddress": "0xedd6ca8a4202d4a36611e2fff109648c4863ae19"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x69af81e73a73b40adf4f3d4223cd9b1ece623074.png",
+    "symbol": "MASK",
+    "name": "Mask Network",
+    "contractAddress": "0x2b9e7ccdf0f4e5b24757c1e1a80e311e34cb10c7"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0xffc97d72e13e01096502cb8eb52dee56f74dad7b.png",
+    "symbol": "MAAAVE",
+    "name": "Matic Aave Interest Bearing AAVE",
+    "contractAddress": "0x823cd4264c1b951c9209ad0deaea9988fe8429bf"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x028171bca77440897b824ca71d1c56cac55b68a3.png",
+    "symbol": "MADAI",
+    "name": "Matic Aave Interest Bearing DAI",
+    "contractAddress": "0xe0b22e0037b130a9f56bbb537684e6fa18192341"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0xa06bc25b5805d5f8d82847d191cb4af5a3e873e0.png",
+    "symbol": "MALINK",
+    "name": "Matic Aave Interest Bearing LINK",
+    "contractAddress": "0x98ea609569bd25119707451ef982b90e3eb719cd"
+  },
+  {
+    "decimalCount": 6,
+    "customIconUrl": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/polygon/assets/0x9719d867A500Ef117cC201206B8ab51e794d3F82/logo.png",
+    "symbol": "MAUSDC",
+    "name": "Matic Aave Interest Bearing USDC",
+    "contractAddress": "0x9719d867a500ef117cc201206b8ab51e794d3f82"
+  },
+  {
+    "decimalCount": 6,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x3ed3b47dd13ec9a98b44e6204a523e766b225811.png",
+    "symbol": "MAUSDT",
+    "name": "Matic Aave Interest Bearing USDT",
+    "contractAddress": "0xdae5f1590db13e3b40423b5b5c5fbf175515910b"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x030ba81f1c18d280636f32af80b9aad02cf0854e.png",
+    "symbol": "MAWETH",
+    "name": "Matic Aave Interest Bearing WETH",
+    "contractAddress": "0x20d3922b4a1a8560e1ac99fba4fade0c849e2142"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x5165d24277cd063f5ac44efd447b27025e888f37.png",
+    "symbol": "MAYFI",
+    "name": "Matic Aave Interest Bearing YFI",
+    "contractAddress": "0xe20f7d1f0ec39c4d5db01f53554f2ef54c71f613"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x101cc05f4a51c0319f570d5e146a8c625198e636.png",
+    "symbol": "MATUSD",
+    "name": "Matic Aave interest bearing TUSD",
+    "contractAddress": "0xf4b8888427b00d7caf21654408b7cba2ecf4ebd9"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x72e364F2ABdC788b7E918bc238B21f109Cd634D7.png",
+    "symbol": "MVI",
+    "name": "Metaverse Index",
+    "contractAddress": "0xfe712251173a2cd5f5be2b46bb528328ea3565e1"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x7778360F035C589fCE2f4eA5786CbD8B36e5396B.png",
+    "symbol": "OOE",
+    "name": "OpenOcean",
+    "contractAddress": "0x9d5565da88e596730522cbc5a918d2a89dbc16d9"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/polygon/assets/0x1631244689EC1fEcbDD22fb5916E920dFC9b8D30/logo.png",
+    "symbol": "OVR",
+    "name": "Ovr",
+    "contractAddress": "0x1631244689ec1fecbdd22fb5916e920dfc9b8d30"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/polygon/assets/0x9aF3b7DC29D3C4B1A5731408B6A9656fA7aC3b72/logo.png",
+    "symbol": "PUSD",
+    "name": "PUSD",
+    "contractAddress": "0x9af3b7dc29d3c4b1a5731408b6a9656fa7ac3b72"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x4C16f69302CcB511c5Fac682c7626B9eF0Dc126a.png",
+    "symbol": "POLYBUNNY",
+    "name": "Pancake Bunny Polygon",
+    "contractAddress": "0x4c16f69302ccb511c5fac682c7626b9ef0dc126a"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/polygon/assets/0xc1c93D475dc82Fe72DBC7074d55f5a734F8cEEAE/logo.png",
+    "symbol": "PGX",
+    "name": "Pegaxy Stone",
+    "contractAddress": "0xc1c93d475dc82fe72dbc7074d55f5a734f8ceeae"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x429881672b9ae42b8eba0e26cd9c73711b891ca5.png",
+    "symbol": "PICKLE",
+    "name": "Pickle Finance",
+    "contractAddress": "0x2b88ad57897a8b496595925f43048301c37615da"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0xe3818504c1b32bf1557b16c238b2e01fd3149c17.png",
+    "symbol": "PLR",
+    "name": "Pillar",
+    "contractAddress": "0xa6b37fc85d870711c56fbcb8afe2f8db049ae774"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x054d64b73d3d8a21af3d764efd76bcaa774f3bb2.png",
+    "symbol": "PPAY",
+    "name": "Plasma Finance",
+    "contractAddress": "0x08158a6b5d4018340387d1a302f882e98a8bc5b4"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x72f020f8f3e8fd9382705723cd26380f8d0c66bb.png",
+    "symbol": "PLOT",
+    "name": "PlotX",
+    "contractAddress": "0xe82808eaa78339b06a691fd92e1be79671cad8d3"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0xd8912c10681d8b21fd3742244f44658dba12264e.png",
+    "symbol": "PLU",
+    "name": "Pluton",
+    "contractAddress": "0x7dc0cb65ec6019330a6841e9c274f2ee57a6ca6c"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/polygon/assets/0x3a3Df212b7AA91Aa0402B9035b098891d276572B/logo.png",
+    "symbol": "FISH",
+    "name": "Polycat Finance",
+    "contractAddress": "0x3a3df212b7aa91aa0402b9035b098891d276572b"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://wallet-asset.matic.network/img/tokens/matic.svg",
+    "symbol": "MATIC",
+    "name": "Polygon",
+    "contractAddress": "0x0000000000000000000000000000000000001010"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/polygon/assets/0xC68e83a305b0FaD69E264A1769a0A070F190D2d6/logo.png",
+    "symbol": "ROLL",
+    "name": "Polyroll",
+    "contractAddress": "0xc68e83a305b0fad69e264a1769a0a070f190d2d6"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/polygon/assets/0x05089C9EBFFa4F0AcA269e32056b1b36B37ED71b/logo.png",
+    "symbol": "KRILL",
+    "name": "Polywhale",
+    "contractAddress": "0x05089c9ebffa4f0aca269e32056b1b36b37ed71b"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/polygon/assets/0x580A84C73811E1839F75d86d75d88cCa0c241fF4/logo.png",
+    "symbol": "QI",
+    "name": "Qi Dao",
+    "contractAddress": "0x580a84c73811e1839f75d86d75d88cca0c241ff4"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://wallet-asset.matic.network/img/tokens/quick.svg",
+    "symbol": "QUICK",
+    "name": "Quickswap",
+    "contractAddress": "0x831753dd7087cac61ab5644b308642cc1c33dc13"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x33D0568941C0C64ff7e0FB4fbA0B11BD37deEd9f.png",
+    "symbol": "RAMP",
+    "name": "RAMP",
+    "contractAddress": "0xaecebfcf604ad245eaf0d5bd68459c3a7a6399c2"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x03ab458634910aad20ef5f1c8ee96f1d6ac54919.png",
+    "symbol": "RAI",
+    "name": "Rai Reflex Index",
+    "contractAddress": "0x00e5646f60ac6fb446f621d146b6e1886f002905"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0xC91c06DB0f7bFFba61e2A5645CC15686F0a8c828.png",
+    "symbol": "RAZOR",
+    "name": "Razor Network",
+    "contractAddress": "0xc91c06db0f7bffba61e2a5645cc15686f0a8c828"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x61299774020dA444Af134c82fa83E3810b309991.png",
+    "symbol": "RNDR",
+    "name": "Render Token",
+    "contractAddress": "0x61299774020da444af134c82fa83e3810b309991"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/polygon/assets/0x16ECCfDbb4eE1A85A33f3A9B21175Cd7Ae753dB4/logo.png",
+    "symbol": "ROUTE",
+    "name": "Router Protocol",
+    "contractAddress": "0x16eccfdbb4ee1a85a33f3a9b21175cd7ae753db4"
+  },
+  {
+    "decimalCount": 2,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0xdb25f211ab05b1c97d595516f45794528a807ad8.png",
+    "symbol": "EURS",
+    "name": "STASIS EURO",
+    "contractAddress": "0xe111178a87a3bff0c8d18decba5798827539ae99"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x840195888Db4D6A99ED9F73FcD3B225Bb3cB1A79.png",
+    "symbol": "SX",
+    "name": "SX Network",
+    "contractAddress": "0x840195888db4d6a99ed9f73fcd3b225bb3cb1a79"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0xc770eefad204b5180df6a14ee197d99d808ee52d.png",
+    "symbol": "FOX",
+    "name": "ShapeShift FOX Token",
+    "contractAddress": "0x65a05db8322701724c197af82c9cae41195b0aa8"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/polygon/assets/0xccBe9B810d6574701d324fD6DbE0A1b68f9d5bf7/logo.png",
+    "symbol": "STACK",
+    "name": "Stacker Ventures",
+    "contractAddress": "0xccbe9b810d6574701d324fd6dbe0a1b68f9d5bf7"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/polygon/assets/0x3a9A81d576d83FF21f26f325066054540720fC34/logo.png",
+    "symbol": "DATA",
+    "name": "Streamr",
+    "contractAddress": "0x3a9a81d576d83ff21f26f325066054540720fc34"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0xe53ec727dbdeb9e2d5456c3be40cff031ab40a55.png",
+    "symbol": "SUPER",
+    "name": "SuperFarm",
+    "contractAddress": "0xa1428174f516f527fafdd146b883bb4428682737"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0xea319e87cf06203dae107dd8e5672175e3ee976c.png",
+    "symbol": "SURF",
+    "name": "Surf.Finance",
+    "contractAddress": "0x1e42edbe5376e717c1b22904c59e406426e8173f"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://wallet-asset.matic.network/img/tokens/sushi.svg",
+    "symbol": "SUSHI",
+    "name": "Sushi",
+    "contractAddress": "0x0b3f868e0be5597d5db7feb59e1cadbb0fdda50a"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0xc011a73ee8576fb46f5e1c5751ca3b9fe0af2a6f.png",
+    "symbol": "SNX",
+    "name": "Synthetix Network Token",
+    "contractAddress": "0x50b728d8d964fd00c2d0aad81718b71311fef68a"
+  },
+  {
+    "decimalCount": 2,
+    "customIconUrl": "https://wallet-asset.matic.network/img/tokens/tel.svg",
+    "symbol": "TEL",
+    "name": "Telcoin",
+    "contractAddress": "0xdf7837de1f2fa4631d716cf2502f8b230f1dcc32"
+  },
+  {
+    "decimalCount": 6,
+    "customIconUrl": "https://wallet-asset.matic.network/img/tokens/usdt.svg",
+    "symbol": "USDT",
+    "name": "Tether",
+    "contractAddress": "0xc2132d05d31c914a87c6611c10748aeb04b58e8f"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0xc944e90c64b2c07662a292be6244bdf05cda44a7.png",
+    "symbol": "GRT",
+    "name": "The Graph",
+    "contractAddress": "0x5fe2b58c013d7601147dcdd68c143a77499f5531"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x0000000000085d4780b73119b644ae5ecd22b376.png",
+    "symbol": "TUSD",
+    "name": "TrueUSD",
+    "contractAddress": "0x2e1ad108ff1d8c782fcbbb89aad783ac49586756"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0xcc4304a31d09258b0029ea7fe63d032f52e44efe.png",
+    "symbol": "SWAP",
+    "name": "Trustswap",
+    "contractAddress": "0x3809dcdd5dde24b37abe64a5a339784c3323c44f"
+  },
+  {
+    "decimalCount": 6,
+    "customIconUrl": "https://wallet-asset.matic.network/img/tokens/usdc.svg",
+    "symbol": "USDC",
+    "name": "USD Coin",
+    "contractAddress": "0x2791bca1f2de4661ed88a30c99a7a9449aa84174"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x0202be363b8a4820f3f4de7faf5224ff05943ab1.png",
+    "symbol": "UFT",
+    "name": "UniLend Finance",
+    "contractAddress": "0x5b4cf2c120a9702225814e18543ee658c5f8631e"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0xf2f9a7e93f845b3ce154efbeb64fb9346fcce509.png",
+    "symbol": "POWER",
+    "name": "UniPower",
+    "contractAddress": "0x00d5149cdf7cec8725bf50073c51c4fa58ecca12"
+  },
+  {
+    "decimalCount": 8,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x8400d94a5cb0fa0d041a3788e395285d61c9ee5e.png",
+    "symbol": "UBT",
+    "name": "Unibright",
+    "contractAddress": "0x7fbc10850cae055b27039af31bd258430e714c62"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://wallet-asset.matic.network/img/tokens/uni.svg",
+    "symbol": "UNI",
+    "name": "Uniswap",
+    "contractAddress": "0xb33eaad8d922b1083446dc23f610c2567fb5180f"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x1b40183EFB4Dd766f11bDa7A7c3AD8982e998421.png",
+    "symbol": "VSP",
+    "name": "Vesper Finance",
+    "contractAddress": "0x09c5a4bca808bd1ba2b8e6b3aaf7442046b4ca5b"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://wallet-asset.matic.network/img/tokens/eth.svg",
+    "symbol": "WETH",
+    "name": "WETH",
+    "contractAddress": "0x7ceb23fd6bc0add59e62ac25578270cff1b9f619"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x4691937a7508860f876c9c0a2a617e7d9e945d4b.png",
+    "symbol": "WOO",
+    "name": "WOO Network",
+    "contractAddress": "0x1b815d120b3ef02039ee11dc2d33de7aa4a8c603"
+  },
+  {
+    "decimalCount": 8,
+    "customIconUrl": "https://wallet-asset.matic.network/img/tokens/wbtc.svg",
+    "symbol": "WBTC",
+    "name": "Wrapped Bitcoin",
+    "contractAddress": "0x1bfd67037b42cf73acf2047067bd4f2c47d9bfd6"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x6e1A19F235bE7ED8E3369eF73b196C07257494DE.png",
+    "symbol": "WFIL",
+    "name": "Wrapped Filecoin",
+    "contractAddress": "0xede1b77c0ccc45bfa949636757cd2ca7ef30137f"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/polygon/assets/0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270/logo.png",
+    "symbol": "WMATIC",
+    "name": "Wrapped Matic",
+    "contractAddress": "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0xa47c8bf37f92abed4a126bda807a7b7498661acd.png",
+    "symbol": "UST",
+    "name": "Wrapped UST",
+    "contractAddress": "0x692597b009d13c4049a947cab2239b7d6517875f"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0xf4cd3d3fda8d7fd6c5a500203e38640a70bf9577.png",
+    "symbol": "YF-DAI",
+    "name": "YfDAI.finance",
+    "contractAddress": "0x7e7ff932fab08a0af569f93ce65e7b8b23698ad8"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/polygon/assets/0x8C92e38eCA8210f4fcBf17F0951b198Dd7668292/logo.png",
+    "symbol": "DHT",
+    "name": "dHEDGE DAO",
+    "contractAddress": "0x8c92e38eca8210f4fcbf17f0951b198dd7668292"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0xa0246c9032bc3a600820415ae600c6388619a14d.png",
+    "symbol": "IFARM",
+    "name": "iFARM",
+    "contractAddress": "0xab0b2ddb9c7e440fac8e140a89c0dbcbf2d7bbff"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0xa3bed4e1c75d00fa6f4e5e6922db7261b5e9acd2.png",
+    "symbol": "MTA",
+    "name": "mStable Governance Token: Meta",
+    "contractAddress": "0xf501dd45a1198c2e1b5aef5314a68b9006d842e0"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0xfC40a4F89b410a1b855b5e205064a38fC29F5eb5.png",
+    "symbol": "RUSD",
+    "name": "rUSD",
+    "contractAddress": "0xfc40a4f89b410a1b855b5e205064a38fc29f5eb5"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x0bc529c00c6401aef6d220be8c6ea1667f6ad93e.png",
+    "symbol": "YFI",
+    "name": "yearn.finance",
+    "contractAddress": "0xda537104d6a5edd53c6fbba9a898708e465260b6"
+  }
+]
