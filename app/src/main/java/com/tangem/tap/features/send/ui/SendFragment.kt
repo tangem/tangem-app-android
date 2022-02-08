@@ -23,7 +23,8 @@ import com.tangem.tap.common.qrCodeScan.ScanQrCodeActivity
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.common.snackBar.MaxAmountSnackbar
 import com.tangem.tap.common.text.truncateMiddleWith
-import com.tangem.tap.common.toggleWidget.*
+import com.tangem.tap.common.toggleWidget.IndeterminateProgressButtonWidget
+import com.tangem.tap.common.toggleWidget.ViewStateWidget
 import com.tangem.tap.features.BaseStoreFragment
 import com.tangem.tap.features.addBackPressHandler
 import com.tangem.tap.features.send.redux.*
@@ -40,8 +41,6 @@ import com.tangem.tap.mainScope
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fragment_send.*
-import kotlinx.android.synthetic.main.fragment_send.rv_warning_messages
-import kotlinx.android.synthetic.main.fragment_wallet.*
 import kotlinx.android.synthetic.main.layout_send_address_payid.*
 import kotlinx.android.synthetic.main.layout_send_amount.*
 import kotlinx.android.synthetic.main.layout_send_fee.*
