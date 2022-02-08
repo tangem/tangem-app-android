@@ -194,11 +194,10 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
 
         layout_buttons_add_cards.show()
         layout_buttons_common.hide()
+        btn_add_card.text = getText(R.string.onboarding_button_add_backup_card)
         if (state.backupCardsNumber < state.maxBackupCards) {
-            btn_add_card.text = getText(R.string.onboarding_button_add_backup_card)
             btn_add_card.setOnClickListener { store.dispatch(BackupAction.AddBackupCard) }
         } else {
-            btn_add_card.text = "You hit the maximum"
             btn_add_card.isEnabled = false
         }
 
