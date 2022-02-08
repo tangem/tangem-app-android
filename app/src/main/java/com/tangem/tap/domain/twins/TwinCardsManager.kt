@@ -92,7 +92,7 @@ class TwinCardsManager(
                         card = card
                     )
                 }
-                Result.failure(response.error)
+                Result.fromTangemSdkError(response.error)
             }
         }
     }
