@@ -44,7 +44,7 @@ class TokensMiddleware {
         val scanResponse = store.state.globalState.scanResponse ?: return
         val isTestcard = scanResponse.card.isTestCard
 
-        val tokens = currenciesRepository.getPopularTokens(isTestcard)
+        val tokens = currenciesRepository.getSupportedTokens(isTestcard)
         val blockchains = currenciesRepository.getBlockchains(
             cardFirmware = scanResponse.card.firmwareVersion,
             isTestNet = isTestcard
