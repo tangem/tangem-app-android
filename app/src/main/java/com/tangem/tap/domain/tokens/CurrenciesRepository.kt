@@ -63,6 +63,11 @@ class CurrenciesRepository(val context: Application) {
         saveBlockchains(cardId, blockchains)
     }
 
+    fun removeCurrencies(cardId: String) {
+        saveTokens(cardId, emptyList())
+        saveBlockchains(cardId, emptyList())
+    }
+
     private fun loadSavedTokens(cardId: String): List<Token> {
         val json = try {
             context.readFileText(getFileNameForTokens(cardId))
