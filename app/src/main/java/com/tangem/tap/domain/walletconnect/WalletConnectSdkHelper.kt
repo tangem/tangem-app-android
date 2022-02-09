@@ -10,6 +10,7 @@ import com.tangem.blockchain.extensions.*
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.hexToBytes
+import com.tangem.common.extensions.toDecompressedPublicKey
 import com.tangem.common.extensions.toHexString
 import com.tangem.crypto.CryptoUtils
 import com.tangem.operations.sign.SignHashCommand
@@ -187,8 +188,8 @@ class WalletConnectSdkHelper {
         val result = tangemSdkManager.runTaskAsync(command, initialMessage = Message())
         return when (result) {
             is CompletionResult.Success -> {
-                val key = session.wallet.derivedPublicKey
-                    ?: session.wallet.walletPublicKey
+                val key = session.wallet.derivedPublicKey?.toDecompressedPublicKey()
+                    ?: session.wallet.walletPublicKey.toDecompressedPublicKey()
                 getBnbResultString(
                     key.toHexString(),
                     result.data.signature.toHexString()
