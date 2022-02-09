@@ -1,6 +1,7 @@
 package com.tangem.tap.features.onboarding
 
 import android.content.Context
+import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.tangem.tap.common.extensions.copyToClipboard
 import com.tangem.tap.common.extensions.dispatchDialogHide
@@ -23,6 +24,7 @@ class AddressInfoBottomSheetDialog(
 
     init {
         this.setContentView(R.layout.dialog_onboarding_address_info)
+        behavior.state = BottomSheetBehavior.STATE_EXPANDED
         setOnCancelListener { store.dispatchDialogHide() }
     }
 
