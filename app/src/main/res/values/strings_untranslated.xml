@@ -315,4 +315,6 @@ Amount to pay: %s</string>
 
     <string name="solana_rent_warning" translatable="false">Solana network charges a rent of %s every 2 days. Accounts that can’t afford the rent are purged from the network. Deposit your account with more than %s to use it for free.</string>
 
+    <string name="token_symbol_address_format" translatable="false">%1s (%2s)</string>
+
 </resources>
