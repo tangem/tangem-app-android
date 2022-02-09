@@ -10,7 +10,6 @@ class WalletConnectNetworkUtils {
         fun parseBlockchain(
             chainId: Int?,
             peer: WCPeerMeta,
-            isTestNet: Boolean? = null
         ): Blockchain? {
             return when {
                 chainId != null -> {
@@ -30,7 +29,7 @@ class WalletConnectNetworkUtils {
                     Blockchain.BSC
                 }
                 else -> {
-                    if (isTestNet == true) Blockchain.EthereumTestnet else Blockchain.Ethereum
+                   Blockchain.Ethereum
                 }
             }
         }
