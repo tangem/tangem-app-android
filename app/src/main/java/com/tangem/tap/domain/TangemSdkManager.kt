@@ -25,7 +25,6 @@ import com.tangem.operations.pins.SetUserCodeCommand
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.AnalyticsHandler
-import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.domain.tasks.CreateWalletAndRescanTask
 import com.tangem.tap.domain.tasks.product.ResetToFactorySettingsTask
 import com.tangem.tap.domain.tasks.product.ScanProductTask
@@ -33,6 +32,7 @@ import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.domain.tokens.CurrenciesRepository
 import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -135,7 +135,7 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         withContext(Dispatchers.Main) {
             suspendCoroutine { continuation ->
                 tangemSdk.startSessionWithRunnable(runnable, cardId, initialMessage) { result ->
-                    continuation.resume(result)
+                    if (isActive) continuation.resume(result)
                 }
             }
         }
