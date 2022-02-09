@@ -56,7 +56,7 @@ class QrScanFragment : Fragment(0), ZXingScannerView.ResultHandler {
         store.dispatch(NavigationAction.PopBackTo())
 
         if (!result.text.isNullOrBlank()) {
-            store.dispatch(WalletConnectAction.ScanCard(result.text))
+            store.dispatch(WalletConnectAction.OpenSession(result.text))
         }
     }
 
