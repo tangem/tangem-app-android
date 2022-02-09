@@ -16,7 +16,7 @@ class ClipboardOrScanQrDialog {
                 setTitle(context.getString(R.string.wallet_connect))
                 setMessage(context.getText(R.string.wallet_connect_clipboard_alert))
                 setPositiveButton(context.getText(R.string.wallet_connect_paste_from_clipboard)) { _, _ ->
-                    store.dispatch(WalletConnectAction.ScanCard(wcUri))
+                    store.dispatch(WalletConnectAction.OpenSession(wcUri))
                 }
                 setNegativeButton(context.getText(R.string.wallet_connect_scan_new_code)) { _, _ ->
                     store.dispatch(NavigationAction.NavigateTo(AppScreen.QrScan))
