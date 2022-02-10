@@ -34,9 +34,9 @@ data class WalletConnectSession(
 @JsonClass(generateAdapter = true)
 data class WalletForSession(
     val cardId: String,
-    val walletPublicKey: ByteArray?,
-    val derivedPublicKey: ByteArray?,
-    val derivationPath: DerivationPath?,
+    val walletPublicKey: ByteArray? = null,
+    val derivedPublicKey: ByteArray? = null,
+    val derivationPath: DerivationPath? = null,
     val isTestNet: Boolean = false,
     val blockchain: Blockchain? = if (isTestNet) Blockchain.EthereumTestnet else Blockchain.Ethereum
 ) {
