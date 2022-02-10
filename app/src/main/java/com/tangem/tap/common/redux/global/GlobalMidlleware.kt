@@ -90,6 +90,7 @@ private val globalMiddlewareHandler: Middleware<AppState> = { dispatch, appState
                         val result = tangemSdkManager.scanProduct(
                             store.state.globalState.analyticsHandlers,
                             currenciesRepository,
+                            action.additionalBlockchainsToDerive,
                             action.messageResId
                         )
                         withMainContext {
