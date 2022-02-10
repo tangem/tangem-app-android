@@ -182,7 +182,10 @@ class CurrenciesAdapter : ListAdapter<CurrencyListItem, RecyclerView.ViewHolder>
             Picasso.get().loadCurrenciesIcon(view.iv_currency, view.tv_token_letter, token, token.blockchain)
 
             view.tv_currency_name.text = token.name
-            view.tv_currency_symbol.text = token.symbol
+            view.tv_currency_symbol.text = view.context.getString(
+                R.string.token_symbol_address_format,
+                token.symbol, token.contractAddress
+            )
             view.btn_add_token.setOnClickListener {
                 onItemAddListener.invoke(currency)
                 currency.isAdded = true
