@@ -17,6 +17,9 @@ class WalletConnectReducer {
                     )
                 }
                 is  WalletConnectAction.OpenSession -> {
+                    state.copy(loading = true)
+                }
+                is WalletConnectAction.AddScanResponse -> {
                     state.copy(scanResponse = action.scanResponse)
                 }
                 is WalletConnectAction.SetSessionsRestored ->
@@ -27,8 +30,6 @@ class WalletConnectReducer {
                         state.sessions.filterNot { it.session.toUri() == action.session.toUri() }
                     state.copy(sessions = sessions)
                 }
-                is WalletConnectAction.ScanCard -> state.copy(loading = true)
-
                 is WalletConnectAction.UnsupportedCard -> state.copy(loading = false)
                 is WalletConnectAction.RefuseOpeningSession -> state.copy(loading = false)
                 is WalletConnectAction.OpeningSessionTimeout -> state.copy(loading = false)
