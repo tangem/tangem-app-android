@@ -67,7 +67,7 @@ private fun handleReadCard() {
         store.dispatch(NavigationAction.NavigateTo(AppScreen.Disclaimer))
     } else {
         changeButtonState(ButtonState.PROGRESS)
-        store.dispatch(GlobalAction.ScanCard(false, { scanResponse ->
+        store.dispatch(GlobalAction.ScanCard( onSuccess =  { scanResponse ->
             store.state.globalState.tapWalletManager.updateConfigManager(scanResponse)
             store.dispatch(TwinCardsAction.IfTwinsPrepareState(scanResponse))
 
@@ -88,7 +88,7 @@ private fun handleReadCard() {
                     }
                 }
             }
-        }, {
+        }, onFailure = {
             changeButtonState(ButtonState.ENABLED)
         }))
     }
