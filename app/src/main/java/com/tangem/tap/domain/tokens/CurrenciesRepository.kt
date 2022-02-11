@@ -156,10 +156,19 @@ class CurrenciesRepository(val context: Application) {
         cardFirmware: FirmwareVersion,
         isTestNet: Boolean = false
     ): List<Blockchain> {
-        return if (cardFirmware < FirmwareVersion.MultiWalletAvailable) {
+        val blockchains = if (cardFirmware < FirmwareVersion.MultiWalletAvailable) {
             Blockchain.secp256k1Blockchains(isTestNet)
         } else {
             Blockchain.secp256k1Blockchains(isTestNet) + Blockchain.ed25519OnlyBlockchains(isTestNet)
+        }
+        return excludeUnsupportedBlockchains(blockchains)
+    }
+// [REDACTED_TODO_COMMENT]
+    private fun excludeUnsupportedBlockchains(blockchains: List<Blockchain>): List<Blockchain> {
+        return blockchains.toMutableList().apply {
+            removeAll(listOf(
+                Blockchain.Fantom, Blockchain.FantomTestnet
+            ))
         }
     }
 
