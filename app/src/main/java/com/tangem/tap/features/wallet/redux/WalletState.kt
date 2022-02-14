@@ -246,13 +246,19 @@ data class WalletData(
     val fiatRateString: String? = null,
     val fiatRate: BigDecimal? = null,
     val mainButton: WalletMainButton = WalletMainButton.SendButton(false),
-    val currency: Currency
+    val currency: Currency,
+    val walletRent: WalletRent? = null,
 ) {
     fun shouldShowMultipleAddress(): Boolean {
         val listOfAddresses = walletAddresses?.list ?: return false
         return listOfAddresses.size > 1
     }
 }
+
+data class WalletRent(
+    val minRentValue: String,
+    val rentExemptValue: String
+)
 
 sealed interface Currency {
 
