@@ -1,5 +1,6 @@
 package com.tangem.tap.common.redux.global
 
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemError
@@ -37,7 +38,7 @@ sealed class GlobalAction : Action {
     }
 
     data class ScanCard(
-        val shouldDeriveWC: Boolean,
+        val additionalBlockchainsToDerive: Collection<Blockchain>? = null,
         val onSuccess: ((ScanResponse) -> Unit)? = null,
         val onFailure: ((TangemError) -> Unit)? = null,
         val messageResId: Int? = null,
