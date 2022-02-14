@@ -88,7 +88,6 @@ data class SessionDao(
                 session = session.session,
                 peerMeta = session.peerMeta
             )
-
         }
     }
 }

@@ -1,0 +1,16 @@
+[
+  {
+    "decimalCount": 6,
+    "customIconUrl": "https://i.imgur.com\/LPZDXoT.png",
+    "symbol": "FUJISTABLE",
+    "name": "The Fuji stablecoin",
+    "contractAddress": "0x2058ec2791dD28b6f67DB836ddf87534F4Bbdf22"
+  },
+  {
+    "decimalCount": 9,
+    "customIconUrl": "https://i.imgur.com\/jNTqyQA.png",
+    "symbol": "FUJIMOON",
+    "name": "To the Moon",
+    "contractAddress": "0x97132C109c6816525F7f338DCb7435E1412A7668"
+  }
+]

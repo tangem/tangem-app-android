@@ -105,6 +105,7 @@ object TangemSdk {
             is TangemSdkError.WrongInteractionMode -> TangemSdkError.WrongInteractionMode()
             is TangemSdkError.IssuerSignatureLoadingFailed -> TangemSdkError.IssuerSignatureLoadingFailed()
             is TangemSdkError.BackupFailedFirmware -> TangemSdkError.BackupFailedFirmware()
+            is TangemSdkError.UserForgotTheCode -> TangemSdkError.UserForgotTheCode()
         }
     }
 
