@@ -73,7 +73,10 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
             }
             tv_card_id.text = cardId
             tv_issuer.text = state.cardInfo.issuer
-            tv_signed_hashes.text = state.cardInfo.signedHashes.toString()
+            tv_signed_hashes.text = getString(
+                R.string.details_row_subtitle_signed_hashes_format,
+                state.cardInfo.signedHashes.toString()
+            )
         }
 
         tv_signed_hashes.show(!state.isTangemTwins)
