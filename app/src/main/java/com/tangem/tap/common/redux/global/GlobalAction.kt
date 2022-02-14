@@ -1,8 +1,10 @@
 package com.tangem.tap.common.redux.global
 
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemError
+import com.tangem.tap.common.analytics.GlobalAnalyticsHandler
 import com.tangem.tap.common.redux.*
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.configurable.config.ConfigManager
@@ -36,7 +38,7 @@ sealed class GlobalAction : Action {
     }
 
     data class ScanCard(
-        val shouldDeriveWC: Boolean,
+        val additionalBlockchainsToDerive: Collection<Blockchain>? = null,
         val onSuccess: ((ScanResponse) -> Unit)? = null,
         val onFailure: ((TangemError) -> Unit)? = null,
         val messageResId: Int? = null,
@@ -69,6 +71,7 @@ sealed class GlobalAction : Action {
     data class SetConfigManager(val configManager: ConfigManager) : GlobalAction()
     data class SetWarningManager(val warningManager: WarningMessagesManager) : GlobalAction()
     data class SetFeedbackManager(val feedbackManager: FeedbackManager) : GlobalAction()
+    data class SetAnanlyticHandlers(val analyticsHandlers: GlobalAnalyticsHandler) : GlobalAction()
 
     data class SendFeedback(val emailData: EmailData) : GlobalAction()
     data class UpdateFeedbackInfo(val walletManagers: List<WalletManager>) : GlobalAction()
