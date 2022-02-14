@@ -54,7 +54,7 @@
     <string name="alert_negative_app_rate_sent_message" translatable="false">Thank your for your feedback. We will response as soon as possible</string>
     <string name="alert_failed_to_send_email_title" translatable="false">Failed to send email</string>
     <string name="alert_failed_to_send_email_message" translatable="false">Reason: %s</string>
-    <string name="alert_failed_to_send_transaction_title" translatable="false">Can’t send a transaction</string>
+    <string name="alert_failed_to_send_transaction_title" translatable="false">Can\'t send a transaction</string>
     <string name="alert_failed_to_send_transaction_message" translatable="false">Reason: %s. Do you want to send feedback?</string>
     <string name="alert_troubleshooting_scan_card_title" translatable="false">Are you having difficulty scanning your card?</string>
     <string name="alert_troubleshooting_scan_card_message" translatable="false">Please try to tap the card exactly as shown in the animation or request support.</string>
@@ -115,9 +115,9 @@
     <string name="warning_important_security_info" translatable="false">Important security information \u26A0</string>
     <string name="warning_signed_tx_previously" translatable="false">This card has signed transactions in the past</string>
     <string name="warning_button_learn_more" translatable="false">Learn more</string>
-    <string name="alert_signed_hashes_message" translatable="false">This card is not a bearer note. We can’t currently match the signature count on the card with the information on the blockchain. This is normal but in rare cases can mean a previous holder is holding back an offline signature, which is a security concern.
-    \n\nDo not accept this card as physical payment from someone you don’t trust.
-    \n\nIt’s perfectly safe in all other respects.
+    <string name="alert_signed_hashes_message" translatable="false">This card is not a bearer note. We can\'t currently match the signature count on the card with the information on the blockchain. This is normal but in rare cases can mean a previous holder is holding back an offline signature, which is a security concern.
+    \n\nDo not accept this card as physical payment from someone you don\'t trust.
+    \n\nIt\'s perfectly safe in all other respects.
     \n\nTangem is the only hardware wallet to offer signature count protection.</string>
     <string name="alert_button_i_understand" translatable="false">I understand</string>
 
@@ -162,7 +162,7 @@
     <string name="wallet_connect_clipboard_alert" translatable="false">Clipboard contain WalletConnect code. Use copied value or scan QR-code</string>
     <string name="wallet_connect_paste_from_clipboard" translatable="false">Paste from clipboard</string>
     <string name="wallet_connect_scan_new_code" translatable="false">Scan new code</string>
-    <string name="wallet_connect_scanner_error_no_ethereum_wallet" translatable="false">This card can’t be used to establish WalletConnect session</string>
+    <string name="wallet_connect_scanner_error_no_ethereum_wallet" translatable="false">This card can\'t be used to establish WalletConnect session</string>
     <string name="wallet_connect_could_not_complete" translatable="false">The operation couldn\'t be completed</string>
     <string name="wallet_connect_same_wcuri" translatable="false">The operation couldn\'t be completed. \n\nYou have already established a WalletConnect session with this parameters.</string>
     <string name="wallet_connect_error_timeout" translatable="false">Failed to establish WalletConnect session: timeout error. Please, try again later.</string>
@@ -184,14 +184,14 @@
     <string name="onboarding_button_receive_crypto" translatable="false">Receive crypto</string>
 
     <string name="onboarding_create_wallet_header" translatable="false">Create a wallet</string>
-    <string name="onboarding_create_wallet_body" translatable="false">Let’s generate all the keys on your card and create a secure wallet</string>
+    <string name="onboarding_create_wallet_body" translatable="false">Let\'s generate all the keys on your card and create a secure wallet</string>
     <string name="onboarding_create_wallet_button_create_wallet" translatable="false">Create wallet</string>
 
     <string name="onboarding_top_up_header" translatable="false">Top up your wallet</string>
     <string name="onboarding_top_up_body" translatable="false">To get started, simply top up the card with any amount</string>
     <string name="onboarding_top_up_body_no_account_error" translatable="false">To get started, simply top up the wallet with more than %s %s.</string>
     <string name="onboarding_top_up_button_but_crypto" translatable="false">Buy crypto</string>
-    <string name="onboarding_top_up_button_show_wallet_address" translatable="false">Show the wallet’s address</string>
+    <string name="onboarding_top_up_button_show_wallet_address" translatable="false">Show the wallet\'s address</string>
     <string name="onboarding_dialog_wallet_address" translatable="false">Scan the address to top up your wallet</string>
 
     <string name="onboarding_done_header" translatable="false">Success!</string>
@@ -201,8 +201,8 @@
     <string name="address_qr_code_message_format" translatable="false">Send only %s (%s) to this address. Sending any other currency will result in its irreversible loss.</string>
     <string name="address_qr_code_message_token_format" translatable="false">Send only %s (%s) from %s network to this address. Sending any other currency will result in its irreversible loss.</string>
 
-    <string name="onboarding_twins_interrupt_warning" translatable="false">If the process of re-creating the wallet gets interrupted in any way, you’ll have to start over.</string>
-    <string name="onboarding_twin_exit_warning" translatable="false">The twinning process is partly complete. You can’t exit it now.</string>
+    <string name="onboarding_twins_interrupt_warning" translatable="false">If the process of re-creating the wallet gets interrupted in any way, you\'ll have to start over.</string>
+    <string name="onboarding_twin_exit_warning" translatable="false">The twinning process is partly complete. You can\'t exit it now.</string>
 
     <string name="onboarding_error_create_primary_wallet" translatable="false">Internal error: can\'t create wallet manager</string>
 
@@ -235,9 +235,9 @@
     <string name="onboarding_subtitle_scan_origin_card" translatable="false">Prepare the primary card</string>
     <string name="onboarding_subtitle_one_backup_card" translatable="false">You can add one more card or finalize the backup process</string>
     <string name="onboarding_subtitle_two_backup_cards" translatable="false">Max number of cards added. Finalize the backup process</string>
-    <string name="onboarding_subtitle_backup_warning" translatable="false">If the process of backup gets interrupted in any way you’ll have to start over</string>
+    <string name="onboarding_subtitle_backup_warning" translatable="false">If the process of backup gets interrupted in any way you\'ll have to start over</string>
 
-    <string name="onboarding_alert_message_not_max_backup_cards_added" translatable="false">You’ve added one backup card. When backup process is finished you can’t add more backup cards. If you have one more card, add it in backup, otherwise you can buy it in shop. Do you like to continue backup process?</string>
+    <string name="onboarding_alert_message_not_max_backup_cards_added" translatable="false">You\'ve added one backup card. When backup process is finished you can\'t add more backup cards. If you have one more card, add it in backup, otherwise you can buy it in shop. Do you like to continue backup process?</string>
 
     <string name="onboarding_access_code_intro_title" translatable="false">Create Access Code</string>
     <string name="onboarding_access_code_repeat_code_title" translatable="false">Re-enter your Access Code</string>
@@ -246,7 +246,7 @@
     <string name="onboarding_access_code_feature_3_title" translatable="false">Restore</string>
     <string name="onboarding_access_code_feature_1_description" translatable="false">You have to setup a single access code to protect all yor wallets.</string>
     <string name="onboarding_access_code_feature_2_description" translatable="false">You can set an individual access code on each card later.</string>
-    <string name="onboarding_access_code_feature_3_description" translatable="false">The access code can be restored with a linked card, don’t keep all cards at one place.</string>
+    <string name="onboarding_access_code_feature_3_description" translatable="false">The access code can be restored with a linked card, don\'t keep all cards at one place.</string>
     <string name="onboarding_access_code_hint" translatable="false">Choose any word, phrase, or number you want as your access code.</string>
     <string name="onboarding_access_code_too_short" translatable="false">Access code must be at least 4 characters long</string>
     <string name="onboarding_access_codes_doesnt_match" translatable="false">Entered access code didn\'t match initial access code</string>
@@ -255,7 +255,7 @@
     <string name="common_submit" translatable="false">Submit</string>
     <string name="onboarding_subtitle_success_backup" translatable="false">You have created 2 backup cards, and now these cards are ready for use.</string>
     <string name="onboarding_navbar_title_creating_backup" translatable="false">Creating a backup</string>
-    <string name="onboarding_backup_exit_warning" translatable="false">The backup process is partly complete. You can’t exit it now.</string>
+    <string name="onboarding_backup_exit_warning" translatable="false">The backup process is partly complete. You can\'t exit it now.</string>
 
     <string name="onboarding_wallet_info_title_first" translatable="false">Backup wallet</string>
     <string name="onboarding_wallet_info_title_second" translatable="false">Identical cards</string>
@@ -313,8 +313,9 @@ Price: %s\n
 Amount to receive: %s\n
 Amount to pay: %s</string>
 
-    <string name="solana_rent_warning" translatable="false">Solana network charges a rent of %s every 2 days. Accounts that can’t afford the rent are purged from the network. Deposit your account with more than %s to use it for free.</string>
+    <string name="solana_rent_warning" translatable="false">Solana network charges a rent of %s every 2 days. Accounts that can\'t afford the rent are purged from the network. Deposit your account with more than %s to use it for free.</string>
 
     <string name="token_symbol_address_format" translatable="false">%1s (%2s)</string>
+    <string name="add_token_search_hint" translatable="false">Type here to search</string>
 
 </resources>
