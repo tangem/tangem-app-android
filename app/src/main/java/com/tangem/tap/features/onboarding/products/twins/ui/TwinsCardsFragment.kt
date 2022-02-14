@@ -12,8 +12,8 @@ import com.squareup.picasso.Picasso
 import com.tangem.Message
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.VoidCallback
+import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.LeapfrogWidget
 import com.tangem.tap.common.extensions.*
-import com.tangem.tap.common.leapfrogWidget.LeapfrogWidget
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.common.redux.navigation.ShareElement
