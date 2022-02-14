@@ -80,7 +80,8 @@ typealias KeyWalletPublicKey = ByteArrayKey
 
 class ScanProductTask(
     val card: Card? = null,
-    private val currenciesRepository: CurrenciesRepository?
+    private val currenciesRepository: CurrenciesRepository?,
+    private val additionalBlockchainsToDerive: Collection<Blockchain>? = null
 ) : CardSessionRunnable<ScanResponse> {
 
     override fun run(
@@ -101,7 +102,7 @@ class ScanProductTask(
         val commandProcessor = when {
             TapWorkarounds.isTangemNote(card) -> ScanNoteProcessor()
             card.isTangemTwins() -> ScanTwinProcessor()
-            else -> ScanWalletProcessor(currenciesRepository)
+            else -> ScanWalletProcessor(currenciesRepository, additionalBlockchainsToDerive)
         }
         commandProcessor.proceed(card, session) { processorResult ->
             when (processorResult) {
@@ -153,7 +154,8 @@ private class ScanNoteProcessor : ProductCommandProcessor<ScanResponse> {
 }
 
 private class ScanWalletProcessor(
-    private val currenciesRepository: CurrenciesRepository?
+    private val currenciesRepository: CurrenciesRepository?,
+    private val additionalBlockchainsToDerive: Collection<Blockchain>? = null
 ) : ProductCommandProcessor<ScanResponse> {
 
     var primaryCard: PrimaryCard? = null
@@ -290,6 +292,9 @@ private class ScanWalletProcessor(
                     Blockchain.EthereumTestnet
                 )
             )
+        }
+        if (additionalBlockchainsToDerive != null) {
+            blockchainsToDerive.addAll(additionalBlockchainsToDerive)
         }
         return blockchainsToDerive.distinct()
     }
