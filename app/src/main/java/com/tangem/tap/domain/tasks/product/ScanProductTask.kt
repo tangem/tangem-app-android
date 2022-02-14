@@ -12,19 +12,20 @@ import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.TangemError
 import com.tangem.common.core.TangemSdkError
+import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.toHexString
+import com.tangem.common.extensions.toMapKey
 import com.tangem.common.hdWallet.DerivationPath
-import com.tangem.common.hdWallet.ExtendedPublicKey
 import com.tangem.operations.CommandResponse
 import com.tangem.operations.PreflightReadMode
 import com.tangem.operations.PreflightReadTask
 import com.tangem.operations.ScanTask
 import com.tangem.operations.backup.PrimaryCard
 import com.tangem.operations.backup.StartPrimaryCardLinkingTask
+import com.tangem.operations.derivation.DeriveMultipleWalletPublicKeysTask
+import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.operations.issuerAndUserData.ReadIssuerDataCommand
-import com.tangem.tap.common.extensions.ByteArrayKey
-import com.tangem.tap.common.extensions.toMapKey
 import com.tangem.tap.domain.ProductType
 import com.tangem.tap.domain.TapSdkError
 import com.tangem.tap.domain.TapWorkarounds
@@ -33,7 +34,6 @@ import com.tangem.tap.domain.TapWorkarounds.isExcluded
 import com.tangem.tap.domain.TapWorkarounds.isNotSupportedInThatRelease
 import com.tangem.tap.domain.extensions.getPrimaryCurve
 import com.tangem.tap.domain.extensions.getSingleWallet
-import com.tangem.tap.domain.tasks.DerivationTask
 import com.tangem.tap.domain.tokens.CurrenciesRepository
 import com.tangem.tap.domain.twins.TwinsHelper
 import com.tangem.tap.preferencesStorage
@@ -43,7 +43,7 @@ data class ScanResponse(
     val productType: ProductType,
     val walletData: WalletData?,
     val secondTwinPublicKey: String? = null,
-    val derivedKeys: Map<KeyWalletPublicKey, List<ExtendedPublicKey>> = mapOf(),
+    val derivedKeys: Map<KeyWalletPublicKey, ExtendedPublicKeysMap> = mapOf(),
     val primaryCard: PrimaryCard? = null
 ) : CommandResponse {
 
@@ -80,7 +80,8 @@ typealias KeyWalletPublicKey = ByteArrayKey
 
 class ScanProductTask(
     val card: Card? = null,
-    private val currenciesRepository: CurrenciesRepository?
+    private val currenciesRepository: CurrenciesRepository?,
+    private val additionalBlockchainsToDerive: Collection<Blockchain>? = null
 ) : CardSessionRunnable<ScanResponse> {
 
     override fun run(
@@ -101,7 +102,7 @@ class ScanProductTask(
         val commandProcessor = when {
             TapWorkarounds.isTangemNote(card) -> ScanNoteProcessor()
             card.isTangemTwins() -> ScanTwinProcessor()
-            else -> ScanWalletProcessor(currenciesRepository)
+            else -> ScanWalletProcessor(currenciesRepository, additionalBlockchainsToDerive)
         }
         commandProcessor.proceed(card, session) { processorResult ->
             when (processorResult) {
@@ -153,7 +154,8 @@ private class ScanNoteProcessor : ProductCommandProcessor<ScanResponse> {
 }
 
 private class ScanWalletProcessor(
-    private val currenciesRepository: CurrenciesRepository?
+    private val currenciesRepository: CurrenciesRepository?,
+    private val additionalBlockchainsToDerive: Collection<Blockchain>? = null
 ) : ProductCommandProcessor<ScanResponse> {
 
     var primaryCard: PrimaryCard? = null
@@ -253,7 +255,7 @@ private class ScanWalletProcessor(
             return
         }
 
-        DerivationTask(derivations).run(session) { result ->
+        DeriveMultipleWalletPublicKeysTask(derivations).run(session) { result ->
             when (result) {
                 is CompletionResult.Success -> {
                     val response = ScanResponse(
@@ -290,6 +292,9 @@ private class ScanWalletProcessor(
                     Blockchain.EthereumTestnet
                 )
             )
+        }
+        if (additionalBlockchainsToDerive != null) {
+            blockchainsToDerive.addAll(additionalBlockchainsToDerive)
         }
         return blockchainsToDerive.distinct()
     }
