@@ -102,6 +102,7 @@
     <string name="add_tokens_subtitle_bsc_tokens" translatable="false">Binance Smart Chain tokens</string>
     <string name="add_tokens_subtitle_binance_tokens" translatable="false">Binance Chain tokens</string>
     <string name="add_tokens_subtitle_avalanche_tokens" translatable="false">Avalanche C-Chain tokens</string>
+    <string name="add_tokens_subtitle_polygon_tokens" translatable="false">Polygon tokens</string>
     <string name="wallet_address_button_copy" translatable="false">Copy</string>
     <string name="wallet_address_button_share" translatable="false">Share</string>
     <string name="wallet_button_add_tokens" translatable="false">+ Add tokens</string>
@@ -313,5 +314,7 @@ Amount to receive: %s\n
 Amount to pay: %s</string>
 
     <string name="solana_rent_warning" translatable="false">Solana network charges a rent of %s every 2 days. Accounts that can’t afford the rent are purged from the network. Deposit your account with more than %s to use it for free.</string>
+
+    <string name="token_symbol_address_format" translatable="false">%1s (%2s)</string>
 
 </resources>
