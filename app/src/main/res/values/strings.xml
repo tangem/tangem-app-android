@@ -110,8 +110,8 @@
     <string name="alert_card_signed_transactions">This card has been already topped up and signed transactions in the past. Consider immediate withdrawal of all funds if you have received this card from an untrusted source.</string>
     <string name="alert_title">Warning</string>
     <string name="alert_unsupported_card">This card is not designed to work with this app</string>
-    <string name="alert_developer_card">The card you scanned is a development card. Don’t accept it as a payment</string>
-    <string name="alert_old_card">Tangem cards manufactured before September 2019 cannot currently be extracted with an iPhone. We’re working hard with Apple to make it possible in future versions of iOS.</string>
+    <string name="alert_developer_card">The card you scanned is a development card. Don\'t accept it as a payment</string>
+    <string name="alert_old_card">Tangem cards manufactured before September 2019 cannot currently be extracted with an iPhone. We\'re working hard with Apple to make it possible in future versions of iOS.</string>
 
     <string name="initial_message_sign_header">Tap to sign</string>
     <string name="initial_message_sign_body">Tap the card to your phone as shown above</string>
@@ -122,7 +122,7 @@
 
     <string name="payid_service_error_loading">Invalid PayString</string>
 
-    <string name="disclaimer_text">Legal Disclaimer
+    <string name="disclaimer_text" translatable="false">Legal Disclaimer
     \n
     \n1. Tangem application (Software)
     \n
@@ -144,7 +144,7 @@
     \n
     \nc) Technical failures in the hardware of the user, including Cards, of any cryptocurrency-related software or service, e.g., data loss due to a faulty or damaged storage device.
     \n
-    \nd) Security problems experienced by the user of any cryptocurrency-related software or service, e.g., unauthorized access to users’ wallets and/or accounts.
+    \nd) Security problems experienced by the user of any cryptocurrency-related software or service, e.g., unauthorized access to users\' wallets and/or accounts.
     \n
     \ne) Actions or inactions of third parties and/or events experienced by third parties, e.g., bankruptcy of service providers, information security attacks on service providers, and fraud conducted by third parties.
     \n
