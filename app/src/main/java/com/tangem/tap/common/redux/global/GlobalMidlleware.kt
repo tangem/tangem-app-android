@@ -4,7 +4,6 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.services.Result
 import com.tangem.tap.*
-import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.withMainContext
@@ -89,9 +88,9 @@ private val globalMiddlewareHandler: Middleware<AppState> = { dispatch, appState
                 is GlobalAction.ScanCard -> {
                     scope.launch {
                         val result = tangemSdkManager.scanProduct(
-                            FirebaseAnalyticsHandler,
+                            store.state.globalState.analyticsHandlers,
                             currenciesRepository,
-                            action.shouldDeriveWC,
+                            action.additionalBlockchainsToDerive,
                             action.messageResId
                         )
                         withMainContext {
