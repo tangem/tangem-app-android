@@ -5,6 +5,7 @@ import CreateProductWalletTaskResponse
 import android.content.Context
 import com.tangem.Message
 import com.tangem.TangemSdk
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CardFilter
 import com.tangem.common.CompletionResult
 import com.tangem.common.SuccessResponse
@@ -25,7 +26,6 @@ import com.tangem.operations.pins.SetUserCodeCommand
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.AnalyticsHandler
-import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
 import com.tangem.tap.domain.tasks.CreateWalletAndRescanTask
 import com.tangem.tap.domain.tasks.product.ResetToFactorySettingsTask
 import com.tangem.tap.domain.tasks.product.ScanProductTask
@@ -33,6 +33,7 @@ import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.domain.tokens.CurrenciesRepository
 import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
@@ -42,13 +43,16 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
     suspend fun scanProduct(
         analyticsHandler: AnalyticsHandler?,
         currenciesRepository: CurrenciesRepository,
+        additionalBlockchainsToDerive: Collection<Blockchain>? = null,
         messageRes: Int? = null,
     ): CompletionResult<ScanResponse> {
         analyticsHandler?.triggerEvent(AnalyticsEvent.READY_TO_SCAN, null)
 
         val message = Message(context.getString(messageRes ?: R.string.initial_message_scan_header))
-        return runTaskAsyncReturnOnMain(ScanProductTask(null, currenciesRepository), null, message)
-            .also { sendScanResultsToAnalytics(analyticsHandler, it) }
+        return runTaskAsyncReturnOnMain(
+            runnable = ScanProductTask(null, currenciesRepository, additionalBlockchainsToDerive),
+            cardId = null, initialMessage = message
+        ).also { sendScanResultsToAnalytics(analyticsHandler, it) }
     }
 
     suspend fun createProductWallet(
@@ -135,7 +139,7 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         withContext(Dispatchers.Main) {
             suspendCoroutine { continuation ->
                 tangemSdk.startSessionWithRunnable(runnable, cardId, initialMessage) { result ->
-                    continuation.resume(result)
+                    if (continuation.context.isActive) continuation.resume(result)
                 }
             }
         }
