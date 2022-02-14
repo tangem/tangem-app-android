@@ -2,7 +2,10 @@ package com.tangem.tap.features.details.redux.walletconnect
 
 import android.app.Activity
 import com.tangem.tap.common.redux.NotificationAction
+import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.wallet.R
+import com.trustwallet.walletconnect.models.binance.WCBinanceTradeOrder
+import com.trustwallet.walletconnect.models.binance.WCBinanceTransferOrder
 import com.trustwallet.walletconnect.models.ethereum.WCEthereumSignMessage
 import com.trustwallet.walletconnect.models.ethereum.WCEthereumTransaction
 import com.trustwallet.walletconnect.models.session.WCSession
@@ -20,20 +23,23 @@ sealed class WalletConnectAction : Action {
 
     data class ShowClipboardOrScanQrDialog(val wcUri: String) : WalletConnectAction()
 
-    data class ScanCard(val wcUri: String) : WalletConnectAction()
-
     object UnsupportedCard : WalletConnectAction()
 
     data class OpenSession(
         val wcUri: String,
-        val wallet: WalletForSession,
     ) : WalletConnectAction()
+
+    data class AddScanResponse(
+        val scanResponse: ScanResponse
+    ): WalletConnectAction()
 
     object RefuseOpeningSession : WalletConnectAction()
 
     data class OpeningSessionTimeout(val session: WCSession) : WalletConnectAction()
 
-    data class AcceptOpeningSession(val session: WalletConnectSession) : WalletConnectAction()
+    data class ScanCard(
+        val session: WalletConnectSession, val chainId: Int?,
+    ) : WalletConnectAction()
 
     data class ApproveSession(
         val session: WCSession,
@@ -78,5 +84,21 @@ sealed class WalletConnectAction : Action {
 
     object NotifyCameraPermissionIsRequired : WalletConnectAction(), NotificationAction {
         override val messageResource = R.string.common_camera_denied_alert_message
+    }
+
+    object BinanceTransaction : WalletConnectAction() {
+        data class Trade(
+            val id: Long, val order: WCBinanceTradeOrder,
+            val sessionData: WalletConnectSession,
+        ) : WalletConnectAction()
+
+        data class Transfer(
+            val id: Long, val order: WCBinanceTransferOrder,
+            val sessionData: WalletConnectSession,
+        ) : WalletConnectAction()
+
+        data class Sign(
+            val id: Long, val data: ByteArray, val sessionData: WCSession,
+            ) : WalletConnectAction()
     }
 }
