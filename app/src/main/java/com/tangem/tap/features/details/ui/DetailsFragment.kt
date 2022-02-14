@@ -125,7 +125,7 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
             store.dispatch(NavigationAction.NavigateTo(AppScreen.WalletConnectSessions))
         }
 
-        tv_security_title.setOnClickListener {
+        ll_manage_security.setOnClickListener {
             store.dispatch(DetailsAction.ManageSecurity.CheckCurrentSecurityOption(state.scanResponse!!.card))
         }
 
