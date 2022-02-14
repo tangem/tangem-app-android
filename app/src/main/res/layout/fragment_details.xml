@@ -133,32 +133,39 @@
                 app:layout_constraintTop_toBottomOf="@id/tv_issuer"
                 tools:text="48 hashes" />
 
-            <TextView
-                android:id="@+id/tv_security"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:drawablePadding="15dp"
-                android:paddingTop="7dp"
-                android:paddingBottom="7dp"
-                android:textColor="@color/darkGray1"
-                android:textSize="16sp"
-                app:drawableEndCompat="@drawable/ic_angle_bracket_right"
-                app:drawableTint="@color/darkGray1"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_signed_hashes_title"
-                tools:text="Long Tap" />
-
-            <TextView
-                android:id="@+id/tv_security_title"
+            <androidx.appcompat.widget.LinearLayoutCompat
+                android:id="@+id/ll_manage_security"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
                 android:paddingTop="7dp"
                 android:paddingBottom="7dp"
-                android:text="@string/details_row_title_manage_security"
-                android:textColor="@color/darkGray6"
-                android:textSize="16sp"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_signed_hashes" />
+                app:layout_constraintTop_toBottomOf="@+id/tv_signed_hashes_title">
+
+                <TextView
+                    android:id="@+id/tv_security_title"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/details_row_title_manage_security"
+                    android:textColor="@color/darkGray6"
+                    android:textSize="16sp" />
+
+                <TextView
+                    android:id="@+id/tv_security"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:drawablePadding="15dp"
+                    android:gravity="end"
+                    android:maxLines="2"
+                    android:textColor="@color/darkGray1"
+                    android:textSize="16sp"
+                    app:drawableEndCompat="@drawable/ic_angle_bracket_right"
+                    app:drawableTint="@color/darkGray1"
+                    tools:text="Long Tap" />
+            </androidx.appcompat.widget.LinearLayoutCompat>
 
             <TextView
                 android:id="@+id/tv_create_backup"
@@ -173,7 +180,7 @@
                 app:drawableEndCompat="@drawable/ic_angle_bracket_right"
                 app:drawableTint="@color/darkGray1"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_security_title" />
+                app:layout_constraintTop_toBottomOf="@id/ll_manage_security" />
 
             <TextView
                 android:id="@+id/tv_reset_to_factory"
