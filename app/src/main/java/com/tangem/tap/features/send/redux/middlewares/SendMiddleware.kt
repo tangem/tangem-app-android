@@ -9,8 +9,9 @@ import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.common.card.Card
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.services.Result
+import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.AnalyticsEvent
-import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
+import com.tangem.tap.common.analytics.AnalyticsParam
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -180,7 +181,7 @@ private fun sendTransaction(
             tangemSdk.config.linkedTerminal = isLinkedTerminal
             when (sendResult) {
                 is SimpleResult.Success -> {
-                    FirebaseAnalyticsHandler.triggerEvent(
+                    store.state.globalState.analyticsHandlers?.triggerEvent(
                         event = AnalyticsEvent.TRANSACTION_IS_SENT,
                         card = card,
                         blockchain = walletManager.wallet.blockchain.currency
@@ -204,13 +205,13 @@ private fun sendTransaction(
                 }
                 is SimpleResult.Failure -> {
                     when (sendResult.error) {
-                        is CreateAccountUnderfunded -> {
-                            val error = sendResult.error as CreateAccountUnderfunded
+                        is BlockchainSdkError.CreateAccountUnderfunded -> {
+                            val error = sendResult.error as BlockchainSdkError.CreateAccountUnderfunded
                             val reserve = error.minReserve.value?.stripZeroPlainString() ?: "0"
                             val symbol = error.minReserve.currencySymbol
                             dispatch(SendAction.SendError(TapError.CreateAccountUnderfunded(listOf(reserve, symbol))))
                         }
-                        is SendException -> {
+                        is BlockchainSdkError.SendException -> {
                             sendResult.error?.let { FirebaseCrashlytics.getInstance().recordException(it) }
                         }
                         is Throwable -> {
@@ -239,11 +240,11 @@ private fun sendTransaction(
                                 }
                                 else -> {
                                     (sendResult.error as? TangemSdkError)?.let { error ->
-                                        FirebaseAnalyticsHandler.logCardSdkError(
+                                        store.state.globalState.analyticsHandlers?.logCardSdkError(
                                             error,
-                                            FirebaseAnalyticsHandler.ActionToLog.SendTransaction,
+                                            Analytics.ActionToLog.SendTransaction,
                                             mapOf(
-                                                FirebaseAnalyticsHandler.AnalyticsParam.BLOCKCHAIN
+                                                AnalyticsParam.BLOCKCHAIN
                                                     to walletManager.wallet.blockchain.currency),
                                             card = card,
                                         )
