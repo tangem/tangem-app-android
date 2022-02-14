@@ -79,6 +79,15 @@ class DialogManager : StoreSubscriber<GlobalState> {
                 TransactionDialog.create(state.dialog.dialogData, context)
             is WalletConnectDialog.PersonalSign ->
                 PersonalSignDialog.create(state.dialog.data, context)
+            is WalletConnectDialog.BnbTransactionDialog ->
+                BnbTransactionDialog.create(
+                    data = state.dialog.data,
+                    session = state.dialog.session,
+                    sessionId = state.dialog.sessionId,
+                    cardId = state.dialog.cardId,
+                    dAppName = state.dialog.dAppName,
+                    context = context
+                )
             is BackupDialog.AddMoreBackupCards -> AddMoreBackupCardsDialog.create(context)
             is BackupDialog.BackupInProgress -> BackupInProgressDialog.create(context)
             is BackupDialog.UnfinishedBackupFound -> UnfinishedBackupFoundDialog.create(context)
