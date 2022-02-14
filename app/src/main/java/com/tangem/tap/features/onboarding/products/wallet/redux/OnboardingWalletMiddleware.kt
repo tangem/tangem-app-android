@@ -4,6 +4,9 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.card.Card
 import com.tangem.operations.backup.BackupService
 import com.tangem.tap.*
+import com.tangem.tap.common.analytics.AnalyticsEvent
+import com.tangem.tap.common.analytics.AnalyticsParam
+import com.tangem.tap.common.analytics.GetCardSourceParams
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchOpenUrl
 import com.tangem.tap.common.extensions.withMainContext
@@ -14,8 +17,8 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.extensions.hasWallets
 import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.features.home.redux.HomeAction
-import com.tangem.tap.features.onboarding.products.note.redux.OnboardingNoteAction
 import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletMiddleware.Companion.BUY_WALLET_URL
+import com.tangem.tap.features.wallet.redux.Artwork
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.Middleware
@@ -61,11 +64,16 @@ private fun handleWalletAction(action: Action) {
             }
             store.dispatch(action)
         }
-        is OnboardingNoteAction.LoadCardArtwork -> {
-//            scope.launch {
-//                val artwork = onboardingManager.loadArtwork()
-//                store.dispatchOnMain(OnboardingWalletAction.SetArtworkUrl(artwork))
-//            }
+        is OnboardingWalletAction.LoadArtwork -> {
+            scope.launch {
+                val artwork = onboardingManager?.loadArtworkUrl()
+                val cardArtwork = if (artwork == Artwork.DEFAULT_IMG_URL) {
+                    null
+                } else {
+                    artwork
+                }
+                store.dispatchOnMain(OnboardingWalletAction.SetArtworkUrl(cardArtwork))
+            }
         }
         is OnboardingWalletAction.CreateWallet -> {
             scope.launch {
@@ -207,7 +215,13 @@ private fun handleBackupAction(action: BackupAction) {
             }
         }
         is BackupAction.GoToShop -> {
-            store.dispatchOpenUrl(BUY_WALLET_URL)
+            backupState.buyAdditionalCardsUrl?.let { url ->
+                store.dispatchOpenUrl(url)
+                store.state.globalState.analyticsHandlers?.triggerEvent(
+                    event = AnalyticsEvent.GET_CARD,
+                    params = mapOf(AnalyticsParam.SOURCE.param to GetCardSourceParams.ONBOARDING.param)
+                )
+            }
         }
         is BackupAction.FinishAddingBackupCards -> {
             if (backupService.addedBackupCardsCount == 1) {
@@ -223,11 +237,13 @@ private fun handleBackupAction(action: BackupAction) {
                     AccessCodeError.CodeTooShort
                 ))
             } else {
+                store.dispatch(BackupAction.SetAccessCodeError(null))
                 store.dispatch(BackupAction.SaveFirstAccessCode(action.accessCode))
             }
         }
         is BackupAction.SaveAccessCodeConfirmation -> {
             if (action.accessCodeConfirmation == backupState.accessCode) {
+                store.dispatch(BackupAction.SetAccessCodeError(null))
                 backupService.setAccessCode(action.accessCodeConfirmation)
                 store.dispatch(BackupAction.PrepareToWritePrimaryCard)
             } else {
