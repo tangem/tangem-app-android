@@ -42,7 +42,7 @@ class WalletConnectManager {
 
     private var sessions: MutableMap<WCSession, WalletConnectActiveData> = mutableMapOf()
 
-    fun connect(wcUri: String, wallet: WalletForSession) {
+    fun connect(wcUri: String) {
         val session = WCSession.from(wcUri) ?: return
         if (sessions[session] != null) {
             store.dispatchOnMain(WalletConnectAction.RefuseOpeningSession)
@@ -57,7 +57,7 @@ class WalletConnectManager {
             remotePeerId = null,
             session = session,
             client = client,
-            wallet = wallet
+            wallet = WalletForSession(cardId = "")
         )
         setupConnectionTimeoutCheck(session)
     }
@@ -154,7 +154,12 @@ class WalletConnectManager {
 
     fun disconnect(session: WCSession) {
         val activeData = sessions[session] ?: return
-        val disconnected = activeData.client.killSession()
+        val disconnected = if (activeData.client.isConnected) {
+            activeData.client.killSession()
+        } else {
+            true
+        }
+
         if (disconnected) {
             onSessionClosed(session)
         }
@@ -296,7 +301,7 @@ class WalletConnectManager {
                 val sessionData = data.toWalletConnectSession()
                 sessionData?.let {
                     store.dispatchOnMain(
-                        WalletConnectAction.AcceptOpeningSession(
+                        WalletConnectAction.ScanCard(
                             session = sessionData,
                             chainId = client.chainId?.toIntOrNull()
                         )
