@@ -37,6 +37,11 @@ private fun internalReduce(action: Action, state: AppState): TokensState {
                 tokensState.copy(shownCurrencies = shownCurrencies)
             }
         }
+        is TokensAction.OpenAllTokens -> {
+            val shownCurrencies = tokensState.currencies
+            shownCurrencies.forEach {  if (it is CurrencyListItem.TitleListItem) it.isContentShown = true}
+            tokensState.copy(shownCurrencies = tokensState.currencies)
+        }
         else -> tokensState
     }
 }
