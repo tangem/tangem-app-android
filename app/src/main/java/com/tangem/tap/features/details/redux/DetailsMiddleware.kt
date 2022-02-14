@@ -5,7 +5,9 @@ import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.services.Result
 import com.tangem.operations.pins.CheckUserCodesResponse
-import com.tangem.tap.common.analytics.FirebaseAnalyticsHandler
+import com.tangem.tap.*
+import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.AnalyticsParam
 import com.tangem.tap.common.extensions.dispatchNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
@@ -18,10 +20,6 @@ import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.features.wallet.models.hasSendableAmountsOrPendingTransactions
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.network.coinmarketcap.CoinMarketCapService
-import com.tangem.tap.preferencesStorage
-import com.tangem.tap.scope
-import com.tangem.tap.store
-import com.tangem.tap.tangemSdkManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -114,13 +112,14 @@ class DetailsMiddleware {
                         withContext(Dispatchers.Main) {
                             when (result) {
                                 is CompletionResult.Success -> {
+                                    currenciesRepository.removeCurrencies(card.cardId)
                                     store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
                                 }
                                 is CompletionResult.Failure -> {
                                     (result.error as? TangemSdkError)?.let { error ->
-                                        FirebaseAnalyticsHandler.logCardSdkError(
+                                        store.state.globalState.analyticsHandlers?.logCardSdkError(
                                             error,
-                                            FirebaseAnalyticsHandler.ActionToLog.PurgeWallet,
+                                            Analytics.ActionToLog.PurgeWallet,
                                             card = store.state.detailsState.scanResponse?.card
                                         )
                                     }
@@ -206,11 +205,11 @@ class DetailsMiddleware {
                                 }
                                 is CompletionResult.Failure -> {
                                     (result.error as? TangemSdkError)?.let { error ->
-                                        FirebaseAnalyticsHandler.logCardSdkError(
+                                        store.state.globalState.analyticsHandlers?.logCardSdkError(
                                             error = error,
-                                            actionToLog = FirebaseAnalyticsHandler.ActionToLog.ChangeSecOptions,
+                                            actionToLog = Analytics.ActionToLog.ChangeSecOptions,
                                             parameters = mapOf(
-                                                FirebaseAnalyticsHandler.AnalyticsParam.NEW_SECURITY_OPTION to
+                                                AnalyticsParam.NEW_SECURITY_OPTION to
                                                     (selectedOption?.name ?: "")
                                             ),
                                             card = store.state.detailsState.scanResponse?.card

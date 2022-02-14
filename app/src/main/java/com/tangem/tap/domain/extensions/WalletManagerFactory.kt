@@ -6,7 +6,7 @@ import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.common.card.CardWallet
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.extensions.hexToBytes
-import com.tangem.tap.common.extensions.toMapKey
+import com.tangem.common.extensions.toMapKey
 import com.tangem.tap.domain.TapWorkarounds.isTestCard
 import com.tangem.tap.domain.tasks.product.ScanResponse
 
@@ -33,13 +33,23 @@ fun WalletManagerFactory.makeWalletManagerForApp(
         }
         seedKey != null -> {
             val derivedKeys = scanResponse.derivedKeys[wallet.publicKey.toMapKey()]
-            val derivedKey = derivedKeys?.firstOrNull { it.derivationPath == blockchain.derivationPath() }
+            val derivedKey = derivedKeys?.get(blockchain.derivationPath())
                 ?: return null
 
-            makeWalletManager(card.cardId, environmentBlockchain, seedKey, derivedKey)
+            makeWalletManager(
+                cardId = card.cardId,
+                blockchain = environmentBlockchain,
+                seedKey = wallet.publicKey,
+                derivedKey = derivedKey
+            )
         }
         else -> {
-            makeWalletManager(card.cardId, environmentBlockchain, wallet.publicKey, wallet.curve)
+            makeWalletManager(
+                cardId = card.cardId,
+                blockchain = environmentBlockchain,
+                walletPublicKey = wallet.publicKey,
+                curve = wallet.curve
+            )
         }
     }
 }
