@@ -61,13 +61,16 @@
 
     <TextView
         android:id="@+id/tv_currency_symbol"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:ellipsize="middle"
         android:paddingStart="16dp"
         android:paddingEnd="16dp"
+        android:singleLine="true"
         android:textColor="@color/darkGray6"
         android:textSize="14sp"
         app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/btn_add_token"
         app:layout_constraintHorizontal_bias="0"
         app:layout_constraintStart_toEndOf="@id/iv_currency"
         app:layout_constraintTop_toTopOf="@id/guideline"
