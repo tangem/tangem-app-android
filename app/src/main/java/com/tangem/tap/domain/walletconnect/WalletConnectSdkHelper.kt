@@ -10,6 +10,7 @@ import com.tangem.blockchain.extensions.*
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.hexToBytes
+import com.tangem.common.extensions.toDecompressedPublicKey
 import com.tangem.common.extensions.toHexString
 import com.tangem.crypto.CryptoUtils
 import com.tangem.operations.sign.SignHashCommand
@@ -48,7 +49,8 @@ class WalletConnectSdkHelper {
             wallet.amounts[AmountType.Coin]?.value ?: return null
 
         val gas = transaction.gas?.hexToBigDecimal()
-            ?: transaction.gasLimit?.hexToBigDecimal() ?: return null
+            ?: transaction.gasLimit?.hexToBigDecimal()
+            ?: BigDecimal(300000) //Set high gasLimit if not provided
 
         val decimals = wallet.blockchain.decimals()
 
@@ -187,8 +189,8 @@ class WalletConnectSdkHelper {
         val result = tangemSdkManager.runTaskAsync(command, initialMessage = Message())
         return when (result) {
             is CompletionResult.Success -> {
-                val key = session.wallet.derivedPublicKey
-                    ?: session.wallet.walletPublicKey
+                val key = session.wallet.derivedPublicKey?.toDecompressedPublicKey()
+                    ?: session.wallet.walletPublicKey.toDecompressedPublicKey()
                 getBnbResultString(
                     key.toHexString(),
                     result.data.signature.toHexString()
