@@ -4,8 +4,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:paddingBottom="24dp">
+    android:layout_height="120dp">
 
     <TextView
         android:id="@+id/tv_amount"
@@ -48,12 +47,13 @@
         android:layout_margin="16dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:src="@drawable/shape_circle"/>
+        tools:src="@drawable/shape_circle" />
 
     <TextView
         android:id="@+id/tv_token_letter"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginBottom="2dp"
         android:textColor="@android:color/white"
         android:textSize="25sp"
         android:textStyle="bold"
@@ -61,8 +61,7 @@
         app:layout_constraintEnd_toEndOf="@id/iv_currency"
         app:layout_constraintStart_toStartOf="@id/iv_currency"
         app:layout_constraintTop_toTopOf="@id/iv_currency"
-        android:layout_marginBottom="2dp"
-        tools:text="J"/>
+        tools:text="J" />
 
     <TextView
         android:id="@+id/tv_status_verified"
@@ -130,7 +129,5 @@
         android:visibility="gone"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/tv_fiat_amount" />
-
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>
