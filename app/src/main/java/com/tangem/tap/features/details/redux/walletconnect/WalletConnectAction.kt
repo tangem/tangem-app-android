@@ -23,21 +23,21 @@ sealed class WalletConnectAction : Action {
 
     data class ShowClipboardOrScanQrDialog(val wcUri: String) : WalletConnectAction()
 
-    data class ScanCard(val wcUri: String) : WalletConnectAction()
-
     object UnsupportedCard : WalletConnectAction()
 
     data class OpenSession(
         val wcUri: String,
-        val wallet: WalletForSession,
-        val scanResponse: ScanResponse
     ) : WalletConnectAction()
+
+    data class AddScanResponse(
+        val scanResponse: ScanResponse
+    ): WalletConnectAction()
 
     object RefuseOpeningSession : WalletConnectAction()
 
     data class OpeningSessionTimeout(val session: WCSession) : WalletConnectAction()
 
-    data class AcceptOpeningSession(
+    data class ScanCard(
         val session: WalletConnectSession, val chainId: Int?,
     ) : WalletConnectAction()
 
