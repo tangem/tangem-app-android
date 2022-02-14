@@ -9,7 +9,7 @@ import com.squareup.moshi.Types
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.common.card.FirmwareVersion
-import com.tangem.common.json.MoshiJsonConverter
+import com.tangem.tap.common.extensions.appendIf
 import com.tangem.tap.common.extensions.readJsonFileToString
 import com.tangem.tap.domain.extensions.getCustomIconUrl
 import com.tangem.tap.domain.extensions.setCustomIconUrl
@@ -63,6 +63,11 @@ class CurrenciesRepository(val context: Application) {
         saveBlockchains(cardId, blockchains)
     }
 
+    fun removeCurrencies(cardId: String) {
+        saveTokens(cardId, emptyList())
+        saveBlockchains(cardId, emptyList())
+    }
+
     private fun loadSavedTokens(cardId: String): List<Token> {
         val json = try {
             context.readFileText(getFileNameForTokens(cardId))
@@ -73,11 +78,7 @@ class CurrenciesRepository(val context: Application) {
         return try {
             tokensAdapter.fromJson(json)!!.map { it.toToken() }.distinct()
         } catch (exception: Exception) {
-            try {
-                obsoleteTokensAdapter.fromJson(json)!!.map { it.toToken() }
-            } catch (exception: Exception) {
-                emptyList()
-            }
+            emptyList()
         }
     }
 
@@ -109,71 +110,76 @@ class CurrenciesRepository(val context: Application) {
         }
     }
 
-    fun getPopularTokens(isTestNet: Boolean = false): List<Token> {
-        val ethereumTokensFileName =
-            if (isTestNet) ETHEREUM_TESTNET_TOKENS_FILE_NAME else ETHEREUM_TOKENS_FILE_NAME
-        val bscTokensFileName =
-            if (isTestNet) BSC_TESTNET_TOKENS_FILE_NAME else BSC_TOKENS_FILE_NAME
-        val binanceTokensFileName =
-            if (isTestNet) BINANCE_TESTNET_TOKENS_FILE_NAME else BINANCE_TOKENS_FILE_NAME
-        val avalancheTokensFileName =
-            if (isTestNet) AVALANCHE_TESTNET_TOKENS_FILE_NAME else AVALANCHE_TOKENS_FILE_NAME
+    fun getSupportedTokens(isTestNet: Boolean = false): List<Token> {
+        val supportedTokens = if (isTestNet) {
+            getSupportedTokens().mapNotNull { it.getTestnetVersion() }
+        } else {
+            getSupportedTokens()
+        }
 
-        val ethereumTokensJson = context.assets.readJsonFileToString(ethereumTokensFileName)
-        val bscTokensJson = context.assets.readJsonFileToString(bscTokensFileName)
-        val binanceTokensJson = context.assets.readJsonFileToString(binanceTokensFileName)
-        val avalancheTokensJson = context.assets.readJsonFileToString(avalancheTokensFileName)
+        val blockchainTokens = supportedTokens.map {
+            fromJsonToTokensDao(loadTokensJson(it), it)
+        }
+        val tokens = blockchainTokens.flatten().map { it.toToken() }
+        return tokens
+    }
 
-        return tokensAdapter.fromJson(ethereumTokensJson)!!.map { it.toToken() } +
-            tokensAdapter.fromJson(bscTokensJson)!!.map { it.toToken() } +
-            tokensAdapter.fromJson(binanceTokensJson)!!.mapNotNull {
-                // temporary exclude Binance BEP-8 tokens
-                if (it.type != null && it.type == BINANCE_TOKEN_TYPE_BEP8) null else it.toToken()
-            } +
-            tokensAdapter.fromJson(avalancheTokensJson)!!.map { it.toToken() }
+    private fun loadTokensJson(blockchain: Blockchain): String {
+        val fileName = getFileName(blockchain)
+        return context.assets.readJsonFileToString(fileName)
+    }
+
+    private fun getFileName(blockchain: Blockchain): String {
+        return StringBuilder().apply {
+            append(blockchain.id.toLowerCase().replace("/test", ""))
+            append("_tokens")
+            appendIf("_testnet") { blockchain.isTestnet() }
+        }.toString()
+    }
+
+    private fun fromJsonToTokensDao(tokenJson: String, blockchain: Blockchain): List<TokenDao> {
+        return obsoleteTokensAdapter.fromJson(tokenJson)!!.map { it.toTokenDao(blockchain) }
+    }
+
+    private fun getSupportedTokens(): List<Blockchain> {
+        return listOf(
+            Blockchain.Avalanche,
+            Blockchain.Binance,
+            Blockchain.BSC,
+            Blockchain.Ethereum,
+            Blockchain.Polygon,
+            Blockchain.Solana,
+        )
     }
 
     fun getBlockchains(
         cardFirmware: FirmwareVersion,
         isTestNet: Boolean = false
     ): List<Blockchain> {
-        return if (cardFirmware < FirmwareVersion.MultiWalletAvailable) {
+        val blockchains = if (cardFirmware < FirmwareVersion.MultiWalletAvailable) {
             Blockchain.secp256k1Blockchains(isTestNet)
         } else {
             Blockchain.secp256k1Blockchains(isTestNet) + Blockchain.ed25519OnlyBlockchains(isTestNet)
         }
+        return excludeUnsupportedBlockchains(blockchains)
+    }
+
+    //TODO: move to the App settings
+    private fun excludeUnsupportedBlockchains(blockchains: List<Blockchain>): List<Blockchain> {
+        return blockchains.toMutableList().apply {
+            removeAll(listOf(
+                Blockchain.Fantom, Blockchain.FantomTestnet
+            ))
+        }
     }
 
     companion object {
-        private const val ETHEREUM_TOKENS_FILE_NAME = "ethereum_tokens"
-        private const val ETHEREUM_TESTNET_TOKENS_FILE_NAME = "ethereum_tokens_testnet"
-        private const val BSC_TOKENS_FILE_NAME = "bsc_tokens"
-        private const val BSC_TESTNET_TOKENS_FILE_NAME = "bsc_tokens_testnet"
-        private const val BINANCE_TOKENS_FILE_NAME = "binance_tokens"
-        private const val BINANCE_TESTNET_TOKENS_FILE_NAME = "binance_tokens_testnet"
-        private const val AVALANCHE_TOKENS_FILE_NAME = "avalanche_tokens"
-        private const val AVALANCHE_TESTNET_TOKENS_FILE_NAME = "avalanche_tokens_testnet"
-
         private const val FILE_NAME_PREFIX_TOKENS = "tokens"
         private const val FILE_NAME_PREFIX_BLOCKCHAINS = "blockchains"
-
-        private const val BINANCE_TOKEN_TYPE_BEP8 = "bep8"
 
         fun getFileNameForTokens(cardId: String): String = "${FILE_NAME_PREFIX_TOKENS}_$cardId"
         fun getFileNameForBlockchains(cardId: String): String =
             "${FILE_NAME_PREFIX_BLOCKCHAINS}_$cardId"
-
-        fun injectDaoBlockchain(context: Context, tokenFileName: String, blockchain: Blockchain): String? {
-            val tokenJson = context.assets.readJsonFileToString(tokenFileName)
-            val converter = MoshiJsonConverter.default()
-            val rawTokensList = converter.fromJson<List<MutableMap<String, Any>>>(tokenJson) ?: return null
-
-            rawTokensList.forEach {
-                it["blockchain"] = BlockchainDao.fromBlockchain(blockchain)
-            }
-
-            return converter.toJson(rawTokensList)
-        }
     }
 }
 
@@ -242,13 +248,16 @@ data class ObsoleteTokenDao(
     val symbol: String,
     val contractAddress: String,
     val decimalCount: Int,
+    val customIconUrl: String?,
 ) {
-    fun toToken(): Token {
-        return Token(
+    fun toTokenDao(blockchain: Blockchain): TokenDao {
+        return TokenDao(
             name = name,
             symbol = symbol,
             contractAddress = contractAddress,
-            decimals = decimalCount
+            decimalCount = decimalCount,
+            blockchainDao = BlockchainDao.fromBlockchain(blockchain),
+            customIconUrl = customIconUrl
         )
     }
 }
