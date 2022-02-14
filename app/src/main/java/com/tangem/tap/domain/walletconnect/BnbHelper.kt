@@ -4,6 +4,7 @@ import com.github.salomonbrys.kotson.registerTypeAdapter
 import com.google.gson.GsonBuilder
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.calculateSha256
+import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.features.details.redux.walletconnect.BinanceMessageData
 import com.tangem.tap.features.details.redux.walletconnect.TradeData
 import com.trustwallet.walletconnect.models.binance.WCBinanceTradeOrder
@@ -24,8 +25,8 @@ class BnbHelper {
                 .mapNotNull { if (it.denom == currency) it.amount else null }
                 .sum()
                 .toBigDecimal()
-                .movePointRight(Blockchain.Binance.decimals())
-                .toString()
+                .movePointLeft(Blockchain.Binance.decimals())
+                .stripZeroPlainString()
 
             val gson = GsonBuilder()
                 .registerTypeAdapter(tradeOrderSerializer)

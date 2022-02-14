@@ -14,10 +14,11 @@ fun MoonpayStatus.buyIsAllowed(currency: Currency): Boolean {
 
     return when (currency) {
         is Currency.Blockchain -> {
-            if (currency.blockchain == Blockchain.Unknown || currency.blockchain == Blockchain.BSC) {
-                false
-            } else {
-                availableToBuy.contains(currency.currencySymbol)
+            val blockchain = currency.blockchain
+            when {
+                blockchain.isTestnet() -> blockchain.getTestnetTopUpUrl() != null
+                blockchain == Blockchain.Unknown || blockchain == Blockchain.BSC -> false
+                else -> availableToBuy.contains(currency.currencySymbol)
             }
         }
         is Currency.Token -> false
