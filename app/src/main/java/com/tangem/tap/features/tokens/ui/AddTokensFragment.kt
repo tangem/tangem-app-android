@@ -121,7 +121,7 @@ fun SearchView.inputtedTextAsFlow(): Flow<String> = callbackFlow {
         }
 
         override fun onQueryTextChange(newText: String?): Boolean {
-            offer(newText ?: "")
+            trySend(newText ?: "")
             return false
         }
     })
