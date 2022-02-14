@@ -78,28 +78,38 @@
 
             <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/imv_second_backup_card"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
                 android:layout_gravity="center"
                 android:src="@drawable/card_placeholder_new"
                 android:visibility="gone"
+                android:layout_marginStart="32dp"
+                android:layout_marginEnd="32dp"
+                android:scaleType="fitCenter"
+
                 />
 
             <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/imv_first_backup_card"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
                 android:layout_gravity="center"
                 android:src="@drawable/card_placeholder_new"
+                android:layout_marginStart="32dp"
+                android:layout_marginEnd="32dp"
+                android:scaleType="fitCenter"
                 android:visibility="gone"/>
 
             <androidx.appcompat.widget.AppCompatImageView
                 android:id="@+id/imv_front_card"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
                 android:layout_gravity="center"
                 android:src="@drawable/card_placeholder_new"
                 android:transitionName="imv_front_card"
+                android:layout_marginStart="32dp"
+                android:layout_marginEnd="32dp"
+                android:scaleType="fitCenter"
                 />
 
         </FrameLayout>
@@ -182,6 +192,7 @@
             app:tabBackground="@drawable/selector_tabs_dots"
             app:tabIndicator="@null"
             app:tabPaddingStart="8dp"
+            android:layout_marginBottom="16dp"
             app:tabPaddingEnd="8dp"
             app:tabGravity="center"/>
 
