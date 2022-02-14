@@ -23,29 +23,36 @@ sealed class CurrencyListItem {
             blockchains: List<Blockchain>,
             tokens: List<Token>,
         ): List<CurrencyListItem> {
-            val blockchainsTitle = R.string.add_tokens_subtitle_blockchains
-            val ethereumTokensTitle = R.string.add_tokens_subtitle_ethereum_tokens
-            val bscTokensTitle = R.string.add_tokens_subtitle_bsc_tokens
-            val binanceTokensTitle = R.string.add_tokens_subtitle_binance_tokens
+            return createBlockchainList(blockchains) +
+                createTokensList(R.string.add_tokens_subtitle_ethereum_tokens, Blockchain.Ethereum, tokens) +
+                createTokensList(R.string.add_tokens_subtitle_bsc_tokens, Blockchain.BSC, tokens) +
+                createTokensList(R.string.add_tokens_subtitle_binance_tokens, Blockchain.Binance, tokens) +
+                createTokensList(R.string.add_tokens_subtitle_polygon_tokens, Blockchain.Polygon, tokens) +
+                createTokensList(R.string.add_tokens_subtitle_avalanche_tokens, Blockchain.Avalanche, tokens)
+        }
 
-            val ethereumTokens = tokens.filter { it.blockchain == Blockchain.Ethereum }
-            val bscTokens = tokens.filter { it.blockchain == Blockchain.BSC }
-            val binanceTokens = tokens.filter { it.blockchain == Blockchain.Binance }
-            return listOf(TitleListItem(blockchainsTitle)) +
-                    blockchains.map { BlockchainListItem(it) } +
-                    listOf(TitleListItem(ethereumTokensTitle, blockchain = Blockchain.Ethereum)) +
-                    ethereumTokens.map { TokenListItem(it) } +
-                    listOf(TitleListItem(bscTokensTitle, blockchain = Blockchain.BSC)) +
-                    bscTokens.map { TokenListItem(it) } +
-                    listOf(TitleListItem(binanceTokensTitle, blockchain = Blockchain.Binance)) +
-                    binanceTokens.map { TokenListItem(it) }
+        private fun createBlockchainList(blockchains: List<Blockchain>): List<CurrencyListItem> {
+            val blockchainsTitle = R.string.add_tokens_subtitle_blockchains
+            return listOf(TitleListItem(blockchainsTitle)) + blockchains.map { BlockchainListItem(it) }
+        }
+
+        private fun createTokensList(
+            @StringRes titleResId: Int,
+            blockchain: Blockchain,
+            tokens: List<Token>
+        ): List<CurrencyListItem> {
+            val filteredTokens = tokens.filter {
+                it.blockchain == blockchain || it.blockchain == blockchain.getTestnetVersion()
+            }
+            val tokensListItem = filteredTokens.map { TokenListItem(it) }
+            return listOf(TitleListItem(titleResId, blockchain = blockchain)) + tokensListItem
         }
     }
 }
 
 fun List<CurrencyListItem>.removeTokensForBlockchain(blockchain: Blockchain): List<CurrencyListItem> {
     return filterNot {
-        it is CurrencyListItem.TokenListItem && it.token.blockchain == blockchain
+        it is CurrencyListItem.TokenListItem && it.isTheSameOrTestnetBlockchain(blockchain)
     }
 }
 
@@ -53,18 +60,31 @@ fun List<CurrencyListItem>.addTokensForBlockchain(
     blockchain: Blockchain, fullCurrenciesList: List<CurrencyListItem>,
 ): List<CurrencyListItem> {
     val tokensToAdd = fullCurrenciesList.filter {
-        it is CurrencyListItem.TokenListItem && it.token.blockchain == blockchain
+        it is CurrencyListItem.TokenListItem && it.isTheSameOrTestnetBlockchain(blockchain)
     }
     val indexToInsert = indexOfFirst {
-        it is CurrencyListItem.TitleListItem && it.blockchain == blockchain
+        it is CurrencyListItem.TitleListItem && it.isTheSameOrTestnetBlockchain(blockchain)
     } + 1
     return this.toMutableList().apply { addAll(indexToInsert, tokensToAdd) }
 }
 
 fun List<CurrencyListItem>.toggleHeaderContentShownValue(blockchain: Blockchain) {
     map {
-        if (it is CurrencyListItem.TitleListItem && it.blockchain == blockchain) {
+        if (it is CurrencyListItem.TitleListItem && it.isTheSameOrTestnetBlockchain(blockchain)) {
             it.isContentShown = !it.isContentShown
         }
     }
+}
+
+// if you do not check the testNet blockchains, it will not collapse
+private fun CurrencyListItem.isTheSameOrTestnetBlockchain(blockchain: Blockchain): Boolean {
+    return when (this) {
+        is CurrencyListItem.TitleListItem -> this.blockchain?.isTheSameOrTestnetBlockchain(blockchain) ?: false
+        is CurrencyListItem.BlockchainListItem -> this.blockchain.isTheSameOrTestnetBlockchain(blockchain)
+        is CurrencyListItem.TokenListItem -> this.token.blockchain.isTheSameOrTestnetBlockchain(blockchain)
+    }
+}
+
+private fun Blockchain.isTheSameOrTestnetBlockchain(blockchain: Blockchain): Boolean {
+    return this == blockchain || this == blockchain.getTestnetVersion()
 }
