@@ -364,4 +364,16 @@
     <string name="wallet_connect_bnb_sign_message">DApp %s, запрашивает\nподпись транзакции BNB с\nкартой: %s\n\n%s</string>
     <string name="wallet_connect_bnb_transaction_message">Сведения о транзакции:\nОт: %s\nКому: %s\nСумма: %s</string>
     <string name="wallet_connect_bnb_trade_order_message">Торговый ордер на %s\nЦена: %s\nСумма к получению: %s\nСумма к оплате: %s</string>
+    <string name="feedback_subject_rate_negative">Мои предложения</string>
+    <string name="feedback_subject_scan_failed">Не могу отсканировать карту</string>
+    <string name="feedback_subject_tx_failed">Не могу отправить транзакцию</string>
+    <string name="feedback_subject_tx_push_failed">Не могу протолкнуть транзакцию</string>
+    <string name="feedback_subject_support_tangem">Обращение в поддержку Tangem</string>
+    <string name="feedback_subject_support">Обращение в поддержку</string>
+    <string name="feedback_preface_rate_negative">Расскажите, каких функций Вам не хватает, и мы постараемся Вам помочь.</string>
+    <string name="feedback_preface_scan_failed">Скажите, пожалуйста, какая у Вас карта?</string>
+    <string name="feedback_preface_tx_failed">Пожалуйста, расскажите нам больше о Вашей проблеме. Каждая маленькая деталь может помочь.</string>
+    <string name="feedback_preface_support">Привет, команда поддержки,</string>
+    <string name="feedback_preface_tx_push_failed">Пожалуйста, расскажите нам больше о Вашей проблеме. Каждая деталь может быть полезной</string>
+    <string name="feedback_data_collection_message">Информация ниже не является обязательной. Вы можете стереть её, если хотите.</string>
 </resources>
