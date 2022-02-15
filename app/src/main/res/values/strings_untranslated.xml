@@ -318,4 +318,17 @@ Amount to pay: %s</string>
     <string name="token_symbol_address_format" translatable="false">%1s (%2s)</string>
     <string name="add_token_search_hint" translatable="false">Type here to search</string>
 
+    <string name="feedback_subject_rate_negative" translatable="false">My suggestions</string>
+    <string name="feedback_subject_scan_failed" translatable="false">Can\'t scan a card</string>
+    <string name="feedback_subject_tx_failed" translatable="false">Can\'t send a transaction</string>
+    <string name="feedback_subject_tx_push_failed" translatable="false">Can\'t push a transaction</string>
+    <string name="feedback_subject_support_tangem" translatable="false">Tangem feedback</string>
+    <string name="feedback_subject_support" translatable="false">Feedback</string>
+    <string name="feedback_preface_rate_negative" translatable="false">Tell us what functions you are missing, and we will try to help you.</string>
+    <string name="feedback_preface_scan_failed" translatable="false">Please tell us what card do you have?</string>
+    <string name="feedback_preface_tx_failed" translatable="false">Please tell us more about your issue. Every small detail can help.</string>
+    <string name="feedback_preface_support" translatable="false">Hi support team,</string>
+    <string name="feedback_preface_tx_push_failed" translatable="false">Please tell us more about your issue. Every small detail can help.</string>
+    <string name="feedback_data_collection_message" translatable="false">Following information is optional. You can erase it if you don’t want to share it.</string>
+
 </resources>
