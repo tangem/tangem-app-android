@@ -62,7 +62,7 @@ class PendingTransactionsAdapter
             }
             view.tv_pending_transaction.text = view.context.getString(transactionDescriptionRes)
 
-            transaction.amount?.let { view.tv_pending_transaction_amount.text = "$it " }
+            transaction.amountUi?.let { view.tv_pending_transaction_amount.text = "$it " }
             view.tv_pending_transaction_currency.text = "${transaction.currency}"
 
             if (transaction.address != null) {
