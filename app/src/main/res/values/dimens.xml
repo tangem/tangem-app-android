@@ -41,4 +41,16 @@
     <dimen name="onboarding_card_margin_top">70dp</dimen>
     <dimen name="onboarding_square_background_margin_top">37dp</dimen>
 
+
+    <!--    onboarding bottom container-->
+    <dimen name="linearLayoutCompat_marginBottom">8dp</dimen>
+    <dimen name="linearLayoutCompat_constraintVertical_bias">0.1</dimen>>
+
+    <dimen name="tv_body_marginTop">14dp</dimen>
+    <dimen name="tv_body_marginStart">14dp</dimen>
+    <dimen name="tv_body_marginEnd">14dp</dimen>
+
+    <dimen name="fl_scan_card_container_marginBottom">72dp</dimen>
+
+    <dimen name="btn_alternative_action_marginBottom">12dp</dimen>
 </resources>
