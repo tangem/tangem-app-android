@@ -2,6 +2,7 @@ package com.tangem.tap.domain.configurable.config
 
 import com.tangem.blockchain.common.BlockchainSdkConfig
 import com.tangem.common.extensions.VoidCallback
+import com.tangem.tap.common.shop.shopify.ShopifyShop
 import com.tangem.tap.domain.configurable.Loader
 
 /**
@@ -16,7 +17,8 @@ data class Config(
     val isSendingToPayIdEnabled: Boolean = true,
     val isTopUpEnabled: Boolean = false,
     @Deprecated("Not relevant since version 3.23")
-    val isCreatingTwinCardsAllowed: Boolean = false
+    val isCreatingTwinCardsAllowed: Boolean = false,
+    val shopify: ShopifyShop? = null
 )
 
 class ConfigManager(
@@ -52,10 +54,10 @@ class ConfigManager(
     fun resetToDefault(name: String) {
         when (name) {
             isSendingToPayIdEnabled -> config =
-                    config.copy(isSendingToPayIdEnabled = defaultConfig.isSendingToPayIdEnabled)
+                config.copy(isSendingToPayIdEnabled = defaultConfig.isSendingToPayIdEnabled)
             isTopUpEnabled -> config = config.copy(isTopUpEnabled = defaultConfig.isTopUpEnabled)
             isCreatingTwinCardsAllowed -> config =
-                    config.copy(isCreatingTwinCardsAllowed = defaultConfig.isCreatingTwinCardsAllowed)
+                config.copy(isCreatingTwinCardsAllowed = defaultConfig.isCreatingTwinCardsAllowed)
         }
     }
 
@@ -87,6 +89,7 @@ class ConfigManager(
                 infuraProjectId = values.infuraProjectId
             ),
             appsFlyerDevKey = values.appsFlyerDevKey,
+            shopify = values.shopify,
         )
         defaultConfig = defaultConfig.copy(
             coinMarketCapKey = values.coinMarketCapKey,
@@ -99,6 +102,7 @@ class ConfigManager(
                 infuraProjectId = values.infuraProjectId
             ),
             appsFlyerDevKey = values.appsFlyerDevKey,
+            shopify = values.shopify,
         )
     }
 
