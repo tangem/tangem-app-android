@@ -1,0 +1,375 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/coordinator_details_confirm"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/backgroundLightGray"
+    android:clipChildren="false"
+    android:clipToPadding="false"
+    android:fitsSystemWindows="true"
+    android:focusableInTouchMode="true"
+    android:orientation="vertical">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/app_bar"
+        style="@style/ThemeOverlay.MyTheme.Toolbar.AccentColorMenu"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/backgroundLightGray"
+        android:fitsSystemWindows="true"
+        app:liftOnScroll="true">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:navigationIcon="@drawable/ic_clear_24"
+            app:title="@string/shop_title"
+            app:titleCentered="true" />
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="bottom"
+            android:clickable="true"
+            android:fitsSystemWindows="true"
+            android:focusable="true"
+            android:focusableInTouchMode="true">
+
+
+            <FrameLayout
+                android:id="@+id/fl_cards"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginStart="36dp"
+                android:layout_marginTop="24dp"
+                android:layout_marginEnd="36dp"
+                android:layout_weight="1"
+                app:layout_constraintBottom_toTopOf="@+id/tv_header"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <ImageView
+                    android:id="@+id/imv_third"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:adjustViewBounds="true"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/card_new"
+                    android:visibility="visible"
+                    app:layout_constraintBottom_toTopOf="@id/tv_header"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:tint="@color/darkGray2" />
+
+                <ImageView
+                    android:id="@+id/imv_second"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:adjustViewBounds="true"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/card_new"
+                    android:visibility="visible"
+                    app:layout_constraintBottom_toTopOf="@id/tv_header"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:tint="@color/darkGray4" />
+
+                <ImageView
+                    android:id="@+id/imv_first"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:adjustViewBounds="true"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/card_new"
+                    android:visibility="visible"
+                    app:layout_constraintBottom_toTopOf="@id/tv_header"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+            </FrameLayout>
+
+            <TextView
+                android:id="@+id/tv_header"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="44dp"
+                android:layout_marginBottom="14dp"
+                android:fontFamily="sans-serif-medium"
+                android:text="@string/shop_one_wallet"
+                android:textColor="#060606"
+                android:textSize="24sp"
+                app:layout_constraintBottom_toTopOf="@+id/chip_group_product"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/fl_cards" />
+
+
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chip_group_product"
+                android:layout_width="wrap_content"
+                android:layout_height="42dp"
+                android:layout_marginBottom="24dp"
+                android:background="@drawable/shape_rectangle_rounded_100"
+                android:backgroundTint="@color/backgroundGray"
+                android:paddingStart="3dp"
+                android:paddingTop="3dp"
+                android:paddingEnd="3dp"
+                app:layout_constraintBottom_toTopOf="@id/v_shipping_discount_background"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:selectionRequired="true"
+                app:singleLine="true"
+                app:singleSelection="true">
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_product_1"
+                    style="@style/ShopChips"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:checked="true"
+                    android:text="@string/shop_3_cards"
+                    app:chipMinTouchTargetSize="0dp" />
+
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chip_product_2"
+                    style="@style/ShopChips"
+                    android:layout_width="wrap_content"
+                    android:layout_height="36dp"
+                    android:checked="false"
+                    android:text="@string/shop_2_cards"
+                    app:chipMinTouchTargetSize="0dp" />
+
+
+            </com.google.android.material.chip.ChipGroup>
+
+            <View
+                android:id="@+id/v_shipping_discount_background"
+                android:layout_width="match_parent"
+                android:layout_height="93dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginBottom="16dp"
+                android:background="@drawable/shape_rectangle_rounded_4"
+                app:layout_constraintBottom_toTopOf="@id/v_total_background" />
+
+            <ImageView
+                android:id="@+id/iv_delivery"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:src="@drawable/ic_shipping"
+                app:layout_constraintBottom_toTopOf="@id/v_divider"
+                app:layout_constraintStart_toStartOf="@id/v_shipping_discount_background"
+                app:layout_constraintTop_toTopOf="@id/v_shipping_discount_background" />
+
+            <TextView
+                android:id="@+id/tv_delivery_worldwide"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingStart="6dp"
+                android:paddingEnd="6dp"
+                android:text="@string/shop_shipping"
+                android:textColor="@color/textBlack"
+                android:textSize="15sp"
+                app:layout_constraintBottom_toTopOf="@id/v_divider"
+                app:layout_constraintStart_toEndOf="@id/iv_delivery"
+                app:layout_constraintTop_toTopOf="@id/v_shipping_discount_background" />
+
+            <TextView
+                android:id="@+id/tv_delivery_cost"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:text="@string/shop_free"
+                android:textColor="@color/textBlack"
+                android:textSize="15sp"
+                app:layout_constraintBottom_toTopOf="@id/v_divider"
+                app:layout_constraintEnd_toEndOf="@id/v_shipping_discount_background"
+                app:layout_constraintTop_toTopOf="@id/v_shipping_discount_background" />
+
+            <View
+                android:id="@+id/v_divider"
+                android:layout_width="0dp"
+                android:layout_height="0.5dp"
+                android:background="#BEBEBE"
+                app:layout_constraintBottom_toBottomOf="@id/v_shipping_discount_background"
+                app:layout_constraintEnd_toEndOf="@id/v_shipping_discount_background"
+                app:layout_constraintStart_toStartOf="@id/v_shipping_discount_background"
+                app:layout_constraintTop_toTopOf="@id/v_shipping_discount_background" />
+
+            <ImageView
+                android:id="@+id/iv_promo_code"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_marginStart="12dp"
+                android:src="@drawable/ic_promo_code"
+                app:layout_constraintBottom_toBottomOf="@id/v_shipping_discount_background"
+                app:layout_constraintStart_toStartOf="@id/v_shipping_discount_background"
+                app:layout_constraintTop_toBottomOf="@id/v_divider" />
+
+            <EditText
+                android:id="@+id/et_promo_code"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:background="@android:color/transparent"
+                android:hint="@string/shop_i_have_a_promo_code"
+                android:imeOptions="actionDone"
+                android:inputType="textCapCharacters"
+                android:paddingStart="6dp"
+                android:paddingEnd="6dp"
+                android:singleLine="true"
+                android:textColor="@color/textBlack"
+                android:textSize="15sp"
+                app:layout_constraintBottom_toBottomOf="@id/v_shipping_discount_background"
+                app:layout_constraintEnd_toEndOf="@id/v_shipping_discount_background"
+                app:layout_constraintHorizontal_bias="0"
+                app:layout_constraintStart_toEndOf="@id/iv_promo_code"
+                app:layout_constraintTop_toBottomOf="@id/v_divider" />
+
+            <ProgressBar
+                android:id="@+id/pb_promo_code"
+                android:layout_width="wrap_content"
+                android:layout_height="28dp"
+                android:layout_marginEnd="16dp"
+                android:indeterminateTint="@color/darkGray2"
+                app:layout_constraintBottom_toBottomOf="@id/v_shipping_discount_background"
+                app:layout_constraintEnd_toEndOf="@id/v_shipping_discount_background"
+                app:layout_constraintTop_toBottomOf="@id/v_divider" />
+
+
+            <View
+                android:id="@+id/v_total_background"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:layout_marginBottom="21dp"
+                android:background="@drawable/shape_rectangle_rounded_4"
+                app:layout_constraintBottom_toTopOf="@id/ll_buttons" />
+
+            <TextView
+                android:id="@+id/tv_total_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:text="@string/shop_total"
+                android:textColor="@color/textBlack"
+                android:textSize="15sp"
+                app:layout_constraintBottom_toBottomOf="@id/v_total_background"
+                app:layout_constraintStart_toStartOf="@id/v_total_background"
+                app:layout_constraintTop_toTopOf="@id/v_total_background" />
+
+            <TextView
+                android:id="@+id/tv_total_before_discount"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:background="@drawable/shape_line"
+                android:textColor="@color/darkGray6"
+                android:textSize="15sp"
+                app:layout_constraintBottom_toBottomOf="@id/v_total_background"
+                app:layout_constraintEnd_toStartOf="@id/tv_total"
+                app:layout_constraintTop_toTopOf="@id/v_total_background"
+                tools:text="$44.20" />
+
+            <TextView
+                android:id="@+id/tv_total"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingStart="6dp"
+                android:paddingEnd="12dp"
+                android:textColor="@color/darkGray6"
+                android:textSize="22sp"
+                android:textStyle="bold"
+                app:layout_constraintBottom_toBottomOf="@id/v_total_background"
+                app:layout_constraintEnd_toEndOf="@id/v_total_background"
+                app:layout_constraintTop_toTopOf="@id/v_total_background"
+                tools:text="$44.20" />
+
+            <ProgressBar
+                android:id="@+id/pb_price"
+                android:layout_width="wrap_content"
+                android:layout_height="36dp"
+                android:layout_marginEnd="16dp"
+                android:indeterminateTint="@color/darkGray2"
+                app:layout_constraintBottom_toBottomOf="@id/v_total_background"
+                app:layout_constraintEnd_toEndOf="@id/v_total_background"
+                app:layout_constraintTop_toTopOf="@id/v_total_background" />
+
+
+            <LinearLayout
+                android:id="@+id/ll_buttons"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                app:layout_constraintBottom_toBottomOf="parent">
+
+                <include
+                    android:id="@+id/btn_pay_google_pay"
+                    layout="@layout/buy_with_googlepay_button"
+                    android:layout_width="match_parent"
+                    android:layout_height="48sp"
+                    android:layout_gravity="bottom"
+                    android:layout_marginStart="14dp"
+                    android:layout_marginEnd="14dp"
+                    android:visibility="gone"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_main_action"
+                    style="@style/TapBlackButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="48sp"
+                    android:layout_marginStart="14dp"
+                    android:layout_marginEnd="14dp"
+                    android:layout_marginBottom="70dp"
+                    android:text="@string/shop_buy_now"
+                    android:textAlignment="center"
+                    android:textSize="16sp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btn_alternative_payment"
+                    style="@style/Widget.AppCompat.Button.Borderless"
+                    android:layout_width="match_parent"
+                    android:layout_height="42dp"
+                    android:layout_gravity="bottom"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="16dp"
+                    android:layout_marginBottom="20dp"
+                    android:paddingTop="0dp"
+                    android:paddingBottom="0dp"
+                    android:text="@string/shop_other_payment_methods"
+                    android:textAllCaps="false"
+                    android:textColor="@color/textBlack"
+                    android:textSize="16sp"
+                    android:visibility="gone" />
+            </LinearLayout>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+    </LinearLayout>
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
