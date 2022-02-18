@@ -1,5 +1,7 @@
 package com.tangem.tap.domain.configurable.config
 
+import com.tangem.tap.common.shop.shopify.ShopifyShop
+
 /**
 [REDACTED_AUTHOR]
  */
@@ -20,6 +22,7 @@ class ConfigValueModel(
         val blockcypherTokens: Set<String>?,
         val infuraProjectId: String?,
         val appsFlyerDevKey: String,
+        val shopify: ShopifyShop?
 )
 
 class ConfigModel(val features: FeatureModel?, val configValues: ConfigValueModel?) {
