@@ -22,7 +22,7 @@ class ConfigValueModel(
         val blockcypherTokens: Set<String>?,
         val infuraProjectId: String?,
         val appsFlyerDevKey: String,
-        val shopify: ShopifyShop?
+        val shopifyShop: ShopifyShop?
 )
 
 class ConfigModel(val features: FeatureModel?, val configValues: ConfigValueModel?) {
