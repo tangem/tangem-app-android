@@ -89,7 +89,7 @@ class ConfigManager(
                 infuraProjectId = values.infuraProjectId
             ),
             appsFlyerDevKey = values.appsFlyerDevKey,
-            shopify = values.shopify,
+            shopify = values.shopifyShop,
         )
         defaultConfig = defaultConfig.copy(
             coinMarketCapKey = values.coinMarketCapKey,
@@ -102,7 +102,7 @@ class ConfigManager(
                 infuraProjectId = values.infuraProjectId
             ),
             appsFlyerDevKey = values.appsFlyerDevKey,
-            shopify = values.shopify,
+            shopify = values.shopifyShop,
         )
     }
 
