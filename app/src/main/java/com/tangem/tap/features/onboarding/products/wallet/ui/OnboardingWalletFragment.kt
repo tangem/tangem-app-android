@@ -32,7 +32,7 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
     StoreSubscriber<OnboardingWalletState>, FragmentOnBackPressedHandler {
 
     private var accessCodeDialog: AccessCodeDialog? = null
-    private lateinit var cardsWidget: BackupCardsWidget
+    private lateinit var cardsWidget: WalletCardsWidget
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,7 +48,7 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
         super.onViewCreated(view, savedInstanceState)
 
         val leapfrog = LeapfrogWidget(fl_cards_container)
-        cardsWidget = BackupCardsWidget(leapfrog) { 200f }
+        cardsWidget = WalletCardsWidget(leapfrog) { 200f }
         startPostponedEnterTransition()
 
         view_pager_backup_info.adapter = BackupInfoAdapter()
