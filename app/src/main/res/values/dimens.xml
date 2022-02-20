@@ -35,22 +35,31 @@
     <dimen name="text_size_amount_to_send">32sp</dimen>
     <dimen name="dimen16">16dp</dimen>
 
-    <dimen name="home_back_card_translationY">-30dp</dimen>
-    <dimen name="home_front_card_translationY">-20dp</dimen>
-    <dimen name="onboarding_progress_margin_top">8dp</dimen>
-    <dimen name="onboarding_card_margin_top">70dp</dimen>
+    <item name="device_scale_factor_for_twins_welcome" format="float" type="dimen">0.85</item>
+
+    <!-- Home - TOP -->
+    <item name="home_top_weight" format="float" type="dimen">0.9</item>
+    <dimen name="home_top_back_card_translationY">-60dp</dimen>
+    <item name="home_top_back_card_scaleX" format="float" type="dimen">0.9</item>
+    <item name="home_top_back_card_scaleY" format="float" type="dimen">0.9</item>
+    <dimen name="home_top_front_card_translationY">-40dp</dimen>
+    <item name="home_top_front_card_scaleY" format="float" type="dimen">0.9</item>
+    <item name="home_top_front_card_scaleX" format="float" type="dimen">0.9</item>
+
+    <!--  Home - bottom -->
+    <item name="home_bottom_weight" format="float" type="dimen">1</item>
+    <dimen name="home_bottom_llCompat_margin_bottom">8dp</dimen>
+    <item name="home_bottom_llCompat_constraint_vertical_bias" format="float" type="dimen">0.1</item>>
+    <dimen name="home_bottom_tv_body_margin_top">10dp</dimen>
+    <dimen name="home_bottom_tv_body_margin_start">34dp</dimen>
+    <dimen name="home_bottom_tv_body_margin_end">34dp</dimen>
+    <dimen name="home_bottom_fl_scan_card_container_margin_bottom">72dp</dimen>
+    <dimen name="home_bottom_btn_alternative_action_margin_bottom">12dp</dimen>
+
+    <!--  Onboarding  -->
+    <dimen name="onboarding_progress_margin_top">0dp</dimen>
+    <dimen name="onboarding_card_margin_top">50dp</dimen>
+    <dimen name="onboarding_square_background_height">180dp</dimen>
     <dimen name="onboarding_square_background_margin_top">37dp</dimen>
 
-
-    <!--    onboarding bottom container-->
-    <dimen name="linearLayoutCompat_marginBottom">8dp</dimen>
-    <dimen name="linearLayoutCompat_constraintVertical_bias">0.1</dimen>>
-
-    <dimen name="tv_body_marginTop">14dp</dimen>
-    <dimen name="tv_body_marginStart">14dp</dimen>
-    <dimen name="tv_body_marginEnd">14dp</dimen>
-
-    <dimen name="fl_scan_card_container_marginBottom">72dp</dimen>
-
-    <dimen name="btn_alternative_action_marginBottom">12dp</dimen>
 </resources>
