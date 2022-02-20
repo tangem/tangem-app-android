@@ -25,7 +25,7 @@
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/imv_card_background"
         android:layout_width="match_parent"
-        android:layout_height="230dp"
+        android:layout_height="@dimen/onboarding_square_background_height"
         android:layout_marginStart="32dp"
         android:layout_marginTop="@dimen/onboarding_square_background_margin_top"
         android:layout_marginEnd="32dp"

@@ -16,6 +16,7 @@ import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.LeapfrogWidget
  */
 class TwinsCardWidget(
     val leapfrogWidget: LeapfrogWidget,
+    private val deviceScaleFactor: Float = 1f,
     val getTopOfAnchorViewForActivateState: () -> Float
 ) {
 
@@ -87,20 +88,20 @@ class TwinsCardWidget(
         return when (cardNumber) {
             TwinCardNumber.First -> {
                 TwinsCardProperties(
-                    xTranslation = -120f,
-                    yTranslation = -220f,
+                    xTranslation = -120f * deviceScaleFactor,
+                    yTranslation = -220f * deviceScaleFactor,
                     rotation = -3f,
                     elevation = 1f,
-                    scale = 1f,
+                    scale = deviceScaleFactor,
                 )
             }
             TwinCardNumber.Second -> {
                 TwinsCardProperties(
-                    xTranslation = 170f,
-                    yTranslation = 170f,
+                    xTranslation = 170f * deviceScaleFactor,
+                    yTranslation = 170f * deviceScaleFactor,
                     rotation = -3f,
                     elevation = 0f,
-                    scale = 1f,
+                    scale = deviceScaleFactor,
                 )
             }
         }
@@ -123,7 +124,7 @@ class TwinsCardWidget(
             xTranslation = twinProperties.xTranslation,
             yTranslation = twinProperties.yTranslation - topOfAnchorView,
             rotation = 0f,
-            scale = twinProperties.scale - 0.5f,
+            scale = (twinProperties.scale - 0.5f) * deviceScaleFactor,
         )
     }
 
