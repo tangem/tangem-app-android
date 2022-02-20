@@ -1,33 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools">
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_main_action"
         style="@style/OnboardingButton"
         android:layout_width="204dp"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="92dp"
-        tools:text="Main Action"
+        android:layout_marginBottom="@dimen/home_bottom_fl_scan_card_container_margin_bottom"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        tools:text="Main Action" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_alternative_action"
         style="@style/Widget.AppCompat.Button.Borderless"
-        android:textSize="16sp"
         android:layout_width="204dp"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="32dp"
-        tools:text="Alternative action"
+        android:layout_marginBottom="@dimen/home_bottom_btn_alternative_action_margin_bottom"
         android:textAllCaps="false"
         android:textColor="@color/tapButtonColorBlack"
+        android:textSize="16sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        tools:text="Alternative action" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

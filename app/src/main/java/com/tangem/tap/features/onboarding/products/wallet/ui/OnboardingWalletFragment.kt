@@ -1,6 +1,7 @@
 package com.tangem.tap.features.onboarding.products.wallet.ui
 
 import android.os.Bundle
+import android.util.TypedValue
 import android.view.*
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
@@ -47,8 +48,12 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        val typedValue = TypedValue()
+        resources.getValue(R.dimen.device_scale_factor_for_twins_welcome, typedValue, true)
+        val deviceScaleFactorForWelcomeState = typedValue.float
+
         val leapfrog = LeapfrogWidget(fl_cards_container)
-        cardsWidget = BackupCardsWidget(leapfrog) { 200f }
+        cardsWidget = BackupCardsWidget(leapfrog, deviceScaleFactorForWelcomeState) { 200f * deviceScaleFactorForWelcomeState }
         startPostponedEnterTransition()
 
         view_pager_backup_info.adapter = BackupInfoAdapter()
