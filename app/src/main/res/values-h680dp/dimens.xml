@@ -3,18 +3,18 @@
     <dimen name="device_scale_factor_for_twins_welcome">1.0</dimen>
 
     <!-- Home - TOP -->
-    <dimen name="home_top_weight">1.1</dimen>
+    <item name="home_top_weight" format="float" type="dimen">1.1</item>
     <dimen name="home_top_back_card_translationY">-10dp</dimen>
-    <dimen name="home_top_back_card_scaleX">1</dimen>
+    <item name="home_top_back_card_scaleX" format="float" type="dimen">1</item>
     <dimen name="home_top_back_card_scaleY">1</dimen>
     <dimen name="home_top_front_card_translationY">0dp</dimen>
-    <dimen name="home_top_front_card_scaleY">1</dimen>
-    <dimen name="home_top_front_card_scaleX">1</dimen>
+    <item name="home_top_front_card_scaleY" format="float" type="dimen">1</item>
+    <item name="home_top_front_card_scaleX" format="float" type="dimen">1</item>
 
     <!--  Home - bottom -->
-    <dimen name="home_bottom_weight">1</dimen>
+    <item name="home_bottom_weight" format="float" type="dimen">1</item>
     <dimen name="home_bottom_llCompat_margin_bottom">16dp</dimen>
-    <dimen name="home_bottom_llCompat_constraint_vertical_bias">0.4</dimen>>
+    <item name="home_bottom_llCompat_constraint_vertical_bias" format="float" type="dimen">0.4</item>>
     <dimen name="home_bottom_tv_body_margin_top">14dp</dimen>
     <dimen name="home_bottom_tv_body_margin_start">64dp</dimen>
     <dimen name="home_bottom_tv_body_margin_end">64dp</dimen>
