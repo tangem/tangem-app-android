@@ -63,4 +63,13 @@
     <dimen name="onboarding_square_background_margin_top">37dp</dimen>
     <item name="onboarding_wallet_top_guide_line_weight" type="dimen" format="float">0.48</item>>
 
+    <!--  Onboarding - Wallet - Access code  -->
+    <dimen name="access_code_title_margin_top">40dp</dimen>
+    <dimen name="access_code_imv_lock_margin_top">12dp</dimen>
+    <dimen name="access_code_info_protect_margin_top">8dp</dimen>
+    <dimen name="access_code_info_items_space">16dp</dimen>
+    <dimen name="access_code_btn_continue_margin_bottom">38dp</dimen>
+    <dimen name="access_code_btn_continue_margin_start">78dp</dimen>
+    <dimen name="access_code_btn_continue_margin_end">78dp</dimen>
+
 </resources>
