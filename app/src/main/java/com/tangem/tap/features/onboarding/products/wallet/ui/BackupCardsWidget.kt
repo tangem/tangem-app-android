@@ -12,6 +12,7 @@ import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.LeapfrogWidget
 
 class BackupCardsWidget(
     val leapfrogWidget: LeapfrogWidget,
+    private val deviceScaleFactor: Float = 1f,
     val getTopOfAnchorViewForActivateState: () -> Float,
 ) {
 
@@ -98,26 +99,26 @@ class BackupCardsWidget(
     private fun createWelcomeProperties(cardType: BackupCardType): CardProperties {
         return when (cardType) {
             BackupCardType.ORIGIN -> CardProperties(
-                    xTranslation = 440f,
-                    yTranslation = 0f,
-                    rotation = 75f,
-                    elevation = 2f,
-                    scale = .9f,
-                )
+                xTranslation = 440f * deviceScaleFactor,
+                yTranslation = 70f,
+                rotation = 75f,
+                elevation = 2f,
+                scale = .85f * deviceScaleFactor,
+            )
             BackupCardType.FIRST_BACKUP -> CardProperties(
-                    xTranslation = 10f,
-                    yTranslation = -100f,
-                    rotation = 100f,
-                    elevation = 1f,
-                    scale = .9f,
-)
+                xTranslation = 10f * deviceScaleFactor,
+                yTranslation = -30f,
+                rotation = 100f,
+                elevation = 1f,
+                scale = .85f * deviceScaleFactor,
+            )
             BackupCardType.SECOND_BACKUP -> CardProperties(
-                    xTranslation = -440f,
-                    yTranslation = -100f,
-                    rotation = 70f,
-                    elevation = 0f,
-                    scale = .9f,
-                )
+                xTranslation = -440f * deviceScaleFactor,
+                yTranslation = -30f,
+                rotation = 70f,
+                elevation = 0f,
+                scale = .85f * deviceScaleFactor,
+            )
         }
     }
 
@@ -125,24 +126,24 @@ class BackupCardsWidget(
         return when (cardType) {
             BackupCardType.ORIGIN -> CardProperties(
                 xTranslation = 0f,
-                yTranslation = 0f,
+                yTranslation = 30f,
                 rotation = 5f,
                 elevation = 2f,
-                scale = 1f,
+                scale = 1f * deviceScaleFactor,
             )
             BackupCardType.FIRST_BACKUP -> CardProperties(
                 xTranslation = 0f,
-                yTranslation = -80f,
+                yTranslation = -50f,
                 rotation = -5f,
                 elevation = 1f,
-                scale = 0.9f,
+                scale = 0.9f * deviceScaleFactor,
             )
             BackupCardType.SECOND_BACKUP -> CardProperties(
                 xTranslation = 10f,
-                yTranslation = -170f,
+                yTranslation = -120f,
                 rotation = -20f,
                 elevation = 0f,
-                scale = 0.8f,
+                scale = 0.8f * deviceScaleFactor,
             )
         }
     }
@@ -154,21 +155,21 @@ class BackupCardsWidget(
                 yTranslation = 0f,
                 rotation = 0f,
                 elevation = 2f,
-                scale = 1f,
+                scale = 1f * deviceScaleFactor,
             )
             BackupCardType.FIRST_BACKUP -> CardProperties(
                 xTranslation = 0f,
                 yTranslation = 0f,
                 rotation = 0f,
                 elevation = 1f,
-                scale = 0.9f,
+                scale = 0.9f * deviceScaleFactor,
             )
             BackupCardType.SECOND_BACKUP -> CardProperties(
                 xTranslation = 0f,
                 yTranslation = 0f,
                 rotation = 0f,
                 elevation = 0f,
-                scale = 0.8f,
+                scale = 0.8f * deviceScaleFactor,
             )
         }
     }
