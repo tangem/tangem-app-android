@@ -61,5 +61,6 @@
     <dimen name="onboarding_card_margin_top">50dp</dimen>
     <dimen name="onboarding_square_background_height">180dp</dimen>
     <dimen name="onboarding_square_background_margin_top">37dp</dimen>
+    <item name="onboarding_wallet_top_guide_line_weight" type="dimen" format="float">0.5</item>>
 
 </resources>
