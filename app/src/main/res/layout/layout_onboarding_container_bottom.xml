@@ -10,14 +10,14 @@
         android:id="@+id/linearLayoutCompat"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="@dimen/linearLayoutCompat_marginBottom"
+        android:layout_marginBottom="@dimen/home_bottom_llCompat_margin_bottom"
         android:gravity="center"
         android:orientation="vertical"
         app:layout_constraintBottom_toTopOf="@+id/fl_scan_card_container"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="@dimen/linearLayoutCompat_constraintVertical_bias">
+        app:layout_constraintVertical_bias="@dimen/home_bottom_llCompat_constraint_vertical_bias">
 
         <TextView
             android:id="@+id/tv_header"
@@ -35,9 +35,9 @@
             style="@style/TextViewOnboarding.Body"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/tv_body_marginStart"
-            android:layout_marginTop="@dimen/tv_body_marginTop"
-            android:layout_marginEnd="@dimen/tv_body_marginEnd"
+            android:layout_marginStart="@dimen/home_bottom_tv_body_margin_start"
+            android:layout_marginTop="@dimen/home_bottom_tv_body_margin_top"
+            android:layout_marginEnd="@dimen/home_bottom_tv_body_margin_end"
             android:minLines="3"
             app:layout_constraintBottom_toTopOf="@+id/fl_scan_card_container"
             app:layout_constraintEnd_toEndOf="parent"
@@ -65,7 +65,7 @@
         android:id="@+id/fl_scan_card_container"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="@dimen/fl_scan_card_container_marginBottom"
+        android:layout_marginBottom="@dimen/home_bottom_fl_scan_card_container_margin_bottom"
         android:clipChildren="false"
         android:clipToPadding="false"
         app:layout_constraintBottom_toBottomOf="parent"
@@ -92,7 +92,7 @@
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_alternative_action"
         style="@style/TapButtonText"
-        android:layout_marginBottom="@dimen/btn_alternative_action_marginBottom"
+        android:layout_marginBottom="@dimen/home_bottom_btn_alternative_action_margin_bottom"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
