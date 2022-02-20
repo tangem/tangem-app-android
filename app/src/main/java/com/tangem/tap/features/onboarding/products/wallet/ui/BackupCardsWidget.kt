@@ -43,7 +43,7 @@ class BackupCardsWidget(
             createAnimator(BackupCardType.FIRST_BACKUP, createLeapfrogProperties(BackupCardType.FIRST_BACKUP)),
             createAnimator(BackupCardType.SECOND_BACKUP, createLeapfrogProperties(BackupCardType.SECOND_BACKUP))
         )
-        leapfrogWidget.fold { animator.start() }
+        leapfrogWidget.fold(animate) { animator.start() }
     }
 
     fun toFan(animate: Boolean = true, onEnd: () -> Unit = {}) {
@@ -71,7 +71,7 @@ class BackupCardsWidget(
         )
         leapfrogWidget.fold {
             animator.doOnEnd {
-                leapfrogWidget.initViews()
+//                leapfrogWidget.initViews()
                 leapfrogWidget.unfold()
             }
             animator.start()
