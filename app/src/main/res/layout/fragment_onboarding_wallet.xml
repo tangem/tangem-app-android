@@ -140,13 +140,14 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:fontFamily="sans-serif-medium"
+            android:textAlignment="center"
             android:textColor="#060606"
             android:textSize="24sp"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.504"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="@+id/guideline2"
-            tools:text="Header" />
+            tools:text="Добавлена одна резервная карта" />
 
         <TextView
             android:id="@+id/tv_body"
