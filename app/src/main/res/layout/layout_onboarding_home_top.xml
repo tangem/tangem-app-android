@@ -6,7 +6,11 @@
     android:layout_height="match_parent"
     android:clipChildren="false">
 
-    <include layout="@layout/view_bg_home" />
+    <include
+        layout="@layout/view_bg_home"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
     <androidx.appcompat.widget.AppCompatImageView
         android:id="@+id/imv_back_card"
@@ -16,8 +20,10 @@
         android:elevation="0dp"
         android:rotation="-21"
         android:scaleType="fitXY"
+        android:scaleX="@dimen/home_top_back_card_scaleX"
+        android:scaleY="@dimen/home_top_back_card_scaleY"
         android:src="@drawable/card_placeholder_white"
-        android:translationY="@dimen/home_back_card_translationY"
+        android:translationY="@dimen/home_top_back_card_translationY"
         app:layout_constraintEnd_toEndOf="@+id/imv_front_card"
         app:layout_constraintStart_toStartOf="@+id/imv_front_card"
         app:layout_constraintTop_toBottomOf="@+id/imv_front_card" />
@@ -29,8 +35,10 @@
         android:elevation="1dp"
         android:rotation="-3"
         android:scaleType="fitXY"
+        android:scaleX="@dimen/home_top_front_card_scaleX"
+        android:scaleY="@dimen/home_top_front_card_scaleY"
         android:src="@drawable/card_placeholder_black"
-        android:translationY="@dimen/home_front_card_translationY"
+        android:translationY="@dimen/home_top_front_card_translationY"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
