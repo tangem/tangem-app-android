@@ -44,6 +44,7 @@
             android:value="true" />
 
         <activity
+            android:exported="true"
             android:name="com.tangem.tap.MainActivity"
             android:launchMode="singleTask"
             android:screenOrientation="portrait"
