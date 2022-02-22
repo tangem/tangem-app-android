@@ -317,4 +317,16 @@ Amount to pay: %s</string>
 
     <string name="token_symbol_address_format" translatable="false">%1s (%2s)</string>
 
+    <string name="shop_one_wallet" translatable="false">One Wallet</string>
+    <string name="shop_3_cards" translatable="false">3 cards</string>
+    <string name="shop_2_cards" translatable="false">2 cards</string>
+    <string name="shop_shipping" translatable="false">Shipping</string>
+    <string name="shop_free" translatable="false">Free</string>
+    <string name="shop_i_have_a_promo_code" translatable="false">I have a promo code...</string>
+    <string name="shop_total" translatable="false">Total</string>
+    <string name="shop_other_payment_methods" translatable="false">Other payment methods</string>
+    <string name="shop_buy_now" translatable="false">Buy now</string>
+    <string name="shop_title" translatable="false">Order card</string>
+    <string name="shop_free_delivery" translatable="false">Delivery (Free shipping)</string>
+
 </resources>
