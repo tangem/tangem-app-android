@@ -329,4 +329,26 @@ Amount to pay: %s</string>
     <string name="shop_title" translatable="false">Order card</string>
     <string name="shop_free_delivery" translatable="false">Delivery (Free shipping)</string>
 
+
+    <string name="story_meet_title" translatable="false">Meet\nTangem</string>
+    <string name="story_meet_buy" translatable="false">Buy</string>
+    <string name="story_meet_store" translatable="false">Store</string>
+    <string name="story_meet_send" translatable="false">Send</string>
+    <string name="story_meet_pay" translatable="false">Pay</string>
+    <string name="story_meet_exchange" translatable="false">Exchange</string>
+    <string name="story_meet_lend" translatable="false">Lend</string>
+    <string name="story_meet_borrow" translatable="false">Borrow</string>
+    <string name="story_meet_stake" translatable="false">Stake</string>
+    <string name="story_awe_title" translatable="false">Revolutionary Hardware Wallet</string>
+    <string name="story_awe_description" translatable="false">Store your crypto assets secure while keeping private keys contained in your card</string>
+    <string name="story_backup_title" translatable="false">Ultra Secure Backup</string>
+    <string name="story_backup_description" translatable="false">Up to 3 physical cards to one wallet</string>
+    <string name="story_currencies_title" translatable="false">Thousands of Currencies</string>
+    <string name="story_currencies_description" translatable="false">A hardware wallet for your Bitcoin, Ethereum and many more currencies simultaneously – all in one card</string>
+    <string name="story_web3_title" translatable="false">Web3 Compatible</string>
+    <string name="story_web3_description" translatable="false">Exchange, buy NFT’s, make loans and deposits in more than 100 different decentralized services</string>
+    <string name="story_finish_title" translatable="false">The Wallet for Everyone</string>
+    <string name="story_finish_description" translatable="false">Use it on the go, anywhere, anytime. No wires or batteries. Just tap the card to your phone when you need your crypto.</string>
+
+
 </resources>
