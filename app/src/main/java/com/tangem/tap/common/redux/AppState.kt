@@ -23,6 +23,8 @@ import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWallet
 import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletState
 import com.tangem.tap.features.send.redux.middlewares.SendMiddleware
 import com.tangem.tap.features.send.redux.states.SendState
+import com.tangem.tap.features.shop.redux.ShopMiddleware
+import com.tangem.tap.features.shop.redux.ShopState
 import com.tangem.tap.features.tokens.redux.TokensMiddleware
 import com.tangem.tap.features.tokens.redux.TokensState
 import com.tangem.tap.features.wallet.redux.WalletState
@@ -44,6 +46,7 @@ data class AppState(
     val disclaimerState: DisclaimerState = DisclaimerState(),
     val tokensState: TokensState = TokensState(),
     val walletConnectState: WalletConnectState = WalletConnectState(),
+    val shopState: ShopState = ShopState(),
 ) : StateType {
 
     companion object {
@@ -62,7 +65,8 @@ data class AppState(
                 DisclaimerMiddleware().disclaimerMiddleware,
                 TokensMiddleware().tokensMiddleware,
                 WalletConnectMiddleware().walletConnectMiddleware,
-                BackupMiddleware().backupMiddleware
+                BackupMiddleware().backupMiddleware,
+                ShopMiddleware().shopMiddleware,
             )
         }
     }
