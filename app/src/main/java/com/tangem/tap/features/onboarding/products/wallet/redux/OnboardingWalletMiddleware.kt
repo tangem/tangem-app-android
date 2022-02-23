@@ -16,6 +16,7 @@ import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.extensions.hasWallets
 import com.tangem.tap.domain.tasks.product.ScanResponse
+import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletMiddleware.Companion.BUY_WALLET_URL
 import com.tangem.tap.features.wallet.redux.Artwork
@@ -164,14 +165,16 @@ class BackupMiddleware {
     val backupMiddleware: Middleware<AppState> = { dispatch, state ->
         { next ->
             { action ->
-                if (action is BackupAction) handleBackupAction(action)
+                if (action is BackupAction) handleBackupAction(state, action)
                 next(action)
             }
         }
     }
 }
 
-private fun handleBackupAction(action: BackupAction) {
+private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) {
+    if (DemoHelper.tryHandle(appState, action)) return
+
     val backupState = store.state.onboardingWalletState.backupState
 
     val globalState = store.state.globalState
