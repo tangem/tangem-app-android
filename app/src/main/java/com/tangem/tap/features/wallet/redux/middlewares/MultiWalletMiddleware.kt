@@ -15,6 +15,8 @@ import com.tangem.tap.domain.extensions.makeWalletManagerForApp
 import com.tangem.tap.domain.extensions.makeWalletManagersForApp
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.demo.isDemoCard
+import com.tangem.tap.features.wallet.models.PendingTransactionType
+import com.tangem.tap.features.wallet.models.getPendingTransactions
 import com.tangem.tap.features.wallet.redux.Currency
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletState
@@ -217,13 +219,25 @@ class MultiWalletMiddleware {
         scope.launch {
             when (val result = rentProvider.minimalBalanceForRentExemption()) {
                 is Result.Success -> {
+                    fun isNeedToShowWarning(balance: BigDecimal, rentExempt: BigDecimal): Boolean = balance >= rentExempt
+
+                    val balance = walletManager.wallet.fundsAvailable(AmountType.Coin)
+                    val outgoingTxs = walletManager.wallet.getPendingTransactions(PendingTransactionType.Outgoing)
+                    val rentExempt = result.data
+                    val show = if (outgoingTxs.isEmpty()) {
+                        isNeedToShowWarning(balance, rentExempt)
+                    } else {
+                        val outgoingAmount = outgoingTxs.sumOf { it.amount ?: BigDecimal.ZERO }
+                        val rest = balance.minus(outgoingAmount)
+                        isNeedToShowWarning(rest, rentExempt)
+                    }
+                    if (!show) return@launch
+
                     val currency = walletManager.wallet.blockchain.currency
-                    val minRent = ("${rentProvider.rentAmount().stripZeroPlainString()} $currency")
-                    val rentExempt = ("${result.data.stripZeroPlainString()} $currency")
                     store.dispatchOnMain(WalletAction.SetWalletRent(
                         blockchain = walletManager.wallet.blockchain,
-                        minRent = minRent,
-                        rentExempt = rentExempt
+                        minRent = ("${rentProvider.rentAmount().stripZeroPlainString()} $currency"),
+                        rentExempt = ("${rentExempt.stripZeroPlainString()} $currency")
                     ))
                 }
                 is Result.Failure -> {}
