@@ -16,7 +16,7 @@ import com.tangem.tap.domain.extensions.setCustomIconUrl
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.network.createMoshi
 
-open class CurrenciesRepository(val context: Application) {
+class CurrenciesRepository(val context: Application) {
 
     private val moshi = createMoshi()
     private val blockchainsAdapter: JsonAdapter<List<Blockchain>> = moshi.adapter(
@@ -168,11 +168,11 @@ open class CurrenciesRepository(val context: Application) {
         }
         return excludeUnsupportedBlockchains(blockchains)
     }
-// [REDACTED_TODO_COMMENT]
+
     private fun excludeUnsupportedBlockchains(blockchains: List<Blockchain>): List<Blockchain> {
         return blockchains.toMutableList().apply {
             removeAll(listOf(
-                Blockchain.Fantom, Blockchain.FantomTestnet
+//                Blockchain.Fantom, Blockchain.FantomTestnet
             ))
         }
     }
