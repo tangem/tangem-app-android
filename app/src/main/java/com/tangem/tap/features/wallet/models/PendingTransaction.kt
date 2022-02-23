@@ -6,10 +6,12 @@ import com.tangem.blockchain.common.TransactionStatus
 import com.tangem.blockchain.common.Wallet
 import com.tangem.tap.common.extensions.toFormattedString
 import com.tangem.tap.domain.extensions.toSendableAmounts
+import java.math.BigDecimal
 
 data class PendingTransaction(
     val address: String?,
-    val amount: String?,
+    val amount: BigDecimal?,
+    val amountUi: String?,
     val currency: String,
     val type: PendingTransactionType
 )
@@ -38,6 +40,7 @@ fun TransactionData.toPendingTransaction(walletAddress: String): PendingTransact
 
     return PendingTransaction(
         if (address == "unknown") null else address,
+        this.amount.value,
         this.amount.value?.toFormattedString(amount.decimals),
         this.amount.currencySymbol,
         type
@@ -61,8 +64,12 @@ fun List<TransactionData>.toPendingTransactionsForToken(token: Token, walletAddr
     return this.mapNotNull { it.toPendingTransactionForToken(token, walletAddress) }
 }
 
-fun Wallet.getPendingTransactions(): List<PendingTransaction> {
-    return recentTransactions.toPendingTransactions(address)
+fun Wallet.getPendingTransactions(type: PendingTransactionType? = null): List<PendingTransaction> {
+    val txs = recentTransactions.toPendingTransactions(address)
+    return when(type) {
+        null -> txs
+        else -> txs.filter { it.type == type }
+    }
 }
 
 fun Wallet.hasPendingTransactions(): Boolean {
