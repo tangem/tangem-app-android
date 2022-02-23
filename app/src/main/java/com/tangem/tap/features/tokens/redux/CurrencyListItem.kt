@@ -23,12 +23,11 @@ sealed class CurrencyListItem {
             blockchains: List<Blockchain>,
             tokens: List<Token>,
         ): List<CurrencyListItem> {
-            return createBlockchainList(blockchains) +
-                createTokensList(R.string.add_tokens_subtitle_ethereum_tokens, Blockchain.Ethereum, tokens) +
-                createTokensList(R.string.add_tokens_subtitle_bsc_tokens, Blockchain.BSC, tokens) +
-                createTokensList(R.string.add_tokens_subtitle_binance_tokens, Blockchain.Binance, tokens) +
-                createTokensList(R.string.add_tokens_subtitle_polygon_tokens, Blockchain.Polygon, tokens) +
-                createTokensList(R.string.add_tokens_subtitle_avalanche_tokens, Blockchain.Avalanche, tokens)
+            val blockchainsItemList = createBlockchainList(blockchains)
+            val tokenItemsLists = tokens.groupBy { it.blockchain }.map {
+                createTokensList(R.string.add_tokens_subtitle_format, it.key, it.value)
+            }
+            return blockchainsItemList + tokenItemsLists.flatten()
         }
 
         private fun createBlockchainList(blockchains: List<Blockchain>): List<CurrencyListItem> {
