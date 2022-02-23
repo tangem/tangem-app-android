@@ -3,10 +3,12 @@ package com.tangem.tap.features.wallet.redux.middlewares
 import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.common.AmountType
 import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.topup.TopUpManager
 import com.tangem.tap.domain.topup.TradeCryptoHelper
+import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.send.redux.PrepareSendScreen
 import com.tangem.tap.features.send.redux.SendAction
 import com.tangem.tap.features.wallet.redux.Currency
@@ -18,7 +20,9 @@ import timber.log.Timber
 
 
 class TradeCryptoMiddleware {
-    fun handle(action: WalletAction.TradeCryptoAction) {
+    fun handle(state: () -> AppState?, action: WalletAction.TradeCryptoAction) {
+        if (DemoHelper.tryHandle(state, action)) return
+
         when (action) {
             is WalletAction.TradeCryptoAction.Buy -> startExchange(action)
             is WalletAction.TradeCryptoAction.Sell -> startExchange(action)
