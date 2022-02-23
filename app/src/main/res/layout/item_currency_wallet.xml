@@ -119,17 +119,21 @@
 
             <TextView
                 android:id="@+id/tv_status_error_message"
-                android:layout_width="wrap_content"
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginBottom="16dp"
+                android:ellipsize="end"
+                android:maxLines="1"
                 android:paddingStart="16dp"
                 android:paddingEnd="16dp"
                 android:textColor="@color/warning"
                 android:textSize="14sp"
                 android:visibility="gone"
                 app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@+id/tv_amount_fiat"
                 app:layout_constraintStart_toEndOf="@id/iv_currency"
-                app:layout_constraintTop_toTopOf="@id/guideline" />
+                app:layout_constraintTop_toTopOf="@id/guideline"
+                tools:text="@string/lorem_ipsum" />
 
             <TextView
                 android:id="@+id/tv_status_loading"
@@ -166,13 +170,13 @@
                 android:id="@+id/tv_amount_fiat"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:paddingStart="16dp"
+                android:layout_marginBottom="16dp"
                 android:paddingEnd="16dp"
                 android:textColor="@color/darkGray2"
                 android:textSize="14sp"
-                app:layout_constraintBottom_toBottomOf="@id/tv_exchange_rate"
+                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@id/tv_exchange_rate"
+                app:layout_constraintTop_toTopOf="@id/guideline"
                 tools:text="0.43 USD" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
