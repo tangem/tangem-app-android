@@ -13,9 +13,11 @@ import com.tangem.tap.common.extensions.appendIf
 import com.tangem.tap.common.extensions.readJsonFileToString
 import com.tangem.tap.domain.extensions.getCustomIconUrl
 import com.tangem.tap.domain.extensions.setCustomIconUrl
+import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.network.createMoshi
 
-class CurrenciesRepository(val context: Application) {
+open class CurrenciesRepository(val context: Application) {
+
     private val moshi = createMoshi()
     private val blockchainsAdapter: JsonAdapter<List<Blockchain>> = moshi.adapter(
         Types.newParameterizedType(List::class.java, Blockchain::class.java)
@@ -28,10 +30,13 @@ class CurrenciesRepository(val context: Application) {
     )
 
     fun loadCardCurrencies(cardId: String): CardCurrencies? {
-        val blockchains = loadSavedBlockchains(cardId)
+        val blockchains = loadSavedBlockchains(cardId).toMutableSet()
+        if (DemoHelper.isDemoCardId(cardId)) {
+            blockchains.addAll(DemoHelper.config.demoBlockchains)
+        }
         if (blockchains.isEmpty()) return null
 
-        return CardCurrencies(loadSavedTokens(cardId), blockchains)
+        return CardCurrencies(loadSavedTokens(cardId), blockchains.toList())
     }
 
     fun saveCardCurrencies(cardId: String, currencies: CardCurrencies) {
