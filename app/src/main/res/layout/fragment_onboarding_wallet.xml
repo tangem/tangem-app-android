@@ -81,7 +81,7 @@
                 android:layout_marginStart="32dp"
                 android:layout_marginEnd="32dp"
                 android:scaleType="fitCenter"
-                android:src="@drawable/card_placeholder_new"
+                android:src="@drawable/card_placeholder_black"
                 android:visibility="gone" />
 
             <androidx.appcompat.widget.AppCompatImageView
@@ -92,7 +92,7 @@
                 android:layout_marginStart="32dp"
                 android:layout_marginEnd="32dp"
                 android:scaleType="fitCenter"
-                android:src="@drawable/card_placeholder_new"
+                android:src="@drawable/card_placeholder_black"
                 android:visibility="gone" />
 
             <androidx.appcompat.widget.AppCompatImageView
@@ -103,7 +103,7 @@
                 android:layout_marginStart="32dp"
                 android:layout_marginEnd="32dp"
                 android:scaleType="fitCenter"
-                android:src="@drawable/card_placeholder_new"
+                android:src="@drawable/card_placeholder_black"
                 android:transitionName="imv_front_card" />
 
         </FrameLayout>
