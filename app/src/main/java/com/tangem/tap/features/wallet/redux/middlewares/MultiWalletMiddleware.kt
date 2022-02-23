@@ -13,6 +13,8 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.currenciesRepository
 import com.tangem.tap.domain.extensions.makeWalletManagerForApp
 import com.tangem.tap.domain.extensions.makeWalletManagersForApp
+import com.tangem.tap.features.demo.DemoHelper
+import com.tangem.tap.features.demo.isDemoCard
 import com.tangem.tap.features.wallet.redux.Currency
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletState
@@ -22,6 +24,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.math.BigDecimal
 
 class MultiWalletMiddleware {
     fun handle(
@@ -99,28 +102,25 @@ class MultiWalletMiddleware {
                 scope.launch {
                     walletManagers.map { walletManager ->
                         async(Dispatchers.IO) {
-                            try {
-                                walletManager.update()
-                                val wallet = walletManager.wallet
-                                val coinAmount = wallet.amounts[AmountType.Coin]?.value
-                                if (coinAmount != null && !coinAmount.isZero()) {
-                                    scope.launch(Dispatchers.Main) {
-                                        if (walletState?.getWalletData(wallet.blockchain) == null) {
-                                            store.dispatch(
-                                                WalletAction.MultiWallet.AddWalletManagers(
-                                                    listOfNotNull(walletManager)
-                                                )
+                            walletManager.safeUpdate()
+                            val wallet = walletManager.wallet
+                            val coinAmount = wallet.amounts[AmountType.Coin]?.value
+                            if (coinAmount != null && !coinAmount.isZero()) {
+                                scope.launch(Dispatchers.Main) {
+                                    if (walletState?.getWalletData(wallet.blockchain) == null) {
+                                        store.dispatch(
+                                            WalletAction.MultiWallet.AddWalletManagers(
+                                                listOfNotNull(walletManager)
                                             )
-                                            store.dispatch(
-                                                WalletAction.MultiWallet.AddBlockchain(
-                                                    wallet.blockchain
-                                                )
+                                        )
+                                        store.dispatch(
+                                            WalletAction.MultiWallet.AddBlockchain(
+                                                wallet.blockchain
                                             )
-                                            store.dispatch(WalletAction.LoadWallet.Success(wallet))
-                                        }
+                                        )
+                                        store.dispatch(WalletAction.LoadWallet.Success(wallet))
                                     }
                                 }
-                            } catch (exception: Exception) {
                             }
                         }
                     }
