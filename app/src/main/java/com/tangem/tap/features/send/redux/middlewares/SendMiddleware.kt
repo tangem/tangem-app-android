@@ -13,6 +13,7 @@ import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.AnalyticsParam
 import com.tangem.tap.common.extensions.*
+import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.NavigationAction
@@ -22,6 +23,8 @@ import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.TapWorkarounds.isStart2Coin
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.extensions.minimalAmount
+import com.tangem.tap.features.demo.DemoTransactionSender
+import com.tangem.tap.features.demo.isDemoWallet
 import com.tangem.tap.features.send.redux.*
 import com.tangem.tap.features.send.redux.FeeAction.RequestFee
 import com.tangem.tap.features.send.redux.states.ButtonState
@@ -32,6 +35,7 @@ import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdk
+import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -164,9 +168,12 @@ private fun sendTransaction(
                 )
             )
         }
-
         val sendResult = try {
-            (walletManager as TransactionSender).send(txData, signer)
+            if (walletManager.isDemoWallet()) {
+                DemoTransactionSender(walletManager).send(txData, signer)
+            } else {
+                (walletManager as TransactionSender).send(txData, signer)
+            }
         } catch (ex: Exception) {
             FirebaseCrashlytics.getInstance().recordException(ex)
             delay(DELAY_SDK_DIALOG_CLOSE)
@@ -237,6 +244,12 @@ private fun sendTransaction(
                                 // accept a string identifier of the error message
                                 message.contains("Target account is not created. To create account send 1+ XLM.") -> {
                                     dispatch(SendAction.SendError(TapError.XmlError.AssetAccountNotCreated))
+                                }
+                                message.contains(DemoTransactionSender.ID) -> {
+                                    store.dispatchDialogShow(AppDialog.SimpleOkDialogRes(
+                                        R.string.common_done,
+                                        R.string.alert_demo_tx_send
+                                    ))
                                 }
                                 else -> {
                                     (sendResult.error as? TangemSdkError)?.let { error ->
