@@ -15,6 +15,7 @@ import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.loadCurrenciesIcon
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.domain.tokens.CardCurrencies
+import com.tangem.tap.domain.tokens.getTokensName
 import com.tangem.tap.features.tokens.redux.CurrencyListItem
 import com.tangem.tap.features.tokens.redux.TokensAction
 import com.tangem.tap.store
@@ -211,12 +212,11 @@ class CurrenciesAdapter : ListAdapter<CurrencyListItem, RecyclerView.ViewHolder>
         }
     }
 
-    class TitleViewHolder(val view: View) :
-        RecyclerView.ViewHolder(view) {
+    class TitleViewHolder(val view: View) : RecyclerView.ViewHolder(view) {
         fun bind(title: CurrencyListItem.TitleListItem) {
-            view.tv_subtitle.text = view.getString(title.titleResId).uppercase()
-
             if (title.blockchain != null) {
+                val subtitle = view.getString(title.titleResId, title.blockchain.getTokensName())
+                view.tv_subtitle.text = subtitle.uppercase()
                 view.cl_subtitle_container.setOnClickListener {
                     val rotation = if (title.isContentShown) -90f else 90f
                     store.dispatch(TokensAction.ToggleShowTokensForBlockchain(
@@ -228,6 +228,7 @@ class CurrenciesAdapter : ListAdapter<CurrencyListItem, RecyclerView.ViewHolder>
                 }
                 showArrow(view, title.isContentShown)
             } else {
+                view.tv_subtitle.text = view.getString(title.titleResId).uppercase()
                 view.iv_toggle_sublist_visibility.hide()
             }
         }
