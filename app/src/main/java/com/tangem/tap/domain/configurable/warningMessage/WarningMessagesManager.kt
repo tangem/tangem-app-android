@@ -162,7 +162,7 @@ class WarningMessagesManager(
             "",
             type = WarningMessage.Type.TestCard,
             priority = WarningMessage.Priority.Critical,
-            listOf(WarningMessage.Location.MainScreen),
+            listOf(WarningMessage.Location.MainScreen, WarningMessage.Location.SendScreen),
             null,
             R.string.alert_title,
             R.string.warning_testnet_card_message,
