@@ -18,8 +18,12 @@ import com.tangem.tap.common.redux.global.AndroidResources
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.common.shop.GooglePayService
+import com.tangem.tap.common.shop.GooglePayService.Companion.LOAD_PAYMENT_DATA_REQUEST_CODE
+import com.tangem.tap.common.shop.googlepay.GooglePayUtil.createPaymentsClient
 import com.tangem.tap.domain.TangemSdkManager
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
+import com.tangem.tap.features.shop.redux.ShopAction
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -73,7 +77,13 @@ class MainActivity : AppCompatActivity(), SnackbarHandler {
 
         store.dispatch(GlobalAction.SetResources(getAndroidResources()))
         store.dispatch(WalletConnectAction.RestoreSessions)
+        store.dispatch(
+            ShopAction.CheckIfGooglePayAvailable(
+                GooglePayService(createPaymentsClient(this), this)
+            )
+        )
     }
+
 
     private fun getAndroidResources(): AndroidResources {
         return AndroidResources(
@@ -97,7 +107,8 @@ class MainActivity : AppCompatActivity(), SnackbarHandler {
         val backStackIsEmpty = supportFragmentManager.backStackEntryCount == 0
         val isScannedBefore = store.state.globalState.scanResponse != null
         val isOnboardingServiceActive = store.state.globalState.onboardingState.onboardingStarted
-        if (backStackIsEmpty || (!isOnboardingServiceActive && !isScannedBefore)) {
+        val shopOpened = store.state.shopState.total != null
+        if (backStackIsEmpty || (!isOnboardingServiceActive && !isScannedBefore && !shopOpened)) {
             store.dispatch(NavigationAction.NavigateTo(AppScreen.Home))
         }
         intentHandler.handleIntent(intent)
@@ -139,5 +150,16 @@ class MainActivity : AppCompatActivity(), SnackbarHandler {
     override fun dismissSnackbar() {
         snackbar?.dismiss()
         snackbar = null
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        when (requestCode) {
+            LOAD_PAYMENT_DATA_REQUEST_CODE -> {
+                store.dispatch(
+                    ShopAction.BuyWithGooglePay.HandleGooglePayResponse(resultCode, data)
+                )
+            }
+        }
     }
 }
