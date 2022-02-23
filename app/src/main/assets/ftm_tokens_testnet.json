@@ -1,0 +1,16 @@
+[
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://cdn.worldvectorlogo.com/logos/usd-1.svg",
+    "symbol": "FUSD",
+    "name": "Fantom USD",
+    "contractAddress": "0x91ea991bd52EE3C40EdA2509701d905e1Ee54074"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://cryptologos.cc/logos/fantom-ftm-logo.svg?v=003",
+    "symbol": "WFTM",
+    "name": "Wrapped Fantom",
+    "contractAddress": "0xf1277d1Ed8AD466beddF92ef448A132661956621"
+  }
+]
