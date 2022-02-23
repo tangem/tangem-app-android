@@ -8,18 +8,26 @@ import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.amountToCreateAccount
 import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.domain.topup.TradeCryptoHelper
+import com.tangem.tap.features.demo.isDemoWallet
 import com.tangem.tap.features.wallet.redux.AddressData
 import com.tangem.tap.features.wallet.redux.reducers.createAddressesData
 import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.tap.store
+import timber.log.Timber
 
 /**
 [REDACTED_AUTHOR]
  */
 suspend fun WalletManager.safeUpdate(): Result<Wallet> = try {
-    update()
-    Result.Success(wallet)
+    if (isDemoWallet()) {
+        Result.Success(wallet)
+    } else {
+        update()
+        Result.Success(wallet)
+    }
 } catch (exception: Exception) {
+    Timber.e(exception)
+
     if (!NetworkConnectivity.getInstance().isOnlineOrConnecting()) {
         Result.Failure(TapError.NoInternetConnection)
     } else {
