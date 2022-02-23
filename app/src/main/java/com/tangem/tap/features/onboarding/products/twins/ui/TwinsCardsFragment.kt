@@ -1,6 +1,7 @@
 package com.tangem.tap.features.onboarding.products.twins.ui
 
 import android.os.Bundle
+import android.util.TypedValue
 import android.view.View
 import android.view.animation.OvershootInterpolator
 import androidx.annotation.LayoutRes
@@ -37,6 +38,7 @@ import kotlinx.android.synthetic.main.layout_onboarding_container_top.*
 import kotlinx.android.synthetic.main.view_bg_twins_welcome.*
 import kotlinx.android.synthetic.main.view_onboarding_progress.*
 import kotlinx.android.synthetic.main.view_onboarding_tv_balance.*
+
 
 class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
 
@@ -75,7 +77,14 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
         addBackPressHandler(this)
 
         reconfigureLayoutForTwins()
-        twinsWidget = TwinsCardWidget(LeapfrogWidget(cards_container)) { 285f }
+
+        val typedValue = TypedValue()
+        resources.getValue(R.dimen.device_scale_factor_for_twins_welcome, typedValue, true)
+        val deviceScaleFactorForWelcomeState = typedValue.float
+
+        twinsWidget = TwinsCardWidget(LeapfrogWidget(cards_container), deviceScaleFactorForWelcomeState) {
+            285f * deviceScaleFactorForWelcomeState
+        }
         btnRefreshBalanceWidget = RefreshBalanceWidget(onboarding_main_container)
 
         toolbar.title = getText(R.string.twins_recreate_toolbar)
