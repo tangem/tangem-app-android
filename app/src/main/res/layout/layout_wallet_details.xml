@@ -71,19 +71,15 @@
 
             </com.google.android.material.chip.ChipGroup>
 
-
             <ImageView
                 android:id="@+id/iv_qr_code"
-                android:layout_width="wrap_content"
-                android:layout_height="0dp"
-                android:layout_marginStart="16dp"
-                android:layout_marginEnd="10dp"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
                 android:adjustViewBounds="true"
-                android:scaleType="fitXY"
+                android:scaleType="fitStart"
                 app:layout_constraintEnd_toEndOf="@id/guideline"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/chip_group_address_type"
-                app:layout_constraintBottom_toBottomOf="@id/v_qr_lower_end"
                 tools:src="@drawable/ic_qr_code_show" />
 
             <androidx.constraintlayout.widget.Guideline
@@ -92,22 +88,20 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintGuide_percent="0.4" />
+                app:layout_constraintGuide_percent="0.40" />
 
             <TextView
                 android:id="@+id/tv_address"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
+                android:layout_marginTop="16dp"
                 android:layout_marginEnd="14dp"
-                android:ellipsize="middle"
                 android:textColor="@color/darkGray1"
                 android:textSize="13sp"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toEndOf="@id/iv_qr_code"
                 app:layout_constraintTop_toTopOf="@id/iv_qr_code"
-                tools:text="139mrsJgyWnJjkljlkhiuojlkljkjljljlkjlkfsdkdsjflsdkjflsdkjfffffffljlkjkljlkjlkjkljky9BV"
-                android:singleLine="true" />
+                tools:text="139mrsJgyWnJjkljlkhiuojlkljkjljljlkjlkfsdkdsjflsdkjflsdkjfffffffljlkjkljlkjlkjkljky9BV" />
 
             <TextView
                 android:id="@+id/tv_explore"
@@ -126,72 +120,60 @@
                 app:layout_constraintStart_toEndOf="@id/iv_qr_code"
                 app:layout_constraintTop_toBottomOf="@id/tv_address" />
 
-
             <com.google.android.material.chip.Chip
                 android:id="@+id/btn_copy"
                 style="@style/Widget.MaterialComponents.Chip.Action"
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="6dp"
-                android:layout_marginBottom="24dp"
-                android:layout_marginTop="22dp"
+                android:layout_marginEnd="4dp"
                 android:src="@drawable/ic_inactive"
                 android:text="@string/wallet_address_button_copy"
                 android:textAlignment="center"
                 android:textColor="@color/colorSecondary"
                 app:chipBackgroundColor="@color/blue_pale"
                 app:chipIcon="@drawable/ic_copy_chip"
-                app:iconStartPadding="12dp"
-                app:iconEndPadding="0dp"
                 app:chipIconSize="16dp"
-                app:layout_constraintTop_toBottomOf="@id/tv_explore"
-                app:layout_constraintEnd_toStartOf="@id/btn_share"
-                app:layout_constraintStart_toEndOf="@id/iv_qr_code" />
-
-            <View
-                android:id="@+id/v_qr_lower_end"
-                android:layout_width="1dp"
-                android:layout_height="1dp"
-                app:layout_constraintTop_toBottomOf="@id/btn_copy"
-                app:layout_constraintStart_toStartOf="@id/btn_copy"
-                android:layout_marginTop="5dp"
-            />
-
+                app:iconEndPadding="0dp"
+                app:iconStartPadding="12dp"
+                app:layout_constraintEnd_toStartOf="@+id/btn_share"
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintHorizontal_chainStyle="packed"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/iv_qr_code" />
 
             <com.google.android.material.chip.Chip
                 android:id="@+id/btn_share"
                 style="@style/Widget.MaterialComponents.Chip.Action"
-                android:layout_width="0dp"
+                android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="16dp"
-                android:layout_marginBottom="24dp"
-                android:layout_marginTop="22dp"
+                android:layout_marginStart="4dp"
                 android:src="@drawable/ic_inactive"
                 android:text="@string/wallet_address_button_share"
-                app:chipIcon="@drawable/ic_share_chip"
-                app:iconStartPadding="12dp"
-                app:iconEndPadding="0dp"
-                app:chipIconSize="16dp"
                 android:textAlignment="center"
                 android:textColor="@color/colorSecondary"
                 app:chipBackgroundColor="@color/blue_pale"
-                app:layout_constraintTop_toBottomOf="@id/tv_explore"
+                app:chipIcon="@drawable/ic_share_chip"
+                app:chipIconSize="16dp"
+                app:iconEndPadding="0dp"
+                app:iconStartPadding="12dp"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@id/btn_copy" />
+                app:layout_constraintHorizontal_bias="0.5"
+                app:layout_constraintStart_toEndOf="@+id/btn_copy"
+                app:layout_constraintTop_toTopOf="@+id/btn_copy" />
 
             <TextView
-                android:id="@+id/tv_recieve_message"
+                android:id="@+id/tv_receive_message"
                 style="@style/TextViewOnboarding.Body"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="16dp"
-                android:layout_marginTop="16dp"
+                android:layout_marginTop="8dp"
                 android:layout_marginEnd="16dp"
                 android:textAlignment="center"
                 android:textAllCaps="false"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/iv_qr_code"
+                app:layout_constraintTop_toBottomOf="@+id/btn_copy"
                 tools:text="@string/address_qr_code_message_token_format" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
