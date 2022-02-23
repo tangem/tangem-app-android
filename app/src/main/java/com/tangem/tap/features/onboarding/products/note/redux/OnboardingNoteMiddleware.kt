@@ -13,6 +13,7 @@ import com.tangem.tap.domain.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.hasWallets
 import com.tangem.tap.domain.extensions.makePrimaryWalletManager
+import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.wallet.redux.Currency
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.scope
@@ -33,14 +34,16 @@ class OnboardingNoteMiddleware {
 private val onboardingNoteMiddleware: Middleware<AppState> = { dispatch, state ->
     { next ->
         { action ->
-            handleNoteAction(action, dispatch)
+            handleNoteAction(state, action, dispatch)
             next(action)
         }
     }
 }
 
-private fun handleNoteAction(action: Action, dispatch: DispatchFunction) {
+private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch: DispatchFunction) {
     if (action !is OnboardingNoteAction) return
+    if (DemoHelper.tryHandle(appState, action)) return
+
     val globalState = store.state.globalState
     val onboardingManager = globalState.onboardingState.onboardingManager ?: return
 
