@@ -87,13 +87,12 @@ class DemoConfig {
         val demoIds = (releaseDemoCardIds + testDemoCardIds).toMutableList()
         if (BuildConfig.DEBUG) demoIds.addAll(debugTestDemoCardIds)
 
-        return@lazy demoIds
+        return@lazy demoIds.distinct()
     }
 
     private val walletBalances: Map<Blockchain, Amount> = mapOf(
         Blockchain.Bitcoin to Amount(0.028.toBigDecimal(), Blockchain.Bitcoin),
         Blockchain.Ethereum to Amount(0.2311.toBigDecimal(), Blockchain.Ethereum),
-        Blockchain.XRP to Amount(1248.56.toBigDecimal(), Blockchain.XRP),
         Blockchain.Dogecoin to Amount(1450.025.toBigDecimal(), Blockchain.Dogecoin),
         Blockchain.Solana to Amount(13.246.toBigDecimal(), Blockchain.Solana),
     )
@@ -108,17 +107,18 @@ class DemoConfig {
     )
 
     private val testDemoCardIds = listOf(
-        "FB30000000000176",
-        "FB20000000000186",
-        "FB10000000000196",
+        "FB20000000000186", // Note ETH
+        "FB10000000000196", // Note BTC
+        "FB30000000000176", // Wallet
+        //TODO: delete bellow ids before 3.28 release
+        "AB01000000045060", // Note BTC
+        "AB02000000045028", // Note ETH
+        "AC79000000000004", // Wallet 4.46
     )
 
     private val debugTestDemoCardIds = listOf(
-        "AB06000000018575", // Note XRP
-        "AB04000000011036", // Note Doge
         "AB01000000045060", // Note BTC
         "AB02000000045028", // Note ETH
-        "AC01000000200003", // Wallet 4.52
         "AC79000000000004", // Wallet 4.46
     )
 }
@@ -147,7 +147,7 @@ class DemoTransactionSender(
             .joinToString("")
     }
 
-    companion object{
+    companion object {
         val ID = DemoTransactionSender::class.java.simpleName
     }
 
