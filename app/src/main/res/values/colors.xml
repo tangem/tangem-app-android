@@ -29,6 +29,11 @@
     <color name="buttonGray">#F4F5F6</color>
     <color name="textGray">#DE000000</color>
 
+    <color name="textBlack">#060606</color>
+    <color name="iconGray">#686868</color>
+    <color name="backgroundGray">#F2F2F2</color>
+    <color name="chipBlack">#090E13</color>
+
     <color name="twins_dark">#14181D</color>
 
 
