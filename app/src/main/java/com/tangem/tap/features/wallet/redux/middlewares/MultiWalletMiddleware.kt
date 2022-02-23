@@ -37,6 +37,9 @@ class MultiWalletMiddleware {
             is WalletAction.MultiWallet.AddWalletManagers -> {
                 globalState.feedbackManager?.infoHolder?.setWalletsInfo(action.walletManagers)
                 action.walletManagers.forEach { checkForRentWarning(it) }
+                if (globalState.scanResponse?.isDemoCard() == true) {
+                    addDummyBalances(action.walletManagers)
+                }
             }
             is WalletAction.MultiWallet.SelectWallet -> {
                 if (action.walletData != null) {
@@ -163,6 +166,14 @@ class MultiWalletMiddleware {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    private fun addDummyBalances(walletManagers: List<WalletManager>) {
+        walletManagers.forEach {
+            if (it.wallet.fundsAvailable(AmountType.Coin) == BigDecimal.ZERO) {
+                DemoHelper.injectDemoBalance(it)
             }
         }
     }
