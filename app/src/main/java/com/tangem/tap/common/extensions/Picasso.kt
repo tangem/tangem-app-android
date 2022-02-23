@@ -4,6 +4,7 @@ import android.graphics.PorterDuff
 import android.net.Uri
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.constraintlayout.utils.widget.ImageFilterView
 import androidx.core.content.ContextCompat
 import com.squareup.picasso.Callback
 import com.squareup.picasso.Picasso
@@ -14,7 +15,7 @@ import com.tangem.tap.domain.extensions.getCustomIconUrl
 import com.tangem.wallet.R
 
 fun Picasso.loadCurrenciesIcon(
-    imageView: ImageView,
+    imageView: ImageFilterView,
     textView: TextView,
     token: Token? = null,
     blockchain: Blockchain,
@@ -54,7 +55,7 @@ fun Picasso.loadCurrenciesIcon(
                                 imageView.colorFilter = null
                                 textView.text = null
                             }
-                            if (blockchain.isTestnet()) imageView.tint(R.color.tint)
+                            if (blockchain.isTestnet()) imageView.saturation = 0f
                         }
                     })
         }
@@ -68,7 +69,7 @@ private const val QCX = "QCX"
 private const val VOYR = "VOYRME"
 
 private fun setOfflineCurrencyImage(
-    imageView: ImageView,
+    imageView: ImageFilterView,
     textView: TextView,
     token: Token?,
     blockchain: Blockchain,
@@ -89,7 +90,7 @@ fun ImageView.tint(colorRes: Int) {
 }
 
 private fun setBlockchainImage(
-    imageView: ImageView,
+    imageView: ImageFilterView,
     textView: TextView,
     blockchain: Blockchain,
 ) {
@@ -99,11 +100,15 @@ private fun setBlockchainImage(
 }
 
 private fun setTokenImage(
-    imageView: ImageView,
+    imageView: ImageFilterView,
     textView: TextView,
     token: Token,
 ) {
     imageView.setImageResource(R.drawable.shape_circle)
-    imageView.setColorFilter(token.getColor())
+    if (token.blockchain.isTestnet()) {
+        imageView.saturation = 0f
+    } else {
+        imageView.setColorFilter(token.getColor())
+    }
     textView.text = token.symbol.take(1)
 }
