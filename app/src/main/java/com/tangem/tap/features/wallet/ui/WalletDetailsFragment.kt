@@ -23,8 +23,6 @@ import com.tangem.tap.features.wallet.ui.dialogs.AmountToSendDialog
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlinx.android.synthetic.main.fragment_wallet_details.*
-import kotlinx.android.synthetic.main.item_currency_wallet.view.*
-import kotlinx.android.synthetic.main.item_popular_token.view.*
 import kotlinx.android.synthetic.main.layout_balance_error.*
 import kotlinx.android.synthetic.main.layout_balance_wallet_details.*
 import kotlinx.android.synthetic.main.layout_wallet_details.*
@@ -197,7 +195,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
                     requireContext()))
             }
             iv_qr_code.setImageBitmap(state.walletAddresses.selectedAddress.shareUrl.toQrCode())
-            tv_recieve_message.text = getQRReceiveMessage(tv_recieve_message.context, state.currency)
+            tv_receive_message.text = getQRReceiveMessage(tv_receive_message.context, state.currency)
         }
     }
 
