@@ -68,9 +68,16 @@ fun View.hide(invokeBeforeStateChanged: (() -> Unit)? = null) {
     this.visibility = View.GONE
 }
 
-fun View.makeInvisible() {
-    if (this.visibility == View.INVISIBLE) return
-    this.visibility = View.INVISIBLE
+fun View.invisible(invisible: Boolean = true, invokeBeforeStateChanged: (() -> Unit)? = null) {
+    if (invisible) {
+        if (this.visibility == View.INVISIBLE) return
+
+        invokeBeforeStateChanged?.invoke()
+        this.visibility = View.INVISIBLE
+    } else {
+        this.show(invokeBeforeStateChanged)
+    }
+
 }
 
 fun Context.dpToPixels(dp: Int): Int =
