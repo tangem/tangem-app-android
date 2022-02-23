@@ -12,6 +12,7 @@ import com.tangem.tap.common.images.PicassoHelper
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.appReducer
 import com.tangem.tap.common.redux.global.GlobalAction
+import com.tangem.tap.common.shop.TangemShopService
 import com.tangem.tap.domain.configurable.config.ConfigManager
 import com.tangem.tap.domain.configurable.config.FeaturesLocalLoader
 import com.tangem.tap.domain.configurable.config.FeaturesRemoteLoader
@@ -37,6 +38,7 @@ val store = Store(
 lateinit var preferencesStorage: PreferencesStorage
 lateinit var currenciesRepository: CurrenciesRepository
 lateinit var walletConnectRepository: WalletConnectRepository
+lateinit var shopService: TangemShopService
 
 class TapApplication : Application() {
     override fun onCreate() {
@@ -72,7 +74,10 @@ class TapApplication : Application() {
         val localLoader = FeaturesLocalLoader(this, moshi)
         val remoteLoader = FeaturesRemoteLoader(moshi)
         val configManager = ConfigManager(localLoader, remoteLoader)
-        configManager.load { store.dispatch(GlobalAction.SetConfigManager(configManager)) }
+        configManager.load {
+            store.dispatch(GlobalAction.SetConfigManager(configManager))
+            shopService = TangemShopService(this, configManager.config.shopify!!)
+        }
         val warningsManager = WarningMessagesManager(RemoteWarningLoader(moshi))
         warningsManager.load { store.dispatch(GlobalAction.SetWarningManager(warningsManager)) }
     }

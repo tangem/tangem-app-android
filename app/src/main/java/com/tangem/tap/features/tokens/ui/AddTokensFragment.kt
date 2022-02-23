@@ -11,6 +11,7 @@ import androidx.appcompat.widget.SearchView
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.transition.TransitionInflater
+import com.tangem.tap.common.extensions.getString
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.tokens.redux.TokensAction
 import com.tangem.tap.features.tokens.redux.TokensState
@@ -96,7 +97,7 @@ class AddTokensFragment : Fragment(R.layout.fragment_add_tokens),
 
         val menuItem = menu.findItem(R.id.menu_search)
         val searchView: SearchView = menuItem.actionView as SearchView
-        searchView.queryHint = "Type here to search"
+        searchView.queryHint = searchView.getString(R.string.add_token_search_hint)
         searchView.maxWidth = android.R.attr.width
         searchView.inputtedTextAsFlow()
                 .debounce(400)
