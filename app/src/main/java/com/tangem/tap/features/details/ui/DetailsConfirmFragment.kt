@@ -68,7 +68,7 @@ class DetailsConfirmFragment : Fragment(R.layout.fragment_details_confirm),
             }
             ConfirmScreenState.LongTap, ConfirmScreenState.AccessCode,
             ConfirmScreenState.PassCode -> {
-                toolbar.title = getString(R.string.details_row_title_manage_security)
+                toolbar.title = getString(R.string.details_manage_security_title)
                 tv_warning_description.text = getString(R.string.details_security_management_warning)
                 btn_confirm.text = getString(R.string.common_save_changes)
                 btn_confirm.setCompoundDrawablesRelativeWithIntrinsicBounds(
