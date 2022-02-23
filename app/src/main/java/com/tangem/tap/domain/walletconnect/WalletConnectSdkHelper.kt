@@ -15,6 +15,7 @@ import com.tangem.common.extensions.toHexString
 import com.tangem.crypto.CryptoUtils
 import com.tangem.operations.sign.SignHashCommand
 import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.extensions.toFormattedString
 import com.tangem.tap.features.details.redux.walletconnect.*
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.PersonalSignDialogData
@@ -35,18 +36,11 @@ class WalletConnectSdkHelper {
         id: Long,
         type: WcTransactionType,
     ): WcTransactionData? {
-
         val walletManager = getWalletManager(session) ?: return null
-        try {
-            walletManager.update()
-        } catch (exception: Exception) {
-            Timber.e(exception)
-            return null
-        }
 
+        walletManager.safeUpdate()
         val wallet = walletManager.wallet
-        val balance =
-            wallet.amounts[AmountType.Coin]?.value ?: return null
+        val balance = wallet.amounts[AmountType.Coin]?.value ?: return null
 
         val gas = transaction.gas?.hexToBigDecimal()
             ?: transaction.gasLimit?.hexToBigDecimal()
