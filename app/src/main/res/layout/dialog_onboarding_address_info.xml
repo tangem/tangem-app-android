@@ -24,7 +24,7 @@
         app:layout_constraintTop_toBottomOf="@+id/pseudo_toolbar" />
 
     <TextView
-        android:id="@+id/tv_recieve_message"
+        android:id="@+id/tv_receive_message"
         style="@style/TextViewOnboarding.Body"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
