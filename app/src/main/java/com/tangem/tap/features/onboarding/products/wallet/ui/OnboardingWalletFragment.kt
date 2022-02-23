@@ -1,6 +1,7 @@
 package com.tangem.tap.features.onboarding.products.wallet.ui
 
 import android.os.Bundle
+import android.util.TypedValue
 import android.view.*
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
@@ -13,6 +14,7 @@ import com.squareup.picasso.Picasso
 import com.tangem.common.CardIdFormatter
 import com.tangem.common.core.CardIdDisplayFormat
 import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.LeapfrogWidget
+import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.PropertyCalculator
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.features.FragmentOnBackPressedHandler
@@ -47,8 +49,15 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val leapfrog = LeapfrogWidget(fl_cards_container)
-        cardsWidget = WalletCardsWidget(leapfrog) { 200f }
+        val typedValue = TypedValue()
+        resources.getValue(R.dimen.device_scale_factor_for_twins_welcome, typedValue, true)
+        val deviceScaleFactor = typedValue.float
+
+        val leapfrogCalculator = PropertyCalculator(
+            yTranslationFactor = 25f * deviceScaleFactor,
+        )
+        val leapfrog = LeapfrogWidget(fl_cards_container, leapfrogCalculator)
+        cardsWidget = WalletCardsWidget(leapfrog, deviceScaleFactor) { 200f * deviceScaleFactor }
         startPostponedEnterTransition()
 
         view_pager_backup_info.adapter = BackupInfoAdapter()
@@ -121,8 +130,7 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
         tv_header.setText(R.string.onboarding_create_wallet_header)
         tv_body.setText(R.string.onboarding_create_wallet_body)
 
-        cardsWidget.toFolded()
-        startPostponedEnterTransition()
+        cardsWidget.toFolded(false) { startPostponedEnterTransition() }
     }
 
 
@@ -379,7 +387,7 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
 
         val shopMenuShouldBeVisible =
             (backupStep == BackupStep.ScanOriginCard || backupStep == BackupStep.AddBackupCards) &&
-                    backupState.buyAdditionalCardsUrl != null
+                backupState.buyAdditionalCardsUrl != null
         menu.getItem(0).isVisible = shopMenuShouldBeVisible
     }
 
