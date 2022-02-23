@@ -10,7 +10,7 @@ import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.LeapView
 import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.LeapViewState
 import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.LeapfrogWidget
 
-class BackupCardsWidget(
+class WalletCardsWidget(
     val leapfrogWidget: LeapfrogWidget,
     val getTopOfAnchorViewForActivateState: () -> Float,
 ) {
