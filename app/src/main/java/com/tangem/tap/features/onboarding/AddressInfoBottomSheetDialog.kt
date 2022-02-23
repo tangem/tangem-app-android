@@ -45,7 +45,7 @@ class AddressInfoBottomSheetDialog(
         btn_fl_share.setOnClickListener {
             store.dispatchShare(data.shareUrl)
         }
-        tv_recieve_message.text = getQRReceiveMessage(tv_recieve_message.context, stateDialog.currency)
+        tv_receive_message.text = getQRReceiveMessage(tv_receive_message.context, stateDialog.currency)
     }
 }
 
