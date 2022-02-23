@@ -17,9 +17,11 @@ import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.domain.walletconnect.BnbHelper
 import com.tangem.tap.domain.walletconnect.WalletConnectManager
 import com.tangem.tap.domain.walletconnect.WalletConnectNetworkUtils
+import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.store
 import com.tangem.wallet.R
+import org.rekotlin.Action
 import org.rekotlin.Middleware
 
 class WalletConnectMiddleware {
@@ -28,138 +30,131 @@ class WalletConnectMiddleware {
     val walletConnectMiddleware: Middleware<AppState> = { dispatch, state ->
         { next ->
             { action ->
-                when (action) {
+                handle(state, action)
+                next(action)
+            }
+        }
+    }
 
-                    is WalletConnectAction.RestoreSessions -> {
-                        walletConnectManager.restoreSessions()
-                    }
+    private fun handle(state: () -> AppState?, action: Action) {
+        if (DemoHelper.tryHandle(state, action)) return
 
-                    is WalletConnectAction.HandleDeepLink -> {
-                        if (!action.wcUri.isNullOrBlank()) {
-                            if (WalletConnectManager.isCorrectWcUri(action.wcUri)) {
-                                store.dispatchOnMain(WalletConnectAction.OpenSession(action.wcUri))
-                            }
-                        }
-                    }
-
-                    is WalletConnectAction.StartWalletConnect -> {
-                        val uri = action.activity.getFromClipboard()?.toString()
-                        if (uri != null && WalletConnectManager.isCorrectWcUri(uri)) {
-                            store.dispatchOnMain(WalletConnectAction.ShowClipboardOrScanQrDialog(uri))
-                        } else {
-                            store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.QrScan))
-                        }
-                    }
-
-                    is WalletConnectAction.ShowClipboardOrScanQrDialog -> {
-                        store.dispatchOnMain(
-                            GlobalAction.ShowDialog(
-                                WalletConnectDialog.ClipboardOrScanQr(
-                                    action.wcUri
-                                )
-                            )
-                        )
-                    }
-
-                    is WalletConnectAction.OpeningSessionTimeout -> {
-                        store.dispatchOnMain(GlobalAction.ShowDialog(WalletConnectDialog.SessionTimeout))
-                    }
-
-                    is WalletConnectAction.FailureEstablishingSession -> {
-                        if (action.session != null) {
-                            walletConnectManager.disconnect(action.session)
-                        }
-                    }
-
-                    is WalletConnectAction.UnsupportedCard -> {
-                        store.dispatchOnMain(GlobalAction.ShowDialog(WalletConnectDialog.UnsupportedCard))
-                    }
-
-                    is WalletConnectAction.OpenSession -> {
-                        walletConnectManager.connect(
-                            wcUri = action.wcUri,
-                        )
-                    }
-
-                    is WalletConnectAction.RefuseOpeningSession -> {
-                        store.dispatch(
-                            GlobalAction.ShowDialog(
-                                WalletConnectDialog.OpeningSessionRejected
-                            )
-                        )
-                    }
-
-                    is WalletConnectAction.ScanCard -> {
-                        scanCard(action.session, action.chainId)
-                    }
-
-                    is WalletConnectAction.ApproveSession -> {
-                        walletConnectManager.approve(action.session)
-                    }
-
-                    is WalletConnectAction.DisconnectSession -> {
-                        walletConnectManager.disconnect(action.session)
-                    }
-
-                    is WalletConnectAction.HandleTransactionRequest -> {
-                        walletConnectManager.handleTransactionRequest(
-                            transaction = action.transaction,
-                            session = action.session,
-                            id = action.id,
-                            type = action.type
-                        )
-                    }
-                    is WalletConnectAction.HandlePersonalSignRequest -> {
-                        walletConnectManager.handlePersonalSignRequest(
-                            message = action.message,
-                            session = action.session,
-                            id = action.id
-                        )
-                    }
-                    is WalletConnectAction.RejectRequest -> {
-                        walletConnectManager.rejectRequest(action.session, action.id)
-                    }
-                    is WalletConnectAction.SendTransaction -> {
-                        walletConnectManager.completeTransaction(action.session)
-                    }
-                    is WalletConnectAction.SignMessage -> {
-                        walletConnectManager.sendSignedMessage(action.session)
-                    }
-                    is WalletConnectAction.BinanceTransaction.Trade -> {
-                        val messageData = BnbHelper.createMessageData(action.order)
-                        store.dispatchOnMain(
-                            GlobalAction.ShowDialog(
-                                WalletConnectDialog.BnbTransactionDialog(
-                                    data = messageData,
-                                    session = action.sessionData.session,
-                                    sessionId = action.id,
-                                    cardId = action.sessionData.wallet.cardId,
-                                    dAppName = action.sessionData.peerMeta.name
-                                )
-                            )
-                        )
-                    }
-                    is WalletConnectAction.BinanceTransaction.Transfer -> {
-                        val messageData = BnbHelper.createMessageData(action.order)
-                        store.dispatchOnMain(
-                            GlobalAction.ShowDialog(
-                                WalletConnectDialog.BnbTransactionDialog(
-                                    data = messageData,
-                                    session = action.sessionData.session,
-                                    sessionId = action.id,
-                                    cardId = action.sessionData.wallet.cardId,
-                                    dAppName = action.sessionData.peerMeta.name
-                                )
-                            )
-                        )
-                    }
-                    is WalletConnectAction.BinanceTransaction.Sign -> {
-                        walletConnectManager.signBnb(
-                            action.id, action.data, action.sessionData
-                        )
+        when (action) {
+            is WalletConnectAction.RestoreSessions -> {
+                walletConnectManager.restoreSessions()
+            }
+            is WalletConnectAction.HandleDeepLink -> {
+                if (!action.wcUri.isNullOrBlank()) {
+                    if (WalletConnectManager.isCorrectWcUri(action.wcUri)) {
+                        store.dispatchOnMain(WalletConnectAction.OpenSession(action.wcUri))
                     }
                 }
-                next(action)
+            }
+            is WalletConnectAction.StartWalletConnect -> {
+                val uri = action.activity.getFromClipboard()?.toString()
+                if (uri != null && WalletConnectManager.isCorrectWcUri(uri)) {
+                    store.dispatchOnMain(WalletConnectAction.ShowClipboardOrScanQrDialog(uri))
+                } else {
+                    store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.QrScan))
+                }
+            }
+            is WalletConnectAction.ShowClipboardOrScanQrDialog -> {
+                store.dispatchOnMain(
+                    GlobalAction.ShowDialog(
+                        WalletConnectDialog.ClipboardOrScanQr(
+                            action.wcUri
+                        )
+                    )
+                )
+            }
+            is WalletConnectAction.OpeningSessionTimeout -> {
+                store.dispatchOnMain(GlobalAction.ShowDialog(WalletConnectDialog.SessionTimeout))
+            }
+            is WalletConnectAction.FailureEstablishingSession -> {
+                if (action.session != null) {
+                    walletConnectManager.disconnect(action.session)
+                }
+            }
+            is WalletConnectAction.UnsupportedCard -> {
+                store.dispatchOnMain(GlobalAction.ShowDialog(WalletConnectDialog.UnsupportedCard))
+            }
+            is WalletConnectAction.OpenSession -> {
+                walletConnectManager.connect(
+                    wcUri = action.wcUri,
+                )
+            }
+            is WalletConnectAction.RefuseOpeningSession -> {
+                store.dispatch(
+                    GlobalAction.ShowDialog(
+                        WalletConnectDialog.OpeningSessionRejected
+                    )
+                )
+            }
+            is WalletConnectAction.ScanCard -> {
+                scanCard(action.session, action.chainId)
+            }
+            is WalletConnectAction.ApproveSession -> {
+                walletConnectManager.approve(action.session)
+            }
+            is WalletConnectAction.DisconnectSession -> {
+                walletConnectManager.disconnect(action.session)
+            }
+            is WalletConnectAction.HandleTransactionRequest -> {
+                walletConnectManager.handleTransactionRequest(
+                    transaction = action.transaction,
+                    session = action.session,
+                    id = action.id,
+                    type = action.type
+                )
+            }
+            is WalletConnectAction.HandlePersonalSignRequest -> {
+                walletConnectManager.handlePersonalSignRequest(
+                    message = action.message,
+                    session = action.session,
+                    id = action.id
+                )
+            }
+            is WalletConnectAction.RejectRequest -> {
+                walletConnectManager.rejectRequest(action.session, action.id)
+            }
+            is WalletConnectAction.SendTransaction -> {
+                walletConnectManager.completeTransaction(action.session)
+            }
+            is WalletConnectAction.SignMessage -> {
+                walletConnectManager.sendSignedMessage(action.session)
+            }
+            is WalletConnectAction.BinanceTransaction.Trade -> {
+                val messageData = BnbHelper.createMessageData(action.order)
+                store.dispatchOnMain(
+                    GlobalAction.ShowDialog(
+                        WalletConnectDialog.BnbTransactionDialog(
+                            data = messageData,
+                            session = action.sessionData.session,
+                            sessionId = action.id,
+                            cardId = action.sessionData.wallet.cardId,
+                            dAppName = action.sessionData.peerMeta.name
+                        )
+                    )
+                )
+            }
+            is WalletConnectAction.BinanceTransaction.Transfer -> {
+                val messageData = BnbHelper.createMessageData(action.order)
+                store.dispatchOnMain(
+                    GlobalAction.ShowDialog(
+                        WalletConnectDialog.BnbTransactionDialog(
+                            data = messageData,
+                            session = action.sessionData.session,
+                            sessionId = action.id,
+                            cardId = action.sessionData.wallet.cardId,
+                            dAppName = action.sessionData.peerMeta.name
+                        )
+                    )
+                )
+            }
+            is WalletConnectAction.BinanceTransaction.Sign -> {
+                walletConnectManager.signBnb(
+                    action.id, action.data, action.sessionData
+                )
             }
         }
     }
@@ -190,9 +185,9 @@ class WalletConnectMiddleware {
         }
 
         val walletManager = getWalletManager(scanResponse, blockchain).guard {
-                store.dispatchOnMain(WalletConnectAction.FailureEstablishingSession(null))
-                return
-            }
+            store.dispatchOnMain(WalletConnectAction.FailureEstablishingSession(null))
+            return
+        }
 
         val wallet = walletManager.wallet
         val derivedKey =
@@ -227,7 +222,7 @@ class WalletConnectMiddleware {
     ): WalletManager? {
         val card = scanResponse.card
         val factory = store.state.globalState.tapWalletManager.walletManagerFactory
-        val blockchainToMake = if (blockchain == Blockchain.Ethereum && card.isTestCard)  {
+        val blockchainToMake = if (blockchain == Blockchain.Ethereum && card.isTestCard) {
             Blockchain.EthereumTestnet
         } else {
             blockchain
