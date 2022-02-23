@@ -71,6 +71,8 @@
             android:layout_height="174dp"
             android:layout_gravity="center"
             android:scaleType="fitXY"
+            android:scaleX="@dimen/home_top_back_card_scaleX"
+            android:scaleY="@dimen/home_top_back_card_scaleY"
             android:src="@drawable/card_placeholder_white" />
 
         <androidx.appcompat.widget.AppCompatImageView
