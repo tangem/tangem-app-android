@@ -17,6 +17,7 @@ import com.tangem.tap.domain.extensions.hasSignedHashes
 import com.tangem.tap.domain.extensions.remainingSignatures
 import com.tangem.tap.domain.isMultiwalletAllowed
 import com.tangem.tap.domain.tasks.product.ScanResponse
+import com.tangem.tap.features.demo.isDemoCard
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.tap.preferencesStorage
@@ -98,6 +99,9 @@ class WarningsMiddleware {
                 if (!globalState.cardVerifiedOnline) {
                     addWarningMessage(WarningMessagesManager.onlineVerificationFailed())
                 }
+            }
+            if (scanResponse.isDemoCard()){
+                addWarningMessage(WarningMessagesManager.demoCardWarning())
             }
             setWarningMessages()
         }
