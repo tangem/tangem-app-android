@@ -49,8 +49,7 @@ class TokensMiddleware {
             cardFirmware = scanResponse.card.firmwareVersion,
             isTestNet = isTestcard
         ).sortedBy { it.fullName }
-        val currencies =
-            CurrencyListItem.createListOfCurrencies(blockchains, tokens).toMutableList()
+        val currencies = CurrencyListItem.createListOfCurrencies(blockchains, tokens)
         store.dispatch(TokensAction.LoadCurrencies.Success(currencies))
     }
 
