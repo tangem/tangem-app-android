@@ -6,6 +6,7 @@ import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.extensions.Result
+import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TangemSigner
 import com.tangem.tap.store
@@ -14,7 +15,7 @@ import java.math.BigDecimal
 
 class TopUpManager {
     suspend fun topUpTestErc20Tokens(walletManager: EthereumWalletManager, token: Token) {
-        walletManager.update()
+        walletManager.safeUpdate()
 
         val amountToSend = Amount(walletManager.wallet.blockchain)
         val destinationAddress = token.contractAddress
