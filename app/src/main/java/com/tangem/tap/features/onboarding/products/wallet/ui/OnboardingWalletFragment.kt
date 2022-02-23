@@ -57,7 +57,6 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
             yTranslationFactor = 25f * deviceScaleFactor,
         )
         val leapfrog = LeapfrogWidget(fl_cards_container, leapfrogCalculator)
-//        cardsWidget = BackupCardsWidget(leapfrog, deviceScaleFactor) { 200f * deviceScaleFactor }
         cardsWidget = WalletCardsWidget(leapfrog, deviceScaleFactor) { 200f * deviceScaleFactor }
         startPostponedEnterTransition()
 
