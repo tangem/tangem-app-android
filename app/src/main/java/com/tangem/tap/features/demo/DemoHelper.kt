@@ -78,7 +78,6 @@ class DemoConfig {
     val demoBlockchains = listOf(
         Blockchain.Bitcoin,
         Blockchain.Ethereum,
-        Blockchain.XRP,
         Blockchain.Dogecoin,
         Blockchain.Solana,
     )
