@@ -1,0 +1,282 @@
+[
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/fantom/assets/0x6a07A792ab2965C72a5B8088d3a069A7aC3a993B/logo.png",
+    "symbol": "AAVE",
+    "name": "Aave",
+    "contractAddress": "0x6a07a792ab2965c72a5b8088d3a069a7ac3a993b"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0xf99d58e463A2E07e5692127302C20A191861b4D6.png",
+    "symbol": "ANY",
+    "name": "Anyswap",
+    "contractAddress": "0xddcb3ffd12750b45d32e084887fdf1aabab34239"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://ftmscan.com/token/images/bandprotocol_32.png",
+    "symbol": "BAND",
+    "name": "Band Protocol",
+    "contractAddress": "0x46e7628e8b4350b2716ab470ee0ba1fa9e76c6c5"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0xFbdd194376de19a88118e84E279b977f165d01b8.png",
+    "symbol": "BIFI",
+    "name": "Beefy.Finance",
+    "contractAddress": "0xd6070ae98b8069de6b494332d1a1a81b6179d960"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0xF24Bcf4d1e507740041C9cFd2DddB29585aDCe1e.png",
+    "symbol": "BEETS",
+    "name": "Beethoven X",
+    "contractAddress": "0xf24bcf4d1e507740041c9cfd2dddb29585adce1e"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/fantom/assets/0xb3654dc3D10Ea7645f8319668E8F54d2574FBdC8/logo.png",
+    "symbol": "LINK",
+    "name": "Chainlink",
+    "contractAddress": "0xb3654dc3d10ea7645f8319668e8f54d2574fbdc8"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://ftmscan.com/token/images/cover_32.png",
+    "symbol": "COVER",
+    "name": "Cover Protocol",
+    "contractAddress": "0xb01e8419d842beebf1b70a7b5f7142abbaf7159d"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://ftmscan.com/token/images/CreamFinance_32.png",
+    "symbol": "CREAM",
+    "name": "Cream",
+    "contractAddress": "0x657a1861c15a3ded9af0b6799a195a249ebdcbc6"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/fantom/assets/0x1E4F97b9f9F913c46F1632781732927B9019C68b/logo.png",
+    "symbol": "CRV",
+    "name": "Curve DAO Token",
+    "contractAddress": "0x1e4f97b9f9f913c46f1632781732927b9019c68b"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/fantom/assets/0x8D11eC38a3EB5E956B052f67Da8Bdc9bef8Abf3E/logo.png",
+    "symbol": "DAI",
+    "name": "Dai",
+    "contractAddress": "0x8d11ec38a3eb5e956b052f67da8bdc9bef8abf3e"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://ftmscan.com/token/images/fUSD_32.png",
+    "symbol": "FUSD",
+    "name": "Fantom USD",
+    "contractAddress": "0xad84341756bf337f5a0164515b1f6f993d194e1f"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/fantom/assets/0xdc301622e621166BD8E82f2cA0A26c13Ad0BE355/logo.png",
+    "symbol": "FRAX",
+    "name": "Frax",
+    "contractAddress": "0xdc301622e621166bd8e82f2ca0a26c13ad0be355"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/fantom/assets/0x7d016eec9c25232b01F23EF992D98ca97fc2AF5a/logo.png",
+    "symbol": "FXS",
+    "name": "Frax Share",
+    "contractAddress": "0x7d016eec9c25232b01f23ef992d98ca97fc2af5a"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x07E6332dD090D287d3489245038daF987955DCFB.png",
+    "symbol": "GDAI",
+    "name": "Geist Dai",
+    "contractAddress": "0x07e6332dd090d287d3489245038daf987955dcfb"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x25c130B2624CF12A4Ea30143eF50c5D68cEFA22f.png",
+    "symbol": "GETH",
+    "name": "Geist ETH",
+    "contractAddress": "0x25c130b2624cf12a4ea30143ef50c5d68cefa22f"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x39B3bd37208CBaDE74D0fcBDBb12D606295b430a.png",
+    "symbol": "GFTM",
+    "name": "Geist FTM",
+    "contractAddress": "0x39b3bd37208cbade74d0fcbdbb12d606295b430a"
+  },
+  {
+    "decimalCount": 6,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0xe578C856933D8e1082740bf7661e379Aa2A30b26.png",
+    "symbol": "GUSDC",
+    "name": "Geist USDC",
+    "contractAddress": "0xe578c856933d8e1082740bf7661e379aa2a30b26"
+  },
+  {
+    "decimalCount": 8,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x38aCa5484B8603373Acc6961Ecd57a6a594510A3.png",
+    "symbol": "GWBTC",
+    "name": "Geist WBTC",
+    "contractAddress": "0x38aca5484b8603373acc6961ecd57a6a594510a3"
+  },
+  {
+    "decimalCount": 6,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x940F41F0ec9ba1A34CF001cc03347ac092F5F6B5.png",
+    "symbol": "GFUSDT",
+    "name": "Geist fUSDT",
+    "contractAddress": "0x940f41f0ec9ba1a34cf001cc03347ac092f5f6b5"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://ftmscan.com/token/images/hegic_32.png",
+    "symbol": "HEGIC",
+    "name": "Hegic",
+    "contractAddress": "0x44b26e839eb3572c5e959f994804a5de66600349"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://ftmscan.com/token/images/kp3r_32.png",
+    "symbol": "KP3R",
+    "name": "Keep3rV1",
+    "contractAddress": "0x2a5062d22adcfaafbd5c541d4da82e4b450d4212"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/fantom/assets/0x82f0B8B456c1A451378467398982d4834b6829c1/logo.png",
+    "symbol": "MIM",
+    "name": "Magic Internet Money",
+    "contractAddress": "0x82f0b8b456c1a451378467398982d4834b6829c1"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/sushiswap/assets/master/blockchains/ethereum/assets/0xf16e81dce15B08F326220742020379B855B87DF9/logo.png",
+    "symbol": "ICE",
+    "name": "Popsicle Finance",
+    "contractAddress": "0xf16e81dce15b08f326220742020379b855b87df9"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0xe0654C8e6fd4D733349ac7E09f6f23DA256bF475.png",
+    "symbol": "SCREAM",
+    "name": "Scream",
+    "contractAddress": "0xe0654c8e6fd4d733349ac7e09f6f23da256bf475"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/fantom/assets/0x468003B688943977e6130F4F68F23aad939a1040/logo.png",
+    "symbol": "SPELL",
+    "name": "Spell Token",
+    "contractAddress": "0x468003b688943977e6130f4f68f23aad939a1040"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x5Cc61A78F164885776AA610fb0FE1257df78E59B.png",
+    "symbol": "SPIRIT",
+    "name": "SpiritSwap",
+    "contractAddress": "0x5cc61a78f164885776aa610fb0fe1257df78e59b"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x841FAD6EAe12c286d1Fd18d1d525DFfA75C7EFFE.png",
+    "symbol": "BOO",
+    "name": "Spookyswap",
+    "contractAddress": "0x841fad6eae12c286d1fd18d1d525dffa75c7effe"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/fantom/assets/0xae75A438b2E0cB8Bb01Ec1E1e376De11D44477CC/logo.png",
+    "symbol": "SUSHI",
+    "name": "Sushi",
+    "contractAddress": "0xae75a438b2e0cb8bb01ec1e1e376de11d44477cc"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/fantom/assets/0x56ee926bD8c72B2d5fa1aF4d9E4Cbb515a1E3Adc/logo.png",
+    "symbol": "SNX",
+    "name": "Synthetix Network Token",
+    "contractAddress": "0x56ee926bd8c72b2d5fa1af4d9e4cbb515a1e3adc"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0xC5e2B037D30a390e62180970B3aa4E91868764cD.png",
+    "symbol": "TAROT",
+    "name": "Tarot",
+    "contractAddress": "0xc5e2b037d30a390e62180970b3aa4e91868764cd"
+  },
+  {
+    "decimalCount": 6,
+    "customIconUrl": "https://raw.githubusercontent.com/sushiswap/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png",
+    "symbol": "USDT",
+    "name": "Tether",
+    "contractAddress": "0x049d68029688eabf473097a2fc38ef61633a3c7a"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/plasmadlt/token-list/master/assets/0x6c021Ae822BEa943b2E66552bDe1D2696a53fbB7.png",
+    "symbol": "TOMB",
+    "name": "Tomb",
+    "contractAddress": "0x6c021ae822bea943b2e66552bde1d2696a53fbb7"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/fantom/assets/0x4cdF39285D7Ca8eB3f090fDA0C069ba5F4145B37/logo.png",
+    "symbol": "TSHARE",
+    "name": "Tomb Shares",
+    "contractAddress": "0x4cdf39285d7ca8eb3f090fda0c069ba5f4145b37"
+  },
+  {
+    "decimalCount": 6,
+    "customIconUrl": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/fantom/assets/0x04068DA6C83AFCFA0e13ba15A6696662335D5B75/logo.png",
+    "symbol": "USDC",
+    "name": "USD Coin",
+    "contractAddress": "0x04068da6c83afcfa0e13ba15a6696662335d5b75"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://ftmscan.com/token/images/wETH_32.png",
+    "symbol": "WETH",
+    "name": "WETH",
+    "contractAddress": "0x74b23882a30290451a17c44f4f05243b6b58c76d"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://tokens.pancakeswap.finance/images/0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c.png",
+    "symbol": "WBNB",
+    "name": "Wrapped BNB",
+    "contractAddress": "0xd67de0e0a0fd7b15dc8348bb9be742f3c5850454"
+  },
+  {
+    "decimalCount": 8,
+    "customIconUrl": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/fantom/assets/0x321162Cd933E2Be498Cd2267a90534A804051b11/logo.png",
+    "symbol": "WBTC",
+    "name": "Wrapped Bitcoin",
+    "contractAddress": "0x321162cd933e2be498cd2267a90534a804051b11"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/fantom/assets/0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83/logo.png",
+    "symbol": "WFTM",
+    "name": "Wrapped Fantom",
+    "contractAddress": "0x21be370d5312f44cb42ce377bc9b8a0cef1a4c83"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://ftmscan.com/token/images/sUSD_32.png",
+    "symbol": "SUSD",
+    "name": "sUSD",
+    "contractAddress": "0x0e1694483ebb3b74d3054e383840c6cf011e518e"
+  },
+  {
+    "decimalCount": 18,
+    "customIconUrl": "https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/fantom/assets/0x29b0Da86e484E1C0029B56e817912d778aC0EC69/logo.png",
+    "symbol": "YFI",
+    "name": "yearn.finance",
+    "contractAddress": "0x29b0da86e484e1c0029b56e817912d778ac0ec69"
+  }
+]
