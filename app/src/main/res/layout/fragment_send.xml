@@ -39,12 +39,14 @@
             android:orientation="vertical">
 
             <include
+                android:id="@+id/l_send_address_payid"
                 layout="@layout/layout_send_address_payid"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp" />
 
             <include
+                android:id="@+id/l_send_amount"
                 layout="@layout/layout_send_amount"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
