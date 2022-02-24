@@ -56,7 +56,7 @@ class HomeFragment : Fragment(R.layout.fragment_home), StoreSubscriber<HomeState
 
 
     override fun newState(state: HomeState) {
-        if (activity == null) return
+        if (activity == null || view == null) return
 
         homeState.value = state
     }
