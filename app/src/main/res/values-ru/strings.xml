@@ -214,11 +214,7 @@
     <string name="details_section_title_blockchain">Блокчейн</string>
     <string name="details_row_title_manage_tokens">Управление токенами</string>
     <string name="add_tokens_subtitle_blockchains">Блокчейны</string>
-    <string name="add_tokens_subtitle_ethereum_tokens">Ethereum токены</string>
-    <string name="add_tokens_subtitle_bsc_tokens">Binance Smart Chain токены</string>
-    <string name="add_tokens_subtitle_binance_tokens">Binance Chain токены</string>
-    <string name="add_tokens_subtitle_avalanche_tokens">Avalanche C-Chain токены</string>
-    <string name="add_tokens_subtitle_polygon_tokens">Polygon токены</string>
+    <string name="add_tokens_subtitle_format" translatable="false">%s токены</string>
     <string name="wallet_address_button_copy">Копировать</string>
     <string name="wallet_address_button_share">Поделиться</string>
     <string name="wallet_button_add_tokens">+ Добавить токены</string>
