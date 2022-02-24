@@ -1,8 +1,9 @@
 package com.tangem.tap.features.wallet.ui.dialogs
 
 import android.content.Context
+import android.content.DialogInterface
+import android.os.Bundle
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import androidx.appcompat.view.ContextThemeWrapper
 import androidx.recyclerview.widget.*
@@ -12,14 +13,22 @@ import com.tangem.tap.common.extensions.toFormattedString
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.store
 import com.tangem.wallet.R
-import kotlinx.android.synthetic.main.dialog_wallet_send.*
-import kotlinx.android.synthetic.main.item_wallet_amount_to_send.view.*
-
+import com.tangem.wallet.databinding.DialogWalletSendBinding
+import com.tangem.wallet.databinding.ItemWalletAmountToSendBinding
 
 class AmountToSendDialog(context: Context) : BottomSheetDialog(context) {
 
-    init {
-        this.setContentView(R.layout.dialog_wallet_send)
+    var binding: DialogWalletSendBinding? = null
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        binding = DialogWalletSendBinding.inflate(LayoutInflater.from(context))
+        setContentView(binding!!.root)
+    }
+
+    override fun setOnCancelListener(listener: DialogInterface.OnCancelListener?) {
+        super.setOnCancelListener(listener)
+        binding = null
     }
 
     fun show(amounts: List<Amount>?) {
@@ -27,15 +36,15 @@ class AmountToSendDialog(context: Context) : BottomSheetDialog(context) {
             store.dispatch(WalletAction.Send.Cancel)
         }
 
-        rv_amounts_to_send.layoutManager = LinearLayoutManager(context)
+        binding!!.rvAmountsToSend.layoutManager = LinearLayoutManager(context)
         val dividerItemDecoration = DividerItemDecoration(
-                ContextThemeWrapper(rv_amounts_to_send.context, R.style.AppTheme),
+                ContextThemeWrapper(binding!!.root.context, R.style.AppTheme),
                 DividerItemDecoration.VERTICAL
         )
-        rv_amounts_to_send.addItemDecoration(dividerItemDecoration)
+        binding!!.rvAmountsToSend.addItemDecoration(dividerItemDecoration)
 
         val viewAdapter = ChooseAmountAdapter()
-        rv_amounts_to_send.adapter = viewAdapter
+        binding!!.rvAmountsToSend.adapter = viewAdapter
 
         viewAdapter.submitList(amounts)
 
@@ -48,9 +57,10 @@ class ChooseAmountAdapter
     : ListAdapter<Amount, ChooseAmountAdapter.AmountViewHolder>(DiffUtilCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AmountViewHolder {
-        val layout = LayoutInflater.from(parent.context)
-                .inflate(R.layout.item_wallet_amount_to_send, parent, false)
-        return AmountViewHolder(layout)
+        val binding = ItemWalletAmountToSendBinding.inflate(
+            LayoutInflater.from(parent.context), parent, false
+        )
+        return AmountViewHolder(binding)
     }
 
     override fun onBindViewHolder(holder: AmountViewHolder, position: Int) {
@@ -67,13 +77,13 @@ class ChooseAmountAdapter
         ) = oldItem == newItem
     }
 
-    class AmountViewHolder(val view: View) :
-            RecyclerView.ViewHolder(view) {
+    class AmountViewHolder(val binding: ItemWalletAmountToSendBinding) :
+            RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(amount: Amount) {
-            view.tv_currency_symbol.text = amount.currencySymbol
-            view.tv_amount.text = amount.value?.toFormattedString(amount.decimals)
-            view.setOnClickListener {
+        fun bind(amount: Amount) = with(binding) {
+            tvCurrencySymbol.text = amount.currencySymbol
+            tvAmount.text = amount.value?.toFormattedString(amount.decimals)
+            root.setOnClickListener {
                 store.dispatch(WalletAction.Send.Cancel)
                 store.dispatch(WalletAction.Send(amount))
             }
