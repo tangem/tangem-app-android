@@ -10,9 +10,11 @@ import com.tangem.tap.currenciesRepository
 import com.tangem.tap.domain.TapWorkarounds.isStart2Coin
 import com.tangem.tap.domain.TapWorkarounds.isTestCard
 import com.tangem.tap.domain.configurable.config.ConfigManager
-import com.tangem.tap.domain.extensions.*
+import com.tangem.tap.domain.extensions.makePrimaryWalletManager
+import com.tangem.tap.domain.extensions.makeWalletManagersForApp
 import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.domain.tokens.CardCurrencies
+import com.tangem.tap.features.demo.isDemoCard
 import com.tangem.tap.features.wallet.redux.Currency
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.network.NetworkConnectivity
@@ -206,6 +208,9 @@ class TapWalletManager {
             }
             data.getBlockchain() == Blockchain.Unknown && !data.card.isMultiwalletAllowed -> {
                 WalletAction.LoadData.Failure(TapError.UnknownBlockchain)
+            }
+            data.isDemoCard() -> {
+                return null
             }
             data.card.wallets.isEmpty() -> {
                 WalletAction.EmptyWallet
