@@ -11,6 +11,7 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.transition.TransitionInflater
+import by.kirich1409.viewbindingdelegate.viewBinding
 import com.squareup.picasso.Picasso
 import com.tangem.tangem_sdk_new.extensions.dpToPx
 import com.tangem.tap.MainActivity
@@ -29,15 +30,15 @@ import com.tangem.tap.features.wallet.ui.wallet.SingleWalletView
 import com.tangem.tap.features.wallet.ui.wallet.WalletView
 import com.tangem.tap.store
 import com.tangem.wallet.R
-import kotlinx.android.synthetic.main.fragment_wallet.*
-import kotlinx.android.synthetic.main.fragment_wallet.toolbar
-import kotlinx.android.synthetic.main.fragment_wallet_details.*
+import com.tangem.wallet.databinding.FragmentWalletBinding
 import org.rekotlin.StoreSubscriber
 
 
 class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<WalletState> {
 
     private lateinit var warningsAdapter: WarningMessagesAdapter
+
+    private val binding: FragmentWalletBinding by viewBinding(FragmentWalletBinding::bind)
 
     private var walletView: WalletView = SingleWalletView()
 
@@ -61,7 +62,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
                 oldState.walletState == newState.walletState
             }.select { it.walletState }
         }
-        walletView.setFragment(this)
+        walletView.setFragment(this, binding)
         store.dispatch(WalletAction.UpdateWallet())
     }
 
@@ -73,43 +74,45 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        (activity as? AppCompatActivity)?.setSupportActionBar(toolbar)
+        (activity as? AppCompatActivity)?.setSupportActionBar(binding.toolbar)
 
-        toolbar.setNavigationOnClickListener {
+        binding.toolbar.setNavigationOnClickListener {
             store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
         }
         setupWarningsRecyclerView()
-        walletView.changeWalletView(this)
+        walletView.changeWalletView(this, binding)
     }
 
     private fun setupWarningsRecyclerView() {
         warningsAdapter = WarningMessagesAdapter()
         val layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
-        rv_warning_messages.layoutManager = layoutManager
-        rv_warning_messages.addItemDecoration(SpacesItemDecoration(rv_warning_messages.dpToPx(16f).toInt()))
-        rv_warning_messages.adapter = warningsAdapter
+        with(binding) {
+            rvWarningMessages.layoutManager = layoutManager
+            rvWarningMessages.addItemDecoration(SpacesItemDecoration(rvWarningMessages.dpToPx(16f).toInt()))
+            rvWarningMessages.adapter = warningsAdapter
+        }
     }
 
 
     override fun newState(state: WalletState) {
-        if (activity == null) return
+        if (activity == null || view == null) return
 
         if (state.isMultiwalletAllowed &&
             state.primaryWallet?.currencyData?.status != BalanceStatus.EmptyCard &&
             walletView is SingleWalletView
         ) {
             walletView = MultiWalletView()
-            walletView.changeWalletView(this)
+            walletView.changeWalletView(this, binding)
         } else if (!state.isMultiwalletAllowed && walletView is MultiWalletView) {
             walletView = SingleWalletView()
-            walletView.changeWalletView(this)
+            walletView.changeWalletView(this, binding)
         }
         walletView.onNewState(state)
 
         if (!state.shouldShowDetails) {
-            toolbar.menu.removeItem(R.id.details_menu)
-        } else if (toolbar.menu.findItem(R.id.details_menu) == null) {
-            toolbar.inflateMenu(R.menu.wallet)
+            binding.toolbar.menu.removeItem(R.id.details_menu)
+        } else if (binding.toolbar.menu.findItem(R.id.details_menu) == null) {
+            binding.toolbar.inflateMenu(R.menu.wallet)
         }
 
         setupNoInternetHandling(state)
@@ -117,26 +120,26 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
 
         showWarningsIfPresent(state.mainWarningsList)
 
-        srl_wallet.setOnRefreshListener {
+        binding.srlWallet.setOnRefreshListener {
             if (state.state != ProgressState.Loading) {
                 store.dispatch(WalletAction.LoadData)
             }
         }
 
         if (state.state != ProgressState.Loading) {
-            srl_wallet.isRefreshing = false
+            binding.srlWallet.isRefreshing = false
         }
     }
 
     private fun showWarningsIfPresent(warnings: List<WarningMessage>) {
         warningsAdapter.submitList(warnings)
-        rv_warning_messages.show(warnings.isNotEmpty())
+        binding.rvWarningMessages.show(warnings.isNotEmpty())
     }
 
     private fun setupNoInternetHandling(state: WalletState) {
         if (state.state == ProgressState.Error) {
             if (state.error == ErrorType.NoInternetConnection) {
-                srl_wallet_details?.isRefreshing = false
+                binding.srlWallet.isRefreshing = false
                 (activity as? MainActivity)?.showSnackbar(
                     text = R.string.wallet_notification_no_internet,
                     buttonTitle = R.string.common_retry
@@ -152,7 +155,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
                 .load(cardImage?.artworkId)
                 .placeholder(R.drawable.card_placeholder_black)
                 ?.error(R.drawable.card_placeholder_black)
-                ?.into(iv_card)
+                ?.into(binding.ivCard)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
