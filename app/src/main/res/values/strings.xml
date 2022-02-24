@@ -21,7 +21,6 @@
     <string name="home_ready_title">Get ready to tap your \ncard to the back of the \nphone.</string>
     <string name="home_button_tapin">Tap in</string>
     <string name="home_button_scan">Scan card</string>
-    <string name="home_button_order">Order card</string>
     <string name="home_button_yes">Yes! Scan it.</string>
 
     <string name="wallet_button_scan">Scan</string>
