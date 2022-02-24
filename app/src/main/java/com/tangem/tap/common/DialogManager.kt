@@ -15,6 +15,7 @@ import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.BackupInPro
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.ConfirmDiscardingBackupDialog
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.UnfinishedBackupFoundDialog
 import com.tangem.tap.features.wallet.ui.dialogs.ScanFailsDialog
+import com.tangem.tap.features.wallet.ui.dialogs.SimpleOkDialog
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import org.rekotlin.StoreSubscriber
@@ -48,6 +49,8 @@ class DialogManager : StoreSubscriber<GlobalState> {
         if (dialog != null) return
 
         dialog = when (state.dialog) {
+            is AppDialog.SimpleOkDialog -> SimpleOkDialog.create(state.dialog, context)
+            is AppDialog.SimpleOkDialogRes -> SimpleOkDialog.create(state.dialog, context)
             is AppDialog.ScanFailsDialog -> ScanFailsDialog.create(context)
             is AppDialog.AddressInfoDialog -> AddressInfoBottomSheetDialog(state.dialog, context)
             is TwinCardsAction.Wallet.ShowInterruptDialog -> CreateWalletInterruptDialog.create(state.dialog, context)
