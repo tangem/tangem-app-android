@@ -12,6 +12,7 @@
         android:visibility="gone" />
 
     <include
+        android:id="@+id/v_onboarding_progress"
         layout="@layout/view_onboarding_progress"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
