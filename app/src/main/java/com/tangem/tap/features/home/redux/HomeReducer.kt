@@ -15,9 +15,6 @@ private fun internalReduce(action: Action, state: AppState): HomeState {
 
     var state = state.homeState
     when (action) {
-        is HomeAction.SetFragmentShareTransition -> {
-            state = state.copy(shareTransition = action.shareTransition)
-        }
         is HomeAction.ShouldScanCardOnResume -> {
             state = state.copy(shouldScanCardOnResume = action.shouldScanCard)
         }
