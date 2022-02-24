@@ -46,6 +46,10 @@ fun View.getString(@StringRes id: Int): String {
     return context.getString(id)
 }
 
+fun View.getString(@StringRes id: Int, vararg formatArgs: String): String {
+    return context.getString(id, *formatArgs)
+}
+
 fun View.getResourceName(): String {
     return try {
         resources.getResourceEntryName(id)
