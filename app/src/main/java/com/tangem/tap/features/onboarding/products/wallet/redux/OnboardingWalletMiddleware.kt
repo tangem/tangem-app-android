@@ -8,7 +8,6 @@ import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.AnalyticsParam
 import com.tangem.tap.common.analytics.GetCardSourceParams
 import com.tangem.tap.common.extensions.dispatchOnMain
-import com.tangem.tap.common.extensions.dispatchOpenUrl
 import com.tangem.tap.common.extensions.withMainContext
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -218,13 +217,11 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             }
         }
         is BackupAction.GoToShop -> {
-            backupState.buyAdditionalCardsUrl?.let { url ->
-                store.dispatchOpenUrl(url)
-                store.state.globalState.analyticsHandlers?.triggerEvent(
-                    event = AnalyticsEvent.GET_CARD,
-                    params = mapOf(AnalyticsParam.SOURCE.param to GetCardSourceParams.ONBOARDING.param)
-                )
-            }
+            store.dispatch(NavigationAction.NavigateTo(AppScreen.Shop))
+            store.state.globalState.analyticsHandlers?.triggerEvent(
+                event = AnalyticsEvent.GET_CARD,
+                params = mapOf(AnalyticsParam.SOURCE.param to GetCardSourceParams.ONBOARDING.param)
+            )
         }
         is BackupAction.FinishAddingBackupCards -> {
             if (backupService.addedBackupCardsCount == 1) {
@@ -236,9 +233,11 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
         }
         is BackupAction.CheckAccessCode -> {
             if (action.accessCode.length < 4) {
-                store.dispatch(BackupAction.SetAccessCodeError(
-                    AccessCodeError.CodeTooShort
-                ))
+                store.dispatch(
+                    BackupAction.SetAccessCodeError(
+                        AccessCodeError.CodeTooShort
+                    )
+                )
             } else {
                 store.dispatch(BackupAction.SetAccessCodeError(null))
                 store.dispatch(BackupAction.SaveFirstAccessCode(action.accessCode))
@@ -250,9 +249,11 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                 backupService.setAccessCode(action.accessCodeConfirmation)
                 store.dispatch(BackupAction.PrepareToWritePrimaryCard)
             } else {
-                store.dispatch(BackupAction.SetAccessCodeError(
-                    AccessCodeError.CodesDoNotMatch
-                ))
+                store.dispatch(
+                    BackupAction.SetAccessCodeError(
+                        AccessCodeError.CodesDoNotMatch
+                    )
+                )
             }
         }
         is BackupAction.WritePrimaryCard -> {
