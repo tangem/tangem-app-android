@@ -13,6 +13,10 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.currenciesRepository
 import com.tangem.tap.domain.extensions.makeWalletManagerForApp
 import com.tangem.tap.domain.extensions.makeWalletManagersForApp
+import com.tangem.tap.features.demo.DemoHelper
+import com.tangem.tap.features.demo.isDemoCard
+import com.tangem.tap.features.wallet.models.PendingTransactionType
+import com.tangem.tap.features.wallet.models.getPendingTransactions
 import com.tangem.tap.features.wallet.redux.Currency
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletState
@@ -22,6 +26,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.math.BigDecimal
 
 class MultiWalletMiddleware {
     fun handle(
@@ -34,6 +39,9 @@ class MultiWalletMiddleware {
             is WalletAction.MultiWallet.AddWalletManagers -> {
                 globalState.feedbackManager?.infoHolder?.setWalletsInfo(action.walletManagers)
                 action.walletManagers.forEach { checkForRentWarning(it) }
+                if (globalState.scanResponse?.isDemoCard() == true) {
+                    addDummyBalances(action.walletManagers)
+                }
             }
             is WalletAction.MultiWallet.SelectWallet -> {
                 if (action.walletData != null) {
@@ -99,28 +107,25 @@ class MultiWalletMiddleware {
                 scope.launch {
                     walletManagers.map { walletManager ->
                         async(Dispatchers.IO) {
-                            try {
-                                walletManager.update()
-                                val wallet = walletManager.wallet
-                                val coinAmount = wallet.amounts[AmountType.Coin]?.value
-                                if (coinAmount != null && !coinAmount.isZero()) {
-                                    scope.launch(Dispatchers.Main) {
-                                        if (walletState?.getWalletData(wallet.blockchain) == null) {
-                                            store.dispatch(
-                                                WalletAction.MultiWallet.AddWalletManagers(
-                                                    listOfNotNull(walletManager)
-                                                )
+                            walletManager.safeUpdate()
+                            val wallet = walletManager.wallet
+                            val coinAmount = wallet.amounts[AmountType.Coin]?.value
+                            if (coinAmount != null && !coinAmount.isZero()) {
+                                scope.launch(Dispatchers.Main) {
+                                    if (walletState?.getWalletData(wallet.blockchain) == null) {
+                                        store.dispatch(
+                                            WalletAction.MultiWallet.AddWalletManagers(
+                                                listOfNotNull(walletManager)
                                             )
-                                            store.dispatch(
-                                                WalletAction.MultiWallet.AddBlockchain(
-                                                    wallet.blockchain
-                                                )
+                                        )
+                                        store.dispatch(
+                                            WalletAction.MultiWallet.AddBlockchain(
+                                                wallet.blockchain
                                             )
-                                            store.dispatch(WalletAction.LoadWallet.Success(wallet))
-                                        }
+                                        )
+                                        store.dispatch(WalletAction.LoadWallet.Success(wallet))
                                     }
                                 }
-                            } catch (exception: Exception) {
                             }
                         }
                     }
@@ -167,6 +172,14 @@ class MultiWalletMiddleware {
         }
     }
 
+    private fun addDummyBalances(walletManagers: List<WalletManager>) {
+        walletManagers.forEach {
+            if (it.wallet.fundsAvailable(AmountType.Coin) == BigDecimal.ZERO) {
+                DemoHelper.injectDemoBalance(it)
+            }
+        }
+    }
+
     private fun addToken(token: Token, walletState: WalletState?, globalState: GlobalState?) {
         val scanResponse = globalState?.scanResponse ?: return
 
@@ -206,13 +219,25 @@ class MultiWalletMiddleware {
         scope.launch {
             when (val result = rentProvider.minimalBalanceForRentExemption()) {
                 is Result.Success -> {
+                    fun isNeedToShowWarning(balance: BigDecimal, rentExempt: BigDecimal): Boolean = balance >= rentExempt
+
+                    val balance = walletManager.wallet.fundsAvailable(AmountType.Coin)
+                    val outgoingTxs = walletManager.wallet.getPendingTransactions(PendingTransactionType.Outgoing)
+                    val rentExempt = result.data
+                    val show = if (outgoingTxs.isEmpty()) {
+                        isNeedToShowWarning(balance, rentExempt)
+                    } else {
+                        val outgoingAmount = outgoingTxs.sumOf { it.amount ?: BigDecimal.ZERO }
+                        val rest = balance.minus(outgoingAmount)
+                        isNeedToShowWarning(rest, rentExempt)
+                    }
+                    if (!show) return@launch
+
                     val currency = walletManager.wallet.blockchain.currency
-                    val minRent = ("${rentProvider.rentAmount().stripZeroPlainString()} $currency")
-                    val rentExempt = ("${result.data.stripZeroPlainString()} $currency")
                     store.dispatchOnMain(WalletAction.SetWalletRent(
                         blockchain = walletManager.wallet.blockchain,
-                        minRent = minRent,
-                        rentExempt = rentExempt
+                        minRent = ("${rentProvider.rentAmount().stripZeroPlainString()} $currency"),
+                        rentExempt = ("${rentExempt.stripZeroPlainString()} $currency")
                     ))
                 }
                 is Result.Failure -> {}
