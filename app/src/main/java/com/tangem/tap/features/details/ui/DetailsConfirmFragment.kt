@@ -5,6 +5,7 @@ import android.view.View
 import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import androidx.transition.TransitionInflater
+import by.kirich1409.viewbindingdelegate.viewBinding
 import com.tangem.tap.common.extensions.getDrawable
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.details.redux.ConfirmScreenState
@@ -12,11 +13,13 @@ import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.store
 import com.tangem.wallet.R
-import kotlinx.android.synthetic.main.fragment_details_confirm.*
+import com.tangem.wallet.databinding.FragmentDetailsConfirmBinding
 import org.rekotlin.StoreSubscriber
 
 class DetailsConfirmFragment : Fragment(R.layout.fragment_details_confirm),
         StoreSubscriber<DetailsState> {
+
+    private val binding: FragmentDetailsConfirmBinding by viewBinding(FragmentDetailsConfirmBinding::bind)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,38 +50,39 @@ class DetailsConfirmFragment : Fragment(R.layout.fragment_details_confirm),
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        toolbar.setNavigationOnClickListener {
+        binding.toolbar.setNavigationOnClickListener {
             store.dispatch(NavigationAction.PopBackTo())
         }
     }
 
 
     override fun newState(state: DetailsState) {
-        if (activity == null) return
+        if (activity == null || view == null) return
+        setState(state)
+    }
 
+    private fun setState(state: DetailsState) = with(binding) {
         when (state.confirmScreenState) {
             ConfirmScreenState.EraseWallet -> {
                 toolbar.title = getString(R.string.details_row_title_reset_factory_settings)
-                tv_warning_description.text = getString(R.string.details_row_title_reset_factory_settings_warning)
-                btn_confirm.text = getString(R.string.details_row_title_reset_factory_settings)
-                btn_confirm.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                        null, null, getDrawable(R.drawable.ic_send), null
+                tvWarningDescription.text = getString(R.string.details_row_title_reset_factory_settings_warning)
+                btnConfirm.text = getString(R.string.details_row_title_reset_factory_settings)
+                btnConfirm.setCompoundDrawablesRelativeWithIntrinsicBounds(
+                    null, null, getDrawable(R.drawable.ic_send), null
                 )
-                btn_confirm.setOnClickListener { store.dispatch(DetailsAction.ResetToFactory.Confirm) }
+                btnConfirm.setOnClickListener { store.dispatch(DetailsAction.ResetToFactory.Confirm) }
             }
             ConfirmScreenState.LongTap, ConfirmScreenState.AccessCode,
             ConfirmScreenState.PassCode -> {
                 toolbar.title = getString(R.string.details_manage_security_title)
-                tv_warning_description.text = getString(R.string.details_security_management_warning)
-                btn_confirm.text = getString(R.string.common_save_changes)
-                btn_confirm.setCompoundDrawablesRelativeWithIntrinsicBounds(
-                        null, null, getDrawable(R.drawable.ic_save), null
+                tvWarningDescription.text = getString(R.string.details_security_management_warning)
+                btnConfirm.text = getString(R.string.common_save_changes)
+                btnConfirm.setCompoundDrawablesRelativeWithIntrinsicBounds(
+                    null, null, getDrawable(R.drawable.ic_save), null
                 )
-                btn_confirm.setOnClickListener { store.dispatch(DetailsAction.ManageSecurity.SaveChanges) }
+                btnConfirm.setOnClickListener { store.dispatch(DetailsAction.ManageSecurity.SaveChanges) }
             }
         }
-
-
     }
 
 }
