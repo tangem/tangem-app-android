@@ -37,6 +37,11 @@ fun Context.getColorCompat(@ColorRes colorRes: Int): Int {
     return ContextCompat.getColor(this, colorRes)
 }
 
+@ColorInt
+fun View.getColor(@ColorRes colorRes: Int): Int {
+    return ContextCompat.getColor(context, colorRes)
+}
+
 fun View.getString(@StringRes id: Int): String {
     return context.getString(id)
 }
@@ -169,4 +174,8 @@ fun Context.safeStartActivity(
     } finally {
         finally?.invoke()
     }
+}
+
+fun View.getString(resId: Int, vararg formatArgs: Any?): String {
+    return context.getString(resId, formatArgs)
 }
