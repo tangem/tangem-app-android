@@ -27,6 +27,8 @@ class ShopFragment : BaseStoreFragment(R.layout.fragment_shop), StoreSubscriber<
 
     private val binding: FragmentShopBinding by viewBinding(FragmentShopBinding::bind)
 
+    lateinit var keyboardObserver: KeyboardObserver
+
     override fun subscribeToStore() {
         store.subscribe(this) { state ->
             state.skipRepeats { oldState, newState ->
@@ -46,6 +48,11 @@ class ShopFragment : BaseStoreFragment(R.layout.fragment_shop), StoreSubscriber<
         })
     }
 
+    override fun onDestroyView() {
+        super.onDestroyView()
+        keyboardObserver.unregisterListener()
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
@@ -57,10 +64,10 @@ class ShopFragment : BaseStoreFragment(R.layout.fragment_shop), StoreSubscriber<
             requireActivity().onBackPressed()
         }
 
-
-        val keyboardObserver = KeyboardObserver(requireActivity())
-        keyboardObserver.registerListener { isVisible ->
-            binding.flCards.show(!isVisible)
+        keyboardObserver = KeyboardObserver(requireActivity()).apply {
+            registerListener { isVisible ->
+                binding.flCards.show(!isVisible)
+            }
         }
     }
 
