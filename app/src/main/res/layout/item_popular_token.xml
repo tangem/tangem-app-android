@@ -8,7 +8,7 @@
     android:background="@android:color/white"
     android:minHeight="60dp">
 
-    <ImageView
+    <androidx.constraintlayout.utils.widget.ImageFilterView
         android:id="@+id/iv_currency"
         android:layout_width="40dp"
         android:layout_height="40dp"
