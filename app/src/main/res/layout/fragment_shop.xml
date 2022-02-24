@@ -26,7 +26,7 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             app:navigationIcon="@drawable/ic_clear_24"
-            app:title="@string/shop_title"
+            app:title="@string/home_button_order"
             app:titleCentered="true" />
 
     </com.google.android.material.appbar.AppBarLayout>
