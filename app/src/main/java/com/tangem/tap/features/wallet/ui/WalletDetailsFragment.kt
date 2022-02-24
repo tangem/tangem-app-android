@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.transition.TransitionInflater
+import by.kirich1409.viewbindingdelegate.viewBinding
 import com.squareup.picasso.Picasso
 import com.tangem.common.extensions.guard
 import com.tangem.tap.common.SnackbarHandler
@@ -22,18 +23,16 @@ import com.tangem.tap.features.wallet.ui.adapters.PendingTransactionsAdapter
 import com.tangem.tap.features.wallet.ui.dialogs.AmountToSendDialog
 import com.tangem.tap.store
 import com.tangem.wallet.R
-import kotlinx.android.synthetic.main.fragment_wallet_details.*
-import kotlinx.android.synthetic.main.layout_balance_error.*
-import kotlinx.android.synthetic.main.layout_balance_wallet_details.*
-import kotlinx.android.synthetic.main.layout_wallet_details.*
-import kotlinx.android.synthetic.main.layout_wallet_details.card_balance
-import kotlinx.android.synthetic.main.layout_wallet_details_rent.*
+import com.tangem.wallet.databinding.FragmentWalletDetailsBinding
 import org.rekotlin.StoreSubscriber
 
-class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreSubscriber<WalletState> {
+class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
+    StoreSubscriber<WalletState> {
 
     private lateinit var pendingTransactionAdapter: PendingTransactionsAdapter
     private var dialog: Dialog? = null
+
+    private val binding: FragmentWalletDetailsBinding by viewBinding(FragmentWalletDetailsBinding::bind)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,8 +64,8 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        (activity as? AppCompatActivity)?.setSupportActionBar(toolbar)
-        toolbar.setNavigationOnClickListener { activity?.onBackPressed() }
+        (activity as? AppCompatActivity)?.setSupportActionBar(binding.toolbar)
+        binding.toolbar.setNavigationOnClickListener { activity?.onBackPressed() }
 
 
         setupTransactionsRecyclerView()
@@ -74,91 +73,98 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
     }
 
 
-    private fun setupTransactionsRecyclerView() {
+    private fun setupTransactionsRecyclerView() = with(binding) {
         pendingTransactionAdapter = PendingTransactionsAdapter()
-        rv_pending_transaction.layoutManager = LinearLayoutManager(requireContext())
-        rv_pending_transaction.adapter = pendingTransactionAdapter
+        rvPendingTransaction.layoutManager = LinearLayoutManager(requireContext())
+        rvPendingTransaction.adapter = pendingTransactionAdapter
     }
 
-    private fun setupButtons() {
-        btn_confirm.text = getString(R.string.wallet_button_send)
-        btn_confirm.setOnClickListener { store.dispatch(WalletAction.Send()) }
+    private fun setupButtons() = with(binding) {
+        btnConfirm.text = getString(R.string.wallet_button_send)
+        btnConfirm.setOnClickListener { store.dispatch(WalletAction.Send()) }
 
-        btn_share.setOnClickListener { store.dispatch(WalletAction.ShowDialog.QrCode) }
+        binding.lWalletDetails.btnShare.setOnClickListener { store.dispatch(WalletAction.ShowDialog.QrCode) }
 
-        btn_trade.setOnClickListener { store.dispatch(WalletAction.TradeCryptoAction.Buy) }
+        btnTrade.setOnClickListener { store.dispatch(WalletAction.TradeCryptoAction.Buy) }
 
-        btn_sell.setOnClickListener { store.dispatch(WalletAction.TradeCryptoAction.Sell) }
+        btnSell.setOnClickListener { store.dispatch(WalletAction.TradeCryptoAction.Sell) }
     }
 
     override fun newState(state: WalletState) {
-        if (activity == null) return
+        if (activity == null || view == null) return
         if (state.selectedWallet == null) return
         val selectedWallet = state.getSelectedWalletData() ?: return
 
-        tv_currency_title.text = selectedWallet.currencyData.currency
-        val currency = selectedWallet.currency
-        if (currency is Currency.Token) {
-            tv_currency_subtitle.text = currency.blockchain.tokenDisplayName()
-            tv_currency_subtitle.show()
-        } else {
-            tv_currency_subtitle.hide()
-        }
-
 
         showPendingTransactionsIfPresent(selectedWallet.pendingTransactions)
+        setupCurrency(selectedWallet.currencyData, selectedWallet.currency)
         setupAddressCard(selectedWallet)
         setupNoInternetHandling(state)
         setupBalanceData(selectedWallet.currencyData)
-
-        btn_confirm.isEnabled = selectedWallet.mainButton.enabled
-        btn_copy.setOnClickListener {
-            selectedWallet.walletAddresses?.selectedAddress?.address?.let { addressString ->
-                store.dispatch(WalletAction.CopyAddress(addressString, requireContext()))
-            }
-        }
-        btn_share.setOnClickListener {
-            selectedWallet.walletAddresses?.selectedAddress?.address?.let { addressString ->
-                store.dispatch(WalletAction.ShareAddress(addressString, requireContext()))
-            }
-        }
+        setupButtons(selectedWallet)
 
         handleDialogs(state.walletDialog)
         handleCurrencyIcon(selectedWallet)
         handleWalletRent(selectedWallet.walletRent)
 
-        srl_wallet_details.setOnRefreshListener {
+
+        binding.srlWalletDetails.setOnRefreshListener {
             if (selectedWallet.currencyData.status != BalanceStatus.Loading) {
-                store.dispatch(WalletAction.LoadWallet(
-                    blockchain = selectedWallet.currency.blockchain
-                ))
+                store.dispatch(
+                    WalletAction.LoadWallet(
+                        blockchain = selectedWallet.currency.blockchain
+                    )
+                )
             }
         }
 
         if (selectedWallet.currencyData.status != BalanceStatus.Loading) {
-            srl_wallet_details.isRefreshing = false
+            binding.srlWalletDetails.isRefreshing = false
         }
-
-        btn_trade.isEnabled = selectedWallet.tradeCryptoState.buyingAllowed
-        btn_sell.show(selectedWallet.tradeCryptoState.sellingAllowed)
     }
 
-    private fun handleWalletRent(rent: WalletRent?) {
+    private fun setupCurrency(currencyData: BalanceWidgetData, currency: Currency) = with(binding) {
+        tvCurrencyTitle.text = currencyData.currency
+        if (currency is Currency.Token) {
+            binding.tvCurrencySubtitle.text = currency.blockchain.tokenDisplayName()
+            binding.tvCurrencySubtitle.show()
+        } else {
+            binding.tvCurrencySubtitle.hide()
+        }
+    }
+
+    private fun setupButtons(selectedWallet: WalletData) = with(binding) {
+        btnConfirm.isEnabled = selectedWallet.mainButton.enabled
+        lWalletDetails.btnCopy.setOnClickListener {
+            selectedWallet.walletAddresses?.selectedAddress?.address?.let { addressString ->
+                store.dispatch(WalletAction.CopyAddress(addressString, requireContext()))
+            }
+        }
+        lWalletDetails.btnShare.setOnClickListener {
+            selectedWallet.walletAddresses?.selectedAddress?.address?.let { addressString ->
+                store.dispatch(WalletAction.ShareAddress(addressString, requireContext()))
+            }
+        }
+        btnTrade.isEnabled = selectedWallet.tradeCryptoState.buyingAllowed
+        btnSell.show(selectedWallet.tradeCryptoState.sellingAllowed)
+    }
+
+    private fun handleWalletRent(rent: WalletRent?) = with(binding) {
         val rent = rent.guard {
-            l_rent_warning.hide()
+            lRentWarning.root.hide()
             return
         }
-
         val warningMessage = requireContext().getString(
-            R.string.solana_rent_warning, rent.minRentValue, rent.rentExemptValue)
-        tv_rent_warning_message.text = warningMessage
-        l_rent_warning.show()
+            R.string.solana_rent_warning, rent.minRentValue, rent.rentExemptValue
+        )
+        lRentWarning.tvRentWarningMessage.text = warningMessage
+        lRentWarning.root.show()
     }
 
-    private fun handleCurrencyIcon(wallet: WalletData) {
+    private fun handleCurrencyIcon(wallet: WalletData) = with(binding.lWalletDetails.lBalance) {
         Picasso.get().loadCurrenciesIcon(
-            imageView = iv_currency,
-            textView = tv_token_letter,
+            imageView = ivCurrency,
+            textView = tvTokenLetter,
             blockchain = wallet.currency.blockchain,
             token = (wallet.currency as? Currency.Token)?.token
         )
@@ -167,42 +173,48 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
 
     private fun showPendingTransactionsIfPresent(pendingTransactions: List<PendingTransaction>) {
         pendingTransactionAdapter.submitList(pendingTransactions)
-        rv_pending_transaction?.show(pendingTransactions.isNotEmpty())
+        binding.rvPendingTransaction?.show(pendingTransactions.isNotEmpty())
     }
 
-    private fun setupAddressCard(state: WalletData) {
+    private fun setupAddressCard(state: WalletData) = with(binding.lWalletDetails) {
         if (state.walletAddresses != null) {
             if (state.shouldShowMultipleAddress() && state.currency is Currency.Blockchain) {
-                (card_balance as? ViewGroup)?.beginDelayedTransition()
-                chip_group_address_type.show()
-                chip_group_address_type.fitChipsByGroupWidth()
+                (cardBalance as? ViewGroup)?.beginDelayedTransition()
+                chipGroupAddressType.show()
+                chipGroupAddressType.fitChipsByGroupWidth()
 
-                val checkedId = MultipleAddressUiHelper.typeToId(state.walletAddresses.selectedAddress.type)
-                if (checkedId != View.NO_ID) chip_group_address_type.check(checkedId)
+                val checkedId =
+                    MultipleAddressUiHelper.typeToId(state.walletAddresses.selectedAddress.type)
+                if (checkedId != View.NO_ID) chipGroupAddressType.check(checkedId)
 
-                chip_group_address_type.setOnCheckedChangeListener { group, checkedId ->
+                chipGroupAddressType.setOnCheckedChangeListener { group, checkedId ->
                     if (checkedId == -1) return@setOnCheckedChangeListener
-                    val type = MultipleAddressUiHelper.idToType(checkedId, state.currency.blockchain)
+                    val type =
+                        MultipleAddressUiHelper.idToType(checkedId, state.currency.blockchain)
                     type?.let { store.dispatch(WalletAction.ChangeSelectedAddress(type)) }
                 }
             } else {
-                chip_group_address_type.hide()
+                chipGroupAddressType.hide()
             }
-            tv_address.text = state.walletAddresses.selectedAddress.address
-            tv_explore?.setOnClickListener {
-                store.dispatch(WalletAction.ExploreAddress(
-                    state.walletAddresses.selectedAddress.exploreUrl,
-                    requireContext()))
+            tvAddress.text = state.walletAddresses.selectedAddress.address
+            tvExplore?.setOnClickListener {
+                store.dispatch(
+                    WalletAction.ExploreAddress(
+                        state.walletAddresses.selectedAddress.exploreUrl,
+                        requireContext()
+                    )
+                )
             }
-            iv_qr_code.setImageBitmap(state.walletAddresses.selectedAddress.shareUrl.toQrCode())
-            tv_receive_message.text = getQRReceiveMessage(tv_receive_message.context, state.currency)
+            ivQrCode.setImageBitmap(state.walletAddresses.selectedAddress.shareUrl.toQrCode())
+            tvReceiveMessage.text =
+                getQRReceiveMessage(tvReceiveMessage.context, state.currency)
         }
     }
 
     private fun setupNoInternetHandling(state: WalletState) {
         if (state.state == ProgressState.Error) {
             if (state.error == ErrorType.NoInternetConnection) {
-                srl_wallet_details?.isRefreshing = false
+                binding.srlWalletDetails.isRefreshing = false
                 (activity as? SnackbarHandler)?.showSnackbar(
                     text = R.string.wallet_notification_no_internet,
                     buttonTitle = R.string.common_retry
@@ -213,73 +225,77 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details), StoreS
         }
     }
 
-    private fun setupBalanceData(data: BalanceWidgetData) {
+    private fun setupBalanceData(data: BalanceWidgetData) = with(binding.lWalletDetails) {
         when (data.status) {
             BalanceStatus.Loading -> {
-                l_balance.show()
-                l_balance_error.hide()
-                tv_fiat_amount.hide()
-                tv_amount.text = ""
-
+                lBalance.root.show()
+                lBalanceError.root.hide()
+                lBalance.tvFiatAmount.hide()
+                lBalance.tvAmount.text = ""
                 showStatus(R.id.tv_status_loading)
                 showBalanceWithoutToken(data, false)
             }
             BalanceStatus.VerifiedOnline, BalanceStatus.SameCurrencyTransactionInProgress,
             BalanceStatus.TransactionInProgress -> {
-                l_balance.show()
-                l_balance_error.hide()
+                lBalance.root.show()
+                lBalanceError.root.hide()
                 val statusView = if (data.status == BalanceStatus.VerifiedOnline ||
-                        data.status == BalanceStatus.SameCurrencyTransactionInProgress) {
+                    data.status == BalanceStatus.SameCurrencyTransactionInProgress
+                ) {
                     R.id.tv_status_verified
                 } else {
-                    tv_status_error.text =
-                            getText(R.string.wallet_balance_tx_in_progress)
+                    lBalance.tvStatusError.text =
+                        getText(R.string.wallet_balance_tx_in_progress)
                     R.id.group_error
                 }
                 showStatus(statusView)
-                tv_status_error_message.hide()
+                lBalance.tvStatusErrorMessage.hide()
                 showBalanceWithoutToken(data, true)
             }
             BalanceStatus.Unreachable -> {
-                l_balance.show()
-                l_balance_error.hide()
-                tv_fiat_amount.hide()
+                lBalance.root.show()
+                lBalanceError.root.hide()
+                lBalance.tvFiatAmount.hide()
 
-                tv_amount.text = ""
+                lBalance.tvAmount.text = ""
 
-                tv_status_error_message.text = data.errorMessage
-                tv_status_error.text =
-                        getString(R.string.wallet_balance_blockchain_unreachable)
+                lBalance.tvStatusErrorMessage.text = data.errorMessage
+                lBalance.tvStatusError.text =
+                    getString(R.string.wallet_balance_blockchain_unreachable)
 
                 showStatus(R.id.group_error)
-                tv_status_error_message.show(!data.errorMessage.isNullOrBlank())
+                lBalance.tvStatusErrorMessage.show(!data.errorMessage.isNullOrBlank())
             }
 
             BalanceStatus.NoAccount -> {
-                l_balance.hide()
-                l_balance_error.show()
-                tv_error_title.text = getText(R.string.wallet_error_no_account)
-                tv_error_descriptions.text =
-                        getString(
-                            R.string.wallet_error_no_account_subtitle_format,
-                            data.amountToCreateAccount, data.currencySymbol
-                        )
+                lBalance.root.hide()
+                lBalanceError.root.show()
+                lBalanceError.tvErrorTitle.text = getText(R.string.wallet_error_no_account)
+                lBalanceError.tvErrorDescriptions.text =
+                    getString(
+                        R.string.wallet_error_no_account_subtitle_format,
+                        data.amountToCreateAccount, data.currencySymbol
+                    )
             }
         }
-        card_pending_transaction_warning.show(data.status == BalanceStatus.SameCurrencyTransactionInProgress)
+        binding.cardPendingTransactionWarning.show(data.status == BalanceStatus.SameCurrencyTransactionInProgress)
     }
 
     private fun showStatus(@IdRes viewRes: Int) {
-        group_error.show(viewRes == R.id.group_error)
-        tv_status_loading.show(viewRes == R.id.tv_status_loading)
-        tv_status_verified.show(viewRes == R.id.tv_status_verified)
+        with(binding.lWalletDetails.lBalance) {
+            groupError.show(viewRes == R.id.group_error)
+            tvStatusLoading.show(viewRes == R.id.tv_status_loading)
+            tvStatusVerified.show(viewRes == R.id.tv_status_verified)
+        }
     }
 
     private fun showBalanceWithoutToken(data: BalanceWidgetData, showAmount: Boolean) {
-        tv_amount.text = if (showAmount) data.amount else ""
-        if (showAmount) {
-            tv_fiat_amount.show()
-            tv_fiat_amount.text = data.fiatAmountFormatted
+        with(binding.lWalletDetails.lBalance) {
+            tvAmount.text = if (showAmount) data.amount else ""
+            if (showAmount) {
+                tvFiatAmount.show()
+                tvFiatAmount.text = data.fiatAmountFormatted
+            }
         }
     }
 
