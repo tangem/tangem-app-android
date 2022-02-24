@@ -18,17 +18,11 @@ import com.tangem.tap.features.onboarding.products.otherCards.redux.OnboardingOt
 import com.tangem.tap.features.onboarding.products.otherCards.redux.OnboardingOtherCardsStep
 import com.tangem.tap.store
 import com.tangem.wallet.R
-import kotlinx.android.synthetic.main.fragment_onboarding_main.*
-import kotlinx.android.synthetic.main.layout_onboarding_container_bottom.*
-import kotlinx.android.synthetic.main.layout_onboarding_container_top.*
-import kotlinx.android.synthetic.main.view_onboarding_progress.*
 
 /**
 [REDACTED_AUTHOR]
  */
 class OnboardingOtherCardsFragment : BaseOnboardingFragment<OnboardingOtherCardsState>() {
-
-    override fun getOnboardingTopContainerId(): Int = R.layout.layout_onboarding_container_top
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -39,10 +33,10 @@ class OnboardingOtherCardsFragment : BaseOnboardingFragment<OnboardingOtherCards
         super.onViewCreated(view, savedInstanceState)
         addBackPressHandler(this)
 
-        imv_front_card.transitionName = ShareElement.imvFrontCard
+        binding.onboardingTopContainer.imvFrontCard.transitionName = ShareElement.imvFrontCard
         startPostponedEnterTransition()
 
-        toolbar.setTitle(R.string.onboarding_title)
+        binding.toolbar.setTitle(R.string.onboarding_title)
         store.dispatch(OnboardingOtherCardsAction.LoadCardArtwork)
         store.dispatch(OnboardingOtherCardsAction.DetermineStepOfScreen)
     }
@@ -57,64 +51,75 @@ class OnboardingOtherCardsFragment : BaseOnboardingFragment<OnboardingOtherCards
     }
 
     override fun newState(state: OnboardingOtherCardsState) {
-        if (activity == null) return
+        if (activity == null || view == null) return
         if (state.currentStep == OnboardingOtherCardsStep.None) return
 
         Picasso.get()
-                .load(state.cardArtworkUrl)
-                .error(R.drawable.card_placeholder_black)
-                .placeholder(R.drawable.card_placeholder_black)
-                ?.into(imv_front_card)
+            .load(state.cardArtworkUrl)
+            .error(R.drawable.card_placeholder_black)
+            .placeholder(R.drawable.card_placeholder_black)
+            ?.into(binding.onboardingTopContainer.imvFrontCard)
 
-        pb_state.max = state.steps.size - 1
-        pb_state.progress = state.progress
+        pbBinding.pbState.max = state.steps.size - 1
+        pbBinding.pbState.progress = state.progress
 
         when (state.currentStep) {
-            OnboardingOtherCardsStep.CreateWallet -> setupCreateWalletState(state)
-            OnboardingOtherCardsStep.Done -> setupDoneState(state)
+            OnboardingOtherCardsStep.CreateWallet -> setupCreateWalletState()
+            OnboardingOtherCardsStep.Done -> setupDoneState()
         }
         showConfetti(state.showConfetti)
     }
 
-    private fun setupCreateWalletState(state: OnboardingOtherCardsState) {
-        btn_main_action.setText(R.string.onboarding_create_wallet_button_create_wallet)
-        btn_main_action.setOnClickListener { store.dispatch(OnboardingOtherCardsAction.CreateWallet) }
-        btn_alternative_action.setText(R.string.onboarding_button_what_does_it_mean)
-        btn_alternative_action.setOnClickListener { }
+    private fun setupCreateWalletState() = with(binding) {
 
-        tv_header.setText(R.string.onboarding_create_wallet_header)
-        tv_body.setText(R.string.onboarding_create_wallet_body)
+        with(onboardingActionContainer) {
+            btnMainAction.setText(R.string.onboarding_create_wallet_button_create_wallet)
+            btnMainAction.setOnClickListener { store.dispatch(OnboardingOtherCardsAction.CreateWallet) }
+            btnAlternativeAction.setText(R.string.onboarding_button_what_does_it_mean)
+            btnAlternativeAction.setOnClickListener { }
 
-        imv_card_background.setBackgroundDrawable(requireContext().getDrawableCompat(R.drawable.shape_circle))
+            tvHeader.setText(R.string.onboarding_create_wallet_header)
+            tvBody.setText(R.string.onboarding_create_wallet_body)
+
+            btnAlternativeAction.isVisible = false // temporary
+        }
+
+
+        binding.onboardingTopContainer.imvCardBackground.setBackgroundDrawable(
+            requireContext().getDrawableCompat(R.drawable.shape_circle)
+        )
         updateConstraints(R.layout.lp_onboarding_create_wallet)
 
-        btn_alternative_action.isVisible = false // temporary
     }
 
-    private fun setupDoneState(state: OnboardingOtherCardsState) {
-        btn_main_action.setText(R.string.onboarding_done_button_continue)
-        btn_main_action.setOnClickListener {
+    private fun setupDoneState() = with(binding.onboardingActionContainer) {
+        btnMainAction.setText(R.string.onboarding_done_button_continue)
+        btnMainAction.setOnClickListener {
             showConfetti(false)
             store.dispatch(OnboardingOtherCardsAction.Done)
         }
 
-        btn_alternative_action.isVisible = false
-        btn_alternative_action.setText("")
-        btn_alternative_action.setOnClickListener { }
+        btnAlternativeAction.isVisible = false
+        btnAlternativeAction.setText("")
+        btnAlternativeAction.setOnClickListener { }
 
-        tv_header.setText(R.string.onboarding_done_header)
-        tv_body.setText(R.string.onboarding_done_body)
+        tvHeader.setText(R.string.onboarding_done_header)
+        tvBody.setText(R.string.onboarding_done_body)
 
-        imv_card_background.setBackgroundDrawable(requireContext().getDrawableCompat(R.drawable.shape_rectangle_rounded_8))
+        binding.onboardingTopContainer.imvCardBackground?.setBackgroundDrawable(
+            requireContext().getDrawableCompat(R.drawable.shape_rectangle_rounded_8)
+        )
         updateConstraints(R.layout.lp_onboarding_done)
     }
 
     private fun updateConstraints(@LayoutRes layoutId: Int) {
-        val constraintSet = ConstraintSet()
-        constraintSet.clone(requireContext(), layoutId)
-        constraintSet.applyTo(onboarding_main_container)
-        val transition = InternalNoteLayoutTransition()
-        transition.interpolator = OvershootInterpolator()
-        TransitionManager.beginDelayedTransition(onboarding_main_container, transition)
+        with(binding.onboardingTopContainer) {
+            val constraintSet = ConstraintSet()
+            constraintSet.clone(requireContext(), layoutId)
+            constraintSet.applyTo(onboardingMainContainer)
+            val transition = InternalNoteLayoutTransition()
+            transition.interpolator = OvershootInterpolator()
+            TransitionManager.beginDelayedTransition(onboardingMainContainer, transition)
+        }
     }
 }
