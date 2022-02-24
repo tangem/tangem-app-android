@@ -40,7 +40,7 @@
         app:layout_constraintTop_toBottomOf="@id/tv_amount"
         tools:text="3.588 ETH" />
 
-    <ImageView
+    <androidx.constraintlayout.utils.widget.ImageFilterView
         android:id="@+id/iv_currency"
         android:layout_width="40dp"
         android:layout_height="40dp"
