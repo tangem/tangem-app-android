@@ -73,14 +73,14 @@ private fun handleReadCard() {
             if (OnboardingHelper.isOnboardingCase(scanResponse)) {
                 val navigateTo = OnboardingHelper.whereToNavigate(scanResponse)
                 store.dispatch(GlobalAction.Onboarding.Start(scanResponse))
-                navigateTo(navigateTo, store.state.homeState.shareTransition)
+                navigateTo(navigateTo)
             } else {
                 scope.launch {
                     store.onCardScanned(scanResponse)
                     withMainContext {
                         if (scanResponse.twinsIsTwinned() && !preferencesStorage.wasTwinsOnboardingShown()) {
                             store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.WelcomeOnly))
-                            navigateTo(AppScreen.OnboardingTwins, store.state.homeState.shareTransition)
+                            navigateTo(AppScreen.OnboardingTwins)
                         } else {
                             navigateTo(AppScreen.Wallet, null)
                         }
@@ -98,7 +98,7 @@ private fun changeButtonState(state: ButtonState) {
     store.dispatch(HomeAction.ChangeScanCardButtonState(btnState))
 }
 
-private fun navigateTo(screen: AppScreen, transition: FragmentShareTransition?) {
+private fun navigateTo(screen: AppScreen, transition: FragmentShareTransition? = null) {
     post(DELAY_SDK_DIALOG_CLOSE) {
         changeButtonState(ButtonState.ENABLED)
         store.dispatch(NavigationAction.NavigateTo(screen, transition))
