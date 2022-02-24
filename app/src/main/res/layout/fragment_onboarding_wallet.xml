@@ -225,6 +225,7 @@
     </androidx.constraintlayout.widget.ConstraintLayout>
 
     <include
+        android:id="@+id/v_confetti"
         layout="@layout/view_confetti"
         android:visibility="gone" />
 
