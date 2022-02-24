@@ -32,13 +32,7 @@ import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsStep
 import com.tangem.tap.features.wallet.redux.Artwork
 import com.tangem.tap.store
 import com.tangem.wallet.R
-import kotlinx.android.synthetic.main.fragment_onboarding_main.*
-import kotlinx.android.synthetic.main.layout_onboarding_container_bottom.*
-import kotlinx.android.synthetic.main.layout_onboarding_container_top.*
-import kotlinx.android.synthetic.main.view_bg_twins_welcome.*
-import kotlinx.android.synthetic.main.view_onboarding_progress.*
-import kotlinx.android.synthetic.main.view_onboarding_tv_balance.*
-
+import com.tangem.wallet.databinding.LayoutOnboardingContainerTopBinding
 
 class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
 
@@ -49,11 +43,10 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
 
     private val assetReader: AssetReader by lazy {
         object : AssetReader {
-            override fun readAssetAsString(name: String): String = requireContext().readAssetAsString(name)
+            override fun readAssetAsString(name: String): String =
+                requireContext().readAssetAsString(name)
         }
     }
-
-    override fun getOnboardingTopContainerId(): Int = R.layout.layout_onboarding_container_top
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -76,43 +69,44 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
         super.onViewCreated(view, savedInstanceState)
         addBackPressHandler(this)
 
-        reconfigureLayoutForTwins()
+        reconfigureLayoutForTwins(binding.onboardingTopContainer)
 
         val typedValue = TypedValue()
         resources.getValue(R.dimen.device_scale_factor_for_twins_welcome, typedValue, true)
         val deviceScaleFactorForWelcomeState = typedValue.float
 
-        twinsWidget = TwinsCardWidget(LeapfrogWidget(cards_container), deviceScaleFactorForWelcomeState) {
+        twinsWidget = TwinsCardWidget(LeapfrogWidget(binding.onboardingTopContainer.cardsContainer), deviceScaleFactorForWelcomeState) {
             285f * deviceScaleFactorForWelcomeState
         }
-        btnRefreshBalanceWidget = RefreshBalanceWidget(onboarding_main_container)
+        btnRefreshBalanceWidget = RefreshBalanceWidget(binding.onboardingTopContainer.onboardingMainContainer)
 
-        toolbar.title = getText(R.string.twins_recreate_toolbar)
-
-        Picasso.get()
-                .load(Artwork.TWIN_CARD_1)
-                .error(R.drawable.card_placeholder_black)
-                .placeholder(R.drawable.card_placeholder_black)
-                ?.into(imv_twin_front_card)
+        binding.toolbar.title = getText(R.string.twins_recreate_toolbar)
 
         Picasso.get()
-                .load(Artwork.TWIN_CARD_2)
-                .error(R.drawable.card_placeholder_white)
-                .placeholder(R.drawable.card_placeholder_white)
-                ?.into(imv_twin_back_card)
+            .load(Artwork.TWIN_CARD_1)
+            .error(R.drawable.card_placeholder_black)
+            .placeholder(R.drawable.card_placeholder_black)
+            ?.into(binding.onboardingTopContainer.imvTwinFrontCard)
+
+        Picasso.get()
+            .load(Artwork.TWIN_CARD_2)
+            .error(R.drawable.card_placeholder_white)
+            .placeholder(R.drawable.card_placeholder_white)
+            ?.into(binding.onboardingTopContainer.imvTwinBackCard)
     }
 
-    private fun reconfigureLayoutForTwins() {
-        imv_front_card.hide()
-        imv_card_background.hide()
-        cards_container.show()
+    private fun reconfigureLayoutForTwins(containerBinding: LayoutOnboardingContainerTopBinding) =
+        with(containerBinding) {
+            imvFrontCard.hide()
+            imvCardBackground.hide()
+            cardsContainer.show()
 
-        imv_twin_front_card.transitionName = ShareElement.imvFrontCard
-        imv_twin_back_card.transitionName = ShareElement.imvBackCard
+            imvTwinFrontCard.transitionName = ShareElement.imvFrontCard
+            imvTwinBackCard.transitionName = ShareElement.imvBackCard
 
-        // if don't this, the bg_circle_... is overflow the app_bar
-        app_bar.bringToFront()
-    }
+            // if don't this, the bg_circle_... is overflow the app_bar
+            binding.appBar.bringToFront()
+        }
 
     override fun subscribeToStore() {
         store.subscribe(this) { state ->
@@ -124,10 +118,10 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
     }
 
     override fun newState(state: TwinCardsState) {
-        if (activity == null) return
+        if (activity == null || view == null) return
 
-        pb_state.max = state.steps.size - 1
-        pb_state.progress = state.progress
+        pbBinding.pbState.max = state.steps.size - 1
+        pbBinding.pbState.progress = state.progress
 
         when (state.currentStep) {
             TwinCardsStep.WelcomeOnly -> setupWelcomeOnlyState(state)
@@ -148,13 +142,15 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
     private fun setBalance(state: TwinCardsState) {
         if (state.walletBalance.currency.blockchain == Blockchain.Unknown) return
 
-        if (state.balanceCriticalError == null) {
-            val balanceValue = state.walletBalance.value.stripZeroPlainString()
-            tv_balance_value.text = balanceValue
-            tv_balance_currency.text = state.walletBalance.currency.currencySymbol
-        } else {
-            tv_balance_value.text = "–"
-            tv_balance_currency.text = ""
+        with(binding.onboardingTopContainer.onboardingTvBalance) {
+            if (state.balanceCriticalError == null) {
+                val balanceValue = state.walletBalance.value.stripZeroPlainString()
+                tvBalanceValue.text = balanceValue
+                tvBalanceCurrency.text = state.walletBalance.currency.currencySymbol
+            } else {
+                tvBalanceValue.text = "–"
+                tvBalanceCurrency.text = ""
+            }
         }
     }
 
@@ -169,203 +165,235 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
         setupWelcomeState(state) { store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.CreateFirstWallet)) }
     }
 
-    private fun setupWelcomeState(state: TwinCardsState, mainAction: VoidCallback) {
+    private fun setupWelcomeState(state: TwinCardsState, mainAction: VoidCallback) =
+        with(binding.onboardingActionContainer) {
+            twinsWidget.toWelcome(false) { startPostponedEnterTransition() }
+
+            binding.onboardingTopContainer.onboardingTwinsWelcomeBg.root.show()
+            pbBinding.pbState.hide()
+
+            tvHeader.setText(R.string.twins_onboarding_subtitle)
+            tvBody.text = getString(
+                R.string.twins_onboarding_description_format,
+                state.cardNumber?.pairIndexNumber()
+            )
+
+            btnMainAction.setText(R.string.common_continue)
+            btnMainAction.setOnClickListener { mainAction() }
+        }
+
+    private fun setupWarningState(state: TwinCardsState) = with(binding.onboardingActionContainer) {
         twinsWidget.toWelcome(false) { startPostponedEnterTransition() }
 
-        onboarding_twins_welcome_bg.show()
-        pb_state.hide()
+        binding.onboardingTopContainer.onboardingTwinsWelcomeBg.root.hide()
+        pbBinding.pbState.hide()
+        chbUnderstand.show()
 
-        tv_header.setText(R.string.twins_onboarding_subtitle)
-        tv_body.text = getString(R.string.twins_onboarding_description_format, state.cardNumber?.pairIndexNumber())
+        tvHeader.setText(R.string.common_warning)
+        tvBody.setText(R.string.twins_recreate_warning)
 
-        btn_main_action.setText(R.string.common_continue)
-        btn_main_action.setOnClickListener { mainAction() }
-    }
-
-    private fun setupWarningState(state: TwinCardsState) {
-        twinsWidget.toWelcome(false) { startPostponedEnterTransition() }
-
-        onboarding_twins_welcome_bg.hide()
-        pb_state.hide()
-        chb_understand.show()
-
-        tv_header.setText(R.string.common_warning)
-        tv_body.setText(R.string.twins_recreate_warning)
-
-        chb_understand.setOnCheckedChangeListener { buttonView, isChecked ->
+        chbUnderstand.setOnCheckedChangeListener { buttonView, isChecked ->
             store.dispatch(TwinCardsAction.SetUserUnderstand(isChecked))
         }
-        btn_main_action.isEnabled = state.userWasUnderstandIfWalletRecreate
-        btn_main_action.setText(R.string.common_continue)
-        btn_main_action.setOnClickListener {
+        btnMainAction.isEnabled = state.userWasUnderstandIfWalletRecreate
+        btnMainAction.setText(R.string.common_continue)
+        btnMainAction.setOnClickListener {
             store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.CreateFirstWallet))
         }
     }
 
-    private fun setupCreateFirstWalletState(state: TwinCardsState) {
-        onboarding_twins_welcome_bg.hide()
-        bg_circle_large.hide()
-        bg_circle_medium.hide()
-        bg_circle_min.hide()
-        chb_understand.hide()
-        pb_state.show()
+    private fun setupCreateFirstWalletState(state: TwinCardsState) =
+        with(binding.onboardingActionContainer) {
+            binding.onboardingTopContainer.onboardingTwinsWelcomeBg.root.hide()
+            binding.onboardingTopContainer.onboardingTwinsWelcomeBg.bgCircleLarge.hide()
+            binding.onboardingTopContainer.onboardingTwinsWelcomeBg.bgCircleMedium.hide()
+            binding.onboardingTopContainer.onboardingTwinsWelcomeBg.bgCircleMin.hide()
+            chbUnderstand.hide()
+            pbBinding.pbState.show()
 
-        onboarding_main_container.beginDelayedTransition()
+            binding.onboardingTopContainer.onboardingMainContainer.beginDelayedTransition()
 
-        when (previousStep) {
-            TwinCardsStep.None -> {
-                twinsWidget.toLeapfrog(false) {
-                    when (state.cardNumber) {
-                        TwinCardNumber.First -> startPostponedEnterTransition()
-                        TwinCardNumber.Second -> {
-                            switchToCard(state.cardNumber, false) { startPostponedEnterTransition() }
+            when (previousStep) {
+                TwinCardsStep.None -> {
+                    twinsWidget.toLeapfrog(false) {
+                        when (state.cardNumber) {
+                            TwinCardNumber.First -> startPostponedEnterTransition()
+                            TwinCardNumber.Second -> {
+                                switchToCard(
+                                    state.cardNumber,
+                                    false
+                                ) { startPostponedEnterTransition() }
+                            }
                         }
                     }
                 }
+                TwinCardsStep.Welcome, TwinCardsStep.Warning -> {
+                    twinsWidget.toLeapfrog(onEnd = { switchToCard(state.cardNumber) })
+                }
             }
-            TwinCardsStep.Welcome, TwinCardsStep.Warning -> {
-                twinsWidget.toLeapfrog(onEnd = { switchToCard(state.cardNumber) })
+
+            val twinIndexNumber = state.cardNumber?.indexNumber()
+            tvHeader.text = getString(R.string.twins_recreate_title_format, twinIndexNumber)
+            tvBody.setText(R.string.onboarding_twins_interrupt_warning)
+
+            btnMainAction.text = getString(R.string.twins_recreate_button_format, twinIndexNumber)
+            btnMainAction.setOnClickListener {
+                store.dispatch(
+                    TwinCardsAction.Wallet.LaunchFirstStep(
+                        Message(getString(R.string.twins_recreate_title_format, twinIndexNumber)),
+                        assetReader
+                    )
+                )
+            }
+
+            btnAlternativeAction.isVisible = false
+            btnAlternativeAction.isClickable = false
+        }
+
+    private fun setupCreateSecondWalletState(state: TwinCardsState) =
+        with(binding.onboardingActionContainer) {
+            switchToCard(state.cardNumber?.pairNumber())
+
+            val twinPairIndexNumber = state.cardNumber?.pairIndexNumber()
+            tvHeader.text = getString(R.string.twins_recreate_title_format, twinPairIndexNumber)
+            tvBody.setText(R.string.onboarding_twins_interrupt_warning)
+
+            btnMainAction.text =
+                getString(R.string.twins_recreate_button_format, twinPairIndexNumber)
+            btnMainAction.setOnClickListener {
+                store.dispatch(
+                    TwinCardsAction.Wallet.LaunchSecondStep(
+                        Message(
+                            getString(
+                                R.string.twins_recreate_title_format,
+                                twinPairIndexNumber
+                            )
+                        ),
+                        Message(getString(R.string.twins_recreate_title_preparing)),
+                        Message(getString(R.string.twins_recreate_title_creating_wallet)),
+                    )
+                )
             }
         }
 
-        val twinIndexNumber = state.cardNumber?.indexNumber()
-        tv_header.text = getString(R.string.twins_recreate_title_format, twinIndexNumber)
-        tv_body.setText(R.string.onboarding_twins_interrupt_warning)
+    private fun setupCreateThirdWalletState(state: TwinCardsState) =
+        with(binding.onboardingActionContainer) {
+            switchToCard(state.cardNumber)
 
-        btn_main_action.text = getString(R.string.twins_recreate_button_format, twinIndexNumber)
-        btn_main_action.setOnClickListener {
-            store.dispatch(TwinCardsAction.Wallet.LaunchFirstStep(
-                Message(getString(R.string.twins_recreate_title_format, twinIndexNumber)),
-                assetReader
-            ))
+            val twinIndexNumber = state.cardNumber?.indexNumber()
+            tvHeader.text = getString(R.string.twins_recreate_title_format, twinIndexNumber)
+            tvBody.setText(R.string.onboarding_twins_interrupt_warning)
+
+            btnMainAction.text = getString(R.string.twins_recreate_button_format, twinIndexNumber)
+            btnMainAction.setOnClickListener {
+                store.dispatch(
+                    TwinCardsAction.Wallet.LaunchThirdStep(
+                        Message(getString(R.string.twins_recreate_title_format, twinIndexNumber))
+                    )
+                )
+            }
         }
 
-        btn_alternative_action.isVisible = false
-        btn_alternative_action.isClickable = false
-    }
 
-    private fun setupCreateSecondWalletState(state: TwinCardsState) {
-        switchToCard(state.cardNumber?.pairNumber())
-
-        val twinPairIndexNumber = state.cardNumber?.pairIndexNumber()
-        tv_header.text = getString(R.string.twins_recreate_title_format, twinPairIndexNumber)
-        tv_body.setText(R.string.onboarding_twins_interrupt_warning)
-
-        btn_main_action.text = getString(R.string.twins_recreate_button_format, twinPairIndexNumber)
-        btn_main_action.setOnClickListener {
-            store.dispatch(TwinCardsAction.Wallet.LaunchSecondStep(
-                Message(getString(R.string.twins_recreate_title_format, twinPairIndexNumber)),
-                Message(getString(R.string.twins_recreate_title_preparing)),
-                Message(getString(R.string.twins_recreate_title_creating_wallet)),
-            ))
-        }
-    }
-
-    private fun setupCreateThirdWalletState(state: TwinCardsState) {
-        switchToCard(state.cardNumber)
-
-        val twinIndexNumber = state.cardNumber?.indexNumber()
-        tv_header.text = getString(R.string.twins_recreate_title_format, twinIndexNumber)
-        tv_body.setText(R.string.onboarding_twins_interrupt_warning)
-
-        btn_main_action.text = getString(R.string.twins_recreate_button_format, twinIndexNumber)
-        btn_main_action.setOnClickListener {
-            store.dispatch(TwinCardsAction.Wallet.LaunchThirdStep(
-                Message(getString(R.string.twins_recreate_title_format, twinIndexNumber))
-            ))
-        }
-    }
-
-
-    private fun setupTopUpWalletState(state: TwinCardsState) {
-        when (previousStep) {
-            TwinCardsStep.None -> {
-                when (state.cardNumber) {
-                    TwinCardNumber.First -> {
-                        twinsWidget.leapfrogWidget.unfold(false) {
-                            twinsWidget.toActivate(false) {
+    private fun setupTopUpWalletState(state: TwinCardsState) =
+        with(binding.onboardingActionContainer) {
+            when (previousStep) {
+                TwinCardsStep.None -> {
+                    when (state.cardNumber) {
+                        TwinCardNumber.First -> {
+                            twinsWidget.leapfrogWidget.unfold(false) {
+                                twinsWidget.toActivate(false) {
+                                    startPostponedEnterTransition()
+                                }
+                            }
+                        }
+                        TwinCardNumber.Second -> {
+                            switchToCard(state.cardNumber, false) {
+                                twinsWidget.toActivate(false)
                                 startPostponedEnterTransition()
                             }
                         }
                     }
-                    TwinCardNumber.Second -> {
-                        switchToCard(state.cardNumber, false) {
-                            twinsWidget.toActivate(false)
-                            startPostponedEnterTransition()
-                        }
-                    }
+                }
+                TwinCardsStep.CreateThirdWallet -> {
+                    twinsWidget.toActivate()
                 }
             }
-            TwinCardsStep.CreateThirdWallet -> {
-                twinsWidget.toActivate()
+
+            if (state.isBuyAllowed) {
+                btnMainAction.setText(R.string.onboarding_top_up_button_but_crypto)
+                btnMainAction.setOnClickListener {
+                    store.dispatch(TwinCardsAction.TopUp)
+                }
+
+                btnAlternativeAction.isVisible = true
+                btnAlternativeAction.setText(R.string.onboarding_top_up_button_show_wallet_address)
+                btnAlternativeAction.setOnClickListener {
+                    store.dispatch(TwinCardsAction.ShowAddressInfoDialog)
+                }
+            } else {
+                btnAlternativeAction.setText(R.string.onboarding_button_receive_crypto)
+                btnAlternativeAction.setOnClickListener {
+                    store.dispatch(TwinCardsAction.ShowAddressInfoDialog)
+                }
+
+                btnAlternativeAction.isVisible = false
             }
+
+            tvHeader.setText(R.string.onboarding_top_up_header)
+            tvBody.setText(R.string.onboarding_top_up_body)
+
+            btnRefreshBalanceWidget.changeState(state.walletBalance.state)
+            if (btnRefreshBalanceWidget.isShowing != true) {
+                btnRefreshBalanceWidget.mainView.setOnClickListener {
+                    store.dispatch(TwinCardsAction.Balance.Update)
+                }
+            }
+            binding.onboardingTopContainer.imvCardBackground.setBackgroundDrawable(
+                requireContext().getDrawableCompat(R.drawable.shape_rectangle_rounded_8)
+            )
+            updateConstraints(state.currentStep, R.layout.lp_onboarding_topup_wallet_twins)
         }
 
-        if (state.isBuyAllowed) {
-            btn_main_action.setText(R.string.onboarding_top_up_button_but_crypto)
-            btn_main_action.setOnClickListener {
-                store.dispatch(TwinCardsAction.TopUp)
+    private fun setupDoneState(state: TwinCardsState) =
+        with(binding.onboardingActionContainer) {
+            btnMainAction.setText(R.string.onboarding_done_button_continue)
+            btnMainAction.setOnClickListener {
+                store.dispatch(TwinCardsAction.Confetti.Hide)
+                store.dispatch(TwinCardsAction.Done)
             }
 
-            btn_alternative_action.isVisible = true
-            btn_alternative_action.setText(R.string.onboarding_top_up_button_show_wallet_address)
-            btn_alternative_action.setOnClickListener {
-                store.dispatch(TwinCardsAction.ShowAddressInfoDialog)
+            btnAlternativeAction.isVisible = false
+            btnAlternativeAction.isClickable = false
+
+            tvHeader.setText(R.string.onboarding_done_header)
+            tvBody.setText(R.string.onboarding_done_body)
+
+            val layout = when (state.mode) {
+                CreateTwinWalletMode.CreateWallet -> R.layout.lp_onboarding_done_activation_twins
+                CreateTwinWalletMode.RecreateWallet -> R.layout.lp_onboarding_done
             }
-        } else {
-            btn_main_action.setText(R.string.onboarding_button_receive_crypto)
-            btn_main_action.setOnClickListener {
-                store.dispatch(TwinCardsAction.ShowAddressInfoDialog)
-            }
-
-            btn_alternative_action.isVisible = false
+            updateConstraints(state.currentStep, layout)
         }
-
-        tv_header.setText(R.string.onboarding_top_up_header)
-        tv_body.setText(R.string.onboarding_top_up_body)
-
-        btnRefreshBalanceWidget.changeState(state.walletBalance.state)
-        if (btnRefreshBalanceWidget.isShowing != true) {
-            btnRefreshBalanceWidget.mainView.setOnClickListener {
-                store.dispatch(TwinCardsAction.Balance.Update)
-            }
-        }
-        imv_card_background.setBackgroundDrawable(requireContext().getDrawableCompat(R.drawable.shape_rectangle_rounded_8))
-        updateConstraints(state.currentStep, R.layout.lp_onboarding_topup_wallet_twins)
-    }
-
-    private fun setupDoneState(state: TwinCardsState) {
-        btn_main_action.setText(R.string.onboarding_done_button_continue)
-        btn_main_action.setOnClickListener {
-            store.dispatch(TwinCardsAction.Confetti.Hide)
-            store.dispatch(TwinCardsAction.Done)
-        }
-
-        btn_alternative_action.isVisible = false
-        btn_alternative_action.isClickable = false
-
-        tv_header.setText(R.string.onboarding_done_header)
-        tv_body.setText(R.string.onboarding_done_body)
-
-        val layout = when (state.mode) {
-            CreateTwinWalletMode.CreateWallet -> R.layout.lp_onboarding_done_activation_twins
-            CreateTwinWalletMode.RecreateWallet -> R.layout.lp_onboarding_done
-        }
-        updateConstraints(state.currentStep, layout)
-    }
 
     private fun updateConstraints(currentStep: TwinCardsStep, @LayoutRes layoutId: Int) {
         if (this.previousStep == currentStep) return
 
-        val constraintSet = ConstraintSet()
-        constraintSet.clone(requireContext(), layoutId)
-        constraintSet.applyTo(onboarding_main_container)
-        val transition = InternalNoteLayoutTransition()
-        transition.interpolator = OvershootInterpolator()
-        TransitionManager.beginDelayedTransition(onboarding_main_container, transition)
+        with(binding.onboardingTopContainer) {
+            val constraintSet = ConstraintSet()
+            constraintSet.clone(requireContext(), layoutId)
+            constraintSet.applyTo(onboardingMainContainer)
+            val transition = InternalNoteLayoutTransition()
+            transition.interpolator = OvershootInterpolator()
+            TransitionManager.beginDelayedTransition(onboardingMainContainer, transition)
+        }
     }
 
-    private fun switchToCard(cardNumber: TwinCardNumber?, animate: Boolean = true, onEnd: VoidCallback = {}) {
+    private fun switchToCard(
+        cardNumber: TwinCardNumber?,
+        animate: Boolean = true,
+        onEnd: VoidCallback = {}
+    ) {
         val position = cardNumber?.number ?: return
 
         if (twinsWidget.leapfrogWidget.getViewPositionByIndex(1) != position - 1) {
