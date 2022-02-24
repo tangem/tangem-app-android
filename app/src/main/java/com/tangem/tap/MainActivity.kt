@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import by.kirich1409.viewbindingdelegate.viewBinding
 import com.google.android.material.snackbar.Snackbar
 import com.tangem.TangemSdk
 import com.tangem.operations.backup.BackupService
@@ -25,7 +26,7 @@ import com.tangem.tap.domain.TangemSdkManager
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.shop.redux.ShopAction
 import com.tangem.wallet.R
-import kotlinx.android.synthetic.main.activity_main.*
+import com.tangem.wallet.databinding.ActivityMainBinding
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -63,6 +64,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler {
     private var snackbar: Snackbar? = null
     private val dialogManager = DialogManager()
     private val intentHandler = IntentHandler()
+    private val binding: ActivityMainBinding by viewBinding(ActivityMainBinding::bind)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -102,7 +104,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler {
 
     override fun onResume() {
         super.onResume()
-        notificationsHandler = NotificationsHandler(fragment_container)
+        notificationsHandler = NotificationsHandler(binding.fragmentContainer)
 
         val backStackIsEmpty = supportFragmentManager.backStackEntryCount == 0
         val isScannedBefore = store.state.globalState.scanResponse != null
@@ -139,7 +141,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler {
         if (snackbar != null) return
 
         snackbar = Snackbar.make(
-            fragment_container, getString(text), Snackbar.LENGTH_INDEFINITE
+            binding.fragmentContainer, getString(text), Snackbar.LENGTH_INDEFINITE
         )
         if (buttonTitle != null && action != null) {
             snackbar?.setAction(getString(buttonTitle), action)
