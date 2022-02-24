@@ -1,19 +1,20 @@
 package com.tangem.tap.features.details.ui.walletconnect
 
-import android.app.Dialog
 import android.os.Bundle
 import android.view.View
 import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.transition.TransitionInflater
+import by.kirich1409.viewbindingdelegate.viewBinding
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
+import com.tangem.tap.features.details.redux.walletconnect.WalletConnectSession
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectState
 import com.tangem.tap.store
 import com.tangem.wallet.R
-import kotlinx.android.synthetic.main.fragment_wallet_connect_sessions.*
+import com.tangem.wallet.databinding.FragmentWalletConnectSessionsBinding
 import org.rekotlin.StoreSubscriber
 
 
@@ -21,7 +22,9 @@ class WalletConnectSessionsFragment : Fragment(R.layout.fragment_wallet_connect_
     StoreSubscriber<WalletConnectState> {
 
     private lateinit var walletConnectSessionsAdapter: WalletConnectSessionsAdapter
-    private var dialog: Dialog? = null
+    private val binding: FragmentWalletConnectSessionsBinding by viewBinding(
+        FragmentWalletConnectSessionsBinding::bind
+    )
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,7 +56,7 @@ class WalletConnectSessionsFragment : Fragment(R.layout.fragment_wallet_connect_
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        toolbar.setNavigationOnClickListener {
+        binding.toolbar.setNavigationOnClickListener {
             store.dispatch(NavigationAction.PopBackTo())
         }
         setOnClickListeners()
@@ -61,27 +64,31 @@ class WalletConnectSessionsFragment : Fragment(R.layout.fragment_wallet_connect_
     }
 
     private fun setOnClickListeners() {
-        fab_open_session.setOnClickListener {
+        binding.fabOpenSession.setOnClickListener {
             store.dispatch(WalletConnectAction.StartWalletConnect(activity = requireActivity()))
         }
     }
 
-    private fun setupTransactionsRecyclerView() {
+    private fun setupTransactionsRecyclerView() = with(binding) {
         walletConnectSessionsAdapter = WalletConnectSessionsAdapter()
-        rv_wallet_connect_sessions.layoutManager = LinearLayoutManager(requireContext())
-        rv_wallet_connect_sessions.adapter = walletConnectSessionsAdapter
+        rvWalletConnectSessions.layoutManager = LinearLayoutManager(requireContext())
+        rvWalletConnectSessions.adapter = walletConnectSessionsAdapter
         walletConnectSessionsAdapter.submitList(store.state.walletConnectState.sessions)
     }
 
     override fun newState(state: WalletConnectState) {
-        if (activity == null) return
+        if (activity == null || view == null) return
 
-        fab_open_session.show(!state.loading)
-        pb_wallet_connect.show(state.loading)
+        binding.fabOpenSession.show(!state.loading)
+        binding.pbWalletConnect.show(state.loading)
 
-        walletConnectSessionsAdapter.submitList(state.sessions)
-        rv_wallet_connect_sessions.show(state.sessions.isNotEmpty())
-        tv_no_sessions.show(state.sessions.isEmpty())
-        tv_no_sessions_title.show(state.sessions.isEmpty())
+        showUpdatedList(state.sessions)
+    }
+
+    private fun showUpdatedList(sessions: List<WalletConnectSession>) = with(binding) {
+        walletConnectSessionsAdapter.submitList(sessions)
+        rvWalletConnectSessions.show(sessions.isNotEmpty())
+        tvNoSessions.show(sessions.isEmpty())
+        tvNoSessionsTitle.show(sessions.isEmpty())
     }
 }
