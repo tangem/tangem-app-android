@@ -3,6 +3,7 @@ package com.tangem.tap.features.demo
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
+import com.tangem.common.CompletionResult
 import com.tangem.tap.common.extensions.dispatchNotification
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.tasks.product.ScanResponse
@@ -171,7 +172,10 @@ class DemoTransactionSender(
     override suspend fun send(transactionData: TransactionData, signer: TransactionSigner): SimpleResult {
         val dataToSign = randomString(32).toByteArray()
         val signerResponse = signer.sign(dataToSign, walletManager.wallet.cardId, walletManager.wallet.publicKey)
-        return SimpleResult.Failure(Exception(ID))
+        return when (signerResponse) {
+            is CompletionResult.Success -> SimpleResult.Failure(Exception(ID))
+            is CompletionResult.Failure -> SimpleResult.fromTangemSdkError(signerResponse.error)
+        }
     }
 
     private fun randomInt(from: Int, to: Int): Int = kotlin.random.Random.nextInt(from, to)
