@@ -249,7 +249,7 @@ private fun sendTransaction(
                                     delay(DELAY_SDK_DIALOG_CLOSE)
                                     store.dispatchDialogShow(AppDialog.SimpleOkDialogRes(
                                         R.string.common_done,
-                                        R.string.alert_demo_tx_send
+                                        R.string.alert_demo_feature_disabled
                                     ) { dispatch(NavigationAction.PopBackTo()) })
                                 }
                                 else -> {
