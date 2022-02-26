@@ -1,5 +1,6 @@
 package com.tangem.tap.features.demo
 
+import com.tangem.blockchain.blockchains.bitcoin.BitcoinWalletManager
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
@@ -166,8 +167,18 @@ class DemoTransactionSender(
     private val sender: TransactionSender = walletManager as TransactionSender
 ) : TransactionSender {
 
-    override suspend fun getFee(amount: Amount, destination: String): Result<List<Amount>> =
-        sender.getFee(amount, destination)
+    override suspend fun getFee(amount: Amount, destination: String): Result<List<Amount>> {
+        val blockchain = walletManager.wallet.blockchain
+        return when (walletManager) {
+            is BitcoinWalletManager -> Result.Success(listOf(
+                Amount(0.0001.toBigDecimal(), blockchain),
+                Amount(0.0003.toBigDecimal(), blockchain),
+                Amount(0.00055.toBigDecimal(), blockchain),
+            ))
+            else -> sender.getFee(amount, destination)
+        }
+    }
+
 
     override suspend fun send(transactionData: TransactionData, signer: TransactionSigner): SimpleResult {
         val dataToSign = randomString(32).toByteArray()
