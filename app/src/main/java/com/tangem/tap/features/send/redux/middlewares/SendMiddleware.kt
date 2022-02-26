@@ -246,10 +246,11 @@ private fun sendTransaction(
                                     dispatch(SendAction.SendError(TapError.XmlError.AssetAccountNotCreated))
                                 }
                                 message.contains(DemoTransactionSender.ID) -> {
+                                    delay(DELAY_SDK_DIALOG_CLOSE)
                                     store.dispatchDialogShow(AppDialog.SimpleOkDialogRes(
                                         R.string.common_done,
                                         R.string.alert_demo_tx_send
-                                    ))
+                                    ) { dispatch(NavigationAction.PopBackTo()) })
                                 }
                                 else -> {
                                     (sendResult.error as? TangemSdkError)?.let { error ->
