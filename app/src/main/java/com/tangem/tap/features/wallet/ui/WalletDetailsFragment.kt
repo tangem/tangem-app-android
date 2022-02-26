@@ -3,8 +3,10 @@ package com.tangem.tap.features.wallet.ui
 import android.app.Dialog
 import android.os.Bundle
 import android.view.*
+import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
-import androidx.annotation.IdRes
+import androidx.annotation.ColorRes
+import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -228,45 +230,38 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
     private fun setupBalanceData(data: BalanceWidgetData) = with(binding.lWalletDetails) {
         when (data.status) {
             BalanceStatus.Loading -> {
-                lBalance.root.show()
                 lBalanceError.root.hide()
-                lBalance.tvFiatAmount.hide()
-                lBalance.tvAmount.text = ""
-                showStatus(R.id.tv_status_loading)
-                showBalanceWithoutToken(data, false)
+                lBalance.root.show()
+                lBalance.groupBalance.show()
+                lBalance.tvError.hide()
+                lBalance.tvAmount.text = data.amount
+                lBalance.tvFiatAmount.text = data.fiatAmountFormatted
+                lBalance.tvStatus.setLoadingStatus(R.string.wallet_balance_loading)
             }
             BalanceStatus.VerifiedOnline, BalanceStatus.SameCurrencyTransactionInProgress,
             BalanceStatus.TransactionInProgress -> {
-                lBalance.root.show()
                 lBalanceError.root.hide()
-                val statusView = if (data.status == BalanceStatus.VerifiedOnline ||
-                    data.status == BalanceStatus.SameCurrencyTransactionInProgress
-                ) {
-                    R.id.tv_status_verified
-                } else {
-                    lBalance.tvStatusError.text =
-                        getText(R.string.wallet_balance_tx_in_progress)
-                    R.id.group_error
+                lBalance.root.show()
+                lBalance.groupBalance.show()
+                lBalance.tvError.hide()
+                lBalance.tvAmount.text = data.amount
+                lBalance.tvFiatAmount.text = data.fiatAmountFormatted
+                when (data.status) {
+                    BalanceStatus.VerifiedOnline, BalanceStatus.SameCurrencyTransactionInProgress -> {
+                        lBalance.tvStatus.setVerifiedBalanceStatus(R.string.wallet_balance_verified)
+                    }
+                    else -> {
+                        lBalance.tvStatus.setWarningStatus(R.string.wallet_balance_tx_in_progress)
+                    }
                 }
-                showStatus(statusView)
-                lBalance.tvStatusErrorMessage.hide()
-                showBalanceWithoutToken(data, true)
             }
             BalanceStatus.Unreachable -> {
-                lBalance.root.show()
                 lBalanceError.root.hide()
-                lBalance.tvFiatAmount.hide()
-
-                lBalance.tvAmount.text = ""
-
-                lBalance.tvStatusErrorMessage.text = data.errorMessage
-                lBalance.tvStatusError.text =
-                    getString(R.string.wallet_balance_blockchain_unreachable)
-
-                showStatus(R.id.group_error)
-                lBalance.tvStatusErrorMessage.show(!data.errorMessage.isNullOrBlank())
+                lBalance.root.show()
+                lBalance.groupBalance.hide()
+                lBalance.tvError.show()
+                lBalance.tvError.setWarningStatus(R.string.wallet_balance_blockchain_unreachable, data.errorMessage)
             }
-
             BalanceStatus.NoAccount -> {
                 lBalance.root.hide()
                 lBalanceError.root.show()
@@ -279,24 +274,6 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
             }
         }
         binding.cardPendingTransactionWarning.show(data.status == BalanceStatus.SameCurrencyTransactionInProgress)
-    }
-
-    private fun showStatus(@IdRes viewRes: Int) {
-        with(binding.lWalletDetails.lBalance) {
-            groupError.show(viewRes == R.id.group_error)
-            tvStatusLoading.show(viewRes == R.id.tv_status_loading)
-            tvStatusVerified.show(viewRes == R.id.tv_status_verified)
-        }
-    }
-
-    private fun showBalanceWithoutToken(data: BalanceWidgetData, showAmount: Boolean) {
-        with(binding.lWalletDetails.lBalance) {
-            tvAmount.text = if (showAmount) data.amount else ""
-            if (showAmount) {
-                tvFiatAmount.show()
-                tvFiatAmount.text = data.fiatAmountFormatted
-            }
-        }
     }
 
     private fun handleDialogs(walletDialog: StateDialog?) {
@@ -337,4 +314,22 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
         menu.getItem(0).isEnabled = walletCanBeRemoved
     }
 
+    private fun TextView.setWarningStatus(mainMessage: Int, error: String? = null) {
+        val text = getString(mainMessage).appendIfNotNull(error, "\nError: ")
+        setStatus(text, R.color.warning, R.drawable.ic_warning_small)
+    }
+
+    private fun TextView.setVerifiedBalanceStatus(mainMessage: Int) {
+        setStatus(getString(mainMessage), R.color.accent, R.drawable.ic_ok)
+    }
+
+    private fun TextView.setLoadingStatus(mainMessage: Int) {
+        setStatus(getString(mainMessage), R.color.darkGray4, null)
+    }
+
+    private fun TextView.setStatus(text: String, @ColorRes color: Int, @DrawableRes drawable: Int?) {
+        this.text = text
+        setTextColor(getColor(color))
+        setCompoundDrawablesWithIntrinsicBounds(drawable ?: 0, 0, 0, 0)
+    }
 }
