@@ -18,7 +18,10 @@ class SimpleOkDialog {
                 setTitle(dialog.header)
                 setMessage(dialog.message)
                 setPositiveButton(R.string.common_ok) { _, _ -> }
-                setOnDismissListener { store.dispatchDialogHide() }
+                setOnDismissListener {
+                    store.dispatchDialogHide()
+                    dialog.onOk?.invoke()
+                }
             }.create()
         }
 
@@ -27,7 +30,10 @@ class SimpleOkDialog {
                 setTitle(context.getString(dialog.headerId))
                 setMessage(dialog.messageId)
                 setPositiveButton(R.string.common_ok) { _, _ -> }
-                setOnDismissListener { store.dispatchDialogHide() }
+                setOnDismissListener {
+                    store.dispatchDialogHide()
+                    dialog.onOk?.invoke()
+                }
             }.create()
         }
     }
