@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
-    <string name="shop_one_wallet">Один Кошелек</string>
+    <string name="shop_one_wallet">Tangem Wallet</string>
     <string name="shop_3_cards">3 карты</string>
     <string name="shop_2_cards">2 карты</string>
     <string name="shop_shipping">Доставка</string>
     <string name="shop_free">Бесплатно</string>
-    <string name="shop_i_have_a_promo_code">У меня есть промо-код…</string>
+    <string name="shop_i_have_a_promo_code">У меня есть промо-код...</string>
     <string name="shop_total">Итого</string>
     <string name="shop_other_payment_methods">Другие способы оплаты</string>
     <string name="shop_buy_now">Купить сейчас</string>
-    <string name="shop_placing_order">Оформление вашего заказа</string>
+    <string name="shop_placing_order">Оформление заказа</string>
     <string name="shop_web_checkout_title">Ваш заказ</string>
     <string name="story_meet_title">Встречайте\nTangem</string>
     <string name="story_meet_buy">Покупайте</string>
@@ -17,21 +17,22 @@
     <string name="story_meet_send">Отправляйте</string>
     <string name="story_meet_pay">Расплачивайтесь</string>
     <string name="story_meet_exchange">Обменивайте</string>
-    <string name="story_meet_lend">Одалживайте</string>
+    <string name="story_meet_lend">Вкладывайте</string>
     <string name="story_meet_borrow">Занимайте</string>
-    <string name="story_meet_stake">Вкладывайте</string>
+    <string name="story_meet_stake">Стейкайте</string>
     <string name="story_awe_title">Революционный аппаратный кошелек</string>
-    <string name="story_awe_description">Держите свои криптосбережения в безопасности - приватные ключи надежно хранятся на карте</string>
-    <string name="story_backup_title">Ультрабезопасная резервная копия</string>
+    <string name="story_awe_description">Держите свои криптосбережения в безопасности. Приватные ключи надежно хранятся на карте.</string>
+    <string name="story_backup_title">Все ключи в безопасности</string>
     <string name="story_backup_description">До трех карт с одним кошельком</string>
     <string name="story_currencies_title">Тысячи криптовалют</string>
     <string name="story_currencies_description">Аппаратный кошелек для ваших биткоинов, эфира и многих других валют одновременно — все в одной карте</string>
-    <string name="story_web3_title">Поддерживает Web3</string>
-    <string name="story_web3_description">Обменивайте, покупайте NFT, получайте займы и вклады в более чем 100 различных децентрализованных сервисах</string>
+    <string name="story_web3_title">Поддержка DeFi</string>
+    <string name="story_web3_description">Обменивайте, покупайте NFT, получайте займы и делайте вклады в более чем 100 различных децентрализованных сервисах</string>
     <string name="story_finish_title">Кошелек для каждого</string>
-    <string name="story_finish_description">Используйте его на ходу, в любом месте, в любое время. Без проводов и аккумуляторов. Как только понадобится крипта, просто приложите карту к телефону.</string>
+    <string name="story_finish_description">Используйте его на ходу, в любом месте, в любое время. Без проводов и батареек. Как только понадобится крипта, просто приложите карту к телефону.</string>
     <string name="home_button_order">Заказать карту</string>
+    <string name="home_button_search_tokens">Поиск токенов</string>
+    <string name="search_tokens_title">Поиск токенов</string>
     <string name="alert_demo_message">Приложение работает в демонстрационном режиме. Средства на всех счетах ненастоящие.</string>
     <string name="alert_demo_feature_disabled">Эта функция недоступна в демонстрационном режиме</string>
-    <string name="alert_demo_tx_send">Транзакция успешно подписана, но не отправлена в блокчейн, потому что активирован демонстрационный режим.</string>
 </resources>
