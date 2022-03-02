@@ -332,8 +332,8 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
                     store.dispatch(TwinCardsAction.ShowAddressInfoDialog)
                 }
             } else {
-                btnAlternativeAction.setText(R.string.onboarding_button_receive_crypto)
-                btnAlternativeAction.setOnClickListener {
+                btnMainAction.setText(R.string.onboarding_button_receive_crypto)
+                btnMainAction.setOnClickListener {
                     store.dispatch(TwinCardsAction.ShowAddressInfoDialog)
                 }
 
