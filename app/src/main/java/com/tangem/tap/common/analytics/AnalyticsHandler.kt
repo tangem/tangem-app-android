@@ -1,5 +1,6 @@
 package com.tangem.tap.common.analytics
 
+import com.shopify.buy3.Storefront
 import com.tangem.common.card.Card
 import com.tangem.common.core.TangemSdkError
 import com.tangem.tap.common.extensions.filterNotNull
@@ -11,6 +12,11 @@ abstract class AnalyticsHandler {
         card: Card? = null,
         blockchain: String? = null,
         params: Map<String, String> = emptyMap()
+    )
+
+    abstract fun triggerEvent(
+        event: String,
+        params: Map<String, String>
     )
 
     abstract fun logCardSdkError(
@@ -71,6 +77,13 @@ abstract class AnalyticsHandler {
                 )
             }
         }
-
     }
+
+    fun logShopifyOrder(order: Storefront.Order) {
+        triggerEvent(getOrderEvent(), getOrderParams(order))
+    }
+
+    protected abstract fun getOrderEvent(): String
+
+    protected abstract fun getOrderParams(order: Storefront.Order): Map<String, String>
 }
