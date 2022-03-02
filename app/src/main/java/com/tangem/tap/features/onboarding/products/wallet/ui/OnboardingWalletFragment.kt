@@ -204,7 +204,7 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
         viewPagerBackupInfo.hide()
         tabLayoutBackupInfo.hide()
 
-        imvSecondBackupCard.show()
+        imvFirstBackupCard.show()
         imvSecondBackupCard.show()
     }
 
@@ -236,12 +236,15 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
                 tvHeader.text = getText(R.string.onboarding_title_one_backup_card)
                 tvBody.text = getText(R.string.onboarding_subtitle_one_backup_card)
 
+                cardsWidget.toFan(false)
                 cardsWidget.getFirstBackupCardView().animate().alpha(1f).setDuration(400)
                 cardsWidget.getSecondBackupCardView().alpha = 0.2f
             }
             2 -> {
                 tvHeader.text = getText(R.string.onboarding_title_two_backup_cards)
                 tvBody.text = getText(R.string.onboarding_subtitle_two_backup_cards)
+
+                cardsWidget.toFan(false)
                 cardsWidget.getFirstBackupCardView().alpha = 1f
                 cardsWidget.getSecondBackupCardView().animate().alpha(1f).setDuration(400)
             }
