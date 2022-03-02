@@ -54,28 +54,46 @@ fun StoriesScreen(
         Modifier
             .fillMaxSize()
             .background(Color(0xFF090E13))
-            .pointerInput(Unit) {
-                val maxWidth = this.size.width
-                detectTapGestures(
-                    onPress = {
-                        val pressStartTime = System.currentTimeMillis()
-                        isPressed.value = true
-                        this.tryAwaitRelease()
-                        val pressEndTime = System.currentTimeMillis()
-                        val totalPressTime = pressEndTime - pressStartTime
-                        if (totalPressTime < 200) {
-                            val isTapOnRightTwoTiers = (it.x > (maxWidth / 2))
-                            if (isTapOnRightTwoTiers) {
-                                goToNextScreen()
-                            } else {
-                                goToPreviousScreen()
-                            }
-                        }
-                        isPressed.value = false
-                    },
-                )
-            }
     ) {
+        Row(
+            Modifier.fillMaxSize()
+        ) {
+            Box(
+                Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .pointerInput(isPressed) {
+                        detectTapGestures(
+                            onPress = {
+                                val pressStartTime = System.currentTimeMillis()
+                                isPressed.value = true
+                                this.tryAwaitRelease()
+                                val pressEndTime = System.currentTimeMillis()
+                                val totalPressTime = pressEndTime - pressStartTime
+                                if (totalPressTime < 200) goToPreviousScreen()
+                                isPressed.value = false
+                            },
+                        )
+                    }
+            )
+            Box(
+                Modifier.weight(1f)
+                    .fillMaxHeight()
+                    .pointerInput(isPressed) {
+                        detectTapGestures(
+                            onPress = {
+                                val pressStartTime = System.currentTimeMillis()
+                                isPressed.value = true
+                                this.tryAwaitRelease()
+                                val pressEndTime = System.currentTimeMillis()
+                                val totalPressTime = pressEndTime - pressStartTime
+                                if (totalPressTime < 200) goToNextScreen()
+                                isPressed.value = false
+                            },
+                        )
+                    }
+            )
+        }
         if (!isDarkBackground) {
             Image(
                 painter = painterResource(id = R.drawable.ic_overlay),
@@ -87,9 +105,8 @@ fun StoriesScreen(
         }
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier =
-            Modifier
-                .fillMaxSize()
+            verticalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxWidth()
         ) {
             Spacer(modifier = Modifier.size(24.dp))
             StoriesProgressBar(
@@ -111,12 +128,6 @@ fun StoriesScreen(
                     .align(Alignment.Start),
                 colorFilter = if (isDarkBackground) null else ColorFilter.tint(Color.Black)
             )
-        }
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxWidth()
-        ) {
             when (currentStep.value) {
                 1 -> FirstStoriesContent(pause, stepDuration) { hideContent.value = it }
                 2 -> StoriesRevolutionaryWallet()
@@ -130,7 +141,8 @@ fun StoriesScreen(
             isDarkBackground = isDarkBackground,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(37.dp),
+                .padding(37.dp)
+                .fillMaxWidth(),
             onScanButtonClick = onScanButtonClick,
             onShopButtonClick = onShopButtonClick
         )
