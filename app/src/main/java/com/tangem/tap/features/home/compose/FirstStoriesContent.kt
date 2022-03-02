@@ -9,7 +9,6 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
-import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
@@ -21,6 +20,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -88,32 +88,27 @@ fun FirstStoriesContent(
             StartingScreenState.MEET_TANGEM -> R.string.story_meet_title
         }
 
-        if (screenState.value != StartingScreenState.MEET_TANGEM) {
-            Text(
-                text = text?.let { stringResource(text) } ?: "",
-                fontSize = 60.sp,
-                fontWeight = FontWeight.SemiBold,
-                modifier = Modifier
-                    .padding(start = 40.dp, end = 40.dp)
-                    .alpha(if (screenState.value == StartingScreenState.SHOW_CARD) 0f else 1f),
-                color = Color.White,
-                textAlign = TextAlign.Center,
+        val style = TextStyle(
+            fontSize = 60.sp,
+            fontWeight = FontWeight.SemiBold,
+            color = Color.White,
+            textAlign = TextAlign.Center,
+        )
 
-                )
+        if (screenState.value != StartingScreenState.MEET_TANGEM) {
+            AutoSizeText(text = text?.let { stringResource(text) } ?: "", textStyle = style,
+                modifier = Modifier
+                .padding(start = 40.dp, end = 40.dp)
+                .alpha(if (screenState.value == StartingScreenState.SHOW_CARD) 0f else 1f),)
         }
 
         AnimatedVisibility(
             visible = screenState.value == StartingScreenState.MEET_TANGEM,
             enter = slideInVertically() { it / 2 }
         ) {
-            Text(
-                text = text?.let { stringResource(text) } ?: "",
-                fontSize = 60.sp,
-                fontWeight = FontWeight.SemiBold,
+            AutoSizeText(text = text?.let { stringResource(text) } ?: "", textStyle = style,
                 modifier = Modifier
-                    .padding(start = 40.dp, end = 40.dp),
-                color = Color.White,
-                textAlign = TextAlign.Center
+                    .padding(start = 40.dp, end = 40.dp)
             )
         }
 
