@@ -6,7 +6,6 @@ import android.view.View
 import android.view.animation.OvershootInterpolator
 import androidx.annotation.LayoutRes
 import androidx.constraintlayout.widget.ConstraintSet
-import androidx.core.view.isVisible
 import androidx.transition.TransitionInflater
 import androidx.transition.TransitionManager
 import com.squareup.picasso.Picasso
@@ -332,8 +331,8 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
                     store.dispatch(TwinCardsAction.ShowAddressInfoDialog)
                 }
             } else {
-                btnAlternativeAction.setText(R.string.onboarding_button_receive_crypto)
-                btnAlternativeAction.setOnClickListener {
+                btnMainAction.setText(R.string.onboarding_button_receive_crypto)
+                btnMainAction.setOnClickListener {
                     store.dispatch(TwinCardsAction.ShowAddressInfoDialog)
                 }
 
