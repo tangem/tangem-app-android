@@ -9,10 +9,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tangem.wallet.R
-import androidx.compose.foundation.layout.fillMaxWidth as fillMaxWidth1
 
 @Composable
 fun HomeButtons(
@@ -25,13 +25,13 @@ fun HomeButtons(
 
     Row(
         horizontalArrangement = Arrangement.SpaceEvenly,
-        modifier = modifier.fillMaxWidth1()
+        modifier = modifier.fillMaxWidth()
     ) {
-        Spacer(modifier = Modifier.size(16.dp))
         Button(
             modifier = Modifier
                 .weight(1f)
-                .height(42.dp),
+                .height(42.dp)
+            ,
             onClick = onScanButtonClick,
             colors = ButtonDefaults.textButtonColors(
                 backgroundColor = if (isDarkBackground) darkColorBackground else Color.White,
@@ -41,7 +41,8 @@ fun HomeButtons(
             Text(
                 text = stringResource(id = R.string.home_button_scan),
                 fontWeight = FontWeight.Medium,
-                fontSize = 16.sp
+                fontSize = 16.sp,
+                textAlign = TextAlign.Center
             )
         }
         Spacer(modifier = Modifier.size(8.dp))
@@ -58,9 +59,9 @@ fun HomeButtons(
             Text(
                 text = stringResource(id = R.string.home_button_order),
                 fontWeight = FontWeight.Medium,
-                fontSize = 16.sp
+                fontSize = 16.sp,
+                textAlign = TextAlign.Center
             )
         }
-        Spacer(modifier = Modifier.size(16.dp))
     }
 }
