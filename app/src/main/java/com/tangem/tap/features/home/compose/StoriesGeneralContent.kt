@@ -61,7 +61,7 @@ fun StoriesGeneralContent(
             Image(
                 painter = painterResource(id = imageSource),
                 contentDescription = null,
-                contentScale = ContentScale.FillWidth,
+                contentScale = if(isDarkBackground) ContentScale.Inside else ContentScale.FillWidth,
                 modifier = Modifier.fillMaxWidth()
             )
         }
