@@ -84,7 +84,7 @@ class ShopifyService(private val application: Application, val shop: ShopifyShop
                 when (result) {
                     is GraphCallResult.Success -> {
                         val checkout = result.response.data?.node as? Checkout
-                        checkout == null
+                        checkout?.order == null
                     }
                     is GraphCallResult.Failure -> false
                 }
