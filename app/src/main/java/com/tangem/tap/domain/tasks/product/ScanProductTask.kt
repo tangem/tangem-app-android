@@ -1,6 +1,5 @@
 package com.tangem.tap.domain.tasks.product
 
-import com.tangem.*
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.common.CompletionResult
@@ -241,7 +240,7 @@ private class ScanWalletProcessor(
         callback: (result: CompletionResult<ScanResponse>) -> Unit
     ) {
         val derivations = collectDerivations(card)
-        if (derivations.isEmpty()) {
+        if (derivations.isEmpty() || !card.settings.isHDWalletAllowed) {
             callback(
                 CompletionResult.Success(
                     ScanResponse(
