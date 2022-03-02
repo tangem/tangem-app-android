@@ -110,7 +110,18 @@ private fun handle(action: Action) {
         }
         ShopAction.StartWebCheckout -> {
             store.dispatchOpenUrl(shopService.getCheckoutUrl(shopState.selectedProduct))
+            store.dispatch(ShopAction.FinishSuccessfulOrder)
         }
+
+        is ShopAction.FinishSuccessfulOrder -> {
+            scope.launch {
+                shopService.waitForCheckout(
+                    productType = shopState.selectedProduct,
+                    analyticsHandler = store.state.globalState.analyticsHandlers
+                )
+            }
+        }
+
     }
 
 }
