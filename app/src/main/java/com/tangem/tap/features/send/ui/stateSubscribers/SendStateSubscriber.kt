@@ -230,7 +230,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
     }
 
     private fun handleFeeState(fg: SendFragment, state: FeeState) = with(fg.binding.clNetworkFee) {
-        chipGroup.fitChipsByGroupWidth()
+//        chipGroup.fitChipsByGroupWidth()
         fg.view?.findViewById<ViewGroup>(R.id.clNetworkFee)?.show(state.mainLayoutIsVisible)
         flExpandCollapse.imvExpandCollapse.rotation = if (state.controlsLayoutIsVisible) 0f else 180f
         llFeeControlsContainer.show(state.controlsLayoutIsVisible)
