@@ -54,28 +54,46 @@ fun StoriesScreen(
         Modifier
             .fillMaxSize()
             .background(Color(0xFF090E13))
-            .pointerInput(Unit) {
-                val maxWidth = this.size.width
-                detectTapGestures(
-                    onPress = {
-                        val pressStartTime = System.currentTimeMillis()
-                        isPressed.value = true
-                        this.tryAwaitRelease()
-                        val pressEndTime = System.currentTimeMillis()
-                        val totalPressTime = pressEndTime - pressStartTime
-                        if (totalPressTime < 200) {
-                            val isTapOnRightTwoTiers = (it.x > (maxWidth / 2))
-                            if (isTapOnRightTwoTiers) {
-                                goToNextScreen()
-                            } else {
-                                goToPreviousScreen()
-                            }
-                        }
-                        isPressed.value = false
-                    },
-                )
-            }
     ) {
+        Row(
+            Modifier.fillMaxSize()
+        ) {
+            Box(
+                Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .pointerInput(isPressed) {
+                        detectTapGestures(
+                            onPress = {
+                                val pressStartTime = System.currentTimeMillis()
+                                isPressed.value = true
+                                this.tryAwaitRelease()
+                                val pressEndTime = System.currentTimeMillis()
+                                val totalPressTime = pressEndTime - pressStartTime
+                                if (totalPressTime < 200) goToPreviousScreen()
+                                isPressed.value = false
+                            },
+                        )
+                    }
+            )
+            Box(
+                Modifier.weight(1f)
+                    .fillMaxHeight()
+                    .pointerInput(isPressed) {
+                        detectTapGestures(
+                            onPress = {
+                                val pressStartTime = System.currentTimeMillis()
+                                isPressed.value = true
+                                this.tryAwaitRelease()
+                                val pressEndTime = System.currentTimeMillis()
+                                val totalPressTime = pressEndTime - pressStartTime
+                                if (totalPressTime < 200) goToNextScreen()
+                                isPressed.value = false
+                            },
+                        )
+                    }
+            )
+        }
         if (!isDarkBackground) {
             Image(
                 painter = painterResource(id = R.drawable.ic_overlay),
