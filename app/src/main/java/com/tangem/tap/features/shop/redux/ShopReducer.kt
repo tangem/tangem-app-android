@@ -63,6 +63,7 @@ private fun internalReduce(action: Action, state: ShopState): ShopState {
         ShopAction.BuyWithGooglePay.UserCancelled -> {
             state
         }
+        ShopAction.FinishSuccessfulOrder -> state
         ShopAction.ResetState -> ShopState()
     }
 }
