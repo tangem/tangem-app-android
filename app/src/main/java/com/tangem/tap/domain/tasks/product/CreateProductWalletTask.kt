@@ -145,7 +145,20 @@ private class CreateWalletTangemWallet : ProductCommandProcessor<CreateProductWa
             when (result) {
                 is CompletionResult.Success -> {
                     primaryCard = result.data
-                    deriveKeys(createWalletResponse, session, callback)
+                    when {
+                        card.settings.isHDWalletAllowed -> {
+                            deriveKeys(createWalletResponse, session, callback)
+                        }
+                        else -> {
+                            callback(
+                                CompletionResult.Success(
+                                    CreateProductWalletTaskResponse(
+                                        card = session.environment.card!!, primaryCard = primaryCard
+                                    )
+                                )
+                            )
+                        }
+                    }
                 }
                 is CompletionResult.Failure -> {
                     callback(CompletionResult.Failure(result.error))
