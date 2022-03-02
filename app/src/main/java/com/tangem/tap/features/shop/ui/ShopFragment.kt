@@ -137,7 +137,7 @@ class ShopFragment : BaseStoreFragment(R.layout.fragment_shop), StoreSubscriber<
             .setListener(object : AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: Animator) {
                     super.onAnimationEnd(animation)
-                    imvThird?.show(show)
+                    imvThird.show(show)
                 }
             })
     }
