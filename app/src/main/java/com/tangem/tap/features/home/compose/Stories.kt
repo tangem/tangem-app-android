@@ -87,9 +87,8 @@ fun StoriesScreen(
         }
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
-            modifier =
-            Modifier
-                .fillMaxSize()
+            verticalArrangement = Arrangement.Center,
+                modifier = Modifier.fillMaxWidth()
         ) {
             Spacer(modifier = Modifier.size(24.dp))
             StoriesProgressBar(
@@ -111,12 +110,6 @@ fun StoriesScreen(
                     .align(Alignment.Start),
                 colorFilter = if (isDarkBackground) null else ColorFilter.tint(Color.Black)
             )
-        }
-        Column(
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxWidth()
-        ) {
             when (currentStep.value) {
                 1 -> FirstStoriesContent(pause, stepDuration) { hideContent.value = it }
                 2 -> StoriesRevolutionaryWallet()
@@ -130,7 +123,8 @@ fun StoriesScreen(
             isDarkBackground = isDarkBackground,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(37.dp),
+                .padding(37.dp)
+                .fillMaxWidth(),
             onScanButtonClick = onScanButtonClick,
             onShopButtonClick = onShopButtonClick
         )
