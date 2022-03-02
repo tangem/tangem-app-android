@@ -124,10 +124,15 @@ private fun handleWalletAction(action: Action) {
                     } else {
                         null
                     }
-                    BackupAction.IntroduceBackup(url)
+                    if (walletState.backupState.backupStep == BackupStep.InitBackup ||
+                        walletState.backupState.backupStep == BackupStep.Finished) {
+                        BackupAction.IntroduceBackup(url)
+                    } else {
+                        null
+                    }
                 }
             }
-            store.dispatch(newAction)
+            newAction?.let { store.dispatch(it) }
         }
         OnboardingWalletAction.OnBackPressed -> {
             when (walletState.backupState.backupStep) {
