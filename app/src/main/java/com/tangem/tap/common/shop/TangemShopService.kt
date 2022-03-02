@@ -4,9 +4,11 @@ import android.app.Application
 import android.content.Intent
 import com.google.android.gms.wallet.PaymentData
 import com.shopify.buy3.Storefront
+import com.tangem.tap.common.analytics.AnalyticsHandler
 import com.tangem.tap.common.shop.data.ProductType
 import com.tangem.tap.common.shop.data.TangemProduct
 import com.tangem.tap.common.shop.data.TotalSum
+import com.tangem.tap.common.shop.shopify.ShopifyService
 import com.tangem.tap.common.shop.shopify.ShopifyShop
 import com.tangem.tap.common.shop.shopify.data.CheckoutItem
 import kotlinx.coroutines.async
@@ -195,6 +197,18 @@ class TangemShopService(application: Application, shopifyShop: ShopifyShop) {
 
     fun getCheckoutUrl(productType: ProductType): String {
         return checkouts[productType]!!.webUrl
+    }
+
+    suspend fun waitForCheckout(
+        productType: ProductType,
+        analyticsHandler: AnalyticsHandler?
+    ) {
+        val result = shopifyService.checkout(true, checkouts[productType]!!.id)
+        result.onSuccess {
+            if (it.order != null) {
+                analyticsHandler?.logShopifyOrder(order = it.order)
+            }
+        }
     }
 
     companion object {
