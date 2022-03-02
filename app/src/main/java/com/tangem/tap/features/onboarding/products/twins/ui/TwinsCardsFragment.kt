@@ -6,6 +6,7 @@ import android.view.View
 import android.view.animation.OvershootInterpolator
 import androidx.annotation.LayoutRes
 import androidx.constraintlayout.widget.ConstraintSet
+import androidx.core.view.isVisible
 import androidx.transition.TransitionInflater
 import androidx.transition.TransitionManager
 import com.squareup.picasso.Picasso
