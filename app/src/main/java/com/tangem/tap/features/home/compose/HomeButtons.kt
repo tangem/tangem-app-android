@@ -25,13 +25,12 @@ fun HomeButtons(
 
     Row(
         horizontalArrangement = Arrangement.SpaceEvenly,
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier
     ) {
         Button(
             modifier = Modifier
                 .weight(1f)
-                .height(42.dp)
-            ,
+                .height(48.dp),
             onClick = onScanButtonClick,
             colors = ButtonDefaults.textButtonColors(
                 backgroundColor = if (isDarkBackground) darkColorBackground else Color.White,
@@ -42,14 +41,15 @@ fun HomeButtons(
                 text = stringResource(id = R.string.home_button_scan),
                 fontWeight = FontWeight.Medium,
                 fontSize = 16.sp,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                maxLines = 1
             )
         }
         Spacer(modifier = Modifier.size(8.dp))
         Button(
             modifier = Modifier
                 .weight(1f)
-                .height(42.dp),
+                .height(48.dp),
             onClick = onShopButtonClick,
             colors = ButtonDefaults.textButtonColors(
                 backgroundColor = if (isDarkBackground) Color.White else darkColorBackground,
@@ -60,7 +60,8 @@ fun HomeButtons(
                 text = stringResource(id = R.string.home_button_order),
                 fontWeight = FontWeight.Medium,
                 fontSize = 16.sp,
-                textAlign = TextAlign.Center
+                textAlign = TextAlign.Center,
+                maxLines = 1
             )
         }
     }
