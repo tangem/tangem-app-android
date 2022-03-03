@@ -63,10 +63,7 @@ class MultiWalletMiddleware {
                     }
                 }
                 store.dispatch(WalletAction.LoadFiatRate(currency = Currency.Blockchain(action.blockchain)))
-                store.dispatch(WalletAction.LoadWallet(
-                    moonpayStatus = globalState.moonpayStatus,
-                    blockchain = action.blockchain
-                )
+                store.dispatch(WalletAction.LoadWallet(action.blockchain)
                 )
             }
             is WalletAction.MultiWallet.SaveCurrencies -> {
