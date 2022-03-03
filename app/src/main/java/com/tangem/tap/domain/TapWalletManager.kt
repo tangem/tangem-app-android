@@ -138,8 +138,7 @@ class TapWalletManager {
                     loadMultiWalletData(data, blockchain, null)
                 }
             }
-            val moonPayStatus = store.state.globalState.moonpayStatus
-            store.dispatch(WalletAction.LoadWallet(moonPayStatus))
+            store.dispatch(WalletAction.LoadWallet())
             store.dispatch(WalletAction.LoadFiatRate())
         }
     }
@@ -201,8 +200,7 @@ class TapWalletManager {
                 return@withContext
             }
 
-            val moonPayStatus = store.state.globalState.moonpayStatus
-            store.dispatch(WalletAction.LoadWallet(moonPayStatus))
+            store.dispatch(WalletAction.LoadWallet())
             store.dispatch(WalletAction.LoadFiatRate())
         }
     }
