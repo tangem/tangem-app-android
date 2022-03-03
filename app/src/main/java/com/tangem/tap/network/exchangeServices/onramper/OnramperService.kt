@@ -76,7 +76,7 @@ class OnramperService(
         action: CurrencyExchangeManager.Action,
         blockchain: Blockchain,
         cryptoCurrencyName: CryptoCurrencyName,
-        fatCurrency: String,
+        fiatCurrency: String,
         walletAddress: String,
     ): String? {
         var languageCode = Locale.getDefault().language
@@ -89,7 +89,7 @@ class OnramperService(
             .appendQueryParameter("defaultCrypto", cryptoCurrencyName)
             .appendQueryParameter("wallets", "${blockchain.currency}:$walletAddress".urlEncode())
             .appendQueryParameter("redirectURL", SUCCESS_URL)
-            .appendQueryParameter("defaultFiat", fatCurrency)
+            .appendQueryParameter("defaultFiat", fiatCurrency)
             .appendQueryParameter("language", languageCode)
 
         status?.apply {
