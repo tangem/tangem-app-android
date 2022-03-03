@@ -2,13 +2,22 @@ package com.tangem.tap.domain.extensions
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.tap.features.wallet.redux.Currency
-import com.tangem.tap.network.moonpay.MoonpayStatus
+import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
+import com.tangem.tap.network.exchangeServices.CurrencyExchangeStatus
 import com.tangem.tap.store
 
 /**
 [REDACTED_AUTHOR]
  */
-fun MoonpayStatus.buyIsAllowed(currency: Currency): Boolean {
+fun CurrencyExchangeManager.buyIsAllowed(currency: Currency): Boolean {
+    return this.status?.buyIsAllowed(currency) ?: false
+}
+
+fun CurrencyExchangeManager.sellIsAllowed(currency: Currency): Boolean {
+    return this.status?.sellIsAllowed(currency) ?: false
+}
+
+fun CurrencyExchangeStatus.buyIsAllowed(currency: Currency): Boolean {
     if (store.state.globalState.configManager?.config?.isTopUpEnabled == false) return false
     if (!isBuyAllowed) return false
 
@@ -25,16 +34,17 @@ fun MoonpayStatus.buyIsAllowed(currency: Currency): Boolean {
     }
 }
 
-fun MoonpayStatus.sellIsAllowed(currency: Currency): Boolean {
+fun CurrencyExchangeStatus.sellIsAllowed(currency: Currency): Boolean {
     if (store.state.globalState.configManager?.config?.isTopUpEnabled == false) return false
     if (!isSellAllowed) return false
 
     return when (currency) {
         is Currency.Blockchain -> {
-            if (currency.blockchain == Blockchain.Unknown || currency.blockchain == Blockchain.BSC) {
-                false
-            } else {
-                availableToSell.contains(currency.currencySymbol)
+            val blockchain = currency.blockchain
+            when {
+                blockchain.isTestnet() -> false
+                blockchain == Blockchain.Unknown || currency.blockchain == Blockchain.BSC -> false
+                else -> availableToSell.contains(currency.currencySymbol)
             }
         }
         is Currency.Token -> false
