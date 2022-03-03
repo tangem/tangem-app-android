@@ -141,7 +141,7 @@ fun StoriesScreen(
             isDarkBackground = isDarkBackground,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(37.dp)
+                .padding(16.dp, 0.dp, 16.dp, 37.dp)
                 .fillMaxWidth(),
             onScanButtonClick = onScanButtonClick,
             onShopButtonClick = onShopButtonClick
