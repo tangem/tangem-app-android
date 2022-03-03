@@ -1,13 +1,12 @@
 package com.tangem.tap.common.extensions
 
-import android.graphics.PorterDuff
+import android.graphics.*
 import android.net.Uri
-import android.widget.ImageView
 import android.widget.TextView
 import androidx.constraintlayout.utils.widget.ImageFilterView
-import androidx.core.content.ContextCompat
 import com.squareup.picasso.Callback
 import com.squareup.picasso.Picasso
+import com.squareup.picasso.Transformation
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.IconsUtil
 import com.tangem.blockchain.common.Token
@@ -43,6 +42,7 @@ fun Picasso.loadCurrenciesIcon(
                 setTokenImage(imageView, textView, token)
             }
             this.load(url)
+                .transform(RoundedCornersTransform())
                 .noPlaceholder()
                 ?.into(imageView,
                     object : Callback {
@@ -74,19 +74,10 @@ private fun setOfflineCurrencyImage(
     token: Token?,
     blockchain: Blockchain,
 ) {
-    if (token != null) {
-        setTokenImage(imageView, textView, token)
-    } else {
-        setBlockchainImage(imageView, textView, blockchain)
+    when (token) {
+        null -> setBlockchainImage(imageView, textView, blockchain)
+        else -> setTokenImage(imageView, textView, token)
     }
-    if (blockchain.isTestnet()) imageView.tint(R.color.tint)
-}
-
-fun ImageView.tint(colorRes: Int) {
-//    val color = ContextCompat.getColor(context, colorRes);
-//    ImageViewCompat.setImageTintList(this, ColorStateList.valueOf(color));
-    this.setColorFilter(ContextCompat.getColor(context, colorRes), PorterDuff.Mode.DARKEN);
-
 }
 
 private fun setBlockchainImage(
@@ -96,6 +87,7 @@ private fun setBlockchainImage(
 ) {
     imageView.setImageResource(blockchain.getIconRes())
     imageView.colorFilter = null
+    if (blockchain.isTestnet()) imageView.saturation = 0f
     textView.text = null
 }
 
@@ -111,4 +103,30 @@ private fun setTokenImage(
         imageView.setColorFilter(token.getColor())
     }
     textView.text = token.symbol.take(1)
+}
+
+private class RoundedCornersTransform : Transformation {
+
+    override fun transform(source: Bitmap): Bitmap {
+        val size = source.width.coerceAtMost(source.height)
+        val x = (source.width - size) / 2
+        val y = (source.height - size) / 2
+        val squaredBitmap = Bitmap.createBitmap(source, x, y, size, size)
+        if (squaredBitmap != source) source.recycle()
+
+        val paint = Paint().apply {
+            shader = BitmapShader(squaredBitmap, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP)
+            isAntiAlias = true
+        }
+
+        val rectF = RectF(0f, 0f, source.width.toFloat(), source.height.toFloat())
+        val radius = size / 8f
+        val bitmap = Bitmap.createBitmap(size, size, source.config)
+        Canvas(bitmap).drawRoundRect(rectF, radius, radius, paint)
+        squaredBitmap.recycle()
+
+        return bitmap
+    }
+
+    override fun key(): String = "rounded_corners"
 }
