@@ -5,7 +5,6 @@ import android.nfc.NfcAdapter
 import android.nfc.Tag
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
-import com.tangem.tap.domain.topup.TradeCryptoHelper
 import com.tangem.tap.domain.walletconnect.WalletConnectManager
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.home.redux.HomeAction
@@ -15,6 +14,11 @@ import timber.log.Timber
 
 class IntentHandler {
 
+    private val TRANSACTION_ID_PARAM = "transactionId"
+    private val CURRENCY_CODE_PARAM = "baseCurrencyCode"
+    private val CURRENCY_AMOUNT_PARAM = "baseCurrencyAmount"
+    private val DEPOSIT_WALLET_ADDRESS_PARAM = "depositWalletAddress"
+
     fun handleIntent(intent: Intent?) {
         handleBackgroundScan(intent)
         handleWalletConnectLink(intent)
@@ -23,8 +27,8 @@ class IntentHandler {
 
     private fun handleBackgroundScan(intent: Intent?) {
         if (intent != null && (NfcAdapter.ACTION_TECH_DISCOVERED == intent.action ||
-                    NfcAdapter.ACTION_NDEF_DISCOVERED == intent.action
-                    )
+                NfcAdapter.ACTION_NDEF_DISCOVERED == intent.action
+                )
         ) {
             val tag = intent.getParcelableExtra<Tag>(NfcAdapter.EXTRA_TAG)
             if (tag != null) {
@@ -45,13 +49,13 @@ class IntentHandler {
     private fun handleSellCurrencyCallback(intent: Intent?) {
         try {
             val transactionID =
-                intent?.data?.getQueryParameter(TradeCryptoHelper.TRANSACTION_ID_PARAM) ?: return
+                intent?.data?.getQueryParameter(TRANSACTION_ID_PARAM) ?: return
             val currency =
-                intent.data?.getQueryParameter(TradeCryptoHelper.CURRENCY_CODE_PARAM) ?: return
+                intent.data?.getQueryParameter(CURRENCY_CODE_PARAM) ?: return
             val amount =
-                intent.data?.getQueryParameter(TradeCryptoHelper.CURRENCY_AMOUNT_PARAM) ?: return
+                intent.data?.getQueryParameter(CURRENCY_AMOUNT_PARAM) ?: return
             val destinationAddress =
-                intent.data?.getQueryParameter(TradeCryptoHelper.DEPOSIT_WALLET_ADDRESS_PARAM)
+                intent.data?.getQueryParameter(DEPOSIT_WALLET_ADDRESS_PARAM)
                     ?: return
 
             Timber.d("MoonPay Sell: $amount $currency to $destinationAddress")
@@ -63,7 +67,7 @@ class IntentHandler {
                 transactionId = transactionID
             ))
         } catch (exception: Exception) {
-            Timber.d("Not Moonpay URL")
+            Timber.d("Not MoonPay URL")
         }
     }
 
