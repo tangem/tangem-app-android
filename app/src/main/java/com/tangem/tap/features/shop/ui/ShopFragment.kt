@@ -10,6 +10,7 @@ import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import androidx.activity.OnBackPressedCallback
 import by.kirich1409.viewbindingdelegate.viewBinding
+import com.tangem.tap.common.GlobalLayoutStateHandler
 import com.tangem.tap.common.KeyboardObserver
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.redux.navigation.NavigationAction
@@ -71,17 +72,25 @@ class ShopFragment : BaseStoreFragment(R.layout.fragment_shop), StoreSubscriber<
         }
     }
 
+    private var cardTranslationY = 70f
     private fun setupCardsImages() {
-        binding.imvSecond.animate()
-            .translationY(70f)
-            .scaleX(0.9f)
-            .scaleY(0.9f)
-            .start()
-        binding.imvThird.animate()
-            .translationY(140f)
-            .scaleX(0.8f)
-            .scaleY(0.8f)
-            .start()
+        GlobalLayoutStateHandler(binding.imvSecond).apply {
+            onStateChanged = {
+                cardTranslationY = it.height * 0.15f
+                binding.imvSecond.animate()
+                    .translationY(cardTranslationY)
+                    .scaleX(0.9f)
+                    .scaleY(0.9f)
+                    .start()
+                binding.imvThird.animate()
+                    .translationY(cardTranslationY * 2)
+                    .scaleX(0.8f)
+                    .scaleY(0.8f)
+                    .start()
+                detach()
+            }
+        }
+
     }
 
     private fun setupProductSelection() = with(binding) {
@@ -130,7 +139,7 @@ class ShopFragment : BaseStoreFragment(R.layout.fragment_shop), StoreSubscriber<
     }
 
     private fun showOrHideThirdCardWithAnimation(show: Boolean) = with(binding) {
-        val translationY = if (show) 140f else 0f
+        val translationY = if (show) cardTranslationY * 2 else cardTranslationY
         if (show) imvThird.show()
         imvThird.animate()
             .translationY(translationY)
