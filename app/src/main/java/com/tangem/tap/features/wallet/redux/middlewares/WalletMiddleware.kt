@@ -11,6 +11,7 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.isZero
 import com.tangem.common.services.Result
+import com.tangem.operations.attestation.Attestation
 import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.extensions.*
@@ -147,6 +148,9 @@ class WalletMiddleware {
                 store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
             }
             is WalletAction.LoadCardInfo -> {
+                val attestationFailed = action.card.attestation.status == Attestation.Status.Failed
+                store.dispatchOnMain(GlobalAction.SetIfCardVerifiedOnline(!attestationFailed))
+
                 scope.launch {
                     val response = OnlineCardVerifier().getCardInfo(
                         action.card.cardId, action.card.cardPublicKey
@@ -156,12 +160,8 @@ class WalletMiddleware {
                             val actionList = listOf(
                                 WalletAction.SetArtworkId(response.data.artwork?.id),
                                 WalletAction.LoadArtwork(action.card, response.data.artwork?.id),
-                                GlobalAction.SetIfCardVerifiedOnline(response.data.passed)
                             )
                             withMainContext { actionList.forEach { store.dispatch(it) } }
-                        }
-                        is Result.Failure -> {
-                            store.dispatchOnMain(GlobalAction.SetIfCardVerifiedOnline(false))
                         }
                     }
                     store.dispatchOnMain(WalletAction.Warnings.CheckIfNeeded)
