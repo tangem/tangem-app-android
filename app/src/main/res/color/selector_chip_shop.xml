@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 24% opacity -->
+    <item android:color="@color/chipBlack" android:state_enabled="true" android:state_selected="true" />
+
+    <item android:color="@color/chipBlack" android:state_checked="true" android:state_enabled="true" />
+
+    <item android:color="@color/backgroundGray" android:state_enabled="true" />
+    <item android:color="@color/backgroundGray" />
+
+</selector>
