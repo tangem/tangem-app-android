@@ -5,6 +5,7 @@ import android.view.View
 import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import androidx.transition.TransitionInflater
+import by.kirich1409.viewbindingdelegate.viewBinding
 import com.tangem.common.card.Card
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.redux.navigation.NavigationAction
@@ -13,13 +14,16 @@ import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.features.details.redux.SecurityOption
 import com.tangem.tap.store
 import com.tangem.wallet.R
-import kotlinx.android.synthetic.main.fragment_details_confirm.toolbar
-import kotlinx.android.synthetic.main.fragment_details_security.*
+import com.tangem.wallet.databinding.FragmentDetailsSecurityBinding
 import org.rekotlin.StoreSubscriber
 import java.util.*
 
 class DetailsSecurityFragment : Fragment(R.layout.fragment_details_security),
         StoreSubscriber<DetailsState> {
+
+    private val binding: FragmentDetailsSecurityBinding by viewBinding(
+        FragmentDetailsSecurityBinding::bind
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,14 +53,14 @@ class DetailsSecurityFragment : Fragment(R.layout.fragment_details_security),
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        toolbar.setNavigationOnClickListener {
+        binding.toolbar.setNavigationOnClickListener {
             store.dispatch(NavigationAction.PopBackTo())
         }
         setOnClickListeners()
     }
 
     private fun setOnClickListeners() {
-        btn_save_changes.setOnClickListener {
+        binding.btnSaveChanges.setOnClickListener {
             store.state.detailsState.securityScreenState?.selectedOption?.let {
                 store.dispatch(DetailsAction.ManageSecurity.ConfirmSelection(it))
             }
@@ -64,7 +68,8 @@ class DetailsSecurityFragment : Fragment(R.layout.fragment_details_security),
     }
 
     override fun newState(state: DetailsState) {
-        if (activity == null) return
+        if (activity == null || view == null) return
+
         selectSecurityOption(state.securityScreenState?.selectedOption)
         for (option in SecurityOption.values()) {
             setupOption(
@@ -73,18 +78,18 @@ class DetailsSecurityFragment : Fragment(R.layout.fragment_details_security),
                             ?: EnumSet.noneOf(SecurityOption::class.java)
             )
         }
-        tv_access_code_unavailable_disclaimer.show(
+        binding.tvAccessCodeUnavailableDisclaimer.show(
             state.scanResponse?.card?.backupStatus == Card.BackupStatus.NoBackup
         )
     }
 
-    private fun selectSecurityOption(securityOption: SecurityOption?) {
-        radiobutton_long_tap.isChecked =
-                securityOption == SecurityOption.LongTap && radiobutton_long_tap.isEnabled
-        radiobutton_passcode.isChecked =
-                securityOption == SecurityOption.PassCode && radiobutton_passcode.isEnabled
-        radiobutton_access_code.isChecked =
-                securityOption == SecurityOption.AccessCode && radiobutton_access_code.isEnabled
+    private fun selectSecurityOption(securityOption: SecurityOption?) = with(binding) {
+        radiobuttonLongTap.isChecked =
+                securityOption == SecurityOption.LongTap && radiobuttonLongTap.isEnabled
+        radiobuttonPasscode.isChecked =
+                securityOption == SecurityOption.PassCode && radiobuttonPasscode.isEnabled
+        radiobuttonAccessCode.isChecked =
+                securityOption == SecurityOption.AccessCode && radiobuttonAccessCode.isEnabled
     }
 
     private fun setupOption(option: SecurityOption, allowedOptions: EnumSet<SecurityOption>) {
@@ -95,46 +100,46 @@ class DetailsSecurityFragment : Fragment(R.layout.fragment_details_security),
         }
     }
 
-    private fun enableLongTap(enable: Boolean) {
-        group_long_tap.show(enable)
+    private fun enableLongTap(enable: Boolean) = with(binding) {
+        groupLongTap.show(enable)
         val alpha = if (enable) 1f else 0.5f
-        tv_long_tap_description.alpha = alpha
-        tv_long_tap_title.alpha = alpha
-        radiobutton_long_tap.alpha = alpha
-        radiobutton_long_tap.isEnabled = enable
-        v_long_tap.isClickable = enable
+        tvLongTapDescription.alpha = alpha
+        tvLongTapTitle.alpha = alpha
+        radiobuttonLongTap.alpha = alpha
+        radiobuttonLongTap.isEnabled = enable
+        vLongTap.isClickable = enable
         if (enable) {
-            v_long_tap.setOnClickListener {
+            vLongTap.setOnClickListener {
                 store.dispatch(DetailsAction.ManageSecurity.SelectOption(SecurityOption.LongTap))
             }
         }
     }
 
-    private fun enablePasscode(enable: Boolean) {
-        group_passcode.show(enable)
+    private fun enablePasscode(enable: Boolean) = with(binding) {
+        groupPasscode.show(enable)
         val alpha = if (enable) 1f else 0.5f
-        tv_passcode_description.alpha = alpha
-        tv_passcode_title.alpha = alpha
-        radiobutton_passcode.alpha = alpha
-        radiobutton_passcode.isEnabled = enable
-        v_passcode.isClickable = enable
+        tvPasscodeDescription.alpha = alpha
+        tvPasscodeTitle.alpha = alpha
+        radiobuttonPasscode.alpha = alpha
+        radiobuttonPasscode.isEnabled = enable
+        vPasscode.isClickable = enable
         if (enable) {
-            v_passcode.setOnClickListener {
+            vPasscode.setOnClickListener {
                 store.dispatch(DetailsAction.ManageSecurity.SelectOption(SecurityOption.PassCode))
             }
         }
     }
 
-    private fun enableAccessCode(enable: Boolean) {
-        group_access_code.show(enable)
+    private fun enableAccessCode(enable: Boolean) = with(binding) {
+        groupAccessCode.show(enable)
         val alpha = if (enable) 1f else 0.5f
-        tv_access_code_description.alpha = alpha
-        tv_access_code_title.alpha = alpha
-        radiobutton_access_code.alpha = alpha
-        radiobutton_access_code.isEnabled = enable
-        v_access_code.isClickable = enable
+        tvAccessCodeDescription.alpha = alpha
+        tvAccessCodeTitle.alpha = alpha
+        radiobuttonAccessCode.alpha = alpha
+        radiobuttonAccessCode.isEnabled = enable
+        vAccessCode.isClickable = enable
         if (enable) {
-            v_access_code.setOnClickListener {
+            vAccessCode.setOnClickListener {
                 store.dispatch(DetailsAction.ManageSecurity.SelectOption(SecurityOption.AccessCode))
             }
         }

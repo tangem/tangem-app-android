@@ -1,4 +1,4 @@
-package com.tangem.tap.common.shop
+package com.tangem.tap.common.shop.shopify
 
 import android.app.Application
 import com.shopify.buy3.GraphCallResult
@@ -7,7 +7,6 @@ import com.shopify.buy3.RetryHandler
 import com.shopify.buy3.Storefront.*
 import com.shopify.graphql.support.ID
 import com.shopify.graphql.support.Input
-import com.tangem.tap.common.shop.shopify.ShopifyShop
 import com.tangem.tap.common.shop.shopify.data.CheckoutItem
 import com.tangem.tap.common.shop.shopify.data.checkoutFieldsFragment
 import com.tangem.tap.common.shop.shopify.data.collectionFieldsFragment
@@ -85,7 +84,7 @@ class ShopifyService(private val application: Application, val shop: ShopifyShop
                 when (result) {
                     is GraphCallResult.Success -> {
                         val checkout = result.response.data?.node as? Checkout
-                        checkout == null
+                        checkout?.order == null
                     }
                     is GraphCallResult.Failure -> false
                 }
