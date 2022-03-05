@@ -5,8 +5,10 @@ import com.tangem.common.card.EllipticCurve
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.TangemSdkError
+import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.toMapKey
+import com.tangem.common.hdWallet.DerivationPath
 import com.tangem.operations.CommandResponse
 import com.tangem.operations.backup.PrimaryCard
 import com.tangem.operations.backup.StartPrimaryCardLinkingTask
@@ -16,10 +18,12 @@ import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.operations.wallet.CreateWalletTask
 import com.tangem.tap.domain.ProductType
 import com.tangem.tap.domain.TapWorkarounds.getTangemNoteBlockchain
+import com.tangem.tap.domain.TapWorkarounds.isTestCard
 import com.tangem.tap.domain.tasks.product.CreateWalletsTask
 import com.tangem.tap.domain.tasks.product.KeyWalletPublicKey
 import com.tangem.tap.domain.tasks.product.ProductCommandProcessor
 import com.tangem.tap.domain.tasks.product.getCurvesForNonCreatedWallets
+import com.tangem.tap.features.demo.DemoHelper
 
 
 data class CreateProductWalletTaskResponse(
@@ -96,25 +100,27 @@ private class CreateWalletTangemNote : ProductCommandProcessor<CreateWalletRespo
 
 private class CreateWalletTangemWallet : ProductCommandProcessor<CreateProductWalletTaskResponse> {
 
+    private lateinit var card: Card
     private var primaryCard: PrimaryCard? = null
-    private var createWalletResponse: CreateWalletResponse? = null
 
     override fun proceed(
         card: Card,
         session: CardSession,
         callback: (result: CompletionResult<CreateProductWalletTaskResponse>) -> Unit,
     ) {
+        this.card = card
         val curves = card.getCurvesForNonCreatedWallets()
+
         CreateWalletsTask(curves).run(session) { result ->
             when (result) {
                 is CompletionResult.Success -> {
-                    createWalletResponse = result.data.createWalletResponses[0]
+                    val createWalletResponses = result.data.createWalletResponses
                     when {
                         card.settings.isBackupAllowed -> {
-                            linkPrimaryCard(session, callback)
+                            linkPrimaryCard(createWalletResponses, session, callback)
                         }
                         card.settings.isHDWalletAllowed -> {
-                            deriveKeys(session, callback)
+                            deriveKeys(createWalletResponses, session, callback)
                         }
                         else -> {
                             callback(
@@ -124,7 +130,6 @@ private class CreateWalletTangemWallet : ProductCommandProcessor<CreateProductWa
                             )
                         }
                     }
-
                 }
                 is CompletionResult.Failure -> callback(CompletionResult.Failure(result.error))
             }
@@ -132,6 +137,7 @@ private class CreateWalletTangemWallet : ProductCommandProcessor<CreateProductWa
     }
 
     private fun linkPrimaryCard(
+        createWalletResponse: List<CreateWalletResponse>,
         session: CardSession,
         callback: (result: CompletionResult<CreateProductWalletTaskResponse>) -> Unit,
     ) {
@@ -139,7 +145,20 @@ private class CreateWalletTangemWallet : ProductCommandProcessor<CreateProductWa
             when (result) {
                 is CompletionResult.Success -> {
                     primaryCard = result.data
-                    deriveKeys(session, callback)
+                    when {
+                        card.settings.isHDWalletAllowed -> {
+                            deriveKeys(createWalletResponse, session, callback)
+                        }
+                        else -> {
+                            callback(
+                                CompletionResult.Success(
+                                    CreateProductWalletTaskResponse(
+                                        card = session.environment.card!!, primaryCard = primaryCard
+                                    )
+                                )
+                            )
+                        }
+                    }
                 }
                 is CompletionResult.Failure -> {
                     callback(CompletionResult.Failure(result.error))
@@ -149,28 +168,26 @@ private class CreateWalletTangemWallet : ProductCommandProcessor<CreateProductWa
     }
 
     private fun deriveKeys(
+        createWalletResponse: List<CreateWalletResponse>,
         session: CardSession,
         callback: (result: CompletionResult<CreateProductWalletTaskResponse>) -> Unit,
     ) {
-        val derivationPaths = listOf(Blockchain.Bitcoin, Blockchain.Ethereum)
-            .mapNotNull { it.derivationPath() }
-        val response = createWalletResponse.guard {
+        val map = mutableMapOf<ByteArrayKey, List<DerivationPath>>()
+        createWalletResponse.forEach { response ->
+            val blockchainsForCurve = getBlockchains(response.cardId).filter {
+                it.getSupportedCurves().contains(response.wallet.curve)
+            }
+            val derivationPaths = blockchainsForCurve.mapNotNull { it.derivationPath() }
+            if (derivationPaths.isNotEmpty()) {
+                map[response.wallet.publicKey.toMapKey()] = derivationPaths
+            }
+        }
+        if (map.isEmpty()) {
             callback(CompletionResult.Failure(TangemSdkError.UnknownError()))
             return
         }
 
-        if (derivationPaths.isNullOrEmpty()) {
-            callback(
-                CompletionResult.Success(
-                    CreateProductWalletTaskResponse(
-                        card = session.environment.card!!, primaryCard = primaryCard
-                    )
-                )
-            )
-            return
-        }
-
-        DeriveMultipleWalletPublicKeysTask(mapOf(response.wallet.publicKey.toMapKey() to derivationPaths))
+        DeriveMultipleWalletPublicKeysTask(map)
             .run(session) { result ->
                 when (result) {
                     is CompletionResult.Success -> {
@@ -187,5 +204,13 @@ private class CreateWalletTangemWallet : ProductCommandProcessor<CreateProductWa
                     is CompletionResult.Failure -> callback(CompletionResult.Failure(result.error))
                 }
             }
+    }
+
+    private fun getBlockchains(cardId: String): List<Blockchain> {
+        return when {
+            DemoHelper.isDemoCardId(cardId) -> DemoHelper.config.demoBlockchains
+            card.isTestCard -> listOf(Blockchain.BitcoinTestnet, Blockchain.EthereumTestnet)
+            else -> listOf(Blockchain.Bitcoin, Blockchain.Ethereum)
+        }
     }
 }
