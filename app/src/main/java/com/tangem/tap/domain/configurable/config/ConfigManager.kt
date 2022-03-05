@@ -2,6 +2,7 @@ package com.tangem.tap.domain.configurable.config
 
 import com.tangem.blockchain.common.BlockchainSdkConfig
 import com.tangem.common.extensions.VoidCallback
+import com.tangem.tap.common.shop.shopify.ShopifyShop
 import com.tangem.tap.domain.configurable.Loader
 
 /**
@@ -10,13 +11,15 @@ import com.tangem.tap.domain.configurable.Loader
 data class Config(
     val coinMarketCapKey: String = "f6622117-c043-47a0-8975-9d673ce484de",
     val moonPayApiKey: String = "pk_test_kc90oYTANy7UQdBavDKGfL4K9l6VEPE",
+    val onramperApiKey: String = "pk_test_Ix2aCF3ej_5tcDKkBR7MChIvf5Nb0oPORPQ3Oal5G8I0",
     val moonPayApiSecretKey: String = "sk_test_V8w4M19LbDjjYOt170s0tGuvXAgyEb1C",
     val appsFlyerDevKey: String = "",
     val blockchainSdkConfig: BlockchainSdkConfig = BlockchainSdkConfig(),
     val isSendingToPayIdEnabled: Boolean = true,
     val isTopUpEnabled: Boolean = false,
     @Deprecated("Not relevant since version 3.23")
-    val isCreatingTwinCardsAllowed: Boolean = false
+    val isCreatingTwinCardsAllowed: Boolean = false,
+    val shopify: ShopifyShop? = null
 )
 
 class ConfigManager(
@@ -52,10 +55,10 @@ class ConfigManager(
     fun resetToDefault(name: String) {
         when (name) {
             isSendingToPayIdEnabled -> config =
-                    config.copy(isSendingToPayIdEnabled = defaultConfig.isSendingToPayIdEnabled)
+                config.copy(isSendingToPayIdEnabled = defaultConfig.isSendingToPayIdEnabled)
             isTopUpEnabled -> config = config.copy(isTopUpEnabled = defaultConfig.isTopUpEnabled)
             isCreatingTwinCardsAllowed -> config =
-                    config.copy(isCreatingTwinCardsAllowed = defaultConfig.isCreatingTwinCardsAllowed)
+                config.copy(isCreatingTwinCardsAllowed = defaultConfig.isCreatingTwinCardsAllowed)
         }
     }
 
@@ -79,6 +82,7 @@ class ConfigManager(
         config = config.copy(
             coinMarketCapKey = values.coinMarketCapKey,
             moonPayApiKey = values.moonPayApiKey,
+            onramperApiKey = values.onramperApiKey,
             moonPayApiSecretKey = values.moonPayApiSecretKey,
             blockchainSdkConfig = BlockchainSdkConfig(
                 blockchairApiKey = values.blockchairApiKey,
@@ -87,10 +91,12 @@ class ConfigManager(
                 infuraProjectId = values.infuraProjectId
             ),
             appsFlyerDevKey = values.appsFlyerDevKey,
+            shopify = values.shopifyShop,
         )
         defaultConfig = defaultConfig.copy(
             coinMarketCapKey = values.coinMarketCapKey,
             moonPayApiKey = values.moonPayApiKey,
+            onramperApiKey = values.onramperApiKey,
             moonPayApiSecretKey = values.moonPayApiSecretKey,
             blockchainSdkConfig = BlockchainSdkConfig(
                 blockchairApiKey = values.blockchairApiKey,
@@ -99,6 +105,7 @@ class ConfigManager(
                 infuraProjectId = values.infuraProjectId
             ),
             appsFlyerDevKey = values.appsFlyerDevKey,
+            shopify = values.shopifyShop,
         )
     }
 

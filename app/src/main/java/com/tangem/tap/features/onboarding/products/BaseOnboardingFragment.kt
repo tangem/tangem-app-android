@@ -1,14 +1,12 @@
 package com.tangem.tap.features.onboarding.products
 
-import android.os.Bundle
-import android.view.View
-import com.tangem.tap.common.extensions.inflate
+import by.kirich1409.viewbindingdelegate.viewBinding
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.transitions.HomeToOnboardingTransition
 import com.tangem.tap.features.BaseStoreFragment
 import com.tangem.wallet.R
-import kotlinx.android.synthetic.main.fragment_onboarding_main.*
-import kotlinx.android.synthetic.main.view_confetti.*
+import com.tangem.wallet.databinding.FragmentOnboardingMainBinding
+import com.tangem.wallet.databinding.ViewOnboardingProgressBinding
 import org.rekotlin.StoreSubscriber
 
 /**
@@ -16,26 +14,22 @@ import org.rekotlin.StoreSubscriber
  */
 abstract class BaseOnboardingFragment<T> : BaseStoreFragment(R.layout.fragment_onboarding_main), StoreSubscriber<T> {
 
+    protected val binding: FragmentOnboardingMainBinding by viewBinding(FragmentOnboardingMainBinding::bind)
+    protected val pbBinding: ViewOnboardingProgressBinding by viewBinding(ViewOnboardingProgressBinding::bind)
+
     override fun configureTransitions() {
         enterTransition = HomeToOnboardingTransition()
         exitTransition = HomeToOnboardingTransition()
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
 
-        onboarding_top_container.inflate(getOnboardingTopContainerId(), true)
-    }
-
-    abstract fun getOnboardingTopContainerId(): Int
-
-    protected fun showConfetti(show: Boolean) {
-        lav_confetti.show(show)
+    protected fun showConfetti(show: Boolean) = with(binding.vConfetti) {
+        lavConfetti.show(show)
 
         if (show) {
-            lav_confetti.playAnimation()
+            lavConfetti.playAnimation()
         } else {
-            lav_confetti.cancelAnimation()
+            lavConfetti.cancelAnimation()
         }
     }
 }

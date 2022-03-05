@@ -3,13 +3,16 @@ package com.tangem.tap.features.wallet.redux.middlewares
 import android.content.Intent
 import android.net.Uri
 import androidx.core.content.ContextCompat
-import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.AmountType
+import com.tangem.blockchain.common.Wallet
+import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.isZero
 import com.tangem.common.services.Result
+import com.tangem.operations.attestation.Attestation
 import com.tangem.operations.attestation.OnlineCardVerifier
-import com.tangem.tap.*
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppDialog
@@ -18,10 +21,14 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.extensions.toSendableAmounts
+import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.send.redux.PrepareSendScreen
 import com.tangem.tap.features.wallet.redux.*
 import com.tangem.tap.network.NetworkStateChanged
+import com.tangem.tap.scope
+import com.tangem.tap.store
+import com.tangem.tap.tangemSdkManager
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
@@ -37,18 +44,20 @@ class WalletMiddleware {
     val walletMiddleware: Middleware<AppState> = { dispatch, state ->
         { next ->
             { action ->
-                handleAction(action, dispatch)
+                handleAction(state, action, dispatch)
                 next(action)
             }
         }
     }
 
-    private fun handleAction(action: Action, dispatch: DispatchFunction) {
+    private fun handleAction(state: () -> AppState?, action: Action, dispatch: DispatchFunction) {
+        if (DemoHelper.tryHandle(state, action)) return
+
         val globalState = store.state.globalState
         val walletState = store.state.walletState
 
         when (action) {
-            is WalletAction.TradeCryptoAction -> tradeCryptoMiddleware.handle(action)
+            is WalletAction.TradeCryptoAction -> tradeCryptoMiddleware.handle(state, action)
             is WalletAction.Warnings -> warningsMiddleware.handle(action, globalState)
             is WalletAction.MultiWallet -> multiWalletMiddleware.handle(action, walletState, globalState)
             is WalletAction.LoadWallet -> {
@@ -139,6 +148,9 @@ class WalletMiddleware {
                 store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
             }
             is WalletAction.LoadCardInfo -> {
+                val attestationFailed = action.card.attestation.status == Attestation.Status.Failed
+                store.dispatchOnMain(GlobalAction.SetIfCardVerifiedOnline(!attestationFailed))
+
                 scope.launch {
                     val response = OnlineCardVerifier().getCardInfo(
                         action.card.cardId, action.card.cardPublicKey
@@ -148,12 +160,8 @@ class WalletMiddleware {
                             val actionList = listOf(
                                 WalletAction.SetArtworkId(response.data.artwork?.id),
                                 WalletAction.LoadArtwork(action.card, response.data.artwork?.id),
-                                GlobalAction.SetIfCardVerifiedOnline(response.data.passed)
                             )
                             withMainContext { actionList.forEach { store.dispatch(it) } }
-                        }
-                        is Result.Failure -> {
-                            store.dispatchOnMain(GlobalAction.SetIfCardVerifiedOnline(false))
                         }
                     }
                     store.dispatchOnMain(WalletAction.Warnings.CheckIfNeeded)
