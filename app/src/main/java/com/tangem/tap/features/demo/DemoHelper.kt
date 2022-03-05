@@ -1,8 +1,10 @@
 package com.tangem.tap.features.demo
 
+import com.tangem.blockchain.blockchains.bitcoin.BitcoinWalletManager
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
+import com.tangem.common.CompletionResult
 import com.tangem.tap.common.extensions.dispatchNotification
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.tasks.product.ScanResponse
@@ -102,7 +104,45 @@ class DemoConfig {
         ?: Amount(BigDecimal.ZERO, blockchain).copy()
 
     private val releaseDemoCardIds = mutableListOf<String>(
-
+//        Tangem Wallet:
+        "AC01000000041100",
+        "AC01000000042462",
+        "AC01000000041647",
+        "AC01000000041621",
+        "AC01000000041217",
+        "AC01000000041225",
+        "AC01000000041209",
+        "AC01000000041092",
+        "AC01000000041472",
+        "AC01000000041662",
+        "AC01000000045754",
+        "AC01000000045960",
+//            Tangem Note BTC:
+        "AB0100000046530",
+        "AB0100000046720",
+        "AB0100000046746",
+        "AB0100000046498",
+        "AB0100000046753",
+        "AB0100000049608",
+        "AB0100000046761",
+        "AB0100000049574",
+        "AB0100000046605",
+        "AB0100000046571",
+        "AB0100000046704",
+        "AB0100000046647",
+//            Tangem Note Ethereum:
+        "AB02000000051000",
+        "AB02000000050986",
+        "AB02000000051026",
+        "AB02000000051042",
+        "AB02000000051091",
+        "AB02000000051083",
+        "AB02000000050960",
+        "AB02000000051034",
+        "AB02000000050911",
+        "AB02000000051133",
+        "AB02000000051158",
+        "AB02000000051059",
     )
 
     private val testDemoCardIds = listOf(
@@ -115,10 +155,7 @@ class DemoConfig {
         "AC79000000000004", // Wallet 4.46
     )
 
-    private val debugTestDemoCardIds = listOf(
-        "AB01000000045060", // Note BTC
-        "AB02000000045028", // Note ETH
-        "AC79000000000004", // Wallet 4.46
+    private val debugTestDemoCardIds = listOf<String>(
     )
 }
 
@@ -127,13 +164,26 @@ class DemoTransactionSender(
     private val sender: TransactionSender = walletManager as TransactionSender
 ) : TransactionSender {
 
-    override suspend fun getFee(amount: Amount, destination: String): Result<List<Amount>> =
-        sender.getFee(amount, destination)
+    override suspend fun getFee(amount: Amount, destination: String): Result<List<Amount>> {
+        val blockchain = walletManager.wallet.blockchain
+        return when (walletManager) {
+            is BitcoinWalletManager -> Result.Success(listOf(
+                Amount(0.0001.toBigDecimal(), blockchain),
+                Amount(0.0003.toBigDecimal(), blockchain),
+                Amount(0.00055.toBigDecimal(), blockchain),
+            ))
+            else -> sender.getFee(amount, destination)
+        }
+    }
+
 
     override suspend fun send(transactionData: TransactionData, signer: TransactionSigner): SimpleResult {
         val dataToSign = randomString(32).toByteArray()
         val signerResponse = signer.sign(dataToSign, walletManager.wallet.cardId, walletManager.wallet.publicKey)
-        return SimpleResult.Failure(Exception(ID))
+        return when (signerResponse) {
+            is CompletionResult.Success -> SimpleResult.Failure(Exception(ID))
+            is CompletionResult.Failure -> SimpleResult.fromTangemSdkError(signerResponse.error)
+        }
     }
 
     private fun randomInt(from: Int, to: Int): Int = kotlin.random.Random.nextInt(from, to)
