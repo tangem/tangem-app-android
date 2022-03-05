@@ -33,11 +33,12 @@
         android:orientation="vertical"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <FrameLayout
+        <include
             android:id="@+id/onboarding_top_container"
+            layout="@layout/layout_onboarding_container_top"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1.2"
+            android:layout_weight="@dimen/home_top_weight"
             android:clipChildren="false" />
 
         <include
@@ -45,11 +46,12 @@
             layout="@layout/layout_onboarding_container_bottom"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1" />
+            android:layout_weight="@dimen/home_bottom_weight" />
 
     </androidx.appcompat.widget.LinearLayoutCompat>
 
     <include
+        android:id="@+id/v_confetti"
         layout="@layout/view_confetti"
         android:visibility="gone" />
 

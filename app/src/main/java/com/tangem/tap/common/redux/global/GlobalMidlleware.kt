@@ -2,7 +2,7 @@ package com.tangem.tap.common.redux.global
 
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
-import com.tangem.common.services.Result
+import com.tangem.common.extensions.ifNotNull
 import com.tangem.tap.*
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -12,10 +12,11 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.features.send.redux.SendAction
 import com.tangem.tap.features.wallet.redux.WalletAction
-import com.tangem.tap.network.moonpay.MoonpayService
+import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
+import com.tangem.tap.network.exchangeServices.moonpay.MoonPayService
+import com.tangem.tap.network.exchangeServices.onramper.OnramperService
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
-import timber.log.Timber
 
 class GlobalMiddleware {
     companion object {
@@ -69,19 +70,21 @@ private val globalMiddlewareHandler: Middleware<AppState> = { dispatch, appState
                 }
                 is GlobalAction.UpdateFeedbackInfo -> {
                     store.state.globalState.feedbackManager?.infoHolder
-                            ?.setWalletsInfo(action.walletManagers)
+                        ?.setWalletsInfo(action.walletManagers)
                 }
-                is GlobalAction.GetMoonPayStatus -> {
-                    val apiKey = appState()?.globalState?.configManager?.config?.moonPayApiKey
-                    if (apiKey != null) {
+                is GlobalAction.InitCurrencyExchangeManager -> {
+                    val config = appState()?.globalState?.configManager?.config
+                    ifNotNull(
+                        config?.onramperApiKey,
+                        config?.moonPayApiKey,
+                        config?.moonPayApiSecretKey,
+                    ) { onramperKey, moonPayKey, moonPaySecretKey ->
                         scope.launch {
-                            val result = MoonpayService().getMoonpayStatus(apiKey)
-                            when (result) {
-                                is Result.Success -> {
-                                    store.dispatchOnMain(GlobalAction.GetMoonPayStatus.Success(result.data))
-                                }
-                                is Result.Failure -> Timber.e(result.error)
-                            }
+                            val onramper = OnramperService(onramperKey)
+                            val moonPay = MoonPayService(moonPayKey, moonPaySecretKey)
+                            val exchangeManager = CurrencyExchangeManager(onramper, moonPay)
+                            exchangeManager.getStatus()
+                            store.dispatchOnMain(GlobalAction.InitCurrencyExchangeManager.Success(exchangeManager))
                         }
                     }
                 }
