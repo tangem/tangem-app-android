@@ -3,14 +3,15 @@ package com.tangem.tap.features.details.ui.walletconnect
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.TextView
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.chip.Chip
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectSession
 import com.tangem.tap.store
 import com.tangem.wallet.R
-import kotlinx.android.synthetic.main.item_wallet_connect_session.view.*
 
 class WalletConnectSessionsAdapter
     : ListAdapter<WalletConnectSession, WalletConnectSessionsAdapter.SessionsViewHolder>(
@@ -41,15 +42,14 @@ class WalletConnectSessionsAdapter
         RecyclerView.ViewHolder(view) {
 
         fun bind(session: WalletConnectSession) {
-            view.tv_card_id.text = view.context.getString(
+            view.findViewById<TextView>(R.id.tv_card_id).text = view.context.getString(
                 R.string.wallet_connect_card_number, session.wallet.cardId
             )
-            view.tv_d_app_name.text = session.peerMeta.name
+            view.findViewById<TextView>(R.id.tv_d_app_name).text = session.peerMeta.name
 
-            view.btn_disconnect.setOnClickListener {
+            view.findViewById<Chip>(R.id.btn_disconnect).setOnClickListener {
                 store.dispatch(WalletConnectAction.DisconnectSession(session.session))
             }
-
         }
     }
 }
