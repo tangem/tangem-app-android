@@ -10,7 +10,7 @@ import com.tangem.wallet.R
 [REDACTED_AUTHOR]
  */
 class WarningMessagesManager(
-        private val warningLoader: RemoteWarningLoader,
+    private val warningLoader: RemoteWarningLoader,
 ) {
 
     private val warningsList: MutableList<WarningMessage> = mutableListOf()
@@ -33,15 +33,15 @@ class WarningMessagesManager(
 
     fun getWarnings(location: WarningMessage.Location, forBlockchains: List<Blockchain> = emptyList()): List<WarningMessage> {
         return warningsList
-                .filter { !it.isHidden && it.location.contains(location) }
-                .filter {
-                    val list = it.blockchainList
-                    when {
-                        list == null -> true
-                        list.containsAny(forBlockchains) -> true
-                        else -> false
-                    }
+            .filter { !it.isHidden && it.location.contains(location) }
+            .filter {
+                val list = it.blockchainList
+                when {
+                    list == null -> true
+                    list.containsAny(forBlockchains) -> true
+                    else -> false
                 }
+            }
     }
 
     fun hideWarning(warning: WarningMessage): Boolean {
@@ -49,7 +49,7 @@ class WarningMessagesManager(
         return when {
             foundWarning == null -> false
             foundWarning.type == WarningMessage.Type.Temporary
-                    || foundWarning.type == WarningMessage.Type.AppRating -> {
+                || foundWarning.type == WarningMessage.Type.AppRating -> {
                 if (foundWarning.isHidden) {
                     false
                 } else {
@@ -80,32 +80,32 @@ class WarningMessagesManager(
 
     companion object {
         fun devCardWarning(): WarningMessage = WarningMessage(
-                "",
-                "",
-                type = WarningMessage.Type.Permanent,
-                priority = WarningMessage.Priority.Critical,
-                listOf(WarningMessage.Location.MainScreen),
-                null,
-                R.string.alert_title,
-                R.string.alert_developer_card,
-                WarningMessage.Origin.Local
+            "",
+            "",
+            type = WarningMessage.Type.Permanent,
+            priority = WarningMessage.Priority.Critical,
+            listOf(WarningMessage.Location.MainScreen),
+            null,
+            R.string.alert_title,
+            R.string.alert_developer_card,
+            WarningMessage.Origin.Local
         )
 
         fun alreadySignedHashesWarning(): WarningMessage = WarningMessage(
-                "",
-                "",
-                type = WarningMessage.Type.Temporary,
-                priority = WarningMessage.Priority.Info,
-                listOf(WarningMessage.Location.MainScreen),
-                null,
-                R.string.alert_title,
-                R.string.alert_card_signed_transactions,
-                WarningMessage.Origin.Local
+            "",
+            "",
+            type = WarningMessage.Type.Temporary,
+            priority = WarningMessage.Priority.Info,
+            listOf(WarningMessage.Location.MainScreen),
+            null,
+            R.string.alert_title,
+            R.string.alert_card_signed_transactions,
+            WarningMessage.Origin.Local
         )
 
         fun signedHashesMultiWalletWarning(): WarningMessage = WarningMessage(
             title = "",
-            message =  "",
+            message = "",
             type = WarningMessage.Type.Temporary,
             priority = WarningMessage.Priority.Info,
             location = listOf(WarningMessage.Location.MainScreen),
@@ -117,15 +117,15 @@ class WarningMessagesManager(
         )
 
         fun appRatingWarning(): WarningMessage = WarningMessage(
-                "",
-                "",
-                WarningMessage.Type.AppRating,
-                WarningMessage.Priority.Info,
-                listOf(WarningMessage.Location.MainScreen),
-                null,
-                R.string.warning_rate_app_title,
-                R.string.warning_rate_app_message,
-                WarningMessage.Origin.Local
+            "",
+            "",
+            WarningMessage.Type.AppRating,
+            WarningMessage.Priority.Info,
+            listOf(WarningMessage.Location.MainScreen),
+            null,
+            R.string.warning_rate_app_title,
+            R.string.warning_rate_app_message,
+            WarningMessage.Origin.Local
         )
 
         fun isAlreadySignedHashesWarning(warning: WarningMessage): Boolean {
@@ -133,15 +133,15 @@ class WarningMessagesManager(
         }
 
         fun onlineVerificationFailed(): WarningMessage = WarningMessage(
-                "",
-                "",
-                type = WarningMessage.Type.Permanent,
-                priority = WarningMessage.Priority.Critical,
-                listOf(WarningMessage.Location.MainScreen),
-                null,
-                R.string.warning_failed_to_verify_card_title,
-                R.string.warning_failed_to_verify_card_message,
-                WarningMessage.Origin.Local
+            "",
+            "",
+            type = WarningMessage.Type.Permanent,
+            priority = WarningMessage.Priority.Critical,
+            listOf(WarningMessage.Location.MainScreen),
+            null,
+            R.string.warning_failed_to_verify_card_title,
+            R.string.warning_failed_to_verify_card_message,
+            WarningMessage.Origin.Local
         )
 
         fun remainingSignaturesNotEnough(remainingSignatures: Int): WarningMessage = WarningMessage(
@@ -162,10 +162,22 @@ class WarningMessagesManager(
             "",
             type = WarningMessage.Type.TestCard,
             priority = WarningMessage.Priority.Critical,
-            listOf(WarningMessage.Location.MainScreen),
+            listOf(WarningMessage.Location.MainScreen, WarningMessage.Location.SendScreen),
             null,
             R.string.alert_title,
             R.string.warning_testnet_card_message,
+            WarningMessage.Origin.Local
+        )
+
+        fun demoCardWarning(): WarningMessage = WarningMessage(
+            "",
+            "",
+            type = WarningMessage.Type.Permanent,
+            priority = WarningMessage.Priority.Critical,
+            listOf(WarningMessage.Location.MainScreen),
+            null,
+            R.string.alert_title,
+            R.string.alert_demo_message,
             WarningMessage.Origin.Local
         )
 
