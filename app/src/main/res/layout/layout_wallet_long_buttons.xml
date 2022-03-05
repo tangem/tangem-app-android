@@ -27,7 +27,7 @@
         android:layout_height="wrap_content"
         android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintGuide_percent="0.37" />
+        app:layout_constraintGuide_percent="0.5" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_confirm_long"
