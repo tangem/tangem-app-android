@@ -1,22 +1,22 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
 apply plugin: 'kotlin-kapt'
 apply plugin: 'com.google.gms.google-services'
 apply plugin: 'com.google.firebase.crashlytics'
 
 android {
-    compileSdkVersion 30
+    compileSdkVersion 31
     defaultConfig {
         applicationId "com.tangem.wallet"
         versionCode project.hasProperty('versionCode') ? project.property('versionCode') as int : 1
         versionName project.hasProperty('versionName') ? project.property('versionName') : "1.0.0.-SNAPSHOT"
         minSdkVersion 21
-        targetSdkVersion 30
+        targetSdkVersion 31
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
-    androidExtensions {
-        experimental = true
+    buildFeatures {
+        compose true
+        viewBinding true
     }
     buildTypes {
         release {
@@ -38,7 +38,7 @@ android {
         }
         debug_beta {
             initWith release
-            debuggable true
+            debuggable false
             versionNameSuffix "-beta"
             applicationIdSuffix ".debug"
             buildConfigField 'String', 'CONFIG_ENVIRONMENT', '\"prod\"'
@@ -47,11 +47,13 @@ android {
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_1_8.toString()
     }
-
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
         coreLibraryDesugaringEnabled false
+    }
+    composeOptions {
+        kotlinCompilerExtensionVersion '1.1.0'
     }
     packagingOptions {
         exclude 'lib/x86_64/darwin/libscrypt.dylib'
@@ -67,19 +69,19 @@ repositories {
 dependencies {
     implementation fileTree(include: ['*.aar'], dir: 'libs')
 
-    implementation 'androidx.core:core-ktx:1.6.0'
-    implementation 'androidx.appcompat:appcompat:1.3.1'
-    implementation 'androidx.fragment:fragment-ktx:1.3.6'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.1'
-    implementation 'com.google.android.material:material:1.4.0'
-    implementation "androidx.core:core-ktx:1.6.0"
-    implementation 'com.google.android.play:core:1.10.2'
+    implementation 'androidx.core:core-ktx:1.7.0'
+    implementation 'androidx.appcompat:appcompat:1.4.1'
+    implementation 'androidx.fragment:fragment-ktx:1.4.1'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.3'
+    implementation 'com.google.android.material:material:1.5.0'
+    implementation "androidx.core:core-ktx:1.7.0"
+    implementation 'com.google.android.play:core:1.10.3'
     implementation 'com.google.android.play:core-ktx:1.8.1'
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.1.5'
 
     implementation 'com.tangem:blockchain:develop-64'
-    implementation 'com.tangem.tangem-sdk-kotlin:core:develop-132'
-    implementation 'com.tangem.tangem-sdk-kotlin:android:develop-132'
+    implementation 'com.tangem.tangem-sdk-kotlin:core:develop-139'
+    implementation 'com.tangem.tangem-sdk-kotlin:android:develop-139'
 
     // WebView
     implementation "androidx.browser:browser:1.3.0"
@@ -137,6 +139,15 @@ dependencies {
 
     // Google Pay
     implementation 'com.google.android.gms:play-services-wallet:19.1.0'
+
+    //Compose
+    implementation 'androidx.activity:activity-compose:1.4.0'
+    implementation 'androidx.compose.material:material:1.1.0'
+    implementation 'androidx.compose.animation:animation:1.1.0'
+    implementation 'androidx.compose.ui:ui-tooling:1.1.0'
+    implementation "com.google.accompanist:accompanist-appcompat-theme:0.23.0"
+
+    implementation 'com.github.kirich1409:viewbindingpropertydelegate-noreflection:1.5.6'
 
     testImplementation 'junit:junit:4.13.2'
     testImplementation "com.google.truth:truth:1.1.3"
