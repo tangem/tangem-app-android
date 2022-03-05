@@ -37,8 +37,17 @@ fun Context.getColorCompat(@ColorRes colorRes: Int): Int {
     return ContextCompat.getColor(this, colorRes)
 }
 
+@ColorInt
+fun View.getColor(@ColorRes colorRes: Int): Int {
+    return ContextCompat.getColor(context, colorRes)
+}
+
 fun View.getString(@StringRes id: Int): String {
     return context.getString(id)
+}
+
+fun View.getString(@StringRes id: Int, vararg formatArgs: String): String {
+    return context.getString(id, *formatArgs)
 }
 
 fun View.getResourceName(): String {
@@ -68,9 +77,16 @@ fun View.hide(invokeBeforeStateChanged: (() -> Unit)? = null) {
     this.visibility = View.GONE
 }
 
-fun View.makeInvisible() {
-    if (this.visibility == View.INVISIBLE) return
-    this.visibility = View.INVISIBLE
+fun View.invisible(invisible: Boolean = true, invokeBeforeStateChanged: (() -> Unit)? = null) {
+    if (invisible) {
+        if (this.visibility == View.INVISIBLE) return
+
+        invokeBeforeStateChanged?.invoke()
+        this.visibility = View.INVISIBLE
+    } else {
+        this.show(invokeBeforeStateChanged)
+    }
+
 }
 
 fun Context.dpToPixels(dp: Int): Int =
@@ -158,4 +174,8 @@ fun Context.safeStartActivity(
     } finally {
         finally?.invoke()
     }
+}
+
+fun View.getString(resId: Int, vararg formatArgs: Any?): String {
+    return context.getString(resId, formatArgs)
 }
