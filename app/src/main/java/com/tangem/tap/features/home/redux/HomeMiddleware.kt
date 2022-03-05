@@ -4,7 +4,6 @@ import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.AnalyticsParam
 import com.tangem.tap.common.analytics.GetCardSourceParams
 import com.tangem.tap.common.entities.IndeterminateProgressButton
-import com.tangem.tap.common.extensions.dispatchOpenUrl
 import com.tangem.tap.common.extensions.onCardScanned
 import com.tangem.tap.common.extensions.withMainContext
 import com.tangem.tap.common.post
@@ -39,7 +38,7 @@ private val homeMiddleware: Middleware<AppState> = { dispatch, state ->
             when (action) {
                 is HomeAction.Init -> {
                     store.dispatch(GlobalAction.RestoreAppCurrency)
-                    store.dispatch(GlobalAction.GetMoonPayStatus)
+                    store.dispatch(GlobalAction.InitCurrencyExchangeManager)
                     store.dispatch(HomeAction.SetTermsOfUseState(preferencesStorage.wasDisclaimerAccepted()))
                 }
                 is HomeAction.ShouldScanCardOnResume -> {
@@ -50,7 +49,7 @@ private val homeMiddleware: Middleware<AppState> = { dispatch, state ->
                 }
                 is HomeAction.ReadCard -> handleReadCard()
                 is HomeAction.GoToShop -> {
-                    store.dispatchOpenUrl(HomeMiddleware.CARD_SHOP_URI)
+                    store.dispatch(NavigationAction.NavigateTo(AppScreen.Shop))
                     store.state.globalState.analyticsHandlers?.triggerEvent(
                         event = AnalyticsEvent.GET_CARD,
                         params = mapOf(AnalyticsParam.SOURCE.param to GetCardSourceParams.WELCOME.param)
@@ -74,14 +73,14 @@ private fun handleReadCard() {
             if (OnboardingHelper.isOnboardingCase(scanResponse)) {
                 val navigateTo = OnboardingHelper.whereToNavigate(scanResponse)
                 store.dispatch(GlobalAction.Onboarding.Start(scanResponse))
-                navigateTo(navigateTo, store.state.homeState.shareTransition)
+                navigateTo(navigateTo)
             } else {
                 scope.launch {
                     store.onCardScanned(scanResponse)
                     withMainContext {
                         if (scanResponse.twinsIsTwinned() && !preferencesStorage.wasTwinsOnboardingShown()) {
                             store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.WelcomeOnly))
-                            navigateTo(AppScreen.OnboardingTwins, store.state.homeState.shareTransition)
+                            navigateTo(AppScreen.OnboardingTwins)
                         } else {
                             navigateTo(AppScreen.Wallet, null)
                         }
@@ -99,7 +98,7 @@ private fun changeButtonState(state: ButtonState) {
     store.dispatch(HomeAction.ChangeScanCardButtonState(btnState))
 }
 
-private fun navigateTo(screen: AppScreen, transition: FragmentShareTransition?) {
+private fun navigateTo(screen: AppScreen, transition: FragmentShareTransition? = null) {
     post(DELAY_SDK_DIALOG_CLOSE) {
         changeButtonState(ButtonState.ENABLED)
         store.dispatch(NavigationAction.NavigateTo(screen, transition))
