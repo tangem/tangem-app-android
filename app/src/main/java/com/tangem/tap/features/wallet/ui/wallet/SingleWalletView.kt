@@ -128,7 +128,7 @@ class SingleWalletView : WalletView {
         val btnConfirm = if (state.tradeCryptoState.sellingAllowed ||
             state.tradeCryptoState.buyingAllowed
         ) {
-            lButtonsShort.btnConfirmShort
+            lButtonsShort.btnConfirm
         } else {
             lButtonsLong.btnConfirmLong
         }
@@ -136,7 +136,7 @@ class SingleWalletView : WalletView {
         val btnScan = if (state.tradeCryptoState.sellingAllowed ||
             state.tradeCryptoState.buyingAllowed
         ) {
-            lButtonsShort.btnScanShort
+            lButtonsShort.btnScan
         } else {
             lButtonsLong.btnScanLong
         }
@@ -175,14 +175,14 @@ class SingleWalletView : WalletView {
             else -> R.string.wallet_button_trade
         }
         val icon = when {
-            allowedToBuy && !allowedToSell -> R.drawable.ic_arrow_up_short_btn
-            !allowedToBuy && allowedToSell -> R.drawable.ic_arrow_down_short_button
-            allowedToBuy && allowedToSell -> R.drawable.ic_arrows_up_down_short_btn
+            allowedToBuy && !allowedToSell -> R.drawable.ic_arrow_up
+            !allowedToBuy && allowedToSell -> R.drawable.ic_arrow_down
+            allowedToBuy && allowedToSell -> R.drawable.ic_arrows_up_down
             else -> null
         }
         with(binding) {
             lButtonsShort.btnTrade.text = fragment?.getText(text)
-            lButtonsShort.btnTrade.setCompoundDrawablesWithIntrinsicBounds(0, icon ?: 0, 0, 0)
+            icon?.let { lButtonsShort.btnTrade.setIconResource(it) }
             lButtonsShort.btnTrade.setOnClickListener { if (action != null) store.dispatch(action) }
         }
     }
