@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/clNetworkFee"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -35,39 +36,47 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/flExpandCollapse">
 
-        <com.google.android.material.chip.ChipGroup
-            android:id="@+id/chipGroup"
+        <HorizontalScrollView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            android:translationY="-8dp"
-            app:selectionRequired="true"
-            app:singleLine="true"
-            app:singleSelection="true">
+            android:clipChildren="false">
 
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chipLow"
-                style="@style/TapChip"
+            <com.google.android.material.chip.ChipGroup
+                android:id="@+id/chipGroup"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/send_fee_picker_low" />
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:translationY="-8dp"
+                app:selectionRequired="true"
+                app:singleLine="true"
+                app:singleSelection="true">
 
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chipNormal"
-                style="@style/TapChip"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/send_fee_picker_normal" />
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipLow"
+                    style="@style/TapChip"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/send_fee_picker_low" />
 
-            <com.google.android.material.chip.Chip
-                android:id="@+id/chipPriority"
-                style="@style/TapChip"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/send_fee_picker_priority" />
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipNormal"
+                    style="@style/TapChip"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/send_fee_picker_normal"
+                    tools:text="Нормальный" />
 
-        </com.google.android.material.chip.ChipGroup>
+                <com.google.android.material.chip.Chip
+                    android:id="@+id/chipPriority"
+                    style="@style/TapChip"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/send_fee_picker_priority"
+                    tools:text="Приоритетный" />
+
+            </com.google.android.material.chip.ChipGroup>
+        </HorizontalScrollView>
 
         <com.google.android.material.switchmaterial.SwitchMaterial
             android:id="@+id/swIncludeFee"

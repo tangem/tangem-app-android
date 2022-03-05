@@ -6,6 +6,7 @@ import android.view.View
 import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import androidx.transition.TransitionInflater
+import by.kirich1409.viewbindingdelegate.viewBinding
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
@@ -18,13 +19,13 @@ import com.tangem.tap.features.details.redux.SecurityOption
 import com.tangem.tap.features.feedback.FeedbackEmail
 import com.tangem.tap.store
 import com.tangem.wallet.R
-import kotlinx.android.synthetic.main.fragment_details.*
-import kotlinx.android.synthetic.main.fragment_wallet.toolbar
+import com.tangem.wallet.databinding.FragmentDetailsBinding
 import org.rekotlin.StoreSubscriber
 
 class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<DetailsState> {
 
     private var currencySelectionDialog = CurrencySelectionDialog()
+    private val binding: FragmentDetailsBinding by viewBinding(FragmentDetailsBinding::bind)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,15 +56,18 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        toolbar.setNavigationOnClickListener {
+        binding.toolbar.setNavigationOnClickListener {
             store.dispatch(NavigationAction.PopBackTo())
         }
     }
 
 
     override fun newState(state: DetailsState) {
-        if (activity == null) return
+        if (activity == null || view == null) return
+        setState(state)
+    }
 
+    private fun setState(state: DetailsState)  = with (binding){
 
         if (state.cardInfo != null) {
             val cardId = if (state.isTangemTwins) {
@@ -71,61 +75,61 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
             } else {
                 state.cardInfo.cardId
             }
-            tv_card_id.text = cardId
-            tv_issuer.text = state.cardInfo.issuer
-            tv_signed_hashes.text = getString(
+            tvCardId.text = cardId
+            tvIssuer.text = state.cardInfo.issuer
+            tvSignedHashes.text = getString(
                 R.string.details_row_subtitle_signed_hashes_format,
                 state.cardInfo.signedHashes.toString()
             )
         }
 
-        tv_signed_hashes.show(!state.isTangemTwins)
-        tv_signed_hashes_title.show(!state.isTangemTwins)
+        tvSignedHashes.show(!state.isTangemTwins)
+        tvSignedHashesTitle.show(!state.isTangemTwins)
 
-        tv_disclaimer.setOnClickListener { store.dispatch(DetailsAction.ShowDisclaimer) }
+        tvDisclaimer.setOnClickListener { store.dispatch(DetailsAction.ShowDisclaimer) }
 
-        tv_card_tou.show(state.cardTermsOfUseUrl != null)
-        tv_card_tou.setOnClickListener {
+        tvCardTou.show(state.cardTermsOfUseUrl != null)
+        tvCardTou.setOnClickListener {
             val intent = Intent(Intent.ACTION_VIEW)
             intent.data = state.cardTermsOfUseUrl
             startActivity(intent)
         }
 
         if (state.isTangemTwins) {
-            tv_reset_to_factory.show()
-            tv_reset_to_factory.text = getText(R.string.details_row_title_twins_recreate)
-            tv_reset_to_factory.setOnClickListener {
+            tvResetToFactory.show()
+            tvResetToFactory.text = getText(R.string.details_row_title_twins_recreate)
+            tvResetToFactory.setOnClickListener {
                 store.dispatch(DetailsAction.ReCreateTwinsWallet(state.twinCardsState.cardNumber!!))
             }
         } else {
-            tv_reset_to_factory.show()
-            tv_reset_to_factory.text = getText(R.string.details_row_title_reset_factory_settings)
-            tv_reset_to_factory.setOnClickListener {
+            tvResetToFactory.show()
+            tvResetToFactory.text = getText(R.string.details_row_title_reset_factory_settings)
+            tvResetToFactory.setOnClickListener {
                 store.dispatch(DetailsAction.ResetToFactory.Check)
                 store.dispatch(DetailsAction.ResetToFactory.Proceed)
             }
         }
 
-        tv_create_backup.show(state.createBackupAllowed)
-        tv_create_backup.setOnClickListener {
+        tvCreateBackup.show(state.createBackupAllowed)
+        tvCreateBackup.setOnClickListener {
             store.dispatch(DetailsAction.CreateBackup)
         }
 
-        tv_app_currency.text = state.appCurrencyState.fiatCurrencyName
+        tvAppCurrency.text = state.appCurrencyState.fiatCurrencyName
 
-        tv_app_currency_title.setOnClickListener {
+        tvAppCurrencyTitle.setOnClickListener {
             store.dispatch(DetailsAction.AppCurrencyAction.ChooseAppCurrency)
         }
-        tv_send_feedback.setOnClickListener {
+        tvSendFeedback.setOnClickListener {
             store.dispatch(GlobalAction.SendFeedback(FeedbackEmail()))
         }
 
-        tv_wallet_connect.show(state.scanResponse?.card?.isMultiwalletAllowed == true)
-        tv_wallet_connect.setOnClickListener {
+        tvWalletConnect.show(state.scanResponse?.card?.isMultiwalletAllowed == true)
+        tvWalletConnect.setOnClickListener {
             store.dispatch(NavigationAction.NavigateTo(AppScreen.WalletConnectSessions))
         }
 
-        tv_security_title.setOnClickListener {
+        llManageSecurity.setOnClickListener {
             store.dispatch(DetailsAction.ManageSecurity.CheckCurrentSecurityOption(state.scanResponse!!.card))
         }
 
@@ -135,7 +139,7 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
             SecurityOption.AccessCode -> R.string.details_manage_security_access_code
             null -> null
         }
-        currentSecurity?.let { tv_security.text = getString(it) }
+        currentSecurity?.let { tvSecurity.text = getString(it) }
 
         if (state.appCurrencyState.showAppCurrencyDialog &&
             !state.appCurrencyState.fiatCurrencies.isNullOrEmpty()) {
@@ -147,7 +151,6 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
         } else {
             currencySelectionDialog.clear()
         }
-
     }
 
 }

@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import by.kirich1409.viewbindingdelegate.viewBinding
 import com.google.android.material.snackbar.Snackbar
 import com.tangem.TangemSdk
 import com.tangem.operations.backup.BackupService
@@ -18,10 +19,14 @@ import com.tangem.tap.common.redux.global.AndroidResources
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.common.shop.GooglePayService
+import com.tangem.tap.common.shop.GooglePayService.Companion.LOAD_PAYMENT_DATA_REQUEST_CODE
+import com.tangem.tap.common.shop.googlepay.GooglePayUtil.createPaymentsClient
 import com.tangem.tap.domain.TangemSdkManager
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
+import com.tangem.tap.features.shop.redux.ShopAction
 import com.tangem.wallet.R
-import kotlinx.android.synthetic.main.activity_main.*
+import com.tangem.wallet.databinding.ActivityMainBinding
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -59,6 +64,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler {
     private var snackbar: Snackbar? = null
     private val dialogManager = DialogManager()
     private val intentHandler = IntentHandler()
+    private val binding: ActivityMainBinding by viewBinding(ActivityMainBinding::bind)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -73,7 +79,13 @@ class MainActivity : AppCompatActivity(), SnackbarHandler {
 
         store.dispatch(GlobalAction.SetResources(getAndroidResources()))
         store.dispatch(WalletConnectAction.RestoreSessions)
+        store.dispatch(
+            ShopAction.CheckIfGooglePayAvailable(
+                GooglePayService(createPaymentsClient(this), this)
+            )
+        )
     }
+
 
     private fun getAndroidResources(): AndroidResources {
         return AndroidResources(
@@ -92,12 +104,13 @@ class MainActivity : AppCompatActivity(), SnackbarHandler {
 
     override fun onResume() {
         super.onResume()
-        notificationsHandler = NotificationsHandler(fragment_container)
+        notificationsHandler = NotificationsHandler(binding.fragmentContainer)
 
         val backStackIsEmpty = supportFragmentManager.backStackEntryCount == 0
         val isScannedBefore = store.state.globalState.scanResponse != null
         val isOnboardingServiceActive = store.state.globalState.onboardingState.onboardingStarted
-        if (backStackIsEmpty || (!isOnboardingServiceActive && !isScannedBefore)) {
+        val shopOpened = store.state.shopState.total != null
+        if (backStackIsEmpty || (!isOnboardingServiceActive && !isScannedBefore && !shopOpened)) {
             store.dispatch(NavigationAction.NavigateTo(AppScreen.Home))
         }
         intentHandler.handleIntent(intent)
@@ -128,7 +141,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler {
         if (snackbar != null) return
 
         snackbar = Snackbar.make(
-            fragment_container, getString(text), Snackbar.LENGTH_INDEFINITE
+            binding.fragmentContainer, getString(text), Snackbar.LENGTH_INDEFINITE
         )
         if (buttonTitle != null && action != null) {
             snackbar?.setAction(getString(buttonTitle), action)
@@ -139,5 +152,16 @@ class MainActivity : AppCompatActivity(), SnackbarHandler {
     override fun dismissSnackbar() {
         snackbar?.dismiss()
         snackbar = null
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        when (requestCode) {
+            LOAD_PAYMENT_DATA_REQUEST_CODE -> {
+                store.dispatch(
+                    ShopAction.BuyWithGooglePay.HandleGooglePayResponse(resultCode, data)
+                )
+            }
+        }
     }
 }

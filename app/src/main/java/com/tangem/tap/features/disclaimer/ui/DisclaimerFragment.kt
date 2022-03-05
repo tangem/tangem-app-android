@@ -5,17 +5,20 @@ import android.view.View
 import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import androidx.transition.TransitionInflater
+import by.kirich1409.viewbindingdelegate.viewBinding
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
 import com.tangem.tap.features.disclaimer.redux.DisclaimerState
 import com.tangem.tap.store
 import com.tangem.wallet.R
-import kotlinx.android.synthetic.main.fragment_disclaimer.*
+import com.tangem.wallet.databinding.FragmentDisclaimerBinding
 import org.rekotlin.StoreSubscriber
 
 class DisclaimerFragment : Fragment(R.layout.fragment_disclaimer),
         StoreSubscriber<DisclaimerState> {
+
+    private val binding: FragmentDisclaimerBinding by viewBinding(FragmentDisclaimerBinding::bind)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -45,22 +48,22 @@ class DisclaimerFragment : Fragment(R.layout.fragment_disclaimer),
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        toolbar.setNavigationOnClickListener {
+        binding.toolbar.setNavigationOnClickListener {
             store.dispatch(NavigationAction.PopBackTo())
         }
         setOnClickListeners()
     }
 
     private fun setOnClickListeners() {
-        btn_accept.setOnClickListener { store.dispatch(DisclaimerAction.AcceptDisclaimer) }
+        binding.btnAccept.setOnClickListener { store.dispatch(DisclaimerAction.AcceptDisclaimer) }
     }
 
     override fun newState(state: DisclaimerState) {
-        if (activity == null) return
+        if (activity == null || view == null) return
 
         if (state.accepted) {
-            half_transparent_overlay.hide()
-            btn_accept.hide()
+            binding.halfTransparentOverlay.hide()
+            binding.btnAccept.hide()
         }
     }
 }
