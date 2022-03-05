@@ -147,6 +147,15 @@
         <item name="android:windowSoftInputMode">adjustResize</item>
     </style>
 
+    <style name="ShopChips" parent="@style/Widget.MaterialComponents.Chip.Choice">
+        <item name="chipBackgroundColor">@color/selector_chip_shop</item>
+        <item name="android:minWidth">100dp</item>
+        <item name="android:textAlignment">center</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">@color/selector_chip_shop_text</item>
+    </style>
+
 </resources>
 
     <!--    android:fontFamily="sans-serif"           // roboto regular  -->

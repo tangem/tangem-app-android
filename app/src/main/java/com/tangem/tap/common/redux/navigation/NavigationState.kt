@@ -11,6 +11,7 @@ data class NavigationState(
 
 enum class AppScreen {
     Home,
+    Shop,
     Disclaimer,
     OnboardingNote, OnboardingWallet, OnboardingTwins, OnboardingOther,
     Wallet, WalletDetails,
