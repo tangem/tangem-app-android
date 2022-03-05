@@ -11,7 +11,7 @@ import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.features.feedback.FeedbackManager
 import com.tangem.tap.features.onboarding.OnboardingManager
 import com.tangem.tap.network.coinmarketcap.CoinMarketCapService
-import com.tangem.tap.network.moonpay.MoonpayStatus
+import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import org.rekotlin.StateType
 
 data class GlobalState(
@@ -27,7 +27,7 @@ data class GlobalState(
     val appCurrency: FiatCurrencyName = DEFAULT_FIAT_CURRENCY,
     val scanCardFailsCounter: Int = 0,
     val dialog: StateDialog? = null,
-    val moonpayStatus: MoonpayStatus? = null,
+    val currencyExchangeManager: CurrencyExchangeManager? = null,
     val resources: AndroidResources = AndroidResources(),
     val analyticsHandlers: AnalyticsHandler? = null,
 ) : StateType
