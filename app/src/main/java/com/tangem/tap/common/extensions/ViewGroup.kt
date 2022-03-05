@@ -29,6 +29,10 @@ fun ViewGroup.beginDelayedTransition(transition: Transition = AutoTransition()) 
     TransitionManager.beginDelayedTransition(this, transition)
 }
 
+fun View.beginDelayedTransition(transition: Transition = AutoTransition()) {
+    (this as? ViewGroup)?.beginDelayedTransition(transition)
+}
+
 fun ChipGroup.fitChipsByGroupWidth() {
     val layoutStateHandler = GlobalLayoutStateHandler(this)
     layoutStateHandler.onStateChanged = stateHandler@{
