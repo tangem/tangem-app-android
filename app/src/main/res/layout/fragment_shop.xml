@@ -53,9 +53,12 @@
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_marginStart="36dp"
-                android:layout_marginTop="24dp"
                 android:layout_marginEnd="36dp"
                 android:layout_weight="1"
+                android:clipChildren="false"
+                android:clipToPadding="false"
+                android:paddingTop="16dp"
+                android:paddingBottom="44dp"
                 app:layout_constraintBottom_toTopOf="@+id/tv_header"
                 app:layout_constraintTop_toTopOf="parent">
 
@@ -109,7 +112,6 @@
                 android:id="@+id/tv_header"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="44dp"
                 android:layout_marginBottom="14dp"
                 android:fontFamily="sans-serif-medium"
                 android:text="@string/shop_one_wallet"
@@ -343,7 +345,7 @@
                     android:layout_height="48sp"
                     android:layout_marginStart="14dp"
                     android:layout_marginEnd="14dp"
-                    android:layout_marginBottom="70dp"
+                    android:layout_marginBottom="20dp"
                     android:text="@string/shop_buy_now"
                     android:textAlignment="center"
                     android:textSize="16sp" />
