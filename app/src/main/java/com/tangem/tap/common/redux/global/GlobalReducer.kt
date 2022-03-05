@@ -2,7 +2,6 @@ package com.tangem.tap.common.redux.global
 
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.onboarding.OnboardingManager
-import com.tangem.tap.network.moonpay.MoonpayStatus
 import com.tangem.tap.preferencesStorage
 import org.rekotlin.Action
 
@@ -19,7 +18,7 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
         is GlobalAction.Onboarding.Start -> {
             val onboardingManager = if (action.scanResponse != null) {
                 val usedCardsPrefStorage = preferencesStorage.usedCardsPrefStorage
-                 OnboardingManager(action.scanResponse, usedCardsPrefStorage)
+                OnboardingManager(action.scanResponse, usedCardsPrefStorage)
             } else {
                 null
             }
@@ -67,19 +66,8 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
         is GlobalAction.HideDialog -> {
             globalState.copy(dialog = null)
         }
-        is GlobalAction.GetMoonPayStatus.Success -> {
-            val fiatExchangeIsEnabled = globalState.configManager?.config?.isTopUpEnabled ?: false
-            val moonpayStatus = if (fiatExchangeIsEnabled) {
-                action.moonPayStatus
-            } else {
-                MoonpayStatus(
-                    isBuyAllowed = false,
-                    isSellAllowed = false,
-                    availableToBuy = emptyList(),
-                    availableToSell = emptyList()
-                )
-            }
-            globalState.copy(moonpayStatus = moonpayStatus)
+        is GlobalAction.InitCurrencyExchangeManager.Success -> {
+            globalState.copy(currencyExchangeManager = action.exchangeManager)
         }
         is GlobalAction.SetIfCardVerifiedOnline ->
             globalState.copy(cardVerifiedOnline = action.verified)

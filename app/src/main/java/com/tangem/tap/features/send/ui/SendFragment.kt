@@ -11,6 +11,7 @@ import androidx.core.view.postDelayed
 import androidx.core.widget.addTextChangedListener
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import by.kirich1409.viewbindingdelegate.viewBinding
 import com.google.android.material.textfield.TextInputEditText
 import com.tangem.Message
 import com.tangem.tangem_sdk_new.extensions.dpToPx
@@ -40,10 +41,7 @@ import com.tangem.tap.features.wallet.ui.adapters.WarningMessagesAdapter
 import com.tangem.tap.mainScope
 import com.tangem.tap.store
 import com.tangem.wallet.R
-import kotlinx.android.synthetic.main.fragment_send.*
-import kotlinx.android.synthetic.main.layout_send_address_payid.*
-import kotlinx.android.synthetic.main.layout_send_amount.*
-import kotlinx.android.synthetic.main.layout_send_fee.*
+import com.tangem.wallet.databinding.FragmentSendBinding
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.*
@@ -62,6 +60,8 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
     private val sendSubscriber = SendStateSubscriber(this)
     private lateinit var keyboardObserver: KeyboardObserver
 
+    val binding: FragmentSendBinding by viewBinding(FragmentSendBinding::bind)
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         addBackPressHandler(this)
@@ -77,7 +77,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         store.dispatch(SendActionUi.CheckIfTransactionDataWasProvided)
     }
 
-    private fun initSendButtonStates() {
+    private fun initSendButtonStates() = with(binding) {
         btnSend.setOnClickListener {
             store.dispatch(SendActionUi.SendAmountToRecipient(
                 Message(getString(R.string.initial_message_sign_header))
@@ -86,7 +86,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         sendBtn = IndeterminateProgressButtonWidget(btnSend, progress)
     }
 
-    private fun setupAddressOrPayIdLayout() {
+    private fun setupAddressOrPayIdLayout() = with(binding.lSendAddressPayid) {
         store.dispatch(SetTruncateHandler { etAddressOrPayId.truncateMiddleWith(it, "...") })
         store.dispatch(CheckClipboard(requireContext().getFromClipboard()?.toString()))
 
@@ -113,7 +113,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         }
     }
 
-    private fun setupTransactionExtrasLayout() {
+    private fun setupTransactionExtrasLayout() = with(binding.lSendAddressPayid) {
         etXlmMemo.inputtedTextAsFlow()
                 .debounce(400)
                 .filter {
@@ -151,9 +151,9 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         // Delayed launch is needed in order for the UI to be drawn and to process the sent events.
         // If do not use the delay, then etAmount error field is not displayed when
         // inserting an incorrect amount by shareUri
-        imvQrCode.postDelayed({
+        binding.lSendAddressPayid.imvQrCode.postDelayed({
             store.dispatch(PasteAddressPayId(scannedCode))
-            store.dispatch(TruncateOrRestore(!etAddressOrPayId.isFocused))
+            store.dispatch(TruncateOrRestore(!binding.lSendAddressPayid.etAddressOrPayId.isFocused))
         }, 200)
     }
 
@@ -165,7 +165,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         val decimalSeparator = DecimalFormatSymbols.getInstance().decimalSeparator.toString()
         store.dispatch(AmountAction.SetDecimalSeparator(decimalSeparator))
 
-        tvAmountCurrency.setOnClickListener {
+        binding.lSendAmount.tvAmountCurrency.setOnClickListener {
             store.dispatch(ToggleMainCurrency)
             store.dispatch(ReceiptAction.RefreshReceipt)
             store.dispatch(SendAction.ChangeSendButtonState(store.state.sendState.getButtonState()))
@@ -223,8 +223,8 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         }
     }
 
-    private fun setupFeeLayout() {
-        flExpandCollapse.setOnClickListener {
+    private fun setupFeeLayout() = with(binding.clNetworkFee) {
+        flExpandCollapse.flExpandCollapse.setOnClickListener {
             store.dispatch(ToggleControlsVisibility)
         }
         chipGroup.check(FeeUiHelper.toId(FeeType.NORMAL))
@@ -240,12 +240,12 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         }
     }
 
-    private fun setupWarningMessages() {
+    private fun setupWarningMessages() = with(binding) {
         warningsAdapter = WarningMessagesAdapter()
         val layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
-        rv_warning_messages.layoutManager = layoutManager
-        rv_warning_messages.addItemDecoration(SpacesItemDecoration(rv_warning_messages.dpToPx(16f).toInt()))
-        rv_warning_messages.adapter = warningsAdapter
+        rvWarningMessages.layoutManager = layoutManager
+        rvWarningMessages.addItemDecoration(SpacesItemDecoration(rvWarningMessages.dpToPx(16f).toInt()))
+        rvWarningMessages.adapter = warningsAdapter
 
         store.dispatch(SendAction.Warnings.Update)
     }
