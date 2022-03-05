@@ -18,64 +18,64 @@ import com.tangem.tap.features.wallet.ui.adapters.WalletAdapter
 import com.tangem.tap.features.wallet.ui.dialogs.SignedHashesWarningDialog
 import com.tangem.tap.store
 import com.tangem.wallet.R
-import kotlinx.android.synthetic.main.card_balance.*
-import kotlinx.android.synthetic.main.fragment_wallet.*
-import kotlinx.android.synthetic.main.layout_balance_error.*
-import kotlinx.android.synthetic.main.layout_wallet_long_buttons.*
+import com.tangem.wallet.databinding.FragmentWalletBinding
 
 
 class MultiWalletView : WalletView {
 
     private var fragment: WalletFragment? = null
+    private var binding: FragmentWalletBinding? = null
     private var dialog: Dialog? = null
 
     private lateinit var walletsAdapter: WalletAdapter
 
 
-    override fun changeWalletView(fragment: WalletFragment) {
-        setFragment(fragment)
+    override fun changeWalletView(fragment: WalletFragment, binding: FragmentWalletBinding) {
+        setFragment(fragment, binding)
         onViewCreated()
-        showMultiWalletView(fragment)
-        setupButtons(fragment)
+        showMultiWalletView(binding)
+        setupButtons(binding)
     }
 
 
-    private fun showMultiWalletView(fragment: WalletFragment) = with(fragment) {
-        tv_twin_card_number.hide()
-        rv_pending_transaction.hide()
-        l_card_balance.hide()
-        l_address.hide()
-        l_buttons_short.hide()
-        l_buttons_long.hide()
-        btn_scan_multiwallet?.show()
-        rv_multiwallet.show()
-        btn_add_token.show()
-        setupWalletCardNumber(fragment)
+    private fun showMultiWalletView(binding: FragmentWalletBinding) = with(binding) {
+        tvTwinCardNumber.hide()
+        rvPendingTransaction.hide()
+        lCardBalance.root.hide()
+        lAddress.root.hide()
+        lButtonsShort.root.hide()
+        lButtonsLong.root.hide()
+        btnScanMultiwallet.show()
+        rvMultiwallet.show()
+        btnAddToken.show()
+        setupWalletCardNumber(binding)
     }
 
-    private fun setupWalletCardNumber(fragment: WalletFragment) = with(fragment) {
+    private fun setupWalletCardNumber(binding: FragmentWalletBinding) = with(binding) {
         val card = store.state.globalState.scanResponse?.card
         if (card?.backupStatus is Card.BackupStatus.Active) {
             val cardCount = (card.backupStatus as Card.BackupStatus.Active).cardCount + 1
-            tv_twin_card_number.show()
-            tv_twin_card_number.text =
-                getString(R.string.wallet_twins_chip_format, 1, cardCount)
+            tvTwinCardNumber.show()
+            tvTwinCardNumber.text =
+                fragment?.getString(R.string.wallet_twins_chip_format, 1, cardCount)
         } else {
-            tv_twin_card_number.hide()
+            tvTwinCardNumber.hide()
         }
     }
 
 
-    private fun setupButtons(fragment: WalletFragment) = with(fragment) {
-        btn_scan_multiwallet?.setOnClickListener { store.dispatch(WalletAction.Scan) }
+    private fun setupButtons(binding: FragmentWalletBinding) = with(binding) {
+        btnScanMultiwallet.setOnClickListener { store.dispatch(WalletAction.Scan) }
     }
 
-    override fun setFragment(fragment: WalletFragment) {
+    override fun setFragment(fragment: WalletFragment, binding: FragmentWalletBinding) {
         this.fragment = fragment
+        this.binding = binding
     }
 
     override fun removeFragment() {
         this.fragment = null
+        this.binding = null
     }
 
     override fun onViewCreated() {
@@ -86,37 +86,42 @@ class MultiWalletView : WalletView {
         val fragment = fragment ?: return
         walletsAdapter = WalletAdapter()
         walletsAdapter.setHasStableIds(true)
-        fragment.rv_multiwallet.layoutManager = LinearLayoutManager(fragment.requireContext())
-        fragment.rv_multiwallet.adapter = walletsAdapter
+        binding?.rvMultiwallet?.layoutManager = LinearLayoutManager(fragment.requireContext())
+        binding?.rvMultiwallet?.adapter = walletsAdapter
     }
 
     override fun onNewState(state: WalletState) {
         val fragment = fragment ?: return
+        val binding = binding ?: return
 
         walletsAdapter.submitList(state.wallets, state.primaryBlockchain, state.primaryToken)
 
-        fragment.btn_add_token?.setOnClickListener {
+        binding.btnAddToken.setOnClickListener {
             store.dispatch(TokensAction.LoadCurrencies)
             store.dispatch(TokensAction.SetAddedCurrencies(state.wallets))
             store.dispatch(NavigationAction.NavigateTo(AppScreen.AddTokens))
         }
-        handleErrorStates(state, fragment)
+        handleErrorStates(state = state, binding = binding, fragment = fragment)
         handleDialogs(state.walletDialog)
     }
 
-    private fun handleErrorStates(state: WalletState, fragment: WalletFragment) {
+    private fun handleErrorStates(
+        state: WalletState,
+        binding: FragmentWalletBinding,
+        fragment: WalletFragment
+    ) {
         when (state.primaryWallet?.currencyData?.status) {
             BalanceStatus.EmptyCard -> {
                 showErrorState(
-                    fragment,
+                    binding,
                     fragment.getText(R.string.wallet_error_empty_card),
                     fragment.getString(R.string.wallet_error_empty_card_subtitle)
                 )
-                configureButtonsForEmptyWalletState(fragment)
+                configureButtonsForEmptyWalletState(binding)
             }
             BalanceStatus.UnknownBlockchain -> {
                 showErrorState(
-                    fragment,
+                    binding,
                     fragment.getText(R.string.wallet_error_unsupported_blockchain),
                     fragment.getString(R.string.wallet_error_unsupported_blockchain_subtitle)
                 )
@@ -125,24 +130,28 @@ class MultiWalletView : WalletView {
     }
 
     private fun showErrorState(
-        fragment: WalletFragment, errorTitle: CharSequence, errorDescription: CharSequence,
-    ) = with(fragment) {
-        l_card_balance.show()
-        l_balance.hide()
-        l_balance_error.show()
-        rv_multiwallet.hide()
-        btn_add_token.hide()
-        tv_error_title.text = errorTitle
-        tv_error_descriptions.text = errorDescription
+        binding: FragmentWalletBinding, errorTitle: CharSequence, errorDescription: CharSequence,
+    ) = with(binding) {
+        lCardBalance.root.show()
+        with(lCardBalance) {
+            lBalance.root.hide()
+            lBalanceError.root.show()
+            rvMultiwallet.show()
+            btnAddToken.hide()
+            lBalanceError.tvErrorTitle.text = errorTitle
+            lBalanceError.tvErrorDescriptions.text = errorDescription
+        }
     }
 
-    private fun configureButtonsForEmptyWalletState(fragment: WalletFragment) = with(fragment) {
-        btn_scan_multiwallet.hide()
-        l_buttons_long.show()
-        btn_scan_long.setOnClickListener { store.dispatch(WalletAction.Scan) }
-        btn_confirm_long.setOnClickListener { store.dispatch(WalletAction.CreateWallet) }
-        btn_confirm_long.text = fragment.getText(R.string.wallet_button_create_wallet)
-    }
+    private fun configureButtonsForEmptyWalletState(binding: FragmentWalletBinding) =
+        with(binding) {
+            btnScanMultiwallet.hide()
+            lButtonsLong.root.show()
+            lButtonsLong.btnScanLong.setOnClickListener { store.dispatch(WalletAction.Scan) }
+            lButtonsLong.btnConfirmLong.setOnClickListener { store.dispatch(WalletAction.CreateWallet) }
+            lButtonsLong.btnConfirmLong.text =
+                fragment?.getText(R.string.wallet_button_create_wallet)
+        }
 
     private fun handleDialogs(walletDialog: StateDialog?) {
         val fragment = fragment ?: return
