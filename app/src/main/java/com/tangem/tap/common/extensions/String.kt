@@ -3,6 +3,7 @@ package com.tangem.tap.common.extensions
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.net.Uri
 import android.text.Spannable
 import android.text.style.ForegroundColorSpan
 import androidx.core.content.ContextCompat
@@ -21,24 +22,24 @@ fun String?.ellipsizeBeforeSpace(allowedSize: Int): String {
     val startIndex = endIndex - sizeDifference
     val newString = this.removeRange(startIndex, endIndex)
     return newString.substring(0 until startIndex) + "..." +
-            newString.substring(startIndex until newString.length)
+        newString.substring(startIndex until newString.length)
 }
 
 fun String.colorSegment(
-        context: Context,
-        color: Int,
-        startIndex: Int = 0,
-        endIndex: Int = this.length
+    context: Context,
+    color: Int,
+    startIndex: Int = 0,
+    endIndex: Int = this.length
 ): Spannable {
     return this.toSpannable()
-            .also { spannable ->
-                spannable.setSpan(
-                        ForegroundColorSpan(ContextCompat.getColor(context, color)),
-                        startIndex,
-                        endIndex,
-                        Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
-                )
-            }
+        .also { spannable ->
+            spannable.setSpan(
+                ForegroundColorSpan(ContextCompat.getColor(context, color)),
+                startIndex,
+                endIndex,
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+            )
+        }
 }
 
 fun String.toQrCode(): Bitmap {
@@ -60,3 +61,5 @@ fun String.toQrCode(): Bitmap {
     }
     return bmp
 }
+
+fun String.urlEncode(): String = Uri.encode(this)
