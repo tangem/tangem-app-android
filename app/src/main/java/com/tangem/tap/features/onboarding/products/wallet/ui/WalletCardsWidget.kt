@@ -71,7 +71,7 @@ class WalletCardsWidget(
         )
         leapfrogWidget.fold {
             animator.doOnEnd {
-//                leapfrogWidget.initViews()
+                leapfrogWidget.initViews()
                 leapfrogWidget.unfold()
             }
             animator.start()
