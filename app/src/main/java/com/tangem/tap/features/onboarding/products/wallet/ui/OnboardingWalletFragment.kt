@@ -1,18 +1,21 @@
 package com.tangem.tap.features.onboarding.products.wallet.ui
 
 import android.os.Bundle
+import android.util.TypedValue
 import android.view.*
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.transition.TransitionInflater
 import androidx.transition.TransitionManager
+import by.kirich1409.viewbindingdelegate.viewBinding
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.tabs.TabLayoutMediator
 import com.squareup.picasso.Picasso
 import com.tangem.common.CardIdFormatter
 import com.tangem.common.core.CardIdDisplayFormat
 import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.LeapfrogWidget
+import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.PropertyCalculator
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.features.FragmentOnBackPressedHandler
@@ -21,18 +24,21 @@ import com.tangem.tap.features.onboarding.products.wallet.redux.*
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.AccessCodeDialog
 import com.tangem.tap.store
 import com.tangem.wallet.R
-import kotlinx.android.synthetic.main.fragment_onboarding_wallet.*
-import kotlinx.android.synthetic.main.layout_onboarding_buttons_add_cards.*
-import kotlinx.android.synthetic.main.layout_onboarding_buttons_common.*
-import kotlinx.android.synthetic.main.view_confetti.*
-import kotlinx.android.synthetic.main.view_onboarding_progress.*
+import com.tangem.wallet.databinding.FragmentOnboardingWalletBinding
+import com.tangem.wallet.databinding.ViewOnboardingProgressBinding
 import org.rekotlin.StoreSubscriber
 
 class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
     StoreSubscriber<OnboardingWalletState>, FragmentOnBackPressedHandler {
 
     private var accessCodeDialog: AccessCodeDialog? = null
-    private lateinit var cardsWidget: BackupCardsWidget
+    private lateinit var cardsWidget: WalletCardsWidget
+    private val binding: FragmentOnboardingWalletBinding by viewBinding(
+        FragmentOnboardingWalletBinding::bind
+    )
+    private val pbBinding: ViewOnboardingProgressBinding by viewBinding(
+        ViewOnboardingProgressBinding::bind)
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,19 +53,29 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val leapfrog = LeapfrogWidget(fl_cards_container)
-        cardsWidget = BackupCardsWidget(leapfrog) { 200f }
+        val typedValue = TypedValue()
+        resources.getValue(R.dimen.device_scale_factor_for_twins_welcome, typedValue, true)
+        val deviceScaleFactor = typedValue.float
+
+        val leapfrogCalculator = PropertyCalculator(
+            yTranslationFactor = 25f * deviceScaleFactor,
+        )
+        val leapfrog = LeapfrogWidget(binding.flCardsContainer, leapfrogCalculator)
+        cardsWidget = WalletCardsWidget(leapfrog, deviceScaleFactor) { 200f * deviceScaleFactor }
         startPostponedEnterTransition()
 
-        view_pager_backup_info.adapter = BackupInfoAdapter()
-        TabLayoutMediator(tab_layout_backup_info, view_pager_backup_info) { tab, position ->
+        binding.viewPagerBackupInfo.adapter = BackupInfoAdapter()
+        TabLayoutMediator(
+            binding.tabLayoutBackupInfo,
+            binding.viewPagerBackupInfo
+        ) { tab, position ->
             //Some implementation
         }.attach()
 
-        (activity as? AppCompatActivity)?.setSupportActionBar(toolbar)
+        (activity as? AppCompatActivity)?.setSupportActionBar(binding.toolbar)
 
         store.dispatch(OnboardingWalletAction.Init)
-        toolbar.setNavigationOnClickListener { activity?.onBackPressed() }
+        binding.toolbar.setNavigationOnClickListener { activity?.onBackPressed() }
 
         store.dispatch(OnboardingWalletAction.LoadArtwork)
 
@@ -81,16 +97,18 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
     }
 
     override fun newState(state: OnboardingWalletState) {
-        if (activity == null) return
+        if (activity == null || view == null) return
 
         requireActivity().invalidateOptionsMenu()
 
-        loadImageIntoImageView(state.cardArtworkUrl, imv_front_card)
-        loadImageIntoImageView(state.cardArtworkUrl, imv_first_backup_card)
-        loadImageIntoImageView(state.cardArtworkUrl, imv_second_backup_card)
+        with(binding) {
+            loadImageIntoImageView(state.cardArtworkUrl, imvFrontCard)
+            loadImageIntoImageView(state.cardArtworkUrl, imvFirstBackupCard)
+            loadImageIntoImageView(state.cardArtworkUrl, imvSecondBackupCard)
+        }
 
-        pb_state.max = 6
-        pb_state.progress = state.getProgressStep()
+        pbBinding.pbState.max = 6
+        pbBinding.pbState.progress = state.getProgressStep()
 
         when (state.step) {
             OnboardingWalletStep.None -> {
@@ -111,25 +129,24 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
             ?.into(view)
     }
 
-    private fun setupCreateWalletState() {
-        btn_main_action.setText(R.string.onboarding_create_wallet_button_create_wallet)
-        btn_main_action.setOnClickListener { store.dispatch(OnboardingWalletAction.CreateWallet) }
-        btn_alternative_action.hide()
+    private fun setupCreateWalletState() = with(binding) {
+        layoutButtonsCommon.btnMainAction.setText(R.string.onboarding_create_wallet_button_create_wallet)
+        layoutButtonsCommon.btnMainAction.setOnClickListener { store.dispatch(OnboardingWalletAction.CreateWallet) }
+        layoutButtonsCommon.btnAlternativeAction.hide()
 
         toolbar.title = getText(R.string.onboarding_getting_started)
 
-        tv_header.setText(R.string.onboarding_create_wallet_header)
-        tv_body.setText(R.string.onboarding_create_wallet_body)
+        tvHeader.setText(R.string.onboarding_create_wallet_header)
+        tvBody.setText(R.string.onboarding_create_wallet_body)
 
-        cardsWidget.toFolded()
-        startPostponedEnterTransition()
+        cardsWidget.toFolded(false) { startPostponedEnterTransition() }
     }
 
 
     private fun setBackupState(state: BackupState) {
         when (state.backupStep) {
             BackupStep.InitBackup -> showBackupIntro(state)
-            BackupStep.ScanOriginCard -> showScanOriginCard(state)
+            BackupStep.ScanOriginCard -> showScanOriginCard()
             BackupStep.AddBackupCards -> showAddBackupCards(state)
             BackupStep.SetAccessCode -> showSetAccessCode()
             BackupStep.EnterAccessCode -> showEnterAccessCode(state)
@@ -140,65 +157,70 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
         }
     }
 
-    private fun showBackupIntro(state: BackupState) {
-        imv_first_backup_card.show()
-        imv_second_backup_card.show()
+    private fun showBackupIntro(state: BackupState) = with(binding) {
+        imvFirstBackupCard.show()
+        imvSecondBackupCard.show()
 
         cardsWidget.toWelcome()
 
-        tv_header.hide()
-        tv_body.hide()
-        view_pager_backup_info.show()
-        tab_layout_backup_info.show()
+        tvHeader.hide()
+        tvBody.hide()
+        viewPagerBackupInfo.show()
+        tabLayoutBackupInfo.show()
 
-        btn_main_action.text = getText(R.string.onboarding_button_backup_now)
-        btn_alternative_action.text = getText(R.string.onboarding_button_skip_backup)
-        btn_alternative_action.show(state.canSkipBackup)
-        btn_main_action.setOnClickListener { store.dispatch(BackupAction.StartBackup) }
-        btn_alternative_action.setOnClickListener { store.dispatch(BackupAction.DismissBackup) }
+        with(layoutButtonsCommon) {
+            btnMainAction.text = getText(R.string.onboarding_button_backup_now)
+            btnAlternativeAction.text = getText(R.string.onboarding_button_skip_backup)
+            btnAlternativeAction.show(state.canSkipBackup)
+            btnMainAction.setOnClickListener { store.dispatch(BackupAction.StartBackup) }
+            btnAlternativeAction.setOnClickListener { store.dispatch(BackupAction.DismissBackup) }
+        }
+
         startPostponedEnterTransition()
     }
 
-    private fun showScanOriginCard(state: BackupState) {
+    private fun showScanOriginCard() = with(binding) {
         prepareBackupView()
 
         cardsWidget.toFolded()
 
-        tv_header.text = getText(R.string.onboarding_title_scan_origin_card)
-        tv_body.text = getString(
+        tvHeader.text = getText(R.string.onboarding_title_scan_origin_card)
+        tvBody.text = getString(
             R.string.onboarding_subtitle_scan_origin_card,
         )
 
-        btn_main_action.text = getString(R.string.onboarding_button_scan_origin_card)
-        btn_alternative_action.hide()
-        btn_main_action.setOnClickListener { store.dispatch(BackupAction.ScanPrimaryCard) }
+        with(layoutButtonsCommon) {
+            btnMainAction.text = getString(R.string.onboarding_button_scan_origin_card)
+            btnAlternativeAction.hide()
+            btnMainAction.setOnClickListener { store.dispatch(BackupAction.ScanPrimaryCard) }
+        }
     }
 
-    private fun prepareBackupView() {
+    private fun prepareBackupView() = with(binding) {
         toolbar.title = getText(R.string.onboarding_navbar_title_creating_backup)
 
-        tv_header.show()
-        tv_body.show()
-        view_pager_backup_info.hide()
-        tab_layout_backup_info.hide()
+        tvHeader.show()
+        tvBody.show()
+        viewPagerBackupInfo.hide()
+        tabLayoutBackupInfo.hide()
 
-        imv_first_backup_card.show()
-        imv_second_backup_card.show()
+        imvFirstBackupCard.show()
+        imvSecondBackupCard.show()
     }
 
-    private fun showAddBackupCards(state: BackupState) {
+    private fun showAddBackupCards(state: BackupState) = with(binding) {
         prepareBackupView()
 
         accessCodeDialog?.dismiss()
         accessCodeDialog = null
 
-        layout_buttons_add_cards.show()
-        layout_buttons_common.hide()
-        btn_add_card.text = getText(R.string.onboarding_button_add_backup_card)
+        layoutButtonsAddCards.root.show()
+        layoutButtonsCommon.root.hide()
+        layoutButtonsAddCards.btnAddCard.text = getText(R.string.onboarding_button_add_backup_card)
         if (state.backupCardsNumber < state.maxBackupCards) {
-            btn_add_card.setOnClickListener { store.dispatch(BackupAction.AddBackupCard) }
+            layoutButtonsAddCards.btnAddCard.setOnClickListener { store.dispatch(BackupAction.AddBackupCard) }
         } else {
-            btn_add_card.isEnabled = false
+            layoutButtonsAddCards.btnAddCard.isEnabled = false
         }
 
         when (state.backupCardsNumber) {
@@ -207,27 +229,30 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
                     cardsWidget.getFirstBackupCardView().animate().alpha(0.6f).setDuration(200)
                     cardsWidget.getSecondBackupCardView().animate().alpha(0.2f).setDuration(200)
                 }
-                tv_header.text = getText(R.string.onboarding_title_no_backup_cards)
-                tv_body.text = getText(R.string.onboarding_subtitle_no_backup_cards)
+                tvHeader.text = getText(R.string.onboarding_title_no_backup_cards)
+                tvBody.text = getText(R.string.onboarding_subtitle_no_backup_cards)
             }
             1 -> {
-                tv_header.text = getText(R.string.onboarding_title_one_backup_card)
-                tv_body.text = getText(R.string.onboarding_subtitle_one_backup_card)
+                tvHeader.text = getText(R.string.onboarding_title_one_backup_card)
+                tvBody.text = getText(R.string.onboarding_subtitle_one_backup_card)
 
+                cardsWidget.toFan(false)
                 cardsWidget.getFirstBackupCardView().animate().alpha(1f).setDuration(400)
                 cardsWidget.getSecondBackupCardView().alpha = 0.2f
             }
             2 -> {
-                tv_header.text = getText(R.string.onboarding_title_two_backup_cards)
-                tv_body.text = getText(R.string.onboarding_subtitle_two_backup_cards)
+                tvHeader.text = getText(R.string.onboarding_title_two_backup_cards)
+                tvBody.text = getText(R.string.onboarding_subtitle_two_backup_cards)
+
+                cardsWidget.toFan(false)
                 cardsWidget.getFirstBackupCardView().alpha = 1f
                 cardsWidget.getSecondBackupCardView().animate().alpha(1f).setDuration(400)
             }
         }
 
-        btn_continue.text = getText(R.string.onboarding_button_finalize_backup)
-        btn_continue.setOnClickListener { store.dispatch(BackupAction.FinishAddingBackupCards) }
-        btn_continue.isEnabled = state.backupCardsNumber != 0
+        layoutButtonsAddCards.btnContinue.text = getText(R.string.onboarding_button_finalize_backup)
+        layoutButtonsAddCards.btnContinue.setOnClickListener { store.dispatch(BackupAction.FinishAddingBackupCards) }
+        layoutButtonsAddCards.btnContinue.isEnabled = state.backupCardsNumber != 0
     }
 
     private fun showSetAccessCode() {
@@ -258,7 +283,7 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
         accessCodeDialog?.showError(state.accessCodeError)
     }
 
-    private fun showWritePrimaryCard(state: BackupState) {
+    private fun showWritePrimaryCard(state: BackupState) = with(binding) {
         accessCodeDialog?.dismiss()
 
         prepareViewForFinalizeStep()
@@ -270,33 +295,33 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
         }
 
         val cardIdFormatter = CardIdFormatter(CardIdDisplayFormat.LastMasked(4))
-        tv_header.text = getText(R.string.onboarding_title_prepare_origin)
-        tv_body.text = getString(
+        tvHeader.text = getText(R.string.onboarding_title_prepare_origin)
+        tvBody.text = getString(
             R.string.onboarding_subtitle_scan_primary_card_format,
             state.primaryCardId?.let { cardIdFormatter.getFormattedCardId(it) }
         )
-        btn_main_action.text = getText(R.string.onboarding_button_backup_origin)
-        btn_main_action.setOnClickListener { store.dispatch(BackupAction.WritePrimaryCard) }
+        layoutButtonsCommon.btnMainAction.text = getText(R.string.onboarding_button_backup_origin)
+        layoutButtonsCommon.btnMainAction.setOnClickListener { store.dispatch(BackupAction.WritePrimaryCard) }
 
     }
 
-    private fun prepareViewForFinalizeStep() {
-        layout_buttons_add_cards.hide()
-        layout_buttons_common.show()
+    private fun prepareViewForFinalizeStep() = with(binding) {
+        layoutButtonsAddCards.root.hide()
+        layoutButtonsCommon.root.show()
 
-        imv_first_backup_card.show()
-        imv_second_backup_card.show()
+        imvFirstBackupCard.show()
+        imvSecondBackupCard.show()
 
         toolbar.title = getText(R.string.onboarding_button_finalize_backup)
 
-        imv_card_background.hide()
+        imvCardBackground.hide()
 
         cardsWidget.toLeapfrog()
 
-        btn_alternative_action.hide()
+        layoutButtonsCommon.btnAlternativeAction.hide()
     }
 
-    private fun showWriteBackupCard(state: BackupState) {
+    private fun showWriteBackupCard(state: BackupState) = with(binding) {
         prepareViewForFinalizeStep()
 
         cardsWidget.getSecondBackupCardView().show(state.backupCardsNumber == 2)
@@ -316,46 +341,47 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
         }
 
         val cardIdFormatter = CardIdFormatter(CardIdDisplayFormat.LastMasked(4))
-        tv_header.text =
+        tvHeader.text =
             getString(R.string.onboarding_title_backup_card_format, cardNumber)
-        tv_body.text = getString(
+        tvBody.text = getString(
             R.string.onboarding_subtitle_scan_backup_card_format,
             cardIdFormatter.getFormattedCardId(state.backupCardIds[cardNumber - 1])
         )
-        btn_main_action.text = getString(
+        layoutButtonsCommon.btnMainAction.text = getString(
             R.string.onboarding_button_backup_card_format,
             cardNumber
         )
-
-        btn_main_action.setOnClickListener { store.dispatch(BackupAction.WriteBackupCard(cardNumber)) }
+        layoutButtonsCommon.btnMainAction.setOnClickListener {
+            store.dispatch(BackupAction.WriteBackupCard(cardNumber))
+        }
     }
 
-    private fun showSuccess() {
-        tv_header.text = getText(R.string.onboarding_done_header)
+    private fun showSuccess() = with(binding) {
+        tvHeader.text = getText(R.string.onboarding_done_header)
 
-        tv_header.show()
-        tv_body.show()
-        view_pager_backup_info.hide()
-        tab_layout_backup_info.hide()
+        tvHeader.show()
+        tvBody.show()
+        viewPagerBackupInfo.hide()
+        tabLayoutBackupInfo.hide()
 
-        tv_body.text = getText(R.string.onboarding_subtitle_success_tangem_wallet_onboarding)
-        btn_main_action.text = getText(R.string.onboarding_button_continue_wallet)
-        btn_alternative_action.hide()
-        btn_main_action.setOnClickListener {
-            lav_confetti.cancelAnimation()
-            lav_confetti.hide()
+        tvBody.text = getText(R.string.onboarding_subtitle_success_tangem_wallet_onboarding)
+        layoutButtonsCommon.btnMainAction.text = getText(R.string.onboarding_button_continue_wallet)
+        layoutButtonsCommon.btnAlternativeAction.hide()
+        layoutButtonsCommon.btnMainAction.setOnClickListener {
+            vConfetti.lavConfetti.cancelAnimation()
+            vConfetti.lavConfetti.hide()
             store.dispatch(OnboardingWalletAction.FinishOnboarding)
         }
 
         cardsWidget.leapfrogWidget.fold {
-            fl_cards_container?.hide()
-            imv_card_background?.hide()
-            lav_confetti?.show()
-            lav_confetti?.playAnimation()
-            imv_success?.alpha = 0f
-            imv_success?.show()
+            flCardsContainer.hide()
+            imvCardBackground.hide()
+            vConfetti.lavConfetti.show()
+            vConfetti.lavConfetti.playAnimation()
+            imvSuccess.alpha = 0f
+            imvSuccess.show()
 
-            imv_success?.animate()
+            imvSuccess.animate()
                 ?.alpha(1f)
                 ?.setDuration(400)
         }
@@ -379,7 +405,7 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
 
         val shopMenuShouldBeVisible =
             (backupStep == BackupStep.ScanOriginCard || backupStep == BackupStep.AddBackupCards) &&
-                    backupState.buyAdditionalCardsUrl != null
+                backupState.buyAdditionalCardsUrl != null
         menu.getItem(0).isVisible = shopMenuShouldBeVisible
     }
 
