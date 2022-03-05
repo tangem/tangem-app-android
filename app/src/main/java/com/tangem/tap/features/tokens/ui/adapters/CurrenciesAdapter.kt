@@ -1,7 +1,6 @@
 package com.tangem.tap.features.tokens.ui.adapters
 
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -15,12 +14,13 @@ import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.loadCurrenciesIcon
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.domain.tokens.CardCurrencies
+import com.tangem.tap.domain.tokens.getTokensName
 import com.tangem.tap.features.tokens.redux.CurrencyListItem
 import com.tangem.tap.features.tokens.redux.TokensAction
 import com.tangem.tap.store
 import com.tangem.wallet.R
-import kotlinx.android.synthetic.main.item_currency_subtitle.view.*
-import kotlinx.android.synthetic.main.item_popular_token.view.*
+import com.tangem.wallet.databinding.ItemCurrencySubtitleBinding
+import com.tangem.wallet.databinding.ItemPopularTokenBinding
 import java.util.*
 
 class CurrenciesAdapter : ListAdapter<CurrencyListItem, RecyclerView.ViewHolder>(DiffUtilCallback) {
@@ -61,18 +61,18 @@ class CurrenciesAdapter : ListAdapter<CurrencyListItem, RecyclerView.ViewHolder>
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return when (viewType) {
             0 -> TitleViewHolder(
-                LayoutInflater.from(parent.context)
-                    .inflate(R.layout.item_currency_subtitle, parent, false)
+                binding = ItemCurrencySubtitleBinding
+                    .inflate(LayoutInflater.from(parent.context), parent, false)
             )
             1 -> CurrenciesViewHolder(
-                LayoutInflater.from(parent.context)
-                    .inflate(R.layout.item_popular_token, parent, false),
-                vhOnItemAddListener
+                binding = ItemPopularTokenBinding
+                    .inflate(LayoutInflater.from(parent.context), parent, false),
+                onItemAddListener = vhOnItemAddListener
             )
             else -> CurrenciesViewHolder(
-                LayoutInflater.from(parent.context)
-                    .inflate(R.layout.item_popular_token, parent, false),
-                vhOnItemAddListener
+                binding = ItemPopularTokenBinding
+                    .inflate(LayoutInflater.from(parent.context), parent, false),
+                onItemAddListener = vhOnItemAddListener
             )
         }
     }
@@ -108,15 +108,15 @@ class CurrenciesAdapter : ListAdapter<CurrencyListItem, RecyclerView.ViewHolder>
                         is CurrencyListItem.BlockchainListItem -> {
                             element.blockchain.currency.toLowerCase(Locale.US)
                                 .contains(queryNormalized) ||
-                                element.blockchain.fullName.toLowerCase(Locale.US)
-                                    .contains(queryNormalized)
+                                    element.blockchain.fullName.toLowerCase(Locale.US)
+                                        .contains(queryNormalized)
 
                         }
                         is CurrencyListItem.TokenListItem -> {
                             element.token.name.toLowerCase(Locale.US)
                                 .contains(queryNormalized) ||
-                                element.token.symbol.toLowerCase(Locale.US)
-                                    .contains(queryNormalized)
+                                    element.token.symbol.toLowerCase(Locale.US)
+                                        .contains(queryNormalized)
                         }
                         is CurrencyListItem.TitleListItem -> true
                     }
@@ -128,9 +128,9 @@ class CurrenciesAdapter : ListAdapter<CurrencyListItem, RecyclerView.ViewHolder>
     }
 
     class CurrenciesViewHolder(
-        private val view: View,
+        private val binding: ItemPopularTokenBinding,
         private val onItemAddListener: ((CurrencyListItem) -> Unit),
-    ) : RecyclerView.ViewHolder(view) {
+    ) : RecyclerView.ViewHolder(binding.root) {
 
         fun bind(
             currency: CurrencyListItem,
@@ -140,12 +140,14 @@ class CurrenciesAdapter : ListAdapter<CurrencyListItem, RecyclerView.ViewHolder>
             when (currency) {
                 is CurrencyListItem.BlockchainListItem -> {
                     val addedBlockchains = addedCurrencies?.blockchains ?: listOf()
-                    val currentlyAdded = currentlyAddedItems.filterIsInstance<CurrencyListItem.BlockchainListItem>()
+                    val currentlyAdded =
+                        currentlyAddedItems.filterIsInstance<CurrencyListItem.BlockchainListItem>()
                     bindBlockchain(currency, addedBlockchains, currentlyAdded)
                 }
                 is CurrencyListItem.TokenListItem -> {
                     val addedTokens = addedCurrencies?.tokens ?: listOf()
-                    val currentlyAdded = currentlyAddedItems.filterIsInstance<CurrencyListItem.TokenListItem>()
+                    val currentlyAdded =
+                        currentlyAddedItems.filterIsInstance<CurrencyListItem.TokenListItem>()
                     bindToken(currency, addedTokens, currentlyAdded)
                 }
             }
@@ -155,13 +157,13 @@ class CurrenciesAdapter : ListAdapter<CurrencyListItem, RecyclerView.ViewHolder>
             currency: CurrencyListItem.BlockchainListItem,
             addedBlockchains: List<Blockchain>,
             currentlyAdded: List<CurrencyListItem.BlockchainListItem>
-        ) {
+        ) = with(binding) {
             val blockchain = currency.blockchain
-            Picasso.get().loadCurrenciesIcon(view.iv_currency, view.tv_token_letter, null, blockchain)
+            Picasso.get().loadCurrenciesIcon(ivCurrency, tvTokenLetter, null, blockchain)
 
-            view.tv_currency_name.text = blockchain.fullName
-            view.tv_currency_symbol.text = blockchain.currency
-            view.btn_add_token.setOnClickListener {
+            tvCurrencyName.text = blockchain.fullName
+            tvCurrencySymbol.text = blockchain.currency
+            btnAddToken.setOnClickListener {
                 onItemAddListener.invoke(currency)
                 currency.isAdded = true
                 modifyAddTokenButton(currency)
@@ -177,16 +179,17 @@ class CurrenciesAdapter : ListAdapter<CurrencyListItem, RecyclerView.ViewHolder>
             currency: CurrencyListItem.TokenListItem,
             addedTokens: List<Token>,
             currentlyAdded: List<CurrencyListItem.TokenListItem>
-        ) {
+        ) = with(binding) {
             val token = currency.token
-            Picasso.get().loadCurrenciesIcon(view.iv_currency, view.tv_token_letter, token, token.blockchain)
+            Picasso.get()
+                .loadCurrenciesIcon(ivCurrency, tvTokenLetter, token, token.blockchain)
 
-            view.tv_currency_name.text = token.name
-            view.tv_currency_symbol.text = view.context.getString(
+            tvCurrencyName.text = token.name
+            tvCurrencySymbol.text = tvCurrencySymbol.getString(
                 R.string.token_symbol_address_format,
                 token.symbol, token.contractAddress
             )
-            view.btn_add_token.setOnClickListener {
+            btnAddToken.setOnClickListener {
                 onItemAddListener.invoke(currency)
                 currency.isAdded = true
                 modifyAddTokenButton(currency)
@@ -199,48 +202,52 @@ class CurrenciesAdapter : ListAdapter<CurrencyListItem, RecyclerView.ViewHolder>
             modifyAddTokenButton(currency)
         }
 
-        private fun modifyAddTokenButton(currency: CurrencyListItem) {
+        private fun modifyAddTokenButton(currency: CurrencyListItem) = with(binding) {
             if (currency.isLocked) {
-                view.btn_add_token.setText(R.string.common_add)
-                view.btn_add_token.isEnabled = false
+                btnAddToken.setText(R.string.common_add)
+                btnAddToken.isEnabled = false
             } else {
                 val text = if (currency.isAdded) R.string.add_token_added else R.string.common_add
-                view.btn_add_token.setText(text)
-                view.btn_add_token.isEnabled = !currency.isAdded
+                btnAddToken.setText(text)
+                btnAddToken.isEnabled = !currency.isAdded
             }
         }
     }
 
-    class TitleViewHolder(val view: View) :
-        RecyclerView.ViewHolder(view) {
-        fun bind(title: CurrencyListItem.TitleListItem) {
-            view.tv_subtitle.text = view.getString(title.titleResId).uppercase()
+    class TitleViewHolder(val binding: ItemCurrencySubtitleBinding) :
+        RecyclerView.ViewHolder(binding.root) {
 
+        fun bind(title: CurrencyListItem.TitleListItem) = with(binding) {
             if (title.blockchain != null) {
-                view.cl_subtitle_container.setOnClickListener {
+                val subtitle = root.getString(title.titleResId, title.blockchain.getTokensName())
+                tvSubtitle.text = subtitle.uppercase()
+                clSubtitleContainer.setOnClickListener {
                     val rotation = if (title.isContentShown) -90f else 90f
-                    store.dispatch(TokensAction.ToggleShowTokensForBlockchain(
-                        title.isContentShown, title.blockchain
-                    ))
-                    view.iv_toggle_sublist_visibility.animate().rotation(rotation).withEndAction {
-                        showArrow(view, title.isContentShown)
+                    store.dispatch(
+                        TokensAction.ToggleShowTokensForBlockchain(
+                            title.isContentShown, title.blockchain
+                        )
+                    )
+                    ivToggleSublistVisibility.animate().rotation(rotation).withEndAction {
+                        showArrow(title.isContentShown)
                     }
                 }
-                showArrow(view, title.isContentShown)
+                showArrow(title.isContentShown)
             } else {
-                view.iv_toggle_sublist_visibility.hide()
+                tvSubtitle.text = root.getString(title.titleResId).uppercase()
+                ivToggleSublistVisibility.hide()
             }
         }
 
-        private fun showArrow(view: View, isContentShown: Boolean) {
-            view.iv_toggle_sublist_visibility.show()
+        private fun showArrow(isContentShown: Boolean) = with(binding) {
+            ivToggleSublistVisibility.show()
             val drawable = if (isContentShown) {
                 R.drawable.ic_arrow_angle_down
             } else {
                 R.drawable.ic_arrow_angle_right
             }
-            view.iv_toggle_sublist_visibility.setImageResource(drawable)
-            view.iv_toggle_sublist_visibility.rotation = 0f
+            ivToggleSublistVisibility.setImageResource(drawable)
+            ivToggleSublistVisibility.rotation = 0f
         }
     }
 }
