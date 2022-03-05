@@ -1,7 +1,6 @@
 package com.tangem.tap.features.wallet.ui.adapters
 
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
@@ -9,6 +8,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.squareup.picasso.Picasso
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
+import com.tangem.tap.common.extensions.getString
 import com.tangem.tap.common.extensions.loadCurrenciesIcon
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.features.wallet.redux.Currency
@@ -17,7 +17,7 @@ import com.tangem.tap.features.wallet.redux.WalletData
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.store
 import com.tangem.wallet.R
-import kotlinx.android.synthetic.main.item_currency_wallet.view.*
+import com.tangem.wallet.databinding.ItemCurrencyWalletBinding
 
 class WalletAdapter
     : ListAdapter<WalletData, WalletAdapter.WalletsViewHolder>(DiffUtilCallback) {
@@ -32,8 +32,9 @@ class WalletAdapter
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): WalletsViewHolder {
-        val layout = LayoutInflater.from(parent.context)
-                .inflate(R.layout.item_currency_wallet, parent, false)
+        val layout = ItemCurrencyWalletBinding.inflate(
+            LayoutInflater.from(parent.context), parent, false
+        )
         return WalletsViewHolder(layout)
     }
 
@@ -51,24 +52,24 @@ class WalletAdapter
         ) = oldItem == newItem
     }
 
-    class WalletsViewHolder(val view: View) :
-            RecyclerView.ViewHolder(view) {
+    class WalletsViewHolder(val binding: ItemCurrencyWalletBinding) :
+            RecyclerView.ViewHolder(binding.root) {
 
-        fun bind(wallet: WalletData) {
-            view.tv_currency.text = wallet.currencyData.currency
-            view.tv_amount.text = wallet.currencyData.amount?.takeWhile { !it.isWhitespace() }
-            view.tv_currency_symbol.text = wallet.currencyData.amount?.takeLastWhile { !it.isWhitespace() }
-            view.tv_amount_fiat.text = wallet.currencyData.fiatAmountFormatted
-            view.tv_exchange_rate.text = wallet.fiatRateString
-            view.card_wallet.setOnClickListener {
+        fun bind(wallet: WalletData) = with(binding) {
+            tvCurrency.text = wallet.currencyData.currency
+            tvAmount.text = wallet.currencyData.amount?.takeWhile { !it.isWhitespace() }
+            tvCurrencySymbol.text = wallet.currencyData.amount?.takeLastWhile { !it.isWhitespace() }
+            tvAmountFiat.text = wallet.currencyData.fiatAmountFormatted
+            tvExchangeRate.text = wallet.fiatRateString
+            cardWallet.setOnClickListener {
                 store.dispatch(WalletAction.MultiWallet.SelectWallet(wallet))
             }
             val blockchain = wallet.currency.blockchain
             val token = (wallet.currency as? Currency.Token)?.token
 
             Picasso.get().loadCurrenciesIcon(
-                imageView = view.iv_currency,
-                textView = view.tv_token_letter,
+                imageView = ivCurrency,
+                textView = tvTokenLetter,
                 token = token, blockchain = blockchain,
             )
 
@@ -77,16 +78,16 @@ class WalletAdapter
                 BalanceStatus.Loading -> {
                     hideWarning()
                     if (wallet.currencyData.amount == null) {
-                        view.tv_exchange_rate.text = view.context.getText(R.string.wallet_balance_loading)
+                        tvExchangeRate.text = root.getString(R.string.wallet_balance_loading)
                     }
                 }
                 BalanceStatus.TransactionInProgress ->
-                    showWarning(view.context.getString(R.string.wallet_balance_tx_in_progress))
+                    showWarning(root.getString(R.string.wallet_balance_tx_in_progress))
                 BalanceStatus.Unreachable ->
-                    showWarning(view.context.getString(R.string.wallet_balance_blockchain_unreachable))
+                    showWarning(root.getString(R.string.wallet_balance_blockchain_unreachable))
 
                 BalanceStatus.NoAccount ->
-                    showWarning(view.context.getString(R.string.wallet_error_no_account))
+                    showWarning(root.getString(R.string.wallet_error_no_account))
                 else -> {
                 }
             }
@@ -94,7 +95,7 @@ class WalletAdapter
 
         private fun showWarning(message: String) {
             toggleWarning(true)
-            view.tv_status_error_message.text = message
+            binding.tvStatusErrorMessage.text = message
         }
 
         private fun hideWarning() {
@@ -102,8 +103,8 @@ class WalletAdapter
         }
 
         private fun toggleWarning(show: Boolean) {
-            view.tv_exchange_rate.show(!show)
-            view.tv_status_error_message.show(show)
+            binding.tvExchangeRate.show(!show)
+            binding.tvStatusErrorMessage.show(show)
         }
     }
 }
