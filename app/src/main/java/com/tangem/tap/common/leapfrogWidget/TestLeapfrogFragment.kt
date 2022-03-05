@@ -5,15 +5,18 @@ import android.view.View
 import android.widget.FrameLayout
 import androidx.fragment.app.Fragment
 import androidx.transition.TransitionInflater
+import by.kirich1409.viewbindingdelegate.viewBinding
 import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.LeapfrogWidget
 import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.LeapfrogWidgetState
 import com.tangem.tap.domain.twins.TwinsCardWidget
 import com.tangem.wallet.R
-import kotlinx.android.synthetic.main.test_leapfrog_fragment.*
+import com.tangem.wallet.databinding.TestLeapfrogFragmentBinding
 
 class TestLeapfrogFragment : Fragment(R.layout.test_leapfrog_fragment) {
 
     private lateinit var twinsCardWidget: TwinsCardWidget
+    private val binding: TestLeapfrogFragmentBinding by viewBinding(TestLeapfrogFragmentBinding::bind)
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -28,30 +31,29 @@ class TestLeapfrogFragment : Fragment(R.layout.test_leapfrog_fragment) {
         val leapfrog = LeapfrogWidget(leapfrogContainer)
         twinsCardWidget = TwinsCardWidget(leapfrog) { 200f }
 
-        btn_twin_welcome.setOnClickListener {
+        binding.btnTwinWelcome.setOnClickListener {
             twinsCardWidget.toWelcome()
         }
-        btn_twin_to_leapfrog.setOnClickListener {
+        binding.btnTwinToLeapfrog.setOnClickListener {
             twinsCardWidget.toLeapfrog()
         }
-        btn_twin_activate.setOnClickListener {
+        binding.btnTwinActivate.setOnClickListener {
             twinsCardWidget.toActivate()
         }
 
-
-        btn_lp_init.setOnClickListener {
+        binding.btnLpInit.setOnClickListener {
             leapfrog.initViews()
         }
-        btn_lp_unfold.setOnClickListener {
+        binding.btnLpUnfold.setOnClickListener {
             leapfrog.unfold()
         }
-        btn_lp_fold.setOnClickListener {
+        binding.btnLpFold.setOnClickListener {
             leapfrog.fold()
         }
-        btn_lp_leap.setOnClickListener {
+        binding.btnLpLeap.setOnClickListener {
             leapfrog.leap()
         }
-        btn_lp_leap_back.setOnClickListener {
+        binding.btnLpLeapBack.setOnClickListener {
             leapfrog.leapBack()
         }
     }
