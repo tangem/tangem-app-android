@@ -8,7 +8,6 @@ import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.AnalyticsParam
 import com.tangem.tap.common.analytics.GetCardSourceParams
 import com.tangem.tap.common.extensions.dispatchOnMain
-import com.tangem.tap.common.extensions.dispatchOpenUrl
 import com.tangem.tap.common.extensions.withMainContext
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -16,6 +15,7 @@ import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.extensions.hasWallets
 import com.tangem.tap.domain.tasks.product.ScanResponse
+import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletMiddleware.Companion.BUY_WALLET_URL
 import com.tangem.tap.features.wallet.redux.Artwork
@@ -124,10 +124,15 @@ private fun handleWalletAction(action: Action) {
                     } else {
                         null
                     }
-                    BackupAction.IntroduceBackup(url)
+                    if (walletState.backupState.backupStep == BackupStep.InitBackup ||
+                        walletState.backupState.backupStep == BackupStep.Finished) {
+                        BackupAction.IntroduceBackup(url)
+                    } else {
+                        null
+                    }
                 }
             }
-            store.dispatch(newAction)
+            newAction?.let { store.dispatch(it) }
         }
         OnboardingWalletAction.OnBackPressed -> {
             when (walletState.backupState.backupStep) {
@@ -164,14 +169,16 @@ class BackupMiddleware {
     val backupMiddleware: Middleware<AppState> = { dispatch, state ->
         { next ->
             { action ->
-                if (action is BackupAction) handleBackupAction(action)
+                if (action is BackupAction) handleBackupAction(state, action)
                 next(action)
             }
         }
     }
 }
 
-private fun handleBackupAction(action: BackupAction) {
+private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) {
+    if (DemoHelper.tryHandle(appState, action)) return
+
     val backupState = store.state.onboardingWalletState.backupState
 
     val globalState = store.state.globalState
@@ -215,13 +222,11 @@ private fun handleBackupAction(action: BackupAction) {
             }
         }
         is BackupAction.GoToShop -> {
-            backupState.buyAdditionalCardsUrl?.let { url ->
-                store.dispatchOpenUrl(url)
-                store.state.globalState.analyticsHandlers?.triggerEvent(
-                    event = AnalyticsEvent.GET_CARD,
-                    params = mapOf(AnalyticsParam.SOURCE.param to GetCardSourceParams.ONBOARDING.param)
-                )
-            }
+            store.dispatch(NavigationAction.NavigateTo(AppScreen.Shop))
+            store.state.globalState.analyticsHandlers?.triggerEvent(
+                event = AnalyticsEvent.GET_CARD,
+                params = mapOf(AnalyticsParam.SOURCE.param to GetCardSourceParams.ONBOARDING.param)
+            )
         }
         is BackupAction.FinishAddingBackupCards -> {
             if (backupService.addedBackupCardsCount == 1) {
@@ -233,9 +238,11 @@ private fun handleBackupAction(action: BackupAction) {
         }
         is BackupAction.CheckAccessCode -> {
             if (action.accessCode.length < 4) {
-                store.dispatch(BackupAction.SetAccessCodeError(
-                    AccessCodeError.CodeTooShort
-                ))
+                store.dispatch(
+                    BackupAction.SetAccessCodeError(
+                        AccessCodeError.CodeTooShort
+                    )
+                )
             } else {
                 store.dispatch(BackupAction.SetAccessCodeError(null))
                 store.dispatch(BackupAction.SaveFirstAccessCode(action.accessCode))
@@ -247,9 +254,11 @@ private fun handleBackupAction(action: BackupAction) {
                 backupService.setAccessCode(action.accessCodeConfirmation)
                 store.dispatch(BackupAction.PrepareToWritePrimaryCard)
             } else {
-                store.dispatch(BackupAction.SetAccessCodeError(
-                    AccessCodeError.CodesDoNotMatch
-                ))
+                store.dispatch(
+                    BackupAction.SetAccessCodeError(
+                        AccessCodeError.CodesDoNotMatch
+                    )
+                )
             }
         }
         is BackupAction.WritePrimaryCard -> {
