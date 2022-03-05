@@ -19,7 +19,7 @@ import com.tangem.tap.features.wallet.models.toPendingTransactions
 import com.tangem.tap.features.wallet.models.toPendingTransactionsForToken
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
-import com.tangem.tap.network.moonpay.MoonpayStatus
+import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import com.tangem.tap.store
 import org.rekotlin.StateType
 import java.math.BigDecimal
@@ -160,12 +160,18 @@ data class WalletState(
         return updatedWallets + remainingWallets
     }
 
-    fun updateTradeCryptoState(moonpayStatus: MoonpayStatus?, walletData: WalletData): WalletData {
-        return walletData.copy(tradeCryptoState = TradeCryptoState.from(moonpayStatus, walletData))
+    fun updateTradeCryptoState(
+        exchangeManager: CurrencyExchangeManager?,
+        walletData: WalletData
+    ): WalletData {
+        return walletData.copy(tradeCryptoState = TradeCryptoState.from(exchangeManager, walletData))
     }
 
-    fun updateTradeCryptoState(moonpayStatus: MoonpayStatus?, walletDataList: List<WalletData>): List<WalletData> {
-        return walletDataList.map { it.copy(tradeCryptoState = TradeCryptoState.from(moonpayStatus, it)) }
+    fun updateTradeCryptoState(
+        exchangeManager: CurrencyExchangeManager?,
+        walletDataList: List<WalletData>
+    ): List<WalletData> {
+        return walletDataList.map { it.copy(tradeCryptoState = TradeCryptoState.from(exchangeManager, it)) }
     }
 
     fun addWalletManagers(newWalletManagers: List<WalletManager>): WalletState {
@@ -226,8 +232,8 @@ data class TradeCryptoState(
     val buyingAllowed: Boolean = false,
 ) {
     companion object {
-        fun from(moonpayStatus: MoonpayStatus?, walletData: WalletData): TradeCryptoState {
-            val status = moonpayStatus ?: return walletData.tradeCryptoState
+        fun from(exchangeManager: CurrencyExchangeManager?, walletData: WalletData): TradeCryptoState {
+            val status = exchangeManager ?: return walletData.tradeCryptoState
             val currency = walletData.currency
 
             return TradeCryptoState(status.sellIsAllowed(currency), status.buyIsAllowed(currency))
