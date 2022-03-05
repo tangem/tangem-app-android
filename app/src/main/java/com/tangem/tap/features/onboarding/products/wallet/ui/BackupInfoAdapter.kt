@@ -1,28 +1,30 @@
 package com.tangem.tap.features.onboarding.products.wallet.ui
 
 import android.view.LayoutInflater
-import android.view.View
 import android.view.ViewGroup
 import androidx.annotation.StringRes
 import androidx.recyclerview.widget.RecyclerView
 import com.tangem.tap.common.extensions.getString
 import com.tangem.wallet.R
-import kotlinx.android.synthetic.main.item_backup_info_adapter.view.*
+import com.tangem.wallet.databinding.ItemBackupInfoAdapterBinding
 
 class BackupInfoAdapter : RecyclerView.Adapter<BackupInfoViewHolder>() {
 
     private val data = backupInfoSnippets
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BackupInfoViewHolder =
-        BackupInfoViewHolder(LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_backup_info_adapter, parent, false))
+        BackupInfoViewHolder(
+            ItemBackupInfoAdapterBinding.inflate(
+                LayoutInflater.from(parent.context), parent, false
+            )
+        )
 
     override fun getItemCount(): Int = data.size
 
     override fun onBindViewHolder(holder: BackupInfoViewHolder, position: Int) =
-        holder.itemView.run {
-            tv_header.text = getString(data[position].header)
-            tv_body.text = getString(data[position].body)
+        holder.binding.run {
+            tvHeader.text = root.getString(data[position].header)
+            tvBody.text = root.getString(data[position].body)
         }
 }
 
@@ -51,4 +53,5 @@ private val backupInfoSnippets = listOf(
 
     )
 
-class BackupInfoViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView)
+class BackupInfoViewHolder(val binding: ItemBackupInfoAdapterBinding) :
+    RecyclerView.ViewHolder(binding.root)

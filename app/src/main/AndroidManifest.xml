@@ -39,8 +39,12 @@
         tools:ignore="GoogleAppIndexingWarning"
         tools:replace="android:fullBackupContent">
 
+        <meta-data
+            android:name="com.google.android.gms.wallet.api.enabled"
+            android:value="true" />
 
         <activity
+            android:exported="true"
             android:name="com.tangem.tap.MainActivity"
             android:launchMode="singleTask"
             android:screenOrientation="portrait"
