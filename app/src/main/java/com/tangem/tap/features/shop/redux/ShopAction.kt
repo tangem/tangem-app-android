@@ -34,5 +34,7 @@ sealed class ShopAction : Action {
 
     data class SelectProduct(val productType: ProductType) : ShopAction()
 
+    object FinishSuccessfulOrder : ShopAction()
+
     object ResetState : ShopAction()
 }

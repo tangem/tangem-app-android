@@ -1,13 +1,10 @@
 package com.tangem.tap.features.wallet.ui
 
 import androidx.annotation.IdRes
-import androidx.fragment.app.Fragment
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.wallet.R
-import kotlinx.android.synthetic.main.card_balance.*
-import kotlinx.android.synthetic.main.layout_balance.*
-import kotlinx.android.synthetic.main.layout_balance_error.*
+import com.tangem.wallet.databinding.CardBalanceBinding
 import java.math.BigDecimal
 
 enum class BalanceStatus {
@@ -34,30 +31,34 @@ data class BalanceWidgetData(
 )
 
 data class TokenData(
-        val amount: String,
-        val tokenSymbol: String,
-        val fiatAmount: String? = null,
-        val fiatRateString: String? = null,
-        val fiatRate: BigDecimal? = null,
+    val amount: String,
+    val tokenSymbol: String,
+    val fiatAmount: String? = null,
+    val fiatRateString: String? = null,
+    val fiatRate: BigDecimal? = null,
 )
 
 
 class BalanceWidget(
-        val fragment: Fragment,
-        val data: BalanceWidgetData,
-        private val isTwinCard: Boolean,
+    private val binding: CardBalanceBinding,
+    private val fragment: WalletFragment,
+    private val data: BalanceWidgetData,
+    private val isTwinCard: Boolean,
 ) {
 
     fun setup() {
 
         when (data.status) {
             BalanceStatus.Loading -> {
-                fragment.l_balance.show()
-                fragment.l_balance_error.hide()
-                fragment.tv_fiat_amount.hide()
+                with(binding) {
+                    lBalance.root.show()
+                    lBalanceError.root.hide()
+                    lBalance.tvFiatAmount.hide()
 
-                fragment.tv_currency.text = data.currency
-                fragment.tv_amount.text = ""
+                    lBalance.tvCurrency.text = data.currency
+                    lBalance.tvAmount.text = ""
+                }
+
 
                 showStatus(R.id.tv_status_loading)
 
@@ -67,18 +68,18 @@ class BalanceWidget(
                     showBalanceWithoutToken(data, false)
                 }
             }
-            BalanceStatus.VerifiedOnline, BalanceStatus.TransactionInProgress -> {
-                fragment.l_balance.show()
-                fragment.l_balance_error.hide()
+            BalanceStatus.VerifiedOnline, BalanceStatus.TransactionInProgress -> with(binding.lBalance) {
+                root.show()
+                binding.lBalanceError.root.hide()
                 val statusView = if (data.status == BalanceStatus.VerifiedOnline) {
                     R.id.tv_status_verified
                 } else {
-                    fragment.tv_status_error.text =
-                            fragment.getText(R.string.wallet_balance_tx_in_progress)
+                    tvStatusError.text =
+                        fragment.getText(R.string.wallet_balance_tx_in_progress)
                     R.id.group_error
                 }
                 showStatus(statusView)
-                fragment.tv_status_error_message.hide()
+                tvStatusErrorMessage.hide()
 
                 if (data.token != null) {
                     showBalanceWithToken(data, true)
@@ -86,79 +87,83 @@ class BalanceWidget(
                     showBalanceWithoutToken(data, true)
                 }
             }
-            BalanceStatus.Unreachable -> {
-                fragment.l_balance.show()
-                fragment.l_balance_error.hide()
-                fragment.tv_fiat_amount.hide()
-                fragment.group_base_currency.hide()
+            BalanceStatus.Unreachable -> with(binding.lBalance) {
+                root.show()
+                binding.lBalanceError.root.hide()
+                tvFiatAmount.hide()
+                groupBaseCurrency.hide()
 
                 val currency = if (data.token != null) data.token.tokenSymbol else data.currency
-                fragment.tv_currency.text = currency
-                fragment.tv_amount.text = ""
+                tvCurrency.text = currency
+                tvAmount.text = ""
 
-                fragment.tv_status_error_message.text = data.errorMessage
-                fragment.tv_status_error.text =
-                        fragment.getString(R.string.wallet_balance_blockchain_unreachable)
+                tvStatusErrorMessage.text = data.errorMessage
+                tvStatusError.text =
+                    fragment.getString(R.string.wallet_balance_blockchain_unreachable)
 
                 showStatus(R.id.group_error)
-                fragment.tv_status_error_message.show(!data.errorMessage.isNullOrBlank())
+                tvStatusErrorMessage.show(!data.errorMessage.isNullOrBlank())
             }
-            BalanceStatus.EmptyCard -> {
-                fragment.l_balance.hide()
-                fragment.l_balance_error.show()
+            BalanceStatus.EmptyCard -> with(binding.lBalanceError) {
+                binding.lBalance.root.hide()
+                binding.lBalanceError.root.show()
                 if (isTwinCard) {
-                    fragment.tv_error_title.text = fragment.getText(R.string.wallet_error_empty_twin_card)
-                    fragment.tv_error_descriptions.text = fragment.getText(R.string.wallet_error_empty_twin_card_subtitle)
+                    tvErrorTitle.text = fragment.getText(R.string.wallet_error_empty_twin_card)
+                    tvErrorDescriptions.text =
+                        fragment.getText(R.string.wallet_error_empty_twin_card_subtitle)
                 } else {
-                    fragment.tv_error_title.text = fragment.getText(R.string.wallet_error_empty_card)
-                    fragment.tv_error_descriptions.text = fragment.getText(R.string.wallet_error_empty_card_subtitle)
+                    tvErrorTitle.text = fragment.getText(R.string.wallet_error_empty_card)
+                    tvErrorDescriptions.text =
+                        fragment.getText(R.string.wallet_error_empty_card_subtitle)
                 }
             }
-            BalanceStatus.NoAccount -> {
-                fragment.l_balance.hide()
-                fragment.l_balance_error.show()
-                fragment.tv_error_title.text = fragment.getText(R.string.wallet_error_no_account)
-                fragment.tv_error_descriptions.text =
-                        fragment.getString(
-                                R.string.wallet_error_no_account_subtitle_format,
-                                data.amountToCreateAccount, data.currencySymbol
-                        )
+            BalanceStatus.NoAccount -> with(binding.lBalanceError) {
+                binding.lBalance.root.hide()
+                binding.lBalanceError.root.show()
+                tvErrorTitle.text = fragment.getText(R.string.wallet_error_no_account)
+                tvErrorDescriptions.text =
+                    fragment.getString(
+                        R.string.wallet_error_no_account_subtitle_format,
+                        data.amountToCreateAccount, data.currencySymbol
+                    )
             }
-            BalanceStatus.UnknownBlockchain -> {
-                fragment.l_balance.hide()
-                fragment.l_balance_error.show()
-                fragment.tv_error_title.text = fragment.getText(R.string.wallet_error_unsupported_blockchain)
-                fragment.tv_error_descriptions.text =
-                        fragment.getString(R.string.wallet_error_unsupported_blockchain_subtitle)
+            BalanceStatus.UnknownBlockchain -> with(binding.lBalanceError) {
+                binding.lBalance.root.hide()
+                binding.lBalanceError.root.show()
+                tvErrorTitle.text =
+                    fragment.getText(R.string.wallet_error_unsupported_blockchain)
+                tvErrorDescriptions.text =
+                    fragment.getString(R.string.wallet_error_unsupported_blockchain_subtitle)
             }
         }
     }
 
-    private fun showStatus(@IdRes viewRes: Int) {
-        fragment.group_error.show(viewRes == R.id.group_error)
-        fragment.tv_status_loading.show(viewRes == R.id.tv_status_loading)
-        fragment.tv_status_verified.show(viewRes == R.id.tv_status_verified)
+    private fun showStatus(@IdRes viewRes: Int) = with(binding.lBalance) {
+        groupError.show(viewRes == R.id.group_error)
+        tvStatusLoading.show(viewRes == R.id.tv_status_loading)
+        tvStatusVerified.show(viewRes == R.id.tv_status_verified)
     }
 
-    private fun showBalanceWithToken(data: BalanceWidgetData, showAmount: Boolean) {
-        fragment.group_base_currency.show()
-        fragment.tv_currency.text = data.token?.tokenSymbol
-        fragment.tv_base_currency.text = data.currency
-        fragment.tv_amount.text = if (showAmount) data.token?.amount else ""
-        fragment.tv_base_amount.text = if (showAmount) data.amount else ""
+    private fun showBalanceWithToken(data: BalanceWidgetData, showAmount: Boolean) = with(binding.lBalance) {
+        groupBaseCurrency.show()
+        tvCurrency.text = data.token?.tokenSymbol
+        tvBaseCurrency.text = data.currency
+        tvAmount.text = if (showAmount) data.token?.amount else ""
+        tvBaseAmount.text = if (showAmount) data.amount else ""
         if (showAmount) {
-            fragment.tv_fiat_amount.show()
-            fragment.tv_fiat_amount.text = data.token?.fiatAmount
+            tvFiatAmount.show()
+            tvFiatAmount.text = data.token?.fiatAmount
         }
     }
 
-    private fun showBalanceWithoutToken(data: BalanceWidgetData, showAmount: Boolean) {
-        fragment.group_base_currency.hide()
-        fragment.tv_currency.text = data.currency
-        fragment.tv_amount.text = if (showAmount) data.amount else ""
-        if (showAmount) {
-            fragment.tv_fiat_amount.show()
-            fragment.tv_fiat_amount.text = data.fiatAmountFormatted
+    private fun showBalanceWithoutToken(data: BalanceWidgetData, showAmount: Boolean) =
+        with(binding.lBalance) {
+            groupBaseCurrency.hide()
+            tvCurrency.text = data.currency
+            tvAmount.text = if (showAmount) data.amount else ""
+            if (showAmount) {
+                tvFiatAmount.show()
+                tvFiatAmount.text = data.fiatAmountFormatted
+            }
         }
-    }
 }
