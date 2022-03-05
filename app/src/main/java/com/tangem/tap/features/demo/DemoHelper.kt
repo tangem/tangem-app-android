@@ -155,10 +155,7 @@ class DemoConfig {
         "AC79000000000004", // Wallet 4.46
     )
 
-    private val debugTestDemoCardIds = listOf(
-        "AB01000000045060", // Note BTC
-        "AB02000000045028", // Note ETH
-        "AC79000000000004", // Wallet 4.46
+    private val debugTestDemoCardIds = listOf<String>(
     )
 }
 
