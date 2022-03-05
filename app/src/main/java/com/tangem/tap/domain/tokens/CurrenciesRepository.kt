@@ -13,9 +13,12 @@ import com.tangem.tap.common.extensions.appendIf
 import com.tangem.tap.common.extensions.readJsonFileToString
 import com.tangem.tap.domain.extensions.getCustomIconUrl
 import com.tangem.tap.domain.extensions.setCustomIconUrl
+import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.network.createMoshi
+import timber.log.Timber
 
 class CurrenciesRepository(val context: Application) {
+
     private val moshi = createMoshi()
     private val blockchainsAdapter: JsonAdapter<List<Blockchain>> = moshi.adapter(
         Types.newParameterizedType(List::class.java, Blockchain::class.java)
@@ -28,10 +31,13 @@ class CurrenciesRepository(val context: Application) {
     )
 
     fun loadCardCurrencies(cardId: String): CardCurrencies? {
-        val blockchains = loadSavedBlockchains(cardId)
+        val blockchains = loadSavedBlockchains(cardId).toMutableSet()
+        if (DemoHelper.isDemoCardId(cardId)) {
+            blockchains.addAll(DemoHelper.config.demoBlockchains)
+        }
         if (blockchains.isEmpty()) return null
 
-        return CardCurrencies(loadSavedTokens(cardId), blockchains)
+        return CardCurrencies(loadSavedTokens(cardId), blockchains.toList())
     }
 
     fun saveCardCurrencies(cardId: String, currencies: CardCurrencies) {
@@ -117,16 +123,21 @@ class CurrenciesRepository(val context: Application) {
             getSupportedTokens()
         }
 
-        val blockchainTokens = supportedTokens.map {
-            fromJsonToTokensDao(loadTokensJson(it), it)
+        val blockchainTokens = supportedTokens.mapNotNull { blockchain ->
+            loadTokensJson(blockchain)?.let { fromJsonToTokensDao(it, blockchain) }
         }
         val tokens = blockchainTokens.flatten().map { it.toToken() }
         return tokens
     }
 
-    private fun loadTokensJson(blockchain: Blockchain): String {
+    private fun loadTokensJson(blockchain: Blockchain): String? {
         val fileName = getFileName(blockchain)
-        return context.assets.readJsonFileToString(fileName)
+        return try {
+            context.assets.readJsonFileToString(fileName)
+        } catch (ex: Exception) {
+            Timber.e(ex, "Tokens with the file name %s not found", fileName)
+            null
+        }
     }
 
     private fun getFileName(blockchain: Blockchain): String {
@@ -143,12 +154,12 @@ class CurrenciesRepository(val context: Application) {
 
     private fun getSupportedTokens(): List<Blockchain> {
         return listOf(
-            Blockchain.Avalanche,
-            Blockchain.Binance,
-            Blockchain.BSC,
             Blockchain.Ethereum,
+            Blockchain.BSC,
+            Blockchain.Binance,
             Blockchain.Polygon,
-            Blockchain.Solana,
+            Blockchain.Avalanche,
+            Blockchain.Fantom,
         )
     }
 
@@ -164,11 +175,11 @@ class CurrenciesRepository(val context: Application) {
         return excludeUnsupportedBlockchains(blockchains)
     }
 
-    //TODO: move to the App settings
+    // Use this list to temporarily exclude a blockchain from the list of tokens.
     private fun excludeUnsupportedBlockchains(blockchains: List<Blockchain>): List<Blockchain> {
         return blockchains.toMutableList().apply {
             removeAll(listOf(
-                Blockchain.Fantom, Blockchain.FantomTestnet
+//                Any blockchain
             ))
         }
     }
@@ -180,6 +191,13 @@ class CurrenciesRepository(val context: Application) {
         fun getFileNameForTokens(cardId: String): String = "${FILE_NAME_PREFIX_TOKENS}_$cardId"
         fun getFileNameForBlockchains(cardId: String): String =
             "${FILE_NAME_PREFIX_BLOCKCHAINS}_$cardId"
+    }
+}
+
+fun Blockchain.getTokensName(): String {
+    return when (this) {
+        Blockchain.Fantom -> "Fantom Opera"
+        else -> this.fullName
     }
 }
 
