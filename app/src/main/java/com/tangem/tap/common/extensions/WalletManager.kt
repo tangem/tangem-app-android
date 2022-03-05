@@ -13,6 +13,7 @@ import com.tangem.tap.features.wallet.redux.reducers.createAddressesData
 import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import com.tangem.tap.store
+import kotlinx.coroutines.delay
 import timber.log.Timber
 
 /**
@@ -20,6 +21,7 @@ import timber.log.Timber
  */
 suspend fun WalletManager.safeUpdate(): Result<Wallet> = try {
     if (isDemoWallet()) {
+        delay(500)
         Result.Success(wallet)
     } else {
         update()
