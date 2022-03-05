@@ -16,6 +16,7 @@ class FeatureModel(
 class ConfigValueModel(
         val coinMarketCapKey: String,
         val moonPayApiKey: String,
+        val onramperApiKey: String,
         val moonPayApiSecretKey: String,
         val blockchairApiKey: String?,
         val blockchairAuthorizationToken: String?,
