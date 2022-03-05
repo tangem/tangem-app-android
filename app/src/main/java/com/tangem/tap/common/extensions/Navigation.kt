@@ -19,6 +19,7 @@ import com.tangem.tap.features.onboarding.products.otherCards.OnboardingOtherCar
 import com.tangem.tap.features.onboarding.products.twins.ui.TwinsCardsFragment
 import com.tangem.tap.features.onboarding.products.wallet.ui.OnboardingWalletFragment
 import com.tangem.tap.features.send.ui.SendFragment
+import com.tangem.tap.features.shop.ui.ShopFragment
 import com.tangem.tap.features.tokens.ui.AddTokensFragment
 import com.tangem.tap.features.wallet.ui.WalletDetailsFragment
 import com.tangem.tap.features.wallet.ui.WalletFragment
@@ -69,6 +70,7 @@ fun FragmentActivity.addOnBackPressedDispatcher(
 private fun fragmentFactory(screen: AppScreen): Fragment {
     return when (screen) {
         AppScreen.Home -> HomeFragment()
+        AppScreen.Shop -> ShopFragment()
         AppScreen.OnboardingNote -> OnboardingNoteFragment()
         AppScreen.OnboardingWallet -> OnboardingWalletFragment()
         AppScreen.OnboardingTwins -> TwinsCardsFragment()
