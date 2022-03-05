@@ -34,7 +34,7 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
 
     if (action !is WalletAction) return state.walletState
 
-    val moonpayStatus = store.state.globalState.moonpayStatus
+    val exchangeManager = store.state.globalState.currencyExchangeManager
     var newState = state.walletState
 
     when (action) {
@@ -103,7 +103,7 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                             currencySymbol = wallet.currencyData.currencySymbol,
                         ),
                         mainButton = WalletMainButton.SendButton(false),
-                        tradeCryptoState = TradeCryptoState.from(action.moonpayStatus, wallet)
+                        tradeCryptoState = TradeCryptoState.from(exchangeManager, wallet)
                     )
                 }
                 newState = newState.copy(
@@ -124,11 +124,11 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                                 currencySymbol = wallet.currencyData.currencySymbol,
                             ),
                             mainButton = WalletMainButton.SendButton(false),
-                            tradeCryptoState = TradeCryptoState.from(action.moonpayStatus, wallet)
+                            tradeCryptoState = TradeCryptoState.from(exchangeManager, wallet)
                         )
                     }
                 val wallets = newState.replaceSomeWallets(newWallets)
-                newState = newState.copy(wallets = newState.updateTradeCryptoState(moonpayStatus, wallets))
+                newState = newState.copy(wallets = newState.updateTradeCryptoState(exchangeManager, wallets))
             }
         }
         is WalletAction.LoadWallet.Success -> newState =
@@ -153,7 +153,7 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                 }
             newState = newState.copy(
                 state = progressState,
-                wallets = newState.updateTradeCryptoState(moonpayStatus, wallets)
+                wallets = newState.updateTradeCryptoState(exchangeManager, wallets)
             )
         }
         is WalletAction.LoadWallet.Failure -> {
@@ -188,7 +188,7 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                 }
             newState = newState.copy(
                 state = progressState,
-                wallets = newState.updateTradeCryptoState(moonpayStatus, wallets)
+                wallets = newState.updateTradeCryptoState(exchangeManager, wallets)
             )
         }
         is WalletAction.SetArtworkId -> {

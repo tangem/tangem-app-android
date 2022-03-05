@@ -9,7 +9,6 @@ import com.tangem.tap.common.redux.NotificationAction
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.tokens.CardCurrencies
-import com.tangem.tap.network.moonpay.MoonpayStatus
 import com.tangem.wallet.R
 import org.rekotlin.Action
 import java.math.BigDecimal
@@ -25,11 +24,7 @@ sealed class WalletAction : Action {
     }
 
 
-    data class LoadWallet(
-        val moonpayStatus: MoonpayStatus? = null,
-        val blockchain: Blockchain? = null,
-    ) :
-        WalletAction() {
+    data class LoadWallet(val blockchain: Blockchain? = null) : WalletAction() {
         data class Success(val wallet: Wallet) : WalletAction()
         data class NoAccount(val wallet: Wallet, val amountToCreateAccount: String) : WalletAction()
         data class Failure(val wallet: Wallet, val errorMessage: String? = null) : WalletAction()
@@ -146,5 +141,5 @@ sealed class WalletAction : Action {
 
     data class ChangeSelectedAddress(val type: AddressType) : WalletAction()
 
-    data class SetWalletRent(val blockchain: Blockchain, val minRent: String, val rentExempt: String): WalletAction()
+    data class SetWalletRent(val blockchain: Blockchain, val minRent: String, val rentExempt: String) : WalletAction()
 }
