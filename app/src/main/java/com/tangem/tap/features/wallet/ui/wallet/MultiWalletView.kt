@@ -94,11 +94,11 @@ class MultiWalletView : WalletView {
         val fragment = fragment ?: return
         val binding = binding ?: return
 
-        walletsAdapter.submitList(state.wallets, state.primaryBlockchain, state.primaryToken)
+        walletsAdapter.submitList(state.walletsData, state.primaryBlockchain, state.primaryToken)
 
         binding.btnAddToken.setOnClickListener {
             store.dispatch(TokensAction.LoadCurrencies)
-            store.dispatch(TokensAction.SetAddedCurrencies(state.wallets))
+            store.dispatch(TokensAction.SetAddedCurrencies(state.walletsData))
             store.dispatch(NavigationAction.NavigateTo(AppScreen.AddTokens))
         }
         handleErrorStates(state = state, binding = binding, fragment = fragment)
