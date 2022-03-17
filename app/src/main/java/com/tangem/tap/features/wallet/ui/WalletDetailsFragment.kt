@@ -94,7 +94,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
 
     override fun newState(state: WalletState) {
         if (activity == null || view == null) return
-        if (state.selectedWallet == null) return
+        if (state.selectedCurrency == null) return
         val selectedWallet = state.getSelectedWalletData() ?: return
 
 
