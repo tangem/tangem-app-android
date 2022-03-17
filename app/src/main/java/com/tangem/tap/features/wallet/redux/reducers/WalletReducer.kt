@@ -131,11 +131,7 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                 newState = newState.copy(walletsData = newState.updateTradeCryptoState(exchangeManager, wallets))
             }
         }
-        is WalletAction.LoadWallet.Success -> newState =
-            onWalletLoadedReducer.reduce(action.wallet, newState)
-        is WalletAction.UpdateWallet.Success -> {
-            newState = onWalletLoadedReducer.reduce(action.wallet, newState)
-        }
+        is WalletAction.LoadWallet.Success -> newState = onWalletLoadedReducer.reduce(action.wallet, newState)
         is WalletAction.LoadWallet.NoAccount -> {
             val walletData = newState.getWalletData(action.wallet.blockchain)?.copy(
                 currencyData = BalanceWidgetData(
