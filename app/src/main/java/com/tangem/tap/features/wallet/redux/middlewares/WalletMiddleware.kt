@@ -24,7 +24,10 @@ import com.tangem.tap.domain.extensions.toSendableAmounts
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.send.redux.PrepareSendScreen
-import com.tangem.tap.features.wallet.redux.*
+import com.tangem.tap.features.wallet.redux.Currency
+import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.features.wallet.redux.WalletData
+import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.network.NetworkStateChanged
 import com.tangem.tap.scope
 import com.tangem.tap.store
@@ -63,9 +66,9 @@ class WalletMiddleware {
             is WalletAction.LoadWallet -> {
                 scope.launch {
                     if (action.blockchain == null) {
-                            walletState.walletManagers.map { walletManager ->
-                                async { globalState.tapWalletManager.loadWalletData(walletManager) }
-                            }.awaitAll()
+                        walletState.walletManagers.map { walletManager ->
+                            async { globalState.tapWalletManager.loadWalletData(walletManager) }
+                        }.awaitAll()
                     } else {
                         val walletManager = walletState.getWalletManager(action.blockchain)
                         walletManager?.let { globalState.tapWalletManager.loadWalletData(it) }
@@ -122,22 +125,6 @@ class WalletMiddleware {
                                     Analytics.ActionToLog.CreateWallet,
                                     card = store.state.detailsState.scanResponse?.card
                                 )
-                            }
-                        }
-                    }
-                }
-            }
-            is WalletAction.UpdateWallet -> {
-                if (action.blockchain != null) {
-                    scope.launch {
-                        val walletManager = walletState.getWalletManager(action.blockchain)
-                        walletManager?.let { globalState.tapWalletManager.updateWallet(it) }
-                    }
-                } else {
-                    scope.launch {
-                        if (walletState.state == ProgressState.Done) {
-                            walletState.walletManagers.map { walletManager ->
-                                globalState.tapWalletManager.updateWallet(walletManager)
                             }
                         }
                     }
