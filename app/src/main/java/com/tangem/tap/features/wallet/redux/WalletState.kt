@@ -36,7 +36,7 @@ data class WalletState(
     val walletManagers: List<WalletManager> = emptyList(),
     val isMultiwalletAllowed: Boolean = false,
     val cardCurrency: CryptoCurrencyName? = null,
-    val selectedWallet: Currency? = null,
+    val selectedCurrency: Currency? = null,
     val primaryBlockchain: Blockchain? = null,
     val primaryToken: Token? = null,
     val isTestnet: Boolean = false,
@@ -93,7 +93,7 @@ data class WalletState(
     }
 
     fun getSelectedWalletData(): WalletData? {
-        return walletsData.find { it.currency == selectedWallet }
+        return walletsData.find { it.currency == selectedCurrency }
     }
 
     fun canBeRemoved(walletData: WalletData?): Boolean {
