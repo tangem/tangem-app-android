@@ -99,7 +99,7 @@ class WalletMiddleware {
                         else -> {
                             globalState.tapWalletManager.loadFiatRate(
                                 fiatCurrency = globalState.appCurrency,
-                                currencies = walletState.wallets.mapNotNull { it.currency }
+                                currencies = walletState.walletsData.mapNotNull { it.currency }
                             )
                         }
                     }
@@ -170,7 +170,7 @@ class WalletMiddleware {
             is WalletAction.LoadData -> {
                 scope.launch {
                     val scanNoteResponse = globalState.scanResponse ?: return@launch
-                    if (!walletState.wallets.isEmpty()) {
+                    if (walletState.walletsData.isNotEmpty()) {
                         globalState.tapWalletManager.reloadData(scanNoteResponse)
                     } else {
                         globalState.tapWalletManager.loadData(scanNoteResponse)
