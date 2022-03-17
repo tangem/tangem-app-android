@@ -202,12 +202,12 @@ private fun sendTransaction(
                     }
                     scope.launch(Dispatchers.IO) {
                         withContext(Dispatchers.Main) {
-                            dispatch(WalletAction.UpdateWallet(walletManager.wallet.blockchain))
+                            dispatch(WalletAction.LoadWallet(walletManager.wallet.blockchain))
                         }
 // [REDACTED_TODO_COMMENT]
                         delay(10000)
                         withContext(Dispatchers.Main) {
-                            dispatch(WalletAction.UpdateWallet(walletManager.wallet.blockchain))
+                            dispatch(WalletAction.LoadWallet(walletManager.wallet.blockchain))
                         }
                     }
                 }

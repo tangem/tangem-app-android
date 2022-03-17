@@ -3,7 +3,6 @@ package com.tangem.tap.domain
 import com.tangem.blockchain.blockchains.solana.RentProvider
 import com.tangem.blockchain.common.*
 import com.tangem.common.services.Result
-import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.extensions.stripZeroPlainString
@@ -42,20 +41,31 @@ class TapWalletManager {
         by lazy { WalletManagerFactory(blockchainSdkConfig) }
 
     suspend fun loadWalletData(walletManager: WalletManager) {
-        handleUpdateWalletResult(walletManager.safeUpdate(), walletManager)
-    }
-
-    suspend fun updateWallet(walletManager: WalletManager) {
         val result = walletManager.safeUpdate()
         withContext(Dispatchers.Main) {
             when (result) {
-                is Result.Success ->
-                    store.dispatch(WalletAction.UpdateWallet.Success(result.data))
-                is Result.Failure ->
-                    store.dispatch(WalletAction.UpdateWallet.Failure(result.error.localizedMessage))
+                is Result.Success -> {
+                    checkForRentWarning(walletManager)
+                    store.dispatch(WalletAction.LoadWallet.Success(result.data))
+                }
+                is Result.Failure -> {
+                    when (result.error) {
+                        is TapError.WalletManagerUpdate.NoAccountError -> {
+                            store.dispatch(WalletAction.LoadWallet.NoAccount(
+                                walletManager.wallet,
+                                (result.error as TapError.WalletManagerUpdate.NoAccountError).customMessage
+                            ))
+                        }
+                        else -> {
+                            store.dispatch(WalletAction.LoadWallet.Failure(
+                                walletManager.wallet,
+                                result.error.localizedMessage
+                            ))
+                        }
+                    }
+                }
             }
         }
-
     }
 
     suspend fun loadFiatRate(fiatCurrency: FiatCurrencyName, wallet: Wallet) {
@@ -221,36 +231,6 @@ class TapWalletManager {
                 WalletAction.EmptyWallet
             }
             else -> null
-        }
-    }
-
-    private suspend fun handleUpdateWalletResult(result: Result<Wallet>, walletManager: WalletManager) {
-        withContext(Dispatchers.Main) {
-            when (result) {
-                is Result.Success -> {
-                    checkForRentWarning(walletManager)
-                    store.dispatch(WalletAction.LoadWallet.Success(result.data))
-                }
-                is Result.Failure -> {
-                    val error = (result.error as? TapError) ?: TapError.UnknownError
-                    when (error) {
-                        TapError.NoInternetConnection -> {
-                            store.dispatch(WalletAction.LoadData.Failure(error))
-                        }
-                        is TapError.WalletManagerUpdate.NoAccountError -> {
-                            store.dispatch(WalletAction.LoadWallet
-                                .NoAccount(walletManager.wallet, error.customMessage))
-                        }
-                        is TapError.WalletManagerUpdate.InternalError -> {
-                            store.dispatch(WalletAction.LoadWallet
-                                .Failure(walletManager.wallet, error.customMessage))
-                        }
-                        else -> {
-                            store.dispatchDebugErrorNotification(error)
-                        }
-                    }
-                }
-            }
         }
     }
 
