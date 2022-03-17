@@ -21,7 +21,7 @@ class MultiWalletReducer {
                 state.addWalletManagers(action.walletManagers)
             }
             is WalletAction.MultiWallet.AddBlockchains -> {
-                val wallets = action.blockchains.map { blockchain ->
+                val walletsData = action.blockchains.map { blockchain ->
                     val wallet = state.getWalletManager(blockchain)?.wallet
                     val cardToken = if (!state.isMultiwalletAllowed) {
                         wallet?.getFirstToken()?.symbol?.let { TokenData("", tokenSymbol = it) }
@@ -41,14 +41,14 @@ class MultiWalletReducer {
                     )
                 }
 
-                val selectedWallet = if (!state.isMultiwalletAllowed) {
-                    wallets[0].currency
+                val selectedCurrency = if (!state.isMultiwalletAllowed) {
+                    walletsData[0].currency
                 } else {
-                    state.selectedWallet
+                    state.selectedCurrency
                 }
                 state.copy(
-                        walletsData = wallets,
-                        selectedWallet = selectedWallet
+                        walletsData = walletsData,
+                        selectedCurrency = selectedCurrency
                 )
             }
             is WalletAction.MultiWallet.AddBlockchain -> {
@@ -115,7 +115,7 @@ class MultiWalletReducer {
                 state.copy(isMultiwalletAllowed = action.isMultiwalletAllowed)
 
             is WalletAction.MultiWallet.SelectWallet ->
-                state.copy(selectedWallet = action.walletData?.currency)
+                state.copy(selectedCurrency = action.walletData?.currency)
 
             is WalletAction.MultiWallet.RemoveWallet -> {
                 val wallets = state.walletsData.filterNot {
