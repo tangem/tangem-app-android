@@ -137,6 +137,7 @@ class OnWalletLoadedReducer {
         val pendingTransactions = wallet.recentTransactions
                 .toPendingTransactions(wallet.address)
 
+        //TO:
         val sendButtonEnabled = amount?.isZero() == false && pendingTransactions.isEmpty()
         val balanceStatus = if (pendingTransactions.isNotEmpty()) {
             BalanceStatus.TransactionInProgress
