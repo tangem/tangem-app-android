@@ -203,7 +203,7 @@ class WalletMiddleware {
                 }
             }
             is WalletAction.ShowDialog.QrCode -> {
-                val selectedWalletData = walletState.getWalletData(walletState.selectedWallet) ?: return
+                val selectedWalletData = walletState.getWalletData(walletState.selectedCurrency) ?: return
                 val selectedAddressData = selectedWalletData.walletAddresses?.selectedAddress ?: return
 
                 val currency = selectedWalletData.currency
