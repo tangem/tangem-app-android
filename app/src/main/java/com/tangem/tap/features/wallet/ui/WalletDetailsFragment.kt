@@ -107,8 +107,8 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
 
         handleDialogs(state.walletDialog)
         handleCurrencyIcon(selectedWallet)
-        handleWalletRent(selectedWallet.walletRent)
-
+        handleWalletRent(selectedWallet.warningRent)
+        handleNotEnoughFundsOnMainCurrency(selectedWallet)
 
         binding.srlWalletDetails.setOnRefreshListener {
             if (selectedWallet.currencyData.status != BalanceStatus.Loading) {
@@ -153,14 +153,27 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
 
     private fun handleWalletRent(rent: WalletRent?) = with(binding) {
         val rent = rent.guard {
-            lRentWarning.root.hide()
+            lWarning.root.hide()
             return
         }
         val warningMessage = requireContext().getString(
             R.string.solana_rent_warning, rent.minRentValue, rent.rentExemptValue
         )
-        lRentWarning.tvRentWarningMessage.text = warningMessage
-        lRentWarning.root.show()
+        lWarning.tvWarningMessage.text = warningMessage
+        lWarning.root.show()
+    }
+
+    private fun handleNotEnoughFundsOnMainCurrency(selectedWalletData: WalletData) = with(binding) {
+        if (selectedWalletData.shouldShowCoinAmountWarning()) {
+            val blockchainName = selectedWalletData.currency.blockchain.fullName
+            val warningMessage = requireContext().getString(
+                R.string.token_details_send_blocked_fee_format, blockchainName, blockchainName
+            )
+            lWarning.tvWarningMessage.text = warningMessage
+            lWarning.root.show()
+        } else {
+            lWarning.root.hide()
+        }
     }
 
     private fun handleCurrencyIcon(wallet: WalletData) = with(binding.lWalletDetails.lBalance) {
@@ -234,7 +247,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
                 lBalance.root.show()
                 lBalance.groupBalance.show()
                 lBalance.tvError.hide()
-                lBalance.tvAmount.text = data.amount
+                lBalance.tvAmount.text = data.amountFormatted
                 lBalance.tvFiatAmount.text = data.fiatAmountFormatted
                 lBalance.tvStatus.setLoadingStatus(R.string.wallet_balance_loading)
             }
@@ -244,7 +257,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
                 lBalance.root.show()
                 lBalance.groupBalance.show()
                 lBalance.tvError.hide()
-                lBalance.tvAmount.text = data.amount
+                lBalance.tvAmount.text = data.amountFormatted
                 lBalance.tvFiatAmount.text = data.fiatAmountFormatted
                 when (data.status) {
                     BalanceStatus.VerifiedOnline, BalanceStatus.SameCurrencyTransactionInProgress -> {
