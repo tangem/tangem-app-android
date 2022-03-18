@@ -57,8 +57,8 @@ class WalletAdapter
 
         fun bind(wallet: WalletData) = with(binding) {
             tvCurrency.text = wallet.currencyData.currency
-            tvAmount.text = wallet.currencyData.amount?.takeWhile { !it.isWhitespace() }
-            tvCurrencySymbol.text = wallet.currencyData.amount?.takeLastWhile { !it.isWhitespace() }
+            tvAmount.text = wallet.currencyData.amountFormatted?.takeWhile { !it.isWhitespace() }
+            tvCurrencySymbol.text = wallet.currencyData.amountFormatted?.takeLastWhile { !it.isWhitespace() }
             tvAmountFiat.text = wallet.currencyData.fiatAmountFormatted
             tvExchangeRate.text = wallet.fiatRateString
             cardWallet.setOnClickListener {
@@ -77,7 +77,7 @@ class WalletAdapter
                 BalanceStatus.VerifiedOnline, BalanceStatus.SameCurrencyTransactionInProgress -> hideWarning()
                 BalanceStatus.Loading -> {
                     hideWarning()
-                    if (wallet.currencyData.amount == null) {
+                    if (wallet.currencyData.amountFormatted == null) {
                         tvExchangeRate.text = root.getString(R.string.wallet_balance_loading)
                     }
                 }
