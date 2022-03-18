@@ -63,7 +63,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
             }.select { it.walletState }
         }
         walletView.setFragment(this, binding)
-        store.dispatch(WalletAction.UpdateWallet())
+        store.dispatch(WalletAction.LoadWallet())
     }
 
     override fun onStop() {
