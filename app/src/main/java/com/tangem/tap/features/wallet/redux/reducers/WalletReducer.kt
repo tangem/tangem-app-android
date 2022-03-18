@@ -246,7 +246,7 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
             if (walletData == null) {
                 newState
             } else {
-                walletData = walletData.copy(walletRent = WalletRent(action.minRent, action.rentExempt))
+                walletData = walletData.copy(warningRent = WalletRent(action.minRent, action.rentExempt))
                 newState = newState.copy(
                     walletsData = newState.replaceSomeWallets(listOf(walletData))
                 )
