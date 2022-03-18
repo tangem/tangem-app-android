@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.blockchain.extensions.isAboveZero
+import com.tangem.common.extensions.isZero
 import com.tangem.tap.common.entities.Button
 import com.tangem.tap.common.extensions.toQrCode
 import com.tangem.tap.common.redux.StateDialog
@@ -248,17 +249,27 @@ data class WalletData(
     val currencyData: BalanceWidgetData = BalanceWidgetData(),
     val updatingWallet: Boolean = false,
     val tradeCryptoState: TradeCryptoState = TradeCryptoState(),
-    val allowToSend: Boolean = true,
     val fiatRateString: String? = null,
     val fiatRate: BigDecimal? = null,
     val mainButton: WalletMainButton = WalletMainButton.SendButton(false),
     val currency: Currency,
-    val walletRent: WalletRent? = null,
+    val warningRent: WalletRent? = null,
+    val blockchainAmount: BigDecimal? = BigDecimal.ZERO
 ) {
     fun shouldShowMultipleAddress(): Boolean {
         val listOfAddresses = walletAddresses?.list ?: return false
         return listOfAddresses.size > 1
     }
+
+    fun shouldShowCoinAmountWarning(): Boolean = when (currency) {
+        is Currency.Blockchain -> false
+        is Currency.Token -> blockchainAmountIsEmpty() && !tokenAmountIsEmpty()
+    }
+
+    fun shouldEnableTokenSendButton(): Boolean = !blockchainAmountIsEmpty() || !tokenAmountIsEmpty()
+
+    private fun blockchainAmountIsEmpty(): Boolean = blockchainAmount?.isZero() ?: false
+    private fun tokenAmountIsEmpty(): Boolean = currencyData.amount?.isZero() == true
 }
 
 data class WalletRent(
