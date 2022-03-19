@@ -87,23 +87,19 @@ class WalletMiddleware {
                 warningsMiddleware.tryToShowAppRatingWarning(action.wallet)
             }
             is WalletAction.LoadFiatRate -> {
+                val tapWalletManager = globalState.tapWalletManager
+                val fiatAppCurrency = globalState.appCurrency
                 scope.launch {
                     when {
                         action.wallet != null -> {
-                            globalState.tapWalletManager.loadFiatRate(
-                                globalState.appCurrency, action.wallet
-                            )
+                            tapWalletManager.loadFiatRate(fiatAppCurrency, action.wallet)
                         }
-                        action.currency != null -> {
-                            globalState.tapWalletManager.loadFiatRate(
-                                globalState.appCurrency, action.currency
-                            )
+                        action.currencyList != null -> {
+                            tapWalletManager.loadFiatRate(fiatAppCurrency, action.currencyList)
                         }
                         else -> {
-                            globalState.tapWalletManager.loadFiatRate(
-                                fiatCurrency = globalState.appCurrency,
-                                currencies = walletState.walletsData.mapNotNull { it.currency }
-                            )
+                            val currencyList = walletState.walletsData.map { it.currency }
+                            tapWalletManager.loadFiatRate(fiatAppCurrency, currencyList)
                         }
                     }
                 }
@@ -217,12 +213,12 @@ class WalletMiddleware {
                 when (currency) {
                     is Currency.Blockchain -> {
                         val amountToSend = amounts?.find { it.currencySymbol == currency.blockchain.currency }
-                                ?: return WalletAction.Send.ChooseCurrency(amounts)
+                            ?: return WalletAction.Send.ChooseCurrency(amounts)
                         PrepareSendScreen(amountToSend, selectedWalletData.fiatRate, walletManager)
                     }
                     is Currency.Token -> {
                         val amountToSend = amounts?.find { it.currencySymbol == currency.token.symbol }
-                                ?: return WalletAction.Send.ChooseCurrency(amounts)
+                            ?: return WalletAction.Send.ChooseCurrency(amounts)
                         prepareSendActionForToken(amountToSend, state, selectedWalletData, wallet, walletManager)
                     }
                 }
