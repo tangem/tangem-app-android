@@ -61,7 +61,9 @@ class MultiWalletMiddleware {
                             }
                     }
                 }
-                store.dispatch(WalletAction.LoadFiatRate(currency = Currency.Blockchain(action.blockchain)))
+                store.dispatch(WalletAction.LoadFiatRate(
+                    currencyList = listOf(Currency.Blockchain(action.blockchain)))
+                )
                 store.dispatch(WalletAction.LoadWallet(action.blockchain)
                 )
             }
@@ -184,7 +186,7 @@ class MultiWalletMiddleware {
                     store.dispatch(WalletAction.MultiWallet.AddWalletManagers(it))
                     store.dispatch(WalletAction.MultiWallet.AddBlockchain(blockchain))
                 }
-            tokensList.forEach { store.dispatch(WalletAction.LoadFiatRate(currency = Currency.Token(it))) }
+            store.dispatch(WalletAction.LoadFiatRate(currencyList = tokensList.map { Currency.Token(it) }))
             walletManager?.apply { addTokens(tokensList) }
         }
         scope.launch {
