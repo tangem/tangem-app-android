@@ -22,6 +22,7 @@ data class BalanceWidgetData(
     val status: BalanceStatus? = null,
     val currency: String? = null,
     val currencySymbol: String? = null,
+    val blockchainAmount: BigDecimal? = BigDecimal.ZERO,
     val amount: BigDecimal? = null,
     val amountFormatted: String? = null,
     val fiatAmountFormatted: String? = null,
