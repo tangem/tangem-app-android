@@ -254,7 +254,6 @@ data class WalletData(
     val mainButton: WalletMainButton = WalletMainButton.SendButton(false),
     val currency: Currency,
     val warningRent: WalletRent? = null,
-    val blockchainAmount: BigDecimal? = BigDecimal.ZERO
 ) {
     fun shouldShowMultipleAddress(): Boolean {
         val listOfAddresses = walletAddresses?.list ?: return false
@@ -268,7 +267,7 @@ data class WalletData(
 
     fun shouldEnableTokenSendButton(): Boolean = !blockchainAmountIsEmpty() || !tokenAmountIsEmpty()
 
-    private fun blockchainAmountIsEmpty(): Boolean = blockchainAmount?.isZero() ?: false
+    private fun blockchainAmountIsEmpty(): Boolean = currencyData.blockchainAmount?.isZero() ?: false
     private fun tokenAmountIsEmpty(): Boolean = currencyData.amount?.isZero() == true
 }
 
