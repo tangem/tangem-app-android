@@ -75,11 +75,6 @@ class TapWalletManager {
         loadFiatRate(fiatCurrency, currencies)
     }
 
-    suspend fun loadFiatRate(fiatCurrency: FiatCurrencyName, currency: Currency) {
-        val currencies = listOf(currency)
-        loadFiatRate(fiatCurrency, currencies)
-    }
-
     suspend fun loadFiatRate(fiatCurrency: FiatCurrencyName, currencies: List<Currency>) {
         val results = mutableListOf<Pair<Currency, Result<BigDecimal>?>>()
         currencies.forEach {
