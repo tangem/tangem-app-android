@@ -84,7 +84,7 @@ class TapWalletManager {
     }
 
     suspend fun onCardScanned(data: ScanResponse) {
-        store.state.globalState.feedbackManager?.infoHolder?.setCardInfo(data.card)
+        store.state.globalState.feedbackManager?.infoHolder?.setCardInfo(data)
         updateConfigManager(data)
 
         withContext(Dispatchers.Main) {
