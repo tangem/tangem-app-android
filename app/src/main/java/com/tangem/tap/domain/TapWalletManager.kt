@@ -42,24 +42,16 @@ class TapWalletManager {
         store.state.globalState.configManager?.config?.blockchainSdkConfig ?: BlockchainSdkConfig()
     }
 
-    private val throttlingDuration = 10000
-    private val throttlingWalletManagers: MutableMap<Blockchain, Long> = mutableMapOf()
-
-    private val throttlingFiatRateDuration = 60000
-    private val throttlingFiatRate: MutableMap<Currency, Long> = mutableMapOf()
+    private val walletManagersThrottler = Throttler<Blockchain>(10000)
+    private val fiatRatesThrottler = Throttler<Currency>(60000)
 
     suspend fun loadWalletData(walletManager: WalletManager) {
-        val result = if (managerIsStillThrottled(walletManager)) {
+        val blockchain = walletManager.wallet.blockchain
+        val result = if (walletManagersThrottler.isStillThrottled(blockchain)) {
             delay(200)
             Result.Success(walletManager.wallet)
         } else {
-            val blockchain = walletManager.wallet.blockchain
-            val now = System.currentTimeMillis()
-            val throttledUpTo = throttlingWalletManagers[blockchain] ?: 0L
-            if (throttledUpTo == 0L || throttledUpTo < now) {
-                val newTime = now + throttlingDuration
-                throttlingWalletManagers[blockchain] = newTime
-            }
+            walletManagersThrottler.updateThrottlingTo(blockchain)
             walletManager.safeUpdate()
         }
         handleUpdateWalletResult(result, walletManager)
@@ -92,27 +84,18 @@ class TapWalletManager {
 
     suspend fun loadFiatRate(fiatCurrency: FiatCurrencyName, currencies: List<Currency>) {
         val results = mutableListOf<Pair<Currency, Result<BigDecimal>?>>()
-        val toUpdate = currencies.mapNotNull {
-            if (fiatRateIsStillThrottled(it)) {
-                null
-            } else {
-                val now = System.currentTimeMillis()
-                val throttledUpTo = throttlingFiatRate[it] ?: 0L
-                if (throttledUpTo == 0L || throttledUpTo < now) {
-                    val newTime = now + throttlingFiatRateDuration
-                    throttlingFiatRate[it] = newTime
-                }
-                it
+        currencies.forEach {
+            if (!fiatRatesThrottler.isStillThrottled(it)) {
+                fiatRatesThrottler.updateThrottlingTo(it)
+                results.add(it to coinMarketCapService.getRate(it.currencySymbol, fiatCurrency))
+                handleFiatRatesResult(results)
             }
         }
-
-        toUpdate.forEach {
-            results.add(it to coinMarketCapService.getRate(it.currencySymbol, fiatCurrency))
-        }
-        handleFiatRatesResult(results)
     }
 
     suspend fun onCardScanned(data: ScanResponse) {
+        walletManagersThrottler.clear()
+        fiatRatesThrottler.clear()
         store.state.globalState.feedbackManager?.infoHolder?.setCardInfo(data.card)
         updateConfigManager(data)
 
@@ -335,20 +318,35 @@ class TapWalletManager {
             }
         }
     }
-
-    private fun managerIsStillThrottled(walletManager: WalletManager): Boolean {
-        val inThrottlingUpTo = throttlingWalletManagers[walletManager.wallet.blockchain] ?: return false
-        val diff = System.currentTimeMillis() - inThrottlingUpTo
-        return diff < 0
-    }
-
-    private fun fiatRateIsStillThrottled(currency: Currency): Boolean {
-        val inThrottlingUpTo = throttlingFiatRate[currency] ?: return false
-        val diff = System.currentTimeMillis() - inThrottlingUpTo
-        return diff < 0
-    }
 }
 
 fun Wallet.getFirstToken(): Token? {
     return getTokens().toList().getOrNull(0)
+}
+
+class Throttler<T>(
+    private val duration: Long,
+) {
+
+    private val items: MutableMap<T, Long> = mutableMapOf()
+
+    fun isStillThrottled(item: T): Boolean {
+        val inThrottlingUpTo = items[item] ?: return false
+        val diff = System.currentTimeMillis() - inThrottlingUpTo
+        return diff < 0
+    }
+
+    fun updateThrottlingTo(item: T): T {
+        val now = System.currentTimeMillis()
+        val throttledUpTo = items[item] ?: 0L
+        if (throttledUpTo == 0L || throttledUpTo < now) {
+            val newTime = now + duration
+            items[item] = newTime
+        }
+        return item
+    }
+
+    fun clear() {
+        items.clear()
+    }
 }
