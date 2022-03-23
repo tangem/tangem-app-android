@@ -27,22 +27,42 @@ import com.tangem.tap.network.coinmarketcap.CoinMarketCapService
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 
 
 class TapWalletManager {
-    private val coinMarketCapService = CoinMarketCapService()
-
-    private val blockchainSdkConfig by lazy {
-        store.state.globalState.configManager?.config?.blockchainSdkConfig ?: BlockchainSdkConfig()
-    }
     val walletManagerFactory: WalletManagerFactory
         by lazy { WalletManagerFactory(blockchainSdkConfig) }
 
+    private val coinMarketCapService = CoinMarketCapService()
+    private val blockchainSdkConfig by lazy {
+        store.state.globalState.configManager?.config?.blockchainSdkConfig ?: BlockchainSdkConfig()
+    }
+
+    private val throttlingDuration = 10000
+    private val throttlingWalletManagers: MutableMap<Blockchain, Long> = mutableMapOf()
+
+    private val throttlingFiatRateDuration = 60000
+    private val throttlingFiatRate: MutableMap<Currency, Long> = mutableMapOf()
+
     suspend fun loadWalletData(walletManager: WalletManager) {
-        handleUpdateWalletResult(walletManager.safeUpdate(), walletManager)
+        val result = if (managerIsStillThrottled(walletManager)) {
+            delay(200)
+            Result.Success(walletManager.wallet)
+        } else {
+            val blockchain = walletManager.wallet.blockchain
+            val now = System.currentTimeMillis()
+            val throttledUpTo = throttlingWalletManagers[blockchain] ?: 0L
+            if (throttledUpTo == 0L || throttledUpTo < now) {
+                val newTime = now + throttlingDuration
+                throttlingWalletManagers[blockchain] = newTime
+            }
+            walletManager.safeUpdate()
+        }
+        handleUpdateWalletResult(result, walletManager)
     }
 
     suspend fun updateWallet(walletManager: WalletManager) {
@@ -72,7 +92,21 @@ class TapWalletManager {
 
     suspend fun loadFiatRate(fiatCurrency: FiatCurrencyName, currencies: List<Currency>) {
         val results = mutableListOf<Pair<Currency, Result<BigDecimal>?>>()
-        currencies.forEach {
+        val toUpdate = currencies.mapNotNull {
+            if (fiatRateIsStillThrottled(it)) {
+                null
+            } else {
+                val now = System.currentTimeMillis()
+                val throttledUpTo = throttlingFiatRate[it] ?: 0L
+                if (throttledUpTo == 0L || throttledUpTo < now) {
+                    val newTime = now + throttlingFiatRateDuration
+                    throttlingFiatRate[it] = newTime
+                }
+                it
+            }
+        }
+
+        toUpdate.forEach {
             results.add(it to coinMarketCapService.getRate(it.currencySymbol, fiatCurrency))
         }
         handleFiatRatesResult(results)
@@ -300,6 +334,18 @@ class TapWalletManager {
                 }
             }
         }
+    }
+
+    private fun managerIsStillThrottled(walletManager: WalletManager): Boolean {
+        val inThrottlingUpTo = throttlingWalletManagers[walletManager.wallet.blockchain] ?: return false
+        val diff = System.currentTimeMillis() - inThrottlingUpTo
+        return diff < 0
+    }
+
+    private fun fiatRateIsStillThrottled(currency: Currency): Boolean {
+        val inThrottlingUpTo = throttlingFiatRate[currency] ?: return false
+        val diff = System.currentTimeMillis() - inThrottlingUpTo
+        return diff < 0
     }
 }
 
