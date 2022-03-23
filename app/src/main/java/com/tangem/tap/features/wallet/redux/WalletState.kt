@@ -63,8 +63,6 @@ data class WalletState(
     val currencies: List<Currency>
         get() = wallets.mapNotNull { it.currency }
 
-    val throttlingDuration = 10000L
-
     fun getWalletManager(token: Token?): WalletManager? {
         if (token == null) return null
         return walletManagers.find { it.wallet.blockchain == token.blockchain }
