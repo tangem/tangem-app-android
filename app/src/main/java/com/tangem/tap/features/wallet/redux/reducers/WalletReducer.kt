@@ -94,8 +94,20 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
         }
         is WalletAction.LoadWallet -> {
             if (action.blockchain == null) {
-                val wallets = newState.wallets.map { wallet ->
+                // update throttling
+                val updatedThrottling = newState.walletManagersThrottling
+                newState.walletManagers.forEach {
+                    val now = System.currentTimeMillis()
+                    val currentThrottling = newState.walletManagersThrottling[it.wallet.blockchain] ?: 0L
+                    if (currentThrottling == 0L || currentThrottling < now) {
+                        val newThrottlingUpTo = now + newState.throttlingDuration
+                        updatedThrottling[it.wallet.blockchain] = newThrottlingUpTo
+                    }
 
+                }
+                newState = newState.copy(walletManagersThrottling = updatedThrottling)
+
+                val wallets = newState.wallets.map { wallet ->
                     wallet.copy(
                         currencyData = wallet.currencyData.copy(
                             status = BalanceStatus.Loading,
@@ -113,6 +125,17 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
             } else {
                 val walletManager = newState.getWalletManager(action.blockchain) ?: return newState
                 val blockchain = walletManager.wallet.blockchain
+
+                // update throttling
+                val now = System.currentTimeMillis()
+                val currentThrottling = newState.walletManagersThrottling[blockchain] ?: 0L
+                if (currentThrottling == 0L || currentThrottling < now) {
+                    val newThrottlingUpTo = now + newState.throttlingDuration
+                    val newMap = newState.walletManagersThrottling.toMutableMap()
+                    newMap[blockchain] = newThrottlingUpTo
+                    newState = newState.copy(walletManagersThrottling = newMap)
+                }
+
                 val currencies = listOf(Currency.Blockchain(blockchain)) +
                     walletManager.cardTokens.map { Currency.Token(it) }
                 val newWallets = newState.wallets.filter { currencies.contains(it.currency) }
