@@ -84,16 +84,19 @@ class FeedbackManager(
 class TangemLogCollector : TangemSdkLogger {
     private val dateFormatter = SimpleDateFormat("HH:mm:ss.SSS")
     private val logs = mutableListOf<String>()
+    private val mutex = Object()
 
     override fun log(message: () -> String, level: Log.Level) {
         val time = dateFormatter.format(Date())
-        logs.add("$time: ${message()}\n")
+        synchronized(mutex) {
+            logs.add("$time: ${message()}\n")
+        }
     }
 
-    fun getLogs(): List<String> = logs.toList()
+    fun getLogs(): List<String> = synchronized(mutex) { logs.toList() }
 
     fun clearLogs() {
-        logs.clear()
+        synchronized(mutex) { logs.clear() }
     }
 }
 
