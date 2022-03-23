@@ -57,8 +57,19 @@ class TapWalletManager {
         handleUpdateWalletResult(result, walletManager)
     }
 
-    suspend fun updateWallet(walletManager: WalletManager) {
-        val result = walletManager.safeUpdate()
+    suspend fun updateWallet(walletManager: WalletManager, force: Boolean) {
+        val result = if (force) {
+            walletManager.safeUpdate()
+        } else {
+            val blockchain = walletManager.wallet.blockchain
+            if (walletManagersThrottler.isStillThrottled(blockchain)) {
+                delay(200)
+                Result.Success(walletManager.wallet)
+            } else {
+                walletManagersThrottler.updateThrottlingTo(blockchain)
+                walletManager.safeUpdate()
+            }
+        }
         withContext(Dispatchers.Main) {
             when (result) {
                 is Result.Success ->
