@@ -99,7 +99,7 @@ class WalletMiddleware {
                         else -> {
                             globalState.tapWalletManager.loadFiatRate(
                                 fiatCurrency = globalState.appCurrency,
-                                currencies = walletState.wallets.mapNotNull { it.currency }
+                                currencies = walletState.wallets.map { it.currency }
                             )
                         }
                     }
@@ -131,13 +131,13 @@ class WalletMiddleware {
                 if (action.blockchain != null) {
                     scope.launch {
                         val walletManager = walletState.getWalletManager(action.blockchain)
-                        walletManager?.let { globalState.tapWalletManager.updateWallet(it) }
+                        walletManager?.let { globalState.tapWalletManager.updateWallet(it, action.force) }
                     }
                 } else {
                     scope.launch {
                         if (walletState.state == ProgressState.Done) {
                             walletState.walletManagers.map { walletManager ->
-                                globalState.tapWalletManager.updateWallet(walletManager)
+                                globalState.tapWalletManager.updateWallet(walletManager, action.force)
                             }
                         }
                     }
@@ -163,6 +163,7 @@ class WalletMiddleware {
                             )
                             withMainContext { actionList.forEach { store.dispatch(it) } }
                         }
+                        is Result.Failure -> {}
                     }
                     store.dispatchOnMain(WalletAction.Warnings.CheckIfNeeded)
                 }
