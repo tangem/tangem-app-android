@@ -34,6 +34,7 @@ data class WalletState(
     val mainWarningsList: List<WarningMessage> = mutableListOf(),
     val wallets: List<WalletData> = emptyList(),
     val walletManagers: List<WalletManager> = emptyList(),
+    val walletManagersThrottling: MutableMap<Blockchain, Long> = mutableMapOf(),
     val isMultiwalletAllowed: Boolean = false,
     val cardCurrency: CryptoCurrencyName? = null,
     val selectedWallet: Currency? = null,
@@ -54,14 +55,16 @@ data class WalletState(
     val primaryWallet = if (wallets.isNotEmpty()) wallets[0] else null
 
     val shouldShowDetails: Boolean =
-            primaryWallet?.currencyData?.status != BalanceStatus.EmptyCard &&
-                    primaryWallet?.currencyData?.status != BalanceStatus.UnknownBlockchain
+        primaryWallet?.currencyData?.status != BalanceStatus.EmptyCard &&
+            primaryWallet?.currencyData?.status != BalanceStatus.UnknownBlockchain
 
     val blockchains: List<Blockchain>
         get() = walletManagers.map { it.wallet.blockchain }
 
     val currencies: List<Currency>
         get() = wallets.mapNotNull { it.currency }
+
+    val throttlingDuration = 10000L
 
     fun getWalletManager(token: Token?): WalletManager? {
         if (token == null) return null
@@ -101,10 +104,10 @@ data class WalletState(
 
         if (!isPrimaryCurrency(walletData)) {
             val walletManager = getWalletManager(walletData.currency)
-                    ?: return true
+                ?: return true
 
             if (walletData.currency is Currency.Blockchain &&
-                    walletManager.cardTokens.isNotEmpty()
+                walletManager.cardTokens.isNotEmpty()
             ) {
                 return false
             }
@@ -113,22 +116,22 @@ data class WalletState(
 
             if (walletData.currency is Currency.Blockchain) {
                 return wallet.recentTransactions.toPendingTransactions(wallet.address).isEmpty() &&
-                        wallet.amounts.toSendableAmounts().isEmpty()
+                    wallet.amounts.toSendableAmounts().isEmpty()
             } else if (walletData.currency is Currency.Token) (
-                    return wallet.recentTransactions.toPendingTransactionsForToken(
-                        walletData.currency.token, wallet.address).isEmpty()
-                            && wallet.amounts[AmountType.Token(token = walletData.currency.token)]
-                            ?.isAboveZero() != true
-                    )
+                return wallet.recentTransactions.toPendingTransactionsForToken(
+                    walletData.currency.token, wallet.address).isEmpty()
+                    && wallet.amounts[AmountType.Token(token = walletData.currency.token)]
+                    ?.isAboveZero() != true
+                )
         }
         return false
     }
 
     private fun isPrimaryCurrency(walletData: WalletData): Boolean {
         return (walletData.currency is Currency.Blockchain &&
-                walletData.currency.blockchain == store.state.walletState.primaryBlockchain)
-                || (walletData.currency is Currency.Token &&
-                walletData.currency.token == store.state.walletState.primaryToken)
+            walletData.currency.blockchain == store.state.walletState.primaryBlockchain)
+            || (walletData.currency is Currency.Token &&
+            walletData.currency.token == store.state.walletState.primaryToken)
     }
 
     fun replaceWalletInWallets(walletData: WalletData?): List<WalletData> {
@@ -149,7 +152,7 @@ data class WalletState(
         val remainingWallets: MutableList<WalletData> = newWallets.toMutableList()
         val updatedWallets = wallets.map { wallet ->
             val newWallet = newWallets
-                    .firstOrNull { wallet.currency == it.currency }
+                .firstOrNull { wallet.currency == it.currency }
             if (newWallet == null) {
                 wallet
             } else {
@@ -176,8 +179,14 @@ data class WalletState(
 
     fun addWalletManagers(newWalletManagers: List<WalletManager>): WalletState {
         val updatedWalletManagers = this.walletManagers +
-                newWalletManagers.filterNot { this.blockchains.contains(it.wallet.blockchain) }
+            newWalletManagers.filterNot { this.blockchains.contains(it.wallet.blockchain) }
         return copy(walletManagers = updatedWalletManagers)
+    }
+
+    fun isThrottling(walletManager: WalletManager): Boolean {
+        val inThrottlingUpTo = walletManagersThrottling[walletManager.wallet.blockchain] ?: return false
+        val diff = System.currentTimeMillis() - inThrottlingUpTo
+        return diff < 0
     }
 }
 
