@@ -26,11 +26,13 @@ import com.tangem.operations.pins.SetUserCodeCommand
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.AnalyticsHandler
+import com.tangem.tap.common.analytics.AnalyticsParam
 import com.tangem.tap.domain.tasks.CreateWalletAndRescanTask
 import com.tangem.tap.domain.tasks.product.ResetToFactorySettingsTask
 import com.tangem.tap.domain.tasks.product.ScanProductTask
 import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.domain.tokens.CurrenciesRepository
+import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.isActive
@@ -70,12 +72,21 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         result: CompletionResult<ScanResponse>
     ) {
         when (result) {
-            is CompletionResult.Success ->
+            is CompletionResult.Success -> {
                 analyticsHandler?.triggerEvent(
                     event = AnalyticsEvent.CARD_IS_SCANNED,
                     card = result.data.card,
                     blockchain = result.data.walletData?.blockchain
                 )
+                if (DemoHelper.isDemoCard(result.data)) {
+                    analyticsHandler?.triggerEvent(
+                        event = AnalyticsEvent.DEMO_MODE_ACTIVATED,
+                        card = result.data.card,
+                        blockchain = result.data.walletData?.blockchain,
+                        params = mapOf(AnalyticsParam.CARD_ID.param to result.data.card.cardId)
+                    )
+                }
+            }
             is CompletionResult.Failure ->
                 (result.error as? TangemSdkError)?.let { error ->
                     analyticsHandler?.logCardSdkError(
