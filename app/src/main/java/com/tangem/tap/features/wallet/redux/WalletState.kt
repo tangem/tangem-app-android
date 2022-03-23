@@ -34,7 +34,6 @@ data class WalletState(
     val mainWarningsList: List<WarningMessage> = mutableListOf(),
     val wallets: List<WalletData> = emptyList(),
     val walletManagers: List<WalletManager> = emptyList(),
-    val walletManagersThrottling: MutableMap<Blockchain, Long> = mutableMapOf(),
     val isMultiwalletAllowed: Boolean = false,
     val cardCurrency: CryptoCurrencyName? = null,
     val selectedWallet: Currency? = null,
@@ -181,12 +180,6 @@ data class WalletState(
         val updatedWalletManagers = this.walletManagers +
             newWalletManagers.filterNot { this.blockchains.contains(it.wallet.blockchain) }
         return copy(walletManagers = updatedWalletManagers)
-    }
-
-    fun isThrottling(walletManager: WalletManager): Boolean {
-        val inThrottlingUpTo = walletManagersThrottling[walletManager.wallet.blockchain] ?: return false
-        val diff = System.currentTimeMillis() - inThrottlingUpTo
-        return diff < 0
     }
 }
 
