@@ -39,14 +39,7 @@ class BackupReducer {
         ): BackupState {
 
             return when (action) {
-                is BackupAction.IntroduceBackup -> BackupState(
-                    backupStep = BackupStep.InitBackup,
-                    canSkipBackup = state.canSkipBackup,
-                    buyAdditionalCardsUrl = action.buyCardsUrl
-                )
-
                 BackupAction.StartAddingPrimaryCard -> state.copy(backupStep = BackupStep.ScanOriginCard)
-
                 BackupAction.StartAddingBackupCards -> {
                     state.copy(backupStep = BackupStep.AddBackupCards)
                 }
@@ -122,7 +115,6 @@ class BackupReducer {
                 BackupAction.DismissBackup -> state
                 is BackupAction.LoadBackupCardArtwork -> state
                 is BackupAction.CheckAccessCode -> state
-                BackupAction.GoToShop -> state
                 BackupAction.DetermineBackupStep -> state
                 BackupAction.CheckForUnfinishedBackup -> state
                 BackupAction.DiscardBackup -> state
