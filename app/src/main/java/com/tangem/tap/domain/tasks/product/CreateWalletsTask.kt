@@ -4,6 +4,7 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
+import com.tangem.common.core.TangemSdkError
 import com.tangem.operations.CommandResponse
 import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.operations.wallet.CreateWalletTask
@@ -22,6 +23,11 @@ class CreateWalletsTask(
     private val createdWalletsResponses = mutableListOf<CreateWalletResponse>()
 
     override fun run(session: CardSession, callback: (result: CompletionResult<CreateWalletsResponse>) -> Unit) {
+        if (curves.isEmpty()){
+            callback(CompletionResult.Failure(TangemSdkError.WalletIsNotCreated()))
+            return
+        }
+
         val curve = curves[createdWalletsResponses.size]
         createWallet(curve, session, callback)
     }
