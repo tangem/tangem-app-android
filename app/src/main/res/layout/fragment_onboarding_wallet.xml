@@ -23,7 +23,6 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            app:menu="@menu/shop"
             app:navigationIcon="@drawable/ic_baseline_arrow_back_24"
             app:title="@string/onboarding_getting_started" />
 
