@@ -29,9 +29,7 @@ import com.tangem.tap.network.NetworkStateChanged
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import org.rekotlin.Action
 import org.rekotlin.DispatchFunction
 import org.rekotlin.Middleware
@@ -61,14 +59,32 @@ class WalletMiddleware {
             is WalletAction.Warnings -> warningsMiddleware.handle(action, globalState)
             is WalletAction.MultiWallet -> multiWalletMiddleware.handle(action, walletState, globalState)
             is WalletAction.LoadWallet -> {
-                scope.launch {
-                    if (action.blockchain == null) {
-                            walletState.walletManagers.map { walletManager ->
-                                async { globalState.tapWalletManager.loadWalletData(walletManager) }
-                            }.awaitAll()
-                    } else {
-                        val walletManager = walletState.getWalletManager(action.blockchain)
-                        walletManager?.let { globalState.tapWalletManager.loadWalletData(it) }
+                if (action.blockchain == null) {
+                    val throttledWalletManagers = walletState.walletManagers.filter { walletState.isThrottling(it) }
+                    val freeWalletManagers = walletState.walletManagers.filter { !walletState.isThrottling(it) }
+                    scope.launch {
+                        freeWalletManagers.map { walletManager ->
+                            async { globalState.tapWalletManager.loadWalletData(walletManager) }
+                        }.awaitAll()
+
+                        delay(500)
+                        launch(Dispatchers.Main) {
+                            throttledWalletManagers.forEach { store.dispatch(WalletAction.LoadWallet.Success(it.wallet)) }
+                        }
+                    }
+
+                } else {
+                    val walletManager = walletState.getWalletManager(action.blockchain) ?: return
+
+                    scope.launch {
+                        if (walletState.isThrottling(walletManager)) {
+                            delay(500)
+                            launch(Dispatchers.Main) {
+                                store.dispatch(WalletAction.LoadWallet.Success(walletManager.wallet))
+                            }
+                        } else {
+                            globalState.tapWalletManager.loadWalletData(walletManager)
+                        }
                     }
                 }
             }
@@ -230,12 +246,12 @@ class WalletMiddleware {
                 when (currency) {
                     is Currency.Blockchain -> {
                         val amountToSend = amounts?.find { it.currencySymbol == currency.blockchain.currency }
-                                ?: return WalletAction.Send.ChooseCurrency(amounts)
+                            ?: return WalletAction.Send.ChooseCurrency(amounts)
                         PrepareSendScreen(amountToSend, selectedWalletData.fiatRate, walletManager)
                     }
                     is Currency.Token -> {
                         val amountToSend = amounts?.find { it.currencySymbol == currency.token.symbol }
-                                ?: return WalletAction.Send.ChooseCurrency(amounts)
+                            ?: return WalletAction.Send.ChooseCurrency(amounts)
                         prepareSendActionForToken(amountToSend, state, selectedWalletData, wallet, walletManager)
                     }
                 }
