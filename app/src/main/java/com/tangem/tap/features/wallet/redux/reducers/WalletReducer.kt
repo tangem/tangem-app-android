@@ -95,7 +95,6 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
         is WalletAction.LoadWallet -> {
             if (action.blockchain == null) {
                 val wallets = newState.wallets.map { wallet ->
-
                     wallet.copy(
                         currencyData = wallet.currencyData.copy(
                             status = BalanceStatus.Loading,

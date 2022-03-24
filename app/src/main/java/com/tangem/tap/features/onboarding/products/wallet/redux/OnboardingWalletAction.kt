@@ -21,7 +21,6 @@ sealed class OnboardingWalletAction : Action {
 sealed class BackupAction : Action {
 
     object DetermineBackupStep : BackupAction()
-    data class IntroduceBackup(val buyCardsUrl: String? = null) : BackupAction()
     object StartBackup : BackupAction()
     object DismissBackup : BackupAction()
 
@@ -42,7 +41,6 @@ sealed class BackupAction : Action {
         data class Success(val cardId: CardId, val artwork: Bitmap)
     }
 
-    object GoToShop : BackupAction()
     object FinishAddingBackupCards : BackupAction()
 
     object ShowAccessCodeInfoScreen : BackupAction()
@@ -58,7 +56,7 @@ sealed class BackupAction : Action {
     data class WriteBackupCard(val cardNumber: Int) : BackupAction()
 
     object PrepareToWritePrimaryCard : BackupAction()
-    object WritePrimaryCard: BackupAction()
+    object WritePrimaryCard : BackupAction()
 
     object FinishBackup : BackupAction()
     object DiscardBackup : BackupAction()
