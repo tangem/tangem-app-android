@@ -112,7 +112,7 @@ class TapWalletManager {
 
     suspend fun onCardScanned(data: ScanResponse) {
         walletManagersThrottler.clear()
-        fiatRatesThrottler.clear()
+//        fiatRatesThrottler.clear()
         store.state.globalState.feedbackManager?.infoHolder?.setCardInfo(data.card)
         updateConfigManager(data)
 
