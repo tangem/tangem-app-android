@@ -3,6 +3,8 @@ package com.tangem.tap.domain
 import com.tangem.blockchain.blockchains.solana.RentProvider
 import com.tangem.blockchain.common.*
 import com.tangem.common.services.Result
+import com.tangem.tap.common.Throttler
+import com.tangem.tap.common.ThrottlerWithValues
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.safeUpdate
@@ -39,32 +41,30 @@ class TapWalletManager {
         store.state.globalState.configManager?.config?.blockchainSdkConfig ?: BlockchainSdkConfig()
     }
 
-    private val walletManagersThrottler = Throttler<Blockchain>(10000)
+    private val walletManagersThrottler = ThrottlerWithValues<Blockchain, Result<Wallet>>(10000)
     private val fiatRatesThrottler = Throttler<Currency>(60000)
 
     suspend fun loadWalletData(walletManager: WalletManager) {
         val blockchain = walletManager.wallet.blockchain
         val result = if (walletManagersThrottler.isStillThrottled(blockchain)) {
             delay(500)
-            Result.Success(walletManager.wallet)
+            walletManagersThrottler.geValue(blockchain)!!
         } else {
-            walletManagersThrottler.updateThrottlingTo(blockchain)
-            walletManager.safeUpdate()
+            updateThrottlingForWalletManager(walletManager)
         }
         handleUpdateWalletResult(result, walletManager)
     }
 
     suspend fun updateWallet(walletManager: WalletManager, force: Boolean) {
         val result = if (force) {
-            walletManager.safeUpdate()
+            updateThrottlingForWalletManager(walletManager)
         } else {
             val blockchain = walletManager.wallet.blockchain
             if (walletManagersThrottler.isStillThrottled(blockchain)) {
                 delay(500)
-                Result.Success(walletManager.wallet)
+                walletManagersThrottler.geValue(blockchain)!!
             } else {
-                walletManagersThrottler.updateThrottlingTo(blockchain)
-                walletManager.safeUpdate()
+                updateThrottlingForWalletManager(walletManager)
             }
         }
         withContext(Dispatchers.Main) {
@@ -75,7 +75,14 @@ class TapWalletManager {
                     store.dispatch(WalletAction.UpdateWallet.Failure(result.error.localizedMessage))
             }
         }
+    }
 
+    private suspend fun updateThrottlingForWalletManager(walletManager: WalletManager): Result<Wallet> {
+        val newResult = walletManager.safeUpdate()
+        val blockchain = walletManager.wallet.blockchain
+        walletManagersThrottler.updateThrottlingTo(blockchain)
+        walletManagersThrottler.setValue(blockchain, newResult)
+        return newResult
     }
 
     suspend fun loadFiatRate(fiatCurrency: FiatCurrencyName, wallet: Wallet) {
@@ -248,6 +255,7 @@ class TapWalletManager {
     }
 
     private suspend fun handleUpdateWalletResult(result: Result<Wallet>, walletManager: WalletManager) {
+        walletManagersThrottler.setValue(walletManager.wallet.blockchain, result)
         withContext(Dispatchers.Main) {
             when (result) {
                 is Result.Success -> {
@@ -327,31 +335,4 @@ class TapWalletManager {
 
 fun Wallet.getFirstToken(): Token? {
     return getTokens().toList().getOrNull(0)
-}
-
-class Throttler<T>(
-    private val duration: Long,
-) {
-
-    private val items: MutableMap<T, Long> = mutableMapOf()
-
-    fun isStillThrottled(item: T): Boolean {
-        val inThrottlingUpTo = items[item] ?: return false
-        val diff = System.currentTimeMillis() - inThrottlingUpTo
-        return diff < 0
-    }
-
-    fun updateThrottlingTo(item: T): T {
-        val now = System.currentTimeMillis()
-        val throttledUpTo = items[item] ?: 0L
-        if (throttledUpTo == 0L || throttledUpTo < now) {
-            val newTime = now + duration
-            items[item] = newTime
-        }
-        return item
-    }
-
-    fun clear() {
-        items.clear()
-    }
 }
