@@ -45,7 +45,7 @@ class TapWalletManager {
     suspend fun loadWalletData(walletManager: WalletManager) {
         val blockchain = walletManager.wallet.blockchain
         val result = if (walletManagersThrottler.isStillThrottled(blockchain)) {
-            delay(200)
+            delay(500)
             Result.Success(walletManager.wallet)
         } else {
             walletManagersThrottler.updateThrottlingTo(blockchain)
@@ -60,7 +60,7 @@ class TapWalletManager {
         } else {
             val blockchain = walletManager.wallet.blockchain
             if (walletManagersThrottler.isStillThrottled(blockchain)) {
-                delay(200)
+                delay(500)
                 Result.Success(walletManager.wallet)
             } else {
                 walletManagersThrottler.updateThrottlingTo(blockchain)
@@ -87,13 +87,16 @@ class TapWalletManager {
 
     suspend fun loadFiatRate(fiatCurrency: FiatCurrencyName, currencies: List<Currency>) {
         val results = mutableListOf<Pair<Currency, Result<BigDecimal>?>>()
-        currencies.forEach {
-            if (!fiatRatesThrottler.isStillThrottled(it)) {
-                fiatRatesThrottler.updateThrottlingTo(it)
-                results.add(it to coinMarketCapService.getRate(it.currencySymbol, fiatCurrency))
-                handleFiatRatesResult(results)
+        val toUpdate = currencies.filter { !fiatRatesThrottler.isStillThrottled(it) }
+        toUpdate.forEach { fiatRatesThrottler.updateThrottlingTo(it) }
+        toUpdate.map {
+            coroutineScope {
+                async {
+                    results.add(it to coinMarketCapService.getRate(it.currencySymbol, fiatCurrency))
+                }
             }
-        }
+        }.awaitAll()
+        handleFiatRatesResult(results.toList())
     }
 
     suspend fun onCardScanned(data: ScanResponse) {
@@ -315,8 +318,7 @@ class TapWalletManager {
                         store.dispatch(WalletAction.LoadFiatRate.Success(rate))
                     }
                     is Result.Failure -> store.dispatch(WalletAction.LoadFiatRate.Failure)
-                    null -> {
-                    }
+                    null -> {}
                 }
             }
         }
