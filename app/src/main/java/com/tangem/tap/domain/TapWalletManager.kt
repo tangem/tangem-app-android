@@ -26,10 +26,7 @@ import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.tap.network.coinmarketcap.CoinMarketCapService
 import com.tangem.tap.scope
 import com.tangem.tap.store
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
+import kotlinx.coroutines.*
 import java.math.BigDecimal
 
 
@@ -85,11 +82,6 @@ class TapWalletManager {
         val currencies = wallet.getTokens()
             .map { Currency.Token(it) }
             .plus(Currency.Blockchain(wallet.blockchain))
-        loadFiatRate(fiatCurrency, currencies)
-    }
-
-    suspend fun loadFiatRate(fiatCurrency: FiatCurrencyName, currency: Currency) {
-        val currencies = listOf(currency)
         loadFiatRate(fiatCurrency, currencies)
     }
 
