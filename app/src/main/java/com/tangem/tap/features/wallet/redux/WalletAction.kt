@@ -74,7 +74,7 @@ sealed class WalletAction : Action {
         class CheckRemainingSignatures(val remainingSignatures: Int?) : Warnings()
     }
 
-    data class UpdateWallet(val blockchain: Blockchain? = null) : WalletAction() {
+    data class UpdateWallet(val blockchain: Blockchain? = null, val force: Boolean = true) : WalletAction() {
         object ScheduleUpdatingWallet : WalletAction()
         data class Success(val wallet: Wallet) : WalletAction()
         data class Failure(val errorMessage: String? = null) : WalletAction()
