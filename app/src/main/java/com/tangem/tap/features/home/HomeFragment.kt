@@ -1,6 +1,8 @@
 package com.tangem.tap.features.home
 
+import android.content.Context
 import android.os.Bundle
+import android.telephony.TelephonyManager
 import android.view.View
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
@@ -28,13 +30,15 @@ class HomeFragment : Fragment(R.layout.fragment_home), StoreSubscriber<HomeState
         super.onViewCreated(view, savedInstanceState)
 
         store.dispatch(BackupAction.CheckForUnfinishedBackup)
+        val tm = requireContext().getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+        val countryCodeValue = tm.networkCountryIso
 
         getView()?.findViewById<ComposeView>(R.id.cv_stories)?.setContent {
             AppCompatTheme {
                 StoriesScreen(
                     homeState,
                     onScanButtonClick = { store.dispatch(HomeAction.ReadCard) },
-                    onShopButtonClick = { store.dispatch(HomeAction.GoToShop) }
+                    onShopButtonClick = { store.dispatch(HomeAction.GoToShop(countryCodeValue)) }
                 )
             }
         }
