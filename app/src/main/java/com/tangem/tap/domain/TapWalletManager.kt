@@ -27,26 +27,49 @@ import com.tangem.tap.network.coinmarketcap.CoinMarketCapService
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 
 
 class TapWalletManager {
-    private val coinMarketCapService = CoinMarketCapService()
-
-    private val blockchainSdkConfig by lazy {
-        store.state.globalState.configManager?.config?.blockchainSdkConfig ?: BlockchainSdkConfig()
-    }
     val walletManagerFactory: WalletManagerFactory
         by lazy { WalletManagerFactory(blockchainSdkConfig) }
 
-    suspend fun loadWalletData(walletManager: WalletManager) {
-        handleUpdateWalletResult(walletManager.safeUpdate(), walletManager)
+    private val coinMarketCapService = CoinMarketCapService()
+    private val blockchainSdkConfig by lazy {
+        store.state.globalState.configManager?.config?.blockchainSdkConfig ?: BlockchainSdkConfig()
     }
 
-    suspend fun updateWallet(walletManager: WalletManager) {
-        val result = walletManager.safeUpdate()
+    private val walletManagersThrottler = Throttler<Blockchain>(10000)
+    private val fiatRatesThrottler = Throttler<Currency>(60000)
+
+    suspend fun loadWalletData(walletManager: WalletManager) {
+        val blockchain = walletManager.wallet.blockchain
+        val result = if (walletManagersThrottler.isStillThrottled(blockchain)) {
+            delay(200)
+            Result.Success(walletManager.wallet)
+        } else {
+            walletManagersThrottler.updateThrottlingTo(blockchain)
+            walletManager.safeUpdate()
+        }
+        handleUpdateWalletResult(result, walletManager)
+    }
+
+    suspend fun updateWallet(walletManager: WalletManager, force: Boolean) {
+        val result = if (force) {
+            walletManager.safeUpdate()
+        } else {
+            val blockchain = walletManager.wallet.blockchain
+            if (walletManagersThrottler.isStillThrottled(blockchain)) {
+                delay(200)
+                Result.Success(walletManager.wallet)
+            } else {
+                walletManagersThrottler.updateThrottlingTo(blockchain)
+                walletManager.safeUpdate()
+            }
+        }
         withContext(Dispatchers.Main) {
             when (result) {
                 is Result.Success ->
@@ -73,12 +96,17 @@ class TapWalletManager {
     suspend fun loadFiatRate(fiatCurrency: FiatCurrencyName, currencies: List<Currency>) {
         val results = mutableListOf<Pair<Currency, Result<BigDecimal>?>>()
         currencies.forEach {
-            results.add(it to coinMarketCapService.getRate(it.currencySymbol, fiatCurrency))
+            if (!fiatRatesThrottler.isStillThrottled(it)) {
+                fiatRatesThrottler.updateThrottlingTo(it)
+                results.add(it to coinMarketCapService.getRate(it.currencySymbol, fiatCurrency))
+                handleFiatRatesResult(results)
+            }
         }
-        handleFiatRatesResult(results)
     }
 
     suspend fun onCardScanned(data: ScanResponse) {
+        walletManagersThrottler.clear()
+        fiatRatesThrottler.clear()
         store.state.globalState.feedbackManager?.infoHolder?.setCardInfo(data.card)
         updateConfigManager(data)
 
@@ -305,4 +333,31 @@ class TapWalletManager {
 
 fun Wallet.getFirstToken(): Token? {
     return getTokens().toList().getOrNull(0)
+}
+
+class Throttler<T>(
+    private val duration: Long,
+) {
+
+    private val items: MutableMap<T, Long> = mutableMapOf()
+
+    fun isStillThrottled(item: T): Boolean {
+        val inThrottlingUpTo = items[item] ?: return false
+        val diff = System.currentTimeMillis() - inThrottlingUpTo
+        return diff < 0
+    }
+
+    fun updateThrottlingTo(item: T): T {
+        val now = System.currentTimeMillis()
+        val throttledUpTo = items[item] ?: 0L
+        if (throttledUpTo == 0L || throttledUpTo < now) {
+            val newTime = now + duration
+            items[item] = newTime
+        }
+        return item
+    }
+
+    fun clear() {
+        items.clear()
+    }
 }
