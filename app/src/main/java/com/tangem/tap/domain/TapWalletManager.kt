@@ -3,7 +3,6 @@ package com.tangem.tap.domain
 import com.tangem.blockchain.blockchains.solana.RentProvider
 import com.tangem.blockchain.common.*
 import com.tangem.common.services.Result
-import com.tangem.tap.common.Throttler
 import com.tangem.tap.common.ThrottlerWithValues
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -28,7 +27,10 @@ import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.tap.network.coinmarketcap.CoinMarketCapService
 import com.tangem.tap.scope
 import com.tangem.tap.store
-import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 
 
@@ -42,7 +44,7 @@ class TapWalletManager {
     }
 
     private val walletManagersThrottler = ThrottlerWithValues<Blockchain, Result<Wallet>>(10000)
-    private val fiatRatesThrottler = Throttler<Currency>(60000)
+    private val fiatRatesThrottler = ThrottlerWithValues<Currency, Result<BigDecimal>?>(60000)
 
     suspend fun loadWalletData(walletManager: WalletManager) {
         val blockchain = walletManager.wallet.blockchain
@@ -93,17 +95,19 @@ class TapWalletManager {
     }
 
     suspend fun loadFiatRate(fiatCurrency: FiatCurrencyName, currencies: List<Currency>) {
-        val results = mutableListOf<Pair<Currency, Result<BigDecimal>?>>()
+        // get and submit previous result of equivalents.
+        val throttledResult = currencies.filter { fiatRatesThrottler.isStillThrottled(it) }.map {
+            Pair(it, fiatRatesThrottler.geValue(it))
+        }
+        if (throttledResult.isNotEmpty()) handleFiatRatesResult(throttledResult)
+
         val toUpdate = currencies.filter { !fiatRatesThrottler.isStillThrottled(it) }
-        toUpdate.forEach { fiatRatesThrottler.updateThrottlingTo(it) }
-        toUpdate.map {
-            coroutineScope {
-                async {
-                    results.add(it to coinMarketCapService.getRate(it.currencySymbol, fiatCurrency))
-                }
-            }
-        }.awaitAll()
-        handleFiatRatesResult(results.toList())
+        toUpdate.forEach {
+            fiatRatesThrottler.updateThrottlingTo(it)
+            val result = coinMarketCapService.getRate(it.currencySymbol, fiatCurrency)
+            fiatRatesThrottler.setValue(it, result)
+            handleFiatRatesResult(listOf(it to result))
+        }
     }
 
     suspend fun onCardScanned(data: ScanResponse) {
@@ -324,6 +328,7 @@ class TapWalletManager {
                     is Result.Success -> {
                         val rate = it.first to (it.second as Result.Success<BigDecimal>).data
                         store.dispatch(WalletAction.LoadFiatRate.Success(rate))
+                        delay(50) // this one is to try to avoid concurrent state modification
                     }
                     is Result.Failure -> store.dispatch(WalletAction.LoadFiatRate.Failure)
                     null -> {}
