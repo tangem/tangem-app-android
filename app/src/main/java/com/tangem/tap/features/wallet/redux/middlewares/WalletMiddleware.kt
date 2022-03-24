@@ -63,9 +63,9 @@ class WalletMiddleware {
             is WalletAction.LoadWallet -> {
                 scope.launch {
                     if (action.blockchain == null) {
-                            walletState.walletManagers.map { walletManager ->
-                                async { globalState.tapWalletManager.loadWalletData(walletManager) }
-                            }.awaitAll()
+                        walletState.walletManagers.map { walletManager ->
+                            async { globalState.tapWalletManager.loadWalletData(walletManager) }
+                        }.awaitAll()
                     } else {
                         val walletManager = walletState.getWalletManager(action.blockchain)
                         walletManager?.let { globalState.tapWalletManager.loadWalletData(it) }
@@ -99,7 +99,7 @@ class WalletMiddleware {
                         else -> {
                             globalState.tapWalletManager.loadFiatRate(
                                 fiatCurrency = globalState.appCurrency,
-                                currencies = walletState.wallets.mapNotNull { it.currency }
+                                currencies = walletState.wallets.map { it.currency }
                             )
                         }
                     }
@@ -131,13 +131,13 @@ class WalletMiddleware {
                 if (action.blockchain != null) {
                     scope.launch {
                         val walletManager = walletState.getWalletManager(action.blockchain)
-                        walletManager?.let { globalState.tapWalletManager.updateWallet(it) }
+                        walletManager?.let { globalState.tapWalletManager.updateWallet(it, action.force) }
                     }
                 } else {
                     scope.launch {
                         if (walletState.state == ProgressState.Done) {
                             walletState.walletManagers.map { walletManager ->
-                                globalState.tapWalletManager.updateWallet(walletManager)
+                                globalState.tapWalletManager.updateWallet(walletManager, action.force)
                             }
                         }
                     }
@@ -163,6 +163,7 @@ class WalletMiddleware {
                             )
                             withMainContext { actionList.forEach { store.dispatch(it) } }
                         }
+                        is Result.Failure -> {}
                     }
                     store.dispatchOnMain(WalletAction.Warnings.CheckIfNeeded)
                 }
@@ -230,12 +231,12 @@ class WalletMiddleware {
                 when (currency) {
                     is Currency.Blockchain -> {
                         val amountToSend = amounts?.find { it.currencySymbol == currency.blockchain.currency }
-                                ?: return WalletAction.Send.ChooseCurrency(amounts)
+                            ?: return WalletAction.Send.ChooseCurrency(amounts)
                         PrepareSendScreen(amountToSend, selectedWalletData.fiatRate, walletManager)
                     }
                     is Currency.Token -> {
                         val amountToSend = amounts?.find { it.currencySymbol == currency.token.symbol }
-                                ?: return WalletAction.Send.ChooseCurrency(amounts)
+                            ?: return WalletAction.Send.ChooseCurrency(amounts)
                         prepareSendActionForToken(amountToSend, state, selectedWalletData, wallet, walletManager)
                     }
                 }
