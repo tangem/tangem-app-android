@@ -6,7 +6,7 @@ import org.rekotlin.Action
 sealed class HomeAction : Action {
     // from ui
     object ReadCard : HomeAction()
-    object GoToShop : HomeAction()
+    data class GoToShop(val region: String) : HomeAction()
 
     // internal
     data class ShouldScanCardOnResume(val shouldScanCard: Boolean) : HomeAction()
