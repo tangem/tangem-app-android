@@ -43,7 +43,7 @@ class HomeFragment : Fragment(R.layout.fragment_home), StoreSubscriber<HomeState
 
     private fun getRegionProvider(): RegionProvider = RegionService(
         listOf(
-            TelephonyManagerRegionProvider(requireContext()),
+//            TelephonyManagerRegionProvider(requireContext()),
             LocaleRegionProvider()
         )
     )
