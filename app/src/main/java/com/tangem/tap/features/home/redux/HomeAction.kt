@@ -1,12 +1,13 @@
 package com.tangem.tap.features.home.redux
 
 import com.tangem.tap.common.entities.IndeterminateProgressButton
+import com.tangem.tap.features.home.RegionProvider
 import org.rekotlin.Action
 
 sealed class HomeAction : Action {
     // from ui
     object ReadCard : HomeAction()
-    data class GoToShop(val region: String) : HomeAction()
+    data class GoToShop(val regionProvider: RegionProvider) : HomeAction()
 
     // internal
     data class ShouldScanCardOnResume(val shouldScanCard: Boolean) : HomeAction()
