@@ -50,8 +50,6 @@ class PicassoHelper {
         }
 
         private fun addDebugInterceptors(okHttpBuilder: OkHttpClient.Builder) {
-            if (!BuildConfig.DEBUG || !logConfig.picasso) return
-
             val picassoInterceptor = HttpLoggingInterceptor(PicassoOkHttpLogger()).apply {
                 level = HttpLoggingInterceptor.Level.BODY
             }
