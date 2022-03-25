@@ -81,7 +81,7 @@ sealed class WalletAction : Action {
     }
 
     data class LoadFiatRate(
-        val wallet: Wallet? = null, val currency: Currency? = null,
+        val wallet: Wallet? = null, val currencyList: List<Currency>? = null,
     ) : WalletAction() {
         data class Success(val fiatRate: Pair<Currency, BigDecimal?>) : WalletAction()
         object Failure : WalletAction()
