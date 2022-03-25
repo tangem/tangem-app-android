@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.blockchain.extensions.isAboveZero
+import com.tangem.common.extensions.isZero
 import com.tangem.tap.common.entities.Button
 import com.tangem.tap.common.extensions.toQrCode
 import com.tangem.tap.common.redux.StateDialog
@@ -32,11 +33,11 @@ data class WalletState(
     val hashesCountVerified: Boolean? = null,
     val walletDialog: StateDialog? = null,
     val mainWarningsList: List<WarningMessage> = mutableListOf(),
-    val wallets: List<WalletData> = emptyList(),
+    val walletsData: List<WalletData> = emptyList(),
     val walletManagers: List<WalletManager> = emptyList(),
     val isMultiwalletAllowed: Boolean = false,
     val cardCurrency: CryptoCurrencyName? = null,
-    val selectedWallet: Currency? = null,
+    val selectedCurrency: Currency? = null,
     val primaryBlockchain: Blockchain? = null,
     val primaryToken: Token? = null,
     val isTestnet: Boolean = false,
@@ -51,7 +52,7 @@ data class WalletState(
     val isTangemTwins: Boolean
         get() = store.state.globalState.scanResponse?.isTangemTwins() == true
 
-    val primaryWallet = if (wallets.isNotEmpty()) wallets[0] else null
+    val primaryWallet = if (walletsData.isNotEmpty()) walletsData[0] else null
 
     val shouldShowDetails: Boolean =
             primaryWallet?.currencyData?.status != BalanceStatus.EmptyCard &&
@@ -61,7 +62,7 @@ data class WalletState(
         get() = walletManagers.map { it.wallet.blockchain }
 
     val currencies: List<Currency>
-        get() = wallets.mapNotNull { it.currency }
+        get() = walletsData.mapNotNull { it.currency }
 
     fun getWalletManager(token: Token?): WalletManager? {
         if (token == null) return null
@@ -79,21 +80,21 @@ data class WalletState(
 
     fun getWalletData(currency: Currency?): WalletData? {
         if (currency == null) return null
-        return wallets.find { it.currency == currency }
+        return walletsData.find { it.currency == currency }
     }
 
     fun getWalletData(blockchain: Blockchain?): WalletData? {
         if (blockchain == null) return null
-        return wallets.find { (it.currency as? Currency.Blockchain)?.blockchain == blockchain }
+        return walletsData.find { (it.currency as? Currency.Blockchain)?.blockchain == blockchain }
     }
 
     fun getWalletData(token: Token?): WalletData? {
         if (token == null) return null
-        return wallets.find { (it.currency as? Currency.Token)?.token == token }
+        return walletsData.find { (it.currency as? Currency.Token)?.token == token }
     }
 
     fun getSelectedWalletData(): WalletData? {
-        return wallets.find { it.currency == selectedWallet }
+        return walletsData.find { it.currency == selectedCurrency }
     }
 
     fun canBeRemoved(walletData: WalletData?): Boolean {
@@ -132,9 +133,9 @@ data class WalletState(
     }
 
     fun replaceWalletInWallets(walletData: WalletData?): List<WalletData> {
-        if (walletData == null) return wallets
+        if (walletData == null) return walletsData
         var changed = false
-        val updatedWallets = wallets.map {
+        val updatedWallets = walletsData.map {
             if (it.currency == walletData.currency) {
                 changed = true
                 walletData
@@ -142,12 +143,12 @@ data class WalletState(
                 it
             }
         }
-        return if (changed) updatedWallets else wallets + walletData
+        return if (changed) updatedWallets else walletsData + walletData
     }
 
     fun replaceSomeWallets(newWallets: List<WalletData>): List<WalletData> {
         val remainingWallets: MutableList<WalletData> = newWallets.toMutableList()
-        val updatedWallets = wallets.map { wallet ->
+        val updatedWallets = walletsData.map { wallet ->
             val newWallet = newWallets
                     .firstOrNull { wallet.currency == it.currency }
             if (newWallet == null) {
@@ -248,17 +249,26 @@ data class WalletData(
     val currencyData: BalanceWidgetData = BalanceWidgetData(),
     val updatingWallet: Boolean = false,
     val tradeCryptoState: TradeCryptoState = TradeCryptoState(),
-    val allowToSend: Boolean = true,
     val fiatRateString: String? = null,
     val fiatRate: BigDecimal? = null,
     val mainButton: WalletMainButton = WalletMainButton.SendButton(false),
     val currency: Currency,
-    val walletRent: WalletRent? = null,
+    val warningRent: WalletRent? = null,
 ) {
     fun shouldShowMultipleAddress(): Boolean {
         val listOfAddresses = walletAddresses?.list ?: return false
         return listOfAddresses.size > 1
     }
+
+    fun shouldShowCoinAmountWarning(): Boolean = when (currency) {
+        is Currency.Blockchain -> false
+        is Currency.Token -> blockchainAmountIsEmpty() && !tokenAmountIsEmpty()
+    }
+
+    fun shouldEnableTokenSendButton(): Boolean = !blockchainAmountIsEmpty() || !tokenAmountIsEmpty()
+
+    private fun blockchainAmountIsEmpty(): Boolean = currencyData.blockchainAmount?.isZero() ?: false
+    private fun tokenAmountIsEmpty(): Boolean = currencyData.amount?.isZero() == true
 }
 
 data class WalletRent(
