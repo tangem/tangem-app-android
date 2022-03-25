@@ -103,9 +103,11 @@ class TapWalletManager {
 
         val toUpdate = currencies.filter { !fiatRatesThrottler.isStillThrottled(it) }
         toUpdate.forEach {
-            fiatRatesThrottler.updateThrottlingTo(it)
             val result = coinMarketCapService.getRate(it.currencySymbol, fiatCurrency)
-            fiatRatesThrottler.setValue(it, result)
+            if (result is Result.Success) {
+                fiatRatesThrottler.updateThrottlingTo(it)
+                fiatRatesThrottler.setValue(it, result)
+            }
             handleFiatRatesResult(listOf(it to result))
         }
     }
