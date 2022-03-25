@@ -74,14 +74,14 @@ sealed class WalletAction : Action {
         class CheckRemainingSignatures(val remainingSignatures: Int?) : Warnings()
     }
 
-    data class UpdateWallet(val blockchain: Blockchain? = null) : WalletAction() {
+    data class UpdateWallet(val blockchain: Blockchain? = null, val force: Boolean = true) : WalletAction() {
         object ScheduleUpdatingWallet : WalletAction()
         data class Success(val wallet: Wallet) : WalletAction()
         data class Failure(val errorMessage: String? = null) : WalletAction()
     }
 
     data class LoadFiatRate(
-        val wallet: Wallet? = null, val currency: Currency? = null,
+        val wallet: Wallet? = null, val currencyList: List<Currency>? = null,
     ) : WalletAction() {
         data class Success(val fiatRate: Pair<Currency, BigDecimal?>) : WalletAction()
         object Failure : WalletAction()
