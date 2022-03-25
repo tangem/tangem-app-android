@@ -3,7 +3,6 @@ package com.tangem.tap.features.wallet.redux.middlewares
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.extensions.Result
 import com.tangem.common.extensions.isZero
-import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.redux.global.GlobalState
 import com.tangem.tap.common.redux.navigation.AppScreen
@@ -47,7 +46,7 @@ class MultiWalletMiddleware {
                 globalState.scanResponse?.card?.cardId?.let {
                     currenciesRepository.saveAddedToken(it, action.token)
                 }
-                addToken(action.token, walletState, globalState)
+                addTokens(listOf(action.token), walletState, globalState)
             }
             is WalletAction.MultiWallet.AddTokens -> {
                 addTokens(action.tokens, walletState, globalState)
@@ -62,7 +61,9 @@ class MultiWalletMiddleware {
                             }
                     }
                 }
-                store.dispatch(WalletAction.LoadFiatRate(currency = Currency.Blockchain(action.blockchain)))
+                store.dispatch(WalletAction.LoadFiatRate(
+                    currencyList = listOf(Currency.Blockchain(action.blockchain)))
+                )
                 store.dispatch(WalletAction.LoadWallet(action.blockchain)
                 )
             }
@@ -172,80 +173,41 @@ class MultiWalletMiddleware {
         }
     }
 
-    private fun addToken(token: Token, walletState: WalletState?, globalState: GlobalState?) {
+    private fun addTokens(tokens: List<Token>, walletState: WalletState?, globalState: GlobalState?) {
         val scanResponse = globalState?.scanResponse ?: return
+        val wmFactory = globalState.tapWalletManager.walletManagerFactory
 
-        val walletManager = walletState?.getWalletManager(token)
-            ?: globalState.tapWalletManager.walletManagerFactory.makeWalletManagerForApp(
-                scanResponse,
-                token.blockchain
-            )?.also { walletManager ->
-                store.dispatch(WalletAction.MultiWallet.AddWalletManagers(walletManager))
-                store.dispatch(WalletAction.MultiWallet.AddBlockchain(walletManager.wallet.blockchain))
-            }
-
-        store.dispatch(WalletAction.LoadFiatRate(currency = Currency.Token(token)))
-
-        scope.launch {
-            when (val result = walletManager?.addToken(token)) {
-                is Result.Success -> {
-                    store.dispatchOnMain(WalletAction.MultiWallet.TokenLoaded(result.data, token))
+        val groupedTokens = tokens.groupBy { it.blockchain }
+        val walletManagers = groupedTokens.mapNotNull { entry ->
+            val blockchain = entry.key
+            val tokensList = entry.value
+            val walletManager = walletState?.getWalletManager(blockchain)
+                ?: wmFactory.makeWalletManagerForApp(scanResponse, blockchain)?.also {
+                    store.dispatch(WalletAction.MultiWallet.AddWalletManagers(it))
+                    store.dispatch(WalletAction.MultiWallet.AddBlockchain(blockchain))
                 }
-                is Result.Failure -> {
-                    when (val result = walletManager.safeUpdate()) {
-                        is com.tangem.common.services.Result.Success -> {
-                            val tokenAmount = result.data.getTokenAmount(token) ?: return@launch
-                            store.dispatchOnMain(WalletAction.MultiWallet.TokenLoaded(tokenAmount, token))
-                        }
-                        is com.tangem.common.services.Result.Failure -> {
-                        }
+            store.dispatch(WalletAction.LoadFiatRate(currencyList = tokensList.map { Currency.Token(it) }))
+            walletManager?.apply {
+                scope.launch { async { addTokens(tokensList) }.await() }
+            }
+        }
+        scope.launch {
+            walletManagers.forEach { walletManager ->
+                when (val result = walletManager.safeUpdate()) {
+                    is com.tangem.common.services.Result.Success -> {
+                        val wallet = result.data
+                        wallet.getTokens()
+                            .filter { tokens.contains(it) }
+                            .mapNotNull { token -> wallet.getTokenAmount(token)?.let { Pair(token, it) } }
+                            .forEach {
+                                withContext(Dispatchers.Main) {
+                                    store.dispatch(WalletAction.MultiWallet.TokenLoaded(it.second, it.first))
+                                }
+                            }
                     }
+                    is com.tangem.common.services.Result.Failure -> {}
                 }
             }
         }
     }
-
-    private fun addTokens(
-        tokens: List<Token>,
-        walletState: WalletState?,
-        globalState: GlobalState?,
-    ) {
-        val scanResponse = globalState?.scanResponse ?: return
-
-        val tokensWithManagers = tokens.map { token ->
-            val walletManager = walletState?.getWalletManager(token)
-                ?: globalState.tapWalletManager.walletManagerFactory.makeWalletManagerForApp(
-                    scanResponse,
-                    token.blockchain
-                )?.also { walletManager ->
-                    store.dispatch(WalletAction.MultiWallet.AddWalletManagers(walletManager))
-                    store.dispatch(WalletAction.MultiWallet.AddBlockchain(walletManager.wallet.blockchain))
-                }
-            store.dispatch(
-                WalletAction.LoadFiatRate(currency = Currency.Token(token))
-            )
-            TokenWithManager(token, walletManager)
-        }
-        scope.launch {
-            tokensWithManagers.forEach {
-                when (val result = it.walletManager?.addToken(it.token)) {
-                    is Result.Success -> {
-                        store.dispatchOnMain(WalletAction.MultiWallet.TokenLoaded(result.data, it.token))
-                    }
-                    is Result.Failure -> {
-                        when (val result = it.walletManager.safeUpdate()) {
-                            is com.tangem.common.services.Result.Success -> {
-                                val tokenAmount = result.data.getTokenAmount(it.token) ?: return@launch
-                                store.dispatchOnMain(WalletAction.MultiWallet.TokenLoaded(tokenAmount, it.token))
-                            }
-                            is com.tangem.common.services.Result.Failure -> {
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    private data class TokenWithManager(val token: Token, val walletManager: WalletManager?)
 }
