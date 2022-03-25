@@ -88,18 +88,20 @@ class WalletMiddleware {
                     when {
                         action.wallet != null -> {
                             globalState.tapWalletManager.loadFiatRate(
-                                globalState.appCurrency, action.wallet
+                                fiatCurrency = globalState.appCurrency,
+                                wallet = action.wallet,
                             )
                         }
-                        action.currency != null -> {
+                        action.currencyList != null -> {
                             globalState.tapWalletManager.loadFiatRate(
-                                globalState.appCurrency, action.currency
+                                fiatCurrency = globalState.appCurrency,
+                                currencies = action.currencyList,
                             )
                         }
                         else -> {
                             globalState.tapWalletManager.loadFiatRate(
                                 fiatCurrency = globalState.appCurrency,
-                                currencies = walletState.wallets.map { it.currency }
+                                currencies = walletState.wallets.map { it.currency },
                             )
                         }
                     }
