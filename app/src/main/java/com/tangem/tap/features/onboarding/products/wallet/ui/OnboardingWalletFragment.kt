@@ -2,7 +2,9 @@ package com.tangem.tap.features.onboarding.products.wallet.ui
 
 import android.os.Bundle
 import android.util.TypedValue
-import android.view.*
+import android.view.View
+import android.view.ViewGroup
+import android.view.WindowManager
 import android.widget.ImageView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
@@ -385,28 +387,6 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
                 ?.alpha(1f)
                 ?.setDuration(400)
         }
-    }
-
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.shop_menu -> {
-                store.dispatch(BackupAction.GoToShop)
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
-        }
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        inflater.inflate(R.menu.shop, menu)
-
-        val backupState = store.state.onboardingWalletState.backupState
-        val backupStep = backupState.backupStep
-
-        val shopMenuShouldBeVisible =
-            (backupStep == BackupStep.ScanOriginCard || backupStep == BackupStep.AddBackupCards) &&
-                backupState.buyAdditionalCardsUrl != null
-        menu.getItem(0).isVisible = shopMenuShouldBeVisible
     }
 
     override fun handleOnBackPressed() {
