@@ -25,7 +25,7 @@ class RegionService(
     }
 }
 
-class MobileOperatorRegionProvider(context: Context) : RegionProvider {
+class TelephonyManagerRegionProvider(context: Context) : RegionProvider {
 
     private val wContext: WeakReference<Context> = WeakReference(context)
 
