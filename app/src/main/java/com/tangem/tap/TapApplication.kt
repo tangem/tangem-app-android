@@ -105,10 +105,10 @@ class TapApplication : Application() {
 
 data class LogConfig(
     // disables both [internal, http]
-    val picasso: Boolean = false,
+    val picasso: Boolean = BuildConfig.DEBUG,
     val picassoInternal: Boolean = true,
     val picassoHttp: Boolean = true,
 
-    val storeAction: Boolean = false,
+    val storeAction: Boolean = BuildConfig.DEBUG,
 
 )
