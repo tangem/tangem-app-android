@@ -4,6 +4,7 @@ import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.AnalyticsParam
 import com.tangem.tap.common.analytics.GetCardSourceParams
 import com.tangem.tap.common.entities.IndeterminateProgressButton
+import com.tangem.tap.common.extensions.dispatchOpenUrl
 import com.tangem.tap.common.extensions.onCardScanned
 import com.tangem.tap.common.extensions.withMainContext
 import com.tangem.tap.common.post
@@ -14,6 +15,7 @@ import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.FragmentShareTransition
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.DELAY_SDK_DIALOG_CLOSE
+import com.tangem.tap.features.home.redux.HomeMiddleware.Companion.BUY_WALLET_URL
 import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsStep
@@ -29,6 +31,7 @@ class HomeMiddleware {
         val handler = homeMiddleware
 
         const val CARD_SHOP_URI = "http://cards.tangem.com/"
+        const val BUY_WALLET_URL = "https://mv.tangem.com/"
     }
 }
 
@@ -49,7 +52,10 @@ private val homeMiddleware: Middleware<AppState> = { dispatch, state ->
                 }
                 is HomeAction.ReadCard -> handleReadCard()
                 is HomeAction.GoToShop -> {
-                    store.dispatch(NavigationAction.NavigateTo(AppScreen.Shop))
+                    when (action.regionProvider.getRegion()?.toLowerCase()) {
+                        "ru" -> store.dispatchOpenUrl(BUY_WALLET_URL)
+                        else -> store.dispatch(NavigationAction.NavigateTo(AppScreen.Shop))
+                    }
                     store.state.globalState.analyticsHandlers?.triggerEvent(
                         event = AnalyticsEvent.GET_CARD,
                         params = mapOf(AnalyticsParam.SOURCE.param to GetCardSourceParams.WELCOME.param)
@@ -66,7 +72,7 @@ private fun handleReadCard() {
         store.dispatch(NavigationAction.NavigateTo(AppScreen.Disclaimer))
     } else {
         changeButtonState(ButtonState.PROGRESS)
-        store.dispatch(GlobalAction.ScanCard( onSuccess =  { scanResponse ->
+        store.dispatch(GlobalAction.ScanCard(onSuccess = { scanResponse ->
             store.state.globalState.tapWalletManager.updateConfigManager(scanResponse)
             store.dispatch(TwinCardsAction.IfTwinsPrepareState(scanResponse))
 
