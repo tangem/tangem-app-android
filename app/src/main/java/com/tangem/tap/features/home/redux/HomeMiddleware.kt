@@ -52,10 +52,9 @@ private val homeMiddleware: Middleware<AppState> = { dispatch, state ->
                 }
                 is HomeAction.ReadCard -> handleReadCard()
                 is HomeAction.GoToShop -> {
-                    if (action.region == "ru") {
-                        store.dispatchOpenUrl(BUY_WALLET_URL)
-                    } else {
-                        store.dispatch(NavigationAction.NavigateTo(AppScreen.Shop))
+                    when (action.regionProvider.getRegion()?.toLowerCase()) {
+                        "ru" -> store.dispatchOpenUrl(BUY_WALLET_URL)
+                        else -> store.dispatch(NavigationAction.NavigateTo(AppScreen.Shop))
                     }
                     store.state.globalState.analyticsHandlers?.triggerEvent(
                         event = AnalyticsEvent.GET_CARD,
