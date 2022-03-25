@@ -328,7 +328,6 @@ class TapWalletManager {
                     is Result.Success -> {
                         val rate = it.first to (it.second as Result.Success<BigDecimal>).data
                         store.dispatch(WalletAction.LoadFiatRate.Success(rate))
-                        delay(50) // this one is to try to avoid concurrent state modification
                     }
                     is Result.Failure -> store.dispatch(WalletAction.LoadFiatRate.Failure)
                     null -> {}
