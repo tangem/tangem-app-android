@@ -24,7 +24,10 @@ import com.tangem.tap.domain.extensions.toSendableAmounts
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.send.redux.PrepareSendScreen
-import com.tangem.tap.features.wallet.redux.*
+import com.tangem.tap.features.wallet.redux.Currency
+import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.features.wallet.redux.WalletData
+import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.network.NetworkStateChanged
 import com.tangem.tap.scope
 import com.tangem.tap.store
@@ -63,9 +66,9 @@ class WalletMiddleware {
             is WalletAction.LoadWallet -> {
                 scope.launch {
                     if (action.blockchain == null) {
-                            walletState.walletManagers.map { walletManager ->
-                                async { globalState.tapWalletManager.loadWalletData(walletManager) }
-                            }.awaitAll()
+                        walletState.walletManagers.map { walletManager ->
+                            async { globalState.tapWalletManager.loadWalletData(walletManager) }
+                        }.awaitAll()
                     } else {
                         val walletManager = walletState.getWalletManager(action.blockchain)
                         walletManager?.let { globalState.tapWalletManager.loadWalletData(it) }
@@ -84,23 +87,19 @@ class WalletMiddleware {
                 warningsMiddleware.tryToShowAppRatingWarning(action.wallet)
             }
             is WalletAction.LoadFiatRate -> {
+                val tapWalletManager = globalState.tapWalletManager
+                val fiatAppCurrency = globalState.appCurrency
                 scope.launch {
                     when {
                         action.wallet != null -> {
-                            globalState.tapWalletManager.loadFiatRate(
-                                globalState.appCurrency, action.wallet
-                            )
+                            tapWalletManager.loadFiatRate(fiatAppCurrency, action.wallet)
                         }
-                        action.currency != null -> {
-                            globalState.tapWalletManager.loadFiatRate(
-                                globalState.appCurrency, action.currency
-                            )
+                        action.currencyList != null -> {
+                            tapWalletManager.loadFiatRate(fiatAppCurrency, action.currencyList)
                         }
                         else -> {
-                            globalState.tapWalletManager.loadFiatRate(
-                                fiatCurrency = globalState.appCurrency,
-                                currencies = walletState.wallets.mapNotNull { it.currency }
-                            )
+                            val currencyList = walletState.walletsData.map { it.currency }
+                            tapWalletManager.loadFiatRate(fiatAppCurrency, currencyList)
                         }
                     }
                 }
@@ -122,22 +121,6 @@ class WalletMiddleware {
                                     Analytics.ActionToLog.CreateWallet,
                                     card = store.state.detailsState.scanResponse?.card
                                 )
-                            }
-                        }
-                    }
-                }
-            }
-            is WalletAction.UpdateWallet -> {
-                if (action.blockchain != null) {
-                    scope.launch {
-                        val walletManager = walletState.getWalletManager(action.blockchain)
-                        walletManager?.let { globalState.tapWalletManager.updateWallet(it) }
-                    }
-                } else {
-                    scope.launch {
-                        if (walletState.state == ProgressState.Done) {
-                            walletState.walletManagers.map { walletManager ->
-                                globalState.tapWalletManager.updateWallet(walletManager)
                             }
                         }
                     }
@@ -170,7 +153,7 @@ class WalletMiddleware {
             is WalletAction.LoadData -> {
                 scope.launch {
                     val scanNoteResponse = globalState.scanResponse ?: return@launch
-                    if (!walletState.wallets.isEmpty()) {
+                    if (walletState.walletsData.isNotEmpty()) {
                         globalState.tapWalletManager.reloadData(scanNoteResponse)
                     } else {
                         globalState.tapWalletManager.loadData(scanNoteResponse)
@@ -203,7 +186,7 @@ class WalletMiddleware {
                 }
             }
             is WalletAction.ShowDialog.QrCode -> {
-                val selectedWalletData = walletState.getWalletData(walletState.selectedWallet) ?: return
+                val selectedWalletData = walletState.getWalletData(walletState.selectedCurrency) ?: return
                 val selectedAddressData = selectedWalletData.walletAddresses?.selectedAddress ?: return
 
                 val currency = selectedWalletData.currency
@@ -230,12 +213,12 @@ class WalletMiddleware {
                 when (currency) {
                     is Currency.Blockchain -> {
                         val amountToSend = amounts?.find { it.currencySymbol == currency.blockchain.currency }
-                                ?: return WalletAction.Send.ChooseCurrency(amounts)
+                            ?: return WalletAction.Send.ChooseCurrency(amounts)
                         PrepareSendScreen(amountToSend, selectedWalletData.fiatRate, walletManager)
                     }
                     is Currency.Token -> {
                         val amountToSend = amounts?.find { it.currencySymbol == currency.token.symbol }
-                                ?: return WalletAction.Send.ChooseCurrency(amounts)
+                            ?: return WalletAction.Send.ChooseCurrency(amounts)
                         prepareSendActionForToken(amountToSend, state, selectedWalletData, wallet, walletManager)
                     }
                 }

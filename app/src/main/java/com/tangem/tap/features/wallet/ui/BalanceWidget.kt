@@ -22,7 +22,9 @@ data class BalanceWidgetData(
     val status: BalanceStatus? = null,
     val currency: String? = null,
     val currencySymbol: String? = null,
-    val amount: String? = null,
+    val blockchainAmount: BigDecimal? = BigDecimal.ZERO,
+    val amount: BigDecimal? = null,
+    val amountFormatted: String? = null,
     val fiatAmountFormatted: String? = null,
     val fiatAmount: BigDecimal? = null,
     val token: TokenData? = null,
@@ -149,7 +151,7 @@ class BalanceWidget(
         tvCurrency.text = data.token?.tokenSymbol
         tvBaseCurrency.text = data.currency
         tvAmount.text = if (showAmount) data.token?.amount else ""
-        tvBaseAmount.text = if (showAmount) data.amount else ""
+        tvBaseAmount.text = if (showAmount) data.amountFormatted else ""
         if (showAmount) {
             tvFiatAmount.show()
             tvFiatAmount.text = data.token?.fiatAmount
@@ -160,7 +162,7 @@ class BalanceWidget(
         with(binding.lBalance) {
             groupBaseCurrency.hide()
             tvCurrency.text = data.currency
-            tvAmount.text = if (showAmount) data.amount else ""
+            tvAmount.text = if (showAmount) data.amountFormatted else ""
             if (showAmount) {
                 tvFiatAmount.show()
                 tvFiatAmount.text = data.fiatAmountFormatted
