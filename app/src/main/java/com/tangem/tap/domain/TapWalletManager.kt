@@ -259,7 +259,6 @@ class TapWalletManager {
     }
 
     private suspend fun handleUpdateWalletResult(result: Result<Wallet>, walletManager: WalletManager) {
-        walletManagersThrottler.setValue(walletManager.wallet.blockchain, result)
         withContext(Dispatchers.Main) {
             when (result) {
                 is Result.Success -> {
