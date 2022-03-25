@@ -1,12 +1,11 @@
 package com.tangem.tap.features.home
 
-import android.content.Context
 import android.os.Bundle
-import android.telephony.TelephonyManager
 import android.view.View
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.ComposeView
+import androidx.compose.ui.text.intl.Locale
 import androidx.fragment.app.Fragment
 import com.google.accompanist.appcompattheme.AppCompatTheme
 import com.tangem.tap.features.home.compose.StoriesScreen
@@ -30,18 +29,23 @@ class HomeFragment : Fragment(R.layout.fragment_home), StoreSubscriber<HomeState
         super.onViewCreated(view, savedInstanceState)
 
         store.dispatch(BackupAction.CheckForUnfinishedBackup)
-        val tm = requireContext().getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
-        val countryCodeValue = tm.networkCountryIso
+
 
         getView()?.findViewById<ComposeView>(R.id.cv_stories)?.setContent {
             AppCompatTheme {
                 StoriesScreen(
                     homeState,
                     onScanButtonClick = { store.dispatch(HomeAction.ReadCard) },
-                    onShopButtonClick = { store.dispatch(HomeAction.GoToShop(countryCodeValue)) }
+                    onShopButtonClick = { store.dispatch(HomeAction.GoToShop(getLocale())) }
                 )
             }
         }
+    }
+
+    private fun getLocale(): String {
+//        val tm = requireContext().getSystemService(Context.TELEPHONY_SERVICE) as TelephonyManager
+//        val countryCodeValue = tm.networkCountryIso
+        return Locale.current.language
     }
 
     override fun onStart() {
