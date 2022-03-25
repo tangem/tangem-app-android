@@ -29,16 +29,24 @@ class HomeFragment : Fragment(R.layout.fragment_home), StoreSubscriber<HomeState
 
         store.dispatch(BackupAction.CheckForUnfinishedBackup)
 
+
         getView()?.findViewById<ComposeView>(R.id.cv_stories)?.setContent {
             AppCompatTheme {
                 StoriesScreen(
                     homeState,
                     onScanButtonClick = { store.dispatch(HomeAction.ReadCard) },
-                    onShopButtonClick = { store.dispatch(HomeAction.GoToShop) }
+                    onShopButtonClick = { store.dispatch(HomeAction.GoToShop(getRegionProvider())) }
                 )
             }
         }
     }
+
+    private fun getRegionProvider(): RegionProvider = RegionService(
+        listOf(
+//            TelephonyManagerRegionProvider(requireContext()),
+            LocaleRegionProvider()
+        )
+    )
 
     override fun onStart() {
         super.onStart()
