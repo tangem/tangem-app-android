@@ -4,9 +4,6 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.card.Card
 import com.tangem.operations.backup.BackupService
 import com.tangem.tap.*
-import com.tangem.tap.common.analytics.AnalyticsEvent
-import com.tangem.tap.common.analytics.AnalyticsParam
-import com.tangem.tap.common.analytics.GetCardSourceParams
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.withMainContext
 import com.tangem.tap.common.redux.AppState
@@ -17,7 +14,6 @@ import com.tangem.tap.domain.extensions.hasWallets
 import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.redux.HomeAction
-import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletMiddleware.Companion.BUY_WALLET_URL
 import com.tangem.tap.features.wallet.redux.Artwork
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
@@ -26,8 +22,6 @@ import org.rekotlin.Middleware
 class OnboardingWalletMiddleware {
     companion object {
         val handler = onboardingWalletMiddleware
-
-        const val BUY_WALLET_URL = "https://wallet.tangem.com/"
     }
 }
 
@@ -116,21 +110,8 @@ private fun handleWalletAction(action: Action) {
         OnboardingWalletAction.ProceedBackup -> {
             val newAction = when (val backupState = backupService.currentState) {
                 BackupService.State.FinalizingPrimaryCard -> BackupAction.PrepareToWritePrimaryCard
-                is BackupService.State.FinalizingBackupCard ->
-                    BackupAction.PrepareToWriteBackupCard(backupState.index)
-                else -> {
-                    val url = if (card?.issuer?.name?.lowercase()?.contains("tangem") == true) {
-                        BUY_WALLET_URL
-                    } else {
-                        null
-                    }
-                    if (walletState.backupState.backupStep == BackupStep.InitBackup ||
-                        walletState.backupState.backupStep == BackupStep.Finished) {
-                        BackupAction.IntroduceBackup(url)
-                    } else {
-                        null
-                    }
-                }
+                is BackupService.State.FinalizingBackupCard -> BackupAction.PrepareToWriteBackupCard(backupState.index)
+                else -> null
             }
             newAction?.let { store.dispatch(it) }
         }
@@ -220,13 +201,6 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                     }
                 }
             }
-        }
-        is BackupAction.GoToShop -> {
-            store.dispatch(NavigationAction.NavigateTo(AppScreen.Shop))
-            store.state.globalState.analyticsHandlers?.triggerEvent(
-                event = AnalyticsEvent.GET_CARD,
-                params = mapOf(AnalyticsParam.SOURCE.param to GetCardSourceParams.ONBOARDING.param)
-            )
         }
         is BackupAction.FinishAddingBackupCards -> {
             if (backupService.addedBackupCardsCount == 1) {
