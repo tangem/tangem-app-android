@@ -4,10 +4,10 @@ import com.tangem.blockchain.blockchains.solana.RentProvider
 import com.tangem.blockchain.common.*
 import com.tangem.common.services.Result
 import com.tangem.tap.common.ThrottlerWithValues
-import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.extensions.stripZeroPlainString
+import com.tangem.tap.common.extensions.withMainContext
 import com.tangem.tap.common.redux.global.FiatCurrencyName
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.currenciesRepository
@@ -45,42 +45,14 @@ class TapWalletManager {
     private val walletManagersThrottler = ThrottlerWithValues<Blockchain, Result<Wallet>>(10000)
     private val fiatRatesThrottler = ThrottlerWithValues<Currency, Result<BigDecimal>?>(60000)
 
-    // from the master
-//    suspend fun loadWalletData(walletManager: WalletManager) {
-//        val blockchain = walletManager.wallet.blockchain
-//        val result = if (walletManagersThrottler.isStillThrottled(blockchain)) {
-//            delay(500)
-//            walletManagersThrottler.geValue(blockchain)!!
-//        } else {
-//            updateThrottlingForWalletManager(walletManager)
-//        }
-//        handleUpdateWalletResult(result, walletManager)
-//    }
-//
-//    suspend fun updateWallet(walletManager: WalletManager, force: Boolean) {
-//        val result = if (force) {
-//            updateThrottlingForWalletManager(walletManager)
-//        } else {
-//            val blockchain = walletManager.wallet.blockchain
-//            if (walletManagersThrottler.isStillThrottled(blockchain)) {
-//                delay(500)
-//                walletManagersThrottler.geValue(blockchain)!!
-//            } else {
-//                updateThrottlingForWalletManager(walletManager)
-//            }
-//        }
-//        withContext(Dispatchers.Main) {
-//            when (result) {
-//                is Result.Success ->
-//                    store.dispatch(WalletAction.UpdateWallet.Success(result.data))
-//                is Result.Failure ->
-//                    store.dispatch(WalletAction.UpdateWallet.Failure(result.error.localizedMessage))
-//            }
-//        }
-//    }
-
     suspend fun loadWalletData(walletManager: WalletManager) {
-        val result = walletManager.safeUpdate()
+        val blockchain = walletManager.wallet.blockchain
+        val result = if (walletManagersThrottler.isStillThrottled(blockchain)) {
+//            delay(500)
+            walletManagersThrottler.geValue(blockchain)!!
+        } else {
+            updateThrottlingForWalletManager(walletManager)
+        }
         withContext(Dispatchers.Main) {
             when (result) {
                 is Result.Success -> {
@@ -143,7 +115,7 @@ class TapWalletManager {
     suspend fun onCardScanned(data: ScanResponse) {
         walletManagersThrottler.clear()
 //        fiatRatesThrottler.clear()
-        store.state.globalState.feedbackManager?.infoHolder?.setCardInfo(data.card)
+        store.state.globalState.feedbackManager?.infoHolder?.setCardInfo(data)
         updateConfigManager(data)
 
         withContext(Dispatchers.Main) {
@@ -321,7 +293,7 @@ class TapWalletManager {
     }
 
     private suspend fun handleFiatRatesResult(results: List<Pair<Currency, Result<BigDecimal>?>>) {
-        withContext(Dispatchers.Main) {
+        withMainContext {
             results.map {
                 when (it.second) {
                     is Result.Success -> {
