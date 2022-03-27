@@ -4,6 +4,7 @@ enum class AnalyticsEvent(val event: String) {
     CARD_IS_SCANNED("card_is_scanned"),
     TRANSACTION_IS_SENT("transaction_is_sent"),
     READY_TO_SCAN("ready_to_scan"),
+    DEMO_MODE_ACTIVATED("demo_mode_activated"),
 
     APP_RATING_DISPLAYED("rate_app_warning_displayed"),
     APP_RATING_DISMISS("dismiss_rate_app_warning"),
@@ -20,6 +21,7 @@ enum class AnalyticsEvent(val event: String) {
 
 enum class AnalyticsParam(val param: String) {
     BLOCKCHAIN("blockchain"),
+    CARD_ID("cardId"),
     BATCH_ID("batch_id"),
     FIRMWARE("firmware"),
     ACTION("action"),
