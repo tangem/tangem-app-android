@@ -25,10 +25,8 @@ import com.tangem.tap.features.wallet.redux.Currency
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.tap.network.coinmarketcap.CoinMarketCapService
-import com.tangem.tap.scope
 import com.tangem.tap.store
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 
@@ -48,31 +46,28 @@ class TapWalletManager {
     suspend fun loadWalletData(walletManager: WalletManager) {
         val blockchain = walletManager.wallet.blockchain
         val result = if (walletManagersThrottler.isStillThrottled(blockchain)) {
-//            delay(500)
             walletManagersThrottler.geValue(blockchain)!!
         } else {
             updateThrottlingForWalletManager(walletManager)
         }
-        withContext(Dispatchers.Main) {
-            when (result) {
-                is Result.Success -> {
-                    checkForRentWarning(walletManager)
-                    store.dispatch(WalletAction.LoadWallet.Success(result.data))
-                }
-                is Result.Failure -> {
-                    when (result.error) {
-                        is TapError.WalletManagerUpdate.NoAccountError -> {
-                            store.dispatch(WalletAction.LoadWallet.NoAccount(
-                                walletManager.wallet,
-                                (result.error as TapError.WalletManagerUpdate.NoAccountError).customMessage
-                            ))
-                        }
-                        else -> {
-                            store.dispatch(WalletAction.LoadWallet.Failure(
-                                walletManager.wallet,
-                                result.error.localizedMessage
-                            ))
-                        }
+        when (result) {
+            is Result.Success -> {
+                checkForRentWarning(walletManager)
+                dispatchOnMain(WalletAction.LoadWallet.Success(result.data))
+            }
+            is Result.Failure -> {
+                when (result.error) {
+                    is TapError.WalletManagerUpdate.NoAccountError -> {
+                        dispatchOnMain(WalletAction.LoadWallet.NoAccount(
+                            walletManager.wallet,
+                            (result.error as TapError.WalletManagerUpdate.NoAccountError).customMessage
+                        ))
+                    }
+                    else -> {
+                        dispatchOnMain(WalletAction.LoadWallet.Failure(
+                            walletManager.wallet,
+                            result.error.localizedMessage
+                        ))
                     }
                 }
             }
@@ -118,7 +113,7 @@ class TapWalletManager {
         store.state.globalState.feedbackManager?.infoHolder?.setCardInfo(data)
         updateConfigManager(data)
 
-        withContext(Dispatchers.Main) {
+        withMainContext {
             store.dispatch(WalletAction.ResetState)
             store.dispatch(GlobalAction.SaveScanNoteResponse(data))
             store.dispatch(WalletAction.SetIfTestnetCard(data.card.isTestCard))
@@ -144,42 +139,43 @@ class TapWalletManager {
     }
 
     suspend fun loadData(data: ScanResponse) {
-        withContext(Dispatchers.Main) {
-            store.dispatch(WalletAction.LoadCardInfo(data.card))
-            getActionIfUnknownBlockchainOrEmptyWallet(data)?.let {
-                store.dispatch(it)
-                return@withContext
-            }
-
-            val blockchain = data.getBlockchain()
-            val primaryWalletManager = walletManagerFactory.makePrimaryWalletManager(data)
-
-            if (blockchain != Blockchain.Unknown && primaryWalletManager != null) {
-                val primaryToken = data.getPrimaryToken()
-
-                store.dispatch(WalletAction.MultiWallet.SetPrimaryBlockchain(blockchain))
-                if (primaryToken != null) {
-                    primaryWalletManager.addToken(primaryToken)
-                    store.dispatch(WalletAction.MultiWallet.SetPrimaryToken(primaryToken))
-                }
-                if (data.card.isMultiwalletAllowed) {
-                    loadMultiWalletData(data, blockchain, primaryWalletManager)
-                } else {
-                    store.dispatch(WalletAction.MultiWallet.AddWalletManagers(primaryWalletManager))
-                    store.dispatch(WalletAction.MultiWallet.AddBlockchains(listOf(blockchain)))
-                }
-
-            } else {
-                if (data.card.isMultiwalletAllowed) {
-                    loadMultiWalletData(data, blockchain, null)
-                }
-            }
-            store.dispatch(WalletAction.LoadWallet())
-            store.dispatch(WalletAction.LoadFiatRate())
+        dispatchOnMain(WalletAction.LoadCardInfo(data.card))
+        getActionIfUnknownBlockchainOrEmptyWallet(data)?.let {
+            dispatchOnMain(it)
+            return
         }
+
+        val blockchain = data.getBlockchain()
+        val primaryWalletManager = walletManagerFactory.makePrimaryWalletManager(data)
+
+        if (blockchain != Blockchain.Unknown && primaryWalletManager != null) {
+            val primaryToken = data.getPrimaryToken()
+
+            dispatchOnMain(WalletAction.MultiWallet.SetPrimaryBlockchain(blockchain))
+            if (primaryToken != null) {
+                primaryWalletManager.addToken(primaryToken)
+                dispatchOnMain(WalletAction.MultiWallet.SetPrimaryToken(primaryToken))
+            }
+            if (data.card.isMultiwalletAllowed) {
+                loadMultiWalletData(data, blockchain, primaryWalletManager)
+            } else {
+                dispatchOnMain(
+                    WalletAction.MultiWallet.AddWalletManagers(primaryWalletManager),
+                    WalletAction.MultiWallet.AddBlockchains(listOf(blockchain))
+                )
+            }
+        } else {
+            if (data.card.isMultiwalletAllowed) {
+                loadMultiWalletData(data, blockchain, null)
+            }
+        }
+        dispatchOnMain(
+            WalletAction.LoadWallet(),
+            WalletAction.LoadFiatRate()
+        )
     }
 
-    private fun loadMultiWalletData(
+    private suspend fun loadMultiWalletData(
         scanResponse: ScanResponse, primaryBlockchain: Blockchain?, primaryWalletManager: WalletManager?
     ) {
         val primaryTokens = primaryWalletManager?.cardTokens?.toList() ?: emptyList()
@@ -187,25 +183,31 @@ class TapWalletManager {
 
         if (savedCurrencies == null) {
             if (primaryBlockchain != null && primaryWalletManager != null) {
-                store.dispatch(WalletAction.MultiWallet.SaveCurrencies(
-                    CardCurrencies(
-                        blockchains = listOf(primaryBlockchain), tokens = primaryTokens
-                    )))
-                store.dispatch(WalletAction.MultiWallet.AddWalletManagers(primaryWalletManager))
-                store.dispatch(WalletAction.MultiWallet.AddBlockchains(listOf(primaryBlockchain)))
-                store.dispatch(WalletAction.MultiWallet.AddTokens(primaryTokens.toList()))
+                dispatchOnMain(
+                    WalletAction.MultiWallet.SaveCurrencies(
+                        CardCurrencies(blockchains = listOf(primaryBlockchain), tokens = primaryTokens)
+                    ),
+                    WalletAction.MultiWallet.AddWalletManagers(primaryWalletManager),
+                    WalletAction.MultiWallet.AddBlockchains(listOf(primaryBlockchain)),
+                    WalletAction.MultiWallet.AddTokens(primaryTokens.toList())
+                )
+
             } else {
                 val blockchains = listOf(Blockchain.Bitcoin, Blockchain.Ethereum)
-                store.dispatch(WalletAction.MultiWallet.SaveCurrencies(
-                    CardCurrencies(blockchains = blockchains, tokens = emptyList())
-                ))
-                val walletManagers =
-                    walletManagerFactory.makeWalletManagersForApp(scanResponse, blockchains.toList())
-                store.dispatch(WalletAction.MultiWallet.AddWalletManagers(walletManagers))
-                store.dispatch(WalletAction.MultiWallet.AddBlockchains(blockchains.toList()))
+                val walletManagers = walletManagerFactory.makeWalletManagersForApp(scanResponse, blockchains.toList())
+                dispatchOnMain(
+                    WalletAction.MultiWallet.SaveCurrencies(CardCurrencies(
+                        blockchains = blockchains,
+                        tokens = emptyList()
+                    )),
+                    WalletAction.MultiWallet.AddWalletManagers(walletManagers),
+                    WalletAction.MultiWallet.AddBlockchains(blockchains.toList()),
+                )
             }
-            store.dispatch(WalletAction.MultiWallet.FindBlockchainsInUse)
-            store.dispatch(WalletAction.MultiWallet.FindTokensInUse)
+            dispatchOnMain(
+                WalletAction.MultiWallet.FindBlockchainsInUse,
+                WalletAction.MultiWallet.FindTokensInUse,
+            )
         } else {
             val blockchains = savedCurrencies.blockchains.toList()
             val walletManagers = if (
@@ -218,10 +220,11 @@ class TapWalletManager {
             } else {
                 walletManagerFactory.makeWalletManagersForApp(scanResponse, blockchains)
             }
-
-            store.dispatch(WalletAction.MultiWallet.AddWalletManagers(walletManagers))
-            store.dispatch(WalletAction.MultiWallet.AddBlockchains(blockchains))
-            store.dispatch(WalletAction.MultiWallet.AddTokens(savedCurrencies.tokens.toList()))
+            dispatchOnMain(
+                WalletAction.MultiWallet.AddWalletManagers(walletManagers),
+                WalletAction.MultiWallet.AddBlockchains(blockchains),
+                WalletAction.MultiWallet.AddTokens(savedCurrencies.tokens.toList()),
+            )
         }
     }
 
@@ -260,49 +263,45 @@ class TapWalletManager {
         }
     }
 
-    private fun checkForRentWarning(walletManager: WalletManager) {
+    private suspend fun checkForRentWarning(walletManager: WalletManager) {
         val rentProvider = walletManager as? RentProvider ?: return
 
-        scope.launch {
-            when (val result = rentProvider.minimalBalanceForRentExemption()) {
-                is com.tangem.blockchain.extensions.Result.Success -> {
-                    fun isNeedToShowWarning(balance: BigDecimal, rentExempt: BigDecimal): Boolean = balance < rentExempt
+        when (val result = rentProvider.minimalBalanceForRentExemption()) {
+            is com.tangem.blockchain.extensions.Result.Success -> {
+                fun isNeedToShowWarning(balance: BigDecimal, rentExempt: BigDecimal): Boolean = balance < rentExempt
 
-                    val balance = walletManager.wallet.fundsAvailable(AmountType.Coin)
-                    val outgoingTxs = walletManager.wallet.getPendingTransactions(PendingTransactionType.Outgoing)
-                    val rentExempt = result.data
-                    val show = if (outgoingTxs.isEmpty()) {
-                        isNeedToShowWarning(balance, rentExempt)
-                    } else {
-                        val outgoingAmount = outgoingTxs.sumOf { it.amount ?: BigDecimal.ZERO }
-                        val rest = balance.minus(outgoingAmount)
-                        isNeedToShowWarning(rest, rentExempt)
-                    }
-                    if (!show) return@launch
-
-                    val currency = walletManager.wallet.blockchain.currency
-                    store.dispatchOnMain(WalletAction.SetWalletRent(
-                        blockchain = walletManager.wallet.blockchain,
-                        minRent = ("${rentProvider.rentAmount().stripZeroPlainString()} $currency"),
-                        rentExempt = ("${rentExempt.stripZeroPlainString()} $currency")
-                    ))
+                val balance = walletManager.wallet.fundsAvailable(AmountType.Coin)
+                val outgoingTxs = walletManager.wallet.getPendingTransactions(PendingTransactionType.Outgoing)
+                val rentExempt = result.data
+                val show = if (outgoingTxs.isEmpty()) {
+                    isNeedToShowWarning(balance, rentExempt)
+                } else {
+                    val outgoingAmount = outgoingTxs.sumOf { it.amount ?: BigDecimal.ZERO }
+                    val rest = balance.minus(outgoingAmount)
+                    isNeedToShowWarning(rest, rentExempt)
                 }
-                is com.tangem.blockchain.extensions.Result.Failure -> {}
+                if (!show) return
+
+                val currency = walletManager.wallet.blockchain.currency
+                dispatchOnMain(WalletAction.SetWalletRent(
+                    blockchain = walletManager.wallet.blockchain,
+                    minRent = ("${rentProvider.rentAmount().stripZeroPlainString()} $currency"),
+                    rentExempt = ("${rentExempt.stripZeroPlainString()} $currency")
+                ))
             }
+            is com.tangem.blockchain.extensions.Result.Failure -> {}
         }
     }
 
     private suspend fun handleFiatRatesResult(results: List<Pair<Currency, Result<BigDecimal>?>>) {
-        withMainContext {
-            results.map {
-                when (it.second) {
-                    is Result.Success -> {
-                        val rate = it.first to (it.second as Result.Success<BigDecimal>).data
-                        store.dispatch(WalletAction.LoadFiatRate.Success(rate))
-                    }
-                    is Result.Failure -> store.dispatch(WalletAction.LoadFiatRate.Failure)
-                    null -> {}
+        results.map {
+            when (it.second) {
+                is Result.Success -> {
+                    val rate = it.first to (it.second as Result.Success<BigDecimal>).data
+                    dispatchOnMain(WalletAction.LoadFiatRate.Success(rate))
                 }
+                is Result.Failure -> dispatchOnMain(WalletAction.LoadFiatRate.Failure)
+                null -> {}
             }
         }
     }
