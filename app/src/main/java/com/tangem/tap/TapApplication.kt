@@ -35,6 +35,8 @@ val store = Store(
     middleware = AppState.getMiddleware(),
     state = AppState()
 )
+val logConfig = LogConfig()
+
 lateinit var preferencesStorage: PreferencesStorage
 lateinit var currenciesRepository: CurrenciesRepository
 lateinit var walletConnectRepository: WalletConnectRepository
@@ -100,3 +102,13 @@ class TapApplication : Application() {
         store.dispatch(GlobalAction.SetAnanlyticHandlers(analyticsHandler))
     }
 }
+
+data class LogConfig(
+    // disables both [internal, http]
+    val picasso: Boolean = BuildConfig.DEBUG,
+    val picassoInternal: Boolean = true,
+    val picassoHttp: Boolean = true,
+
+    val storeAction: Boolean = BuildConfig.DEBUG,
+
+)
