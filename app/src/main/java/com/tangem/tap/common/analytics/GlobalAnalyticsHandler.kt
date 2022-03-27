@@ -13,7 +13,7 @@ class GlobalAnalyticsHandler(val analyticsHandlers: List<AnalyticsHandler>) :
         blockchain: String?,
         params: Map<String, String>
     ) {
-        analyticsHandlers.forEach { it.triggerEvent(event, card, blockchain) }
+        analyticsHandlers.forEach { it.triggerEvent(event, card, blockchain, params) }
     }
 
     override fun triggerEvent(event: String, params: Map<String, String>) {
