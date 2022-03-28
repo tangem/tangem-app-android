@@ -63,6 +63,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
             }.select { it.walletState }
         }
         walletView.setFragment(this, binding)
+//        store.dispatch(WalletAction.UpdateWallet(force = false))
         store.dispatch(WalletAction.LoadWallet())
     }
 
