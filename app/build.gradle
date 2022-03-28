@@ -81,8 +81,8 @@ dependencies {
 
     implementation 'com.tangem:blockchain:develop-66'
 //    implementation 'com.tangem:blockchain:0.0.1'
-    implementation 'com.tangem.tangem-sdk-kotlin:core:develop-139'
-    implementation 'com.tangem.tangem-sdk-kotlin:android:develop-139'
+    implementation 'com.tangem.tangem-sdk-kotlin:core:develop-140'
+    implementation 'com.tangem.tangem-sdk-kotlin:android:develop-140'
 
     // WebView
     implementation "androidx.browser:browser:1.3.0"
