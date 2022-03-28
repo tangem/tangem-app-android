@@ -92,14 +92,23 @@ class WalletMiddleware {
                 scope.launch {
                     when {
                         action.wallet != null -> {
-                            tapWalletManager.loadFiatRate(fiatAppCurrency, action.wallet)
+                            globalState.tapWalletManager.loadFiatRate(
+                                fiatCurrency = fiatAppCurrency,
+                                wallet = action.wallet,
+                            )
                         }
                         action.currencyList != null -> {
-                            tapWalletManager.loadFiatRate(fiatAppCurrency, action.currencyList)
+                            globalState.tapWalletManager.loadFiatRate(
+                                fiatCurrency = fiatAppCurrency,
+                                currencies = action.currencyList,
+                            )
                         }
                         else -> {
                             val currencyList = walletState.walletsData.map { it.currency }
-                            tapWalletManager.loadFiatRate(fiatAppCurrency, currencyList)
+                            globalState.tapWalletManager.loadFiatRate(
+                                fiatCurrency = fiatAppCurrency,
+                                currencies = currencyList,
+                            )
                         }
                     }
                 }
@@ -146,6 +155,7 @@ class WalletMiddleware {
                             )
                             withMainContext { actionList.forEach { store.dispatch(it) } }
                         }
+                        is Result.Failure -> {}
                     }
                     store.dispatchOnMain(WalletAction.Warnings.CheckIfNeeded)
                 }
