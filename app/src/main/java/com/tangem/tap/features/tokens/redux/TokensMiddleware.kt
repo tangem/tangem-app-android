@@ -9,6 +9,7 @@ import com.tangem.common.extensions.toMapKey
 import com.tangem.common.hdWallet.DerivationPath
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.tap.common.extensions.dispatchErrorNotification
+import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.NavigationAction
@@ -106,11 +107,11 @@ class TokensMiddleware {
                     val updatedScanResponse = scanResponse.copy(
                         derivedKeys = updatedDerivedKeys
                     )
-                    store.dispatch(GlobalAction.SaveScanNoteResponse(updatedScanResponse))
+                    store.dispatchOnMain(GlobalAction.SaveScanNoteResponse(updatedScanResponse))
                     submitAdd(blockchains, tokens)
 
                     delay(DELAY_SDK_DIALOG_CLOSE)
-                    store.dispatch(NavigationAction.PopBackTo())
+                    store.dispatchOnMain(NavigationAction.PopBackTo())
                 }
                 is CompletionResult.Failure -> {
                     store.dispatchErrorNotification(TapError.CustomError("Error adding tokens"))
@@ -155,6 +156,6 @@ class TokensMiddleware {
             WalletAction.MultiWallet.AddBlockchain(it)
         } + tokens.map {
             WalletAction.MultiWallet.AddToken(it)
-        }).forEach { store.dispatch(it) }
+        }).forEach { store.dispatchOnMain(it) }
     }
 }
