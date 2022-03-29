@@ -18,6 +18,10 @@ fun Store<*>.dispatchOnMain(action: Action) {
     }
 }
 
+suspend fun dispatchOnMain(vararg actions: Action) {
+    withMainContext { actions.forEach { store.dispatch(it) } }
+}
+
 suspend fun Store<*>.onCardScanned(scanResponse: ScanResponse) {
     store.state.globalState.tapWalletManager.onCardScanned(scanResponse)
 }
