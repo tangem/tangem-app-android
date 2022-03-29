@@ -24,7 +24,10 @@ import com.tangem.tap.domain.extensions.toSendableAmounts
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.send.redux.PrepareSendScreen
-import com.tangem.tap.features.wallet.redux.*
+import com.tangem.tap.features.wallet.redux.Currency
+import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.features.wallet.redux.WalletData
+import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.network.NetworkStateChanged
 import com.tangem.tap.scope
 import com.tangem.tap.store
@@ -84,24 +87,27 @@ class WalletMiddleware {
                 warningsMiddleware.tryToShowAppRatingWarning(action.wallet)
             }
             is WalletAction.LoadFiatRate -> {
+                val tapWalletManager = globalState.tapWalletManager
+                val fiatAppCurrency = globalState.appCurrency
                 scope.launch {
                     when {
                         action.wallet != null -> {
                             globalState.tapWalletManager.loadFiatRate(
-                                fiatCurrency = globalState.appCurrency,
+                                fiatCurrency = fiatAppCurrency,
                                 wallet = action.wallet,
                             )
                         }
                         action.currencyList != null -> {
                             globalState.tapWalletManager.loadFiatRate(
-                                fiatCurrency = globalState.appCurrency,
+                                fiatCurrency = fiatAppCurrency,
                                 currencies = action.currencyList,
                             )
                         }
                         else -> {
+                            val currencyList = walletState.walletsData.map { it.currency }
                             globalState.tapWalletManager.loadFiatRate(
-                                fiatCurrency = globalState.appCurrency,
-                                currencies = walletState.wallets.map { it.currency },
+                                fiatCurrency = fiatAppCurrency,
+                                currencies = currencyList,
                             )
                         }
                     }
@@ -124,22 +130,6 @@ class WalletMiddleware {
                                     Analytics.ActionToLog.CreateWallet,
                                     card = store.state.detailsState.scanResponse?.card
                                 )
-                            }
-                        }
-                    }
-                }
-            }
-            is WalletAction.UpdateWallet -> {
-                if (action.blockchain != null) {
-                    scope.launch {
-                        val walletManager = walletState.getWalletManager(action.blockchain)
-                        walletManager?.let { globalState.tapWalletManager.updateWallet(it, action.force) }
-                    }
-                } else {
-                    scope.launch {
-                        if (walletState.state == ProgressState.Done) {
-                            walletState.walletManagers.map { walletManager ->
-                                globalState.tapWalletManager.updateWallet(walletManager, action.force)
                             }
                         }
                     }
@@ -173,7 +163,7 @@ class WalletMiddleware {
             is WalletAction.LoadData -> {
                 scope.launch {
                     val scanNoteResponse = globalState.scanResponse ?: return@launch
-                    if (!walletState.wallets.isEmpty()) {
+                    if (walletState.walletsData.isNotEmpty()) {
                         globalState.tapWalletManager.reloadData(scanNoteResponse)
                     } else {
                         globalState.tapWalletManager.loadData(scanNoteResponse)
@@ -206,7 +196,7 @@ class WalletMiddleware {
                 }
             }
             is WalletAction.ShowDialog.QrCode -> {
-                val selectedWalletData = walletState.getWalletData(walletState.selectedWallet) ?: return
+                val selectedWalletData = walletState.getWalletData(walletState.selectedCurrency) ?: return
                 val selectedAddressData = selectedWalletData.walletAddresses?.selectedAddress ?: return
 
                 val currency = selectedWalletData.currency
