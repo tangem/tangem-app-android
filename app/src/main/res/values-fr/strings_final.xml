@@ -5,7 +5,7 @@
     <string name="shop_2_cards">2 cards</string>
     <string name="shop_shipping">Shipping</string>
     <string name="shop_free">Free</string>
-    <string name="shop_i_have_a_promo_code">I have a promo code…</string>
+    <string name="shop_i_have_a_promo_code">I have a promo code...</string>
     <string name="shop_total">Total</string>
     <string name="shop_other_payment_methods">Other payment methods</string>
     <string name="shop_buy_now">Buy now</string>
@@ -23,18 +23,19 @@
     <string name="story_awe_title">Revolutionary Hardware Wallet</string>
     <string name="story_awe_description">Store your crypto assets secure while keeping private keys contained in your card</string>
     <string name="story_backup_title">Ultra Secure Backup</string>
-    <string name="story_backup_description">Up to 3 physical cards to one wallet</string>
+    <string name="story_backup_description">Up to <b>3 physical cards</b> to one wallet</string>
     <string name="story_currencies_title">Thousands of Currencies</string>
     <string name="story_currencies_description">A hardware wallet for your Bitcoin, Ethereum and many more currencies simultaneously – all in one card</string>
     <string name="story_web3_title">DeFi Compatible</string>
     <string name="story_web3_description">Exchange, buy NFT’s, make loans and deposits in more than 100 different decentralized services</string>
     <string name="story_finish_title">The Wallet for Everyone</string>
     <string name="story_finish_description">Use it on the go, anywhere, anytime. No wires or batteries. Just tap the card to your phone when you need your crypto.</string>
-    <string name="home_button_order">Order card</string>
+    <string name="home_button_order">Order</string>
     <string name="home_button_search_tokens">Search tokens</string>
     <string name="search_tokens_title">Search tokens</string>
     <string name="alert_demo_message">You are currently running in Demo mode. All funds are not real.</string>
     <string name="alert_demo_feature_disabled">This feature is disabled in Demo mode</string>
+    <string name="token_details_send_blocked_fee_format">Not enough funds for fee on your %s wallet to send a transaction. Top up your %s wallet first.</string>
 
     <string name="currency_subtitle_expanded">Available networks</string>
 </resources>
