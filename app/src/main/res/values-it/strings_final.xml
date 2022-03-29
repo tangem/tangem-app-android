@@ -35,4 +35,7 @@
     <string name="search_tokens_title">Search tokens</string>
     <string name="alert_demo_message">You are currently running in Demo mode. All funds are not real.</string>
     <string name="alert_demo_feature_disabled">This feature is disabled in Demo mode</string>
+
+    <string name="currency_subtitle_expanded">Available networks</string>
+
 </resources>
