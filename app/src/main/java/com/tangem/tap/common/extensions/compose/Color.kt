@@ -1,0 +1,16 @@
+package com.tangem.tap.common.extensions.compose
+
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.core.graphics.alpha
+import androidx.core.graphics.blue
+import androidx.core.graphics.green
+import androidx.core.graphics.red
+
+/**
+[REDACTED_AUTHOR]
+ */
+fun Color.argb(): Int {
+    val argb = this.toArgb()
+    return android.graphics.Color.argb(argb.alpha, argb.red, argb.green, argb.blue)
+}
