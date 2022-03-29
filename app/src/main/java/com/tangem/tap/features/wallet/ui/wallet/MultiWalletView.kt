@@ -94,12 +94,12 @@ class MultiWalletView : WalletView {
         val fragment = fragment ?: return
         val binding = binding ?: return
 
-        walletsAdapter.submitList(state.wallets, state.primaryBlockchain, state.primaryToken)
+        walletsAdapter.submitList(state.walletsData, state.primaryBlockchain, state.primaryToken)
 
         binding.btnAddToken.setOnClickListener {
             store.dispatch(TokensAction.LoadCurrencies)
             store.dispatch(TokensAction.AllowToAddTokens(true))
-            store.dispatch(TokensAction.SetAddedCurrencies(state.wallets))
+            store.dispatch(TokensAction.SetAddedCurrencies(state.walletsData))
             store.dispatch(TokensAction.SetNonRemovableCurrencies(
                 state.wallets.filterNot { state.canBeRemoved(it) })
             )

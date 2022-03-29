@@ -187,9 +187,7 @@ class MultiWalletMiddleware {
                     store.dispatch(WalletAction.MultiWallet.AddBlockchain(blockchain))
                 }
             store.dispatch(WalletAction.LoadFiatRate(currencyList = tokensList.map { Currency.Token(it) }))
-            walletManager?.apply {
-                scope.launch { async { addTokens(tokensList) }.await() }
-            }
+            walletManager?.apply { addTokens(tokensList) }
         }
         scope.launch {
             walletManagers.forEach { walletManager ->
