@@ -35,4 +35,6 @@
     <string name="search_tokens_title">Поиск токенов</string>
     <string name="alert_demo_message">Приложение работает в демонстрационном режиме. Средства на всех счетах ненастоящие.</string>
     <string name="alert_demo_feature_disabled">Эта функция недоступна в демонстрационном режиме</string>
+
+    <string name="currency_subtitle_expanded">Доступные сети</string>
 </resources>
