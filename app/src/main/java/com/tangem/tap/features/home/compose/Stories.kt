@@ -18,6 +18,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tangem.tap.common.compose.SpacerS24
 import com.tangem.tap.features.home.redux.HomeState
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.wallet.R
@@ -108,7 +109,7 @@ fun StoriesScreen(
             verticalArrangement = Arrangement.Center,
                 modifier = Modifier.fillMaxWidth()
         ) {
-            Spacer(modifier = Modifier.size(24.dp))
+            SpacerS24()
             StoriesProgressBar(
                 steps = steps,
                 currentStep = currentStep.value,
