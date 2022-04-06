@@ -2,6 +2,7 @@ package com.tangem.tap.features.onboarding.products.note.redux
 
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.guard
+import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.postUi
 import com.tangem.tap.common.redux.AppDialog
