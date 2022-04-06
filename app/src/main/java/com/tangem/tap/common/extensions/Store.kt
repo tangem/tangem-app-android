@@ -1,5 +1,6 @@
 package com.tangem.tap.common.extensions
 
+import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.NavigationAction
