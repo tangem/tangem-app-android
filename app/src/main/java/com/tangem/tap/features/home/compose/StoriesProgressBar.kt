@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tangem.tap.common.compose.SpacerV4
 
 @Composable
 fun StoriesProgressBar(
@@ -67,7 +68,7 @@ fun StoriesProgressBar(
                 ) {}
             }
             if (index != steps) {
-                Spacer(modifier = Modifier.width(4.dp))
+                SpacerV4()
             }
         }
     }
