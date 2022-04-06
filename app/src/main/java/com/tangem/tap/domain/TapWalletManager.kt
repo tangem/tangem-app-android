@@ -3,11 +3,11 @@ package com.tangem.tap.domain
 import com.tangem.blockchain.blockchains.solana.RentProvider
 import com.tangem.blockchain.common.*
 import com.tangem.common.services.Result
+import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.common.ThrottlerWithValues
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.extensions.stripZeroPlainString
-import com.tangem.tap.common.extensions.withMainContext
 import com.tangem.tap.common.redux.global.FiatCurrencyName
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.currenciesRepository
