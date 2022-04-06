@@ -5,14 +5,14 @@ import android.content.Context
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Types
+import com.tangem.network.common.MoshiConverter
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectSession
 import com.tangem.tap.features.details.redux.walletconnect.WalletForSession
-import com.tangem.tap.network.createMoshi
 import com.trustwallet.walletconnect.models.WCPeerMeta
 import com.trustwallet.walletconnect.models.session.WCSession
 
 class WalletConnectRepository(val context: Application) {
-    private val moshi = createMoshi()
+    private val moshi = MoshiConverter.defaultMoshi()
     private val walletConnectAdapter: JsonAdapter<List<SessionDao>> = moshi.adapter(
         Types.newParameterizedType(List::class.java, SessionDao::class.java)
     )

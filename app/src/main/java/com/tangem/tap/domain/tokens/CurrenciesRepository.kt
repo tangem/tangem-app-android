@@ -9,17 +9,17 @@ import com.squareup.moshi.Types
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.common.card.FirmwareVersion
+import com.tangem.network.common.MoshiConverter
 import com.tangem.tap.common.extensions.appendIf
 import com.tangem.tap.common.extensions.readJsonFileToString
 import com.tangem.tap.domain.extensions.getCustomIconUrl
 import com.tangem.tap.domain.extensions.setCustomIconUrl
 import com.tangem.tap.features.demo.DemoHelper
-import com.tangem.tap.network.createMoshi
 import timber.log.Timber
 
 class CurrenciesRepository(val context: Application) {
 
-    private val moshi = createMoshi()
+    private val moshi = MoshiConverter.defaultMoshi()
     private val blockchainsAdapter: JsonAdapter<List<Blockchain>> = moshi.adapter(
         Types.newParameterizedType(List::class.java, Blockchain::class.java)
     )
