@@ -22,6 +22,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.tangem.tangem_sdk_new.extensions.dpToPx
+import com.tangem.tap.common.compose.SpacerS16
+import com.tangem.tap.common.compose.SpacerS24
 import com.tangem.tap.common.extensions.compose.argb
 import com.tangem.wallet.R
 
@@ -53,11 +55,11 @@ fun StoriesGeneralContent(
             textAlign = TextAlign.Center
         )
 
-        Spacer(modifier = Modifier.size(16.dp))
+        SpacerS16()
 
         SubtitleText(subtitleText, subtitleTextId)
 
-        Spacer(modifier = Modifier.size(25.dp))
+        SpacerS24()
 
         if (imageSource != null) {
             Image(
