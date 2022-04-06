@@ -1,8 +1,7 @@
 package com.tangem.tap.network.coinmarketcap
 
-import com.tangem.tap.network.createRetrofitInstance
+import com.tangem.network.common.createRetrofitInstance
 import okhttp3.Interceptor
-import okhttp3.Response
 import retrofit2.http.GET
 import retrofit2.http.Query
 
@@ -25,18 +24,14 @@ interface CoinMarketCapApi {
         fun create(apiKey: String): CoinMarketCapApi {
             return createRetrofitInstance(
                     baseUrl,
-                    listOf(createCoinMarketRequestInterceptor(apiKey)),
+                    interceptors = listOf(createCoinMarketRequestInterceptor(apiKey)),
             ).create(CoinMarketCapApi::class.java)
         }
     }
 }
 
-private fun createCoinMarketRequestInterceptor(apiKey: String): Interceptor {
-    return object : Interceptor {
-        override fun intercept(chain: Interceptor.Chain): Response {
-            val requestBuilder = chain.request().newBuilder()
-            requestBuilder.addHeader("X-CMC_PRO_API_KEY", apiKey)
-            return chain.proceed(requestBuilder.build())
-        }
-    }
+private fun createCoinMarketRequestInterceptor(apiKey: String): Interceptor = Interceptor { chain ->
+    val requestBuilder = chain.request().newBuilder()
+    requestBuilder.addHeader("X-CMC_PRO_API_KEY", apiKey)
+    chain.proceed(requestBuilder.build())
 }
