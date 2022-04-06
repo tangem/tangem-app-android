@@ -3,10 +3,10 @@ package com.tangem.tap.common.redux.global
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.ifNotNull
+import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.*
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOnMain
-import com.tangem.tap.common.extensions.withMainContext
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
