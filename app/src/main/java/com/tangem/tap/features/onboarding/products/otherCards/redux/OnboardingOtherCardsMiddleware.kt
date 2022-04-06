@@ -1,8 +1,8 @@
 package com.tangem.tap.features.onboarding.products.otherCards.redux
 
 import com.tangem.common.CompletionResult
+import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.common.extensions.onCardScanned
-import com.tangem.tap.common.extensions.withMainContext
 import com.tangem.tap.common.postUi
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
