@@ -1,4 +1,4 @@
-package com.tangem.tap.common.extensions
+package com.tangem.domain.common.extensions
 
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
