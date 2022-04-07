@@ -29,7 +29,7 @@ data class CoinsCheckAddressResponse(
         data class Contract(
             val networkId: String,
             val address: String,
-            val decimalCount: BigDecimal,
+            val decimalCount: BigDecimal?,
             val active: Boolean
         )
     }
