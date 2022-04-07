@@ -7,10 +7,10 @@ import android.os.Build
 import com.tangem.Log
 import com.tangem.TangemSdkLogger
 import com.tangem.blockchain.common.*
+import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.common.TapWorkarounds
 import com.tangem.tap.common.extensions.sendEmail
 import com.tangem.tap.common.extensions.stripZeroPlainString
-import com.tangem.tap.domain.TapWorkarounds
-import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.wallet.R
 import timber.log.Timber
 import java.io.File

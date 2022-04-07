@@ -3,6 +3,7 @@ package com.tangem.tap.features.wallet.redux.reducers
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Wallet
+import com.tangem.domain.common.TwinCardNumber
 import com.tangem.tap.common.extensions.toFiatString
 import com.tangem.tap.common.extensions.toFiatValue
 import com.tangem.tap.common.extensions.toFormattedCurrencyString
@@ -12,7 +13,6 @@ import com.tangem.tap.common.redux.global.FiatCurrencyName
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.getArtworkUrl
 import com.tangem.tap.domain.getFirstToken
-import com.tangem.tap.domain.twins.TwinCardNumber
 import com.tangem.tap.features.wallet.redux.*
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData

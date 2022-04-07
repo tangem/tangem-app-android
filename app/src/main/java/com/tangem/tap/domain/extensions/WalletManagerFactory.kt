@@ -7,11 +7,12 @@ import com.tangem.common.card.CardWallet
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toMapKey
-import com.tangem.tap.domain.TapWorkarounds.isTestCard
-import com.tangem.tap.domain.tasks.product.ScanResponse
+import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.common.TapWorkarounds.isTestCard
 
 fun WalletManagerFactory.makeWalletManagerForApp(
-    scanResponse: ScanResponse, blockchain: Blockchain
+    scanResponse: ScanResponse,
+    blockchain: Blockchain
 ): WalletManager? {
     val card = scanResponse.card
     if (card.isTestCard && blockchain.getTestnetVersion() == null) return null
@@ -27,7 +28,7 @@ fun WalletManagerFactory.makeWalletManagerForApp(
         scanResponse.isTangemTwins() && scanResponse.secondTwinPublicKey != null -> {
             makeTwinWalletManager(
                 card.cardId,
-                wallet.publicKey, scanResponse.secondTwinPublicKey.hexToBytes(),
+                wallet.publicKey, scanResponse.secondTwinPublicKey!!.hexToBytes(),
                 environmentBlockchain, wallet.curve
             )
         }
