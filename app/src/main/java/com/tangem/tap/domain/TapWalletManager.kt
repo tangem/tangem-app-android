@@ -3,6 +3,9 @@ package com.tangem.tap.domain
 import com.tangem.blockchain.blockchains.solana.RentProvider
 import com.tangem.blockchain.common.*
 import com.tangem.common.services.Result
+import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.common.TapWorkarounds.isStart2Coin
+import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.common.ThrottlerWithValues
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -11,12 +14,10 @@ import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.common.redux.global.FiatCurrencyName
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.currenciesRepository
-import com.tangem.tap.domain.TapWorkarounds.isStart2Coin
-import com.tangem.tap.domain.TapWorkarounds.isTestCard
 import com.tangem.tap.domain.configurable.config.ConfigManager
+import com.tangem.tap.domain.extensions.isMultiwalletAllowed
 import com.tangem.tap.domain.extensions.makePrimaryWalletManager
 import com.tangem.tap.domain.extensions.makeWalletManagersForApp
-import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.domain.tokens.CardCurrencies
 import com.tangem.tap.features.demo.isDemoCard
 import com.tangem.tap.features.wallet.models.PendingTransactionType
