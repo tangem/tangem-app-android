@@ -1,5 +1,6 @@
 package com.tangem.tap.common.redux.global
 
+import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.analytics.AnalyticsHandler
 import com.tangem.tap.common.entities.TapCurrency.Companion.DEFAULT_FIAT_CURRENCY
 import com.tangem.tap.common.redux.StateDialog
@@ -7,7 +8,6 @@ import com.tangem.tap.domain.PayIdManager
 import com.tangem.tap.domain.TapWalletManager
 import com.tangem.tap.domain.configurable.config.ConfigManager
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
-import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.features.feedback.FeedbackManager
 import com.tangem.tap.features.onboarding.OnboardingManager
 import com.tangem.tap.network.coinmarketcap.CoinMarketCapService
