@@ -1,4 +1,4 @@
-package com.tangem.tap.domain.twins
+package com.tangem.domain.common
 
 import com.tangem.common.card.Card
 import com.tangem.crypto.CryptoUtils
