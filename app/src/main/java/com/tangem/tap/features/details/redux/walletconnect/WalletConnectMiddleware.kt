@@ -3,6 +3,8 @@ package com.tangem.tap.features.details.redux.walletconnect
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.extensions.guard
+import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.getFromClipboard
 import com.tangem.tap.common.redux.AppState
@@ -10,10 +12,8 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.currenciesRepository
-import com.tangem.tap.domain.TapWorkarounds.isTestCard
+import com.tangem.tap.domain.extensions.isMultiwalletAllowed
 import com.tangem.tap.domain.extensions.makeWalletManagerForApp
-import com.tangem.tap.domain.isMultiwalletAllowed
-import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.domain.walletconnect.BnbHelper
 import com.tangem.tap.domain.walletconnect.WalletConnectManager
 import com.tangem.tap.domain.walletconnect.WalletConnectNetworkUtils
