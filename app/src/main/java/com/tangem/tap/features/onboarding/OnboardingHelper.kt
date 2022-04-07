@@ -1,9 +1,9 @@
 package com.tangem.tap.features.onboarding
 
+import com.tangem.domain.common.ProductType
+import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.redux.navigation.AppScreen
-import com.tangem.tap.domain.ProductType
 import com.tangem.tap.domain.extensions.hasWallets
-import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.preferencesStorage
 
 /**
