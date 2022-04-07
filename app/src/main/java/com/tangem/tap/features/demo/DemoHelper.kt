@@ -5,9 +5,9 @@ import com.tangem.blockchain.common.*
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.common.CompletionResult
+import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.extensions.dispatchNotification
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
 import com.tangem.tap.features.wallet.redux.WalletAction
