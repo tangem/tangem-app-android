@@ -1,7 +1,7 @@
 package com.tangem.tap.common.redux
 
-import com.tangem.domain.store.DomainState
-import com.tangem.domain.store.domainStore
+import com.tangem.domain.restore.DomainState
+import com.tangem.domain.restore.domainStore
 import com.tangem.tap.common.redux.global.GlobalMiddleware
 import com.tangem.tap.common.redux.global.GlobalState
 import com.tangem.tap.common.redux.navigation.NavigationState
@@ -51,7 +51,7 @@ data class AppState(
     val shopState: ShopState = ShopState(),
 ) : StateType {
 
-    val featuresState: DomainState
+    val domainState: DomainState
         get() = domainStore.state
 
     companion object {
