@@ -4,13 +4,13 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemError
+import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.analytics.GlobalAnalyticsHandler
 import com.tangem.tap.common.redux.*
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.configurable.config.ConfigManager
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
-import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.features.details.redux.SecurityOption
 import com.tangem.tap.features.feedback.EmailData
 import com.tangem.tap.features.feedback.FeedbackManager
