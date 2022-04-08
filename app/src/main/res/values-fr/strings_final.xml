@@ -36,4 +36,6 @@
     <string name="alert_demo_message">You are currently running in Demo mode. All funds are not real.</string>
     <string name="alert_demo_feature_disabled">This feature is disabled in Demo mode</string>
     <string name="token_details_send_blocked_fee_format">Not enough funds for fee on your %s wallet to send a transaction. Top up your %s wallet first.</string>
+
+    <string name="currency_subtitle_expanded">Available networks</string>
 </resources>
