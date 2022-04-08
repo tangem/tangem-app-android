@@ -17,6 +17,7 @@ import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.operations.wallet.CreateWalletTask
 import com.tangem.tap.domain.ProductType
+import com.tangem.tap.domain.TapWorkarounds.derivationStyle
 import com.tangem.tap.domain.TapWorkarounds.getTangemNoteBlockchain
 import com.tangem.tap.domain.TapWorkarounds.isTestCard
 import com.tangem.tap.domain.tasks.product.CreateWalletsTask
@@ -177,7 +178,7 @@ private class CreateWalletTangemWallet : ProductCommandProcessor<CreateProductWa
             val blockchainsForCurve = getBlockchains(response.cardId).filter {
                 it.getSupportedCurves().contains(response.wallet.curve)
             }
-            val derivationPaths = blockchainsForCurve.mapNotNull { it.derivationPath() }
+            val derivationPaths = blockchainsForCurve.mapNotNull { it.derivationPath(card.derivationStyle) }
             if (derivationPaths.isNotEmpty()) {
                 map[response.wallet.publicKey.toMapKey()] = derivationPaths
             }

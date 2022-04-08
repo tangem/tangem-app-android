@@ -10,6 +10,7 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.currenciesRepository
 import com.tangem.tap.domain.extensions.makeWalletManagerForApp
 import com.tangem.tap.domain.extensions.makeWalletManagersForApp
+import com.tangem.tap.domain.tokens.BlockchainNetwork
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.demo.isDemoCard
 import com.tangem.tap.features.wallet.redux.Currency
@@ -31,11 +32,8 @@ class MultiWalletMiddleware {
         val tapWalletManager = globalState.tapWalletManager
 
         when (action) {
-            is WalletAction.MultiWallet.AddWalletManagers -> {
-                globalState.feedbackManager?.infoHolder?.setWalletsInfo(action.walletManagers)
-                if (globalState.scanResponse?.isDemoCard() == true) {
-                    addDummyBalances(action.walletManagers)
-                }
+            is WalletAction.MultiWallet.AddBlockchains -> {
+                handleAddingWalletManagers(globalState, action.walletManagers)
             }
             is WalletAction.MultiWallet.SelectWallet -> {
                 if (action.walletData != null) {
@@ -43,33 +41,39 @@ class MultiWalletMiddleware {
                 }
             }
             is WalletAction.MultiWallet.AddToken -> {
-                globalState.scanResponse?.card?.cardId?.let {
-                    currenciesRepository.saveAddedToken(it, action.token)
-                }
-                addTokens(listOf(action.token), walletState, globalState)
+                addTokens(listOf(action.token), action.blockchain, walletState, globalState)
             }
             is WalletAction.MultiWallet.AddTokens -> {
-                addTokens(action.tokens, walletState, globalState)
+                addTokens(action.tokens, action.blockchain, walletState, globalState)
             }
             is WalletAction.MultiWallet.AddBlockchain -> {
-                globalState.scanResponse?.let {
-                    currenciesRepository.saveAddedBlockchain(it.card.cardId, action.blockchain)
-                    if (walletState?.blockchains?.contains(action.blockchain) != true) {
-                        tapWalletManager.walletManagerFactory
-                            .makeWalletManagerForApp(it, action.blockchain)?.let { walletManager ->
-                                store.dispatch(WalletAction.MultiWallet.AddWalletManagers(walletManager))
-                            }
-                    }
+                action.walletManager?.let {
+                    handleAddingWalletManagers(globalState, listOf(action.walletManager))
                 }
-                store.dispatch(WalletAction.LoadFiatRate(
-                    currencyList = listOf(Currency.Blockchain(action.blockchain)))
+
+                globalState.scanResponse?.let {
+                    currenciesRepository.saveUpdatedCurrency(
+                        cardId = it.card.cardId,
+                        blockchainNetwork = action.blockchain
+                    )
+                }
+                store.dispatch(
+                    WalletAction.LoadFiatRate(
+                        currencyList = listOf(
+                            Currency.Blockchain(
+                                action.blockchain.blockchain,
+                                action.blockchain.derivationPath
+                            )
+                        )
+                    )
                 )
-                store.dispatch(WalletAction.LoadWallet(action.blockchain)
+                store.dispatch(
+                    WalletAction.LoadWallet(action.blockchain)
                 )
             }
             is WalletAction.MultiWallet.SaveCurrencies -> {
                 globalState.scanResponse?.card?.cardId?.let {
-                    currenciesRepository.saveCardCurrencies(it, action.cardCurrencies)
+                    currenciesRepository.saveCurrencies(it, action.blockchainNetworks)
                 }
             }
             is WalletAction.MultiWallet.RemoveWallet -> {
@@ -77,13 +81,27 @@ class MultiWalletMiddleware {
                 when (val currency = action.walletData.currency) {
                     is Currency.Blockchain -> {
                         cardId?.let {
-                            currenciesRepository.removeBlockchain(it, currency.blockchain)
+                            currenciesRepository.removeBlockchain(
+                                cardId = it,
+                                blockchainNetwork = BlockchainNetwork(
+                                    currency.blockchain, currency.derivationPath,
+                                    emptyList()
+                                )
+                            )
                         }
                     }
                     is Currency.Token -> {
-                        walletState?.getWalletManager(currency.token)
-                            ?.removeToken(currency.token)
-                        cardId?.let { currenciesRepository.removeToken(it, currency.token) }
+                        val walletManager = walletState?.getWalletManager(currency.token)
+                        if (walletManager != null) {
+                            walletManager.removeToken(currency.token)
+                            cardId?.let {
+                                currenciesRepository.removeToken(
+                                    cardId = it,
+                                    token = currency.token,
+                                    blockchainNetwork = BlockchainNetwork.fromWalletManager(walletManager)
+                                )
+                            }
+                        }
                     }
                 }
             }
@@ -94,8 +112,12 @@ class MultiWalletMiddleware {
                 val cardFirmware = scanResponse.card.firmwareVersion
                 val blockchains = currenciesRepository.getBlockchains(cardFirmware)
                     .filterNot { walletState?.blockchains?.contains(it) == true }
+                    .map { BlockchainNetwork(it, null, emptyList()) }
                 val walletManagers =
-                    tapWalletManager.walletManagerFactory.makeWalletManagersForApp(scanResponse, blockchains)
+                    tapWalletManager.walletManagerFactory.makeWalletManagersForApp(
+                        scanResponse,
+                        blockchains
+                    )
 
                 scope.launch {
                     walletManagers.map { walletManager ->
@@ -105,18 +127,23 @@ class MultiWalletMiddleware {
                             val coinAmount = wallet.amounts[AmountType.Coin]?.value
                             if (coinAmount != null && !coinAmount.isZero()) {
                                 scope.launch(Dispatchers.Main) {
-                                    if (walletState?.getWalletData(wallet.blockchain) == null) {
-                                        store.dispatch(
-                                            WalletAction.MultiWallet.AddWalletManagers(
-                                                listOfNotNull(walletManager)
-                                            )
-                                        )
+                                    val blockchainNetwork = BlockchainNetwork(
+                                        wallet.blockchain,
+                                        null,
+                                        walletManager.cardTokens.toList()
+                                    )
+                                    if (walletState?.getWalletData(blockchainNetwork) == null) {
                                         store.dispatch(
                                             WalletAction.MultiWallet.AddBlockchain(
-                                                wallet.blockchain
+                                                blockchainNetwork, walletManager
                                             )
                                         )
-                                        store.dispatch(WalletAction.LoadWallet.Success(wallet))
+                                        store.dispatch(
+                                            WalletAction.LoadWallet.Success(
+                                                wallet = wallet,
+                                                blockchain = blockchainNetwork
+                                            )
+                                        )
                                     }
                                 }
                             }
@@ -130,30 +157,42 @@ class MultiWalletMiddleware {
 
                 val walletFactory = tapWalletManager.walletManagerFactory
                 val card = scanResponse.card
-                val walletManager = walletState?.getWalletManager(Blockchain.Ethereum)
-                    ?: walletFactory.makeWalletManagerForApp(scanResponse, Blockchain.Ethereum)
+
+                val walletManager = walletState?.getWalletManager(
+                    Currency.Blockchain(Blockchain.Ethereum, null)
+                )
+                    ?: walletFactory.makeWalletManagerForApp(
+                        scanResponse,
+                        Currency.Blockchain(Blockchain.Ethereum, null)
+                    )
 
                 val tokenFinder = walletManager as? TokenFinder ?: return
                 scope.launch {
                     val result = tokenFinder.findTokens()
+
                     withContext(Dispatchers.Main) {
                         when (result) {
                             is Result.Success -> {
                                 if (result.data.isNotEmpty()) {
-                                    currenciesRepository.saveAddedTokens(card.cardId, result.data)
+                                    val blockchainNetwork = BlockchainNetwork(
+                                        walletManager.wallet.blockchain,
+                                        walletManager.wallet.publicKey.derivationPath?.rawPath,
+                                        walletManager.cardTokens.toList()
+                                    )
+                                    currenciesRepository.saveUpdatedCurrency(
+                                        card.cardId,
+                                        blockchainNetwork
+                                    )
                                     store.dispatch(
-                                        WalletAction.MultiWallet.AddWalletManagers(
+                                        WalletAction.MultiWallet.AddBlockchain(
+                                            blockchainNetwork,
                                             walletManager
                                         )
                                     )
                                     store.dispatch(
-                                        WalletAction.MultiWallet.AddBlockchain(
-                                            walletManager.wallet.blockchain
-                                        )
-                                    )
-                                    store.dispatch(
                                         WalletAction.MultiWallet.AddTokens(
-                                            walletManager.cardTokens.toList()
+                                            walletManager.cardTokens.toList(),
+                                            blockchainNetwork
                                         )
                                     )
                                 }
@@ -173,38 +212,60 @@ class MultiWalletMiddleware {
         }
     }
 
-    private fun addTokens(tokens: List<Token>, walletState: WalletState?, globalState: GlobalState?) {
+    private fun handleAddingWalletManagers(
+        globalState: GlobalState,
+        walletManagers: List<WalletManager>
+    ) {
+        globalState.feedbackManager?.infoHolder?.setWalletsInfo(walletManagers)
+        if (globalState.scanResponse?.isDemoCard() == true) {
+            addDummyBalances(walletManagers)
+        }
+    }
+
+    private fun addTokens(
+        tokens: List<Token>, blockchainNetwork: BlockchainNetwork,
+        walletState: WalletState?, globalState: GlobalState?
+    ) {
         val scanResponse = globalState?.scanResponse ?: return
         val wmFactory = globalState.tapWalletManager.walletManagerFactory
 
-        val groupedTokens = tokens.groupBy { it.blockchain }
-        val walletManagers = groupedTokens.mapNotNull { entry ->
-            val blockchain = entry.key
-            val tokensList = entry.value
-            val walletManager = walletState?.getWalletManager(blockchain)
-                ?: wmFactory.makeWalletManagerForApp(scanResponse, blockchain)?.also {
-                    store.dispatch(WalletAction.MultiWallet.AddWalletManagers(it))
-                    store.dispatch(WalletAction.MultiWallet.AddBlockchain(blockchain))
-                }
-            store.dispatch(WalletAction.LoadFiatRate(currencyList = tokensList.map { Currency.Token(it) }))
-            walletManager?.apply { addTokens(tokensList) }
-        }
+        val walletManager = walletState?.getWalletManager(blockchainNetwork)
+            ?: wmFactory.makeWalletManagerForApp(scanResponse, blockchainNetwork)?.also {
+                store.dispatch(WalletAction.MultiWallet.AddBlockchain(blockchainNetwork, it))
+            } ?: return
+
+        store.dispatch(WalletAction.LoadFiatRate(currencyList = tokens.map { token ->
+            Currency.Token(
+                token, blockchainNetwork.blockchain, blockchainNetwork.derivationPath
+            )
+        }))
+        walletManager.addTokens(tokens)
+        currenciesRepository.saveUpdatedCurrency(
+            cardId = scanResponse.card.cardId,
+            blockchainNetwork = BlockchainNetwork.fromWalletManager(walletManager)
+        )
         scope.launch {
-            walletManagers.forEach { walletManager ->
-                when (val result = walletManager.safeUpdate()) {
-                    is com.tangem.common.services.Result.Success -> {
-                        val wallet = result.data
-                        wallet.getTokens()
-                            .filter { tokens.contains(it) }
-                            .mapNotNull { token -> wallet.getTokenAmount(token)?.let { Pair(token, it) } }
-                            .forEach {
-                                withContext(Dispatchers.Main) {
-                                    store.dispatch(WalletAction.MultiWallet.TokenLoaded(it.second, it.first))
-                                }
+            when (val result = walletManager.safeUpdate()) {
+                is com.tangem.common.services.Result.Success -> {
+                    val wallet = result.data
+                    wallet.getTokens()
+                        .filter { tokens.contains(it) }
+                        .mapNotNull { token ->
+                            wallet.getTokenAmount(token)?.let { Pair(token, it) }
+                        }
+                        .forEach {
+                            withContext(Dispatchers.Main) {
+                                store.dispatch(
+                                    WalletAction.MultiWallet.TokenLoaded(
+                                        it.second,
+                                        it.first,
+                                        blockchainNetwork
+                                    )
+                                )
                             }
-                    }
-                    is com.tangem.common.services.Result.Failure -> {}
+                        }
                 }
+                is com.tangem.common.services.Result.Failure -> {}
             }
         }
     }
