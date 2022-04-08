@@ -16,17 +16,17 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.SubcomposeAsyncImage
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.Token
 import com.tangem.tap.common.extensions.getGreyedOutIconRes
 import com.tangem.tap.common.extensions.getRoundIconRes
 import com.tangem.tap.domain.tokens.Currency
 import com.tangem.tap.domain.tokens.fromNetworkId
+import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
 import com.tangem.wallet.R
 
 @Composable
 fun CollapsedCurrencyItem(
     currency: Currency,
-    addedTokens: List<Token>,
+    addedTokens: List<TokenWithBlockchain>,
     addedBlockchains: List<Blockchain>,
     onCurrencyClick: (String) -> Unit
 ) {
@@ -69,7 +69,7 @@ fun CollapsedCurrencyItem(
                 if (currency.contracts != null) {
                     currency.contracts.map { contract ->
                         val added =
-                            addedTokens.map { it.contractAddress }.contains(contract.address)
+                            addedTokens.map { it.token.contractAddress }.contains(contract.address)
                         val icon = if (added) {
                             contract.blockchain.getRoundIconRes()
                         } else {
