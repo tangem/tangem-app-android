@@ -31,8 +31,10 @@ import com.tangem.tap.domain.TapWorkarounds
 import com.tangem.tap.domain.TapWorkarounds.getTangemNoteBlockchain
 import com.tangem.tap.domain.TapWorkarounds.isExcluded
 import com.tangem.tap.domain.TapWorkarounds.isNotSupportedInThatRelease
+import com.tangem.tap.domain.TapWorkarounds.useOldStyleDerivation
 import com.tangem.tap.domain.extensions.getPrimaryCurve
 import com.tangem.tap.domain.extensions.getSingleWallet
+import com.tangem.tap.domain.tokens.BlockchainNetwork
 import com.tangem.tap.domain.tokens.CurrenciesRepository
 import com.tangem.tap.domain.twins.TwinsHelper
 import com.tangem.tap.preferencesStorage
@@ -60,7 +62,6 @@ data class ScanResponse(
             cardToken.symbol,
             cardToken.contractAddress,
             cardToken.decimals,
-            Blockchain.fromId(walletData.blockchain)
         )
     }
 
@@ -272,28 +273,38 @@ private class ScanWalletProcessor(
         }
     }
 
-    private fun getBlockchainsToDerive(card: Card): List<Blockchain> {
+    private fun getBlockchainsToDerive(card: Card): List<BlockchainNetwork> {
         val currenciesRepository = currenciesRepository ?: return emptyList()
-        val cardCurrencies = currenciesRepository.loadCardCurrencies(card.cardId)
+        val cardCurrencies = currenciesRepository.loadSavedCurrencies(card.cardId).toMutableList()
 
-        val blockchainsToDerive = if (cardCurrencies == null) {
-            mutableListOf(Blockchain.Bitcoin, Blockchain.Ethereum)
-        } else {
-            val tokenBlockchains = cardCurrencies.tokens.map { it.blockchain }
-            (cardCurrencies.blockchains + tokenBlockchains).toMutableList()
+        val blockchainsToDerive = cardCurrencies.ifEmpty {
+            mutableListOf(
+                BlockchainNetwork(Blockchain.Bitcoin, card),
+                BlockchainNetwork(Blockchain.Ethereum, card))
         }
 
         if (card.settings.isHDWalletAllowed) {
             blockchainsToDerive.addAll(
                 listOf(
-                    Blockchain.Ethereum,
-                    Blockchain.Binance,
-                    Blockchain.EthereumTestnet
+                    BlockchainNetwork(Blockchain.Ethereum, card),
+                    BlockchainNetwork(Blockchain.Binance, card),
+                    BlockchainNetwork(Blockchain.EthereumTestnet, card)
                 )
             )
         }
         if (additionalBlockchainsToDerive != null) {
-            blockchainsToDerive.addAll(additionalBlockchainsToDerive)
+            blockchainsToDerive.addAll(additionalBlockchainsToDerive.map { BlockchainNetwork(it, card) })
+        }
+        if (!card.useOldStyleDerivation) {
+            blockchainsToDerive.removeAll(
+                listOf(
+                Blockchain.BSC, Blockchain.BSCTestnet,
+                Blockchain.Polygon, Blockchain.PolygonTestnet,
+                Blockchain.RSK,
+                Blockchain.Fantom, Blockchain.FantomTestnet,
+                Blockchain.Avalanche, Blockchain.AvalancheTestnet,
+            ).map { BlockchainNetwork(it, card) }
+            )
         }
         return blockchainsToDerive.distinct()
     }
@@ -303,13 +314,13 @@ private class ScanWalletProcessor(
         val derivations = mutableMapOf<ByteArrayKey, List<DerivationPath>>()
 
         blockchains.forEach { blockchain ->
-            val curve = blockchain.getPrimaryCurve()
+            val curve = blockchain.blockchain.getPrimaryCurve()
 
             val wallet = card.wallets.firstOrNull { it.curve == curve } ?: return@forEach
             if (wallet.chainCode == null) return@forEach
 
             val key = wallet.publicKey.toMapKey()
-            val path = blockchain.derivationPath()
+            val path = blockchain.derivationPath?.let { DerivationPath(it) }
             if (path != null) {
                 val addedDerivations = derivations[key]
                 if (addedDerivations != null) {
