@@ -12,6 +12,7 @@ import com.tangem.tap.common.extensions.dispatchErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
+import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.currenciesRepository
 import com.tangem.tap.domain.DELAY_SDK_DIALOG_CLOSE
@@ -42,34 +43,37 @@ class TokensMiddleware {
     }
 
     private fun handleLoadCurrencies() {
-        val scanResponse = store.state.globalState.scanResponse ?: return
-        val isTestcard = scanResponse.card.isTestCard
+        val scanResponse = store.state.globalState.scanResponse
+        val isTestcard = scanResponse?.card?.isTestCard ?: false
 
-        val tokens = currenciesRepository.getSupportedTokens(isTestcard)
-        val blockchains = currenciesRepository.getBlockchains(
-            cardFirmware = scanResponse.card.firmwareVersion,
-            isTestNet = isTestcard
-        ).sortedBy { it.fullName }
-        val currencies = CurrencyListItem.createListOfCurrencies(blockchains, tokens)
+        val currencies = currenciesRepository.getSupportedTokens(isTestcard)
+
         store.dispatch(TokensAction.LoadCurrencies.Success(currencies))
     }
 
     private fun handleSaveChanges(action: TokensAction.SaveChanges) {
         val scanResponse = store.state.globalState.scanResponse ?: return
 
-        val candidatesToAdd = action.addedItems
-        if (candidatesToAdd.isEmpty()) return
+        val currentTokens = store.state.tokensState.addedWallets.toTokens()
+        val currentBlockchains = store.state.tokensState.addedWallets.toBlockchains()
 
-        val blockchains = candidatesToAdd.filterIsInstance<CurrencyListItem.BlockchainListItem>()
-            .map { it.blockchain }
-        val tokens = candidatesToAdd.filterIsInstance<CurrencyListItem.TokenListItem>()
-            .map { it.token }
-        if (blockchains.isEmpty() && tokens.isEmpty()) return
+        val blockchainsToAdd = action.addedBlockchains.filter { !currentBlockchains.contains(it) }
+        val blockchainsToRemove = currentBlockchains.filter { !action.addedBlockchains.contains(it) }
+
+        val tokensToAdd = action.addedTokens.filter { !currentTokens.contains(it) }
+        val tokensToRemove = currentTokens.filter { !action.addedTokens.contains(it) }
+
+        removeCurrenciesIfNeeded(blockchainsToRemove, tokensToRemove)
+
+        if (tokensToAdd.isEmpty() && blockchainsToAdd.isEmpty()) {
+            store.dispatch(NavigationAction.PopBackTo())
+            return
+        }
 
         if (scanResponse.supportsHdWallet()) {
-            deriveMissingBlockchains(scanResponse, blockchains, tokens)
+            deriveMissingBlockchains(scanResponse, blockchainsToAdd, tokensToAdd)
         } else {
-            submitAdd(blockchains, tokens)
+            submitAdd(blockchainsToAdd, tokensToAdd)
             store.dispatch(NavigationAction.PopBackTo())
         }
     }
@@ -158,4 +162,22 @@ class TokensMiddleware {
             WalletAction.MultiWallet.AddToken(it)
         }).forEach { store.dispatchOnMain(it) }
     }
+
+    private fun removeCurrenciesIfNeeded(blockchains: List<Blockchain>, tokens: List<Token>) {
+        if (tokens.isNotEmpty()) {
+            tokens.forEach { token ->
+                store.state.walletState.getWalletData(token)?.let {
+                    store.dispatch(WalletAction.MultiWallet.RemoveWallet(it))
+                }
+            }
+        }
+        if (blockchains.isNotEmpty()) {
+            blockchains.forEach { blockchain ->
+                store.state.walletState.getWalletData(blockchain)?.let {
+                    store.dispatch(WalletAction.MultiWallet.RemoveWallet(it))
+                }
+            }
+        }
+    }
+
 }
