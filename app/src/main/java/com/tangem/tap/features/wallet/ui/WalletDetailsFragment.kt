@@ -18,6 +18,7 @@ import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.domain.tokens.BlockchainNetwork
 import com.tangem.tap.features.onboarding.getQRReceiveMessage
 import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.redux.*
@@ -114,7 +115,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
             if (selectedWallet.currencyData.status != BalanceStatus.Loading) {
                 store.dispatch(
                     WalletAction.LoadWallet(
-                        blockchain = selectedWallet.currency.blockchain
+                        blockchain = BlockchainNetwork(selectedWallet.currency.blockchain, selectedWallet.currency.derivationPath, emptyList())
                     )
                 )
             }
@@ -188,7 +189,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
 
     private fun showPendingTransactionsIfPresent(pendingTransactions: List<PendingTransaction>) {
         pendingTransactionAdapter.submitList(pendingTransactions)
-        binding.rvPendingTransaction?.show(pendingTransactions.isNotEmpty())
+        binding.rvPendingTransaction.show(pendingTransactions.isNotEmpty())
     }
 
     private fun setupAddressCard(state: WalletData) = with(binding.lWalletDetails) {
@@ -212,7 +213,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
                 chipGroupAddressType.hide()
             }
             tvAddress.text = state.walletAddresses.selectedAddress.address
-            tvExplore?.setOnClickListener {
+            tvExplore.setOnClickListener {
                 store.dispatch(
                     WalletAction.ExploreAddress(
                         state.walletAddresses.selectedAddress.exploreUrl,
