@@ -23,7 +23,9 @@ class OnramperService(
 ) : ExchangeService, ExchangeUrlBuilder {
 
     private val api: OnramperApi by lazy {
-        createRetrofitInstance(OnramperApi.BASE_URL, listOf(AddKeyToHeaderInterceptor(apiKey)))
+        createRetrofitInstance(OnramperApi.BASE_URL,
+            listOf(AddKeyToHeaderInterceptor(apiKey))
+        )
             .create(OnramperApi::class.java)
     }
 
