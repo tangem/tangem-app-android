@@ -1,6 +1,7 @@
 package com.tangem.tap.features.details.redux.walletconnect
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.DerivationParams
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.extensions.guard
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -10,14 +11,17 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.currenciesRepository
+import com.tangem.tap.domain.TapWorkarounds.derivationStyle
 import com.tangem.tap.domain.TapWorkarounds.isTestCard
 import com.tangem.tap.domain.extensions.makeWalletManagerForApp
 import com.tangem.tap.domain.isMultiwalletAllowed
 import com.tangem.tap.domain.tasks.product.ScanResponse
+import com.tangem.tap.domain.tokens.BlockchainNetwork
 import com.tangem.tap.domain.walletconnect.BnbHelper
 import com.tangem.tap.domain.walletconnect.WalletConnectManager
 import com.tangem.tap.domain.walletconnect.WalletConnectNetworkUtils
 import com.tangem.tap.features.demo.DemoHelper
+import com.tangem.tap.features.wallet.redux.Currency
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.store
 import com.tangem.wallet.R
@@ -164,14 +168,16 @@ class WalletConnectMiddleware {
             chainId = chainId, peer = session.peerMeta
         ) ?: Blockchain.Ethereum
 
-        store.dispatch(GlobalAction.ScanCard(additionalBlockchainsToDerive = listOf(blockchain),
-            onSuccess = { scanResponse ->
-                handleScanResponse(scanResponse, session, blockchain)
-            },
-            onFailure = {
-                store.dispatchOnMain(WalletConnectAction.FailureEstablishingSession(null))
-            }, R.string.wallet_connect_scan_card_message
-        )
+        store.dispatch(
+            GlobalAction.ScanCard(
+                additionalBlockchainsToDerive = listOf(blockchain),
+                onSuccess = { scanResponse ->
+                    handleScanResponse(scanResponse, session, blockchain)
+                },
+                onFailure = {
+                    store.dispatchOnMain(WalletConnectAction.FailureEstablishingSession(null))
+                }, R.string.wallet_connect_scan_card_message
+            )
         )
     }
 
@@ -229,22 +235,35 @@ class WalletConnectMiddleware {
         }
 
         return if (store.state.globalState.scanResponse?.card?.cardId == card.cardId) {
-            store.state.walletState.getWalletManager(blockchainToMake)
-                ?: factory.makeWalletManagerForApp(scanResponse, blockchainToMake)
+            val derivationPath = blockchainToMake.derivationPath(card.derivationStyle)?.rawPath
+            store.state.walletState.getWalletManager(
+                Currency.Blockchain(blockchainToMake, derivationPath)
+            )
+                ?: factory.makeWalletManagerForApp(
+                    scanResponse,
+                    blockchainToMake,
+                    card.derivationStyle?.let { DerivationParams.Default(it) }
+                )
                     ?.also { walletManager ->
-                        store.dispatch(WalletAction.MultiWallet.AddWalletManagers(walletManager))
-                        store.dispatch(WalletAction.MultiWallet.AddBlockchain(walletManager.wallet.blockchain))
+                        store.dispatch(
+                            WalletAction.MultiWallet.AddBlockchain(
+                                BlockchainNetwork.fromWalletManager(walletManager), walletManager
+                            )
+                        )
                     }
         } else {
-            val walletManager = factory.makeWalletManagerForApp(scanResponse, blockchainToMake)
-            if (currenciesRepository.loadCardCurrencies(card.cardId)?.blockchains?.contains(
-                    blockchainToMake
-                ) != true
+            val walletManager = factory.makeWalletManagerForApp(
+                scanResponse,
+                blockchainToMake,
+                card.derivationStyle?.let { DerivationParams.Default(it) }
+            )
+            if (currenciesRepository.loadSavedCurrencies(card.cardId)
+                    .find { it.blockchain == blockchainToMake } != null
             ) {
                 walletManager?.let {
-                    currenciesRepository.saveAddedBlockchain(
+                    currenciesRepository.saveUpdatedCurrency(
                         card.cardId,
-                        blockchainToMake
+                        BlockchainNetwork.fromWalletManager(walletManager)
                     )
                 }
             }

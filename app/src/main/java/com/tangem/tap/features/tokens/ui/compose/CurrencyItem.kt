@@ -2,21 +2,21 @@ package com.tangem.tap.features.tokens.ui.compose
 
 import androidx.compose.runtime.Composable
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.Token
 import com.tangem.tap.domain.tokens.Currency
 import com.tangem.tap.features.tokens.redux.ContractAddress
+import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
 
 @Composable
 fun CurrencyItem(
     currency: Currency,
     nonRemovableTokens: List<ContractAddress>,
     nonRemovableBlockchains: List<Blockchain>,
-    addedTokens: List<Token>,
+    addedTokens: List<TokenWithBlockchain>,
     addedBlockchains: List<Blockchain>,
     allowToAdd: Boolean,
     expanded: Boolean,
     onCurrencyClick: (String) -> Unit,
-    onAddCurrencyToggled: (Currency, Token?) -> Unit
+    onAddCurrencyToggled: (Currency, TokenWithBlockchain?) -> Unit
 ) {
     if (expanded) {
         ExpandedCurrencyItem(
