@@ -12,12 +12,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.Token
 import com.tangem.tap.common.compose.Keyboard
 import com.tangem.tap.common.compose.keyboardAsState
 import com.tangem.tap.common.extensions.pixelsToDp
 import com.tangem.tap.domain.tokens.Currency
 import com.tangem.tap.domain.tokens.fromNetworkId
+import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
 import com.tangem.tap.features.tokens.redux.TokensState
 import com.tangem.tap.store
 import com.tangem.wallet.R
@@ -26,7 +26,7 @@ import com.tangem.wallet.R
 fun CurrenciesScreen(
     tokensState: MutableState<TokensState> = mutableStateOf(store.state.tokensState),
     searchInput: MutableState<String>,
-    onSaveChanges: (List<Token>, List<Blockchain>) -> Unit
+    onSaveChanges: (List<TokenWithBlockchain>, List<Blockchain>) -> Unit
 ) {
 
     val addedTokensState = remember { mutableStateOf(tokensState.value.addedTokens) }
@@ -34,13 +34,13 @@ fun CurrenciesScreen(
 
     val isKeyboardOpen by keyboardAsState()
 
-    val onAddCurrencyToggleClick = { currency: Currency, contract: Token? ->
-        if (contract != null) {
+    val onAddCurrencyToggleClick = { currency: Currency, token: TokenWithBlockchain? ->
+        if (token != null) {
             val mutableList = addedTokensState.value.toMutableList()
-            if (mutableList.contains(contract)) {
-                mutableList.remove(contract)
+            if (mutableList.contains(token)) {
+                mutableList.remove(token)
             } else {
-                mutableList.add(contract)
+                mutableList.add(token)
             }
             addedTokensState.value = mutableList
         } else {
