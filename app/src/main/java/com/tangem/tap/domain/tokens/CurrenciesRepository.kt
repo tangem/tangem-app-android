@@ -16,6 +16,7 @@ import com.tangem.tap.domain.extensions.setCustomIconUrl
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.network.createMoshi
 import timber.log.Timber
+import java.util.*
 
 class CurrenciesRepository(val context: Application) {
 
@@ -29,6 +30,9 @@ class CurrenciesRepository(val context: Application) {
     private val obsoleteTokensAdapter: JsonAdapter<List<ObsoleteTokenDao>> = moshi.adapter(
         Types.newParameterizedType(List::class.java, ObsoleteTokenDao::class.java)
     )
+    private val currenciesAdapter : JsonAdapter<CurrenciesFromJson> =
+        moshi.adapter(CurrenciesFromJson::class.java)
+
 
     fun loadCardCurrencies(cardId: String): CardCurrencies? {
         val blockchains = loadSavedBlockchains(cardId).toMutableSet()
@@ -116,18 +120,10 @@ class CurrenciesRepository(val context: Application) {
         }
     }
 
-    fun getSupportedTokens(isTestNet: Boolean = false): List<Token> {
-        val supportedTokens = if (isTestNet) {
-            getSupportedTokens().mapNotNull { it.getTestnetVersion() }
-        } else {
-            getSupportedTokens()
-        }
-
-        val blockchainTokens = supportedTokens.mapNotNull { blockchain ->
-            loadTokensJson(blockchain)?.let { fromJsonToTokensDao(it, blockchain) }
-        }
-        val tokens = blockchainTokens.flatten().map { it.toToken() }
-        return tokens
+    fun getSupportedTokens(isTestNet: Boolean = false): List<Currency> {
+        val fileName = if (isTestNet) "testnet_tokens" else "tokens"
+        val json = context.assets.readJsonFileToString(fileName)
+        return currenciesAdapter.fromJson(json)!!.tokens.map { Currency.fromJsonObject(it) }
     }
 
     private fun loadTokensJson(blockchain: Blockchain): String? {
@@ -142,7 +138,7 @@ class CurrenciesRepository(val context: Application) {
 
     private fun getFileName(blockchain: Blockchain): String {
         return StringBuilder().apply {
-            append(blockchain.id.toLowerCase().replace("/test", ""))
+            append(blockchain.id.lowercase(Locale.getDefault()).replace("/test", ""))
             append("_tokens")
             appendIf("_testnet") { blockchain.isTestnet() }
         }.toString()
