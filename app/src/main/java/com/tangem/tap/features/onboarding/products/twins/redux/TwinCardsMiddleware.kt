@@ -214,7 +214,10 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
             }
             val isLoadedBefore = twinCardsState.walletBalance.state != ProgressState.Loading
             val balanceIsLoading = twinCardsState.walletBalance.copy(
-                currency = Currency.Blockchain(walletManager.wallet.blockchain),
+                currency = Currency.Blockchain(
+                    walletManager.wallet.blockchain,
+                    walletManager.wallet.publicKey.derivationPath?.rawPath
+                ),
                 state = ProgressState.Loading,
                 error = null,
                 criticalError = null
