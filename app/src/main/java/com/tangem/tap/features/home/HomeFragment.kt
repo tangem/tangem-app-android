@@ -41,7 +41,7 @@ class HomeFragment : Fragment(R.layout.fragment_home), StoreSubscriber<HomeState
                     onShopButtonClick = { store.dispatch(HomeAction.GoToShop(getRegionProvider())) },
                     onSearchTokensClick = {
                         store.dispatch(TokensAction.AllowToAddTokens(false))
-                        store.dispatch(TokensAction.LoadCurrencies)
+                        store.dispatch(TokensAction.LoadCurrencies())
                         store.dispatch(NavigationAction.NavigateTo(AppScreen.AddTokens))
                     }
                 )

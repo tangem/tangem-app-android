@@ -18,11 +18,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.SubcomposeAsyncImage
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.Token
 import com.tangem.tap.common.extensions.getRoundIconRes
 import com.tangem.tap.domain.tokens.Currency
 import com.tangem.tap.domain.tokens.fromNetworkId
 import com.tangem.tap.features.tokens.redux.ContractAddress
+import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
 import com.tangem.wallet.R
 
 @Composable
@@ -30,11 +30,11 @@ fun ExpandedCurrencyItem(
     currency: Currency,
     nonRemovableTokens: List<ContractAddress>,
     nonRemovableBlockchains: List<Blockchain>,
-    addedTokens: List<Token>,
+    addedTokens: List<TokenWithBlockchain>,
     addedBlockchains: List<Blockchain>,
     allowToAdd: Boolean,
     onCurrencyClick: (String) -> Unit,
-    onAddCurrencyToggled: (Currency, Token?) -> Unit
+    onAddCurrencyToggled: (Currency, TokenWithBlockchain?) -> Unit
 ) {
     val blockchain = Blockchain.fromNetworkId(currency.id)
     val iconRes = if (blockchain == Blockchain.Unknown) {
@@ -131,7 +131,7 @@ fun ExpandedCurrencyItem(
                 blockchains.map { blockchain ->
                     val contract = currency.contracts?.firstOrNull { it.blockchain == blockchain }
                     val added = if (contract != null) {
-                        addedTokens.map { it.contractAddress }.contains(contract.address)
+                        addedTokens.map { it.token.contractAddress }.contains(contract.address)
                     } else {
                         addedBlockchains.contains(blockchain)
                     }
