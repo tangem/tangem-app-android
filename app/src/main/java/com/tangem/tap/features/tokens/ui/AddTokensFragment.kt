@@ -8,15 +8,17 @@ import android.view.View
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.fragment.app.Fragment
-import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.transition.TransitionInflater
 import by.kirich1409.viewbindingdelegate.viewBinding
+import com.google.accompanist.appcompattheme.AppCompatTheme
 import com.tangem.tap.common.extensions.getString
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.tokens.redux.TokensAction
 import com.tangem.tap.features.tokens.redux.TokensState
-import com.tangem.tap.features.tokens.ui.adapters.CurrenciesAdapter
+import com.tangem.tap.features.tokens.ui.compose.CurrenciesScreen
 import com.tangem.tap.mainScope
 import com.tangem.tap.store
 import com.tangem.wallet.R
@@ -27,10 +29,11 @@ import org.rekotlin.StoreSubscriber
 
 
 class AddTokensFragment : Fragment(R.layout.fragment_add_tokens),
-        StoreSubscriber<TokensState> {
+    StoreSubscriber<TokensState> {
 
-    private lateinit var viewAdapter: CurrenciesAdapter
     private val binding: FragmentAddTokensBinding by viewBinding(FragmentAddTokensBinding::bind)
+    private var tokensState: MutableState<TokensState> = mutableStateOf(store.state.tokensState)
+    private var searchInput = mutableStateOf("")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -64,27 +67,24 @@ class AddTokensFragment : Fragment(R.layout.fragment_add_tokens),
 
         (activity as? AppCompatActivity)?.setSupportActionBar(toolbar)
         toolbar.setNavigationOnClickListener { activity?.onBackPressed() }
-        setupPopularTokensRecyclerView()
-        btnTokensSaveChanges.setOnClickListener {
-            store.dispatch(TokensAction.SaveChanges(viewAdapter.getAddedItems()))
-        }
-    }
 
-    private fun setupPopularTokensRecyclerView() = with(binding) {
-        viewAdapter = CurrenciesAdapter()
-        viewAdapter.setOnItemAddListener {
-            btnTokensSaveChanges.isEnabled = viewAdapter.getAddedItems().isNotEmpty()
+        cvCurrencies.setContent {
+            AppCompatTheme {
+                CurrenciesScreen(
+                    tokensState = tokensState,
+                    searchInput = searchInput
+                ) { tokens, blockchains ->
+                    store.dispatch(TokensAction.SaveChanges(tokens, blockchains))
+                }
+            }
         }
-
-        rvPopularTokens.layoutManager = LinearLayoutManager(context)
-        rvPopularTokens.adapter = viewAdapter
     }
 
     override fun newState(state: TokensState) {
         if (activity == null || view == null) return
-
-        viewAdapter.addedCurrencies = state.addedCurrencies
-        viewAdapter.submitUnfilteredList(state.shownCurrencies)
+        val toolbarTitle =
+            if (state.allowToAdd) R.string.add_tokens_title else R.string.search_tokens_title
+        binding.toolbar.title = getString(toolbarTitle)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -102,13 +102,13 @@ class AddTokensFragment : Fragment(R.layout.fragment_add_tokens),
         searchView.queryHint = searchView.getString(R.string.add_token_search_hint)
         searchView.maxWidth = android.R.attr.width
         searchView.inputtedTextAsFlow()
-                .debounce(400)
-                .distinctUntilChanged()
-                .onEach {
-                    viewAdapter.filter(searchView.query)
-                }
-                .launchIn(mainScope)
-        return super.onCreateOptionsMenu(menu, inflater);
+            .debounce(400)
+            .distinctUntilChanged()
+            .onEach {
+                searchInput.value = it.lowercase()
+            }
+            .launchIn(mainScope)
+        return super.onCreateOptionsMenu(menu, inflater)
     }
 
     override fun onDestroy() {
