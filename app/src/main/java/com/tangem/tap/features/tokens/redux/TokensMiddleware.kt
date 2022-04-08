@@ -34,11 +34,6 @@ class TokensMiddleware {
         { next ->
             { action ->
                 when (action) {
-                    is NavigationAction.NavigateTo -> {
-                        if (action.screen == AppScreen.AddTokens) {
-                            store.dispatch(TokensAction.LoadCurrencies)
-                        }
-                    }
                     is TokensAction.LoadCurrencies -> handleLoadCurrencies()
                     is TokensAction.SaveChanges -> handleSaveChanges(action)
                 }
