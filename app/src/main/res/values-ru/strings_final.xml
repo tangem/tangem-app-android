@@ -36,4 +36,6 @@
     <string name="alert_demo_message">Приложение работает в демонстрационном режиме. Средства на всех счетах ненастоящие.</string>
     <string name="alert_demo_feature_disabled">Эта функция недоступна в демонстрационном режиме</string>
     <string name="token_details_send_blocked_fee_format">Недостаточно средств для комиссии на вашем %s кошельке для отправки транзакции. Сначала пополните свой %s кошелек.</string>
+
+    <string name="currency_subtitle_expanded">Доступные сети</string>
 </resources>
