@@ -102,7 +102,7 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain {
 fun Blockchain.toNetworkId(): String {
     return when (this) {
         Blockchain.Unknown -> "unknown"
-        Blockchain.Avalanche -> "avalaunch"
+        Blockchain.Avalanche -> "avalanche"
         Blockchain.AvalancheTestnet -> "avalaunch"
         Blockchain.Binance -> "binancecoin"
         Blockchain.BinanceTestnet -> "binancecoin"
@@ -123,7 +123,7 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.Litecoin -> "litecoin"
         Blockchain.Polygon -> "matic-network"
         Blockchain.PolygonTestnet -> "matic-networks"
-        Blockchain.RSK -> "rsk"
+        Blockchain.RSK -> "rootstock"
         Blockchain.Stellar -> "stellar"
         Blockchain.StellarTestnet -> "stellar"
         Blockchain.Solana -> "solana"

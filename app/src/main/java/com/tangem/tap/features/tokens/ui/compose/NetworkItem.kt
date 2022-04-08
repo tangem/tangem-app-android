@@ -21,13 +21,14 @@ import com.tangem.tap.common.extensions.getNetworkName
 import com.tangem.tap.common.extensions.getRoundIconRes
 import com.tangem.tap.domain.tokens.Contract
 import com.tangem.tap.domain.tokens.Currency
+import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
 
 @Composable
 fun NetworkItem(
     currency: Currency, contract: Contract?,
     blockchain: Blockchain, allowToAdd: Boolean,
     added: Boolean, canBeRemoved: Boolean,
-    onAddCurrencyToggled: (Currency, Token?) -> Unit
+    onAddCurrencyToggled: (Currency, TokenWithBlockchain?) -> Unit
 ) {
     Row(
         modifier = Modifier
@@ -67,15 +68,16 @@ fun NetworkItem(
         val token = if (contract != null) {
             Token(
                 name = currency.name, symbol = currency.symbol, contractAddress = contract.address,
-                decimals = contract.decimalCount, blockchain = contract.blockchain
+                decimals = contract.decimalCount,
             )
         } else {
             null
         }
+        val tokenWithBlockchain = token?.let { TokenWithBlockchain(token, contract!!.blockchain) }
         if (allowToAdd) Switch(
             checked = added,
             enabled = canBeRemoved,
-            onCheckedChange = { onAddCurrencyToggled(currency, token) },
+            onCheckedChange = { onAddCurrencyToggled(currency, tokenWithBlockchain) },
             modifier = Modifier.padding(start = 16.dp, end = 16.dp),
             colors = SwitchDefaults.colors(
                 checkedThumbColor = Color(0xFF1ACE80)

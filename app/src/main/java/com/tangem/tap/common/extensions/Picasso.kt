@@ -39,7 +39,7 @@ fun Picasso.loadCurrenciesIcon(
         }
         url != null -> {
             if (token != null) {
-                setTokenImage(imageView, textView, token)
+                setTokenImage(imageView, textView, token, blockchain)
             }
             this.load(url)
                 .transform(RoundedCornersTransform())
@@ -76,7 +76,7 @@ private fun setOfflineCurrencyImage(
 ) {
     when (token) {
         null -> setBlockchainImage(imageView, textView, blockchain)
-        else -> setTokenImage(imageView, textView, token)
+        else -> setTokenImage(imageView, textView, token, blockchain)
     }
 }
 
@@ -95,9 +95,10 @@ private fun setTokenImage(
     imageView: ImageFilterView,
     textView: TextView,
     token: Token,
+    tokenBlockchain: Blockchain
 ) {
     imageView.setImageResource(R.drawable.shape_circle)
-    if (token.blockchain.isTestnet()) {
+    if (tokenBlockchain.isTestnet()) {
         imageView.saturation = 0f
     } else {
         imageView.setColorFilter(token.getColor())
