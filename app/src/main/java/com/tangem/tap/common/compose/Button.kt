@@ -24,6 +24,7 @@ private class Button {}
 fun Button(
     text: String = "",
     textId: Int? = null,
+    isEnabled: Boolean = true,
     modifier: Modifier = Modifier,
     leftContent: @Composable RowScope.() -> Unit = {},
     rightContent: @Composable RowScope.() -> Unit = {},
@@ -31,6 +32,7 @@ fun Button(
 ) {
     Button(
         modifier = modifier.height(42.dp),
+        enabled = isEnabled,
         onClick = onClick,
     ) {
         leftContent()
