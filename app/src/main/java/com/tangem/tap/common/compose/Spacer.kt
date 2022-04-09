@@ -14,78 +14,78 @@ import androidx.compose.ui.unit.dp
  */
 // ***************************** Horizontal
 @Composable
-fun SpacerH(height: Dp) {
-    Spacer(modifier = Modifier.height(height))
+fun SpacerH(height: Dp, modifier: Modifier = Modifier) {
+    Spacer(modifier = modifier.height(height))
 }
 
 @Composable
-fun SpacerH4() {
-    SpacerH(4.dp)
+fun SpacerH4(modifier: Modifier = Modifier) {
+    SpacerH(4.dp, modifier)
 }
 
 @Composable
-fun SpacerH8() {
-    SpacerH(8.dp)
+fun SpacerH8(modifier: Modifier = Modifier) {
+    SpacerH(8.dp, modifier)
 }
 
 @Composable
-fun SpacerH16() {
-    SpacerH(16.dp)
+fun SpacerH16(modifier: Modifier = Modifier) {
+    SpacerH(16.dp, modifier)
 }
 
 @Composable
-fun SpacerH24() {
-    SpacerH(24.dp)
+fun SpacerH24(modifier: Modifier = Modifier) {
+    SpacerH(24.dp, modifier)
 }
 
 // ***************************** Vertical
 @Composable
-fun SpacerV(width: Dp) {
-    Spacer(modifier = Modifier.width(width))
+fun SpacerV(width: Dp, modifier: Modifier = Modifier) {
+    Spacer(modifier = modifier.width(width))
 }
 
 @Composable
-fun SpacerV4() {
-    SpacerV(4.dp)
+fun SpacerV4(modifier: Modifier = Modifier) {
+    SpacerV(4.dp, modifier)
 }
 
 @Composable
-fun SpacerV8() {
-    SpacerV(8.dp)
+fun SpacerV8(modifier: Modifier = Modifier) {
+    SpacerV(8.dp, modifier)
 }
 
 @Composable
-fun SpacerV16() {
-    SpacerV(16.dp)
+fun SpacerV16(modifier: Modifier = Modifier) {
+    SpacerV(16.dp, modifier)
 }
 
 @Composable
-fun SpacerV24() {
-    SpacerV(24.dp)
+fun SpacerV24(modifier: Modifier = Modifier) {
+    SpacerV(24.dp, modifier)
 }
 
 // ***************************** Size
 @Composable
-fun SpacerS(size: Dp) {
-    Spacer(modifier = Modifier.size(size))
+fun SpacerS(size: Dp, modifier: Modifier = Modifier) {
+    Spacer(modifier = modifier.size(size))
 }
 
 @Composable
-fun SpacerS4() {
-    SpacerS(4.dp)
+fun SpacerS4(modifier: Modifier = Modifier) {
+    SpacerS(4.dp, modifier)
 }
 
 @Composable
-fun SpacerS8() {
-    SpacerS(8.dp)
+fun SpacerS8(modifier: Modifier = Modifier) {
+    SpacerS(8.dp, modifier)
 }
 
 @Composable
-fun SpacerS16() {
-    SpacerS(16.dp)
+fun SpacerS16(modifier: Modifier = Modifier) {
+    SpacerS(16.dp, modifier)
 }
 
 @Composable
-fun SpacerS24() {
-    SpacerS(24.dp)
+fun SpacerS24(modifier: Modifier = Modifier) {
+    SpacerS(24.dp, modifier)
 }
