@@ -8,5 +8,5 @@ import timber.log.Timber
  */
 @Composable
 fun LogSideEffect(message: String) {
-    Timber.w("SideEffect: $message")
+    Timber.d("SideEffect: $message")
 }
