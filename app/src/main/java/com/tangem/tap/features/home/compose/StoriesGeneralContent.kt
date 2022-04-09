@@ -24,7 +24,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.tangem.tangem_sdk_new.extensions.dpToPx
 import com.tangem.tap.common.compose.SpacerS16
 import com.tangem.tap.common.compose.SpacerS24
-import com.tangem.tap.common.extensions.compose.argb
+import com.tangem.tap.common.extensions.compose.toAndroidGraphicsColor
 import com.tangem.wallet.R
 
 @Composable
@@ -95,7 +95,7 @@ fun SubtitleText(subtitleText: String, subtitleTextId: Int?) {
                 textAlignment = View.TEXT_ALIGNMENT_CENTER
                 typeface = Typeface.DEFAULT
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f)
-                setTextColor(color.argb())
+                setTextColor(color.toAndroidGraphicsColor())
             }
         }
     }
