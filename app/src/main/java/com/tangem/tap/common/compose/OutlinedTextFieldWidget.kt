@@ -1,13 +1,18 @@
 package com.tangem.tap.common.compose
 
 import androidx.compose.animation.*
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.*
+import androidx.compose.material.LinearProgressIndicator
+import androidx.compose.material.OutlinedTextField
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -31,42 +36,91 @@ fun OutlinedTextFieldWidget(
     label: String = "",
     placeholderId: Int? = null,
     placeholder: String = "",
+    trailingIcon: @Composable (() -> Unit)? = null,
     isEnabled: Boolean = true,
+    isVisible: Boolean = true,
+    isLoading: Boolean = false,
     error: DomainError? = null,
     errorConverter: ErrorConverter<String>? = null,
     debounceTextChanges: Long = 400,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     onTextChanged: (String) -> Unit,
 ) {
+    if (!isVisible) return
+
     val placeholder = placeholderId?.let { stringResource(id = it) } ?: placeholder
     val label = labelId?.let { stringResource(id = it) } ?: label
-
-    val rTextValue = remember { mutableStateOf(text) }
-    val textDebouncer = ComposableTextDebouncer(text, debounceTextChanges, onTextChanged)
 
     Column(
         modifier = modifier.animateContentSize(),
     ) {
-        OutlinedTextField(
-            value = rTextValue.value,
-            onValueChange = {
-                rTextValue.value = it
-                textDebouncer.emmit(it)
-            },
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text(label) },
-            placeholder = { Text(placeholder) },
-            singleLine = true,
-            enabled = isEnabled,
-            isError = error != null,
+        OutlinedProgressTextField(
+            text = text,
+            modifier = modifier,
+            label = label,
+            placeholder = placeholder,
+            trailingIcon = trailingIcon,
+            isEnabled = isEnabled,
+            isLoading = isLoading,
+            error = error,
+            debounceTextChanges = debounceTextChanges,
             visualTransformation = visualTransformation,
+            onTextChanged = onTextChanged
         )
         errorConverter?.let { TextFieldErrorWidget(error, it) }
     }
 }
 
 @Composable
-fun TextFieldErrorWidget(
+private fun OutlinedProgressTextField(
+    text: String,
+    modifier: Modifier = Modifier,
+    label: String = "",
+    placeholder: String = "",
+    isEnabled: Boolean = true,
+    isLoading: Boolean = false,
+    error: DomainError? = null,
+    debounceTextChanges: Long = 400,
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    trailingIcon: @Composable (() -> Unit)? = null,
+    onTextChanged: (String) -> Unit,
+) {
+    val rTextValue = remember { mutableStateOf(text) }
+    val textDebouncer = ComposableTextDebouncer(text, debounceTextChanges, onTextChanged)
+
+    // add ability to paste text from state
+    if (rTextValue.value != text) rTextValue.value = text
+
+    Box {
+        OutlinedTextField(
+            value = rTextValue.value,
+            onValueChange = {
+                // immediately change text for the OutlinedTextField
+                rTextValue.value = it
+                textDebouncer.emmit(it)
+            },
+            modifier = Modifier.fillMaxWidth(),
+            label = { Text(label) },
+            placeholder = { Text(placeholder) },
+            trailingIcon = trailingIcon,
+            singleLine = true,
+            enabled = isEnabled,
+            isError = error != null,
+            visualTransformation = visualTransformation,
+        )
+        AnimatedVisibility(
+            modifier = modifier
+                .fillMaxWidth()
+                .align(Alignment.BottomCenter)
+                .padding(start = 6.dp, top = 0.dp, end = 6.dp, bottom = 6.dp),
+            visible = isLoading,
+        ) { LinearProgressIndicator() }
+    }
+
+}
+
+@Composable
+private fun TextFieldErrorWidget(
     error: DomainError? = null,
     errorConverter: ErrorConverter<String>,
 ) {
@@ -75,29 +129,11 @@ fun TextFieldErrorWidget(
         enter = fadeIn() + slideInVertically(),
         exit = slideOutVertically() + fadeOut(),
     ) {
-        ErrorView(
-            errorConverter.convertError(error!!),
-            style = TextStyle(
-                fontSize = 14.sp
-            )
-        )
+        error?.let {
+            ErrorView(errorConverter.convertError(it), style = TextStyle(fontSize = 14.sp))
+        }
     }
 }
-
-@Composable
-fun ErrorView(
-    text: String,
-    modifier: Modifier = Modifier,
-    style: TextStyle = LocalTextStyle.current
-) {
-    Text(
-        text,
-        color = MaterialTheme.colors.error,
-        modifier = modifier,
-        style = style
-    )
-}
-
 
 @Preview
 @Composable
@@ -138,6 +174,16 @@ fun OutlinedTextFieldWithErrorTest() {
                 text = "First",
                 label = "First label",
                 placeholder = "1 placeholder",
+                error = null,
+                errorConverter = converter,
+                onTextChanged = {},
+            )
+            OutlinedTextFieldWidget(
+                modifier = modifier,
+                text = "First",
+                label = "First label",
+                placeholder = "1 placeholder",
+                isLoading = true,
                 error = null,
                 errorConverter = converter,
                 onTextChanged = {},
