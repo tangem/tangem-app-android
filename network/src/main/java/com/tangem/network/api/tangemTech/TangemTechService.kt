@@ -20,22 +20,38 @@ class TangemTechService {
         currency: String,
         ids: List<String>
     ): Result<CoinsPricesResponse> {
-        return api.coinsPrices(currency, ids)
+        return try {
+            api.coinsPrices(currency, ids)
+        } catch (ex: Exception) {
+            Result.Failure(ex)
+        }
     }
 
     suspend fun coinsCheckAddress(
         contractAddress: String,
         networkId: String? = null
     ): Result<CoinsCheckAddressResponse> {
-        return api.coinsCheckAddress(contractAddress, networkId)
+        return try {
+            api.coinsCheckAddress(contractAddress, networkId)
+        } catch (ex: Exception) {
+            Result.Failure(ex)
+        }
     }
 
     suspend fun coinsCurrencies(): Result<CoinsCurrenciesResponse> {
-        return api.coinsCurrencies()
+        return try {
+            api.coinsCurrencies()
+        } catch (ex: Exception) {
+            Result.Failure(ex)
+        }
     }
 
     suspend fun coinsTokens(): Result<CoinsCurrenciesResponse> {
-        return api.coinsTokens()
+        return try {
+            api.coinsTokens()
+        } catch (ex: Exception) {
+            Result.Failure(ex)
+        }
     }
 
     fun addHeaderInterceptors(interceptors: List<AddHeaderInterceptor>) {
