@@ -1,4 +1,4 @@
-package com.tangem.tap.common.extensions.compose
+package com.tangem.tap.common.compose.extensions
 
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
