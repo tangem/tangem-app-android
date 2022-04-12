@@ -4,8 +4,8 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.ifNotNull
 import com.tangem.domain.common.extensions.withMainContext
-import com.tangem.domain.features.global.redux.DomainGlobalAction
-import com.tangem.domain.restore.domainStore
+import com.tangem.domain.redux.domainStore
+import com.tangem.domain.redux.global.DomainGlobalAction
 import com.tangem.tap.*
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOnMain
