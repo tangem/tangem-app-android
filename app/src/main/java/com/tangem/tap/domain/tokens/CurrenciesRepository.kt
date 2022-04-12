@@ -98,13 +98,19 @@ class CurrenciesRepository(val context: Application) {
         }
     }
 
-    fun loadSavedCurrencies(cardId: String): List<BlockchainNetwork> {
+    fun loadSavedCurrencies(
+        cardId: String,
+        derivationStyle: DerivationStyle? = null
+    ): List<BlockchainNetwork> {
         if (DemoHelper.isDemoCardId(cardId)) {
             return loadDemoCurrencies(cardId)
         }
         return try {
             val json = context.readFileText(getFileNameForBlockchains(cardId))
-            blockchainNetworkAdapter.fromJson(json)?.distinct() ?: loadSavedCurrenciesOldWay(cardId)
+            blockchainNetworkAdapter.fromJson(json)?.distinct() ?: loadSavedCurrenciesOldWay(
+                cardId,
+                derivationStyle
+            )
         } catch (exception: Exception) {
             emptyList()
         }
@@ -120,16 +126,25 @@ class CurrenciesRepository(val context: Application) {
         }
     }
 
-    private fun loadSavedCurrenciesOldWay(cardId: String): List<BlockchainNetwork> {
+    private fun loadSavedCurrenciesOldWay(
+        cardId: String, derivationStyle: DerivationStyle?
+    ): List<BlockchainNetwork> {
         val blockchains = loadSavedBlockchains(cardId)
         val tokens = loadSavedTokens(cardId)
+        val currencies = getSupportedTokens()
         val blockchainNetworks = blockchains.map { blockchain ->
             BlockchainNetwork(
                 blockchain = blockchain,
-                derivationPath = null,
+                derivationPath = blockchain.derivationPath(derivationStyle)?.rawPath,
                 tokens = tokens
                     .filter { it.blockchainDao.toBlockchain() == blockchain }
-                    .map { it.toToken() }
+                    .map {
+                        val token = it.toToken()
+                        val id = currencies
+                            .find { it.contracts?.find { it.address == token.contractAddress } != null }
+                            ?.id
+                        token.copy(id = id)
+                    }
             )
         }
         saveCurrencies(cardId, blockchainNetworks) // migrate saved currencies
@@ -176,17 +191,6 @@ class CurrenciesRepository(val context: Application) {
 
     private fun fromJsonToTokensDao(tokenJson: String, blockchain: Blockchain): List<TokenDao> {
         return obsoleteTokensAdapter.fromJson(tokenJson)!!.map { it.toTokenDao(blockchain) }
-    }
-
-    private fun getSupportedTokens(): List<Blockchain> {
-        return listOf(
-            Blockchain.Ethereum,
-            Blockchain.BSC,
-            Blockchain.Binance,
-            Blockchain.Polygon,
-            Blockchain.Avalanche,
-            Blockchain.Fantom,
-        )
     }
 
     fun getBlockchains(
