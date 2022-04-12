@@ -14,8 +14,8 @@ import java.util.concurrent.Executors
 [REDACTED_AUTHOR]
  * ReStoreHub's should not store the <StoreState> or the <State>, because this can lead to destabilization of
  * a state behavior.
+ * All ReStoreHub's must be marked as internal
  */
-// all ReStoreHub's must be marked as internal
 internal interface ReStoreHub<StoreState, State> : HubMiddleware<StoreState>, HubReducer<StoreState>
 
 internal interface HubMiddleware<StoreState> {
@@ -77,7 +77,7 @@ internal abstract class BaseStoreHub<State>(
     }
 
     /**
-     * Reduce the action and check if - if the action hasn't updated the hubState, then it doesn't need to update
+     * Reduce the action and check it. If the action hasn't updated the hubState, then it doesn't need to update
      * storeState
      */
     override fun reduce(action: Action, storeState: DomainState): DomainState {
