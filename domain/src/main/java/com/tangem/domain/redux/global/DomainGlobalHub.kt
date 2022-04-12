@@ -1,10 +1,9 @@
-package com.tangem.domain.features.global.redux
+package com.tangem.domain.redux.global
 
 import android.webkit.ValueCallback
-import com.tangem.domain.restore.BaseStoreHub
-import com.tangem.domain.restore.DomainState
+import com.tangem.domain.redux.BaseStoreHub
+import com.tangem.domain.redux.DomainState
 import org.rekotlin.Action
-import org.rekotlin.DispatchFunction
 
 /**
 [REDACTED_AUTHOR]
@@ -16,19 +15,18 @@ internal class DomainGlobalHub : BaseStoreHub<DomainGlobalState>("DomainGlobalHu
         return storeState.globalState
     }
 
-    override fun updateStoreState(storeState: DomainState, newState: DomainGlobalState): DomainState {
-        return storeState.copy(globalState = newState)
+    override fun updateStoreState(storeState: DomainState, newHubState: DomainGlobalState): DomainState {
+        return storeState.copy(globalState = newHubState)
     }
 
     override suspend fun handleAction(
-        state: DomainState,
         action: Action,
-        dispatch: DispatchFunction,
+        storeState: DomainState,
         cancel: ValueCallback<Action>
     ) {
         if (action !is DomainGlobalAction) return
 
-        val state = state.globalState
+        val state = storeState.globalState
 
         when (action) {
         }
@@ -37,6 +35,9 @@ internal class DomainGlobalHub : BaseStoreHub<DomainGlobalState>("DomainGlobalHu
     override fun reduceAction(action: Action, state: DomainGlobalState): DomainGlobalState = when (action) {
         is DomainGlobalAction.SetScanResponse -> {
             state.copy(scanResponse = action.scanResponse)
+        }
+        is DomainGlobalAction.ShowDialog -> {
+            state.copy(dialog = action.stateDialog)
         }
         else -> state
     }
