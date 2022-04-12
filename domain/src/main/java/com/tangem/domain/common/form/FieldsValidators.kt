@@ -2,9 +2,7 @@ package com.tangem.domain.common.form
 
 import com.tangem.blockchain.blockchains.ethereum.EthereumAddressService
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.common.hdWallet.DerivationPath
-import com.tangem.common.hdWallet.HDWalletError
-import com.tangem.domain.common.Validator
+import com.tangem.domain.Validator
 import com.tangem.domain.features.addCustomToken.AddCustomTokenError
 
 /**
@@ -27,18 +25,16 @@ class StringIsNotEmptyValidator : CustomTokenValidator<String>() {
 }
 
 class TokenContractAddressValidator : CustomTokenValidator<String>() {
+    override fun validate(data: String?): AddCustomTokenError? {
+        if (data == null || data.isEmpty()) return null
 
-    override fun validate(data: String?): AddCustomTokenError? = when {
-//        data == null || data.isEmpty() -> AddCustomTokenError.FieldIsEmpty
-        else -> EthAddressValidator().validate(data)
-    }
-
-    private class EthAddressValidator : CustomTokenValidator<String>() {
-        override fun validate(data: String?): AddCustomTokenError? {
-            val isValid = EthereumAddressService().validate(data ?: "")
-            return if (isValid) null else AddCustomTokenError.InvalidContractAddress
+        return if (EthereumAddressService().validate(data)) {
+            null
+        } else {
+            AddCustomTokenError.InvalidContractAddress
         }
     }
+
 }
 
 class TokenNetworkValidator : CustomTokenValidator<Blockchain>() {
@@ -48,16 +44,13 @@ class TokenNetworkValidator : CustomTokenValidator<Blockchain>() {
     }
 }
 
-class DerivationPathValidator : CustomTokenValidator<String>() {
-    override fun validate(data: String?): AddCustomTokenError? = when {
-        data == null || data.isEmpty() -> null
-        else -> {
-            try {
-                DerivationPath(data)
-                null
-            } catch (ex: HDWalletError) {
-                AddCustomTokenError.InvalidDerivationPath
-            }
+class TokenDecimalsValidator : CustomTokenValidator<String>() {
+    override fun validate(data: String?): AddCustomTokenError? {
+        val decimal = data?.toIntOrNull() ?: return AddCustomTokenError.FieldIsEmpty
+
+        return when {
+            decimal > 30 -> AddCustomTokenError.InvalidDecimalsCount
+            else -> null
         }
     }
 }
