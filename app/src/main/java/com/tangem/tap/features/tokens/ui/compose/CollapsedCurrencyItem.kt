@@ -36,11 +36,7 @@ fun CollapsedCurrencyItem(
             .clickable(onClick = { onCurrencyClick(currency.id) })
     ) {
         val blockchain = Blockchain.fromNetworkId(currency.id)
-        val iconRes = if (blockchain == Blockchain.Unknown) {
-            currency.iconUrl
-        } else {
-            blockchain.getRoundIconRes()
-        }
+        val iconRes = currency.iconUrl
 
         SubcomposeAsyncImage(
             model = iconRes,
@@ -66,32 +62,36 @@ fun CollapsedCurrencyItem(
             )
             Spacer(modifier = Modifier.size(6.dp))
             Row {
-                if (currency.contracts != null) {
+                if (!currency.contracts.isNullOrEmpty()) {
                     currency.contracts.map { contract ->
-                        val added =
-                            addedTokens.map { it.token.contractAddress }.contains(contract.address)
-                        val icon = if (added) {
-                            contract.blockchain.getRoundIconRes()
+                        if (contract.address == currency.symbol) {
+                            BlockchainNetworkItem(
+                                blockchain = Blockchain.fromNetworkId(contract.networkId),
+                                addedBlockchains = addedBlockchains
+                            )
                         } else {
-                            contract.blockchain.getGreyedOutIconRes()
+                            val added =
+                                addedTokens.map { it.token.contractAddress }
+                                    .contains(contract.address)
+                            val icon = if (added) {
+                                contract.blockchain.getRoundIconRes()
+                            } else {
+                                contract.blockchain.getGreyedOutIconRes()
+                            }
+                            Image(
+                                painter = painterResource(id = icon),
+                                contentDescription = null,
+                                Modifier
+                                    .size(20.dp)
+                            )
+                            Spacer(modifier = Modifier.size(5.dp))
                         }
-                        Image(
-                            painter = painterResource(id = icon),
-                            contentDescription = null,
-                            Modifier
-                                .size(20.dp)
-                        )
-                        Spacer(modifier = Modifier.size(5.dp))
+
                     }
                 } else {
-                    val added = addedBlockchains.contains(blockchain)
-                    val icon =
-                        if (added) blockchain.getRoundIconRes() else blockchain.getGreyedOutIconRes()
-                    Image(
-                        painter = painterResource(id = icon),
-                        contentDescription = null,
-                        Modifier
-                            .size(20.dp)
+                    BlockchainNetworkItem(
+                        blockchain = blockchain,
+                        addedBlockchains = addedBlockchains
                     )
                 }
             }
@@ -104,5 +104,24 @@ fun CollapsedCurrencyItem(
                 .align(Alignment.CenterVertically)
 
         )
+    }
+}
+
+@Composable
+fun BlockchainNetworkItem(
+    blockchain: Blockchain?,
+    addedBlockchains: List<Blockchain>
+) {
+    val added = addedBlockchains.contains(blockchain)
+    val icon =
+        if (added) blockchain?.getRoundIconRes() else blockchain?.getGreyedOutIconRes()
+    if (icon != null) {
+        Image(
+            painter = painterResource(id = icon),
+            contentDescription = null,
+            Modifier
+                .size(20.dp)
+        )
+        Spacer(modifier = Modifier.size(5.dp))
     }
 }
