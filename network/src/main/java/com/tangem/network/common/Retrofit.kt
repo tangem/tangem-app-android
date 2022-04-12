@@ -15,8 +15,13 @@ fun createRetrofitInstance(
     converterFactory: Converter.Factory = MoshiConverter.createFactory(),
     logEnabled: Boolean = false
 ): Retrofit {
+    okHttpBuilder.apply {
+        callTimeout(10, TimeUnit.SECONDS)
+        connectTimeout(20, TimeUnit.SECONDS)
+        readTimeout(20, TimeUnit.SECONDS)
+        writeTimeout(20, TimeUnit.SECONDS)
+    }
     interceptors.forEach { okHttpBuilder.addInterceptor(it) }
-    addTimeOuts(okHttpBuilder)
 
     if (logEnabled) okHttpBuilder.addInterceptor(createHttpLoggingInterceptor())
 
@@ -27,15 +32,6 @@ fun createRetrofitInstance(
         .build()
 }
 
-private fun addTimeOuts(okHttpBuilder: OkHttpClient.Builder) {
-    okHttpBuilder.callTimeout(1, TimeUnit.SECONDS)
-    okHttpBuilder.connectTimeout(20, TimeUnit.SECONDS)
-    okHttpBuilder.readTimeout(20, TimeUnit.SECONDS)
-    okHttpBuilder.writeTimeout(20, TimeUnit.SECONDS)
-}
-
-private fun createHttpLoggingInterceptor(): HttpLoggingInterceptor {
-    return HttpLoggingInterceptor().apply {
-        level = HttpLoggingInterceptor.Level.BODY
-    }
+private fun createHttpLoggingInterceptor(): HttpLoggingInterceptor = HttpLoggingInterceptor().apply {
+    level = HttpLoggingInterceptor.Level.BODY
 }
