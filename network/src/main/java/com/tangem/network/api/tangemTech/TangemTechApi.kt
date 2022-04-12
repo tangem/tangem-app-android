@@ -1,6 +1,5 @@
 package com.tangem.network.api.tangemTech
 
-import com.tangem.common.services.Result
 import retrofit2.http.GET
 import retrofit2.http.Query
 
@@ -13,18 +12,18 @@ interface TangemTechApi {
     suspend fun coinsPrices(
         @Query("currency") currency: String,
         @Query("ids") ids: List<String>,
-    ): Result<CoinsPricesResponse>
+    ): Coins.PricesResponse
 
     @GET("coins/check-address")
     suspend fun coinsCheckAddress(
         @Query("contractAddress") contractAddress: String,
         @Query("networkId") networkId: String? = null,
-    ): Result<CoinsCheckAddressResponse>
+    ): Coins.CheckAddressResponse
 
     @GET("coins/currencies")
-    suspend fun coinsCurrencies(): Result<CoinsCurrenciesResponse>
+    suspend fun coinsCurrencies(): Coins.CurrenciesResponse
 
     @GET("coins/tokens")
-    suspend fun coinsTokens(): Result<CoinsCurrenciesResponse>
+    suspend fun coinsTokens(): Coins.TokensResponse
 
 }
