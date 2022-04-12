@@ -1,8 +1,9 @@
 package com.tangem.network.api.tangemTech
 
 import com.tangem.common.services.Result
+import com.tangem.common.services.performRequest
 import com.tangem.network.common.AddHeaderInterceptor
-import com.tangem.network.common.CacheHttpInterceptor
+import com.tangem.network.common.CacheControlHttpInterceptor
 import com.tangem.network.common.createRetrofitInstance
 
 /**
@@ -10,49 +11,17 @@ import com.tangem.network.common.createRetrofitInstance
  */
 class TangemTechService {
 
+    val coins: CoinsRoute = CoinsRoute()
+
+    private val techRoutes: List<TangemTechRoute> = listOf(
+        coins
+    )
+
     private val headerInterceptors = mutableListOf<AddHeaderInterceptor>(
-        CacheHttpInterceptor(cacheMaxAge)
+        CacheControlHttpInterceptor(cacheMaxAge)
     )
 
     private var api: TangemTechApi = createApi()
-
-    suspend fun coinsPrices(
-        currency: String,
-        ids: List<String>
-    ): Result<CoinsPricesResponse> {
-        return try {
-            api.coinsPrices(currency, ids)
-        } catch (ex: Exception) {
-            Result.Failure(ex)
-        }
-    }
-
-    suspend fun coinsCheckAddress(
-        contractAddress: String,
-        networkId: String? = null
-    ): Result<CoinsCheckAddressResponse> {
-        return try {
-            api.coinsCheckAddress(contractAddress, networkId)
-        } catch (ex: Exception) {
-            Result.Failure(ex)
-        }
-    }
-
-    suspend fun coinsCurrencies(): Result<CoinsCurrenciesResponse> {
-        return try {
-            api.coinsCurrencies()
-        } catch (ex: Exception) {
-            Result.Failure(ex)
-        }
-    }
-
-    suspend fun coinsTokens(): Result<CoinsCurrenciesResponse> {
-        return try {
-            api.coinsTokens()
-        } catch (ex: Exception) {
-            Result.Failure(ex)
-        }
-    }
 
     fun addHeaderInterceptors(interceptors: List<AddHeaderInterceptor>) {
         headerInterceptors.removeAll(interceptors)
@@ -65,8 +34,9 @@ class TangemTechService {
             baseUrl = baseUrl,
             interceptors = headerInterceptors.toList()
         )
-
-        return retrofit.create(TangemTechApi::class.java)
+        return retrofit.create(TangemTechApi::class.java).apply {
+            techRoutes.forEach { it.setApi(this) }
+        }
     }
 
     companion object {
@@ -75,8 +45,36 @@ class TangemTechService {
     }
 }
 
-class TangemAuthInterceptor(
-    private val cardPublicKeyHex: String
-) : AddHeaderInterceptor(
-    mapOf("card_public_key" to cardPublicKeyHex)
-)
+private interface TangemTechRoute {
+    fun setApi(api: TangemTechApi)
+}
+
+class CoinsRoute : TangemTechRoute {
+    private lateinit var api: TangemTechApi
+
+    override fun setApi(api: TangemTechApi) {
+        this.api = api
+    }
+
+    suspend fun prices(
+        currency: String,
+        ids: List<String>
+    ): Result<Coins.PricesResponse> {
+        return performRequest { api.coinsPrices(currency, ids) }
+    }
+
+    suspend fun checkAddress(
+        contractAddress: String,
+        networkId: String? = null
+    ): Result<Coins.CheckAddressResponse> {
+        return performRequest { api.coinsCheckAddress(contractAddress, networkId) }
+    }
+
+    suspend fun currencies(): Result<Coins.CurrenciesResponse> {
+        return performRequest { api.coinsCurrencies() }
+    }
+
+    suspend fun tokens(): Result<Coins.TokensResponse> {
+        return performRequest { api.coinsTokens() }
+    }
+}
