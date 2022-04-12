@@ -1,7 +1,6 @@
 package com.tangem.tap.common.extensions
 
 import android.graphics.*
-import android.net.Uri
 import android.widget.TextView
 import androidx.constraintlayout.utils.widget.ImageFilterView
 import com.squareup.picasso.Callback
@@ -11,6 +10,8 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.IconsUtil
 import com.tangem.blockchain.common.Token
 import com.tangem.tap.domain.extensions.getCustomIconUrl
+import com.tangem.tap.domain.tokens.getIconUrl
+import com.tangem.tap.domain.tokens.toNetworkId
 import com.tangem.wallet.R
 
 fun Picasso.loadCurrenciesIcon(
@@ -20,10 +21,11 @@ fun Picasso.loadCurrenciesIcon(
     blockchain: Blockchain,
 ) {
 
-    val url = if (token != null) {
-        token.getCustomIconUrl()?.let { Uri.parse(it) } ?: IconsUtil.getTokenIconUri(blockchain, token)
+    val url: String? = if (token != null) {
+        token.id?.let { getIconUrl(it) } ?: token.getCustomIconUrl()
+        ?: IconsUtil.getTokenIconUri(blockchain, token)?.toString()
     } else {
-        IconsUtil.getBlockchainIconUri(blockchain)
+        getIconUrl(blockchain.toNetworkId())
     }
 
     imageView.setImageDrawable(null)
@@ -85,7 +87,7 @@ private fun setBlockchainImage(
     textView: TextView,
     blockchain: Blockchain,
 ) {
-    imageView.setImageResource(blockchain.getIconRes())
+    imageView.setImageResource(blockchain.getRoundIconRes())
     imageView.colorFilter = null
     if (blockchain.isTestnet()) imageView.saturation = 0f
     textView.text = null

@@ -14,8 +14,13 @@ import androidx.fragment.app.Fragment
 import androidx.transition.TransitionInflater
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.google.accompanist.appcompattheme.AppCompatTheme
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.tap.common.extensions.copyToClipboard
+import com.tangem.tap.common.extensions.dispatchNotification
 import com.tangem.tap.common.extensions.getString
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.features.tokens.redux.ContractAddress
+import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
 import com.tangem.tap.features.tokens.redux.TokensAction
 import com.tangem.tap.features.tokens.redux.TokensState
 import com.tangem.tap.features.tokens.ui.compose.CurrenciesScreen
@@ -68,14 +73,22 @@ class AddTokensFragment : Fragment(R.layout.fragment_add_tokens),
         (activity as? AppCompatActivity)?.setSupportActionBar(toolbar)
         toolbar.setNavigationOnClickListener { activity?.onBackPressed() }
 
+        val onSaveChanges = { tokens: List<TokenWithBlockchain>, blockchains: List<Blockchain> ->
+            store.dispatch(TokensAction.SaveChanges(tokens, blockchains))
+        }
+        val onNetworkItemClicked = { contractAddress: ContractAddress ->
+            context?.copyToClipboard(contractAddress)
+            store.dispatchNotification(R.string.contract_address_copied_message)
+        }
+
         cvCurrencies.setContent {
             AppCompatTheme {
                 CurrenciesScreen(
                     tokensState = tokensState,
-                    searchInput = searchInput
-                ) { tokens, blockchains ->
-                    store.dispatch(TokensAction.SaveChanges(tokens, blockchains))
-                }
+                    searchInput = searchInput,
+                    onSaveChanges = onSaveChanges,
+                    onNetworkItemClicked = onNetworkItemClicked
+                )
             }
         }
     }
