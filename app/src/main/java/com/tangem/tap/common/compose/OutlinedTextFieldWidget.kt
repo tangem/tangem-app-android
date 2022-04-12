@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Scaffold
@@ -14,14 +15,15 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.tangem.domain.common.DomainError
-import com.tangem.domain.common.ErrorConverter
+import com.tangem.domain.DomainError
+import com.tangem.domain.ErrorConverter
+import com.tangem.domain.common.form.Field
+import com.tangem.tap.common.compose.extensions.stringResourceDefault
 
 /**
 [REDACTED_AUTHOR]
@@ -30,8 +32,8 @@ private class OutlinedTextFieldWidget
 
 @Composable
 fun OutlinedTextFieldWidget(
-    text: String,
     modifier: Modifier = Modifier,
+    textFieldData: Field.Data<String>,
     labelId: Int? = null,
     label: String = "",
     placeholderId: Int? = null,
@@ -44,62 +46,66 @@ fun OutlinedTextFieldWidget(
     errorConverter: ErrorConverter<String>? = null,
     debounceTextChanges: Long = 400,
     visualTransformation: VisualTransformation = VisualTransformation.None,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     onTextChanged: (String) -> Unit,
 ) {
     if (!isVisible) return
-
-    val placeholder = placeholderId?.let { stringResource(id = it) } ?: placeholder
-    val label = labelId?.let { stringResource(id = it) } ?: label
 
     Column(
         modifier = modifier.animateContentSize(),
     ) {
         OutlinedProgressTextField(
-            text = text,
             modifier = modifier,
-            label = label,
-            placeholder = placeholder,
+            textFieldData = textFieldData,
+            label = stringResourceDefault(labelId, label),
+            placeholder = stringResourceDefault(placeholderId, placeholder),
             trailingIcon = trailingIcon,
             isEnabled = isEnabled,
             isLoading = isLoading,
             error = error,
-            debounceTextChanges = debounceTextChanges,
+            debounce = debounceTextChanges,
             visualTransformation = visualTransformation,
+            keyboardOptions = keyboardOptions,
             onTextChanged = onTextChanged
         )
-        errorConverter?.let { TextFieldErrorWidget(error, it) }
+        errorConverter?.let { AnimatedErrorView(error, it) }
     }
 }
 
 @Composable
 private fun OutlinedProgressTextField(
-    text: String,
     modifier: Modifier = Modifier,
+    textFieldData: Field.Data<String>,
     label: String = "",
     placeholder: String = "",
     isEnabled: Boolean = true,
     isLoading: Boolean = false,
     error: DomainError? = null,
-    debounceTextChanges: Long = 400,
+    debounce: Long = 400,
     visualTransformation: VisualTransformation = VisualTransformation.None,
+    keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     trailingIcon: @Composable (() -> Unit)? = null,
     onTextChanged: (String) -> Unit,
 ) {
-    val rTextValue = remember { mutableStateOf(text) }
-    val textDebouncer = ComposableTextDebouncer(text, debounceTextChanges, onTextChanged)
+    val rTextDebouncer = valueDebouncerAsState(debounce, onTextChanged)
+    val rText = remember { mutableStateOf(textFieldData.value) }
 
-    // add ability to paste text from state
-    if (rTextValue.value != text) rTextValue.value = text
+    fun updateFieldValueAndEmmit(value: String){
+        rText.value = value
+        rTextDebouncer.emmit(value)
+    }
+    // This action came from redux. Update the field value and send a new event as if from the user
+    if (!textFieldData.isUserInput) {
+        updateFieldValueAndEmmit(textFieldData.value)
+    }
 
     Box {
         OutlinedTextField(
-            value = rTextValue.value,
-            onValueChange = {
-                // immediately change text for the OutlinedTextField
-                rTextValue.value = it
-                textDebouncer.emmit(it)
-            },
-            modifier = Modifier.fillMaxWidth(),
+            modifier = Modifier
+                .fillMaxWidth(),
+            value = rText.value,
+            onValueChange = ::updateFieldValueAndEmmit,
+            keyboardOptions = keyboardOptions,
             label = { Text(label) },
             placeholder = { Text(placeholder) },
             trailingIcon = trailingIcon,
@@ -120,7 +126,7 @@ private fun OutlinedProgressTextField(
 }
 
 @Composable
-private fun TextFieldErrorWidget(
+private fun AnimatedErrorView(
     error: DomainError? = null,
     errorConverter: ErrorConverter<String>,
 ) {
@@ -162,41 +168,37 @@ fun OutlinedTextFieldWithErrorTest() {
         ) {
             OutlinedTextFieldWidget(
                 modifier = modifier,
-                text = "",
+                textFieldData = Field.Data(""),
                 label = "First label",
                 placeholder = "1 placeholder",
                 error = null,
                 errorConverter = converter,
-                onTextChanged = {},
-            )
+            ) {}
             OutlinedTextFieldWidget(
                 modifier = modifier,
-                text = "First",
+                textFieldData = Field.Data("First"),
                 label = "First label",
                 placeholder = "1 placeholder",
                 error = null,
                 errorConverter = converter,
-                onTextChanged = {},
-            )
+            ) {}
             OutlinedTextFieldWidget(
                 modifier = modifier,
-                text = "First",
+                textFieldData = Field.Data("First"),
                 label = "First label",
                 placeholder = "1 placeholder",
                 isLoading = true,
                 error = null,
                 errorConverter = converter,
-                onTextChanged = {},
-            )
+            ) {}
             OutlinedTextFieldWidget(
                 modifier = modifier,
-                text = "First",
+                textFieldData = Field.Data("First"),
                 label = "First label",
                 placeholder = "1 placeholder",
                 error = SimpleError(),
                 errorConverter = converter,
-                onTextChanged = {},
-            )
+            ) {}
         }
     }
 }
