@@ -24,7 +24,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import com.tangem.tangem_sdk_new.extensions.dpToPx
 import com.tangem.tap.common.compose.SpacerS16
 import com.tangem.tap.common.compose.SpacerS24
-import com.tangem.tap.common.extensions.compose.toAndroidGraphicsColor
+import com.tangem.tap.common.compose.extensions.toAndroidGraphicsColor
 import com.tangem.wallet.R
 
 @Composable
