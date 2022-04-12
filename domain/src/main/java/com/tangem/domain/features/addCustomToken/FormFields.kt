@@ -2,6 +2,7 @@ package com.tangem.domain.features.addCustomToken
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.domain.common.form.BaseDataField
+import com.tangem.domain.common.form.Field
 import com.tangem.domain.common.form.FieldId
 
 /**
@@ -16,21 +17,16 @@ enum class CustomTokenFieldId : FieldId {
     DerivationPath,
 }
 
+data class TokenField(
+    override val id: FieldId,
+) : BaseDataField<String>(id, Field.Data(""))
+
 data class TokenNetworkField(
     override val id: FieldId,
     val itemList: List<Blockchain>,
-    override val isEnabled: Boolean = true,
-    override val isVisible: Boolean = true,
-) : BaseDataField<Blockchain>(id, Blockchain.Unknown)
-
-data class TokenField(
-    override val id: FieldId,
-    override val isEnabled: Boolean = true,
-    override val isVisible: Boolean = true,
-) : BaseDataField<String>(id, "")
+) : BaseDataField<Blockchain>(id, Field.Data(Blockchain.Unknown))
 
 data class TokenDerivationPathField(
     override val id: FieldId,
-    override val isEnabled: Boolean = true,
-    override val isVisible: Boolean = true,
-) : BaseDataField<String>(id, "")
+    val itemList: List<Blockchain>,
+) : BaseDataField<Blockchain>(id, Field.Data(Blockchain.Unknown))
