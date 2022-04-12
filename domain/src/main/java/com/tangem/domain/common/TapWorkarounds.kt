@@ -41,12 +41,6 @@ object TapWorkarounds {
 
     fun Card.getTangemNoteBlockchain(): Blockchain? = tangemNoteBatches[batchId]
 
-    val Card.derivationType: DerivationType
-        get() = when {
-            tangemWalletBatchesWithStandardDerivationType.contains(batchId) -> DerivationType.Standard
-            else -> DerivationType.Metamask
-        }
-
     val Card.isStart2Coin: Boolean
         get() = isStart2CoinIssuer(issuer.name)
 
@@ -71,8 +65,4 @@ object TapWorkarounds {
     fun isStart2CoinIssuer(cardIssuer: String?): Boolean {
         return cardIssuer?.toLowerCase(Locale.US) == START_2_COIN_ISSUER
     }
-}
-
-enum class DerivationType {
-    Metamask, Standard
 }
