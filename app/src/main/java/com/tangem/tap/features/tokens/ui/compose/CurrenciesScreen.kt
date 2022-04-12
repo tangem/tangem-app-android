@@ -1,5 +1,6 @@
 package com.tangem.tap.features.tokens.ui.compose
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.ExtendedFloatingActionButton
 import androidx.compose.material.FabPosition
@@ -17,6 +18,7 @@ import com.tangem.tap.common.compose.keyboardAsState
 import com.tangem.tap.common.extensions.pixelsToDp
 import com.tangem.tap.domain.tokens.Currency
 import com.tangem.tap.domain.tokens.fromNetworkId
+import com.tangem.tap.features.tokens.redux.ContractAddress
 import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
 import com.tangem.tap.features.tokens.redux.TokensState
 import com.tangem.tap.store
@@ -26,7 +28,8 @@ import com.tangem.wallet.R
 fun CurrenciesScreen(
     tokensState: MutableState<TokensState> = mutableStateOf(store.state.tokensState),
     searchInput: MutableState<String>,
-    onSaveChanges: (List<TokenWithBlockchain>, List<Blockchain>) -> Unit
+    onSaveChanges: (List<TokenWithBlockchain>, List<Blockchain>) -> Unit,
+    onNetworkItemClicked: (ContractAddress) -> Unit
 ) {
 
     val addedTokensState = remember { mutableStateOf(tokensState.value.addedTokens) }
@@ -49,7 +52,7 @@ fun CurrenciesScreen(
             if (mutableList.contains(blockchain)) {
                 mutableList.remove(blockchain)
             } else {
-                mutableList.add(blockchain)
+                blockchain?.let { mutableList.add(blockchain) }
             }
             addedBlockchainsState.value = mutableList
         }
@@ -65,16 +68,21 @@ fun CurrenciesScreen(
         floatingActionButtonPosition = FabPosition.Center,
     ) {
 
-        ListOfCurrencies(
-            currencies = tokensState.value.currencies,
-            nonRemovableTokens = tokensState.value.nonRemovableTokens,
-            nonRemovableBlockchains = tokensState.value.nonRemovableBlockchains,
-            addedTokens = addedTokensState.value,
-            addedBlockchains = addedBlockchainsState.value,
-            searchInput = searchInput.value,
-            allowToAdd = tokensState.value.allowToAdd,
-            onAddCurrencyToggled = onAddCurrencyToggleClick
-        )
+        Column {
+            if (tokensState.value.allowToAdd) CurrenciesWarning()
+            ListOfCurrencies(
+                currencies = tokensState.value.currencies,
+                nonRemovableTokens = tokensState.value.nonRemovableTokens,
+                nonRemovableBlockchains = tokensState.value.nonRemovableBlockchains,
+                addedTokens = addedTokensState.value,
+                addedBlockchains = addedBlockchainsState.value,
+                searchInput = searchInput.value,
+                allowToAdd = tokensState.value.allowToAdd,
+                onAddCurrencyToggled = onAddCurrencyToggleClick,
+                onNetworkItemClicked = onNetworkItemClicked
+            )
+        }
+
     }
 }
 
