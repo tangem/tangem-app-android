@@ -4,11 +4,14 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.domain.common.form.BaseFieldDataConverter
 import com.tangem.domain.common.form.FieldDataConverter
 import com.tangem.domain.common.form.FieldId
-import com.tangem.domain.features.addCustomToken.redux.CompleteDataType
 
 /**
 [REDACTED_AUTHOR]
  */
+enum class CompleteDataType {
+    Blockchain, Token
+}
+
 sealed class CompleteData() {
 
     companion object {
