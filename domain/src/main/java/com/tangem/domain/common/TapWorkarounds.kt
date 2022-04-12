@@ -36,7 +36,7 @@ object TapWorkarounds {
     )
 
     private val tangemWalletBatchesWithStandardDerivationType = listOf(
-        "AC01", "AC02"
+        "AC01", "AC02", "CB95"
     )
 
     fun Card.getTangemNoteBlockchain(): Blockchain? = tangemNoteBatches[batchId]
