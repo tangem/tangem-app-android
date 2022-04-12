@@ -1,7 +1,10 @@
-package com.tangem.domain.common
+package com.tangem.domain
 
 /**
 [REDACTED_AUTHOR]
+ * @property code describes what feature is the error coming from
+ * @property message the error description
+ * @property data any data that can help in the part where this error is being handled
  */
 interface DomainError {
     val code: Int
@@ -9,7 +12,7 @@ interface DomainError {
     val data: Any?
 }
 
-open class AnyError(
+open class AnError(
     override val code: Int,
     override val message: String,
     override val data: Any? = null,
@@ -22,3 +25,5 @@ interface ErrorConverter<T> {
 interface Validator<Data, Error> {
     fun validate(data: Data? = null): Error?
 }
+
+const val ERROR_CODE_ADD_CUSTOM_TOKEN = 100
