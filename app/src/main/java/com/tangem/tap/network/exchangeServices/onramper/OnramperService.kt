@@ -4,6 +4,7 @@ import android.net.Uri
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.services.Result
 import com.tangem.common.services.performRequest
+import com.tangem.network.common.AddHeaderInterceptor
 import com.tangem.network.common.createRetrofitInstance
 import com.tangem.tap.common.extensions.urlEncode
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
@@ -25,7 +26,9 @@ class OnramperService(
     private val api: OnramperApi by lazy {
         createRetrofitInstance(
             baseUrl = OnramperApi.BASE_URL,
-            interceptors = listOf(AddKeyToHeaderInterceptor(apiKey))
+            interceptors = listOf(
+                AddHeaderInterceptor(mapOf("Authorization" to "Basic $apiKey")),
+            )
         ).create(OnramperApi::class.java)
     }
 
