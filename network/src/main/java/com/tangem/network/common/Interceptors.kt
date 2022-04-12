@@ -21,6 +21,6 @@ open class AddHeaderInterceptor(
     }
 }
 
-class CacheHttpInterceptor(
-    maxAgeSeconds: Int
-) : AddHeaderInterceptor(mapOf("Cache-Control" to "max-age=$maxAgeSeconds"))
+class CacheControlHttpInterceptor(maxAgeSeconds: Int) : AddHeaderInterceptor(mapOf(
+    "Cache-Control" to "max-age=$maxAgeSeconds",
+))
