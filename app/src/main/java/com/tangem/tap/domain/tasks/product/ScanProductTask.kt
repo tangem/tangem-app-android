@@ -28,6 +28,7 @@ import com.tangem.operations.issuerAndUserData.ReadIssuerDataCommand
 import com.tangem.tap.domain.ProductType
 import com.tangem.tap.domain.TapSdkError
 import com.tangem.tap.domain.TapWorkarounds
+import com.tangem.tap.domain.TapWorkarounds.derivationStyle
 import com.tangem.tap.domain.TapWorkarounds.getTangemNoteBlockchain
 import com.tangem.tap.domain.TapWorkarounds.isExcluded
 import com.tangem.tap.domain.TapWorkarounds.isNotSupportedInThatRelease
@@ -275,7 +276,7 @@ private class ScanWalletProcessor(
 
     private fun getBlockchainsToDerive(card: Card): List<BlockchainNetwork> {
         val currenciesRepository = currenciesRepository ?: return emptyList()
-        val cardCurrencies = currenciesRepository.loadSavedCurrencies(card.cardId).toMutableList()
+        val cardCurrencies = currenciesRepository.loadSavedCurrencies(card.cardId, card.derivationStyle).toMutableList()
 
         val blockchainsToDerive = cardCurrencies.ifEmpty {
             mutableListOf(
