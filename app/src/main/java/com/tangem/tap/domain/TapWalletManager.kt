@@ -11,6 +11,7 @@ import com.tangem.tap.common.extensions.withMainContext
 import com.tangem.tap.common.redux.global.FiatCurrencyName
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.currenciesRepository
+import com.tangem.tap.domain.TapWorkarounds.derivationStyle
 import com.tangem.tap.domain.TapWorkarounds.isStart2Coin
 import com.tangem.tap.domain.TapWorkarounds.isTestCard
 import com.tangem.tap.domain.configurable.config.ConfigManager
@@ -190,7 +191,7 @@ class TapWalletManager {
         primaryWalletManager: WalletManager?
     ) {
         val primaryTokens = primaryWalletManager?.cardTokens?.toList() ?: emptyList()
-        val savedCurrencies = currenciesRepository.loadSavedCurrencies(scanResponse.card.cardId)
+        val savedCurrencies = currenciesRepository.loadSavedCurrencies(scanResponse.card.cardId, scanResponse.card.derivationStyle)
 
         if (savedCurrencies.isEmpty()) {
             if (primaryBlockchain != null && primaryWalletManager != null) {
@@ -205,9 +206,10 @@ class TapWalletManager {
                 )
 
             } else {
+                val derivationStyle = scanResponse.card.derivationStyle
                 val blockchainNetworks = listOf(
-                    BlockchainNetwork(Blockchain.Bitcoin,null, emptyList()),
-                    BlockchainNetwork(Blockchain.Ethereum,null, emptyList())
+                    BlockchainNetwork(Blockchain.Bitcoin, scanResponse.card),
+                    BlockchainNetwork(Blockchain.Ethereum, scanResponse.card)
                 )
 
                 val walletManagers = walletManagerFactory.makeWalletManagersForApp(
