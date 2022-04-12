@@ -22,7 +22,8 @@ fun ListOfCurrencies(
     addedBlockchains: List<Blockchain>,
     searchInput: String,
     allowToAdd: Boolean,
-    onAddCurrencyToggled: (Currency, TokenWithBlockchain?) -> Unit
+    onAddCurrencyToggled: (Currency, TokenWithBlockchain?) -> Unit,
+    onNetworkItemClicked: (ContractAddress) -> Unit
 ) {
 
     val expandedCurrencies = remember { mutableStateOf(listOf("")) }
@@ -59,7 +60,8 @@ fun ListOfCurrencies(
                 allowToAdd = allowToAdd,
                 expanded = expandedCurrencies.value.contains(currency.id),
                 onCurrencyClick = onCurrencyClick,
-                onAddCurrencyToggled = onAddCurrencyToggled
+                onAddCurrencyToggled = onAddCurrencyToggled,
+                onNetworkItemClicked = onNetworkItemClicked
             )
         }
 
