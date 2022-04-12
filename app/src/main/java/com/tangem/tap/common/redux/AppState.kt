@@ -1,7 +1,7 @@
 package com.tangem.tap.common.redux
 
-import com.tangem.domain.restore.DomainState
-import com.tangem.domain.restore.domainStore
+import com.tangem.domain.redux.DomainState
+import com.tangem.domain.redux.domainStore
 import com.tangem.tap.common.redux.global.GlobalMiddleware
 import com.tangem.tap.common.redux.global.GlobalState
 import com.tangem.tap.common.redux.navigation.NavigationState
