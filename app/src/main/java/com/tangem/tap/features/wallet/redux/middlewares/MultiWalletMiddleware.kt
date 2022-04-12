@@ -127,11 +127,7 @@ class MultiWalletMiddleware {
                             val coinAmount = wallet.amounts[AmountType.Coin]?.value
                             if (coinAmount != null && !coinAmount.isZero()) {
                                 scope.launch(Dispatchers.Main) {
-                                    val blockchainNetwork = BlockchainNetwork(
-                                        wallet.blockchain,
-                                        null,
-                                        walletManager.cardTokens.toList()
-                                    )
+                                    val blockchainNetwork = BlockchainNetwork.fromWalletManager(walletManager)
                                     if (walletState?.getWalletData(blockchainNetwork) == null) {
                                         store.dispatch(
                                             WalletAction.MultiWallet.AddBlockchain(
