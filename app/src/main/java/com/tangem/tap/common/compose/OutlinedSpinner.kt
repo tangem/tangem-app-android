@@ -8,24 +8,31 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.VoidCallback
+import com.tangem.domain.common.form.Field
 import com.tangem.tap.common.extensions.ValueCallback
 
 /**
 [REDACTED_AUTHOR]
  */
+private class OutlinedSpinner
+
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun <T> OutlinedSpinner(
+    modifier: Modifier = Modifier,
     title: String,
     itemList: List<T>,
-    selectedItem: T,
+    selectedItem: Field.Data<T>,
     onItemSelected: ValueCallback<T>,
-    modifier: Modifier = Modifier,
     itemNameConverter: (T) -> String = { it.toString() },
+    isEnabled: Boolean = true,
     onClose: VoidCallback = {}
 ) {
-    val rSelectedItem = remember { mutableStateOf(selectedItem) }
     val rIsExpanded = remember { mutableStateOf(false) }
+    val rSelectedItem = remember { mutableStateOf(selectedItem.value) }
+    if (!selectedItem.isUserInput) {
+        rSelectedItem.value = selectedItem.value
+    }
 
     val onItemSelectedInternal: (T) -> Unit = {
         rSelectedItem.value = it
@@ -44,6 +51,7 @@ fun <T> OutlinedSpinner(
         OutlinedTextField(
             modifier = modifier,
             readOnly = true,
+            enabled = isEnabled,
             value = itemNameConverter(rSelectedItem.value),
             onValueChange = {},
             label = { Text(title) },
@@ -66,12 +74,12 @@ fun <T> OutlinedSpinner(
 
 @Preview
 @Composable
-fun TestSpinnerPreview(){
+fun TestSpinnerPreview() {
     Scaffold() {
         OutlinedSpinner(
             title = "Blockchain name",
             itemList = listOf(Blockchain.values()),
-            selectedItem = Blockchain.Avalanche,
+            selectedItem = Field.Data(Blockchain.Avalanche),
             onItemSelected = {},
         )
     }
