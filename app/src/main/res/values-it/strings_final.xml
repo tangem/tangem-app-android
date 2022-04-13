@@ -38,5 +38,9 @@
     <string name="token_details_send_blocked_fee_format">Not enough funds for fee on your %s wallet to send a transaction. Top up your %s wallet first.</string>
 
     <string name="currency_subtitle_expanded">Available networks</string>
+    <string name="alert_manage_tokens_addresses_message">Note that tokens on different networks have different addresses. Double check that your address matches the network when you transfer funds.</string>
+    <string name="contract_address_copied_message">Contract address copied!</string>
+
+    <string name="common_custom">Custom</string>
 
 </resources>
