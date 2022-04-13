@@ -6,6 +6,7 @@ import com.tangem.common.extensions.isZero
 import com.tangem.tap.common.extensions.toFiatString
 import com.tangem.tap.common.extensions.toFormattedCurrencyString
 import com.tangem.tap.domain.getFirstToken
+import com.tangem.tap.domain.tokens.BlockchainNetwork
 import com.tangem.tap.features.wallet.models.removeUnknownTransactions
 import com.tangem.tap.features.wallet.models.toPendingTransactions
 import com.tangem.tap.features.wallet.redux.*
@@ -17,66 +18,85 @@ import com.tangem.tap.store
 class MultiWalletReducer {
     fun reduce(action: WalletAction.MultiWallet, state: WalletState): WalletState {
         return when (action) {
-            is WalletAction.MultiWallet.AddWalletManagers -> {
-                state.addWalletManagers(action.walletManagers)
-            }
             is WalletAction.MultiWallet.AddBlockchains -> {
-                val walletsData = action.blockchains.map { blockchain ->
-                    val wallet = state.getWalletManager(blockchain)?.wallet
+                val wallets: List<WalletStore> = action.blockchains.map { blockchain ->
+                    val walletManager = action.walletManagers.first {
+                        it.wallet.blockchain == blockchain.blockchain &&
+                                (it.wallet.publicKey.derivationPath?.rawPath == blockchain.derivationPath)
+                    }
+                    val wallet = walletManager.wallet
                     val cardToken = if (!state.isMultiwalletAllowed) {
-                        wallet?.getFirstToken()?.symbol?.let { TokenData("", tokenSymbol = it) }
+                        wallet.getFirstToken()?.symbol?.let { TokenData("", tokenSymbol = it) }
                     } else {
                         null
                     }
-                    WalletData(
+                    val walletData = WalletData(
                         currencyData = BalanceWidgetData(
                             BalanceStatus.Loading,
-                            blockchain.fullName,
-                            currencySymbol = blockchain.currency,
+                            blockchain.blockchain.fullName,
+                            currencySymbol = blockchain.blockchain.currency,
                             token = cardToken
                         ),
                         walletAddresses = createAddressList(wallet),
                         mainButton = WalletMainButton.SendButton(false),
-                        currency = Currency.Blockchain(blockchain),
+                        currency = Currency.Blockchain(
+                            blockchain.blockchain,
+                            blockchain.derivationPath
+                        ),
+                    )
+
+                    WalletStore(
+                        walletManager = walletManager,
+                        blockchainNetwork = blockchain,
+                        walletsData = listOf(walletData)
                     )
                 }
 
                 val selectedCurrency = if (!state.isMultiwalletAllowed) {
-                    walletsData[0].currency
+                    wallets[0].walletsData[0].currency
                 } else {
                     state.selectedCurrency
                 }
                 state.copy(
-                    walletsData = walletsData,
+                    wallets = wallets,
                     selectedCurrency = selectedCurrency
                 )
             }
             is WalletAction.MultiWallet.AddBlockchain -> {
-                val wallet = state.getWalletManager(action.blockchain)?.wallet
+                val walletManager = action.walletManager ?: state.getWalletManager(action.blockchain)
+                val wallet = walletManager?.wallet
+
                 val walletData = WalletData(
                     currencyData = BalanceWidgetData(
                         BalanceStatus.Loading,
-                        action.blockchain.fullName,
-                        currencySymbol = action.blockchain.currency,
+                        action.blockchain.blockchain.fullName,
+                        currencySymbol = action.blockchain.blockchain.currency,
                     ),
                     walletAddresses = createAddressList(wallet),
                     mainButton = WalletMainButton.SendButton(false),
-                    currency = Currency.Blockchain(action.blockchain),
+                    currency = Currency.Blockchain(
+                        action.blockchain.blockchain,
+                        action.blockchain.derivationPath
+                    ),
                 )
-                val newState = state.copy(walletsData = state.replaceWalletInWallets(walletData))
+                val walletStore = WalletStore(
+                    walletManager = walletManager,
+                    blockchainNetwork = action.blockchain,
+                    walletsData = listOf(walletData)
+                )
+
+                val newState = state.updateWalletStore(walletStore)
                 if (wallet != null && wallet.amounts[AmountType.Coin]?.value != null) {
-                    OnWalletLoadedReducer().reduce(wallet, newState)
+                    OnWalletLoadedReducer().reduce(wallet, action.blockchain, newState)
                 } else {
                     newState
                 }
             }
             is WalletAction.MultiWallet.AddTokens -> {
-                val wallets = action.tokens.mapNotNull { token -> token.toWallet(state) }
-                state.copy(walletsData = state.replaceSomeWallets(wallets))
+                addTokens(action.tokens, action.blockchain, state)
             }
             is WalletAction.MultiWallet.AddToken -> {
-                val walletData = action.token.toWallet(state) ?: return state
-                state.copy(walletsData = state.replaceWalletInWallets(walletData))
+                addTokens(listOf(action.token), action.blockchain, state)
             }
             is WalletAction.MultiWallet.TokenLoaded -> {
                 val pendingTransactions = state.getWalletManager(action.token)
@@ -84,7 +104,8 @@ class MultiWalletReducer {
                         wallet.recentTransactions.toPendingTransactions(wallet.address)
                     } ?: emptyList()
 
-                val sendButtonEnabled = action.amount.value?.isZero() == false && pendingTransactions.isEmpty()
+                val sendButtonEnabled =
+                    action.amount.value?.isZero() == false && pendingTransactions.isEmpty()
                 val tokenPendingTransactions = pendingTransactions
                     .filter { it.currency == action.amount.currencySymbol }
                 val tokenBalanceStatus = when {
@@ -107,10 +128,13 @@ class MultiWalletReducer {
                     ),
                     pendingTransactions = pendingTransactions.removeUnknownTransactions(),
                     mainButton = WalletMainButton.SendButton(sendButtonEnabled),
-                    currency = Currency.Token(action.token)
+                    currency = Currency.Token(
+                        token = action.token,
+                        blockchain = action.blockchain.blockchain,
+                        derivationPath = action.blockchain.derivationPath
+                    )
                 )
-                val wallets = state.replaceWalletInWallets(newTokenWalletData)
-                state.copy(walletsData = wallets)
+                state.updateWalletData(newTokenWalletData)
             }
             is WalletAction.MultiWallet.SetIsMultiwalletAllowed ->
                 state.copy(isMultiwalletAllowed = action.isMultiwalletAllowed)
@@ -119,21 +143,7 @@ class MultiWalletReducer {
                 state.copy(selectedCurrency = action.walletData?.currency)
 
             is WalletAction.MultiWallet.RemoveWallet -> {
-                val wallets = state.walletsData.filterNot {
-                    it.currency == action.walletData.currency
-                }
-                if (action.walletData.currency is Currency.Blockchain) {
-                    state.copy(
-                        walletsData = wallets,
-                        walletManagers = state.walletManagers.filterNot {
-                            it.wallet.blockchain == action.walletData.currency.blockchain
-                        }
-                    )
-                } else {
-                    state.copy(walletsData = wallets)
-                }
-
-
+                state.removeWallet(action.walletData)
             }
             is WalletAction.MultiWallet.SetPrimaryBlockchain ->
                 state.copy(primaryBlockchain = action.blockchain)
@@ -147,7 +157,14 @@ class MultiWalletReducer {
     }
 }
 
-fun Token.toWallet(state: WalletState): WalletData? {
+private fun addTokens(
+    tokens: List<Token>, blockchain: BlockchainNetwork, state: WalletState
+): WalletState {
+    val wallets = tokens.mapNotNull { token -> token.toWallet(state, blockchain) }
+    return state.updateWalletsData(wallets)
+}
+
+fun Token.toWallet(state: WalletState, blockchain: BlockchainNetwork): WalletData? {
     if (!state.isMultiwalletAllowed) return null
     if (state.currencies.any { it is Currency.Token && it.token == this }) {
         return null
@@ -164,6 +181,6 @@ fun Token.toWallet(state: WalletState): WalletData? {
         ),
         walletAddresses = walletAddresses,
         mainButton = WalletMainButton.SendButton(false),
-        currency = Currency.Token(this),
+        currency = Currency.fromBlockchainNetwork(blockchain, this)
     )
 }

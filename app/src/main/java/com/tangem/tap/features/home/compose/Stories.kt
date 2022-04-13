@@ -4,6 +4,9 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
@@ -16,9 +19,13 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.tap.common.compose.SpacerS24
+import androidx.compose.ui.unit.sp
 import com.tangem.tap.features.home.redux.HomeState
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.wallet.R
@@ -28,7 +35,8 @@ import kotlin.math.max
 fun StoriesScreen(
     homeState: MutableState<HomeState> = mutableStateOf(HomeState()),
     onScanButtonClick: () -> Unit,
-    onShopButtonClick: () -> Unit
+    onShopButtonClick: () -> Unit,
+    onSearchTokensClick: () -> Unit,
 ) {
     val steps = 6
     val stepDuration = 8_000
@@ -78,7 +86,8 @@ fun StoriesScreen(
                     }
             )
             Box(
-                Modifier.weight(1f)
+                Modifier
+                    .weight(1f)
                     .fillMaxHeight()
                     .pointerInput(isPressed) {
                         detectTapGestures(
@@ -107,7 +116,7 @@ fun StoriesScreen(
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
-                modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth()
         ) {
             SpacerS24()
             StoriesProgressBar(
@@ -138,15 +147,44 @@ fun StoriesScreen(
                 6 -> StoriesWalletForEveryone()
             }
         }
-        HomeButtons(
-            isDarkBackground = isDarkBackground,
+        Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(16.dp, 0.dp, 16.dp, 37.dp)
-                .fillMaxWidth(),
-            onScanButtonClick = onScanButtonClick,
-            onShopButtonClick = onShopButtonClick
-        )
+                .fillMaxWidth()
+        ) {
+            if (currentStep.value == 4) Button(
+                onClick = onSearchTokensClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
+                    .height(48.dp)
+                ,
+                colors = ButtonDefaults.textButtonColors(
+                    backgroundColor = Color.White,
+                    contentColor = Color(0xFF080C10)
+                )
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.ic_search),
+                    contentDescription = null
+                )
+                Text(
+                    text = stringResource(id = R.string.search_tokens_title),
+                    fontWeight = FontWeight.Medium,
+                    fontSize = 16.sp,
+                    textAlign = TextAlign.Center
+                )
+            }
+            HomeButtons(
+                isDarkBackground = isDarkBackground,
+                modifier = Modifier
+                    .padding(start = 16.dp, top = 0.dp, end = 16.dp, bottom = 37.dp)
+                    .fillMaxWidth(),
+                onScanButtonClick = onScanButtonClick,
+                onShopButtonClick = onShopButtonClick
+            )
+        }
+
     }
 }
 
@@ -154,5 +192,5 @@ fun StoriesScreen(
 @Preview
 @Composable
 fun InstagramScreenPreview() {
-    StoriesScreen(onScanButtonClick = {}, onShopButtonClick = {})
+    StoriesScreen(onScanButtonClick = {}, onShopButtonClick = {}, onSearchTokensClick = {})
 }
