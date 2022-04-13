@@ -46,9 +46,9 @@ dependencies {
     implementation implementation(project(path: ':network'))
 
     // Tangem sdk's
-    implementation 'com.tangem:blockchain:develop-66'
-    implementation 'com.tangem.tangem-sdk-kotlin:core:develop-140'
-    implementation 'com.tangem.tangem-sdk-kotlin:android:develop-140'
+    implementation 'com.tangem:blockchain:develop-70'
+    implementation 'com.tangem.tangem-sdk-kotlin:core:develop-142'
+    implementation 'com.tangem.tangem-sdk-kotlin:android:develop-142'
 
     // Kotlin
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2'
