@@ -1,7 +1,7 @@
 package com.tangem.tap.features.tokens.redux
 
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.Token
+import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.tap.domain.tokens.Currency
 import com.tangem.tap.features.wallet.redux.WalletData
 import org.rekotlin.Action
@@ -12,15 +12,17 @@ sealed class TokensAction : Action {
 
     data class AllowToAddTokens(val allow: Boolean) : TokensAction()
 
-    object LoadCurrencies : TokensAction() {
+    data class LoadCurrencies(val supportedBlockchains: List<Blockchain>? = null) : TokensAction() {
         data class Success(val currencies: List<Currency>) : TokensAction()
     }
 
-    data class SetAddedCurrencies(val wallets: List<WalletData>) : TokensAction()
+    data class SetAddedCurrencies(
+        val wallets: List<WalletData>, val derivationStyle: DerivationStyle?
+        ) : TokensAction()
     data class SetNonRemovableCurrencies(val wallets: List<WalletData>) : TokensAction()
 
     data class SaveChanges(
-        val addedTokens: List<Token>,
+        val addedTokens: List<TokenWithBlockchain>,
         val addedBlockchains: List<Blockchain>
     ) : TokensAction()
 }
