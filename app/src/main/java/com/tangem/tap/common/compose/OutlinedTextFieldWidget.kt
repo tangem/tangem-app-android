@@ -28,8 +28,6 @@ import com.tangem.tap.common.compose.extensions.stringResourceDefault
 /**
 [REDACTED_AUTHOR]
  */
-private class OutlinedTextFieldWidget
-
 @Composable
 fun OutlinedTextFieldWidget(
     modifier: Modifier = Modifier,
@@ -90,7 +88,7 @@ private fun OutlinedProgressTextField(
     val rTextDebouncer = valueDebouncerAsState(debounce, onTextChanged)
     val rText = remember { mutableStateOf(textFieldData.value) }
 
-    fun updateFieldValueAndEmmit(value: String){
+    fun updateFieldValueAndEmmit(value: String) {
         rText.value = value
         rTextDebouncer.emmit(value)
     }
