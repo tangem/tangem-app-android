@@ -49,6 +49,7 @@ fun AddCustomTokenScreen(state: MutableState<AddCustomTokenState>) {
             LazyColumn(
                 contentPadding = PaddingValues(bottom = 90.dp)
             ) {
+                item { AddCustomTokenDebugActions() }
                 item {
                     Surface(
                         modifier = Modifier.padding(16.dp),
