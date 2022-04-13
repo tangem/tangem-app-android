@@ -1,27 +1,32 @@
 package com.tangem.tap.domain.extensions
 
-import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.WalletManager
-import com.tangem.blockchain.common.WalletManagerFactory
+import com.tangem.blockchain.common.*
+import com.tangem.common.card.Card
 import com.tangem.common.card.CardWallet
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toMapKey
+import com.tangem.common.hdWallet.DerivationPath
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.isTestCard
+import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
+import com.tangem.tap.domain.tokens.BlockchainNetwork
+import com.tangem.tap.features.wallet.redux.Currency
 
 fun WalletManagerFactory.makeWalletManagerForApp(
     scanResponse: ScanResponse,
-    blockchain: Blockchain
+    blockchain: Blockchain,
+    derivationParams: DerivationParams?
 ): WalletManager? {
     val card = scanResponse.card
     if (card.isTestCard && blockchain.getTestnetVersion() == null) return null
-    val supportedCurves = blockchain.getSupportedCurves() ?: return null
+    val supportedCurves = blockchain.getSupportedCurves()
 
     val wallets = card.wallets.filter { wallet -> supportedCurves.contains(wallet.curve) }
     val wallet = selectWallet(wallets) ?: return null
 
-    val environmentBlockchain = if (card.isTestCard) blockchain.getTestnetVersion()!! else blockchain
+    val environmentBlockchain =
+        if (card.isTestCard) blockchain.getTestnetVersion()!! else blockchain
 
     val seedKey = wallet.extendedPublicKey
     return when {
@@ -32,16 +37,21 @@ fun WalletManagerFactory.makeWalletManagerForApp(
                 environmentBlockchain, wallet.curve
             )
         }
-        seedKey != null -> {
+        seedKey != null && derivationParams != null -> {
             val derivedKeys = scanResponse.derivedKeys[wallet.publicKey.toMapKey()]
-            val derivedKey = derivedKeys?.get(blockchain.derivationPath())
+            val derivationPath = when (derivationParams) {
+                is DerivationParams.Default -> blockchain.derivationPath(derivationParams.style)
+                is DerivationParams.Custom -> derivationParams.path
+            }
+            val derivedKey = derivedKeys?.get(derivationPath)
                 ?: return null
 
             makeWalletManager(
                 cardId = card.cardId,
                 blockchain = environmentBlockchain,
                 seedKey = wallet.publicKey,
-                derivedKey = derivedKey
+                derivedKey = derivedKey,
+                derivation = derivationParams
             )
         }
         else -> {
@@ -55,12 +65,44 @@ fun WalletManagerFactory.makeWalletManagerForApp(
     }
 }
 
+fun WalletManagerFactory.makeWalletManagerForApp(
+    scanResponse: ScanResponse, blockchainNetwork: BlockchainNetwork
+): WalletManager? {
+    return makeWalletManagerForApp(
+        scanResponse,
+        blockchain = blockchainNetwork.blockchain,
+        derivationParams = getDerivationParams(blockchainNetwork.derivationPath, scanResponse.card)
+    )
+}
+
+private fun getDerivationParams(derivationPath: String?, card: Card): DerivationParams? {
+    return derivationPath?.let {
+        DerivationParams.Custom(
+            DerivationPath(it)
+        )
+    } ?: if (!card.settings.isHDWalletAllowed) {
+        null
+    } else if (card.useOldStyleDerivation) {
+        DerivationParams.Default(DerivationStyle.LEGACY)
+    } else {
+        DerivationParams.Default(DerivationStyle.NEW)
+    }
+}
+
+fun WalletManagerFactory.makeWalletManagerForApp(
+    scanResponse: ScanResponse, currency: Currency
+): WalletManager? {
+    return makeWalletManagerForApp(
+        scanResponse,
+        blockchain = currency.blockchain,
+        derivationParams = getDerivationParams(currency.derivationPath, scanResponse.card)
+    )
+}
+
 fun WalletManagerFactory.makeWalletManagersForApp(
-    scanResponse: ScanResponse, blockchains: List<Blockchain>,
+    scanResponse: ScanResponse, blockchains: List<BlockchainNetwork>,
 ): List<WalletManager> {
-    val isTestCard = scanResponse.card.isTestCard
-    val filteredBlockchains = blockchains.mapNotNull { if (isTestCard) it.getTestnetVersion() else it }
-    return filteredBlockchains.mapNotNull { makeWalletManagerForApp(scanResponse, it) }
+    return blockchains.mapNotNull { this.makeWalletManagerForApp(scanResponse, it) }
 }
 
 fun WalletManagerFactory.makePrimaryWalletManager(
@@ -71,7 +113,12 @@ fun WalletManagerFactory.makePrimaryWalletManager(
     } else {
         scanResponse.getBlockchain()
     }
-    return makeWalletManagerForApp(scanResponse, blockchain)
+    val derivationParams = getDerivationParams(null, scanResponse.card)
+    return makeWalletManagerForApp(
+        scanResponse = scanResponse,
+        blockchain = blockchain,
+        derivationParams = derivationParams
+    )
 }
 
 private fun selectWallet(wallets: List<CardWallet>): CardWallet? {
