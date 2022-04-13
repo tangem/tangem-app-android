@@ -36,4 +36,11 @@
     <string name="alert_demo_message">Приложение работает в демонстрационном режиме. Средства на всех счетах ненастоящие.</string>
     <string name="alert_demo_feature_disabled">Эта функция недоступна в демонстрационном режиме</string>
     <string name="token_details_send_blocked_fee_format">Недостаточно средств для комиссии на вашем %s кошельке для отправки транзакции. Сначала пополните свой %s кошелек.</string>
+
+    <string name="currency_subtitle_expanded">Доступные сети</string>
+    <string name="alert_manage_tokens_addresses_message">Внимание! Валюты на разных сетях имеют разные адреса. Убедитесь, что адрес соответствует сети, в которой вы отправляете средства.</string>
+    <string name="contract_address_copied_message">Адрес контракта скопирован!</string>
+
+    <string name="common_custom">Пользовательский</string>
+
 </resources>
