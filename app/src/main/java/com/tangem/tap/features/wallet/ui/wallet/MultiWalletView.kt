@@ -8,6 +8,9 @@ import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.currenciesRepository
+import com.tangem.tap.domain.TapWorkarounds.derivationStyle
+import com.tangem.tap.domain.TapWorkarounds.isTestCard
 import com.tangem.tap.features.tokens.redux.TokensAction
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletDialog
@@ -97,8 +100,20 @@ class MultiWalletView : WalletView {
         walletsAdapter.submitList(state.walletsData, state.primaryBlockchain, state.primaryToken)
 
         binding.btnAddToken.setOnClickListener {
-            store.dispatch(TokensAction.LoadCurrencies)
-            store.dispatch(TokensAction.SetAddedCurrencies(state.walletsData))
+            val card = store.state.globalState.scanResponse!!.card
+            store.dispatch(TokensAction.LoadCurrencies(
+                supportedBlockchains = currenciesRepository.getBlockchains(
+                card.firmwareVersion,
+                card.isTestCard
+            )))
+            store.dispatch(TokensAction.AllowToAddTokens(true))
+            store.dispatch(TokensAction.SetAddedCurrencies(
+                wallets = state.walletsData,
+                derivationStyle = card.derivationStyle
+            ))
+            store.dispatch(TokensAction.SetNonRemovableCurrencies(
+                state.walletsData.filterNot { state.canBeRemoved(it) })
+            )
             store.dispatch(NavigationAction.NavigateTo(AppScreen.AddTokens))
         }
         handleErrorStates(state = state, binding = binding, fragment = fragment)
