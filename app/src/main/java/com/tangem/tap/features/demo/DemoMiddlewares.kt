@@ -36,7 +36,7 @@ internal class DemoOnboardingNoteMiddleware : DemoMiddleware {
                 val balanceAmount = config.getBalance(walletManager.wallet.blockchain)
                 val loadedBalance = noteState.walletBalance.copy(
                     value = balanceAmount.value!!,
-                    currency = Currency.Blockchain(walletManager.wallet.blockchain),
+                    currency = Currency.Blockchain(walletManager.wallet.blockchain, null),
                     state = ProgressState.Done,
                     error = null,
                     criticalError = null
