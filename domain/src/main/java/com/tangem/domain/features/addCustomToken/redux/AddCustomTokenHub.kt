@@ -3,9 +3,11 @@ package com.tangem.domain.features.addCustomToken.redux
 import android.webkit.ValueCallback
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.card.Card
+import com.tangem.common.extensions.toHexString
 import com.tangem.common.services.Result
 import com.tangem.domain.DomainDialog
 import com.tangem.domain.DomainException
+import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.form.*
 import com.tangem.domain.features.addCustomToken.*
 import com.tangem.domain.features.addCustomToken.CustomTokenFieldId.*
@@ -43,12 +45,13 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
         cancel: ValueCallback<Action>
     ) {
         if (action !is AddCustomTokenAction) return
-//        val card = storeState.globalState.scanResponse?.card
-//            ?: throw IllegalStateException("ScanResponse must be set before showing the AddCustomToken screen")
+        val card = storeState.globalState.scanResponse?.card
+            ?: throw IllegalStateException("ScanResponse must be set before showing the AddCustomToken screen")
 
         when (action) {
             is OnCreate -> {
-//                hubState.addCustomTokenManager.attachAuthKey(card.cardPublicKey.toHexString())
+                hubState.addCustomTokenManager.attachAuthKey(card.cardPublicKey.toHexString())
+                dispatchOnMain(OnCreate.SetDerivationStyle(card.derivationStyle))
             }
             is OnDestroy -> hubScope.cancel()
             is OnTokenContractAddressChanged -> {
@@ -201,7 +204,7 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
                                 if (blockchain == Blockchain.Unknown) {
                                     throw DomainException.SelectTokeNetworkException(networkId)
                                 }
-                                AddCustomTokenState.convertBlockchainName(blockchain, "")
+                                hubState.convertBlockchainName(blockchain, "")
                             },
                             onSelect = { selectedContract ->
                                 hubScope.launch {
