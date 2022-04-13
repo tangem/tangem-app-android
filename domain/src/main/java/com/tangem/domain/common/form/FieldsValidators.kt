@@ -34,7 +34,6 @@ class TokenContractAddressValidator : CustomTokenValidator<String>() {
             AddCustomTokenError.InvalidContractAddress
         }
     }
-
 }
 
 class TokenNetworkValidator : CustomTokenValidator<Blockchain>() {
@@ -42,6 +41,14 @@ class TokenNetworkValidator : CustomTokenValidator<Blockchain>() {
         null, Blockchain.Unknown -> AddCustomTokenError.NetworkIsNotSelected
         else -> null
     }
+}
+
+class TokenNameValidator : CustomTokenValidator<String>() {
+    override fun validate(data: String?): AddCustomTokenError? = StringIsNotEmptyValidator().validate(data)
+}
+
+class TokenSymbolValidator : CustomTokenValidator<String>() {
+    override fun validate(data: String?): AddCustomTokenError? = StringIsNotEmptyValidator().validate(data)
 }
 
 class TokenDecimalsValidator : CustomTokenValidator<String>() {

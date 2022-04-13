@@ -16,9 +16,10 @@ sealed class AddCustomTokenAction : Action {
     // from user, ui
     object OnCreate : AddCustomTokenAction()
     object OnDestroy : AddCustomTokenAction()
-    data class OnTokenFieldChanged(val id: FieldId, val value: Field.Data<String>) : AddCustomTokenAction()
     data class OnTokenContractAddressChanged(val value: Field.Data<String>) : AddCustomTokenAction()
     data class OnTokenNetworkChanged(val value: Field.Data<Blockchain>) : AddCustomTokenAction()
+    data class OnTokenNameChanged(val value: Field.Data<String>) : AddCustomTokenAction()
+    data class OnTokenSymbolChanged(val value: Field.Data<String>) : AddCustomTokenAction()
     data class OnTokenDerivationPathChanged(val value: Field.Data<Blockchain>) : AddCustomTokenAction()
     data class OnTokenDecimalsChanged(val value: Field.Data<String>) : AddCustomTokenAction()
     data class OnCustomTokenSelected(val any: Any = Unit) : AddCustomTokenAction()
