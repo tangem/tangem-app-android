@@ -24,6 +24,7 @@ import com.tangem.tap.domain.TangemSigner
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.extensions.minimalAmount
+import com.tangem.tap.domain.tokens.BlockchainNetwork
 import com.tangem.tap.features.demo.DemoTransactionSender
 import com.tangem.tap.features.demo.isDemoWallet
 import com.tangem.tap.features.send.redux.*
@@ -203,11 +204,11 @@ private fun sendTransaction(
                     }
                     scope.launch(Dispatchers.IO) {
                         withContext(Dispatchers.Main) {
-                            dispatch(WalletAction.LoadWallet(walletManager.wallet.blockchain))
+                            dispatch(WalletAction.LoadWallet(BlockchainNetwork.fromWalletManager(walletManager)))
                         }
                         delay(11000) // more than 10000 to avoid throttling
                         withContext(Dispatchers.Main) {
-                            dispatch(WalletAction.LoadWallet(walletManager.wallet.blockchain))
+                            dispatch(WalletAction.LoadWallet(BlockchainNetwork.fromWalletManager(walletManager)))
                         }
                     }
                 }
