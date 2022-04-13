@@ -3,7 +3,9 @@ package com.tangem.domain.features.addCustomToken.redux
 import android.webkit.ValueCallback
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.card.Card
+import com.tangem.common.services.Result
 import com.tangem.domain.DomainDialog
+import com.tangem.domain.DomainException
 import com.tangem.domain.common.form.*
 import com.tangem.domain.features.addCustomToken.*
 import com.tangem.domain.features.addCustomToken.CustomTokenFieldId.*
@@ -73,21 +75,29 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
                 }
             }
             is OnTokenNetworkChanged -> {
-                val validator: TokenNetworkValidator = getValidator(Network, hubState)
-                addOrRemoveError(Network, validator.validate(action.value.value))
+//                val validator: TokenNetworkValidator = getValidator(Network, hubState)
+//                addOrRemoveError(Network, validator.validate(action.value.value))
+
+//                dispatchOnMain(OnTokenContractAddressChanged(Field.Data(
+//                    getField<TokenField>(ContractAddress, hubState).data.value, false
+//                )))
             }
-            is OnTokenDerivationPathChanged -> {
-//                val validator: TokenDerivationPathValidator = getValidator(DerivationPath, hubState)
-//                addOrRemoveError(DerivationPath, validator.validate(action.value.value))
+            is OnTokenNameChanged -> {
+                val validator: TokenNameValidator = getValidator(Name, hubState)
+                addOrRemoveError(Name, validator.validate(action.value.value))
+            }
+            is OnTokenSymbolChanged -> {
+                val validator: TokenSymbolValidator = getValidator(Symbol, hubState)
+                addOrRemoveError(Symbol, validator.validate(action.value.value))
             }
             is OnTokenDecimalsChanged -> {
                 val validator: TokenDecimalsValidator = getValidator(Decimals, hubState)
                 addOrRemoveError(Decimals, validator.validate(action.value.value))
             }
-            is OnTokenFieldChanged -> {
-                val validator: StringIsNotEmptyValidator = getValidator(action.id, hubState)
-                addOrRemoveError(action.id as CustomTokenFieldId, validator.validate(action.value.value))
-            }
+//            is OnTokenDerivationPathChanged -> {
+//                val validator: TokenDerivationPathValidator = getValidator(DerivationPath, hubState)
+//                addOrRemoveError(DerivationPath, validator.validate(action.value.value))
+//            }
             is OnCustomTokenSelected -> {
 //                dispatchOnMain()
             }
@@ -231,8 +241,13 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
                 field.data = action.value
                 updateFormState(state)
             }
-            is OnTokenDerivationPathChanged -> {
-                val field: TokenDerivationPathField = getField(DerivationPath, state)
+            is OnTokenNameChanged -> {
+                val field: TokenField = getField(Name, state)
+                field.data = action.value
+                updateFormState(state)
+            }
+            is OnTokenSymbolChanged -> {
+                val field: TokenField = getField(Symbol, state)
                 field.data = action.value
                 updateFormState(state)
             }
@@ -241,8 +256,8 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
                 field.data = action.value
                 updateFormState(state)
             }
-            is OnTokenFieldChanged -> {
-                val field: TokenField = getField(action.id, state)
+            is OnTokenDerivationPathChanged -> {
+                val field: TokenDerivationPathField = getField(DerivationPath, state)
                 field.data = action.value
                 updateFormState(state)
             }
