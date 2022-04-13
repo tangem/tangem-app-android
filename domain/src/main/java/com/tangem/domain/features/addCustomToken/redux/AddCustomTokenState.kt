@@ -49,22 +49,17 @@ data class AddCustomTokenState(
     companion object {
         fun convertBlockchainName(blockchain: Blockchain, unknown: String): String = when (blockchain) {
             Blockchain.Unknown -> unknown
-            Blockchain.Cardano -> "Cardano"
-            Blockchain.CardanoShelley -> "Cardano Shelley"
             else -> blockchain.fullName
         }
 
-        fun convertDerivationPathName(blockchain: Blockchain, unknown: String): String = when (blockchain) {
-            Blockchain.Unknown -> unknown
-            Blockchain.BSC -> "BNB Smart Chain"
-            Blockchain.Fantom -> "Fantom Opera"
-            else -> blockchain.fullName
+        fun convertDerivationPathLabel(blockchain: Blockchain, unknown: String): String {
+            return blockchain.derivationPath()?.rawPath ?: unknown
         }
 
         private fun createFormFields(): List<DataField<*>> {
             return listOf(
                 TokenField(ContractAddress),
-                TokenNetworkField(Network, getSupportedNetworks()),
+                TokenBlockchainField(Network, getSupportedNetworks()),
                 TokenField(Name),
                 TokenField(Symbol),
                 TokenField(Decimals),
@@ -84,6 +79,7 @@ data class AddCustomTokenState(
 
         private fun getSupportedNetworks(): List<Blockchain> {
             return listOf(
+                Blockchain.Unknown,
                 Blockchain.Ethereum,
                 Blockchain.BSC,
                 Blockchain.Binance,
