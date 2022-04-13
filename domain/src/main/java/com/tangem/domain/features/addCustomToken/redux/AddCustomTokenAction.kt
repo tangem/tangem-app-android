@@ -1,6 +1,7 @@
 package com.tangem.domain.features.addCustomToken.redux
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.domain.common.form.Field
 import com.tangem.domain.common.form.FieldId
 import com.tangem.domain.features.addCustomToken.AddCustomTokenError
@@ -13,9 +14,13 @@ import org.rekotlin.Action
 [REDACTED_AUTHOR]
  */
 sealed class AddCustomTokenAction : Action {
-    // from user, ui
-    object OnCreate : AddCustomTokenAction()
+    object OnCreate : AddCustomTokenAction() {
+        data class SetDerivationStyle(val derivationStyle: DerivationStyle?) : AddCustomTokenAction()
+    }
+
     object OnDestroy : AddCustomTokenAction()
+
+    // from user, ui
     data class OnTokenContractAddressChanged(val contractAddress: Field.Data<String>) : AddCustomTokenAction()
     data class OnTokenNetworkChanged(val blockchainNetwork: Field.Data<Blockchain>) : AddCustomTokenAction()
     data class OnTokenNameChanged(val tokenName: Field.Data<String>) : AddCustomTokenAction()
