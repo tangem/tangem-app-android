@@ -3,14 +3,14 @@ package com.tangem.tap.features.wallet.ui.wallet
 import android.app.Dialog
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.tangem.common.card.Card
+import com.tangem.domain.common.TapWorkarounds.derivationStyle
+import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.currenciesRepository
-import com.tangem.tap.domain.TapWorkarounds.derivationStyle
-import com.tangem.tap.domain.TapWorkarounds.isTestCard
 import com.tangem.tap.features.tokens.redux.TokensAction
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletDialog
@@ -103,9 +103,9 @@ class MultiWalletView : WalletView {
             val card = store.state.globalState.scanResponse!!.card
             store.dispatch(TokensAction.LoadCurrencies(
                 supportedBlockchains = currenciesRepository.getBlockchains(
-                card.firmwareVersion,
-                card.isTestCard
-            )))
+                    card.firmwareVersion,
+                    card.isTestCard
+                )))
             store.dispatch(TokensAction.AllowToAddTokens(true))
             store.dispatch(TokensAction.SetAddedCurrencies(
                 wallets = state.walletsData,
