@@ -35,10 +35,15 @@ class CustomTokenWarningConverter(
     override fun convertError(error: DomainError): String {
         val customTokenWarning = (error as? AddCustomTokenWarning) ?: throw UnsupportedOperationException()
 
-        val resId = when (customTokenWarning) {
+        val rawMessage = when (customTokenWarning) {
             AddCustomTokenWarning.PotentialScamToken -> R.string.custom_token_validation_error_not_found
             AddCustomTokenWarning.TokenAlreadyAdded -> R.string.custom_token_validation_error_already_added
+            AddCustomTokenWarning.Network.CheckAddressRequestError -> "CheckAddressRequestError"
         }
-        return context.getString(resId)
+        return when (rawMessage) {
+            is Int -> context.getString(rawMessage)
+            is String -> rawMessage
+            else -> "Unknown error: ${customTokenWarning::class.java.simpleName}"
+        }
     }
 }
