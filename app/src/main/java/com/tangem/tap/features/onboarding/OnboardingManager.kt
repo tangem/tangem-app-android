@@ -67,7 +67,9 @@ class OnboardingManager(
             }
         }
 
-        return balance.copy(currency = Currency.Blockchain(walletManager.wallet.blockchain))
+        return balance.copy(currency = Currency.Blockchain(
+            walletManager.wallet.blockchain, walletManager.wallet.publicKey.derivationPath?.rawPath)
+        )
     }
 
     fun activationStarted(cardId: String) {
@@ -81,7 +83,7 @@ class OnboardingManager(
 
 data class OnboardingWalletBalance(
     val value: BigDecimal = BigDecimal.ZERO,
-    val currency: Currency.Blockchain = Currency.Blockchain(Blockchain.Unknown),
+    val currency: Currency.Blockchain = Currency.Blockchain(Blockchain.Unknown, null),
     val hasIncomingTransaction: Boolean = false,
     val state: ProgressState,
     val error: TapError? = null,
