@@ -16,7 +16,7 @@ sealed class Coins : TangemTechResponse {
         )
     }
 
-    data class CheckAddressResponse(val imageHost: String, val tokens: List<Token>, val total: Int) : Coins() {
+    data class CheckAddressResponse(val imageHost: String?, val tokens: List<Token>, val total: Int) : Coins() {
         data class Token(
             val id: String,
             val name: String,
