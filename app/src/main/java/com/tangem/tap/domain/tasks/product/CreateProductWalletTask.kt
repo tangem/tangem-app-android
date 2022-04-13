@@ -11,6 +11,7 @@ import com.tangem.common.extensions.toMapKey
 import com.tangem.common.hdWallet.DerivationPath
 import com.tangem.domain.common.KeyWalletPublicKey
 import com.tangem.domain.common.ProductType
+import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.TapWorkarounds.getTangemNoteBlockchain
 import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.operations.CommandResponse
@@ -20,10 +21,6 @@ import com.tangem.operations.derivation.DeriveMultipleWalletPublicKeysTask
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.operations.wallet.CreateWalletTask
-import com.tangem.domain.common.ProductType
-import com.tangem.domain.common.TapWorkarounds.derivationStyle
-import com.tangem.domain.common.TapWorkarounds.getTangemNoteBlockchain
-import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.tap.domain.tasks.product.CreateWalletsTask
 import com.tangem.tap.domain.tasks.product.ProductCommandProcessor
 import com.tangem.tap.domain.tasks.product.getCurvesForNonCreatedWallets
