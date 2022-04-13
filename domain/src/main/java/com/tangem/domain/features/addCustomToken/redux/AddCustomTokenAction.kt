@@ -16,26 +16,27 @@ sealed class AddCustomTokenAction : Action {
     // from user, ui
     object OnCreate : AddCustomTokenAction()
     object OnDestroy : AddCustomTokenAction()
-    data class OnTokenContractAddressChanged(val value: Field.Data<String>) : AddCustomTokenAction()
-    data class OnTokenNetworkChanged(val value: Field.Data<Blockchain>) : AddCustomTokenAction()
-    data class OnTokenNameChanged(val value: Field.Data<String>) : AddCustomTokenAction()
-    data class OnTokenSymbolChanged(val value: Field.Data<String>) : AddCustomTokenAction()
-    data class OnTokenDerivationPathChanged(val value: Field.Data<Blockchain>) : AddCustomTokenAction()
-    data class OnTokenDecimalsChanged(val value: Field.Data<String>) : AddCustomTokenAction()
-    data class OnCustomTokenSelected(val any: Any = Unit) : AddCustomTokenAction()
+    data class OnTokenContractAddressChanged(val contractAddress: Field.Data<String>) : AddCustomTokenAction()
+    data class OnTokenNetworkChanged(val blockchainNetwork: Field.Data<Blockchain>) : AddCustomTokenAction()
+    data class OnTokenNameChanged(val tokenName: Field.Data<String>) : AddCustomTokenAction()
+    data class OnTokenSymbolChanged(val tokenSymbol: Field.Data<String>) : AddCustomTokenAction()
+    data class OnTokenDerivationPathChanged(val blockchainDerivationPath: Field.Data<Blockchain>) : AddCustomTokenAction()
+    data class OnTokenDecimalsChanged(val tokenDecimals: Field.Data<String>) : AddCustomTokenAction()
 
-
+    // form fields
     data class UpdateForm(val state: AddCustomTokenState) : AddCustomTokenAction()
+    object ClearTokenFields : AddCustomTokenAction()
     data class FillTokenFields(
         val token: Coins.CheckAddressResponse.Token,
         val contract: Coins.CheckAddressResponse.Token.Contract,
     ) : AddCustomTokenAction()
 
-    sealed class Error : AddCustomTokenAction() {
-        data class Add(val id: CustomTokenFieldId, val error: AddCustomTokenError) : Error()
-        data class Remove(val id: CustomTokenFieldId) : Error()
+    sealed class FieldError : AddCustomTokenAction() {
+        data class Add(val id: CustomTokenFieldId, val error: AddCustomTokenError) : FieldError()
+        data class Remove(val id: CustomTokenFieldId) : FieldError()
     }
 
+    // warnings
     sealed class Warning : AddCustomTokenAction() {
         data class Add(val warnings: Set<AddCustomTokenWarning>) : Warning()
         data class Remove(val warnings: Set<AddCustomTokenWarning>) : Warning()
