@@ -21,7 +21,7 @@ data class TokenField(
     override val id: FieldId,
 ) : BaseDataField<String>(id, Field.Data(""))
 
-data class TokenNetworkField(
+data class TokenBlockchainField(
     override val id: FieldId,
     val itemList: List<Blockchain>,
 ) : BaseDataField<Blockchain>(id, Field.Data(Blockchain.Unknown))
