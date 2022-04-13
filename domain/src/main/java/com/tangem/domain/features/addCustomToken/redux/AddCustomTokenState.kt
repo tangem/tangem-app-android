@@ -76,10 +76,9 @@ data class AddCustomTokenState(
             return mapOf(
                 ContractAddress to TokenContractAddressValidator(),
                 Network to TokenNetworkValidator(),
-                Name to StringIsNotEmptyValidator(),
-                Symbol to StringIsNotEmptyValidator(),
+                Name to TokenNameValidator(),
+                Symbol to TokenSymbolValidator(),
                 Decimals to TokenDecimalsValidator(),
-//                DerivationPath to TokenDerivationPathValidator(),
             )
         }
 
@@ -99,7 +98,7 @@ data class AddCustomTokenState(
             val evmBlockchains = Blockchain.values().filter {
                 !it.isTestnet() && it.getChainId() != null
             }
-            return evmBlockchains
+            return listOf(Blockchain.Unknown) + evmBlockchains
         }
 
         private fun createInitialScreenState(): ScreenState {
