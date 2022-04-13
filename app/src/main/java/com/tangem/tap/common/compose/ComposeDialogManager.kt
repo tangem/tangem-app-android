@@ -4,8 +4,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.LocalTextStyle
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.*
@@ -22,6 +22,7 @@ import com.tangem.domain.DomainStateDialog
 import com.tangem.domain.redux.domainStore
 import com.tangem.domain.redux.global.DomainGlobalAction
 import com.tangem.domain.redux.global.DomainGlobalState
+import com.tangem.tap.features.tokens.addCustomToken.compose.SelectTokenNetworkDialog
 import org.rekotlin.StoreSubscriber
 
 @Composable
@@ -56,15 +57,7 @@ fun ShowTheDialog(dialogState: MutableState<DomainStateDialog?>) {
     val onDismissRequest = { domainStore.dispatch(DomainGlobalAction.ShowDialog(null)) }
 
     when (val dialog = dialogState.value) {
-        is DomainDialog.SelectTokenDialog -> {
-            SimpleDialog(
-                title = "Select a token",
-                items = dialog.items,
-                itemNameConverter = dialog.itemNameConverter,
-                onSelect = dialog.onSelect,
-                onDismissRequest = onDismissRequest
-            )
-        }
+        is DomainDialog.SelectTokenDialog -> SelectTokenNetworkDialog(dialog, onDismissRequest)
     }
 }
 
@@ -75,9 +68,9 @@ fun ShowTheDialog(dialogState: MutableState<DomainStateDialog?>) {
 fun <T> SimpleDialog(
     title: String,
     items: List<T>,
-    itemNameConverter: (T) -> String,
     onSelect: (T) -> Unit,
-    onDismissRequest: () -> Unit
+    onDismissRequest: () -> Unit,
+    itemContent: @Composable (T) -> Unit,
 ) {
     Dialog(
         properties = DialogProperties(false, false),
@@ -85,7 +78,7 @@ fun <T> SimpleDialog(
     ) {
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(8.dp)
+            shape = MaterialTheme.shapes.medium
         ) {
             Column(
                 modifier = Modifier.padding(22.dp)
@@ -112,11 +105,7 @@ fun <T> SimpleDialog(
                                     onDismissRequest()
                                 },
                             verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Text(
-                                text = itemNameConverter(item),
-                            )
-                        }
+                        ) { itemContent(item) }
                     }
                 }
             }
