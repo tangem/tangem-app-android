@@ -70,7 +70,7 @@ fun AddCustomTokenScreen(state: MutableState<AddCustomTokenState>) {
             HangingOverKeyboardView(
                 modifier = Modifier
                     .align(Alignment.BottomCenter),
-                keyboardState = keyboardObserverAsState(),
+                keyboardState = keyboardAsState(),
                 defaultBottomPadding = 30.dp,
                 spaceBetweenKeyboard = 20.dp,
             ) {
@@ -92,15 +92,16 @@ private fun FormFields(state: MutableState<AddCustomTokenState>) {
     val context = LocalContext.current
     val errorConverter = remember { CustomTokenErrorConverter(context) }
 
-    state.value.form.fieldList.forEach { field ->
-        val data = ScreenFieldData.fromState(field, state.value, errorConverter)
+    val stateValue = state.value
+    stateValue.form.fieldList.forEach { field ->
+        val data = ScreenFieldData.fromState(field, stateValue, errorConverter)
         when (field.id) {
             ContractAddress -> TokenContractAddressView(data)
-            Network -> TokenNetworkView(data)
+            Network -> TokenNetworkView(data, stateValue)
             Name -> TokenNameView(data)
             Symbol -> TokenSymbolView(data)
             Decimals -> TokenDecimalsView(data)
-            DerivationPath -> TokenDerivationPathView(data)
+            DerivationPath -> TokenDerivationPathView(data, stateValue)
         }
     }
 }
@@ -145,7 +146,7 @@ private fun TokenNameView(screenFieldData: ScreenFieldData) {
 }
 
 @Composable
-private fun TokenNetworkView(screenFieldData: ScreenFieldData) {
+private fun TokenNetworkView(screenFieldData: ScreenFieldData, state: AddCustomTokenState) {
     if (!screenFieldData.viewState.isVisible) return
 
     val notSelected = stringResource(id = R.string.custom_token_network_input_not_selected)
@@ -156,7 +157,7 @@ private fun TokenNetworkView(screenFieldData: ScreenFieldData) {
         itemList = networkField.itemList,
         selectedItem = networkField.data,
         isEnabled = screenFieldData.viewState.isEnabled,
-        textFieldConverter = { AddCustomTokenState.convertBlockchainName(it, notSelected) },
+        textFieldConverter = { state.convertBlockchainName(it, notSelected) },
     ) { domainStore.dispatch(OnTokenNetworkChanged(Field.Data(it))) }
     SpacerH8()
 }
@@ -197,7 +198,7 @@ private fun TokenDecimalsView(screenFieldData: ScreenFieldData) {
 }
 
 @Composable
-private fun TokenDerivationPathView(screenFieldData: ScreenFieldData) {
+private fun TokenDerivationPathView(screenFieldData: ScreenFieldData, state: AddCustomTokenState) {
     if (!screenFieldData.viewState.isVisible) return
 
     val notSelected = stringResource(id = R.string.custom_token_derivation_path_default)
@@ -208,10 +209,10 @@ private fun TokenDerivationPathView(screenFieldData: ScreenFieldData) {
         itemList = networkField.itemList,
         selectedItem = networkField.data,
         isEnabled = screenFieldData.viewState.isEnabled,
-        textFieldConverter = { AddCustomTokenState.convertBlockchainName(it, notSelected) },
+        textFieldConverter = { state.convertBlockchainName(it, notSelected) },
         dropdownItemView = { blockchain ->
-            val derivationPathLabel = AddCustomTokenState.convertDerivationPathLabel(blockchain, notSelected)
-            val blockchainName = AddCustomTokenState.convertBlockchainName(blockchain, notSelected)
+            val derivationPathLabel = state.convertDerivationPathLabel(blockchain, notSelected)
+            val blockchainName = state.convertBlockchainName(blockchain, notSelected)
             TitleSubtitle(derivationPathLabel, blockchainName)
         }
     ) { domainStore.dispatch(OnTokenDerivationPathChanged(Field.Data(it))) }

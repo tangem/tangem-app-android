@@ -1,12 +1,10 @@
 package com.tangem.tap.domain.tasks.product
 
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.Token
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.Card
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.card.FirmwareVersion
-import com.tangem.common.card.WalletData
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.TangemError
@@ -17,8 +15,10 @@ import com.tangem.common.extensions.toHexString
 import com.tangem.common.extensions.toMapKey
 import com.tangem.common.hdWallet.DerivationPath
 import com.tangem.domain.common.*
+import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.TapWorkarounds.isExcluded
 import com.tangem.domain.common.TapWorkarounds.isNotSupportedInThatRelease
+import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
 import com.tangem.operations.PreflightReadMode
 import com.tangem.operations.PreflightReadTask
 import com.tangem.operations.ScanTask
@@ -27,56 +27,11 @@ import com.tangem.operations.backup.StartPrimaryCardLinkingTask
 import com.tangem.operations.derivation.DeriveMultipleWalletPublicKeysTask
 import com.tangem.operations.issuerAndUserData.ReadIssuerDataCommand
 import com.tangem.tap.domain.TapSdkError
-import com.tangem.domain.common.TapWorkarounds
-import com.tangem.domain.common.TapWorkarounds.derivationStyle
-import com.tangem.domain.common.TapWorkarounds.getTangemNoteBlockchain
-import com.tangem.domain.common.TapWorkarounds.isExcluded
-import com.tangem.domain.common.TapWorkarounds.isNotSupportedInThatRelease
-import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
 import com.tangem.tap.domain.extensions.getPrimaryCurve
 import com.tangem.tap.domain.extensions.getSingleWallet
 import com.tangem.tap.domain.tokens.BlockchainNetwork
 import com.tangem.tap.domain.tokens.CurrenciesRepository
 import com.tangem.tap.preferencesStorage
-
-data class 1ScanResponse(
-    val card: Card,
-    val productType: ProductType,
-    val walletData: WalletData?,
-    val secondTwinPublicKey: String? = null,
-    val derivedKeys: Map<KeyWalletPublicKey, ExtendedPublicKeysMap> = mapOf(),
-    val primaryCard: PrimaryCard? = null
-) : CommandResponse {
-
-    fun getBlockchain(): Blockchain {
-        if (productType == ProductType.Note) return getTangemNoteBlockchain(card)
-            ?: return Blockchain.Unknown
-        val blockchainName: String = walletData?.blockchain ?: return Blockchain.Unknown
-        return Blockchain.fromId(blockchainName)
-    }
-
-    fun getPrimaryToken(): Token? {
-        val cardToken = walletData?.token ?: return null
-        return Token(
-            cardToken.name,
-            cardToken.symbol,
-            cardToken.contractAddress,
-            cardToken.decimals,
-        )
-    }
-
-    fun isTangemNote(): Boolean = productType == ProductType.Note
-    fun isTangemWallet(): Boolean = productType == ProductType.Wallet
-    fun isTangemTwins(): Boolean = productType == ProductType.Twins
-
-    fun supportsHdWallet(): Boolean = card.settings.isHDWalletAllowed
-    fun supportsBackup(): Boolean = card.settings.isBackupAllowed
-
-    fun twinsIsTwinned(): Boolean =
-        card.isTangemTwins() && walletData != null && secondTwinPublicKey != null
-}
-
-typealias KeyWalletPublicKey = ByteArrayKey
 
 class ScanProductTask(
     val card: Card? = null,
@@ -296,12 +251,12 @@ private class ScanWalletProcessor(
         if (!card.useOldStyleDerivation) {
             blockchainsToDerive.removeAll(
                 listOf(
-                Blockchain.BSC, Blockchain.BSCTestnet,
-                Blockchain.Polygon, Blockchain.PolygonTestnet,
-                Blockchain.RSK,
-                Blockchain.Fantom, Blockchain.FantomTestnet,
-                Blockchain.Avalanche, Blockchain.AvalancheTestnet,
-            ).map { BlockchainNetwork(it, card) }
+                    Blockchain.BSC, Blockchain.BSCTestnet,
+                    Blockchain.Polygon, Blockchain.PolygonTestnet,
+                    Blockchain.RSK,
+                    Blockchain.Fantom, Blockchain.FantomTestnet,
+                    Blockchain.Avalanche, Blockchain.AvalancheTestnet,
+                ).map { BlockchainNetwork(it, card) }
             )
         }
         return blockchainsToDerive.distinct()
