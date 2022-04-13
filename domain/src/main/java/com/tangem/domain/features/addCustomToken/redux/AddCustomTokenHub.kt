@@ -25,6 +25,9 @@ import org.rekotlin.Action
  */
 internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomTokenHub") {
 
+    private val hubState: AddCustomTokenState
+        get() = domainStore.state.addCustomTokensState
+
     override fun getHubState(storeState: DomainState): AddCustomTokenState {
         return storeState.addCustomTokensState
     }
@@ -41,7 +44,6 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
         if (action !is AddCustomTokenAction) return
 //        val card = storeState.globalState.scanResponse?.card
 //            ?: throw IllegalStateException("ScanResponse must be set before showing the AddCustomToken screen")
-        val hubState = storeState.addCustomTokensState
 
         when (action) {
             is OnCreate -> {
@@ -102,7 +104,7 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
 //                dispatchOnMain()
             }
             is FillTokenFields -> {
-                val networkField = getField<TokenNetworkField>(Network, hubState)
+                val networkField = getField<TokenBlockchainField>(Network, hubState)
                 val nameField = getField<TokenField>(Name, hubState)
                 val symbolField = getField<TokenField>(Symbol, hubState)
                 val decimalsField = getField<TokenField>(Decimals, hubState)
@@ -127,13 +129,22 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
     ): List<Coins.CheckAddressResponse.Token> {
         dispatchOnMain(Screen.UpdateTokenFields(listOf(ContractAddress to ViewStates.TokenField(isLoading = true))))
         val tokenManager = hubState.addCustomTokenManager
-        val field = getField<TokenNetworkField>(Network, hubState)
+        val field = getField<TokenBlockchainField>(Network, hubState)
         val selectedNetworkId: String? = field.data.value.let {
             if (it == Blockchain.Unknown) null else it
         }?.toNetworkId()
-        val foundTokens = tokenManager.checkAddress(contractAddress, selectedNetworkId)
+
+//        delay(1000)
+        val result = when (val foundTokensResult = tokenManager.checkAddress(contractAddress, selectedNetworkId)) {
+            is Result.Success -> foundTokensResult.data
+            is Result.Failure -> {
+//                val warning = AddCustomTokenWarning.Network.CheckAddressRequestError
+//                dispatchOnMain(Warning.Add(setOf(warning)))
+                emptyList()
+            }
+        }
         dispatchOnMain(Screen.UpdateTokenFields(listOf(ContractAddress to ViewStates.TokenField(isLoading = false))))
-        return foundTokens
+        return result
     }
 
     private suspend fun checkToken(
@@ -171,12 +182,18 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
             else -> {
                 val dialog = DomainDialog.SelectTokenDialog(
                     items = contracts,
-                    itemNameConverter = { it.address },
+                    networkIdConverter = { networkId ->
+                        val blockchain = Blockchain.fromNetworkId(networkId)
+                        if (blockchain == Blockchain.Unknown) {
+                            throw DomainException.SelectTokeNetworkException(networkId)
+                        }
+                        AddCustomTokenState.convertBlockchainName(blockchain, "")
+                    },
                     onSelect = { selectedContract ->
                         hubScope.launch {
                             // find how to connect to the upper coroutineContext and dispatch through them
                             dispatchOnMain(FillTokenFields(token, selectedContract))
-                            dispatchOnMain(FillTokenFields(token, selectedContract))
+                            dispatchOnMain(actionsLockTokenFields())
                         }
                     },
                 )
@@ -237,7 +254,7 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
                 updateFormState(state)
             }
             is OnTokenNetworkChanged -> {
-                val field: TokenNetworkField = getField(Network, state)
+                val field: TokenBlockchainField = getField(Network, state)
                 field.data = action.value
                 updateFormState(state)
             }
