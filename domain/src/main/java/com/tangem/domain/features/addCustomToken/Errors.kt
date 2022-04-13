@@ -18,4 +18,8 @@ sealed class AddCustomTokenError : AnError(ERROR_CODE_ADD_CUSTOM_TOKEN, "Add cus
 sealed class AddCustomTokenWarning : AnError(ERROR_CODE_ADD_CUSTOM_TOKEN, "Add custom token - warning") {
     object PotentialScamToken : AddCustomTokenWarning()
     object TokenAlreadyAdded : AddCustomTokenWarning()
+
+    sealed class Network : AddCustomTokenWarning() {
+        object CheckAddressRequestError : Network()
+    }
 }

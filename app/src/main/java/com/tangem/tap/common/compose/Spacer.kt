@@ -40,28 +40,28 @@ fun SpacerH24(modifier: Modifier = Modifier) {
 
 // ***************************** Vertical
 @Composable
-fun SpacerV(width: Dp, modifier: Modifier = Modifier) {
+fun SpacerW(width: Dp, modifier: Modifier = Modifier) {
     Spacer(modifier = modifier.width(width))
 }
 
 @Composable
-fun SpacerV4(modifier: Modifier = Modifier) {
-    SpacerV(4.dp, modifier)
+fun SpacerW4(modifier: Modifier = Modifier) {
+    SpacerW(4.dp, modifier)
 }
 
 @Composable
-fun SpacerV8(modifier: Modifier = Modifier) {
-    SpacerV(8.dp, modifier)
+fun SpacerW8(modifier: Modifier = Modifier) {
+    SpacerW(8.dp, modifier)
 }
 
 @Composable
-fun SpacerV16(modifier: Modifier = Modifier) {
-    SpacerV(16.dp, modifier)
+fun SpacerW16(modifier: Modifier = Modifier) {
+    SpacerW(16.dp, modifier)
 }
 
 @Composable
-fun SpacerV24(modifier: Modifier = Modifier) {
-    SpacerV(24.dp, modifier)
+fun SpacerW24(modifier: Modifier = Modifier) {
+    SpacerW(24.dp, modifier)
 }
 
 // ***************************** Size
