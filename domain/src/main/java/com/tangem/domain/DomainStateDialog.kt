@@ -12,7 +12,7 @@ sealed class DomainDialog : DomainStateDialog {
 
     data class SelectTokenDialog(
         val items: List<Coins.CheckAddressResponse.Token.Contract>,
-        val itemNameConverter: (Coins.CheckAddressResponse.Token.Contract) -> String,
+        val networkIdConverter: (String) -> String,
         val onSelect: (Coins.CheckAddressResponse.Token.Contract) -> Unit,
         val onClose: VoidCallback = {}
     ) : DomainDialog()
