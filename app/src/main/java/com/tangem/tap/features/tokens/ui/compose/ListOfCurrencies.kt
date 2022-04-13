@@ -8,9 +8,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.Token
 import com.tangem.tap.domain.tokens.Currency
 import com.tangem.tap.features.tokens.redux.ContractAddress
+import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
 
 
 @Composable
@@ -18,11 +18,12 @@ fun ListOfCurrencies(
     currencies: List<Currency>,
     nonRemovableTokens: List<ContractAddress>,
     nonRemovableBlockchains: List<Blockchain>,
-    addedTokens: List<Token>,
+    addedTokens: List<TokenWithBlockchain>,
     addedBlockchains: List<Blockchain>,
     searchInput: String,
     allowToAdd: Boolean,
-    onAddCurrencyToggled: (Currency, Token?) -> Unit
+    onAddCurrencyToggled: (Currency, TokenWithBlockchain?) -> Unit,
+    onNetworkItemClicked: (ContractAddress) -> Unit
 ) {
 
     val expandedCurrencies = remember { mutableStateOf(listOf("")) }
@@ -59,7 +60,8 @@ fun ListOfCurrencies(
                 allowToAdd = allowToAdd,
                 expanded = expandedCurrencies.value.contains(currency.id),
                 onCurrencyClick = onCurrencyClick,
-                onAddCurrencyToggled = onAddCurrencyToggled
+                onAddCurrencyToggled = onAddCurrencyToggled,
+                onNetworkItemClicked = onNetworkItemClicked
             )
         }
 
