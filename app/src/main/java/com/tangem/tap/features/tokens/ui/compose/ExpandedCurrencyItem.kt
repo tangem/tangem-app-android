@@ -18,11 +18,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.SubcomposeAsyncImage
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.Token
-import com.tangem.tap.common.extensions.getRoundIconRes
 import com.tangem.tap.domain.tokens.Currency
 import com.tangem.tap.domain.tokens.fromNetworkId
 import com.tangem.tap.features.tokens.redux.ContractAddress
+import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
 import com.tangem.wallet.R
 
 @Composable
@@ -30,18 +29,15 @@ fun ExpandedCurrencyItem(
     currency: Currency,
     nonRemovableTokens: List<ContractAddress>,
     nonRemovableBlockchains: List<Blockchain>,
-    addedTokens: List<Token>,
+    addedTokens: List<TokenWithBlockchain>,
     addedBlockchains: List<Blockchain>,
     allowToAdd: Boolean,
     onCurrencyClick: (String) -> Unit,
-    onAddCurrencyToggled: (Currency, Token?) -> Unit
+    onAddCurrencyToggled: (Currency, TokenWithBlockchain?) -> Unit,
+    onNetworkItemClicked: (ContractAddress) -> Unit
 ) {
     val blockchain = Blockchain.fromNetworkId(currency.id)
-    val iconRes = if (blockchain == Blockchain.Unknown) {
-        currency.iconUrl
-    } else {
-        blockchain.getRoundIconRes()
-    }
+    val iconRes = currency.iconUrl
 
     Column {
         Row(
@@ -89,7 +85,7 @@ fun ExpandedCurrencyItem(
             )
         }
 
-        val blockchains = currency.contracts?.map { it.blockchain } ?: listOf(
+        val blockchains = currency.contracts?.map { it.blockchain } ?: listOfNotNull(
             Blockchain.fromNetworkId(currency.id)
         )
 
@@ -99,11 +95,18 @@ fun ExpandedCurrencyItem(
                     .fillMaxHeight()
             ) {
                 if (blockchains.size > 1) {
+                    val dividerHeight = if (blockchains.size == 2) {
+                        60
+                    } else if (blockchains.size == 3) {
+                        110
+                    } else {
+                        43 * blockchains.size
+                    }
                     Divider(
                         color = Color(0xFFDEDEDE),
                         modifier = Modifier
-                            .height((43 * blockchains.size - 1).dp)
-                            .padding(start = 37.dp, top = 16.dp)
+                            .height(dividerHeight.dp)
+                            .padding(start = 37.5.dp)
                             .width(1.dp)
                     )
                 }
@@ -130,12 +133,12 @@ fun ExpandedCurrencyItem(
             ) {
                 blockchains.map { blockchain ->
                     val contract = currency.contracts?.firstOrNull { it.blockchain == blockchain }
-                    val added = if (contract != null) {
-                        addedTokens.map { it.contractAddress }.contains(contract.address)
+                    val added = if (contract != null && contract.address != currency.symbol) {
+                        addedTokens.map { it.token.contractAddress }.contains(contract.address)
                     } else {
                         addedBlockchains.contains(blockchain)
                     }
-                    val canBeRemoved = if (contract != null) {
+                    val canBeRemoved = if (contract != null && contract.address != currency.symbol) {
                         !nonRemovableTokens.contains(contract.address)
                     } else {
                         !nonRemovableBlockchains.contains(blockchain)
@@ -146,7 +149,8 @@ fun ExpandedCurrencyItem(
                         blockchain = blockchain, allowToAdd = allowToAdd,
                         added = added,
                         canBeRemoved = canBeRemoved,
-                        onAddCurrencyToggled = onAddCurrencyToggled
+                        onAddCurrencyToggled = onAddCurrencyToggled,
+                        onNetworkItemClicked = onNetworkItemClicked,
                     )
                 }
             }
