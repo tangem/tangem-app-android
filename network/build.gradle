@@ -10,7 +10,7 @@ java {
 
 dependencies {
     // Tangem sdk's
-    implementation 'com.tangem.tangem-sdk-kotlin:core:develop-140'
+    implementation 'com.tangem.tangem-sdk-kotlin:core:develop-142'
 
     // Network
     implementation(platform("com.squareup.okhttp3:okhttp-bom:4.9.3"))
