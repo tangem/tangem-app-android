@@ -11,6 +11,7 @@ import com.tangem.blockchain.common.Token
 import com.tangem.tap.common.extensions.getString
 import com.tangem.tap.common.extensions.loadCurrenciesIcon
 import com.tangem.tap.common.extensions.show
+import com.tangem.tap.domain.TapWorkarounds.derivationStyle
 import com.tangem.tap.features.wallet.redux.Currency
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletData
@@ -26,7 +27,11 @@ class WalletAdapter
         return currentList[position].currencyData.currencySymbol?.hashCode()?.toLong() ?: 0
     }
 
-    fun submitList(list: List<WalletData>, primaryBlockchain: Blockchain?, primaryToken: Token? = null) {
+    fun submitList(
+        list: List<WalletData>,
+        primaryBlockchain: Blockchain?,
+        primaryToken: Token? = null
+    ) {
         // We used this method to sort the list of currencies. Sorting is disabled for now.
         super.submitList(list)
     }
@@ -44,21 +49,22 @@ class WalletAdapter
 
     object DiffUtilCallback : DiffUtil.ItemCallback<WalletData>() {
         override fun areContentsTheSame(
-                oldItem: WalletData, newItem: WalletData
+            oldItem: WalletData, newItem: WalletData
         ) = oldItem == newItem
 
         override fun areItemsTheSame(
-                oldItem: WalletData, newItem: WalletData
+            oldItem: WalletData, newItem: WalletData
         ) = oldItem == newItem
     }
 
     class WalletsViewHolder(val binding: ItemCurrencyWalletBinding) :
-            RecyclerView.ViewHolder(binding.root) {
+        RecyclerView.ViewHolder(binding.root) {
 
         fun bind(wallet: WalletData) = with(binding) {
             tvCurrency.text = wallet.currencyData.currency
             tvAmount.text = wallet.currencyData.amountFormatted?.takeWhile { !it.isWhitespace() }
-            tvCurrencySymbol.text = wallet.currencyData.amountFormatted?.takeLastWhile { !it.isWhitespace() }
+            tvCurrencySymbol.text =
+                wallet.currencyData.amountFormatted?.takeLastWhile { !it.isWhitespace() }
             tvAmountFiat.text = wallet.currencyData.fiatAmountFormatted
             tvExchangeRate.text = wallet.fiatRateString
             cardWallet.setOnClickListener {
@@ -66,6 +72,11 @@ class WalletAdapter
             }
             val blockchain = wallet.currency.blockchain
             val token = (wallet.currency as? Currency.Token)?.token
+
+            val isCustom =
+                wallet.currency.isCustomCurrency(store.state.globalState.scanResponse?.card?.derivationStyle)
+            tvExchangeRate.show(!isCustom)
+            tvCustomCurrency.show(isCustom)
 
             Picasso.get().loadCurrenciesIcon(
                 imageView = ivCurrency,
