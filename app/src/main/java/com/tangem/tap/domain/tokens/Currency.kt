@@ -26,7 +26,7 @@ data class CurrenciesFromJson(
 
 
 fun List<ContractFromJson>.toContracts(): List<Contract> {
-    return map { Contract.fromJsonObject(it) }
+    return mapNotNull { Contract.fromJsonObject(it) }
 }
 
 data class Currency(
@@ -59,10 +59,11 @@ data class Contract(
 ) {
 
     companion object {
-        fun fromJsonObject(contract: ContractFromJson): Contract {
+        fun fromJsonObject(contract: ContractFromJson): Contract? {
+            val blockchain = Blockchain.fromNetworkId(contract.networkId) ?: return null
             return Contract(
                 networkId = contract.networkId,
-                blockchain = Blockchain.fromNetworkId(contract.networkId),
+                blockchain = blockchain,
                 address = contract.address,
                 decimalCount = contract.decimalCount,
                 iconUrl = getIconUrl(contract.networkId)
@@ -76,7 +77,7 @@ fun getIconUrl(id: String): String {
 }
 
 
-fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain {
+fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
     return when (networkId) {
         "avalanche" -> Blockchain.Avalanche
         "binancecoin" -> Blockchain.Binance
@@ -95,15 +96,15 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain {
         "stellar" -> Blockchain.Stellar
         "tezos" -> Blockchain.Tezos
         "ripple" -> Blockchain.XRP
-        else -> Blockchain.Unknown
+        else -> null
     }
 }
 
 fun Blockchain.toNetworkId(): String {
     return when (this) {
         Blockchain.Unknown -> "unknown"
-        Blockchain.Avalanche -> "avalaunch"
-        Blockchain.AvalancheTestnet -> "avalaunch"
+        Blockchain.Avalanche -> "avalanche"
+        Blockchain.AvalancheTestnet -> "avalaunche"
         Blockchain.Binance -> "binancecoin"
         Blockchain.BinanceTestnet -> "binancecoin"
         Blockchain.BSC -> "binance-smart-chain"
@@ -123,7 +124,7 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.Litecoin -> "litecoin"
         Blockchain.Polygon -> "matic-network"
         Blockchain.PolygonTestnet -> "matic-networks"
-        Blockchain.RSK -> "rsk"
+        Blockchain.RSK -> "rootstock"
         Blockchain.Stellar -> "stellar"
         Blockchain.StellarTestnet -> "stellar"
         Blockchain.Solana -> "solana"
