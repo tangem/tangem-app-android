@@ -10,6 +10,7 @@ import com.tangem.common.extensions.toMapKey
 import com.tangem.common.hdWallet.DerivationPath
 import com.tangem.domain.common.KeyWalletPublicKey
 import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.tap.*
@@ -19,12 +20,7 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.TapError
-import com.tangem.domain.common.TapWorkarounds.derivationStyle
-import com.tangem.domain.common.TapWorkarounds.derivationStyle
-import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.tap.domain.extensions.makeWalletManagerForApp
-import com.tangem.tap.domain.tasks.product.KeyWalletPublicKey
-import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.domain.tokens.BlockchainNetwork
 import com.tangem.tap.features.wallet.redux.WalletAction
 import kotlinx.coroutines.delay
