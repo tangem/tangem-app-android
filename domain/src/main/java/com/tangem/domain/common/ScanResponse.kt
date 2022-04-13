@@ -36,7 +36,6 @@ data class ScanResponse(
             cardToken.symbol,
             cardToken.contractAddress,
             cardToken.decimals,
-            Blockchain.fromId(walletData.blockchain)
         )
     }
 
