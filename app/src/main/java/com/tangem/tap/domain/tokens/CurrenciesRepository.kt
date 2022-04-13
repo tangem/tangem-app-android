@@ -12,10 +12,10 @@ import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.card.Card
 import com.tangem.common.card.FirmwareVersion
+import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.network.common.MoshiConverter
 import com.tangem.tap.common.extensions.appendIf
 import com.tangem.tap.common.extensions.readJsonFileToString
-import com.tangem.tap.domain.TapWorkarounds.derivationStyle
 import com.tangem.tap.domain.extensions.setCustomIconUrl
 import com.tangem.tap.features.demo.DemoHelper
 import timber.log.Timber
