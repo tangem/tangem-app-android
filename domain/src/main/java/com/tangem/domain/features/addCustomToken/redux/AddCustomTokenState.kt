@@ -1,6 +1,7 @@
 package com.tangem.domain.features.addCustomToken.redux
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.domain.common.form.*
 import com.tangem.domain.features.addCustomToken.*
 import com.tangem.domain.features.addCustomToken.CustomTokenFieldId.*
@@ -13,7 +14,8 @@ data class AddCustomTokenState(
     val formErrors: Map<CustomTokenFieldId, AddCustomTokenError> = emptyMap(),
     val warnings: Set<AddCustomTokenWarning> = emptySet(),
     val screenState: ScreenState = createInitialScreenState(),
-    val addCustomTokenManager: AddCustomTokenManager = AddCustomTokenManager(TangemTechService())
+    val addCustomTokenManager: AddCustomTokenManager = AddCustomTokenManager(TangemTechService()),
+    val derivationStyle: DerivationStyle? = null
 ) : StateType {
 
     val completeDataType: CompleteDataType
@@ -32,6 +34,15 @@ data class AddCustomTokenState(
         return formErrors[id]
     }
 
+    fun convertBlockchainName(blockchain: Blockchain, unknown: String): String = when (blockchain) {
+        Blockchain.Unknown -> unknown
+        else -> blockchain.fullName
+    }
+
+    fun convertDerivationPathLabel(blockchain: Blockchain, unknown: String): String {
+        return blockchain.derivationPath(derivationStyle)?.rawPath ?: unknown
+    }
+
     private fun calculateDataType(): CompleteDataType {
         val idsToCheck = listOf(ContractAddress, Name, Symbol, Decimals)
         val fieldsToCheck = form.fieldList.filter { idsToCheck.contains(it.id) }
@@ -47,15 +58,6 @@ data class AddCustomTokenState(
     }
 
     companion object {
-        fun convertBlockchainName(blockchain: Blockchain, unknown: String): String = when (blockchain) {
-            Blockchain.Unknown -> unknown
-            else -> blockchain.fullName
-        }
-
-        fun convertDerivationPathLabel(blockchain: Blockchain, unknown: String): String {
-            return blockchain.derivationPath()?.rawPath ?: unknown
-        }
-
         private fun createFormFields(): List<DataField<*>> {
             return listOf(
                 TokenField(ContractAddress),
