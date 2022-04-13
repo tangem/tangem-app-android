@@ -5,6 +5,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.VoidCallback
@@ -14,17 +16,16 @@ import com.tangem.tap.common.extensions.ValueCallback
 /**
 [REDACTED_AUTHOR]
  */
-private class OutlinedSpinner
-
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun <T> OutlinedSpinner(
     modifier: Modifier = Modifier,
-    title: String,
+    label: String,
     itemList: List<T>,
     selectedItem: Field.Data<T>,
     onItemSelected: ValueCallback<T>,
-    itemNameConverter: (T) -> String = { it.toString() },
+    textFieldConverter: (T) -> String = { it.toString() },
+    dropdownItemView: @Composable ((T) -> Unit)? = null,
     isEnabled: Boolean = true,
     onClose: VoidCallback = {}
 ) {
@@ -48,24 +49,27 @@ fun <T> OutlinedSpinner(
         expanded = rIsExpanded.value,
         onExpandedChange = { rIsExpanded.value = !rIsExpanded.value },
     ) {
-        OutlinedTextField(
-            modifier = modifier,
-            readOnly = true,
-            enabled = isEnabled,
-            value = itemNameConverter(rSelectedItem.value),
-            onValueChange = {},
-            label = { Text(title) },
-            trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = rIsExpanded.value) },
-        )
+        ProvideTextStyle(value = TextStyle(color = Color.Blue)) {
+            OutlinedTextField(
+                modifier = modifier,
+                readOnly = true,
+                enabled = isEnabled,
+                value = textFieldConverter(rSelectedItem.value),
+                onValueChange = {},
+                label = { Text(label) },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = rIsExpanded.value) },
+            )
+        }
         ExposedDropdownMenu(
             expanded = rIsExpanded.value,
             onDismissRequest = onDismissRequest,
         ) {
             itemList.forEach { item ->
-                DropdownMenuItem(
-                    onClick = { onItemSelectedInternal(item) }
-                ) {
-                    Text(itemNameConverter(item))
+                DropdownMenuItem(onClick = { onItemSelectedInternal(item) }) {
+                    when (dropdownItemView) {
+                        null -> Text(textFieldConverter(item))
+                        else -> dropdownItemView(item)
+                    }
                 }
             }
         }
@@ -77,7 +81,7 @@ fun <T> OutlinedSpinner(
 fun TestSpinnerPreview() {
     Scaffold() {
         OutlinedSpinner(
-            title = "Blockchain name",
+            label = "Blockchain name",
             itemList = listOf(Blockchain.values()),
             selectedItem = Field.Data(Blockchain.Avalanche),
             onItemSelected = {},
