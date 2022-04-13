@@ -2,12 +2,10 @@ package com.tangem.tap.features.tokens.addCustomToken.compose
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.Scaffold
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
-import androidx.compose.material.rememberScaffoldState
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -29,10 +27,7 @@ import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenState
 import com.tangem.domain.features.addCustomToken.redux.ScreenState
 import com.tangem.domain.features.addCustomToken.redux.ViewStates
 import com.tangem.domain.redux.domainStore
-import com.tangem.tap.common.compose.ComposeDialogManager
-import com.tangem.tap.common.compose.OutlinedTextFieldWidget
-import com.tangem.tap.common.compose.SpacerH8
-import com.tangem.tap.common.compose.keyboardObserverAsState
+import com.tangem.tap.common.compose.*
 import com.tangem.tap.features.tokens.addCustomToken.CustomTokenErrorConverter
 import com.tangem.tap.features.tokens.addCustomToken.CustomTokenWarningConverter
 import com.tangem.wallet.R
@@ -52,12 +47,12 @@ fun AddCustomTokenScreen(state: MutableState<AddCustomTokenState>) {
     ) {
         Box(Modifier.fillMaxSize()) {
             LazyColumn(
-                contentPadding = PaddingValues(bottom = 80.dp)
+                contentPadding = PaddingValues(bottom = 90.dp)
             ) {
                 item {
                     Surface(
                         modifier = Modifier.padding(16.dp),
-                        shape = RoundedCornerShape(4.dp),
+                        shape = MaterialTheme.shapes.small,
                         elevation = 4.dp,
                     ) {
                         Column(
@@ -143,7 +138,7 @@ private fun TokenNameView(screenFieldData: ScreenFieldData) {
         error = screenFieldData.error,
         errorConverter = screenFieldData.errorConverter,
     ) {
-        domainStore.dispatch(OnTokenFieldChanged(screenFieldData.field.id, Field.Data(it)))
+        domainStore.dispatch(OnTokenNameChanged(Field.Data(it)))
     }
     SpacerH8()
 }
@@ -153,14 +148,14 @@ private fun TokenNetworkView(screenFieldData: ScreenFieldData) {
     if (!screenFieldData.viewState.isVisible) return
 
     val notSelected = stringResource(id = R.string.custom_token_network_input_not_selected)
-    val networkField = screenFieldData.field as TokenNetworkField
+    val networkField = screenFieldData.field as TokenBlockchainField
 
-    TokenNetworkSpinner(
+    BlockchainSpinner(
         title = R.string.custom_token_network_input_title,
         itemList = networkField.itemList,
         selectedItem = networkField.data,
         isEnabled = screenFieldData.viewState.isEnabled,
-        itemNameConverter = { AddCustomTokenState.convertBlockchainName(it, notSelected) },
+        textFieldConverter = { AddCustomTokenState.convertBlockchainName(it, notSelected) },
     ) { domainStore.dispatch(OnTokenNetworkChanged(Field.Data(it))) }
     SpacerH8()
 }
@@ -178,7 +173,7 @@ private fun TokenSymbolView(screenFieldData: ScreenFieldData) {
         isEnabled = screenFieldData.viewState.isEnabled,
         error = screenFieldData.error,
         errorConverter = screenFieldData.errorConverter,
-    ) { domainStore.dispatch(OnTokenFieldChanged(screenFieldData.field.id, Field.Data(it))) }
+    ) { domainStore.dispatch(OnTokenSymbolChanged(Field.Data(it))) }
     SpacerH8()
 }
 
@@ -207,12 +202,17 @@ private fun TokenDerivationPathView(screenFieldData: ScreenFieldData) {
     val notSelected = stringResource(id = R.string.custom_token_derivation_path_default)
     val networkField = screenFieldData.field as TokenDerivationPathField
 
-    TokenNetworkSpinner(
-        title = R.string.custom_token_network_input_title,
+    BlockchainSpinner(
+        title = R.string.custom_token_derivation_path_input_title,
         itemList = networkField.itemList,
         selectedItem = networkField.data,
         isEnabled = screenFieldData.viewState.isEnabled,
-        itemNameConverter = { AddCustomTokenState.convertDerivationPathName(it, notSelected) },
+        textFieldConverter = { AddCustomTokenState.convertBlockchainName(it, notSelected) },
+        dropdownItemView = { blockchain ->
+            val derivationPathLabel = AddCustomTokenState.convertDerivationPathLabel(blockchain, notSelected)
+            val blockchainName = AddCustomTokenState.convertBlockchainName(blockchain, notSelected)
+            TitleSubtitle(derivationPathLabel, blockchainName)
+        }
     ) { domainStore.dispatch(OnTokenDerivationPathChanged(Field.Data(it))) }
     SpacerH8()
 }
@@ -227,13 +227,13 @@ private fun Warnings(warnings: List<AddCustomTokenWarning>) {
     Column {
         warnings.forEachIndexed { index, item ->
             val modifier = when (index) {
-                0 -> Modifier.padding(16.dp, 0.dp, 16.dp, 16.dp)
-                warnings.lastIndex -> Modifier.padding(16.dp, 16.dp, 16.dp, 16.dp)
-                else -> Modifier.padding(16.dp, 16.dp, 16.dp, 0.dp)
+                0 -> Modifier.padding(16.dp, 16.dp, 16.dp, 0.dp)
+                warnings.lastIndex -> Modifier.padding(16.dp, 8.dp, 16.dp, 16.dp)
+                else -> Modifier.padding(16.dp, 8.dp, 16.dp, 0.dp)
             }
             Surface(
                 modifier = modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(4.dp),
+                shape = MaterialTheme.shapes.small,
                 color = colorResource(id = R.color.darkGray2),
                 contentColor = colorResource(id = R.color.darkGray3)
             ) {
@@ -246,6 +246,30 @@ private fun Warnings(warnings: List<AddCustomTokenWarning>) {
             }
         }
     }
+}
+
+@Composable
+private fun AddButton(
+    modifier: Modifier = Modifier,
+    isEnabled: Boolean,
+    textId: Int = R.string.common_add,
+    onClick: () -> Unit,
+) {
+    Button(
+        textId = textId,
+        isEnabled = isEnabled,
+        modifier = modifier
+            .height(52.dp)
+            .padding(horizontal = 16.dp)
+            .fillMaxWidth(),
+        leadingView = {
+            Icon(
+                imageVector = Icons.Filled.Add,
+                contentDescription = "Add",
+            )
+        },
+        onClick = onClick
+    )
 }
 
 private data class ScreenFieldData(
