@@ -106,6 +106,7 @@ class AdditionalEmailInfo {
         var address: String = "",
         var explorerLink: String = "",
         var host: String = "",
+        var derivationPath: String = "",
     )
 
     var appVersion: String = ""
@@ -159,7 +160,8 @@ class AdditionalEmailInfo {
                     blockchain = manager.wallet.blockchain,
                     address = getAddress(manager.wallet),
                     explorerLink = getExploreUri(manager.wallet),
-                    host = manager.currentHost
+                    host = manager.currentHost,
+                    derivationPath = manager.wallet.publicKey.derivationPath?.rawPath ?: ""
                 )
             )
             if (manager.cardTokens.isNotEmpty()) {
@@ -173,7 +175,8 @@ class AdditionalEmailInfo {
             blockchain = wallet.blockchain,
             address = getAddress(wallet),
             explorerLink = getExploreUri(wallet),
-            host = host
+            host = host,
+            derivationPath = wallet.publicKey.derivationPath?.rawPath ?: ""
         )
 
         this.destinationAddress = destinationAddress
@@ -325,6 +328,7 @@ class EmailDataBuilder(
             builder.appendKeyValue("Blockchain", it.blockchain.fullName)
             builder.appendKeyValue("Host", it.host)
             builder.appendKeyValue("Wallet address", it.address)
+            builder.appendKeyValue("Derivation path", it.derivationPath)
             builder.appendKeyValue("Explorer link", it.explorerLink)
 
             infoHolder.tokens[it.blockchain]?.let { tokens ->
@@ -332,6 +336,7 @@ class EmailDataBuilder(
                 appendLine()
                 tokens.forEach { token ->
                     builder.appendKeyValue("Name", token.name)
+                    if (token.id != null) builder.appendKeyValue("Id", token.id ?: "")
                     builder.appendKeyValue("Contract address", token.contractAddress)
                 }
             }
@@ -342,6 +347,7 @@ class EmailDataBuilder(
     fun appendTxFailedBlockchainInfo(error: String): EmailDataBuilder {
         val walletInfo = infoHolder.onSendErrorWalletInfo ?: AdditionalEmailInfo.EmailWalletInfo()
         builder.appendKeyValue("Blockchain", walletInfo.blockchain.fullName)
+        builder.appendKeyValue("Derivation path", walletInfo.derivationPath)
         builder.appendKeyValue("Host", walletInfo.host)
         builder.appendKeyValue("Token", infoHolder.token)
         builder.appendKeyValue("Error", error)
