@@ -22,7 +22,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.tangem.tangem_sdk_new.extensions.dpToPx
-import com.tangem.tap.common.extensions.compose.argb
+import com.tangem.tap.common.compose.SpacerS16
+import com.tangem.tap.common.compose.SpacerS24
+import com.tangem.tap.common.compose.extensions.toAndroidGraphicsColor
 import com.tangem.wallet.R
 
 @Composable
@@ -53,11 +55,11 @@ fun StoriesGeneralContent(
             textAlign = TextAlign.Center
         )
 
-        Spacer(modifier = Modifier.size(16.dp))
+        SpacerS16()
 
         SubtitleText(subtitleText, subtitleTextId)
 
-        Spacer(modifier = Modifier.size(25.dp))
+        SpacerS24()
 
         if (imageSource != null) {
             Image(
@@ -93,7 +95,7 @@ fun SubtitleText(subtitleText: String, subtitleTextId: Int?) {
                 textAlignment = View.TEXT_ALIGNMENT_CENTER
                 typeface = Typeface.DEFAULT
                 setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f)
-                setTextColor(color.argb())
+                setTextColor(color.toAndroidGraphicsColor())
             }
         }
     }
