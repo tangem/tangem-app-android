@@ -26,7 +26,7 @@ class StringIsNotEmptyValidator : CustomTokenValidator<String>() {
 
 class TokenContractAddressValidator : CustomTokenValidator<String>() {
     override fun validate(data: String?): AddCustomTokenError? {
-        if (data == null || data.isEmpty()) return AddCustomTokenError.FieldIsEmpty
+        if (data == null || data.isEmpty()) return null
 
         return if (EthereumAddressService().validate(data)) {
             null
