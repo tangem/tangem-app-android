@@ -15,14 +15,17 @@ android {
     }
 
     buildTypes {
-        debug {
-            debuggable true
-            minifyEnabled false
-        }
         release {
             debuggable false
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            debuggable true
+            minifyEnabled false
+        }
+        debug_beta {
+            initWith release
         }
     }
     kotlinOptions {
