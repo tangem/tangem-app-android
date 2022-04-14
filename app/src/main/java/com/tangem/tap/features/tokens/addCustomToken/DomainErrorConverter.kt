@@ -36,13 +36,15 @@ private class AddCustomTokenConverter(
             AddCustomTokenError.InvalidContractAddress -> R.string.custom_token_creation_error_invalid_contract_address
             AddCustomTokenError.NetworkIsNotSelected -> R.string.custom_token_creation_error_network_not_selected
             AddCustomTokenError.InvalidDerivationPath -> R.string.custom_token_creation_error_invalid_derivation_path
-            AddCustomTokenError.InvalidDecimalsCount -> R.string.custom_token_creation_error_wrong_decimals
-            AddCustomTokenError.FieldIsEmpty -> R.string.custom_token_creation_error_empty_fields
+            AddCustomTokenError.InvalidDecimalsCount -> {
+                context.getString(R.string.custom_token_creation_error_wrong_decimals, 30)
+            }
+            AddCustomTokenError.FieldIsEmpty -> R.string.custom_token_creation_error_required_field
             else -> null
         }
         return when (rawMessage) {
             is Int -> context.getString(rawMessage)
-//            is String -> rawMessage
+            is String -> rawMessage
             else -> "Unknown error: ${customTokenError::class.java.simpleName}"
         }
     }
