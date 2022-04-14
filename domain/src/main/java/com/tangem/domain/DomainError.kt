@@ -6,7 +6,7 @@ package com.tangem.domain
  * @property message the error description
  * @property data any data that can help in the part where this error is being handled
  */
-interface DomainError {
+interface DomainError : DomainMessage {
     val code: Int
     val message: String
     val data: Any?
