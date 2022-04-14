@@ -40,9 +40,9 @@ class HomeFragment : Fragment(R.layout.fragment_home), StoreSubscriber<HomeState
                     onScanButtonClick = { store.dispatch(HomeAction.ReadCard) },
                     onShopButtonClick = { store.dispatch(HomeAction.GoToShop(getRegionProvider())) },
                     onSearchTokensClick = {
+                        store.dispatch(NavigationAction.NavigateTo(AppScreen.AddTokens))
                         store.dispatch(TokensAction.AllowToAddTokens(false))
                         store.dispatch(TokensAction.LoadCurrencies())
-                        store.dispatch(NavigationAction.NavigateTo(AppScreen.AddTokens))
                     }
                 )
             }
