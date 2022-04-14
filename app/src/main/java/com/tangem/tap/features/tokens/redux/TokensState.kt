@@ -3,6 +3,7 @@ package com.tangem.tap.features.tokens.redux
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.blockchain.common.Token
+import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.domain.tokens.Currency
 import com.tangem.tap.domain.tokens.fromNetworkId
 import com.tangem.tap.features.wallet.redux.WalletData
@@ -16,7 +17,8 @@ data class TokensState(
     val nonRemovableBlockchains: List<Blockchain> = emptyList(),
     val currencies: List<Currency> = emptyList(),
     val allowToAdd: Boolean = true,
-    val derivationStyle: DerivationStyle? = null
+    val derivationStyle: DerivationStyle? = null,
+    val scanResponse: ScanResponse? = null
 ) : StateType
 
 typealias ContractAddress = String
