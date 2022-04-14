@@ -5,13 +5,13 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.extensions.isZero
 import com.tangem.common.services.Result
+import com.tangem.domain.common.ScanResponse
 import com.tangem.operations.attestation.CardVerifyAndGetInfo
 import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.tap.common.extensions.isPositive
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.getOrLoadCardArtworkUrl
-import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.features.wallet.models.hasPendingTransactions
 import com.tangem.tap.features.wallet.redux.Currency
 import com.tangem.tap.features.wallet.redux.ProgressState
