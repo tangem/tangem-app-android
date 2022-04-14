@@ -70,6 +70,7 @@ class WalletMiddleware {
                         }.awaitAll()
                     } else {
                         val walletManager = walletState.getWalletManager(action.blockchain)
+                            ?: action.walletManager
                         walletManager?.let { globalState.tapWalletManager.loadWalletData(it) }
                     }
                 }
