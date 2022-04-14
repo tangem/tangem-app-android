@@ -17,12 +17,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
+import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.tap.common.compose.Keyboard
 import com.tangem.tap.common.compose.keyboardAsState
 import com.tangem.tap.common.extensions.pixelsToDp
-import com.tangem.tap.domain.TapWorkarounds.useOldStyleDerivation
 import com.tangem.tap.domain.tokens.Currency
-import com.tangem.tap.domain.tokens.fromNetworkId
 import com.tangem.tap.features.tokens.redux.ContractAddress
 import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
 import com.tangem.tap.features.tokens.redux.TokensState
