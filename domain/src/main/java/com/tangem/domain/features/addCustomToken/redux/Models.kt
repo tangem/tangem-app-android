@@ -1,5 +1,8 @@
 package com.tangem.domain.features.addCustomToken.redux
 
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.domain.DomainWrapped
+
 /**
 [REDACTED_AUTHOR]
  */
@@ -25,3 +28,8 @@ sealed class ViewStates {
         val isEnabled: Boolean = true
     ) : ViewStates()
 }
+
+data class AddedCurrencies(
+    val addedTokens: List<DomainWrapped.TokenWithBlockchain>,
+    val addedBlockchains: List<Blockchain>
+)
