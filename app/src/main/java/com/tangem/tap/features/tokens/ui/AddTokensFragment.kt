@@ -103,6 +103,10 @@ class AddTokensFragment : Fragment(R.layout.fragment_add_tokens),
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.menu_search -> true
+            R.id.menu_navigate_add_custom_token -> {
+                store.dispatch(TokensAction.PrepareAndNavigateToAddCustomToken)
+                true
+            }
             else -> super.onOptionsItemSelected(item)
         }
     }
