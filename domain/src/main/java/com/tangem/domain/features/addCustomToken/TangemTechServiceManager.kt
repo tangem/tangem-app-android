@@ -8,7 +8,7 @@ import com.tangem.network.common.AddHeaderInterceptor
 /**
 [REDACTED_AUTHOR]
  */
-class AddCustomTokenManager(
+class TangemTechServiceManager(
     private val tangemTechService: TangemTechService
 ) {
 
