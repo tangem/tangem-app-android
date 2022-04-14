@@ -4,13 +4,12 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.LocalTextStyle
-import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Surface
-import androidx.compose.material.Text
+import androidx.compose.material.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -22,7 +21,9 @@ import com.tangem.domain.DomainStateDialog
 import com.tangem.domain.redux.domainStore
 import com.tangem.domain.redux.global.DomainGlobalAction
 import com.tangem.domain.redux.global.DomainGlobalState
+import com.tangem.tap.features.tokens.addCustomToken.DomainErrorConverter
 import com.tangem.tap.features.tokens.addCustomToken.compose.SelectTokenNetworkDialog
+import com.tangem.wallet.R
 import org.rekotlin.StoreSubscriber
 
 @Composable
@@ -51,12 +52,19 @@ fun ComposeDialogManager() {
 }
 
 @Composable
-fun ShowTheDialog(dialogState: MutableState<DomainStateDialog?>) {
+private fun ShowTheDialog(dialogState: MutableState<DomainStateDialog?>) {
     if (dialogState.value == null) return
 
+    val context = LocalContext.current
+    val errorConverter = remember { DomainErrorConverter(context) }
     val onDismissRequest = { domainStore.dispatch(DomainGlobalAction.ShowDialog(null)) }
 
     when (val dialog = dialogState.value) {
+        is DomainDialog.DialogError -> ErrorDialog(
+            title = stringResource(id = R.string.common_error),
+            body = errorConverter.convertError(dialog.error),
+            onDismissRequest
+        )
         is DomainDialog.SelectTokenDialog -> SelectTokenNetworkDialog(dialog, onDismissRequest)
     }
 }
@@ -83,17 +91,7 @@ fun <T> SimpleDialog(
             Column(
                 modifier = Modifier.padding(22.dp)
             ) {
-                Text(
-                    text = title,
-                    style = LocalTextStyle.provides(
-                        TextStyle(
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 20.sp
-                        )
-                    ).value
-                )
-
-                SpacerH16()
+                DialogTitle(title = title)
                 LazyColumn() {
                     items(items) { item ->
                         Row(
@@ -111,4 +109,36 @@ fun <T> SimpleDialog(
             }
         }
     }
+}
+
+@Composable
+private fun DialogTitle(title: String) {
+    Text(
+        text = title,
+        style = LocalTextStyle.provides(
+            TextStyle(
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp
+            )
+        ).value
+    )
+    SpacerH16()
+}
+
+@Composable
+fun ErrorDialog(
+    title: String,
+    body: String,
+    onDismissRequest: () -> Unit,
+) {
+    AlertDialog(
+        title = { DialogTitle(title) },
+        text = { Text(body) },
+        onDismissRequest = onDismissRequest,
+        confirmButton = {
+            Button(onClick = onDismissRequest) {
+                Text(text = stringResource(id = R.string.common_ok))
+            }
+        }
+    )
 }
