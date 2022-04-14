@@ -8,20 +8,25 @@ import com.tangem.common.card.EllipticCurve
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.toMapKey
 import com.tangem.common.hdWallet.DerivationPath
+import com.tangem.domain.DomainWrapped
+import com.tangem.domain.common.KeyWalletPublicKey
+import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.common.TapWorkarounds.derivationStyle
+import com.tangem.domain.common.TapWorkarounds.isTestCard
+import com.tangem.domain.features.addCustomToken.CompleteData
+import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction
+import com.tangem.domain.features.addCustomToken.redux.AddedCurrencies
+import com.tangem.domain.redux.domainStore
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
+import com.tangem.tap.*
 import com.tangem.tap.common.extensions.dispatchErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
+import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
-import com.tangem.tap.currenciesRepository
-import com.tangem.tap.domain.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.domain.TapError
-import com.tangem.tap.domain.TapWorkarounds.derivationStyle
-import com.tangem.tap.domain.TapWorkarounds.isTestCard
 import com.tangem.tap.domain.extensions.makeWalletManagerForApp
-import com.tangem.tap.domain.tasks.product.KeyWalletPublicKey
-import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.domain.tokens.BlockchainNetwork
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.scope
@@ -31,6 +36,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
+import timber.log.Timber
 
 class TokensMiddleware {
 
@@ -40,6 +46,7 @@ class TokensMiddleware {
                 when (action) {
                     is TokensAction.LoadCurrencies -> handleLoadCurrencies(action)
                     is TokensAction.SaveChanges -> handleSaveChanges(action)
+                    is TokensAction.PrepareAndNavigateToAddCustomToken -> handleAddingCustomToken(action)
                 }
                 next(action)
             }
@@ -86,6 +93,22 @@ class TokensMiddleware {
             submitAdd(blockchainsToAdd, tokensToAdd, scanResponse)
             store.dispatch(NavigationAction.PopBackTo())
         }
+    }
+
+    private fun handleAddingCustomToken(action: TokensAction.PrepareAndNavigateToAddCustomToken) {
+        val tokensState = store.state.tokensState
+        val addedTokensList = tokensState.addedTokens.map {
+            DomainWrapped.TokenWithBlockchain(it.token.copy(), it.blockchain)
+        }
+        val addedBlockchains = tokensState.addedBlockchains.map { it }
+        val addedCurrencies = AddedCurrencies(addedTokensList, addedBlockchains)
+        domainStore.dispatch(AddCustomTokenAction.Init.SetAddedCurrencies(addedCurrencies))
+
+        val callback = fun(data: CompleteData) {
+            Timber.e("Yoooohhhoooo")
+        }
+        domainStore.dispatch(AddCustomTokenAction.Init.SetOnAddTokenCallback(callback))
+        store.dispatch(NavigationAction.NavigateTo(AppScreen.AddCustomToken))
     }
 
     private fun deriveMissingBlockchains(
