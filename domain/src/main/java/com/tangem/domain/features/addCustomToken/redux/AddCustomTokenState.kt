@@ -5,33 +5,37 @@ import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.domain.common.form.*
 import com.tangem.domain.features.addCustomToken.*
 import com.tangem.domain.features.addCustomToken.CustomTokenFieldId.*
-import com.tangem.network.api.tangemTech.TangemTechService
 import org.rekotlin.StateType
 
 data class AddCustomTokenState(
+    val addedCurrencies: AddedCurrencies? = null,
+    val onTokenAddCallback: ((CompleteData) -> Unit)? = null,
+    val derivationStyle: DerivationStyle? = null,
     val form: Form = Form(createFormFields()),
-    val formValidators: Map<CustomTokenFieldId, CustomTokenValidator<*>> = createFormValidators(),
+    val formValidators: Map<CustomTokenFieldId, CustomTokenValidator<out Any>> = createFormValidators(),
     val formErrors: Map<CustomTokenFieldId, AddCustomTokenError> = emptyMap(),
+    val tokenId: String? = null,
     val warnings: Set<AddCustomTokenWarning> = emptySet(),
     val screenState: ScreenState = createInitialScreenState(),
-    val addCustomTokenManager: AddCustomTokenManager = AddCustomTokenManager(TangemTechService()),
-    val derivationStyle: DerivationStyle? = null
+    val tangemTechServiceManager: TangemTechServiceManager? = null
 ) : StateType {
 
-    val completeDataType: CompleteDataType
-        get() = calculateDataType()
+    inline fun <reified T> getField(id: FieldId): T = form.getField(id) as T
+
+    inline fun <reified T> getValidator(id: FieldId): T = formValidators[id] as T
+
+    fun getError(id: FieldId): AddCustomTokenError? = formErrors[id]
+
+    fun hasError(id: FieldId): Boolean = formErrors[id] != null
+
+    fun getCompleteData(type: CompleteDataType): CompleteData = when (type) {
+        CompleteDataType.Token -> getToken()
+        CompleteDataType.Blockchain -> getBlockchain()
+    }
 
     inline fun <reified T> visitDataConverter(converter: FieldDataConverter<T>): T {
         form.visitDataConverter(converter)
         return converter.getConvertedData()
-    }
-
-    fun getValidator(id: FieldId): CustomTokenValidator<*> = formValidators[id]!!
-
-    fun hasError(id: FieldId): Boolean = formErrors[id] != null
-
-    fun getError(id: FieldId): AddCustomTokenError? {
-        return formErrors[id]
     }
 
     fun convertBlockchainName(blockchain: Blockchain, unknown: String): String = when (blockchain) {
@@ -43,18 +47,49 @@ data class AddCustomTokenState(
         return blockchain.derivationPath(derivationStyle)?.rawPath ?: unknown
     }
 
-    private fun calculateDataType(): CompleteDataType {
+    fun reset(): AddCustomTokenState {
+        return this.copy(
+            addedCurrencies = null,
+            onTokenAddCallback = null,
+            derivationStyle = null,
+            form = Form(createFormFields()),
+            formErrors = emptyMap(),
+            tokenId = null,
+            warnings = emptySet(),
+            screenState = createInitialScreenState(),
+            tangemTechServiceManager = null,
+        )
+    }
+
+    fun networkIsEmpty(): Boolean {
+        val network = getField<TokenBlockchainField>(Network)
+        return network.data.value != Blockchain.Unknown
+    }
+
+    fun customTokensFieldsIsEmpty(): Boolean {
         val idsToCheck = listOf(ContractAddress, Name, Symbol, Decimals)
         val fieldsToCheck = form.fieldList.filter { idsToCheck.contains(it.id) }
-
-        val isEmptyValidator = StringIsEmptyValidator()
-        fieldsToCheck.map { data -> data.toString() }.forEach {
-            // if one of the fields has error -> then it
-            val error = isEmptyValidator.validate(it)
-            if (error != null) return CompleteDataType.Token
+        val validator = StringIsEmptyValidator()
+//        val errors = mutableMapOf<>()
+        fieldsToCheck.forEach { field ->
+            val error = validator.validate(field.data.value?.toString())
+            if (error != null) return true
         }
+        return false
+    }
 
-        return CompleteDataType.Blockchain
+    fun allFieldsIsEmpty(): Boolean = networkIsEmpty() && customTokensFieldsIsEmpty()
+
+    private fun getToken(): CompleteData.CustomToken {
+        return CompleteData.CustomToken.Converter(tokenId)
+            .apply { visitDataConverter(this) }
+            .getConvertedData()
+    }
+
+    private fun getBlockchain(): CompleteData.CustomBlockchain {
+        return CompleteData.CustomBlockchain.Converter()
+            .apply { visitDataConverter(this) }
+            .getConvertedData()
     }
 
     companion object {
@@ -69,7 +104,7 @@ data class AddCustomTokenState(
             )
         }
 
-        private fun createFormValidators(): Map<CustomTokenFieldId, CustomTokenValidator<*>> {
+        private fun createFormValidators(): Map<CustomTokenFieldId, CustomTokenValidator<out Any>> {
             return mapOf(
                 ContractAddress to TokenContractAddressValidator(),
                 Network to TokenNetworkValidator(),
