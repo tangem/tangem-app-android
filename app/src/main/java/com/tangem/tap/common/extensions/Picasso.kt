@@ -9,9 +9,9 @@ import com.squareup.picasso.Transformation
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.IconsUtil
 import com.tangem.blockchain.common.Token
+import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.tap.domain.extensions.getCustomIconUrl
 import com.tangem.tap.domain.tokens.getIconUrl
-import com.tangem.tap.domain.tokens.toNetworkId
 import com.tangem.wallet.R
 
 fun Picasso.loadCurrenciesIcon(
