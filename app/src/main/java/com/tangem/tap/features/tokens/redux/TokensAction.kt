@@ -2,7 +2,7 @@ package com.tangem.tap.features.tokens.redux
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.DerivationStyle
-import com.tangem.tap.domain.tasks.product.ScanResponse
+import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.domain.tokens.Currency
 import com.tangem.tap.features.wallet.redux.WalletData
 import org.rekotlin.Action
