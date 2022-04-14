@@ -4,6 +4,7 @@ import android.webkit.ValueCallback
 import com.tangem.domain.common.FeatureCoroutineExceptionHandler
 import com.tangem.domain.common.extensions.withIOContext
 import com.tangem.domain.common.extensions.withMainContext
+import com.tangem.domain.redux.global.DomainGlobalState
 import kotlinx.coroutines.*
 import org.rekotlin.Action
 import org.rekotlin.DispatchFunction
@@ -32,13 +33,19 @@ internal interface HubReducer<StoreState> {
  * All action went from the middleware must be dispatched through ReStoreHub.dispatchOnMain(Actions) to prevent
  * concurrent modification in the Store
  * Only the changed hub State will change its state in the DomainState
+ * Do not implement other states like as DomainGlobalState. Because it can dilute the responsibility of
+ * states.
  * @param name - name of the Hub
  * @param dispatcher - main coroutine dispatcher for actions
+ * @property globalState - state witch produce accessibility to global variables
  */
 internal abstract class BaseStoreHub<State>(
     private val name: String,
     private val dispatcher: CoroutineDispatcher = Executors.newFixedThreadPool(1).asCoroutineDispatcher()
 ) : ReStoreHub<DomainState, State> {
+
+    val globalState: DomainGlobalState
+        get() = domainStore.state.globalState
 
     val hubScope = CoroutineScope(
         Job() + dispatcher + CoroutineName(name) + FeatureCoroutineExceptionHandler.create(name)
