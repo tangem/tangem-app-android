@@ -15,6 +15,7 @@ private fun internalReduce(action: Action, state: AppState): TokensState {
     val tokensState = state.tokensState
     return when (action) {
         is TokensAction.ResetState -> TokensState()
+        is TokensAction.LoadCurrencies -> tokensState.copy(scanResponse = action.scanResponse)
         is TokensAction.LoadCurrencies.Success -> {
             tokensState.copy(currencies = action.currencies)
         }
