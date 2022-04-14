@@ -7,14 +7,16 @@ import com.tangem.common.card.EllipticCurve
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toMapKey
 import com.tangem.common.hdWallet.DerivationPath
-import com.tangem.tap.domain.TapWorkarounds.isTestCard
-import com.tangem.tap.domain.TapWorkarounds.useOldStyleDerivation
-import com.tangem.tap.domain.tasks.product.ScanResponse
+import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.common.TapWorkarounds.isTestCard
+import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
 import com.tangem.tap.domain.tokens.BlockchainNetwork
 import com.tangem.tap.features.wallet.redux.Currency
 
 fun WalletManagerFactory.makeWalletManagerForApp(
-    scanResponse: ScanResponse, blockchain: Blockchain, derivationParams: DerivationParams?
+    scanResponse: ScanResponse,
+    blockchain: Blockchain,
+    derivationParams: DerivationParams?
 ): WalletManager? {
     val card = scanResponse.card
     if (card.isTestCard && blockchain.getTestnetVersion() == null) return null
@@ -31,7 +33,7 @@ fun WalletManagerFactory.makeWalletManagerForApp(
         scanResponse.isTangemTwins() && scanResponse.secondTwinPublicKey != null -> {
             makeTwinWalletManager(
                 card.cardId,
-                wallet.publicKey, scanResponse.secondTwinPublicKey.hexToBytes(),
+                wallet.publicKey, scanResponse.secondTwinPublicKey!!.hexToBytes(),
                 environmentBlockchain, wallet.curve
             )
         }
