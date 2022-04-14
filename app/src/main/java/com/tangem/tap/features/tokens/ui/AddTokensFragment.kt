@@ -97,6 +97,7 @@ class AddTokensFragment : Fragment(R.layout.fragment_add_tokens),
         if (activity == null || view == null) return
         val toolbarTitle =
             if (state.allowToAdd) R.string.add_tokens_title else R.string.search_tokens_title
+        tokensState.value = state
         binding.toolbar.title = getString(toolbarTitle)
     }
 
