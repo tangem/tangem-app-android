@@ -24,7 +24,10 @@ sealed class WalletAction : Action {
     }
 
 
-    data class LoadWallet(val blockchain: BlockchainNetwork? = null) : WalletAction() {
+    data class LoadWallet(
+        val blockchain: BlockchainNetwork? = null,
+        val walletManager: WalletManager? = null
+    ) : WalletAction() {
         data class Success(val wallet: Wallet, val blockchain: BlockchainNetwork) : WalletAction()
         data class NoAccount(
             val wallet: Wallet,
