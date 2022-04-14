@@ -14,6 +14,7 @@ import com.google.accompanist.appcompattheme.AppCompatTheme
 import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenState
 import com.tangem.domain.redux.domainStore
 import com.tangem.tap.features.BaseStoreFragment
+import com.tangem.tap.features.addBackPressHandler
 import com.tangem.tap.features.tokens.addCustomToken.compose.AddCustomTokenScreen
 import com.tangem.wallet.R
 import org.rekotlin.StoreSubscriber
@@ -57,6 +58,6 @@ class AddCustomTokenFragment : BaseStoreFragment(R.layout.view_compose_fragment)
 
             }
         }
-//        addBackPressHandler(this)
+        addBackPressHandler(this)
     }
 }
