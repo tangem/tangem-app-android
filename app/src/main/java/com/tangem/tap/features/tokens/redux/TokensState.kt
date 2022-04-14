@@ -3,8 +3,8 @@ package com.tangem.tap.features.tokens.redux
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.blockchain.common.Token
+import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.tap.domain.tokens.Currency
-import com.tangem.tap.domain.tokens.fromNetworkId
 import com.tangem.tap.features.wallet.redux.WalletData
 import org.rekotlin.StateType
 
