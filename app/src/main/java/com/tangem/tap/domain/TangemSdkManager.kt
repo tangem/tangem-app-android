@@ -17,6 +17,7 @@ import com.tangem.common.core.Config
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.hdWallet.DerivationPath
+import com.tangem.domain.common.ScanResponse
 import com.tangem.operations.CommandResponse
 import com.tangem.operations.derivation.DerivationTaskResponse
 import com.tangem.operations.derivation.DeriveMultipleWalletPublicKeysTask
@@ -30,7 +31,6 @@ import com.tangem.tap.common.analytics.AnalyticsParam
 import com.tangem.tap.domain.tasks.CreateWalletAndRescanTask
 import com.tangem.tap.domain.tasks.product.ResetToFactorySettingsTask
 import com.tangem.tap.domain.tasks.product.ScanProductTask
-import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.domain.tokens.CurrenciesRepository
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.wallet.R
