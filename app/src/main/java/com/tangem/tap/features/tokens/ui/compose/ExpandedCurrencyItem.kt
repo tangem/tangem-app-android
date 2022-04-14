@@ -18,8 +18,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.SubcomposeAsyncImage
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.tap.domain.tokens.Currency
-import com.tangem.tap.domain.tokens.fromNetworkId
 import com.tangem.tap.features.tokens.redux.ContractAddress
 import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
 import com.tangem.wallet.R
