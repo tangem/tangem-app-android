@@ -73,14 +73,12 @@ data class AddCustomTokenState(
 //        val errors = mutableMapOf<>()
         fieldsToCheck.forEach { field ->
             val error = validator.validate(field.data.value?.toString())
-            if (error != null) return false
+            if (error != null) return true
         }
-        return true
+        return false
     }
 
-    fun allFieldsIsEmpty(): Boolean {
-        return networkIsEmpty() && customTokensFieldsIsEmpty()
-    }
+    fun allFieldsIsEmpty(): Boolean = networkIsEmpty() && customTokensFieldsIsEmpty()
 
     private fun getToken(): CompleteData.CustomToken {
         return CompleteData.CustomToken.Converter(tokenId)
@@ -140,11 +138,11 @@ data class AddCustomTokenState(
             return ScreenState(
                 contractAddressField = ViewStates.TokenField(),
                 network = ViewStates.TokenField(),
-                name = ViewStates.TokenField(isEnabled = false),
-                symbol = ViewStates.TokenField(isEnabled = false),
-                decimals = ViewStates.TokenField(isEnabled = false),
+                name = ViewStates.TokenField(),
+                symbol = ViewStates.TokenField(),
+                decimals = ViewStates.TokenField(),
                 derivationPath = ViewStates.TokenField(),
-                addButton = ViewStates.AddButton(isEnabled = false)
+                addButton = ViewStates.AddButton()
             )
         }
     }
