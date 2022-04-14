@@ -101,18 +101,25 @@ class MultiWalletView : WalletView {
 
         binding.btnAddToken.setOnClickListener {
             val card = store.state.globalState.scanResponse!!.card
-            store.dispatch(TokensAction.LoadCurrencies(
-                supportedBlockchains = currenciesRepository.getBlockchains(
-                    card.firmwareVersion,
-                    card.isTestCard
-                )))
+            store.dispatch(
+                TokensAction.LoadCurrencies(
+                    supportedBlockchains = currenciesRepository.getBlockchains(
+                        card.firmwareVersion,
+                        card.isTestCard
+                    ),
+                    scanResponse = store.state.globalState.scanResponse
+                )
+            )
             store.dispatch(TokensAction.AllowToAddTokens(true))
-            store.dispatch(TokensAction.SetAddedCurrencies(
-                wallets = state.walletsData,
-                derivationStyle = card.derivationStyle
-            ))
-            store.dispatch(TokensAction.SetNonRemovableCurrencies(
-                state.walletsData.filterNot { state.canBeRemoved(it) })
+            store.dispatch(
+                TokensAction.SetAddedCurrencies(
+                    wallets = state.walletsData,
+                    derivationStyle = card.derivationStyle
+                )
+            )
+            store.dispatch(
+                TokensAction.SetNonRemovableCurrencies(
+                    state.walletsData.filterNot { state.canBeRemoved(it) })
             )
             store.dispatch(NavigationAction.NavigateTo(AppScreen.AddTokens))
         }
