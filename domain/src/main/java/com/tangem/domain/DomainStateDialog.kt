@@ -10,6 +10,8 @@ interface DomainStateDialog
 
 sealed class DomainDialog : DomainStateDialog {
 
+    data class DialogError(val error: DomainError) : DomainDialog()
+
     data class SelectTokenDialog(
         val items: List<Coins.CheckAddressResponse.Token.Contract>,
         val networkIdConverter: (String) -> String,
