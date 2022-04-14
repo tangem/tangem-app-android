@@ -13,13 +13,13 @@ sealed class AddCustomTokenError : AnError(ERROR_CODE_ADD_CUSTOM_TOKEN, "Add cus
     object NetworkIsNotSelected : AddCustomTokenError()
     object InvalidDecimalsCount : AddCustomTokenError()
     object InvalidDerivationPath : AddCustomTokenError()
-}
-
-sealed class AddCustomTokenWarning : AnError(ERROR_CODE_ADD_CUSTOM_TOKEN, "Add custom token - warning") {
-    object PotentialScamToken : AddCustomTokenWarning()
-    object TokenAlreadyAdded : AddCustomTokenWarning()
 
     sealed class Network : AddCustomTokenWarning() {
         object CheckAddressRequestError : Network()
     }
+}
+
+sealed class AddCustomTokenWarning : AddCustomTokenError() {
+    object PotentialScamToken : AddCustomTokenWarning()
+    object TokenAlreadyAdded : AddCustomTokenWarning()
 }
