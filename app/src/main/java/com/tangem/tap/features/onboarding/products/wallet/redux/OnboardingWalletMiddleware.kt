@@ -2,16 +2,16 @@ package com.tangem.tap.features.onboarding.products.wallet.redux
 
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.Card
+import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.operations.backup.BackupService
 import com.tangem.tap.*
 import com.tangem.tap.common.extensions.dispatchOnMain
-import com.tangem.tap.common.extensions.withMainContext
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.extensions.hasWallets
-import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.wallet.redux.Artwork
