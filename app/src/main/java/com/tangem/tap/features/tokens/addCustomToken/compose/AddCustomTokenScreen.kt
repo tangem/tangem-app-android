@@ -25,6 +25,7 @@ import com.tangem.domain.features.addCustomToken.redux.ScreenState
 import com.tangem.domain.features.addCustomToken.redux.ViewStates
 import com.tangem.domain.redux.domainStore
 import com.tangem.tap.common.compose.ComposeDialogManager
+import com.tangem.tap.common.compose.ToggledRippleTheme
 import com.tangem.tap.common.compose.keyboardAsState
 import com.tangem.tap.features.tokens.addCustomToken.DomainErrorConverter
 import com.tangem.wallet.R
@@ -107,7 +108,7 @@ fun Warnings(warnings: List<AddCustomTokenWarning>) {
     Column {
         warnings.forEachIndexed { index, item ->
             val modifier = when (index) {
-                0 -> Modifier.padding(16.dp, 16.dp, 16.dp, 0.dp)
+                0 -> Modifier.padding(16.dp, 0.dp, 16.dp, 0.dp)
                 warnings.lastIndex -> Modifier.padding(16.dp, 8.dp, 16.dp, 16.dp)
                 else -> Modifier.padding(16.dp, 8.dp, 16.dp, 0.dp)
             }
@@ -120,7 +121,7 @@ fun Warnings(warnings: List<AddCustomTokenWarning>) {
                 Text(
                     modifier = Modifier.padding(16.dp),
                     text = warningConverter.convertError(item),
-                    color = colorResource(id = R.color.lightGray0),
+                    color = colorResource(id = R.color.white),
                     fontSize = 14.sp
                 )
             }
@@ -138,36 +139,34 @@ private fun AddButton(state: MutableState<AddCustomTokenState>) {
 }
 
 @Composable
-fun AddCustomTokenFab(
+private fun AddCustomTokenFab(
     modifier: Modifier = Modifier,
     isEnabled: Boolean = true,
     onClick: () -> Unit
 ) {
-    val contentColor = if (isEnabled) {
-        Color.White
+    val contentColor = Color.White
+    val backgroundColor = if (isEnabled) {
+        Color(0xFF1ACE80)
     } else {
-        colorResource(id = R.color.darkGray1)
+        Color(0xFFB9E6D3)
     }
-    val backgroundColor = Color(0xFF1ACE80)
 
-    ExtendedFloatingActionButton(
-        modifier = modifier,
-        icon = {
-            Icon(
-                imageVector = Icons.Filled.Add,
-                tint = contentColor,
-                contentDescription = "Add",
-            )
-        },
-        text = {
-            Text(
-                text = stringResource(id = R.string.common_add),
-            )
-        },
-        onClick = onClick,
-        backgroundColor = backgroundColor,
-        contentColor = contentColor,
-    )
+    ToggledRippleTheme(isEnabled) {
+        ExtendedFloatingActionButton(
+            modifier = modifier,
+            icon = {
+                Icon(
+                    imageVector = Icons.Filled.Add,
+                    tint = contentColor,
+                    contentDescription = "Add",
+                )
+            },
+            text = { Text(text = stringResource(id = R.string.common_add)) },
+            onClick = { if (isEnabled) onClick() },
+            backgroundColor = backgroundColor,
+            contentColor = contentColor,
+        )
+    }
 }
 
 data class ScreenFieldData(
