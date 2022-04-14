@@ -2,34 +2,31 @@ package com.tangem.tap.features.tokens.addCustomToken.compose
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tangem.domain.ErrorConverter
 import com.tangem.domain.common.form.DataField
-import com.tangem.domain.common.form.Field
 import com.tangem.domain.common.form.FieldId
-import com.tangem.domain.features.addCustomToken.*
+import com.tangem.domain.features.addCustomToken.AddCustomTokenError
+import com.tangem.domain.features.addCustomToken.AddCustomTokenWarning
 import com.tangem.domain.features.addCustomToken.CustomTokenFieldId.*
 import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction
-import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction.*
 import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenState
 import com.tangem.domain.features.addCustomToken.redux.ScreenState
 import com.tangem.domain.features.addCustomToken.redux.ViewStates
 import com.tangem.domain.redux.domainStore
-import com.tangem.tap.common.compose.*
-import com.tangem.tap.features.tokens.addCustomToken.CustomTokenErrorConverter
-import com.tangem.tap.features.tokens.addCustomToken.CustomTokenWarningConverter
+import com.tangem.tap.common.compose.ComposeDialogManager
+import com.tangem.tap.common.compose.keyboardAsState
+import com.tangem.tap.features.tokens.addCustomToken.DomainErrorConverter
 import com.tangem.wallet.R
 
 /**
@@ -44,12 +41,18 @@ fun AddCustomTokenScreen(state: MutableState<AddCustomTokenState>) {
     Scaffold(
         scaffoldState = scaffoldState,
         backgroundColor = colorResource(id = R.color.backgroundLightGray),
+        floatingActionButton = {
+            HangingOverKeyboardView(keyboardState = keyboardAsState()) {
+                AddButton(state)
+            }
+        },
+        floatingActionButtonPosition = FabPosition.Center,
     ) {
         Box(Modifier.fillMaxSize()) {
             LazyColumn(
                 contentPadding = PaddingValues(bottom = 90.dp)
             ) {
-                item { AddCustomTokenDebugActions() }
+//                item { AddCustomTokenDebugActions() }
                 item {
                     Surface(
                         modifier = Modifier.padding(16.dp),
@@ -67,18 +70,6 @@ fun AddCustomTokenScreen(state: MutableState<AddCustomTokenState>) {
                 }
                 item { Warnings(state.value.warnings.toList()) }
             }
-            HangingOverKeyboardView(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter),
-                keyboardState = keyboardAsState(),
-                defaultBottomPadding = 30.dp,
-                spaceBetweenKeyboard = 20.dp,
-            ) {
-                AddButton(
-                    isEnabled = state.value.screenState.addButton.isEnabled
-                ) {
-                }
-            }
         }
         ComposeDialogManager()
     }
@@ -90,7 +81,7 @@ fun AddCustomTokenScreen(state: MutableState<AddCustomTokenState>) {
 @Composable
 private fun FormFields(state: MutableState<AddCustomTokenState>) {
     val context = LocalContext.current
-    val errorConverter = remember { CustomTokenErrorConverter(context) }
+    val errorConverter = remember { DomainErrorConverter(context) }
 
     val stateValue = state.value
     stateValue.form.fieldList.forEach { field ->
@@ -107,124 +98,11 @@ private fun FormFields(state: MutableState<AddCustomTokenState>) {
 }
 
 @Composable
-private fun TokenContractAddressView(screenFieldData: ScreenFieldData) {
-    if (!screenFieldData.viewState.isVisible) return
-
-    val tokenField = screenFieldData.field as TokenField
-
-    OutlinedTextFieldWidget(
-        textFieldData = tokenField.data,
-        labelId = R.string.custom_token_contract_address_input_title,
-        placeholder = "0x0000000000000000",
-        isEnabled = screenFieldData.viewState.isEnabled,
-        isLoading = screenFieldData.viewState.isLoading,
-        error = screenFieldData.error,
-        errorConverter = screenFieldData.errorConverter,
-    ) {
-        domainStore.dispatch(OnTokenContractAddressChanged(Field.Data(it)))
-    }
-    SpacerH8()
-}
-
-@Composable
-private fun TokenNameView(screenFieldData: ScreenFieldData) {
-    if (!screenFieldData.viewState.isVisible) return
-
-    val tokenField = screenFieldData.field as TokenField
-
-    OutlinedTextFieldWidget(
-        textFieldData = tokenField.data,
-        labelId = R.string.custom_token_name_input_title,
-        placeholderId = R.string.custom_token_name_input_placeholder,
-        isEnabled = screenFieldData.viewState.isEnabled,
-        error = screenFieldData.error,
-        errorConverter = screenFieldData.errorConverter,
-    ) {
-        domainStore.dispatch(OnTokenNameChanged(Field.Data(it)))
-    }
-    SpacerH8()
-}
-
-@Composable
-private fun TokenNetworkView(screenFieldData: ScreenFieldData, state: AddCustomTokenState) {
-    if (!screenFieldData.viewState.isVisible) return
-
-    val notSelected = stringResource(id = R.string.custom_token_network_input_not_selected)
-    val networkField = screenFieldData.field as TokenBlockchainField
-
-    BlockchainSpinner(
-        title = R.string.custom_token_network_input_title,
-        itemList = networkField.itemList,
-        selectedItem = networkField.data,
-        isEnabled = screenFieldData.viewState.isEnabled,
-        textFieldConverter = { state.convertBlockchainName(it, notSelected) },
-    ) { domainStore.dispatch(OnTokenNetworkChanged(Field.Data(it))) }
-    SpacerH8()
-}
-
-@Composable
-private fun TokenSymbolView(screenFieldData: ScreenFieldData) {
-    if (!screenFieldData.viewState.isVisible) return
-
-    val tokenField = screenFieldData.field as TokenField
-
-    OutlinedTextFieldWidget(
-        textFieldData = tokenField.data,
-        labelId = R.string.custom_token_token_symbol_input_title,
-        placeholderId = R.string.custom_token_token_symbol_input_placeholder,
-        isEnabled = screenFieldData.viewState.isEnabled,
-        error = screenFieldData.error,
-        errorConverter = screenFieldData.errorConverter,
-    ) { domainStore.dispatch(OnTokenSymbolChanged(Field.Data(it))) }
-    SpacerH8()
-}
-
-@Composable
-private fun TokenDecimalsView(screenFieldData: ScreenFieldData) {
-    if (!screenFieldData.viewState.isVisible) return
-
-    val tokenField = screenFieldData.field as TokenField
-
-    OutlinedTextFieldWidget(
-        textFieldData = tokenField.data,
-        labelId = R.string.custom_token_decimals_input_title,
-        placeholder = "8",
-        isEnabled = screenFieldData.viewState.isEnabled,
-        error = screenFieldData.error,
-        errorConverter = screenFieldData.errorConverter,
-        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-    ) { domainStore.dispatch(OnTokenDecimalsChanged(Field.Data(it))) }
-    SpacerH8()
-}
-
-@Composable
-private fun TokenDerivationPathView(screenFieldData: ScreenFieldData, state: AddCustomTokenState) {
-    if (!screenFieldData.viewState.isVisible) return
-
-    val notSelected = stringResource(id = R.string.custom_token_derivation_path_default)
-    val networkField = screenFieldData.field as TokenDerivationPathField
-
-    BlockchainSpinner(
-        title = R.string.custom_token_derivation_path_input_title,
-        itemList = networkField.itemList,
-        selectedItem = networkField.data,
-        isEnabled = screenFieldData.viewState.isEnabled,
-        textFieldConverter = { state.convertBlockchainName(it, notSelected) },
-        dropdownItemView = { blockchain ->
-            val derivationPathLabel = state.convertDerivationPathLabel(blockchain, notSelected)
-            val blockchainName = state.convertBlockchainName(blockchain, notSelected)
-            TitleSubtitle(derivationPathLabel, blockchainName)
-        }
-    ) { domainStore.dispatch(OnTokenDerivationPathChanged(Field.Data(it))) }
-    SpacerH8()
-}
-
-@Composable
-private fun Warnings(warnings: List<AddCustomTokenWarning>) {
+fun Warnings(warnings: List<AddCustomTokenWarning>) {
     if (warnings.isEmpty()) return
 
     val context = LocalContext.current
-    val warningConverter = remember { CustomTokenWarningConverter(context) }
+    val warningConverter = remember { DomainErrorConverter(context) }
 
     Column {
         warnings.forEachIndexed { index, item ->
@@ -236,8 +114,8 @@ private fun Warnings(warnings: List<AddCustomTokenWarning>) {
             Surface(
                 modifier = modifier.fillMaxWidth(),
                 shape = MaterialTheme.shapes.small,
-                color = colorResource(id = R.color.darkGray2),
-                contentColor = colorResource(id = R.color.darkGray3)
+                color = colorResource(id = R.color.warning_warning),
+                elevation = 4.dp,
             ) {
                 Text(
                     modifier = Modifier.padding(16.dp),
@@ -251,30 +129,48 @@ private fun Warnings(warnings: List<AddCustomTokenWarning>) {
 }
 
 @Composable
-private fun AddButton(
+private fun AddButton(state: MutableState<AddCustomTokenState>) {
+    AddCustomTokenFab(
+        modifier = Modifier
+            .widthIn(210.dp, 280.dp),
+        isEnabled = state.value.screenState.addButton.isEnabled
+    ) { domainStore.dispatch(AddCustomTokenAction.OnAddCustomTokenClicked) }
+}
+
+@Composable
+fun AddCustomTokenFab(
     modifier: Modifier = Modifier,
-    isEnabled: Boolean,
-    textId: Int = R.string.common_add,
-    onClick: () -> Unit,
+    isEnabled: Boolean = true,
+    onClick: () -> Unit
 ) {
-    Button(
-        textId = textId,
-        isEnabled = isEnabled,
-        modifier = modifier
-            .height(52.dp)
-            .padding(horizontal = 16.dp)
-            .fillMaxWidth(),
-        leadingView = {
+    val contentColor = if (isEnabled) {
+        Color.White
+    } else {
+        colorResource(id = R.color.darkGray1)
+    }
+    val backgroundColor = Color(0xFF1ACE80)
+
+    ExtendedFloatingActionButton(
+        modifier = modifier,
+        icon = {
             Icon(
                 imageVector = Icons.Filled.Add,
+                tint = contentColor,
                 contentDescription = "Add",
             )
         },
-        onClick = onClick
+        text = {
+            Text(
+                text = stringResource(id = R.string.common_add),
+            )
+        },
+        onClick = onClick,
+        backgroundColor = backgroundColor,
+        contentColor = contentColor,
     )
 }
 
-private data class ScreenFieldData(
+data class ScreenFieldData(
     val field: DataField<*>,
     val error: AddCustomTokenError?,
     val errorConverter: ErrorConverter<String>,
@@ -284,7 +180,7 @@ private data class ScreenFieldData(
         fun fromState(
             field: DataField<*>,
             state: AddCustomTokenState,
-            errorConverter: CustomTokenErrorConverter
+            errorConverter: DomainErrorConverter
         ): ScreenFieldData {
             return ScreenFieldData(
                 field = field,
