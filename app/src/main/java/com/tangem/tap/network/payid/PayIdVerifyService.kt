@@ -2,7 +2,7 @@ package com.tangem.tap.network.payid
 
 import com.tangem.common.services.Result
 import com.tangem.common.services.performRequest
-import com.tangem.tap.network.createRetrofitInstance
+import com.tangem.network.common.createRetrofitInstance
 
 /**
 [REDACTED_AUTHOR]
