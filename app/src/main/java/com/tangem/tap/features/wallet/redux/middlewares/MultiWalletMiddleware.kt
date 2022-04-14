@@ -68,7 +68,7 @@ class MultiWalletMiddleware {
                     )
                 )
                 store.dispatch(
-                    WalletAction.LoadWallet(action.blockchain)
+                    WalletAction.LoadWallet(action.blockchain, action.walletManager)
                 )
             }
             is WalletAction.MultiWallet.SaveCurrencies -> {
