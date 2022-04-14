@@ -10,4 +10,8 @@ sealed class DomainException(message: String?) : Throwable(message), DomainInter
     data class SelectTokeNetworkException(val networkId: String) : DomainException(
         "Unknown network [$networkId] should not be included in the network selection dialog."
     )
+
+    data class UnAppropriateInitializationException(val of: String, val info: String? = null) : DomainException(
+        "The [$of], must be properly initialized. Info []"
+    )
 }
