@@ -1,16 +1,13 @@
-package com.tangem.tap.domain
+package com.tangem.domain.common
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.common.card.Card
-import com.tangem.common.card.EllipticCurve
-import com.tangem.common.card.FirmwareVersion
-import com.tangem.tap.domain.TapWorkarounds.isStart2Coin
-import com.tangem.tap.domain.TapWorkarounds.isTangemNote
-import com.tangem.tap.domain.extensions.getSingleWallet
-import com.tangem.tap.domain.twins.isTangemTwin
 import java.util.*
 
+/**
+[REDACTED_AUTHOR]
+ */
 object TapWorkarounds {
 
     fun isStart2CoinIssuer(cardIssuer: String?): Boolean {
@@ -24,7 +21,7 @@ object TapWorkarounds {
         get() = batchId == TEST_CARD_BATCH && cardId.startsWith(TEST_CARD_ID_STARTS_WITH)
 
     val Card.useOldStyleDerivation: Boolean
-        get() = batchId == "AC01" || batchId == "AC02" ||  batchId == "CB95"
+        get() = batchId == "AC01" || batchId == "AC02" || batchId == "CB95"
 
     val Card.derivationStyle: DerivationStyle?
         get() = if (!settings.isHDWalletAllowed) {
@@ -50,7 +47,7 @@ object TapWorkarounds {
 
     fun isTangemWalletBatch(card: Card): Boolean = tangemWalletBatches.contains(card.batchId)
 
-    fun getTangemNoteBlockchain(card: Card): Blockchain? = tangemNoteBatches[card.batchId]
+    fun Card.getTangemNoteBlockchain(): Blockchain? = tangemNoteBatches[batchId]
 
     private const val START_2_COIN_ISSUER = "start2coin"
     private const val TEST_CARD_BATCH = "99FF"
@@ -79,13 +76,8 @@ object TapWorkarounds {
         "AB07" to Blockchain.Bitcoin,
         "AB08" to Blockchain.Ethereum,
     )
+
+    private val tangemWalletBatchesWithStandardDerivationType = listOf(
+        "AC01", "AC02", "CB95"
+    )
 }
-
-val DELAY_SDK_DIALOG_CLOSE = 1400L
-
-val Card.isMultiwalletAllowed: Boolean
-    get() {
-        return !isTangemTwin() && !isStart2Coin && !isTangemNote(this)
-                && (firmwareVersion >= FirmwareVersion.MultiWalletAvailable ||
-                getSingleWallet()?.curve == EllipticCurve.Secp256k1)
-    }
