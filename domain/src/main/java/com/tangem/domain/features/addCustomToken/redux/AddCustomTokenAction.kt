@@ -6,6 +6,7 @@ import com.tangem.domain.common.form.Field
 import com.tangem.domain.common.form.FieldId
 import com.tangem.domain.features.addCustomToken.AddCustomTokenError
 import com.tangem.domain.features.addCustomToken.AddCustomTokenWarning
+import com.tangem.domain.features.addCustomToken.CompleteData
 import com.tangem.domain.features.addCustomToken.CustomTokenFieldId
 import com.tangem.network.api.tangemTech.Coins
 import org.rekotlin.Action
@@ -14,6 +15,12 @@ import org.rekotlin.Action
 [REDACTED_AUTHOR]
  */
 sealed class AddCustomTokenAction : Action {
+    sealed class Init : AddCustomTokenAction() {
+        data class SetAddedCurrencies(val addedCurrencies: AddedCurrencies) : AddCustomTokenAction()
+
+        data class SetOnAddTokenCallback(val callback: (CompleteData) -> Unit) : AddCustomTokenAction()
+    }
+
     object OnCreate : AddCustomTokenAction() {
         data class SetDerivationStyle(val derivationStyle: DerivationStyle?) : AddCustomTokenAction()
     }
@@ -27,10 +34,12 @@ sealed class AddCustomTokenAction : Action {
     data class OnTokenSymbolChanged(val tokenSymbol: Field.Data<String>) : AddCustomTokenAction()
     data class OnTokenDerivationPathChanged(val blockchainDerivationPath: Field.Data<Blockchain>) : AddCustomTokenAction()
     data class OnTokenDecimalsChanged(val tokenDecimals: Field.Data<String>) : AddCustomTokenAction()
+    object OnAddCustomTokenClicked : AddCustomTokenAction()
 
     // form fields
     data class UpdateForm(val state: AddCustomTokenState) : AddCustomTokenAction()
     object ClearTokenFields : AddCustomTokenAction()
+
     data class FillTokenFields(
         val token: Coins.CheckAddressResponse.Token,
         val contract: Coins.CheckAddressResponse.Token.Contract,
@@ -40,6 +49,8 @@ sealed class AddCustomTokenAction : Action {
         data class Add(val id: CustomTokenFieldId, val error: AddCustomTokenError) : FieldError()
         data class Remove(val id: CustomTokenFieldId) : FieldError()
     }
+
+    data class SetTokenId(val id: String) : AddCustomTokenAction()
 
     // warnings
     sealed class Warning : AddCustomTokenAction() {
