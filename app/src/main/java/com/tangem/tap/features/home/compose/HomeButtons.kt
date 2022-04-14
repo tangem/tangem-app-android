@@ -1,6 +1,8 @@
 package com.tangem.tap.features.home.compose
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.height
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Text
@@ -12,6 +14,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.tangem.tap.common.compose.SpacerS8
 import com.tangem.wallet.R
 
 @Composable
@@ -45,7 +48,7 @@ fun HomeButtons(
                 maxLines = 1
             )
         }
-        Spacer(modifier = Modifier.size(8.dp))
+        SpacerS8()
         Button(
             modifier = Modifier
                 .weight(1f)

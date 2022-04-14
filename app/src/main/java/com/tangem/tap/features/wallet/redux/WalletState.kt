@@ -5,12 +5,12 @@ import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.blockchain.extensions.isAboveZero
 import com.tangem.common.extensions.isZero
+import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.tap.common.entities.Button
 import com.tangem.tap.common.extensions.toQrCode
 import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.common.toggleWidget.WidgetState
-import com.tangem.tap.domain.TapWorkarounds.derivationStyle
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.extensions.buyIsAllowed
 import com.tangem.tap.domain.extensions.sellIsAllowed

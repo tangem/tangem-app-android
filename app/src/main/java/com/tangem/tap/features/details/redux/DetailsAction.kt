@@ -2,12 +2,12 @@ package com.tangem.tap.features.details.redux
 
 import com.tangem.blockchain.common.Wallet
 import com.tangem.common.card.Card
+import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.common.TwinCardNumber
 import com.tangem.operations.pins.CheckUserCodesResponse
 import com.tangem.tap.common.redux.NotificationAction
 import com.tangem.tap.common.redux.global.FiatCurrencyName
-import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.domain.termsOfUse.CardTou
-import com.tangem.tap.domain.twins.TwinCardNumber
 import com.tangem.tap.network.coinmarketcap.FiatCurrency
 import com.tangem.wallet.R
 import org.rekotlin.Action
