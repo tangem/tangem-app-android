@@ -2,12 +2,14 @@ package com.tangem.tap.features.tokens.ui.compose
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Switch
 import androidx.compose.material.SwitchDefaults
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,9 +43,15 @@ fun NetworkItem(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .combinedClickable {
-                if (contract != null) onNetworkItemClicked(contract.address)
-            }
+            .combinedClickable(
+                enabled = allowToAdd,
+                onLongClick = {
+                    if (contract != null) onNetworkItemClicked(contract.address)
+                },
+                onClick = {},
+                indication = null,
+                interactionSource = remember { MutableInteractionSource() }
+            )
     ) {
         SubcomposeAsyncImage(
             model = if (added) blockchain.getRoundIconRes() else blockchain.getGreyedOutIconRes(),
@@ -70,7 +78,7 @@ fun NetworkItem(
             )
             Spacer(modifier = Modifier.size(3.dp))
             Text(
-                text = if (isBlockchain)  "MAIN" else blockchain.getNetworkName().uppercase(),
+                text = if (isBlockchain) "MAIN" else blockchain.getNetworkName().uppercase(),
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Normal,
                 color = if (!isBlockchain) Color(0xFF8E8E93) else Color(0xFF1ACE80),
