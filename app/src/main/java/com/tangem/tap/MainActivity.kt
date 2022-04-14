@@ -3,12 +3,12 @@ package com.tangem.tap
 import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.google.android.material.snackbar.Snackbar
 import com.tangem.TangemSdk
+import com.tangem.domain.common.FeatureCoroutineExceptionHandler
 import com.tangem.operations.backup.BackupService
 import com.tangem.tangem_sdk_new.extensions.init
 import com.tangem.tap.common.DialogManager
@@ -27,12 +27,9 @@ import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.shop.redux.ShopAction
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.ActivityMainBinding
-import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import java.io.PrintWriter
-import java.io.StringWriter
 import java.lang.ref.WeakReference
 import kotlin.coroutines.CoroutineContext
 
@@ -42,22 +39,12 @@ lateinit var backupService: BackupService
 var notificationsHandler: NotificationsHandler? = null
 
 private val coroutineContext: CoroutineContext
-    get() = Job() + Dispatchers.IO + initCoroutineExceptionHandler()
+    get() = Job() + Dispatchers.IO + FeatureCoroutineExceptionHandler.create("scope")
 val scope = CoroutineScope(coroutineContext)
 
 private val mainCoroutineContext: CoroutineContext
-    get() = Job() + Dispatchers.Main
+    get() = Job() + Dispatchers.Main + FeatureCoroutineExceptionHandler.create("mainScope")
 val mainScope = CoroutineScope(mainCoroutineContext)
-
-private fun initCoroutineExceptionHandler(): CoroutineExceptionHandler {
-    return CoroutineExceptionHandler { _, throwable ->
-        val sw = StringWriter()
-        throwable.printStackTrace(PrintWriter(sw))
-        val exceptionAsString: String = sw.toString()
-        Log.e("Coroutine", exceptionAsString)
-        throw throwable
-    }
-}
 
 class MainActivity : AppCompatActivity(), SnackbarHandler {
 

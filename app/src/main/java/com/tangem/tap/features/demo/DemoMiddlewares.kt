@@ -1,9 +1,9 @@
 package com.tangem.tap.features.demo
 
 import com.tangem.common.extensions.guard
-import com.tangem.tap.common.extensions.withMainContext
+import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.domain.extensions.makePrimaryWalletManager
-import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.features.onboarding.products.note.redux.OnboardingNoteAction
 import com.tangem.tap.features.wallet.redux.Currency
 import com.tangem.tap.features.wallet.redux.ProgressState
