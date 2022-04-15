@@ -18,6 +18,7 @@ import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.domain.tokens.BlockchainNetwork
 import com.tangem.tap.features.onboarding.getQRReceiveMessage
 import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.redux.*
@@ -94,7 +95,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
 
     override fun newState(state: WalletState) {
         if (activity == null || view == null) return
-        if (state.selectedWallet == null) return
+        if (state.selectedCurrency == null) return
         val selectedWallet = state.getSelectedWalletData() ?: return
 
 
@@ -107,14 +108,14 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
 
         handleDialogs(state.walletDialog)
         handleCurrencyIcon(selectedWallet)
-        handleWalletRent(selectedWallet.walletRent)
-
+        handleWalletRent(selectedWallet.warningRent)
+        handleNotEnoughFundsOnMainCurrency(selectedWallet)
 
         binding.srlWalletDetails.setOnRefreshListener {
             if (selectedWallet.currencyData.status != BalanceStatus.Loading) {
                 store.dispatch(
                     WalletAction.LoadWallet(
-                        blockchain = selectedWallet.currency.blockchain
+                        blockchain = BlockchainNetwork(selectedWallet.currency.blockchain, selectedWallet.currency.derivationPath, emptyList())
                     )
                 )
             }
@@ -153,14 +154,27 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
 
     private fun handleWalletRent(rent: WalletRent?) = with(binding) {
         val rent = rent.guard {
-            lRentWarning.root.hide()
+            lWarning.root.hide()
             return
         }
         val warningMessage = requireContext().getString(
             R.string.solana_rent_warning, rent.minRentValue, rent.rentExemptValue
         )
-        lRentWarning.tvRentWarningMessage.text = warningMessage
-        lRentWarning.root.show()
+        lWarning.tvWarningMessage.text = warningMessage
+        lWarning.root.show()
+    }
+
+    private fun handleNotEnoughFundsOnMainCurrency(selectedWalletData: WalletData) = with(binding) {
+        if (selectedWalletData.shouldShowCoinAmountWarning()) {
+            val blockchainName = selectedWalletData.currency.blockchain.fullName
+            val warningMessage = requireContext().getString(
+                R.string.token_details_send_blocked_fee_format, blockchainName, blockchainName
+            )
+            lWarning.tvWarningMessage.text = warningMessage
+            lWarning.root.show()
+        } else {
+            lWarning.root.hide()
+        }
     }
 
     private fun handleCurrencyIcon(wallet: WalletData) = with(binding.lWalletDetails.lBalance) {
@@ -175,7 +189,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
 
     private fun showPendingTransactionsIfPresent(pendingTransactions: List<PendingTransaction>) {
         pendingTransactionAdapter.submitList(pendingTransactions)
-        binding.rvPendingTransaction?.show(pendingTransactions.isNotEmpty())
+        binding.rvPendingTransaction.show(pendingTransactions.isNotEmpty())
     }
 
     private fun setupAddressCard(state: WalletData) = with(binding.lWalletDetails) {
@@ -199,7 +213,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
                 chipGroupAddressType.hide()
             }
             tvAddress.text = state.walletAddresses.selectedAddress.address
-            tvExplore?.setOnClickListener {
+            tvExplore.setOnClickListener {
                 store.dispatch(
                     WalletAction.ExploreAddress(
                         state.walletAddresses.selectedAddress.exploreUrl,
@@ -234,7 +248,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
                 lBalance.root.show()
                 lBalance.groupBalance.show()
                 lBalance.tvError.hide()
-                lBalance.tvAmount.text = data.amount
+                lBalance.tvAmount.text = data.amountFormatted
                 lBalance.tvFiatAmount.text = data.fiatAmountFormatted
                 lBalance.tvStatus.setLoadingStatus(R.string.wallet_balance_loading)
             }
@@ -244,7 +258,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
                 lBalance.root.show()
                 lBalance.groupBalance.show()
                 lBalance.tvError.hide()
-                lBalance.tvAmount.text = data.amount
+                lBalance.tvAmount.text = data.amountFormatted
                 lBalance.tvFiatAmount.text = data.fiatAmountFormatted
                 when (data.status) {
                     BalanceStatus.VerifiedOnline, BalanceStatus.SameCurrencyTransactionInProgress -> {

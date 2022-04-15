@@ -1,5 +1,11 @@
 package com.tangem.tap.features.home.compose
 
+import android.content.Context
+import android.graphics.Typeface
+import android.util.TypedValue
+import android.view.View
+import android.view.ViewGroup
+import android.widget.TextView
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Text
@@ -14,6 +20,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import com.tangem.tangem_sdk_new.extensions.dpToPx
+import com.tangem.tap.common.compose.SpacerS16
+import com.tangem.tap.common.compose.SpacerS24
+import com.tangem.tap.common.compose.extensions.toAndroidGraphicsColor
 import com.tangem.wallet.R
 
 @Composable
@@ -22,8 +33,9 @@ fun StoriesGeneralContent(
     subtitleText: String,
     imageSource: Int?,
     isDarkBackground: Boolean,
+    subtitleTextId: Int? = null,
     imageComposable: (() -> Unit)? = null,
-    ) {
+) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
@@ -43,29 +55,49 @@ fun StoriesGeneralContent(
             textAlign = TextAlign.Center
         )
 
-        Spacer(modifier = Modifier.size(16.dp))
+        SpacerS16()
 
-        Text(
-            text = subtitleText,
-            fontSize = 20.sp,
-            fontWeight = FontWeight.Normal,
-            modifier = Modifier
-                .padding(start = 40.dp, end = 40.dp),
-            color = Color(0xFFA6AAAD),
-            textAlign = TextAlign.Center
-        )
+        SubtitleText(subtitleText, subtitleTextId)
 
-        Spacer(modifier = Modifier.size(25.dp))
+        SpacerS24()
 
         if (imageSource != null) {
             Image(
                 painter = painterResource(id = imageSource),
                 contentDescription = null,
-                contentScale = if(isDarkBackground) ContentScale.Inside else ContentScale.FillWidth,
+                contentScale = if (isDarkBackground) ContentScale.Inside else ContentScale.FillWidth,
                 modifier = Modifier.fillMaxWidth()
             )
         }
         imageComposable?.invoke()
+    }
+}
+
+@Composable
+fun SubtitleText(subtitleText: String, subtitleTextId: Int?) {
+    val color = Color(0xFFA6AAAD)
+
+    if (subtitleTextId == null) {
+        Text(
+            text = subtitleText,
+            fontSize = 20.sp,
+            fontWeight = FontWeight.Normal,
+            modifier = Modifier.padding(start = 40.dp, end = 40.dp),
+            color = color,
+            textAlign = TextAlign.Center
+        )
+    } else {
+        HtmlText(subtitleTextId) { context ->
+            val padding = context.dpToPx(40f).toInt()
+            TextView(context).apply {
+                layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                setPadding(padding, 0, padding, 0)
+                textAlignment = View.TEXT_ALIGNMENT_CENTER
+                typeface = Typeface.DEFAULT
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f)
+                setTextColor(color.toAndroidGraphicsColor())
+            }
+        }
     }
 }
 
@@ -85,6 +117,7 @@ fun StoriesUltraSecureBackup() {
         titleText = stringResource(id = R.string.story_backup_title),
         subtitleText = stringResource(id = R.string.story_backup_description),
         imageSource = R.drawable.floating_cards,
+        subtitleTextId = R.string.story_backup_description,
         isDarkBackground = false
     )
 }
@@ -117,4 +150,13 @@ fun StoriesWalletForEveryone() {
         imageSource = R.drawable.wallet_for_everyone,
         isDarkBackground = true
     )
+}
+
+@Composable
+fun HtmlText(
+    stringResId: Int,
+    modifier: Modifier = Modifier,
+    factory: (Context) -> TextView
+) {
+    AndroidView(factory, modifier) { it.text = it.context.getText(stringResId) }
 }
