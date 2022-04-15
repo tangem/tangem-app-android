@@ -168,7 +168,8 @@ class CurrenciesRepository(val context: Application) {
     fun getSupportedTokens(isTestNet: Boolean = false): List<Currency> {
         val fileName = if (isTestNet) "testnet_tokens" else "tokens"
         val json = context.assets.readJsonFileToString(fileName)
-        return currenciesAdapter.fromJson(json)!!.tokens.map { Currency.fromJsonObject(it) }
+        return currenciesAdapter.fromJson(json)!!.tokens
+            .map { Currency.fromJsonObject(it, isTestNet) }
     }
 
     private fun loadTokensJson(blockchain: Blockchain): String? {
