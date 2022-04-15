@@ -5,8 +5,8 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.hdWallet.DerivationPath
+import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.redux.StateDialog
-import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.PersonalSignDialogData
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.TransactionRequestDialogData
 import com.trustwallet.walletconnect.models.WCPeerMeta
