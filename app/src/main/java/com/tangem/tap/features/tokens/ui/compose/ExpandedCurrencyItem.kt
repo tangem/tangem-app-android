@@ -11,12 +11,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.SubcomposeAsyncImage
+import coil.request.ImageRequest
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.tap.domain.tokens.Currency
@@ -36,9 +38,6 @@ fun ExpandedCurrencyItem(
     onAddCurrencyToggled: (Currency, TokenWithBlockchain?) -> Unit,
     onNetworkItemClicked: (ContractAddress) -> Unit
 ) {
-    val blockchain = Blockchain.fromNetworkId(currency.id)
-    val iconRes = currency.iconUrl
-
     Column {
         Row(
             modifier = Modifier
@@ -46,7 +45,10 @@ fun ExpandedCurrencyItem(
                 .clickable(onClick = { onCurrencyClick(currency.id) })
         ) {
             SubcomposeAsyncImage(
-                model = iconRes,
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(currency.iconUrl)
+                    .crossfade(true)
+                    .build(),
                 contentDescription = currency.id,
                 loading = { CurrencyPlaceholderIcon(currency.id) },
                 error = { CurrencyPlaceholderIcon(currency.id) },
