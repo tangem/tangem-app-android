@@ -106,6 +106,7 @@ object TangemSdk {
             is TangemSdkError.IssuerSignatureLoadingFailed -> TangemSdkError.IssuerSignatureLoadingFailed()
             is TangemSdkError.BackupFailedFirmware -> TangemSdkError.BackupFailedFirmware()
             is TangemSdkError.UserForgotTheCode -> TangemSdkError.UserForgotTheCode()
+            is TangemSdkError.BackupFailedIncompatibleBatch -> TangemSdkError.BackupFailedIncompatibleBatch()
         }
     }
 
