@@ -107,12 +107,9 @@ class CurrenciesRepository(val context: Application) {
         }
         return try {
             val json = context.readFileText(getFileNameForBlockchains(cardId))
-            blockchainNetworkAdapter.fromJson(json)?.distinct() ?: loadSavedCurrenciesOldWay(
-                cardId,
-                derivationStyle
-            )
+            blockchainNetworkAdapter.fromJson(json)?.distinct() ?: emptyList()
         } catch (exception: Exception) {
-            emptyList()
+            tryToLoadPreviousFormatAndMigrate(cardId, derivationStyle)
         }
     }
 
@@ -123,6 +120,20 @@ class CurrenciesRepository(val context: Application) {
                 derivationPath = it.derivationPath(DerivationStyle.LEGACY)?.rawPath,
                 tokens = emptyList()
             )
+        }
+    }
+
+    private fun tryToLoadPreviousFormatAndMigrate(
+        cardId: String,
+        derivationStyle: DerivationStyle?
+    ): List<BlockchainNetwork> {
+        return try {
+            loadSavedCurrenciesOldWay(
+                cardId,
+                derivationStyle
+            )
+        } catch (exception: Exception) {
+            emptyList()
         }
     }
 
