@@ -58,12 +58,11 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     override fun onStart() {
         super.onStart()
         store.subscribe(this) { state ->
-            state.skipRepeats { oldState, newState ->
-                oldState.walletState == newState.walletState
-            }.select { it.walletState }
+            state.select { it.walletState }
         }
         walletView.setFragment(this, binding)
-        store.dispatch(WalletAction.UpdateWallet(force = false))
+//        store.dispatch(WalletAction.UpdateWallet(force = false))
+//        store.dispatch(WalletAction.LoadWallet())
     }
 
     override fun onStop() {
