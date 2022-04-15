@@ -19,11 +19,11 @@ class MultiWalletReducer {
     fun reduce(action: WalletAction.MultiWallet, state: WalletState): WalletState {
         return when (action) {
             is WalletAction.MultiWallet.AddBlockchains -> {
-                val wallets: List<WalletStore> = action.blockchains.map { blockchain ->
-                    val walletManager = action.walletManagers.first {
+                val wallets: List<WalletStore> = action.blockchains.mapNotNull { blockchain ->
+                    val walletManager = action.walletManagers.firstOrNull {
                         it.wallet.blockchain == blockchain.blockchain &&
                                 (it.wallet.publicKey.derivationPath?.rawPath == blockchain.derivationPath)
-                    }
+                    } ?: return@mapNotNull null
                     val wallet = walletManager.wallet
                     val cardToken = if (!state.isMultiwalletAllowed) {
                         wallet.getFirstToken()?.symbol?.let { TokenData("", tokenSymbol = it) }
