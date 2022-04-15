@@ -9,6 +9,9 @@ import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.common.card.Card
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.services.Result
+import com.tangem.domain.common.TapWorkarounds.isStart2Coin
+import com.tangem.domain.common.extensions.withMainContext
+import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.AnalyticsParam
@@ -17,12 +20,11 @@ import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.NavigationAction
-import com.tangem.tap.domain.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.domain.TangemSigner
 import com.tangem.tap.domain.TapError
-import com.tangem.tap.domain.TapWorkarounds.isStart2Coin
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.extensions.minimalAmount
+import com.tangem.tap.domain.tokens.BlockchainNetwork
 import com.tangem.tap.features.demo.DemoTransactionSender
 import com.tangem.tap.features.demo.isDemoWallet
 import com.tangem.tap.features.send.redux.*
@@ -202,11 +204,11 @@ private fun sendTransaction(
                     }
                     scope.launch(Dispatchers.IO) {
                         withContext(Dispatchers.Main) {
-                            dispatch(WalletAction.UpdateWallet(walletManager.wallet.blockchain))
+                            dispatch(WalletAction.LoadWallet(BlockchainNetwork.fromWalletManager(walletManager)))
                         }
                         delay(11000) // more than 10000 to avoid throttling
                         withContext(Dispatchers.Main) {
-                            dispatch(WalletAction.UpdateWallet(walletManager.wallet.blockchain))
+                            dispatch(WalletAction.LoadWallet(BlockchainNetwork.fromWalletManager(walletManager)))
                         }
                     }
                 }
