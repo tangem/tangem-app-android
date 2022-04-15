@@ -3,6 +3,9 @@ package com.tangem.tap.features.onboarding.products.twins.redux
 import com.tangem.blockchain.extensions.Result
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.guard
+import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.common.extensions.withMainContext
+import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.postUi
 import com.tangem.tap.common.redux.AppDialog
@@ -10,10 +13,8 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
-import com.tangem.tap.domain.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.makePrimaryWalletManager
-import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.domain.twins.TwinCardsManager
 import com.tangem.tap.features.wallet.redux.Currency
 import com.tangem.tap.features.wallet.redux.ProgressState
@@ -214,7 +215,10 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
             }
             val isLoadedBefore = twinCardsState.walletBalance.state != ProgressState.Loading
             val balanceIsLoading = twinCardsState.walletBalance.copy(
-                currency = Currency.Blockchain(walletManager.wallet.blockchain),
+                currency = Currency.Blockchain(
+                    walletManager.wallet.blockchain,
+                    walletManager.wallet.publicKey.derivationPath?.rawPath
+                ),
                 state = ProgressState.Loading,
                 error = null,
                 criticalError = null
