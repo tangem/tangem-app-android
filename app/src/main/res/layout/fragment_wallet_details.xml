@@ -99,8 +99,8 @@
                     app:layout_constraintTop_toBottomOf="@id/rv_pending_transaction" />
 
                 <include
-                    android:id="@+id/l_rent_warning"
-                    layout="@layout/layout_wallet_details_rent"
+                    android:id="@+id/l_warning"
+                    layout="@layout/layout_wallet_details_warning"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
@@ -168,7 +168,7 @@
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toStartOf="@+id/btn_sell"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/l_rent_warning"
+                    app:layout_constraintTop_toBottomOf="@+id/l_warning"
                     app:layout_constraintVertical_bias="1" />
 
                 <com.google.android.material.button.MaterialButton
@@ -185,7 +185,7 @@
                     app:layout_constraintEnd_toStartOf="@id/btn_confirm"
                     app:layout_constraintHorizontal_chainStyle="packed"
                     app:layout_constraintStart_toEndOf="@id/btn_trade"
-                    app:layout_constraintTop_toBottomOf="@+id/l_rent_warning"
+                    app:layout_constraintTop_toBottomOf="@+id/l_warning"
                     app:layout_constraintVertical_bias="1" />
 
                 <com.google.android.material.button.MaterialButton
@@ -201,7 +201,7 @@
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toEndOf="@id/btn_sell"
-                    app:layout_constraintTop_toBottomOf="@+id/l_rent_warning"
+                    app:layout_constraintTop_toBottomOf="@+id/l_warning"
                     app:layout_constraintVertical_bias="1" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
