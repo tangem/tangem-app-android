@@ -5,12 +5,11 @@ import android.net.Uri
 import androidx.core.content.ContextCompat
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
-import com.tangem.blockchain.common.Wallet
-import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.isZero
 import com.tangem.common.services.Result
+import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.operations.attestation.Attestation
 import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.tap.common.analytics.Analytics
@@ -59,7 +58,11 @@ class WalletMiddleware {
         when (action) {
             is WalletAction.TradeCryptoAction -> tradeCryptoMiddleware.handle(state, action)
             is WalletAction.Warnings -> warningsMiddleware.handle(action, globalState)
-            is WalletAction.MultiWallet -> multiWalletMiddleware.handle(action, walletState, globalState)
+            is WalletAction.MultiWallet -> multiWalletMiddleware.handle(
+                action,
+                walletState,
+                globalState
+            )
             is WalletAction.LoadWallet -> {
                 scope.launch {
                     if (action.blockchain == null) {
@@ -68,6 +71,7 @@ class WalletMiddleware {
                         }.awaitAll()
                     } else {
                         val walletManager = walletState.getWalletManager(action.blockchain)
+                            ?: action.walletManager
                         walletManager?.let { globalState.tapWalletManager.loadWalletData(it) }
                     }
                 }
@@ -75,33 +79,46 @@ class WalletMiddleware {
             is WalletAction.LoadWallet.Success -> {
                 val coinAmount = action.wallet.amounts[AmountType.Coin]?.value
                 if (coinAmount != null && !coinAmount.isZero()) {
-                    if (walletState.getWalletData(action.wallet.blockchain) == null) {
-                        store.dispatch(WalletAction.MultiWallet.AddBlockchain(action.wallet.blockchain))
-                        store.dispatch(WalletAction.LoadWallet.Success(action.wallet))
+                    if (walletState.getWalletData(action.blockchain) == null) {
+                        store.dispatch(
+                            WalletAction.MultiWallet.AddBlockchain(
+                                action.blockchain,
+                                null
+                            )
+                        )
+                        store.dispatch(
+                            WalletAction.LoadWallet.Success(
+                                action.wallet,
+                                action.blockchain
+                            )
+                        )
                     }
                 }
                 store.dispatch(WalletAction.Warnings.CheckHashesCount.CheckHashesCountOnline)
                 warningsMiddleware.tryToShowAppRatingWarning(action.wallet)
             }
             is WalletAction.LoadFiatRate -> {
+                val tapWalletManager = globalState.tapWalletManager
+                val fiatAppCurrency = globalState.appCurrency
                 scope.launch {
                     when {
                         action.wallet != null -> {
                             globalState.tapWalletManager.loadFiatRate(
-                                fiatCurrency = globalState.appCurrency,
+                                fiatCurrency = fiatAppCurrency,
                                 wallet = action.wallet,
                             )
                         }
                         action.currencyList != null -> {
                             globalState.tapWalletManager.loadFiatRate(
-                                fiatCurrency = globalState.appCurrency,
+                                fiatCurrency = fiatAppCurrency,
                                 currencies = action.currencyList,
                             )
                         }
                         else -> {
+                            val currencyList = walletState.walletsData.map { it.currency }
                             globalState.tapWalletManager.loadFiatRate(
-                                fiatCurrency = globalState.appCurrency,
-                                currencies = walletState.wallets.map { it.currency },
+                                fiatCurrency = fiatAppCurrency,
+                                currencies = currencyList,
                             )
                         }
                     }
@@ -114,7 +131,8 @@ class WalletMiddleware {
                     )
                     when (result) {
                         is CompletionResult.Success -> {
-                            val scanNoteResponse = globalState.scanResponse?.copy(card = result.data)
+                            val scanNoteResponse =
+                                globalState.scanResponse?.copy(card = result.data)
                             scanNoteResponse?.let { store.onCardScanned(scanNoteResponse) }
                         }
                         is CompletionResult.Failure -> {
@@ -124,22 +142,6 @@ class WalletMiddleware {
                                     Analytics.ActionToLog.CreateWallet,
                                     card = store.state.detailsState.scanResponse?.card
                                 )
-                            }
-                        }
-                    }
-                }
-            }
-            is WalletAction.UpdateWallet -> {
-                if (action.blockchain != null) {
-                    scope.launch {
-                        val walletManager = walletState.getWalletManager(action.blockchain)
-                        walletManager?.let { globalState.tapWalletManager.updateWallet(it, action.force) }
-                    }
-                } else {
-                    scope.launch {
-                        if (walletState.state == ProgressState.Done) {
-                            walletState.walletManagers.map { walletManager ->
-                                globalState.tapWalletManager.updateWallet(walletManager, action.force)
                             }
                         }
                     }
@@ -173,7 +175,7 @@ class WalletMiddleware {
             is WalletAction.LoadData -> {
                 scope.launch {
                     val scanNoteResponse = globalState.scanResponse ?: return@launch
-                    if (!walletState.wallets.isEmpty()) {
+                    if (walletState.walletsData.isNotEmpty()) {
                         globalState.tapWalletManager.reloadData(scanNoteResponse)
                     } else {
                         globalState.tapWalletManager.loadData(scanNoteResponse)
@@ -206,8 +208,10 @@ class WalletMiddleware {
                 }
             }
             is WalletAction.ShowDialog.QrCode -> {
-                val selectedWalletData = walletState.getWalletData(walletState.selectedWallet) ?: return
-                val selectedAddressData = selectedWalletData.walletAddresses?.selectedAddress ?: return
+                val selectedWalletData =
+                    walletState.getWalletData(walletState.selectedCurrency) ?: return
+                val selectedAddressData =
+                    selectedWalletData.walletAddresses?.selectedAddress ?: return
 
                 val currency = selectedWalletData.currency
                 store.dispatchDialogShow(AppDialog.AddressInfoDialog(currency, selectedAddressData))
@@ -218,28 +222,38 @@ class WalletMiddleware {
     private fun prepareSendAction(amount: Amount?, state: WalletState?): Action {
         val selectedWalletData = state?.getSelectedWalletData()
         val currency = selectedWalletData?.currency
-        val walletManager = state?.getWalletManager(currency)
-        val wallet = walletManager?.wallet
+        val walletStore = state?.getWalletStore(currency)
 
         return if (amount != null) {
             if (amount.type is AmountType.Token) {
-                prepareSendActionForToken(amount, state, selectedWalletData, wallet, walletManager)
+                prepareSendActionForToken(amount, state, selectedWalletData, walletStore)
             } else {
-                PrepareSendScreen(amount, selectedWalletData?.fiatRate, walletManager)
+                PrepareSendScreen(amount, selectedWalletData?.fiatRate, walletStore?.walletManager)
             }
         } else {
-            val amounts = wallet?.amounts?.toSendableAmounts()
+            val amounts = walletStore?.walletManager?.wallet?.amounts?.toSendableAmounts()
             if (currency != null && state.isMultiwalletAllowed) {
                 when (currency) {
                     is Currency.Blockchain -> {
-                        val amountToSend = amounts?.find { it.currencySymbol == currency.blockchain.currency }
-                            ?: return WalletAction.Send.ChooseCurrency(amounts)
-                        PrepareSendScreen(amountToSend, selectedWalletData.fiatRate, walletManager)
+                        val amountToSend =
+                            amounts?.find { it.currencySymbol == currency.blockchain.currency }
+                                ?: return WalletAction.Send.ChooseCurrency(amounts)
+                        PrepareSendScreen(
+                            coinAmount = amountToSend,
+                            coinRate = selectedWalletData.fiatRate,
+                            walletManager = walletStore.walletManager
+                        )
                     }
                     is Currency.Token -> {
-                        val amountToSend = amounts?.find { it.currencySymbol == currency.token.symbol }
-                            ?: return WalletAction.Send.ChooseCurrency(amounts)
-                        prepareSendActionForToken(amountToSend, state, selectedWalletData, wallet, walletManager)
+                        val amountToSend =
+                            amounts?.find { it.currencySymbol == currency.token.symbol }
+                                ?: return WalletAction.Send.ChooseCurrency(amounts)
+                        prepareSendActionForToken(
+                            amount = amountToSend,
+                            state = state,
+                            selectedWalletData = selectedWalletData,
+                            walletStore = walletStore
+                        )
                     }
                 }
             } else {
@@ -247,24 +261,36 @@ class WalletMiddleware {
                     WalletAction.Send.ChooseCurrency(amounts)
                 } else {
                     val amountToSend = amounts?.first()
-                    PrepareSendScreen(amountToSend, selectedWalletData?.fiatRate, walletManager)
+                    PrepareSendScreen(
+                        coinAmount = amountToSend,
+                        coinRate = selectedWalletData?.fiatRate,
+                        walletManager = walletStore?.walletManager
+                    )
                 }
             }
         }
     }
 
     private fun prepareSendActionForToken(
-        amount: Amount, state: WalletState?, selectedWalletData: WalletData?, wallet: Wallet?,
-        walletManager: WalletManager?
+        amount: Amount,
+        state: WalletState?,
+        selectedWalletData: WalletData?,
+        walletStore: WalletStore?
     ): PrepareSendScreen {
-        val coinRate = state?.getWalletData(wallet?.blockchain)?.fiatRate
+        val coinRate = state?.getWalletData(walletStore?.blockchainNetwork)?.fiatRate
         val tokenRate = if (state?.isMultiwalletAllowed == true) {
             selectedWalletData?.fiatRate
         } else {
             selectedWalletData?.currencyData?.token?.fiatRate
         }
+        val coinAmount = walletStore?.walletManager?.wallet?.amounts?.get(AmountType.Coin)
+
         return PrepareSendScreen(
-            wallet?.amounts?.get(AmountType.Coin), coinRate, walletManager,
-            amount, tokenRate)
+            coinAmount = coinAmount,
+            coinRate = coinRate,
+            walletManager = walletStore?.walletManager,
+            tokenAmount = amount,
+            tokenRate = tokenRate
+        )
     }
 }

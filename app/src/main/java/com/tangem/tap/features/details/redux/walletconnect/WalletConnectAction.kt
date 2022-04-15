@@ -1,8 +1,8 @@
 package com.tangem.tap.features.details.redux.walletconnect
 
 import android.app.Activity
+import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.redux.NotificationAction
-import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.wallet.R
 import com.trustwallet.walletconnect.models.binance.WCBinanceTradeOrder
 import com.trustwallet.walletconnect.models.binance.WCBinanceTransferOrder

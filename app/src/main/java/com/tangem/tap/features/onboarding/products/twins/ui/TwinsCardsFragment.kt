@@ -13,6 +13,7 @@ import com.squareup.picasso.Picasso
 import com.tangem.Message
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.VoidCallback
+import com.tangem.domain.common.TwinCardNumber
 import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.LeapfrogWidget
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.navigation.AppScreen
@@ -21,7 +22,6 @@ import com.tangem.tap.common.redux.navigation.ShareElement
 import com.tangem.tap.common.toggleWidget.RefreshBalanceWidget
 import com.tangem.tap.common.transitions.InternalNoteLayoutTransition
 import com.tangem.tap.domain.twins.AssetReader
-import com.tangem.tap.domain.twins.TwinCardNumber
 import com.tangem.tap.domain.twins.TwinsCardWidget
 import com.tangem.tap.features.addBackPressHandler
 import com.tangem.tap.features.onboarding.products.BaseOnboardingFragment
