@@ -7,12 +7,10 @@ import android.os.Build
 import com.tangem.Log
 import com.tangem.TangemSdkLogger
 import com.tangem.blockchain.common.*
-import com.tangem.common.card.Card
+import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.common.TapWorkarounds
 import com.tangem.tap.common.extensions.sendEmail
 import com.tangem.tap.common.extensions.stripZeroPlainString
-import com.tangem.tap.domain.TapWorkarounds
-import com.tangem.tap.features.feedback.EmailData.Companion.appendBlankLine
-import com.tangem.tap.features.feedback.EmailData.Companion.appendDelimiter
 import com.tangem.wallet.R
 import timber.log.Timber
 import java.io.File
@@ -86,16 +84,19 @@ class FeedbackManager(
 class TangemLogCollector : TangemSdkLogger {
     private val dateFormatter = SimpleDateFormat("HH:mm:ss.SSS")
     private val logs = mutableListOf<String>()
+    private val mutex = Object()
 
     override fun log(message: () -> String, level: Log.Level) {
         val time = dateFormatter.format(Date())
-        logs.add("$time: ${message()}\n")
+        synchronized(mutex) {
+            logs.add("$time: ${message()}\n")
+        }
     }
 
-    fun getLogs(): List<String> = logs.toList()
+    fun getLogs(): List<String> = synchronized(mutex) { logs.toList() }
 
     fun clearLogs() {
-        logs.clear()
+        synchronized(mutex) { logs.clear() }
     }
 }
 
@@ -105,8 +106,7 @@ class AdditionalEmailInfo {
         var address: String = "",
         var explorerLink: String = "",
         var host: String = "",
-        //    var outputsCount: String = ""
-        //    var transactionHex: String = ""
+        var derivationPath: String = "",
     )
 
     var appVersion: String = ""
@@ -115,6 +115,7 @@ class AdditionalEmailInfo {
     var cardId: String = ""
     var cardFirmwareVersion: String = ""
     var cardIssuer: String = ""
+    var cardBlockchain: String = ""
 
     // wallets
     internal val walletsInfo = mutableListOf<EmailWalletInfo>()
@@ -141,12 +142,13 @@ class AdditionalEmailInfo {
         }
     }
 
-    fun setCardInfo(card: Card) {
-        cardId = card.cardId
-        cardFirmwareVersion = card.firmwareVersion.stringValue
-        cardIssuer = card.issuer.name
-        signedHashesCount = card.wallets
-            .joinToString(";") { "${it.curve?.curve} - ${it.totalSignedHashes}" }
+    fun setCardInfo(data: ScanResponse) {
+        cardId = data.card.cardId
+        cardBlockchain = data.walletData?.blockchain ?: ""
+        cardFirmwareVersion = data.card.firmwareVersion.stringValue
+        cardIssuer = data.card.issuer.name
+        signedHashesCount = data.card.wallets
+            .joinToString("; ") { "${it.curve.curve} - ${it.totalSignedHashes}" }
     }
 
     fun setWalletsInfo(walletManagers: List<WalletManager>) {
@@ -158,7 +160,8 @@ class AdditionalEmailInfo {
                     blockchain = manager.wallet.blockchain,
                     address = getAddress(manager.wallet),
                     explorerLink = getExploreUri(manager.wallet),
-                    host = manager.currentHost
+                    host = manager.currentHost,
+                    derivationPath = manager.wallet.publicKey.derivationPath?.rawPath ?: ""
                 )
             )
             if (manager.cardTokens.isNotEmpty()) {
@@ -172,7 +175,8 @@ class AdditionalEmailInfo {
             blockchain = wallet.blockchain,
             address = getAddress(wallet),
             explorerLink = getExploreUri(wallet),
-            host = host
+            host = host,
+            derivationPath = wallet.publicKey.derivationPath?.rawPath ?: ""
         )
 
         this.destinationAddress = destinationAddress
@@ -217,15 +221,11 @@ interface EmailData {
     fun joinTogether(context: Context, infoHolder: AdditionalEmailInfo): String {
         return StringBuilder().apply {
             append(context.getString(mainMessageResId))
-            append("\n\n\n\n")
+            appendLine(3)
             append(context.getString(getDataCollectionMessageResId()))
+            appendLine()
             append(createOptionalMessage(infoHolder))
         }.toString()
-    }
-
-    companion object {
-        internal fun StringBuilder.appendDelimiter() = append("----------\n")
-        internal fun StringBuilder.appendBlankLine() = append("\n")
     }
 }
 
@@ -233,17 +233,11 @@ class RateCanBeBetterEmail : EmailData {
     override val subjectResId: Int = R.string.feedback_subject_rate_negative
     override val mainMessageResId: Int = R.string.feedback_preface_rate_negative
 
-    override fun createOptionalMessage(infoHolder: AdditionalEmailInfo): String {
-        val walletInfo = infoHolder.walletsInfo[0]
-        return StringBuilder().apply {
-            appendKeyValue("Card ID", infoHolder.cardId)
-            appendKeyValue("Blockchain", walletInfo.blockchain.fullName)
-            appendBlankLine()
-            appendKeyValue("Phone model", infoHolder.phoneModel)
-            appendKeyValue("OS version", infoHolder.osVersion)
-            appendKeyValue("App version", infoHolder.appVersion)
-        }.toString()
-    }
+    override fun createOptionalMessage(infoHolder: AdditionalEmailInfo): String = EmailDataBuilder(infoHolder)
+        .appendCardInfo()
+        .appendLine()
+        .appendPhoneInfo()
+        .build()
 }
 
 class ScanFailsEmail : EmailData {
@@ -251,51 +245,31 @@ class ScanFailsEmail : EmailData {
     override val subjectResId: Int = R.string.feedback_subject_scan_failed
     override val mainMessageResId: Int = R.string.feedback_preface_scan_failed
 
-    override fun joinTogether(context: Context, infoHolder: AdditionalEmailInfo): String {
-        return StringBuilder().apply {
-            append(context.getString(mainMessageResId))
-            append("\n\n\n\n")
-            append(createOptionalMessage(infoHolder))
-        }.toString()
-    }
+    override fun joinTogether(context: Context, infoHolder: AdditionalEmailInfo): String = StringBuilder().apply {
+        append(context.getString(mainMessageResId))
+        appendLine(4)
+        append(createOptionalMessage(infoHolder))
+    }.toString()
 
-    override fun createOptionalMessage(infoHolder: AdditionalEmailInfo): String {
-        return StringBuilder().apply {
-            appendBlankLine()
-            appendKeyValue("Phone model", infoHolder.phoneModel)
-            appendKeyValue("OS version", infoHolder.osVersion)
-            appendKeyValue("App version", infoHolder.appVersion)
-        }.toString()
-    }
+    override fun createOptionalMessage(infoHolder: AdditionalEmailInfo): String = EmailDataBuilder(infoHolder)
+        .appendPhoneInfo()
+        .build()
 }
 
-class SendTransactionFailedEmail(private val error: String) : EmailData {
+class SendTransactionFailedEmail(
+    val error: String
+) : EmailData {
+
     override val subjectResId: Int = R.string.feedback_subject_tx_failed
     override val mainMessageResId: Int = R.string.feedback_preface_tx_failed
 
-    override fun createOptionalMessage(infoHolder: AdditionalEmailInfo): String {
-        val walletInfo = infoHolder.onSendErrorWalletInfo ?: AdditionalEmailInfo.EmailWalletInfo()
-        return StringBuilder().apply {
-            appendKeyValue("Card ID", infoHolder.cardId)
-            appendKeyValue("Firmware version", infoHolder.cardFirmwareVersion)
-            appendKeyValue("Signed hashes", infoHolder.signedHashesCount)
-            appendDelimiter()
-            appendKeyValue("Blockchain", walletInfo.blockchain.fullName)
-            appendKeyValue("Host", walletInfo.host)
-            appendKeyValue("Token", infoHolder.token)
-            appendKeyValue("Error", error)
-            appendDelimiter()
-            appendKeyValue("Source address", walletInfo.address)
-            appendKeyValue("Destination address", infoHolder.destinationAddress)
-            appendKeyValue("Amount", infoHolder.amount)
-            appendKeyValue("Fee", infoHolder.fee)
-            appendBlankLine()
-            appendKeyValue("Phone model", infoHolder.phoneModel)
-            appendKeyValue("OS version", infoHolder.osVersion)
-            appendKeyValue("App version", infoHolder.appVersion)
-//            appendKeyValue("Transaction HEX", infoHolder.transactionHex)
-        }.toString()
-    }
+    override fun createOptionalMessage(infoHolder: AdditionalEmailInfo): String = EmailDataBuilder(infoHolder)
+        .appendCardInfo()
+        .appendDelimiter()
+        .appendTxFailedBlockchainInfo(error)
+        .appendLine()
+        .appendPhoneInfo()
+        .build()
 }
 
 class FeedbackEmail : EmailData {
@@ -316,37 +290,91 @@ class FeedbackEmail : EmailData {
         isS2CCard = TapWorkarounds.isStart2CoinIssuer(infoHolder.cardIssuer)
     }
 
-    override fun createOptionalMessage(infoHolder: AdditionalEmailInfo): String {
-        val builder = StringBuilder()
+    override fun createOptionalMessage(infoHolder: AdditionalEmailInfo): String = EmailDataBuilder(infoHolder)
+        .appendCardInfo()
+        .appendWalletsInfo()
+        .appendLine()
+        .appendPhoneInfo()
+        .build()
+}
+
+
+class EmailDataBuilder(
+    private val infoHolder: AdditionalEmailInfo
+) {
+    val builder = StringBuilder()
+
+    fun appendDelimiter(): EmailDataBuilder {
+        builder.appendDelimiter()
+        return this
+    }
+
+    fun appendLine(count: Int = 1): EmailDataBuilder {
+        builder.appendLine(count)
+        return this
+    }
+
+    fun appendCardInfo(): EmailDataBuilder {
         builder.appendKeyValue("Card ID", infoHolder.cardId)
         builder.appendKeyValue("Firmware version", infoHolder.cardFirmwareVersion)
+        builder.appendKeyValue("Card Blockchain", infoHolder.cardBlockchain)
         builder.appendKeyValue("Signed hashes", infoHolder.signedHashesCount)
+        return this
+    }
 
+    fun appendWalletsInfo(): EmailDataBuilder {
         infoHolder.walletsInfo.forEach {
             builder.appendDelimiter()
             builder.appendKeyValue("Blockchain", it.blockchain.fullName)
             builder.appendKeyValue("Host", it.host)
             builder.appendKeyValue("Wallet address", it.address)
+            builder.appendKeyValue("Derivation path", it.derivationPath)
             builder.appendKeyValue("Explorer link", it.explorerLink)
-        }
-        builder.appendBlankLine()
 
-        infoHolder.tokens.forEach { tokens ->
-            builder.appendDelimiter()
-            builder.appendKeyValue("Blockchain", tokens.key.fullName)
-            builder.appendKeyValue("Tokens", tokens.value.map { "${it.name} - ${it.symbol}" }.toString())
+            infoHolder.tokens[it.blockchain]?.let { tokens ->
+                builder.append("Tokens:")
+                appendLine()
+                tokens.forEach { token ->
+                    builder.appendKeyValue("Name", token.name)
+                    if (token.id != null) builder.appendKeyValue("Id", token.id ?: "")
+                    builder.appendKeyValue("Contract address", token.contractAddress)
+                }
+            }
         }
+        return this
+    }
+
+    fun appendTxFailedBlockchainInfo(error: String): EmailDataBuilder {
+        val walletInfo = infoHolder.onSendErrorWalletInfo ?: AdditionalEmailInfo.EmailWalletInfo()
+        builder.appendKeyValue("Blockchain", walletInfo.blockchain.fullName)
+        builder.appendKeyValue("Derivation path", walletInfo.derivationPath)
+        builder.appendKeyValue("Host", walletInfo.host)
+        builder.appendKeyValue("Token", infoHolder.token)
+        builder.appendKeyValue("Error", error)
         builder.appendDelimiter()
-        builder.appendBlankLine()
-//            appendKeyValue("Outputs count", infoHolder.outputsCount)
+        builder.appendKeyValue("Source address", walletInfo.address)
+        builder.appendKeyValue("Destination address", infoHolder.destinationAddress)
+        builder.appendKeyValue("Amount", infoHolder.amount)
+        builder.appendKeyValue("Fee", infoHolder.fee)
+        return this
+    }
+
+    fun appendPhoneInfo(): EmailDataBuilder {
         builder.appendKeyValue("Phone model", infoHolder.phoneModel)
         builder.appendKeyValue("OS version", infoHolder.osVersion)
         builder.appendKeyValue("App version", infoHolder.appVersion)
-
-        return builder.toString()
+        return this
     }
+
+    fun build(): String = builder.toString()
 }
 
 private fun StringBuilder.appendKeyValue(key: String, value: String): StringBuilder {
     return if (value.isNotBlank()) this.append("$key: $value\n") else this
+}
+
+private fun StringBuilder.appendDelimiter(): StringBuilder = append("----------\n")
+
+private fun StringBuilder.appendLine(count: Int = 1): StringBuilder {
+    return append(List(count) { "\n" }.joinToString(separator = ""))
 }
