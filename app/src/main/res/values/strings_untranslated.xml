@@ -67,8 +67,6 @@
     <string name="warning_rate_app_title" translatable="false">One question</string>
     <string name="warning_rate_app_message" translatable="false">How do you like Tangem?</string>
 
-    <string name="custom_token_creation_error_empty_field" translatable="false">All fields are required</string>
-
     //Manage tokens
     <string name="manage_tokens_no_tokens" translatable="false">No tokens yet</string>
     <string name="manage_tokens_section_title_added_tokens" translatable="false">Added tokens</string>
@@ -80,18 +78,31 @@
     <string name="add_custom" translatable="false">Add Custom</string>
     <string name="add_token_section_title_custom_tokens" translatable="false">Custom tokens</string>
     <string name="add_token_section_title_popular_tokens" translatable="false">Popular tokens</string>
-    <string name="add_custom_token_title" translatable="false">Add Custom Token</string>
-    <string name="custom_token_creation_error_empty_fields" translatable="false">Please, fill all fields</string>
-    <string name="custom_token_creation_error_wrong_decimals" translatable="false">Entered number is not a valid decimals number</string>
-    <string name="custom_token_name_input_title" translatable="false">Name</string>
-    <string name="custom_token_token_symbol_input_title" translatable="false">Token symbol</string>
-    <string name="custom_token_contract_address_input_title" translatable="false">Contract address</string>
-    <string name="custom_token_decimals_input_title" translatable="false">Decimals</string>
-    <string name="custom_token_name_input_placeholder" translatable="false">ex. USD Coin</string>
-    <string name="custom_token_token_symbol_input_placeholder" translatable="false">ex. USDC</string>
     <string name="add_token_added" translatable="false">Added</string>
     <string name="remove_token" translatable="false">Remove token</string>
     <string name="token_icon" translatable="false">Token icon</string>
+
+    <string name="add_custom_token_title" translatable="false">Add Token</string>
+    <string name="custom_token_contract_address_input_title" translatable="false">Contract address</string>
+    <string name="custom_token_creation_error_network_not_selected" translatable="false">Please select the network</string>
+    <string name="custom_token_creation_error_empty_fields" translatable="false">Please fill in all the fields</string>
+    <string name="custom_token_creation_error_wrong_decimals" translatable="false">Decimal number must be a valid integer, no higher than %d</string>
+    <string name="custom_token_creation_error_invalid_contract_address" translatable="false">Contract address is invalid</string>
+    <string name="custom_token_creation_error_invalid_derivation_path" translatable="false">Derivation path is invalid</string>
+    <string name="custom_token_validation_error_not_found" translatable="false">Note that tokens can be created by anyone. Be aware of adding scam tokens, they can cost nothing.</string>
+    <string name="custom_token_validation_error_already_added" translatable="false">This token/network has already been added to your list</string>
+    <string name="custom_token_type_network" translatable="false">Network</string>
+    <string name="custom_token_type_token" translatable="false">Token</string>
+    <string name="custom_token_decimals_input_title" translatable="false">Decimals</string>
+    <string name="custom_token_network_input_title" translatable="false">Network</string>
+    <string name="custom_token_network_input_not_selected" translatable="false">Not selected</string>
+    <string name="custom_token_name_input_placeholder" translatable="false">E.g. USD Coin</string>
+    <string name="custom_token_name_input_title" translatable="false">Name</string>
+    <string name="custom_token_token_symbol_input_placeholder" translatable="false">E.g. USDC</string>
+    <string name="custom_token_token_symbol_input_title" translatable="false">Token symbol</string>
+    <string name="custom_token_derivation_path_input_title" translatable="false">BIP44 coin type</string>
+    <string name="custom_token_derivation_path_default" translatable="false">Default</string>
+    <string name="custom_token_add_token" translatable="false">Add token</string>
 
     //Details
     <string name="details_section_title_blockchain" translatable="false">Blockchain</string>

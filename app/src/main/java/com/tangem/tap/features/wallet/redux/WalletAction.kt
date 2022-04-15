@@ -8,7 +8,7 @@ import com.tangem.tap.common.redux.ErrorAction
 import com.tangem.tap.common.redux.NotificationAction
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
-import com.tangem.tap.domain.tokens.CardCurrencies
+import com.tangem.tap.domain.tokens.BlockchainNetwork
 import com.tangem.wallet.R
 import org.rekotlin.Action
 import java.math.BigDecimal
@@ -24,9 +24,17 @@ sealed class WalletAction : Action {
     }
 
 
-    data class LoadWallet(val blockchain: Blockchain? = null) : WalletAction() {
-        data class Success(val wallet: Wallet) : WalletAction()
-        data class NoAccount(val wallet: Wallet, val amountToCreateAccount: String) : WalletAction()
+    data class LoadWallet(
+        val blockchain: BlockchainNetwork? = null,
+        val walletManager: WalletManager? = null
+    ) : WalletAction() {
+        data class Success(val wallet: Wallet, val blockchain: BlockchainNetwork) : WalletAction()
+        data class NoAccount(
+            val wallet: Wallet,
+            val blockchain: BlockchainNetwork,
+            val amountToCreateAccount: String
+        ) : WalletAction()
+
         data class Failure(val wallet: Wallet, val errorMessage: String? = null) : WalletAction()
     }
 
@@ -35,19 +43,30 @@ sealed class WalletAction : Action {
 
     sealed class MultiWallet : WalletAction() {
         data class SetIsMultiwalletAllowed(val isMultiwalletAllowed: Boolean) : MultiWallet()
-        data class AddWalletManagers(val walletManagers: List<WalletManager>) : MultiWallet() {
-            constructor(walletManager: WalletManager) : this(listOf(walletManager))
-        }
 
-        data class AddBlockchain(val blockchain: Blockchain) : MultiWallet()
-        data class AddBlockchains(val blockchains: List<Blockchain>) : MultiWallet()
-        data class AddTokens(val tokens: List<Token>) : MultiWallet()
-        data class AddToken(val token: Token) : MultiWallet()
-        data class SaveCurrencies(val cardCurrencies: CardCurrencies) : MultiWallet()
+        data class AddBlockchain(
+            val blockchain: BlockchainNetwork,
+            val walletManager: WalletManager?
+        ) : MultiWallet()
+
+        data class AddBlockchains(
+            val blockchains: List<BlockchainNetwork>, val walletManagers: List<WalletManager>
+        ) : MultiWallet()
+
+        data class AddTokens(val tokens: List<Token>, val blockchain: BlockchainNetwork) :
+            MultiWallet()
+
+        data class AddToken(val token: Token, val blockchain: BlockchainNetwork) : MultiWallet()
+        data class SaveCurrencies(val blockchainNetworks: List<BlockchainNetwork>) : MultiWallet()
         object FindTokensInUse : MultiWallet()
         object FindBlockchainsInUse : MultiWallet()
 
-        data class TokenLoaded(val amount: Amount, val token: Token) : MultiWallet()
+        data class TokenLoaded(
+            val amount: Amount,
+            val token: Token,
+            val blockchain: BlockchainNetwork
+        ) : MultiWallet()
+
         data class SelectWallet(val walletData: WalletData?) : MultiWallet()
         data class RemoveWallet(val walletData: WalletData) : MultiWallet()
         data class SetPrimaryBlockchain(val blockchain: Blockchain) : MultiWallet()
@@ -72,12 +91,6 @@ sealed class WalletAction : Action {
         }
 
         class CheckRemainingSignatures(val remainingSignatures: Int?) : Warnings()
-    }
-
-    data class UpdateWallet(val blockchain: Blockchain? = null, val force: Boolean = true) : WalletAction() {
-        object ScheduleUpdatingWallet : WalletAction()
-        data class Success(val wallet: Wallet) : WalletAction()
-        data class Failure(val errorMessage: String? = null) : WalletAction()
     }
 
     data class LoadFiatRate(
@@ -141,5 +154,9 @@ sealed class WalletAction : Action {
 
     data class ChangeSelectedAddress(val type: AddressType) : WalletAction()
 
-    data class SetWalletRent(val blockchain: Blockchain, val minRent: String, val rentExempt: String) : WalletAction()
+    data class SetWalletRent(
+        val blockchain: BlockchainNetwork,
+        val minRent: String,
+        val rentExempt: String
+    ) : WalletAction()
 }
