@@ -9,6 +9,11 @@ import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.toMapKey
 import com.tangem.common.hdWallet.DerivationPath
+import com.tangem.domain.common.KeyWalletPublicKey
+import com.tangem.domain.common.ProductType
+import com.tangem.domain.common.TapWorkarounds.derivationStyle
+import com.tangem.domain.common.TapWorkarounds.getTangemNoteBlockchain
+import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.operations.CommandResponse
 import com.tangem.operations.backup.PrimaryCard
 import com.tangem.operations.backup.StartPrimaryCardLinkingTask
@@ -16,11 +21,7 @@ import com.tangem.operations.derivation.DeriveMultipleWalletPublicKeysTask
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.operations.wallet.CreateWalletTask
-import com.tangem.tap.domain.ProductType
-import com.tangem.tap.domain.TapWorkarounds.getTangemNoteBlockchain
-import com.tangem.tap.domain.TapWorkarounds.isTestCard
 import com.tangem.tap.domain.tasks.product.CreateWalletsTask
-import com.tangem.tap.domain.tasks.product.KeyWalletPublicKey
 import com.tangem.tap.domain.tasks.product.ProductCommandProcessor
 import com.tangem.tap.domain.tasks.product.getCurvesForNonCreatedWallets
 import com.tangem.tap.features.demo.DemoHelper
@@ -78,7 +79,7 @@ private class CreateWalletTangemNote : ProductCommandProcessor<CreateWalletRespo
             return
         }
 
-        val curvesSupportedByBlockchain = getTangemNoteBlockchain(card)?.getSupportedCurves()
+        val curvesSupportedByBlockchain = card.getTangemNoteBlockchain()?.getSupportedCurves()
         if (curvesSupportedByBlockchain == null || curvesSupportedByBlockchain.isEmpty()) {
             callback(CompletionResult.Failure(TangemSdkError.CardError()))
             return
@@ -177,7 +178,7 @@ private class CreateWalletTangemWallet : ProductCommandProcessor<CreateProductWa
             val blockchainsForCurve = getBlockchains(response.cardId).filter {
                 it.getSupportedCurves().contains(response.wallet.curve)
             }
-            val derivationPaths = blockchainsForCurve.mapNotNull { it.derivationPath() }
+            val derivationPaths = blockchainsForCurve.mapNotNull { it.derivationPath(card.derivationStyle) }
             if (derivationPaths.isNotEmpty()) {
                 map[response.wallet.publicKey.toMapKey()] = derivationPaths
             }
