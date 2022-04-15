@@ -2,6 +2,8 @@ package com.tangem.tap.features.onboarding.products.note.redux
 
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.guard
+import com.tangem.domain.common.extensions.withMainContext
+import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.postUi
 import com.tangem.tap.common.redux.AppDialog
@@ -9,7 +11,6 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
-import com.tangem.tap.domain.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.hasWallets
 import com.tangem.tap.domain.extensions.makePrimaryWalletManager
@@ -112,7 +113,10 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
 
             val isLoadedBefore = noteState.walletBalance.state != ProgressState.Loading
             val balanceIsLoading = noteState.walletBalance.copy(
-                currency = Currency.Blockchain(walletManager.wallet.blockchain),
+                currency = Currency.Blockchain(
+                    walletManager.wallet.blockchain,
+                    walletManager.wallet.publicKey.derivationPath?.rawPath
+                ),
                 state = ProgressState.Loading,
                 error = null,
                 criticalError = null
