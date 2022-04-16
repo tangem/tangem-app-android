@@ -29,7 +29,7 @@ fun TokenContractAddressView(screenFieldData: ScreenFieldData) {
     OutlinedTextFieldWidget(
         textFieldData = tokenField.data,
         labelId = R.string.custom_token_contract_address_input_title,
-        placeholder = "0x0000000000000000",
+        placeholder = "0x0000000000000000000000000000000000000000",
         isEnabled = screenFieldData.viewState.isEnabled,
         isLoading = screenFieldData.viewState.isLoading,
         error = screenFieldData.error,
