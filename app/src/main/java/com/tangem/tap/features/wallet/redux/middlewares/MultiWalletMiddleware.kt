@@ -1,5 +1,6 @@
 package com.tangem.tap.features.wallet.redux.middlewares
 
+import com.tangem.blockchain.blockchains.solana.SolanaWalletManager
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.extensions.Result
 import com.tangem.common.extensions.isZero
@@ -235,7 +236,9 @@ class MultiWalletMiddleware {
                 token, blockchainNetwork.blockchain, blockchainNetwork.derivationPath
             )
         }))
-        walletManager.addTokens(tokens)
+        // we can't add Solana token's - they are not supported now
+        if (walletManager !is SolanaWalletManager) walletManager.addTokens(tokens)
+
         currenciesRepository.saveUpdatedCurrency(
             cardId = scanResponse.card.cardId,
             blockchainNetwork = BlockchainNetwork.fromWalletManager(walletManager)
