@@ -4,7 +4,6 @@ import android.webkit.ValueCallback
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.common.extensions.guard
-import com.tangem.common.extensions.toHexString
 import com.tangem.common.services.Result
 import com.tangem.domain.DomainDialog
 import com.tangem.domain.DomainException
@@ -22,7 +21,6 @@ import com.tangem.domain.redux.dispatchOnMain
 import com.tangem.domain.redux.domainStore
 import com.tangem.domain.redux.global.DomainGlobalAction
 import com.tangem.network.api.tangemTech.Coins
-import com.tangem.network.api.tangemTech.TangemTechService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -476,8 +474,7 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
             }
             is OnCreate -> {
                 val card = requireNotNull(globalState.scanResponse?.card)
-                val tangemTechServiceManager = TangemTechServiceManager(TangemTechService())
-                tangemTechServiceManager.attachAuthKey(card.cardPublicKey.toHexString())
+                val tangemTechServiceManager = AddCustomTokenService(globalState.networkServices.tangemTechService)
 
                 var derivationPathState = state.screenState.derivationPath
                 derivationPathState = when (card.derivationStyle) {
