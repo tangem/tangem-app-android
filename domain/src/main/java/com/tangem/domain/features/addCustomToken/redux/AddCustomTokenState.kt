@@ -18,7 +18,7 @@ data class AddCustomTokenState(
     val tokenId: String? = null,
     val warnings: Set<AddCustomTokenWarning> = emptySet(),
     val screenState: ScreenState = createInitialScreenState(),
-    val tangemTechServiceManager: TangemTechServiceManager? = null
+    val tangemTechServiceManager: AddCustomTokenService? = null
 ) : StateType {
 
     inline fun <reified T> getField(id: FieldId): T = form.getField(id) as T
