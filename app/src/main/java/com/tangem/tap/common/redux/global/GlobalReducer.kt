@@ -1,5 +1,7 @@
 package com.tangem.tap.common.redux.global
 
+import com.tangem.domain.redux.domainStore
+import com.tangem.domain.redux.global.DomainGlobalAction
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.onboarding.OnboardingManager
 import com.tangem.tap.preferencesStorage
@@ -33,8 +35,10 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
         is GlobalAction.ScanFailsCounter.Reset -> {
             globalState.copy(scanCardFailsCounter = 0)
         }
-        is GlobalAction.SaveScanNoteResponse ->
+        is GlobalAction.SaveScanNoteResponse ->{
+            domainStore.dispatch(DomainGlobalAction.SaveScanNoteResponse(action.scanResponse))
             globalState.copy(scanResponse = action.scanResponse)
+        }
         is GlobalAction.ChangeAppCurrency -> {
             globalState.copy(appCurrency = action.appCurrency)
         }
