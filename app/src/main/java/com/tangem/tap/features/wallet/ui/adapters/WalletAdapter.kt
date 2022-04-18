@@ -115,6 +115,7 @@ class WalletAdapter
 
         private fun toggleWarning(show: Boolean) {
             binding.tvExchangeRate.show(!show)
+            binding.tvCustomCurrency.show(!show)
             binding.tvStatusErrorMessage.show(show)
         }
     }
