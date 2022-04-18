@@ -1,29 +1,42 @@
 package com.tangem.domain
 
+import com.tangem.common.module.ModuleError
+import com.tangem.common.module.ModuleMessage
+
 /**
 [REDACTED_AUTHOR]
- * @property code describes what feature is the error coming from
- * @property message the error description
- * @property data any data that can help in the part where this error is being handled
+ * All DomainError descendants must use their own range of codes, but no more than 999 error codes for each.
  */
-interface DomainError : DomainMessage {
-    val code: Int
-    val message: String
-    val data: Any?
-}
+sealed interface DomainModuleMessage : ModuleMessage
 
-open class AnError(
+sealed class DomainError(
     override val code: Int,
     override val message: String,
-    override val data: Any? = null,
-) : DomainError
+    override val data: Any?,
+) : DomainModuleMessage, ModuleError {
 
-interface ErrorConverter<T> {
-    fun convertError(error: DomainError): T
+    companion object {
+        const val CODE_ADD_CUSTOM_TOKEN = 1000
+    }
 }
 
-interface Validator<Data, Error> {
-    fun validate(data: Data? = null): Error?
-}
+sealed class AddCustomTokenError(
+    subCode: Int = 0
+) : DomainError(CODE_ADD_CUSTOM_TOKEN + subCode, this::class.java.simpleName, null) {
 
-const val ERROR_CODE_ADD_CUSTOM_TOKEN = 100
+    object FieldIsEmpty : AddCustomTokenError()
+    object FieldIsNotEmpty : AddCustomTokenError()
+    object InvalidContractAddress : AddCustomTokenError()
+    object NetworkIsNotSelected : AddCustomTokenError()
+    object InvalidDecimalsCount : AddCustomTokenError()
+    object InvalidDerivationPath : AddCustomTokenError()
+
+    sealed class Network : AddCustomTokenError() {
+        object CheckAddressRequestError : Network()
+    }
+
+    sealed class Warning : AddCustomTokenError() {
+        object PotentialScamToken : Warning()
+        object TokenAlreadyAdded : Warning()
+    }
+}
