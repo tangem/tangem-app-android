@@ -2,7 +2,7 @@ package com.tangem.tap.features.tokens.redux
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.DerivationParams
-import com.tangem.blockchain.common.Token
+import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.extensions.ByteArrayKey
@@ -67,21 +67,28 @@ class TokensMiddleware {
 
     private fun handleSaveChanges(action: TokensAction.SaveChanges) {
         val scanResponse = store.state.globalState.scanResponse ?: return
-// [REDACTED_TODO_COMMENT]
-        // Если сохраненный токен является кастомным, то его не будет в currentTokens списке, а будет его не кастомный
-        // собрат и из-за этого добавить не кастомный токен рядом с кастомным не получается
-        val currentTokens = store.state.tokensState.addedWallets.toTokens()
-        val currentBlockchains = store.state.tokensState.addedWallets.toBlockchains(
-            store.state.tokensState.derivationStyle
+
+        val currentTokens = store.state.tokensState.addedWallets.toNonCustomTokensWithBlockchains(
+            scanResponse.card.derivationStyle
+        )
+        val currentBlockchains = store.state.tokensState.addedWallets.toNonCustomBlockchains(
+            scanResponse.card.derivationStyle
         )
 
         val blockchainsToAdd = action.addedBlockchains.filter { !currentBlockchains.contains(it) }
         val blockchainsToRemove = currentBlockchains.filter { !action.addedBlockchains.contains(it) }
 
-        val tokensToAdd = action.addedTokens.filter { !currentTokens.contains(it.token) }
-        val tokensToRemove = currentTokens.filter { token -> !action.addedTokens.any { it.token == token } }
+        val tokensToAdd = action.addedTokens.filter { !currentTokens.contains(it) }
+        val tokensToRemove = currentTokens.filter {
+                token -> !action.addedTokens.any { it.token == token.token }
+        }
+        val derivationStyle = scanResponse.card.derivationStyle
 
-        removeCurrenciesIfNeeded(blockchainsToRemove, tokensToRemove)
+        removeCurrenciesIfNeeded(convertToCurrencies(
+            blockchains = blockchainsToRemove,
+            tokens = tokensToRemove,
+            derivationStyle = derivationStyle
+        ))
 
         if (tokensToAdd.isEmpty() && blockchainsToAdd.isEmpty()) {
             store.dispatchDebugErrorNotification("Nothing to save")
@@ -89,12 +96,11 @@ class TokensMiddleware {
             return
         }
 
-        val derivationStyle = scanResponse.card.derivationStyle
-        val currencyList = blockchainsToAdd.map {
-            Currency.Blockchain(it, it.derivationPath(derivationStyle)?.rawPath)
-        } + tokensToAdd.map {
-            Currency.Token(it.token, it.blockchain, it.blockchain.derivationPath(derivationStyle)?.rawPath)
-        }
+        val currencyList = convertToCurrencies(
+            blockchains = blockchainsToAdd,
+            tokens = tokensToAdd,
+            derivationStyle = derivationStyle
+        )
         if (scanResponse.supportsHdWallet()) {
             deriveMissingBlockchains(scanResponse, currencyList) {
                 submitAdd(it, currencyList)
@@ -103,6 +109,22 @@ class TokensMiddleware {
         } else {
             submitAdd(scanResponse, currencyList)
             store.dispatchOnMain(NavigationAction.PopBackTo())
+        }
+    }
+
+    private fun convertToCurrencies(
+        blockchains: List<Blockchain>,
+        tokens: List<TokenWithBlockchain>,
+        derivationStyle: DerivationStyle?
+    ): List<Currency> {
+        return blockchains.map {
+            Currency.Blockchain(it, it.derivationPath(derivationStyle)?.rawPath)
+        } + tokens.map {
+            Currency.Token(
+                it.token,
+                it.blockchain,
+                it.blockchain.derivationPath(derivationStyle)?.rawPath
+            )
         }
     }
 
@@ -234,17 +256,10 @@ class TokensMiddleware {
         addActions.forEach { store.dispatchOnMain(it) }
     }
 
-    private fun removeCurrenciesIfNeeded(blockchains: List<Blockchain>, tokens: List<Token>) {
-        if (tokens.isNotEmpty()) {
-            tokens.forEach { token ->
-                store.state.walletState.getWalletData(token)?.let {
-                    store.dispatch(WalletAction.MultiWallet.RemoveWallet(it))
-                }
-            }
-        }
-        if (blockchains.isNotEmpty()) {
-            blockchains.forEach { blockchain ->
-                store.state.walletState.getWalletData(blockchain)?.let {
+    private fun removeCurrenciesIfNeeded(currencies: List<Currency>) {
+        if (currencies.isNotEmpty()) {
+            currencies.forEach { currency ->
+                store.state.walletState.getWalletData(currency)?.let {
                     store.dispatch(WalletAction.MultiWallet.RemoveWallet(it))
                 }
             }
