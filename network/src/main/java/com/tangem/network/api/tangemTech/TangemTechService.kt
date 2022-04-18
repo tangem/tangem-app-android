@@ -5,6 +5,8 @@ import com.tangem.common.services.performRequest
 import com.tangem.network.common.AddHeaderInterceptor
 import com.tangem.network.common.CacheControlHttpInterceptor
 import com.tangem.network.common.createRetrofitInstance
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 /**
 [REDACTED_AUTHOR]
@@ -59,22 +61,22 @@ class CoinsRoute : TangemTechRoute {
     suspend fun prices(
         currency: String,
         ids: List<String>
-    ): Result<Coins.PricesResponse> {
-        return performRequest { api.coinsPrices(currency, ids) }
+    ): Result<Coins.PricesResponse> = withContext(Dispatchers.IO) {
+        performRequest { api.coinsPrices(currency, ids) }
     }
 
     suspend fun checkAddress(
         contractAddress: String,
         networkId: String? = null
-    ): Result<Coins.CheckAddressResponse> {
-        return performRequest { api.coinsCheckAddress(contractAddress, networkId) }
+    ): Result<Coins.CheckAddressResponse> = withContext(Dispatchers.IO) {
+        performRequest { api.coinsCheckAddress(contractAddress, networkId) }
     }
 
-    suspend fun currencies(): Result<Coins.CurrenciesResponse> {
-        return performRequest { api.coinsCurrencies() }
+    suspend fun currencies(): Result<Coins.CurrenciesResponse> = withContext(Dispatchers.IO) {
+        performRequest { api.coinsCurrencies() }
     }
 
-    suspend fun tokens(): Result<Coins.TokensResponse> {
-        return performRequest { api.coinsTokens() }
+    suspend fun tokens(): Result<Coins.TokensResponse> = withContext(Dispatchers.IO) {
+        performRequest { api.coinsTokens() }
     }
 }
