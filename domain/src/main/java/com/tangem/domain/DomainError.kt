@@ -10,19 +10,23 @@ import com.tangem.common.module.ModuleMessage
 sealed interface DomainModuleMessage : ModuleMessage
 
 sealed class DomainError(
-    override val code: Int,
+    subCode: Int,
     override val message: String,
     override val data: Any?,
 ) : DomainModuleMessage, ModuleError {
+    override val code: Int = ERROR_CODE_DOMAIN + subCode
 
     companion object {
-        const val CODE_ADD_CUSTOM_TOKEN = 1000
+        // base code used for all error in the module
+        const val ERROR_CODE_DOMAIN = 10000
+        const val ERROR_CODE_ADD_CUSTOM_TOKEN = 100
+//        const val CODE_ANY_OTHER = 200..299
     }
 }
 
 sealed class AddCustomTokenError(
     subCode: Int = 0
-) : DomainError(CODE_ADD_CUSTOM_TOKEN + subCode, this::class.java.simpleName, null) {
+) : DomainError(ERROR_CODE_ADD_CUSTOM_TOKEN + subCode, this::class.java.simpleName, null) {
 
     object FieldIsEmpty : AddCustomTokenError()
     object FieldIsNotEmpty : AddCustomTokenError()
