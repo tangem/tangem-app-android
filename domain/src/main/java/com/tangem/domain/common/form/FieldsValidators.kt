@@ -2,8 +2,8 @@ package com.tangem.domain.common.form
 
 import com.tangem.blockchain.blockchains.ethereum.EthereumAddressService
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.domain.Validator
-import com.tangem.domain.features.addCustomToken.AddCustomTokenError
+import com.tangem.common.Validator
+import com.tangem.domain.AddCustomTokenError
 
 /**
 [REDACTED_AUTHOR]

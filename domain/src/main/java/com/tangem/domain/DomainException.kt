@@ -1,17 +1,19 @@
 package com.tangem.domain
 
+import com.tangem.common.module.FbConsumeException
+import com.tangem.common.module.ModuleException
+
 /**
 [REDACTED_AUTHOR]
- * Must be handled by the module or sent to Crashlytics
  */
-interface DomainInternalException
+sealed class AddCustomTokenException(override val message: String) : Throwable(message), ModuleException {
 
-sealed class DomainException(message: String?) : Throwable(message), DomainInternalException {
-    data class SelectTokeNetworkException(val networkId: String) : DomainException(
+    data class SelectTokeNetworkException(val networkId: String) : AddCustomTokenException(
         "Unknown network [$networkId] should not be included in the network selection dialog."
-    )
+    ), FbConsumeException
 
-    data class UnAppropriateInitializationException(val of: String, val info: String? = null) : DomainException(
-        "The [$of], must be properly initialized. Info []"
-    )
+    data class UnAppropriateInitializationException(
+        val of: String,
+        val info: String? = null
+    ) : AddCustomTokenException("The [$of], must be properly initialized. Info [$info]")
 }
