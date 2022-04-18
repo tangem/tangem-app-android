@@ -3,9 +3,13 @@ package com.tangem.domain.features.addCustomToken.redux
 import android.webkit.ValueCallback
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.DerivationStyle
+import com.tangem.common.extensions.guard
+import com.tangem.common.extensions.toHexString
 import com.tangem.common.services.Result
 import com.tangem.domain.DomainDialog
 import com.tangem.domain.DomainException
+import com.tangem.domain.DomainWrapped
+import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.common.form.*
@@ -19,7 +23,7 @@ import com.tangem.domain.redux.domainStore
 import com.tangem.domain.redux.global.DomainGlobalAction
 import com.tangem.network.api.tangemTech.Coins
 import com.tangem.network.api.tangemTech.TangemTechService
-import kotlinx.coroutines.cancel
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
@@ -39,17 +43,6 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
         return storeState.copy(addCustomTokensState = newHubState)
     }
 
-    private val contractAddressValidator: TokenContractAddressValidator
-        get() = hubState.getValidator(ContractAddress)
-    private val nameValidator: TokenNameValidator
-        get() = hubState.getValidator(Name)
-    private val symbolValidator: TokenSymbolValidator
-        get() = hubState.getValidator(Symbol)
-    private val decimalsValidator: TokenDecimalsValidator
-        get() = hubState.getValidator(Decimals)
-    val networkValidator: TokenNetworkValidator
-        get() = hubState.getValidator(Network)
-
     override suspend fun handleAction(
         action: Action,
         storeState: DomainState,
@@ -58,105 +51,114 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
         if (action !is AddCustomTokenAction) return
 
         when (action) {
-            is Init.SetAddedCurrencies -> {}
-            is Init.SetOnAddTokenCallback -> {}
             is OnCreate -> {
-//                hubState.addedCurrencies.guard {
-//                    return throwUnAppropriateInitialization("addedTokens")
-//                }
+                hubState.appSavedCurrencies.guard {
+                    return throwUnAppropriateInitialization("addedTokens")
+                }
             }
-            is OnDestroy -> hubScope.cancel()
+            is OnDestroy -> cancelAll()
             is OnTokenContractAddressChanged -> {
                 val address = action.contractAddress.value
-                when (val error = ContractAddress.validate(address)) {
+
+                when (val error = ContractAddress.validateValue(address)) {
                     null -> {
                         ContractAddress.removeError()
-                        dispatchOnMain(unlockTokenFieldsAction())
+                        unlockTokenFields()
                     }
                     AddCustomTokenError.FieldIsEmpty -> {
                         ContractAddress.removeError()
-                        dispatchOnMain(lockTokenFieldsAction())
                         return
                     }
                     AddCustomTokenError.InvalidContractAddress -> {
                         ContractAddress.addError(error)
-                        dispatchOnMain(unlockTokenFieldsAction())
+                        unlockTokenFields()
                         return
                     }
                     else -> {}
                 }
 
                 if (!action.contractAddress.isUserInput) return
-
-                manageTokenChanges(requestInfoAboutContractAddress(address))
+                manageFoundTokenChanges(requestInfoAboutToken(address))
+            }
+            is OnTokenNameChanged -> {
+                updateAddButton()
+            }
+            is OnTokenSymbolChanged -> {
+                updateAddButton()
+            }
+            is OnTokenDecimalsChanged -> {
+                updateAddButton()
             }
             is OnTokenNetworkChanged -> {
                 if (!action.blockchainNetwork.isUserInput) return
 
                 val contractAddress = ContractAddress.getFieldValue<String>()
-                val error = ContractAddress.validate(contractAddress)
-                if (error == null) {
-                    manageTokenChanges(requestInfoAboutContractAddress(contractAddress))
+                val error = ContractAddress.validateValue(contractAddress)
+                if (error == null && contractAddress.isNotEmpty()) {
+                    // token branch
+                    manageFoundTokenChanges(requestInfoAboutToken(contractAddress))
                 } else {
-
+                    // blockchain branch
+                    val isAlreadyAdded = isBlockchainPersistIntoAppSavedTokensList(
+                        selectedNetwork = action.blockchainNetwork.value
+                    )
+                    updateWarningAlreadyAdded(isAlreadyAdded)
+                    updateAddButton()
                 }
             }
-            is OnTokenNameChanged -> {
-                Name.addOrRemoveError(Name.validate(action.tokenName.value))
-            }
-            is OnTokenSymbolChanged -> {
-                Symbol.addOrRemoveError(Symbol.validate(action.tokenSymbol.value))
-            }
-            is OnTokenDecimalsChanged -> {
-                Decimals.addOrRemoveError(Decimals.validate(action.tokenDecimals.value))
-            }
-            is ClearTokenFields -> {
-                Name.setFieldValue(Field.Data("", false))
-                Symbol.setFieldValue(Field.Data("", false))
-                Decimals.setFieldValue(Field.Data("", false))
-                dispatchOnMain(UpdateForm(hubState))
-            }
-            is FillTokenFields -> {
-                val token = action.token
-                val contract = action.contract
-                val blockchain = Blockchain.fromNetworkId(contract.networkId) ?: Blockchain.Unknown
-
-                Network.setFieldValue(Field.Data(blockchain, false))
-                Name.setFieldValue(Field.Data(token.name, false))
-                Symbol.setFieldValue(Field.Data(token.symbol, false))
-                Decimals.setFieldValue(Field.Data(contract.decimalCount.toString(), false))
-
-                dispatchOnMain(UpdateForm(hubState))
+            is OnTokenDerivationPathChanged -> {
+                val isAlreadyAdded = if (ContractAddress.isFilled()) {
+                    // token branch
+                    isTokenPersistIntoAppSavedTokensList(
+                        selectedDerivation = action.blockchainDerivationPath.value
+                    )
+                } else {
+                    // blockchain branch
+                    isBlockchainPersistIntoAppSavedTokensList(
+                        selectedDerivation = action.blockchainDerivationPath.value
+                    )
+                }
+                updateWarningAlreadyAdded(isAlreadyAdded)
+                updateAddButton()
             }
             is OnAddCustomTokenClicked -> {
-//                if (hubState.allFieldsIsEmpty()) {
-                dispatchOnMain(
-                    DomainGlobalAction.ShowDialog(DomainDialog.DialogError(
-                        AddCustomTokenError.InvalidDerivationPath
-                    )))
-                return
-//                }
-                when {
-                    !hubState.customTokensFieldsIsEmpty() && !hubState.networkIsEmpty() -> {
-                        hubState.getCompleteData(CompleteDataType.Token)
+                val state = hubState
+                val completeData = when {
+                    state.tokensFieldsIsFilled() && state.networkIsSelected() -> {
+                        state.gatherUserToken()
                     }
-//                    !hubState.customTokensFieldsIsEmpty() && -> {
-//                    }
+                    !state.tokensFieldsIsFilled() && state.networkIsSelected() -> {
+                        state.gatherBlockchain()
+                    }
+                    else -> null
                 }
-//                if (true) {
-//                    dispatchOnMain(NavigationAction.PopBackTo())
-//                    hubState.onTokenAddCallback?.invoke()
-//                }
+
+                if (completeData == null) {
+                    // normally it can't be, because the AddButton must be blocked
+                } else {
+                    hubScope.launch(Dispatchers.Main) {
+                        state.onTokenAddCallback?.invoke(completeData)
+                    }
+                }
             }
             else -> {}
         }
     }
 
-    private suspend fun requestInfoAboutContractAddress(
+    private suspend fun updateWarningAlreadyAdded(isInAppSavedList: Boolean) {
+        if (isInAppSavedList) {
+            AddCustomTokenWarning.TokenAlreadyAdded.add()
+        } else {
+            AddCustomTokenWarning.TokenAlreadyAdded.remove()
+        }
+    }
+
+    private suspend fun requestInfoAboutToken(
         contractAddress: String,
     ): List<Coins.CheckAddressResponse.Token> {
         val tangemTechServiceManager = requireNotNull(hubState.tangemTechServiceManager)
         dispatchOnMain(Screen.UpdateTokenFields(listOf(ContractAddress to ViewStates.TokenField(isLoading = true))))
+
         val field = hubState.getField<TokenBlockchainField>(Network)
         val selectedNetworkId: String? = field.data.value.let {
             if (it == Blockchain.Unknown) null else it
@@ -179,85 +181,184 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
         return result
     }
 
-    private suspend fun manageTokenChanges(foundTokens: List<Coins.CheckAddressResponse.Token>) {
-        val toAddWarnings = mutableSetOf<AddCustomTokenWarning>()
-        val toRemoveWarnings = mutableSetOf<AddCustomTokenWarning>()
+    private suspend fun manageFoundTokenChanges(foundTokens: List<Coins.CheckAddressResponse.Token>) {
+        if (foundTokens.isEmpty()) {
+            // token not found - it's completely custom
+            AddCustomTokenWarning.TokenAlreadyAdded.remove()
+            AddCustomTokenWarning.PotentialScamToken.add()
 
+            dispatchOnMain(SetFoundTokenId(null))
+            clearTokenFields()
+            unlockTokenFields()
+            updateAddButton()
+            return
+        }
+
+        // foundToken - contains all info about the token
+        val foundToken = foundTokens[0]
+        dispatchOnMain(SetFoundTokenId(foundToken.id))
         when {
-            foundTokens.isEmpty() -> {
-                toAddWarnings.add(AddCustomTokenWarning.PotentialScamToken)
-                toRemoveWarnings.add(AddCustomTokenWarning.TokenAlreadyAdded)
-                dispatchOnMain(ClearTokenFields)
-                dispatchOnMain(unlockTokenFieldsAction())
+            foundToken.contracts.isEmpty() -> {
+                Timber.e("Unexpected state -> throw to FB")
+            }
+            foundToken.contracts.size == 1 -> {
+                // token with single contract address
+                val singleTokenContract = foundToken.contracts[0]
+                fillTokenFields(foundToken, singleTokenContract)
+
+                val isInAppSavedTokens = isTokenPersistIntoAppSavedTokensList()
+                if (isInAppSavedTokens) {
+                    lockTokenFields()
+                    lockAddButton()
+                    AddCustomTokenWarning.PotentialScamToken.replace(AddCustomTokenWarning.TokenAlreadyAdded)
+                } else {
+                    // not in the saved tokens list
+                    if (singleTokenContract.active) {
+                        lockTokenFields()
+                        unlockAddButton()
+                        if (hubState.derivationPathIsSelected()) {
+                            AddCustomTokenWarning.PotentialScamToken.add()
+                        } else {
+                            AddCustomTokenWarning.TokenAlreadyAdded.remove()
+                            AddCustomTokenWarning.PotentialScamToken.remove()
+                        }
+                    } else {
+                        unlockAddButton()
+                        AddCustomTokenWarning.PotentialScamToken.add()
+                    }
+                }
             }
             else -> {
-                val token = foundTokens[0]
-                val contracts = token.contracts
-                when {
-                    contracts.isEmpty() -> {
-                        // TODO: refactoring:
-                        Timber.e("Unexpected state -> throw to FB")
-                    }
-                    contracts.size == 1 -> {
-                        val contract = contracts[0]
-                        val isPersistIntoTheAppAddedTokenList = isPersistIntoTheAppAddedTokenList(token, contract)
+                AddCustomTokenWarning.PotentialScamToken.replace(AddCustomTokenWarning.TokenAlreadyAdded)
 
-                        if (isPersistIntoTheAppAddedTokenList) {
-                            toAddWarnings.add(AddCustomTokenWarning.TokenAlreadyAdded)
-                            toRemoveWarnings.add(AddCustomTokenWarning.PotentialScamToken)
-
-                            dispatchOnMain(Screen.UpdateAddButton(ViewStates.AddButton(false)))
-                            dispatchOnMain(lockTokenFieldsAction())
-                        } else {
-                            toRemoveWarnings.add(AddCustomTokenWarning.TokenAlreadyAdded)
-                            dispatchOnMain(Screen.UpdateAddButton(ViewStates.AddButton(true)))
-
-                            val isStandardDerivation = true
-                            val tokenContract = token.contracts[0]
-                            if (tokenContract.active && isStandardDerivation) {
-                                toRemoveWarnings.add(AddCustomTokenWarning.PotentialScamToken)
-                                dispatchOnMain(FillTokenFields(token, contract))
-                                dispatchOnMain(lockTokenFieldsAction())
-                            } else {
-                                toAddWarnings.add(AddCustomTokenWarning.PotentialScamToken)
-                                dispatchOnMain(ClearTokenFields)
-                                dispatchOnMain(unlockTokenFieldsAction())
-                            }
+                val dialog = DomainDialog.SelectTokenDialog(
+                    items = foundToken.contracts,
+                    networkIdConverter = { networkId ->
+                        val blockchain = Blockchain.fromNetworkId(networkId)
+                        if (blockchain == null || blockchain == Blockchain.Unknown) {
+                            throw DomainException.SelectTokeNetworkException(networkId)
                         }
+                        hubState.blockchainToName(blockchain) ?: ""
+                    },
+                    onSelect = { selectedContract ->
+                        hubScope.launch {
+                            // find how to connect to the upper coroutineContext and dispatch through them
+                            fillTokenFields(foundToken, selectedContract)
+                            lockTokenFields()
+                            unlockAddButton()
+                        }
+                    },
+                )
+                dispatchOnMain(DomainGlobalAction.ShowDialog(dialog))
+            }
+        }
+    }
+
+    private suspend fun replaceWarnings(
+        warningsAdd: MutableSet<AddCustomTokenWarning> = mutableSetOf(),
+        warningsRemove: MutableSet<AddCustomTokenWarning> = mutableSetOf(),
+    ) {
+        if (warningsAdd.isNotEmpty() || warningsRemove.isNotEmpty()) {
+            dispatchOnMain(Warning.Replace(warningsRemove.toSet(), warningsAdd.toSet()))
+        }
+    }
+
+    private suspend fun updateAddButton() {
+        val state = hubState
+        if (state.warnings.contains(AddCustomTokenWarning.TokenAlreadyAdded)) {
+            lockAddButton()
+            return
+        }
+        when {
+            // token
+            state.tokensOneFieldsIsFilled() -> {
+                lockAddButton()
+            }
+            // token
+            state.tokensFieldsIsFilled() && state.networkIsSelected() -> {
+                unlockAddButton()
+            }
+            // blockchain
+            else -> {
+                if (state.networkIsSelected()) {
+                    val alreadyAdded = isBlockchainPersistIntoAppSavedTokensList()
+                    if (alreadyAdded) {
+                        lockAddButton()
+                    } else {
+                        unlockAddButton()
                     }
-                    else -> {
-                        val dialog = DomainDialog.SelectTokenDialog(
-                            items = contracts,
-                            networkIdConverter = { networkId ->
-                                val blockchain = Blockchain.fromNetworkId(networkId)
-                                if (blockchain == null || blockchain == Blockchain.Unknown) {
-                                    throw DomainException.SelectTokeNetworkException(networkId)
-                                }
-                                hubState.convertBlockchainName(blockchain, "")
-                            },
-                            onSelect = { selectedContract ->
-                                hubScope.launch {
-                                    // find how to connect to the upper coroutineContext and dispatch through them
-                                    dispatchOnMain(FillTokenFields(token, selectedContract))
-                                    dispatchOnMain(lockTokenFieldsAction())
-                                }
-                            },
-                        )
-                        dispatchOnMain(DomainGlobalAction.ShowDialog(dialog))
+                } else {
+                    lockAddButton()
+                }
+            }
+        }
+    }
+
+    private suspend fun lockAddButton() {
+        dispatchOnMain(Screen.UpdateAddButton(ViewStates.AddButton(false)))
+    }
+
+    private suspend fun unlockAddButton() {
+        dispatchOnMain(Screen.UpdateAddButton(ViewStates.AddButton(true)))
+    }
+
+    /**
+     * These are helper functions.
+     */
+    private fun isTokenPersistIntoAppSavedTokensList(
+        tokenId: String? = hubState.tokenId,
+        tokenContractAddress: String = ContractAddress.getFieldValue(),
+        tokenNetworkId: String = Network.getFieldValue<Blockchain>().toNetworkId(),
+        selectedDerivation: Blockchain = DerivationPath.getFieldValue()
+    ): Boolean {
+        val savedCurrencies = hubState.appSavedCurrencies ?: return false
+
+        val derivationPath = getDerivationPathFromSelectedBlockchain(selectedDerivation)
+        savedCurrencies.forEach { wrappedCurrency ->
+            when (wrappedCurrency) {
+                is DomainWrapped.Currency.Blockchain -> {}
+                is DomainWrapped.Currency.Token -> {
+                    val sameId = tokenId == wrappedCurrency.token.id
+                    val sameAddress = tokenContractAddress == wrappedCurrency.token.contractAddress
+                    val sameBlockchain = Blockchain.fromNetworkId(tokenNetworkId) == wrappedCurrency.blockchain
+                    val sameDerivationPath = derivationPath?.rawPath == wrappedCurrency.derivationPath
+                    if (sameId && sameAddress && sameBlockchain && sameDerivationPath) {
+                        return true
                     }
                 }
             }
         }
-
-        if (toAddWarnings.isNotEmpty() || toRemoveWarnings.isNotEmpty()) {
-            dispatchOnMain(Warning.Replace(toRemoveWarnings.toSet(), toAddWarnings.toSet()))
-        }
+        return false
     }
 
-    private fun isPersistIntoTheAppAddedTokenList(
-        token: Coins.CheckAddressResponse.Token,
-        contract: Coins.CheckAddressResponse.Token.Contract
-    ): Boolean = false
+    private fun isBlockchainPersistIntoAppSavedTokensList(
+        selectedNetwork: Blockchain = Network.getFieldValue(),
+        selectedDerivation: Blockchain = DerivationPath.getFieldValue()
+    ): Boolean {
+        val state = hubState
+        val savedCurrencies = state.appSavedCurrencies ?: return false
+
+        val derivationPath = getDerivationPathFromSelectedBlockchain(selectedDerivation)
+        savedCurrencies.forEach { wrappedCurrency ->
+            when (wrappedCurrency) {
+                is DomainWrapped.Currency.Blockchain -> {
+                    val isSameBlockchain = selectedNetwork == wrappedCurrency.blockchain
+                    val isSameDerivationPath = derivationPath?.rawPath == wrappedCurrency.derivationPath
+                    if (isSameBlockchain && isSameDerivationPath) return true
+                }
+                is DomainWrapped.Currency.Token -> {}
+            }
+        }
+        return false
+    }
+
+    private fun getDerivationPathFromSelectedBlockchain(
+        selectedDerivationBlockchain: Blockchain
+    ): com.tangem.common.hdWallet.DerivationPath? = AddCustomTokenState.getDerivationPath(
+        mainNetwork = Network.getFieldValue(),
+        derivationNetwork = selectedDerivationBlockchain,
+        derivationStyle = hubState.cardDerivationStyle
+    )
 
     private suspend fun CustomTokenFieldId.addError(error: AddCustomTokenError) {
         dispatchOnMain(FieldError.Add(this, error))
@@ -265,13 +366,6 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
 
     private suspend fun CustomTokenFieldId.removeError() {
         dispatchOnMain(FieldError.Remove(this))
-    }
-
-    private suspend fun CustomTokenFieldId.addOrRemoveError(error: AddCustomTokenError?) {
-        when (error) {
-            null -> removeError()
-            else -> addError(error)
-        }
     }
 
     private inline fun <reified T> CustomTokenFieldId.getField(): T {
@@ -310,66 +404,126 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
         }
     }
 
-    private fun CustomTokenFieldId.validate(value: Any): AddCustomTokenError? {
+    private fun CustomTokenFieldId.validateValue(value: Any): AddCustomTokenError? {
+        val state = hubState
+        val contractAddressValidator: TokenContractAddressValidator = state.getValidator(ContractAddress)
+        val nameValidator: TokenNameValidator = state.getValidator(Name)
+        val symbolValidator: TokenSymbolValidator = state.getValidator(Symbol)
+        val decimalsValidator: TokenDecimalsValidator = state.getValidator(Decimals)
+        val networkValidator: TokenNetworkValidator = state.getValidator(Network)
         return when (this) {
             ContractAddress -> contractAddressValidator.validate(value as String)
-            Network -> networkValidator.validate(value as Blockchain)
+            Network, DerivationPath -> networkValidator.validate(value as Blockchain)
             Name -> nameValidator.validate(value as String)
             Symbol -> symbolValidator.validate(value as String)
             Decimals -> decimalsValidator.validate(value as String)
-            DerivationPath -> networkValidator.validate(value as Blockchain)
         }
     }
 
-    private fun lockTokenFieldsAction(): Action {
+    private fun CustomTokenFieldId.isFilled(): Boolean {
+        return when (this) {
+            ContractAddress -> getFieldValue<String>().isNotEmpty()
+            Network -> getFieldValue<Blockchain>() != Blockchain.Unknown
+            Name -> getFieldValue<String>().isNotEmpty()
+            Symbol -> getFieldValue<String>().isNotEmpty()
+            Decimals -> getFieldValue<String>().isNotEmpty()
+            DerivationPath -> getFieldValue<Blockchain>() != Blockchain.Unknown
+        }
+    }
+
+    /**
+     * The field is being validated.
+     * If there is an error, then it adds it to the field.
+     */
+    private suspend fun CustomTokenFieldId.validateAndUpdateError(value: Any): AddCustomTokenError? {
+        val error = this.validateValue(value)
+        when (error) {
+            null -> this.removeError()
+            else -> this.addError(error)
+        }
+        return error
+    }
+
+    private suspend fun fillTokenFields(
+        token: Coins.CheckAddressResponse.Token,
+        contract: Coins.CheckAddressResponse.Token.Contract,
+    ) {
+        val blockchain = Blockchain.fromNetworkId(contract.networkId) ?: Blockchain.Unknown
+        Network.setFieldValue(Field.Data(blockchain, false))
+        Name.setFieldValue(Field.Data(token.name, false))
+        Symbol.setFieldValue(Field.Data(token.symbol, false))
+        Decimals.setFieldValue(Field.Data(contract.decimalCount.toString(), false))
+        dispatchOnMain(UpdateForm(hubState))
+    }
+
+    private suspend fun clearTokenFields() {
+        Name.setFieldValue(Field.Data("", false))
+        Symbol.setFieldValue(Field.Data("", false))
+        Decimals.setFieldValue(Field.Data("", false))
+        dispatchOnMain(UpdateForm(hubState))
+    }
+
+    private suspend fun lockTokenFields() {
         val state = hubState
-        return Screen.UpdateTokenFields(listOf(
+        val action = Screen.UpdateTokenFields(listOf(
             Network to state.screenState.network.copy(isEnabled = false),
             Name to state.screenState.name.copy(isEnabled = false),
             Symbol to state.screenState.symbol.copy(isEnabled = false),
             Decimals to state.screenState.decimals.copy(isEnabled = false),
         ))
+        dispatchOnMain(action)
     }
 
-    private fun unlockTokenFieldsAction(): Action {
+    private suspend fun unlockTokenFields() {
         val state = hubState
-        return Screen.UpdateTokenFields(listOf(
+        val action = Screen.UpdateTokenFields(listOf(
             Network to state.screenState.network.copy(isEnabled = true),
             Name to state.screenState.name.copy(isEnabled = true),
             Symbol to state.screenState.symbol.copy(isEnabled = true),
             Decimals to state.screenState.decimals.copy(isEnabled = true),
         ))
+        dispatchOnMain(action)
     }
 
-    private suspend fun toggleAddButtonAction(enable: Boolean) = when (enable) {
-        true -> unlockAddButtonAction()
-        else -> lockAddButtonAction()
+    private suspend fun AddCustomTokenWarning.add() {
+        dispatchOnMain(Warning.Add(setOf(this)))
     }
 
-    private suspend fun lockAddButtonAction() {
-        dispatchOnMain(Screen.UpdateAddButton(ViewStates.AddButton(false)))
+    private suspend fun AddCustomTokenWarning.remove() {
+        dispatchOnMain(Warning.Remove(setOf(this)))
     }
 
-    private suspend fun unlockAddButtonAction() {
-        dispatchOnMain(Screen.UpdateAddButton(ViewStates.AddButton(true)))
+    private suspend fun AddCustomTokenWarning.replace(to: AddCustomTokenWarning) {
+        dispatchOnMain(Warning.Replace(setOf(this), setOf(to)))
     }
+
+//    private suspend fun AddCustomTokenWarning.replace(replace: Boolean, to: AddCustomTokenWarning) {
+//        if (replace) dispatchOnMain(Warning.Replace(setOf(this), setOf(to)))
+//    }
+
 
     override fun reduceAction(action: Action, state: AddCustomTokenState): AddCustomTokenState {
         return when (action) {
             is Init.SetAddedCurrencies -> {
-                state.copy(addedCurrencies = action.addedCurrencies)
+                state.copy(appSavedCurrencies = action.addedCurrencies)
             }
             is Init.SetOnAddTokenCallback -> {
                 state.copy(onTokenAddCallback = action.callback)
             }
             is OnCreate -> {
-//                val card = requireNotNull(globalState.scanResponse?.card)
+                val card = requireNotNull(globalState.scanResponse?.card)
                 val tangemTechServiceManager = TangemTechServiceManager(TangemTechService())
-//                tangemTechServiceManager.attachAuthKey(card.cardPublicKey.toHexString())
+                tangemTechServiceManager.attachAuthKey(card.cardPublicKey.toHexString())
+
+                var derivationPathState = state.screenState.derivationPath
+                derivationPathState = when (card.derivationStyle) {
+                    DerivationStyle.LEGACY -> derivationPathState.copy(isVisible = true)
+                    null, DerivationStyle.NEW -> derivationPathState.copy(isVisible = false)
+                }
                 state.copy(
-//                    derivationStyle = card.derivationStyle,
-                    derivationStyle = DerivationStyle.LEGACY,
-                    tangemTechServiceManager = tangemTechServiceManager
+                    cardDerivationStyle = card.derivationStyle,
+                    tangemTechServiceManager = tangemTechServiceManager,
+                    screenState = state.screenState.copy(derivationPath = derivationPathState)
                 )
             }
             is OnDestroy -> state.reset()
@@ -414,7 +568,7 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
                 val newMap = state.formErrors.toMutableMap().apply { remove(action.id) }
                 state.copy(formErrors = newMap)
             }
-            is SetTokenId -> {
+            is SetFoundTokenId -> {
                 state.copy(tokenId = action.id)
             }
             is Warning.Add -> {
