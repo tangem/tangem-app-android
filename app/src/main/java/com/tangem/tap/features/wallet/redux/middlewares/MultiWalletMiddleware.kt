@@ -236,8 +236,7 @@ class MultiWalletMiddleware {
                 token, blockchainNetwork.blockchain, blockchainNetwork.derivationPath
             )
         }))
-        // we can't add Solana token's - they are not supported now
-        if (walletManager !is SolanaWalletManager) walletManager.addTokens(tokens)
+        if (tokens.isNotEmpty()) walletManager.addTokens(tokens)
 
         currenciesRepository.saveUpdatedCurrency(
             cardId = scanResponse.card.cardId,
