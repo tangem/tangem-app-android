@@ -17,7 +17,6 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.tangem.domain.DomainDialog
-import com.tangem.domain.DomainStateDialog
 import com.tangem.domain.redux.domainStore
 import com.tangem.domain.redux.global.DomainGlobalAction
 import com.tangem.domain.redux.global.DomainGlobalState
@@ -28,7 +27,7 @@ import org.rekotlin.StoreSubscriber
 
 @Composable
 fun ComposeDialogManager() {
-    val dialogSate = remember { mutableStateOf<DomainStateDialog?>(null) }
+    val dialogSate = remember { mutableStateOf<DomainDialog?>(null) }
     val subscriber = remember {
         object : StoreSubscriber<DomainGlobalState> {
             override fun newState(state: DomainGlobalState) {
@@ -52,7 +51,7 @@ fun ComposeDialogManager() {
 }
 
 @Composable
-private fun ShowTheDialog(dialogState: MutableState<DomainStateDialog?>) {
+private fun ShowTheDialog(dialogState: MutableState<DomainDialog?>) {
     if (dialogState.value == null) return
 
     val context = LocalContext.current
