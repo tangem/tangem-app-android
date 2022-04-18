@@ -11,9 +11,8 @@ import timber.log.Timber
  */
 class UsedCardsPrefStorage(
     private val preferences: SharedPreferences,
+    private val jsonConverter: MoshiJsonConverter
 ) {
-
-    private val jsonConverter = MoshiJsonConverter.INSTANCE
 
     internal fun migrate() {
         val scannedIds = preferences.getString(SCANNED_CARDS_IDS_KEY, null) ?: return
@@ -27,7 +26,7 @@ class UsedCardsPrefStorage(
     fun scanned(cardId: String) {
         val restoredList = restore()
         val foundItem = findCardInfo(cardId, restoredList)?.copy(isScanned = true)
-                ?: UsedCardInfo(cardId, true)
+            ?: UsedCardInfo(cardId, true)
 
         save(foundItem, restoredList)
     }
@@ -39,7 +38,7 @@ class UsedCardsPrefStorage(
     fun activationStarted(cardId: String) {
         val restoredList = restore()
         val foundItem = findCardInfo(cardId, restoredList)?.copy(isActivationStarted = true)
-                ?: UsedCardInfo(cardId, isActivationStarted = true)
+            ?: UsedCardInfo(cardId, isActivationStarted = true)
 
         save(foundItem, restoredList)
     }
@@ -55,7 +54,7 @@ class UsedCardsPrefStorage(
     fun activationFinished(cardId: String) {
         val restoredList = restore()
         val foundItem = findCardInfo(cardId, restoredList)?.copy(isActivationStarted = false)
-                ?: UsedCardInfo(cardId, isActivationStarted = false)
+            ?: UsedCardInfo(cardId, isActivationStarted = false)
 
         save(foundItem, restoredList)
     }
