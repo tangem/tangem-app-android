@@ -7,7 +7,7 @@ import com.tangem.tap.store
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.math.BigDecimal
-
+// [REDACTED_TODO_COMMENT]
 class CoinMarketCapService() {
     private val api: CoinMarketCapApi by lazy { CoinMarketCapApi.create(getApiKey()) }
 

@@ -2,6 +2,7 @@ package com.tangem.tap.common.redux
 
 import com.tangem.domain.redux.DomainState
 import com.tangem.domain.redux.domainStore
+import com.tangem.domain.redux.global.NetworkServices
 import com.tangem.tap.common.redux.global.GlobalMiddleware
 import com.tangem.tap.common.redux.global.GlobalState
 import com.tangem.tap.common.redux.navigation.NavigationState
@@ -53,6 +54,9 @@ data class AppState(
 
     val domainState: DomainState
         get() = domainStore.state
+
+    val domainNetworks: NetworkServices
+        get() = domainState.globalState.networkServices
 
     companion object {
         fun getMiddleware(): List<Middleware<AppState>> {

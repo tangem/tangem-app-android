@@ -1,8 +1,10 @@
 package com.tangem.domain.redux.global
 
 import android.webkit.ValueCallback
+import com.tangem.common.extensions.toHexString
 import com.tangem.domain.redux.BaseStoreHub
 import com.tangem.domain.redux.DomainState
+import com.tangem.network.common.CardPublicKeyHttpInterceptor
 import org.rekotlin.Action
 
 /**
@@ -33,7 +35,11 @@ internal class DomainGlobalHub : BaseStoreHub<DomainGlobalState>("DomainGlobalHu
     }
 
     override fun reduceAction(action: Action, state: DomainGlobalState): DomainGlobalState = when (action) {
-        is DomainGlobalAction.SetScanResponse -> {
+        is DomainGlobalAction.SaveScanNoteResponse -> {
+            val cardPublicKeyHex = action.scanResponse.card.cardPublicKey.toHexString()
+            state.networkServices.tangemTechService.addHeaderInterceptors(
+                listOf(CardPublicKeyHttpInterceptor(cardPublicKeyHex))
+            )
             state.copy(scanResponse = action.scanResponse)
         }
         is DomainGlobalAction.ShowDialog -> {

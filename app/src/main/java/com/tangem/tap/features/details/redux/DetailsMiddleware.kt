@@ -4,6 +4,7 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.services.Result
+import com.tangem.network.api.tangemTech.Coins
 import com.tangem.operations.pins.CheckUserCodesResponse
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.Analytics
@@ -19,7 +20,6 @@ import com.tangem.tap.features.onboarding.products.twins.redux.CreateTwinWalletM
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.features.wallet.models.hasSendableAmountsOrPendingTransactions
 import com.tangem.tap.features.wallet.redux.WalletAction
-import com.tangem.tap.network.coinmarketcap.CoinMarketCapService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -33,7 +33,7 @@ class DetailsMiddleware {
         { next ->
             { action ->
                 when (action) {
-                    is DetailsAction.PrepareScreen -> prepareData()
+                    is DetailsAction.PrepareScreen -> prepareData(action)
                     is DetailsAction.ResetToFactory -> eraseWalletMiddleware.handle(action)
                     is DetailsAction.AppCurrencyAction -> appCurrencyMiddleware.handle(action)
                     is DetailsAction.ManageSecurity -> manageSecurityMiddleware.handle(action)
@@ -68,23 +68,26 @@ class DetailsMiddleware {
         }
     }
 
-    private fun prepareData() {
+    private fun prepareData(action: DetailsAction.PrepareScreen) {
+        val fiatCurrenciesPrefStorage = preferencesStorage.fiatCurrenciesPrefStorage
+        val storedFiatCurrencies = fiatCurrenciesPrefStorage.restore()
+        if (storedFiatCurrencies.isNotEmpty()) {
+            store.dispatch(DetailsAction.AppCurrencyAction.SetCurrencies(storedFiatCurrencies))
+        }
+
         scope.launch {
-            val loadedCurrencies = preferencesStorage.getFiatCurrencies()
-            if (loadedCurrencies.isNullOrEmpty()) {
-                val response = CoinMarketCapService().getFiatCurrencies()
-                withContext(Dispatchers.Main) {
-                    when (response) {
-                        is Result.Success -> {
-                            preferencesStorage.saveFiatCurrencies(response.data)
-                            store.dispatch(DetailsAction.AppCurrencyAction.SetCurrencies(response.data))
-                        }
+            val tangemTechService = action.tangemTechService
+            when (val result = tangemTechService.coins.currencies()) {
+                is Result.Success -> {
+                    val fiatCurrencies = result.data.currencies.filter {
+                        it.type == Coins.CurrenciesResponse.CurrencyType.Fiat.type
+                    }
+                    if (fiatCurrencies.isNotEmpty() && fiatCurrencies.toSet() != storedFiatCurrencies.toSet()) {
+                        fiatCurrenciesPrefStorage.save(fiatCurrencies)
+                        dispatchOnMain(DetailsAction.AppCurrencyAction.SetCurrencies(fiatCurrencies))
                     }
                 }
-            } else {
-                withContext(Dispatchers.Main) {
-                    store.dispatch(DetailsAction.AppCurrencyAction.SetCurrencies(loadedCurrencies))
-                }
+                is Result.Failure -> {}
             }
         }
     }
