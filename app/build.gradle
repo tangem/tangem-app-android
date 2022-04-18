@@ -69,8 +69,8 @@ repositories {
 dependencies {
     implementation fileTree(include: ['*.aar'], dir: 'libs')
     implementation implementation(project(path: ':domain'))
-    // TODO: refactoring: only for backwards compatibility with non-relocated services to the network module
     implementation implementation(project(path: ':network'))
+    implementation implementation(project(path: ':common'))
 
     implementation 'androidx.core:core-ktx:1.7.0'
     implementation 'androidx.appcompat:appcompat:1.4.1'
