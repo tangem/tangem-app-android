@@ -35,7 +35,7 @@ data class Currency(
     val name: String,
     val symbol: String,
     val iconUrl: String,
-    val contracts: List<Contract>?
+    val contracts: List<Contract>
 ) {
 
     companion object {
@@ -45,8 +45,18 @@ data class Currency(
                 name = currency.name,
                 symbol = currency.symbol,
                 iconUrl = getIconUrl(currency.id),
-                contracts = currency.contracts?.toContracts(isTestNet)
+                contracts = prepareListOfContracts(currency.contracts, currency.id, isTestNet)
             )
+        }
+
+        private fun prepareListOfContracts(
+            contractsFromJson: List<ContractFromJson>?,
+            currencyId: String,
+            isTestNet: Boolean
+        ): List<Contract> {
+            val mainNetwork = Contract.fromCurrencyId(currencyId, isTestNet)
+            val contracts = contractsFromJson?.toContracts(isTestNet) ?: emptyList()
+            return (listOfNotNull(mainNetwork) + contracts).distinct()
         }
     }
 }
@@ -69,6 +79,18 @@ data class Contract(
                 address = contract.address,
                 decimalCount = contract.decimalCount,
                 iconUrl = getIconUrl(contract.networkId)
+            )
+        }
+
+        fun fromCurrencyId(currencyId: String, isTestNet: Boolean): Contract? {
+            val networkId = if (isTestNet) currencyId + TESTNET else currencyId
+            val blockchain = Blockchain.fromNetworkId(networkId) ?: return null
+            return Contract(
+                networkId = networkId,
+                blockchain = blockchain,
+                address = blockchain.currency,
+                decimalCount = blockchain.decimals(),
+                iconUrl = getIconUrl(networkId)
             )
         }
 
