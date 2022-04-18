@@ -11,7 +11,7 @@ interface TangemTechApi {
     @GET("coins/prices")
     suspend fun coinsPrices(
         @Query("currency") currency: String,
-        @Query("ids") ids: List<String>,
+        @Query("ids") ids: String,
     ): Coins.PricesResponse
 
     @GET("coins/check-address")
