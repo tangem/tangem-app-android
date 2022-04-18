@@ -50,7 +50,7 @@ class TradeCryptoMiddleware {
         if (exchangeAction == CurrencyExchangeManager.Action.Buy &&
             currency is Currency.Token && currency.blockchain.isTestnet()
         ) {
-            val walletManager = store.state.walletState.getWalletManager(currency.token)
+            val walletManager = store.state.walletState.getWalletManager(currency)
             if (walletManager !is EthereumWalletManager) return
 
             scope.launch { exchangeManager.buyErc20Tokens(walletManager, currency.token) }
