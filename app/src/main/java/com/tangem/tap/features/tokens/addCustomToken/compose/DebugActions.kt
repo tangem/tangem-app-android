@@ -14,7 +14,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.VoidCallback
 import com.tangem.common.services.Result
 import com.tangem.domain.common.form.Field
-import com.tangem.domain.features.addCustomToken.TangemTechServiceManager
+import com.tangem.domain.features.addCustomToken.AddCustomTokenService
 import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction
 import com.tangem.domain.redux.domainStore
 import com.tangem.network.api.tangemTech.TangemTechService
@@ -147,7 +147,7 @@ private fun CustomActions() {
     CustomActionButton(
         name = "Find tokens in several networks",
         action = {
-            val manager = TangemTechServiceManager(TangemTechService())
+            val manager = AddCustomTokenService(TangemTechService())
             val currencies = manager.tokens()
             val asdfsd = mutableMapOf<String, MutableList<Any>>()
             val contractAddresses = currencies.mapNotNull { currency ->

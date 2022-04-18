@@ -3,12 +3,11 @@ package com.tangem.domain.features.addCustomToken
 import com.tangem.common.services.Result
 import com.tangem.network.api.tangemTech.Coins
 import com.tangem.network.api.tangemTech.TangemTechService
-import com.tangem.network.common.AddHeaderInterceptor
 
 /**
 [REDACTED_AUTHOR]
  */
-class TangemTechServiceManager(
+class AddCustomTokenService(
     private val tangemTechService: TangemTechService
 ) {
 
@@ -44,21 +43,9 @@ class TangemTechServiceManager(
         return when (val result = tangemTechService.coins.tokens()) {
             is Result.Success -> {
                 val tokens = result.data.tokens
-                tokens.filter {
-                    it.contracts.isNullOrEmpty()
-                }
+                tokens.filter { it.contracts.isNullOrEmpty() }
             }
             is Result.Failure -> emptyList()
         }
     }
-
-    fun attachAuthKey(authKey: String) {
-        tangemTechService.addHeaderInterceptors(listOf(
-            CardPublicKeyHttpInterceptor(authKey),
-        ))
-    }
 }
-
-private class CardPublicKeyHttpInterceptor(cardPublicKeyHex: String) : AddHeaderInterceptor(mapOf(
-    "card_public_key" to cardPublicKeyHex,
-))
