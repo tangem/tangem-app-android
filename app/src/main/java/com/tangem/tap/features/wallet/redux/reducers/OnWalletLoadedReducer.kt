@@ -74,7 +74,8 @@ class OnWalletLoadedReducer {
         )
 
         val tokens = wallet.getTokens().mapNotNull { token ->
-            val tokenWalletData = walletState.getWalletData(token)
+            val currency = Currency.fromBlockchainNetwork(blockchainNetwork, token)
+            val tokenWalletData = walletState.getWalletData(currency)
             val tokenPendingTransactions =
                 pendingTransactions.filter { it.currency == token.symbol }
             val tokenBalanceStatus = when {
