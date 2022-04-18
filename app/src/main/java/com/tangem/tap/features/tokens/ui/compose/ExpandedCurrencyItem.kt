@@ -20,7 +20,6 @@ import androidx.compose.ui.unit.sp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.tap.domain.tokens.Currency
 import com.tangem.tap.features.tokens.redux.ContractAddress
 import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
@@ -65,7 +64,7 @@ fun ExpandedCurrencyItem(
                     .align(Alignment.CenterVertically)
             ) {
                 Text(
-                    text = currency.name,
+                    text = currency.fullName,
                     fontSize = 17.sp,
                     fontWeight = FontWeight.Normal,
                     color = Color(0xFF1C1C1E),
@@ -87,9 +86,7 @@ fun ExpandedCurrencyItem(
             )
         }
 
-        val blockchains = currency.contracts?.map { it.blockchain } ?: listOfNotNull(
-            Blockchain.fromNetworkId(currency.id)
-        )
+        val blockchains = currency.contracts.map { it.blockchain }
 
         Row {
             Box(
@@ -134,7 +131,7 @@ fun ExpandedCurrencyItem(
                     .padding(top = 6.dp),
             ) {
                 blockchains.map { blockchain ->
-                    val contract = currency.contracts?.firstOrNull { it.blockchain == blockchain }
+                    val contract = currency.contracts.firstOrNull { it.blockchain == blockchain }
                     val added = if (contract != null && contract.address != currency.symbol) {
                         addedTokens.map { it.token.contractAddress }.contains(contract.address)
                     } else {
