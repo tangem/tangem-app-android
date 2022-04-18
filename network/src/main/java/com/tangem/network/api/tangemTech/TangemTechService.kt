@@ -34,7 +34,8 @@ class TangemTechService {
     private fun createApi(): TangemTechApi {
         val retrofit = createRetrofitInstance(
             baseUrl = baseUrl,
-            interceptors = headerInterceptors.toList()
+            interceptors = headerInterceptors.toList(),
+//            logEnabled = true,
         )
         return retrofit.create(TangemTechApi::class.java).apply {
             techRoutes.forEach { it.setApi(this) }
@@ -62,7 +63,9 @@ class CoinsRoute : TangemTechRoute {
         currency: String,
         ids: List<String>
     ): Result<Coins.PricesResponse> = withContext(Dispatchers.IO) {
-        performRequest { api.coinsPrices(currency, ids) }
+        performRequest {
+            api.coinsPrices(currency.lowercase(), ids.joinToString(","))
+        }
     }
 
     suspend fun checkAddress(
