@@ -5,7 +5,6 @@ import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.blockchain.extensions.isAboveZero
 import com.tangem.common.extensions.isZero
-import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.features.addCustomToken.CustomCurrency
 import com.tangem.tap.common.entities.Button
 import com.tangem.tap.common.extensions.toQrCode
@@ -75,19 +74,9 @@ data class WalletState(
     val walletManagers: List<WalletManager>
         get() = wallets.mapNotNull { it.walletManager }
 
-    fun getWalletManager(token: Token?): WalletManager? {
-        if (token == null) return null
-        return wallets
-            .mapNotNull { it.walletManager }
-            .find { walletManager ->
-                walletManager.cardTokens.any { it.contractAddress == token.contractAddress }
-            }
-    }
-
     fun getWalletManager(currency: Currency?): WalletManager? {
         if (currency?.blockchain == null) return null
-        return wallets.map { it.walletManager }
-            .find { it?.wallet?.blockchain == currency.blockchain }
+        return getWalletStore(currency)?.walletManager
     }
 
     fun getWalletManager(blockchain: BlockchainNetwork): WalletManager? {
@@ -129,22 +118,6 @@ data class WalletState(
     fun getWalletData(currency: Currency?): WalletData? {
         if (currency == null) return null
         return getWalletStore(currency)?.walletsData?.firstOrNull { it.currency == currency }
-    }
-
-    fun getWalletData(token: Token?): WalletData? {
-        if (token == null) return null
-        return walletsData.find {
-            (it.currency as? Currency.Token)?.token == token &&
-                    !it.currency.isCustomCurrency(store.state.globalState.scanResponse!!.card.derivationStyle)
-        }
-    }
-
-    fun getWalletData(blockchain: Blockchain?): WalletData? {
-        if (blockchain == null) return null
-        return walletsData.find {
-            (it.currency as? Currency.Blockchain)?.blockchain == blockchain &&
-                    !it.currency.isCustomCurrency(store.state.globalState.scanResponse!!.card.derivationStyle)
-        }
     }
 
     fun getSelectedWalletData(): WalletData? {
