@@ -37,10 +37,10 @@ suspend fun WalletManager.safeUpdate(): Result<Wallet> = try {
         val amountToCreateAccount = blockchain.amountToCreateAccount(wallet.getFirstToken())
 
         if (exception is BlockchainSdkError.AccountNotFound && amountToCreateAccount != null) {
-            Result.Failure(TapError.WalletManagerUpdate.NoAccountError(amountToCreateAccount.toString()))
+            Result.Failure(TapError.WalletManager.NoAccountError(amountToCreateAccount.toString()))
         } else {
             val message = exception.localizedMessage ?: "An error has occurred. Try later"
-            Result.Failure(TapError.WalletManagerUpdate.InternalError(message))
+            Result.Failure(TapError.WalletManager.InternalError(message))
         }
     }
 }
