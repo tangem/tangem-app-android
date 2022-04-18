@@ -2,13 +2,17 @@ package com.tangem.tap.domain
 
 import com.tangem.blockchain.blockchains.solana.RentProvider
 import com.tangem.blockchain.common.*
+import com.tangem.common.extensions.guard
 import com.tangem.common.services.Result
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.TapWorkarounds.isTestCard
+import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.common.extensions.withMainContext
+import com.tangem.network.api.tangemTech.TangemTechService
 import com.tangem.tap.common.ThrottlerWithValues
+import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.extensions.stripZeroPlainString
@@ -26,7 +30,6 @@ import com.tangem.tap.features.wallet.models.getPendingTransactions
 import com.tangem.tap.features.wallet.redux.Currency
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.network.NetworkConnectivity
-import com.tangem.tap.network.coinmarketcap.CoinMarketCapService
 import com.tangem.tap.store
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -37,7 +40,9 @@ class TapWalletManager {
     val walletManagerFactory: WalletManagerFactory
         by lazy { WalletManagerFactory(blockchainSdkConfig) }
 
-    private val coinMarketCapService = CoinMarketCapService()
+    private val tangemTechService: TangemTechService
+        get() = store.state.domainNetworks.tangemTechService
+
     private val blockchainSdkConfig by lazy {
         store.state.globalState.configManager?.config?.blockchainSdkConfig ?: BlockchainSdkConfig()
     }
@@ -98,20 +103,58 @@ class TapWalletManager {
     }
 
     suspend fun loadFiatRate(fiatCurrency: FiatCurrencyName, currencies: List<Currency>) {
+        suspend fun handleFiatRatesResult(rates: Map<Currency, Result<BigDecimal>?>) {
+            rates.forEach { (currency, priceResult) ->
+                when (priceResult) {
+                    is Result.Success -> {
+                        dispatchOnMain(
+                            WalletAction.LoadFiatRate.Success(
+                                currency to priceResult.data
+                            ))
+                    }
+                    is Result.Failure -> dispatchOnMain(WalletAction.LoadFiatRate.Failure)
+                    null -> {}
+                }
+            }
+        }
+
         // get and submit previous result of equivalents.
         val throttledResult = currencies.filter { fiatRatesThrottler.isStillThrottled(it) }.map {
             Pair(it, fiatRatesThrottler.geValue(it))
         }
-        if (throttledResult.isNotEmpty()) handleFiatRatesResult(throttledResult)
+        if (throttledResult.isNotEmpty()) {
+            handleFiatRatesResult(throttledResult.toMap())
+        }
 
-        val toUpdate = currencies.filter { !fiatRatesThrottler.isStillThrottled(it) }
-        toUpdate.forEach {
-            val result = coinMarketCapService.getRate(it.currencySymbol, fiatCurrency)
-            if (result is Result.Success) {
-                fiatRatesThrottler.updateThrottlingTo(it)
-                fiatRatesThrottler.setValue(it, result)
+        val toUpdateCurrencies = currencies.filter { !fiatRatesThrottler.isStillThrottled(it) }
+        val toUpdateIds = toUpdateCurrencies.mapNotNull { it.id }.distinct()
+        if (toUpdateIds.isEmpty()) return
+
+        //TODO: refactoring: move fiatRatesThrottler to the TangemTechRepository
+        when (val result = tangemTechService.coins.prices(fiatCurrency, toUpdateIds)) {
+            is Result.Success -> {
+                val missedCurrencies = mutableListOf<String>()
+                val updatedCurrencies = mutableMapOf<Currency, Result<BigDecimal>?>()
+
+                result.data.prices.forEach { (name, value) ->
+                    val currency = toUpdateCurrencies.firstOrNull { it.id == name }.guard {
+                        missedCurrencies.add(name)
+                        return@forEach
+                    }
+                    val priceResult = Result.Success(value.toBigDecimal())
+                    updatedCurrencies[currency] = priceResult
+
+                    fiatRatesThrottler.updateThrottlingTo(currency)
+                    fiatRatesThrottler.setValue(currency, priceResult)
+                }
+
+                if (missedCurrencies.isNotEmpty()) {
+                    val missedNames = missedCurrencies.joinToString(", ")
+                    store.dispatchDebugErrorNotification("Not found currencies to update: [$missedNames]")
+                }
+                handleFiatRatesResult(updatedCurrencies)
             }
-            handleFiatRatesResult(listOf(it to result))
+            is Result.Failure -> dispatchOnMain(WalletAction.LoadFiatRate.Failure)
         }
     }
 
@@ -318,21 +361,14 @@ class TapWalletManager {
             is com.tangem.blockchain.extensions.Result.Failure -> {}
         }
     }
-
-    private suspend fun handleFiatRatesResult(results: List<Pair<Currency, Result<BigDecimal>?>>) {
-        results.map {
-            when (it.second) {
-                is Result.Success -> {
-                    val rate = it.first to (it.second as Result.Success<BigDecimal>).data
-                    dispatchOnMain(WalletAction.LoadFiatRate.Success(rate))
-                }
-                is Result.Failure -> dispatchOnMain(WalletAction.LoadFiatRate.Failure)
-                null -> {}
-            }
-        }
-    }
 }
 
 fun Wallet.getFirstToken(): Token? {
     return getTokens().toList().getOrNull(0)
 }
+
+val Currency.id: String?
+    get() = when (this) {
+        is Currency.Blockchain -> blockchain.toNetworkId()
+        is Currency.Token -> token.id
+    }
