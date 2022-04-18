@@ -2,11 +2,10 @@ package com.tangem.domain.features.addCustomToken.redux
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.DerivationStyle
+import com.tangem.domain.AddCustomTokenError
 import com.tangem.domain.DomainWrapped
 import com.tangem.domain.common.form.Field
 import com.tangem.domain.common.form.FieldId
-import com.tangem.domain.features.addCustomToken.AddCustomTokenError
-import com.tangem.domain.features.addCustomToken.AddCustomTokenWarning
 import com.tangem.domain.features.addCustomToken.CustomCurrency
 import com.tangem.domain.features.addCustomToken.CustomTokenFieldId
 import org.rekotlin.Action
@@ -47,9 +46,12 @@ sealed class AddCustomTokenAction : Action {
 
     // warnings
     sealed class Warning : AddCustomTokenAction() {
-        data class Add(val warnings: Set<AddCustomTokenWarning>) : Warning()
-        data class Remove(val warnings: Set<AddCustomTokenWarning>) : Warning()
-        data class Replace(val remove: Set<AddCustomTokenWarning>, val add: Set<AddCustomTokenWarning>) : Warning()
+        data class Add(val warnings: Set<AddCustomTokenError.Warning>) : Warning()
+        data class Remove(val warnings: Set<AddCustomTokenError.Warning>) : Warning()
+        data class Replace(
+            val remove: Set<AddCustomTokenError.Warning>,
+            val add: Set<AddCustomTokenError.Warning>
+        ) : Warning()
     }
 
     // To change the screenState
