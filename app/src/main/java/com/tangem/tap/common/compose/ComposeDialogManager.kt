@@ -20,7 +20,7 @@ import com.tangem.domain.DomainDialog
 import com.tangem.domain.redux.domainStore
 import com.tangem.domain.redux.global.DomainGlobalAction
 import com.tangem.domain.redux.global.DomainGlobalState
-import com.tangem.tap.features.tokens.addCustomToken.DomainErrorConverter
+import com.tangem.tap.common.moduleMessage.ModuleMessageConverter
 import com.tangem.tap.features.tokens.addCustomToken.compose.SelectTokenNetworkDialog
 import com.tangem.wallet.R
 import org.rekotlin.StoreSubscriber
@@ -55,13 +55,13 @@ private fun ShowTheDialog(dialogState: MutableState<DomainDialog?>) {
     if (dialogState.value == null) return
 
     val context = LocalContext.current
-    val errorConverter = remember { DomainErrorConverter(context) }
+    val errorConverter = remember { ModuleMessageConverter(context) }
     val onDismissRequest = { domainStore.dispatch(DomainGlobalAction.ShowDialog(null)) }
 
     when (val dialog = dialogState.value) {
         is DomainDialog.DialogError -> ErrorDialog(
             title = stringResource(id = R.string.common_error),
-            body = errorConverter.convertError(dialog.error),
+            body = errorConverter.convert(dialog.error),
             onDismissRequest
         )
         is DomainDialog.SelectTokenDialog -> SelectTokenNetworkDialog(dialog, onDismissRequest)
