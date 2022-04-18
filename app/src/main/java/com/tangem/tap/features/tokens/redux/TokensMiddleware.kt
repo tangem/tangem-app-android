@@ -2,7 +2,6 @@ package com.tangem.tap.features.tokens.redux
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.DerivationParams
-import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.blockchain.common.Token
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.EllipticCurve
@@ -207,16 +206,10 @@ class TokensMiddleware {
                 is Currency.Blockchain -> {
                     val derivationPath = currency.derivationPath?.let { DerivationPath(it) }
 
-                    val derivationParams = if (derivationStyle == null) {
-                        null
-                    } else {
-                        if (derivationPath == null) {
-                            DerivationParams.Default(derivationStyle)
-                        } else {
-                            when (derivationStyle) {
-                                DerivationStyle.LEGACY -> DerivationParams.Custom(derivationPath)
-                                DerivationStyle.NEW -> DerivationParams.Default(derivationStyle)
-                            }
+                    val derivationParams = derivationStyle?.let {
+                        when (derivationPath) {
+                            null -> DerivationParams.Default(derivationStyle)
+                            else -> DerivationParams.Custom(derivationPath)
                         }
                     }
 
