@@ -6,6 +6,7 @@ import com.tangem.blockchain.common.address.AddressType
 import com.tangem.blockchain.extensions.isAboveZero
 import com.tangem.common.extensions.isZero
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
+import com.tangem.domain.features.addCustomToken.CustomCurrency
 import com.tangem.tap.common.entities.Button
 import com.tangem.tap.common.extensions.toQrCode
 import com.tangem.tap.common.redux.StateDialog
@@ -17,6 +18,7 @@ import com.tangem.tap.domain.extensions.sellIsAllowed
 import com.tangem.tap.domain.extensions.toSendableAmounts
 import com.tangem.tap.domain.tokens.BlockchainNetwork
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
+import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
 import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.models.toPendingTransactions
 import com.tangem.tap.features.wallet.models.toPendingTransactionsForToken
@@ -438,6 +440,28 @@ sealed interface Currency {
                     derivationPath = blockchainNetwork.derivationPath
                 )
             }
+        }
+
+        fun fromCustomCurrency(customCurrency: CustomCurrency): Currency {
+            return when (customCurrency) {
+                is CustomCurrency.CustomBlockchain -> Blockchain(
+                    blockchain = customCurrency.network,
+                    derivationPath = customCurrency.derivationPath?.rawPath
+                )
+                is CustomCurrency.CustomToken -> Token(
+                    token = customCurrency.token,
+                    blockchain = customCurrency.network,
+                    derivationPath = customCurrency.derivationPath?.rawPath,
+                )
+            }
+        }
+
+        fun fromTokenWithBlockchain(tokenWithBlockchain: TokenWithBlockchain): Token {
+            return Currency.Token(
+                token = tokenWithBlockchain.token,
+                blockchain = tokenWithBlockchain.blockchain,
+                derivationPath = null
+            )
         }
     }
 }
