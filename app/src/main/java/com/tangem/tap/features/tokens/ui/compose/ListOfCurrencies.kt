@@ -67,3 +67,6 @@ fun ListOfCurrencies(
 
     }
 }
+
+val Currency.fullName: String
+    get() = "${this.name} (${this.symbol})"
