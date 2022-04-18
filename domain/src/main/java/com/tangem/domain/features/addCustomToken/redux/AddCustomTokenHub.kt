@@ -4,10 +4,12 @@ import android.webkit.ValueCallback
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.common.extensions.guard
-import com.tangem.common.extensions.toHexString
 import com.tangem.common.services.Result
+import com.tangem.domain.AddCustomTokenError
+import com.tangem.domain.AddCustomTokenError.Warning.PotentialScamToken
+import com.tangem.domain.AddCustomTokenError.Warning.TokenAlreadyAdded
+import com.tangem.domain.AddCustomTokenException
 import com.tangem.domain.DomainDialog
-import com.tangem.domain.DomainException
 import com.tangem.domain.DomainWrapped
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.extensions.fromNetworkId
@@ -22,7 +24,6 @@ import com.tangem.domain.redux.dispatchOnMain
 import com.tangem.domain.redux.domainStore
 import com.tangem.domain.redux.global.DomainGlobalAction
 import com.tangem.network.api.tangemTech.Coins
-import com.tangem.network.api.tangemTech.TangemTechService
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -147,9 +148,9 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
 
     private suspend fun updateWarningAlreadyAdded(isInAppSavedList: Boolean) {
         if (isInAppSavedList) {
-            AddCustomTokenWarning.TokenAlreadyAdded.add()
+            TokenAlreadyAdded.add()
         } else {
-            AddCustomTokenWarning.TokenAlreadyAdded.remove()
+            TokenAlreadyAdded.remove()
         }
     }
 
@@ -172,7 +173,7 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
         val result = when (foundTokensResult) {
             is Result.Success -> foundTokensResult.data
             is Result.Failure -> {
-//                val warning = AddCustomTokenWarning.Network.CheckAddressRequestError
+//                val warning = Warning.Network.CheckAddressRequestError
 //                dispatchOnMain(Warning.Add(setOf(warning)))
                 emptyList()
             }
@@ -184,8 +185,8 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
     private suspend fun manageFoundTokenChanges(foundTokens: List<Coins.CheckAddressResponse.Token>) {
         if (foundTokens.isEmpty()) {
             // token not found - it's completely custom
-            AddCustomTokenWarning.TokenAlreadyAdded.remove()
-            AddCustomTokenWarning.PotentialScamToken.add()
+            TokenAlreadyAdded.remove()
+            PotentialScamToken.add()
 
             dispatchOnMain(SetFoundTokenId(null))
             clearTokenFields()
@@ -210,33 +211,33 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
                 if (isInAppSavedTokens) {
                     lockTokenFields()
                     lockAddButton()
-                    AddCustomTokenWarning.PotentialScamToken.replace(AddCustomTokenWarning.TokenAlreadyAdded)
+                    PotentialScamToken.replace(TokenAlreadyAdded)
                 } else {
                     // not in the saved tokens list
                     if (singleTokenContract.active) {
                         lockTokenFields()
                         unlockAddButton()
                         if (hubState.derivationPathIsSelected()) {
-                            AddCustomTokenWarning.PotentialScamToken.add()
+                            PotentialScamToken.add()
                         } else {
-                            AddCustomTokenWarning.TokenAlreadyAdded.remove()
-                            AddCustomTokenWarning.PotentialScamToken.remove()
+                            TokenAlreadyAdded.remove()
+                            PotentialScamToken.remove()
                         }
                     } else {
                         unlockAddButton()
-                        AddCustomTokenWarning.PotentialScamToken.add()
+                        PotentialScamToken.add()
                     }
                 }
             }
             else -> {
-                AddCustomTokenWarning.PotentialScamToken.replace(AddCustomTokenWarning.TokenAlreadyAdded)
+                PotentialScamToken.replace(TokenAlreadyAdded)
 
                 val dialog = DomainDialog.SelectTokenDialog(
                     items = foundToken.contracts,
                     networkIdConverter = { networkId ->
                         val blockchain = Blockchain.fromNetworkId(networkId)
                         if (blockchain == null || blockchain == Blockchain.Unknown) {
-                            throw DomainException.SelectTokeNetworkException(networkId)
+                            throw AddCustomTokenException.SelectTokeNetworkException(networkId)
                         }
                         hubState.blockchainToName(blockchain) ?: ""
                     },
@@ -255,8 +256,8 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
     }
 
     private suspend fun replaceWarnings(
-        warningsAdd: MutableSet<AddCustomTokenWarning> = mutableSetOf(),
-        warningsRemove: MutableSet<AddCustomTokenWarning> = mutableSetOf(),
+        warningsAdd: MutableSet<AddCustomTokenError.Warning> = mutableSetOf(),
+        warningsRemove: MutableSet<AddCustomTokenError.Warning> = mutableSetOf(),
     ) {
         if (warningsAdd.isNotEmpty() || warningsRemove.isNotEmpty()) {
             dispatchOnMain(Warning.Replace(warningsRemove.toSet(), warningsAdd.toSet()))
@@ -265,7 +266,7 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
 
     private suspend fun updateAddButton() {
         val state = hubState
-        if (state.warnings.contains(AddCustomTokenWarning.TokenAlreadyAdded)) {
+        if (state.warnings.contains(TokenAlreadyAdded)) {
             lockAddButton()
             return
         }
@@ -485,19 +486,19 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
         dispatchOnMain(action)
     }
 
-    private suspend fun AddCustomTokenWarning.add() {
+    private suspend fun AddCustomTokenError.Warning.add() {
         dispatchOnMain(Warning.Add(setOf(this)))
     }
 
-    private suspend fun AddCustomTokenWarning.remove() {
+    private suspend fun AddCustomTokenError.Warning.remove() {
         dispatchOnMain(Warning.Remove(setOf(this)))
     }
 
-    private suspend fun AddCustomTokenWarning.replace(to: AddCustomTokenWarning) {
+    private suspend fun AddCustomTokenError.Warning.replace(to: AddCustomTokenError.Warning) {
         dispatchOnMain(Warning.Replace(setOf(this), setOf(to)))
     }
 
-//    private suspend fun AddCustomTokenWarning.replace(replace: Boolean, to: AddCustomTokenWarning) {
+//    private suspend fun Warning.replace(replace: Boolean, to: Warning) {
 //        if (replace) dispatchOnMain(Warning.Replace(setOf(this), setOf(to)))
 //    }
 
@@ -512,8 +513,7 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
             }
             is OnCreate -> {
                 val card = requireNotNull(globalState.scanResponse?.card)
-                val tangemTechServiceManager = TangemTechServiceManager(TangemTechService())
-                tangemTechServiceManager.attachAuthKey(card.cardPublicKey.toHexString())
+                val tangemTechServiceManager = AddCustomTokenService(globalState.networkServices.tangemTechService)
 
                 var derivationPathState = state.screenState.derivationPath
                 derivationPathState = when (card.derivationStyle) {
@@ -656,7 +656,7 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
 
     @Throws
     private fun throwUnAppropriateInitialization(objName: String) {
-        throw DomainException.UnAppropriateInitializationException(
+        throw AddCustomTokenException.UnAppropriateInitializationException(
             "AddCustomTokenHub", "$objName must be not NULL"
         )
     }
