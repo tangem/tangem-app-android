@@ -9,12 +9,7 @@ interface HttpResponse
 sealed interface TangemTechResponse : HttpResponse
 
 sealed class Coins : TangemTechResponse {
-    data class PricesResponse(val prices: List<Price>) : Coins() {
-        data class Price(
-            val name: String,
-            val price: BigDecimal,
-        )
-    }
+    data class PricesResponse(val prices: Map<String, Double>) : Coins()
 
     data class CheckAddressResponse(val imageHost: String?, val tokens: List<Token>, val total: Int) : Coins() {
         data class Token(
@@ -51,11 +46,15 @@ sealed class Coins : TangemTechResponse {
     data class CurrenciesResponse(val currencies: List<Currency>) {
         data class Currency(
             val id: String,
-            val code: String,
+            val code: String,       // this is an uppercase id
             val name: String,
             val rateBTC: String,
-            val unit: String,
+            val unit: String,       // $, €, ₽
             val type: String,
         )
+
+        enum class CurrencyType(val type: String) {
+            Fiat("fiat"), Crypto("crypto")
+        }
     }
 }
