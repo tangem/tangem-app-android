@@ -68,7 +68,7 @@ private fun AllInOne() {
     )
     // unknown
     ContractAddressButton(
-        name = "unk",
+        name = "unknown",
         address = "0x1111111111111111112111111111111111111113"
     )
 }

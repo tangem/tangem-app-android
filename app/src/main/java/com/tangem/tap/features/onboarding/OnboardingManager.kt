@@ -32,7 +32,7 @@ class OnboardingManager(
 
     suspend fun loadArtworkUrl(): String {
         val cardInfo = cardInfo
-                ?: OnlineCardVerifier().getCardInfo(scanResponse.card.cardId, scanResponse.card.cardPublicKey)
+            ?: OnlineCardVerifier().getCardInfo(scanResponse.card.cardId, scanResponse.card.cardPublicKey)
         this.cardInfo = cardInfo
         return scanResponse.card.getOrLoadCardArtworkUrl(cardInfo)
     }
@@ -57,11 +57,11 @@ class OnboardingManager(
             is Result.Failure -> {
                 val error = (result.error as? TapError) ?: TapError.UnknownError
                 when (error) {
-                    is TapError.WalletManagerUpdate.NoAccountError -> OnboardingWalletBalance.error(error)
-                    // NoInternetConnection, WalletManagerUpdate.InternalError
+                    is TapError.WalletManager.NoAccountError -> OnboardingWalletBalance.error(error)
+                    // NoInternetConnection, WalletManager.InternalError
                     else -> {
                         Timber.e(error.localizedMessage)
-                        OnboardingWalletBalance.criticalError(TapError.WalletManagerUpdate.BlockchainIsUnreachableTryLater)
+                        OnboardingWalletBalance.criticalError(TapError.WalletManager.BlockchainIsUnreachableTryLater)
                     }
                 }
             }
@@ -93,7 +93,7 @@ data class OnboardingWalletBalance(
     fun balanceIsToppedUp(): Boolean = value.isPositive() || hasIncomingTransaction
 
     val amountToCreateAccount: String?
-        get() = if (error is TapError.WalletManagerUpdate.NoAccountError) error.customMessage else null
+        get() = if (error is TapError.WalletManager.NoAccountError) error.customMessage else null
 
     companion object {
         fun error(error: TapError): OnboardingWalletBalance = OnboardingWalletBalance(
