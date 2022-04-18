@@ -24,3 +24,7 @@ open class AddHeaderInterceptor(
 class CacheControlHttpInterceptor(maxAgeSeconds: Int) : AddHeaderInterceptor(mapOf(
     "Cache-Control" to "max-age=$maxAgeSeconds",
 ))
+
+class CardPublicKeyHttpInterceptor(cardPublicKeyHex: String) : AddHeaderInterceptor(mapOf(
+    "card_public_key" to cardPublicKeyHex,
+))
