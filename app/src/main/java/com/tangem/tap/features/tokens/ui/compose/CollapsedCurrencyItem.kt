@@ -59,7 +59,7 @@ fun CollapsedCurrencyItem(
                 .align(Alignment.CenterVertically)
         ) {
             Text(
-                text = currency.name,
+                text = currency.fullName,
                 fontSize = 17.sp,
                 fontWeight = FontWeight.Normal,
                 color = Color(0xFF1C1C1E),

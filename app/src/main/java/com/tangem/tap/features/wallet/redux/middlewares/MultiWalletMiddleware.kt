@@ -91,7 +91,7 @@ class MultiWalletMiddleware {
                         }
                     }
                     is Currency.Token -> {
-                        val walletManager = walletState?.getWalletManager(currency.token)
+                        val walletManager = walletState?.getWalletManager(currency)
                         if (walletManager != null) {
                             walletManager.removeToken(currency.token)
                             cardId?.let {
@@ -222,6 +222,7 @@ class MultiWalletMiddleware {
         tokens: List<Token>, blockchainNetwork: BlockchainNetwork,
         walletState: WalletState?, globalState: GlobalState?
     ) {
+        if (tokens.isEmpty()) return
         val scanResponse = globalState?.scanResponse ?: return
         val wmFactory = globalState.tapWalletManager.walletManagerFactory
 
