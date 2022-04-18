@@ -15,16 +15,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.tangem.domain.DomainError
-import com.tangem.domain.ErrorConverter
+import com.tangem.common.module.ModuleError
 import com.tangem.domain.common.form.Field
 import com.tangem.tap.common.compose.extensions.stringResourceDefault
+import com.tangem.tap.common.moduleMessage.ModuleMessageConverter
 
 /**
 [REDACTED_AUTHOR]
@@ -41,8 +42,8 @@ fun OutlinedTextFieldWidget(
     isEnabled: Boolean = true,
     isVisible: Boolean = true,
     isLoading: Boolean = false,
-    error: DomainError? = null,
-    errorConverter: ErrorConverter<String>? = null,
+    error: ModuleError? = null,
+    errorConverter: ModuleMessageConverter? = null,
     debounceTextChanges: Long = 400,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
@@ -79,7 +80,7 @@ private fun OutlinedProgressTextField(
     placeholder: String = "",
     isEnabled: Boolean = true,
     isLoading: Boolean = false,
-    error: DomainError? = null,
+    error: ModuleError? = null,
     debounce: Long = 400,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
@@ -132,8 +133,8 @@ private fun OutlinedProgressTextField(
 
 @Composable
 private fun AnimatedErrorView(
-    error: DomainError? = null,
-    errorConverter: ErrorConverter<String>,
+    error: ModuleError? = null,
+    errorConverter: ModuleMessageConverter,
 ) {
     AnimatedVisibility(
         visible = error != null,
@@ -141,7 +142,7 @@ private fun AnimatedErrorView(
         exit = slideOutVertically() + fadeOut(),
     ) {
         error?.let {
-            ErrorView(errorConverter.convertError(it), style = TextStyle(fontSize = 14.sp))
+            ErrorView(errorConverter.convert(it), style = TextStyle(fontSize = 14.sp))
         }
     }
 }
@@ -149,20 +150,14 @@ private fun AnimatedErrorView(
 @Preview
 @Composable
 fun OutlinedTextFieldWithErrorTest() {
-    val converter = remember {
-        object : ErrorConverter<String> {
-            override fun convertError(error: DomainError): String {
-                return "Hello, i'am the error: ${error::class.java.simpleName}"
-            }
-
-        }
-    }
+    val context = LocalContext.current
+    val converter = remember { ModuleMessageConverter(context) }
 
     class SimpleError(
         override val code: Int = 1,
         override val message: String = "Error message",
         override val data: Any? = null,
-    ) : DomainError
+    ) : ModuleError
 
     val modifier = Modifier
         .fillMaxWidth()
