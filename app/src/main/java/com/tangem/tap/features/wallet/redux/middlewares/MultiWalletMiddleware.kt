@@ -235,7 +235,8 @@ class MultiWalletMiddleware {
                 token, blockchainNetwork.blockchain, blockchainNetwork.derivationPath
             )
         }))
-        walletManager.addTokens(tokens)
+        if (tokens.isNotEmpty()) walletManager.addTokens(tokens)
+
         currenciesRepository.saveUpdatedCurrency(
             cardId = scanResponse.card.cardId,
             blockchainNetwork = BlockchainNetwork.fromWalletManager(walletManager)
