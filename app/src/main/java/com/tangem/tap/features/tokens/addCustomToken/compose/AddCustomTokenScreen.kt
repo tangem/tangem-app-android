@@ -13,11 +13,9 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.tangem.domain.ErrorConverter
+import com.tangem.domain.AddCustomTokenError
 import com.tangem.domain.common.form.DataField
 import com.tangem.domain.common.form.FieldId
-import com.tangem.domain.features.addCustomToken.AddCustomTokenError
-import com.tangem.domain.features.addCustomToken.AddCustomTokenWarning
 import com.tangem.domain.features.addCustomToken.CustomTokenFieldId.*
 import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction
 import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenState
@@ -27,7 +25,7 @@ import com.tangem.domain.redux.domainStore
 import com.tangem.tap.common.compose.ComposeDialogManager
 import com.tangem.tap.common.compose.ToggledRippleTheme
 import com.tangem.tap.common.compose.keyboardAsState
-import com.tangem.tap.features.tokens.addCustomToken.DomainErrorConverter
+import com.tangem.tap.common.moduleMessage.ModuleMessageConverter
 import com.tangem.wallet.R
 
 /**
@@ -82,7 +80,7 @@ fun AddCustomTokenScreen(state: MutableState<AddCustomTokenState>) {
 @Composable
 private fun FormFields(state: MutableState<AddCustomTokenState>) {
     val context = LocalContext.current
-    val errorConverter = remember { DomainErrorConverter(context) }
+    val errorConverter = remember { ModuleMessageConverter(context) }
 
     val stateValue = state.value
     stateValue.form.fieldList.forEach { field ->
@@ -99,11 +97,11 @@ private fun FormFields(state: MutableState<AddCustomTokenState>) {
 }
 
 @Composable
-fun Warnings(warnings: List<AddCustomTokenWarning>) {
+fun Warnings(warnings: List<AddCustomTokenError.Warning>) {
     if (warnings.isEmpty()) return
 
     val context = LocalContext.current
-    val warningConverter = remember { DomainErrorConverter(context) }
+    val warningConverter = remember { ModuleMessageConverter(context) }
 
     Column {
         warnings.forEachIndexed { index, item ->
@@ -120,7 +118,7 @@ fun Warnings(warnings: List<AddCustomTokenWarning>) {
             ) {
                 Text(
                     modifier = Modifier.padding(16.dp),
-                    text = warningConverter.convertError(item),
+                    text = warningConverter.convert(item),
                     color = colorResource(id = R.color.white),
                     fontSize = 14.sp
                 )
@@ -172,14 +170,14 @@ private fun AddCustomTokenFab(
 data class ScreenFieldData(
     val field: DataField<*>,
     val error: AddCustomTokenError?,
-    val errorConverter: ErrorConverter<String>,
+    val errorConverter: ModuleMessageConverter,
     val viewState: ViewStates.TokenField
 ) {
     companion object {
         fun fromState(
             field: DataField<*>,
             state: AddCustomTokenState,
-            errorConverter: DomainErrorConverter
+            errorConverter: ModuleMessageConverter
         ): ScreenFieldData {
             return ScreenFieldData(
                 field = field,
