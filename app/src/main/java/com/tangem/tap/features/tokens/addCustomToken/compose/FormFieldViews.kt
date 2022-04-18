@@ -29,7 +29,7 @@ fun TokenContractAddressView(screenFieldData: ScreenFieldData) {
     OutlinedTextFieldWidget(
         textFieldData = tokenField.data,
         labelId = R.string.custom_token_contract_address_input_title,
-        placeholder = "0x0000000000000000",
+        placeholder = "0x0000000000000000000000000000000000000000",
         isEnabled = screenFieldData.viewState.isEnabled,
         isLoading = screenFieldData.viewState.isLoading,
         error = screenFieldData.error,
@@ -71,7 +71,7 @@ fun TokenNetworkView(screenFieldData: ScreenFieldData, state: AddCustomTokenStat
         itemList = networkField.itemList,
         selectedItem = networkField.data,
         isEnabled = screenFieldData.viewState.isEnabled,
-        textFieldConverter = { state.convertBlockchainName(it, notSelected) },
+        textFieldConverter = { state.blockchainToName(it) ?: notSelected },
     ) { domainStore.dispatch(AddCustomTokenAction.OnTokenNetworkChanged(Field.Data(it))) }
     SpacerH8()
 }
@@ -123,11 +123,11 @@ fun TokenDerivationPathView(screenFieldData: ScreenFieldData, state: AddCustomTo
         itemList = networkField.itemList,
         selectedItem = networkField.data,
         isEnabled = screenFieldData.viewState.isEnabled,
-        textFieldConverter = { state.convertBlockchainName(it, notSelected) },
+        textFieldConverter = { state.blockchainToName(it) ?: notSelected },
         dropdownItemView = { blockchain ->
-            val derivationPathLabel = state.convertDerivationPathLabel(blockchain, notSelected)
-            val blockchainName = state.convertBlockchainName(blockchain, notSelected)
-            TitleSubtitle(derivationPathLabel, blockchainName)
+            val derivationPathName = state.blockchainToName(blockchain, true) ?: notSelected
+            val blockchainName = state.blockchainToName(blockchain) ?: notSelected
+            TitleSubtitle(derivationPathName, blockchainName)
         }
     ) { domainStore.dispatch(AddCustomTokenAction.OnTokenDerivationPathChanged(Field.Data(it))) }
     SpacerH8()
