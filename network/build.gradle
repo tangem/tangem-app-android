@@ -9,8 +9,16 @@ java {
 }
 
 dependencies {
+    implementation implementation(project(path: ':common'))
+
     // Tangem sdk's
     implementation 'com.tangem.tangem-sdk-kotlin:core:develop-142'
+
+    // Kotlin coroutines
+    implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2'
+
+    // Logs
+    implementation 'com.jakewharton.timber:timber:4.7.1'
 
     // Network
     implementation(platform("com.squareup.okhttp3:okhttp-bom:4.9.3"))

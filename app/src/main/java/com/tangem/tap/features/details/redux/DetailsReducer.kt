@@ -43,13 +43,15 @@ private fun handlePrepareScreen(
     action: DetailsAction.PrepareScreen,
     state: DetailsState,
 ): DetailsState {
-    val backupIsActive = action.scanResponse.card.backupStatus?.isActive ?: false
 
     return DetailsState(
         scanResponse = action.scanResponse,
         wallets = action.wallets,
         cardInfo = action.scanResponse.card.toCardInfo(),
-        appCurrencyState = AppCurrencyState(action.fiatCurrencyName),
+        appCurrencyState = state.appCurrencyState.copy(
+            fiatCurrencyName = action.fiatCurrencyName,
+            showAppCurrencyDialog = false,
+        ),
         cardTermsOfUseUrl = action.cardTou.getUrl(action.scanResponse.card),
         createBackupAllowed = action.scanResponse.card.backupStatus == Card.BackupStatus.NoBackup,
     )
