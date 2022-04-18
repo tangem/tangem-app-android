@@ -4,8 +4,8 @@ import com.tangem.blockchain.common.Blockchain
 
 fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
     return when (networkId) {
-        "avalanche" -> Blockchain.Avalanche
-        "avalanche-testnet" -> Blockchain.AvalancheTestnet
+        "avalanche", "avalanche-2" -> Blockchain.Avalanche
+        "avalanche-testnet", "avalanche-2-testnet" -> Blockchain.AvalancheTestnet
         "binancecoin" -> Blockchain.Binance
         "binancecoin-testnet" -> Blockchain.BinanceTestnet
         "binance-smart-chain" -> Blockchain.BSC
