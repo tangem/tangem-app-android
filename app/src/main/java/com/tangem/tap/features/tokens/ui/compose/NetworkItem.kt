@@ -46,7 +46,7 @@ fun NetworkItem(
             .combinedClickable(
                 enabled = allowToAdd,
                 onLongClick = {
-                    if (contract != null) onNetworkItemClicked(contract.address)
+                    if (!isBlockchain) onNetworkItemClicked(contract!!.address)
                 },
                 onClick = {},
                 indication = null,
