@@ -43,7 +43,8 @@ sealed class TapError(
         object AssetAccountNotCreated : TapError(R.string.send_error_no_account_xlm)
     }
 
-    sealed class WalletManagerUpdate {
+    sealed class WalletManager {
+        object CreationError: CustomError("Can't create wallet manager")
         class NoAccountError(amountToCreateAccount: String): CustomError(amountToCreateAccount)
         class InternalError(message: String): CustomError(message)
         object BlockchainIsUnreachable: TapError(R.string.wallet_balance_blockchain_unreachable)
