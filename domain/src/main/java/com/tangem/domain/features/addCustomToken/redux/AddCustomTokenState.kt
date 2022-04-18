@@ -2,15 +2,16 @@ package com.tangem.domain.features.addCustomToken.redux
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.DerivationStyle
+import com.tangem.domain.DomainWrapped
 import com.tangem.domain.common.form.*
 import com.tangem.domain.features.addCustomToken.*
 import com.tangem.domain.features.addCustomToken.CustomTokenFieldId.*
 import org.rekotlin.StateType
 
 data class AddCustomTokenState(
-    val addedCurrencies: AddedCurrencies? = null,
-    val onTokenAddCallback: ((CompleteData) -> Unit)? = null,
-    val derivationStyle: DerivationStyle? = null,
+    val appSavedCurrencies: List<DomainWrapped.Currency>? = null,
+    val onTokenAddCallback: ((CustomCurrency) -> Unit)? = null,
+    val cardDerivationStyle: DerivationStyle? = null,
     val form: Form = Form(createFormFields()),
     val formValidators: Map<CustomTokenFieldId, CustomTokenValidator<out Any>> = createFormValidators(),
     val formErrors: Map<CustomTokenFieldId, AddCustomTokenError> = emptyMap(),
@@ -28,30 +29,73 @@ data class AddCustomTokenState(
 
     fun hasError(id: FieldId): Boolean = formErrors[id] != null
 
-    fun getCompleteData(type: CompleteDataType): CompleteData = when (type) {
-        CompleteDataType.Token -> getToken()
-        CompleteDataType.Blockchain -> getBlockchain()
-    }
-
     inline fun <reified T> visitDataConverter(converter: FieldDataConverter<T>): T {
         form.visitDataConverter(converter)
         return converter.getConvertedData()
     }
 
-    fun convertBlockchainName(blockchain: Blockchain, unknown: String): String = when (blockchain) {
-        Blockchain.Unknown -> unknown
-        else -> blockchain.fullName
+    fun blockchainToName(blockchain: Blockchain, isDerivationPath: Boolean = false): String? {
+        return when {
+            isDerivationPath -> blockchain.derivationPath(cardDerivationStyle)?.rawPath
+            else -> {
+                when (blockchain) {
+                    Blockchain.Unknown -> null
+                    else -> blockchain.fullName
+                }
+            }
+        }
     }
 
-    fun convertDerivationPathLabel(blockchain: Blockchain, unknown: String): String {
-        return blockchain.derivationPath(derivationStyle)?.rawPath ?: unknown
+    // except network
+    fun tokensFieldsIsFilled(): Boolean {
+        val idsToCheck = listOf(ContractAddress, Name, Symbol, Decimals)
+        val fieldsToCheck = form.fieldList.filter { idsToCheck.contains(it.id) }
+        val validator = StringIsNotEmptyValidator()
+        fieldsToCheck.forEach { field ->
+            val error = validator.validate(field.data.value?.toString())
+            if (error != null) return false
+        }
+        return true
+    }
+
+    // except network
+    fun tokensOneFieldsIsFilled(): Boolean {
+        val idsToCheck = listOf(ContractAddress, Name, Symbol, Decimals)
+        val fieldsToCheck = form.fieldList.filter { idsToCheck.contains(it.id) }
+        val validator = StringIsEmptyValidator()
+        val errorsList = fieldsToCheck.mapNotNull { field ->
+            validator.validate(field.data.value?.toString())
+        }
+        return errorsList.size == 1
+    }
+
+    fun networkIsSelected(): Boolean {
+        val network = getField<TokenBlockchainField>(Network)
+        return network.data.value != Blockchain.Unknown
+    }
+
+    fun derivationPathIsSelected(): Boolean {
+        val network = getField<TokenDerivationPathField>(DerivationPath)
+        return network.data.value != Blockchain.Unknown
+    }
+
+    fun gatherUserToken(): CustomCurrency.CustomToken? = try {
+        getToken()
+    } catch (ex: Exception) {
+        null
+    }
+
+    fun gatherBlockchain(): CustomCurrency.CustomBlockchain? = try {
+        getBlockchain()
+    } catch (ex: Exception) {
+        null
     }
 
     fun reset(): AddCustomTokenState {
         return this.copy(
-            addedCurrencies = null,
+            appSavedCurrencies = null,
             onTokenAddCallback = null,
-            derivationStyle = null,
+            cardDerivationStyle = null,
             form = Form(createFormFields()),
             formErrors = emptyMap(),
             tokenId = null,
@@ -61,40 +105,33 @@ data class AddCustomTokenState(
         )
     }
 
-    fun networkIsEmpty(): Boolean {
-        val network = getField<TokenBlockchainField>(Network)
-        return network.data.value != Blockchain.Unknown
-    }
-
-    fun customTokensFieldsIsEmpty(): Boolean {
-        val idsToCheck = listOf(ContractAddress, Name, Symbol, Decimals)
-        val fieldsToCheck = form.fieldList.filter { idsToCheck.contains(it.id) }
-        val validator = StringIsEmptyValidator()
-//        val errors = mutableMapOf<>()
-        fieldsToCheck.forEach { field ->
-            val error = validator.validate(field.data.value?.toString())
-            if (error != null) return false
-        }
-        return true
-    }
-
-    fun allFieldsIsEmpty(): Boolean {
-        return networkIsEmpty() && customTokensFieldsIsEmpty()
-    }
-
-    private fun getToken(): CompleteData.CustomToken {
-        return CompleteData.CustomToken.Converter(tokenId)
+    private fun getToken(): CustomCurrency.CustomToken {
+        return CustomCurrency.CustomToken.Converter(tokenId, cardDerivationStyle)
             .apply { visitDataConverter(this) }
             .getConvertedData()
     }
 
-    private fun getBlockchain(): CompleteData.CustomBlockchain {
-        return CompleteData.CustomBlockchain.Converter()
+    private fun getBlockchain(): CustomCurrency.CustomBlockchain {
+        return CustomCurrency.CustomBlockchain.Converter(cardDerivationStyle)
             .apply { visitDataConverter(this) }
             .getConvertedData()
     }
 
     companion object {
+
+        /**
+         * If an user select derivation path (derivationNetwork) as Blockchain.Unknown,
+         * then we should use a blockchain from the mainNetwork to determine a DerivationPath
+         */
+        fun getDerivationPath(
+            mainNetwork: Blockchain,
+            derivationNetwork: Blockchain,
+            derivationStyle: DerivationStyle?
+        ): com.tangem.common.hdWallet.DerivationPath? = when (derivationNetwork) {
+            Blockchain.Unknown -> mainNetwork
+            else -> derivationNetwork
+        }.derivationPath(derivationStyle)
+
         private fun createFormFields(): List<DataField<*>> {
             return listOf(
                 TokenField(ContractAddress),
