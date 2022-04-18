@@ -97,6 +97,10 @@ internal abstract class BaseStoreHub<State>(
         }
     }
 
+    protected fun cancelAll() {
+        actionsAndJobs.forEach { (_, job) -> job.cancel() }
+    }
+
     protected abstract suspend fun handleAction(action: Action, storeState: DomainState, cancel: ValueCallback<Action>)
     protected abstract fun reduceAction(action: Action, state: State): State
 
