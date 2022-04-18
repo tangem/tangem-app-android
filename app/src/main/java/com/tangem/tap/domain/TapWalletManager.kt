@@ -4,9 +4,9 @@ import com.tangem.blockchain.blockchains.solana.RentProvider
 import com.tangem.blockchain.common.*
 import com.tangem.common.services.Result
 import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.TapWorkarounds.isTestCard
-import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.common.ThrottlerWithValues
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -19,7 +19,6 @@ import com.tangem.tap.domain.configurable.config.ConfigManager
 import com.tangem.tap.domain.extensions.isMultiwalletAllowed
 import com.tangem.tap.domain.extensions.makePrimaryWalletManager
 import com.tangem.tap.domain.extensions.makeWalletManagersForApp
-import com.tangem.tap.domain.tokens.CardCurrencies
 import com.tangem.tap.domain.tokens.BlockchainNetwork
 import com.tangem.tap.features.demo.isDemoCard
 import com.tangem.tap.features.wallet.models.PendingTransactionType
@@ -61,12 +60,12 @@ class TapWalletManager {
             }
             is Result.Failure -> {
                 when (result.error) {
-                    is TapError.WalletManagerUpdate.NoAccountError -> {
+                    is TapError.WalletManager.NoAccountError -> {
                         dispatchOnMain(
                             WalletAction.LoadWallet.NoAccount(
                                 walletManager.wallet,
                                 blockchainNetwork,
-                                (result.error as TapError.WalletManagerUpdate.NoAccountError).customMessage
+                                (result.error as TapError.WalletManager.NoAccountError).customMessage
                             )
                         )
                     }
