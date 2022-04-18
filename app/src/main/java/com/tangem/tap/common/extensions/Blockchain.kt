@@ -22,6 +22,7 @@ fun Blockchain.getRoundIconRes(): Int {
         Blockchain.Solana, Blockchain.SolanaTestnet -> R.drawable.ic_solana_round
         Blockchain.Fantom, Blockchain.FantomTestnet -> R.drawable.ic_fantom_round
         Blockchain.BSC, Blockchain.BSCTestnet, Blockchain.Binance, Blockchain.BinanceTestnet -> R.drawable.ic_bsc_round
+        Blockchain.Dogecoin -> R.drawable.ic_dogecoin_round
         else -> R.drawable.ic_tangem_logo
     }
 }
@@ -44,6 +45,7 @@ fun Blockchain.getGreyedOutIconRes(): Int {
         Blockchain.Solana, Blockchain.SolanaTestnet -> R.drawable.ic_solana_no_color
         Blockchain.Fantom, Blockchain.FantomTestnet -> R.drawable.ic_fantom_no_color
         Blockchain.BSC, Blockchain.BSCTestnet, Blockchain.Binance, Blockchain.BinanceTestnet -> R.drawable.ic_bsc_no_color
+        Blockchain.Dogecoin -> R.drawable.ic_dogecoin_no_color
         else -> R.drawable.ic_tangem_logo
     }
 }
