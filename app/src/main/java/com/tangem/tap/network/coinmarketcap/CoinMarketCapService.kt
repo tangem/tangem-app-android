@@ -8,6 +8,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 
+//TODO: refactoring: move to the domain module and aggregate it as the alternative service for TangemTech
 class CoinMarketCapService() {
     private val api: CoinMarketCapApi by lazy { CoinMarketCapApi.create(getApiKey()) }
 
