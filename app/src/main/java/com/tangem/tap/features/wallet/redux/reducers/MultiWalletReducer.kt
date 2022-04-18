@@ -99,7 +99,8 @@ class MultiWalletReducer {
                 addTokens(listOf(action.token), action.blockchain, state)
             }
             is WalletAction.MultiWallet.TokenLoaded -> {
-                val pendingTransactions = state.getWalletManager(action.token)
+                val currency = Currency.fromBlockchainNetwork(action.blockchain, action.token)
+                val pendingTransactions = state.getWalletManager(currency)
                     ?.wallet?.let { wallet ->
                         wallet.recentTransactions.toPendingTransactions(wallet.address)
                     } ?: emptyList()
@@ -113,7 +114,7 @@ class MultiWalletReducer {
                     pendingTransactions.isNotEmpty() -> BalanceStatus.SameCurrencyTransactionInProgress
                     else -> BalanceStatus.VerifiedOnline
                 }
-                val tokenWalletData = state.getWalletData(action.token)
+                val tokenWalletData = state.getWalletData(currency)
                 val newTokenWalletData = tokenWalletData?.copy(
                     currencyData = tokenWalletData.currencyData.copy(
                         status = tokenBalanceStatus,
@@ -166,11 +167,10 @@ private fun addTokens(
 
 fun Token.toWallet(state: WalletState, blockchain: BlockchainNetwork): WalletData? {
     if (!state.isMultiwalletAllowed) return null
-    if (state.currencies.any { it is Currency.Token && it.token == this }) {
-        return null
-    }
+    val currency = Currency.fromBlockchainNetwork(blockchain, this)
+    if (state.currencies.contains(currency)) return null
 
-    val walletManager = state.getWalletManager(this)?.wallet
+    val walletManager = state.getWalletManager(currency)?.wallet
     val walletAddresses = createAddressList(walletManager)
 
     return WalletData(
@@ -181,6 +181,6 @@ fun Token.toWallet(state: WalletState, blockchain: BlockchainNetwork): WalletDat
         ),
         walletAddresses = walletAddresses,
         mainButton = WalletMainButton.SendButton(false),
-        currency = Currency.fromBlockchainNetwork(blockchain, this)
+        currency = currency
     )
 }
