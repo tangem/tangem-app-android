@@ -63,11 +63,10 @@ data class AddCustomTokenState(
         val idsToCheck = listOf(ContractAddress, Name, Symbol, Decimals)
         val fieldsToCheck = form.fieldList.filter { idsToCheck.contains(it.id) }
         val validator = StringIsEmptyValidator()
-        fieldsToCheck.forEach { field ->
-            val error = validator.validate(field.data.value?.toString())
-            if (error != null) return false
+        val errorsList = fieldsToCheck.mapNotNull { field ->
+            validator.validate(field.data.value?.toString())
         }
-        return true
+        return errorsList.size == 1
     }
 
     fun networkIsSelected(): Boolean {
