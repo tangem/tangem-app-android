@@ -39,6 +39,10 @@ class BackupReducer {
         ): BackupState {
 
             return when (action) {
+                is BackupAction.IntroduceBackup -> BackupState(
+                    backupStep = BackupStep.InitBackup,
+                    canSkipBackup = state.canSkipBackup,
+                )
                 BackupAction.StartAddingPrimaryCard -> state.copy(backupStep = BackupStep.ScanOriginCard)
                 BackupAction.StartAddingBackupCards -> {
                     state.copy(backupStep = BackupStep.AddBackupCards)
@@ -104,6 +108,7 @@ class BackupReducer {
                 BackupAction.OnAccessCodeDialogClosed -> {
                     state.copy(backupStep = BackupStep.AddBackupCards)
                 }
+                BackupAction.DiscardBackup -> BackupState()
 
                 BackupAction.WritePrimaryCard -> state
                 is BackupAction.WriteBackupCard -> state
@@ -117,7 +122,6 @@ class BackupReducer {
                 is BackupAction.CheckAccessCode -> state
                 BackupAction.DetermineBackupStep -> state
                 BackupAction.CheckForUnfinishedBackup -> state
-                BackupAction.DiscardBackup -> state
                 BackupAction.ResumeBackup -> state
                 BackupAction.DiscardSavedBackup -> state
                 BackupAction.StartBackup -> state
