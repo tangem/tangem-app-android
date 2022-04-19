@@ -21,7 +21,7 @@ data class WarningMessage(
     val messageFormatArg: String? = null
 ) {
     val blockchainList: List<Blockchain>? by lazy {
-        blockchains?.map { Blockchain.fromId(it.toUpperCase()) }
+        blockchains?.map { Blockchain.fromId(it.uppercase()) }
     }
 
 
