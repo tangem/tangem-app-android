@@ -47,10 +47,10 @@ fun AddCustomTokenDebugActions() {
 @Composable
 private fun AllInOne() {
     // validation error
-    ContractAddressButton(
-        name = "invalid",
-        address = "unk"
-    )
+//    ContractAddressButton(
+//        name = "invalid",
+//        address = "unk"
+//    )
     // active = true
     ContractAddressButton(
         name = "true",
@@ -70,6 +70,10 @@ private fun AllInOne() {
     ContractAddressButton(
         name = "unknown",
         address = "0x1111111111111111112111111111111111111113"
+    )
+    ContractAddressButton(
+        name = "solana",
+        address = "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB"
     )
 }
 
