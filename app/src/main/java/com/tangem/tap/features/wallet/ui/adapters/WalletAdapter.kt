@@ -10,6 +10,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.tap.common.extensions.getString
+import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.loadCurrenciesIcon
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.features.wallet.redux.Currency
@@ -85,37 +86,42 @@ class WalletAdapter
             )
 
             when (wallet.currencyData.status) {
-                BalanceStatus.VerifiedOnline, BalanceStatus.SameCurrencyTransactionInProgress -> hideWarning()
+                BalanceStatus.VerifiedOnline, BalanceStatus.SameCurrencyTransactionInProgress -> hideWarning(isCustom)
                 BalanceStatus.Loading -> {
-                    hideWarning()
+                    hideWarning(isCustom)
                     if (wallet.currencyData.amountFormatted == null) {
                         tvExchangeRate.text = root.getString(R.string.wallet_balance_loading)
                     }
                 }
                 BalanceStatus.TransactionInProgress ->
-                    showWarning(root.getString(R.string.wallet_balance_tx_in_progress))
+                    showWarning(root.getString(R.string.wallet_balance_tx_in_progress), isCustom)
                 BalanceStatus.Unreachable ->
-                    showWarning(root.getString(R.string.wallet_balance_blockchain_unreachable))
+                    showWarning(root.getString(R.string.wallet_balance_blockchain_unreachable), isCustom)
 
                 BalanceStatus.NoAccount ->
-                    showWarning(root.getString(R.string.wallet_error_no_account))
+                    showWarning(root.getString(R.string.wallet_error_no_account), isCustom)
                 else -> {
                 }
             }
         }
 
-        private fun showWarning(message: String) {
-            toggleWarning(true)
+        private fun showWarning(message: String, isCustom: Boolean = false) {
+            toggleWarning(true, isCustom)
             binding.tvStatusErrorMessage.text = message
         }
 
-        private fun hideWarning() {
-            toggleWarning(false)
+        private fun hideWarning(isCustom: Boolean = false) {
+            toggleWarning(false, isCustom)
         }
 
-        private fun toggleWarning(show: Boolean) {
-            binding.tvExchangeRate.show(!show)
-            binding.tvCustomCurrency.show(!show)
+        private fun toggleWarning(show: Boolean, isCustom: Boolean = false) {
+            if (!show) {
+                binding.tvExchangeRate.show(!isCustom)
+                binding.tvCustomCurrency.show(isCustom)
+            } else {
+                binding.tvExchangeRate.hide()
+                binding.tvCustomCurrency.hide()
+            }
             binding.tvStatusErrorMessage.show(show)
         }
     }
