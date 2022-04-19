@@ -47,9 +47,13 @@ class TokenContractAddressValidator : CustomTokenValidator<String>() {
     private fun getAddressService(): AddressService {
         return when (blockchain) {
             Blockchain.Solana, Blockchain.SolanaTestnet -> SolanaAddressService()
+            Blockchain.Unknown -> EthereumAddressService()
             else -> {
-                if (blockchain.isEvm()) EthereumAddressService()
-                else throw UnsupportedOperationException()
+                if (blockchain.isEvm()) {
+                    EthereumAddressService()
+                } else {
+                    throw UnsupportedOperationException()
+                }
             }
         }
     }
