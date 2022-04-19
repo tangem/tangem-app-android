@@ -1,9 +1,11 @@
 package com.tangem.tap.features.wallet.ui.adapters
 
+import android.content.res.Resources
 import android.graphics.Rect
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.os.ConfigurationCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -13,6 +15,7 @@ import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
+import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.features.feedback.RateCanBeBetterEmail
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.store
@@ -56,7 +59,9 @@ class WarningMessageVH(val binding: LayoutWarningBinding) : RecyclerView.ViewHol
 
         tvTitle.text = getString(warning.titleResId, warning.title)
         tvMessage.text = getString(
-            resId = warning.messageResId, default = warning.message, formatArgs = warning.messageFormatArg
+            resId = warning.messageResId,
+            default = warning.message,
+            formatArgs = warning.messageFormatArg
         )
     }
 
@@ -73,15 +78,31 @@ class WarningMessageVH(val binding: LayoutWarningBinding) : RecyclerView.ViewHol
         WarningMessage.Type.Permanent, WarningMessage.Type.TestCard -> {
             binding.groupControlsTemporary.hide()
             binding.groupControlsRating.hide()
+            binding.btnClose.hide()
         }
         WarningMessage.Type.Temporary -> {
             binding.groupControlsRating.hide()
             binding.groupControlsTemporary.show()
+            binding.btnClose.hide()
+
             val buttonAction =
                 when (warning.titleResId) {
                     R.string.warning_important_security_info -> {
                         View.OnClickListener {
                             store.dispatch(WalletAction.ShowDialog.SignedHashesMultiWalletDialog)
+                        }
+                    }
+                    R.string.alert_funds_restoration_message -> {
+                        binding.btnClose.show()
+                        binding.btnClose.setOnClickListener {
+                            store.dispatch(GlobalAction.HideWarningMessage(warning))
+                        }
+                        val locale = ConfigurationCompat
+                            .getLocales(Resources.getSystem().configuration)
+                            .get(0)
+                        val url = WarningMessagesManager.getRestoreFundsGuideUrl(locale.language)
+                        View.OnClickListener {
+                            store.dispatchOpenUrl(url)
                         }
                     }
                     else -> {
@@ -99,6 +120,7 @@ class WarningMessageVH(val binding: LayoutWarningBinding) : RecyclerView.ViewHol
         WarningMessage.Type.AppRating -> {
             binding.groupControlsTemporary.hide()
             binding.groupControlsRating.show()
+            binding.btnClose.show()
             val analyticsHandler = store.state.globalState.analyticsHandlers
             binding.btnClose.setOnClickListener {
                 analyticsHandler?.triggerEvent(AnalyticsEvent.APP_RATING_DISMISS)
