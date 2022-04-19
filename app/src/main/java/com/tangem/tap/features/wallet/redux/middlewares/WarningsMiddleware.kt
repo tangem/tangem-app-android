@@ -8,6 +8,7 @@ import com.tangem.common.card.Card
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.isTestCard
+import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
 import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.isGreaterThan
@@ -88,6 +89,9 @@ class WarningsMiddleware {
             if (card.isTestCard) {
                 addWarningMessage(WarningMessagesManager.testCardWarning(), autoUpdate = true)
                 return@let
+            }
+            if (card.useOldStyleDerivation) {
+                addWarningMessage(warning = WarningMessagesManager.restoreFundsWarning())
             }
 
             showWarningLowRemainingSignaturesIfNeeded(card)
