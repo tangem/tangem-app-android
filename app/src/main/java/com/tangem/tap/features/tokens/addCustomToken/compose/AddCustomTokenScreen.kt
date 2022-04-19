@@ -12,7 +12,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.tangem.domain.AddCustomTokenError
 import com.tangem.domain.common.form.DataField
 import com.tangem.domain.common.form.FieldId
@@ -22,6 +21,7 @@ import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenState
 import com.tangem.domain.features.addCustomToken.redux.ScreenState
 import com.tangem.domain.features.addCustomToken.redux.ViewStates
 import com.tangem.domain.redux.domainStore
+import com.tangem.tap.common.compose.AddCustomTokenWarning
 import com.tangem.tap.common.compose.ComposeDialogManager
 import com.tangem.tap.common.compose.ToggledRippleTheme
 import com.tangem.tap.common.compose.keyboardAsState
@@ -51,7 +51,7 @@ fun AddCustomTokenScreen(state: MutableState<AddCustomTokenState>) {
             LazyColumn(
                 contentPadding = PaddingValues(bottom = 90.dp)
             ) {
-//                item { AddCustomTokenDebugActions() }
+                item { AddCustomTokenDebugActions() }
                 item {
                     Surface(
                         modifier = Modifier.padding(16.dp),
@@ -110,19 +110,11 @@ fun Warnings(warnings: List<AddCustomTokenError.Warning>) {
                 warnings.lastIndex -> Modifier.padding(16.dp, 8.dp, 16.dp, 16.dp)
                 else -> Modifier.padding(16.dp, 8.dp, 16.dp, 0.dp)
             }
-            Surface(
+            AddCustomTokenWarning(
                 modifier = modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.small,
-                color = colorResource(id = R.color.warning_warning),
-                elevation = 4.dp,
-            ) {
-                Text(
-                    modifier = Modifier.padding(16.dp),
-                    text = warningConverter.convert(item),
-                    color = colorResource(id = R.color.white),
-                    fontSize = 14.sp
-                )
-            }
+                warning = item,
+                converter = warningConverter
+            )
         }
     }
 }
