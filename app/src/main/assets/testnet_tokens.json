@@ -1,12 +1,12 @@
 {
   "tokens" : [
     {
-      "id" : "polygon/test",
+      "id" : "polygon-pos/test",
       "symbol" : "MATIC",
       "name" : "Polygon",
       "contracts" : [
         {
-          "networkId" : "polygon-pos",
+          "networkId" : "polygon-pos/test",
           "address" : "0x0000000000000000000000000000000000001010",
           "decimalCount" : 18
         }
@@ -18,17 +18,17 @@
       "name" : "Dai Stablecoin",
       "contracts" : [
         {
-          "networkId" : "polygon-pos",
+          "networkId" : "polygon-pos/test",
           "address" : "0xcB1e72786A6eb3b44C2a2429e317c8a2462CFeb1",
           "decimalCount" : 18
         },
         {
-          "networkId" : "binance-smart-chain",
+          "networkId" : "binance-smart-chain/test",
           "address" : "0xec5dcb5dbf4b114c9d0f65bccab49ec54f6a0867",
           "decimalCount" : 18
         },
         {
-          "networkId" : "binance-smart-chain",
+          "networkId" : "binance-smart-chain/test",
           "address" : "0x8a9424745056eb399fd19a0ec26a14316684e274",
           "decimalCount" : 18
         }
@@ -40,7 +40,7 @@
       "name" : "Dummy ERC20",
       "contracts" : [
         {
-          "networkId" : "polygon-pos",
+          "networkId" : "polygon-pos/test",
           "address" : "0xfe4F5145f6e09952a5ba9e956ED0C25e3Fa4c7F1",
           "decimalCount" : 18
         }
@@ -52,12 +52,12 @@
       "name" : "Ether",
       "contracts" : [
         {
-          "networkId" : "polygon-pos",
+          "networkId" : "polygon-pos/test",
           "address" : "0x714550C2C1Ea08688607D86ed8EeF4f5E4F22323",
           "decimalCount" : 18
         },
         {
-          "networkId" : "binance-smart-chain",
+          "networkId" : "binance-smart-chain/test",
           "address" : "0xd66c6b4f0be8ce5b39d52e0fd1344c389929b378",
           "decimalCount" : 18
         }
@@ -69,7 +69,7 @@
       "name" : "Test Token",
       "contracts" : [
         {
-          "networkId" : "polygon-pos",
+          "networkId" : "polygon-pos/test",
           "address" : "0x2d7882bedcbfddce29ba99965dd3cdf7fcb10a1e",
           "decimalCount" : 18
         }
@@ -81,17 +81,17 @@
       "name" : "Tether USD",
       "contracts" : [
         {
-          "networkId" : "polygon-pos",
+          "networkId" : "polygon-pos/test",
           "address" : "0x3813e82e6f7098b9583FC0F33a962D02018B6803",
           "decimalCount" : 6
         },
         {
-          "networkId" : "binance-smart-chain",
+          "networkId" : "binance-smart-chain/test",
           "address" : "0x337610d27c682e347c9cd60bd4b3b107c9d34ddd",
           "decimalCount" : 18
         },
         {
-          "networkId" : "binance-smart-chain",
+          "networkId" : "binance-smart-chain/test",
           "address" : "0x7ef95a0fee0dd31b22626fa2e10ee6a223f8a684",
           "decimalCount" : 18
         }
@@ -103,7 +103,7 @@
       "name" : "Wrapped Ether",
       "contracts" : [
         {
-          "networkId" : "polygon-pos",
+          "networkId" : "polygon-pos/test",
           "address" : "0xA6FA4fB5f76172d178d61B04b0ecd319C5d1C0aa",
           "decimalCount" : 18
         }
@@ -115,7 +115,7 @@
       "name" : "Wrapped Matic",
       "contracts" : [
         {
-          "networkId" : "polygon-pos",
+          "networkId" : "polygon-pos/test",
           "address" : "0xd0A1E359811322d97991E03f863a0C30C2cF029C",
           "decimalCount" : 18
         }
@@ -135,7 +135,7 @@
       "name" : "Tangem Coin A",
       "contracts" : [
         {
-          "networkId" : "solana",
+          "networkId" : "solana/test",
           "address" : "22PTNbX31Zuztd6nD82fC8nQdT2hUfWv9XWXKuDkrFqR",
           "decimalCount" : 9
         }
@@ -147,14 +147,14 @@
       "name" : "Tangem Coin B",
       "contracts" : [
         {
-          "networkId" : "solana",
+          "networkId" : "solana/test",
           "address" : "HmSghNPg6KCk711YJA92aPejt8auyFkvmaED6jbHfUs4",
           "decimalCount" : 9
         }
       ]
     },
     {
-      "id" : "binance/test",
+      "id" : "binancecoin/test",
       "symbol" : "BNB",
       "name" : "Binance",
       "contracts" : [
@@ -167,14 +167,14 @@
       "name" : "Hemster - 452",
       "contracts" : [
         {
-          "networkId" : "binancecoin",
+          "networkId" : "binancecoin/test",
           "address" : "HEM-452",
           "decimalCount" : 8
         }
       ]
     },
     {
-      "id" : "bsc/test",
+      "id" : "binance-smart-chain/test",
       "symbol" : "BNB",
       "name" : "Bsc",
       "contracts" : [
@@ -187,7 +187,7 @@
       "name" : "Binance-Peg BTCB Token",
       "contracts" : [
         {
-          "networkId" : "binance-smart-chain",
+          "networkId" : "binance-smart-chain/test",
           "address" : "0x6ce8da28e2f864420840cf74474eff5fd80e65b8",
           "decimalCount" : 18
         }
@@ -199,7 +199,7 @@
       "name" : "Binance-Peg BUSD Token",
       "contracts" : [
         {
-          "networkId" : "binance-smart-chain",
+          "networkId" : "binance-smart-chain/test",
           "address" : "0xed24fc36d5ee211ea25a80239fb8c4cfd80f12ee",
           "decimalCount" : 18
         }
@@ -211,7 +211,7 @@
       "name" : "Binance-Peg USDC Token",
       "contracts" : [
         {
-          "networkId" : "binance-smart-chain",
+          "networkId" : "binance-smart-chain/test",
           "address" : "0x64544969ed7ebf5f083679233325356ebe738930",
           "decimalCount" : 18
         }
@@ -223,7 +223,7 @@
       "name" : "Binance-Peg XRP",
       "contracts" : [
         {
-          "networkId" : "binance-smart-chain",
+          "networkId" : "binance-smart-chain/test",
           "address" : "0xa83575490d7df4e2f47b7d38ef351a2722ca45b9",
           "decimalCount" : 18
         }
@@ -255,7 +255,7 @@
       "name" : "Xeenus",
       "contracts" : [
         {
-          "networkId" : "ethereum",
+          "networkId" : "ethereum/test",
           "address" : "0x022E292b44B5a146F2e8ee36Ff44D3dd863C915c",
           "decimalCount" : 18
         }
@@ -267,7 +267,7 @@
       "name" : "Yeenus",
       "contracts" : [
         {
-          "networkId" : "ethereum",
+          "networkId" : "ethereum/test",
           "address" : "0xc6fDe3FD2Cc2b173aEC24cc3f267cb3Cd78a26B7",
           "decimalCount" : 8
         }
@@ -279,7 +279,7 @@
       "name" : "Zeenus",
       "contracts" : [
         {
-          "networkId" : "ethereum",
+          "networkId" : "ethereum/test",
           "address" : "0x1f9061B953bBa0E36BF50F21876132DcF276fC6e",
           "decimalCount" : 0
         }
@@ -299,7 +299,7 @@
       "name" : "The Fuji stablecoin",
       "contracts" : [
         {
-          "networkId" : "avalanche",
+          "networkId" : "avalanche/test",
           "address" : "0x2058ec2791dD28b6f67DB836ddf87534F4Bbdf22",
           "decimalCount" : 6
         }
@@ -311,7 +311,7 @@
       "name" : "To the Moon",
       "contracts" : [
         {
-          "networkId" : "avalanche",
+          "networkId" : "avalanche/test",
           "address" : "0x97132C109c6816525F7f338DCb7435E1412A7668",
           "decimalCount" : 9
         }
@@ -331,7 +331,7 @@
       "name" : "Fantom USD",
       "contracts" : [
         {
-          "networkId" : "fantom",
+          "networkId" : "fantom/test",
           "address" : "0x91ea991bd52EE3C40EdA2509701d905e1Ee54074",
           "decimalCount" : 18
         }
@@ -343,7 +343,7 @@
       "name" : "Wrapped Fantom",
       "contracts" : [
         {
-          "networkId" : "fantom",
+          "networkId" : "fantom/test",
           "address" : "0xf1277d1Ed8AD466beddF92ef448A132661956621",
           "decimalCount" : 18
         }
