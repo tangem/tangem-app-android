@@ -5,6 +5,7 @@ import com.tangem.common.extensions.VoidCallback
 import com.tangem.tap.common.extensions.containsAny
 import com.tangem.tap.common.extensions.removeBy
 import com.tangem.wallet.R
+import java.util.*
 
 /**
 [REDACTED_AUTHOR]
@@ -181,6 +182,24 @@ class WarningMessagesManager(
             WarningMessage.Origin.Local
         )
 
+        fun restoreFundsWarning(): WarningMessage = WarningMessage(
+            title = "",
+            message = "",
+            type = WarningMessage.Type.Temporary,
+            priority = WarningMessage.Priority.Warning,
+            listOf(WarningMessage.Location.MainScreen),
+            blockchains = null,
+            titleResId = R.string.alert_funds_restoration_message,
+            messageResId = R.string.alert_funds_restoration_message,
+            origin = WarningMessage.Origin.Local,
+            buttonTextId = R.string.warning_button_learn_more
+        )
+
         const val REMAINING_SIGNATURES_WARNING = 10
+
+        fun getRestoreFundsGuideUrl(locale: String): String {
+            val code = if (locale == Locale("ru").language) "ru" else "en"
+            return "https://tangem.com/$code/notion"
+        }
     }
 }
