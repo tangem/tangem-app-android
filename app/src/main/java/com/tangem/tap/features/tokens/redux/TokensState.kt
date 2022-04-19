@@ -61,7 +61,8 @@ fun List<Currency>.filter(supportedBlockchains: Set<Blockchain>?): List<Currency
     return map {
         it.copy(contracts =
         it.contracts.filter {
-            supportedBlockchains.contains(it.blockchain) && it.blockchain.canHandleTokens()
+            supportedBlockchains.contains(it.blockchain) &&
+                    (it.blockchain.canHandleTokens() || it.blockchain.currency == it.address)
         }
         )
     }.filterNot {
