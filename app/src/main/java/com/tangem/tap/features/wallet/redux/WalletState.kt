@@ -395,6 +395,9 @@ sealed interface Currency {
         return derivationPath != blockchain.derivationPath(derivationStyle)?.rawPath
     }
 
+    fun isBlockchain(): Boolean = this is Blockchain
+
+    fun isToken(): Boolean = this is Token
 
     companion object {
         fun fromBlockchainNetwork(
@@ -402,13 +405,13 @@ sealed interface Currency {
             token: com.tangem.blockchain.common.Token? = null
         ): Currency {
             return if (token != null) {
-                Currency.Token(
+                Token(
                     token = token,
                     blockchain = blockchainNetwork.blockchain,
                     derivationPath = blockchainNetwork.derivationPath
                 )
             } else {
-                Currency.Blockchain(
+                Blockchain(
                     blockchain = blockchainNetwork.blockchain,
                     derivationPath = blockchainNetwork.derivationPath
                 )
@@ -430,7 +433,7 @@ sealed interface Currency {
         }
 
         fun fromTokenWithBlockchain(tokenWithBlockchain: TokenWithBlockchain): Token {
-            return Currency.Token(
+            return Token(
                 token = tokenWithBlockchain.token,
                 blockchain = tokenWithBlockchain.blockchain,
                 derivationPath = null
