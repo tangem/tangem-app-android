@@ -3,8 +3,10 @@ package com.tangem.tap.features.wallet.redux.middlewares
 import android.content.Intent
 import android.net.Uri
 import androidx.core.content.ContextCompat
+import com.tangem.blockchain.blockchains.solana.RentProvider
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
+import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.isZero
@@ -20,9 +22,12 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.extensions.toSendableAmounts
+import com.tangem.tap.domain.tokens.BlockchainNetwork
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.send.redux.PrepareSendScreen
+import com.tangem.tap.features.wallet.models.PendingTransactionType
+import com.tangem.tap.features.wallet.models.getPendingTransactions
 import com.tangem.tap.features.wallet.redux.*
 import com.tangem.tap.network.NetworkStateChanged
 import com.tangem.tap.scope
@@ -34,6 +39,7 @@ import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.DispatchFunction
 import org.rekotlin.Middleware
+import java.math.BigDecimal
 
 class WalletMiddleware {
     private val tradeCryptoMiddleware = TradeCryptoMiddleware()
@@ -77,21 +83,18 @@ class WalletMiddleware {
                 }
             }
             is WalletAction.LoadWallet.Success -> {
+                checkForRentWarning(walletState.getWalletManager(action.blockchain))
                 val coinAmount = action.wallet.amounts[AmountType.Coin]?.value
                 if (coinAmount != null && !coinAmount.isZero()) {
                     if (walletState.getWalletData(action.blockchain) == null) {
-                        store.dispatch(
-                            WalletAction.MultiWallet.AddBlockchain(
-                                action.blockchain,
-                                null
-                            )
-                        )
-                        store.dispatch(
-                            WalletAction.LoadWallet.Success(
-                                action.wallet,
-                                action.blockchain
-                            )
-                        )
+                        store.dispatch(WalletAction.MultiWallet.AddBlockchain(
+                            action.blockchain,
+                            null
+                        ))
+                        store.dispatch(WalletAction.LoadWallet.Success(
+                            action.wallet,
+                            action.blockchain
+                        ))
                     }
                 }
                 store.dispatch(WalletAction.Warnings.CheckHashesCount.CheckHashesCountOnline)
@@ -292,5 +295,44 @@ class WalletMiddleware {
             tokenAmount = amount,
             tokenRate = tokenRate
         )
+    }
+
+    private fun checkForRentWarning(walletManager: WalletManager?) {
+        val rentProvider = walletManager as? RentProvider ?: return
+
+        scope.launch {
+            when (val result = rentProvider.minimalBalanceForRentExemption()) {
+                is com.tangem.blockchain.extensions.Result.Success -> {
+                    fun isNeedToShowWarning(balance: BigDecimal, rentExempt: BigDecimal): Boolean {
+                        return balance < rentExempt
+                    }
+
+                    val balance = walletManager.wallet.fundsAvailable(AmountType.Coin)
+                    val outgoingTxs = walletManager.wallet.getPendingTransactions(PendingTransactionType.Outgoing)
+                    val rentExempt = result.data
+                    val show = if (outgoingTxs.isEmpty()) {
+                        isNeedToShowWarning(balance, rentExempt)
+                    } else {
+                        val outgoingAmount = outgoingTxs.sumOf { it.amount ?: BigDecimal.ZERO }
+                        val rest = balance.minus(outgoingAmount)
+                        isNeedToShowWarning(rest, rentExempt)
+                    }
+
+                    val currency = walletManager.wallet.blockchain.currency
+                    if (show) {
+                        dispatchOnMain(WalletAction.SetWalletRent(
+                            blockchain = BlockchainNetwork.fromWalletManager(walletManager),
+                            minRent = ("${rentProvider.rentAmount().stripZeroPlainString()} $currency"),
+                            rentExempt = ("${rentExempt.stripZeroPlainString()} $currency")
+                        ))
+                    } else {
+                        dispatchOnMain(WalletAction.RemoveWalletRent(
+                            blockchain = BlockchainNetwork.fromWalletManager(walletManager),
+                        ))
+                    }
+                }
+                is com.tangem.blockchain.extensions.Result.Failure -> {}
+            }
+        }
     }
 }
