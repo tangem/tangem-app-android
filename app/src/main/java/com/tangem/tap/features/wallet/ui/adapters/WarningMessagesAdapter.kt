@@ -96,6 +96,7 @@ class WarningMessageVH(val binding: LayoutWarningBinding) : RecyclerView.ViewHol
                         binding.btnClose.show()
                         binding.btnClose.setOnClickListener {
                             store.dispatch(GlobalAction.HideWarningMessage(warning))
+                            store.dispatch(WalletAction.Warnings.RestoreFundsWarningClosed)
                         }
                         val locale = ConfigurationCompat
                             .getLocales(Resources.getSystem().configuration)
