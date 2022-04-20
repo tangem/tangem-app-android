@@ -1,6 +1,7 @@
 package com.tangem.tap.features.tokens.ui.compose
 
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -53,17 +54,36 @@ fun NetworkItem(
                 interactionSource = remember { MutableInteractionSource() }
             )
     ) {
-        SubcomposeAsyncImage(
-            model = if (added) blockchain.getRoundIconRes() else blockchain.getGreyedOutIconRes(),
-            contentDescription = blockchain.fullName,
-            loading = { CurrencyPlaceholderIcon(blockchain.id) },
-            error = { CurrencyPlaceholderIcon(blockchain.id) },
-            modifier = Modifier
-                .clip(CircleShape)
-                .padding(start = 8.dp, top = 16.dp, bottom = 16.dp, end = 6.dp)
-                .size(20.dp)
-                .align(Alignment.CenterVertically)
-        )
+        Box(modifier = Modifier
+            .align(Alignment.CenterVertically)
+            .padding(start = 8.dp, top = 16.dp, bottom = 16.dp, end = 6.dp)
+        ) {
+            SubcomposeAsyncImage(
+                model = if (added) blockchain.getRoundIconRes() else blockchain.getGreyedOutIconRes(),
+                contentDescription = blockchain.fullName,
+                loading = { CurrencyPlaceholderIcon(blockchain.id) },
+                error = { CurrencyPlaceholderIcon(blockchain.id) },
+                modifier = Modifier
+                    .size(20.dp)
+            )
+            if (isBlockchain) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .size(7.dp)
+                        .clip(CircleShape)
+                        .background(Color.White)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .size(5.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF1ACE80))
+                    )
+                }
+            }
+        }
         Row(
             modifier = Modifier
                 .fillMaxHeight()
