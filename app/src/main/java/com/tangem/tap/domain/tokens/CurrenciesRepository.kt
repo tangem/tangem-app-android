@@ -152,7 +152,7 @@ class CurrenciesRepository(val context: Application) {
                     .map {
                         val token = it.toToken()
                         val id = currencies
-                            .find { it.contracts?.find { it.address == token.contractAddress } != null }
+                            .find { it.contracts.find { it.address == token.contractAddress } != null }
                             ?.id
                         token.copy(id = id)
                     }
@@ -180,7 +180,7 @@ class CurrenciesRepository(val context: Application) {
         val fileName = if (isTestNet) "testnet_tokens" else "tokens"
         val json = context.assets.readJsonFileToString(fileName)
         return currenciesAdapter.fromJson(json)!!.tokens
-            .map { Currency.fromJsonObject(it, isTestNet) }
+            .map { Currency.fromJsonObject(it) }
     }
 
     private fun loadTokensJson(blockchain: Blockchain): String? {
