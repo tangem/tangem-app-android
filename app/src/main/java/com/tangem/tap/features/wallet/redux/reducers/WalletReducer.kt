@@ -314,6 +314,15 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                 newState = newState.updateWalletsData(listOf(walletData))
             }
         }
+        is WalletAction.RemoveWalletRent -> {
+            var walletData = newState.getWalletData(action.blockchain)
+            if (walletData == null) {
+                newState
+            } else {
+                walletData = walletData.copy(warningRent = null)
+                newState = newState.updateWalletsData(listOf(walletData))
+            }
+        }
     }
     return newState
 }
