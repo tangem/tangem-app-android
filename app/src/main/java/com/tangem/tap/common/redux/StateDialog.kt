@@ -1,6 +1,7 @@
 package com.tangem.tap.common.redux
 
 import com.tangem.common.extensions.VoidCallback
+import com.tangem.tap.common.TestAction
 import com.tangem.tap.features.wallet.redux.AddressData
 import com.tangem.tap.features.wallet.redux.Currency
 
@@ -16,5 +17,9 @@ sealed class AppDialog : StateDialog {
     data class AddressInfoDialog(
         val currency: Currency,
         val addressData: AddressData,
+    ) : AppDialog()
+
+    data class TestActionsDialog(
+        val actionsList: List<TestAction>
     ) : AppDialog()
 }
