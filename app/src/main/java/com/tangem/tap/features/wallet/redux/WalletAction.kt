@@ -159,4 +159,6 @@ sealed class WalletAction : Action {
         val minRent: String,
         val rentExempt: String
     ) : WalletAction()
+
+    data class RemoveWalletRent(val blockchain: BlockchainNetwork) : WalletAction()
 }
