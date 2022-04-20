@@ -91,6 +91,8 @@ sealed class WalletAction : Action {
         }
 
         class CheckRemainingSignatures(val remainingSignatures: Int?) : Warnings()
+
+        object RestoreFundsWarningClosed : Warnings()
     }
 
     data class LoadFiatRate(
