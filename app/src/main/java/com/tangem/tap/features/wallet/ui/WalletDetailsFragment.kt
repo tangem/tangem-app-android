@@ -15,6 +15,7 @@ import by.kirich1409.viewbindingdelegate.viewBinding
 import com.squareup.picasso.Picasso
 import com.tangem.common.extensions.guard
 import com.tangem.tap.common.SnackbarHandler
+import com.tangem.tap.common.TestActions
 import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.redux.navigation.NavigationAction
@@ -24,6 +25,7 @@ import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.redux.*
 import com.tangem.tap.features.wallet.ui.adapters.PendingTransactionsAdapter
 import com.tangem.tap.features.wallet.ui.dialogs.AmountToSendDialog
+import com.tangem.tap.features.wallet.ui.test.TestWalletDetails
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentWalletDetailsBinding
@@ -54,9 +56,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
     override fun onStart() {
         super.onStart()
         store.subscribe(this) { state ->
-            state.skipRepeats { oldState, newState ->
-                oldState.walletState == newState.walletState
-            }.select { it.walletState }
+            state.select { it.walletState }
         }
     }
 
@@ -70,11 +70,10 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
         (activity as? AppCompatActivity)?.setSupportActionBar(binding.toolbar)
         binding.toolbar.setNavigationOnClickListener { activity?.onBackPressed() }
 
-
         setupTransactionsRecyclerView()
         setupButtons()
+        setupTestActionButton()
     }
-
 
     private fun setupTransactionsRecyclerView() = with(binding) {
         pendingTransactionAdapter = PendingTransactionsAdapter()
@@ -91,6 +90,15 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
         btnTrade.setOnClickListener { store.dispatch(WalletAction.TradeCryptoAction.Buy) }
 
         btnSell.setOnClickListener { store.dispatch(WalletAction.TradeCryptoAction.Sell) }
+    }
+
+    private fun setupTestActionButton() {
+        view?.findViewById<View>(R.id.l_balance)?.let { view ->
+            TestActions.initFor(
+                view = view,
+                actions = TestWalletDetails.solanaRentExemptWarning()
+            )
+        }
     }
 
     override fun newState(state: WalletState) {
@@ -113,11 +121,13 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
 
         binding.srlWalletDetails.setOnRefreshListener {
             if (selectedWallet.currencyData.status != BalanceStatus.Loading) {
-                store.dispatch(
-                    WalletAction.LoadWallet(
-                        blockchain = BlockchainNetwork(selectedWallet.currency.blockchain, selectedWallet.currency.derivationPath, emptyList())
+                store.dispatch(WalletAction.LoadWallet(
+                    blockchain = BlockchainNetwork(
+                        selectedWallet.currency.blockchain,
+                        selectedWallet.currency.derivationPath,
+                        emptyList()
                     )
-                )
+                ))
             }
         }
 
@@ -165,6 +175,8 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
     }
 
     private fun handleNotEnoughFundsOnMainCurrency(selectedWalletData: WalletData) = with(binding) {
+        if (selectedWalletData.currency.isBlockchain()) return@with
+
         if (selectedWalletData.shouldShowCoinAmountWarning()) {
             val blockchainName = selectedWalletData.currency.blockchain.fullName
             val warningMessage = requireContext().getString(
