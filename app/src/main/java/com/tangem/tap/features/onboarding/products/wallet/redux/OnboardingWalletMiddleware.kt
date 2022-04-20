@@ -111,7 +111,15 @@ private fun handleWalletAction(action: Action) {
             val newAction = when (val backupState = backupService.currentState) {
                 BackupService.State.FinalizingPrimaryCard -> BackupAction.PrepareToWritePrimaryCard
                 is BackupService.State.FinalizingBackupCard -> BackupAction.PrepareToWriteBackupCard(backupState.index)
-                else -> null
+                else -> {
+                    if (walletState.backupState.backupStep == BackupStep.InitBackup ||
+                        walletState.backupState.backupStep == BackupStep.Finished
+                    ) {
+                        BackupAction.IntroduceBackup
+                    } else {
+                        null
+                    }
+                }
             }
             newAction?.let { store.dispatch(it) }
         }
