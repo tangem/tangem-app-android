@@ -26,6 +26,7 @@ import com.tangem.tap.common.compose.ComposeDialogManager
 import com.tangem.tap.common.compose.ToggledRippleTheme
 import com.tangem.tap.common.compose.keyboardAsState
 import com.tangem.tap.common.moduleMessage.ModuleMessageConverter
+import com.tangem.tap.features.tokens.addCustomToken.compose.test.TestAddCustomTokenActions
 import com.tangem.wallet.R
 
 /**
@@ -51,7 +52,7 @@ fun AddCustomTokenScreen(state: MutableState<AddCustomTokenState>) {
             LazyColumn(
                 contentPadding = PaddingValues(bottom = 90.dp)
             ) {
-                item { AddCustomTokenDebugActions() }
+                item { TestAddCustomTokenActions() }
                 item {
                     Surface(
                         modifier = Modifier.padding(16.dp),
