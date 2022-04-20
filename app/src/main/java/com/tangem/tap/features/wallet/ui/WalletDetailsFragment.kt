@@ -54,9 +54,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
     override fun onStart() {
         super.onStart()
         store.subscribe(this) { state ->
-            state.skipRepeats { oldState, newState ->
-                oldState.walletState == newState.walletState
-            }.select { it.walletState }
+            state.select { it.walletState }
         }
     }
 
