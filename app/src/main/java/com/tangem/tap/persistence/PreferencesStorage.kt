@@ -64,12 +64,21 @@ class PreferencesStorage(applicationContext: Application) {
         preferences.edit { putInt(APP_LAUNCH_COUNT_KEY, ++count) }
     }
 
+    fun wasRestoreFundsWarningClosed(): Boolean {
+        return preferences.getBoolean(RESTORE_FUNDS_CLOSED_KEY, false)
+    }
+
+    fun saveRestoreFundsWarningClosed() {
+        preferences.edit { putBoolean(RESTORE_FUNDS_CLOSED_KEY, true) }
+    }
+
     companion object {
         private const val PREFERENCES_NAME = "tapPrefs"
         private const val APP_CURRENCY_KEY = "appCurrency"
         private const val DISCLAIMER_ACCEPTED_KEY = "disclaimerAccepted"
         private const val TWINS_ONBOARDING_SHOWN_KEY = "twinsOnboardingShown"
         private const val APP_LAUNCH_COUNT_KEY = "launchCount"
+        private const val RESTORE_FUNDS_CLOSED_KEY = "restoreFundsClosed"
     }
 
 }
