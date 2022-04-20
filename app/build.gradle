@@ -26,6 +26,14 @@ android {
         viewBinding true
     }
     buildTypes {
+        release {
+            debuggable false
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.debug
+            buildConfigField 'String', configVar.configEnvironment, '\"prod\"'
+            buildConfigField 'Boolean', configVar.testActionEnabled, 'false'
+        }
         debug {
             debuggable true
             minifyEnabled false
@@ -45,14 +53,7 @@ android {
             buildConfigField 'String', configVar.configEnvironment, '\"prod\"'
             buildConfigField 'Boolean', configVar.testActionEnabled, 'false'
         }
-        release {
-            debuggable false
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.debug
-            buildConfigField 'String', configVar.configEnvironment, '\"prod\"'
-            buildConfigField 'Boolean', configVar.testActionEnabled, 'false'
-        }
+
     }
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_1_8.toString()
