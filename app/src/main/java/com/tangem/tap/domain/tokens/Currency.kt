@@ -26,8 +26,8 @@ data class CurrenciesFromJson(
 )
 
 
-fun List<ContractFromJson>.toContracts(isTestNet: Boolean): List<Contract> {
-    return mapNotNull { Contract.fromJsonObject(it, isTestNet) }
+fun List<ContractFromJson>.toContracts(): List<Contract> {
+    return mapNotNull { Contract.fromJsonObject(it) }
 }
 
 data class Currency(
@@ -39,23 +39,22 @@ data class Currency(
 ) {
 
     companion object {
-        fun fromJsonObject(currency: CurrencyFromJson, isTestNet: Boolean): Currency {
+        fun fromJsonObject(currency: CurrencyFromJson): Currency {
             return Currency(
                 id = currency.id,
                 name = currency.name,
                 symbol = currency.symbol,
                 iconUrl = getIconUrl(currency.id),
-                contracts = prepareListOfContracts(currency.contracts, currency.id, isTestNet)
+                contracts = prepareListOfContracts(currency.contracts, currency.id)
             )
         }
 
         private fun prepareListOfContracts(
             contractsFromJson: List<ContractFromJson>?,
             currencyId: String,
-            isTestNet: Boolean
         ): List<Contract> {
-            val mainNetwork = Contract.fromCurrencyId(currencyId, isTestNet)
-            val contracts = contractsFromJson?.toContracts(isTestNet) ?: emptyList()
+            val mainNetwork = Contract.fromCurrencyId(currencyId)
+            val contracts = contractsFromJson?.toContracts() ?: emptyList()
             return (listOfNotNull(mainNetwork) + contracts).distinct()
         }
     }
@@ -70,11 +69,10 @@ data class Contract(
 ) {
 
     companion object {
-        fun fromJsonObject(contract: ContractFromJson, isTestNet: Boolean): Contract? {
-            val networkId = if (isTestNet) contract.networkId + TESTNET else contract.networkId
-            val blockchain = Blockchain.fromNetworkId(networkId) ?: return null
+        fun fromJsonObject(contract: ContractFromJson): Contract? {
+            val blockchain = Blockchain.fromNetworkId(contract.networkId) ?: return null
             return Contract(
-                networkId = networkId,
+                networkId = contract.networkId,
                 blockchain = blockchain,
                 address = contract.address,
                 decimalCount = contract.decimalCount,
@@ -82,19 +80,17 @@ data class Contract(
             )
         }
 
-        fun fromCurrencyId(currencyId: String, isTestNet: Boolean): Contract? {
-            val networkId = if (isTestNet) currencyId + TESTNET else currencyId
-            val blockchain = Blockchain.fromNetworkId(networkId) ?: return null
+        fun fromCurrencyId(currencyId: String): Contract? {
+            val blockchain = Blockchain.fromNetworkId(currencyId) ?: return null
             return Contract(
-                networkId = networkId,
+                networkId = currencyId,
                 blockchain = blockchain,
                 address = blockchain.currency,
                 decimalCount = blockchain.decimals(),
-                iconUrl = getIconUrl(networkId)
+                iconUrl = getIconUrl(currencyId)
             )
         }
 
-        const val TESTNET = "-testnet"
     }
 }
 

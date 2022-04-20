@@ -413,7 +413,10 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
         val decimalsValidator: TokenDecimalsValidator = state.getValidator(Decimals)
         val networkValidator: TokenNetworkValidator = state.getValidator(Network)
         return when (this) {
-            ContractAddress -> contractAddressValidator.validate(value as String)
+            ContractAddress -> {
+                contractAddressValidator.nextValidationFor(Network.getFieldValue())
+                contractAddressValidator.validate(value as String)
+            }
             Network, DerivationPath -> networkValidator.validate(value as Blockchain)
             Name -> nameValidator.validate(value as String)
             Symbol -> symbolValidator.validate(value as String)

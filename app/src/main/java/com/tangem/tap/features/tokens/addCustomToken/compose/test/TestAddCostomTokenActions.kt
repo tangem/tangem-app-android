@@ -1,4 +1,4 @@
-package com.tangem.tap.features.tokens.addCustomToken.compose
+package com.tangem.tap.features.tokens.addCustomToken.compose.test
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
@@ -25,8 +25,8 @@ import timber.log.Timber
 [REDACTED_AUTHOR]
  */
 @Composable
-fun AddCustomTokenDebugActions() {
-    if (!BuildConfig.DEBUG) return
+fun TestAddCustomTokenActions() {
+    if (!BuildConfig.TEST_ACTION_ENABLED) return
 
     Column() {
         // deep test
@@ -47,10 +47,10 @@ fun AddCustomTokenDebugActions() {
 @Composable
 private fun AllInOne() {
     // validation error
-    ContractAddressButton(
-        name = "invalid",
-        address = "unk"
-    )
+//    ContractAddressButton(
+//        name = "invalid",
+//        address = "unk"
+//    )
     // active = true
     ContractAddressButton(
         name = "true",
@@ -70,6 +70,10 @@ private fun AllInOne() {
     ContractAddressButton(
         name = "unknown",
         address = "0x1111111111111111112111111111111111111113"
+    )
+    ContractAddressButton(
+        name = "solana",
+        address = "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB"
     )
 }
 
