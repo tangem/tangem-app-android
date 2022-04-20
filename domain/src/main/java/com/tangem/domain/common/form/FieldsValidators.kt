@@ -1,7 +1,9 @@
 package com.tangem.domain.common.form
 
 import com.tangem.blockchain.blockchains.ethereum.EthereumAddressService
+import com.tangem.blockchain.blockchains.solana.SolanaAddressService
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.address.AddressService
 import com.tangem.common.Validator
 import com.tangem.domain.AddCustomTokenError
 
@@ -25,13 +27,34 @@ class StringIsNotEmptyValidator : CustomTokenValidator<String>() {
 }
 
 class TokenContractAddressValidator : CustomTokenValidator<String>() {
+
+    private var blockchain: Blockchain = Blockchain.Unknown
+
+    fun nextValidationFor(blockchain: Blockchain) {
+        this.blockchain = blockchain
+    }
+
     override fun validate(data: String?): AddCustomTokenError? {
         if (data == null || data.isEmpty()) return AddCustomTokenError.FieldIsEmpty
 
-        return if (EthereumAddressService().validate(data)) {
+        return if (getAddressService().validate(data)) {
             null
         } else {
             AddCustomTokenError.InvalidContractAddress
+        }
+    }
+
+    private fun getAddressService(): AddressService {
+        return when (blockchain) {
+            Blockchain.Solana, Blockchain.SolanaTestnet -> SolanaAddressService()
+            Blockchain.Unknown -> EthereumAddressService()
+            else -> {
+                if (blockchain.isEvm()) {
+                    EthereumAddressService()
+                } else {
+                    throw UnsupportedOperationException()
+                }
+            }
         }
     }
 }
