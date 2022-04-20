@@ -1,6 +1,7 @@
 package com.tangem.tap.features.tokens.ui.compose
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -71,6 +72,7 @@ fun CollapsedCurrencyItem(
                         if (contract.address == currency.symbol) {
                             BlockchainNetworkItem(
                                 blockchain = Blockchain.fromNetworkId(contract.networkId),
+                                isMainNetwork = true,
                                 addedBlockchains = addedBlockchains
                             )
                         } else {
@@ -95,6 +97,7 @@ fun CollapsedCurrencyItem(
                 } else {
                     BlockchainNetworkItem(
                         blockchain = blockchain,
+                        isMainNetwork = false,
                         addedBlockchains = addedBlockchains
                     )
                 }
@@ -114,18 +117,39 @@ fun CollapsedCurrencyItem(
 @Composable
 fun BlockchainNetworkItem(
     blockchain: Blockchain?,
+    isMainNetwork: Boolean,
     addedBlockchains: List<Blockchain>
 ) {
     val added = addedBlockchains.contains(blockchain)
     val icon =
         if (added) blockchain?.getRoundIconRes() else blockchain?.getGreyedOutIconRes()
     if (icon != null) {
-        Image(
-            painter = painterResource(id = icon),
-            contentDescription = null,
-            Modifier
-                .size(20.dp)
-        )
+        Box(Modifier
+            .size(20.dp)) {
+            Image(
+                painter = painterResource(id = icon),
+                contentDescription = null,
+                Modifier
+                    .size(20.dp)
+            )
+            if (isMainNetwork) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .size(7.dp)
+                        .clip(CircleShape)
+                        .background(Color.White)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .size(5.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF1ACE80))
+                    )
+                }
+            }
+        }
         Spacer(modifier = Modifier.size(5.dp))
     }
 }
