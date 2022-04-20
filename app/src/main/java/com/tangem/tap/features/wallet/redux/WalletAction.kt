@@ -91,6 +91,8 @@ sealed class WalletAction : Action {
         }
 
         class CheckRemainingSignatures(val remainingSignatures: Int?) : Warnings()
+
+        object RestoreFundsWarningClosed : Warnings()
     }
 
     data class LoadFiatRate(
@@ -159,4 +161,6 @@ sealed class WalletAction : Action {
         val minRent: String,
         val rentExempt: String
     ) : WalletAction()
+
+    data class RemoveWalletRent(val blockchain: BlockchainNetwork) : WalletAction()
 }
