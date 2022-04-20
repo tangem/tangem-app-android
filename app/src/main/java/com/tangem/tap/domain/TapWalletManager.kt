@@ -1,6 +1,5 @@
 package com.tangem.tap.domain
 
-import com.tangem.blockchain.blockchains.solana.RentProvider
 import com.tangem.blockchain.common.*
 import com.tangem.common.extensions.guard
 import com.tangem.common.services.Result
@@ -15,7 +14,6 @@ import com.tangem.tap.common.ThrottlerWithValues
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.safeUpdate
-import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.common.redux.global.FiatCurrencyName
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.currenciesRepository
@@ -25,8 +23,6 @@ import com.tangem.tap.domain.extensions.makePrimaryWalletManager
 import com.tangem.tap.domain.extensions.makeWalletManagersForApp
 import com.tangem.tap.domain.tokens.BlockchainNetwork
 import com.tangem.tap.features.demo.isDemoCard
-import com.tangem.tap.features.wallet.models.PendingTransactionType
-import com.tangem.tap.features.wallet.models.getPendingTransactions
 import com.tangem.tap.features.wallet.redux.Currency
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.network.NetworkConnectivity
@@ -60,7 +56,6 @@ class TapWalletManager {
         }
         when (result) {
             is Result.Success -> {
-                checkForRentWarning(walletManager)
                 dispatchOnMain(WalletAction.LoadWallet.Success(result.data, blockchainNetwork))
             }
             is Result.Failure -> {
@@ -327,40 +322,6 @@ class TapWalletManager {
                 WalletAction.EmptyWallet
             }
             else -> null
-        }
-    }
-
-    private suspend fun checkForRentWarning(walletManager: WalletManager) {
-        val rentProvider = walletManager as? RentProvider ?: return
-
-        when (val result = rentProvider.minimalBalanceForRentExemption()) {
-            is com.tangem.blockchain.extensions.Result.Success -> {
-                fun isNeedToShowWarning(balance: BigDecimal, rentExempt: BigDecimal): Boolean =
-                    balance < rentExempt
-
-                val balance = walletManager.wallet.fundsAvailable(AmountType.Coin)
-                val outgoingTxs =
-                    walletManager.wallet.getPendingTransactions(PendingTransactionType.Outgoing)
-                val rentExempt = result.data
-                val show = if (outgoingTxs.isEmpty()) {
-                    isNeedToShowWarning(balance, rentExempt)
-                } else {
-                    val outgoingAmount = outgoingTxs.sumOf { it.amount ?: BigDecimal.ZERO }
-                    val rest = balance.minus(outgoingAmount)
-                    isNeedToShowWarning(rest, rentExempt)
-                }
-                if (!show) return
-
-                val currency = walletManager.wallet.blockchain.currency
-                dispatchOnMain(
-                    WalletAction.SetWalletRent(
-                        blockchain = BlockchainNetwork.fromWalletManager(walletManager),
-                        minRent = ("${rentProvider.rentAmount().stripZeroPlainString()} $currency"),
-                        rentExempt = ("${rentExempt.stripZeroPlainString()} $currency")
-                    )
-                )
-            }
-            is com.tangem.blockchain.extensions.Result.Failure -> {}
         }
     }
 }
