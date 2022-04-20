@@ -66,6 +66,9 @@ class WarningsMiddleware {
                     )
                 }
             }
+            is WalletAction.Warnings.RestoreFundsWarningClosed -> {
+                preferencesStorage.saveRestoreFundsWarningClosed()
+            }
         }
     }
 
@@ -90,7 +93,7 @@ class WarningsMiddleware {
                 addWarningMessage(WarningMessagesManager.testCardWarning(), autoUpdate = true)
                 return@let
             }
-            if (card.useOldStyleDerivation) {
+            if (card.useOldStyleDerivation && !preferencesStorage.wasRestoreFundsWarningClosed()) {
                 addWarningMessage(warning = WarningMessagesManager.restoreFundsWarning())
             }
 
