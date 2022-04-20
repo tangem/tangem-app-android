@@ -1,6 +1,5 @@
 package com.tangem.tap.features.wallet.redux.middlewares
 
-import com.tangem.blockchain.blockchains.solana.SolanaWalletManager
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.extensions.Result
 import com.tangem.common.extensions.isZero
@@ -130,17 +129,13 @@ class MultiWalletMiddleware {
                                 scope.launch(Dispatchers.Main) {
                                     val blockchainNetwork = BlockchainNetwork.fromWalletManager(walletManager)
                                     if (walletState?.getWalletData(blockchainNetwork) == null) {
-                                        store.dispatch(
-                                            WalletAction.MultiWallet.AddBlockchain(
-                                                blockchainNetwork, walletManager
-                                            )
-                                        )
-                                        store.dispatch(
-                                            WalletAction.LoadWallet.Success(
-                                                wallet = wallet,
-                                                blockchain = blockchainNetwork
-                                            )
-                                        )
+                                        store.dispatch(WalletAction.MultiWallet.AddBlockchain(
+                                            blockchainNetwork, walletManager
+                                        ))
+                                        store.dispatch(WalletAction.LoadWallet.Success(
+                                            wallet = wallet,
+                                            blockchain = blockchainNetwork
+                                        ))
                                     }
                                 }
                             }
