@@ -1,17 +1,14 @@
 package com.tangem.tap.domain
 
 import com.tangem.blockchain.common.*
-import com.tangem.common.extensions.guard
 import com.tangem.common.services.Result
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.TapWorkarounds.isTestCard
-import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.network.api.tangemTech.TangemTechService
 import com.tangem.tap.common.ThrottlerWithValues
-import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.redux.global.FiatCurrencyName
@@ -122,30 +119,22 @@ class TapWalletManager {
         }
 
         val toUpdateCurrencies = currencies.filter { !fiatRatesThrottler.isStillThrottled(it) }
-        val toUpdateIds = toUpdateCurrencies.mapNotNull { it.id }.distinct()
+        val toUpdateIds = toUpdateCurrencies.mapNotNull { it.coinId }.distinct()
         if (toUpdateIds.isEmpty()) return
 
         //TODO: refactoring: move fiatRatesThrottler to the TangemTechRepository
         when (val result = tangemTechService.coins.prices(fiatCurrency, toUpdateIds)) {
             is Result.Success -> {
-                val missedCurrencies = mutableListOf<String>()
-                val updatedCurrencies = mutableMapOf<Currency, Result<BigDecimal>?>()
-
-                result.data.prices.forEach { (name, value) ->
-                    val currency = toUpdateCurrencies.firstOrNull { it.id == name }.guard {
-                        missedCurrencies.add(name)
-                        return@forEach
-                    }
-                    val priceResult = Result.Success(value.toBigDecimal())
-                    updatedCurrencies[currency] = priceResult
-
-                    fiatRatesThrottler.updateThrottlingTo(currency)
-                    fiatRatesThrottler.setValue(currency, priceResult)
+                val priceResultList: Map<String, Result<BigDecimal>> = result.data.prices.mapValues {
+                    Result.Success(it.value.toBigDecimal())
                 }
-
-                if (missedCurrencies.isNotEmpty()) {
-                    val missedNames = missedCurrencies.joinToString(", ")
-                    store.dispatchDebugErrorNotification("Not found currencies to update: [$missedNames]")
+                val updatedCurrencies = mutableMapOf<Currency, Result<BigDecimal>?>()
+                toUpdateCurrencies.forEach { currency ->
+                    priceResultList[currency.coinId]?.let {
+                        updatedCurrencies[currency] = it
+                        fiatRatesThrottler.updateThrottlingTo(currency)
+                        fiatRatesThrottler.setValue(currency, it)
+                    }
                 }
                 handleFiatRatesResult(updatedCurrencies)
             }
@@ -329,9 +318,3 @@ class TapWalletManager {
 fun Wallet.getFirstToken(): Token? {
     return getTokens().toList().getOrNull(0)
 }
-
-val Currency.id: String?
-    get() = when (this) {
-        is Currency.Blockchain -> blockchain.toNetworkId()
-        is Currency.Token -> token.id
-    }
