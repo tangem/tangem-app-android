@@ -7,7 +7,7 @@ import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.TapWorkarounds.isTestCard
-import com.tangem.domain.common.extensions.toNetworkId
+import com.tangem.domain.common.extensions.toCoinId
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.network.api.tangemTech.TangemTechService
 import com.tangem.tap.common.ThrottlerWithValues
@@ -332,6 +332,6 @@ fun Wallet.getFirstToken(): Token? {
 
 val Currency.id: String?
     get() = when (this) {
-        is Currency.Blockchain -> blockchain.toNetworkId()
+        is Currency.Blockchain -> blockchain.toCoinId()
         is Currency.Token -> token.id
     }
