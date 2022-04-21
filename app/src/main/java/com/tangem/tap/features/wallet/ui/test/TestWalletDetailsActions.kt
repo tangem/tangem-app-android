@@ -1,10 +1,7 @@
 package com.tangem.tap.features.wallet.ui.test
 
-import com.tangem.blockchain.blockchains.solana.SolanaWalletManager
 import com.tangem.blockchain.common.Amount
-import com.tangem.blockchain.common.Blockchain
-import com.tangem.domain.common.ScanResponse
-import com.tangem.domain.common.TapWorkarounds.isTestCard
+import com.tangem.blockchain.common.WalletManager
 import com.tangem.tap.common.TestAction
 import com.tangem.tap.common.TestActions
 import com.tangem.tap.domain.tokens.BlockchainNetwork
@@ -68,7 +65,7 @@ private class SolanaRentWarningActionEmitter {
     }
 
     private fun setBalance(value: BigDecimal) {
-        val amount = Amount(getBlockchain()).copy(value = value)
+        val amount = Amount(getBlockchainNetwork().blockchain).copy(value = value)
         getWalletManager().apply {
             TestActions.testAmountInjectionForWalletManagerEnabled = true
             wallet.setAmount(amount)
@@ -76,19 +73,12 @@ private class SolanaRentWarningActionEmitter {
         store.dispatch(WalletAction.LoadData)
     }
 
-    private fun getWalletManager(): SolanaWalletManager {
-        return store.state.walletState.getWalletManager(BlockchainNetwork(
-            blockchain = getBlockchain(),
-            card = scanResponse().card
-        )) as SolanaWalletManager
+    private fun getWalletManager(): WalletManager {
+        return store.state.walletState.getWalletManager(getBlockchainNetwork())!!
     }
 
-    private fun getBlockchain(): Blockchain = when {
-        scanResponse().card.isTestCard -> Blockchain.SolanaTestnet
-        else -> Blockchain.Solana
-    }
-
-    private fun scanResponse(): ScanResponse {
-        return store.state.globalState.scanResponse ?: throw UnsupportedOperationException()
+    private fun getBlockchainNetwork(): BlockchainNetwork {
+        val currency = store.state.walletState.getSelectedWalletData()!!.currency
+        return BlockchainNetwork(currency.blockchain, currency.derivationPath, listOf())
     }
 }
