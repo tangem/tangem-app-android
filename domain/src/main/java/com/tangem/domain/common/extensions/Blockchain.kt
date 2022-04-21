@@ -68,3 +68,10 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.XRP -> "ripple"
     }
 }
+
+fun Blockchain.toCoinId(): String {
+    return when (this) {
+        Blockchain.BSC, Blockchain.Binance -> "binancecoin"
+        else -> this.toNetworkId()
+    }
+}
