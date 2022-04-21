@@ -10,6 +10,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.VoidCallback
 import com.tangem.domain.common.form.Field
 import com.tangem.tap.common.extensions.ValueCallback
+import timber.log.Timber
 
 /**
 [REDACTED_AUTHOR]
@@ -27,14 +28,24 @@ fun <T> OutlinedSpinner(
     isEnabled: Boolean = true,
     onClose: VoidCallback = {}
 ) {
+    val compositionCounter = remember { CompositionCounter(label) }
+    val counter = compositionCounter.increase(label)
+
     val rIsExpanded = remember { mutableStateOf(false) }
-    val rSelectedItem = remember { mutableStateOf(selectedItem.value) }
+    val stateSelectedItem = remember { mutableStateOf(selectedItem.value) }
+    osLog(label, "recompose ------------------------------------", counter)
+    osLog(label, "selectedItem: $selectedItem", counter)
+    osLog(label, "stateSelectedItem: ${stateSelectedItem.value}", counter)
     if (!selectedItem.isUserInput) {
-        rSelectedItem.value = selectedItem.value
+        osLog(label, "stateSelectedItem.value: update = selectedItem.value", counter)
+        stateSelectedItem.value = selectedItem.value
     }
+    osLog(label, "stateSelectedItem: ${stateSelectedItem.value}", counter)
 
     val onDropDownItemSelectedInternal: (T) -> Unit = {
-        rSelectedItem.value = it
+        osLog(label, "onDropDownItemSelectedInternal: value: [${it.toString()}]", counter)
+        stateSelectedItem.value = it
+        osLog(label, "onDropDownItemSelectedInternal: stateSelectedItem: ${stateSelectedItem.value}", counter)
         rIsExpanded.value = false
         onItemSelected(it)
     }
@@ -51,7 +62,7 @@ fun <T> OutlinedSpinner(
             modifier = modifier,
             readOnly = true,
             enabled = isEnabled,
-            value = textFieldConverter(rSelectedItem.value),
+            value = textFieldConverter(stateSelectedItem.value),
             onValueChange = {},
             label = { Text(label) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = rIsExpanded.value) },
@@ -71,6 +82,27 @@ fun <T> OutlinedSpinner(
                 }
             }
         }
+    }
+}
+
+private fun osLog(id: String, log: String, counter: CompositionCounter) {
+    if (id == "Сеть") Timber.d(
+        "OutlinedSpinner[$id]:[${counter.count}] - $log"
+    )
+}
+
+class CompositionCounter(
+    val id: String,
+    count: Int = 0
+) {
+    var count: Int = count
+        private set
+
+    fun increase(id: String): CompositionCounter {
+        if (this.id != id) return this
+
+        count += 1
+        return CompositionCounter(id, count)
     }
 }
 
