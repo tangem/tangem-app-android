@@ -2,7 +2,7 @@ package com.tangem.tap.features.details.ui
 
 import android.content.Context
 import androidx.appcompat.app.AlertDialog
-import com.tangem.network.api.tangemTech.Coins
+import com.tangem.network.api.tangemTech.CurrenciesResponse
 import com.tangem.tap.common.extensions.toFormattedString
 import com.tangem.tap.common.redux.global.FiatCurrencyName
 import com.tangem.tap.features.details.redux.DetailsAction
@@ -13,11 +13,11 @@ class CurrencySelectionDialog {
 
     var dialog: AlertDialog? = null
 
-    fun show(currencies: List<Coins.CurrenciesResponse.Currency>, currentAppCurrency: FiatCurrencyName, context: Context) {
+    fun show(currenciesList: List<CurrenciesResponse.Currency>, currentAppCurrency: FiatCurrencyName, context: Context) {
 
         if (dialog == null) {
-            val currenciesToShow = currencies.map { it.toFormattedString() }.toTypedArray()
-            var currentSelection = currencies.indexOfFirst { it.code == currentAppCurrency }
+            val currenciesToShow = currenciesList.map { it.toFormattedString() }.toTypedArray()
+            var currentSelection = currenciesList.indexOfFirst { it.code == currentAppCurrency }
 
             dialog = AlertDialog.Builder(context)
                     .setTitle(context.getString(R.string.details_row_title_currency))
@@ -25,7 +25,7 @@ class CurrencySelectionDialog {
                         store.dispatch(DetailsAction.AppCurrencyAction.Cancel)
                     }
                     .setPositiveButton(context.getString(R.string.common_done)) { _, _ ->
-                        val selectedCurrency = currencies[currentSelection]
+                        val selectedCurrency = currenciesList[currentSelection]
                         store.dispatch(DetailsAction.AppCurrencyAction.SelectAppCurrency(selectedCurrency.code))
                     }
                     .setOnDismissListener {
