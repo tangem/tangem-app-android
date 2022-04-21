@@ -101,27 +101,26 @@ class WalletMiddleware {
                 warningsMiddleware.tryToShowAppRatingWarning(action.wallet)
             }
             is WalletAction.LoadFiatRate -> {
-                val tapWalletManager = globalState.tapWalletManager
-                val fiatAppCurrency = globalState.appCurrency
+                val appCurrencyId = globalState.appCurrency
                 scope.launch {
                     when {
                         action.wallet != null -> {
                             globalState.tapWalletManager.loadFiatRate(
-                                fiatCurrency = fiatAppCurrency,
+                                currencyId = appCurrencyId,
                                 wallet = action.wallet,
                             )
                         }
-                        action.currencyList != null -> {
+                        action.coinsList != null -> {
                             globalState.tapWalletManager.loadFiatRate(
-                                fiatCurrency = fiatAppCurrency,
-                                currencies = action.currencyList,
+                                currencyId = appCurrencyId,
+                                coinsList = action.coinsList,
                             )
                         }
                         else -> {
-                            val currencyList = walletState.walletsData.map { it.currency }
+                            val coinsList = walletState.walletsData.map { it.currency }
                             globalState.tapWalletManager.loadFiatRate(
-                                fiatCurrency = fiatAppCurrency,
-                                currencies = currencyList,
+                                currencyId = appCurrencyId,
+                                coinsList = coinsList,
                             )
                         }
                     }
