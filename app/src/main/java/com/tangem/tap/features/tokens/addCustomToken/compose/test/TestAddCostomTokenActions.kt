@@ -12,14 +12,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.VoidCallback
-import com.tangem.common.services.Result
 import com.tangem.domain.common.form.Field
-import com.tangem.domain.features.addCustomToken.AddCustomTokenService
 import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction
 import com.tangem.domain.redux.domainStore
-import com.tangem.network.api.tangemTech.TangemTechService
 import com.tangem.wallet.BuildConfig
-import timber.log.Timber
 
 /**
 [REDACTED_AUTHOR]
@@ -40,7 +36,7 @@ fun TestAddCustomTokenActions() {
         ActionRow("All in one") { AllInOne() }
 
         // Any action
-//        ActionRow("CustomActions -  find tokens active=false, decimals != null") { CustomActions() }
+//        ActionRow("CustomActions -  find coins active=false, decimals != null") { CustomActions() }
     }
 }
 
@@ -147,41 +143,6 @@ private fun UnknownContracts() {
 
 @Composable
 private fun CustomActions() {
-
-    CustomActionButton(
-        name = "Find tokens in several networks",
-        action = {
-            val manager = AddCustomTokenService(TangemTechService())
-            val currencies = manager.tokens()
-            val asdfsd = mutableMapOf<String, MutableList<Any>>()
-            val contractAddresses = currencies.mapNotNull { currency ->
-                currency.contracts?.map { it.address }
-            }.flatten()
-            contractAddresses.take(500).forEachIndexed() { index, address ->
-                when (val result = manager.checkAddress(address)) {
-                    is Result.Success -> {
-                        val contractList = mutableListOf<Any>()
-                        result.data.forEach { token ->
-                            token.contracts.forEach { contract ->
-                                if (!contract.active && contract.decimalCount != null) {
-                                    contractList.add(contract)
-                                }
-                            }
-                        }
-                        if (contractList.isNotEmpty()) {
-                            val list = asdfsd[address] ?: mutableListOf()
-                            list.addAll(contractList)
-                            asdfsd[address] = list
-                        }
-                        Timber.e("Success. handle $index item from size ${contractAddresses.size}. Result = ${asdfsd.size}")
-                    }
-                    is Result.Failure -> {}
-                }
-            }
-            val result = asdfsd.filter { it.value.size > 1 }
-            if (result.isEmpty()) return@CustomActionButton
-        }
-    )
 }
 
 @Composable

@@ -4,7 +4,6 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.services.Result
-import com.tangem.network.api.tangemTech.Coins
 import com.tangem.operations.pins.CheckUserCodesResponse
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.Analytics
@@ -77,14 +76,12 @@ class DetailsMiddleware {
 
         scope.launch {
             val tangemTechService = action.tangemTechService
-            when (val result = tangemTechService.coins.currencies()) {
+            when (val result = tangemTechService.currencies()) {
                 is Result.Success -> {
-                    val fiatCurrencies = result.data.currencies.filter {
-                        it.type == Coins.CurrenciesResponse.CurrencyType.Fiat.type
-                    }
-                    if (fiatCurrencies.isNotEmpty() && fiatCurrencies.toSet() != storedFiatCurrencies.toSet()) {
-                        fiatCurrenciesPrefStorage.save(fiatCurrencies)
-                        dispatchOnMain(DetailsAction.AppCurrencyAction.SetCurrencies(fiatCurrencies))
+                    val currenciesList = result.data.currencies
+                    if (currenciesList.isNotEmpty() && currenciesList.toSet() != storedFiatCurrencies.toSet()) {
+                        fiatCurrenciesPrefStorage.save(currenciesList)
+                        dispatchOnMain(DetailsAction.AppCurrencyAction.SetCurrencies(currenciesList))
                     }
                 }
                 is Result.Failure -> {}
