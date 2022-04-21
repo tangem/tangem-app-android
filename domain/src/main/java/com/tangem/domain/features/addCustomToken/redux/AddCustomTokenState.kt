@@ -13,7 +13,7 @@ data class AddCustomTokenState(
     val appSavedCurrencies: List<DomainWrapped.Currency>? = null,
     val onTokenAddCallback: ((CustomCurrency) -> Unit)? = null,
     val cardDerivationStyle: DerivationStyle? = null,
-    val form: Form = Form(createFormFields()),
+    val form: Form = Form(createFormFields(CustomTokenType.Blockchain)),
     val formValidators: Map<CustomTokenFieldId, CustomTokenValidator<out Any>> = createFormValidators(),
     val formErrors: Map<CustomTokenFieldId, AddCustomTokenError> = emptyMap(),
     val tokenId: String? = null,
@@ -23,6 +23,10 @@ data class AddCustomTokenState(
 ) : StateType {
 
     inline fun <reified T> getField(id: FieldId): T = form.getField(id) as T
+
+    fun setField(field: DataField<*>) {
+        form.setField(field)
+    }
 
     inline fun <reified T> getValidator(id: FieldId): T = formValidators[id] as T
 
@@ -80,6 +84,11 @@ data class AddCustomTokenState(
         return network.data.value != Blockchain.Unknown
     }
 
+    fun getCustomTokenType(): CustomTokenType = when {
+        tokensOneFieldsIsFilled() || tokensFieldsIsFilled() -> CustomTokenType.Token
+        else -> CustomTokenType.Blockchain
+    }
+
     fun gatherUserToken(): CustomCurrency.CustomToken? = try {
         getToken()
     } catch (ex: Exception) {
@@ -97,7 +106,7 @@ data class AddCustomTokenState(
             appSavedCurrencies = null,
             onTokenAddCallback = null,
             cardDerivationStyle = null,
-            form = Form(createFormFields()),
+            form = Form(createFormFields(CustomTokenType.Blockchain)),
             formErrors = emptyMap(),
             tokenId = null,
             warnings = emptySet(),
@@ -118,6 +127,10 @@ data class AddCustomTokenState(
             .getConvertedData()
     }
 
+    fun getNetworks(type: CustomTokenType): List<Blockchain> {
+        return getSupportedNetworks(type)
+    }
+
     companion object {
 
         /**
@@ -133,10 +146,10 @@ data class AddCustomTokenState(
             else -> derivationNetwork
         }.derivationPath(derivationStyle)
 
-        private fun createFormFields(): List<DataField<*>> {
+        private fun createFormFields(type: CustomTokenType): List<DataField<*>> {
             return listOf(
                 TokenField(ContractAddress),
-                TokenBlockchainField(Network, getSupportedNetworks()),
+                TokenBlockchainField(Network, getSupportedNetworks(type)),
                 TokenField(Name),
                 TokenField(Symbol),
                 TokenField(Decimals),
@@ -154,17 +167,20 @@ data class AddCustomTokenState(
             )
         }
 
-        private fun getSupportedNetworks(): List<Blockchain> {
-            return listOf(
+        private fun getSupportedNetworks(type: CustomTokenType): List<Blockchain> {
+            val networks = mutableListOf(
                 Blockchain.Unknown,
                 Blockchain.Ethereum,
                 Blockchain.BSC,
                 Blockchain.Binance,
                 Blockchain.Polygon,
                 Blockchain.Avalanche,
-//                Blockchain.Solana, // not supported until tokens added to the Blockchain SDK
                 Blockchain.Fantom,
+                Blockchain.Solana, // should be unsupported for tokens until they are added to the Blockchain SDK
             )
+            if (type == CustomTokenType.Token) networks.remove(Blockchain.Solana)
+
+            return networks
         }
 
         private fun getSupportedDerivations(): List<Blockchain> {
@@ -186,4 +202,8 @@ data class AddCustomTokenState(
             )
         }
     }
+}
+
+enum class CustomTokenType {
+    Token, Blockchain
 }
