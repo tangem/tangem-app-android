@@ -98,11 +98,11 @@ fun FirstStoriesContent(
         if (screenState.value != StartingScreenState.MEET_TANGEM) {
             TextAutoSize(
                 modifier = Modifier
-                    .padding(start = 40.dp, end = 40.dp, bottom = 100.dp)
+                    .padding(start = 20.dp, end = 20.dp, bottom = 100.dp)
                     .alpha(if (screenState.value == StartingScreenState.SHOW_CARD) 0f else 1f),
                 text = text?.let { stringResource(text) } ?: "",
                 textStyle = style,
-                fontSizeRange = FontSizeRange(40.sp, 60.sp)
+                fontSizeRange = FontSizeRange(20.sp, 60.sp)
             )
         }
 
