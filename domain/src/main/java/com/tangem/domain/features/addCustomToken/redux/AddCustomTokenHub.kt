@@ -65,30 +65,24 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
                     null -> {
                         ContractAddress.removeError()
                         unlockTokenFields()
+                        changeBlockchainNetworkList()
                     }
                     AddCustomTokenError.FieldIsEmpty -> {
                         ContractAddress.removeError()
+                        changeBlockchainNetworkList()
                         return
                     }
                     AddCustomTokenError.InvalidContractAddress -> {
                         ContractAddress.addError(error)
                         unlockTokenFields()
+                        changeBlockchainNetworkList()
                         return
                     }
                     else -> {}
                 }
-
                 if (!action.contractAddress.isUserInput) return
+
                 manageFoundTokenChanges(requestInfoAboutToken(address))
-            }
-            is OnTokenNameChanged -> {
-                updateAddButton()
-            }
-            is OnTokenSymbolChanged -> {
-                updateAddButton()
-            }
-            is OnTokenDecimalsChanged -> {
-                updateAddButton()
             }
             is OnTokenNetworkChanged -> {
                 if (!action.blockchainNetwork.isUserInput) return
@@ -122,13 +116,25 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
                 updateWarningAlreadyAdded(isAlreadyAdded)
                 updateAddButton()
             }
+            is OnTokenNameChanged -> {
+                changeBlockchainNetworkList()
+                updateAddButton()
+            }
+            is OnTokenSymbolChanged -> {
+                changeBlockchainNetworkList()
+                updateAddButton()
+            }
+            is OnTokenDecimalsChanged -> {
+                changeBlockchainNetworkList()
+                updateAddButton()
+            }
             is OnAddCustomTokenClicked -> {
                 val state = hubState
                 val completeData = when {
-                    state.tokensFieldsIsFilled() && state.networkIsSelected() -> {
+                    state.getCustomTokenType() == CustomTokenType.Token && state.networkIsSelected() -> {
                         state.gatherUserToken()
                     }
-                    !state.tokensFieldsIsFilled() && state.networkIsSelected() -> {
+                    state.getCustomTokenType() == CustomTokenType.Blockchain && state.networkIsSelected() -> {
                         state.gatherBlockchain()
                     }
                     else -> null
@@ -144,6 +150,41 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
             }
             else -> {}
         }
+    }
+
+    /**
+     * This feature is only needed until Solana tokens are added.
+     * While they are not there - this function excludes the Solana blockchain if the user has
+     * filled in at least one field of the token.
+     */
+    private suspend fun changeBlockchainNetworkList() {
+        val state = hubState
+        val networkBlockchainList = Network.getField<TokenBlockchainField>().itemList
+        val newNetworkBlockchainList: List<Blockchain> = state.getNetworks(state.getCustomTokenType())
+
+        val listsIdentical = newNetworkBlockchainList.toSet() == networkBlockchainList.toSet()
+        if (listsIdentical) return
+
+        val networkFieldIsFilled = Network.isFilled()
+        val newNetworkField = Network.getField<TokenBlockchainField>().copy(itemList = newNetworkBlockchainList)
+        if (networkFieldIsFilled) {
+            val listSameSize = networkBlockchainList.size == newNetworkBlockchainList.size
+            val newListLessThanOld = networkBlockchainList.size > newNetworkBlockchainList.size
+            if (listSameSize || newListLessThanOld) {
+//                 check selected blockchain
+                val selectedBlockchain = Network.getFieldValue<Blockchain>()
+                val defaultSelection = Blockchain.Unknown
+                if (!newNetworkBlockchainList.contains(selectedBlockchain)
+                    && newNetworkBlockchainList.contains(defaultSelection)
+                ) {
+//                     selectedBlockchain not present in the new list. Change selection to default
+                    newNetworkField.data = Field.Data(defaultSelection, false)
+                }
+            }
+        }
+
+        hubState.setField(newNetworkField)
+        dispatchOnMain(UpdateForm(hubState))
     }
 
     private suspend fun updateWarningAlreadyAdded(isInAppSavedList: Boolean) {
