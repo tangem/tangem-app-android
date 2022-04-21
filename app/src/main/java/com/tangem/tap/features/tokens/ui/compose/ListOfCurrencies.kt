@@ -1,5 +1,6 @@
 package com.tangem.tap.features.tokens.ui.compose
 
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -7,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.tap.domain.tokens.Currency
 import com.tangem.tap.features.tokens.redux.ContractAddress
@@ -39,7 +41,9 @@ fun ListOfCurrencies(
     }
 
     LazyColumn(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize(),
+        contentPadding = PaddingValues(bottom = 90.dp)
     ) {
 
         val filteredCurrencies = if (searchInput.isBlank()) {
