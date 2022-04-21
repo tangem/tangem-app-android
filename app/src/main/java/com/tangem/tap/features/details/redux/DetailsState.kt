@@ -3,7 +3,7 @@ package com.tangem.tap.features.details.redux
 import android.net.Uri
 import com.tangem.blockchain.common.Wallet
 import com.tangem.domain.common.ScanResponse
-import com.tangem.network.api.tangemTech.Coins
+import com.tangem.network.api.tangemTech.CurrenciesResponse
 import com.tangem.tap.common.entities.Button
 import com.tangem.tap.common.entities.TapCurrency.Companion.DEFAULT_FIAT_CURRENCY
 import com.tangem.tap.common.redux.global.FiatCurrencyName
@@ -55,5 +55,5 @@ enum class SecurityOption { LongTap, PassCode, AccessCode }
 data class AppCurrencyState(
     val fiatCurrencyName: FiatCurrencyName = DEFAULT_FIAT_CURRENCY,
     val showAppCurrencyDialog: Boolean = false,
-    val fiatCurrencies: List<Coins.CurrenciesResponse.Currency>? = null,
+    val fiatCurrencies: List<CurrenciesResponse.Currency>? = null,
 )

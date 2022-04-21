@@ -87,22 +87,21 @@ class TapWalletManager {
         return newResult
     }
 
-    suspend fun loadFiatRate(fiatCurrency: FiatCurrencyName, wallet: Wallet) {
-        val currencies = wallet.getTokens()
+    suspend fun loadFiatRate(currencyId: FiatCurrencyName, wallet: Wallet) {
+        val coinsList = wallet.getTokens()
             .map { Currency.Token(it, wallet.blockchain, wallet.publicKey.derivationPath?.rawPath) }
             .plus(Currency.Blockchain(wallet.blockchain, wallet.publicKey.derivationPath?.rawPath))
-        loadFiatRate(fiatCurrency, currencies)
+        loadFiatRate(currencyId, coinsList)
     }
 
-    suspend fun loadFiatRate(fiatCurrency: FiatCurrencyName, currencies: List<Currency>) {
+    suspend fun loadFiatRate(currencyId: FiatCurrencyName, coinsList: List<Currency>) {
         suspend fun handleFiatRatesResult(rates: Map<Currency, Result<BigDecimal>?>) {
             rates.forEach { (currency, priceResult) ->
                 when (priceResult) {
                     is Result.Success -> {
-                        dispatchOnMain(
-                            WalletAction.LoadFiatRate.Success(
-                                currency to priceResult.data
-                            ))
+                        dispatchOnMain(WalletAction.LoadFiatRate.Success(
+                            currency to priceResult.data
+                        ))
                     }
                     is Result.Failure -> dispatchOnMain(WalletAction.LoadFiatRate.Failure)
                     null -> {}
@@ -111,26 +110,26 @@ class TapWalletManager {
         }
 
         // get and submit previous result of equivalents.
-        val throttledResult = currencies.filter { fiatRatesThrottler.isStillThrottled(it) }.map {
+        val throttledResult = coinsList.filter { fiatRatesThrottler.isStillThrottled(it) }.map {
             Pair(it, fiatRatesThrottler.geValue(it))
         }
         if (throttledResult.isNotEmpty()) {
             handleFiatRatesResult(throttledResult.toMap())
         }
 
-        val toUpdateCurrencies = currencies.filter { !fiatRatesThrottler.isStillThrottled(it) }
-        val toUpdateIds = toUpdateCurrencies.mapNotNull { it.coinId }.distinct()
-        if (toUpdateIds.isEmpty()) return
+        val currenciesToUpdate = coinsList.filter { !fiatRatesThrottler.isStillThrottled(it) }
+        val coinIds = currenciesToUpdate.mapNotNull { it.coinId }.distinct()
+        if (coinIds.isEmpty()) return
 
         //TODO: refactoring: move fiatRatesThrottler to the TangemTechRepository
-        when (val result = tangemTechService.coins.prices(fiatCurrency, toUpdateIds)) {
+        when (val result = tangemTechService.rates(currencyId, coinIds)) {
             is Result.Success -> {
-                val priceResultList: Map<String, Result<BigDecimal>> = result.data.prices.mapValues {
+                val ratesResultList: Map<String, Result<BigDecimal>> = result.data.rates.mapValues {
                     Result.Success(it.value.toBigDecimal())
                 }
                 val updatedCurrencies = mutableMapOf<Currency, Result<BigDecimal>?>()
-                toUpdateCurrencies.forEach { currency ->
-                    priceResultList[currency.coinId]?.let {
+                currenciesToUpdate.forEach { currency ->
+                    ratesResultList[currency.coinId]?.let {
                         updatedCurrencies[currency] = it
                         fiatRatesThrottler.updateThrottlingTo(currency)
                         fiatRatesThrottler.setValue(currency, it)
