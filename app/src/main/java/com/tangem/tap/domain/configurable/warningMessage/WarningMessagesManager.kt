@@ -4,6 +4,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.VoidCallback
 import com.tangem.tap.common.extensions.containsAny
 import com.tangem.tap.common.extensions.removeBy
+import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
 import java.util.*
 
@@ -17,6 +18,11 @@ class WarningMessagesManager(
     private val warningsList: MutableList<WarningMessage> = mutableListOf()
 
     fun load(onComplete: VoidCallback? = null) {
+        // exclude annoying remote debug warnings
+        if (BuildConfig.DEBUG) {
+            onComplete?.invoke()
+            return
+        }
         warningLoader.load { remoteList ->
             warningsList.clear()
             warningsList.addAll(remoteList)
