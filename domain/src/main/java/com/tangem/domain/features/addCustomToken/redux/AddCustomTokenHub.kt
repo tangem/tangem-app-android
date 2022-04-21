@@ -63,24 +63,33 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
 
                 when (val error = ContractAddress.validateValue(address)) {
                     null -> {
+                        // valid contract
                         ContractAddress.removeError()
-                        unlockTokenFields()
+                        updateTokenDetailFields(false)
                         changeBlockchainNetworkList()
                     }
                     AddCustomTokenError.FieldIsEmpty -> {
+                        // empty contract address
                         ContractAddress.removeError()
+                        clearTokenDetailsFields()
+                        updateTokenDetailFields(false)
                         changeBlockchainNetworkList()
+                        checkAndUpdateAddButton()
                         return
                     }
                     AddCustomTokenError.InvalidContractAddress -> {
                         ContractAddress.addError(error)
-                        unlockTokenFields()
+                        updateTokenDetailFields(hubState.tokensAnyFieldsIsFilled())
                         changeBlockchainNetworkList()
+                        checkAndUpdateAddButton()
                         return
                     }
                     else -> {}
                 }
-                if (!action.contractAddress.isUserInput) return
+                if (!action.contractAddress.isUserInput) {
+                    checkAndUpdateAddButton()
+                    return
+                }
 
                 manageFoundTokenChanges(requestInfoAboutToken(address))
             }
@@ -98,7 +107,7 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
                         selectedNetwork = action.blockchainNetwork.value
                     )
                     updateWarningAlreadyAdded(isAlreadyAdded)
-                    updateAddButton()
+                    checkAndUpdateAddButton()
                 }
             }
             is OnTokenDerivationPathChanged -> {
@@ -114,19 +123,22 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
                     )
                 }
                 updateWarningAlreadyAdded(isAlreadyAdded)
-                updateAddButton()
+                checkAndUpdateAddButton()
             }
             is OnTokenNameChanged -> {
-                changeBlockchainNetworkList()
-                updateAddButton()
+//                changeBlockchainNetworkList()
+//                updateTokenDetailFields(hubState.tokensAnyFieldsIsFilled())
+                checkAndUpdateAddButton()
             }
             is OnTokenSymbolChanged -> {
-                changeBlockchainNetworkList()
-                updateAddButton()
+//                changeBlockchainNetworkList()
+//                updateTokenDetailFields(hubState.tokensAnyFieldsIsFilled())
+                checkAndUpdateAddButton()
             }
             is OnTokenDecimalsChanged -> {
-                changeBlockchainNetworkList()
-                updateAddButton()
+//                changeBlockchainNetworkList()
+//                updateTokenDetailFields(hubState.tokensAnyFieldsIsFilled())
+                checkAndUpdateAddButton()
             }
             is OnAddCustomTokenClicked -> {
                 val state = hubState
@@ -167,6 +179,7 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
 
         val networkFieldIsFilled = Network.isFilled()
         val newNetworkField = Network.getField<TokenBlockchainField>().copy(itemList = newNetworkBlockchainList)
+        newNetworkField.data = Field.Data(Network.getFieldValue(), newNetworkField.data.isUserInput)
         if (networkFieldIsFilled) {
             val listSameSize = networkBlockchainList.size == newNetworkBlockchainList.size
             val newListLessThanOld = networkBlockchainList.size > newNetworkBlockchainList.size
@@ -230,9 +243,8 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
             PotentialScamToken.add()
 
             dispatchOnMain(SetFoundTokenId(null))
-            clearTokenFields()
-            unlockTokenFields()
-            updateAddButton()
+            updateTokenDetailFields(true)
+            checkAndUpdateAddButton()
             return
         }
 
@@ -250,14 +262,14 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
 
                 val isInAppSavedTokens = isTokenPersistIntoAppSavedTokensList()
                 if (isInAppSavedTokens) {
-                    lockTokenFields()
-                    lockAddButton()
+                    updateTokenDetailFields(false)
+                    updateAddButton(false)
                     PotentialScamToken.replace(TokenAlreadyAdded)
                 } else {
                     // not in the saved tokens list
                     if (singleTokenContract.active) {
-                        lockTokenFields()
-                        unlockAddButton()
+                        updateTokenDetailFields(false)
+                        updateAddButton(true)
                         if (hubState.derivationPathIsSelected()) {
                             PotentialScamToken.add()
                         } else {
@@ -265,7 +277,7 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
                             PotentialScamToken.remove()
                         }
                     } else {
-                        unlockAddButton()
+                        updateAddButton(true)
                         PotentialScamToken.add()
                     }
                 }
@@ -286,8 +298,8 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
                         hubScope.launch {
                             // find how to connect to the upper coroutineContext and dispatch through them
                             fillTokenFields(foundToken, selectedContract)
-                            lockTokenFields()
-                            unlockAddButton()
+                            updateTokenDetailFields(false)
+                            updateAddButton(true)
                         }
                     },
                 )
@@ -296,52 +308,36 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
         }
     }
 
-    private suspend fun replaceWarnings(
-        warningsAdd: MutableSet<AddCustomTokenError.Warning> = mutableSetOf(),
-        warningsRemove: MutableSet<AddCustomTokenError.Warning> = mutableSetOf(),
-    ) {
-        if (warningsAdd.isNotEmpty() || warningsRemove.isNotEmpty()) {
-            dispatchOnMain(Warning.Replace(warningsRemove.toSet(), warningsAdd.toSet()))
-        }
-    }
-
-    private suspend fun updateAddButton() {
+    private suspend fun checkAndUpdateAddButton() {
         val state = hubState
         if (state.warnings.contains(TokenAlreadyAdded)) {
-            lockAddButton()
+            updateAddButton(false)
             return
         }
         when {
             // token
-            state.tokensOneFieldsIsFilled() -> {
-                lockAddButton()
+            state.tokensFieldsIsFilled() && state.networkIsSelected() -> {
+                val error = ContractAddress.validateValue(ContractAddress.getFieldValue<String>())
+                updateAddButton(error == null)
             }
             // token
-            state.tokensFieldsIsFilled() && state.networkIsSelected() -> {
-                unlockAddButton()
+            state.tokensAnyFieldsIsFilled() -> {
+                updateAddButton(false)
             }
             // blockchain
             else -> {
                 if (state.networkIsSelected()) {
                     val alreadyAdded = isBlockchainPersistIntoAppSavedTokensList()
                     if (alreadyAdded) {
-                        lockAddButton()
+                        updateAddButton(false)
                     } else {
-                        unlockAddButton()
+                        updateAddButton(true)
                     }
                 } else {
-                    lockAddButton()
+                    updateAddButton(false)
                 }
             }
         }
-    }
-
-    private suspend fun lockAddButton() {
-        dispatchOnMain(Screen.UpdateAddButton(ViewStates.AddButton(false)))
-    }
-
-    private suspend fun unlockAddButton() {
-        dispatchOnMain(Screen.UpdateAddButton(ViewStates.AddButton(true)))
     }
 
     /**
@@ -501,33 +497,32 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
         dispatchOnMain(UpdateForm(hubState))
     }
 
-    private suspend fun clearTokenFields() {
+    private suspend fun clearTokenDetailsFields() {
         Name.setFieldValue(Field.Data("", false))
         Symbol.setFieldValue(Field.Data("", false))
         Decimals.setFieldValue(Field.Data("", false))
         dispatchOnMain(UpdateForm(hubState))
     }
 
-    private suspend fun lockTokenFields() {
+    private suspend fun updateTokenDetailFields(isEnabled: Boolean = true) {
         val state = hubState
         val action = Screen.UpdateTokenFields(listOf(
-            Network to state.screenState.network.copy(isEnabled = false),
-            Name to state.screenState.name.copy(isEnabled = false),
-            Symbol to state.screenState.symbol.copy(isEnabled = false),
-            Decimals to state.screenState.decimals.copy(isEnabled = false),
+            Name to state.screenState.name.copy(isEnabled = isEnabled),
+            Symbol to state.screenState.symbol.copy(isEnabled = isEnabled),
+            Decimals to state.screenState.decimals.copy(isEnabled = isEnabled),
         ))
         dispatchOnMain(action)
     }
 
-    private suspend fun unlockTokenFields() {
-        val state = hubState
+    private suspend fun updateBlockchainNetworkField(isEnabled: Boolean) {
         val action = Screen.UpdateTokenFields(listOf(
-            Network to state.screenState.network.copy(isEnabled = true),
-            Name to state.screenState.name.copy(isEnabled = true),
-            Symbol to state.screenState.symbol.copy(isEnabled = true),
-            Decimals to state.screenState.decimals.copy(isEnabled = true),
+            Name to hubState.screenState.name.copy(isEnabled = isEnabled),
         ))
         dispatchOnMain(action)
+    }
+
+    private suspend fun updateAddButton(isEnabled: Boolean) {
+        dispatchOnMain(Screen.UpdateAddButton(ViewStates.AddButton(isEnabled)))
     }
 
     private suspend fun AddCustomTokenError.Warning.add() {
