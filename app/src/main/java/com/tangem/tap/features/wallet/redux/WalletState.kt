@@ -5,6 +5,7 @@ import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.blockchain.extensions.isAboveZero
 import com.tangem.common.extensions.isZero
+import com.tangem.domain.common.extensions.toCoinId
 import com.tangem.domain.features.addCustomToken.CustomCurrency
 import com.tangem.tap.common.entities.Button
 import com.tangem.tap.common.extensions.toQrCode
@@ -60,7 +61,7 @@ data class WalletState(
 
     val shouldShowDetails: Boolean =
         primaryWallet?.currencyData?.status != BalanceStatus.EmptyCard &&
-                primaryWallet?.currencyData?.status != BalanceStatus.UnknownBlockchain
+            primaryWallet?.currencyData?.status != BalanceStatus.UnknownBlockchain
 
     val blockchains: List<Blockchain>
         get() = wallets.mapNotNull { it.walletManager?.wallet?.blockchain }
@@ -87,8 +88,8 @@ data class WalletState(
         if (blockchain == null) return null
         return walletsData.find {
             it.currency is Currency.Blockchain &&
-                    it.currency.blockchain == blockchain.blockchain &&
-                    it.currency.derivationPath == blockchain.derivationPath
+                it.currency.blockchain == blockchain.blockchain &&
+                it.currency.derivationPath == blockchain.derivationPath
         }
     }
 
@@ -96,7 +97,7 @@ data class WalletState(
         if (currency == null) return null
         return wallets.firstOrNull {
             it.blockchainNetwork.derivationPath == currency.derivationPath &&
-                    (it.blockchainNetwork.blockchain == currency.blockchain)
+                (it.blockchainNetwork.blockchain == currency.blockchain)
         }
     }
 
@@ -111,7 +112,7 @@ data class WalletState(
         if (blockchainNetwork == null) return null
         return wallets.firstOrNull {
             it.blockchainNetwork.derivationPath == blockchainNetwork.derivationPath &&
-                    (it.blockchainNetwork.blockchain == blockchainNetwork.blockchain)
+                (it.blockchainNetwork.blockchain == blockchainNetwork.blockchain)
         }
     }
 
@@ -141,23 +142,23 @@ data class WalletState(
 
             if (walletData.currency is Currency.Blockchain) {
                 return wallet.recentTransactions.toPendingTransactions(wallet.address).isEmpty() &&
-                        wallet.amounts.toSendableAmounts().isEmpty()
+                    wallet.amounts.toSendableAmounts().isEmpty()
             } else if (walletData.currency is Currency.Token) (
-                    return wallet.recentTransactions.toPendingTransactionsForToken(
-                        walletData.currency.token, wallet.address
-                    ).isEmpty()
-                            && wallet.amounts[AmountType.Token(token = walletData.currency.token)]
-                        ?.isAboveZero() != true
-                    )
+                return wallet.recentTransactions.toPendingTransactionsForToken(
+                    walletData.currency.token, wallet.address
+                ).isEmpty()
+                    && wallet.amounts[AmountType.Token(token = walletData.currency.token)]
+                    ?.isAboveZero() != true
+                )
         }
         return false
     }
 
     private fun isPrimaryCurrency(walletData: WalletData): Boolean {
         return (walletData.currency is Currency.Blockchain &&
-                walletData.currency.blockchain == store.state.walletState.primaryBlockchain)
-                || (walletData.currency is Currency.Token &&
-                walletData.currency.token == store.state.walletState.primaryToken)
+            walletData.currency.blockchain == store.state.walletState.primaryBlockchain)
+            || (walletData.currency is Currency.Token &&
+            walletData.currency.token == store.state.walletState.primaryToken)
     }
 
     fun replaceWalletInWallets(wallet: WalletStore?): List<WalletStore> {
@@ -214,7 +215,7 @@ data class WalletState(
         return if (walletData.currency is Currency.Blockchain) {
             val walletStores = wallets.filterNot {
                 it.blockchainNetwork.blockchain == walletData.currency.blockchain
-                        && it.blockchainNetwork.derivationPath == walletData.currency.derivationPath
+                    && it.blockchainNetwork.derivationPath == walletData.currency.derivationPath
             }
             copy(wallets = walletStores)
         } else {
@@ -371,6 +372,11 @@ data class WalletRent(
 
 sealed interface Currency {
 
+    val coinId: String?
+        get() = when (this) {
+            is Blockchain -> blockchain.toCoinId()
+            is Token -> token.id
+        }
     val blockchain: com.tangem.blockchain.common.Blockchain
     val currencySymbol: CryptoCurrencyName
     val derivationPath: String?
@@ -450,7 +456,7 @@ data class WalletStore(
     fun updateWallets(walletDataList: List<WalletData>): WalletStore {
         val relevantWalletDataList = walletDataList.filter {
             it.currency.blockchain == blockchainNetwork.blockchain &&
-                    it.currency.derivationPath == blockchainNetwork.derivationPath
+                it.currency.derivationPath == blockchainNetwork.derivationPath
         }.toMutableList()
         val updatedWalletDataList = walletsData.map { walletData ->
             val matchingWalletData = relevantWalletDataList.find { it.currency == walletData.currency }
