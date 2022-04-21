@@ -23,7 +23,7 @@ import com.tangem.domain.redux.DomainState
 import com.tangem.domain.redux.dispatchOnMain
 import com.tangem.domain.redux.domainStore
 import com.tangem.domain.redux.global.DomainGlobalAction
-import com.tangem.network.api.tangemTech.Coins
+import com.tangem.network.api.tangemTech.CoinsResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -153,7 +153,7 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
     }
 
     /**
-     * This feature is only needed until Solana tokens are added.
+     * This feature is only needed until Solana coins are added.
      * While they are not there - this function excludes the Solana blockchain if the user has
      * filled in at least one field of the token.
      */
@@ -197,7 +197,7 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
 
     private suspend fun requestInfoAboutToken(
         contractAddress: String,
-    ): List<Coins.CheckAddressResponse.Token> {
+    ): List<CoinsResponse.Coin> {
         val tangemTechServiceManager = requireNotNull(hubState.tangemTechServiceManager)
         dispatchOnMain(Screen.UpdateTokenFields(listOf(ContractAddress to ViewStates.TokenField(isLoading = true))))
 
@@ -210,7 +210,7 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
         // got the result faster than 500ms and the delay would only be the difference between them.
         delay(500)
 
-        val foundTokensResult = tangemTechServiceManager.checkAddress(contractAddress, selectedNetworkId)
+        val foundTokensResult = tangemTechServiceManager.findToken(contractAddress, selectedNetworkId)
         val result = when (foundTokensResult) {
             is Result.Success -> foundTokensResult.data
             is Result.Failure -> {
@@ -223,7 +223,7 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
         return result
     }
 
-    private suspend fun manageFoundTokenChanges(foundTokens: List<Coins.CheckAddressResponse.Token>) {
+    private suspend fun manageFoundTokenChanges(foundTokens: List<CoinsResponse.Coin>) {
         if (foundTokens.isEmpty()) {
             // token not found - it's completely custom
             TokenAlreadyAdded.remove()
@@ -240,12 +240,12 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
         val foundToken = foundTokens[0]
         dispatchOnMain(SetFoundTokenId(foundToken.id))
         when {
-            foundToken.contracts.isEmpty() -> {
+            foundToken.networks.isEmpty() -> {
                 Timber.e("Unexpected state -> throw to FB")
             }
-            foundToken.contracts.size == 1 -> {
+            foundToken.networks.size == 1 -> {
                 // token with single contract address
-                val singleTokenContract = foundToken.contracts[0]
+                val singleTokenContract = foundToken.networks[0]
                 fillTokenFields(foundToken, singleTokenContract)
 
                 val isInAppSavedTokens = isTokenPersistIntoAppSavedTokensList()
@@ -254,8 +254,8 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
                     lockAddButton()
                     PotentialScamToken.replace(TokenAlreadyAdded)
                 } else {
-                    // not in the saved tokens list
-                    if (singleTokenContract.active) {
+                    // not in the saved coins list
+                    if (foundToken.active) {
                         lockTokenFields()
                         unlockAddButton()
                         if (hubState.derivationPathIsSelected()) {
@@ -274,7 +274,7 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
                 PotentialScamToken.replace(TokenAlreadyAdded)
 
                 val dialog = DomainDialog.SelectTokenDialog(
-                    items = foundToken.contracts,
+                    items = foundToken.networks,
                     networkIdConverter = { networkId ->
                         val blockchain = Blockchain.fromNetworkId(networkId)
                         if (blockchain == null || blockchain == Blockchain.Unknown) {
@@ -490,14 +490,14 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
     }
 
     private suspend fun fillTokenFields(
-        token: Coins.CheckAddressResponse.Token,
-        contract: Coins.CheckAddressResponse.Token.Contract,
+        token: CoinsResponse.Coin,
+        coinNetwork: CoinsResponse.Coin.Network,
     ) {
-        val blockchain = Blockchain.fromNetworkId(contract.networkId) ?: Blockchain.Unknown
+        val blockchain = Blockchain.fromNetworkId(coinNetwork.networkId) ?: Blockchain.Unknown
         Network.setFieldValue(Field.Data(blockchain, false))
         Name.setFieldValue(Field.Data(token.name, false))
         Symbol.setFieldValue(Field.Data(token.symbol, false))
-        Decimals.setFieldValue(Field.Data(contract.decimalCount.toString(), false))
+        Decimals.setFieldValue(Field.Data(coinNetwork.decimalCount.toString(), false))
         dispatchOnMain(UpdateForm(hubState))
     }
 
