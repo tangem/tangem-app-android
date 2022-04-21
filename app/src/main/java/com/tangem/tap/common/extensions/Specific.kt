@@ -1,7 +1,7 @@
 package com.tangem.tap.common.extensions
 
 import com.tangem.common.extensions.isZero
-import com.tangem.network.api.tangemTech.Coins
+import com.tangem.network.api.tangemTech.CurrenciesResponse
 import com.tangem.tap.common.redux.global.FiatCurrencyName
 import java.math.BigDecimal
 import java.math.RoundingMode
@@ -52,7 +52,7 @@ fun BigDecimal.toFormattedFiatValue(fiatCurrencyName: FiatCurrencyName): String 
     return "≈ ${fiatCurrencyName}  $this"
 }
 
-fun Coins.CurrenciesResponse.Currency.toFormattedString(): String = "${this.name} (${this.code}) - ${this.unit}"
+fun CurrenciesResponse.Currency.toFormattedString(): String = "${this.name} (${this.code}) - ${this.unit}"
 
 fun BigDecimal.stripZeroPlainString(): String = this.stripTrailingZeros().toPlainString()
 
