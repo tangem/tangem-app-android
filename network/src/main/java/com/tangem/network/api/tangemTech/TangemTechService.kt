@@ -12,18 +12,32 @@ import kotlinx.coroutines.withContext
 [REDACTED_AUTHOR]
  */
 class TangemTechService {
-
-    val coins: CoinsRoute = CoinsRoute()
-
-    private val techRoutes: List<TangemTechRoute> = listOf(
-        coins
-    )
-
     private val headerInterceptors = mutableListOf<AddHeaderInterceptor>(
         CacheControlHttpInterceptor(cacheMaxAge)
     )
-
+    
     private var api: TangemTechApi = createApi()
+
+    suspend fun coins(
+        contractAddress: String? = null,
+        networkId: String? = null,
+        active: Boolean? = null,
+    ): Result<CoinsResponse> = withContext(Dispatchers.IO) {
+        performRequest { api.coins(contractAddress, networkId, active) }
+    }
+
+    suspend fun rates(
+        currency: String,
+        ids: List<String>
+    ): Result<RatesResponse> = withContext(Dispatchers.IO) {
+        performRequest {
+            api.rates(currency.lowercase(), ids.joinToString(","))
+        }
+    }
+
+    suspend fun currencies(): Result<CurrenciesResponse> = withContext(Dispatchers.IO) {
+        performRequest { api.currencies() }
+    }
 
     fun addHeaderInterceptors(interceptors: List<AddHeaderInterceptor>) {
         headerInterceptors.removeAll(interceptors)
@@ -37,49 +51,11 @@ class TangemTechService {
             interceptors = headerInterceptors.toList(),
 //            logEnabled = true,
         )
-        return retrofit.create(TangemTechApi::class.java).apply {
-            techRoutes.forEach { it.setApi(this) }
-        }
+        return retrofit.create(TangemTechApi::class.java)
     }
 
     companion object {
-        const val baseUrl = "https://api.tangem-tech.com/"
+        const val baseUrl = "https://api.tangem-tech.com/v1/"
         const val cacheMaxAge = 600
-    }
-}
-
-private interface TangemTechRoute {
-    fun setApi(api: TangemTechApi)
-}
-
-class CoinsRoute : TangemTechRoute {
-    private lateinit var api: TangemTechApi
-
-    override fun setApi(api: TangemTechApi) {
-        this.api = api
-    }
-
-    suspend fun prices(
-        currency: String,
-        ids: List<String>
-    ): Result<Coins.PricesResponse> = withContext(Dispatchers.IO) {
-        performRequest {
-            api.coinsPrices(currency.lowercase(), ids.joinToString(","))
-        }
-    }
-
-    suspend fun checkAddress(
-        contractAddress: String,
-        networkId: String? = null
-    ): Result<Coins.CheckAddressResponse> = withContext(Dispatchers.IO) {
-        performRequest { api.coinsCheckAddress(contractAddress, networkId) }
-    }
-
-    suspend fun currencies(): Result<Coins.CurrenciesResponse> = withContext(Dispatchers.IO) {
-        performRequest { api.coinsCurrencies() }
-    }
-
-    suspend fun tokens(): Result<Coins.TokensResponse> = withContext(Dispatchers.IO) {
-        performRequest { api.coinsTokens() }
     }
 }
