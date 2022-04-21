@@ -91,7 +91,7 @@ fun NetworkItem(
                 .align(Alignment.CenterVertically)
         ) {
             Text(
-                text = blockchain.name.uppercase(),
+                text = blockchain.fullName.uppercase(),
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,
                 color = if (added) Color.Black else Color(0xFF848488),
