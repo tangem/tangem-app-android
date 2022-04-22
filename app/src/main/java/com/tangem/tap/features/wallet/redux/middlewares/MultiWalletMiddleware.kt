@@ -55,19 +55,17 @@ class MultiWalletMiddleware {
                         blockchainNetwork = action.blockchain
                     )
                 }
-                store.dispatch(
-                    WalletAction.LoadFiatRate(
-                        currencyList = listOf(
-                            Currency.Blockchain(
-                                action.blockchain.blockchain,
-                                action.blockchain.derivationPath
-                            )
+                store.dispatch(WalletAction.LoadFiatRate(
+                    coinsList = listOf(
+                        Currency.Blockchain(
+                            action.blockchain.blockchain,
+                            action.blockchain.derivationPath
                         )
                     )
-                )
-                store.dispatch(
-                    WalletAction.LoadWallet(action.blockchain, action.walletManager)
-                )
+                ))
+                store.dispatch(WalletAction.LoadWallet(
+                    action.blockchain, action.walletManager
+                ))
             }
             is WalletAction.MultiWallet.SaveCurrencies -> {
                 globalState.scanResponse?.card?.cardId?.let {
@@ -225,7 +223,7 @@ class MultiWalletMiddleware {
                 store.dispatch(WalletAction.MultiWallet.AddBlockchain(blockchainNetwork, it))
             } ?: return
 
-        store.dispatch(WalletAction.LoadFiatRate(currencyList = tokens.map { token ->
+        store.dispatch(WalletAction.LoadFiatRate(coinsList = tokens.map { token ->
             Currency.Token(
                 token, blockchainNetwork.blockchain, blockchainNetwork.derivationPath
             )
