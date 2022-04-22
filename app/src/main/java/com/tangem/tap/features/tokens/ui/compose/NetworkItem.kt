@@ -32,14 +32,12 @@ import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun NetworkItem(
-    currency: Currency, contract: Contract?,
+    currency: Currency, contract: Contract,
     blockchain: Blockchain, allowToAdd: Boolean,
     added: Boolean, canBeRemoved: Boolean,
     onAddCurrencyToggled: (Currency, TokenWithBlockchain?) -> Unit,
     onNetworkItemClicked: (ContractAddress) -> Unit
 ) {
-
-    val isBlockchain = contract == null || contract.address == currency.symbol
 
     Row(
         modifier = Modifier
@@ -47,16 +45,17 @@ fun NetworkItem(
             .combinedClickable(
                 enabled = allowToAdd,
                 onLongClick = {
-                    if (!isBlockchain) onNetworkItemClicked(contract!!.address)
+                    contract.address?.let { onNetworkItemClicked(it) }
                 },
                 onClick = {},
                 indication = null,
                 interactionSource = remember { MutableInteractionSource() }
             )
     ) {
-        Box(modifier = Modifier
-            .align(Alignment.CenterVertically)
-            .padding(start = 8.dp, top = 16.dp, bottom = 16.dp, end = 6.dp)
+        Box(
+            modifier = Modifier
+                .align(Alignment.CenterVertically)
+                .padding(start = 8.dp, top = 16.dp, bottom = 16.dp, end = 6.dp)
         ) {
             SubcomposeAsyncImage(
                 model = if (added) blockchain.getRoundIconRes() else blockchain.getGreyedOutIconRes(),
@@ -66,7 +65,7 @@ fun NetworkItem(
                 modifier = Modifier
                     .size(20.dp)
             )
-            if (isBlockchain) {
+            if (contract.address == null) {
                 Box(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
@@ -98,29 +97,29 @@ fun NetworkItem(
             )
             Spacer(modifier = Modifier.size(3.dp))
             Text(
-                text = if (isBlockchain) "MAIN" else blockchain.getNetworkName().uppercase(),
+                text = if (contract.address == null) "MAIN" else blockchain.getNetworkName().uppercase(),
                 fontSize = 13.sp,
                 fontWeight = FontWeight.Normal,
-                color = if (!isBlockchain) Color(0xFF8E8E93) else Color(0xFF1ACE80),
+                color = if (contract.address != null) Color(0xFF8E8E93) else Color(0xFF1ACE80),
             )
         }
 
         if (allowToAdd) {
-            val token = if (!isBlockchain) {
+            val token = if (contract.address != null) {
                 Token(
                     id = currency.id,
                     name = currency.name,
                     symbol = currency.symbol,
-                    contractAddress = contract!!.address,
-                    decimals = contract.decimalCount,
+                    contractAddress = contract.address,
+                    decimals = contract.decimalCount!!,
                 )
             } else {
                 null
             }
             val tokenWithBlockchain =
-                token?.let { TokenWithBlockchain(token, contract!!.blockchain) }
+                token?.let { TokenWithBlockchain(token, contract.blockchain) }
 
-            val currencyToSave = if (isBlockchain && contract != null) {
+            val currencyToSave = if (contract.address == null) {
                 currency.copy(id = contract.networkId)
             } else {
                 currency
