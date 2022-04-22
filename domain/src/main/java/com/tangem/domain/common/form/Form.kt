@@ -38,7 +38,7 @@ interface Field<T> {
 
     data class Data<Data>(
         val value: Data,
-        val isUserInput: Boolean = true
+        val isUserInput: Boolean
     )
 }
 
