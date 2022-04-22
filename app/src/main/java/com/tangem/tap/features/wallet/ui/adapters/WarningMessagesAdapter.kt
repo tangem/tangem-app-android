@@ -86,13 +86,13 @@ class WarningMessageVH(val binding: LayoutWarningBinding) : RecyclerView.ViewHol
             binding.btnClose.hide()
 
             val buttonAction =
-                when (warning.titleResId) {
-                    R.string.warning_important_security_info -> {
+                when {
+                    warning.titleResId == R.string.warning_important_security_info -> {
                         View.OnClickListener {
                             store.dispatch(WalletAction.ShowDialog.SignedHashesMultiWalletDialog)
                         }
                     }
-                    R.string.alert_funds_restoration_message -> {
+                    warning.messageResId == R.string.alert_funds_restoration_message -> {
                         binding.btnClose.show()
                         binding.btnClose.setOnClickListener {
                             store.dispatch(GlobalAction.HideWarningMessage(warning))
