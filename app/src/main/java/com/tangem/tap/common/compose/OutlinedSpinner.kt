@@ -10,7 +10,6 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.VoidCallback
 import com.tangem.domain.common.form.Field
 import com.tangem.tap.common.extensions.ValueCallback
-import timber.log.Timber
 
 /**
 [REDACTED_AUTHOR]
@@ -28,24 +27,14 @@ fun <T> OutlinedSpinner(
     isEnabled: Boolean = true,
     onClose: VoidCallback = {}
 ) {
-    val compositionCounter = remember { CompositionCounter(label) }
-    val counter = compositionCounter.increase(label)
-
     val rIsExpanded = remember { mutableStateOf(false) }
     val stateSelectedItem = remember { mutableStateOf(selectedItem.value) }
-    osLog(label, "recompose ------------------------------------", counter)
-    osLog(label, "selectedItem: $selectedItem", counter)
-    osLog(label, "stateSelectedItem: ${stateSelectedItem.value}", counter)
     if (!selectedItem.isUserInput) {
-        osLog(label, "stateSelectedItem.value: update = selectedItem.value", counter)
         stateSelectedItem.value = selectedItem.value
     }
-    osLog(label, "stateSelectedItem: ${stateSelectedItem.value}", counter)
 
     val onDropDownItemSelectedInternal: (T) -> Unit = {
-        osLog(label, "onDropDownItemSelectedInternal: value: [${it.toString()}]", counter)
         stateSelectedItem.value = it
-        osLog(label, "onDropDownItemSelectedInternal: stateSelectedItem: ${stateSelectedItem.value}", counter)
         rIsExpanded.value = false
         onItemSelected(it)
     }
@@ -85,27 +74,6 @@ fun <T> OutlinedSpinner(
     }
 }
 
-private fun osLog(id: String, log: String, counter: CompositionCounter) {
-    if (id == "Сеть") Timber.d(
-        "OutlinedSpinner[$id]:[${counter.count}] - $log"
-    )
-}
-
-class CompositionCounter(
-    val id: String,
-    count: Int = 0
-) {
-    var count: Int = count
-        private set
-
-    fun increase(id: String): CompositionCounter {
-        if (this.id != id) return this
-
-        count += 1
-        return CompositionCounter(id, count)
-    }
-}
-
 @Preview
 @Composable
 fun TestSpinnerPreview() {
@@ -113,7 +81,7 @@ fun TestSpinnerPreview() {
         OutlinedSpinner(
             label = "Blockchain name",
             itemList = listOf(Blockchain.values()),
-            selectedItem = Field.Data(Blockchain.Avalanche),
+            selectedItem = Field.Data(Blockchain.Avalanche, false),
             onItemSelected = {},
         )
     }
