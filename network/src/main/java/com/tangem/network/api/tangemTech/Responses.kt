@@ -41,10 +41,6 @@ data class CurrenciesResponse(val currencies: List<Currency>) {
         val name: String,
         val rateBTC: String,
         val unit: String,       // $, €, ₽
-        val type: CurrencyType,
+        val type: String,
     ) : TangemTechResponse
-
-    enum class CurrencyType(val type: String) {
-        Fiat("fiat"), Crypto("crypto")
-    }
 }
