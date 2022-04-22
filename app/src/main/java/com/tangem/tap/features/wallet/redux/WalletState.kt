@@ -397,7 +397,10 @@ sealed interface Currency {
     }
 
     fun isCustomCurrency(derivationStyle: DerivationStyle?): Boolean {
+        if (this is Token && this.token.id == null) return true
+
         if (derivationPath == null || derivationStyle == null) return false
+
         return derivationPath != blockchain.derivationPath(derivationStyle)?.rawPath
     }
 
