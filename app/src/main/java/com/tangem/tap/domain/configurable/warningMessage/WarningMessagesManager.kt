@@ -4,6 +4,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.VoidCallback
 import com.tangem.tap.common.extensions.containsAny
 import com.tangem.tap.common.extensions.removeBy
+import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
 import java.util.*
 
@@ -17,6 +18,11 @@ class WarningMessagesManager(
     private val warningsList: MutableList<WarningMessage> = mutableListOf()
 
     fun load(onComplete: VoidCallback? = null) {
+        // exclude annoying remote debug warnings
+        if (BuildConfig.DEBUG) {
+            onComplete?.invoke()
+            return
+        }
         warningLoader.load { remoteList ->
             warningsList.clear()
             warningsList.addAll(remoteList)
@@ -189,17 +195,24 @@ class WarningMessagesManager(
             priority = WarningMessage.Priority.Warning,
             listOf(WarningMessage.Location.MainScreen),
             blockchains = null,
-            titleResId = R.string.alert_funds_restoration_message,
+            titleResId = R.string.alert_title,
             messageResId = R.string.alert_funds_restoration_message,
             origin = WarningMessage.Origin.Local,
             buttonTextId = R.string.warning_button_learn_more
         )
 
         const val REMAINING_SIGNATURES_WARNING = 10
+        private const val RESTORE_FUNDS_GUIDE_URL_RU =
+            "https://tangem.com/ru/kak-vosstanovit-tokeny-otpravlennye-ne-na-tot-adres-v-tangem-wallet"
+        private const val RESTORE_FUNDS_GUIDE_URL_EN =
+            "https://tangem.com/en/how-to-recover-crypto-sent-to-the-wrong-address-in-tangem-wallet"
 
         fun getRestoreFundsGuideUrl(locale: String): String {
-            val code = if (locale == Locale("ru").language) "ru" else "en"
-            return "https://tangem.com/$code/notion"
+            return if (locale == Locale("ru").language) {
+                RESTORE_FUNDS_GUIDE_URL_RU
+            } else {
+                RESTORE_FUNDS_GUIDE_URL_EN
+            }
         }
     }
 }
