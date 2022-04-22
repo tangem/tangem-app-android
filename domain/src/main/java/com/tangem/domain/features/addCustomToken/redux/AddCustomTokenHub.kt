@@ -267,7 +267,7 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
                     PotentialScamToken.replace(TokenAlreadyAdded)
                 } else {
                     // not in the saved coins list
-                    if (singleTokenContract.active) {
+                    if (foundToken.active) {
                         updateTokenDetailFields(false)
                         updateAddButton(true)
                         if (hubState.derivationPathIsSelected()) {
