@@ -63,10 +63,12 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
 
                 when (val error = ContractAddress.validateValue(address)) {
                     null -> {
-                        // valid contract
+                        // valid contract address
                         ContractAddress.removeError()
                         updateTokenDetailFields(false)
                         changeBlockchainNetworkList()
+                        checkAndUpdateAddButton()
+                        manageFoundTokenChanges(requestInfoAboutToken(address))
                     }
                     AddCustomTokenError.FieldIsEmpty -> {
                         // empty contract address
@@ -75,23 +77,14 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
                         updateTokenDetailFields(false)
                         changeBlockchainNetworkList()
                         checkAndUpdateAddButton()
-                        return
                     }
                     AddCustomTokenError.InvalidContractAddress -> {
                         ContractAddress.addError(error)
                         updateTokenDetailFields(hubState.tokensAnyFieldsIsFilled())
                         changeBlockchainNetworkList()
                         checkAndUpdateAddButton()
-                        return
                     }
-                    else -> {}
                 }
-                if (!action.contractAddress.isUserInput) {
-                    checkAndUpdateAddButton()
-                    return
-                }
-
-                manageFoundTokenChanges(requestInfoAboutToken(address))
             }
             is OnTokenNetworkChanged -> {
                 if (!action.blockchainNetwork.isUserInput) return
