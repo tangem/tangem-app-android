@@ -64,14 +64,14 @@ data class AddCustomTokenState(
     }
 
     // except network
-    fun tokensOneFieldsIsFilled(): Boolean {
+    fun tokensAnyFieldsIsFilled(): Boolean {
         val idsToCheck = listOf(ContractAddress, Name, Symbol, Decimals)
         val fieldsToCheck = form.fieldList.filter { idsToCheck.contains(it.id) }
         val validator = StringIsEmptyValidator()
         val errorsList = fieldsToCheck.mapNotNull { field ->
             validator.validate(field.data.value?.toString())
         }
-        return errorsList.size == 1
+        return errorsList.isNotEmpty()
     }
 
     fun networkIsSelected(): Boolean {
@@ -85,7 +85,7 @@ data class AddCustomTokenState(
     }
 
     fun getCustomTokenType(): CustomTokenType = when {
-        tokensOneFieldsIsFilled() || tokensFieldsIsFilled() -> CustomTokenType.Token
+        tokensAnyFieldsIsFilled() || tokensFieldsIsFilled() -> CustomTokenType.Token
         else -> CustomTokenType.Blockchain
     }
 
@@ -172,11 +172,11 @@ data class AddCustomTokenState(
                 Blockchain.Unknown,
                 Blockchain.Ethereum,
                 Blockchain.BSC,
-                Blockchain.Binance,
+                Blockchain.Binance,     // not evm
                 Blockchain.Polygon,
                 Blockchain.Avalanche,
                 Blockchain.Fantom,
-                Blockchain.Solana, // should be unsupported for tokens until they are added to the Blockchain SDK
+                Blockchain.Solana,      // not evm. Should be unsupported for coins until they are added to the Blockchain SDK
             )
             if (type == CustomTokenType.Token) networks.remove(Blockchain.Solana)
 
