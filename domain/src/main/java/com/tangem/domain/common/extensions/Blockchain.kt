@@ -12,8 +12,8 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "binance-smart-chain/test" -> Blockchain.BSCTestnet
         "ethereum" -> Blockchain.Ethereum
         "ethereum/test" -> Blockchain.EthereumTestnet
-        "polygon-pos" -> Blockchain.Polygon
-        "polygon-pos/test" -> Blockchain.PolygonTestnet
+        "polygon-pos", "matic-network" -> Blockchain.Polygon
+        "polygon-pos/test", "matic-network/test" -> Blockchain.PolygonTestnet
         "solana" -> Blockchain.Solana
         "solana/test" -> Blockchain.SolanaTestnet
         "fantom" -> Blockchain.Fantom
@@ -30,7 +30,7 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "stellar" -> Blockchain.Stellar
         "stellar/test" -> Blockchain.StellarTestnet
         "tezos" -> Blockchain.Tezos
-        "xrp" -> Blockchain.XRP
+        "xrp", "ripple" -> Blockchain.XRP
         else -> null
     }
 }
@@ -57,8 +57,8 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.Fantom -> "fantom"
         Blockchain.FantomTestnet -> "fantom/test"
         Blockchain.Litecoin -> "litecoin"
-        Blockchain.Polygon -> "matic-network"
-        Blockchain.PolygonTestnet -> "matic-networks/test"
+        Blockchain.Polygon -> "polygon-pos"
+        Blockchain.PolygonTestnet -> "polygon-pos/test"
         Blockchain.RSK -> "rootstock"
         Blockchain.Stellar -> "stellar"
         Blockchain.StellarTestnet -> "stellar/test"
@@ -71,7 +71,22 @@ fun Blockchain.toNetworkId(): String {
 
 fun Blockchain.toCoinId(): String {
     return when (this) {
-        Blockchain.BSC, Blockchain.Binance -> "binancecoin"
-        else -> this.toNetworkId()
+        Blockchain.Binance, Blockchain.BinanceTestnet, Blockchain.BSC, Blockchain.BSCTestnet -> "binancecoin"
+        Blockchain.Bitcoin, Blockchain.BitcoinTestnet -> "bitcoin"
+        Blockchain.BitcoinCash, Blockchain.BitcoinCashTestnet -> "bitcoin-cash"
+        Blockchain.Ethereum, Blockchain.EthereumTestnet -> "ethereum"
+        Blockchain.Stellar, Blockchain.StellarTestnet -> "stellar"
+        Blockchain.Cardano, Blockchain.CardanoShelley -> "cardano"
+        Blockchain.Polygon, Blockchain.PolygonTestnet -> "matic-network"
+        Blockchain.Avalanche, Blockchain.AvalancheTestnet -> "avalanche-2"
+        Blockchain.Solana, Blockchain.SolanaTestnet -> "solana"
+        Blockchain.Fantom, Blockchain.FantomTestnet -> "fantom"
+        Blockchain.Ducatus -> "ducatus"
+        Blockchain.Litecoin -> "litecoin"
+        Blockchain.RSK -> "rootstock"
+        Blockchain.Tezos -> "tezos"
+        Blockchain.XRP -> "ripple"
+        Blockchain.Dogecoin -> "dogecoin"
+        else -> "unknown"
     }
 }
