@@ -69,9 +69,9 @@ fun CollapsedCurrencyItem(
             Row {
                 if (!currency.contracts.isNullOrEmpty()) {
                     currency.contracts.map { contract ->
-                        if (contract.address == currency.symbol) {
+                        if (contract.address == null) {
                             BlockchainNetworkItem(
-                                blockchain = Blockchain.fromNetworkId(contract.networkId),
+                                blockchain = contract.blockchain,
                                 isMainNetwork = true,
                                 addedBlockchains = addedBlockchains
                             )
