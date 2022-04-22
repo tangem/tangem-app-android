@@ -11,7 +11,7 @@ import com.tangem.domain.common.util.ValueDebouncer
 @Composable
 fun <T> valueDebouncerAsState(
     initialValue: T,
-    debounce: Long = 400,
+    debounce: Long = 600,
     onEmitValueReceived: (T) -> Unit = {},
     onValueChanged: (T) -> Unit,
 ): ValueDebouncer<T> {
