@@ -26,11 +26,11 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "dogecoin" -> Blockchain.Dogecoin
         "ducatus" -> Blockchain.Ducatus
         "litecoin" -> Blockchain.Litecoin
-        "rsk" -> Blockchain.RSK
+        "rootstock" -> Blockchain.RSK
         "stellar" -> Blockchain.Stellar
         "stellar/test" -> Blockchain.StellarTestnet
         "tezos" -> Blockchain.Tezos
-        "ripple" -> Blockchain.XRP
+        "xrp" -> Blockchain.XRP
         else -> null
     }
 }
@@ -65,7 +65,7 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.Solana -> "solana"
         Blockchain.SolanaTestnet -> "solana/test"
         Blockchain.Tezos -> "tezos"
-        Blockchain.XRP -> "ripple"
+        Blockchain.XRP -> "xrp"
     }
 }
 
