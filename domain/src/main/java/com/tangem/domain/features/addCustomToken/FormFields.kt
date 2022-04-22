@@ -19,14 +19,14 @@ enum class CustomTokenFieldId : FieldId {
 
 data class TokenField(
     override val id: FieldId,
-) : BaseDataField<String>(id, Field.Data(""))
+) : BaseDataField<String>(id, Field.Data("", false))
 
 data class TokenBlockchainField(
     override val id: FieldId,
     val itemList: List<Blockchain>,
-) : BaseDataField<Blockchain>(id, Field.Data(Blockchain.Unknown))
+) : BaseDataField<Blockchain>(id, Field.Data(Blockchain.Unknown, false))
 
 data class TokenDerivationPathField(
     override val id: FieldId,
     val itemList: List<Blockchain>,
-) : BaseDataField<Blockchain>(id, Field.Data(Blockchain.Unknown))
+) : BaseDataField<Blockchain>(id, Field.Data(Blockchain.Unknown, false))
