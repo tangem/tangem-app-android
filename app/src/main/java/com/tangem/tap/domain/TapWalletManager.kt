@@ -250,10 +250,10 @@ class TapWalletManager {
                     WalletAction.MultiWallet.AddBlockchains(blockchainNetworks, walletManagers),
                 )
             }
-            dispatchOnMain(
-                WalletAction.MultiWallet.FindBlockchainsInUse,
-                WalletAction.MultiWallet.FindTokensInUse,
-            )
+//            dispatchOnMain(
+//                WalletAction.MultiWallet.FindBlockchainsInUse,
+//                WalletAction.MultiWallet.FindTokensInUse,
+//            )
         } else {
             val walletManagers = if (
                 primaryTokens.isNotEmpty() &&
