@@ -102,11 +102,22 @@ internal abstract class BaseStoreHub<State>(
     }
 
     protected abstract suspend fun handleAction(action: Action, storeState: DomainState, cancel: ValueCallback<Action>)
-    protected abstract fun reduceAction(action: Action, state: State): State
+
+    @Deprecated(
+        replaceWith = ReplaceWith("ReStoreReducer<T>"),
+        message = "must return a Reducer instance. The reducer must be a separate component - this closes " +
+            "access to the states that can be obtained from ReStoreHub"
+    )
+    abstract fun reduceAction(action: Action, state: State): State
+//    protected abstract fun getReducer(): ReStoreReducer<State>
 
     protected abstract fun getHubState(storeState: DomainState): State
     protected abstract fun updateStoreState(storeState: DomainState, newHubState: State): DomainState
 
+}
+
+internal interface ReStoreReducer<State> {
+    fun reduceAction(action: Action, state: State): State
 }
 
 internal suspend inline fun ReStoreHub<*, *>.dispatchOnMain(vararg actions: Action) {
