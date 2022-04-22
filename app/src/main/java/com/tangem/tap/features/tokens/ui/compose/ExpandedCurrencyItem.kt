@@ -132,12 +132,13 @@ fun ExpandedCurrencyItem(
             ) {
                 blockchains.map { blockchain ->
                     val contract = currency.contracts.firstOrNull { it.blockchain == blockchain }
-                    val added = if (contract != null && contract.address != currency.symbol) {
+                        ?: return@map
+                    val added = if (contract.address != null) {
                         addedTokens.map { it.token.contractAddress }.contains(contract.address)
                     } else {
                         addedBlockchains.contains(blockchain)
                     }
-                    val canBeRemoved = if (contract != null && contract.address != currency.symbol) {
+                    val canBeRemoved = if (contract.address != null) {
                         !nonRemovableTokens.contains(contract.address)
                     } else {
                         !nonRemovableBlockchains.contains(blockchain)
