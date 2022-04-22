@@ -9,20 +9,20 @@ data class CurrencyFromJson(
     val id: String,
     val name: String,
     val symbol: String,
-    val contracts: List<ContractFromJson>? = null
+    val networks: List<ContractFromJson>? = null
 )
 
 @JsonClass(generateAdapter = true)
 data class ContractFromJson(
     val networkId: String,
-    val address: String,
-    val decimalCount: Int
+    val contractAddress: String?,
+    val decimalCount: Int?
 )
 
 @JsonClass(generateAdapter = true)
 data class CurrenciesFromJson(
     val imageHost: String?,
-    val tokens: List<CurrencyFromJson>
+    val coins: List<CurrencyFromJson>
 )
 
 
@@ -45,17 +45,8 @@ data class Currency(
                 name = currency.name,
                 symbol = currency.symbol,
                 iconUrl = getIconUrl(currency.id),
-                contracts = prepareListOfContracts(currency.contracts, currency.id)
+                contracts = currency.networks?.toContracts() ?: emptyList()
             )
-        }
-
-        private fun prepareListOfContracts(
-            contractsFromJson: List<ContractFromJson>?,
-            currencyId: String,
-        ): List<Contract> {
-            val mainNetwork = Contract.fromCurrencyId(currencyId)
-            val contracts = contractsFromJson?.toContracts() ?: emptyList()
-            return (listOfNotNull(mainNetwork) + contracts).distinct()
         }
     }
 }
@@ -63,8 +54,8 @@ data class Currency(
 data class Contract(
     val networkId: String,
     val blockchain: Blockchain,
-    val address: String,
-    val decimalCount: Int,
+    val address: String?,
+    val decimalCount: Int?,
     val iconUrl: String,
 ) {
 
@@ -74,23 +65,11 @@ data class Contract(
             return Contract(
                 networkId = contract.networkId,
                 blockchain = blockchain,
-                address = contract.address,
+                address = contract.contractAddress,
                 decimalCount = contract.decimalCount,
                 iconUrl = getIconUrl(contract.networkId)
             )
         }
-
-        fun fromCurrencyId(currencyId: String): Contract? {
-            val blockchain = Blockchain.fromNetworkId(currencyId) ?: return null
-            return Contract(
-                networkId = currencyId,
-                blockchain = blockchain,
-                address = blockchain.currency,
-                decimalCount = blockchain.decimals(),
-                iconUrl = getIconUrl(currencyId)
-            )
-        }
-
     }
 }
 
