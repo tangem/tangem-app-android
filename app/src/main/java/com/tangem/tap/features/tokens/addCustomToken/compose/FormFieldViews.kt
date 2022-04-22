@@ -27,7 +27,7 @@ fun TokenContractAddressView(screenFieldData: ScreenFieldData) {
     val tokenField = screenFieldData.field as TokenField
 
     OutlinedTextFieldWidget(
-        textFieldData = tokenField.data,
+        fieldData = tokenField.data,
         labelId = R.string.custom_token_contract_address_input_title,
         placeholder = "0x0000000000000000000000000000000000000000",
         isEnabled = screenFieldData.viewState.isEnabled,
@@ -35,7 +35,7 @@ fun TokenContractAddressView(screenFieldData: ScreenFieldData) {
         error = screenFieldData.error,
         errorConverter = screenFieldData.errorConverter,
     ) {
-        domainStore.dispatch(AddCustomTokenAction.OnTokenContractAddressChanged(Field.Data(it)))
+        domainStore.dispatch(AddCustomTokenAction.OnTokenContractAddressChanged(Field.Data(it, true)))
     }
     SpacerH8()
 }
@@ -47,14 +47,14 @@ fun TokenNameView(screenFieldData: ScreenFieldData) {
     val tokenField = screenFieldData.field as TokenField
 
     OutlinedTextFieldWidget(
-        textFieldData = tokenField.data,
+        fieldData = tokenField.data,
         labelId = R.string.custom_token_name_input_title,
         placeholderId = R.string.custom_token_name_input_placeholder,
         isEnabled = screenFieldData.viewState.isEnabled,
         error = screenFieldData.error,
         errorConverter = screenFieldData.errorConverter,
     ) {
-        domainStore.dispatch(AddCustomTokenAction.OnTokenNameChanged(Field.Data(it)))
+        domainStore.dispatch(AddCustomTokenAction.OnTokenNameChanged(Field.Data(it, true)))
     }
     SpacerH8()
 }
@@ -72,7 +72,7 @@ fun TokenNetworkView(screenFieldData: ScreenFieldData, state: AddCustomTokenStat
         selectedItem = networkField.data,
         isEnabled = screenFieldData.viewState.isEnabled,
         textFieldConverter = { state.blockchainToName(it) ?: notSelected },
-    ) { domainStore.dispatch(AddCustomTokenAction.OnTokenNetworkChanged(Field.Data(it))) }
+    ) { domainStore.dispatch(AddCustomTokenAction.OnTokenNetworkChanged(Field.Data(it, true))) }
     SpacerH8()
 }
 
@@ -83,13 +83,13 @@ fun TokenSymbolView(screenFieldData: ScreenFieldData) {
     val tokenField = screenFieldData.field as TokenField
 
     OutlinedTextFieldWidget(
-        textFieldData = tokenField.data,
+        fieldData = tokenField.data,
         labelId = R.string.custom_token_token_symbol_input_title,
         placeholderId = R.string.custom_token_token_symbol_input_placeholder,
         isEnabled = screenFieldData.viewState.isEnabled,
         error = screenFieldData.error,
         errorConverter = screenFieldData.errorConverter,
-    ) { domainStore.dispatch(AddCustomTokenAction.OnTokenSymbolChanged(Field.Data(it))) }
+    ) { domainStore.dispatch(AddCustomTokenAction.OnTokenSymbolChanged(Field.Data(it, true))) }
     SpacerH8()
 }
 
@@ -100,14 +100,14 @@ fun TokenDecimalsView(screenFieldData: ScreenFieldData) {
     val tokenField = screenFieldData.field as TokenField
 
     OutlinedTextFieldWidget(
-        textFieldData = tokenField.data,
+        fieldData = tokenField.data,
         labelId = R.string.custom_token_decimals_input_title,
         placeholder = "8",
         isEnabled = screenFieldData.viewState.isEnabled,
         error = screenFieldData.error,
         errorConverter = screenFieldData.errorConverter,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-    ) { domainStore.dispatch(AddCustomTokenAction.OnTokenDecimalsChanged(Field.Data(it))) }
+    ) { domainStore.dispatch(AddCustomTokenAction.OnTokenDecimalsChanged(Field.Data(it, true))) }
     SpacerH8()
 }
 
@@ -129,6 +129,6 @@ fun TokenDerivationPathView(screenFieldData: ScreenFieldData, state: AddCustomTo
             val blockchainName = state.blockchainToName(blockchain) ?: notSelected
             TitleSubtitle(derivationPathName, blockchainName)
         }
-    ) { domainStore.dispatch(AddCustomTokenAction.OnTokenDerivationPathChanged(Field.Data(it))) }
+    ) { domainStore.dispatch(AddCustomTokenAction.OnTokenDerivationPathChanged(Field.Data(it, true))) }
     SpacerH8()
 }
