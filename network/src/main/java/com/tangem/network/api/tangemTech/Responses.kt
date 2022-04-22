@@ -24,7 +24,7 @@ data class CoinsResponse(
 
         data class Network(
             val networkId: String,
-            val address: String? = null,
+            val contractAddress: String? = null,
             val decimalCount: BigDecimal? = null,
         ) : TangemTechResponse
     }

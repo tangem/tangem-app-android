@@ -22,8 +22,8 @@ class AddCustomTokenService(
                 var coinsList = mutableListOf<CoinsResponse.Coin>()
                 result.data.coins.forEach { coin ->
                     val networksWithTheSameAddress = coin.networks
-                        .filter { it.address != null || it.decimalCount != null }
-                        .filter { it.address == contractAddress }
+                        .filter { it.contractAddress != null || it.decimalCount != null }
+                        .filter { it.contractAddress == contractAddress }
                     if (networksWithTheSameAddress.isNotEmpty()) {
                         val newToken = coin.copy(networks = networksWithTheSameAddress)
                         coinsList.add(newToken)
