@@ -172,10 +172,10 @@ data class AddCustomTokenState(
                 Blockchain.Unknown,
                 Blockchain.Ethereum,
                 Blockchain.BSC,
-                Blockchain.Binance,     // not evm
                 Blockchain.Polygon,
                 Blockchain.Avalanche,
                 Blockchain.Fantom,
+                Blockchain.Binance,     // not evm
                 Blockchain.Solana,      // not evm. Should be unsupported for coins until they are added to the Blockchain SDK
             )
             if (type == CustomTokenType.Token) networks.remove(Blockchain.Solana)
