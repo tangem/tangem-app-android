@@ -7,6 +7,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -68,6 +70,7 @@ fun PasteButton(
     enabled: Boolean = true,
     dpSize: DpSize = DpSize(40.dp, 40.dp),
     onClick: () -> Unit,
+    tint: Color? = null,
     content: @Composable (() -> Unit)? = null
 ) {
     IconButton(
@@ -77,8 +80,42 @@ fun PasteButton(
     ) {
         when (content) {
             null -> {
-                val icon = if (enabled) R.drawable.ic_paste else R.drawable.ic_paste_disabled
-                Icon(painterResource(id = icon), contentDescription = "Paste")
+                val tintColor = tint
+                    ?: colorResource(id = if (enabled) R.color.accent else R.color.accent_disabled)
+                Icon(
+                    painterResource(id = R.drawable.ic_paste),
+                    contentDescription = "Paste",
+                    tint = tintColor,
+                )
+            }
+            else -> content()
+        }
+    }
+}
+
+@Composable
+fun ClearButton(
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    dpSize: DpSize = DpSize(40.dp, 40.dp),
+    onClick: () -> Unit,
+    tint: Color? = null,
+    content: @Composable (() -> Unit)? = null
+) {
+    IconButton(
+        modifier = modifier.size(dpSize),
+        enabled = enabled,
+        onClick = onClick,
+    ) {
+        when (content) {
+            null -> {
+                val tintColor = tint
+                    ?: colorResource(id = if (enabled) R.color.accent else R.color.accent_disabled)
+                Icon(
+                    painterResource(id = R.drawable.ic_clear),
+                    contentDescription = "Clear",
+                    tint = tintColor,
+                )
             }
             else -> content()
         }
