@@ -141,6 +141,11 @@ private fun AddCustomTokenFab(
     } else {
         Color(0xFFB9E6D3)
     }
+    val elevation = if (!isEnabled) {
+        FloatingActionButtonDefaults.elevation(0.dp, 0.dp)
+    } else {
+        FloatingActionButtonDefaults.elevation()
+    }
 
     ToggledRippleTheme(isEnabled) {
         ExtendedFloatingActionButton(
@@ -156,6 +161,7 @@ private fun AddCustomTokenFab(
             onClick = { if (isEnabled) onClick() },
             backgroundColor = backgroundColor,
             contentColor = contentColor,
+            elevation = elevation,
         )
     }
 }
