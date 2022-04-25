@@ -67,16 +67,13 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
                 if (!action.blockchainNetwork.isUserInput) return
 
                 val contractAddress = ContractAddress.getFieldValue<String>()
-                when (validateContractAddressAndNotify(contractAddress)) {
-                    is AddCustomTokenError.InvalidContractAddress -> {
-                        val isAlreadyAdded = isBlockchainPersistIntoAppSavedTokensList(
-                            selectedNetwork = action.blockchainNetwork.value
-                        )
-                        updateWarningAlreadyAdded(isAlreadyAdded)
-                        checkAndUpdateAddButton()
-                    }
-                    else -> {}
-                }
+                validateContractAddressAndNotify(contractAddress)
+
+                val isAlreadyAdded = isBlockchainPersistIntoAppSavedTokensList(
+                    selectedNetwork = action.blockchainNetwork.value
+                )
+                updateWarningAlreadyAdded(isAlreadyAdded)
+                checkAndUpdateAddButton()
             }
             is OnTokenDerivationPathChanged -> {
                 val isAlreadyAdded = if (ContractAddress.isFilled()) {
