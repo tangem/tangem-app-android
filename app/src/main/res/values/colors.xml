@@ -3,21 +3,23 @@
 
     <color name="colorPrimary">#0029FF</color>
     <color name="colorSecondary">#0022D4</color>
-    <color name="accent">#1ACE80</color>
+    <color name="accent">#19C878</color>
+    <color name="accent_disabled">#801ACE80</color>
 
-    <color name="toolbarColor">@color/backgroundLightGray</color>
+    <color name="menu_accent_color">@color/accent</color>
 
     <color name="tapButtonColor">@color/accent</color>
-    <color name="tapButtonDisabled">#661ACE80</color>
+    <color name="tapButtonDisabled">@color/accent_disabled</color>
     <color name="tapButtonColorBlack">@color/darkGray6</color>
     <color name="tapButtonBlackDisabled">#6A6A6A</color>
 
-    <color name="success">#5AC461</color>
+    <color name="success">@color/accent</color>
     <color name="error">#C4291C</color>
     <color name="warning">#FFB71B</color>
 
-    <color name="white">#FFFFFF</color>
+    <color name="toolbarColor">@color/backgroundLightGray</color>
 
+    <color name="white">#FFFFFF</color>
     <color name="lightGray0">#F3F3F3</color>
     <color name="lightGray1">#F8F8FB</color>
     <color name="lightGray2">#DADADF</color>
@@ -62,6 +64,4 @@
     <color name="warning_critical">#CA0F03</color>
 
     <color name="gray_button">#EFEFF0</color>
-
-    <color name="menu_accent_color">#18C077</color>
 </resources>
