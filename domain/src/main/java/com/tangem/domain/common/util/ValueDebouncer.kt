@@ -1,10 +1,10 @@
 package com.tangem.domain.common.util
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.onEach
 
 /**
 [REDACTED_AUTHOR]
@@ -18,6 +18,8 @@ class ValueDebouncer<T>(
 
     var emittedValue: T = initialValue
         private set
+    var emitsCountBeforeDebounce: Int = 0
+        private set
     var debounced: T = initialValue
         private set
 
@@ -26,11 +28,14 @@ class ValueDebouncer<T>(
 
     init {
         debounceScope.launch {
-            flow.filter { if (debounced == null) true else debounced != it }
-                .debounce(debounceDuration)
+            flow.debounce(debounceDuration)
                 .onEach {
                     debounced = it
                     onValueChanged(it)
+                    debounceScope.launch {
+                        delay(500)
+                        emitsCountBeforeDebounce = 0
+                    }
                 }
                 .collect()
         }
@@ -39,6 +44,7 @@ class ValueDebouncer<T>(
     fun isDebounced(value: T): Boolean = this.debounced == value
 
     fun emmit(emmitValue: T) {
+        emitsCountBeforeDebounce++
         emittedValue = emmitValue
         onEmitValueReceived.invoke(emmitValue)
         debounceScope.launch { flow.emit(emmitValue) }

@@ -89,7 +89,7 @@ private fun OutlinedProgressTextField(
     onTextChanged: (String) -> Unit,
 ) {
     val logger = remember {
-        CompositionLogger(label, "OutlinedProgressTextField", listOf("Адрес контракта"))
+        CompositionLogger(label, "OutlinedProgressTextField", listOf("Символ токена"))
     }
     logger.nextComposition()
 
@@ -121,7 +121,7 @@ private fun OutlinedProgressTextField(
             logger.log("$isNotUserInput: внешние данные ОДИНАКОВЫ с данными в поле")
         } else {
             logger.log("$isNotUserInput: внешние данные РАЗЛИЧАЮТСЯ с данными в поле")
-            if (textDebouncer.emittedValue != textDebouncer.debounced) {
+            if ((textDebouncer.emittedValue != textDebouncer.debounced) || textDebouncer.emitsCountBeforeDebounce > 0) {
                 logger.log("$isNotUserInput: пользователь ВВОДИТ данные -> внешние данные игнорируем, ждем RECOMPOSE")
             } else {
                 logger.log("$isNotUserInput: пользователь НЕ вводит данные -> пытаемся обработать внешние данные")
@@ -135,7 +135,7 @@ private fun OutlinedProgressTextField(
                         textValueState.value = fieldData.value
                     }
                 } else {
-                    logger.log("$isNotUserInput: UNKNOWN -> start RECOMPOSE by new value for textValueState.value = [${fieldData.value}]")
+                    logger.log("$isNotUserInput: в пустое поле вставляются данные -> start RECOMPOSE новые данные для textValueState.value = [${fieldData.value}]")
                     textValueState.value = fieldData.value
                 }
             }
