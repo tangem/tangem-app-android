@@ -1,13 +1,13 @@
 {
-  "tokens" : [
+  "coins" : [
     {
-      "id" : "polygon-pos/test",
+      "id" : "matic-token",
       "symbol" : "MATIC",
       "name" : "Polygon",
-      "contracts" : [
+      "networks" : [
         {
           "networkId" : "polygon-pos/test",
-          "address" : "0x0000000000000000000000000000000000001010",
+          "contractAddress" : "0x0000000000000000000000000000000000001010",
           "decimalCount" : 18
         }
       ]
@@ -16,20 +16,15 @@
       "id" : "Dai Stablecoin-DAI",
       "symbol" : "DAI",
       "name" : "Dai Stablecoin",
-      "contracts" : [
+      "networks" : [
         {
           "networkId" : "polygon-pos/test",
-          "address" : "0xcB1e72786A6eb3b44C2a2429e317c8a2462CFeb1",
+          "contractAddress" : "0xcB1e72786A6eb3b44C2a2429e317c8a2462CFeb1",
           "decimalCount" : 18
         },
         {
           "networkId" : "binance-smart-chain/test",
-          "address" : "0xec5dcb5dbf4b114c9d0f65bccab49ec54f6a0867",
-          "decimalCount" : 18
-        },
-        {
-          "networkId" : "binance-smart-chain/test",
-          "address" : "0x8a9424745056eb399fd19a0ec26a14316684e274",
+          "contractAddress" : "0xec5dcb5dbf4b114c9d0f65bccab49ec54f6a0867",
           "decimalCount" : 18
         }
       ]
@@ -38,10 +33,10 @@
       "id" : "Dummy ERC20-DERC20",
       "symbol" : "DERC20",
       "name" : "Dummy ERC20",
-      "contracts" : [
+      "networks" : [
         {
           "networkId" : "polygon-pos/test",
-          "address" : "0xfe4F5145f6e09952a5ba9e956ED0C25e3Fa4c7F1",
+          "contractAddress" : "0xfe4F5145f6e09952a5ba9e956ED0C25e3Fa4c7F1",
           "decimalCount" : 18
         }
       ]
@@ -50,15 +45,15 @@
       "id" : "Ether-ETH",
       "symbol" : "ETH",
       "name" : "Ether",
-      "contracts" : [
+      "networks" : [
         {
           "networkId" : "polygon-pos/test",
-          "address" : "0x714550C2C1Ea08688607D86ed8EeF4f5E4F22323",
+          "contractAddress" : "0x714550C2C1Ea08688607D86ed8EeF4f5E4F22323",
           "decimalCount" : 18
         },
         {
           "networkId" : "binance-smart-chain/test",
-          "address" : "0xd66c6b4f0be8ce5b39d52e0fd1344c389929b378",
+          "contractAddress" : "0xd66c6b4f0be8ce5b39d52e0fd1344c389929b378",
           "decimalCount" : 18
         }
       ]
@@ -67,10 +62,10 @@
       "id" : "Test Token-TST",
       "symbol" : "TST",
       "name" : "Test Token",
-      "contracts" : [
+      "networks" : [
         {
           "networkId" : "polygon-pos/test",
-          "address" : "0x2d7882bedcbfddce29ba99965dd3cdf7fcb10a1e",
+          "contractAddress" : "0x2d7882bedcbfddce29ba99965dd3cdf7fcb10a1e",
           "decimalCount" : 18
         }
       ]
@@ -79,20 +74,15 @@
       "id" : "Tether USD-USDT",
       "symbol" : "USDT",
       "name" : "Tether USD",
-      "contracts" : [
+      "networks" : [
         {
           "networkId" : "polygon-pos/test",
-          "address" : "0x3813e82e6f7098b9583FC0F33a962D02018B6803",
+          "contractAddress" : "0x3813e82e6f7098b9583FC0F33a962D02018B6803",
           "decimalCount" : 6
         },
         {
           "networkId" : "binance-smart-chain/test",
-          "address" : "0x337610d27c682e347c9cd60bd4b3b107c9d34ddd",
-          "decimalCount" : 18
-        },
-        {
-          "networkId" : "binance-smart-chain/test",
-          "address" : "0x7ef95a0fee0dd31b22626fa2e10ee6a223f8a684",
+          "contractAddress" : "0x337610d27c682e347c9cd60bd4b3b107c9d34ddd",
           "decimalCount" : 18
         }
       ]
@@ -101,10 +91,10 @@
       "id" : "Wrapped Ether-WETH",
       "symbol" : "WETH",
       "name" : "Wrapped Ether",
-      "contracts" : [
+      "networks" : [
         {
           "networkId" : "polygon-pos/test",
-          "address" : "0xA6FA4fB5f76172d178d61B04b0ecd319C5d1C0aa",
+          "contractAddress" : "0xA6FA4fB5f76172d178d61B04b0ecd319C5d1C0aa",
           "decimalCount" : 18
         }
       ]
@@ -113,30 +103,32 @@
       "id" : "Wrapped Matic-WMATIC",
       "symbol" : "WMATIC",
       "name" : "Wrapped Matic",
-      "contracts" : [
+      "networks" : [
         {
           "networkId" : "polygon-pos/test",
-          "address" : "0xd0A1E359811322d97991E03f863a0C30C2cF029C",
+          "contractAddress" : "0xd0A1E359811322d97991E03f863a0C30C2cF029C",
           "decimalCount" : 18
         }
       ]
     },
     {
-      "id" : "solana/test",
+      "id" : "solana",
       "symbol" : "SOL",
       "name" : "Solana",
-      "contracts" : [
-
+      "networks" : [
+        {
+          "networkId" : "solana/test"
+        }
       ]
     },
     {
       "id" : "Tangem Coin A-TCA",
       "symbol" : "TCA",
       "name" : "Tangem Coin A",
-      "contracts" : [
+      "networks" : [
         {
           "networkId" : "solana/test",
-          "address" : "22PTNbX31Zuztd6nD82fC8nQdT2hUfWv9XWXKuDkrFqR",
+          "contractAddress" : "22PTNbX31Zuztd6nD82fC8nQdT2hUfWv9XWXKuDkrFqR",
           "decimalCount" : 9
         }
       ]
@@ -145,50 +137,47 @@
       "id" : "Tangem Coin B-TCB",
       "symbol" : "TCB",
       "name" : "Tangem Coin B",
-      "contracts" : [
+      "networks" : [
         {
           "networkId" : "solana/test",
-          "address" : "HmSghNPg6KCk711YJA92aPejt8auyFkvmaED6jbHfUs4",
+          "contractAddress" : "HmSghNPg6KCk711YJA92aPejt8auyFkvmaED6jbHfUs4",
           "decimalCount" : 9
         }
       ]
     },
     {
-      "id" : "binancecoin/test",
+      "id" : "binancecoin",
       "symbol" : "BNB",
       "name" : "Binance",
-      "contracts" : [
-
+      "networks" : [
+        {
+          "networkId" : "binancecoin/test"
+        },
+        {
+          "networkId" : "binance-smart-chain/test"
+        }
       ]
     },
     {
       "id" : "Hemster - 452-HEM",
       "symbol" : "HEM",
       "name" : "Hemster - 452",
-      "contracts" : [
+      "networks" : [
         {
           "networkId" : "binancecoin/test",
-          "address" : "HEM-452",
+          "contractAddress" : "HEM-452",
           "decimalCount" : 8
         }
-      ]
-    },
-    {
-      "id" : "binance-smart-chain/test",
-      "symbol" : "BNB",
-      "name" : "Bsc",
-      "contracts" : [
-
       ]
     },
     {
       "id" : "Binance-Peg BTCB Token-BTCB",
       "symbol" : "BTCB",
       "name" : "Binance-Peg BTCB Token",
-      "contracts" : [
+      "networks" : [
         {
           "networkId" : "binance-smart-chain/test",
-          "address" : "0x6ce8da28e2f864420840cf74474eff5fd80e65b8",
+          "contractAddress" : "0x6ce8da28e2f864420840cf74474eff5fd80e65b8",
           "decimalCount" : 18
         }
       ]
@@ -197,10 +186,10 @@
       "id" : "Binance-Peg BUSD Token-BUSD",
       "symbol" : "BUSD",
       "name" : "Binance-Peg BUSD Token",
-      "contracts" : [
+      "networks" : [
         {
           "networkId" : "binance-smart-chain/test",
-          "address" : "0xed24fc36d5ee211ea25a80239fb8c4cfd80f12ee",
+          "contractAddress" : "0xed24fc36d5ee211ea25a80239fb8c4cfd80f12ee",
           "decimalCount" : 18
         }
       ]
@@ -209,10 +198,10 @@
       "id" : "Binance-Peg USDC Token-USDC",
       "symbol" : "USDC",
       "name" : "Binance-Peg USDC Token",
-      "contracts" : [
+      "networks" : [
         {
           "networkId" : "binance-smart-chain/test",
-          "address" : "0x64544969ed7ebf5f083679233325356ebe738930",
+          "contractAddress" : "0x64544969ed7ebf5f083679233325356ebe738930",
           "decimalCount" : 18
         }
       ]
@@ -221,30 +210,32 @@
       "id" : "Binance-Peg XRP-XRP",
       "symbol" : "XRP",
       "name" : "Binance-Peg XRP",
-      "contracts" : [
+      "networks" : [
         {
           "networkId" : "binance-smart-chain/test",
-          "address" : "0xa83575490d7df4e2f47b7d38ef351a2722ca45b9",
+          "contractAddress" : "0xa83575490d7df4e2f47b7d38ef351a2722ca45b9",
           "decimalCount" : 18
         }
       ]
     },
     {
-      "id" : "ethereum/test",
+      "id" : "ethereum",
       "symbol" : "ETH",
       "name" : "Ethereum",
-      "contracts" : [
-
+      "networks" : [
+        {
+          "networkId" : "ethereum/test"
+        }
       ]
     },
     {
       "id" : "Weenus-WEENUS",
       "symbol" : "WEENUS",
       "name" : "Weenus",
-      "contracts" : [
+      "networks" : [
         {
-          "networkId" : "ethereum",
-          "address" : "0xaFF4481D10270F50f203E0763e2597776068CBc5",
+          "networkId" : "ethereum/test",
+          "contractAddress" : "0xaFF4481D10270F50f203E0763e2597776068CBc5",
           "decimalCount" : 18
         }
       ]
@@ -253,10 +244,10 @@
       "id" : "Xeenus-XEENUS",
       "symbol" : "XEENUS",
       "name" : "Xeenus",
-      "contracts" : [
+      "networks" : [
         {
           "networkId" : "ethereum/test",
-          "address" : "0x022E292b44B5a146F2e8ee36Ff44D3dd863C915c",
+          "contractAddress" : "0x022E292b44B5a146F2e8ee36Ff44D3dd863C915c",
           "decimalCount" : 18
         }
       ]
@@ -265,10 +256,10 @@
       "id" : "Yeenus-YEENUS",
       "symbol" : "YEENUS",
       "name" : "Yeenus",
-      "contracts" : [
+      "networks" : [
         {
           "networkId" : "ethereum/test",
-          "address" : "0xc6fDe3FD2Cc2b173aEC24cc3f267cb3Cd78a26B7",
+          "contractAddress" : "0xc6fDe3FD2Cc2b173aEC24cc3f267cb3Cd78a26B7",
           "decimalCount" : 8
         }
       ]
@@ -277,30 +268,32 @@
       "id" : "Zeenus-ZEENUS",
       "symbol" : "ZEENUS",
       "name" : "Zeenus",
-      "contracts" : [
+      "networks" : [
         {
           "networkId" : "ethereum/test",
-          "address" : "0x1f9061B953bBa0E36BF50F21876132DcF276fC6e",
+          "contractAddress" : "0x1f9061B953bBa0E36BF50F21876132DcF276fC6e",
           "decimalCount" : 0
         }
       ]
     },
     {
-      "id" : "avalanche/test",
+      "id" : "avalanche-2",
       "symbol" : "AVAX",
       "name" : "Avalanche",
-      "contracts" : [
-
+      "networks" : [
+        {
+          "networkId" : "avalanche/test"
+        }
       ]
     },
     {
       "id" : "The Fuji stablecoin-FUJISTABLE",
       "symbol" : "FUJISTABLE",
       "name" : "The Fuji stablecoin",
-      "contracts" : [
+      "networks" : [
         {
           "networkId" : "avalanche/test",
-          "address" : "0x2058ec2791dD28b6f67DB836ddf87534F4Bbdf22",
+          "contractAddress" : "0x2058ec2791dD28b6f67DB836ddf87534F4Bbdf22",
           "decimalCount" : 6
         }
       ]
@@ -309,30 +302,32 @@
       "id" : "To the Moon-FUJIMOON",
       "symbol" : "FUJIMOON",
       "name" : "To the Moon",
-      "contracts" : [
+      "networks" : [
         {
           "networkId" : "avalanche/test",
-          "address" : "0x97132C109c6816525F7f338DCb7435E1412A7668",
+          "contractAddress" : "0x97132C109c6816525F7f338DCb7435E1412A7668",
           "decimalCount" : 9
         }
       ]
     },
     {
-      "id" : "fantom/test",
+      "id" : "fantom",
       "symbol" : "FTM",
       "name" : "Fantom",
-      "contracts" : [
-
+      "networks" : [
+        {
+          "networkId" : "fantom/test"
+        }
       ]
     },
     {
       "id" : "Fantom USD-FUSD",
       "symbol" : "FUSD",
       "name" : "Fantom USD",
-      "contracts" : [
+      "networks" : [
         {
           "networkId" : "fantom/test",
-          "address" : "0x91ea991bd52EE3C40EdA2509701d905e1Ee54074",
+          "contractAddress" : "0x91ea991bd52EE3C40EdA2509701d905e1Ee54074",
           "decimalCount" : 18
         }
       ]
@@ -341,29 +336,36 @@
       "id" : "Wrapped Fantom-WFTM",
       "symbol" : "WFTM",
       "name" : "Wrapped Fantom",
-      "contracts" : [
+      "networks" : [
         {
           "networkId" : "fantom/test",
-          "address" : "0xf1277d1Ed8AD466beddF92ef448A132661956621",
+          "contractAddress" : "0xf1277d1Ed8AD466beddF92ef448A132661956621",
           "decimalCount" : 18
         }
       ]
     },
     {
-      "id" : "bitcoin/test",
+      "id" : "bitcoin",
       "symbol" : "BTC",
       "name" : "Bitcoin",
-      "contracts" : [
-
+      "networks" : [
+        {
+          "networkId" : "bitcoin/test"
+        }
       ]
     },
     {
-      "id" : "stellar/test",
+      "id" : "stellar",
       "symbol" : "XLM",
       "name" : "Stellar",
-      "contracts" : [
-
+      "networks" : [
+        {
+          "networkId" : "stellar/test"
+        }
       ]
     }
-  ]
+  ],
+
+  "total" : 0,
+  "imageHost" : "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/"
 }
