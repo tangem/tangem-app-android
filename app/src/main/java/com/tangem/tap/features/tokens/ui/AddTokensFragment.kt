@@ -115,6 +115,9 @@ class AddTokensFragment : Fragment(R.layout.fragment_add_tokens),
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.popular_tokens, menu)
 
+        val addCustomTokenAllowed = store.state.tokensState.allowToAdd
+        menu.findItem(R.id.menu_navigate_add_custom_token).isVisible = addCustomTokenAllowed
+
         val menuItem = menu.findItem(R.id.menu_search)
         val searchView: SearchView = menuItem.actionView as SearchView
         searchView.queryHint = searchView.getString(R.string.add_token_search_hint)
