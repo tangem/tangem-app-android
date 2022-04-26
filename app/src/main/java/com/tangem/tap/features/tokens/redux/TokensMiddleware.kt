@@ -19,7 +19,6 @@ import com.tangem.domain.redux.domainStore
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.tap.*
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
-import com.tangem.tap.common.extensions.dispatchErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -170,7 +169,7 @@ class TokensMiddleware {
                     onSuccess(updatedScanResponse)
                 }
                 is CompletionResult.Failure -> {
-                    store.dispatchErrorNotification(TapError.CustomError("Error adding tokens"))
+                    store.dispatchDebugErrorNotification(TapError.CustomError("Error adding tokens"))
                 }
             }
         }
