@@ -136,6 +136,7 @@ class DetailsMiddleware {
         fun handle(action: DetailsAction.AppCurrencyAction) {
             when (action) {
                 is DetailsAction.AppCurrencyAction.SelectAppCurrency -> {
+                    store.state.globalState.tapWalletManager.rates.clear()
                     preferencesStorage.saveAppCurrency(action.fiatCurrencyName)
                     store.dispatch(GlobalAction.ChangeAppCurrency(action.fiatCurrencyName))
                     store.dispatch(WalletAction.LoadFiatRate())
