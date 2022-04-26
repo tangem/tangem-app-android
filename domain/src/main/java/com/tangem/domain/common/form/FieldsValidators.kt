@@ -1,11 +1,11 @@
 package com.tangem.domain.common.form
 
-import com.tangem.blockchain.blockchains.binance.BinanceAddressService
 import com.tangem.blockchain.blockchains.ethereum.EthereumAddressService
 import com.tangem.blockchain.blockchains.solana.SolanaAddressService
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.address.AddressService
 import com.tangem.common.Validator
+import com.tangem.common.card.EllipticCurve
 import com.tangem.domain.AddCustomTokenError
 import timber.log.Timber
 
@@ -48,10 +48,9 @@ class TokenContractAddressValidator : CustomTokenValidator<String>() {
 
     private fun getAddressService(): AddressService {
         return when (blockchain) {
-            Blockchain.Unknown -> EthereumAddressService()
+            Blockchain.Unknown -> successAddressValidator
+            Blockchain.Binance, Blockchain.BinanceTestnet -> successAddressValidator
             Blockchain.Solana, Blockchain.SolanaTestnet -> SolanaAddressService()
-            Blockchain.Binance -> BinanceAddressService()
-            Blockchain.BinanceTestnet -> BinanceAddressService(true)
             else -> {
                 if (blockchain.isEvm()) {
                     EthereumAddressService()
@@ -61,6 +60,14 @@ class TokenContractAddressValidator : CustomTokenValidator<String>() {
                 }
             }
         }
+    }
+
+    private val successAddressValidator = object : AddressService() {
+        override fun makeAddress(walletPublicKey: ByteArray, curve: EllipticCurve?): String {
+            throw UnsupportedOperationException()
+        }
+
+        override fun validate(address: String): Boolean = true
     }
 }
 
