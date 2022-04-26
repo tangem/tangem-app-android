@@ -15,12 +15,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.SubcomposeAsyncImage
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
+import com.tangem.tap.common.extensions.fullNameWithoutTestnet
 import com.tangem.tap.common.extensions.getGreyedOutIconRes
 import com.tangem.tap.common.extensions.getNetworkName
 import com.tangem.tap.common.extensions.getRoundIconRes
@@ -90,17 +93,13 @@ fun NetworkItem(
                 .align(Alignment.CenterVertically)
         ) {
             Text(
-                text = blockchain.fullName.uppercase(),
-                fontSize = 13.sp,
+                text = prepareNetworkNameSpannableText(
+                    blockchain = blockchain,
+                    contractAddress = contract.address
+                ),
                 fontWeight = FontWeight.SemiBold,
-                color = if (added) Color.Black else Color(0xFF848488),
-            )
-            Spacer(modifier = Modifier.size(3.dp))
-            Text(
-                text = if (contract.address == null) "MAIN" else blockchain.getNetworkName().uppercase(),
                 fontSize = 13.sp,
-                fontWeight = FontWeight.Normal,
-                color = if (contract.address != null) Color(0xFF8E8E93) else Color(0xFF1ACE80),
+                color = if (added) Color.Black else Color(0xFF848488),
             )
         }
 
@@ -136,4 +135,33 @@ fun NetworkItem(
             )
         }
     }
+}
+
+
+@Composable
+fun prepareNetworkNameSpannableText(
+    blockchain: Blockchain,
+    contractAddress: String?
+): AnnotatedString {
+
+    val blockchainName = blockchain.fullNameWithoutTestnet.uppercase()
+    val additionalText =
+        if (contractAddress == null) "MAIN" else blockchain.getNetworkName().uppercase()
+
+    val text = "$blockchainName $additionalText"
+
+    val startOfAdditionalText =
+        if (additionalText.isNotBlank()) text.indexOf(additionalText) else text.length
+
+    val spanStyles = listOf(
+        AnnotatedString.Range(
+            SpanStyle(
+                fontWeight = FontWeight.Normal,
+                color = if (contractAddress != null) Color(0xFF8E8E93) else Color(0xFF1ACE80)
+            ),
+            start = startOfAdditionalText,
+            end = text.length
+        )
+    )
+    return AnnotatedString(text = text, spanStyles = spanStyles)
 }
