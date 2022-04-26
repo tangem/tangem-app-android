@@ -69,7 +69,7 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
                 val contractAddress = ContractAddress.getFieldValue<String>()
                 validateContractAddressAndNotify(contractAddress)
 
-                if (!hubState.tokensAnyFieldsIsFilled()){
+                if (!hubState.tokensAnyFieldsIsFilled()) {
                     val isAlreadyAdded = isBlockchainPersistIntoAppSavedTokensList(
                         selectedNetwork = action.blockchainNetwork.value
                     )
@@ -120,6 +120,8 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
     }
 
     private suspend fun validateContractAddressAndNotify(contractAddress: String): AddCustomTokenError? {
+        if (!Network.isFilled()) return null
+
         val error = ContractAddress.validateValue(contractAddress)
         when (error) {
             null -> {
