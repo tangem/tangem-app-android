@@ -1,4 +1,4 @@
-package com.tangem.tap.common
+package com.tangem.domain.common
 
 /**
 [REDACTED_AUTHOR]
