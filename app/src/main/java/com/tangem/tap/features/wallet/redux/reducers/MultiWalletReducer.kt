@@ -2,6 +2,7 @@ package com.tangem.tap.features.wallet.redux.reducers
 
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Token
+import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.isZero
 import com.tangem.tap.common.extensions.toFiatString
 import com.tangem.tap.common.extensions.toFormattedCurrencyString
@@ -14,6 +15,7 @@ import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.features.wallet.ui.TokenData
 import com.tangem.tap.store
+import java.math.BigDecimal
 
 class MultiWalletReducer {
     fun reduce(action: WalletAction.MultiWallet, state: WalletState): WalletState {
@@ -22,7 +24,7 @@ class MultiWalletReducer {
                 val wallets: List<WalletStore> = action.blockchains.mapNotNull { blockchain ->
                     val walletManager = action.walletManagers.firstOrNull {
                         it.wallet.blockchain == blockchain.blockchain &&
-                                (it.wallet.publicKey.derivationPath?.rawPath == blockchain.derivationPath)
+                            (it.wallet.publicKey.derivationPath?.rawPath == blockchain.derivationPath)
                     } ?: return@mapNotNull null
                     val wallet = walletManager.wallet
                     val cardToken = if (!state.isMultiwalletAllowed) {
@@ -100,11 +102,11 @@ class MultiWalletReducer {
             }
             is WalletAction.MultiWallet.TokenLoaded -> {
                 val currency = Currency.fromBlockchainNetwork(action.blockchain, action.token)
-                val pendingTransactions = state.getWalletManager(currency)
-                    ?.wallet?.let { wallet ->
-                        wallet.recentTransactions.toPendingTransactions(wallet.address)
-                    } ?: emptyList()
+                val wallet = state.getWalletManager(currency)?.wallet.guard {
+                    throw NullPointerException("MultiWallet.TokenLoaded: WalletManager must be no NULL")
+                }
 
+                val pendingTransactions = wallet.recentTransactions.toPendingTransactions(wallet.address)
                 val sendButtonEnabled =
                     action.amount.value?.isZero() == false && pendingTransactions.isEmpty()
                 val tokenPendingTransactions = pendingTransactions
@@ -125,7 +127,8 @@ class MultiWalletReducer {
                         fiatAmountFormatted = tokenWalletData.fiatRate?.let {
                             action.amount.value
                                 ?.toFiatString(it, store.state.globalState.appCurrency)
-                        }
+                        },
+                        blockchainAmount = wallet.amounts[AmountType.Coin]?.value ?: BigDecimal.ZERO
                     ),
                     pendingTransactions = pendingTransactions.removeUnknownTransactions(),
                     mainButton = WalletMainButton.SendButton(sendButtonEnabled),
