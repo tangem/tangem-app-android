@@ -6,12 +6,10 @@ import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.TapWorkarounds.isTestCard
+import com.tangem.domain.common.ThrottlerWithValues
 import com.tangem.domain.common.extensions.withMainContext
-import com.tangem.network.api.tangemTech.TangemTechService
-import com.tangem.tap.common.ThrottlerWithValues
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.safeUpdate
-import com.tangem.tap.common.redux.global.FiatCurrencyName
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.currenciesRepository
 import com.tangem.tap.domain.configurable.config.ConfigManager
@@ -20,28 +18,24 @@ import com.tangem.tap.domain.extensions.makePrimaryWalletManager
 import com.tangem.tap.domain.extensions.makeWalletManagersForApp
 import com.tangem.tap.domain.tokens.BlockchainNetwork
 import com.tangem.tap.features.demo.isDemoCard
-import com.tangem.tap.features.wallet.redux.Currency
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.tap.store
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.math.BigDecimal
 
 
 class TapWalletManager {
     val walletManagerFactory: WalletManagerFactory
         by lazy { WalletManagerFactory(blockchainSdkConfig) }
 
-    private val tangemTechService: TangemTechService
-        get() = store.state.domainNetworks.tangemTechService
+    val rates: RatesRepository = RatesRepository()
 
     private val blockchainSdkConfig by lazy {
         store.state.globalState.configManager?.config?.blockchainSdkConfig ?: BlockchainSdkConfig()
     }
 
     private val walletManagersThrottler = ThrottlerWithValues<Blockchain, Result<Wallet>>(10000)
-    private val fiatRatesThrottler = ThrottlerWithValues<Currency, Result<BigDecimal>?>(60000)
 
     suspend fun loadWalletData(walletManager: WalletManager) {
         val blockchain = walletManager.wallet.blockchain
@@ -49,7 +43,10 @@ class TapWalletManager {
         val result = if (walletManagersThrottler.isStillThrottled(blockchain)) {
             walletManagersThrottler.geValue(blockchain)!!
         } else {
-            updateThrottlingForWalletManager(walletManager)
+            val safeUpdateResult = walletManager.safeUpdate()
+            walletManagersThrottler.updateThrottlingTo(blockchain)
+            walletManagersThrottler.setValue(blockchain, safeUpdateResult)
+            safeUpdateResult
         }
         when (result) {
             is Result.Success -> {
@@ -58,92 +55,25 @@ class TapWalletManager {
             is Result.Failure -> {
                 when (result.error) {
                     is TapError.WalletManager.NoAccountError -> {
-                        dispatchOnMain(
-                            WalletAction.LoadWallet.NoAccount(
-                                walletManager.wallet,
-                                blockchainNetwork,
-                                (result.error as TapError.WalletManager.NoAccountError).customMessage
-                            )
-                        )
-                    }
-                    else -> {
-                        dispatchOnMain(
-                            WalletAction.LoadWallet.Failure(
-                                walletManager.wallet,
-                                result.error.localizedMessage
-                            )
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-    private suspend fun updateThrottlingForWalletManager(walletManager: WalletManager): Result<Wallet> {
-        val newResult = walletManager.safeUpdate()
-        val blockchain = walletManager.wallet.blockchain
-        walletManagersThrottler.updateThrottlingTo(blockchain)
-        walletManagersThrottler.setValue(blockchain, newResult)
-        return newResult
-    }
-
-    suspend fun loadFiatRate(currencyId: FiatCurrencyName, wallet: Wallet) {
-        val coinsList = wallet.getTokens()
-            .map { Currency.Token(it, wallet.blockchain, wallet.publicKey.derivationPath?.rawPath) }
-            .plus(Currency.Blockchain(wallet.blockchain, wallet.publicKey.derivationPath?.rawPath))
-        loadFiatRate(currencyId, coinsList)
-    }
-
-    suspend fun loadFiatRate(currencyId: FiatCurrencyName, coinsList: List<Currency>) {
-        suspend fun handleFiatRatesResult(rates: Map<Currency, Result<BigDecimal>?>) {
-            rates.forEach { (currency, priceResult) ->
-                when (priceResult) {
-                    is Result.Success -> {
-                        dispatchOnMain(WalletAction.LoadFiatRate.Success(
-                            currency to priceResult.data
+                        dispatchOnMain(WalletAction.LoadWallet.NoAccount(
+                            walletManager.wallet,
+                            blockchainNetwork,
+                            (result.error as TapError.WalletManager.NoAccountError).customMessage
                         ))
                     }
-                    is Result.Failure -> dispatchOnMain(WalletAction.LoadFiatRate.Failure)
-                    null -> {}
-                }
-            }
-        }
-
-        // get and submit previous result of equivalents.
-        val throttledResult = coinsList.filter { fiatRatesThrottler.isStillThrottled(it) }.map {
-            Pair(it, fiatRatesThrottler.geValue(it))
-        }
-        if (throttledResult.isNotEmpty()) {
-            handleFiatRatesResult(throttledResult.toMap())
-        }
-
-        val currenciesToUpdate = coinsList.filter { !fiatRatesThrottler.isStillThrottled(it) }
-        val coinIds = currenciesToUpdate.mapNotNull { it.coinId }.distinct()
-        if (coinIds.isEmpty()) return
-
-        //TODO: refactoring: move fiatRatesThrottler to the TangemTechRepository
-        when (val result = tangemTechService.rates(currencyId, coinIds)) {
-            is Result.Success -> {
-                val ratesResultList: Map<String, Result<BigDecimal>> = result.data.rates.mapValues {
-                    Result.Success(it.value.toBigDecimal())
-                }
-                val updatedCurrencies = mutableMapOf<Currency, Result<BigDecimal>?>()
-                currenciesToUpdate.forEach { currency ->
-                    ratesResultList[currency.coinId]?.let {
-                        updatedCurrencies[currency] = it
-                        fiatRatesThrottler.updateThrottlingTo(currency)
-                        fiatRatesThrottler.setValue(currency, it)
+                    else -> {
+                        dispatchOnMain(WalletAction.LoadWallet.Failure(
+                            walletManager.wallet,
+                            result.error.localizedMessage
+                        ))
                     }
                 }
-                handleFiatRatesResult(updatedCurrencies)
             }
-            is Result.Failure -> dispatchOnMain(WalletAction.LoadFiatRate.Failure)
         }
     }
 
     suspend fun onCardScanned(data: ScanResponse) {
         walletManagersThrottler.clear()
-//        fiatRatesThrottler.clear()
         store.state.globalState.feedbackManager?.infoHolder?.setCardInfo(data)
         updateConfigManager(data)
 
@@ -194,22 +124,18 @@ class TapWalletManager {
             if (data.card.isMultiwalletAllowed) {
                 loadMultiWalletData(data, blockchain, primaryWalletManager)
             } else {
-                dispatchOnMain(
-                    WalletAction.MultiWallet.AddBlockchains(
-                        listOf(BlockchainNetwork.fromWalletManager(primaryWalletManager)),
-                        listOf(primaryWalletManager)
-                    )
-                )
+                dispatchOnMain(WalletAction.MultiWallet.AddBlockchains(
+                    listOf(BlockchainNetwork.fromWalletManager(primaryWalletManager)),
+                    listOf(primaryWalletManager)
+                ))
             }
         } else {
             if (data.card.isMultiwalletAllowed) {
                 loadMultiWalletData(data, blockchain, null)
             }
         }
-        dispatchOnMain(
-            WalletAction.LoadWallet(),
-            WalletAction.LoadFiatRate()
-        )
+        dispatchOnMain(WalletAction.LoadWallet())
+        dispatchOnMain(WalletAction.LoadFiatRate())
     }
 
     private suspend fun loadMultiWalletData(
@@ -233,7 +159,6 @@ class TapWalletManager {
                 )
 
             } else {
-                val derivationStyle = scanResponse.card.derivationStyle
                 val blockchainNetworks = listOf(
                     BlockchainNetwork(Blockchain.Bitcoin, scanResponse.card),
                     BlockchainNetwork(Blockchain.Ethereum, scanResponse.card)
