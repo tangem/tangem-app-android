@@ -22,6 +22,8 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.extensions.toSendableAmounts
+import com.tangem.tap.domain.failedRates
+import com.tangem.tap.domain.loadedRates
 import com.tangem.tap.domain.tokens.BlockchainNetwork
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.redux.HomeAction
@@ -39,6 +41,7 @@ import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.DispatchFunction
 import org.rekotlin.Middleware
+import timber.log.Timber
 import java.math.BigDecimal
 
 class WalletMiddleware {
@@ -103,25 +106,32 @@ class WalletMiddleware {
             is WalletAction.LoadFiatRate -> {
                 val appCurrencyId = globalState.appCurrency
                 scope.launch {
-                    when {
+                    val coinsList = when {
                         action.wallet != null -> {
-                            globalState.tapWalletManager.loadFiatRate(
-                                currencyId = appCurrencyId,
-                                wallet = action.wallet,
-                            )
+                            val wallet = action.wallet
+                            wallet.getTokens()
+                                .map { Currency.Token(it, wallet.blockchain, wallet.publicKey.derivationPath?.rawPath) }
+                                .plus(Currency.Blockchain(wallet.blockchain, wallet.publicKey.derivationPath?.rawPath))
                         }
-                        action.coinsList != null -> {
-                            globalState.tapWalletManager.loadFiatRate(
-                                currencyId = appCurrencyId,
-                                coinsList = action.coinsList,
-                            )
+                        action.coinsList != null -> action.coinsList
+                        else -> walletState.walletsData.map { it.currency }
+                    }
+                    val ratesResult = globalState.tapWalletManager.rates.loadFiatRate(
+                        currencyId = appCurrencyId,
+                        coinsList = coinsList,
+                    )
+                    when (ratesResult) {
+                        is Result.Success -> {
+                            ratesResult.data.loadedRates.forEach {
+                                dispatchOnMain(WalletAction.LoadFiatRate.Success(it.toPair()))
+                            }
+                            ratesResult.data.failedRates.forEach { (currency, throwable) ->
+                                Timber.e(throwable, "Loading rates failed for [%s]", currency.currencySymbol)
+                            }
                         }
-                        else -> {
-                            val coinsList = walletState.walletsData.map { it.currency }
-                            globalState.tapWalletManager.loadFiatRate(
-                                currencyId = appCurrencyId,
-                                coinsList = coinsList,
-                            )
+                        is Result.Failure -> {
+                            store.dispatchDebugErrorNotification("LoadFiatRate.Failure")
+                            dispatchOnMain(WalletAction.LoadFiatRate.Failure)
                         }
                     }
                 }
