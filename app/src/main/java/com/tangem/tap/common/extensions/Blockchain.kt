@@ -2,6 +2,7 @@ package com.tangem.tap.common.extensions
 
 import androidx.annotation.DrawableRes
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.common.extensions.remove
 import com.tangem.wallet.R
 
 @DrawableRes
@@ -58,3 +59,6 @@ fun Blockchain.getNetworkName(): String {
         else -> ""
     }
 }
+
+val Blockchain.fullNameWithoutTestnet
+get() = this.fullName.remove(" Testnet")
