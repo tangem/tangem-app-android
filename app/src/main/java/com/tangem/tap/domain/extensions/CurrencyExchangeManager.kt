@@ -20,6 +20,8 @@ fun CurrencyExchangeManager.sellIsAllowed(currency: Currency): Boolean {
 fun CurrencyExchangeStatus.buyIsAllowed(currency: Currency): Boolean {
     if (store.state.globalState.configManager?.config?.isTopUpEnabled == false) return false
     if (!isBuyAllowed) return false
+// [REDACTED_TODO_COMMENT]
+    return true
 
     return when (currency) {
         is Currency.Blockchain -> {
