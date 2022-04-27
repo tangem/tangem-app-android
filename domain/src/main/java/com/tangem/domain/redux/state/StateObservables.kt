@@ -1,6 +1,6 @@
 package com.tangem.domain.redux.state
 
-import com.tangem.domain.features.addCustomToken.AddCustomTokenStatePrinter
+import com.tangem.domain.features.addCustomToken.AddCustomTokenActionStateConverter
 import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction
 import com.tangem.domain.redux.DomainState
 import org.rekotlin.Action
@@ -20,17 +20,17 @@ internal fun observeReducedStates(reducedSates: List<Pair<Action, DomainState>>)
 
 private fun logStates(reducedSates: List<Pair<Action, DomainState>>) {
     reducedSates.forEach {
-        val printer = statePrinters.firstNotNullOfOrNull { entry ->
+        val converter = stateConverters.firstNotNullOfOrNull { entry ->
             if (entry.key.isAssignableFrom(it.first::class.java)) entry.value else null
         } ?: return@forEach
 
-        val messageToPrint = printer.print(it.first, it.second) ?: return@forEach
+        val messageToPrint = converter.convert(it.first, it.second) ?: return@forEach
 
         Timber.d(messageToPrint)
     }
 }
 
 // TODO: refactoring: mutate to factory
-private val statePrinters = mutableMapOf(
-    AddCustomTokenAction::class.java to AddCustomTokenStatePrinter()
+private val stateConverters = mutableMapOf(
+    AddCustomTokenAction::class.java to AddCustomTokenActionStateConverter()
 )
