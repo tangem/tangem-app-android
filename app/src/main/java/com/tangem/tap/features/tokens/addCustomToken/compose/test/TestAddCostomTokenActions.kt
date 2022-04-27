@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.sp
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.VoidCallback
 import com.tangem.domain.common.form.Field
-import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction
+import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction.*
 import com.tangem.domain.redux.domainStore
 import com.tangem.wallet.BuildConfig
 
@@ -52,11 +52,6 @@ private fun AllInOne() {
         name = "true",
         address = "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
     )
-    // active = false, decimalCount != null
-    ContractAddressButton(
-        name = "false",
-        address = "0x2147efff675e4a4ee1c2f918d181cdbd7a8e208f"
-    )
     // more than one network
     ContractAddressButton(
         name = ">1 network",
@@ -68,8 +63,12 @@ private fun AllInOne() {
         address = "0x1111111111111111112111111111111111111113"
     )
     ContractAddressButton(
-        name = "solana",
-        address = "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB"
+        name = "full unk",
+        address = "0x3019BF2a2eF8040C242C9a4c5c4BD4C81678b2A1",
+        tokenNetwork = Blockchain.Ethereum,
+        tokenName = "Test unknown",
+        tokenSymbol = "TU",
+        tokenDecimals = "5",
     )
 }
 
@@ -179,10 +178,26 @@ private fun ActionButton(
 private fun ContractAddressButton(
     name: String,
     address: String,
+    tokenNetwork: Blockchain? = null,
+    tokenName: String? = null,
+    tokenSymbol: String? = null,
+    tokenDecimals: String? = null,
 ) {
     ActionButton(name = name) {
         resetTokenValues()
-        domainStore.dispatch(AddCustomTokenAction.OnTokenContractAddressChanged(Field.Data(address, false)))
+        domainStore.dispatch(OnTokenContractAddressChanged(Field.Data(address, false)))
+        tokenNetwork?.let {
+            domainStore.dispatch(OnTokenNetworkChanged(Field.Data(tokenNetwork, false)))
+        }
+        tokenName?.let {
+            domainStore.dispatch(OnTokenNameChanged(Field.Data(tokenName, false)))
+        }
+        tokenSymbol?.let {
+            domainStore.dispatch(OnTokenSymbolChanged(Field.Data(tokenSymbol, false)))
+        }
+        tokenDecimals?.let {
+            domainStore.dispatch(OnTokenDecimalsChanged(Field.Data(tokenDecimals, false)))
+        }
     }
 }
 
@@ -203,7 +218,7 @@ private fun CustomActionButton(
 }
 
 private fun resetTokenValues() {
-    domainStore.dispatch(AddCustomTokenAction.OnTokenNetworkChanged(Field.Data(Blockchain.Unknown, false)))
+    domainStore.dispatch(OnTokenNetworkChanged(Field.Data(Blockchain.Unknown, false)))
 //    domainStore.dispatch(AddCustomTokenAction.OnTokenNameChanged(Field.Data("", false)))
 //    domainStore.dispatch(AddCustomTokenAction.OnTokenSymbolChanged(Field.Data("", false)))
 //    domainStore.dispatch(AddCustomTokenAction.OnTokenDecimalsChanged(Field.Data("", false)))
