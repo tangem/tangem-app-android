@@ -103,6 +103,7 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
                 null -> {
                     // valid contract address
                     ContractAddress.removeError()
+                    changeBlockchainNetworkList()
                     findTokenAndUpdateFields(contractAddress)
                 }
                 AddCustomTokenError.InvalidContractAddress -> {
@@ -126,6 +127,7 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
                 null -> {
                     // valid contract address
                     ContractAddress.removeError()
+                    changeBlockchainNetworkList()
                     findTokenAndUpdateFields(contractAddress)
                 }
                 else -> {
@@ -138,7 +140,7 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
             }
         }
     }
-
+// [REDACTED_TODO_COMMENT]
     /**
      * This feature is only needed until Solana coins are added.
      * While they are not there - this function excludes the Solana blockchain if the user has
@@ -534,8 +536,10 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
                     DerivationStyle.LEGACY -> derivationPathState.copy(isVisible = true)
                     null, DerivationStyle.NEW -> derivationPathState.copy(isVisible = false)
                 }
+                val form = Form(AddCustomTokenState.createFormFields(CustomTokenType.Blockchain))
                 state.copy(
                     cardDerivationStyle = card.derivationStyle,
+                    form = form,
                     tangemTechServiceManager = tangemTechServiceManager,
                     screenState = state.screenState.copy(derivationPath = derivationPathState)
                 )
