@@ -100,7 +100,7 @@ class CurrenciesRepository(val context: Application) {
 
     fun loadSavedCurrencies(
         cardId: String,
-        derivationStyle: DerivationStyle? = null
+        isHdWalletSupported: Boolean = false
     ): List<BlockchainNetwork> {
         if (DemoHelper.isDemoCardId(cardId)) {
             return loadDemoCurrencies(cardId)
@@ -109,7 +109,7 @@ class CurrenciesRepository(val context: Application) {
             val json = context.readFileText(getFileNameForBlockchains(cardId))
             blockchainNetworkAdapter.fromJson(json)?.distinct() ?: emptyList()
         } catch (exception: Exception) {
-            tryToLoadPreviousFormatAndMigrate(cardId, derivationStyle)
+            tryToLoadPreviousFormatAndMigrate(cardId, isHdWalletSupported)
         }
     }
 
@@ -125,12 +125,12 @@ class CurrenciesRepository(val context: Application) {
 
     private fun tryToLoadPreviousFormatAndMigrate(
         cardId: String,
-        derivationStyle: DerivationStyle?
+        isHdWalletSupported: Boolean = false
     ): List<BlockchainNetwork> {
         return try {
             loadSavedCurrenciesOldWay(
                 cardId,
-                derivationStyle
+                isHdWalletSupported
             )
         } catch (exception: Exception) {
             emptyList()
@@ -138,11 +138,12 @@ class CurrenciesRepository(val context: Application) {
     }
 
     private fun loadSavedCurrenciesOldWay(
-        cardId: String, derivationStyle: DerivationStyle?
+        cardId: String, isHdWalletSupported: Boolean = false
     ): List<BlockchainNetwork> {
         val blockchains = loadSavedBlockchains(cardId)
         val tokens = loadSavedTokens(cardId)
         val currencies = getSupportedTokens()
+        val derivationStyle = if (isHdWalletSupported) DerivationStyle.LEGACY else null
         val blockchainNetworks = blockchains.map { blockchain ->
             BlockchainNetwork(
                 blockchain = blockchain,
