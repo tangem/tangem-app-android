@@ -15,7 +15,6 @@ import com.tangem.common.extensions.toHexString
 import com.tangem.common.extensions.toMapKey
 import com.tangem.common.hdWallet.DerivationPath
 import com.tangem.domain.common.*
-import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.TapWorkarounds.isExcluded
 import com.tangem.domain.common.TapWorkarounds.isNotSupportedInThatRelease
 import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
@@ -228,7 +227,7 @@ private class ScanWalletProcessor(
 
     private fun getBlockchainsToDerive(card: Card): List<BlockchainNetwork> {
         val currenciesRepository = currenciesRepository ?: return emptyList()
-        val cardCurrencies = currenciesRepository.loadSavedCurrencies(card.cardId, card.derivationStyle).toMutableList()
+        val cardCurrencies = currenciesRepository.loadSavedCurrencies(card.cardId, card.settings.isHDWalletAllowed).toMutableList()
 
         val blockchainsToDerive = cardCurrencies.ifEmpty {
             mutableListOf(
