@@ -3,7 +3,6 @@ package com.tangem.tap.domain
 import com.tangem.blockchain.common.*
 import com.tangem.common.services.Result
 import com.tangem.domain.common.ScanResponse
-import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.domain.common.ThrottlerWithValues
@@ -144,7 +143,9 @@ class TapWalletManager {
         primaryWalletManager: WalletManager?
     ) {
         val primaryTokens = primaryWalletManager?.cardTokens?.toList() ?: emptyList()
-        val savedCurrencies = currenciesRepository.loadSavedCurrencies(scanResponse.card.cardId, scanResponse.card.derivationStyle)
+        val savedCurrencies = currenciesRepository.loadSavedCurrencies(
+            scanResponse.card.cardId, scanResponse.card.settings.isHDWalletAllowed
+        )
 
         if (savedCurrencies.isEmpty()) {
             if (primaryBlockchain != null && primaryWalletManager != null) {
