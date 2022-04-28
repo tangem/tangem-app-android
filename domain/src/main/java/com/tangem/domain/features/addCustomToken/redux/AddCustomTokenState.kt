@@ -2,18 +2,22 @@ package com.tangem.domain.features.addCustomToken.redux
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.DerivationStyle
+import com.tangem.common.card.FirmwareVersion
 import com.tangem.domain.AddCustomTokenError
 import com.tangem.domain.DomainWrapped
+import com.tangem.domain.common.extensions.SolanaAvailable
+import com.tangem.domain.common.extensions.SolanaTokensAvailable
 import com.tangem.domain.common.form.*
 import com.tangem.domain.features.addCustomToken.*
 import com.tangem.domain.features.addCustomToken.CustomTokenFieldId.*
+import com.tangem.domain.redux.domainStore
 import org.rekotlin.StateType
 
 data class AddCustomTokenState(
     val appSavedCurrencies: List<DomainWrapped.Currency>? = null,
     val onTokenAddCallback: ((CustomCurrency) -> Unit)? = null,
     val cardDerivationStyle: DerivationStyle? = null,
-    val form: Form = Form(createFormFields(CustomTokenType.Blockchain)),
+    val form: Form = Form(listOf()),
     val formValidators: Map<CustomTokenFieldId, CustomTokenValidator<out Any>> = createFormValidators(),
     val formErrors: Map<CustomTokenFieldId, AddCustomTokenError> = emptyMap(),
     val tokenId: String? = null,
@@ -146,7 +150,7 @@ data class AddCustomTokenState(
             else -> derivationNetwork
         }.derivationPath(derivationStyle)
 
-        private fun createFormFields(type: CustomTokenType): List<DataField<*>> {
+        internal fun createFormFields(type: CustomTokenType): List<DataField<*>> {
             return listOf(
                 TokenField(ContractAddress),
                 TokenBlockchainField(Network, getSupportedNetworks(type)),
@@ -176,8 +180,17 @@ data class AddCustomTokenState(
                 Blockchain.Avalanche,
                 Blockchain.Fantom,
                 Blockchain.Binance,     // not evm
-                Blockchain.Solana,      // not evm. Should be unsupported for coins until they are added to the Blockchain SDK
+                Blockchain.Solana,      // not evm
             )
+            //life hack
+            val fwCardVersion = domainStore.state.globalState.scanResponse?.card?.firmwareVersion
+                ?: FirmwareVersion(0, 0)
+
+            val solanaUnsupportedByCard = fwCardVersion < FirmwareVersion.SolanaAvailable
+            val solanaTokensUnsupportedByCard = fwCardVersion < FirmwareVersion.SolanaTokensAvailable
+            if (solanaUnsupportedByCard || solanaTokensUnsupportedByCard) networks.remove(Blockchain.Solana)
+
+            //TODO: Solana
             if (type == CustomTokenType.Token) networks.remove(Blockchain.Solana)
 
             return networks
