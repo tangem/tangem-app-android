@@ -257,7 +257,7 @@ class WalletConnectMiddleware {
                 blockchainToMake,
                 card.derivationStyle?.let { DerivationParams.Default(it) }
             )
-            if (currenciesRepository.loadSavedCurrencies(card.cardId, card.derivationStyle)
+            if (currenciesRepository.loadSavedCurrencies(card.cardId, card.settings.isHDWalletAllowed)
                     .find { it.blockchain == blockchainToMake } != null
             ) {
                 walletManager?.let {
