@@ -105,7 +105,8 @@ class DemoConfig {
 
     private fun getReleaseIds(): List<String> {
         return (releaseDemoCardIds +
-            releaseDemoCardIds_19042022).distinct()
+            releaseDemoCardIds_19042022 +
+                testDemoCardIds).distinct()
     }
 
     private val releaseDemoCardIds = mutableListOf<String>(
