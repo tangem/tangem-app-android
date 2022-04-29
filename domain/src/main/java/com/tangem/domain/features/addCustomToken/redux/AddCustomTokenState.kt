@@ -164,19 +164,17 @@ data class AddCustomTokenState(
         /**
          * Serves to determine the tokens that can be received from the TangemTech service
          */
-        internal fun getSupportedTokens(): List<Blockchain> {
-            val supportedBlockchains = getNetworksList(CustomTokenType.Token).toMutableList()
-            supportedBlockchains.remove(Blockchain.Unknown)
-            return supportedBlockchains
+        internal fun getSupportedTokensBlockchain(): List<Blockchain> {
+            return Blockchain.values()
+                .filter { !it.isTestnet() }
+                .filter { it.canHandleTokens() }
         }
 
         /**
          * Serves to determine the networks (blockchains & tokens) that can be selected by Form.Networks.
          * Blockchain.Unknown - is the default selection
          */
-        internal fun getNetworksList(type: CustomTokenType): List<Blockchain> {
-            val default = Blockchain.Unknown
-
+        private fun getNetworksList(type: CustomTokenType): List<Blockchain> {
             val evmBlockchains = Blockchain.values()
                 .filter { it.isEvm() }
                 .filter { !it.isTestnet() }
@@ -187,7 +185,6 @@ data class AddCustomTokenState(
             )
 
             val networks = (evmBlockchains + additionalBlockchains).toMutableList()
-            networks.add(0, default)
 
             //life hack
             val fwCardVersion = domainStore.state.globalState.scanResponse?.card?.firmwareVersion
@@ -197,24 +194,21 @@ data class AddCustomTokenState(
             val solanaTokensUnsupportedByCard = fwCardVersion < FirmwareVersion.SolanaTokensAvailable
             if (solanaUnsupportedByCard || solanaTokensUnsupportedByCard) networks.remove(Blockchain.Solana)
 
-            networks.removeAll(getUnsupportedTokensAtAll())
-            networks.removeAll(getNetworksUnsupportedByApp(type))
+            if (type == CustomTokenType.Token) networks.removeAll(getUnsupportedTokensBlockchain())
+
+            val default = Blockchain.Unknown
+            networks.add(0, default)
 
             return networks
         }
 
-        private fun getUnsupportedTokensAtAll():List<Blockchain> {
-            return listOf(
-                Blockchain.RSK,
-            )
+        private fun getUnsupportedTokensBlockchain(): List<Blockchain> {
+            return Blockchain.values()
+                .filter { !it.isTestnet() }
+                .filter { !it.canHandleTokens() }
+                .toMutableList()
         }
 
-        private fun getNetworksUnsupportedByApp(type: CustomTokenType): List<Blockchain> {
-            return when (type) {
-                CustomTokenType.Token -> listOf(Blockchain.Solana)
-                CustomTokenType.Blockchain -> emptyList()
-            }
-        }
 
         private fun createFormValidators(): Map<CustomTokenFieldId, CustomTokenValidator<out Any>> {
             return mapOf(
