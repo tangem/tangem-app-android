@@ -197,9 +197,16 @@ data class AddCustomTokenState(
             val solanaTokensUnsupportedByCard = fwCardVersion < FirmwareVersion.SolanaTokensAvailable
             if (solanaUnsupportedByCard || solanaTokensUnsupportedByCard) networks.remove(Blockchain.Solana)
 
+            networks.removeAll(getUnsupportedTokensAtAll())
             networks.removeAll(getNetworksUnsupportedByApp(type))
 
             return networks
+        }
+
+        private fun getUnsupportedTokensAtAll():List<Blockchain> {
+            return listOf(
+                Blockchain.RSK,
+            )
         }
 
         private fun getNetworksUnsupportedByApp(type: CustomTokenType): List<Blockchain> {
