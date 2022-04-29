@@ -530,7 +530,11 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
             }
             is OnCreate -> {
                 val card = requireNotNull(globalState.scanResponse?.card)
-                val tangemTechServiceManager = AddCustomTokenService(globalState.networkServices.tangemTechService)
+                val supportedTokenNetworkIds = AddCustomTokenState.getSupportedTokens().map { it.toNetworkId() }
+                val tangemTechServiceManager = AddCustomTokenService(
+                    tangemTechService = globalState.networkServices.tangemTechService,
+                    supportedTokenNetworkIds = supportedTokenNetworkIds
+                )
 
                 var derivationPathState = state.screenState.derivationPath
                 derivationPathState = when (card.derivationStyle) {
