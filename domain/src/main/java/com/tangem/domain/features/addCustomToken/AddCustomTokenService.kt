@@ -1,8 +1,6 @@
 package com.tangem.domain.features.addCustomToken
 
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.services.Result
-import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.network.api.tangemTech.CoinsResponse
 import com.tangem.network.api.tangemTech.TangemTechService
 
@@ -10,7 +8,8 @@ import com.tangem.network.api.tangemTech.TangemTechService
 [REDACTED_AUTHOR]
  */
 class AddCustomTokenService(
-    private val tangemTechService: TangemTechService
+    private val tangemTechService: TangemTechService,
+    private val supportedTokenNetworkIds: List<String>,
 ) {
 
     suspend fun findToken(
@@ -26,8 +25,7 @@ class AddCustomTokenService(
                     val networksWithTheSameAddress = coin.networks
                         .filter { it.contractAddress != null || it.decimalCount != null }
                         .filter { it.contractAddress == contractAddress }
-                        //TODO: Solana token
-                        .filter { it.networkId != Blockchain.Solana.toNetworkId() }
+                        .filter { supportedTokenNetworkIds.contains(it.networkId) }
                     if (networksWithTheSameAddress.isNotEmpty()) {
                         val newToken = coin.copy(networks = networksWithTheSameAddress)
                         coinsList.add(newToken)
