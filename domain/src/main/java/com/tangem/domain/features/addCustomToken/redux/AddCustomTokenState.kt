@@ -132,7 +132,7 @@ data class AddCustomTokenState(
     }
 
     fun getNetworks(type: CustomTokenType): List<Blockchain> {
-        return getSupportedNetworks(type)
+        return getNetworksList(type)
     }
 
     companion object {
@@ -141,7 +141,7 @@ data class AddCustomTokenState(
          * If an user select derivation path (derivationNetwork) as Blockchain.Unknown,
          * then we should use a blockchain from the mainNetwork to determine a DerivationPath
          */
-        fun getDerivationPath(
+        internal fun getDerivationPath(
             mainNetwork: Blockchain,
             derivationNetwork: Blockchain,
             derivationStyle: DerivationStyle?
@@ -153,12 +153,60 @@ data class AddCustomTokenState(
         internal fun createFormFields(type: CustomTokenType): List<DataField<*>> {
             return listOf(
                 TokenField(ContractAddress),
-                TokenBlockchainField(Network, getSupportedNetworks(type)),
+                TokenBlockchainField(Network, getNetworksList(type)),
                 TokenField(Name),
                 TokenField(Symbol),
                 TokenField(Decimals),
                 TokenDerivationPathField(DerivationPath, getSupportedDerivations()),
             )
+        }
+
+        /**
+         * Serves to determine the tokens that can be received from the TangemTech service
+         */
+        internal fun getSupportedTokens(): List<Blockchain> {
+            val supportedBlockchains = getNetworksList(CustomTokenType.Token).toMutableList()
+            supportedBlockchains.remove(Blockchain.Unknown)
+            return supportedBlockchains
+        }
+
+        /**
+         * Serves to determine the networks (blockchains & tokens) that can be selected by Form.Networks.
+         * Blockchain.Unknown - is the default selection
+         */
+        internal fun getNetworksList(type: CustomTokenType): List<Blockchain> {
+            val default = Blockchain.Unknown
+
+            val evmBlockchains = Blockchain.values()
+                .filter { it.isEvm() }
+                .filter { !it.isTestnet() }
+
+            val additionalBlockchains = listOf(
+                Blockchain.Binance,
+                Blockchain.Solana,
+            )
+
+            val networks = (evmBlockchains + additionalBlockchains).toMutableList()
+            networks.add(0, default)
+
+            //life hack
+            val fwCardVersion = domainStore.state.globalState.scanResponse?.card?.firmwareVersion
+                ?: FirmwareVersion(0, 0)
+
+            val solanaUnsupportedByCard = fwCardVersion < FirmwareVersion.SolanaAvailable
+            val solanaTokensUnsupportedByCard = fwCardVersion < FirmwareVersion.SolanaTokensAvailable
+            if (solanaUnsupportedByCard || solanaTokensUnsupportedByCard) networks.remove(Blockchain.Solana)
+
+            networks.removeAll(getNetworksUnsupportedByApp(type))
+
+            return networks
+        }
+
+        private fun getNetworksUnsupportedByApp(type: CustomTokenType): List<Blockchain> {
+            return when (type) {
+                CustomTokenType.Token -> listOf(Blockchain.Solana)
+                CustomTokenType.Blockchain -> emptyList()
+            }
         }
 
         private fun createFormValidators(): Map<CustomTokenFieldId, CustomTokenValidator<out Any>> {
@@ -169,31 +217,6 @@ data class AddCustomTokenState(
                 Symbol to TokenSymbolValidator(),
                 Decimals to TokenDecimalsValidator(),
             )
-        }
-
-        private fun getSupportedNetworks(type: CustomTokenType): List<Blockchain> {
-            val networks = mutableListOf(
-                Blockchain.Unknown,
-                Blockchain.Ethereum,
-                Blockchain.BSC,
-                Blockchain.Polygon,
-                Blockchain.Avalanche,
-                Blockchain.Fantom,
-                Blockchain.Binance,     // not evm
-                Blockchain.Solana,      // not evm
-            )
-            //life hack
-            val fwCardVersion = domainStore.state.globalState.scanResponse?.card?.firmwareVersion
-                ?: FirmwareVersion(0, 0)
-
-            val solanaUnsupportedByCard = fwCardVersion < FirmwareVersion.SolanaAvailable
-            val solanaTokensUnsupportedByCard = fwCardVersion < FirmwareVersion.SolanaTokensAvailable
-            if (solanaUnsupportedByCard || solanaTokensUnsupportedByCard) networks.remove(Blockchain.Solana)
-
-            //TODO: Solana
-            if (type == CustomTokenType.Token) networks.remove(Blockchain.Solana)
-
-            return networks
         }
 
         private fun getSupportedDerivations(): List<Blockchain> {
