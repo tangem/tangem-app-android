@@ -26,6 +26,8 @@ import com.tangem.tap.features.wallet.ui.WalletDetailsFragment
 import com.tangem.tap.features.wallet.ui.WalletFragment
 import com.tangem.wallet.R
 
+private class Navigation
+
 fun FragmentActivity.openFragment(
     screen: AppScreen,
     addToBackstack: Boolean,

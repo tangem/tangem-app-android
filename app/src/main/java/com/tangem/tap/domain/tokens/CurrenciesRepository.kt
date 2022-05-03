@@ -100,19 +100,16 @@ class CurrenciesRepository(val context: Application) {
 
     fun loadSavedCurrencies(
         cardId: String,
-        derivationStyle: DerivationStyle? = null
+        isHdWalletSupported: Boolean = false
     ): List<BlockchainNetwork> {
         if (DemoHelper.isDemoCardId(cardId)) {
             return loadDemoCurrencies(cardId)
         }
         return try {
             val json = context.readFileText(getFileNameForBlockchains(cardId))
-            blockchainNetworkAdapter.fromJson(json)?.distinct() ?: loadSavedCurrenciesOldWay(
-                cardId,
-                derivationStyle
-            )
+            blockchainNetworkAdapter.fromJson(json)?.distinct() ?: emptyList()
         } catch (exception: Exception) {
-            emptyList()
+            tryToLoadPreviousFormatAndMigrate(cardId, isHdWalletSupported)
         }
     }
 
@@ -126,12 +123,27 @@ class CurrenciesRepository(val context: Application) {
         }
     }
 
+    private fun tryToLoadPreviousFormatAndMigrate(
+        cardId: String,
+        isHdWalletSupported: Boolean = false
+    ): List<BlockchainNetwork> {
+        return try {
+            loadSavedCurrenciesOldWay(
+                cardId,
+                isHdWalletSupported
+            )
+        } catch (exception: Exception) {
+            emptyList()
+        }
+    }
+
     private fun loadSavedCurrenciesOldWay(
-        cardId: String, derivationStyle: DerivationStyle?
+        cardId: String, isHdWalletSupported: Boolean = false
     ): List<BlockchainNetwork> {
         val blockchains = loadSavedBlockchains(cardId)
         val tokens = loadSavedTokens(cardId)
         val currencies = getSupportedTokens()
+        val derivationStyle = if (isHdWalletSupported) DerivationStyle.LEGACY else null
         val blockchainNetworks = blockchains.map { blockchain ->
             BlockchainNetwork(
                 blockchain = blockchain,
@@ -141,7 +153,7 @@ class CurrenciesRepository(val context: Application) {
                     .map {
                         val token = it.toToken()
                         val id = currencies
-                            .find { it.contracts?.find { it.address == token.contractAddress } != null }
+                            .find { it.contracts.find { it.address == token.contractAddress } != null }
                             ?.id
                         token.copy(id = id)
                     }
@@ -168,7 +180,8 @@ class CurrenciesRepository(val context: Application) {
     fun getSupportedTokens(isTestNet: Boolean = false): List<Currency> {
         val fileName = if (isTestNet) "testnet_tokens" else "tokens"
         val json = context.assets.readJsonFileToString(fileName)
-        return currenciesAdapter.fromJson(json)!!.tokens.map { Currency.fromJsonObject(it) }
+        return currenciesAdapter.fromJson(json)!!.coins
+            .map { Currency.fromJsonObject(it) }
     }
 
     private fun loadTokensJson(blockchain: Blockchain): String? {
