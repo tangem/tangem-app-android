@@ -15,15 +15,18 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.tangem.domain.DomainError
-import com.tangem.domain.ErrorConverter
+import com.tangem.common.module.ModuleError
 import com.tangem.domain.common.form.Field
+import com.tangem.tap.common.CompositionLogger
 import com.tangem.tap.common.compose.extensions.stringResourceDefault
+import com.tangem.tap.common.moduleMessage.ModuleMessageConverter
 
 /**
 [REDACTED_AUTHOR]
@@ -31,7 +34,7 @@ import com.tangem.tap.common.compose.extensions.stringResourceDefault
 @Composable
 fun OutlinedTextFieldWidget(
     modifier: Modifier = Modifier,
-    textFieldData: Field.Data<String>,
+    fieldData: Field.Data<String>,
     labelId: Int? = null,
     label: String = "",
     placeholderId: Int? = null,
@@ -40,8 +43,8 @@ fun OutlinedTextFieldWidget(
     isEnabled: Boolean = true,
     isVisible: Boolean = true,
     isLoading: Boolean = false,
-    error: DomainError? = null,
-    errorConverter: ErrorConverter<String>? = null,
+    error: ModuleError? = null,
+    errorConverter: ModuleMessageConverter? = null,
     debounceTextChanges: Long = 400,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
@@ -54,7 +57,7 @@ fun OutlinedTextFieldWidget(
     ) {
         OutlinedProgressTextField(
             modifier = modifier,
-            textFieldData = textFieldData,
+            fieldData = fieldData,
             label = stringResourceDefault(labelId, label),
             placeholder = stringResourceDefault(placeholderId, placeholder),
             trailingIcon = trailingIcon,
@@ -73,39 +76,91 @@ fun OutlinedTextFieldWidget(
 @Composable
 private fun OutlinedProgressTextField(
     modifier: Modifier = Modifier,
-    textFieldData: Field.Data<String>,
+    fieldData: Field.Data<String>,
     label: String = "",
     placeholder: String = "",
     isEnabled: Boolean = true,
     isLoading: Boolean = false,
-    error: DomainError? = null,
+    error: ModuleError? = null,
     debounce: Long = 400,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     trailingIcon: @Composable (() -> Unit)? = null,
     onTextChanged: (String) -> Unit,
 ) {
-    val rTextDebouncer = valueDebouncerAsState(debounce, onTextChanged)
-    val rText = remember { mutableStateOf(textFieldData.value) }
+    val logger = remember {
+        CompositionLogger(label, "OutlinedProgressTextField", listOf("Символ токена"))
+    }
+    logger.nextComposition()
 
-    fun updateFieldValueAndEmmit(value: String) {
-        rText.value = value
-        rTextDebouncer.emmit(value)
+    val textValueState = remember { mutableStateOf(fieldData.value) }
+    val textDebouncer = valueDebouncerAsState(
+        initialValue = fieldData.value,
+        debounce = debounce,
+        onEmitValueReceived = {
+            logger.log("DEBOUNCER: onEmitValueReceived: [$it]")
+            logger.log("DEBOUNCER: start RECOMPOSE by new value for textValueState.value = [$it]")
+            textValueState.value = it
+        },
+        onValueChanged = {
+            logger.log("DEBOUNCER: onValueChanged:  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  dispatch.toStore([$it])")
+            onTextChanged(it)
+        })
+
+    logger.log("RECOMPOSE ---------------------------------------------------------------START [${logger.count}]")
+    logger.log("RECOMPOSE --data: fieldData.value: [${fieldData}]")
+    logger.log("RECOMPOSE --data: textValueState.value: [${textValueState.value}]")
+    logger.log("RECOMPOSE --data: textDebouncer.emittedValue = [${textDebouncer.emittedValue}]")
+    logger.log("RECOMPOSE --data: textDebouncer.debounced = [${textDebouncer.debounced}]")
+
+    if (!fieldData.isUserInput) {
+        // initial value is not from an user
+        val isNotUserInput = "-- IS NOT USER INPUT"
+        logger.log("recompose $isNotUserInput")
+        if (textValueState.value == fieldData.value) {
+            logger.log("$isNotUserInput: внешние данные ОДИНАКОВЫ с данными в поле")
+        } else {
+            logger.log("$isNotUserInput: внешние данные РАЗЛИЧАЮТСЯ с данными в поле")
+            if ((textDebouncer.emittedValue != textDebouncer.debounced) || textDebouncer.emitsCountBeforeDebounce > 0) {
+                logger.log("$isNotUserInput: пользователь ВВОДИТ данные -> внешние данные игнорируем, ждем RECOMPOSE")
+            } else {
+                logger.log("$isNotUserInput: пользователь НЕ вводит данные -> пытаемся обработать внешние данные")
+                if (textValueState.value != textDebouncer.emittedValue || textValueState.value != textDebouncer.debounced) {
+                    logger.log("$isNotUserInput: даннные в поле не соответствуют данным из textDebouncer")
+                    if (textDebouncer.emittedValue.isEmpty() && textDebouncer.debounced.isEmpty()) {
+                        logger.log("$isNotUserInput: даннные в textDebouncer ПУСТЫ -> start RECOMPOSE новые данные для textValueState.value = [${fieldData.value}]")
+                        textValueState.value = fieldData.value
+                    } else {
+                        logger.log("$isNotUserInput: даннные в textDebouncer НЕ ПУСТЫ  -> start RECOMPOSE новые данные для textValueState.value = [${fieldData.value}]")
+                        textValueState.value = fieldData.value
+                    }
+                } else {
+                    logger.log("$isNotUserInput: в пустое поле вставляются данные -> start RECOMPOSE новые данные для textValueState.value = [${fieldData.value}]")
+                    textValueState.value = fieldData.value
+                }
+            }
+        }
     }
-    // This action came from redux. Update the field value and send a new event as if from the user
-    if (!textFieldData.isUserInput) {
-        updateFieldValueAndEmmit(textFieldData.value)
-    }
+    logger.log("recompose --------------------------------------------------------------FINISH [${logger.count}]")
 
     Box {
         OutlinedTextField(
             modifier = Modifier
                 .fillMaxWidth(),
-            value = rText.value,
-            onValueChange = ::updateFieldValueAndEmmit,
+            value = textValueState.value,
+            onValueChange = {
+                logger.log("WIDGET: textDebouncer.emmit([$it])")
+                textDebouncer.emmit(it)
+            },
             keyboardOptions = keyboardOptions,
             label = { Text(label) },
-            placeholder = { Text(placeholder) },
+            placeholder = {
+                Text(
+                    text = placeholder,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            },
             trailingIcon = trailingIcon,
             singleLine = true,
             enabled = isEnabled,
@@ -120,13 +175,12 @@ private fun OutlinedProgressTextField(
             visible = isLoading,
         ) { LinearProgressIndicator() }
     }
-
 }
 
 @Composable
 private fun AnimatedErrorView(
-    error: DomainError? = null,
-    errorConverter: ErrorConverter<String>,
+    error: ModuleError? = null,
+    errorConverter: ModuleMessageConverter,
 ) {
     AnimatedVisibility(
         visible = error != null,
@@ -134,7 +188,7 @@ private fun AnimatedErrorView(
         exit = slideOutVertically() + fadeOut(),
     ) {
         error?.let {
-            ErrorView(errorConverter.convertError(it), style = TextStyle(fontSize = 14.sp))
+            ErrorView(errorConverter.convert(it), style = TextStyle(fontSize = 14.sp))
         }
     }
 }
@@ -142,20 +196,14 @@ private fun AnimatedErrorView(
 @Preview
 @Composable
 fun OutlinedTextFieldWithErrorTest() {
-    val converter = remember {
-        object : ErrorConverter<String> {
-            override fun convertError(error: DomainError): String {
-                return "Hello, i'am the error: ${error::class.java.simpleName}"
-            }
-
-        }
-    }
+    val context = LocalContext.current
+    val converter = remember { ModuleMessageConverter(context) }
 
     class SimpleError(
         override val code: Int = 1,
         override val message: String = "Error message",
         override val data: Any? = null,
-    ) : DomainError
+    ) : ModuleError
 
     val modifier = Modifier
         .fillMaxWidth()
@@ -166,7 +214,7 @@ fun OutlinedTextFieldWithErrorTest() {
         ) {
             OutlinedTextFieldWidget(
                 modifier = modifier,
-                textFieldData = Field.Data(""),
+                fieldData = Field.Data("", false),
                 label = "First label",
                 placeholder = "1 placeholder",
                 error = null,
@@ -174,7 +222,7 @@ fun OutlinedTextFieldWithErrorTest() {
             ) {}
             OutlinedTextFieldWidget(
                 modifier = modifier,
-                textFieldData = Field.Data("First"),
+                fieldData = Field.Data("First", false),
                 label = "First label",
                 placeholder = "1 placeholder",
                 error = null,
@@ -182,7 +230,7 @@ fun OutlinedTextFieldWithErrorTest() {
             ) {}
             OutlinedTextFieldWidget(
                 modifier = modifier,
-                textFieldData = Field.Data("First"),
+                fieldData = Field.Data("First", false),
                 label = "First label",
                 placeholder = "1 placeholder",
                 isLoading = true,
@@ -191,7 +239,7 @@ fun OutlinedTextFieldWithErrorTest() {
             ) {}
             OutlinedTextFieldWidget(
                 modifier = modifier,
-                textFieldData = Field.Data("First"),
+                fieldData = Field.Data("First", false),
                 label = "First label",
                 placeholder = "1 placeholder",
                 error = SimpleError(),
