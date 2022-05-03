@@ -27,11 +27,13 @@ fun List<WalletData>.toTokensContractAddresses(): List<ContractAddress> {
     return mapNotNull { (it.currency as? com.tangem.tap.features.wallet.redux.Currency.Token)?.token?.contractAddress }.distinct()
 }
 
-fun List<WalletData>.toTokens(): List<Token> {
-    return mapNotNull { (it.currency as? com.tangem.tap.features.wallet.redux.Currency.Token)?.token }.distinct()
+fun List<WalletData>.toNonCustomTokens(derivationStyle: DerivationStyle?): List<Token> {
+    return filter { !it.currency.isCustomCurrency(derivationStyle) }
+        .mapNotNull { (it.currency as? com.tangem.tap.features.wallet.redux.Currency.Token)?.token }
+        .distinct()
 }
 
-fun List<WalletData>.toTokensWithBlockchains(derivationStyle: DerivationStyle?): List<TokenWithBlockchain> {
+fun List<WalletData>.toNonCustomTokensWithBlockchains(derivationStyle: DerivationStyle?): List<TokenWithBlockchain> {
     return mapNotNull {
         if (it.currency !is com.tangem.tap.features.wallet.redux.Currency.Token) return@mapNotNull null
         if (it.currency.isCustomCurrency(derivationStyle)) return@mapNotNull null
@@ -39,7 +41,7 @@ fun List<WalletData>.toTokensWithBlockchains(derivationStyle: DerivationStyle?):
     }.distinct()
 }
 
-fun List<WalletData>.toBlockchains(derivationStyle: DerivationStyle?): List<Blockchain> {
+fun List<WalletData>.toNonCustomBlockchains(derivationStyle: DerivationStyle?): List<Blockchain> {
     return mapNotNull {
         if (it.currency.isCustomCurrency(derivationStyle)) {
             null
@@ -58,8 +60,9 @@ fun List<Currency>.filter(supportedBlockchains: Set<Blockchain>?): List<Currency
     if (supportedBlockchains == null) return this
     return map {
         it.copy(contracts =
-        it.contracts?.filter {
-            supportedBlockchains.contains(it.blockchain) && it.blockchain.canHandleTokens()
+        it.contracts.filter {
+            supportedBlockchains.contains(it.blockchain) &&
+                    (it.blockchain.canHandleTokens() || it.address == null)
         }
         )
     }.filterNot {
