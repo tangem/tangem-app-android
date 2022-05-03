@@ -9,20 +9,20 @@ data class CurrencyFromJson(
     val id: String,
     val name: String,
     val symbol: String,
-    val contracts: List<ContractFromJson>? = null
+    val networks: List<ContractFromJson>? = null
 )
 
 @JsonClass(generateAdapter = true)
 data class ContractFromJson(
     val networkId: String,
-    val address: String,
-    val decimalCount: Int
+    val contractAddress: String?,
+    val decimalCount: Int?
 )
 
 @JsonClass(generateAdapter = true)
 data class CurrenciesFromJson(
-    val imageHost: String,
-    val tokens: List<CurrencyFromJson>
+    val imageHost: String?,
+    val coins: List<CurrencyFromJson>
 )
 
 
@@ -35,7 +35,7 @@ data class Currency(
     val name: String,
     val symbol: String,
     val iconUrl: String,
-    val contracts: List<Contract>?
+    val contracts: List<Contract>
 ) {
 
     companion object {
@@ -45,7 +45,7 @@ data class Currency(
                 name = currency.name,
                 symbol = currency.symbol,
                 iconUrl = getIconUrl(currency.id),
-                contracts = currency.contracts?.toContracts()
+                contracts = currency.networks?.toContracts() ?: emptyList()
             )
         }
     }
@@ -54,8 +54,8 @@ data class Currency(
 data class Contract(
     val networkId: String,
     val blockchain: Blockchain,
-    val address: String,
-    val decimalCount: Int,
+    val address: String?,
+    val decimalCount: Int?,
     val iconUrl: String,
 ) {
 
@@ -65,7 +65,7 @@ data class Contract(
             return Contract(
                 networkId = contract.networkId,
                 blockchain = blockchain,
-                address = contract.address,
+                address = contract.contractAddress,
                 decimalCount = contract.decimalCount,
                 iconUrl = getIconUrl(contract.networkId)
             )
