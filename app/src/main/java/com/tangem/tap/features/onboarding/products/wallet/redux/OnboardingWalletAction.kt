@@ -21,6 +21,7 @@ sealed class OnboardingWalletAction : Action {
 sealed class BackupAction : Action {
 
     object DetermineBackupStep : BackupAction()
+    object IntroduceBackup : BackupAction()
     object StartBackup : BackupAction()
     object DismissBackup : BackupAction()
 

@@ -5,13 +5,13 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.extensions.isZero
 import com.tangem.common.services.Result
+import com.tangem.domain.common.ScanResponse
 import com.tangem.operations.attestation.CardVerifyAndGetInfo
 import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.tap.common.extensions.isPositive
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.getOrLoadCardArtworkUrl
-import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.features.wallet.models.hasPendingTransactions
 import com.tangem.tap.features.wallet.redux.Currency
 import com.tangem.tap.features.wallet.redux.ProgressState
@@ -32,7 +32,7 @@ class OnboardingManager(
 
     suspend fun loadArtworkUrl(): String {
         val cardInfo = cardInfo
-                ?: OnlineCardVerifier().getCardInfo(scanResponse.card.cardId, scanResponse.card.cardPublicKey)
+            ?: OnlineCardVerifier().getCardInfo(scanResponse.card.cardId, scanResponse.card.cardPublicKey)
         this.cardInfo = cardInfo
         return scanResponse.card.getOrLoadCardArtworkUrl(cardInfo)
     }
@@ -57,17 +57,19 @@ class OnboardingManager(
             is Result.Failure -> {
                 val error = (result.error as? TapError) ?: TapError.UnknownError
                 when (error) {
-                    is TapError.WalletManagerUpdate.NoAccountError -> OnboardingWalletBalance.error(error)
-                    // NoInternetConnection, WalletManagerUpdate.InternalError
+                    is TapError.WalletManager.NoAccountError -> OnboardingWalletBalance.error(error)
+                    // NoInternetConnection, WalletManager.InternalError
                     else -> {
                         Timber.e(error.localizedMessage)
-                        OnboardingWalletBalance.criticalError(TapError.WalletManagerUpdate.BlockchainIsUnreachableTryLater)
+                        OnboardingWalletBalance.criticalError(TapError.WalletManager.BlockchainIsUnreachableTryLater)
                     }
                 }
             }
         }
 
-        return balance.copy(currency = Currency.Blockchain(walletManager.wallet.blockchain))
+        return balance.copy(currency = Currency.Blockchain(
+            walletManager.wallet.blockchain, walletManager.wallet.publicKey.derivationPath?.rawPath)
+        )
     }
 
     fun activationStarted(cardId: String) {
@@ -81,7 +83,7 @@ class OnboardingManager(
 
 data class OnboardingWalletBalance(
     val value: BigDecimal = BigDecimal.ZERO,
-    val currency: Currency.Blockchain = Currency.Blockchain(Blockchain.Unknown),
+    val currency: Currency.Blockchain = Currency.Blockchain(Blockchain.Unknown, null),
     val hasIncomingTransaction: Boolean = false,
     val state: ProgressState,
     val error: TapError? = null,
@@ -91,7 +93,7 @@ data class OnboardingWalletBalance(
     fun balanceIsToppedUp(): Boolean = value.isPositive() || hasIncomingTransaction
 
     val amountToCreateAccount: String?
-        get() = if (error is TapError.WalletManagerUpdate.NoAccountError) error.customMessage else null
+        get() = if (error is TapError.WalletManager.NoAccountError) error.customMessage else null
 
     companion object {
         fun error(error: TapError): OnboardingWalletBalance = OnboardingWalletBalance(
