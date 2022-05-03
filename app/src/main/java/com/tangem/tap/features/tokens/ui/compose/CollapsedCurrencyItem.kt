@@ -1,6 +1,7 @@
 package com.tangem.tap.features.tokens.ui.compose
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
@@ -10,11 +11,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.SubcomposeAsyncImage
+import coil.request.ImageRequest
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.tap.common.extensions.getGreyedOutIconRes
@@ -36,10 +39,12 @@ fun CollapsedCurrencyItem(
             .clickable(onClick = { onCurrencyClick(currency.id) })
     ) {
         val blockchain = Blockchain.fromNetworkId(currency.id)
-        val iconRes = currency.iconUrl
 
         SubcomposeAsyncImage(
-            model = iconRes,
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(currency.iconUrl)
+                .crossfade(true)
+                .build(),
             contentDescription = currency.id,
             loading = { CurrencyPlaceholderIcon(currency.id) },
             error = { CurrencyPlaceholderIcon(currency.id) },
@@ -55,7 +60,7 @@ fun CollapsedCurrencyItem(
                 .align(Alignment.CenterVertically)
         ) {
             Text(
-                text = currency.name,
+                text = currency.fullName,
                 fontSize = 17.sp,
                 fontWeight = FontWeight.Normal,
                 color = Color(0xFF1C1C1E),
@@ -64,9 +69,10 @@ fun CollapsedCurrencyItem(
             Row {
                 if (!currency.contracts.isNullOrEmpty()) {
                     currency.contracts.map { contract ->
-                        if (contract.address == currency.symbol) {
+                        if (contract.address == null) {
                             BlockchainNetworkItem(
-                                blockchain = Blockchain.fromNetworkId(contract.networkId),
+                                blockchain = contract.blockchain,
+                                isMainNetwork = true,
                                 addedBlockchains = addedBlockchains
                             )
                         } else {
@@ -91,6 +97,7 @@ fun CollapsedCurrencyItem(
                 } else {
                     BlockchainNetworkItem(
                         blockchain = blockchain,
+                        isMainNetwork = false,
                         addedBlockchains = addedBlockchains
                     )
                 }
@@ -110,18 +117,39 @@ fun CollapsedCurrencyItem(
 @Composable
 fun BlockchainNetworkItem(
     blockchain: Blockchain?,
+    isMainNetwork: Boolean,
     addedBlockchains: List<Blockchain>
 ) {
     val added = addedBlockchains.contains(blockchain)
     val icon =
         if (added) blockchain?.getRoundIconRes() else blockchain?.getGreyedOutIconRes()
     if (icon != null) {
-        Image(
-            painter = painterResource(id = icon),
-            contentDescription = null,
-            Modifier
-                .size(20.dp)
-        )
+        Box(Modifier
+            .size(20.dp)) {
+            Image(
+                painter = painterResource(id = icon),
+                contentDescription = null,
+                Modifier
+                    .size(20.dp)
+            )
+            if (isMainNetwork) {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .size(7.dp)
+                        .clip(CircleShape)
+                        .background(Color.White)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .size(5.dp)
+                            .clip(CircleShape)
+                            .background(Color(0xFF1ACE80))
+                    )
+                }
+            }
+        }
         Spacer(modifier = Modifier.size(5.dp))
     }
 }
