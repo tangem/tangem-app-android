@@ -3,8 +3,10 @@ package com.tangem.tap.features.wallet.redux.middlewares
 import android.content.Intent
 import android.net.Uri
 import androidx.core.content.ContextCompat
+import com.tangem.blockchain.blockchains.solana.RentProvider
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
+import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.isZero
@@ -20,9 +22,14 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.extensions.toSendableAmounts
+import com.tangem.tap.domain.failedRates
+import com.tangem.tap.domain.loadedRates
+import com.tangem.tap.domain.tokens.BlockchainNetwork
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.send.redux.PrepareSendScreen
+import com.tangem.tap.features.wallet.models.PendingTransactionType
+import com.tangem.tap.features.wallet.models.getPendingTransactions
 import com.tangem.tap.features.wallet.redux.*
 import com.tangem.tap.network.NetworkStateChanged
 import com.tangem.tap.scope
@@ -34,6 +41,8 @@ import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.DispatchFunction
 import org.rekotlin.Middleware
+import timber.log.Timber
+import java.math.BigDecimal
 
 class WalletMiddleware {
     private val tradeCryptoMiddleware = TradeCryptoMiddleware()
@@ -77,49 +86,52 @@ class WalletMiddleware {
                 }
             }
             is WalletAction.LoadWallet.Success -> {
+                checkForRentWarning(walletState.getWalletManager(action.blockchain))
                 val coinAmount = action.wallet.amounts[AmountType.Coin]?.value
                 if (coinAmount != null && !coinAmount.isZero()) {
                     if (walletState.getWalletData(action.blockchain) == null) {
-                        store.dispatch(
-                            WalletAction.MultiWallet.AddBlockchain(
-                                action.blockchain,
-                                null
-                            )
-                        )
-                        store.dispatch(
-                            WalletAction.LoadWallet.Success(
-                                action.wallet,
-                                action.blockchain
-                            )
-                        )
+                        store.dispatch(WalletAction.MultiWallet.AddBlockchain(
+                            action.blockchain,
+                            null
+                        ))
+                        store.dispatch(WalletAction.LoadWallet.Success(
+                            action.wallet,
+                            action.blockchain
+                        ))
                     }
                 }
                 store.dispatch(WalletAction.Warnings.CheckHashesCount.CheckHashesCountOnline)
                 warningsMiddleware.tryToShowAppRatingWarning(action.wallet)
             }
             is WalletAction.LoadFiatRate -> {
-                val tapWalletManager = globalState.tapWalletManager
-                val fiatAppCurrency = globalState.appCurrency
+                val appCurrencyId = globalState.appCurrency
                 scope.launch {
-                    when {
+                    val coinsList = when {
                         action.wallet != null -> {
-                            globalState.tapWalletManager.loadFiatRate(
-                                fiatCurrency = fiatAppCurrency,
-                                wallet = action.wallet,
-                            )
+                            val wallet = action.wallet
+                            wallet.getTokens()
+                                .map { Currency.Token(it, wallet.blockchain, wallet.publicKey.derivationPath?.rawPath) }
+                                .plus(Currency.Blockchain(wallet.blockchain, wallet.publicKey.derivationPath?.rawPath))
                         }
-                        action.currencyList != null -> {
-                            globalState.tapWalletManager.loadFiatRate(
-                                fiatCurrency = fiatAppCurrency,
-                                currencies = action.currencyList,
-                            )
+                        action.coinsList != null -> action.coinsList
+                        else -> walletState.walletsData.map { it.currency }
+                    }
+                    val ratesResult = globalState.tapWalletManager.rates.loadFiatRate(
+                        currencyId = appCurrencyId,
+                        coinsList = coinsList,
+                    )
+                    when (ratesResult) {
+                        is Result.Success -> {
+                            ratesResult.data.loadedRates.forEach {
+                                dispatchOnMain(WalletAction.LoadFiatRate.Success(it.toPair()))
+                            }
+                            ratesResult.data.failedRates.forEach { (currency, throwable) ->
+                                Timber.e(throwable, "Loading rates failed for [%s]", currency.currencySymbol)
+                            }
                         }
-                        else -> {
-                            val currencyList = walletState.walletsData.map { it.currency }
-                            globalState.tapWalletManager.loadFiatRate(
-                                fiatCurrency = fiatAppCurrency,
-                                currencies = currencyList,
-                            )
+                        is Result.Failure -> {
+                            store.dispatchDebugErrorNotification("LoadFiatRate.Failure")
+                            dispatchOnMain(WalletAction.LoadFiatRate.Failure)
                         }
                     }
                 }
@@ -292,5 +304,44 @@ class WalletMiddleware {
             tokenAmount = amount,
             tokenRate = tokenRate
         )
+    }
+
+    private fun checkForRentWarning(walletManager: WalletManager?) {
+        val rentProvider = walletManager as? RentProvider ?: return
+
+        scope.launch {
+            when (val result = rentProvider.minimalBalanceForRentExemption()) {
+                is com.tangem.blockchain.extensions.Result.Success -> {
+                    fun isNeedToShowWarning(balance: BigDecimal, rentExempt: BigDecimal): Boolean {
+                        return balance < rentExempt
+                    }
+
+                    val balance = walletManager.wallet.fundsAvailable(AmountType.Coin)
+                    val outgoingTxs = walletManager.wallet.getPendingTransactions(PendingTransactionType.Outgoing)
+                    val rentExempt = result.data
+                    val show = if (outgoingTxs.isEmpty()) {
+                        isNeedToShowWarning(balance, rentExempt)
+                    } else {
+                        val outgoingAmount = outgoingTxs.sumOf { it.amount ?: BigDecimal.ZERO }
+                        val rest = balance.minus(outgoingAmount)
+                        isNeedToShowWarning(rest, rentExempt)
+                    }
+
+                    val currency = walletManager.wallet.blockchain.currency
+                    if (show) {
+                        dispatchOnMain(WalletAction.SetWalletRent(
+                            blockchain = BlockchainNetwork.fromWalletManager(walletManager),
+                            minRent = ("${rentProvider.rentAmount().stripZeroPlainString()} $currency"),
+                            rentExempt = ("${rentExempt.stripZeroPlainString()} $currency")
+                        ))
+                    } else {
+                        dispatchOnMain(WalletAction.RemoveWalletRent(
+                            blockchain = BlockchainNetwork.fromWalletManager(walletManager),
+                        ))
+                    }
+                }
+                is com.tangem.blockchain.extensions.Result.Failure -> {}
+            }
+        }
     }
 }
