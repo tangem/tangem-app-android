@@ -1,7 +1,7 @@
 package com.tangem.tap.features.demo
 
 import com.tangem.blockchain.common.WalletManager
-import com.tangem.tap.domain.tasks.product.ScanResponse
+import com.tangem.domain.common.ScanResponse
 
 /**
 [REDACTED_AUTHOR]
