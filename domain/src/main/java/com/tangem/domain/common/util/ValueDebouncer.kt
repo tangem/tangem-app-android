@@ -1,40 +1,52 @@
 package com.tangem.domain.common.util
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.onEach
 
 /**
 [REDACTED_AUTHOR]
  */
 class ValueDebouncer<T>(
-    private val debounce: Long = 400,
-    private val onValueChanged: (T?) -> Unit
+    private val initialValue: T,
+    private val debounceDuration: Long = 400,
+    private val onValueChanged: (T) -> Unit,
+    private val onEmitValueReceived: (T) -> Unit = {},
 ) {
 
-    private var value: T? = null
-    private val debounceScope = CoroutineScope(Job() + Dispatchers.Main)
-    private val flow = MutableStateFlow(value)
+    var emittedValue: T = initialValue
+        private set
+    var emitsCountBeforeDebounce: Int = 0
+        private set
+    var debounced: T = initialValue
+        private set
+
+    private val debounceScope: CoroutineScope = CoroutineScope(Job() + Dispatchers.Main)
+    private val flow = MutableStateFlow(debounced)
 
     init {
-        initFlow()
-    }
-
-    private fun initFlow() {
         debounceScope.launch {
-            flow.filter { if (value == null) true else value != it }
-                .debounce(debounce)
+            flow.debounce(debounceDuration)
                 .onEach {
-                    value = it
+                    debounced = it
                     onValueChanged(it)
+                    debounceScope.launch {
+                        delay(500)
+                        emitsCountBeforeDebounce = 0
+                    }
                 }
                 .collect()
         }
     }
 
+    fun isDebounced(value: T): Boolean = this.debounced == value
+
     fun emmit(emmitValue: T) {
+        emitsCountBeforeDebounce++
+        emittedValue = emmitValue
+        onEmitValueReceived.invoke(emmitValue)
         debounceScope.launch { flow.emit(emmitValue) }
     }
 }
