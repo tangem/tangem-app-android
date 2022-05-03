@@ -11,14 +11,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.SubcomposeAsyncImage
+import coil.request.ImageRequest
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.tap.domain.tokens.Currency
 import com.tangem.tap.features.tokens.redux.ContractAddress
 import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
@@ -36,9 +37,6 @@ fun ExpandedCurrencyItem(
     onAddCurrencyToggled: (Currency, TokenWithBlockchain?) -> Unit,
     onNetworkItemClicked: (ContractAddress) -> Unit
 ) {
-    val blockchain = Blockchain.fromNetworkId(currency.id)
-    val iconRes = currency.iconUrl
-
     Column {
         Row(
             modifier = Modifier
@@ -46,7 +44,10 @@ fun ExpandedCurrencyItem(
                 .clickable(onClick = { onCurrencyClick(currency.id) })
         ) {
             SubcomposeAsyncImage(
-                model = iconRes,
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(currency.iconUrl)
+                    .crossfade(true)
+                    .build(),
                 contentDescription = currency.id,
                 loading = { CurrencyPlaceholderIcon(currency.id) },
                 error = { CurrencyPlaceholderIcon(currency.id) },
@@ -63,7 +64,7 @@ fun ExpandedCurrencyItem(
                     .align(Alignment.CenterVertically)
             ) {
                 Text(
-                    text = currency.name,
+                    text = currency.fullName,
                     fontSize = 17.sp,
                     fontWeight = FontWeight.Normal,
                     color = Color(0xFF1C1C1E),
@@ -85,9 +86,7 @@ fun ExpandedCurrencyItem(
             )
         }
 
-        val blockchains = currency.contracts?.map { it.blockchain } ?: listOfNotNull(
-            Blockchain.fromNetworkId(currency.id)
-        )
+        val blockchains = currency.contracts.map { it.blockchain }
 
         Row {
             Box(
@@ -132,13 +131,14 @@ fun ExpandedCurrencyItem(
                     .padding(top = 6.dp),
             ) {
                 blockchains.map { blockchain ->
-                    val contract = currency.contracts?.firstOrNull { it.blockchain == blockchain }
-                    val added = if (contract != null && contract.address != currency.symbol) {
+                    val contract = currency.contracts.firstOrNull { it.blockchain == blockchain }
+                        ?: return@map
+                    val added = if (contract.address != null) {
                         addedTokens.map { it.token.contractAddress }.contains(contract.address)
                     } else {
                         addedBlockchains.contains(blockchain)
                     }
-                    val canBeRemoved = if (contract != null && contract.address != currency.symbol) {
+                    val canBeRemoved = if (contract.address != null) {
                         !nonRemovableTokens.contains(contract.address)
                     } else {
                         !nonRemovableBlockchains.contains(blockchain)

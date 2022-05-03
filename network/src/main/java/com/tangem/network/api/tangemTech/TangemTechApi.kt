@@ -8,22 +8,20 @@ import retrofit2.http.Query
  */
 interface TangemTechApi {
 
-    @GET("coins/prices")
-    suspend fun coinsPrices(
-        @Query("currency") currency: String,
-        @Query("ids") ids: List<String>,
-    ): Coins.PricesResponse
-
-    @GET("coins/check-address")
-    suspend fun coinsCheckAddress(
-        @Query("contractAddress") contractAddress: String,
+    @GET("coins")
+    suspend fun coins(
+        @Query("contractAddress") contractAddress: String? = null,
         @Query("networkId") networkId: String? = null,
-    ): Coins.CheckAddressResponse
+        @Query("active") active: Boolean? = null,
+    ): CoinsResponse
 
-    @GET("coins/currencies")
-    suspend fun coinsCurrencies(): Coins.CurrenciesResponse
+    @GET("rates")
+    suspend fun rates(
+        @Query("currencyId") currencyId: String,
+        @Query("coinIds") coinIds: String,
+    ): RatesResponse
 
-    @GET("coins/tokens")
-    suspend fun coinsTokens(): Coins.TokensResponse
+    @GET("currencies")
+    suspend fun currencies(): CurrenciesResponse
 
 }
