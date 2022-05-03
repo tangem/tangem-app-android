@@ -2,13 +2,14 @@ package com.tangem.tap.features.details.redux
 
 import com.tangem.blockchain.common.Wallet
 import com.tangem.common.card.Card
+import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.common.TwinCardNumber
+import com.tangem.network.api.tangemTech.CurrenciesResponse
+import com.tangem.network.api.tangemTech.TangemTechService
 import com.tangem.operations.pins.CheckUserCodesResponse
 import com.tangem.tap.common.redux.NotificationAction
 import com.tangem.tap.common.redux.global.FiatCurrencyName
-import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.domain.termsOfUse.CardTou
-import com.tangem.tap.domain.twins.TwinCardNumber
-import com.tangem.tap.network.coinmarketcap.FiatCurrency
 import com.tangem.wallet.R
 import org.rekotlin.Action
 
@@ -20,6 +21,7 @@ sealed class DetailsAction : Action {
         val cardTou: CardTou,
         val fiatCurrencyName: FiatCurrencyName,
         val fiatCurrencies: List<FiatCurrencyName>? = null,
+        val tangemTechService: TangemTechService,
     ) : DetailsAction()
 
     object ShowDisclaimer : DetailsAction()
@@ -46,7 +48,7 @@ sealed class DetailsAction : Action {
     object CreateBackup : DetailsAction()
 
     sealed class AppCurrencyAction : DetailsAction() {
-        data class SetCurrencies(val currencies: List<FiatCurrency>) : AppCurrencyAction()
+        data class SetCurrencies(val currencies: List<CurrenciesResponse.Currency>) : AppCurrencyAction()
         object ChooseAppCurrency : AppCurrencyAction()
         object Cancel : AppCurrencyAction()
         data class SelectAppCurrency(val fiatCurrencyName: FiatCurrencyName) : AppCurrencyAction()
