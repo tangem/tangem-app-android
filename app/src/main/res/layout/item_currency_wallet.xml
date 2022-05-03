@@ -118,6 +118,25 @@
                 tools:text="USD 3 588" />
 
             <TextView
+                android:id="@+id/tv_custom_currency"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
+                android:paddingStart="4dp"
+                android:paddingEnd="4dp"
+                android:paddingTop="3dp"
+                android:paddingBottom="3dp"
+                android:textColor="@color/darkGray2"
+                android:textSize="14sp"
+                android:background="@drawable/shape_rectangle_rounded_4"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toEndOf="@id/iv_currency"
+                app:layout_constraintTop_toTopOf="@id/guideline"
+                android:text="@string/common_custom" />
+
+            <TextView
                 android:id="@+id/tv_status_error_message"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
