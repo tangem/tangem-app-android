@@ -20,10 +20,13 @@ import com.tangem.tap.features.onboarding.products.twins.ui.TwinsCardsFragment
 import com.tangem.tap.features.onboarding.products.wallet.ui.OnboardingWalletFragment
 import com.tangem.tap.features.send.ui.SendFragment
 import com.tangem.tap.features.shop.ui.ShopFragment
+import com.tangem.tap.features.tokens.addCustomToken.AddCustomTokenFragment
 import com.tangem.tap.features.tokens.ui.AddTokensFragment
 import com.tangem.tap.features.wallet.ui.WalletDetailsFragment
 import com.tangem.tap.features.wallet.ui.WalletFragment
 import com.tangem.wallet.R
+
+private class Navigation
 
 fun FragmentActivity.openFragment(
     screen: AppScreen,
@@ -82,6 +85,7 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
         AppScreen.DetailsSecurity -> DetailsSecurityFragment()
         AppScreen.Disclaimer -> DisclaimerFragment()
         AppScreen.AddTokens -> AddTokensFragment()
+        AppScreen.AddCustomToken -> AddCustomTokenFragment()
         AppScreen.WalletDetails -> WalletDetailsFragment()
         AppScreen.WalletConnectSessions -> WalletConnectSessionsFragment()
         AppScreen.QrScan -> QrScanFragment()

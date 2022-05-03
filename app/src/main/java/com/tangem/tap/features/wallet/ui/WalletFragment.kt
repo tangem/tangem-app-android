@@ -20,6 +20,8 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
+import com.tangem.tap.domain.statePrinter.printScanResponseState
+import com.tangem.tap.domain.statePrinter.printWalletState
 import com.tangem.tap.domain.termsOfUse.CardTou
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.wallet.redux.*
@@ -29,6 +31,7 @@ import com.tangem.tap.features.wallet.ui.wallet.MultiWalletView
 import com.tangem.tap.features.wallet.ui.wallet.SingleWalletView
 import com.tangem.tap.features.wallet.ui.wallet.WalletView
 import com.tangem.tap.store
+import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentWalletBinding
 import org.rekotlin.StoreSubscriber
@@ -58,12 +61,11 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     override fun onStart() {
         super.onStart()
         store.subscribe(this) { state ->
-            state.skipRepeats { oldState, newState ->
-                oldState.walletState == newState.walletState
-            }.select { it.walletState }
+            state.select { it.walletState }
         }
         walletView.setFragment(this, binding)
-        store.dispatch(WalletAction.UpdateWallet(force = false))
+//        store.dispatch(WalletAction.UpdateWallet(force = false))
+//        store.dispatch(WalletAction.LoadWallet())
     }
 
     override fun onStop() {
@@ -81,6 +83,16 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         }
         setupWarningsRecyclerView()
         walletView.changeWalletView(this, binding)
+//        addCustomActionOnCard()
+    }
+
+    private fun addCustomActionOnCard() {
+        if (!BuildConfig.TEST_ACTION_ENABLED) return
+
+        binding.ivCard.setOnClickListener {
+            printScanResponseState()
+            printWalletState()
+        }
     }
 
     private fun setupWarningsRecyclerView() {
@@ -152,10 +164,10 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
 
     private fun setupCardImage(cardImage: Artwork?) {
         Picasso.get()
-                .load(cardImage?.artworkId)
-                .placeholder(R.drawable.card_placeholder_black)
-                ?.error(R.drawable.card_placeholder_black)
-                ?.into(binding.ivCard)
+            .load(cardImage?.artworkId)
+            .placeholder(R.drawable.card_placeholder_black)
+            ?.error(R.drawable.card_placeholder_black)
+            ?.into(binding.ivCard)
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
@@ -167,7 +179,8 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
                         scanNoteResponse,
                         store.state.walletState.walletManagers.map { it.wallet },
                         CardTou(),
-                        store.state.globalState.appCurrency
+                        store.state.globalState.appCurrency,
+                        tangemTechService = store.state.domainNetworks.tangemTechService
                     ))
                     store.dispatch(NavigationAction.NavigateTo(AppScreen.Details))
                     true
