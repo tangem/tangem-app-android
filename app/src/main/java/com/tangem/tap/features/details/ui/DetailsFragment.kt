@@ -7,12 +7,12 @@ import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import androidx.transition.TransitionInflater
 import by.kirich1409.viewbindingdelegate.viewBinding
+import com.tangem.domain.common.getTwinCardIdForUser
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
-import com.tangem.tap.domain.isMultiwalletAllowed
-import com.tangem.tap.domain.twins.getTwinCardIdForUser
+import com.tangem.tap.domain.extensions.isMultiwalletAllowed
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.features.details.redux.SecurityOption
