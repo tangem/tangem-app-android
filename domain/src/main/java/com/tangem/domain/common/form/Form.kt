@@ -4,11 +4,25 @@ package com.tangem.domain.common.form
 [REDACTED_AUTHOR]
  */
 class Form(
-    val fieldList: List<DataField<*>>,
+    fieldList: List<DataField<*>>,
 ) {
+    private val _fieldList: MutableList<DataField<*>> = fieldList.toMutableList()
+
+    val fieldList: List<DataField<*>>
+        get() = _fieldList.toList()
+
     fun getField(id: FieldId): DataField<*>? = fieldList.firstOrNull { it.id == id }
 
     fun getData(id: FieldId): Pair<FieldId, *>? = getField(id)?.getData()
+
+    fun setField(field: DataField<*>) {
+        val oldField = getField(field.id) ?: return
+        val oldIndexOfField = _fieldList.indexOf(oldField)
+        if (oldIndexOfField == -1) return
+
+        _fieldList.removeAt(oldIndexOfField)
+        _fieldList.add(oldIndexOfField, field)
+    }
 
     // convert this form data whatever you want
     fun visitDataConverter(converter: FieldDataConverter<*>) {
@@ -24,7 +38,7 @@ interface Field<T> {
 
     data class Data<Data>(
         val value: Data,
-        val isUserInput: Boolean = true
+        val isUserInput: Boolean
     )
 }
 
