@@ -17,14 +17,13 @@ import java.util.concurrent.Executors
  * a state behavior.
  * All ReStoreHub's must be marked as internal
  */
-internal interface ReStoreHub<StoreState, State> : HubMiddleware<StoreState>, HubReducer<StoreState>
-
-internal interface HubMiddleware<StoreState> {
+internal interface ReStoreHub<StoreState, State> {
     fun getMiddleware(): Middleware<StoreState>
+    fun reduce(action: Action, domainState: StoreState): StoreState
 }
 
-internal interface HubReducer<StoreState> {
-    fun reduce(action: Action, storeState: StoreState): StoreState
+internal interface ReStoreReducer<State> {
+    fun reduceAction(action: Action, state: State): State
 }
 
 /**
@@ -87,13 +86,13 @@ internal abstract class BaseStoreHub<State>(
      * Reduce the action and check it. If the action hasn't updated the hubState, then it doesn't need to update
      * storeState
      */
-    override fun reduce(action: Action, storeState: DomainState): DomainState {
-        val oldState = getHubState(storeState)
-        val newState = reduceAction(action, oldState)
-        return if (oldState === newState) {
-            storeState
+    override fun reduce(action: Action, domainState: DomainState): DomainState {
+        val hubOldState = getHubState(domainState)
+        val hubNewState = getReducer().reduceAction(action, hubOldState)
+        return if (hubOldState === hubNewState) {
+            domainState
         } else {
-            updateStoreState(storeState, newState)
+            updateStoreState(domainState, hubNewState)
         }
     }
 
@@ -102,22 +101,11 @@ internal abstract class BaseStoreHub<State>(
     }
 
     protected abstract suspend fun handleAction(action: Action, storeState: DomainState, cancel: ValueCallback<Action>)
-
-    @Deprecated(
-        replaceWith = ReplaceWith("ReStoreReducer<T>"),
-        message = "must return a Reducer instance. The reducer must be a separate component - this closes " +
-            "access to the states that can be obtained from ReStoreHub"
-    )
-    abstract fun reduceAction(action: Action, state: State): State
-//    protected abstract fun getReducer(): ReStoreReducer<State>
+    protected abstract fun getReducer(): ReStoreReducer<State>
 
     protected abstract fun getHubState(storeState: DomainState): State
     protected abstract fun updateStoreState(storeState: DomainState, newHubState: State): DomainState
 
-}
-
-internal interface ReStoreReducer<State> {
-    fun reduceAction(action: Action, state: State): State
 }
 
 internal suspend inline fun ReStoreHub<*, *>.dispatchOnMain(vararg actions: Action) {
