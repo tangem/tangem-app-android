@@ -21,12 +21,15 @@ fun CurrencyExchangeStatus.buyIsAllowed(currency: Currency): Boolean {
     if (store.state.globalState.configManager?.config?.isTopUpEnabled == false) return false
     if (!isBuyAllowed) return false
 
+    //TODO: temporary, for the 3.32 release, unlock all buy button
+    return true
+
     return when (currency) {
         is Currency.Blockchain -> {
             val blockchain = currency.blockchain
             when {
                 blockchain.isTestnet() -> blockchain.getTestnetTopUpUrl() != null
-                blockchain == Blockchain.Unknown || blockchain == Blockchain.BSC -> false
+                blockchain == Blockchain.Unknown -> false
                 else -> availableToBuy.contains(currency.currencySymbol)
             }
         }
