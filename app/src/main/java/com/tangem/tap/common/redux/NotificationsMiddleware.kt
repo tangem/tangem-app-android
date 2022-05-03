@@ -4,12 +4,14 @@ import android.content.Context
 import android.widget.Toast
 import androidx.coordinatorlayout.widget.CoordinatorLayout
 import com.google.android.material.snackbar.Snackbar
+import com.tangem.tap.common.extensions.getColor
 import com.tangem.tap.domain.ArgError
 import com.tangem.tap.domain.MultiMessageError
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.assembleErrors
 import com.tangem.tap.notificationsHandler
 import com.tangem.wallet.BuildConfig
+import com.tangem.wallet.R
 import org.rekotlin.Action
 import org.rekotlin.Middleware
 import java.lang.ref.WeakReference
@@ -29,7 +31,17 @@ class NotificationsHandler(coordinatorLayout: CoordinatorLayout) {
     fun showNotification(message: String) {
         baseLayout.get()?.let { layout ->
             Snackbar.make(layout, message, Snackbar.LENGTH_LONG)
-                    .also { snackbar -> snackbar.show() }
+                .also { snackbar -> snackbar.show() }
+        }
+    }
+
+    fun showDebugNotification(message: String) {
+        baseLayout.get()?.let { layout ->
+            Snackbar.make(layout, message, Snackbar.LENGTH_LONG)
+                .also { snackbar ->
+                    snackbar.setBackgroundTint(layout.getColor(R.color.warning_warning))
+                    snackbar.show()
+                }
         }
     }
 
@@ -50,6 +62,12 @@ class NotificationsHandler(coordinatorLayout: CoordinatorLayout) {
 
         val message = builder(errorList.map { getMessageString(context, it.first, it.second) })
         showNotification(message)
+    }
+
+    fun showDebugErrorNotification(message: Int, args: List<Any>? = null) {
+        baseLayout.get()?.let {
+            showDebugNotification(getMessageString(it.context, message, args))
+        }
     }
 }
 
@@ -74,17 +92,37 @@ private fun handleNotificationAction(action: Action) {
     if (action is Debug && !BuildConfig.DEBUG) return
 
     when (action) {
-        is NotificationAction -> notificationsHandler?.showNotification(action.messageResource)
+        is NotificationAction -> {
+            notificationsHandler?.showNotification(action.messageResource)
+        }
         is ToastNotificationAction -> notificationsHandler?.showToastNotification(action.messageResource)
         is ErrorAction -> {
-            when (action.error) {
-                is MultiMessageError -> {
-                    val multiError = action.error as MultiMessageError
-                    notificationsHandler?.showNotification(multiError.assembleErrors(), multiError.builder)
+            when (action) {
+                is Debug -> {
+                    val args = (action.error as? ArgError)?.args ?: listOf()
+                    when (action) {
+                        is DebugNotification -> {
+                            notificationsHandler?.showNotification(action.error.messageResource, args)
+                        }
+                        is DebugToastNotification -> {
+                            notificationsHandler?.showToastNotification(action.error.messageResource, args)
+                        }
+                        is DebugErrorAction -> {
+                            notificationsHandler?.showDebugErrorNotification(action.error.messageResource, args)
+                        }
+                    }
                 }
                 else -> {
-                    val args = (action.error as? ArgError)?.args ?: listOf()
-                    notificationsHandler?.showNotification(action.error.messageResource, args)
+                    when (action.error) {
+                        is MultiMessageError -> {
+                            val multiError = action.error as MultiMessageError
+                            notificationsHandler?.showNotification(multiError.assembleErrors(), multiError.builder)
+                        }
+                        else -> {
+                            val args = (action.error as? ArgError)?.args ?: listOf()
+                            notificationsHandler?.showNotification(action.error.messageResource, args)
+                        }
+                    }
                 }
             }
         }
