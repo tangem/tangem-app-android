@@ -336,7 +336,7 @@ class EmailDataBuilder(
                 appendLine()
                 tokens.forEach { token ->
                     builder.appendKeyValue("Name", token.name)
-                    if (token.id != null) builder.appendKeyValue("Id", token.id ?: "")
+                    builder.appendKeyValue("ID", token.id ?: "[custom token]")
                     builder.appendKeyValue("Contract address", token.contractAddress)
                 }
             }

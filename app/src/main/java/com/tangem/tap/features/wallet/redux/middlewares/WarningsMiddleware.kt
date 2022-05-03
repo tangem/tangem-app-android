@@ -8,7 +8,9 @@ import com.tangem.common.card.Card
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.isTestCard
+import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
 import com.tangem.tap.common.analytics.AnalyticsEvent
+import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.isGreaterThan
 import com.tangem.tap.common.redux.global.GlobalState
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
@@ -64,6 +66,9 @@ class WarningsMiddleware {
                     )
                 }
             }
+            is WalletAction.Warnings.RestoreFundsWarningClosed -> {
+                preferencesStorage.saveRestoreFundsWarningClosed()
+            }
         }
     }
 
@@ -87,6 +92,9 @@ class WarningsMiddleware {
             if (card.isTestCard) {
                 addWarningMessage(WarningMessagesManager.testCardWarning(), autoUpdate = true)
                 return@let
+            }
+            if (card.useOldStyleDerivation && !preferencesStorage.wasRestoreFundsWarningClosed()) {
+                addWarningMessage(warning = WarningMessagesManager.restoreFundsWarning())
             }
 
             showWarningLowRemainingSignaturesIfNeeded(card)
@@ -193,7 +201,7 @@ class WarningsMiddleware {
     }
 
     private fun setWarningMessages() {
-        store.dispatch(WalletAction.Warnings.Set(getWarnings()))
+        store.dispatchOnMain(WalletAction.Warnings.Set(getWarnings()))
     }
 
     private fun getWarnings(): List<WarningMessage> {
