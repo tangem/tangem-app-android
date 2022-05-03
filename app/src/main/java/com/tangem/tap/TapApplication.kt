@@ -7,6 +7,7 @@ import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.google.firebase.remoteconfig.ktx.remoteConfigSettings
 import com.tangem.Log
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
+import com.tangem.network.common.MoshiConverter
 import com.tangem.tap.common.analytics.GlobalAnalyticsHandler
 import com.tangem.tap.common.images.PicassoHelper
 import com.tangem.tap.common.redux.AppState
@@ -24,7 +25,6 @@ import com.tangem.tap.features.feedback.AdditionalEmailInfo
 import com.tangem.tap.features.feedback.FeedbackManager
 import com.tangem.tap.features.feedback.TangemLogCollector
 import com.tangem.tap.network.NetworkConnectivity
-import com.tangem.tap.network.createMoshi
 import com.tangem.tap.persistence.PreferencesStorage
 import com.tangem.wallet.BuildConfig
 import org.rekotlin.Store
@@ -72,7 +72,7 @@ class TapApplication : Application() {
     }
 
     private fun loadConfigs() {
-        val moshi = createMoshi()
+        val moshi = MoshiConverter.defaultMoshi()
         val localLoader = FeaturesLocalLoader(this, moshi)
         val remoteLoader = FeaturesRemoteLoader(moshi)
         val configManager = ConfigManager(localLoader, remoteLoader)
