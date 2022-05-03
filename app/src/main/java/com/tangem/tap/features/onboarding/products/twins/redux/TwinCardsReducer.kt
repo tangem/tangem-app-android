@@ -1,7 +1,7 @@
 package com.tangem.tap.features.onboarding.products.twins.redux
 
+import com.tangem.domain.common.getTwinCardNumber
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.domain.twins.getTwinCardNumber
 import org.rekotlin.Action
 
 class TwinCardsReducer {
