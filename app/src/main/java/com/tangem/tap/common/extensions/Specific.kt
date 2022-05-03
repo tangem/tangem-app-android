@@ -1,8 +1,8 @@
 package com.tangem.tap.common.extensions
 
 import com.tangem.common.extensions.isZero
+import com.tangem.network.api.tangemTech.CurrenciesResponse
 import com.tangem.tap.common.redux.global.FiatCurrencyName
-import com.tangem.tap.network.coinmarketcap.FiatCurrency
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.DecimalFormat
@@ -10,7 +10,7 @@ import java.text.DecimalFormatSymbols
 import java.util.*
 
 fun BigDecimal.toFormattedString(
-        decimals: Int, roundingMode: RoundingMode = RoundingMode.DOWN, locale: Locale = Locale.US
+    decimals: Int, roundingMode: RoundingMode = RoundingMode.DOWN, locale: Locale = Locale.US
 ): String {
     val symbols = DecimalFormatSymbols(locale)
     val df = DecimalFormat()
@@ -26,7 +26,7 @@ fun BigDecimal.toFormattedCurrencyString(
     decimals: Int, currency: String, roundingMode: RoundingMode = RoundingMode.DOWN,
     limitNumberOfDecimals: Boolean = true
 ): String {
-    val decimalsForRounding = if (limitNumberOfDecimals){
+    val decimalsForRounding = if (limitNumberOfDecimals) {
         if (decimals > 8) 8 else decimals
     } else {
         decimals
@@ -52,7 +52,7 @@ fun BigDecimal.toFormattedFiatValue(fiatCurrencyName: FiatCurrencyName): String 
     return "≈ ${fiatCurrencyName}  $this"
 }
 
-fun FiatCurrency.toFormattedString(): String = "${this.name} (${this.symbol}) - ${this.sign}"
+fun CurrenciesResponse.Currency.toFormattedString(): String = "${this.name} (${this.code}) - ${this.unit}"
 
 fun BigDecimal.stripZeroPlainString(): String = this.stripTrailingZeros().toPlainString()
 
