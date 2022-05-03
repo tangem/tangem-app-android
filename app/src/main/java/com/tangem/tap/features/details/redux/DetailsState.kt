@@ -3,11 +3,11 @@ package com.tangem.tap.features.details.redux
 import android.net.Uri
 import com.tangem.blockchain.common.Wallet
 import com.tangem.domain.common.ScanResponse
+import com.tangem.network.api.tangemTech.CurrenciesResponse
 import com.tangem.tap.common.entities.Button
 import com.tangem.tap.common.entities.TapCurrency.Companion.DEFAULT_FIAT_CURRENCY
 import com.tangem.tap.common.redux.global.FiatCurrencyName
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
-import com.tangem.tap.network.coinmarketcap.FiatCurrency
 import com.tangem.tap.store
 import org.rekotlin.StateType
 import java.util.*
@@ -51,8 +51,9 @@ data class SecurityScreenState(
 )
 
 enum class SecurityOption { LongTap, PassCode, AccessCode }
+
 data class AppCurrencyState(
     val fiatCurrencyName: FiatCurrencyName = DEFAULT_FIAT_CURRENCY,
     val showAppCurrencyDialog: Boolean = false,
-    val fiatCurrencies: List<FiatCurrency>? = null,
+    val fiatCurrencies: List<CurrenciesResponse.Currency>? = null,
 )
