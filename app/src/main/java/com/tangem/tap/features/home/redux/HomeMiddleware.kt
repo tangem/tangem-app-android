@@ -1,12 +1,13 @@
 package com.tangem.tap.features.home.redux
 
+import com.tangem.domain.common.extensions.withMainContext
+import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.AnalyticsParam
 import com.tangem.tap.common.analytics.GetCardSourceParams
 import com.tangem.tap.common.entities.IndeterminateProgressButton
 import com.tangem.tap.common.extensions.dispatchOpenUrl
 import com.tangem.tap.common.extensions.onCardScanned
-import com.tangem.tap.common.extensions.withMainContext
 import com.tangem.tap.common.post
 import com.tangem.tap.common.postUi
 import com.tangem.tap.common.redux.AppState
@@ -14,7 +15,6 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.FragmentShareTransition
 import com.tangem.tap.common.redux.navigation.NavigationAction
-import com.tangem.tap.domain.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.features.home.redux.HomeMiddleware.Companion.BUY_WALLET_URL
 import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
@@ -50,7 +50,10 @@ private val homeMiddleware: Middleware<AppState> = { dispatch, state ->
                         postUi(700) { store.dispatch(HomeAction.ReadCard) }
                     }
                 }
-                is HomeAction.ReadCard -> handleReadCard()
+                is HomeAction.ReadCard -> {
+                    handleReadCard()
+//                    store.dispatch(NavigationAction.NavigateTo(AppScreen.AddCustomTokens))
+                }
                 is HomeAction.GoToShop -> {
                     when (action.regionProvider.getRegion()?.toLowerCase()) {
                         "ru" -> store.dispatchOpenUrl(BUY_WALLET_URL)
