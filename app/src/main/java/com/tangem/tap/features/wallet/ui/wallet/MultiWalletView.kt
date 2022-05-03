@@ -3,11 +3,14 @@ package com.tangem.tap.features.wallet.ui.wallet
 import android.app.Dialog
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.tangem.common.card.Card
+import com.tangem.domain.common.TapWorkarounds.derivationStyle
+import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.currenciesRepository
 import com.tangem.tap.features.tokens.redux.TokensAction
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletDialog
@@ -94,11 +97,30 @@ class MultiWalletView : WalletView {
         val fragment = fragment ?: return
         val binding = binding ?: return
 
-        walletsAdapter.submitList(state.wallets, state.primaryBlockchain, state.primaryToken)
+        walletsAdapter.submitList(state.walletsData, state.primaryBlockchain, state.primaryToken)
 
         binding.btnAddToken.setOnClickListener {
-            store.dispatch(TokensAction.LoadCurrencies)
-            store.dispatch(TokensAction.SetAddedCurrencies(state.wallets))
+            val card = store.state.globalState.scanResponse!!.card
+            store.dispatch(
+                TokensAction.LoadCurrencies(
+                    supportedBlockchains = currenciesRepository.getBlockchains(
+                        card.firmwareVersion,
+                        card.isTestCard
+                    ),
+                    scanResponse = store.state.globalState.scanResponse
+                )
+            )
+            store.dispatch(TokensAction.AllowToAddTokens(true))
+            store.dispatch(
+                TokensAction.SetAddedCurrencies(
+                    wallets = state.walletsData,
+                    derivationStyle = card.derivationStyle
+                )
+            )
+            store.dispatch(
+                TokensAction.SetNonRemovableCurrencies(
+                    state.walletsData.filterNot { state.canBeRemoved(it) })
+            )
             store.dispatch(NavigationAction.NavigateTo(AppScreen.AddTokens))
         }
         handleErrorStates(state = state, binding = binding, fragment = fragment)
