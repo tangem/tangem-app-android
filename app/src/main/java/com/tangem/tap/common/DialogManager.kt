@@ -53,6 +53,7 @@ class DialogManager : StoreSubscriber<GlobalState> {
             is AppDialog.SimpleOkDialogRes -> SimpleOkDialog.create(state.dialog, context)
             is AppDialog.ScanFailsDialog -> ScanFailsDialog.create(context)
             is AppDialog.AddressInfoDialog -> AddressInfoBottomSheetDialog(state.dialog, context)
+            is AppDialog.TestActionsDialog -> TestActionsBottomSheetDialog(state.dialog, context)
             is TwinCardsAction.Wallet.ShowInterruptDialog -> CreateWalletInterruptDialog.create(state.dialog, context)
             is WalletConnectDialog.UnsupportedCard ->
                 SimpleAlertDialog.create(
