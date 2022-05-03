@@ -4,6 +4,11 @@ apply plugin: 'kotlin-kapt'
 apply plugin: 'com.google.gms.google-services'
 apply plugin: 'com.google.firebase.crashlytics'
 
+ext.configVar = [
+        configEnvironment: "CONFIG_ENVIRONMENT",
+        testActionEnabled: "TEST_ACTION_ENABLED",
+]
+
 android {
     compileSdkVersion 31
     defaultConfig {
@@ -13,6 +18,8 @@ android {
         minSdkVersion 21
         targetSdkVersion 31
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField 'Boolean', configVar.testActionEnabled, 'false'
     }
     buildFeatures {
         compose true
@@ -24,7 +31,8 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.debug
-            buildConfigField 'String', 'CONFIG_ENVIRONMENT', '\"prod\"'
+            buildConfigField 'String', configVar.configEnvironment, '\"prod\"'
+            buildConfigField 'Boolean', configVar.testActionEnabled, 'false'
         }
         debug {
             debuggable true
@@ -34,15 +42,18 @@ android {
             firebaseCrashlytics {
                 mappingFileUploadEnabled false
             }
-            buildConfigField 'String', 'CONFIG_ENVIRONMENT', '\"dev\"'
+            buildConfigField 'String', configVar.configEnvironment, '\"dev\"'
+            buildConfigField 'Boolean', configVar.testActionEnabled, 'true'
         }
         debug_beta {
             initWith release
             debuggable false
             versionNameSuffix "-beta"
             applicationIdSuffix ".debug"
-            buildConfigField 'String', 'CONFIG_ENVIRONMENT', '\"prod\"'
+            buildConfigField 'String', configVar.configEnvironment, '\"prod\"'
+            buildConfigField 'Boolean', configVar.testActionEnabled, 'false'
         }
+
     }
     kotlinOptions {
         jvmTarget = JavaVersion.VERSION_1_8.toString()
@@ -69,8 +80,8 @@ repositories {
 dependencies {
     implementation fileTree(include: ['*.aar'], dir: 'libs')
     implementation implementation(project(path: ':domain'))
-    // TODO: refactoring: only for backwards compatibility with non-relocated services to the network module
     implementation implementation(project(path: ':network'))
+    implementation implementation(project(path: ':common'))
 
     implementation 'androidx.core:core-ktx:1.7.0'
     implementation 'androidx.appcompat:appcompat:1.4.1'
@@ -82,7 +93,7 @@ dependencies {
     implementation 'com.google.android.play:core-ktx:1.8.1'
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.1.5'
 
-    implementation 'com.tangem:blockchain:develop-71'
+    implementation 'com.tangem:blockchain:develop-77'
     implementation 'com.tangem.tangem-sdk-kotlin:core:develop-142'
     implementation 'com.tangem.tangem-sdk-kotlin:android:develop-142'
 
