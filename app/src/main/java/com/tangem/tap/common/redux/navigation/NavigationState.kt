@@ -17,7 +17,7 @@ enum class AppScreen {
     Wallet, WalletDetails,
     Send,
     Details, DetailsConfirm, DetailsSecurity,
-    AddTokens,
+    AddTokens, AddCustomToken,
     WalletConnectSessions,
     QrScan
 }
