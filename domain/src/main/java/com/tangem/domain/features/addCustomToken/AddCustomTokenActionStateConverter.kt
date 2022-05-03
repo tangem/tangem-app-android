@@ -5,17 +5,17 @@ import com.tangem.domain.common.form.FieldToJsonConverter
 import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction
 import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenState
 import com.tangem.domain.redux.DomainState
-import com.tangem.domain.redux.state.StatePrinter
+import com.tangem.domain.redux.state.StringActionConverter
 import org.rekotlin.Action
 
-class AddCustomTokenStatePrinter : StatePrinter<AddCustomTokenAction, AddCustomTokenState> {
+class AddCustomTokenActionStateConverter : StringActionConverter<DomainState> {
     private val jsonConverter: MoshiJsonConverter = MoshiJsonConverter.INSTANCE
     private var builder: StringBuilder = StringBuilder()
 
-    override fun print(action: Action, domainState: DomainState): String? {
+    override fun convert(action: Action, stateHolder: DomainState): String? {
         val action = (action as? AddCustomTokenAction) ?: return null
-        val state = domainState.addCustomTokensState
 
+        val state = stateHolder.addCustomTokensState
         val fieldConverter = FieldToJsonConverter(listOf(
             CustomTokenFieldId.ContractAddress,
             CustomTokenFieldId.Network,
@@ -42,8 +42,6 @@ class AddCustomTokenStatePrinter : StatePrinter<AddCustomTokenAction, AddCustomT
 
         return printed
     }
-
-    override fun getStateObject(domainState: DomainState): AddCustomTokenState = domainState.addCustomTokensState
 
     private fun printStateValue(name: String, value: String) {
         printMessage("$name: $value")

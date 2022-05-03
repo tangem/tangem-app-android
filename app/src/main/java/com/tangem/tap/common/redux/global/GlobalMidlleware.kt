@@ -4,8 +4,6 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.ifNotNull
 import com.tangem.domain.common.extensions.withMainContext
-import com.tangem.domain.redux.domainStore
-import com.tangem.domain.redux.global.DomainGlobalAction
 import com.tangem.tap.*
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -102,12 +100,10 @@ private val globalMiddlewareHandler: Middleware<AppState> = { dispatch, appState
                             store.dispatch(GlobalAction.ScanFailsCounter.ChooseBehavior(result))
                             when (result) {
                                 is CompletionResult.Success -> {
-                                    domainStore.dispatch(DomainGlobalAction.SetScanResponse(result.data))
                                     tangemSdkManager.changeDisplayedCardIdNumbersCount(result.data)
                                     action.onSuccess?.invoke(result.data)
                                 }
                                 is CompletionResult.Failure -> {
-                                    domainStore.dispatch(DomainGlobalAction.SetScanResponse(null))
                                     action.onFailure?.invoke(result.error)
                                 }
                             }

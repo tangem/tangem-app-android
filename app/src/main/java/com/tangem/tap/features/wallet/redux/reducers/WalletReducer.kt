@@ -164,7 +164,10 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                             tradeCryptoState = TradeCryptoState.from(exchangeManager, wallet)
                         )
                     }
-                val wallets = newState.updateTradeCryptoState(exchangeManager, newState.replaceSomeWallets(newWallets))
+                val wallets = newState.updateTradeCryptoState(
+                    exchangeManager,
+                    newState.replaceSomeWallets(newWallets)
+                )
                 val walletStore = newState.getWalletStore(action.blockchain)?.updateWallets(wallets)
                 newState = newState.updateWalletStore(walletStore)
             }
@@ -217,7 +220,11 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                 ),
             )
             val tokenWallets = action.wallet.getTokens()
-                .mapNotNull { newState.getWalletData(it) }
+                .mapNotNull { token ->
+                    walletStore?.blockchainNetwork?.let {
+                        newState.getWalletData(Currency.fromBlockchainNetwork(it, token))
+                    }
+                }
                 .map {
                     it.copy(
                         currencyData = it.currencyData.copy(
@@ -288,12 +295,14 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                     ?: return newState
             val address = walletAddresses.list.firstOrNull { it.type == action.type }
                 ?: return newState
-            newState = newState.updateWalletData(selectedWalletData?.copy(
-                walletAddresses = WalletAddresses(
-                    address,
-                    walletAddresses.list
+            newState = newState.updateWalletData(
+                selectedWalletData?.copy(
+                    walletAddresses = WalletAddresses(
+                        address,
+                        walletAddresses.list
+                    )
                 )
-            ))
+            )
         }
         is WalletAction.SetWalletRent -> {
             var walletData = newState.getWalletData(action.blockchain)
@@ -302,6 +311,15 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
             } else {
                 walletData =
                     walletData.copy(warningRent = WalletRent(action.minRent, action.rentExempt))
+                newState = newState.updateWalletsData(listOf(walletData))
+            }
+        }
+        is WalletAction.RemoveWalletRent -> {
+            var walletData = newState.getWalletData(action.blockchain)
+            if (walletData == null) {
+                newState
+            } else {
+                walletData = walletData.copy(warningRent = null)
                 newState = newState.updateWalletsData(listOf(walletData))
             }
         }
