@@ -96,25 +96,33 @@ fun FirstStoriesContent(
         )
 
         if (screenState.value != StartingScreenState.MEET_TANGEM) {
-            AutoSizeText(text = text?.let { stringResource(text) } ?: "", textStyle = style,
+            TextAutoSize(
                 modifier = Modifier
-                .padding(start = 40.dp, end = 40.dp)
-                .alpha(if (screenState.value == StartingScreenState.SHOW_CARD) 0f else 1f),)
+                    .padding(start = 20.dp, end = 20.dp, bottom = 100.dp)
+                    .alpha(if (screenState.value == StartingScreenState.SHOW_CARD) 0f else 1f),
+                text = text?.let { stringResource(text) } ?: "",
+                textStyle = style,
+                fontSizeRange = FontSizeRange(20.sp, 60.sp)
+            )
         }
 
         AnimatedVisibility(
             visible = screenState.value == StartingScreenState.MEET_TANGEM,
             enter = slideInVertically() { it / 2 }
         ) {
-            AutoSizeText(text = text?.let { stringResource(text) } ?: "", textStyle = style,
+            TextAutoSize(
                 modifier = Modifier
-                    .padding(start = 40.dp, end = 40.dp)
+                    .fillMaxWidth()
+                    .padding(start = 40.dp, end = 40.dp),
+                text = text?.let { stringResource(text) } ?: "",
+                textStyle = style,
+                fontSizeRange = FontSizeRange(20.sp, 60.sp)
             )
         }
 
         AnimatedVisibility(
             visible = screenState.value == StartingScreenState.SHOW_CARD ||
-                    screenState.value == StartingScreenState.MEET_TANGEM,
+                screenState.value == StartingScreenState.MEET_TANGEM,
             enter = scaleIn(initialScale = 3f)
         ) {
             Image(
