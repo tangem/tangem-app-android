@@ -2,12 +2,12 @@ package com.tangem.tap.features.details.redux
 
 
 import com.tangem.common.card.Card
+import com.tangem.domain.common.TapWorkarounds.isStart2Coin
+import com.tangem.domain.common.isTangemTwin
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.domain.TapWorkarounds.isStart2Coin
 import com.tangem.tap.domain.extensions.isWalletDataSupported
 import com.tangem.tap.domain.extensions.signedHashesCount
 import com.tangem.tap.domain.extensions.toSendableAmounts
-import com.tangem.tap.domain.twins.isTangemTwin
 import com.tangem.tap.features.wallet.models.hasPendingTransactions
 import org.rekotlin.Action
 import java.util.*
@@ -43,13 +43,15 @@ private fun handlePrepareScreen(
     action: DetailsAction.PrepareScreen,
     state: DetailsState,
 ): DetailsState {
-    val backupIsActive = action.scanResponse.card.backupStatus?.isActive ?: false
 
     return DetailsState(
         scanResponse = action.scanResponse,
         wallets = action.wallets,
         cardInfo = action.scanResponse.card.toCardInfo(),
-        appCurrencyState = AppCurrencyState(action.fiatCurrencyName),
+        appCurrencyState = state.appCurrencyState.copy(
+            fiatCurrencyName = action.fiatCurrencyName,
+            showAppCurrencyDialog = false,
+        ),
         cardTermsOfUseUrl = action.cardTou.getUrl(action.scanResponse.card),
         createBackupAllowed = action.scanResponse.card.backupStatus == Card.BackupStatus.NoBackup,
     )
@@ -64,8 +66,8 @@ private fun handleEraseWallet(
             val card = state.scanResponse?.card
             val notAllowedByAnyWallet = card?.wallets?.any { it.settings.isPermanent } ?: false
             val notAllowedByCard = notAllowedByAnyWallet ||
-                    (card?.isWalletDataSupported == true &&
-                            (!state.scanResponse.isTangemNote() && !state.scanResponse.supportsBackup()))
+                (card?.isWalletDataSupported == true &&
+                    (!state.scanResponse.isTangemNote() && !state.scanResponse.supportsBackup()))
 
             val notEmpty = state.wallets.any {
                 it.hasPendingTransactions() || it.amounts.toSendableAmounts().isNotEmpty()
@@ -136,7 +138,7 @@ private fun handleSecurityAction(
         is DetailsAction.ManageSecurity.OpenSecurity -> {
             val allowedSecurityOptions = when {
                 state.scanResponse?.card?.isStart2Coin == true ||
-                        state.scanResponse?.isTangemNote() == true -> {
+                    state.scanResponse?.isTangemNote() == true -> {
                     EnumSet.of(SecurityOption.LongTap)
                 }
                 state.scanResponse?.supportsBackup() == true -> {

@@ -4,10 +4,10 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.KeyPair
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
+import com.tangem.domain.common.ScanResponse
 import com.tangem.operations.PreflightReadMode
 import com.tangem.operations.PreflightReadTask
 import com.tangem.tap.domain.tasks.product.ScanProductTask
-import com.tangem.tap.domain.tasks.product.ScanResponse
 
 class FinalizeTwinTask(
     private val twinPublicKey: ByteArray, private val issuerKeys: KeyPair,
