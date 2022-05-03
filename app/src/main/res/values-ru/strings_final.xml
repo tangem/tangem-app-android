@@ -23,7 +23,7 @@
     <string name="story_awe_title">Революционный аппаратный кошелек</string>
     <string name="story_awe_description">Держите свои криптосбережения в безопасности. Приватные ключи надежно хранятся на карте.</string>
     <string name="story_backup_title">Все ключи в безопасности</string>
-    <string name="story_backup_description">До трех карт с одним кошельком</string>
+    <string name="story_backup_description">До <b>трех карт</b> с одним кошельком</string>
     <string name="story_currencies_title">Тысячи криптовалют</string>
     <string name="story_currencies_description">Аппаратный кошелек для ваших биткоинов, эфира и многих других валют одновременно — все в одной карте</string>
     <string name="story_web3_title">Поддержка DeFi</string>
@@ -35,4 +35,13 @@
     <string name="search_tokens_title">Поиск токенов</string>
     <string name="alert_demo_message">Приложение работает в демонстрационном режиме. Средства на всех счетах ненастоящие.</string>
     <string name="alert_demo_feature_disabled">Эта функция недоступна в демонстрационном режиме</string>
+    <string name="token_details_send_blocked_fee_format">Недостаточно средств для комиссии на вашем %s кошельке для отправки транзакции. Сначала пополните свой %s кошелек.</string>
+
+    <string name="currency_subtitle_expanded">Доступные сети</string>
+    <string name="alert_manage_tokens_addresses_message">Внимание! Валюты на разных сетях имеют разные адреса. Убедитесь, что адрес соответствует сети, в которой вы отправляете средства.</string>
+    <string name="contract_address_copied_message">Адрес контракта скопирован!</string>
+    <string name="alert_funds_restoration_message">Если вы совершили ошибку с выбором сети при переводе средств с биржи, эта инструкция поможет вам восстановить средства</string>
+
+    <string name="common_custom">Пользовательский</string>
+
 </resources>
