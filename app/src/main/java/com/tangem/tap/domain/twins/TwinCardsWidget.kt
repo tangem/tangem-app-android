@@ -6,6 +6,7 @@ import android.animation.PropertyValuesHolder
 import android.view.View
 import androidx.core.animation.doOnEnd
 import com.tangem.common.extensions.VoidCallback
+import com.tangem.domain.common.TwinCardNumber
 import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.LeapView
 import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.LeapViewState
 import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.LeapfrogWidget
