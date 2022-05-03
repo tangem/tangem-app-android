@@ -202,6 +202,7 @@
     <string name="token_icon">Значок токена</string>
     <string name="add_custom_token_title" translatable="false">Добавить токен</string>
     <string name="custom_token_contract_address_input_title">Адрес контракта</string>
+    <string name="custom_token_creation_error_required_field">Обязательное поле</string>
     <string name="custom_token_creation_error_network_not_selected">Пожалуйста, выберите сеть</string>
     <string name="custom_token_creation_error_empty_fields">Пожалуйста, заполните все поля</string>
     <string name="custom_token_creation_error_wrong_decimals">Количество знаков после запятой должно быть корректным числом не больше %d</string>
