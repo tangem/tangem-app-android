@@ -2,19 +2,19 @@ package com.tangem.tap.features.tokens.addCustomToken.compose
 
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.domain.common.form.Field
 import com.tangem.domain.features.addCustomToken.TokenBlockchainField
 import com.tangem.domain.features.addCustomToken.TokenDerivationPathField
 import com.tangem.domain.features.addCustomToken.TokenField
-import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction
+import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction.*
 import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenState
 import com.tangem.domain.redux.domainStore
-import com.tangem.tap.common.compose.BlockchainSpinner
-import com.tangem.tap.common.compose.OutlinedTextFieldWidget
-import com.tangem.tap.common.compose.SpacerH8
-import com.tangem.tap.common.compose.TitleSubtitle
+import com.tangem.tap.common.compose.*
+import com.tangem.tap.common.extensions.getFromClipboard
 import com.tangem.wallet.R
 
 /**
@@ -27,17 +27,43 @@ fun TokenContractAddressView(screenFieldData: ScreenFieldData) {
     val tokenField = screenFieldData.field as TokenField
 
     OutlinedTextFieldWidget(
-        textFieldData = tokenField.data,
+        fieldData = tokenField.data,
         labelId = R.string.custom_token_contract_address_input_title,
-        placeholder = "0x0000000000000000",
+        placeholder = "0x0000000000000000000000000000000000000000",
         isEnabled = screenFieldData.viewState.isEnabled,
         isLoading = screenFieldData.viewState.isLoading,
         error = screenFieldData.error,
         errorConverter = screenFieldData.errorConverter,
+//        trailingIcon = { PasteClearButton(showFirst = tokenField.data.value.isEmpty()) }
     ) {
-        domainStore.dispatch(AddCustomTokenAction.OnTokenContractAddressChanged(Field.Data(it)))
+        domainStore.dispatch(OnTokenContractAddressChanged(Field.Data(it, true)))
     }
     SpacerH8()
+}
+
+@Composable
+private fun PasteClearButton(
+    showFirst: Boolean,
+) {
+    if (showFirst) {
+        val context = LocalContext.current
+        PasteButton(
+            onClick = {
+                context.getFromClipboard()?.let {
+                    val fieldData = Field.Data(it.toString(), false)
+                    domainStore.dispatch(OnTokenContractAddressChanged(fieldData))
+                }
+
+            }
+        )
+    } else {
+        ClearButton(
+            onClick = {
+                val fieldData = Field.Data("", false)
+                domainStore.dispatch(OnTokenContractAddressChanged(fieldData))
+            }
+        )
+    }
 }
 
 @Composable
@@ -47,14 +73,14 @@ fun TokenNameView(screenFieldData: ScreenFieldData) {
     val tokenField = screenFieldData.field as TokenField
 
     OutlinedTextFieldWidget(
-        textFieldData = tokenField.data,
+        fieldData = tokenField.data,
         labelId = R.string.custom_token_name_input_title,
         placeholderId = R.string.custom_token_name_input_placeholder,
         isEnabled = screenFieldData.viewState.isEnabled,
         error = screenFieldData.error,
         errorConverter = screenFieldData.errorConverter,
     ) {
-        domainStore.dispatch(AddCustomTokenAction.OnTokenNameChanged(Field.Data(it)))
+        domainStore.dispatch(OnTokenNameChanged(Field.Data(it, true)))
     }
     SpacerH8()
 }
@@ -71,8 +97,8 @@ fun TokenNetworkView(screenFieldData: ScreenFieldData, state: AddCustomTokenStat
         itemList = networkField.itemList,
         selectedItem = networkField.data,
         isEnabled = screenFieldData.viewState.isEnabled,
-        textFieldConverter = { state.convertBlockchainName(it, notSelected) },
-    ) { domainStore.dispatch(AddCustomTokenAction.OnTokenNetworkChanged(Field.Data(it))) }
+        textFieldConverter = { state.blockchainToName(it) ?: notSelected },
+    ) { domainStore.dispatch(OnTokenNetworkChanged(Field.Data(it, true))) }
     SpacerH8()
 }
 
@@ -83,13 +109,13 @@ fun TokenSymbolView(screenFieldData: ScreenFieldData) {
     val tokenField = screenFieldData.field as TokenField
 
     OutlinedTextFieldWidget(
-        textFieldData = tokenField.data,
+        fieldData = tokenField.data,
         labelId = R.string.custom_token_token_symbol_input_title,
         placeholderId = R.string.custom_token_token_symbol_input_placeholder,
         isEnabled = screenFieldData.viewState.isEnabled,
         error = screenFieldData.error,
         errorConverter = screenFieldData.errorConverter,
-    ) { domainStore.dispatch(AddCustomTokenAction.OnTokenSymbolChanged(Field.Data(it))) }
+    ) { domainStore.dispatch(OnTokenSymbolChanged(Field.Data(it, true))) }
     SpacerH8()
 }
 
@@ -100,14 +126,14 @@ fun TokenDecimalsView(screenFieldData: ScreenFieldData) {
     val tokenField = screenFieldData.field as TokenField
 
     OutlinedTextFieldWidget(
-        textFieldData = tokenField.data,
+        fieldData = tokenField.data,
         labelId = R.string.custom_token_decimals_input_title,
         placeholder = "8",
         isEnabled = screenFieldData.viewState.isEnabled,
         error = screenFieldData.error,
         errorConverter = screenFieldData.errorConverter,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-    ) { domainStore.dispatch(AddCustomTokenAction.OnTokenDecimalsChanged(Field.Data(it))) }
+    ) { domainStore.dispatch(OnTokenDecimalsChanged(Field.Data(it, true))) }
     SpacerH8()
 }
 
@@ -123,12 +149,18 @@ fun TokenDerivationPathView(screenFieldData: ScreenFieldData, state: AddCustomTo
         itemList = networkField.itemList,
         selectedItem = networkField.data,
         isEnabled = screenFieldData.viewState.isEnabled,
-        textFieldConverter = { state.convertBlockchainName(it, notSelected) },
+        textFieldConverter = { state.blockchainToName(it) ?: notSelected },
         dropdownItemView = { blockchain ->
-            val derivationPathLabel = state.convertDerivationPathLabel(blockchain, notSelected)
-            val blockchainName = state.convertBlockchainName(blockchain, notSelected)
-            TitleSubtitle(derivationPathLabel, blockchainName)
+            val derivationPathName = state.blockchainToName(blockchain, true) ?: notSelected
+            val blockchainName = state.blockchainToName(blockchain) ?: notSelected
+            TitleSubtitle(derivationPathName, blockchainName)
         }
-    ) { domainStore.dispatch(AddCustomTokenAction.OnTokenDerivationPathChanged(Field.Data(it))) }
+    ) { domainStore.dispatch(OnTokenDerivationPathChanged(Field.Data(it, true))) }
     SpacerH8()
+}
+
+@Preview
+@Composable
+fun TestTokenContractAddressView() {
+
 }
