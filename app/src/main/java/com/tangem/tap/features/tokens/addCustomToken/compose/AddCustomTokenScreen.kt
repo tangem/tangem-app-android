@@ -12,21 +12,21 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.tangem.domain.ErrorConverter
+import com.tangem.domain.AddCustomTokenError
 import com.tangem.domain.common.form.DataField
 import com.tangem.domain.common.form.FieldId
-import com.tangem.domain.features.addCustomToken.AddCustomTokenError
-import com.tangem.domain.features.addCustomToken.AddCustomTokenWarning
 import com.tangem.domain.features.addCustomToken.CustomTokenFieldId.*
 import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction
 import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenState
 import com.tangem.domain.features.addCustomToken.redux.ScreenState
 import com.tangem.domain.features.addCustomToken.redux.ViewStates
 import com.tangem.domain.redux.domainStore
+import com.tangem.tap.common.compose.AddCustomTokenWarning
 import com.tangem.tap.common.compose.ComposeDialogManager
+import com.tangem.tap.common.compose.ToggledRippleTheme
 import com.tangem.tap.common.compose.keyboardAsState
-import com.tangem.tap.features.tokens.addCustomToken.DomainErrorConverter
+import com.tangem.tap.common.moduleMessage.ModuleMessageConverter
+import com.tangem.tap.features.tokens.addCustomToken.compose.test.TestAddCustomTokenActions
 import com.tangem.wallet.R
 
 /**
@@ -52,7 +52,7 @@ fun AddCustomTokenScreen(state: MutableState<AddCustomTokenState>) {
             LazyColumn(
                 contentPadding = PaddingValues(bottom = 90.dp)
             ) {
-//                item { AddCustomTokenDebugActions() }
+                item { TestAddCustomTokenActions() }
                 item {
                     Surface(
                         modifier = Modifier.padding(16.dp),
@@ -81,7 +81,7 @@ fun AddCustomTokenScreen(state: MutableState<AddCustomTokenState>) {
 @Composable
 private fun FormFields(state: MutableState<AddCustomTokenState>) {
     val context = LocalContext.current
-    val errorConverter = remember { DomainErrorConverter(context) }
+    val errorConverter = remember { ModuleMessageConverter(context) }
 
     val stateValue = state.value
     stateValue.form.fieldList.forEach { field ->
@@ -98,32 +98,24 @@ private fun FormFields(state: MutableState<AddCustomTokenState>) {
 }
 
 @Composable
-fun Warnings(warnings: List<AddCustomTokenWarning>) {
+fun Warnings(warnings: List<AddCustomTokenError.Warning>) {
     if (warnings.isEmpty()) return
 
     val context = LocalContext.current
-    val warningConverter = remember { DomainErrorConverter(context) }
+    val warningConverter = remember { ModuleMessageConverter(context) }
 
     Column {
         warnings.forEachIndexed { index, item ->
             val modifier = when (index) {
-                0 -> Modifier.padding(16.dp, 16.dp, 16.dp, 0.dp)
+                0 -> Modifier.padding(16.dp, 0.dp, 16.dp, 0.dp)
                 warnings.lastIndex -> Modifier.padding(16.dp, 8.dp, 16.dp, 16.dp)
                 else -> Modifier.padding(16.dp, 8.dp, 16.dp, 0.dp)
             }
-            Surface(
+            AddCustomTokenWarning(
                 modifier = modifier.fillMaxWidth(),
-                shape = MaterialTheme.shapes.small,
-                color = colorResource(id = R.color.warning_warning),
-                elevation = 4.dp,
-            ) {
-                Text(
-                    modifier = Modifier.padding(16.dp),
-                    text = warningConverter.convertError(item),
-                    color = colorResource(id = R.color.lightGray0),
-                    fontSize = 14.sp
-                )
-            }
+                warning = item,
+                converter = warningConverter
+            )
         }
     }
 }
@@ -138,49 +130,53 @@ private fun AddButton(state: MutableState<AddCustomTokenState>) {
 }
 
 @Composable
-fun AddCustomTokenFab(
+private fun AddCustomTokenFab(
     modifier: Modifier = Modifier,
     isEnabled: Boolean = true,
     onClick: () -> Unit
 ) {
-    val contentColor = if (isEnabled) {
-        Color.White
+    val contentColor = Color.White
+    val backgroundColor = if (isEnabled) {
+        Color(0xFF1ACE80)
     } else {
-        colorResource(id = R.color.darkGray1)
+        Color(0xFFB9E6D3)
     }
-    val backgroundColor = Color(0xFF1ACE80)
+    val elevation = if (!isEnabled) {
+        FloatingActionButtonDefaults.elevation(0.dp, 0.dp)
+    } else {
+        FloatingActionButtonDefaults.elevation()
+    }
 
-    ExtendedFloatingActionButton(
-        modifier = modifier,
-        icon = {
-            Icon(
-                imageVector = Icons.Filled.Add,
-                tint = contentColor,
-                contentDescription = "Add",
-            )
-        },
-        text = {
-            Text(
-                text = stringResource(id = R.string.common_add),
-            )
-        },
-        onClick = onClick,
-        backgroundColor = backgroundColor,
-        contentColor = contentColor,
-    )
+    ToggledRippleTheme(isEnabled) {
+        ExtendedFloatingActionButton(
+            modifier = modifier,
+            icon = {
+                Icon(
+                    imageVector = Icons.Filled.Add,
+                    tint = contentColor,
+                    contentDescription = "Add",
+                )
+            },
+            text = { Text(text = stringResource(id = R.string.common_add)) },
+            onClick = { if (isEnabled) onClick() },
+            backgroundColor = backgroundColor,
+            contentColor = contentColor,
+            elevation = elevation,
+        )
+    }
 }
 
 data class ScreenFieldData(
     val field: DataField<*>,
     val error: AddCustomTokenError?,
-    val errorConverter: ErrorConverter<String>,
+    val errorConverter: ModuleMessageConverter,
     val viewState: ViewStates.TokenField
 ) {
     companion object {
         fun fromState(
             field: DataField<*>,
             state: AddCustomTokenState,
-            errorConverter: DomainErrorConverter
+            errorConverter: ModuleMessageConverter
         ): ScreenFieldData {
             return ScreenFieldData(
                 field = field,
