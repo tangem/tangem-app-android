@@ -8,7 +8,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.squareup.picasso.Picasso
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
+import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.tap.common.extensions.getString
+import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.loadCurrenciesIcon
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.features.wallet.redux.Currency
@@ -26,7 +28,11 @@ class WalletAdapter
         return currentList[position].currencyData.currencySymbol?.hashCode()?.toLong() ?: 0
     }
 
-    fun submitList(list: List<WalletData>, primaryBlockchain: Blockchain?, primaryToken: Token? = null) {
+    fun submitList(
+        list: List<WalletData>,
+        primaryBlockchain: Blockchain?,
+        primaryToken: Token? = null
+    ) {
         // We used this method to sort the list of currencies. Sorting is disabled for now.
         super.submitList(list)
     }
@@ -44,21 +50,22 @@ class WalletAdapter
 
     object DiffUtilCallback : DiffUtil.ItemCallback<WalletData>() {
         override fun areContentsTheSame(
-                oldItem: WalletData, newItem: WalletData
+            oldItem: WalletData, newItem: WalletData
         ) = oldItem == newItem
 
         override fun areItemsTheSame(
-                oldItem: WalletData, newItem: WalletData
+            oldItem: WalletData, newItem: WalletData
         ) = oldItem == newItem
     }
 
     class WalletsViewHolder(val binding: ItemCurrencyWalletBinding) :
-            RecyclerView.ViewHolder(binding.root) {
+        RecyclerView.ViewHolder(binding.root) {
 
         fun bind(wallet: WalletData) = with(binding) {
             tvCurrency.text = wallet.currencyData.currency
-            tvAmount.text = wallet.currencyData.amount?.takeWhile { !it.isWhitespace() }
-            tvCurrencySymbol.text = wallet.currencyData.amount?.takeLastWhile { !it.isWhitespace() }
+            tvAmount.text = wallet.currencyData.amountFormatted?.takeWhile { !it.isWhitespace() }
+            tvCurrencySymbol.text =
+                wallet.currencyData.amountFormatted?.takeLastWhile { !it.isWhitespace() }
             tvAmountFiat.text = wallet.currencyData.fiatAmountFormatted
             tvExchangeRate.text = wallet.fiatRateString
             cardWallet.setOnClickListener {
@@ -67,6 +74,11 @@ class WalletAdapter
             val blockchain = wallet.currency.blockchain
             val token = (wallet.currency as? Currency.Token)?.token
 
+            val isCustom =
+                wallet.currency.isCustomCurrency(store.state.globalState.scanResponse?.card?.derivationStyle)
+            tvExchangeRate.show(!isCustom)
+            tvCustomCurrency.show(isCustom)
+
             Picasso.get().loadCurrenciesIcon(
                 imageView = ivCurrency,
                 textView = tvTokenLetter,
@@ -74,36 +86,42 @@ class WalletAdapter
             )
 
             when (wallet.currencyData.status) {
-                BalanceStatus.VerifiedOnline, BalanceStatus.SameCurrencyTransactionInProgress -> hideWarning()
+                BalanceStatus.VerifiedOnline, BalanceStatus.SameCurrencyTransactionInProgress -> hideWarning(isCustom)
                 BalanceStatus.Loading -> {
-                    hideWarning()
-                    if (wallet.currencyData.amount == null) {
+                    hideWarning(isCustom)
+                    if (wallet.currencyData.amountFormatted == null) {
                         tvExchangeRate.text = root.getString(R.string.wallet_balance_loading)
                     }
                 }
                 BalanceStatus.TransactionInProgress ->
-                    showWarning(root.getString(R.string.wallet_balance_tx_in_progress))
+                    showWarning(root.getString(R.string.wallet_balance_tx_in_progress), isCustom)
                 BalanceStatus.Unreachable ->
-                    showWarning(root.getString(R.string.wallet_balance_blockchain_unreachable))
+                    showWarning(root.getString(R.string.wallet_balance_blockchain_unreachable), isCustom)
 
                 BalanceStatus.NoAccount ->
-                    showWarning(root.getString(R.string.wallet_error_no_account))
+                    showWarning(root.getString(R.string.wallet_error_no_account), isCustom)
                 else -> {
                 }
             }
         }
 
-        private fun showWarning(message: String) {
-            toggleWarning(true)
+        private fun showWarning(message: String, isCustom: Boolean = false) {
+            toggleWarning(true, isCustom)
             binding.tvStatusErrorMessage.text = message
         }
 
-        private fun hideWarning() {
-            toggleWarning(false)
+        private fun hideWarning(isCustom: Boolean = false) {
+            toggleWarning(false, isCustom)
         }
 
-        private fun toggleWarning(show: Boolean) {
-            binding.tvExchangeRate.show(!show)
+        private fun toggleWarning(show: Boolean, isCustom: Boolean = false) {
+            if (!show) {
+                binding.tvExchangeRate.show(!isCustom)
+                binding.tvCustomCurrency.show(isCustom)
+            } else {
+                binding.tvExchangeRate.hide()
+                binding.tvCustomCurrency.hide()
+            }
             binding.tvStatusErrorMessage.show(show)
         }
     }
