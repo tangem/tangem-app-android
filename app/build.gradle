@@ -3,11 +3,7 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-kapt'
 apply plugin: 'com.google.gms.google-services'
 apply plugin: 'com.google.firebase.crashlytics'
-
-ext.configVar = [
-        configEnvironment: "CONFIG_ENVIRONMENT",
-        testActionEnabled: "TEST_ACTION_ENABLED",
-]
+apply from: '../dependencies.gradle'
 
 android {
     compileSdkVersion 31
@@ -19,7 +15,8 @@ android {
         targetSdkVersion 31
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
-        buildConfigField 'Boolean', configVar.testActionEnabled, 'false'
+        buildConfigField 'Boolean', environmentConfig.testActionEnabled, 'false'
+        buildConfigField 'Boolean', environmentConfig.logEnabled, 'false'
     }
     buildFeatures {
         compose true
@@ -31,8 +28,9 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.debug
-            buildConfigField 'String', configVar.configEnvironment, '\"prod\"'
-            buildConfigField 'Boolean', configVar.testActionEnabled, 'false'
+            buildConfigField 'String', environmentConfig.environment, '\"prod\"'
+            buildConfigField 'Boolean', environmentConfig.testActionEnabled, 'false'
+            buildConfigField 'Boolean', environmentConfig.logEnabled, 'false'
         }
         debug {
             debuggable true
@@ -42,16 +40,18 @@ android {
             firebaseCrashlytics {
                 mappingFileUploadEnabled false
             }
-            buildConfigField 'String', configVar.configEnvironment, '\"dev\"'
-            buildConfigField 'Boolean', configVar.testActionEnabled, 'true'
+            buildConfigField 'String', environmentConfig.environment, '\"dev\"'
+            buildConfigField 'Boolean', environmentConfig.testActionEnabled, 'true'
+            buildConfigField 'Boolean', environmentConfig.logEnabled, 'true'
         }
         debug_beta {
             initWith release
             debuggable false
             versionNameSuffix "-beta"
             applicationIdSuffix ".debug"
-            buildConfigField 'String', configVar.configEnvironment, '\"prod\"'
-            buildConfigField 'Boolean', configVar.testActionEnabled, 'false'
+            buildConfigField 'String', environmentConfig.environment, '\"prod\"'
+            buildConfigField 'Boolean', environmentConfig.testActionEnabled, 'false'
+            buildConfigField 'Boolean', environmentConfig.logEnabled, 'false'
         }
 
     }
