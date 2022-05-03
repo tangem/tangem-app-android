@@ -1,8 +1,6 @@
 package com.tangem.tap.network.exchangeServices.onramper
 
 import com.squareup.moshi.JsonClass
-import okhttp3.Interceptor
-import okhttp3.Response
 import retrofit2.http.GET
 import retrofit2.http.Path
 
@@ -20,15 +18,6 @@ interface OnramperApi {
 
     companion object {
         val BASE_URL = "https://onramper.tech/"
-    }
-}
-
-class AddKeyToHeaderInterceptor(
-    private val key: String
-) : Interceptor {
-    override fun intercept(chain: Interceptor.Chain): Response {
-        val request = chain.request().newBuilder().addHeader("Authorization", "Basic $key").build()
-        return chain.proceed(request)
     }
 }
 
