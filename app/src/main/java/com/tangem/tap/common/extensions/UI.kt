@@ -6,6 +6,7 @@ import android.content.res.Resources
 import android.graphics.drawable.Drawable
 import android.os.Build
 import android.os.Bundle
+import android.util.DisplayMetrics
 import android.util.TypedValue
 import android.view.View
 import android.view.ViewGroup
@@ -18,6 +19,7 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.google.android.material.card.MaterialCardView
 import com.tangem.common.extensions.VoidCallback
+
 
 fun Fragment.getDrawable(@DrawableRes drawableResId: Int): Drawable? {
     return ContextCompat.getDrawable(requireContext(), drawableResId)
@@ -93,6 +95,13 @@ fun Context.dpToPixels(dp: Int): Int =
         TypedValue.applyDimension(
                 TypedValue.COMPLEX_UNIT_DIP, dp.toFloat(), this.resources.displayMetrics
         ).toInt()
+
+
+fun Context.pixelsToDp(pixels: Int): Int {
+    return (pixels.toFloat() /
+            (resources.displayMetrics.densityDpi.toFloat() / DisplayMetrics.DENSITY_DEFAULT))
+        .toInt()
+}
 
 tailrec fun Context?.getActivity(): Activity? = this as? Activity
         ?: (this as? ContextWrapper)?.baseContext?.getActivity()
