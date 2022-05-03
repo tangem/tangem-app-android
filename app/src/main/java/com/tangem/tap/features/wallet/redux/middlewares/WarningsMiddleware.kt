@@ -6,17 +6,19 @@ import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.common.card.Card
 import com.tangem.common.card.FirmwareVersion
+import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.common.TapWorkarounds.isTestCard
+import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
 import com.tangem.tap.common.analytics.AnalyticsEvent
+import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.isGreaterThan
 import com.tangem.tap.common.redux.global.GlobalState
-import com.tangem.tap.domain.TapWorkarounds.isTestCard
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.domain.extensions.getSingleWallet
 import com.tangem.tap.domain.extensions.hasSignedHashes
+import com.tangem.tap.domain.extensions.isMultiwalletAllowed
 import com.tangem.tap.domain.extensions.remainingSignatures
-import com.tangem.tap.domain.isMultiwalletAllowed
-import com.tangem.tap.domain.tasks.product.ScanResponse
 import com.tangem.tap.features.demo.isDemoCard
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.network.NetworkConnectivity
@@ -64,6 +66,9 @@ class WarningsMiddleware {
                     )
                 }
             }
+            is WalletAction.Warnings.RestoreFundsWarningClosed -> {
+                preferencesStorage.saveRestoreFundsWarningClosed()
+            }
         }
     }
 
@@ -87,6 +92,9 @@ class WarningsMiddleware {
             if (card.isTestCard) {
                 addWarningMessage(WarningMessagesManager.testCardWarning(), autoUpdate = true)
                 return@let
+            }
+            if (card.useOldStyleDerivation && !preferencesStorage.wasRestoreFundsWarningClosed()) {
+                addWarningMessage(warning = WarningMessagesManager.restoreFundsWarning())
             }
 
             showWarningLowRemainingSignaturesIfNeeded(card)
@@ -193,7 +201,7 @@ class WarningsMiddleware {
     }
 
     private fun setWarningMessages() {
-        store.dispatch(WalletAction.Warnings.Set(getWarnings()))
+        store.dispatchOnMain(WalletAction.Warnings.Set(getWarnings()))
     }
 
     private fun getWarnings(): List<WarningMessage> {
