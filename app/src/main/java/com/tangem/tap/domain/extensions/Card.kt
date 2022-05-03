@@ -2,13 +2,32 @@ package com.tangem.tap.domain.extensions
 
 import com.tangem.common.card.Card
 import com.tangem.common.card.CardWallet
+import com.tangem.common.card.EllipticCurve
+import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.extensions.toHexString
 import com.tangem.common.services.Result
+import com.tangem.domain.common.TapWorkarounds
+import com.tangem.domain.common.TapWorkarounds.isStart2Coin
+import com.tangem.domain.common.TwinCardNumber
+import com.tangem.domain.common.getTwinCardNumber
+import com.tangem.domain.common.isTangemTwin
 import com.tangem.operations.attestation.CardVerifyAndGetInfo
 import com.tangem.operations.attestation.OnlineCardVerifier
-import com.tangem.tap.domain.twins.TwinCardNumber
-import com.tangem.tap.domain.twins.getTwinCardNumber
 import com.tangem.tap.features.wallet.redux.Artwork
+
+
+val Card.remainingSignatures: Int?
+    get() = this.getSingleWallet()?.remainingSignatures
+
+val Card.isWalletDataSupported: Boolean
+    get() = this.firmwareVersion.major >= 4
+
+val Card.isMultiwalletAllowed: Boolean
+    get() {
+        return !isTangemTwin() && !isStart2Coin && !TapWorkarounds.isTangemNote(this)
+            && (firmwareVersion >= FirmwareVersion.MultiWalletAvailable ||
+            getSingleWallet()?.curve == EllipticCurve.Secp256k1)
+    }
 
 fun Card.getSingleWallet(): CardWallet? {
     return wallets.firstOrNull()
@@ -67,9 +86,3 @@ fun Card.getArtworkUrl(artworkId: String?): String? {
         else -> null
     }
 }
-
-val Card.remainingSignatures: Int?
-    get() = this.getSingleWallet()?.remainingSignatures
-
-val Card.isWalletDataSupported: Boolean
-    get() = this.firmwareVersion.major >= 4
