@@ -3,9 +3,13 @@ package com.tangem.domain.common
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.common.card.Card
+import com.tangem.common.card.EllipticCurve
 import com.tangem.common.card.WalletData
 import com.tangem.common.extensions.ByteArrayKey
+import com.tangem.common.extensions.toMapKey
+import com.tangem.common.hdWallet.DerivationPath
 import com.tangem.domain.common.TapWorkarounds.getTangemNoteBlockchain
+import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.operations.CommandResponse
 import com.tangem.operations.backup.PrimaryCard
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
@@ -48,6 +52,33 @@ data class ScanResponse(
 
     fun twinsIsTwinned(): Boolean =
         card.isTangemTwins() && walletData != null && secondTwinPublicKey != null
+
+    fun hasDerivation(blockchain: Blockchain, rawDerivationPath: String): Boolean {
+        return hasDerivation(blockchain, DerivationPath(rawDerivationPath))
+    }
+
+    fun hasDerivation(blockchain: Blockchain, derivationPath: DerivationPath): Boolean {
+        val isTestnet = card.isTestCard || blockchain.isTestnet()
+        return when {
+            Blockchain.secp256k1Blockchains(isTestnet).contains(blockchain) -> {
+                hasDerivation(EllipticCurve.Secp256k1, derivationPath)
+            }
+            Blockchain.ed25519OnlyBlockchains(isTestnet).contains(blockchain) -> {
+                hasDerivation(EllipticCurve.Ed25519, derivationPath)
+            }
+            else -> false
+        }
+    }
+
+    fun hasDerivation(curve: EllipticCurve, derivationPath: DerivationPath): Boolean {
+        val foundWallet = card.wallets.firstOrNull { it.curve == curve }
+            ?: return false
+
+        val extendedPublicKeysMap = derivedKeys[foundWallet.publicKey.toMapKey()] ?: return false
+
+        val extendedPublicKey = extendedPublicKeysMap[derivationPath]
+        return extendedPublicKey != null
+    }
 }
 
 enum class ProductType {

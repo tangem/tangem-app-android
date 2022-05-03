@@ -1,50 +1,40 @@
 package com.tangem.tap.domain
 
-import com.tangem.blockchain.blockchains.solana.RentProvider
 import com.tangem.blockchain.common.*
 import com.tangem.common.services.Result
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.TapWorkarounds.isTestCard
-import com.tangem.domain.common.TapWorkarounds.derivationStyle
+import com.tangem.domain.common.ThrottlerWithValues
 import com.tangem.domain.common.extensions.withMainContext
-import com.tangem.tap.common.ThrottlerWithValues
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.safeUpdate
-import com.tangem.tap.common.extensions.stripZeroPlainString
-import com.tangem.tap.common.redux.global.FiatCurrencyName
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.currenciesRepository
 import com.tangem.tap.domain.configurable.config.ConfigManager
 import com.tangem.tap.domain.extensions.isMultiwalletAllowed
 import com.tangem.tap.domain.extensions.makePrimaryWalletManager
 import com.tangem.tap.domain.extensions.makeWalletManagersForApp
-import com.tangem.tap.domain.tokens.CardCurrencies
 import com.tangem.tap.domain.tokens.BlockchainNetwork
 import com.tangem.tap.features.demo.isDemoCard
-import com.tangem.tap.features.wallet.models.PendingTransactionType
-import com.tangem.tap.features.wallet.models.getPendingTransactions
-import com.tangem.tap.features.wallet.redux.Currency
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.network.NetworkConnectivity
-import com.tangem.tap.network.coinmarketcap.CoinMarketCapService
 import com.tangem.tap.store
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import java.math.BigDecimal
 
 
 class TapWalletManager {
     val walletManagerFactory: WalletManagerFactory
         by lazy { WalletManagerFactory(blockchainSdkConfig) }
 
-    private val coinMarketCapService = CoinMarketCapService()
+    val rates: RatesRepository = RatesRepository()
+
     private val blockchainSdkConfig by lazy {
         store.state.globalState.configManager?.config?.blockchainSdkConfig ?: BlockchainSdkConfig()
     }
 
     private val walletManagersThrottler = ThrottlerWithValues<Blockchain, Result<Wallet>>(10000)
-    private val fiatRatesThrottler = ThrottlerWithValues<Currency, Result<BigDecimal>?>(60000)
 
     suspend fun loadWalletData(walletManager: WalletManager) {
         val blockchain = walletManager.wallet.blockchain
@@ -52,73 +42,37 @@ class TapWalletManager {
         val result = if (walletManagersThrottler.isStillThrottled(blockchain)) {
             walletManagersThrottler.geValue(blockchain)!!
         } else {
-            updateThrottlingForWalletManager(walletManager)
+            val safeUpdateResult = walletManager.safeUpdate()
+            walletManagersThrottler.updateThrottlingTo(blockchain)
+            walletManagersThrottler.setValue(blockchain, safeUpdateResult)
+            safeUpdateResult
         }
         when (result) {
             is Result.Success -> {
-                checkForRentWarning(walletManager)
                 dispatchOnMain(WalletAction.LoadWallet.Success(result.data, blockchainNetwork))
             }
             is Result.Failure -> {
                 when (result.error) {
-                    is TapError.WalletManagerUpdate.NoAccountError -> {
-                        dispatchOnMain(
-                            WalletAction.LoadWallet.NoAccount(
-                                walletManager.wallet,
-                                blockchainNetwork,
-                                (result.error as TapError.WalletManagerUpdate.NoAccountError).customMessage
-                            )
-                        )
+                    is TapError.WalletManager.NoAccountError -> {
+                        dispatchOnMain(WalletAction.LoadWallet.NoAccount(
+                            walletManager.wallet,
+                            blockchainNetwork,
+                            (result.error as TapError.WalletManager.NoAccountError).customMessage
+                        ))
                     }
                     else -> {
-                        dispatchOnMain(
-                            WalletAction.LoadWallet.Failure(
-                                walletManager.wallet,
-                                result.error.localizedMessage
-                            )
-                        )
+                        dispatchOnMain(WalletAction.LoadWallet.Failure(
+                            walletManager.wallet,
+                            result.error.localizedMessage
+                        ))
                     }
                 }
             }
         }
     }
 
-    private suspend fun updateThrottlingForWalletManager(walletManager: WalletManager): Result<Wallet> {
-        val newResult = walletManager.safeUpdate()
-        val blockchain = walletManager.wallet.blockchain
-        walletManagersThrottler.updateThrottlingTo(blockchain)
-        walletManagersThrottler.setValue(blockchain, newResult)
-        return newResult
-    }
-
-    suspend fun loadFiatRate(fiatCurrency: FiatCurrencyName, wallet: Wallet) {
-        val currencies = wallet.getTokens()
-            .map { Currency.Token(it, wallet.blockchain, wallet.publicKey.derivationPath?.rawPath) }
-            .plus(Currency.Blockchain(wallet.blockchain, wallet.publicKey.derivationPath?.rawPath))
-        loadFiatRate(fiatCurrency, currencies)
-    }
-
-    suspend fun loadFiatRate(fiatCurrency: FiatCurrencyName, currencies: List<Currency>) {
-        // get and submit previous result of equivalents.
-        val throttledResult = currencies.filter { fiatRatesThrottler.isStillThrottled(it) }.map {
-            Pair(it, fiatRatesThrottler.geValue(it))
-        }
-        if (throttledResult.isNotEmpty()) handleFiatRatesResult(throttledResult)
-
-        val toUpdate = currencies.filter { !fiatRatesThrottler.isStillThrottled(it) }
-        toUpdate.forEach {
-            val result = coinMarketCapService.getRate(it.currencySymbol, fiatCurrency)
-            if (result is Result.Success) {
-                fiatRatesThrottler.updateThrottlingTo(it)
-                fiatRatesThrottler.setValue(it, result)
-            }
-            handleFiatRatesResult(listOf(it to result))
-        }
-    }
-
     suspend fun onCardScanned(data: ScanResponse) {
         walletManagersThrottler.clear()
-//        fiatRatesThrottler.clear()
         store.state.globalState.feedbackManager?.infoHolder?.setCardInfo(data)
         updateConfigManager(data)
 
@@ -169,22 +123,18 @@ class TapWalletManager {
             if (data.card.isMultiwalletAllowed) {
                 loadMultiWalletData(data, blockchain, primaryWalletManager)
             } else {
-                dispatchOnMain(
-                    WalletAction.MultiWallet.AddBlockchains(
-                        listOf(BlockchainNetwork.fromWalletManager(primaryWalletManager)),
-                        listOf(primaryWalletManager)
-                    )
-                )
+                dispatchOnMain(WalletAction.MultiWallet.AddBlockchains(
+                    listOf(BlockchainNetwork.fromWalletManager(primaryWalletManager)),
+                    listOf(primaryWalletManager)
+                ))
             }
         } else {
             if (data.card.isMultiwalletAllowed) {
                 loadMultiWalletData(data, blockchain, null)
             }
         }
-        dispatchOnMain(
-            WalletAction.LoadWallet(),
-            WalletAction.LoadFiatRate()
-        )
+        dispatchOnMain(WalletAction.LoadWallet())
+        dispatchOnMain(WalletAction.LoadFiatRate())
     }
 
     private suspend fun loadMultiWalletData(
@@ -193,7 +143,9 @@ class TapWalletManager {
         primaryWalletManager: WalletManager?
     ) {
         val primaryTokens = primaryWalletManager?.cardTokens?.toList() ?: emptyList()
-        val savedCurrencies = currenciesRepository.loadSavedCurrencies(scanResponse.card.cardId, scanResponse.card.derivationStyle)
+        val savedCurrencies = currenciesRepository.loadSavedCurrencies(
+            scanResponse.card.cardId, scanResponse.card.settings.isHDWalletAllowed
+        )
 
         if (savedCurrencies.isEmpty()) {
             if (primaryBlockchain != null && primaryWalletManager != null) {
@@ -208,7 +160,6 @@ class TapWalletManager {
                 )
 
             } else {
-                val derivationStyle = scanResponse.card.derivationStyle
                 val blockchainNetworks = listOf(
                     BlockchainNetwork(Blockchain.Bitcoin, scanResponse.card),
                     BlockchainNetwork(Blockchain.Ethereum, scanResponse.card)
@@ -224,15 +175,15 @@ class TapWalletManager {
                     WalletAction.MultiWallet.AddBlockchains(blockchainNetworks, walletManagers),
                 )
             }
-            dispatchOnMain(
-                WalletAction.MultiWallet.FindBlockchainsInUse,
-                WalletAction.MultiWallet.FindTokensInUse,
-            )
+//            dispatchOnMain(
+//                WalletAction.MultiWallet.FindBlockchainsInUse,
+//                WalletAction.MultiWallet.FindTokensInUse,
+//            )
         } else {
             val walletManagers = if (
                 primaryTokens.isNotEmpty() &&
                 primaryWalletManager != null &&
-                primaryBlockchain != null
+                primaryBlockchain != null && primaryBlockchain != Blockchain.Unknown
             ) {
                 val blockchainsWithoutPrimary = savedCurrencies.filterNot { it.blockchain == primaryBlockchain }
                 walletManagerFactory.makeWalletManagersForApp(
@@ -246,7 +197,9 @@ class TapWalletManager {
                 WalletAction.MultiWallet.AddBlockchains(savedCurrencies, walletManagers),
             )
             savedCurrencies.map {
-                dispatchOnMain(WalletAction.MultiWallet.AddTokens(it.tokens, it))
+                if (it.tokens.isNotEmpty()) {
+                    dispatchOnMain(WalletAction.MultiWallet.AddTokens(it.tokens, it))
+                }
             }
         }
     }
@@ -283,53 +236,6 @@ class TapWalletManager {
                 WalletAction.EmptyWallet
             }
             else -> null
-        }
-    }
-
-    private suspend fun checkForRentWarning(walletManager: WalletManager) {
-        val rentProvider = walletManager as? RentProvider ?: return
-
-        when (val result = rentProvider.minimalBalanceForRentExemption()) {
-            is com.tangem.blockchain.extensions.Result.Success -> {
-                fun isNeedToShowWarning(balance: BigDecimal, rentExempt: BigDecimal): Boolean =
-                    balance < rentExempt
-
-                val balance = walletManager.wallet.fundsAvailable(AmountType.Coin)
-                val outgoingTxs =
-                    walletManager.wallet.getPendingTransactions(PendingTransactionType.Outgoing)
-                val rentExempt = result.data
-                val show = if (outgoingTxs.isEmpty()) {
-                    isNeedToShowWarning(balance, rentExempt)
-                } else {
-                    val outgoingAmount = outgoingTxs.sumOf { it.amount ?: BigDecimal.ZERO }
-                    val rest = balance.minus(outgoingAmount)
-                    isNeedToShowWarning(rest, rentExempt)
-                }
-                if (!show) return
-
-                val currency = walletManager.wallet.blockchain.currency
-                dispatchOnMain(
-                    WalletAction.SetWalletRent(
-                        blockchain = BlockchainNetwork.fromWalletManager(walletManager),
-                        minRent = ("${rentProvider.rentAmount().stripZeroPlainString()} $currency"),
-                        rentExempt = ("${rentExempt.stripZeroPlainString()} $currency")
-                    )
-                )
-            }
-            is com.tangem.blockchain.extensions.Result.Failure -> {}
-        }
-    }
-
-    private suspend fun handleFiatRatesResult(results: List<Pair<Currency, Result<BigDecimal>?>>) {
-        results.map {
-            when (it.second) {
-                is Result.Success -> {
-                    val rate = it.first to (it.second as Result.Success<BigDecimal>).data
-                    dispatchOnMain(WalletAction.LoadFiatRate.Success(rate))
-                }
-                is Result.Failure -> dispatchOnMain(WalletAction.LoadFiatRate.Failure)
-                null -> {}
-            }
         }
     }
 }

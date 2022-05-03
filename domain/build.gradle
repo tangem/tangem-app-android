@@ -47,13 +47,14 @@ android {
 
 dependencies {
     implementation implementation(project(path: ':network'))
+    implementation implementation(project(path: ':common'))
 
     // Tangem sdk's
-    implementation 'com.tangem:blockchain:develop-71'
+    implementation 'com.tangem:blockchain:develop-77'
     implementation 'com.tangem.tangem-sdk-kotlin:core:develop-142'
     implementation 'com.tangem.tangem-sdk-kotlin:android:develop-142'
 
-    // Kotlin
+    // Kotlin coroutines
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2'
 
     // State management
