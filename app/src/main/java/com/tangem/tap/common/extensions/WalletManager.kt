@@ -4,6 +4,7 @@ import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.services.Result
+import com.tangem.tap.common.TestActions
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.amountToCreateAccount
 import com.tangem.tap.domain.getFirstToken
@@ -20,8 +21,9 @@ import timber.log.Timber
 [REDACTED_AUTHOR]
  */
 suspend fun WalletManager.safeUpdate(): Result<Wallet> = try {
-    if (isDemoWallet()) {
+    if (isDemoWallet() || TestActions.testAmountInjectionForWalletManagerEnabled) {
         delay(500)
+        TestActions.testAmountInjectionForWalletManagerEnabled = false
         Result.Success(wallet)
     } else {
         update()
@@ -37,10 +39,10 @@ suspend fun WalletManager.safeUpdate(): Result<Wallet> = try {
         val amountToCreateAccount = blockchain.amountToCreateAccount(wallet.getFirstToken())
 
         if (exception is BlockchainSdkError.AccountNotFound && amountToCreateAccount != null) {
-            Result.Failure(TapError.WalletManagerUpdate.NoAccountError(amountToCreateAccount.toString()))
+            Result.Failure(TapError.WalletManager.NoAccountError(amountToCreateAccount.toString()))
         } else {
             val message = exception.localizedMessage ?: "An error has occurred. Try later"
-            Result.Failure(TapError.WalletManagerUpdate.InternalError(message))
+            Result.Failure(TapError.WalletManager.InternalError(message))
         }
     }
 }
