@@ -5,7 +5,8 @@ import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.blockchain.extensions.isAboveZero
 import com.tangem.common.extensions.isZero
-import com.tangem.domain.common.TapWorkarounds.derivationStyle
+import com.tangem.domain.common.extensions.toCoinId
+import com.tangem.domain.features.addCustomToken.CustomCurrency
 import com.tangem.tap.common.entities.Button
 import com.tangem.tap.common.extensions.toQrCode
 import com.tangem.tap.common.redux.StateDialog
@@ -17,6 +18,7 @@ import com.tangem.tap.domain.extensions.sellIsAllowed
 import com.tangem.tap.domain.extensions.toSendableAmounts
 import com.tangem.tap.domain.tokens.BlockchainNetwork
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
+import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
 import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.models.toPendingTransactions
 import com.tangem.tap.features.wallet.models.toPendingTransactionsForToken
@@ -59,7 +61,7 @@ data class WalletState(
 
     val shouldShowDetails: Boolean =
         primaryWallet?.currencyData?.status != BalanceStatus.EmptyCard &&
-                primaryWallet?.currencyData?.status != BalanceStatus.UnknownBlockchain
+            primaryWallet?.currencyData?.status != BalanceStatus.UnknownBlockchain
 
     val blockchains: List<Blockchain>
         get() = wallets.mapNotNull { it.walletManager?.wallet?.blockchain }
@@ -73,19 +75,9 @@ data class WalletState(
     val walletManagers: List<WalletManager>
         get() = wallets.mapNotNull { it.walletManager }
 
-    fun getWalletManager(token: Token?): WalletManager? {
-        if (token == null) return null
-        return wallets
-            .mapNotNull { it.walletManager }
-            .find { walletManager ->
-                walletManager.cardTokens.any { it.contractAddress == token.contractAddress }
-            }
-    }
-
     fun getWalletManager(currency: Currency?): WalletManager? {
         if (currency?.blockchain == null) return null
-        return wallets.map { it.walletManager }
-            .find { it?.wallet?.blockchain == currency.blockchain }
+        return getWalletStore(currency)?.walletManager
     }
 
     fun getWalletManager(blockchain: BlockchainNetwork): WalletManager? {
@@ -96,8 +88,8 @@ data class WalletState(
         if (blockchain == null) return null
         return walletsData.find {
             it.currency is Currency.Blockchain &&
-                    it.currency.blockchain == blockchain.blockchain &&
-                    it.currency.derivationPath == blockchain.derivationPath
+                it.currency.blockchain == blockchain.blockchain &&
+                it.currency.derivationPath == blockchain.derivationPath
         }
     }
 
@@ -105,7 +97,7 @@ data class WalletState(
         if (currency == null) return null
         return wallets.firstOrNull {
             it.blockchainNetwork.derivationPath == currency.derivationPath &&
-                    (it.blockchainNetwork.blockchain == currency.blockchain)
+                (it.blockchainNetwork.blockchain == currency.blockchain)
         }
     }
 
@@ -120,29 +112,13 @@ data class WalletState(
         if (blockchainNetwork == null) return null
         return wallets.firstOrNull {
             it.blockchainNetwork.derivationPath == blockchainNetwork.derivationPath &&
-                    (it.blockchainNetwork.blockchain == blockchainNetwork.blockchain)
+                (it.blockchainNetwork.blockchain == blockchainNetwork.blockchain)
         }
     }
 
     fun getWalletData(currency: Currency?): WalletData? {
         if (currency == null) return null
         return getWalletStore(currency)?.walletsData?.firstOrNull { it.currency == currency }
-    }
-
-    fun getWalletData(token: Token?): WalletData? {
-        if (token == null) return null
-        return walletsData.find {
-            (it.currency as? Currency.Token)?.token == token &&
-                    !it.currency.isCustomCurrency(store.state.globalState.scanResponse!!.card.derivationStyle)
-        }
-    }
-
-    fun getWalletData(blockchain: Blockchain?): WalletData? {
-        if (blockchain == null) return null
-        return walletsData.find {
-            (it.currency as? Currency.Blockchain)?.blockchain == blockchain &&
-                    !it.currency.isCustomCurrency(store.state.globalState.scanResponse!!.card.derivationStyle)
-        }
     }
 
     fun getSelectedWalletData(): WalletData? {
@@ -166,23 +142,23 @@ data class WalletState(
 
             if (walletData.currency is Currency.Blockchain) {
                 return wallet.recentTransactions.toPendingTransactions(wallet.address).isEmpty() &&
-                        wallet.amounts.toSendableAmounts().isEmpty()
+                    wallet.amounts.toSendableAmounts().isEmpty()
             } else if (walletData.currency is Currency.Token) (
-                    return wallet.recentTransactions.toPendingTransactionsForToken(
-                        walletData.currency.token, wallet.address
-                    ).isEmpty()
-                            && wallet.amounts[AmountType.Token(token = walletData.currency.token)]
-                        ?.isAboveZero() != true
-                    )
+                return wallet.recentTransactions.toPendingTransactionsForToken(
+                    walletData.currency.token, wallet.address
+                ).isEmpty()
+                    && wallet.amounts[AmountType.Token(token = walletData.currency.token)]
+                    ?.isAboveZero() != true
+                )
         }
         return false
     }
 
     private fun isPrimaryCurrency(walletData: WalletData): Boolean {
         return (walletData.currency is Currency.Blockchain &&
-                walletData.currency.blockchain == store.state.walletState.primaryBlockchain)
-                || (walletData.currency is Currency.Token &&
-                walletData.currency.token == store.state.walletState.primaryToken)
+            walletData.currency.blockchain == store.state.walletState.primaryBlockchain)
+            || (walletData.currency is Currency.Token &&
+            walletData.currency.token == store.state.walletState.primaryToken)
     }
 
     fun replaceWalletInWallets(wallet: WalletStore?): List<WalletStore> {
@@ -239,7 +215,7 @@ data class WalletState(
         return if (walletData.currency is Currency.Blockchain) {
             val walletStores = wallets.filterNot {
                 it.blockchainNetwork.blockchain == walletData.currency.blockchain
-                        && it.blockchainNetwork.derivationPath == walletData.currency.derivationPath
+                    && it.blockchainNetwork.derivationPath == walletData.currency.derivationPath
             }
             copy(wallets = walletStores)
         } else {
@@ -396,6 +372,11 @@ data class WalletRent(
 
 sealed interface Currency {
 
+    val coinId: String?
+        get() = when (this) {
+            is Blockchain -> blockchain.toCoinId()
+            is Token -> token.id
+        }
     val blockchain: com.tangem.blockchain.common.Blockchain
     val currencySymbol: CryptoCurrencyName
     val derivationPath: String?
@@ -416,10 +397,16 @@ sealed interface Currency {
     }
 
     fun isCustomCurrency(derivationStyle: DerivationStyle?): Boolean {
+        if (this is Token && this.token.id == null) return true
+
         if (derivationPath == null || derivationStyle == null) return false
+
         return derivationPath != blockchain.derivationPath(derivationStyle)?.rawPath
     }
 
+    fun isBlockchain(): Boolean = this is Blockchain
+
+    fun isToken(): Boolean = this is Token
 
     companion object {
         fun fromBlockchainNetwork(
@@ -427,17 +414,39 @@ sealed interface Currency {
             token: com.tangem.blockchain.common.Token? = null
         ): Currency {
             return if (token != null) {
-                Currency.Token(
+                Token(
                     token = token,
                     blockchain = blockchainNetwork.blockchain,
                     derivationPath = blockchainNetwork.derivationPath
                 )
             } else {
-                Currency.Blockchain(
+                Blockchain(
                     blockchain = blockchainNetwork.blockchain,
                     derivationPath = blockchainNetwork.derivationPath
                 )
             }
+        }
+
+        fun fromCustomCurrency(customCurrency: CustomCurrency): Currency {
+            return when (customCurrency) {
+                is CustomCurrency.CustomBlockchain -> Blockchain(
+                    blockchain = customCurrency.network,
+                    derivationPath = customCurrency.derivationPath?.rawPath
+                )
+                is CustomCurrency.CustomToken -> Token(
+                    token = customCurrency.token,
+                    blockchain = customCurrency.network,
+                    derivationPath = customCurrency.derivationPath?.rawPath,
+                )
+            }
+        }
+
+        fun fromTokenWithBlockchain(tokenWithBlockchain: TokenWithBlockchain): Token {
+            return Token(
+                token = tokenWithBlockchain.token,
+                blockchain = tokenWithBlockchain.blockchain,
+                derivationPath = null
+            )
         }
     }
 }
@@ -450,7 +459,7 @@ data class WalletStore(
     fun updateWallets(walletDataList: List<WalletData>): WalletStore {
         val relevantWalletDataList = walletDataList.filter {
             it.currency.blockchain == blockchainNetwork.blockchain &&
-                    it.currency.derivationPath == blockchainNetwork.derivationPath
+                it.currency.derivationPath == blockchainNetwork.derivationPath
         }.toMutableList()
         val updatedWalletDataList = walletsData.map { walletData ->
             val matchingWalletData = relevantWalletDataList.find { it.currency == walletData.currency }
