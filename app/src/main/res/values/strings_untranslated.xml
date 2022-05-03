@@ -84,6 +84,7 @@
 
     <string name="add_custom_token_title" translatable="false">Add Token</string>
     <string name="custom_token_contract_address_input_title" translatable="false">Contract address</string>
+    <string name="custom_token_creation_error_required_field" translatable="false">Required field</string>
     <string name="custom_token_creation_error_network_not_selected" translatable="false">Please select the network</string>
     <string name="custom_token_creation_error_empty_fields" translatable="false">Please fill in all the fields</string>
     <string name="custom_token_creation_error_wrong_decimals" translatable="false">Decimal number must be a valid integer, no higher than %d</string>
