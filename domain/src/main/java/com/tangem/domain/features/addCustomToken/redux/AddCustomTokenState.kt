@@ -3,6 +3,7 @@ package com.tangem.domain.features.addCustomToken.redux
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.common.card.FirmwareVersion
+import com.tangem.common.json.MoshiJsonConverter
 import com.tangem.domain.AddCustomTokenError
 import com.tangem.domain.DomainWrapped
 import com.tangem.domain.common.extensions.SolanaAvailable
@@ -10,7 +11,10 @@ import com.tangem.domain.common.extensions.SolanaTokensAvailable
 import com.tangem.domain.common.form.*
 import com.tangem.domain.features.addCustomToken.*
 import com.tangem.domain.features.addCustomToken.CustomTokenFieldId.*
+import com.tangem.domain.redux.DomainState
 import com.tangem.domain.redux.domainStore
+import com.tangem.domain.redux.state.StringActionStateConverter
+import org.rekotlin.Action
 import org.rekotlin.StateType
 
 data class AddCustomTokenState(
@@ -237,6 +241,58 @@ data class AddCustomTokenState(
                 derivationPath = ViewStates.TokenField(),
                 addButton = ViewStates.AddButton(isEnabled = false)
             )
+        }
+    }
+
+    class Converter : StringActionStateConverter<DomainState> {
+        private val jsonConverter: MoshiJsonConverter = MoshiJsonConverter.INSTANCE
+        private var builder: StringBuilder = StringBuilder()
+
+        override fun convert(action: Action, stateHolder: DomainState): String? {
+            val action = (action as? AddCustomTokenAction) ?: return null
+
+            val state = stateHolder.addCustomTokensState
+            val fieldConverter = FieldToJsonConverter(listOf(
+                ContractAddress,
+                Network,
+                Name,
+                Symbol,
+                Decimals,
+                DerivationPath,
+            ), jsonConverter)
+            state.visitDataConverter(fieldConverter)
+            val errors = state.formErrors.map {
+                "${it.key}: ${it.value::class.java.simpleName}"
+            }
+            val warnings = state.warnings.map { it::class.java.simpleName }
+
+            printAction(action, state)
+            printStateValue("fields", fieldConverter.getConvertedData())
+            printStateValue("fieldErrors", toJson(errors))
+            printStateValue("warnings", toJson(warnings))
+            printStateValue("screenState", toJson(state.screenState))
+            printMessage("------------------------------------------------------")
+
+            val printed = builder.toString()
+            builder = StringBuilder()
+
+            return printed
+        }
+
+        private fun printStateValue(name: String, value: String) {
+            printMessage("$name: $value")
+        }
+
+        private fun printAction(action: AddCustomTokenAction, state: AddCustomTokenState) {
+            printMessage("action: $action, state: ${state::class.java.simpleName}")
+        }
+
+        private fun toJson(value: Any): String {
+            return jsonConverter.prettyPrint(value)
+        }
+
+        private fun printMessage(message: String) {
+            builder.append("$message\n")
         }
     }
 }
