@@ -18,11 +18,9 @@ import com.tangem.domain.common.form.*
 import com.tangem.domain.features.addCustomToken.*
 import com.tangem.domain.features.addCustomToken.CustomTokenFieldId.*
 import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction.*
-import com.tangem.domain.redux.BaseStoreHub
-import com.tangem.domain.redux.DomainState
-import com.tangem.domain.redux.dispatchOnMain
-import com.tangem.domain.redux.domainStore
+import com.tangem.domain.redux.*
 import com.tangem.domain.redux.global.DomainGlobalAction
+import com.tangem.domain.redux.global.DomainGlobalState
 import com.tangem.network.api.tangemTech.CoinsResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -37,6 +35,8 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
 
     private val hubState: AddCustomTokenState
         get() = domainStore.state.addCustomTokensState
+
+    override fun getReducer(): ReStoreReducer<AddCustomTokenState> = AddCustomTokenReducer(globalState)
 
     override fun getHubState(storeState: DomainState): AddCustomTokenState = hubState
 
@@ -515,10 +515,17 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
         dispatchOnMain(Warning.Replace(setOf(this), setOf(to)))
     }
 
-//    private suspend fun Warning.replace(replace: Boolean, to: Warning) {
-//        if (replace) dispatchOnMain(Warning.Replace(setOf(this), setOf(to)))
-//    }
+    @Throws
+    private fun throwUnAppropriateInitialization(objName: String) {
+        throw AddCustomTokenException.UnAppropriateInitializationException(
+            "AddCustomTokenHub", "$objName must be not NULL"
+        )
+    }
+}
 
+private class AddCustomTokenReducer(
+    private val globalState: DomainGlobalState,
+) : ReStoreReducer<AddCustomTokenState> {
 
     override fun reduceAction(action: Action, state: AddCustomTokenState): AddCustomTokenState {
         return when (action) {
@@ -679,10 +686,4 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
         return state.copy(form = Form(state.form.fieldList))
     }
 
-    @Throws
-    private fun throwUnAppropriateInitialization(objName: String) {
-        throw AddCustomTokenException.UnAppropriateInitializationException(
-            "AddCustomTokenHub", "$objName must be not NULL"
-        )
-    }
 }
