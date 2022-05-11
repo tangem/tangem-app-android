@@ -239,7 +239,6 @@ private class ScanWalletProcessor(
             blockchainsToDerive.addAll(
                 listOf(
                     BlockchainNetwork(Blockchain.Ethereum, card),
-                    BlockchainNetwork(Blockchain.Binance, card),
                     BlockchainNetwork(Blockchain.EthereumTestnet, card)
                 )
             )
