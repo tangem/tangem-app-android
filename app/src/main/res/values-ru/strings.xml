@@ -382,4 +382,5 @@
     <string name="feedback_preface_support">Привет, команда поддержки,</string>
     <string name="feedback_preface_tx_push_failed">Пожалуйста, расскажите нам больше о Вашей проблеме. Каждая деталь может быть полезной.</string>
     <string name="feedback_data_collection_message">Информация ниже не является обязательной. Вы можете стереть её, если хотите.</string>
+    <string name="main_page_balance">Баланс</string>
 </resources>
