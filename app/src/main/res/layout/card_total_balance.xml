@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/fl_balance"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:minWidth="300dp">
+
+    <com.google.android.material.card.MaterialCardView
+        android:id="@+id/card_balance"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/white"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="4dp"
+        android:elevation="3dp">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="18dp"
+            android:paddingBottom="18dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            >
+
+            <TextView
+                    android:id="@+id/tv_title"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:textColor="@color/iconGray"
+                    android:textSize="14sp"
+                    android:text="@string/main_page_balance"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toStartOf="@id/tv_currency_name" />
+
+            <TextView
+                    android:id="@+id/tv_balance"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:textColor="@color/darkGray6"
+                    android:textSize="20sp"
+                    android:textStyle="bold"
+                    app:layout_constraintTop_toBottomOf="@id/tv_title"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    tools:text="$ 22 325.40" />
+
+            <TextView
+                    android:id="@+id/tv_currency_name"
+                    android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/darkGray1"
+                    android:textSize="16sp"
+                    app:drawableEndCompat="@drawable/ic_arrow_angle_down"
+                    app:drawableTint="@color/darkGray1"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                tools:text="USD"
+                />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </com.google.android.material.card.MaterialCardView>
+</FrameLayout>
