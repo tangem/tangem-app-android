@@ -1,7 +1,6 @@
 package com.tangem.tap.features.wallet.ui.dialogs
 
 import android.content.Context
-import android.content.DialogInterface
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.ViewGroup
@@ -26,20 +25,18 @@ class AmountToSendDialog(context: Context) : BottomSheetDialog(context) {
         setContentView(binding!!.root)
     }
 
-    override fun setOnCancelListener(listener: DialogInterface.OnCancelListener?) {
-        super.setOnCancelListener(listener)
-        binding = null
-    }
-
     fun show(amounts: List<Amount>?) {
-        this.setOnDismissListener {
+        super.show()
+
+        setOnDismissListener {
+            binding = null
             store.dispatch(WalletAction.Send.Cancel)
         }
 
         binding!!.rvAmountsToSend.layoutManager = LinearLayoutManager(context)
         val dividerItemDecoration = DividerItemDecoration(
-                ContextThemeWrapper(binding!!.root.context, R.style.AppTheme),
-                DividerItemDecoration.VERTICAL
+            ContextThemeWrapper(binding!!.root.context, R.style.AppTheme),
+            DividerItemDecoration.VERTICAL
         )
         binding!!.rvAmountsToSend.addItemDecoration(dividerItemDecoration)
 
@@ -47,8 +44,6 @@ class AmountToSendDialog(context: Context) : BottomSheetDialog(context) {
         binding!!.rvAmountsToSend.adapter = viewAdapter
 
         viewAdapter.submitList(amounts)
-
-        show()
     }
 }
 
@@ -69,16 +64,16 @@ class ChooseAmountAdapter
 
     object DiffUtilCallback : DiffUtil.ItemCallback<Amount>() {
         override fun areContentsTheSame(
-                oldItem: Amount, newItem: Amount
+            oldItem: Amount, newItem: Amount
         ) = oldItem.currencySymbol == newItem.currencySymbol
 
         override fun areItemsTheSame(
-                oldItem: Amount, newItem: Amount
+            oldItem: Amount, newItem: Amount
         ) = oldItem == newItem
     }
 
     class AmountViewHolder(val binding: ItemWalletAmountToSendBinding) :
-            RecyclerView.ViewHolder(binding.root) {
+        RecyclerView.ViewHolder(binding.root) {
 
         fun bind(amount: Amount) = with(binding) {
             tvCurrencySymbol.text = amount.currencySymbol
