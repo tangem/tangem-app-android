@@ -13,6 +13,7 @@ import com.tangem.domain.DomainDialog
 import com.tangem.domain.DomainWrapped
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.extensions.fromNetworkId
+import com.tangem.domain.common.extensions.supportedTokens
 import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.common.form.*
 import com.tangem.domain.features.addCustomToken.*
@@ -141,16 +142,11 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
         }
     }
 
-    //TODO: Solana token
-    /**
-     * This feature is only needed until Solana coins are added.
-     * While they are not there - this function excludes the Solana blockchain if the user has
-     * filled in at least one field of the token.
-     */
     private suspend fun changeBlockchainNetworkList() {
         val state = hubState
         val networkBlockchainList = Network.getField<TokenBlockchainField>().itemList
-        val newNetworkBlockchainList: List<Blockchain> = state.getNetworks(state.getCustomTokenType())
+        val card = requireNotNull(globalState.scanResponse?.card)
+        val newNetworkBlockchainList: List<Blockchain> = state.getNetworks(card, state.getCustomTokenType())
 
         val listsIdentical = newNetworkBlockchainList.toSet() == networkBlockchainList.toSet()
         if (listsIdentical) return
@@ -537,9 +533,7 @@ private class AddCustomTokenReducer(
             }
             is OnCreate -> {
                 val card = requireNotNull(globalState.scanResponse?.card)
-                val supportedTokenNetworkIds = AddCustomTokenState.getSupportedTokensBlockchain().map {
-                    it.toNetworkId()
-                }
+                val supportedTokenNetworkIds = card.supportedTokens().map { it.toNetworkId() }
                 val tangemTechServiceManager = AddCustomTokenService(
                     tangemTechService = globalState.networkServices.tangemTechService,
                     supportedTokenNetworkIds = supportedTokenNetworkIds
@@ -550,7 +544,7 @@ private class AddCustomTokenReducer(
                     DerivationStyle.LEGACY -> derivationPathState.copy(isVisible = true)
                     null, DerivationStyle.NEW -> derivationPathState.copy(isVisible = false)
                 }
-                val form = Form(AddCustomTokenState.createFormFields(CustomTokenType.Blockchain))
+                val form = Form(AddCustomTokenState.createFormFields(card, CustomTokenType.Blockchain))
                 state.copy(
                     cardDerivationStyle = card.derivationStyle,
                     form = form,
@@ -558,7 +552,10 @@ private class AddCustomTokenReducer(
                     screenState = state.screenState.copy(derivationPath = derivationPathState)
                 )
             }
-            is OnDestroy -> state.reset()
+            is OnDestroy -> {
+                val card = requireNotNull(globalState.scanResponse?.card)
+                state.reset(card)
+            }
             is UpdateForm -> {
                 updateFormState(action.state)
             }
