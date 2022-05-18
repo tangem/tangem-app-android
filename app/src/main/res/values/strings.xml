@@ -207,4 +207,5 @@
     <string name="xtz_withdrawal_message_reduce">Reduce by %s XTZ</string>
     <string name="xtz_withdrawal_message_ignore">No, send all</string>
     <string name="main_page_balance">Total balance</string>
+    <string name="main_processing_full_amount">Processing full amount…</string>
 </resources>
