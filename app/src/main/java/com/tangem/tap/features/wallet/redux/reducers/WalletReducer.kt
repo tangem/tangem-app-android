@@ -146,12 +146,9 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
             } else {
                 val walletManager = newState.getWalletManager(action.blockchain) ?: return newState
                 val currencies = listOf(Currency.fromBlockchainNetwork(action.blockchain)) +
-                        walletManager.cardTokens.map {
-                            Currency.fromBlockchainNetwork(
-                                action.blockchain,
-                                it
-                            )
-                        }
+                    walletManager.cardTokens.map {
+                        Currency.fromBlockchainNetwork(action.blockchain, it)
+                    }
                 val newWallets = newState.walletsData.filter { currencies.contains(it.currency) }
                     .map { wallet ->
                         wallet.copy(
@@ -305,23 +302,15 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
             )
         }
         is WalletAction.SetWalletRent -> {
-            var walletData = newState.getWalletData(action.blockchain)
-            if (walletData == null) {
-                newState
-            } else {
-                walletData =
-                    walletData.copy(warningRent = WalletRent(action.minRent, action.rentExempt))
-                newState = newState.updateWalletsData(listOf(walletData))
-            }
+            val walletStore = newState.getWalletStore(action.wallet) ?: return newState
+            val walletRent = WalletRent(action.minRent, action.rentExempt)
+            val walletsData = walletStore.walletsData.map { it.copy(walletRent = walletRent) }
+            newState = newState.updateWalletsData(walletsData)
         }
         is WalletAction.RemoveWalletRent -> {
-            var walletData = newState.getWalletData(action.blockchain)
-            if (walletData == null) {
-                newState
-            } else {
-                walletData = walletData.copy(warningRent = null)
-                newState = newState.updateWalletsData(listOf(walletData))
-            }
+            val walletStore = newState.getWalletStore(action.wallet) ?: return newState
+            val walletsData = walletStore.walletsData.map { it.copy(walletRent = null) }
+            newState = newState.updateWalletsData(walletsData)
         }
     }
     return newState
