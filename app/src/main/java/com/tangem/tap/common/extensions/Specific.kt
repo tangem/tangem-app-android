@@ -54,8 +54,6 @@ fun BigDecimal.toFormattedFiatValue(fiatCurrencyName: String): String {
     return "≈ ${fiatCurrencyName}  $this"
 }
 
-fun CurrenciesResponse.Currency.toFormattedString(): String = "${this.name} (${this.code}) - ${this.unit}"
-
 fun BigDecimal.stripZeroPlainString(): String = this.stripTrailingZeros().toPlainString()
 
 // 0.00 -> 0.00
@@ -89,4 +87,26 @@ fun BigDecimal.isGreaterThanOrEqual(value: BigDecimal): Boolean {
 fun BigDecimal.isLessThanOrEqual(value: BigDecimal): Boolean {
     val compareResult = this.compareTo(value)
     return compareResult == -1 || compareResult == 0
+}
+
+fun BigDecimal.formatAmountAsSpannedString(
+    currencySymbol: String,
+    integerPartSizeProportion: Float = 1.4f
+): SpannedString {
+    val amount = this.scaleToFiat(applyPrecision = true)
+        .stripZeroPlainString()
+    val integer = amount.substringAfter('.')
+    val reminder = amount.substringBefore('.')
+
+    return buildSpannedString {
+        append(
+            integer,
+            RelativeSizeSpan(integerPartSizeProportion),
+            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+        append('.')
+        append(reminder)
+        append(' ')
+        append(currencySymbol)
+    }
 }
