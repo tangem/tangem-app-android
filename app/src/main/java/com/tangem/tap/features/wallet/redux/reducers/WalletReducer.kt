@@ -70,9 +70,9 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
             when (action.error) {
                 is TapError.NoInternetConnection -> {
                     val wallets = newState.wallets
-                        .map {
-                            it.copy(
-                                walletsData = it.walletsData.map {
+                        .map { store ->
+                            store.copy(
+                                walletsData = store.walletsData.map {
                                     it.copy(
                                         currencyData = it.currencyData.copy(
                                             status = BalanceStatus.Unreachable
@@ -109,6 +109,8 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                             )
                         )
                     )
+                }
+                else -> { /* no-op */
                 }
             }
         }
@@ -306,22 +308,22 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
         }
         is WalletAction.SetWalletRent -> {
             var walletData = newState.getWalletData(action.blockchain)
-            if (walletData == null) {
-                newState
-            } else {
-                walletData =
-                    walletData.copy(warningRent = WalletRent(action.minRent, action.rentExempt))
+            if (walletData != null) {
+                walletData = walletData.copy(
+                    warningRent = WalletRent(action.minRent, action.rentExempt)
+                )
                 newState = newState.updateWalletsData(listOf(walletData))
+
             }
         }
         is WalletAction.RemoveWalletRent -> {
             var walletData = newState.getWalletData(action.blockchain)
-            if (walletData == null) {
-                newState
-            } else {
+            if (walletData != null) {
                 walletData = walletData.copy(warningRent = null)
                 newState = newState.updateWalletsData(listOf(walletData))
             }
+        }
+        else -> { /* no-op */
         }
     }
     return newState
