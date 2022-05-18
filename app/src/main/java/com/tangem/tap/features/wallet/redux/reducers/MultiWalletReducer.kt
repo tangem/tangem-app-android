@@ -126,7 +126,7 @@ class MultiWalletReducer {
                         ),
                         fiatAmountFormatted = tokenWalletData.fiatRate?.let {
                             action.amount.value
-                                ?.toFiatString(it, store.state.globalState.appCurrency)
+                                ?.toFiatString(it, store.state.globalState.appCurrency.code)
                         },
                         blockchainAmount = wallet.amounts[AmountType.Coin]?.value ?: BigDecimal.ZERO
                     ),
