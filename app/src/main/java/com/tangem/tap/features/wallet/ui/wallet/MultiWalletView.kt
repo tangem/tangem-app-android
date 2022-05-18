@@ -5,6 +5,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.tangem.common.card.Card
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.TapWorkarounds.isTestCard
+import com.tangem.tap.common.extensions.formatAmountAsSpannedString
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.redux.StateDialog
@@ -134,11 +135,10 @@ class MultiWalletView : WalletView {
         binding: FragmentWalletBinding,
         totalBalance: TotalBalance,
     ) = with(binding.lCardTotalBalance) {
-        val fiatAmountFormatted = with(totalBalance) {
-            "${fiatAmount.stripTrailingZeros()} $fiatCurrencyName"
-        }
-        tvBalance.text = fiatAmountFormatted
-        tvCurrencyName.text = totalBalance.fiatCurrencyName
+        tvBalance.text = totalBalance.fiatAmount.formatAmountAsSpannedString(
+            currencySymbol = totalBalance.fiatCurrency.symbol
+        )
+        tvCurrencyName.text = totalBalance.fiatCurrency.code
         tvCurrencyName.setOnClickListener {
             // TODO: Open app currency selector
         }
