@@ -45,7 +45,7 @@ private val globalMiddlewareHandler: Middleware<AppState> = { dispatch, appState
                 }
                 is GlobalAction.RestoreAppCurrency -> {
                     store.dispatch(GlobalAction.RestoreAppCurrency.Success(
-                        preferencesStorage.getAppCurrency()
+                        preferencesStorage.fiatCurrenciesPrefStorage.getAppCurrency()
                     ))
                 }
                 is GlobalAction.HideWarningMessage -> {
