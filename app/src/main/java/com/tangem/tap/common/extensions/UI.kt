@@ -1,5 +1,7 @@
 package com.tangem.tap.common.extensions
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
 import android.app.Activity
 import android.content.*
 import android.content.res.Resources
@@ -16,6 +18,7 @@ import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import com.google.android.material.card.MaterialCardView
 import com.tangem.common.extensions.VoidCallback
@@ -187,4 +190,47 @@ fun Context.safeStartActivity(
 
 fun View.getString(resId: Int, vararg formatArgs: Any?): String {
     return context.getString(resId, formatArgs)
+}
+
+fun View.showAnimated(durationMillis: Long = 300) {
+    this.animateVisibility(
+        show = true,
+        durationMillis = durationMillis
+    )
+}
+
+fun View.hideAnimated(
+    durationMillis: Long = 300,
+    hiddenVisibility: Int = View.GONE
+) {
+    this.animateVisibility(
+        show = false,
+        durationMillis = durationMillis,
+        hiddenVisibility = hiddenVisibility
+    )
+}
+
+private fun View.animateVisibility(
+    show: Boolean,
+    durationMillis: Long = 300,
+    hiddenVisibility: Int = View.GONE
+) {
+    if (this.isVisible == show) return
+    if (show) {
+        this.alpha = 0f
+        this.isVisible = true
+        this.animate()
+            .alpha(1f)
+            .setDuration(durationMillis)
+            .setListener(null)
+    } else {
+        this.animate()
+            .alpha(0f)
+            .setDuration(durationMillis)
+            .setListener(object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator?) {
+                    this@animateVisibility.visibility = hiddenVisibility
+                }
+            })
+    }
 }
