@@ -13,10 +13,10 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.transition.TransitionInflater
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.squareup.picasso.Picasso
-import com.tangem.common.extensions.guard
 import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.TestActions
 import com.tangem.tap.common.extensions.*
+import com.tangem.tap.common.recyclerView.SpaceItemDecoration
 import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.tokens.BlockchainNetwork
@@ -24,6 +24,8 @@ import com.tangem.tap.features.onboarding.getQRReceiveMessage
 import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.redux.*
 import com.tangem.tap.features.wallet.ui.adapters.PendingTransactionsAdapter
+import com.tangem.tap.features.wallet.ui.adapters.WalletDetailWarningMessagesAdapter
+import com.tangem.tap.features.wallet.ui.adapters.WalletDetailsWarning
 import com.tangem.tap.features.wallet.ui.dialogs.AmountToSendDialog
 import com.tangem.tap.features.wallet.ui.test.TestWalletDetails
 import com.tangem.tap.store
@@ -35,6 +37,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
     StoreSubscriber<WalletState> {
 
     private lateinit var pendingTransactionAdapter: PendingTransactionsAdapter
+    private lateinit var warningMessagesAdapter: WalletDetailWarningMessagesAdapter
     private var dialog: Dialog? = null
 
     private val binding: FragmentWalletDetailsBinding by viewBinding(FragmentWalletDetailsBinding::bind)
@@ -72,6 +75,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
 
         setupTransactionsRecyclerView()
         setupButtons()
+        setupWarningsRecyclerView()
         setupTestActionButton()
     }
 
@@ -79,6 +83,13 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
         pendingTransactionAdapter = PendingTransactionsAdapter()
         rvPendingTransaction.layoutManager = LinearLayoutManager(requireContext())
         rvPendingTransaction.adapter = pendingTransactionAdapter
+    }
+
+    private fun setupWarningsRecyclerView() = with(binding) {
+        warningMessagesAdapter = WalletDetailWarningMessagesAdapter()
+        rvWarningMessages.layoutManager = LinearLayoutManager(requireContext())
+        rvWarningMessages.adapter = warningMessagesAdapter
+        rvWarningMessages.addItemDecoration(SpaceItemDecoration.vertical(8f))
     }
 
     private fun setupButtons() = with(binding) {
@@ -116,8 +127,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
 
         handleDialogs(state.walletDialog)
         handleCurrencyIcon(selectedWallet)
-        handleWalletRent(selectedWallet.warningRent)
-        handleNotEnoughFundsOnMainCurrency(selectedWallet)
+        handleWarnings(selectedWallet)
 
         binding.srlWalletDetails.setOnRefreshListener {
             if (selectedWallet.currencyData.status != BalanceStatus.Loading) {
@@ -162,31 +172,36 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
         btnSell.show(selectedWallet.tradeCryptoState.sellingAllowed)
     }
 
-    private fun handleWalletRent(rent: WalletRent?) = with(binding) {
-        val rent = rent.guard {
-            lWarning.root.hide()
-            return
-        }
-        val warningMessage = requireContext().getString(
-            R.string.solana_rent_warning, rent.minRentValue, rent.rentExemptValue
-        )
-        lWarning.tvWarningMessage.text = warningMessage
-        lWarning.root.show()
-    }
-
-    private fun handleNotEnoughFundsOnMainCurrency(selectedWalletData: WalletData) = with(binding) {
-        if (selectedWalletData.currency.isBlockchain()) return@with
-
-        if (selectedWalletData.shouldShowCoinAmountWarning()) {
-            val blockchainName = selectedWalletData.currency.blockchain.fullName
-            val warningMessage = requireContext().getString(
-                R.string.token_details_send_blocked_fee_format, blockchainName, blockchainName
+    private fun handleWarnings(selectedWallet: WalletData) = with(binding) {
+        val walletWarnings = mutableListOf<WalletDetailsWarning>()
+        if (selectedWallet.currencyData.status == BalanceStatus.SameCurrencyTransactionInProgress) {
+            val txInProgress = WalletDetailsWarning(
+                title = R.string.common_warning,
+                message = R.string.wallet_pending_transaction_warning,
             )
-            lWarning.tvWarningMessage.text = warningMessage
-            lWarning.root.show()
-        } else {
-            lWarning.root.hide()
+            walletWarnings.add(0, txInProgress)
         }
+        if (selectedWallet.walletRent != null) {
+            val rent = selectedWallet.walletRent
+            val rentWarning = WalletDetailsWarning(
+                title = R.string.common_warning,
+                message = R.string.solana_rent_warning,
+                messageArgs = listOf(rent.minRentValue, rent.rentExemptValue)
+            )
+            walletWarnings.add(rentWarning)
+        }
+        if (!selectedWallet.currency.isBlockchain() && selectedWallet.shouldShowCoinAmountWarning()) {
+            val blockchainName = selectedWallet.currency.blockchain.fullName
+            val notEnoughBalanceForFee = WalletDetailsWarning(
+                title = R.string.common_warning,
+                message = R.string.token_details_send_blocked_fee_format,
+                messageArgs = listOf(blockchainName, blockchainName)
+            )
+            walletWarnings.add(notEnoughBalanceForFee)
+        }
+
+        warningMessagesAdapter.submitList(walletWarnings)
+        rvWarningMessages.show(walletWarnings.isNotEmpty())
     }
 
     private fun handleCurrencyIcon(wallet: WalletData) = with(binding.lWalletDetails.lBalance) {
@@ -299,7 +314,6 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
                     )
             }
         }
-        binding.cardPendingTransactionWarning.show(data.status == BalanceStatus.SameCurrencyTransactionInProgress)
     }
 
     private fun handleDialogs(walletDialog: StateDialog?) {
