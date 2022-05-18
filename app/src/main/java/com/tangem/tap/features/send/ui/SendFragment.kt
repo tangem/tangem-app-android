@@ -14,13 +14,13 @@ import androidx.recyclerview.widget.RecyclerView
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.google.android.material.textfield.TextInputEditText
 import com.tangem.Message
-import com.tangem.tangem_sdk_new.extensions.dpToPx
 import com.tangem.tangem_sdk_new.extensions.hideSoftKeyboard
 import com.tangem.tap.common.KeyboardObserver
 import com.tangem.tap.common.entities.TapCurrency
 import com.tangem.tap.common.extensions.getFromClipboard
 import com.tangem.tap.common.extensions.setOnImeActionListener
 import com.tangem.tap.common.qrCodeScan.ScanQrCodeActivity
+import com.tangem.tap.common.recyclerView.SpaceItemDecoration
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.common.snackBar.MaxAmountSnackbar
 import com.tangem.tap.common.text.truncateMiddleWith
@@ -36,7 +36,6 @@ import com.tangem.tap.features.send.redux.states.FeeType
 import com.tangem.tap.features.send.redux.states.MainCurrencyType
 import com.tangem.tap.features.send.ui.stateSubscribers.SendStateSubscriber
 import com.tangem.tap.features.wallet.redux.WalletAction
-import com.tangem.tap.features.wallet.ui.adapters.SpacesItemDecoration
 import com.tangem.tap.features.wallet.ui.adapters.WarningMessagesAdapter
 import com.tangem.tap.mainScope
 import com.tangem.tap.store
@@ -244,7 +243,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         warningsAdapter = WarningMessagesAdapter()
         val layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
         rvWarningMessages.layoutManager = layoutManager
-        rvWarningMessages.addItemDecoration(SpacesItemDecoration(rvWarningMessages.dpToPx(16f).toInt()))
+        rvWarningMessages.addItemDecoration(SpaceItemDecoration.all(16f))
         rvWarningMessages.adapter = warningsAdapter
 
         store.dispatch(SendAction.Warnings.Update)
