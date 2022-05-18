@@ -4,12 +4,12 @@ import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Wallet
 import com.tangem.domain.common.TwinCardNumber
+import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.toFiatString
 import com.tangem.tap.common.extensions.toFiatValue
 import com.tangem.tap.common.extensions.toFormattedCurrencyString
 import com.tangem.tap.common.extensions.toFormattedFiatValue
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.common.redux.global.FiatCurrencyName
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.getArtworkUrl
 import com.tangem.tap.domain.getFirstToken
@@ -377,22 +377,30 @@ private fun handleCheckSignedHashesActions(
 
 private fun setNewFiatRate(
     fiatRate: Pair<Currency, BigDecimal?>,
-    appCurrency: FiatCurrencyName, state: WalletState
+    appCurrency: FiatCurrency,
+    state: WalletState
 ): WalletState {
     val rate = fiatRate.second ?: return state
-    val rateFormatted = rate.toFormattedCurrencyString(2, appCurrency, RoundingMode.HALF_UP)
+    val rateFormatted = rate.toFormattedCurrencyString(
+        decimals = 2,
+        currency = appCurrency.code,
+        roundingMode = RoundingMode.HALF_UP
+    )
     val currency = fiatRate.first
 
     return if (!state.isMultiwalletAllowed) {
-        setSingeWalletFiatRate(rate, rateFormatted, currency, appCurrency, state)
+        setSingleWalletFiatRate(rate, rateFormatted, currency, appCurrency, state)
     } else {
         setMultiWalletFiatRate(rate, rateFormatted, currency, appCurrency, state)
     }
 }
 
 private fun setMultiWalletFiatRate(
-    rate: BigDecimal, rateFormatted: String, currency: Currency,
-    appCurrency: FiatCurrencyName, state: WalletState
+    rate: BigDecimal,
+    rateFormatted: String,
+    currency: Currency,
+    appCurrency: FiatCurrency,
+    state: WalletState
 ): WalletState {
 
     val walletStore = state.getWalletStore(currency) ?: return state
@@ -405,7 +413,7 @@ private fun setMultiWalletFiatRate(
         is Currency.Token ->
             wallet?.getTokenAmount(currency.token)?.value?.toFiatValue(rate)
     }
-    val fiatAmountFormatted = fiatAmount?.toFormattedFiatValue(appCurrency)
+    val fiatAmountFormatted = fiatAmount?.toFormattedFiatValue(appCurrency.code)
     val newWalletData = state.getWalletData(currency)?.copy(
         currencyData = walletData.currencyData.copy(
             fiatAmountFormatted = fiatAmountFormatted,
@@ -416,16 +424,19 @@ private fun setMultiWalletFiatRate(
     return state.updateWalletData(newWalletData)
 }
 
-private fun setSingeWalletFiatRate(
-    rate: BigDecimal, rateFormatted: String, currency: Currency,
-    appCurrency: FiatCurrencyName, state: WalletState
+private fun setSingleWalletFiatRate(
+    rate: BigDecimal,
+    rateFormatted: String,
+    currency: Currency,
+    appCurrency: FiatCurrency,
+    state: WalletState
 ): WalletState {
     val wallet = state.primaryWalletManager?.wallet ?: return state
     val token = wallet.getFirstToken()
 
     if (currency == state.primaryWallet?.currency) {
         val fiatAmount = wallet.amounts[AmountType.Coin]?.value
-            ?.toFiatString(rate, appCurrency)
+            ?.toFiatString(rate, appCurrency.code)
         val walletData = state.primaryWallet.copy(
             currencyData = state.primaryWallet.currencyData.copy(fiatAmountFormatted = fiatAmount),
             fiatRate = rate,
@@ -433,7 +444,9 @@ private fun setSingeWalletFiatRate(
         )
         return state.updateWalletData(walletData)
     } else if (currency is Currency.Token && currency.token == token) {
-        val tokenFiatAmount = wallet.getTokenAmount(token)?.value?.toFiatString(rate, appCurrency)
+        val tokenFiatAmount = wallet.getTokenAmount(token)
+            ?.value
+            ?.toFiatString(rate, appCurrency.code)
         val tokenData = state.primaryWallet?.currencyData?.token?.copy(
             fiatAmount = tokenFiatAmount,
             fiatRate = rate,

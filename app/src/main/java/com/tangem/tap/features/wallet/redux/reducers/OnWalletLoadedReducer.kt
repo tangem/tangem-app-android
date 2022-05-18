@@ -37,7 +37,7 @@ class OnWalletLoadedReducer {
     ): WalletState {
         val walletData = walletState.getWalletData(blockchainNetwork) ?: return walletState
 
-        val fiatCurrencySymbol = store.state.globalState.appCurrency
+        val fiatCurrency = store.state.globalState.appCurrency
         val exchangeManager = store.state.globalState.currencyExchangeManager
 
         val coinAmountValue = wallet.amounts[AmountType.Coin]?.value
@@ -65,7 +65,7 @@ class OnWalletLoadedReducer {
                 amount = coinAmountValue,
                 amountFormatted = formattedAmount,
                 fiatAmount = fiatAmount,
-                fiatAmountFormatted = fiatAmount?.toFormattedFiatValue(fiatCurrencySymbol)
+                fiatAmountFormatted = fiatAmount?.toFormattedFiatValue(fiatCurrency.code)
             ),
             pendingTransactions = pendingTransactions.removeUnknownTransactions(),
             mainButton = WalletMainButton.SendButton(coinSendButton),
@@ -99,7 +99,7 @@ class OnWalletLoadedReducer {
                         token.symbol
                     ),
                     fiatAmount = tokenFiatAmount,
-                    fiatAmountFormatted = tokenFiatAmount?.toFormattedFiatValue(fiatCurrencySymbol)
+                    fiatAmountFormatted = tokenFiatAmount?.toFormattedFiatValue(fiatCurrency.code)
                 ),
                 pendingTransactions = tokenPendingTransactions.removeUnknownTransactions(),
                 mainButton = WalletMainButton.SendButton(tokenSendButton),
@@ -112,7 +112,7 @@ class OnWalletLoadedReducer {
         val totalBalance = TotalBalance(
             state = wallets.findTotalBalanceState(),
             fiatAmount = wallets.calculateTotalFiatAmount(),
-            fiatCurrencyName = fiatCurrencySymbol,
+            fiatCurrency = fiatCurrency,
         )
 
         val state = if (wallets.any { it.currencyData.status == BalanceStatus.Loading }) {
@@ -132,7 +132,7 @@ class OnWalletLoadedReducer {
     private fun onSingleWalletLoaded(wallet: Wallet, walletState: WalletState): WalletState {
         if (wallet.blockchain != walletState.primaryBlockchain) return walletState
 
-        val fiatCurrencySymbol = store.state.globalState.appCurrency
+        val fiatCurrencyName = store.state.globalState.appCurrency.code
         val exchangeManager = store.state.globalState.currencyExchangeManager
 
         val token = wallet.getFirstToken()
@@ -141,7 +141,7 @@ class OnWalletLoadedReducer {
             if (tokenAmount != null) {
                 val tokenFiatRate = walletState.primaryWallet?.currencyData?.token?.fiatRate
                 val tokenFiatAmount =
-                    tokenFiatRate?.let { tokenAmount.value?.toFiatString(it, fiatCurrencySymbol) }
+                    tokenFiatRate?.let { tokenAmount.value?.toFiatString(it, fiatCurrencyName) }
                 TokenData(
                     tokenAmount.value?.toFormattedCurrencyString(
                         token.decimals, token.symbol
@@ -161,7 +161,7 @@ class OnWalletLoadedReducer {
         )
         val fiatRate = walletState.primaryWallet?.fiatRate
         val fiatAmountRaw = fiatRate?.multiply(amount)?.setScale(2, RoundingMode.DOWN)
-        val fiatAmount = fiatRate?.let { amount?.toFiatString(it, fiatCurrencySymbol) }
+        val fiatAmount = fiatRate?.let { amount?.toFiatString(it, fiatCurrencyName) }
 
         val pendingTransactions = wallet.recentTransactions.toPendingTransactions(wallet.address)
         val sendButtonEnabled = amount?.isZero() == false && pendingTransactions.isEmpty()

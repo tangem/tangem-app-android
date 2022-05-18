@@ -49,7 +49,7 @@ private fun handlePrepareScreen(
         wallets = action.wallets,
         cardInfo = action.scanResponse.card.toCardInfo(),
         appCurrencyState = state.appCurrencyState.copy(
-            fiatCurrencyName = action.fiatCurrencyName,
+            currentFiatCurrency = action.fiatCurrencyName,
             showAppCurrencyDialog = false,
         ),
         cardTermsOfUseUrl = action.cardTou.getUrl(action.scanResponse.card),
@@ -109,7 +109,8 @@ private fun handleAppCurrencyAction(
         is DetailsAction.AppCurrencyAction.SelectAppCurrency -> {
             state.copy(
                 appCurrencyState = state.appCurrencyState.copy(
-                    fiatCurrencyName = action.fiatCurrencyName, showAppCurrencyDialog = false
+                    currentFiatCurrency = action.fiatCurrency,
+                    showAppCurrencyDialog = false
                 )
             )
         }
