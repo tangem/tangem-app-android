@@ -4,10 +4,12 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.services.Result
+import com.tangem.network.api.tangemTech.CurrenciesResponse
 import com.tangem.operations.pins.CheckUserCodesResponse
 import com.tangem.tap.*
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.AnalyticsParam
+import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.dispatchNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
@@ -71,7 +73,11 @@ class DetailsMiddleware {
         val fiatCurrenciesPrefStorage = preferencesStorage.fiatCurrenciesPrefStorage
         val storedFiatCurrencies = fiatCurrenciesPrefStorage.restore()
         if (storedFiatCurrencies.isNotEmpty()) {
-            store.dispatch(DetailsAction.AppCurrencyAction.SetCurrencies(storedFiatCurrencies))
+            store.dispatch(
+                DetailsAction.AppCurrencyAction.SetCurrencies(
+                    currencies = storedFiatCurrencies.mapToUiModel()
+                )
+            )
         }
 
         scope.launch {
@@ -79,9 +85,15 @@ class DetailsMiddleware {
             when (val result = tangemTechService.currencies()) {
                 is Result.Success -> {
                     val currenciesList = result.data.currencies
-                    if (currenciesList.isNotEmpty() && currenciesList.toSet() != storedFiatCurrencies.toSet()) {
+                    if (currenciesList.isNotEmpty() &&
+                        currenciesList.toSet() != storedFiatCurrencies.toSet()
+                    ) {
                         fiatCurrenciesPrefStorage.save(currenciesList)
-                        dispatchOnMain(DetailsAction.AppCurrencyAction.SetCurrencies(currenciesList))
+                        dispatchOnMain(
+                            DetailsAction.AppCurrencyAction.SetCurrencies(
+                                currencies = currenciesList.mapToUiModel()
+                            )
+                        )
                     }
                 }
                 is Result.Failure -> {}
@@ -89,7 +101,17 @@ class DetailsMiddleware {
         }
     }
 
-    class EraseWalletMiddleware() {
+    private fun List<CurrenciesResponse.Currency>.mapToUiModel(): List<FiatCurrency> {
+        return this.map {
+            FiatCurrency(
+                code = it.code,
+                name = it.name,
+                symbol = it.unit
+            )
+        }
+    }
+
+    class EraseWalletMiddleware {
         fun handle(action: DetailsAction.ResetToFactory) {
             when (action) {
                 is DetailsAction.ResetToFactory.Proceed -> {
@@ -137,8 +159,9 @@ class DetailsMiddleware {
             when (action) {
                 is DetailsAction.AppCurrencyAction.SelectAppCurrency -> {
                     store.state.globalState.tapWalletManager.rates.clear()
-                    preferencesStorage.saveAppCurrency(action.fiatCurrencyName)
-                    store.dispatch(GlobalAction.ChangeAppCurrency(action.fiatCurrencyName))
+                    preferencesStorage.fiatCurrenciesPrefStorage
+                        .saveAppCurrency(action.fiatCurrency)
+                    store.dispatch(GlobalAction.ChangeAppCurrency(action.fiatCurrency))
                     store.dispatch(WalletAction.LoadFiatRate())
                 }
             }
