@@ -2,7 +2,7 @@ package com.tangem.tap.common.redux.global
 
 import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.analytics.AnalyticsHandler
-import com.tangem.tap.common.entities.TapCurrency.Companion.DEFAULT_FIAT_CURRENCY
+import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.domain.PayIdManager
 import com.tangem.tap.domain.TapWalletManager
@@ -22,7 +22,7 @@ data class GlobalState(
     val configManager: ConfigManager? = null,
     val warningManager: WarningMessagesManager? = null,
     val feedbackManager: FeedbackManager? = null,
-    val appCurrency: FiatCurrencyName = DEFAULT_FIAT_CURRENCY,
+    val appCurrency: FiatCurrency = FiatCurrency.Default,
     val scanCardFailsCounter: Int = 0,
     val dialog: StateDialog? = null,
     val currencyExchangeManager: CurrencyExchangeManager? = null,
@@ -40,7 +40,6 @@ data class AndroidResources(
     )
 }
 typealias CryptoCurrencyName = String
-typealias FiatCurrencyName = String
 
 data class OnboardingState(
     val onboardingStarted: Boolean = false,
