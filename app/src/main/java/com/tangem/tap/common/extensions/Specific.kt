@@ -93,8 +93,10 @@ fun BigDecimal.formatAmountAsSpannedString(
     currencySymbol: String,
     integerPartSizeProportion: Float = 1.4f
 ): SpannedString {
-    val amount = this.scaleToFiat(applyPrecision = true)
-        .stripZeroPlainString()
+    val amount = this.toFormattedString(
+        decimals = 2,
+        roundingMode = RoundingMode.HALF_UP
+    )
     val integer = amount.substringAfter('.')
     val reminder = amount.substringBefore('.')
 
