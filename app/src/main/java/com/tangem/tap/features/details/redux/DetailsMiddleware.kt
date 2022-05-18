@@ -30,7 +30,7 @@ class DetailsMiddleware {
     private val eraseWalletMiddleware = EraseWalletMiddleware()
     private val appCurrencyMiddleware = AppCurrencyMiddleware()
     private val manageSecurityMiddleware = ManageSecurityMiddleware()
-    val detailsMiddleware: Middleware<AppState> = { dispatch, state ->
+    val detailsMiddleware: Middleware<AppState> = { _, _ ->
         { next ->
             { action ->
                 when (action) {
@@ -122,6 +122,8 @@ class DetailsMiddleware {
                             store.dispatch(DetailsAction.ResetToFactory.Proceed.NotAllowedByCard)
                         EraseWalletState.NotEmpty ->
                             store.dispatch(DetailsAction.ResetToFactory.Proceed.NotEmpty)
+                        else -> { /* no-op */
+                        }
                     }
                 }
                 is DetailsAction.ResetToFactory.Cancel -> {
@@ -150,6 +152,8 @@ class DetailsMiddleware {
                         }
                     }
                 }
+                else -> { /* no-op */
+                }
             }
         }
     }
@@ -163,6 +167,8 @@ class DetailsMiddleware {
                         .saveAppCurrency(action.fiatCurrency)
                     store.dispatch(GlobalAction.ChangeAppCurrency(action.fiatCurrency))
                     store.dispatch(WalletAction.LoadFiatRate())
+                }
+                else -> { /* no-op */
                 }
             }
         }
@@ -234,16 +240,20 @@ class DetailsMiddleware {
                                             actionToLog = Analytics.ActionToLog.ChangeSecOptions,
                                             parameters = mapOf(
                                                 AnalyticsParam.NEW_SECURITY_OPTION to
-                                                    (selectedOption?.name ?: "")
+                                                        (selectedOption?.name ?: "")
                                             ),
                                             card = store.state.detailsState.scanResponse?.card
                                         )
                                     }
                                     store.dispatch(DetailsAction.ManageSecurity.SaveChanges.Failure)
                                 }
+                                else -> { /* no-op */
+                                }
                             }
                         }
                     }
+                }
+                else -> { /* no-op */
                 }
             }
         }
