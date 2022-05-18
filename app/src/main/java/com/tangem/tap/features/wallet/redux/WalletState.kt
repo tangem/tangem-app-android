@@ -345,7 +345,7 @@ data class WalletData(
     val fiatRate: BigDecimal? = null,
     val mainButton: WalletMainButton = WalletMainButton.SendButton(false),
     val currency: Currency,
-    val warningRent: WalletRent? = null,
+    val walletRent: WalletRent? = null,
 ) {
     fun shouldShowMultipleAddress(): Boolean {
         val listOfAddresses = walletAddresses?.list ?: return false
