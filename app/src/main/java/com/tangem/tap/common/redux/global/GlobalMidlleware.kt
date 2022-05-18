@@ -24,7 +24,7 @@ class GlobalMiddleware {
     }
 }
 
-private val globalMiddlewareHandler: Middleware<AppState> = { dispatch, appState ->
+private val globalMiddlewareHandler: Middleware<AppState> = { _, appState ->
     { nextDispatch ->
         { action ->
             when (action) {
