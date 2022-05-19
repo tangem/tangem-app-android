@@ -177,7 +177,7 @@ class ReceiptReducer : SendInternalReducer {
 
     private fun determineSymbols(wallet: Wallet, amountType: AmountType): ReceiptSymbols {
         return ReceiptSymbols(
-            fiat = store.state.globalState.appCurrency,
+            fiat = store.state.globalState.appCurrency.code,
             crypto = wallet.blockchain.currency,
             token = when (amountType) {
                 is AmountType.Token -> amountType.token.symbol

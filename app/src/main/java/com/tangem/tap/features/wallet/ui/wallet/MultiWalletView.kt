@@ -5,6 +5,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.tangem.common.card.Card
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.TapWorkarounds.isTestCard
+import com.tangem.tap.common.extensions.formatAmountAsSpannedString
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.redux.StateDialog
@@ -12,6 +13,7 @@ import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.currenciesRepository
 import com.tangem.tap.features.tokens.redux.TokensAction
+import com.tangem.tap.features.wallet.models.TotalBalance
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletDialog
 import com.tangem.tap.features.wallet.redux.WalletState
@@ -51,6 +53,7 @@ class MultiWalletView : WalletView {
         btnScanMultiwallet.show()
         rvMultiwallet.show()
         btnAddToken.show()
+        lCardTotalBalance.root.show()
         setupWalletCardNumber(binding)
     }
 
@@ -97,6 +100,7 @@ class MultiWalletView : WalletView {
         val fragment = fragment ?: return
         val binding = binding ?: return
 
+        state.totalBalance?.let { handleTotalBalance(binding, it) }
         walletsAdapter.submitList(state.walletsData, state.primaryBlockchain, state.primaryToken)
 
         binding.btnAddToken.setOnClickListener {
@@ -127,6 +131,19 @@ class MultiWalletView : WalletView {
         handleDialogs(state.walletDialog)
     }
 
+    private fun handleTotalBalance(
+        binding: FragmentWalletBinding,
+        totalBalance: TotalBalance,
+    ) = with(binding.lCardTotalBalance) {
+        tvBalance.text = totalBalance.fiatAmount.formatAmountAsSpannedString(
+            currencySymbol = totalBalance.fiatCurrency.symbol
+        )
+        tvCurrencyName.text = totalBalance.fiatCurrency.code
+        tvCurrencyName.setOnClickListener {
+            // TODO: Open app currency selector
+        }
+    }
+
     private fun handleErrorStates(
         state: WalletState,
         binding: FragmentWalletBinding,
@@ -147,6 +164,8 @@ class MultiWalletView : WalletView {
                     fragment.getText(R.string.wallet_error_unsupported_blockchain),
                     fragment.getString(R.string.wallet_error_unsupported_blockchain_subtitle)
                 )
+            }
+            else -> { /* no-op */
             }
         }
     }
