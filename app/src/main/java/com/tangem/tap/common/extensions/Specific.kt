@@ -1,8 +1,10 @@
 package com.tangem.tap.common.extensions
 
+import android.text.Spanned
+import android.text.SpannedString
+import android.text.style.RelativeSizeSpan
+import androidx.core.text.buildSpannedString
 import com.tangem.common.extensions.isZero
-import com.tangem.network.api.tangemTech.CurrenciesResponse
-import com.tangem.tap.common.redux.global.FiatCurrencyName
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.DecimalFormat
@@ -37,7 +39,7 @@ fun BigDecimal.toFormattedCurrencyString(
     return "$formattedAmount $currency"
 }
 
-fun BigDecimal.toFiatString(rateValue: BigDecimal, fiatCurrencyName: FiatCurrencyName): String {
+fun BigDecimal.toFiatString(rateValue: BigDecimal, fiatCurrencyName: String): String {
     var fiatValue = rateValue.multiply(this)
     fiatValue = fiatValue.setScale(2, RoundingMode.HALF_UP)
     return "≈ ${fiatCurrencyName}  $fiatValue"
@@ -48,11 +50,9 @@ fun BigDecimal.toFiatValue(rateValue: BigDecimal): BigDecimal {
     return fiatValue.setScale(2, RoundingMode.HALF_UP)
 }
 
-fun BigDecimal.toFormattedFiatValue(fiatCurrencyName: FiatCurrencyName): String {
+fun BigDecimal.toFormattedFiatValue(fiatCurrencyName: String): String {
     return "≈ ${fiatCurrencyName}  $this"
 }
-
-fun CurrenciesResponse.Currency.toFormattedString(): String = "${this.name} (${this.code}) - ${this.unit}"
 
 fun BigDecimal.stripZeroPlainString(): String = this.stripTrailingZeros().toPlainString()
 
@@ -87,4 +87,26 @@ fun BigDecimal.isGreaterThanOrEqual(value: BigDecimal): Boolean {
 fun BigDecimal.isLessThanOrEqual(value: BigDecimal): Boolean {
     val compareResult = this.compareTo(value)
     return compareResult == -1 || compareResult == 0
+}
+
+fun BigDecimal.formatAmountAsSpannedString(
+    currencySymbol: String,
+    integerPartSizeProportion: Float = 1.4f
+): SpannedString {
+    val amount = this.scaleToFiat(applyPrecision = true)
+        .stripZeroPlainString()
+    val integer = amount.substringAfter('.')
+    val reminder = amount.substringBefore('.')
+
+    return buildSpannedString {
+        append(
+            integer,
+            RelativeSizeSpan(integerPartSizeProportion),
+            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+        append('.')
+        append(reminder)
+        append(' ')
+        append(currencySymbol)
+    }
 }
