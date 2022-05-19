@@ -158,7 +158,7 @@ class MultiWalletView : WalletView {
         tvCurrencyName.text = totalBalance.fiatCurrency.code
 
         tvCurrencyName.setOnClickListener {
-// [REDACTED_TODO_COMMENT]
+            store.dispatch(WalletAction.AppCurrencyAction.ChooseAppCurrency)
         }
     }
 

@@ -178,8 +178,6 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
                         scanNoteResponse,
                         store.state.walletState.walletManagers.map { it.wallet },
                         CardTou(),
-                        store.state.globalState.appCurrency,
-                        tangemTechService = store.state.domainNetworks.tangemTechService
                     ))
                     store.dispatch(NavigationAction.NavigateTo(AppScreen.Details))
                     true
