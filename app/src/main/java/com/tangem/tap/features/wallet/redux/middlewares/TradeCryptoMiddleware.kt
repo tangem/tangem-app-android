@@ -61,8 +61,9 @@ class TradeCryptoMiddleware {
             action = exchangeAction,
             blockchain = currency.blockchain,
             cryptoCurrencyName = currencySymbol,
-            fiatCurrency = appCurrency,
-            walletAddress = defaultAddress)?.let { store.dispatchOnMain(NavigationAction.OpenUrl(it)) }
+            fiatCurrencyName = appCurrency.code,
+            walletAddress = defaultAddress
+        )?.let { store.dispatchOnMain(NavigationAction.OpenUrl(it)) }
 
     }
 
