@@ -10,7 +10,7 @@ data class TotalBalance(
 ) {
     enum class State {
         Loading,
-        Failed,
-        Success
+        SomeTokensFailed,
+        Success,
     }
 }
