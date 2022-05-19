@@ -1,13 +1,12 @@
 package com.tangem.tap.features.wallet.ui.wallet
 
 import android.app.Dialog
+import android.view.View
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.tangem.common.card.Card
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.TapWorkarounds.isTestCard
-import com.tangem.tap.common.extensions.formatAmountAsSpannedString
-import com.tangem.tap.common.extensions.hide
-import com.tangem.tap.common.extensions.show
+import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
@@ -135,10 +134,29 @@ class MultiWalletView : WalletView {
         binding: FragmentWalletBinding,
         totalBalance: TotalBalance,
     ) = with(binding.lCardTotalBalance) {
+        when (totalBalance.state) {
+            TotalBalance.State.Loading -> {
+                pbLoading.showAnimated()
+                tvBalance.hideAnimated(hiddenVisibility = View.INVISIBLE)
+                tvProcessing.hideAnimated()
+            }
+            TotalBalance.State.SomeTokensFailed -> {
+                tvBalance.showAnimated()
+                pbLoading.hideAnimated()
+                tvProcessing.showAnimated()
+            }
+            TotalBalance.State.Success -> {
+                tvBalance.showAnimated()
+                pbLoading.hideAnimated()
+                tvProcessing.hideAnimated()
+            }
+        }
+
         tvBalance.text = totalBalance.fiatAmount.formatAmountAsSpannedString(
             currencySymbol = totalBalance.fiatCurrency.symbol
         )
         tvCurrencyName.text = totalBalance.fiatCurrency.code
+
         tvCurrencyName.setOnClickListener {
             // TODO: Open app currency selector
         }
