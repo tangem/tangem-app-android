@@ -9,24 +9,24 @@
     android:minWidth="300dp">
 
     <com.google.android.material.card.MaterialCardView
-        android:id="@+id/card_balance"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@android:color/white"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginTop="12dp"
-        android:layout_marginBottom="4dp"
-        android:elevation="3dp">
-
-        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/card_balance"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingTop="18dp"
-            android:paddingBottom="18dp"
-            android:paddingStart="16dp"
-            android:paddingEnd="16dp"
-            >
+            android:background="@android:color/white"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="4dp"
+            android:elevation="3dp">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="18dp"
+                android:paddingBottom="18dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:animateLayoutChanges="true">
 
             <TextView
                     android:id="@+id/tv_title"
@@ -43,28 +43,54 @@
             <TextView
                     android:id="@+id/tv_balance"
                     android:layout_width="0dp"
-                    android:layout_height="wrap_content"
+                    android:layout_height="32dp"
                     android:layout_marginTop="4dp"
+                    android:visibility="gone"
+                    android:maxLines="1"
                     android:textColor="@color/darkGray6"
                     android:textSize="20sp"
                     android:textStyle="bold"
                     app:layout_constraintTop_toBottomOf="@id/tv_title"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
-                    tools:text="$ 22 325.40" />
+                    tools:text="$ 22 325.40"
+                    tools:visibility="visible" />
+
+            <ProgressBar
+                    android:id="@+id/pb_loading"
+                    android:layout_width="32dp"
+                    android:layout_height="32dp"
+                    android:layout_marginTop="4dp"
+                    android:padding="2dp"
+                    android:visibility="gone"
+                    android:indeterminate="true"
+                    android:indeterminateTint="@color/accent"
+                    app:layout_constraintTop_toBottomOf="@id/tv_title"
+                    app:layout_constraintStart_toStartOf="parent" />
+
+            <TextView
+                    android:id="@+id/tv_processing"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:visibility="gone"
+                    android:textColor="@color/warning"
+                    android:textSize="12sp"
+                    android:text="@string/main_processing_full_amount"
+                    app:layout_constraintTop_toBottomOf="@id/tv_balance"
+                    app:layout_constraintStart_toStartOf="parent" />
 
             <TextView
                     android:id="@+id/tv_currency_name"
                     android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:textColor="@color/darkGray1"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/darkGray1"
                     android:textSize="16sp"
                     app:drawableEndCompat="@drawable/ic_arrow_angle_down"
                     app:drawableTint="@color/darkGray1"
                     app:layout_constraintTop_toTopOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
-                tools:text="USD"
-                />
+                    tools:text="USD" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </com.google.android.material.card.MaterialCardView>
