@@ -214,7 +214,7 @@ class OnWalletLoadedReducer {
                 BalanceStatus.Unreachable,
                 BalanceStatus.NoAccount,
                 BalanceStatus.EmptyCard,
-                BalanceStatus.UnknownBlockchain -> TotalBalance.State.Failed
+                BalanceStatus.UnknownBlockchain -> TotalBalance.State.SomeTokensFailed
                 BalanceStatus.Loading,
                 null -> TotalBalance.State.Loading
             }
@@ -225,13 +225,13 @@ class OnWalletLoadedReducer {
         return when (this) {
             TotalBalance.State.Loading -> when (newState) {
                 TotalBalance.State.Loading -> this
-                TotalBalance.State.Failed,
+                TotalBalance.State.SomeTokensFailed,
                 TotalBalance.State.Success -> newState
             }
             TotalBalance.State.Success,
-            TotalBalance.State.Failed -> when (newState) {
+            TotalBalance.State.SomeTokensFailed -> when (newState) {
                 TotalBalance.State.Loading,
-                TotalBalance.State.Failed -> newState
+                TotalBalance.State.SomeTokensFailed -> newState
                 TotalBalance.State.Success -> this
             }
         }
