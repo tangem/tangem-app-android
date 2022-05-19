@@ -12,6 +12,8 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "binance-smart-chain/test" -> Blockchain.BSCTestnet
         "ethereum" -> Blockchain.Ethereum
         "ethereum/test" -> Blockchain.EthereumTestnet
+        "ethereum-classic" -> Blockchain.EthereumClassic
+        "ethereum-classic/test" -> Blockchain.EthereumClassicTestnet
         "polygon-pos", "matic-network" -> Blockchain.Polygon
         "polygon-pos/test", "matic-network/test" -> Blockchain.PolygonTestnet
         "solana" -> Blockchain.Solana
@@ -54,6 +56,8 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.Ducatus -> "ducatus"
         Blockchain.Ethereum -> "ethereum"
         Blockchain.EthereumTestnet -> "ethereum/test"
+        Blockchain.EthereumClassic -> "ethereum-classic"
+        Blockchain.EthereumClassicTestnet -> "ethereum-classic/test"
         Blockchain.Fantom -> "fantom"
         Blockchain.FantomTestnet -> "fantom/test"
         Blockchain.Litecoin -> "litecoin"
@@ -75,6 +79,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Bitcoin, Blockchain.BitcoinTestnet -> "bitcoin"
         Blockchain.BitcoinCash, Blockchain.BitcoinCashTestnet -> "bitcoin-cash"
         Blockchain.Ethereum, Blockchain.EthereumTestnet -> "ethereum"
+        Blockchain.EthereumClassic, Blockchain.EthereumClassicTestnet -> "ethereum-classic"
         Blockchain.Stellar, Blockchain.StellarTestnet -> "stellar"
         Blockchain.Cardano, Blockchain.CardanoShelley -> "cardano"
         Blockchain.Polygon, Blockchain.PolygonTestnet -> "matic-network"
