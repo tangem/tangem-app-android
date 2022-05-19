@@ -3,24 +3,23 @@ package com.tangem.tap.features.details.redux
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.core.TangemSdkError
-import com.tangem.common.services.Result
-import com.tangem.network.api.tangemTech.CurrenciesResponse
 import com.tangem.operations.pins.CheckUserCodesResponse
-import com.tangem.tap.*
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.AnalyticsParam
-import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.dispatchNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.currenciesRepository
 import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
 import com.tangem.tap.features.onboarding.products.twins.redux.CreateTwinWalletMode
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.features.wallet.models.hasSendableAmountsOrPendingTransactions
-import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.scope
+import com.tangem.tap.store
+import com.tangem.tap.tangemSdkManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -28,15 +27,12 @@ import org.rekotlin.Middleware
 
 class DetailsMiddleware {
     private val eraseWalletMiddleware = EraseWalletMiddleware()
-    private val appCurrencyMiddleware = AppCurrencyMiddleware()
     private val manageSecurityMiddleware = ManageSecurityMiddleware()
     val detailsMiddleware: Middleware<AppState> = { _, _ ->
         { next ->
             { action ->
                 when (action) {
-                    is DetailsAction.PrepareScreen -> prepareData(action)
                     is DetailsAction.ResetToFactory -> eraseWalletMiddleware.handle(action)
-                    is DetailsAction.AppCurrencyAction -> appCurrencyMiddleware.handle(action)
                     is DetailsAction.ManageSecurity -> manageSecurityMiddleware.handle(action)
                     is DetailsAction.ShowDisclaimer -> {
                         store.dispatch(DisclaimerAction.ShowAcceptedDisclaimer)
@@ -66,48 +62,6 @@ class DetailsMiddleware {
                 }
                 next(action)
             }
-        }
-    }
-
-    private fun prepareData(action: DetailsAction.PrepareScreen) {
-        val fiatCurrenciesPrefStorage = preferencesStorage.fiatCurrenciesPrefStorage
-        val storedFiatCurrencies = fiatCurrenciesPrefStorage.restore()
-        if (storedFiatCurrencies.isNotEmpty()) {
-            store.dispatch(
-                DetailsAction.AppCurrencyAction.SetCurrencies(
-                    currencies = storedFiatCurrencies.mapToUiModel()
-                )
-            )
-        }
-
-        scope.launch {
-            val tangemTechService = action.tangemTechService
-            when (val result = tangemTechService.currencies()) {
-                is Result.Success -> {
-                    val currenciesList = result.data.currencies
-                    if (currenciesList.isNotEmpty() &&
-                        currenciesList.toSet() != storedFiatCurrencies.toSet()
-                    ) {
-                        fiatCurrenciesPrefStorage.save(currenciesList)
-                        dispatchOnMain(
-                            DetailsAction.AppCurrencyAction.SetCurrencies(
-                                currencies = currenciesList.mapToUiModel()
-                            )
-                        )
-                    }
-                }
-                is Result.Failure -> {}
-            }
-        }
-    }
-
-    private fun List<CurrenciesResponse.Currency>.mapToUiModel(): List<FiatCurrency> {
-        return this.map {
-            FiatCurrency(
-                code = it.code,
-                name = it.name,
-                symbol = it.unit
-            )
         }
     }
 
@@ -151,22 +105,6 @@ class DetailsMiddleware {
                             }
                         }
                     }
-                }
-                else -> { /* no-op */
-                }
-            }
-        }
-    }
-
-    class AppCurrencyMiddleware {
-        fun handle(action: DetailsAction.AppCurrencyAction) {
-            when (action) {
-                is DetailsAction.AppCurrencyAction.SelectAppCurrency -> {
-                    store.state.globalState.tapWalletManager.rates.clear()
-                    preferencesStorage.fiatCurrenciesPrefStorage
-                        .saveAppCurrency(action.fiatCurrency)
-                    store.dispatch(GlobalAction.ChangeAppCurrency(action.fiatCurrency))
-                    store.dispatch(WalletAction.LoadFiatRate())
                 }
                 else -> { /* no-op */
                 }
