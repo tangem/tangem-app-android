@@ -6,6 +6,7 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemError
 import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.analytics.GlobalAnalyticsHandler
+import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.redux.*
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.configurable.config.ConfigManager
@@ -54,9 +55,9 @@ sealed class GlobalAction : Action {
 
     data class SetIfCardVerifiedOnline(val verified: Boolean) : GlobalAction()
 
-    data class ChangeAppCurrency(val appCurrency: FiatCurrencyName) : GlobalAction()
+    data class ChangeAppCurrency(val appCurrency: FiatCurrency) : GlobalAction()
     object RestoreAppCurrency : GlobalAction() {
-        data class Success(val appCurrency: FiatCurrencyName) : GlobalAction()
+        data class Success(val appCurrency: FiatCurrency) : GlobalAction()
     }
 
     data class UpdateWalletSignedHashes(
