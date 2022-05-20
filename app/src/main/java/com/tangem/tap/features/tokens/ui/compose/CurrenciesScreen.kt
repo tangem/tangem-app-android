@@ -77,7 +77,7 @@ fun CurrenciesScreen(
             visible = tokensState.value.currencies.isEmpty(),
             enter = fadeIn(),
             exit = fadeOut()
-        ){
+        ) {
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier.fillMaxSize()
@@ -93,8 +93,9 @@ fun CurrenciesScreen(
             exit = fadeOut(animationSpec = tween(1000))
         ) {
             Column {
-                if (tokensState.value.scanResponse?.card?.useOldStyleDerivation == true) CurrenciesWarning()
+                val showHeader = tokensState.value.scanResponse?.card?.useOldStyleDerivation == true
                 ListOfCurrencies(
+                    header = { if (showHeader) CurrenciesWarning() },
                     currencies = tokensState.value.currencies,
                     nonRemovableTokens = tokensState.value.nonRemovableTokens,
                     nonRemovableBlockchains = tokensState.value.nonRemovableBlockchains,
