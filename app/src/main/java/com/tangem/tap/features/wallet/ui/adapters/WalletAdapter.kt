@@ -10,7 +10,6 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.tap.common.extensions.getString
-import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.loadCurrenciesIcon
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.features.wallet.redux.Currency
@@ -63,9 +62,7 @@ class WalletAdapter
 
         fun bind(wallet: WalletData) = with(binding) {
             tvCurrency.text = wallet.currencyData.currency
-            tvAmount.text = wallet.currencyData.amountFormatted?.takeWhile { !it.isWhitespace() }
-            tvCurrencySymbol.text =
-                wallet.currencyData.amountFormatted?.takeLastWhile { !it.isWhitespace() }
+            tvAmount.text = wallet.currencyData.amountFormatted.orEmpty()
             tvAmountFiat.text = wallet.currencyData.fiatAmountFormatted
             tvExchangeRate.text = wallet.fiatRateString
             cardWallet.setOnClickListener {
@@ -74,8 +71,8 @@ class WalletAdapter
             val blockchain = wallet.currency.blockchain
             val token = (wallet.currency as? Currency.Token)?.token
 
-            val isCustom =
-                wallet.currency.isCustomCurrency(store.state.globalState.scanResponse?.card?.derivationStyle)
+            val isCustom = wallet.currency
+                .isCustomCurrency(store.state.globalState.scanResponse?.card?.derivationStyle)
             tvExchangeRate.show(!isCustom)
             tvCustomCurrency.show(isCustom)
 
@@ -86,43 +83,35 @@ class WalletAdapter
             )
 
             when (wallet.currencyData.status) {
-                BalanceStatus.VerifiedOnline, BalanceStatus.SameCurrencyTransactionInProgress -> hideWarning(isCustom)
-                BalanceStatus.Loading -> {
-                    hideWarning(isCustom)
-                    if (wallet.currencyData.amountFormatted == null) {
-                        tvExchangeRate.text = root.getString(R.string.wallet_balance_loading)
-                    }
+                BalanceStatus.VerifiedOnline,
+                BalanceStatus.SameCurrencyTransactionInProgress -> hideMessage()
+                BalanceStatus.Loading -> if (wallet.currencyData.amountFormatted == null) {
+                    showMessage(root.getString(R.string.wallet_balance_loading))
                 }
                 BalanceStatus.TransactionInProgress ->
-                    showWarning(root.getString(R.string.wallet_balance_tx_in_progress), isCustom)
+                    showMessage(root.getString(R.string.wallet_balance_tx_in_progress))
                 BalanceStatus.Unreachable ->
-                    showWarning(root.getString(R.string.wallet_balance_blockchain_unreachable), isCustom)
+                    showMessage(root.getString(R.string.wallet_balance_blockchain_unreachable))
 
                 BalanceStatus.NoAccount ->
-                    showWarning(root.getString(R.string.wallet_error_no_account), isCustom)
+                    showMessage(root.getString(R.string.wallet_error_no_account))
                 else -> {
                 }
             }
         }
 
-        private fun showWarning(message: String, isCustom: Boolean = false) {
-            toggleWarning(true, isCustom)
-            binding.tvStatusErrorMessage.text = message
+        private fun showMessage(message: String) {
+            toggleMessage(true)
+            binding.tvStatus.text = message
         }
 
-        private fun hideWarning(isCustom: Boolean = false) {
-            toggleWarning(false, isCustom)
+        private fun hideMessage() {
+            toggleMessage(false)
         }
 
-        private fun toggleWarning(show: Boolean, isCustom: Boolean = false) {
-            if (!show) {
-                binding.tvExchangeRate.show(!isCustom)
-                binding.tvCustomCurrency.show(isCustom)
-            } else {
-                binding.tvExchangeRate.hide()
-                binding.tvCustomCurrency.hide()
-            }
-            binding.tvStatusErrorMessage.show(show)
+        private fun toggleMessage(show: Boolean) {
+            binding.tvAmount.show(!show)
+            binding.tvStatus.show(show)
         }
     }
 }
