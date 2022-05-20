@@ -5,9 +5,9 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Wallet
 import com.tangem.domain.common.TwinCardNumber
 import com.tangem.tap.common.entities.FiatCurrency
+import com.tangem.tap.common.extensions.toFiatRateString
 import com.tangem.tap.common.extensions.toFiatString
 import com.tangem.tap.common.extensions.toFiatValue
-import com.tangem.tap.common.extensions.toFormattedCurrencyString
 import com.tangem.tap.common.extensions.toFormattedFiatValue
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.TapError
@@ -20,7 +20,6 @@ import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.store
 import org.rekotlin.Action
 import java.math.BigDecimal
-import java.math.RoundingMode
 
 class WalletReducer {
     companion object {
@@ -383,10 +382,8 @@ private fun setNewFiatRate(
     state: WalletState
 ): WalletState {
     val rate = fiatRate.second ?: return state
-    val rateFormatted = rate.toFormattedCurrencyString(
-        decimals = 2,
-        currency = appCurrency.code,
-        roundingMode = RoundingMode.HALF_UP
+    val rateFormatted = rate.toFiatRateString(
+        fiatCurrencyName = appCurrency.symbol
     )
     val currency = fiatRate.first
 
@@ -415,7 +412,7 @@ private fun setMultiWalletFiatRate(
         is Currency.Token ->
             wallet?.getTokenAmount(currency.token)?.value?.toFiatValue(rate)
     }
-    val fiatAmountFormatted = fiatAmount?.toFormattedFiatValue(appCurrency.code)
+    val fiatAmountFormatted = fiatAmount?.toFormattedFiatValue(appCurrency.symbol)
     val newWalletData = state.getWalletData(currency)?.copy(
         currencyData = walletData.currencyData.copy(
             fiatAmountFormatted = fiatAmountFormatted,
