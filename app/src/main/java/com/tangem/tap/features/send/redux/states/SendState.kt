@@ -5,8 +5,8 @@ import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.extensions.isZero
 import com.tangem.tap.common.CurrencyConverter
+import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.entities.IndeterminateProgressButton
-import com.tangem.tap.common.entities.TapCurrency
 import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.text.DecimalDigitsInputFilter
 import com.tangem.tap.domain.TapError
@@ -123,18 +123,18 @@ enum class ButtonState {
 }
 
 data class AmountState(
-        val amountToExtract: Amount? = null,
-        val typeOfAmount: AmountType = AmountType.Coin,
-        val viewAmountValue: InputViewValue = InputViewValue(BigDecimal.ZERO.toPlainString()),
-        val viewBalanceValue: String = BigDecimal.ZERO.toPlainString(),
-        val mainCurrency: MainCurrency = MainCurrency(MainCurrencyType.FIAT, TapCurrency.DEFAULT_FIAT_CURRENCY),
-        val amountToSendCrypto: BigDecimal = BigDecimal.ZERO,
-        val balanceCrypto: BigDecimal = BigDecimal.ZERO,
-        val cursorAtTheSamePosition: Boolean = true,
-        val maxLengthOfAmount: Int = 2,
-        val decimalSeparator: String = ".",
-        val error: TapError? = null,
-        val inputIsEnabled: Boolean = true,
+    val amountToExtract: Amount? = null,
+    val typeOfAmount: AmountType = AmountType.Coin,
+    val viewAmountValue: InputViewValue = InputViewValue(BigDecimal.ZERO.toPlainString()),
+    val viewBalanceValue: String = BigDecimal.ZERO.toPlainString(),
+    val mainCurrency: MainCurrency = MainCurrency(MainCurrencyType.FIAT, FiatCurrency.Default.code),
+    val amountToSendCrypto: BigDecimal = BigDecimal.ZERO,
+    val balanceCrypto: BigDecimal = BigDecimal.ZERO,
+    val cursorAtTheSamePosition: Boolean = true,
+    val maxLengthOfAmount: Int = 2,
+    val decimalSeparator: String = ".",
+    val error: TapError? = null,
+    val inputIsEnabled: Boolean = true,
 ) : SendScreenState {
 
     override val stateId: StateId = StateId.AMOUNT
@@ -146,7 +146,7 @@ data class AmountState(
     fun createMainCurrency(type: MainCurrencyType, canSwitched: Boolean): MainCurrency {
         return if (!canSwitched) MainCurrency(type, amountToExtract?.currencySymbol ?: "NONE", false)
         else when (type) {
-            MainCurrencyType.FIAT -> MainCurrency(type, store.state.globalState.appCurrency)
+            MainCurrencyType.FIAT -> MainCurrency(type, store.state.globalState.appCurrency.code)
             MainCurrencyType.CRYPTO -> MainCurrency(type, amountToExtract?.currencySymbol ?: "NONE")
         }
     }
