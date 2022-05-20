@@ -22,10 +22,8 @@ data class TokensState(
     val scanResponse: ScanResponse? = null
 ) : StateType {
 
-    fun canHandleToken(token: TokenWithBlockchain?): Boolean {
-        val token = token ?: return false
-        val card = scanResponse?.card ?: return false
-        return card.canHandleToken(token.blockchain)
+    fun canHandleToken(token: TokenWithBlockchain): Boolean {
+        return scanResponse?.card?.canHandleToken(token.blockchain) ?: false
     }
 }
 
