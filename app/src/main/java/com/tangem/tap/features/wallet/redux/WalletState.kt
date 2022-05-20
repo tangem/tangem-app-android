@@ -20,6 +20,7 @@ import com.tangem.tap.domain.tokens.BlockchainNetwork
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
 import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
 import com.tangem.tap.features.wallet.models.PendingTransaction
+import com.tangem.tap.features.wallet.models.TotalBalance
 import com.tangem.tap.features.wallet.models.toPendingTransactions
 import com.tangem.tap.features.wallet.models.toPendingTransactionsForToken
 import com.tangem.tap.features.wallet.ui.BalanceStatus
@@ -44,6 +45,7 @@ data class WalletState(
     val primaryBlockchain: Blockchain? = null,
     val primaryToken: Token? = null,
     val isTestnet: Boolean = false,
+    val totalBalance: TotalBalance? = null,
 ) : StateType {
 
     // if you do not delegate - the application crashes on startup,
@@ -196,18 +198,20 @@ data class WalletState(
         return copy(wallets = replaceWalletInWallets(walletStore))
     }
 
-    fun updateWalletStores(walletStores: List<WalletStore>): WalletState {
-        val walletStores = walletStores.toMutableList()
+    private fun updateWalletStores(walletStores: List<WalletStore>): WalletState {
+        val walletStoresMutable = walletStores.toMutableList()
         val updatedWallets = wallets.map { oldWalletStore ->
-            val walletStore = walletStores.find { it.blockchainNetwork == oldWalletStore.blockchainNetwork }
+            val walletStore = walletStoresMutable.find {
+                it.blockchainNetwork == oldWalletStore.blockchainNetwork
+            }
             if (walletStore != null) {
-                walletStores.remove(walletStore)
+                walletStoresMutable.remove(walletStore)
                 walletStore
             } else {
                 oldWalletStore
             }
         }
-        return copy(wallets = updatedWallets + walletStores)
+        return copy(wallets = updatedWallets + walletStoresMutable)
     }
 
     fun removeWallet(walletData: WalletData?): WalletState {
@@ -267,6 +271,14 @@ data class WalletState(
                 )
             )
         }
+    }
+
+    fun updateTotalBalance(
+        totalBalance: TotalBalance
+    ): WalletState {
+        return this.copy(
+            totalBalance = totalBalance
+        )
     }
 }
 

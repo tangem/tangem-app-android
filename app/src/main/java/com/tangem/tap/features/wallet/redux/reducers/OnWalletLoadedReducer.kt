@@ -9,6 +9,7 @@ import com.tangem.tap.common.extensions.toFormattedCurrencyString
 import com.tangem.tap.common.extensions.toFormattedFiatValue
 import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.domain.tokens.BlockchainNetwork
+import com.tangem.tap.features.wallet.models.TotalBalance
 import com.tangem.tap.features.wallet.models.removeUnknownTransactions
 import com.tangem.tap.features.wallet.models.toPendingTransactions
 import com.tangem.tap.features.wallet.redux.*
@@ -16,6 +17,7 @@ import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.features.wallet.ui.TokenData
 import com.tangem.tap.store
+import java.math.BigDecimal
 import java.math.RoundingMode
 
 class OnWalletLoadedReducer {
@@ -33,13 +35,12 @@ class OnWalletLoadedReducer {
         blockchainNetwork: BlockchainNetwork,
         walletState: WalletState
     ): WalletState {
-        val fiatCurrencySymbol = store.state.globalState.appCurrency
+        val walletData = walletState.getWalletData(blockchainNetwork) ?: return walletState
+
+        val fiatCurrency = store.state.globalState.appCurrency
         val exchangeManager = store.state.globalState.currencyExchangeManager
 
         val coinAmountValue = wallet.amounts[AmountType.Coin]?.value
-        if (walletState.getWalletData(blockchainNetwork) == null) {
-            return walletState
-        }
         val formattedAmount = coinAmountValue?.toFormattedCurrencyString(
             wallet.blockchain.decimals(),
             wallet.blockchain.currency
@@ -54,10 +55,9 @@ class OnWalletLoadedReducer {
         } else {
             BalanceStatus.VerifiedOnline
         }
-        val walletData = walletState.getWalletData(blockchainNetwork)
 
-        val fiatAmount = walletData?.fiatRate?.let { coinAmountValue?.toFiatValue(it) }
-        val newWalletData = walletData?.copy(
+        val fiatAmount = walletData.fiatRate?.let { coinAmountValue?.toFiatValue(it) }
+        val newWalletData = walletData.copy(
             currencyData = walletData.currencyData.copy(
                 status = balanceStatus, currency = wallet.blockchain.fullName,
                 currencySymbol = wallet.blockchain.currency,
@@ -65,7 +65,7 @@ class OnWalletLoadedReducer {
                 amount = coinAmountValue,
                 amountFormatted = formattedAmount,
                 fiatAmount = fiatAmount,
-                fiatAmountFormatted = fiatAmount?.toFormattedFiatValue(fiatCurrencySymbol)
+                fiatAmountFormatted = fiatAmount?.toFormattedFiatValue(fiatCurrency.code)
             ),
             pendingTransactions = pendingTransactions.removeUnknownTransactions(),
             mainButton = WalletMainButton.SendButton(coinSendButton),
@@ -87,7 +87,7 @@ class OnWalletLoadedReducer {
             val tokenFiatAmount =
                 tokenWalletData?.fiatRate?.let { rate -> tokenAmountValue?.toFiatValue(rate) }
 
-            val tokenSendButton = newWalletData?.shouldEnableTokenSendButton() == true
+            val tokenSendButton = newWalletData.shouldEnableTokenSendButton()
                     && tokenPendingTransactions.isEmpty()
             tokenWalletData?.copy(
                 currencyData = tokenWalletData.currencyData.copy(
@@ -99,31 +99,40 @@ class OnWalletLoadedReducer {
                         token.symbol
                     ),
                     fiatAmount = tokenFiatAmount,
-                    fiatAmountFormatted = tokenFiatAmount?.toFormattedFiatValue(fiatCurrencySymbol)
+                    fiatAmountFormatted = tokenFiatAmount?.toFormattedFiatValue(fiatCurrency.code)
                 ),
                 pendingTransactions = tokenPendingTransactions.removeUnknownTransactions(),
                 mainButton = WalletMainButton.SendButton(tokenSendButton),
                 tradeCryptoState = TradeCryptoState.from(exchangeManager, tokenWalletData),
             )
         }
-        val newWallets = (tokens + newWalletData).mapNotNull { it }
+        val newWallets = tokens + newWalletData
         val wallets = walletState.replaceSomeWallets((newWallets))
+
+        val totalBalance = TotalBalance(
+            state = wallets.findTotalBalanceState(),
+            fiatAmount = wallets.calculateTotalFiatAmount(),
+            fiatCurrency = fiatCurrency,
+        )
 
         val state = if (wallets.any { it.currencyData.status == BalanceStatus.Loading }) {
             ProgressState.Loading
         } else {
             ProgressState.Done
         }
-        val newState = walletState.updateWalletsData(wallets)
-        return newState.copy(
-            state = state, error = null
-        )
+        return walletState
+            .updateWalletsData(wallets)
+            .updateTotalBalance(totalBalance)
+            .copy(
+                state = state,
+                error = null
+            )
     }
 
     private fun onSingleWalletLoaded(wallet: Wallet, walletState: WalletState): WalletState {
         if (wallet.blockchain != walletState.primaryBlockchain) return walletState
 
-        val fiatCurrencySymbol = store.state.globalState.appCurrency
+        val fiatCurrencyName = store.state.globalState.appCurrency.code
         val exchangeManager = store.state.globalState.currencyExchangeManager
 
         val token = wallet.getFirstToken()
@@ -132,7 +141,7 @@ class OnWalletLoadedReducer {
             if (tokenAmount != null) {
                 val tokenFiatRate = walletState.primaryWallet?.currencyData?.token?.fiatRate
                 val tokenFiatAmount =
-                    tokenFiatRate?.let { tokenAmount.value?.toFiatString(it, fiatCurrencySymbol) }
+                    tokenFiatRate?.let { tokenAmount.value?.toFiatString(it, fiatCurrencyName) }
                 TokenData(
                     tokenAmount.value?.toFormattedCurrencyString(
                         token.decimals, token.symbol
@@ -152,7 +161,7 @@ class OnWalletLoadedReducer {
         )
         val fiatRate = walletState.primaryWallet?.fiatRate
         val fiatAmountRaw = fiatRate?.multiply(amount)?.setScale(2, RoundingMode.DOWN)
-        val fiatAmount = fiatRate?.let { amount?.toFiatString(it, fiatCurrencySymbol) }
+        val fiatAmount = fiatRate?.let { amount?.toFiatString(it, fiatCurrencyName) }
 
         val pendingTransactions = wallet.recentTransactions.toPendingTransactions(wallet.address)
         val sendButtonEnabled = amount?.isZero() == false && pendingTransactions.isEmpty()
@@ -182,5 +191,49 @@ class OnWalletLoadedReducer {
         return walletState.updateWalletStore(updatedStore).copy(
             state = ProgressState.Done, error = null
         )
+    }
+
+    private fun List<WalletData>.findTotalBalanceState(): TotalBalance.State {
+        return this.mapToTotalBalanceState()
+            .fold(initial = TotalBalance.State.Loading) { accState, newState ->
+                accState or newState
+            }
+    }
+
+    private fun List<WalletData>.calculateTotalFiatAmount(): BigDecimal {
+        return this.map { it.currencyData.fiatAmount ?: BigDecimal.ZERO }
+            .reduce(BigDecimal::plus)
+    }
+
+    private fun List<WalletData>.mapToTotalBalanceState(): List<TotalBalance.State> {
+        return this.map {
+            when (it.currencyData.status) {
+                BalanceStatus.VerifiedOnline,
+                BalanceStatus.SameCurrencyTransactionInProgress,
+                BalanceStatus.TransactionInProgress -> TotalBalance.State.Success
+                BalanceStatus.Unreachable,
+                BalanceStatus.NoAccount,
+                BalanceStatus.EmptyCard,
+                BalanceStatus.UnknownBlockchain -> TotalBalance.State.SomeTokensFailed
+                BalanceStatus.Loading,
+                null -> TotalBalance.State.Loading
+            }
+        }
+    }
+
+    infix fun TotalBalance.State.or(newState: TotalBalance.State): TotalBalance.State {
+        return when (this) {
+            TotalBalance.State.Loading -> when (newState) {
+                TotalBalance.State.Loading -> this
+                TotalBalance.State.SomeTokensFailed,
+                TotalBalance.State.Success -> newState
+            }
+            TotalBalance.State.Success,
+            TotalBalance.State.SomeTokensFailed -> when (newState) {
+                TotalBalance.State.Loading,
+                TotalBalance.State.SomeTokensFailed -> newState
+                TotalBalance.State.Success -> this
+            }
+        }
     }
 }
