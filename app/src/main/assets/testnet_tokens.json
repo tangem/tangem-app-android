@@ -26,6 +26,11 @@
           "networkId" : "binance-smart-chain/test",
           "contractAddress" : "0xec5dcb5dbf4b114c9d0f65bccab49ec54f6a0867",
           "decimalCount" : 18
+        },
+        {
+          "networkId" : "binance-smart-chain/test",
+          "contractAddress" : "0x8a9424745056eb399fd19a0ec26a14316684e274",
+          "decimalCount" : 18
         }
       ]
     },
@@ -71,7 +76,7 @@
       ]
     },
     {
-      "id" : "Tether USD-USDT",
+      "id" : "tether",
       "symbol" : "USDT",
       "name" : "Tether USD",
       "networks" : [
@@ -83,6 +88,16 @@
         {
           "networkId" : "binance-smart-chain/test",
           "contractAddress" : "0x337610d27c682e347c9cd60bd4b3b107c9d34ddd",
+          "decimalCount" : 18
+        },
+        {
+          "networkId" : "tron/test",
+          "contractAddress" : "TXLAQ63Xg1NAzckPwKHvzw7CSEmLMEqcdj",
+          "decimalCount" : 6
+        },
+        {
+          "networkId" : "binance-smart-chain/test",
+          "contractAddress" : "0x7ef95a0fee0dd31b22626fa2e10ee6a223f8a684",
           "decimalCount" : 18
         }
       ]
@@ -229,6 +244,16 @@
       ]
     },
     {
+      "id" : "ethereum-classic",
+      "symbol" : "ETC",
+      "name" : "Ethereum Classic",
+      "networks" : [
+        {
+          "networkId" : "ethereum-classic/test"
+        }
+      ]
+    },
+    {
       "id" : "Weenus-WEENUS",
       "symbol" : "WEENUS",
       "name" : "Weenus",
@@ -351,6 +376,26 @@
       "networks" : [
         {
           "networkId" : "bitcoin/test"
+        }
+      ]
+    },
+    {
+      "id" : "tron",
+      "symbol" : "TRX",
+      "name" : "Tron",
+      "networks" : [
+        {
+          "networkId" : "tron/test"
+        }
+      ]
+    },
+    {
+      "id" : "arbitrum-one",
+      "symbol" : "ETH",
+      "name" : "Arbitrum",
+      "networks" : [
+        {
+          "networkId" : "arbitrum-one/test"
         }
       ]
     },
