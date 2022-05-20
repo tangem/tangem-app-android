@@ -25,7 +25,6 @@ import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.redux.*
 import com.tangem.tap.features.wallet.ui.adapters.PendingTransactionsAdapter
 import com.tangem.tap.features.wallet.ui.adapters.WalletDetailWarningMessagesAdapter
-import com.tangem.tap.features.wallet.ui.adapters.WalletDetailsWarning
 import com.tangem.tap.features.wallet.ui.dialogs.AmountToSendDialog
 import com.tangem.tap.features.wallet.ui.test.TestWalletDetails
 import com.tangem.tap.store
@@ -173,35 +172,11 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
     }
 
     private fun handleWarnings(selectedWallet: WalletData) = with(binding) {
-        val walletWarnings = mutableListOf<WalletDetailsWarning>()
-        if (selectedWallet.currencyData.status == BalanceStatus.SameCurrencyTransactionInProgress) {
-            val txInProgress = WalletDetailsWarning(
-                title = R.string.common_warning,
-                message = R.string.wallet_pending_transaction_warning,
-            )
-            walletWarnings.add(0, txInProgress)
-        }
-        if (selectedWallet.walletRent != null) {
-            val rent = selectedWallet.walletRent
-            val rentWarning = WalletDetailsWarning(
-                title = R.string.common_warning,
-                message = R.string.solana_rent_warning,
-                messageArgs = listOf(rent.minRentValue, rent.rentExemptValue)
-            )
-            walletWarnings.add(rentWarning)
-        }
-        if (!selectedWallet.currency.isBlockchain() && selectedWallet.shouldShowCoinAmountWarning()) {
-            val blockchainName = selectedWallet.currency.blockchain.fullName
-            val notEnoughBalanceForFee = WalletDetailsWarning(
-                title = R.string.common_warning,
-                message = R.string.token_details_send_blocked_fee_format,
-                messageArgs = listOf(blockchainName, blockchainName)
-            )
-            walletWarnings.add(notEnoughBalanceForFee)
-        }
+        val converter = WalletWarningConverter(requireContext())
+        val warningDetails = selectedWallet.assembleWarnings().map { converter.convert(it) }
 
-        warningMessagesAdapter.submitList(walletWarnings)
-        rvWarningMessages.show(walletWarnings.isNotEmpty())
+        warningMessagesAdapter.submitList(warningDetails)
+        rvWarningMessages.show(warningDetails.isNotEmpty())
     }
 
     private fun handleCurrencyIcon(wallet: WalletData) = with(binding.lWalletDetails.lBalance) {
