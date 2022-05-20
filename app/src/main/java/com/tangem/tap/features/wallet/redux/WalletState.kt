@@ -5,6 +5,7 @@ import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.blockchain.extensions.isAboveZero
 import com.tangem.common.extensions.isZero
+import com.tangem.domain.common.extensions.canHandleToken
 import com.tangem.domain.common.extensions.toCoinId
 import com.tangem.domain.features.addCustomToken.CustomCurrency
 import com.tangem.tap.common.entities.Button
@@ -19,10 +20,7 @@ import com.tangem.tap.domain.extensions.toSendableAmounts
 import com.tangem.tap.domain.tokens.BlockchainNetwork
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
 import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
-import com.tangem.tap.features.wallet.models.PendingTransaction
-import com.tangem.tap.features.wallet.models.TotalBalance
-import com.tangem.tap.features.wallet.models.toPendingTransactions
-import com.tangem.tap.features.wallet.models.toPendingTransactionsForToken
+import com.tangem.tap.features.wallet.models.*
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
@@ -364,23 +362,36 @@ data class WalletData(
         return listOfAddresses.size > 1
     }
 
-    fun shouldShowCoinAmountWarning(): Boolean = when (currency) {
-        is Currency.Blockchain -> false
-        is Currency.Token -> blockchainAmountIsEmpty() && !tokenAmountIsEmpty()
-    }
-
     fun shouldEnableTokenSendButton(): Boolean = !blockchainAmountIsEmpty() || !tokenAmountIsEmpty()
 
-    private fun blockchainAmountIsEmpty(): Boolean =
-        currencyData.blockchainAmount?.isZero() ?: false
+    fun assembleWarnings(): List<WalletWarning> {
+        val blockchain = currency.blockchain
+        val walletWarnings = mutableListOf<WalletWarning>()
+        if (currencyData.status == BalanceStatus.SameCurrencyTransactionInProgress) {
+            walletWarnings.add(WalletWarning.TransactionInProgress)
+        }
+        if (currency.isBlockchain()) {
+            if (blockchain == Blockchain.Solana || blockchain == Blockchain.SolanaTestnet) {
+                val card = store.state.globalState.scanResponse?.card
+                if (card?.canHandleToken(blockchain) == false) {
+                    walletWarnings.add(WalletWarning.SolanaTokensUnsupported)
+                }
+            }
+        }
+        if (walletRent != null) {
+            walletWarnings.add(WalletWarning.Rent(walletRent))
+        }
+        if (!currency.isBlockchain() && (blockchainAmountIsEmpty() && !tokenAmountIsEmpty())) {
+            val fullName = currency.blockchain.fullName
+            walletWarnings.add(WalletWarning.BalanceNotEnoughForFee(fullName))
+        }
+        return walletWarnings.sortedBy { it.showingPosition }
+    }
+
+    private fun blockchainAmountIsEmpty(): Boolean = currencyData.blockchainAmount?.isZero() ?: false
 
     private fun tokenAmountIsEmpty(): Boolean = currencyData.amount?.isZero() == true
 }
-
-data class WalletRent(
-    val minRentValue: String,
-    val rentExemptValue: String
-)
 
 sealed interface Currency {
 
