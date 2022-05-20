@@ -22,7 +22,9 @@ import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.tap.common.compose.Keyboard
 import com.tangem.tap.common.compose.keyboardAsState
+import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.pixelsToDp
+import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.domain.tokens.Currency
 import com.tangem.tap.features.tokens.redux.ContractAddress
 import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
@@ -37,7 +39,7 @@ fun CurrenciesScreen(
     onSaveChanges: (List<TokenWithBlockchain>, List<Blockchain>) -> Unit,
     onNetworkItemClicked: (ContractAddress) -> Unit
 ) {
-
+    val context = LocalContext.current
     val addedTokensState = remember { mutableStateOf(tokensState.value.addedTokens) }
     val addedBlockchainsState = remember { mutableStateOf(tokensState.value.addedBlockchains) }
 
@@ -103,7 +105,18 @@ fun CurrenciesScreen(
                     addedBlockchains = addedBlockchainsState.value,
                     searchInput = searchInput.value,
                     allowToAdd = tokensState.value.allowToAdd,
-                    onAddCurrencyToggled = onAddCurrencyToggleClick,
+                    onAddCurrencyToggled = { currency, token ->
+                        onAddCurrencyToggleClick(currency, token)
+                        if (!tokensState.value.canHandleToken(token)) {
+                            val dialog = AppDialog.SimpleOkDialog(
+                                header = context.getString(R.string.common_warning),
+                                message = context.getString(R.string.alert_manage_tokens_unsupported_message)
+                            ) {
+                                onAddCurrencyToggleClick(currency, token)
+                            }
+                            store.dispatchDialogShow(dialog)
+                        }
+                    },
                     onNetworkItemClicked = onNetworkItemClicked
                 )
             }
