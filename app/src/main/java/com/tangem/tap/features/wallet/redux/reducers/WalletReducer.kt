@@ -14,6 +14,7 @@ import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.getArtworkUrl
 import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.domain.tokens.BlockchainNetwork
+import com.tangem.tap.features.wallet.models.WalletRent
 import com.tangem.tap.features.wallet.redux.*
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
