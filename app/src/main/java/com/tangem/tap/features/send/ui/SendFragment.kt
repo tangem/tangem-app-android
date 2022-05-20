@@ -17,7 +17,7 @@ import com.tangem.Message
 import com.tangem.tangem_sdk_new.extensions.dpToPx
 import com.tangem.tangem_sdk_new.extensions.hideSoftKeyboard
 import com.tangem.tap.common.KeyboardObserver
-import com.tangem.tap.common.entities.TapCurrency
+import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.getFromClipboard
 import com.tangem.tap.common.extensions.setOnImeActionListener
 import com.tangem.tap.common.qrCodeScan.ScanQrCodeActivity
@@ -261,11 +261,10 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
 
     private fun restoreMainCurrency(): MainCurrencyType {
         val sp = requireContext().getSharedPreferences("SendScreen", Context.MODE_PRIVATE)
-        val mainCurrency = sp.getString("mainCurrency", TapCurrency.DEFAULT_FIAT_CURRENCY)
-        val foundType = MainCurrencyType.values()
-                .firstOrNull { it.name.equals(mainCurrency!!, ignoreCase = true) }
-                ?: MainCurrencyType.CRYPTO
-        return foundType
+        val mainCurrency = sp.getString("mainCurrency", FiatCurrency.Default.code)
+        return MainCurrencyType.values()
+            .firstOrNull { it.name.equals(mainCurrency!!, ignoreCase = true) }
+            ?: MainCurrencyType.CRYPTO
     }
 
     fun saveMainCurrency(type: MainCurrencyType) {
