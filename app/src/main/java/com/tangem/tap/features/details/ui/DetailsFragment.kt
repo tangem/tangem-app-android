@@ -115,7 +115,7 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
             store.dispatch(DetailsAction.CreateBackup)
         }
 
-        tvAppCurrency.text = state.appCurrencyState.fiatCurrencyName
+        tvAppCurrency.text = state.appCurrencyState.currentFiatCurrency.code
 
         tvAppCurrencyTitle.setOnClickListener {
             store.dispatch(DetailsAction.AppCurrencyAction.ChooseAppCurrency)
@@ -144,9 +144,9 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
         if (state.appCurrencyState.showAppCurrencyDialog &&
             !state.appCurrencyState.fiatCurrencies.isNullOrEmpty()) {
             currencySelectionDialog.show(
-                state.appCurrencyState.fiatCurrencies,
-                state.appCurrencyState.fiatCurrencyName,
-                requireContext()
+                currenciesList = state.appCurrencyState.fiatCurrencies,
+                currentAppCurrency = state.appCurrencyState.currentFiatCurrency,
+                context = requireContext()
             )
         } else {
             currencySelectionDialog.clear()
