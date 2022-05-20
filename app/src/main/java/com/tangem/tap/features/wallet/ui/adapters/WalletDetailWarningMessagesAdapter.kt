@@ -6,7 +6,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.tangem.tap.common.extensions.getColor
-import com.tangem.tap.common.extensions.getString
+import com.tangem.tap.features.wallet.models.WalletWarningDescription
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.LayoutWarningCardBinding
 
@@ -14,7 +14,7 @@ import com.tangem.wallet.databinding.LayoutWarningCardBinding
 [REDACTED_AUTHOR]
  */
 class WalletDetailWarningMessagesAdapter
-    : ListAdapter<WalletDetailsWarning, WalletDetailsWarningMessageVH>(DiffUtilCallback()) {
+    : ListAdapter<WalletWarningDescription, WalletDetailsWarningMessageVH>(DiffUtilCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): WalletDetailsWarningMessageVH {
         val inflater = LayoutInflater.from(parent.context)
@@ -27,11 +27,11 @@ class WalletDetailWarningMessagesAdapter
         holder.bind(currentList[position])
     }
 
-    private class DiffUtilCallback : DiffUtil.ItemCallback<WalletDetailsWarning>() {
-        override fun areContentsTheSame(oldItem: WalletDetailsWarning, newItem: WalletDetailsWarning) =
+    private class DiffUtilCallback : DiffUtil.ItemCallback<WalletWarningDescription>() {
+        override fun areContentsTheSame(oldItem: WalletWarningDescription, newItem: WalletWarningDescription) =
             oldItem == newItem
 
-        override fun areItemsTheSame(oldItem: WalletDetailsWarning, newItem: WalletDetailsWarning) =
+        override fun areItemsTheSame(oldItem: WalletWarningDescription, newItem: WalletWarningDescription) =
             oldItem == newItem
     }
 }
@@ -40,25 +40,13 @@ class WalletDetailsWarningMessageVH(
     val binding: LayoutWarningCardBinding
 ) : RecyclerView.ViewHolder(binding.root) {
 
-    fun bind(warning: WalletDetailsWarning) {
+    fun bind(warning: WalletWarningDescription) {
         binding.warningCard.setCardBackgroundColor(binding.root.getColor(R.color.darkGray2))
         setText(warning)
     }
 
-    private fun setText(warning: WalletDetailsWarning) = with(binding.warningContentContainer) {
-        fun getString(
-            stringResId: Int,
-            formatArgs: List<String> = emptyList()
-        ) = root.getString(stringResId, *formatArgs.toTypedArray())
-
-        tvTitle.text = getString(warning.title)
-        tvMessage.text = getString(warning.message, warning.messageArgs)
+    private fun setText(warning: WalletWarningDescription) = with(binding.warningContentContainer) {
+        tvTitle.text = warning.title
+        tvMessage.text = warning.message
     }
 }
-
-data class WalletDetailsWarning(
-    val title: Int,
-    val message: Int,
-    val titleArgs: List<String> = emptyList(),
-    val messageArgs: List<String> = emptyList(),
-)
