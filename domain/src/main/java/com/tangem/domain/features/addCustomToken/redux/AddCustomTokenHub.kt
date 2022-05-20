@@ -12,8 +12,9 @@ import com.tangem.domain.AddCustomTokenException
 import com.tangem.domain.DomainDialog
 import com.tangem.domain.DomainWrapped
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
+import com.tangem.domain.common.extensions.canHandleToken
 import com.tangem.domain.common.extensions.fromNetworkId
-import com.tangem.domain.common.extensions.supportedTokens
+import com.tangem.domain.common.extensions.supportedBlockchains
 import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.common.form.*
 import com.tangem.domain.features.addCustomToken.*
@@ -225,6 +226,15 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
                 // token with single contract address
                 val singleTokenContract = foundToken.networks[0]
                 fillTokenFields(foundToken, singleTokenContract)
+
+                if (canHandleToken(Network.getFieldValue())) {
+                    AddCustomTokenError.Warning.UnsupportedSolanaToken.remove()
+                } else {
+                    AddCustomTokenError.Warning.UnsupportedSolanaToken.add()
+                    updateTokenDetailFields(false)
+                    updateAddButton(false)
+                    return
+                }
 
                 val isInAppSavedTokens = isTokenPersistIntoAppSavedTokensList()
                 if (isInAppSavedTokens) {
@@ -511,6 +521,11 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
         dispatchOnMain(Warning.Replace(setOf(this), setOf(to)))
     }
 
+    private fun canHandleToken(blockchain: Blockchain): Boolean {
+        val card = globalState.scanResponse?.card ?: return false
+        return card.canHandleToken(blockchain)
+    }
+
     @Throws
     private fun throwUnAppropriateInitialization(objName: String) {
         throw AddCustomTokenException.UnAppropriateInitializationException(
@@ -533,7 +548,9 @@ private class AddCustomTokenReducer(
             }
             is OnCreate -> {
                 val card = requireNotNull(globalState.scanResponse?.card)
-                val supportedTokenNetworkIds = card.supportedTokens().map { it.toNetworkId() }
+                val supportedTokenNetworkIds = card.supportedBlockchains()
+                    .filter { it.canHandleTokens() }
+                    .map { it.toNetworkId() }
                 val tangemTechServiceManager = AddCustomTokenService(
                     tangemTechService = globalState.networkServices.tangemTechService,
                     supportedTokenNetworkIds = supportedTokenNetworkIds
