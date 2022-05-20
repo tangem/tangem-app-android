@@ -107,15 +107,16 @@ fun CurrenciesScreen(
                     allowToAdd = tokensState.value.allowToAdd,
                     onAddCurrencyToggled = { currency, token ->
                         onAddCurrencyToggleClick(currency, token)
-                        if (!tokensState.value.canHandleToken(token)) {
-                            val dialog = AppDialog.SimpleOkDialog(
-                                header = context.getString(R.string.common_warning),
-                                message = context.getString(R.string.alert_manage_tokens_unsupported_message)
-                            ) {
-                                onAddCurrencyToggleClick(currency, token)
+                        token?.let {
+                            if (!tokensState.value.canHandleToken(it)) {
+                                val dialog = AppDialog.SimpleOkDialog(
+                                    header = context.getString(R.string.common_warning),
+                                    message = context.getString(R.string.alert_manage_tokens_unsupported_message)
+                                ) { onAddCurrencyToggleClick(currency, it) }
+                                store.dispatchDialogShow(dialog)
                             }
-                            store.dispatchDialogShow(dialog)
                         }
+
                     },
                     onNetworkItemClicked = onNetworkItemClicked
                 )
