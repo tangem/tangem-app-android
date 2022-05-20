@@ -104,7 +104,7 @@ class WalletMiddleware {
                 warningsMiddleware.tryToShowAppRatingWarning(action.wallet)
             }
             is WalletAction.LoadFiatRate -> {
-                val appCurrencyId = globalState.appCurrency
+                val appCurrencyId = globalState.appCurrency.code
                 scope.launch {
                     val coinsList = when {
                         action.wallet != null -> {
