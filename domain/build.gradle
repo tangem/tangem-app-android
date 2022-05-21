@@ -60,7 +60,7 @@ dependencies {
     implementation implementation(project(path: ':common'))
 
     // Tangem sdk's
-    implementation 'com.tangem:blockchain:develop-77'
+    implementation 'com.tangem:blockchain:develop-78'
     implementation 'com.tangem.tangem-sdk-kotlin:core:develop-142'
     implementation 'com.tangem.tangem-sdk-kotlin:android:develop-142'
 
