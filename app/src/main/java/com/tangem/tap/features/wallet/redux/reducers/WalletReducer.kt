@@ -14,6 +14,7 @@ import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.getArtworkUrl
 import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.domain.tokens.BlockchainNetwork
+import com.tangem.tap.features.wallet.models.WalletRent
 import com.tangem.tap.features.wallet.redux.*
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
@@ -148,12 +149,9 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
             } else {
                 val walletManager = newState.getWalletManager(action.blockchain) ?: return newState
                 val currencies = listOf(Currency.fromBlockchainNetwork(action.blockchain)) +
-                        walletManager.cardTokens.map {
-                            Currency.fromBlockchainNetwork(
-                                action.blockchain,
-                                it
-                            )
-                        }
+                    walletManager.cardTokens.map {
+                        Currency.fromBlockchainNetwork(action.blockchain, it)
+                    }
                 val newWallets = newState.walletsData.filter { currencies.contains(it.currency) }
                     .map { wallet ->
                         wallet.copy(
@@ -307,21 +305,15 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
             )
         }
         is WalletAction.SetWalletRent -> {
-            var walletData = newState.getWalletData(action.blockchain)
-            if (walletData != null) {
-                walletData = walletData.copy(
-                    warningRent = WalletRent(action.minRent, action.rentExempt)
-                )
-                newState = newState.updateWalletsData(listOf(walletData))
-
-            }
+            val walletStore = newState.getWalletStore(action.wallet) ?: return newState
+            val walletRent = WalletRent(action.minRent, action.rentExempt)
+            val walletsData = walletStore.walletsData.map { it.copy(walletRent = walletRent) }
+            newState = newState.updateWalletsData(walletsData)
         }
         is WalletAction.RemoveWalletRent -> {
-            var walletData = newState.getWalletData(action.blockchain)
-            if (walletData != null) {
-                walletData = walletData.copy(warningRent = null)
-                newState = newState.updateWalletsData(listOf(walletData))
-            }
+            val walletStore = newState.getWalletStore(action.wallet) ?: return newState
+            val walletsData = walletStore.walletsData.map { it.copy(walletRent = null) }
+            newState = newState.updateWalletsData(walletsData)
         }
         else -> { /* no-op */
         }
