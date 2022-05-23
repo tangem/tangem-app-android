@@ -58,8 +58,7 @@ class TokensMiddleware {
                 currenciesRepository.getSupportedTokens(isTestcard)
                     .filter(action.supportedBlockchains?.toSet())
             }
-            val delay = async { delay(600) }
-            delay.await()
+            delay(600)
             store.dispatchOnMain(TokensAction.LoadCurrencies.Success(currencies.await()))
         }
     }
@@ -78,8 +77,8 @@ class TokensMiddleware {
         val blockchainsToRemove = currentBlockchains.filter { !action.addedBlockchains.contains(it) }
 
         val tokensToAdd = action.addedTokens.filter { !currentTokens.contains(it) }
-        val tokensToRemove = currentTokens.filter {
-                token -> !action.addedTokens.any { it.token == token.token }
+        val tokensToRemove = currentTokens.filter { token ->
+            !action.addedTokens.any { it.token == token.token }
         }
         val derivationStyle = scanResponse.card.derivationStyle
 
