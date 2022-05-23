@@ -61,6 +61,7 @@ dependencies {
 
     // Tangem sdk's
     implementation 'com.tangem:blockchain:develop-81'
+//    implementation 'com.tangem:blockchain:0.0.1'
     implementation 'com.tangem.tangem-sdk-kotlin:core:develop-142'
     implementation 'com.tangem.tangem-sdk-kotlin:android:develop-142'
 
