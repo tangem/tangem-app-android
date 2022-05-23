@@ -1,7 +1,6 @@
 package com.tangem.tap.features.send.redux.reducers
 
 import com.tangem.blockchain.common.Amount
-import com.tangem.blockchain.extensions.isAboveZero
 import com.tangem.tap.features.send.redux.FeeAction
 import com.tangem.tap.features.send.redux.FeeActionUi
 import com.tangem.tap.features.send.redux.SendScreenAction
@@ -88,8 +87,6 @@ class FeeReducer : SendInternalReducer {
         if (list == null || list.isEmpty()) return null
 
         return if (list.size == 1) {
-            if (!list[0].isAboveZero()) return null
-
             list[0]
         } else {
             when (feeType) {
