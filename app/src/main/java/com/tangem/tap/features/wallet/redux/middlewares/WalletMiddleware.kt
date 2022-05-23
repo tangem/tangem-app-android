@@ -15,7 +15,13 @@ import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.operations.attestation.Attestation
 import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.tap.common.analytics.Analytics
-import com.tangem.tap.common.extensions.*
+import com.tangem.tap.common.extensions.copyToClipboard
+import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
+import com.tangem.tap.common.extensions.dispatchDialogShow
+import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.extensions.onCardScanned
+import com.tangem.tap.common.extensions.shareText
+import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -29,11 +35,17 @@ import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.send.redux.PrepareSendScreen
 import com.tangem.tap.features.wallet.models.PendingTransactionType
 import com.tangem.tap.features.wallet.models.getPendingTransactions
-import com.tangem.tap.features.wallet.redux.*
+import com.tangem.tap.features.wallet.redux.Currency
+import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.features.wallet.redux.WalletData
+import com.tangem.tap.features.wallet.redux.WalletState
+import com.tangem.tap.features.wallet.redux.WalletStore
 import com.tangem.tap.network.NetworkStateChanged
+import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
+import java.math.BigDecimal
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
@@ -41,12 +53,19 @@ import org.rekotlin.Action
 import org.rekotlin.DispatchFunction
 import org.rekotlin.Middleware
 import timber.log.Timber
-import java.math.BigDecimal
 
 class WalletMiddleware {
     private val tradeCryptoMiddleware = TradeCryptoMiddleware()
     private val warningsMiddleware = WarningsMiddleware()
     private val multiWalletMiddleware = MultiWalletMiddleware()
+    private val appCurrencyMiddleware by lazy(mode = LazyThreadSafetyMode.NONE) {
+        AppCurrencyMiddleware(
+            tangemTechService = store.state.domainNetworks.tangemTechService,
+            tapWalletManager = store.state.globalState.tapWalletManager,
+            fiatCurrenciesPrefStorage = preferencesStorage.fiatCurrenciesPrefStorage,
+            appCurrencyProvider = { store.state.globalState.appCurrency },
+        )
+    }
 
     val walletMiddleware: Middleware<AppState> = { dispatch, state ->
         { next ->
@@ -71,6 +90,7 @@ class WalletMiddleware {
                 walletState,
                 globalState
             )
+            is WalletAction.AppCurrencyAction -> appCurrencyMiddleware.handle(action)
             is WalletAction.LoadWallet -> {
                 scope.launch {
                     if (action.blockchain == null) {
@@ -121,11 +141,15 @@ class WalletMiddleware {
                     )
                     when (ratesResult) {
                         is Result.Success -> {
-                            ratesResult.data.loadedRates.forEach {
-                                dispatchOnMain(WalletAction.LoadFiatRate.Success(it.toPair()))
+                            ratesResult.data.loadedRates.let {
+                                dispatchOnMain(WalletAction.LoadFiatRate.Success(it))
                             }
                             ratesResult.data.failedRates.forEach { (currency, throwable) ->
-                                Timber.e(throwable, "Loading rates failed for [%s]", currency.currencySymbol)
+                                Timber.e(
+                                    throwable,
+                                    "Loading rates failed for [%s]",
+                                    currency.currencySymbol
+                                )
                             }
                         }
                         is Result.Failure -> {
