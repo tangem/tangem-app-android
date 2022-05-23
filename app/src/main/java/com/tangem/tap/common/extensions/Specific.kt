@@ -39,10 +39,23 @@ fun BigDecimal.toFormattedCurrencyString(
     return "$formattedAmount $currency"
 }
 
-fun BigDecimal.toFiatString(rateValue: BigDecimal, fiatCurrencyName: String): String {
+fun BigDecimal.toFiatRateString(
+    fiatCurrencyName: String
+): String {
+    val value = this
+        .setScale(2, RoundingMode.HALF_UP)
+        .formatWithSpaces()
+    return "$value $fiatCurrencyName"
+}
+
+fun BigDecimal.toFiatString(
+    rateValue: BigDecimal,
+    fiatCurrencyName: String,
+    formatWithSpaces: Boolean = false
+): String {
     var fiatValue = rateValue.multiply(this)
     fiatValue = fiatValue.setScale(2, RoundingMode.HALF_UP)
-    return "≈ ${fiatCurrencyName}  $fiatValue"
+    return fiatValue.toFormattedFiatValue(fiatCurrencyName, formatWithSpaces)
 }
 
 fun BigDecimal.toFiatValue(rateValue: BigDecimal): BigDecimal {
@@ -50,8 +63,12 @@ fun BigDecimal.toFiatValue(rateValue: BigDecimal): BigDecimal {
     return fiatValue.setScale(2, RoundingMode.HALF_UP)
 }
 
-fun BigDecimal.toFormattedFiatValue(fiatCurrencyName: String): String {
-    return "≈ ${fiatCurrencyName}  $this"
+fun BigDecimal.toFormattedFiatValue(
+    fiatCurrencyName: String,
+    formatWithSpaces: Boolean = false
+): String {
+    val fiatValue = if (formatWithSpaces) this.formatWithSpaces() else this
+    return " ${fiatValue}  $fiatCurrencyName"
 }
 
 fun BigDecimal.stripZeroPlainString(): String = this.stripTrailingZeros().toPlainString()
@@ -110,5 +127,34 @@ fun BigDecimal.formatAmountAsSpannedString(
         append(reminder)
         append(' ')
         append(currencySymbol)
+    }
+}
+
+fun BigDecimal.formatWithSpaces(): String {
+    val str = this.toString()
+    var integerStr = str.substringBefore('.')
+    val reminderStr = str.substringAfter('.')
+    val packets = arrayListOf<String>()
+
+    var index: Int = integerStr.length
+    while (0 < index) {
+        if (index <= 3) {
+            packets.add(0, integerStr)
+            break
+        }
+        index -= 3
+        packets.add(integerStr.substring(startIndex = index))
+        integerStr = integerStr.substring(startIndex = 0, endIndex = index)
+    }
+
+    return buildString {
+        packets.forEachIndexed { index, packet ->
+            append(packet)
+            if (index != packets.lastIndex) append(' ')
+        }
+        if (reminderStr.isNotBlank()) {
+            append('.')
+            append(reminderStr)
+        }
     }
 }
