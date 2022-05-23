@@ -157,10 +157,10 @@ sealed class WalletAction : Action {
     data class ChangeSelectedAddress(val type: AddressType) : WalletAction()
 
     data class SetWalletRent(
-        val blockchain: BlockchainNetwork,
+        val wallet: Wallet,
         val minRent: String,
         val rentExempt: String
     ) : WalletAction()
 
-    data class RemoveWalletRent(val blockchain: BlockchainNetwork) : WalletAction()
+    data class RemoveWalletRent(val wallet: Wallet) : WalletAction()
 }
