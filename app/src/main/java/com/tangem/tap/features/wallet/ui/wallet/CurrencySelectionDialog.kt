@@ -23,12 +23,13 @@ object CurrencySelectionDialog {
             .setTitle(context.getString(R.string.details_row_title_currency))
             .setNegativeButton(context.getString(R.string.common_cancel)) { _, _ -> /* no-op */ }
             .setPositiveButton(context.getString(R.string.common_done)) { _, _ ->
-                val selectedCurrency = dialog.currenciesList[currentSelection]
-                store.dispatch(
-                    WalletAction.AppCurrencyAction.SelectAppCurrency(
-                        fiatCurrency = selectedCurrency
+                dialog.currenciesList.getOrNull(currentSelection)?.let { selectedCurrency ->
+                    store.dispatch(
+                        WalletAction.AppCurrencyAction.SelectAppCurrency(
+                            fiatCurrency = selectedCurrency
+                        )
                     )
-                )
+                }
             }
             .setOnDismissListener {
                 store.dispatchDialogHide()
