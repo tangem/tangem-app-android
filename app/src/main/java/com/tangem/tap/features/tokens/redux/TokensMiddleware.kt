@@ -29,6 +29,7 @@ import com.tangem.tap.domain.extensions.makeWalletManagerForApp
 import com.tangem.tap.domain.tokens.BlockchainNetwork
 import com.tangem.tap.features.wallet.redux.Currency
 import com.tangem.tap.features.wallet.redux.WalletAction
+import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
@@ -53,10 +54,12 @@ class TokensMiddleware {
         val isTestcard = scanResponse?.card?.isTestCard ?: false
 
         scope.launch {
-            val currencies = currenciesRepository.getSupportedTokens(isTestcard)
-                .filter(action.supportedBlockchains?.toSet())
+            val currencies = async {
+                currenciesRepository.getSupportedTokens(isTestcard)
+                    .filter(action.supportedBlockchains?.toSet())
+            }
             delay(600)
-            store.dispatchOnMain(TokensAction.LoadCurrencies.Success(currencies))
+            store.dispatchOnMain(TokensAction.LoadCurrencies.Success(currencies.await()))
         }
     }
 
