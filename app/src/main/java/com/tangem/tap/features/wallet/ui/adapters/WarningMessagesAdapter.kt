@@ -1,7 +1,6 @@
 package com.tangem.tap.features.wallet.ui.adapters
 
 import android.content.res.Resources
-import android.graphics.Rect
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,7 +8,6 @@ import androidx.core.os.ConfigurationCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import androidx.recyclerview.widget.RecyclerView.ItemDecoration
 import com.google.android.play.core.review.ReviewManagerFactory
 import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.extensions.*
@@ -20,13 +18,13 @@ import com.tangem.tap.features.feedback.RateCanBeBetterEmail
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.store
 import com.tangem.wallet.R
-import com.tangem.wallet.databinding.LayoutWarningBinding
+import com.tangem.wallet.databinding.LayoutWarningCardActionBinding
 import timber.log.Timber
 
 class WarningMessagesAdapter : ListAdapter<WarningMessage, WarningMessageVH>(DiffUtilCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): WarningMessageVH {
-        val binding = LayoutWarningBinding.inflate(
+        val binding = LayoutWarningCardActionBinding.inflate(
             LayoutInflater.from(parent.context), parent, false
         )
         return WarningMessageVH(binding)
@@ -45,7 +43,7 @@ class WarningMessagesAdapter : ListAdapter<WarningMessage, WarningMessageVH>(Dif
     }
 }
 
-class WarningMessageVH(val binding: LayoutWarningBinding) : RecyclerView.ViewHolder(binding.root) {
+class WarningMessageVH(val binding: LayoutWarningCardActionBinding) : RecyclerView.ViewHolder(binding.root) {
 
     fun bind(warning: WarningMessage) {
         setBgColor(warning.priority)
@@ -53,7 +51,7 @@ class WarningMessageVH(val binding: LayoutWarningBinding) : RecyclerView.ViewHol
         setupControlButtons(warning)
     }
 
-    private fun setText(warning: WarningMessage) = with(binding) {
+    private fun setText(warning: WarningMessage) = with(binding.warningContentContainer) {
         fun getString(resId: Int?, default: String, formatArgs: String? = null) =
             if (resId == null) default else root.getString(resId, formatArgs)
 
@@ -71,7 +69,7 @@ class WarningMessageVH(val binding: LayoutWarningBinding) : RecyclerView.ViewHol
             WarningMessage.Priority.Warning -> R.color.warning_warning
             WarningMessage.Priority.Critical -> R.color.warning_critical
         }
-        binding.cardView.setCardBackgroundColor(binding.root.getColor(color))
+        binding.warningCardAction.setCardBackgroundColor(binding.root.getColor(color))
     }
 
     private fun setupControlButtons(warning: WarningMessage) = when (warning.type) {
@@ -115,7 +113,7 @@ class WarningMessageVH(val binding: LayoutWarningBinding) : RecyclerView.ViewHol
             val buttonTitle = binding.root.getString(
                 warning.buttonTextId ?: R.string.how_to_got_it_button
             )
-            binding.btnGotIt.setOnClickListener (buttonAction)
+            binding.btnGotIt.setOnClickListener(buttonAction)
             binding.btnGotIt.text = buttonTitle
         }
         WarningMessage.Type.AppRating -> {
@@ -160,20 +158,5 @@ class WarningMessageVH(val binding: LayoutWarningBinding) : RecyclerView.ViewHol
                 store.dispatch(GlobalAction.HideWarningMessage(warning))
             }
         }
-    }
-}
-
-class SpacesItemDecoration(private val spacePx: Int) : ItemDecoration() {
-    override fun getItemOffsets(
-        outRect: Rect,
-        view: View,
-        parent: RecyclerView,
-        state: RecyclerView.State
-    ) {
-        outRect.left = spacePx
-        outRect.right = spacePx
-
-        outRect.top = spacePx / 2
-        outRect.top = spacePx / 2
     }
 }
