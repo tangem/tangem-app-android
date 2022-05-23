@@ -1,7 +1,13 @@
 package com.tangem.tap.features.wallet.redux
 
 import android.graphics.Bitmap
-import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.AmountType
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.DerivationStyle
+import com.tangem.blockchain.common.Token
+import com.tangem.blockchain.common.Wallet
+import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.blockchain.extensions.isAboveZero
 import com.tangem.common.extensions.isZero
@@ -25,8 +31,8 @@ import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import com.tangem.tap.store
-import org.rekotlin.StateType
 import java.math.BigDecimal
+import org.rekotlin.StateType
 import kotlin.properties.ReadOnlyProperty
 
 data class WalletState(
