@@ -22,7 +22,9 @@ import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.tap.common.compose.Keyboard
 import com.tangem.tap.common.compose.keyboardAsState
+import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.pixelsToDp
+import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.domain.tokens.Currency
 import com.tangem.tap.features.tokens.redux.ContractAddress
 import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
@@ -37,7 +39,7 @@ fun CurrenciesScreen(
     onSaveChanges: (List<TokenWithBlockchain>, List<Blockchain>) -> Unit,
     onNetworkItemClicked: (ContractAddress) -> Unit
 ) {
-
+    val context = LocalContext.current
     val addedTokensState = remember { mutableStateOf(tokensState.value.addedTokens) }
     val addedBlockchainsState = remember { mutableStateOf(tokensState.value.addedBlockchains) }
 
@@ -77,7 +79,7 @@ fun CurrenciesScreen(
             visible = tokensState.value.currencies.isEmpty(),
             enter = fadeIn(),
             exit = fadeOut()
-        ){
+        ) {
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = Modifier.fillMaxSize()
@@ -93,8 +95,9 @@ fun CurrenciesScreen(
             exit = fadeOut(animationSpec = tween(1000))
         ) {
             Column {
-                if (tokensState.value.scanResponse?.card?.useOldStyleDerivation == true) CurrenciesWarning()
+                val showHeader = tokensState.value.scanResponse?.card?.useOldStyleDerivation == true
                 ListOfCurrencies(
+                    header = { if (showHeader) CurrenciesWarning() },
                     currencies = tokensState.value.currencies,
                     nonRemovableTokens = tokensState.value.nonRemovableTokens,
                     nonRemovableBlockchains = tokensState.value.nonRemovableBlockchains,
@@ -102,7 +105,19 @@ fun CurrenciesScreen(
                     addedBlockchains = addedBlockchainsState.value,
                     searchInput = searchInput.value,
                     allowToAdd = tokensState.value.allowToAdd,
-                    onAddCurrencyToggled = onAddCurrencyToggleClick,
+                    onAddCurrencyToggled = { currency, token ->
+                        onAddCurrencyToggleClick(currency, token)
+                        token?.let {
+                            if (!tokensState.value.canHandleToken(it)) {
+                                val dialog = AppDialog.SimpleOkDialog(
+                                    header = context.getString(R.string.common_warning),
+                                    message = context.getString(R.string.alert_manage_tokens_unsupported_message)
+                                ) { onAddCurrencyToggleClick(currency, it) }
+                                store.dispatchDialogShow(dialog)
+                            }
+                        }
+
+                    },
                     onNetworkItemClicked = onNetworkItemClicked
                 )
             }
