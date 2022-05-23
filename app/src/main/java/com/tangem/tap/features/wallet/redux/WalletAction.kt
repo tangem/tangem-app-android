@@ -1,17 +1,22 @@
 package com.tangem.tap.features.wallet.redux
 
 import android.content.Context
-import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.Token
+import com.tangem.blockchain.common.Wallet
+import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.card.Card
+import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.redux.ErrorAction
 import com.tangem.tap.common.redux.NotificationAction
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.tokens.BlockchainNetwork
 import com.tangem.wallet.R
-import org.rekotlin.Action
 import java.math.BigDecimal
+import org.rekotlin.Action
 
 sealed class WalletAction : Action {
 
@@ -98,7 +103,10 @@ sealed class WalletAction : Action {
     data class LoadFiatRate(
         val wallet: Wallet? = null, val coinsList: List<Currency>? = null,
     ) : WalletAction() {
-        data class Success(val fiatRate: Pair<Currency, BigDecimal?>) : WalletAction()
+        data class Success(
+            val fiatRates: Map<Currency, BigDecimal?>
+        ) : WalletAction()
+
         object Failure : WalletAction()
     }
 
@@ -163,4 +171,9 @@ sealed class WalletAction : Action {
     ) : WalletAction()
 
     data class RemoveWalletRent(val wallet: Wallet) : WalletAction()
+
+    sealed class AppCurrencyAction : WalletAction() {
+        object ChooseAppCurrency : AppCurrencyAction()
+        data class SelectAppCurrency(val fiatCurrency: FiatCurrency) : AppCurrencyAction()
+    }
 }
