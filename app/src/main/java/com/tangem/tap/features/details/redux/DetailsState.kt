@@ -4,7 +4,6 @@ import android.net.Uri
 import com.tangem.blockchain.common.Wallet
 import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.entities.Button
-import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
 import com.tangem.tap.store
 import org.rekotlin.StateType
@@ -15,7 +14,6 @@ data class DetailsState(
     val scanResponse: ScanResponse? = null,
     val wallets: List<Wallet> = emptyList(),
     val cardInfo: CardInfo? = null,
-    val appCurrencyState: AppCurrencyState = AppCurrencyState(),
     val eraseWalletState: EraseWalletState? = null,
     val confirmScreenState: ConfirmScreenState? = null,
     val securityScreenState: SecurityScreenState? = null,
@@ -49,9 +47,3 @@ data class SecurityScreenState(
 )
 
 enum class SecurityOption { LongTap, PassCode, AccessCode }
-
-data class AppCurrencyState(
-    val currentFiatCurrency: FiatCurrency = FiatCurrency.Default,
-    val showAppCurrencyDialog: Boolean = false,
-    val fiatCurrencies: List<FiatCurrency>? = null,
-)
