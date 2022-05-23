@@ -24,7 +24,6 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.extensions.toSendableAmounts
 import com.tangem.tap.domain.failedRates
 import com.tangem.tap.domain.loadedRates
-import com.tangem.tap.domain.tokens.BlockchainNetwork
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.send.redux.PrepareSendScreen
@@ -330,14 +329,12 @@ class WalletMiddleware {
                     val currency = walletManager.wallet.blockchain.currency
                     if (show) {
                         dispatchOnMain(WalletAction.SetWalletRent(
-                            blockchain = BlockchainNetwork.fromWalletManager(walletManager),
+                            wallet = walletManager.wallet,
                             minRent = ("${rentProvider.rentAmount().stripZeroPlainString()} $currency"),
                             rentExempt = ("${rentExempt.stripZeroPlainString()} $currency")
                         ))
                     } else {
-                        dispatchOnMain(WalletAction.RemoveWalletRent(
-                            blockchain = BlockchainNetwork.fromWalletManager(walletManager),
-                        ))
+                        dispatchOnMain(WalletAction.RemoveWalletRent(walletManager.wallet))
                     }
                 }
                 is com.tangem.blockchain.extensions.Result.Failure -> {}
