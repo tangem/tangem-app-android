@@ -41,7 +41,6 @@ class MultiWalletView : WalletView {
         setFragment(fragment, binding)
         onViewCreated()
         showMultiWalletView(binding)
-        setupButtons(binding)
     }
 
 
@@ -52,7 +51,6 @@ class MultiWalletView : WalletView {
         lAddress.root.hide()
         lButtonsShort.root.hide()
         lButtonsLong.root.hide()
-        btnScanMultiwallet.show()
         rvMultiwallet.show()
         btnAddToken.show()
         setupWalletCardNumber(binding)
@@ -68,11 +66,6 @@ class MultiWalletView : WalletView {
         } else {
             tvTwinCardNumber.hide()
         }
-    }
-
-
-    private fun setupButtons(binding: FragmentWalletBinding) = with(binding) {
-        btnScanMultiwallet.setOnClickListener { store.dispatch(WalletAction.Scan) }
     }
 
     override fun setFragment(fragment: WalletFragment, binding: FragmentWalletBinding) {
@@ -204,7 +197,6 @@ class MultiWalletView : WalletView {
 
     private fun configureButtonsForEmptyWalletState(binding: FragmentWalletBinding) =
         with(binding) {
-            btnScanMultiwallet.hide()
             lButtonsLong.root.show()
             lButtonsLong.btnScanLong.setOnClickListener { store.dispatch(WalletAction.Scan) }
             lButtonsLong.btnConfirmLong.setOnClickListener { store.dispatch(WalletAction.CreateWallet) }
