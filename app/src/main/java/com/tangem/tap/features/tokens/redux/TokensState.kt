@@ -4,6 +4,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.blockchain.common.Token
 import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.common.extensions.canHandleToken
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.tap.domain.tokens.Currency
 import com.tangem.tap.features.wallet.redux.WalletData
@@ -19,7 +20,12 @@ data class TokensState(
     val allowToAdd: Boolean = true,
     val derivationStyle: DerivationStyle? = null,
     val scanResponse: ScanResponse? = null
-) : StateType
+) : StateType {
+
+    fun canHandleToken(token: TokenWithBlockchain): Boolean {
+        return scanResponse?.card?.canHandleToken(token.blockchain) ?: false
+    }
+}
 
 typealias ContractAddress = String
 
@@ -62,7 +68,7 @@ fun List<Currency>.filter(supportedBlockchains: Set<Blockchain>?): List<Currency
         it.copy(contracts =
         it.contracts.filter {
             supportedBlockchains.contains(it.blockchain) &&
-                    (it.blockchain.canHandleTokens() || it.address == null)
+                (it.blockchain.canHandleTokens() || it.address == null)
         }
         )
     }.filterNot {
