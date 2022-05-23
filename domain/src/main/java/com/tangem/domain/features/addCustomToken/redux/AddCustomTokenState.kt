@@ -177,6 +177,7 @@ data class AddCustomTokenState(
             val additionalBlockchains = listOf(
                 Blockchain.Binance, Blockchain.BinanceTestnet,
                 Blockchain.Solana, Blockchain.SolanaTestnet,
+                Blockchain.Tron, Blockchain.TronTestnet,
             )
 
             val supportedByCard = when (type) {
