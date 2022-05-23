@@ -47,7 +47,7 @@
                     tools:text="J" />
 
             <androidx.constraintlayout.widget.Guideline
-                    android:id="@+id/guideline"
+                    android:id="@+id/guideline_horizontal"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal"
@@ -58,6 +58,7 @@
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
+                    android:layout_marginEnd="8dp"
                     android:ellipsize="end"
                     android:maxLines="1"
                     android:textColor="@color/darkGray6"
@@ -65,26 +66,16 @@
                     android:textStyle="bold"
                     app:lineHeight="24dp"
                     app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintBottom_toTopOf="@id/guideline"
+                    app:layout_constraintBottom_toTopOf="@id/guideline_horizontal"
                     app:layout_constraintStart_toEndOf="@id/iv_currency"
-                    app:layout_constraintEnd_toStartOf="@+id/tv_amount"
+                    app:layout_constraintEnd_toStartOf="@+id/tv_amount_fiat"
                     tools:text="Binance Smart Chain Optimal" />
 
-            <androidx.constraintlayout.widget.Guideline
-                    android:id="@+id/guideline2"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintGuide_percent="0.5"
-                    app:layout_constraintTop_toTopOf="parent" />
 
             <TextView
                     android:id="@+id/tv_amount_fiat"
-                    android:layout_width="0dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:maxEms="12"
-                    android:maxLength="12"
                     android:maxLines="1"
                     android:textColor="@color/darkGray6"
                     android:textSize="16sp"
@@ -92,25 +83,21 @@
                     android:textAlignment="viewEnd"
                     app:lineHeight="24dp"
                     app:layout_constraintTop_toTopOf="parent"
-                    app:layout_constraintBottom_toTopOf="@id/guideline"
-                    app:layout_constraintStart_toEndOf="@+id/guideline2"
+                    app:layout_constraintBottom_toTopOf="@id/guideline_horizontal"
                     app:layout_constraintEnd_toEndOf="parent"
-                    tools:text="12300.43 $" />
+                    tools:text="1230.43 $" />
 
             <TextView
                     android:id="@+id/tv_amount"
-                    android:layout_width="0dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:maxEms="12"
-                    android:maxLength="12"
                     android:maxLines="1"
                     android:textColor="@color/darkGray2"
                     android:textSize="12sp"
                     android:textAlignment="viewEnd"
                     app:lineHeight="20dp"
-                    app:layout_constraintTop_toBottomOf="@id/guideline"
+                    app:layout_constraintTop_toBottomOf="@id/guideline_horizontal"
                     app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toEndOf="@id/guideline2"
                     app:layout_constraintEnd_toEndOf="parent"
                     tools:text="2.002134 BTC" />
 
@@ -118,6 +105,7 @@
                     android:id="@+id/tv_status"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
                     android:visibility="gone"
                     android:maxLines="1"
                     android:ellipsize="end"
@@ -125,40 +113,45 @@
                     android:textSize="12sp"
                     android:textAlignment="viewEnd"
                     app:lineHeight="20dp"
-                    app:layout_constraintTop_toBottomOf="@id/guideline"
+                    app:layout_constraintTop_toBottomOf="@id/guideline_horizontal"
                     app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toEndOf="@id/guideline2"
+                    app:layout_constraintStart_toEndOf="@id/barrier_rate_custom"
                     app:layout_constraintEnd_toEndOf="parent"
                     tools:text="Unreachable..." />
 
             <TextView
                     android:id="@+id/tv_exchange_rate"
-                    android:layout_width="0dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:maxLines="1"
                     android:textColor="@color/darkGray2"
                     android:textSize="12sp"
                     app:lineHeight="20dp"
-                    app:layout_constraintTop_toBottomOf="@id/guideline"
+                    app:layout_constraintTop_toBottomOf="@id/guideline_horizontal"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toEndOf="@id/iv_currency"
-                    app:layout_constraintEnd_toStartOf="@id/guideline2"
                     tools:text="46 908 $" />
 
             <TextView
                     android:id="@+id/tv_custom_currency"
-                    android:layout_width="0dp"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="8dp"
                     android:textColor="@color/darkGray2"
                     android:textSize="14sp"
                     android:text="@string/common_custom"
                     android:visibility="gone"
-                    app:layout_constraintTop_toBottomOf="@id/guideline"
+                    app:layout_constraintTop_toBottomOf="@id/guideline_horizontal"
                     app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toEndOf="@id/iv_currency"
-                    app:layout_constraintEnd_toStartOf="@id/guideline2" />
+                    app:layout_constraintStart_toEndOf="@id/iv_currency" />
+
+            <androidx.constraintlayout.widget.Barrier
+                    android:id="@+id/barrier_rate_custom"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:constraint_referenced_ids="tv_exchange_rate,tv_custom_currency"
+                    app:barrierDirection="end" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </com.google.android.material.card.MaterialCardView>
