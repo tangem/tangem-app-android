@@ -59,7 +59,6 @@ dependencies {
     implementation implementation(project(path: ':network'))
     implementation implementation(project(path: ':common'))
 
-    // Tangem sdk's
     implementation 'com.tangem:blockchain:develop-81'
 //    implementation 'com.tangem:blockchain:0.0.1'
     implementation 'com.tangem.tangem-sdk-kotlin:core:develop-142'
