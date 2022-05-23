@@ -17,6 +17,7 @@ import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
 
 @Composable
 fun ListOfCurrencies(
+    header: @Composable ()->Unit,
     currencies: List<Currency>,
     nonRemovableTokens: List<ContractAddress>,
     nonRemovableBlockchains: List<Blockchain>,
@@ -54,6 +55,7 @@ fun ListOfCurrencies(
                     .contains(searchInput)
             }.toList()
         }
+        item { header() }
         items(filteredCurrencies) { currency ->
             CurrencyItem(
                 currency = currency,
