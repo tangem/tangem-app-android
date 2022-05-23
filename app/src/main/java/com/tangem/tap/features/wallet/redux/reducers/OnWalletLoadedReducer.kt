@@ -65,7 +65,7 @@ class OnWalletLoadedReducer {
                 amount = coinAmountValue,
                 amountFormatted = formattedAmount,
                 fiatAmount = fiatAmount,
-                fiatAmountFormatted = fiatAmount?.toFormattedFiatValue(fiatCurrency.code)
+                fiatAmountFormatted = fiatAmount?.toFormattedFiatValue(fiatCurrency.symbol)
             ),
             pendingTransactions = pendingTransactions.removeUnknownTransactions(),
             mainButton = WalletMainButton.SendButton(coinSendButton),
