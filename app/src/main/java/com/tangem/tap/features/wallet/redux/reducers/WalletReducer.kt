@@ -3,25 +3,38 @@ package com.tangem.tap.features.wallet.redux.reducers
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Wallet
+import com.tangem.common.extensions.mapNotNullValues
 import com.tangem.domain.common.TwinCardNumber
 import com.tangem.tap.common.entities.FiatCurrency
+import com.tangem.tap.common.extensions.toFiatRateString
 import com.tangem.tap.common.extensions.toFiatString
 import com.tangem.tap.common.extensions.toFiatValue
-import com.tangem.tap.common.extensions.toFormattedCurrencyString
 import com.tangem.tap.common.extensions.toFormattedFiatValue
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.getArtworkUrl
 import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.domain.tokens.BlockchainNetwork
-import com.tangem.tap.features.wallet.models.WalletRent
-import com.tangem.tap.features.wallet.redux.*
+import com.tangem.tap.features.wallet.redux.AddressData
+import com.tangem.tap.features.wallet.redux.Artwork
+import com.tangem.tap.features.wallet.redux.Currency
+import com.tangem.tap.features.wallet.redux.ErrorType
+import com.tangem.tap.features.wallet.redux.ProgressState
+import com.tangem.tap.features.wallet.redux.TradeCryptoState
+import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.features.wallet.redux.WalletAddresses
+import com.tangem.tap.features.wallet.redux.WalletData
+import com.tangem.tap.features.wallet.redux.WalletDialog
+import com.tangem.tap.features.wallet.redux.WalletMainButton
+import com.tangem.tap.features.wallet.redux.WalletRent
+import com.tangem.tap.features.wallet.redux.WalletState
+import com.tangem.tap.features.wallet.redux.WalletStore
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.store
-import org.rekotlin.Action
 import java.math.BigDecimal
 import java.math.RoundingMode
+import org.rekotlin.Action
 
 class WalletReducer {
     companion object {
@@ -33,6 +46,7 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
 
     val multiWalletReducer = MultiWalletReducer()
     val onWalletLoadedReducer = OnWalletLoadedReducer()
+    val appCurrencyReducer = AppCurrencyReducer()
 
     if (action !is WalletAction) return state.walletState
 
@@ -261,7 +275,7 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
         }
 
         is WalletAction.LoadFiatRate.Success ->
-            newState = setNewFiatRate(action.fiatRate, state.globalState.appCurrency, newState)
+            newState = setNewFiatRate(action.fiatRates, state.globalState.appCurrency, newState)
         is WalletAction.LoadArtwork -> {
             val artworkUrl = action.card.getArtworkUrl(action.artworkId)
                 ?: when (state.twinCardsState.cardNumber) {
@@ -314,6 +328,9 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
             val walletStore = newState.getWalletStore(action.wallet) ?: return newState
             val walletsData = walletStore.walletsData.map { it.copy(walletRent = null) }
             newState = newState.updateWalletsData(walletsData)
+        }
+        is WalletAction.AppCurrencyAction -> {
+            newState = appCurrencyReducer.reduce(action, newState)
         }
         else -> { /* no-op */
         }
@@ -370,52 +387,71 @@ private fun handleCheckSignedHashesActions(
 
 
 private fun setNewFiatRate(
-    fiatRate: Pair<Currency, BigDecimal?>,
+    fiatRates: Map<Currency, BigDecimal?>,
     appCurrency: FiatCurrency,
     state: WalletState
 ): WalletState {
-    val rate = fiatRate.second ?: return state
-    val rateFormatted = rate.toFormattedCurrencyString(
-        decimals = 2,
-        currency = appCurrency.code,
-        roundingMode = RoundingMode.HALF_UP
-    )
-    val currency = fiatRate.first
+    val rateFormatter: (BigDecimal) -> String = { rate: BigDecimal ->
+        rate.toFiatRateString(
+            fiatCurrencyName = appCurrency.symbol
+        )
+    }
 
-    return if (!state.isMultiwalletAllowed) {
-        setSingleWalletFiatRate(rate, rateFormatted, currency, appCurrency, state)
+    return if (state.isMultiwalletAllowed) {
+        setMultiWalletFiatRate(
+            fiatRates = fiatRates.mapNotNullValues { it.value },
+            rateFormatter = rateFormatter,
+            appCurrency = appCurrency,
+            state = state
+        )
     } else {
-        setMultiWalletFiatRate(rate, rateFormatted, currency, appCurrency, state)
+        val fiatRate = fiatRates.entries.firstOrNull()
+        val currency = fiatRate?.key ?: return state
+        val rate = fiatRate.value ?: return state
+
+        setSingleWalletFiatRate(
+            rate = rate,
+            rateFormatted = rateFormatter(rate),
+            currency = currency,
+            appCurrency = appCurrency,
+            state = state
+        )
     }
 }
 
 private fun setMultiWalletFiatRate(
-    rate: BigDecimal,
-    rateFormatted: String,
-    currency: Currency,
+    fiatRates: Map<Currency, BigDecimal>,
+    rateFormatter: (BigDecimal) -> String,
     appCurrency: FiatCurrency,
     state: WalletState
 ): WalletState {
+    val newWalletsData = fiatRates.mapNotNull { (currency, rate) ->
+        val walletStore = state.getWalletStore(currency) ?: return state
+        val wallet = walletStore.walletManager?.wallet
+        val walletData = state.getWalletData(currency) ?: return state
 
-    val walletStore = state.getWalletStore(currency) ?: return state
-    val wallet = walletStore.walletManager?.wallet
-    val walletData = state.getWalletData(currency) ?: return state
-
-    val fiatAmount = when (currency) {
-        is Currency.Blockchain ->
-            wallet?.amounts?.get(AmountType.Coin)?.value?.toFiatValue(rate)
-        is Currency.Token ->
-            wallet?.getTokenAmount(currency.token)?.value?.toFiatValue(rate)
+        val fiatAmount = when (currency) {
+            is Currency.Blockchain ->
+                wallet?.amounts?.get(AmountType.Coin)?.value?.toFiatValue(rate)
+            is Currency.Token ->
+                wallet?.getTokenAmount(currency.token)?.value?.toFiatValue(rate)
+        }
+        val fiatAmountFormatted = fiatAmount?.toFormattedFiatValue(appCurrency.symbol)
+        state.getWalletData(currency)?.copy(
+            currencyData = walletData.currencyData.copy(
+                fiatAmountFormatted = fiatAmountFormatted,
+                fiatAmount = fiatAmount
+            ),
+            fiatRate = rate,
+            fiatRateString = rateFormatter(rate)
+        )
     }
-    val fiatAmountFormatted = fiatAmount?.toFormattedFiatValue(appCurrency.code)
-    val newWalletData = state.getWalletData(currency)?.copy(
-        currencyData = walletData.currencyData.copy(
-            fiatAmountFormatted = fiatAmountFormatted,
-            fiatAmount = fiatAmount
-        ),
-        fiatRate = rate, fiatRateString = rateFormatted
-    )
-    return state.updateWalletData(newWalletData)
+
+    return state
+        .updateWalletsData(newWalletsData)
+        .updateTotalBalance(
+            totalBalance = obtainTotalBalance(newWalletsData, appCurrency)
+        )
 }
 
 private fun setSingleWalletFiatRate(
