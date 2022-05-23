@@ -28,6 +28,7 @@ private class AddCustomTokenConverter(
         val rawMessage = when (customTokenError) {
             AddCustomTokenError.Warning.PotentialScamToken -> R.string.custom_token_validation_error_not_found
             AddCustomTokenError.Warning.TokenAlreadyAdded -> R.string.custom_token_validation_error_already_added
+            AddCustomTokenError.Warning.UnsupportedSolanaToken -> R.string.alert_manage_tokens_unsupported_message
             AddCustomTokenError.InvalidContractAddress -> R.string.custom_token_creation_error_invalid_contract_address
             AddCustomTokenError.NetworkIsNotSelected -> R.string.custom_token_creation_error_network_not_selected
             AddCustomTokenError.InvalidDerivationPath -> R.string.custom_token_creation_error_invalid_derivation_path
