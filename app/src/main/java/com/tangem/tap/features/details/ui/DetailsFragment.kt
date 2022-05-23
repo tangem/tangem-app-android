@@ -24,7 +24,6 @@ import org.rekotlin.StoreSubscriber
 
 class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<DetailsState> {
 
-    private var currencySelectionDialog = CurrencySelectionDialog()
     private val binding: FragmentDetailsBinding by viewBinding(FragmentDetailsBinding::bind)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -115,11 +114,6 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
             store.dispatch(DetailsAction.CreateBackup)
         }
 
-        tvAppCurrency.text = state.appCurrencyState.currentFiatCurrency.code
-
-        tvAppCurrencyTitle.setOnClickListener {
-            store.dispatch(DetailsAction.AppCurrencyAction.ChooseAppCurrency)
-        }
         tvSendFeedback.setOnClickListener {
             store.dispatch(GlobalAction.SendFeedback(FeedbackEmail()))
         }
@@ -140,17 +134,6 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
             null -> null
         }
         currentSecurity?.let { tvSecurity.text = getString(it) }
-
-        if (state.appCurrencyState.showAppCurrencyDialog &&
-            !state.appCurrencyState.fiatCurrencies.isNullOrEmpty()) {
-            currencySelectionDialog.show(
-                currenciesList = state.appCurrencyState.fiatCurrencies,
-                currentAppCurrency = state.appCurrencyState.currentFiatCurrency,
-                context = requireContext()
-            )
-        } else {
-            currencySelectionDialog.clear()
-        }
     }
 
 }

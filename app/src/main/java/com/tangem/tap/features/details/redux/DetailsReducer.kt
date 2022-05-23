@@ -29,9 +29,6 @@ private fun internalReduce(action: Action, state: AppState): DetailsState {
         is DetailsAction.ResetToFactory -> {
             handleEraseWallet(action, detailsState)
         }
-        is DetailsAction.AppCurrencyAction -> {
-            handleAppCurrencyAction(action, detailsState)
-        }
         is DetailsAction.ManageSecurity -> {
             handleSecurityAction(action, detailsState)
         }
@@ -48,10 +45,6 @@ private fun handlePrepareScreen(
         scanResponse = action.scanResponse,
         wallets = action.wallets,
         cardInfo = action.scanResponse.card.toCardInfo(),
-        appCurrencyState = state.appCurrencyState.copy(
-            currentFiatCurrency = action.fiatCurrencyName,
-            showAppCurrencyDialog = false,
-        ),
         cardTermsOfUseUrl = action.cardTou.getUrl(action.scanResponse.card),
         createBackupAllowed = action.scanResponse.card.backupStatus == Card.BackupStatus.NoBackup,
     )
@@ -89,31 +82,6 @@ private fun handleEraseWallet(
         DetailsAction.ResetToFactory.Cancel -> state.copy(eraseWalletState = null)
         DetailsAction.ResetToFactory.Failure -> state.copy(eraseWalletState = null)
         DetailsAction.ResetToFactory.Success -> state.copy(eraseWalletState = null)
-        else -> state
-    }
-}
-
-private fun handleAppCurrencyAction(
-    action: DetailsAction.AppCurrencyAction, state: DetailsState,
-): DetailsState {
-    return when (action) {
-        is DetailsAction.AppCurrencyAction.SetCurrencies -> {
-            state.copy(appCurrencyState = state.appCurrencyState.copy(fiatCurrencies = action.currencies))
-        }
-        DetailsAction.AppCurrencyAction.ChooseAppCurrency -> {
-            state.copy(appCurrencyState = state.appCurrencyState.copy(showAppCurrencyDialog = true))
-        }
-        DetailsAction.AppCurrencyAction.Cancel -> {
-            state.copy(appCurrencyState = state.appCurrencyState.copy(showAppCurrencyDialog = false))
-        }
-        is DetailsAction.AppCurrencyAction.SelectAppCurrency -> {
-            state.copy(
-                appCurrencyState = state.appCurrencyState.copy(
-                    currentFiatCurrency = action.fiatCurrency,
-                    showAppCurrencyDialog = false
-                )
-            )
-        }
         else -> state
     }
 }
