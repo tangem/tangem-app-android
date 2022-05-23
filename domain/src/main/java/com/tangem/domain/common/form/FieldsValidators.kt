@@ -2,6 +2,7 @@ package com.tangem.domain.common.form
 
 import com.tangem.blockchain.blockchains.ethereum.EthereumAddressService
 import com.tangem.blockchain.blockchains.solana.SolanaAddressService
+import com.tangem.blockchain.blockchains.tron.TronAddressService
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.address.AddressService
 import com.tangem.common.Validator
@@ -51,6 +52,7 @@ class TokenContractAddressValidator : CustomTokenValidator<String>() {
             Blockchain.Unknown -> successAddressValidator
             Blockchain.Binance, Blockchain.BinanceTestnet -> successAddressValidator
             Blockchain.Solana, Blockchain.SolanaTestnet -> SolanaAddressService()
+            Blockchain.Tron, Blockchain.TronTestnet -> TronAddressService()
             else -> {
                 if (blockchain.isEvm()) {
                     EthereumAddressService()
