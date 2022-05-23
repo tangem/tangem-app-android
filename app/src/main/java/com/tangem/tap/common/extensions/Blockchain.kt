@@ -13,6 +13,7 @@ fun Blockchain.getRoundIconRes(): Int {
         Blockchain.BitcoinCash -> R.drawable.ic_bitcoin_cash_round
         Blockchain.Litecoin -> R.drawable.ic_litecoin_round
         Blockchain.Ethereum, Blockchain.EthereumTestnet, -> R.drawable.ic_eth_round
+        Blockchain.EthereumClassic, Blockchain.EthereumClassicTestnet ->  R.drawable.ic_eth_round
         Blockchain.RSK -> R.drawable.ic_rsk_round
         Blockchain.Cardano, Blockchain.CardanoShelley -> R.drawable.ic_cardano_round
         Blockchain.Tezos -> R.drawable.ic_tezos_round
@@ -36,6 +37,7 @@ fun Blockchain.getGreyedOutIconRes(): Int {
         Blockchain.BitcoinCash -> R.drawable.ic_bitcoin_cash_no_color
         Blockchain.Litecoin -> R.drawable.ic_litecoin_no_color
         Blockchain.Ethereum, Blockchain.EthereumTestnet, -> R.drawable.ic_eth_no_color
+        Blockchain.EthereumClassic, Blockchain.EthereumClassicTestnet, -> R.drawable.ic_eth_no_color
         Blockchain.RSK -> R.drawable.ic_rsk_no_color
         Blockchain.Cardano, Blockchain.CardanoShelley -> R.drawable.ic_cardano_no_color
         Blockchain.Tezos -> R.drawable.ic_tezos_no_color
