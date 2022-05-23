@@ -48,7 +48,7 @@ class AppCurrencyMiddleware(
                         fiatCurrenciesPrefStorage.save(currenciesList)
                         store.dispatchDialogShow(
                             AppDialog.CurrencySelectionDialog(
-                                currenciesList = storedFiatCurrencies.mapToUiModel(),
+                                currenciesList = currenciesList.mapToUiModel(),
                                 currentAppCurrency = appCurrencyProvider.invoke()
                             )
                         )
