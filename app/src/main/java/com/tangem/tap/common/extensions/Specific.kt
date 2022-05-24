@@ -110,12 +110,11 @@ fun BigDecimal.formatAmountAsSpannedString(
     currencySymbol: String,
     integerPartSizeProportion: Float = 1.4f
 ): SpannedString {
-    val amount = this.toFormattedString(
-        decimals = 2,
-        roundingMode = RoundingMode.HALF_UP
-    )
-    val integer = amount.substringAfter('.')
-    val reminder = amount.substringBefore('.')
+    val amount = this
+        .setScale(2, RoundingMode.HALF_UP)
+        .toString()
+    val integer = amount.substringBefore('.')
+    val reminder = amount.substringAfter('.')
 
     return buildSpannedString {
         append(
