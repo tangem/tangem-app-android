@@ -206,7 +206,7 @@ data class AddCustomTokenState(
 
         private fun getSupportedDerivations(card: Card): List<Blockchain> {
             val evmBlockchains = Blockchain.values().filter {
-                card.isTestCard == it.isTestnet() && it.getChainId() != null
+                card.isTestCard == it.isTestnet() && it.isEvm()
             }
             return listOf(Blockchain.Unknown) + evmBlockchains
         }
