@@ -4,6 +4,8 @@ import com.tangem.blockchain.common.Blockchain
 
 fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
     return when (networkId) {
+        "arbitrum-one" -> Blockchain.Arbitrum
+        "arbitrum-one/test" -> Blockchain.ArbitrumTestnet
         "avalanche", "avalanche-2" -> Blockchain.Avalanche
         "avalanche/test", "avalanche-2/test" -> Blockchain.AvalancheTestnet
         "binancecoin" -> Blockchain.Binance
@@ -42,6 +44,8 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
 fun Blockchain.toNetworkId(): String {
     return when (this) {
         Blockchain.Unknown -> "unknown"
+        Blockchain.Arbitrum -> "arbitrum-one"
+        Blockchain.ArbitrumTestnet -> "arbitrum/test"
         Blockchain.Avalanche -> "avalanche"
         Blockchain.AvalancheTestnet -> "avalanche/test"
         Blockchain.Binance -> "binancecoin"
@@ -87,6 +91,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Stellar, Blockchain.StellarTestnet -> "stellar"
         Blockchain.Cardano, Blockchain.CardanoShelley -> "cardano"
         Blockchain.Polygon, Blockchain.PolygonTestnet -> "matic-network"
+        Blockchain.Arbitrum, Blockchain.ArbitrumTestnet -> "arbitrum-one"
         Blockchain.Avalanche, Blockchain.AvalancheTestnet -> "avalanche-2"
         Blockchain.Solana, Blockchain.SolanaTestnet -> "solana"
         Blockchain.Fantom, Blockchain.FantomTestnet -> "fantom"
