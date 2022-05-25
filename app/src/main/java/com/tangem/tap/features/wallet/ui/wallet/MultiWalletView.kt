@@ -55,7 +55,6 @@ class MultiWalletView : WalletView {
         btnScanMultiwallet.show()
         rvMultiwallet.show()
         btnAddToken.show()
-        lCardTotalBalance.root.show()
         setupWalletCardNumber(binding)
     }
 
@@ -102,7 +101,7 @@ class MultiWalletView : WalletView {
         val fragment = fragment ?: return
         val binding = binding ?: return
 
-        state.totalBalance?.let { handleTotalBalance(binding, it) }
+        handleTotalBalance(binding, state.totalBalance)
         walletsAdapter.submitList(state.walletsData, state.primaryBlockchain, state.primaryToken)
 
         binding.btnAddToken.setOnClickListener {
@@ -135,8 +134,13 @@ class MultiWalletView : WalletView {
 
     private fun handleTotalBalance(
         binding: FragmentWalletBinding,
-        totalBalance: TotalBalance,
+        totalBalance: TotalBalance?,
     ) = with(binding.lCardTotalBalance) {
+        if (totalBalance == null) {
+            this.root.hide()
+            return@with
+        }
+
         tvBalance.animateVisibility(
             show = totalBalance.state != TotalBalance.State.Loading,
             hiddenVisibility = View.INVISIBLE
