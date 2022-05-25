@@ -17,7 +17,8 @@ class AddCustomTokenService(
         networkId: String? = null,
         active: Boolean? = null,
     ): Result<List<CoinsResponse.Coin>> {
-        val result = tangemTechService.coins(contractAddress, networkId, active)
+        val networksIds = selectNetworksForSearch(networkId)
+        val result = tangemTechService.coins(contractAddress, networksIds, active)
         return when (result) {
             is Result.Success -> {
                 var coinsList = mutableListOf<CoinsResponse.Coin>()
@@ -39,5 +40,10 @@ class AddCustomTokenService(
             }
             is Result.Failure -> result
         }
+    }
+
+    private fun selectNetworksForSearch(networkId: String?): String {
+        return networkId ?: supportedTokenNetworkIds.joinToString(",")
+
     }
 }
