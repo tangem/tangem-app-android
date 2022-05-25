@@ -9,12 +9,14 @@ import java.math.BigDecimal
 fun obtainTotalBalance(
     wallets: List<WalletData>,
     appCurrency: FiatCurrency
-): TotalBalance {
-    return TotalBalance(
-        state = wallets.findTotalBalanceState(),
-        fiatAmount = wallets.calculateTotalFiatAmount(),
-        fiatCurrency = appCurrency
-    )
+): TotalBalance? {
+    return if (wallets.isNotEmpty()) {
+        TotalBalance(
+            state = wallets.findTotalBalanceState(),
+            fiatAmount = wallets.calculateTotalFiatAmount(),
+            fiatCurrency = appCurrency
+        )
+    } else null
 }
 
 private fun List<WalletData>.findTotalBalanceState(): TotalBalance.State {
