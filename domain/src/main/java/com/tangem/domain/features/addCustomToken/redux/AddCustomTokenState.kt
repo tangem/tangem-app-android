@@ -191,7 +191,7 @@ data class AddCustomTokenState(
             val default = Blockchain.Unknown
             typedNetworksList.add(0, default)
 
-            return typedNetworksList
+            return typedNetworksList.sortByName()
         }
 
         private fun createFormValidators(): Map<CustomTokenFieldId, CustomTokenValidator<out Any>> {
@@ -206,9 +206,9 @@ data class AddCustomTokenState(
 
         private fun getSupportedDerivations(card: Card): List<Blockchain> {
             val evmBlockchains = Blockchain.values().filter {
-                card.isTestCard == it.isTestnet() && it.getChainId() != null
+                card.isTestCard == it.isTestnet() && it.isEvm()
             }
-            return listOf(Blockchain.Unknown) + evmBlockchains
+            return (listOf(Blockchain.Unknown) + evmBlockchains).sortByName()
         }
 
         private fun createInitialScreenState(): ScreenState {
@@ -276,6 +276,8 @@ data class AddCustomTokenState(
         }
     }
 }
+
+private fun List<Blockchain>.sortByName(): List<Blockchain> = this.sortedBy { it.fullName }
 
 enum class CustomTokenType {
     Token, Blockchain
