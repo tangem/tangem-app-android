@@ -26,7 +26,12 @@ import com.tangem.tap.domain.extensions.toSendableAmounts
 import com.tangem.tap.domain.tokens.BlockchainNetwork
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
 import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
-import com.tangem.tap.features.wallet.models.*
+import com.tangem.tap.features.wallet.models.PendingTransaction
+import com.tangem.tap.features.wallet.models.TotalBalance
+import com.tangem.tap.features.wallet.models.WalletRent
+import com.tangem.tap.features.wallet.models.WalletWarning
+import com.tangem.tap.features.wallet.models.toPendingTransactions
+import com.tangem.tap.features.wallet.models.toPendingTransactionsForToken
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
@@ -278,7 +283,7 @@ data class WalletState(
     }
 
     fun updateTotalBalance(
-        totalBalance: TotalBalance
+        totalBalance: TotalBalance?
     ): WalletState {
         return this.copy(
             totalBalance = totalBalance
