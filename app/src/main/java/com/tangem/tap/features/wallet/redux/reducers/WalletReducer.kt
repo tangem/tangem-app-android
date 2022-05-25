@@ -16,12 +16,24 @@ import com.tangem.tap.domain.extensions.getArtworkUrl
 import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.domain.tokens.BlockchainNetwork
 import com.tangem.tap.features.wallet.models.WalletRent
-import com.tangem.tap.features.wallet.redux.*
+import com.tangem.tap.features.wallet.redux.AddressData
+import com.tangem.tap.features.wallet.redux.Artwork
+import com.tangem.tap.features.wallet.redux.Currency
+import com.tangem.tap.features.wallet.redux.ErrorType
+import com.tangem.tap.features.wallet.redux.ProgressState
+import com.tangem.tap.features.wallet.redux.TradeCryptoState
+import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.features.wallet.redux.WalletAddresses
+import com.tangem.tap.features.wallet.redux.WalletData
+import com.tangem.tap.features.wallet.redux.WalletDialog
+import com.tangem.tap.features.wallet.redux.WalletMainButton
+import com.tangem.tap.features.wallet.redux.WalletState
+import com.tangem.tap.features.wallet.redux.WalletStore
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.store
-import org.rekotlin.Action
 import java.math.BigDecimal
+import org.rekotlin.Action
 
 class WalletReducer {
     companion object {
@@ -436,9 +448,6 @@ private fun setMultiWalletFiatRate(
 
     return state
         .updateWalletsData(newWalletsData)
-        .updateTotalBalance(
-            totalBalance = obtainTotalBalance(newWalletsData, appCurrency)
-        )
 }
 
 private fun setSingleWalletFiatRate(
