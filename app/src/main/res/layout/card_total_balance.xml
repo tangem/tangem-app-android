@@ -22,10 +22,10 @@
         <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingTop="18dp"
-                android:paddingBottom="18dp"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
+                android:layout_marginTop="18dp"
+                android:layout_marginBottom="18dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
                 android:animateLayoutChanges="true">
 
             <TextView
@@ -40,33 +40,35 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toStartOf="@id/tv_currency_name" />
 
-            <TextView
-                    android:id="@+id/tv_balance"
+            <com.skydoves.androidveil.VeilLayout
+                    android:id="@+id/veil_balance"
                     android:layout_width="0dp"
-                    android:layout_height="32dp"
+                    android:layout_height="wrap_content"
                     android:layout_marginTop="4dp"
-                    android:visibility="gone"
-                    android:maxLines="1"
-                    android:textColor="@color/darkGray6"
-                    android:textSize="20sp"
-                    android:textStyle="bold"
+                    app:veilLayout_layout="@layout/card_total_balance_shimmer"
+                    app:veilLayout_baseColor="@color/lightGray0"
+                    app:veilLayout_highlightColor="@color/lightGray1"
+                    app:veilLayout_shimmerEnable="true"
+                    app:veilLayout_veiled="true"
+                    app:veilLayout_radius="4dp"
                     app:layout_constraintTop_toBottomOf="@id/tv_title"
+                    app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
-                    tools:text="$ 22 325.40"
-                    tools:visibility="visible" />
+                    tools:veilLayout_veiled="false">
 
-            <ProgressBar
-                    android:id="@+id/pb_loading"
-                    android:layout_width="32dp"
-                    android:layout_height="32dp"
-                    android:layout_marginTop="4dp"
-                    android:padding="2dp"
-                    android:visibility="gone"
-                    android:indeterminate="true"
-                    android:indeterminateTint="@color/accent"
-                    app:layout_constraintTop_toBottomOf="@id/tv_title"
-                    app:layout_constraintStart_toStartOf="parent" />
+                <TextView
+                        android:id="@+id/tv_balance"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:minWidth="152dp"
+                        android:maxLines="1"
+                        android:textColor="@color/darkGray6"
+                        android:textSize="26sp"
+                        android:textStyle="bold"
+                        tools:text="22 325.40 $" />
+
+            </com.skydoves.androidveil.VeilLayout>
 
             <TextView
                     android:id="@+id/tv_processing"
@@ -77,7 +79,7 @@
                     android:textColor="@color/warning"
                     android:textSize="12sp"
                     android:text="@string/main_processing_full_amount"
-                    app:layout_constraintTop_toBottomOf="@id/tv_balance"
+                    app:layout_constraintTop_toBottomOf="@id/veil_balance"
                     app:layout_constraintStart_toStartOf="parent" />
 
             <TextView
