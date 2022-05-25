@@ -2,6 +2,7 @@ package com.tangem.tap.features.wallet.ui.wallet
 
 import android.app.Dialog
 import android.view.View
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.tangem.common.card.Card
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
@@ -129,29 +130,28 @@ class MultiWalletView : WalletView {
         binding: FragmentWalletBinding,
         totalBalance: TotalBalance?,
     ) = with(binding.lCardTotalBalance) {
-        if (totalBalance == null) {
-            this.root.hide()
-            return@with
-        }
+        root.isVisible = totalBalance != null
+        if (totalBalance != null) {
+            tvBalance.animateVisibility(
+                show = totalBalance.state != TotalBalance.State.Loading,
+                hiddenVisibility = View.INVISIBLE
+            )
+            pbLoading.animateVisibility(
+                show = totalBalance.state == TotalBalance.State.Loading
+            )
+            tvProcessing.animateVisibility(
+                show = totalBalance.state == TotalBalance.State.SomeTokensFailed
+            )
 
-        tvBalance.animateVisibility(
-            show = totalBalance.state != TotalBalance.State.Loading,
-            hiddenVisibility = View.INVISIBLE
-        )
-        pbLoading.animateVisibility(
-            show = totalBalance.state == TotalBalance.State.Loading
-        )
-        tvProcessing.animateVisibility(
-            show = totalBalance.state == TotalBalance.State.SomeTokensFailed
-        )
+            tvBalance.text = if (totalBalance.state == TotalBalance.State.SomeTokensFailed) "—"
+            else totalBalance.fiatAmount.formatAmountAsSpannedString(
+                currencySymbol = totalBalance.fiatCurrency.symbol
+            )
+            tvCurrencyName.text = totalBalance.fiatCurrency.code
 
-        tvBalance.text = totalBalance.fiatAmount.formatAmountAsSpannedString(
-            currencySymbol = totalBalance.fiatCurrency.symbol
-        )
-        tvCurrencyName.text = totalBalance.fiatCurrency.code
-
-        tvCurrencyName.setOnClickListener {
-            store.dispatch(WalletAction.AppCurrencyAction.ChooseAppCurrency)
+            tvCurrencyName.setOnClickListener {
+                store.dispatch(WalletAction.AppCurrencyAction.ChooseAppCurrency)
+            }
         }
     }
 
