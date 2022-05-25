@@ -10,7 +10,12 @@ import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.domain.tokens.BlockchainNetwork
 import com.tangem.tap.features.wallet.models.removeUnknownTransactions
 import com.tangem.tap.features.wallet.models.toPendingTransactions
-import com.tangem.tap.features.wallet.redux.*
+import com.tangem.tap.features.wallet.redux.Currency
+import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.features.wallet.redux.WalletData
+import com.tangem.tap.features.wallet.redux.WalletMainButton
+import com.tangem.tap.features.wallet.redux.WalletState
+import com.tangem.tap.features.wallet.redux.WalletStore
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.features.wallet.ui.TokenData
@@ -126,7 +131,7 @@ class MultiWalletReducer {
                         ),
                         fiatAmountFormatted = tokenWalletData.fiatRate?.let {
                             action.amount.value
-                                ?.toFiatString(it, store.state.globalState.appCurrency.code)
+                                ?.toFiatString(it, store.state.globalState.appCurrency.symbol)
                         },
                         blockchainAmount = wallet.amounts[AmountType.Coin]?.value ?: BigDecimal.ZERO
                     ),
