@@ -160,7 +160,6 @@
     <style name="Widget.AppTheme.CardView" parent="Widget.MaterialComponents.CardView">
         <item name="cardCornerRadius">8dp</item>
     </style>
-
 </resources>
 
     <!--    android:fontFamily="sans-serif"           // roboto regular  -->
