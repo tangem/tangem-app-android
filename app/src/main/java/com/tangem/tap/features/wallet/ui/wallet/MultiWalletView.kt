@@ -1,7 +1,6 @@
 package com.tangem.tap.features.wallet.ui.wallet
 
 import android.app.Dialog
-import android.view.View
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.tangem.common.card.Card
@@ -132,13 +131,11 @@ class MultiWalletView : WalletView {
     ) = with(binding.lCardTotalBalance) {
         root.isVisible = totalBalance != null
         if (totalBalance != null) {
-            tvBalance.animateVisibility(
-                show = totalBalance.state != TotalBalance.State.Loading,
-                hiddenVisibility = View.INVISIBLE
-            )
-            pbLoading.animateVisibility(
-                show = totalBalance.state == TotalBalance.State.Loading
-            )
+            if (totalBalance.state == TotalBalance.State.Loading) {
+                veilBalance.veil()
+            } else {
+                veilBalance.unVeil()
+            }
             tvProcessing.animateVisibility(
                 show = totalBalance.state == TotalBalance.State.SomeTokensFailed
             )
