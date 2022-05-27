@@ -3,8 +3,9 @@ package com.tangem.tap.features.tokens.ui.compose
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -23,10 +24,10 @@ fun ListOfCurrencies(
     nonRemovableBlockchains: List<Blockchain>,
     addedTokens: List<TokenWithBlockchain>,
     addedBlockchains: List<Blockchain>,
-    searchInput: String,
     allowToAdd: Boolean,
     onAddCurrencyToggled: (Currency, TokenWithBlockchain?) -> Unit,
-    onNetworkItemClicked: (ContractAddress) -> Unit
+    onNetworkItemClicked: (ContractAddress) -> Unit,
+    onLoadMore: () -> Unit
 ) {
 
     val expandedCurrencies = remember { mutableStateOf(listOf("")) }
@@ -46,31 +47,28 @@ fun ListOfCurrencies(
             .fillMaxSize(),
         contentPadding = PaddingValues(bottom = 90.dp)
     ) {
-
-        val filteredCurrencies = if (searchInput.isBlank()) {
-            currencies
-        } else {
-            currencies.asSequence().filter {
-                it.name.lowercase().contains(searchInput) || it.symbol.lowercase()
-                    .contains(searchInput)
-            }.toList()
-        }
         item { header() }
-        items(filteredCurrencies) { currency ->
-            CurrencyItem(
-                currency = currency,
-                nonRemovableTokens = nonRemovableTokens,
-                nonRemovableBlockchains = nonRemovableBlockchains,
-                addedTokens = addedTokens,
-                addedBlockchains = addedBlockchains,
-                allowToAdd = allowToAdd,
-                expanded = expandedCurrencies.value.contains(currency.id),
-                onCurrencyClick = onCurrencyClick,
-                onAddCurrencyToggled = onAddCurrencyToggled,
-                onNetworkItemClicked = onNetworkItemClicked
-            )
-        }
+        itemsIndexed(currencies) { index, currency ->
+            val lastIndex = currencies.lastIndex
+            if (currencies.isNotEmpty()) {
+                if (index + 40 == lastIndex) {
+                    SideEffect { onLoadMore() }
+                }
+                CurrencyItem(
+                    currency = currency,
+                    nonRemovableTokens = nonRemovableTokens,
+                    nonRemovableBlockchains = nonRemovableBlockchains,
+                    addedTokens = addedTokens,
+                    addedBlockchains = addedBlockchains,
+                    allowToAdd = allowToAdd,
+                    expanded = expandedCurrencies.value.contains(currency.id),
+                    onCurrencyClick = onCurrencyClick,
+                    onAddCurrencyToggled = onAddCurrencyToggled,
+                    onNetworkItemClicked = onNetworkItemClicked
+                )
+            }
 
+        }
     }
 }
 
