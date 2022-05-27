@@ -1,6 +1,5 @@
 package com.tangem.tap.features.wallet.ui.wallet
 
-import android.app.Dialog
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
@@ -10,23 +9,18 @@ import com.tangem.tap.common.extensions.beginDelayedTransition
 import com.tangem.tap.common.extensions.fitChipsByGroupWidth
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
-import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
 import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.redux.Currency
 import com.tangem.tap.features.wallet.redux.TradeCryptoState
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletData
-import com.tangem.tap.features.wallet.redux.WalletDialog
 import com.tangem.tap.features.wallet.redux.WalletMainButton
 import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.ui.BalanceWidget
 import com.tangem.tap.features.wallet.ui.MultipleAddressUiHelper
 import com.tangem.tap.features.wallet.ui.WalletFragment
 import com.tangem.tap.features.wallet.ui.adapters.PendingTransactionsAdapter
-import com.tangem.tap.features.wallet.ui.dialogs.AmountToSendDialog
-import com.tangem.tap.features.wallet.ui.dialogs.ChooseTradeActionDialog
-import com.tangem.tap.features.wallet.ui.dialogs.SignedHashesWarningDialog
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentWalletBinding
@@ -36,7 +30,6 @@ class SingleWalletView : WalletView {
     private lateinit var pendingTransactionAdapter: PendingTransactionsAdapter
     private var fragment: WalletFragment? = null
     private var binding: FragmentWalletBinding? = null
-    private var dialog: Dialog? = null
 
     override fun setFragment(fragment: WalletFragment, binding: FragmentWalletBinding) {
         this.fragment = fragment
@@ -85,7 +78,6 @@ class SingleWalletView : WalletView {
         setupAddressCard(state.primaryWallet, binding)
         showPendingTransactionsIfPresent(state.primaryWallet.pendingTransactions)
         setupBalance(state, state.primaryWallet)
-        handleDialogs(state.walletDialog, fragment)
     }
 
     private fun showPendingTransactionsIfPresent(pendingTransactions: List<PendingTransaction>) {
@@ -158,7 +150,14 @@ class SingleWalletView : WalletView {
             }
         }
         lAddress.btnShowQr.setOnClickListener {
-            store.dispatch(WalletAction.ShowDialog.QrCode)
+            state.walletAddresses?.selectedAddress?.let { selectedAddress ->
+                store.dispatch(
+                    WalletAction.DialogAction.QrCode(
+                        currency = state.currency,
+                        selectedAddress = selectedAddress
+                    )
+                )
+            }
         }
 
         setupTradeButton(binding, state.tradeCryptoState)
@@ -170,7 +169,7 @@ class SingleWalletView : WalletView {
         val action = when {
             allowedToBuy && !allowedToSell -> WalletAction.TradeCryptoAction.Buy
             !allowedToBuy && allowedToSell -> WalletAction.TradeCryptoAction.Sell
-            allowedToBuy && allowedToSell -> WalletAction.ShowDialog.ChooseTradeActionDialog
+            allowedToBuy && allowedToSell -> WalletAction.DialogAction.ChooseTradeActionDialog
             else -> null
         }
         val text = when {
@@ -262,28 +261,4 @@ class SingleWalletView : WalletView {
             binding.lAddress.root.hide()
         }
     }
-
-    private fun handleDialogs(walletDialog: StateDialog?, fragment: WalletFragment) {
-        val context = fragment.context ?: return
-        when (walletDialog) {
-            is WalletDialog.SelectAmountToSendDialog -> {
-                if (dialog == null) dialog = AmountToSendDialog(context).apply {
-                    this.show(walletDialog.amounts)
-                }
-            }
-            is WalletDialog.SignedHashesMultiWalletDialog -> {
-                if (dialog == null) {
-                    dialog = SignedHashesWarningDialog.create(context).apply { show() }
-                }
-            }
-            is WalletDialog.ChooseTradeActionDialog -> {
-                if (dialog == null) dialog = ChooseTradeActionDialog(context).apply { show() }
-            }
-            null -> {
-                dialog?.dismiss()
-                dialog = null
-            }
-        }
-    }
-
 }
