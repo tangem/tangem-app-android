@@ -17,7 +17,8 @@ sealed class TokensAction : Action {
         val supportedBlockchains: List<Blockchain>? = null,
         val scanResponse: ScanResponse? = null
     ) : TokensAction() {
-        data class Success(val currencies: List<Currency>) : TokensAction()
+        data class Success(val currencies: List<Currency>, val loadMore: Boolean) : TokensAction()
+        object Failure : TokensAction()
     }
 
     data class SetAddedCurrencies(
@@ -32,4 +33,6 @@ sealed class TokensAction : Action {
     ) : TokensAction()
 
     object PrepareAndNavigateToAddCustomToken : TokensAction()
+
+    data class SetSearchInput(val searchInput: String) : TokensAction()
 }
