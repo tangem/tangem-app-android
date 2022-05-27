@@ -92,14 +92,18 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
     }
 
     private fun setupButtons() = with(binding) {
-        btnConfirm.text = getString(R.string.wallet_button_send)
-        btnConfirm.setOnClickListener { store.dispatch(WalletAction.Send()) }
-
-        binding.lWalletDetails.btnShare.setOnClickListener { store.dispatch(WalletAction.ShowDialog.QrCode) }
-
-        btnTrade.setOnClickListener { store.dispatch(WalletAction.TradeCryptoAction.Buy) }
-
-        btnSell.setOnClickListener { store.dispatch(WalletAction.TradeCryptoAction.Sell) }
+        rowButtons.onBuyClick = {
+            store.dispatch(WalletAction.TradeCryptoAction.Buy)
+        }
+        rowButtons.onSellClick = {
+            store.dispatch(WalletAction.TradeCryptoAction.Sell)
+        }
+        rowButtons.onTradeClick = {
+            store.dispatch(WalletAction.DialogAction.ChooseTradeActionDialog)
+        }
+        rowButtons.onSendClick = {
+            store.dispatch(WalletAction.Send())
+        }
     }
 
     private fun setupTestActionButton() {
@@ -156,7 +160,6 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
     }
 
     private fun setupButtons(selectedWallet: WalletData) = with(binding) {
-        btnConfirm.isEnabled = selectedWallet.mainButton.enabled
         lWalletDetails.btnCopy.setOnClickListener {
             selectedWallet.walletAddresses?.selectedAddress?.address?.let { addressString ->
                 store.dispatch(WalletAction.CopyAddress(addressString, requireContext()))
@@ -167,8 +170,12 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
                 store.dispatch(WalletAction.ShareAddress(addressString, requireContext()))
             }
         }
-        btnTrade.isEnabled = selectedWallet.tradeCryptoState.buyingAllowed
-        btnSell.show(selectedWallet.tradeCryptoState.sellingAllowed)
+
+        rowButtons.updateButtonsVisibility(
+            buyAllowed = selectedWallet.tradeCryptoState.buyingAllowed,
+            sellAllowed = selectedWallet.tradeCryptoState.sellingAllowed,
+            sendAllowed = selectedWallet.mainButton.enabled
+        )
     }
 
     private fun handleWarnings(selectedWallet: WalletData) = with(binding) {
