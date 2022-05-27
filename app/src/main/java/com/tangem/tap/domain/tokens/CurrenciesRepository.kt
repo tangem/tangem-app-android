@@ -2,26 +2,31 @@ package com.tangem.tap.domain.tokens
 
 import android.app.Application
 import android.content.Context
-import com.squareup.moshi.Json
 import com.squareup.moshi.JsonAdapter
-import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Types
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.blockchain.common.Token
-import com.tangem.blockchain.common.WalletManager
-import com.tangem.common.card.Card
 import com.tangem.common.card.FirmwareVersion
-import com.tangem.domain.common.TapWorkarounds.derivationStyle
+import com.tangem.common.services.Result
+import com.tangem.domain.common.extensions.toNetworkId
+import com.tangem.network.api.tangemTech.TangemTechService
 import com.tangem.network.common.MoshiConverter
 import com.tangem.tap.common.extensions.appendIf
 import com.tangem.tap.common.extensions.readJsonFileToString
-import com.tangem.tap.domain.extensions.setCustomIconUrl
+import com.tangem.tap.domain.tokens.models.BlockchainNetwork
+import com.tangem.tap.domain.tokens.models.ObsoleteTokenDao
+import com.tangem.tap.domain.tokens.models.TokenDao
 import com.tangem.tap.features.demo.DemoHelper
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import timber.log.Timber
 import java.util.*
 
-class CurrenciesRepository(val context: Application) {
+class CurrenciesRepository(
+    private val context: Application,
+    private val tangemNetworkService: TangemTechService
+) {
 
     private val moshi = MoshiConverter.defaultMoshi()
     private val blockchainsAdapter: JsonAdapter<List<Blockchain>> = moshi.adapter(
@@ -41,7 +46,7 @@ class CurrenciesRepository(val context: Application) {
 
     fun saveUpdatedCurrency(cardId: String, blockchainNetwork: BlockchainNetwork) {
         var changed = false
-        val currencies = loadSavedCurrencies(cardId).map {
+        val currencies = loadSavedCurrenciesWithoutMigration(cardId).map {
             if (it == blockchainNetwork) {
                 changed = true
                 blockchainNetwork
@@ -54,7 +59,7 @@ class CurrenciesRepository(val context: Application) {
     }
 
     fun removeToken(cardId: String, token: Token, blockchainNetwork: BlockchainNetwork) {
-        val currencies = loadSavedCurrencies(cardId).map {
+        val currencies = loadSavedCurrenciesWithoutMigration(cardId).map {
             if (it == blockchainNetwork) {
                 it.copy(tokens = it.tokens.filterNot { it == token })
             } else {
@@ -65,7 +70,8 @@ class CurrenciesRepository(val context: Application) {
     }
 
     fun removeBlockchain(cardId: String, blockchainNetwork: BlockchainNetwork) {
-        val currencies = loadSavedCurrencies(cardId).filterNot { it == blockchainNetwork }
+        val currencies = loadSavedCurrenciesWithoutMigration(cardId)
+            .filterNot { it == blockchainNetwork }
         saveCurrencies(cardId, currencies)
     }
 
@@ -98,12 +104,12 @@ class CurrenciesRepository(val context: Application) {
         }
     }
 
-    fun loadSavedCurrencies(
+    suspend fun loadSavedCurrencies(
         cardId: String,
         isHdWalletSupported: Boolean = false
     ): List<BlockchainNetwork> {
         if (DemoHelper.isDemoCardId(cardId)) {
-            return loadDemoCurrencies(cardId)
+            return loadDemoCurrencies()
         }
         return try {
             val json = context.readFileText(getFileNameForBlockchains(cardId))
@@ -113,7 +119,21 @@ class CurrenciesRepository(val context: Application) {
         }
     }
 
-    private fun loadDemoCurrencies(cardId: String): List<BlockchainNetwork> {
+    fun loadSavedCurrenciesWithoutMigration(
+        cardId: String,
+    ): List<BlockchainNetwork> {
+        if (DemoHelper.isDemoCardId(cardId)) {
+            return loadDemoCurrencies()
+        }
+        return try {
+            val json = context.readFileText(getFileNameForBlockchains(cardId))
+            blockchainNetworkAdapter.fromJson(json)?.distinct() ?: emptyList()
+        } catch (exception: Exception) {
+            emptyList()
+        }
+    }
+
+    private fun loadDemoCurrencies(): List<BlockchainNetwork> {
         return DemoHelper.config.demoBlockchains.map {
             BlockchainNetwork(
                 blockchain = it,
@@ -123,7 +143,7 @@ class CurrenciesRepository(val context: Application) {
         }
     }
 
-    private fun tryToLoadPreviousFormatAndMigrate(
+    private suspend fun tryToLoadPreviousFormatAndMigrate(
         cardId: String,
         isHdWalletSupported: Boolean = false
     ): List<BlockchainNetwork> {
@@ -137,12 +157,12 @@ class CurrenciesRepository(val context: Application) {
         }
     }
 
-    private fun loadSavedCurrenciesOldWay(
+    private suspend fun loadSavedCurrenciesOldWay(
         cardId: String, isHdWalletSupported: Boolean = false
     ): List<BlockchainNetwork> {
         val blockchains = loadSavedBlockchains(cardId)
         val tokens = loadSavedTokens(cardId)
-        val currencies = getSupportedTokens()
+        val ids = getTokensIds(tokens)
         val derivationStyle = if (isHdWalletSupported) DerivationStyle.LEGACY else null
         val blockchainNetworks = blockchains.map { blockchain ->
             BlockchainNetwork(
@@ -152,15 +172,27 @@ class CurrenciesRepository(val context: Application) {
                     .filter { it.blockchainDao.toBlockchain() == blockchain }
                     .map {
                         val token = it.toToken()
-                        val id = currencies
-                            .find { it.contracts.find { it.address == token.contractAddress } != null }
-                            ?.id
-                        token.copy(id = id)
+                        token.copy(id = ids[token.contractAddress])
                     }
             )
         }
         saveCurrencies(cardId, blockchainNetworks) // migrate saved currencies
         return blockchainNetworks
+    }
+
+    private suspend fun getTokensIds(tokens: List<TokenDao>): Map<String, String> = coroutineScope {
+        tokens.map {
+            async {
+                tangemNetworkService.getTokens(
+                    it.contractAddress,
+                    it.blockchainDao.toBlockchain().toNetworkId()
+                )
+            }
+        }.map { it.await() }
+            .map { (it as? Result.Success)?.data?.coins?.firstOrNull()?.id }
+            .mapIndexedNotNull { index, s ->
+                if (s == null) null else tokens[index].contractAddress to s
+            }.toMap()
     }
 
     fun saveCurrencies(cardId: String, currencies: List<BlockchainNetwork>) {
@@ -177,9 +209,8 @@ class CurrenciesRepository(val context: Application) {
         }
     }
 
-    fun getSupportedTokens(isTestNet: Boolean = false): List<Currency> {
-        val fileName = if (isTestNet) "testnet_tokens" else "tokens"
-        val json = context.assets.readJsonFileToString(fileName)
+    fun getTestnetCoins(): List<Currency> {
+        val json = context.assets.readJsonFileToString(FILE_NAME_TESTNET_COINS)
         return currenciesAdapter.fromJson(json)!!.coins
             .map { Currency.fromJsonObject(it) }
     }
@@ -232,6 +263,7 @@ class CurrenciesRepository(val context: Application) {
     companion object {
         private const val FILE_NAME_PREFIX_TOKENS = "tokens"
         private const val FILE_NAME_PREFIX_BLOCKCHAINS = "blockchains"
+        private const val FILE_NAME_TESTNET_COINS = "testnet_tokens"
 
         fun getFileNameForTokens(cardId: String): String = "${FILE_NAME_PREFIX_TOKENS}_$cardId"
         fun getFileNameForBlockchains(cardId: String): String =
@@ -246,144 +278,3 @@ fun Blockchain.getTokensName(): String {
     }
 }
 
-@JsonClass(generateAdapter = true)
-data class TokenDao(
-    val name: String,
-    val symbol: String,
-    val contractAddress: String,
-    val decimalCount: Int,
-    @Json(name = "blockchain")
-    val blockchainDao: BlockchainDao,
-    val customIconUrl: String? = null,
-    val type: String? = null
-) {
-    fun toToken(): Token {
-        return Token(
-            name = name,
-            symbol = symbol,
-            contractAddress = contractAddress,
-            decimals = decimalCount,
-        ).apply {
-            customIconUrl?.let { this.setCustomIconUrl(it) }
-        }
-    }
-
-}
-
-@JsonClass(generateAdapter = true)
-data class BlockchainDao(
-    @Json(name = "key")
-    val name: String,
-    @Json(name = "testnet")
-    val isTestNet: Boolean
-) {
-    fun toBlockchain(): Blockchain {
-        val blockchain = Blockchain.values().find { it.name.lowercase() == name.lowercase() }
-            ?: throw Exception("Invalid BlockchainDao")
-        return if (!isTestNet) blockchain else blockchain.getTestnetVersion()
-            ?: throw Exception("Invalid BlockchainDao")
-    }
-
-    companion object {
-        fun fromBlockchain(blockchain: Blockchain): BlockchainDao {
-            val name = blockchain.name.removeSuffix("Testnet").lowercase()
-            return BlockchainDao(name, blockchain.isTestnet())
-        }
-    }
-}
-
-@JsonClass(generateAdapter = true)
-data class ObsoleteTokenDao(
-    val name: String,
-    val symbol: String,
-    val contractAddress: String,
-    val decimalCount: Int,
-    val customIconUrl: String?,
-) {
-    fun toTokenDao(blockchain: Blockchain): TokenDao {
-        return TokenDao(
-            name = name,
-            symbol = symbol,
-            contractAddress = contractAddress,
-            decimalCount = decimalCount,
-            blockchainDao = BlockchainDao.fromBlockchain(blockchain),
-            customIconUrl = customIconUrl
-        )
-    }
-}
-
-//@JsonClass(generateAdapter = true)
-//data class CardCurrenciesDao(
-//    val tokens: List<TokenDao>,
-//    val blockchains: List<Blockchain>,
-//) {
-//    fun toCardCurrencies(): CardCurrencies {
-//        return CardCurrencies(
-//            tokens = tokens.map { it.toToken() }.distinct(),
-//            blockchains = blockchains
-//        )
-//    }
-//
-//    companion object {
-//        fun fromCardCurrencies(cardCurrencies: CardCurrencies): CardCurrenciesDao {
-//            return CardCurrenciesDao(
-//                tokens = cardCurrencies.tokens.map { TokenDao.fromToken(it) }.distinct(),
-//                blockchains = cardCurrencies.blockchains
-//            )
-//        }
-//    }
-//}
-
-data class CardCurrencies(
-    val tokens: List<Token>,
-    val blockchains: List<Blockchain>,
-)
-
-@JsonClass(generateAdapter = true)
-data class BlockchainNetwork(
-    val blockchain: Blockchain,
-    val derivationPath: String?,
-    val tokens: List<Token>
-) {
-
-    constructor(blockchain: Blockchain, card: Card) : this(
-        blockchain = blockchain,
-        derivationPath = if (card.settings.isHDWalletAllowed) blockchain.derivationPath(card.derivationStyle)?.rawPath else null,
-        tokens = emptyList()
-    )
-
-
-    fun updateTokens(tokens: List<Token>): BlockchainNetwork {
-        return copy(
-            tokens = (this.tokens + tokens).distinct()
-        )
-    }
-
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (javaClass != other?.javaClass) return false
-
-        other as BlockchainNetwork
-
-        if (blockchain != other.blockchain) return false
-        if (derivationPath != other.derivationPath) return false
-
-        return true
-    }
-
-    override fun hashCode(): Int {
-        var result = blockchain.hashCode()
-        result = 31 * result + (derivationPath?.hashCode() ?: 0)
-        return result
-    }
-
-    companion object {
-        fun fromWalletManager(walletManager: WalletManager): BlockchainNetwork {
-            return BlockchainNetwork(
-                walletManager.wallet.blockchain,
-                walletManager.wallet.publicKey.derivationPath?.rawPath,
-                walletManager.cardTokens.toList()
-            )
-        }
-    }
-}
