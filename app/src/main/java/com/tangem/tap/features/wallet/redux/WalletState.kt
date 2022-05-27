@@ -15,6 +15,7 @@ import com.tangem.domain.common.extensions.canHandleToken
 import com.tangem.domain.common.extensions.toCoinId
 import com.tangem.domain.features.addCustomToken.CustomCurrency
 import com.tangem.tap.common.entities.Button
+import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.toQrCode
 import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
@@ -47,7 +48,6 @@ data class WalletState(
     val error: ErrorType? = null,
     val cardImage: Artwork? = null,
     val hashesCountVerified: Boolean? = null,
-    val walletDialog: StateDialog? = null,
     val mainWarningsList: List<WarningMessage> = mutableListOf(),
     val wallets: List<WalletStore> = listOf(),
     val isMultiwalletAllowed: Boolean = false,
@@ -301,10 +301,14 @@ data class WalletState(
     }
 }
 
-sealed class WalletDialog : StateDialog {
-    data class SelectAmountToSendDialog(val amounts: List<Amount>?) : WalletDialog()
-    object SignedHashesMultiWalletDialog : WalletDialog()
-    object ChooseTradeActionDialog : WalletDialog()
+sealed interface WalletDialog : StateDialog {
+    data class SelectAmountToSendDialog(val amounts: List<Amount>?) : WalletDialog
+    object SignedHashesMultiWalletDialog : WalletDialog
+    object ChooseTradeActionDialog : WalletDialog
+    data class CurrencySelectionDialog(
+        val currenciesList: List<FiatCurrency>,
+        val currentAppCurrency: FiatCurrency,
+    ) : WalletDialog
 }
 
 enum class ProgressState : WidgetState { Loading, Done, Error }
