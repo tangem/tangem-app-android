@@ -9,7 +9,7 @@ interface HttpResponse
 sealed interface TangemTechResponse : HttpResponse
 
 data class CoinsResponse(
-    val imageHost: String,
+    val imageHost: String?,
     val coins: List<Coin>,
     val total: Int
 ) : TangemTechResponse {
