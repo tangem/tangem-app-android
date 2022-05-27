@@ -27,6 +27,7 @@ import com.tangem.tap.common.extensions.pixelsToDp
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.domain.tokens.Currency
 import com.tangem.tap.features.tokens.redux.ContractAddress
+import com.tangem.tap.features.tokens.redux.LoadCoinsState
 import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
 import com.tangem.tap.features.tokens.redux.TokensState
 import com.tangem.tap.store
@@ -35,9 +36,9 @@ import com.tangem.wallet.R
 @Composable
 fun CurrenciesScreen(
     tokensState: MutableState<TokensState> = mutableStateOf(store.state.tokensState),
-    searchInput: MutableState<String>,
     onSaveChanges: (List<TokenWithBlockchain>, List<Blockchain>) -> Unit,
-    onNetworkItemClicked: (ContractAddress) -> Unit
+    onNetworkItemClicked: (ContractAddress) -> Unit,
+    onLoadMore: () -> Unit
 ) {
     val context = LocalContext.current
     val addedTokensState = remember { mutableStateOf(tokensState.value.addedTokens) }
@@ -76,7 +77,7 @@ fun CurrenciesScreen(
     ) {
 
         AnimatedVisibility(
-            visible = tokensState.value.currencies.isEmpty(),
+            visible = tokensState.value.loadCoinsState == LoadCoinsState.LOADING,
             enter = fadeIn(),
             exit = fadeOut()
         ) {
@@ -90,7 +91,7 @@ fun CurrenciesScreen(
             }
         }
         AnimatedVisibility(
-            visible = tokensState.value.currencies.isNotEmpty(),
+            visible = tokensState.value.loadCoinsState == LoadCoinsState.LOADED,
             enter = fadeIn(animationSpec = tween(1000)),
             exit = fadeOut(animationSpec = tween(1000))
         ) {
@@ -103,7 +104,6 @@ fun CurrenciesScreen(
                     nonRemovableBlockchains = tokensState.value.nonRemovableBlockchains,
                     addedTokens = addedTokensState.value,
                     addedBlockchains = addedBlockchainsState.value,
-                    searchInput = searchInput.value,
                     allowToAdd = tokensState.value.allowToAdd,
                     onAddCurrencyToggled = { currency, token ->
                         onAddCurrencyToggleClick(currency, token)
@@ -118,7 +118,8 @@ fun CurrenciesScreen(
                         }
 
                     },
-                    onNetworkItemClicked = onNetworkItemClicked
+                    onNetworkItemClicked = onNetworkItemClicked,
+                    onLoadMore = onLoadMore
                 )
             }
         }
