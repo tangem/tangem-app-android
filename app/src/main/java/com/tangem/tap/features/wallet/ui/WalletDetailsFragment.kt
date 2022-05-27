@@ -1,8 +1,11 @@
 package com.tangem.tap.features.wallet.ui
 
-import android.app.Dialog
 import android.os.Bundle
-import android.view.*
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.ColorRes
@@ -15,17 +18,28 @@ import by.kirich1409.viewbindingdelegate.viewBinding
 import com.squareup.picasso.Picasso
 import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.TestActions
-import com.tangem.tap.common.extensions.*
+import com.tangem.tap.common.extensions.appendIfNotNull
+import com.tangem.tap.common.extensions.beginDelayedTransition
+import com.tangem.tap.common.extensions.fitChipsByGroupWidth
+import com.tangem.tap.common.extensions.getColor
+import com.tangem.tap.common.extensions.getString
+import com.tangem.tap.common.extensions.hide
+import com.tangem.tap.common.extensions.loadCurrenciesIcon
+import com.tangem.tap.common.extensions.show
+import com.tangem.tap.common.extensions.toQrCode
 import com.tangem.tap.common.recyclerView.SpaceItemDecoration
-import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.tokens.BlockchainNetwork
 import com.tangem.tap.features.onboarding.getQRReceiveMessage
 import com.tangem.tap.features.wallet.models.PendingTransaction
-import com.tangem.tap.features.wallet.redux.*
+import com.tangem.tap.features.wallet.redux.Currency
+import com.tangem.tap.features.wallet.redux.ErrorType
+import com.tangem.tap.features.wallet.redux.ProgressState
+import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.features.wallet.redux.WalletData
+import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.ui.adapters.PendingTransactionsAdapter
 import com.tangem.tap.features.wallet.ui.adapters.WalletDetailWarningMessagesAdapter
-import com.tangem.tap.features.wallet.ui.dialogs.AmountToSendDialog
 import com.tangem.tap.features.wallet.ui.test.TestWalletDetails
 import com.tangem.tap.store
 import com.tangem.wallet.R
@@ -37,7 +51,6 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
 
     private lateinit var pendingTransactionAdapter: PendingTransactionsAdapter
     private lateinit var warningMessagesAdapter: WalletDetailWarningMessagesAdapter
-    private var dialog: Dialog? = null
 
     private val binding: FragmentWalletDetailsBinding by viewBinding(FragmentWalletDetailsBinding::bind)
 
@@ -128,7 +141,6 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
         setupBalanceData(selectedWallet.currencyData)
         setupButtons(selectedWallet)
 
-        handleDialogs(state.walletDialog)
         handleCurrencyIcon(selectedWallet)
         handleWarnings(selectedWallet)
 
@@ -174,7 +186,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
         rowButtons.updateButtonsVisibility(
             buyAllowed = selectedWallet.tradeCryptoState.buyingAllowed,
             sellAllowed = selectedWallet.tradeCryptoState.sellingAllowed,
-            sendAllowed = selectedWallet.mainButton.enabled
+            sendAllowed = selectedWallet.mainButton.enabled,
         )
     }
 
@@ -297,21 +309,6 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
             }
         }
     }
-
-    private fun handleDialogs(walletDialog: StateDialog?) {
-        when (walletDialog) {
-            is WalletDialog.SelectAmountToSendDialog -> {
-                if (dialog == null) dialog = AmountToSendDialog(requireContext()).apply {
-                    this.show(walletDialog.amounts)
-                }
-            }
-            null -> {
-                dialog?.dismiss()
-                dialog = null
-            }
-        }
-    }
-
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
