@@ -33,13 +33,15 @@ internal class WalletDetailsButtonsRow @JvmOverloads constructor(
         }
     }
 
-    fun renderButtons(
+    fun updateButtonsVisibility(
         buyAllowed: Boolean,
         sellAllowed: Boolean,
+        sendAllowed: Boolean
     ) = with(binding) {
         btnBuy.isVisible = (buyAllowed && !sellAllowed) || (!buyAllowed && !sellAllowed)
         btnBuy.isEnabled = buyAllowed
         btnSell.isVisible = !buyAllowed && sellAllowed
         btnTrade.isVisible = buyAllowed && sellAllowed
+        btnSend.isEnabled = sendAllowed
     }
 }
