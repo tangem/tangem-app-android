@@ -105,78 +105,27 @@
                     android:layout_marginStart="16dp"
                     android:layout_marginEnd="16dp"
                     app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/l_wallet_details" />
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toBottomOf="@+id/l_wallet_details" />
 
                 <androidx.constraintlayout.widget.Barrier
-                    android:id="@+id/barrier"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    app:barrierDirection="bottom"
-                    app:constraint_referenced_ids="l_wallet_details" />
+                        android:id="@+id/barrier"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        app:barrierDirection="bottom"
+                        app:constraint_referenced_ids="l_wallet_details" />
 
-                <androidx.constraintlayout.widget.Barrier
-                    android:id="@+id/barrier_left_button"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    app:barrierDirection="end"
-                    app:constraint_referenced_ids="btn_trade, btn_sell" />
-
-                <androidx.constraintlayout.widget.Barrier
-                    android:id="@+id/barrier_right_button"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    app:barrierDirection="start"
-                    app:constraint_referenced_ids="btn_sell, btn_confirm" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_trade"
-                    style="@style/TapButtonWithIcon"
-                    android:layout_width="0dp"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginTop="30dp"
-                    android:layout_marginEnd="4dp"
-                    android:layout_marginBottom="33dp"
-                    android:text="@string/wallet_button_buy"
-                    app:icon="@drawable/ic_arrow_up"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@+id/btn_sell"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/rv_warning_messages"
-                    app:layout_constraintVertical_bias="1" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_sell"
-                    style="@style/TapButtonWithIcon"
-                    android:layout_width="0dp"
-                    android:layout_marginStart="4dp"
-                    android:layout_marginTop="30dp"
-                    android:layout_marginEnd="4dp"
-                    android:layout_marginBottom="33dp"
-                    android:text="@string/wallet_button_sell"
-                    app:icon="@drawable/ic_arrow_down"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toStartOf="@id/btn_confirm"
-                    app:layout_constraintHorizontal_chainStyle="packed"
-                    app:layout_constraintStart_toEndOf="@id/btn_trade"
-                    app:layout_constraintTop_toBottomOf="@+id/rv_warning_messages"
-                    app:layout_constraintVertical_bias="1" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btn_confirm"
-                    style="@style/TapButtonWithIcon"
-                    android:layout_width="0dp"
-                    android:layout_marginStart="4dp"
-                    android:layout_marginTop="30dp"
-                    android:layout_marginEnd="16dp"
-                    android:layout_marginBottom="33dp"
-                    android:text="@string/wallet_button_send"
-                    app:icon="@drawable/ic_send"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@id/btn_sell"
-                    app:layout_constraintTop_toBottomOf="@+id/rv_warning_messages"
-                    app:layout_constraintVertical_bias="1" />
+                <com.tangem.tap.features.wallet.ui.view.WalletDetailsButtonsRow
+                        android:id="@+id/row_buttons"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="28dp"
+                        android:layout_marginBottom="32dp"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginEnd="16dp"
+                        app:layout_constraintVertical_bias="1"
+                        app:layout_constraintTop_toBottomOf="@id/rv_warning_messages"
+                        app:layout_constraintBottom_toBottomOf="parent" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
