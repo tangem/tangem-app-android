@@ -7,8 +7,7 @@ import com.tangem.domain.common.isTangemTwin
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.extensions.isWalletDataSupported
 import com.tangem.tap.domain.extensions.signedHashesCount
-import com.tangem.tap.domain.extensions.toSendableAmounts
-import com.tangem.tap.features.wallet.models.hasPendingTransactions
+import com.tangem.tap.features.wallet.models.hasSendableAmountsOrPendingTransactions
 import org.rekotlin.Action
 import java.util.*
 
@@ -62,9 +61,7 @@ private fun handleEraseWallet(
                 (card?.isWalletDataSupported == true &&
                     (!state.scanResponse.isTangemNote() && !state.scanResponse.supportsBackup()))
 
-            val notEmpty = state.wallets.any {
-                it.hasPendingTransactions() || it.amounts.toSendableAmounts().isNotEmpty()
-            }
+            val notEmpty = state.wallets.any { it.hasSendableAmountsOrPendingTransactions() }
             val eraseWalletState = when {
                 notAllowedByCard -> EraseWalletState.NotAllowedByCard
                 notEmpty -> EraseWalletState.NotEmpty
