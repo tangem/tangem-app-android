@@ -43,6 +43,14 @@ fun List<PendingTransaction>.removeUnknownTransactions(): List<PendingTransactio
     return this.filter { it.type != PendingTransactionType.Unknown }
 }
 
+fun List<PendingTransaction>.filterByCoin(): List<PendingTransaction> {
+    return this.filter { it.transactionData.amount.type == AmountType.Coin }
+}
+
+fun List<PendingTransaction>.filterByToken(token: Token): List<PendingTransaction> {
+    return this.filter { it.currency == token.symbol }
+}
+
 fun TransactionData.toPendingTransactionForToken(token: Token, walletAddress: String): PendingTransaction? {
     if (this.amount.currencySymbol != token.symbol) return null
     return this.toPendingTransaction(walletAddress)
