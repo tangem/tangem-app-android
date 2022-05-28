@@ -6,12 +6,21 @@ import com.tangem.tap.common.extensions.toFormattedString
 import java.math.BigDecimal
 
 data class PendingTransaction(
-    val address: String?,
-    val amount: BigDecimal?,
-    val amountUi: String?,
-    val currency: String,
-    val type: PendingTransactionType
-)
+    val transactionData: TransactionData,
+    val type: PendingTransactionType,
+) {
+    val address: String? = when (type) {
+        PendingTransactionType.Incoming -> transactionData.destinationAddress
+        PendingTransactionType.Outgoing -> transactionData.sourceAddress
+        PendingTransactionType.Unknown -> null
+    }
+
+    val amountValue: BigDecimal? = transactionData.amount.value
+
+    val amountValueUi: String? = amountValue?.toFormattedString(transactionData.amount.decimals)
+
+    val currency: String = transactionData.amount.currencySymbol
+}
 
 enum class PendingTransactionType { Incoming, Outgoing, Unknown }
 
@@ -19,29 +28,11 @@ fun TransactionData.toPendingTransaction(walletAddress: String): PendingTransact
     if (this.status == TransactionStatus.Confirmed) return null
 
     val type: PendingTransactionType = when {
-        this.sourceAddress == walletAddress -> {
-            PendingTransactionType.Outgoing
-        }
-        this.destinationAddress == walletAddress -> {
-            PendingTransactionType.Incoming
-        }
-        else -> {
-            PendingTransactionType.Unknown
-        }
+        this.sourceAddress == walletAddress -> PendingTransactionType.Outgoing
+        this.destinationAddress == walletAddress -> PendingTransactionType.Incoming
+        else -> PendingTransactionType.Unknown
     }
-    val address = if (this.sourceAddress == walletAddress) {
-        this.destinationAddress
-    } else {
-        this.sourceAddress
-    }
-
-    return PendingTransaction(
-        if (address == "unknown") null else address,
-        this.amount.value,
-        this.amount.value?.toFormattedString(amount.decimals),
-        this.amount.currencySymbol,
-        type
-    )
+    return PendingTransaction(this, type)
 }
 
 fun List<TransactionData>.toPendingTransactions(walletAddress: String): List<PendingTransaction> {
