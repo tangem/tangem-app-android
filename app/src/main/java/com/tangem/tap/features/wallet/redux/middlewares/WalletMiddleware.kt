@@ -335,7 +335,7 @@ class WalletMiddleware {
                     val show = if (outgoingTxs.isEmpty()) {
                         isNeedToShowWarning(balance, rentExempt)
                     } else {
-                        val outgoingAmount = outgoingTxs.sumOf { it.amount ?: BigDecimal.ZERO }
+                        val outgoingAmount = outgoingTxs.sumOf { it.amountValue ?: BigDecimal.ZERO }
                         val rest = balance.minus(outgoingAmount)
                         isNeedToShowWarning(rest, rentExempt)
                     }
