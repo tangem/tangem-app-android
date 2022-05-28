@@ -1,11 +1,8 @@
 package com.tangem.tap.features.wallet.models
 
-import com.tangem.blockchain.common.Token
-import com.tangem.blockchain.common.TransactionData
-import com.tangem.blockchain.common.TransactionStatus
-import com.tangem.blockchain.common.Wallet
+import com.tangem.blockchain.common.*
+import com.tangem.blockchain.extensions.isAboveZero
 import com.tangem.tap.common.extensions.toFormattedString
-import com.tangem.tap.domain.extensions.toSendableAmounts
 import java.math.BigDecimal
 
 data class PendingTransaction(
@@ -60,22 +57,45 @@ fun TransactionData.toPendingTransactionForToken(token: Token, walletAddress: St
     return this.toPendingTransaction(walletAddress)
 }
 
-fun List<TransactionData>.toPendingTransactionsForToken(token: Token, walletAddress: String): List<PendingTransaction> {
-    return this.mapNotNull { it.toPendingTransactionForToken(token, walletAddress) }
-}
-
 fun Wallet.getPendingTransactions(type: PendingTransactionType? = null): List<PendingTransaction> {
     val txs = recentTransactions.toPendingTransactions(address)
-    return when(type) {
+    return when (type) {
         null -> txs
         else -> txs.filter { it.type == type }
     }
+}
+
+fun Wallet.getPendingTransactions(token: Token): List<PendingTransaction> {
+    return recentTransactions.mapNotNull { it.toPendingTransactionForToken(token, address) }
 }
 
 fun Wallet.hasPendingTransactions(): Boolean {
     return getPendingTransactions().isNotEmpty()
 }
 
+fun Wallet.hasPendingTransactions(token: Token): Boolean {
+    return getPendingTransactions(token).isNotEmpty()
+}
+
+fun Wallet.getSendableAmounts(): List<Amount> {
+    return amounts.values
+        .filter { it.type != AmountType.Reserve }
+        .filter { it.isAboveZero() }
+}
+
+fun Wallet.hasSendableAmounts(): Boolean {
+    return getSendableAmounts().isNotEmpty()
+}
+
 fun Wallet.hasSendableAmountsOrPendingTransactions(): Boolean {
-    return hasPendingTransactions() || amounts.toSendableAmounts().isNotEmpty()
+    return hasPendingTransactions() || hasSendableAmounts()
+}
+
+fun Wallet.isSendableAmount(type: AmountType): Boolean {
+    return amounts[type]?.isAboveZero() == true
+
+}
+
+fun Wallet.isSendableAmount(token: Token): Boolean {
+    return isSendableAmount(AmountType.Token(token))
 }
