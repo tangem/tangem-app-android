@@ -357,7 +357,11 @@ data class WalletData(
         return listOfAddresses.size > 1
     }
 
-    fun shouldEnableTokenSendButton(): Boolean = !blockchainAmountIsEmpty() || !tokenAmountIsEmpty()
+    fun shouldEnableTokenSendButton(): Boolean = if (blockchainAmountIsEmpty()) {
+        false
+    } else {
+        !tokenAmountIsEmpty()
+    }
 
     fun assembleWarnings(): List<WalletWarning> {
         val blockchain = currency.blockchain
@@ -380,10 +384,11 @@ data class WalletData(
             val fullName = currency.blockchain.fullName
             walletWarnings.add(WalletWarning.BalanceNotEnoughForFee(fullName))
         }
+
         return walletWarnings.sortedBy { it.showingPosition }
     }
 
-    private fun blockchainAmountIsEmpty(): Boolean = currencyData.blockchainAmount?.isZero() ?: false
+    private fun blockchainAmountIsEmpty(): Boolean = currencyData.blockchainAmount?.isZero() == true
 
     private fun tokenAmountIsEmpty(): Boolean = currencyData.amount?.isZero() == true
 }
