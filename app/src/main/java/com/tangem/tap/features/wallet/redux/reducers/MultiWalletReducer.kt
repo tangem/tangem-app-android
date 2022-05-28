@@ -107,8 +107,7 @@ class MultiWalletReducer {
                 }
 
                 val pendingTransactions = wallet.recentTransactions.toPendingTransactions(wallet.address)
-                val sendButtonEnabled =
-                    action.amount.value?.isZero() == false && pendingTransactions.isEmpty()
+                val tokenSendButton = action.amount.value?.isZero() == false && pendingTransactions.isEmpty()
                 val tokenPendingTransactions = pendingTransactions
                     .filter { it.currency == action.amount.currencySymbol }
                 val tokenBalanceStatus = when {
@@ -131,7 +130,7 @@ class MultiWalletReducer {
                         blockchainAmount = wallet.amounts[AmountType.Coin]?.value ?: BigDecimal.ZERO
                     ),
                     pendingTransactions = pendingTransactions.removeUnknownTransactions(),
-                    mainButton = WalletMainButton.SendButton(sendButtonEnabled),
+                    mainButton = WalletMainButton.SendButton(tokenSendButton),
                     currency = Currency.Token(
                         token = action.token,
                         blockchain = action.blockchain.blockchain,
