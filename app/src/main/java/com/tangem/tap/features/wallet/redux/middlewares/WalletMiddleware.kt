@@ -17,12 +17,10 @@ import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.extensions.copyToClipboard
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
-import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.onCardScanned
 import com.tangem.tap.common.extensions.shareText
 import com.tangem.tap.common.extensions.stripZeroPlainString
-import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
@@ -58,6 +56,7 @@ class WalletMiddleware {
     private val tradeCryptoMiddleware = TradeCryptoMiddleware()
     private val warningsMiddleware = WarningsMiddleware()
     private val multiWalletMiddleware = MultiWalletMiddleware()
+    private val walletDialogMiddleware = WalletDialogsMiddleware()
     private val appCurrencyMiddleware by lazy(mode = LazyThreadSafetyMode.NONE) {
         AppCurrencyMiddleware(
             tangemTechService = store.state.domainNetworks.tangemTechService,
@@ -91,6 +90,7 @@ class WalletMiddleware {
                 globalState
             )
             is WalletAction.AppCurrencyAction -> appCurrencyMiddleware.handle(action)
+            is WalletAction.DialogAction -> walletDialogMiddleware.handle(action)
             is WalletAction.LoadWallet -> {
                 scope.launch {
                     if (action.blockchain == null) {
@@ -242,15 +242,6 @@ class WalletMiddleware {
                     store.dispatch(NavigationAction.NavigateTo(AppScreen.Send))
                 }
             }
-            is WalletAction.ShowDialog.QrCode -> {
-                val selectedWalletData =
-                    walletState.getWalletData(walletState.selectedCurrency) ?: return
-                val selectedAddressData =
-                    selectedWalletData.walletAddresses?.selectedAddress ?: return
-
-                val currency = selectedWalletData.currency
-                store.dispatchDialogShow(AppDialog.AddressInfoDialog(currency, selectedAddressData))
-            }
         }
     }
 
@@ -272,7 +263,7 @@ class WalletMiddleware {
                     is Currency.Blockchain -> {
                         val amountToSend =
                             amounts?.find { it.currencySymbol == currency.blockchain.currency }
-                                ?: return WalletAction.Send.ChooseCurrency(amounts)
+                                ?: return WalletAction.DialogAction.ChooseCurrency(amounts)
                         PrepareSendScreen(
                             coinAmount = amountToSend,
                             coinRate = selectedWalletData.fiatRate,
@@ -282,7 +273,7 @@ class WalletMiddleware {
                     is Currency.Token -> {
                         val amountToSend =
                             amounts?.find { it.currencySymbol == currency.token.symbol }
-                                ?: return WalletAction.Send.ChooseCurrency(amounts)
+                                ?: return WalletAction.DialogAction.ChooseCurrency(amounts)
                         prepareSendActionForToken(
                             amount = amountToSend,
                             state = state,
