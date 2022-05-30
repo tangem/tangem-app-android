@@ -7,7 +7,7 @@ import com.tangem.common.extensions.guard
 import com.tangem.tap.common.extensions.toFiatString
 import com.tangem.tap.common.extensions.toFormattedCurrencyString
 import com.tangem.tap.domain.getFirstToken
-import com.tangem.tap.domain.tokens.BlockchainNetwork
+import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.wallet.models.filterByToken
 import com.tangem.tap.features.wallet.models.getPendingTransactions
 import com.tangem.tap.features.wallet.models.removeUnknownTransactions
