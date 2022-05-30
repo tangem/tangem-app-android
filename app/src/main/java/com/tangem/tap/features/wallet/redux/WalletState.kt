@@ -20,6 +20,8 @@ import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
 import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
 import com.tangem.tap.features.wallet.models.*
+import com.tangem.tap.features.wallet.redux.reducers.calculateTotalFiatAmount
+import com.tangem.tap.features.wallet.redux.reducers.findTotalBalanceState
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
