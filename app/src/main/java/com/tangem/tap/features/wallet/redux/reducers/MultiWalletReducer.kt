@@ -2,8 +2,8 @@ package com.tangem.tap.features.wallet.redux.reducers
 
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Token
+import com.tangem.blockchain.extensions.isAboveZero
 import com.tangem.common.extensions.guard
-import com.tangem.common.extensions.isZero
 import com.tangem.tap.common.extensions.toFiatString
 import com.tangem.tap.common.extensions.toFormattedCurrencyString
 import com.tangem.tap.domain.getFirstToken
@@ -108,7 +108,6 @@ class MultiWalletReducer {
                 }
 
                 val pendingTransactions = wallet.getPendingTransactions()
-                val tokenSendButton = action.amount.value?.isZero() == false && pendingTransactions.isEmpty()
                 val tokenPendingTransactions = pendingTransactions.filterByToken(action.token)
                 val tokenBalanceStatus = when {
                     tokenPendingTransactions.isNotEmpty() -> BalanceStatus.TransactionInProgress
@@ -116,6 +115,8 @@ class MultiWalletReducer {
                     else -> BalanceStatus.VerifiedOnline
                 }
                 val tokenWalletData = state.getWalletData(currency)
+                val isTokenSendButtonEnabled = action.amount.isAboveZero() && pendingTransactions.isEmpty()
+
                 val newTokenWalletData = tokenWalletData?.copy(
                     currencyData = tokenWalletData.currencyData.copy(
                         status = tokenBalanceStatus,
@@ -130,7 +131,7 @@ class MultiWalletReducer {
                         blockchainAmount = wallet.amounts[AmountType.Coin]?.value ?: BigDecimal.ZERO
                     ),
                     pendingTransactions = pendingTransactions.removeUnknownTransactions(),
-                    mainButton = WalletMainButton.SendButton(tokenSendButton),
+                    mainButton = WalletMainButton.SendButton(isTokenSendButtonEnabled),
                     currency = Currency.Token(
                         token = action.token,
                         blockchain = action.blockchain.blockchain,
