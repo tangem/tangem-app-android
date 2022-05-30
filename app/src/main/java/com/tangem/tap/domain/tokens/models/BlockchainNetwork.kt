@@ -5,6 +5,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.card.Card
+import com.tangem.common.extensions.calculateHashCode
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 
 @JsonClass(generateAdapter = true)
@@ -39,11 +40,9 @@ data class BlockchainNetwork(
         return true
     }
 
-    override fun hashCode(): Int {
-        var result = blockchain.hashCode()
-        result = 31 * result + (derivationPath?.hashCode() ?: 0)
-        return result
-    }
+    override fun hashCode(): Int = calculateHashCode(
+        blockchain.hashCode(), derivationPath?.hashCode() ?: 0
+    )
 
     companion object {
         fun fromWalletManager(walletManager: WalletManager): BlockchainNetwork {
