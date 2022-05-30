@@ -5,10 +5,10 @@ import com.tangem.network.api.tangemTech.CurrenciesResponse
 import com.tangem.network.api.tangemTech.TangemTechService
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.dispatchDialogShow
-import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TapWalletManager
 import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.features.wallet.redux.WalletDialog
 import com.tangem.tap.persistence.FiatCurrenciesPrefStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
@@ -31,7 +31,7 @@ class AppCurrencyMiddleware(
         val storedFiatCurrencies = fiatCurrenciesPrefStorage.restore()
         if (storedFiatCurrencies.isNotEmpty()) {
             store.dispatchDialogShow(
-                AppDialog.CurrencySelectionDialog(
+                WalletDialog.CurrencySelectionDialog(
                     currenciesList = storedFiatCurrencies.mapToUiModel(),
                     currentAppCurrency = appCurrencyProvider.invoke()
                 )
@@ -47,7 +47,7 @@ class AppCurrencyMiddleware(
                     ) {
                         fiatCurrenciesPrefStorage.save(currenciesList)
                         store.dispatchDialogShow(
-                            AppDialog.CurrencySelectionDialog(
+                            WalletDialog.CurrencySelectionDialog(
                                 currenciesList = currenciesList.mapToUiModel(),
                                 currentAppCurrency = appCurrencyProvider.invoke()
                             )
