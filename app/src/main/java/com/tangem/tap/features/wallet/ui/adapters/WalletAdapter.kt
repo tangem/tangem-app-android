@@ -2,6 +2,7 @@ package com.tangem.tap.features.wallet.ui.adapters
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -10,6 +11,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.tap.common.extensions.getString
+import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.loadCurrenciesIcon
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.features.wallet.redux.Currency
@@ -61,57 +63,63 @@ class WalletAdapter
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(wallet: WalletData) = with(binding) {
-            tvCurrency.text = wallet.currencyData.currency
-            tvAmount.text = wallet.currencyData.amountFormatted.orEmpty()
-            tvAmountFiat.text = wallet.currencyData.fiatAmountFormatted
-            tvExchangeRate.text = wallet.fiatRateString
-            cardWallet.setOnClickListener {
-                store.dispatch(WalletAction.MultiWallet.SelectWallet(wallet))
+            val status = wallet.currencyData.status
+            val isCustomCurrency = wallet.currency.isCustomCurrency(
+                derivationStyle = store.state.globalState
+                    .scanResponse
+                    ?.card
+                    ?.derivationStyle
+            )
+            val statusMessage = when (status) {
+                BalanceStatus.TransactionInProgress -> {
+                    root.getString(R.string.wallet_balance_tx_in_progress)
+                }
+                BalanceStatus.Unreachable -> {
+                    root.getString(R.string.wallet_balance_blockchain_unreachable)
+                }
+                BalanceStatus.NoAccount -> {
+                    root.getString(R.string.wallet_error_no_account)
+                }
+                BalanceStatus.VerifiedOnline,
+                BalanceStatus.SameCurrencyTransactionInProgress,
+                BalanceStatus.EmptyCard,
+                BalanceStatus.UnknownBlockchain,
+                BalanceStatus.Loading,
+                null -> null
             }
-            val blockchain = wallet.currency.blockchain
-            val token = (wallet.currency as? Currency.Token)?.token
 
-            val isCustom = wallet.currency
-                .isCustomCurrency(store.state.globalState.scanResponse?.card?.derivationStyle)
-            tvExchangeRate.show(!isCustom)
-            tvCustomCurrency.show(isCustom)
+            if (status == null || status == BalanceStatus.Loading) {
+                lContent.root.hide()
+                lShimmer.root.veil()
+            } else {
+                lShimmer.root.unVeil()
+                lContent.root.show()
+            }
 
             Picasso.get().loadCurrenciesIcon(
                 imageView = ivCurrency,
                 textView = tvTokenLetter,
-                token = token, blockchain = blockchain,
+                token = (wallet.currency as? Currency.Token)?.token,
+                blockchain = wallet.currency.blockchain,
             )
 
-            when (wallet.currencyData.status) {
-                BalanceStatus.VerifiedOnline,
-                BalanceStatus.SameCurrencyTransactionInProgress -> hideMessage()
-                BalanceStatus.Loading -> if (wallet.currencyData.amountFormatted == null) {
-                    showMessage(root.getString(R.string.wallet_balance_loading))
-                }
-                BalanceStatus.TransactionInProgress ->
-                    showMessage(root.getString(R.string.wallet_balance_tx_in_progress))
-                BalanceStatus.Unreachable ->
-                    showMessage(root.getString(R.string.wallet_balance_blockchain_unreachable))
+            lContent.tvCurrency.text = wallet.currencyData.currency
+            lContent.tvAmountFiat.text = wallet.currencyData.fiatAmountFormatted ?: "—"
+            lContent.tvAmount.text = wallet.currencyData.amountFormatted ?: "—"
 
-                BalanceStatus.NoAccount ->
-                    showMessage(root.getString(R.string.wallet_error_no_account))
-                else -> {
-                }
+            lContent.tvStatus.isVisible = statusMessage != null
+            lContent.tvStatus.text = statusMessage
+
+            lContent.tvExchangeRate.isVisible = statusMessage == null
+            lContent.tvExchangeRate.text = if (isCustomCurrency) {
+                root.getString(id = R.string.token_item_no_rate)
+            } else {
+                wallet.fiatRateString
             }
-        }
 
-        private fun showMessage(message: String) {
-            toggleMessage(true)
-            binding.tvStatus.text = message
-        }
-
-        private fun hideMessage() {
-            toggleMessage(false)
-        }
-
-        private fun toggleMessage(show: Boolean) {
-            binding.tvAmount.show(!show)
-            binding.tvStatus.show(show)
+            cardWallet.setOnClickListener {
+                store.dispatch(WalletAction.MultiWallet.SelectWallet(wallet))
+            }
         }
     }
 }
