@@ -5,17 +5,25 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.appcompat.view.ContextThemeWrapper
-import androidx.recyclerview.widget.*
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.ListAdapter
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.tangem.blockchain.common.Amount
 import com.tangem.tap.common.extensions.toFormattedString
 import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.features.wallet.redux.WalletDialog
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.DialogWalletSendBinding
 import com.tangem.wallet.databinding.ItemWalletAmountToSendBinding
 
-class AmountToSendDialog(context: Context) : BottomSheetDialog(context) {
+class AmountToSendBottomSheetDialog(
+    context: Context,
+    private val dialog: WalletDialog.SelectAmountToSendDialog,
+) : BottomSheetDialog(context) {
 
     var binding: DialogWalletSendBinding? = null
 
@@ -25,12 +33,12 @@ class AmountToSendDialog(context: Context) : BottomSheetDialog(context) {
         setContentView(binding!!.root)
     }
 
-    fun show(amounts: List<Amount>?) {
+    override fun show() {
         super.show()
 
         setOnDismissListener {
             binding = null
-            store.dispatch(WalletAction.Send.Cancel)
+            store.dispatch(WalletAction.DialogAction.Hide)
         }
 
         binding!!.rvAmountsToSend.layoutManager = LinearLayoutManager(context)
@@ -43,7 +51,7 @@ class AmountToSendDialog(context: Context) : BottomSheetDialog(context) {
         val viewAdapter = ChooseAmountAdapter()
         binding!!.rvAmountsToSend.adapter = viewAdapter
 
-        viewAdapter.submitList(amounts)
+        viewAdapter.submitList(dialog.amounts)
     }
 }
 
@@ -79,7 +87,7 @@ class ChooseAmountAdapter
             tvCurrencySymbol.text = amount.currencySymbol
             tvAmount.text = amount.value?.toFormattedString(amount.decimals)
             root.setOnClickListener {
-                store.dispatch(WalletAction.Send.Cancel)
+                store.dispatch(WalletAction.DialogAction.Hide)
                 store.dispatch(WalletAction.Send(amount))
             }
         }
