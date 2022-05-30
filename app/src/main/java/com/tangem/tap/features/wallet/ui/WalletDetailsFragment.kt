@@ -29,7 +29,7 @@ import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.extensions.toQrCode
 import com.tangem.tap.common.recyclerView.SpaceItemDecoration
 import com.tangem.tap.common.redux.navigation.NavigationAction
-import com.tangem.tap.domain.tokens.BlockchainNetwork
+import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.onboarding.getQRReceiveMessage
 import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.redux.Currency
