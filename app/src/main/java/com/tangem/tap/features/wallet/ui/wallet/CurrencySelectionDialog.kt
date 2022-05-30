@@ -3,14 +3,14 @@ package com.tangem.tap.features.wallet.ui.wallet
 import android.content.Context
 import androidx.appcompat.app.AlertDialog
 import com.tangem.tap.common.extensions.dispatchDialogHide
-import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.features.wallet.redux.WalletDialog
 import com.tangem.tap.store
 import com.tangem.wallet.R
 
 object CurrencySelectionDialog {
     fun create(
-        dialog: AppDialog.CurrencySelectionDialog,
+        dialog: WalletDialog.CurrencySelectionDialog,
         context: Context
     ): AlertDialog {
         val currenciesToShow = dialog.currenciesList
