@@ -1,37 +1,21 @@
 package com.tangem.tap.features.wallet.redux.reducers
 
-import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.features.wallet.models.TotalBalance
 import com.tangem.tap.features.wallet.redux.WalletData
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import java.math.BigDecimal
 
-fun obtainTotalBalance(
-    wallets: List<WalletData>,
-    appCurrency: FiatCurrency
-): TotalBalance? {
-    return if (wallets.isNotEmpty()) {
-        TotalBalance(
-            state = wallets.findTotalBalanceState(),
-            fiatAmount = wallets.calculateTotalFiatAmount(),
-            fiatCurrency = appCurrency
-        )
-    } else null
-}
-
-private fun List<WalletData>.findTotalBalanceState(): TotalBalance.State {
+fun List<WalletData>.findTotalBalanceState(): TotalBalance.State {
     return this.mapToTotalBalanceState()
-        .fold(initial = TotalBalance.State.Loading) { accState, newState ->
-            accState or newState
-        }
+        .reduce(TotalBalance.State::or)
 }
 
-private fun List<WalletData>.calculateTotalFiatAmount(): BigDecimal {
+fun List<WalletData>.calculateTotalFiatAmount(): BigDecimal {
     return this.map { it.currencyData.fiatAmount ?: BigDecimal.ZERO }
         .reduce(BigDecimal::plus)
 }
 
-private fun List<WalletData>.mapToTotalBalanceState(): List<TotalBalance.State> {
+fun List<WalletData>.mapToTotalBalanceState(): List<TotalBalance.State> {
     return this.map {
         when (it.currencyData.status) {
             BalanceStatus.VerifiedOnline,
@@ -50,9 +34,9 @@ private fun List<WalletData>.mapToTotalBalanceState(): List<TotalBalance.State> 
 infix fun TotalBalance.State.or(newState: TotalBalance.State): TotalBalance.State {
     return when (this) {
         TotalBalance.State.Loading -> when (newState) {
-            TotalBalance.State.Loading -> this
+            TotalBalance.State.Loading,
             TotalBalance.State.SomeTokensFailed,
-            TotalBalance.State.Success -> newState
+            TotalBalance.State.Success -> this
         }
         TotalBalance.State.Success,
         TotalBalance.State.SomeTokensFailed -> when (newState) {
