@@ -2,6 +2,7 @@ package com.tangem.tap.domain.tokens
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.services.Result
+import com.tangem.domain.common.extensions.getListOfCoins
 import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.network.api.tangemTech.CoinsResponse
 import com.tangem.network.api.tangemTech.TangemTechService
