@@ -1,7 +1,7 @@
 package com.tangem.tap.features.wallet.ui.wallet
 
 import android.app.Dialog
-import android.view.View
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.tangem.common.card.Card
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
@@ -41,7 +41,6 @@ class MultiWalletView : WalletView {
         setFragment(fragment, binding)
         onViewCreated()
         showMultiWalletView(binding)
-        setupButtons(binding)
     }
 
 
@@ -52,7 +51,6 @@ class MultiWalletView : WalletView {
         lAddress.root.hide()
         lButtonsShort.root.hide()
         lButtonsLong.root.hide()
-        btnScanMultiwallet.show()
         rvMultiwallet.show()
         btnAddToken.show()
         setupWalletCardNumber(binding)
@@ -68,11 +66,6 @@ class MultiWalletView : WalletView {
         } else {
             tvTwinCardNumber.hide()
         }
-    }
-
-
-    private fun setupButtons(binding: FragmentWalletBinding) = with(binding) {
-        btnScanMultiwallet.setOnClickListener { store.dispatch(WalletAction.Scan) }
     }
 
     override fun setFragment(fragment: WalletFragment, binding: FragmentWalletBinding) {
@@ -136,29 +129,26 @@ class MultiWalletView : WalletView {
         binding: FragmentWalletBinding,
         totalBalance: TotalBalance?,
     ) = with(binding.lCardTotalBalance) {
-        if (totalBalance == null) {
-            this.root.hide()
-            return@with
-        }
+        root.isVisible = totalBalance != null
+        if (totalBalance != null) {
+            if (totalBalance.state == TotalBalance.State.Loading) {
+                veilBalance.veil()
+            } else {
+                veilBalance.unVeil()
+            }
+            tvProcessing.animateVisibility(
+                show = totalBalance.state == TotalBalance.State.SomeTokensFailed
+            )
 
-        tvBalance.animateVisibility(
-            show = totalBalance.state != TotalBalance.State.Loading,
-            hiddenVisibility = View.INVISIBLE
-        )
-        pbLoading.animateVisibility(
-            show = totalBalance.state == TotalBalance.State.Loading
-        )
-        tvProcessing.animateVisibility(
-            show = totalBalance.state == TotalBalance.State.SomeTokensFailed
-        )
+            tvBalance.text = if (totalBalance.state == TotalBalance.State.SomeTokensFailed) "—"
+            else totalBalance.fiatAmount.formatAmountAsSpannedString(
+                currencySymbol = totalBalance.fiatCurrency.symbol
+            )
+            tvCurrencyName.text = totalBalance.fiatCurrency.code
 
-        tvBalance.text = totalBalance.fiatAmount.formatAmountAsSpannedString(
-            currencySymbol = totalBalance.fiatCurrency.symbol
-        )
-        tvCurrencyName.text = totalBalance.fiatCurrency.code
-
-        tvCurrencyName.setOnClickListener {
-            store.dispatch(WalletAction.AppCurrencyAction.ChooseAppCurrency)
+            tvCurrencyName.setOnClickListener {
+                store.dispatch(WalletAction.AppCurrencyAction.ChooseAppCurrency)
+            }
         }
     }
 
@@ -204,7 +194,6 @@ class MultiWalletView : WalletView {
 
     private fun configureButtonsForEmptyWalletState(binding: FragmentWalletBinding) =
         with(binding) {
-            btnScanMultiwallet.hide()
             lButtonsLong.root.show()
             lButtonsLong.btnScanLong.setOnClickListener { store.dispatch(WalletAction.Scan) }
             lButtonsLong.btnConfirmLong.setOnClickListener { store.dispatch(WalletAction.CreateWallet) }
