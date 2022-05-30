@@ -15,7 +15,7 @@ import com.tangem.tap.domain.configurable.config.ConfigManager
 import com.tangem.tap.domain.extensions.isMultiwalletAllowed
 import com.tangem.tap.domain.extensions.makePrimaryWalletManager
 import com.tangem.tap.domain.extensions.makeWalletManagersForApp
-import com.tangem.tap.domain.tokens.BlockchainNetwork
+import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.demo.isDemoCard
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.network.NetworkConnectivity
