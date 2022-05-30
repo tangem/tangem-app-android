@@ -16,12 +16,24 @@ import com.tangem.tap.domain.extensions.getArtworkUrl
 import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.domain.tokens.BlockchainNetwork
 import com.tangem.tap.features.wallet.models.WalletRent
-import com.tangem.tap.features.wallet.redux.*
+import com.tangem.tap.features.wallet.redux.AddressData
+import com.tangem.tap.features.wallet.redux.Artwork
+import com.tangem.tap.features.wallet.redux.Currency
+import com.tangem.tap.features.wallet.redux.ErrorType
+import com.tangem.tap.features.wallet.redux.ProgressState
+import com.tangem.tap.features.wallet.redux.TradeCryptoState
+import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.features.wallet.redux.WalletAddresses
+import com.tangem.tap.features.wallet.redux.WalletData
+import com.tangem.tap.features.wallet.redux.WalletDialog
+import com.tangem.tap.features.wallet.redux.WalletMainButton
+import com.tangem.tap.features.wallet.redux.WalletState
+import com.tangem.tap.features.wallet.redux.WalletStore
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.store
-import org.rekotlin.Action
 import java.math.BigDecimal
+import org.rekotlin.Action
 
 class WalletReducer {
     companion object {
@@ -272,21 +284,6 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                 }
             newState = newState.copy(cardImage = Artwork(artworkId = artworkUrl))
         }
-        is WalletAction.ShowDialog.SignedHashesMultiWalletDialog -> {
-            newState = newState.copy(walletDialog = WalletDialog.SignedHashesMultiWalletDialog)
-        }
-        is WalletAction.ShowDialog.ChooseTradeActionDialog -> {
-            newState = newState.copy(walletDialog = WalletDialog.ChooseTradeActionDialog)
-        }
-        is WalletAction.HideDialog -> {
-            newState = newState.copy(walletDialog = null)
-        }
-        is WalletAction.Send.ChooseCurrency -> {
-            newState = newState.copy(
-                walletDialog = WalletDialog.SelectAmountToSendDialog(action.amounts)
-            )
-        }
-        is WalletAction.Send.Cancel -> newState = newState.copy(walletDialog = null)
         is WalletAction.TradeCryptoAction -> return newState
         is WalletAction.ChangeSelectedAddress -> {
             val selectedWalletData = newState.getWalletData(newState.selectedCurrency)
@@ -436,9 +433,6 @@ private fun setMultiWalletFiatRate(
 
     return state
         .updateWalletsData(newWalletsData)
-        .updateTotalBalance(
-            totalBalance = obtainTotalBalance(newWalletsData, appCurrency)
-        )
 }
 
 private fun setSingleWalletFiatRate(
