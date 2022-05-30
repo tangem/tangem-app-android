@@ -1,6 +1,7 @@
 package com.tangem.domain.features.addCustomToken
 
 import com.tangem.common.services.Result
+import com.tangem.domain.common.extensions.getTokens
 import com.tangem.network.api.tangemTech.CoinsResponse
 import com.tangem.network.api.tangemTech.TangemTechService
 
@@ -18,7 +19,7 @@ class AddCustomTokenService(
         active: Boolean? = null,
     ): Result<List<CoinsResponse.Coin>> {
         val networksIds = selectNetworksForSearch(networkId)
-        val result = tangemTechService.coins(contractAddress, networksIds, active)
+        val result = tangemTechService.getTokens(contractAddress, networksIds, active)
         return when (result) {
             is Result.Success -> {
                 var coinsList = mutableListOf<CoinsResponse.Coin>()
