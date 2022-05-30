@@ -46,7 +46,7 @@ class OnWalletLoadedReducer {
         )
 
         val pendingTransactions = wallet.getPendingTransactions()
-        val coinSendButton = coinAmountValue?.isZero() == false && pendingTransactions.isEmpty()
+        val isCoinSendButtonEnabled = coinAmountValue?.isZero() == false && pendingTransactions.isEmpty()
         val balanceStatus = if (pendingTransactions.isNotEmpty()) {
             BalanceStatus.TransactionInProgress
         } else {
@@ -65,7 +65,7 @@ class OnWalletLoadedReducer {
                 fiatAmountFormatted = fiatAmount?.toFormattedFiatValue(fiatCurrency.symbol)
             ),
             pendingTransactions = pendingTransactions.removeUnknownTransactions(),
-            mainButton = WalletMainButton.SendButton(coinSendButton),
+            mainButton = WalletMainButton.SendButton(isCoinSendButtonEnabled),
             currency = Currency.fromBlockchainNetwork(blockchainNetwork),
             tradeCryptoState = TradeCryptoState.from(exchangeManager, walletData),
         )
@@ -83,7 +83,7 @@ class OnWalletLoadedReducer {
             val tokenFiatAmount =
                 tokenWalletData?.fiatRate?.let { rate -> tokenAmountValue?.toFiatValue(rate) }
 
-            val tokenSendButton = newWalletData.shouldEnableTokenSendButton()
+            val isTokenSendButtonEnabled = newWalletData.shouldEnableTokenSendButton()
                 && tokenPendingTransactions.isEmpty()
             tokenWalletData?.copy(
                 currencyData = tokenWalletData.currencyData.copy(
@@ -98,7 +98,7 @@ class OnWalletLoadedReducer {
                     fiatAmountFormatted = tokenFiatAmount?.toFormattedFiatValue(fiatCurrency.code)
                 ),
                 pendingTransactions = tokenPendingTransactions.removeUnknownTransactions(),
-                mainButton = WalletMainButton.SendButton(tokenSendButton),
+                mainButton = WalletMainButton.SendButton(isTokenSendButtonEnabled),
                 tradeCryptoState = TradeCryptoState.from(exchangeManager, tokenWalletData),
             )
         }
