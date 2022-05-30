@@ -108,24 +108,22 @@ fun BigDecimal.isLessThanOrEqual(value: BigDecimal): Boolean {
 
 fun BigDecimal.formatAmountAsSpannedString(
     currencySymbol: String,
-    integerPartSizeProportion: Float = 1.4f
+    reminderPartSizeProportion: Float = 0.7f
 ): SpannedString {
     val amount = this
         .setScale(2, RoundingMode.HALF_UP)
-        .toString()
+        .formatWithSpaces()
     val integer = amount.substringBefore('.')
     val reminder = amount.substringAfter('.')
 
     return buildSpannedString {
+        append(integer)
+        append('.')
         append(
-            integer,
-            RelativeSizeSpan(integerPartSizeProportion),
+            "$reminder $currencySymbol",
+            RelativeSizeSpan(reminderPartSizeProportion),
             Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
         )
-        append('.')
-        append(reminder)
-        append(' ')
-        append(currencySymbol)
     }
 }
 
