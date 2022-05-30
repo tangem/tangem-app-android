@@ -1,15 +1,8 @@
 package com.tangem.tap.features.wallet.redux
 
 import android.graphics.Bitmap
-import com.tangem.blockchain.common.Amount
-import com.tangem.blockchain.common.AmountType
-import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.DerivationStyle
-import com.tangem.blockchain.common.Token
-import com.tangem.blockchain.common.Wallet
-import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.AddressType
-import com.tangem.blockchain.extensions.isAboveZero
 import com.tangem.common.extensions.isZero
 import com.tangem.domain.common.extensions.canHandleToken
 import com.tangem.domain.common.extensions.toCoinId
@@ -23,24 +16,16 @@ import com.tangem.tap.common.toggleWidget.WidgetState
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.extensions.buyIsAllowed
 import com.tangem.tap.domain.extensions.sellIsAllowed
-import com.tangem.tap.domain.extensions.toSendableAmounts
 import com.tangem.tap.domain.tokens.BlockchainNetwork
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
 import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
-import com.tangem.tap.features.wallet.models.PendingTransaction
-import com.tangem.tap.features.wallet.models.TotalBalance
-import com.tangem.tap.features.wallet.models.WalletRent
-import com.tangem.tap.features.wallet.models.WalletWarning
-import com.tangem.tap.features.wallet.models.toPendingTransactions
-import com.tangem.tap.features.wallet.models.toPendingTransactionsForToken
-import com.tangem.tap.features.wallet.redux.reducers.calculateTotalFiatAmount
-import com.tangem.tap.features.wallet.redux.reducers.findTotalBalanceState
+import com.tangem.tap.features.wallet.models.*
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import com.tangem.tap.store
-import java.math.BigDecimal
 import org.rekotlin.StateType
+import java.math.BigDecimal
 import kotlin.properties.ReadOnlyProperty
 
 data class WalletState(
@@ -153,16 +138,13 @@ data class WalletState(
 
             val wallet = walletManager.wallet
 
-            if (walletData.currency is Currency.Blockchain) {
-                return wallet.recentTransactions.toPendingTransactions(wallet.address).isEmpty() &&
-                    wallet.amounts.toSendableAmounts().isEmpty()
-            } else if (walletData.currency is Currency.Token) (
-                return wallet.recentTransactions.toPendingTransactionsForToken(
-                    walletData.currency.token, wallet.address
-                ).isEmpty()
-                    && wallet.amounts[AmountType.Token(token = walletData.currency.token)]
-                    ?.isAboveZero() != true
-                )
+            return when (walletData.currency) {
+                is Currency.Blockchain -> !wallet.hasPendingTransactions() && !wallet.hasSendableAmounts()
+                is Currency.Token -> {
+                    val token = walletData.currency.token
+                    !wallet.hasPendingTransactions(token) && !wallet.isSendableAmount(token)
+                }
+            }
         }
         return false
     }
@@ -387,7 +369,11 @@ data class WalletData(
         return listOfAddresses.size > 1
     }
 
-    fun shouldEnableTokenSendButton(): Boolean = !blockchainAmountIsEmpty() || !tokenAmountIsEmpty()
+    fun shouldEnableTokenSendButton(): Boolean = if (blockchainAmountIsEmpty()) {
+        false
+    } else {
+        !tokenAmountIsEmpty()
+    }
 
     fun assembleWarnings(): List<WalletWarning> {
         val blockchain = currency.blockchain
@@ -410,10 +396,11 @@ data class WalletData(
             val fullName = currency.blockchain.fullName
             walletWarnings.add(WalletWarning.BalanceNotEnoughForFee(fullName))
         }
+
         return walletWarnings.sortedBy { it.showingPosition }
     }
 
-    private fun blockchainAmountIsEmpty(): Boolean = currencyData.blockchainAmount?.isZero() ?: false
+    private fun blockchainAmountIsEmpty(): Boolean = currencyData.blockchainAmount?.isZero() == true
 
     private fun tokenAmountIsEmpty(): Boolean = currencyData.amount?.isZero() == true
 }
