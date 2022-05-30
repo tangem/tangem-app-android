@@ -191,8 +191,8 @@ class CurrenciesRepository(
             }
         }.map { it.await() }
             .map { (it as? Result.Success)?.data?.coins?.firstOrNull()?.id }
-            .mapIndexedNotNull { index, s ->
-                if (s == null) null else tokens[index].contractAddress to s
+            .mapIndexedNotNull { index, id ->
+                if (id == null) null else tokens[index].contractAddress to id
             }.toMap()
     }
 
