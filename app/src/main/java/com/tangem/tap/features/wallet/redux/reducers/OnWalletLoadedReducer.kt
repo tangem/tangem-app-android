@@ -9,6 +9,8 @@ import com.tangem.tap.common.extensions.toFormattedCurrencyString
 import com.tangem.tap.common.extensions.toFormattedFiatValue
 import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.domain.tokens.BlockchainNetwork
+import com.tangem.tap.features.wallet.models.filterByToken
+import com.tangem.tap.features.wallet.models.getPendingTransactions
 import com.tangem.tap.features.wallet.models.removeUnknownTransactions
 import com.tangem.tap.features.wallet.models.toPendingTransactions
 import com.tangem.tap.features.wallet.redux.Currency
@@ -48,10 +50,8 @@ class OnWalletLoadedReducer {
             wallet.blockchain.currency
         )
 
-        val pendingTransactions = wallet.recentTransactions
-            .toPendingTransactions(wallet.address)
-
-        val coinSendButton = coinAmountValue?.isZero() == false && pendingTransactions.isEmpty()
+        val pendingTransactions = wallet.getPendingTransactions()
+        val isCoinSendButtonEnabled = coinAmountValue?.isZero() == false && pendingTransactions.isEmpty()
         val balanceStatus = if (pendingTransactions.isNotEmpty()) {
             BalanceStatus.TransactionInProgress
         } else {
@@ -70,7 +70,7 @@ class OnWalletLoadedReducer {
                 fiatAmountFormatted = fiatAmount?.toFormattedFiatValue(fiatCurrency.symbol)
             ),
             pendingTransactions = pendingTransactions.removeUnknownTransactions(),
-            mainButton = WalletMainButton.SendButton(coinSendButton),
+            mainButton = WalletMainButton.SendButton(isCoinSendButtonEnabled),
             currency = Currency.fromBlockchainNetwork(blockchainNetwork),
             tradeCryptoState = TradeCryptoState.from(exchangeManager, walletData),
         )
@@ -78,8 +78,7 @@ class OnWalletLoadedReducer {
         val tokens = wallet.getTokens().mapNotNull { token ->
             val currency = Currency.fromBlockchainNetwork(blockchainNetwork, token)
             val tokenWalletData = walletState.getWalletData(currency)
-            val tokenPendingTransactions =
-                pendingTransactions.filter { it.currency == token.symbol }
+            val tokenPendingTransactions = pendingTransactions.filterByToken(token)
             val tokenBalanceStatus = when {
                 tokenPendingTransactions.isNotEmpty() -> BalanceStatus.TransactionInProgress
                 pendingTransactions.isNotEmpty() -> BalanceStatus.SameCurrencyTransactionInProgress
@@ -89,8 +88,8 @@ class OnWalletLoadedReducer {
             val tokenFiatAmount =
                 tokenWalletData?.fiatRate?.let { rate -> tokenAmountValue?.toFiatValue(rate) }
 
-            val tokenSendButton = newWalletData.shouldEnableTokenSendButton()
-                    && tokenPendingTransactions.isEmpty()
+            val isTokenSendButtonEnabled = newWalletData.shouldEnableTokenSendButton()
+                && tokenPendingTransactions.isEmpty()
             tokenWalletData?.copy(
                 currencyData = tokenWalletData.currencyData.copy(
                     status = tokenBalanceStatus,
@@ -104,7 +103,7 @@ class OnWalletLoadedReducer {
                     fiatAmountFormatted = tokenFiatAmount?.toFormattedFiatValue(fiatCurrency.symbol)
                 ),
                 pendingTransactions = tokenPendingTransactions.removeUnknownTransactions(),
-                mainButton = WalletMainButton.SendButton(tokenSendButton),
+                mainButton = WalletMainButton.SendButton(isTokenSendButtonEnabled),
                 tradeCryptoState = TradeCryptoState.from(exchangeManager, tokenWalletData),
             )
         }
@@ -158,7 +157,7 @@ class OnWalletLoadedReducer {
         val fiatAmountRaw = fiatRate?.multiply(amount)?.setScale(2, RoundingMode.DOWN)
         val fiatAmount = fiatRate?.let { amount?.toFiatString(it, fiatCurrencyName) }
 
-        val pendingTransactions = wallet.recentTransactions.toPendingTransactions(wallet.address)
+        val pendingTransactions = wallet.getPendingTransactions()
         val sendButtonEnabled = amount?.isZero() == false && pendingTransactions.isEmpty()
         val balanceStatus = if (pendingTransactions.isNotEmpty()) {
             BalanceStatus.TransactionInProgress
