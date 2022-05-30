@@ -21,6 +21,14 @@ import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
 import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
 import com.tangem.tap.features.wallet.models.*
+import com.tangem.tap.features.wallet.models.PendingTransaction
+import com.tangem.tap.features.wallet.models.TotalBalance
+import com.tangem.tap.features.wallet.models.WalletRent
+import com.tangem.tap.features.wallet.models.WalletWarning
+import com.tangem.tap.features.wallet.models.toPendingTransactions
+import com.tangem.tap.features.wallet.models.toPendingTransactionsForToken
+import com.tangem.tap.features.wallet.redux.reducers.calculateTotalFiatAmount
+import com.tangem.tap.features.wallet.redux.reducers.findTotalBalanceState
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
@@ -189,11 +197,11 @@ data class WalletState(
             .distinct().map { getWalletStore(it) }.mapNotNull { it?.updateWallets(walletsData) }
 
         return updateWalletStores(walletStores)
-
     }
 
     fun updateWalletStore(walletStore: WalletStore?): WalletState {
         return copy(wallets = replaceWalletInWallets(walletStore))
+            .updateTotalBalance()
     }
 
     private fun updateWalletStores(walletStores: List<WalletStore>): WalletState {
@@ -210,6 +218,7 @@ data class WalletState(
             }
         }
         return copy(wallets = updatedWallets + walletStoresMutable)
+            .updateTotalBalance()
     }
 
     fun removeWallet(walletData: WalletData?): WalletState {
@@ -271,11 +280,18 @@ data class WalletState(
         }
     }
 
-    fun updateTotalBalance(
-        totalBalance: TotalBalance?
-    ): WalletState {
-        return this.copy(
-            totalBalance = totalBalance
+    private fun updateTotalBalance(): WalletState {
+        return if (wallets.isNotEmpty()) {
+            val walletsData = wallets.flatMap(WalletStore::walletsData)
+            this.copy(
+                totalBalance = TotalBalance(
+                    state = walletsData.findTotalBalanceState(),
+                    fiatAmount = walletsData.calculateTotalFiatAmount(),
+                    fiatCurrency = store.state.globalState.appCurrency
+                )
+            )
+        } else this.copy(
+            totalBalance = null
         )
     }
 }
