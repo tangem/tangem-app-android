@@ -11,7 +11,11 @@ import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.domain.tokens.BlockchainNetwork
 import com.tangem.tap.features.wallet.models.removeUnknownTransactions
 import com.tangem.tap.features.wallet.models.toPendingTransactions
-import com.tangem.tap.features.wallet.redux.*
+import com.tangem.tap.features.wallet.redux.Currency
+import com.tangem.tap.features.wallet.redux.ProgressState
+import com.tangem.tap.features.wallet.redux.TradeCryptoState
+import com.tangem.tap.features.wallet.redux.WalletMainButton
+import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.features.wallet.ui.TokenData
@@ -97,7 +101,7 @@ class OnWalletLoadedReducer {
                         token.symbol
                     ),
                     fiatAmount = tokenFiatAmount,
-                    fiatAmountFormatted = tokenFiatAmount?.toFormattedFiatValue(fiatCurrency.code)
+                    fiatAmountFormatted = tokenFiatAmount?.toFormattedFiatValue(fiatCurrency.symbol)
                 ),
                 pendingTransactions = tokenPendingTransactions.removeUnknownTransactions(),
                 mainButton = WalletMainButton.SendButton(tokenSendButton),
@@ -114,9 +118,6 @@ class OnWalletLoadedReducer {
         }
         return walletState
             .updateWalletsData(wallets)
-            .updateTotalBalance(
-                totalBalance = obtainTotalBalance(wallets, fiatCurrency)
-            )
             .copy(
                 state = state,
                 error = null
