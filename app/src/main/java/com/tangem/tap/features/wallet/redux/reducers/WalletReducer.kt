@@ -284,21 +284,6 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                 }
             newState = newState.copy(cardImage = Artwork(artworkId = artworkUrl))
         }
-        is WalletAction.ShowDialog.SignedHashesMultiWalletDialog -> {
-            newState = newState.copy(walletDialog = WalletDialog.SignedHashesMultiWalletDialog)
-        }
-        is WalletAction.ShowDialog.ChooseTradeActionDialog -> {
-            newState = newState.copy(walletDialog = WalletDialog.ChooseTradeActionDialog)
-        }
-        is WalletAction.HideDialog -> {
-            newState = newState.copy(walletDialog = null)
-        }
-        is WalletAction.Send.ChooseCurrency -> {
-            newState = newState.copy(
-                walletDialog = WalletDialog.SelectAmountToSendDialog(action.amounts)
-            )
-        }
-        is WalletAction.Send.Cancel -> newState = newState.copy(walletDialog = null)
         is WalletAction.TradeCryptoAction -> return newState
         is WalletAction.ChangeSelectedAddress -> {
             val selectedWalletData = newState.getWalletData(newState.selectedCurrency)
