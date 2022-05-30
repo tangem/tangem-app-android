@@ -18,29 +18,19 @@ class TangemTechService {
 
     private var api: TangemTechApi = createApi()
 
-    suspend fun getTokens(
-        contractAddress: String,
-        networkId: String? = null,
+    suspend fun coins(
+        contractAddress: String? = null,
+        networkIds: String? = null,
         active: Boolean? = null,
-    ): Result<CoinsResponse> = withContext(Dispatchers.IO) {
-        performRequest {
-            api.coins(
-                contractAddress = contractAddress,
-                networkIds = networkId,
-                active = active
-            )
-        }
-    }
-
-    suspend fun getListOfCoins(
-        networkIds: List<String>,
         searchText: String? = null,
         offset: Int? = null,
         limit: Int? = null
     ): Result<CoinsResponse> = withContext(Dispatchers.IO) {
         performRequest {
             api.coins(
-                networkIds = networkIds.joinToString(","),
+                contractAddress = contractAddress,
+                networkIds = networkIds,
+                active = active,
                 searchText = searchText,
                 offset = offset,
                 limit = limit

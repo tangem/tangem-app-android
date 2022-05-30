@@ -9,6 +9,7 @@ import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.blockchain.common.Token
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.services.Result
+import com.tangem.domain.common.extensions.getTokens
 import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.network.api.tangemTech.TangemTechService
 import com.tangem.network.common.MoshiConverter

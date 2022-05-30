@@ -1,6 +1,7 @@
 package com.tangem.domain.features.addCustomToken
 
 import com.tangem.common.services.Result
+import com.tangem.domain.common.extensions.getTokens
 import com.tangem.network.api.tangemTech.CoinsResponse
 import com.tangem.network.api.tangemTech.TangemTechService
 
