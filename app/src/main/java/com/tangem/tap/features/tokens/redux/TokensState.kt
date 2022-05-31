@@ -4,6 +4,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.blockchain.common.Token
 import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.common.extensions.canHandleToken
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.tap.domain.tokens.Currency
 import com.tangem.tap.features.wallet.redux.WalletData
@@ -16,10 +17,19 @@ data class TokensState(
     val nonRemovableTokens: List<ContractAddress> = emptyList(),
     val nonRemovableBlockchains: List<Blockchain> = emptyList(),
     val currencies: List<Currency> = emptyList(),
+    val searchInput: String? = null,
     val allowToAdd: Boolean = true,
     val derivationStyle: DerivationStyle? = null,
-    val scanResponse: ScanResponse? = null
-) : StateType
+    val scanResponse: ScanResponse? = null,
+    val needToLoadMore: Boolean = true,
+    val pageToLoad: Int = 0,
+    val loadCoinsState: LoadCoinsState = LoadCoinsState.LOADING,
+) : StateType {
+
+    fun canHandleToken(token: TokenWithBlockchain): Boolean {
+        return scanResponse?.card?.canHandleToken(token.blockchain) ?: false
+    }
+}
 
 typealias ContractAddress = String
 
@@ -62,10 +72,14 @@ fun List<Currency>.filter(supportedBlockchains: Set<Blockchain>?): List<Currency
         it.copy(contracts =
         it.contracts.filter {
             supportedBlockchains.contains(it.blockchain) &&
-                    (it.blockchain.canHandleTokens() || it.address == null)
+                (it.blockchain.canHandleTokens() || it.address == null)
         }
         )
     }.filterNot {
         it.contracts.isNullOrEmpty() && !supportedBlockchains.contains(Blockchain.fromNetworkId(it.id))
     }
+}
+
+enum class LoadCoinsState {
+    LOADING, LOADED, ERROR
 }

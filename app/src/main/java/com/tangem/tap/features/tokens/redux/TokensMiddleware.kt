@@ -8,11 +8,13 @@ import com.tangem.common.card.EllipticCurve
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.toMapKey
 import com.tangem.common.hdWallet.DerivationPath
+import com.tangem.common.services.Result
 import com.tangem.domain.DomainWrapped
 import com.tangem.domain.common.KeyWalletPublicKey
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.TapWorkarounds.isTestCard
+import com.tangem.domain.common.extensions.supportedBlockchains
 import com.tangem.domain.features.addCustomToken.CustomCurrency
 import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction
 import com.tangem.domain.redux.domainStore
@@ -26,10 +28,10 @@ import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.makeWalletManagerForApp
-import com.tangem.tap.domain.tokens.BlockchainNetwork
+import com.tangem.tap.domain.tokens.LoadAvailableCoinsService
+import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.wallet.redux.Currency
 import com.tangem.tap.features.wallet.redux.WalletAction
-import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
@@ -40,27 +42,65 @@ class TokensMiddleware {
         { next ->
             { action ->
                 when (action) {
-                    is TokensAction.LoadCurrencies -> handleLoadCurrencies(action)
+                    is TokensAction.LoadCurrencies -> handleLoadCurrencies(action.scanResponse)
                     is TokensAction.SaveChanges -> handleSaveChanges(action)
-                    is TokensAction.PrepareAndNavigateToAddCustomToken -> handleAddingCustomToken(action)
+                    is TokensAction.PrepareAndNavigateToAddCustomToken -> handleAddingCustomToken(
+                        action
+                    )
+                    is TokensAction.SetSearchInput -> {
+                        handleLoadCurrencies(
+                            scanResponse = store.state.globalState.scanResponse,
+                            action.searchInput
+                        )
+                    }
+
                 }
                 next(action)
             }
         }
     }
 
-    private fun handleLoadCurrencies(action: TokensAction.LoadCurrencies) {
-        val scanResponse = store.state.globalState.scanResponse
+    private fun handleLoadCurrencies(scanResponse: ScanResponse?, newSearchInput: String? = null) {
+        val tokensState = store.state.tokensState
+
         val isTestcard = scanResponse?.card?.isTestCard ?: false
 
+        val supportedBlockchains: List<Blockchain> =
+            scanResponse?.card?.supportedBlockchains() ?: Blockchain.values().toList()
+                .filter { !it.isTestnet() }
+
+        val loadCoinsService = LoadAvailableCoinsService(
+            store.state.domainNetworks.tangemTechService,
+            currenciesRepository
+        )
+
         scope.launch {
-            val currencies = async {
-                currenciesRepository.getSupportedTokens(isTestcard)
-                    .filter(action.supportedBlockchains?.toSet())
+
+            val loadCoinsResult = if (newSearchInput == null) {
+                loadCoinsService.getSupportedTokens(
+                    isTestcard,
+                    supportedBlockchains,
+                    tokensState.pageToLoad,
+                    tokensState.searchInput
+                )
+            } else {
+                loadCoinsService.getSupportedTokens(
+                    isTestcard, supportedBlockchains, 0, newSearchInput.ifBlank { null }
+                )
             }
-            val delay = async { delay(600) }
-            delay.await()
-            store.dispatchOnMain(TokensAction.LoadCurrencies.Success(currencies.await()))
+            when (loadCoinsResult) {
+                is Result.Success -> {
+                    val currencies = loadCoinsResult.data.currencies
+                        .filter(supportedBlockchains.toSet())
+                    store.dispatchOnMain(
+                        TokensAction.LoadCurrencies.Success(
+                            currencies, loadCoinsResult.data.moreAvailable
+                        )
+                    )
+                }
+                is Result.Failure -> store.dispatchOnMain(TokensAction.LoadCurrencies.Failure)
+            }
+
         }
     }
 
@@ -75,19 +115,22 @@ class TokensMiddleware {
         )
 
         val blockchainsToAdd = action.addedBlockchains.filter { !currentBlockchains.contains(it) }
-        val blockchainsToRemove = currentBlockchains.filter { !action.addedBlockchains.contains(it) }
+        val blockchainsToRemove =
+            currentBlockchains.filter { !action.addedBlockchains.contains(it) }
 
         val tokensToAdd = action.addedTokens.filter { !currentTokens.contains(it) }
-        val tokensToRemove = currentTokens.filter {
-                token -> !action.addedTokens.any { it.token == token.token }
+        val tokensToRemove = currentTokens.filter { token ->
+            !action.addedTokens.any { it.token == token.token }
         }
         val derivationStyle = scanResponse.card.derivationStyle
 
-        removeCurrenciesIfNeeded(convertToCurrencies(
-            blockchains = blockchainsToRemove,
-            tokens = tokensToRemove,
-            derivationStyle = derivationStyle
-        ))
+        removeCurrenciesIfNeeded(
+            convertToCurrencies(
+                blockchains = blockchainsToRemove,
+                tokens = tokensToRemove,
+                derivationStyle = derivationStyle
+            )
+        )
 
         if (tokensToAdd.isEmpty() && blockchainsToAdd.isEmpty()) {
             store.dispatchDebugErrorNotification("Nothing to save")
@@ -247,7 +290,8 @@ class TokensMiddleware {
                     val rawDerivationPath = currency.derivationPath
                         ?: currency.blockchain.derivationPath(derivationStyle)?.rawPath
 
-                    val blockchainNetwork = BlockchainNetwork(currency.blockchain, rawDerivationPath, emptyList())
+                    val blockchainNetwork =
+                        BlockchainNetwork(currency.blockchain, rawDerivationPath, emptyList())
                     WalletAction.MultiWallet.AddToken(currency.token, blockchainNetwork)
                 }
             }
@@ -298,8 +342,15 @@ class TokensMiddleware {
             walletStore.walletsData.map { walletData -> walletData.currency }
         }.flatten().map {
             when (it) {
-                is Currency.Blockchain -> DomainWrapped.Currency.Blockchain(it.blockchain, it.derivationPath)
-                is Currency.Token -> DomainWrapped.Currency.Token(it.token, it.blockchain, it.derivationPath)
+                is Currency.Blockchain -> DomainWrapped.Currency.Blockchain(
+                    it.blockchain,
+                    it.derivationPath
+                )
+                is Currency.Token -> DomainWrapped.Currency.Token(
+                    it.token,
+                    it.blockchain,
+                    it.derivationPath
+                )
             }
         }
         domainStore.dispatch(AddCustomTokenAction.Init.SetAddedCurrencies(addedCurrencies))
