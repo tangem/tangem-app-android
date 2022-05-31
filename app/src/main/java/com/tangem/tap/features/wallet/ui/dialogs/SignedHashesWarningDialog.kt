@@ -24,7 +24,7 @@ class SignedHashesWarningDialog {
                 }
                 setNegativeButton(R.string.common_cancel) { _, _ -> }
                 setOnDismissListener {
-                    store.dispatch(WalletAction.HideDialog)
+                    store.dispatch(WalletAction.DialogAction.Hide)
                 }
             }.create()
         }
