@@ -19,7 +19,11 @@ import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.AddMoreBack
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.BackupInProgressDialog
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.ConfirmDiscardingBackupDialog
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.UnfinishedBackupFoundDialog
+import com.tangem.tap.features.wallet.redux.WalletDialog
+import com.tangem.tap.features.wallet.ui.dialogs.AmountToSendBottomSheetDialog
+import com.tangem.tap.features.wallet.ui.dialogs.ChooseTradeActionBottomSheetDialog
 import com.tangem.tap.features.wallet.ui.dialogs.ScanFailsDialog
+import com.tangem.tap.features.wallet.ui.dialogs.SignedHashesWarningDialog
 import com.tangem.tap.features.wallet.ui.dialogs.SimpleOkDialog
 import com.tangem.tap.features.wallet.ui.wallet.CurrencySelectionDialog
 import com.tangem.tap.store
@@ -60,8 +64,6 @@ class DialogManager : StoreSubscriber<GlobalState> {
             is AppDialog.ScanFailsDialog -> ScanFailsDialog.create(context)
             is AppDialog.AddressInfoDialog -> AddressInfoBottomSheetDialog(state.dialog, context)
             is AppDialog.TestActionsDialog -> TestActionsBottomSheetDialog(state.dialog, context)
-            is AppDialog.CurrencySelectionDialog ->
-                CurrencySelectionDialog.create(state.dialog, context)
             is TwinCardsAction.Wallet.ShowInterruptDialog ->
                 CreateWalletInterruptDialog.create(state.dialog, context)
             is WalletConnectDialog.UnsupportedCard ->
@@ -105,6 +107,14 @@ class DialogManager : StoreSubscriber<GlobalState> {
             is BackupDialog.BackupInProgress -> BackupInProgressDialog.create(context)
             is BackupDialog.UnfinishedBackupFound -> UnfinishedBackupFoundDialog.create(context)
             is BackupDialog.ConfirmDiscardingBackup -> ConfirmDiscardingBackupDialog.create(context)
+            is WalletDialog.CurrencySelectionDialog ->
+                CurrencySelectionDialog.create(state.dialog, context)
+            is WalletDialog.ChooseTradeActionDialog ->
+                ChooseTradeActionBottomSheetDialog(context)
+            is WalletDialog.SelectAmountToSendDialog ->
+                AmountToSendBottomSheetDialog(context, state.dialog)
+            is WalletDialog.SignedHashesMultiWalletDialog ->
+                SignedHashesWarningDialog.create(context)
             else -> null
         }
         dialog?.show()
