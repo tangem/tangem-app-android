@@ -1,9 +1,13 @@
 package com.tangem.tap.features.send.redux.reducers
 
 import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.AmountType
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.tap.common.extensions.fullNameWithoutTestnet
 import com.tangem.tap.features.send.redux.FeeAction
 import com.tangem.tap.features.send.redux.FeeActionUi
 import com.tangem.tap.features.send.redux.SendScreenAction
+import com.tangem.tap.features.send.redux.states.FeePrecision
 import com.tangem.tap.features.send.redux.states.FeeState
 import com.tangem.tap.features.send.redux.states.FeeType
 import com.tangem.tap.features.send.redux.states.SendState
@@ -57,7 +61,8 @@ class FeeReducer : SendInternalReducer {
                             selectedFeeType = feeType,
                             feeList = fees,
                             currentFee = currentFee,
-                            error = null
+                            error = null,
+                            feePrecision = getFeePrecision(sendState)
                     )
                 } else {
                     val feeType = getCurrentFeeType(state)
@@ -67,7 +72,8 @@ class FeeReducer : SendInternalReducer {
                             selectedFeeType = feeType,
                             feeList = fees,
                             currentFee = currentFee,
-                            error = null
+                            error = null,
+                            feePrecision = getFeePrecision(sendState)
                     )
                 }
             }
@@ -97,6 +103,17 @@ class FeeReducer : SendInternalReducer {
             }
         }
     }
+
+    private fun getFeePrecision(sendState: SendState): FeePrecision {
+        val blockchain = sendState.walletManager?.wallet?.blockchain
+        return if (blockchain?.fullNameWithoutTestnet == Blockchain.Tron.fullName &&
+            sendState.amountState.typeOfAmount is AmountType.Token) {
+            FeePrecision.CAN_BE_LOWER
+        } else {
+            FeePrecision.PRECISE
+        }
+    }
+
 
     private fun getCurrentFeeType(state: FeeState): FeeType {
         return if (state.selectedFeeType == FeeType.SINGLE) FeeType.NORMAL else state.selectedFeeType
