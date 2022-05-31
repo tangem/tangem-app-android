@@ -10,7 +10,12 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.play.core.review.ReviewManagerFactory
 import com.tangem.tap.common.analytics.AnalyticsEvent
-import com.tangem.tap.common.extensions.*
+import com.tangem.tap.common.extensions.dispatchOpenUrl
+import com.tangem.tap.common.extensions.getActivity
+import com.tangem.tap.common.extensions.getColor
+import com.tangem.tap.common.extensions.getString
+import com.tangem.tap.common.extensions.hide
+import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
@@ -87,7 +92,7 @@ class WarningMessageVH(val binding: LayoutWarningCardActionBinding) : RecyclerVi
                 when {
                     warning.titleResId == R.string.warning_important_security_info -> {
                         View.OnClickListener {
-                            store.dispatch(WalletAction.ShowDialog.SignedHashesMultiWalletDialog)
+                            store.dispatch(WalletAction.DialogAction.SignedHashesMultiWalletDialog)
                         }
                     }
                     warning.messageResId == R.string.alert_funds_restoration_message -> {
