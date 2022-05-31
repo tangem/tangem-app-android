@@ -13,9 +13,9 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.transition.TransitionInflater
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.squareup.picasso.Picasso
-import com.tangem.tangem_sdk_new.extensions.dpToPx
 import com.tangem.tap.MainActivity
 import com.tangem.tap.common.extensions.show
+import com.tangem.tap.common.recyclerView.SpaceItemDecoration
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
@@ -24,8 +24,11 @@ import com.tangem.tap.domain.statePrinter.printScanResponseState
 import com.tangem.tap.domain.statePrinter.printWalletState
 import com.tangem.tap.domain.termsOfUse.CardTou
 import com.tangem.tap.features.details.redux.DetailsAction
-import com.tangem.tap.features.wallet.redux.*
-import com.tangem.tap.features.wallet.ui.adapters.SpacesItemDecoration
+import com.tangem.tap.features.wallet.redux.Artwork
+import com.tangem.tap.features.wallet.redux.ErrorType
+import com.tangem.tap.features.wallet.redux.ProgressState
+import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.ui.adapters.WarningMessagesAdapter
 import com.tangem.tap.features.wallet.ui.wallet.MultiWalletView
 import com.tangem.tap.features.wallet.ui.wallet.SingleWalletView
@@ -79,7 +82,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         (activity as? AppCompatActivity)?.setSupportActionBar(binding.toolbar)
 
         binding.toolbar.setNavigationOnClickListener {
-            store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
+            store.dispatch(WalletAction.Scan)
         }
         setupWarningsRecyclerView()
         walletView.changeWalletView(this, binding)
@@ -100,7 +103,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         val layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
         with(binding) {
             rvWarningMessages.layoutManager = layoutManager
-            rvWarningMessages.addItemDecoration(SpacesItemDecoration(rvWarningMessages.dpToPx(16f).toInt()))
+            rvWarningMessages.addItemDecoration(SpaceItemDecoration.all(16f))
             rvWarningMessages.adapter = warningsAdapter
         }
     }
@@ -179,8 +182,6 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
                         scanNoteResponse,
                         store.state.walletState.walletManagers.map { it.wallet },
                         CardTou(),
-                        store.state.globalState.appCurrency,
-                        tangemTechService = store.state.domainNetworks.tangemTechService
                     ))
                     store.dispatch(NavigationAction.NavigateTo(AppScreen.Details))
                     true
