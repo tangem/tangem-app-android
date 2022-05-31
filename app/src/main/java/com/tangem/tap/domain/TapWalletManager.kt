@@ -15,7 +15,7 @@ import com.tangem.tap.domain.configurable.config.ConfigManager
 import com.tangem.tap.domain.extensions.isMultiwalletAllowed
 import com.tangem.tap.domain.extensions.makePrimaryWalletManager
 import com.tangem.tap.domain.extensions.makeWalletManagersForApp
-import com.tangem.tap.domain.tokens.BlockchainNetwork
+import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.demo.isDemoCard
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.network.NetworkConnectivity
@@ -34,17 +34,17 @@ class TapWalletManager {
         store.state.globalState.configManager?.config?.blockchainSdkConfig ?: BlockchainSdkConfig()
     }
 
-    private val walletManagersThrottler = ThrottlerWithValues<Blockchain, Result<Wallet>>(10000)
+    private val walletManagersThrottler = ThrottlerWithValues<BlockchainNetwork, Result<Wallet>>(10000)
 
     suspend fun loadWalletData(walletManager: WalletManager) {
         val blockchain = walletManager.wallet.blockchain
         val blockchainNetwork = BlockchainNetwork.fromWalletManager(walletManager)
-        val result = if (walletManagersThrottler.isStillThrottled(blockchain)) {
-            walletManagersThrottler.geValue(blockchain)!!
+        val result = if (walletManagersThrottler.isStillThrottled(blockchainNetwork)) {
+            walletManagersThrottler.geValue(blockchainNetwork)!!
         } else {
             val safeUpdateResult = walletManager.safeUpdate()
-            walletManagersThrottler.updateThrottlingTo(blockchain)
-            walletManagersThrottler.setValue(blockchain, safeUpdateResult)
+            walletManagersThrottler.updateThrottlingTo(blockchainNetwork)
+            walletManagersThrottler.setValue(blockchainNetwork, safeUpdateResult)
             safeUpdateResult
         }
         when (result) {
