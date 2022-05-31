@@ -7,8 +7,7 @@ import com.tangem.domain.common.isTangemTwin
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.extensions.isWalletDataSupported
 import com.tangem.tap.domain.extensions.signedHashesCount
-import com.tangem.tap.domain.extensions.toSendableAmounts
-import com.tangem.tap.features.wallet.models.hasPendingTransactions
+import com.tangem.tap.features.wallet.models.hasSendableAmountsOrPendingTransactions
 import org.rekotlin.Action
 import java.util.*
 
@@ -29,9 +28,6 @@ private fun internalReduce(action: Action, state: AppState): DetailsState {
         is DetailsAction.ResetToFactory -> {
             handleEraseWallet(action, detailsState)
         }
-        is DetailsAction.AppCurrencyAction -> {
-            handleAppCurrencyAction(action, detailsState)
-        }
         is DetailsAction.ManageSecurity -> {
             handleSecurityAction(action, detailsState)
         }
@@ -48,10 +44,6 @@ private fun handlePrepareScreen(
         scanResponse = action.scanResponse,
         wallets = action.wallets,
         cardInfo = action.scanResponse.card.toCardInfo(),
-        appCurrencyState = state.appCurrencyState.copy(
-            fiatCurrencyName = action.fiatCurrencyName,
-            showAppCurrencyDialog = false,
-        ),
         cardTermsOfUseUrl = action.cardTou.getUrl(action.scanResponse.card),
         createBackupAllowed = action.scanResponse.card.backupStatus == Card.BackupStatus.NoBackup,
     )
@@ -69,9 +61,7 @@ private fun handleEraseWallet(
                 (card?.isWalletDataSupported == true &&
                     (!state.scanResponse.isTangemNote() && !state.scanResponse.supportsBackup()))
 
-            val notEmpty = state.wallets.any {
-                it.hasPendingTransactions() || it.amounts.toSendableAmounts().isNotEmpty()
-            }
+            val notEmpty = state.wallets.any { it.hasSendableAmountsOrPendingTransactions() }
             val eraseWalletState = when {
                 notAllowedByCard -> EraseWalletState.NotAllowedByCard
                 notEmpty -> EraseWalletState.NotEmpty
@@ -89,30 +79,6 @@ private fun handleEraseWallet(
         DetailsAction.ResetToFactory.Cancel -> state.copy(eraseWalletState = null)
         DetailsAction.ResetToFactory.Failure -> state.copy(eraseWalletState = null)
         DetailsAction.ResetToFactory.Success -> state.copy(eraseWalletState = null)
-        else -> state
-    }
-}
-
-private fun handleAppCurrencyAction(
-    action: DetailsAction.AppCurrencyAction, state: DetailsState,
-): DetailsState {
-    return when (action) {
-        is DetailsAction.AppCurrencyAction.SetCurrencies -> {
-            state.copy(appCurrencyState = state.appCurrencyState.copy(fiatCurrencies = action.currencies))
-        }
-        DetailsAction.AppCurrencyAction.ChooseAppCurrency -> {
-            state.copy(appCurrencyState = state.appCurrencyState.copy(showAppCurrencyDialog = true))
-        }
-        DetailsAction.AppCurrencyAction.Cancel -> {
-            state.copy(appCurrencyState = state.appCurrencyState.copy(showAppCurrencyDialog = false))
-        }
-        is DetailsAction.AppCurrencyAction.SelectAppCurrency -> {
-            state.copy(
-                appCurrencyState = state.appCurrencyState.copy(
-                    fiatCurrencyName = action.fiatCurrencyName, showAppCurrencyDialog = false
-                )
-            )
-        }
         else -> state
     }
 }
