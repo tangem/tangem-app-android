@@ -1,8 +1,9 @@
 package com.tangem.domain.redux
 
+import com.tangem.domain.DomainLayer
 import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenHub
 import com.tangem.domain.redux.global.DomainGlobalHub
-import com.tangem.domain.redux.state.observeReducedStates
+import org.rekotlin.Action
 import org.rekotlin.Store
 
 /**
@@ -18,16 +19,27 @@ private val RE_STORE_HUBS: List<ReStoreHub<DomainState, *>> = listOf(
 val domainStore = Store(
     state = DomainState(),
     middleware = RE_STORE_HUBS.map { it.getMiddleware() },
-    reducer = { action, state ->
-        requireNotNull(state)
-
-        // we can examine the store state after each change by reducer
-        val reducedSates = RE_STORE_HUBS.mapNotNull {
-            val reducedState = it.reduce(action, state)
-            if (reducedState == state) null else Pair(action, reducedState)
-        }
-        observeReducedStates(reducedSates)
-
-        if (reducedSates.isEmpty()) state else reducedSates.last().second
-    }
+    reducer = { action, state -> reduce(action, state) }
 )
+
+private fun reduce(action: Action, domainState: DomainState?): DomainState {
+    requireNotNull(domainState)
+
+    // we can examine the store state after each change by reducer
+    var assembleReducedDomainState: DomainState = domainState
+    val reducedStatesByAction = mutableListOf<Pair<Action, DomainState>>()
+
+    RE_STORE_HUBS.forEach {
+        val reducedState = it.reduce(action, assembleReducedDomainState)
+
+        assembleReducedDomainState = if (reducedState != assembleReducedDomainState) {
+            reducedStatesByAction.add(action to assembleReducedDomainState)
+            reducedState
+        } else {
+            assembleReducedDomainState
+        }
+    }
+    DomainLayer.actionStateLogger.log(reducedStatesByAction)
+
+    return assembleReducedDomainState
+}
