@@ -21,7 +21,7 @@ class LoadAvailableCoinsService(
         if (isTestNet) {
             return Result.Success(
                 LoadedCoins(
-                    currencies = currenciesRepository.getTestnetCoins(),
+                    currencies = currenciesRepository.getTestnetCoins().filter(searchInput),
                     moreAvailable = false,
                 )
             )
@@ -57,6 +57,15 @@ class LoadAvailableCoinsService(
             limit = LOAD_PER_PAGE,
             searchText = searchInput
         )
+    }
+
+    private fun List<Currency>.filter(searchInput: String?): List<Currency> {
+        if (searchInput.isNullOrBlank()) return this
+
+        return filter{
+            it.symbol.contains(searchInput, ignoreCase = true) ||
+                    it.name.contains(searchInput, ignoreCase = true)
+        }
     }
 
     companion object {
