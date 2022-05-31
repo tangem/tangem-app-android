@@ -4,7 +4,7 @@ import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.tap.common.TestAction
 import com.tangem.tap.common.TestActions
-import com.tangem.tap.domain.tokens.BlockchainNetwork
+import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.store
 import java.math.BigDecimal

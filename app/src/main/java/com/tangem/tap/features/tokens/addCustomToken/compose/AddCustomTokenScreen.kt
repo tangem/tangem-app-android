@@ -21,21 +21,69 @@ import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenState
 import com.tangem.domain.features.addCustomToken.redux.ScreenState
 import com.tangem.domain.features.addCustomToken.redux.ViewStates
 import com.tangem.domain.redux.domainStore
-import com.tangem.tap.common.compose.AddCustomTokenWarning
-import com.tangem.tap.common.compose.ComposeDialogManager
-import com.tangem.tap.common.compose.ToggledRippleTheme
-import com.tangem.tap.common.compose.keyboardAsState
+import com.tangem.tap.common.compose.*
 import com.tangem.tap.common.moduleMessage.ModuleMessageConverter
-import com.tangem.tap.features.tokens.addCustomToken.compose.test.TestAddCustomTokenActions
+import com.tangem.tap.features.tokens.addCustomToken.compose.test.TestCase
+import com.tangem.tap.features.tokens.addCustomToken.compose.test.TestCasesList
 import com.tangem.wallet.R
+import kotlinx.coroutines.launch
 
 /**
 * [REDACTED_AUTHOR]
  */
 private class AddCustomTokenScreen {} // for simple search
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
-fun AddCustomTokenScreen(state: MutableState<AddCustomTokenState>) {
+fun AddCustomTokenScreen(
+    state: MutableState<AddCustomTokenState>,
+    closePopupTrigger: ClosePopupTrigger,
+) {
+    val selectedTestCase = remember { mutableStateOf(TestCase.ContractAddress) }
+
+    val bottomSheetScaffoldState = rememberBottomSheetScaffoldState(
+        bottomSheetState = BottomSheetState(BottomSheetValue.Collapsed)
+    )
+    val coroutineScope = rememberCoroutineScope()
+    val toggleBottomSheet = { coroutineScope.launch { bottomSheetScaffoldState.toggle() } }
+
+    BottomSheetScaffold(
+        scaffoldState = bottomSheetScaffoldState,
+        sheetContent = {
+            Surface(color = colorResource(id = R.color.lightGray5)) {
+                selectedTestCase.value.content(toggleBottomSheet)
+            }
+        },
+        sheetPeekHeight = 0.dp,
+    ) {
+        Column() {
+            TestCasesList(onItemClick = {
+                selectedTestCase.value = it
+                toggleBottomSheet()
+            })
+            ScreenContent(state, closePopupTrigger)
+        }
+    }
+
+    ComposeDialogManager()
+    LaunchedEffect(key1 = Unit, block = { domainStore.dispatch(AddCustomTokenAction.OnCreate) })
+    DisposableEffect(key1 = Unit, effect = { onDispose { domainStore.dispatch(AddCustomTokenAction.OnDestroy) } })
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+private suspend fun BottomSheetScaffoldState.toggle() {
+    if (bottomSheetState.isCollapsed) {
+        bottomSheetState.expand()
+    } else {
+        bottomSheetState.collapse()
+    }
+}
+
+@Composable
+private fun ScreenContent(
+    state: MutableState<AddCustomTokenState>,
+    closePopupTrigger: ClosePopupTrigger,
+) {
     val scaffoldState = rememberScaffoldState()
 
     Scaffold(
@@ -50,9 +98,8 @@ fun AddCustomTokenScreen(state: MutableState<AddCustomTokenState>) {
     ) {
         Box(Modifier.fillMaxSize()) {
             LazyColumn(
-                contentPadding = PaddingValues(bottom = 90.dp)
+                contentPadding = PaddingValues(bottom = 90.dp),
             ) {
-                item { TestAddCustomTokenActions() }
                 item {
                     Surface(
                         modifier = Modifier.padding(16.dp),
@@ -64,22 +111,21 @@ fun AddCustomTokenScreen(state: MutableState<AddCustomTokenState>) {
                                 .fillMaxWidth()
                                 .padding(16.dp)
                         ) {
-                            FormFields(state)
+                            FormFields(state, closePopupTrigger)
                         }
                     }
                 }
                 item { Warnings(state.value.warnings.toList()) }
             }
         }
-        ComposeDialogManager()
     }
-
-    LaunchedEffect(key1 = Unit, block = { domainStore.dispatch(AddCustomTokenAction.OnCreate) })
-    DisposableEffect(key1 = Unit, effect = { onDispose { domainStore.dispatch(AddCustomTokenAction.OnDestroy) } })
 }
 
 @Composable
-private fun FormFields(state: MutableState<AddCustomTokenState>) {
+private fun FormFields(
+    state: MutableState<AddCustomTokenState>,
+    closePopupTrigger: ClosePopupTrigger,
+) {
     val context = LocalContext.current
     val errorConverter = remember { ModuleMessageConverter(context) }
 
@@ -88,11 +134,11 @@ private fun FormFields(state: MutableState<AddCustomTokenState>) {
         val data = ScreenFieldData.fromState(field, stateValue, errorConverter)
         when (field.id) {
             ContractAddress -> TokenContractAddressView(data)
-            Network -> TokenNetworkView(data, stateValue)
+            Network -> TokenNetworkView(data, stateValue, closePopupTrigger)
             Name -> TokenNameView(data)
             Symbol -> TokenSymbolView(data)
             Decimals -> TokenDecimalsView(data)
-            DerivationPath -> TokenDerivationPathView(data, stateValue)
+            DerivationPath -> TokenDerivationPathView(data, stateValue, closePopupTrigger)
         }
     }
 }

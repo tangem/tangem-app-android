@@ -63,7 +63,7 @@ class PendingTransactionsAdapter
             }
             binding.tvPendingTransaction.text = binding.root.getString(transactionDescriptionRes)
 
-            transaction.amountUi?.let { binding.tvPendingTransactionAmount.text = "$it " }
+            transaction.amountValueUi?.let { binding.tvPendingTransactionAmount.text = "$it " }
             binding.tvPendingTransactionCurrency.text = "${transaction.currency}"
 
             if (transaction.address != null) {

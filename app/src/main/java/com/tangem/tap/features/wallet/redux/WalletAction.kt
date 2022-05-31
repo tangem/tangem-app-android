@@ -4,11 +4,12 @@ import android.content.Context
 import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.card.Card
+import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.redux.ErrorAction
 import com.tangem.tap.common.redux.NotificationAction
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
-import com.tangem.tap.domain.tokens.BlockchainNetwork
+import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.wallet.R
 import org.rekotlin.Action
 import java.math.BigDecimal
@@ -98,7 +99,10 @@ sealed class WalletAction : Action {
     data class LoadFiatRate(
         val wallet: Wallet? = null, val coinsList: List<Currency>? = null,
     ) : WalletAction() {
-        data class Success(val fiatRate: Pair<Currency, BigDecimal?>) : WalletAction()
+        data class Success(
+            val fiatRates: Map<Currency, BigDecimal?>
+        ) : WalletAction()
+
         object Failure : WalletAction()
     }
 
@@ -113,9 +117,7 @@ sealed class WalletAction : Action {
 
     data class Send(val amount: Amount? = null) : WalletAction() {
         data class ChooseCurrency(val amounts: List<Amount>?) : WalletAction()
-        object Cancel : WalletAction()
     }
-
 
     object EmptyField : WalletAction(), ErrorAction {
         override val error = TapError.PayIdEmptyField
@@ -129,13 +131,18 @@ sealed class WalletAction : Action {
 
     data class ShareAddress(val address: String, val context: Context) : WalletAction()
 
-    object ShowDialog : WalletAction() {
-        object QrCode : WalletAction()
-        object SignedHashesMultiWalletDialog : WalletAction()
-        object ChooseTradeActionDialog : WalletAction()
-    }
+    sealed class DialogAction : WalletAction() {
+        data class QrCode(
+            val currency: Currency,
+            val selectedAddress: AddressData,
+        ) : DialogAction()
 
-    object HideDialog : WalletAction()
+        object SignedHashesMultiWalletDialog : DialogAction()
+        object ChooseTradeActionDialog : DialogAction()
+        data class ChooseCurrency(val amounts: List<Amount>?) : DialogAction()
+
+        object Hide : DialogAction()
+    }
 
     data class ExploreAddress(val exploreUrl: String, val context: Context) : WalletAction()
 
@@ -157,10 +164,15 @@ sealed class WalletAction : Action {
     data class ChangeSelectedAddress(val type: AddressType) : WalletAction()
 
     data class SetWalletRent(
-        val blockchain: BlockchainNetwork,
+        val wallet: Wallet,
         val minRent: String,
         val rentExempt: String
     ) : WalletAction()
 
-    data class RemoveWalletRent(val blockchain: BlockchainNetwork) : WalletAction()
+    data class RemoveWalletRent(val wallet: Wallet) : WalletAction()
+
+    sealed class AppCurrencyAction : WalletAction() {
+        object ChooseAppCurrency : AppCurrencyAction()
+        data class SelectAppCurrency(val fiatCurrency: FiatCurrency) : AppCurrencyAction()
+    }
 }
