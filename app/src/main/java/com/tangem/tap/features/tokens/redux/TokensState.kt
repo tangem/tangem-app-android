@@ -17,9 +17,13 @@ data class TokensState(
     val nonRemovableTokens: List<ContractAddress> = emptyList(),
     val nonRemovableBlockchains: List<Blockchain> = emptyList(),
     val currencies: List<Currency> = emptyList(),
+    val searchInput: String? = null,
     val allowToAdd: Boolean = true,
     val derivationStyle: DerivationStyle? = null,
-    val scanResponse: ScanResponse? = null
+    val scanResponse: ScanResponse? = null,
+    val needToLoadMore: Boolean = true,
+    val pageToLoad: Int = 0,
+    val loadCoinsState: LoadCoinsState = LoadCoinsState.LOADING,
 ) : StateType {
 
     fun canHandleToken(token: TokenWithBlockchain): Boolean {
@@ -74,4 +78,8 @@ fun List<Currency>.filter(supportedBlockchains: Set<Blockchain>?): List<Currency
     }.filterNot {
         it.contracts.isNullOrEmpty() && !supportedBlockchains.contains(Blockchain.fromNetworkId(it.id))
     }
+}
+
+enum class LoadCoinsState {
+    LOADING, LOADED, ERROR
 }
