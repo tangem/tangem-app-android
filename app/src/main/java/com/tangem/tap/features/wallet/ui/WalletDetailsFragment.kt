@@ -1,8 +1,11 @@
 package com.tangem.tap.features.wallet.ui
 
-import android.app.Dialog
 import android.os.Bundle
-import android.view.*
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.ColorRes
@@ -13,18 +16,30 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.transition.TransitionInflater
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.squareup.picasso.Picasso
-import com.tangem.common.extensions.guard
 import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.TestActions
-import com.tangem.tap.common.extensions.*
-import com.tangem.tap.common.redux.StateDialog
+import com.tangem.tap.common.extensions.appendIfNotNull
+import com.tangem.tap.common.extensions.beginDelayedTransition
+import com.tangem.tap.common.extensions.fitChipsByGroupWidth
+import com.tangem.tap.common.extensions.getColor
+import com.tangem.tap.common.extensions.getString
+import com.tangem.tap.common.extensions.hide
+import com.tangem.tap.common.extensions.loadCurrenciesIcon
+import com.tangem.tap.common.extensions.show
+import com.tangem.tap.common.extensions.toQrCode
+import com.tangem.tap.common.recyclerView.SpaceItemDecoration
 import com.tangem.tap.common.redux.navigation.NavigationAction
-import com.tangem.tap.domain.tokens.BlockchainNetwork
+import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.onboarding.getQRReceiveMessage
 import com.tangem.tap.features.wallet.models.PendingTransaction
-import com.tangem.tap.features.wallet.redux.*
+import com.tangem.tap.features.wallet.redux.Currency
+import com.tangem.tap.features.wallet.redux.ErrorType
+import com.tangem.tap.features.wallet.redux.ProgressState
+import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.features.wallet.redux.WalletData
+import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.ui.adapters.PendingTransactionsAdapter
-import com.tangem.tap.features.wallet.ui.dialogs.AmountToSendDialog
+import com.tangem.tap.features.wallet.ui.adapters.WalletDetailWarningMessagesAdapter
 import com.tangem.tap.features.wallet.ui.test.TestWalletDetails
 import com.tangem.tap.store
 import com.tangem.wallet.R
@@ -35,7 +50,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
     StoreSubscriber<WalletState> {
 
     private lateinit var pendingTransactionAdapter: PendingTransactionsAdapter
-    private var dialog: Dialog? = null
+    private lateinit var warningMessagesAdapter: WalletDetailWarningMessagesAdapter
 
     private val binding: FragmentWalletDetailsBinding by viewBinding(FragmentWalletDetailsBinding::bind)
 
@@ -72,6 +87,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
 
         setupTransactionsRecyclerView()
         setupButtons()
+        setupWarningsRecyclerView()
         setupTestActionButton()
     }
 
@@ -81,15 +97,26 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
         rvPendingTransaction.adapter = pendingTransactionAdapter
     }
 
+    private fun setupWarningsRecyclerView() = with(binding) {
+        warningMessagesAdapter = WalletDetailWarningMessagesAdapter()
+        rvWarningMessages.layoutManager = LinearLayoutManager(requireContext())
+        rvWarningMessages.adapter = warningMessagesAdapter
+        rvWarningMessages.addItemDecoration(SpaceItemDecoration.vertical(8f))
+    }
+
     private fun setupButtons() = with(binding) {
-        btnConfirm.text = getString(R.string.wallet_button_send)
-        btnConfirm.setOnClickListener { store.dispatch(WalletAction.Send()) }
-
-        binding.lWalletDetails.btnShare.setOnClickListener { store.dispatch(WalletAction.ShowDialog.QrCode) }
-
-        btnTrade.setOnClickListener { store.dispatch(WalletAction.TradeCryptoAction.Buy) }
-
-        btnSell.setOnClickListener { store.dispatch(WalletAction.TradeCryptoAction.Sell) }
+        rowButtons.onBuyClick = {
+            store.dispatch(WalletAction.TradeCryptoAction.Buy)
+        }
+        rowButtons.onSellClick = {
+            store.dispatch(WalletAction.TradeCryptoAction.Sell)
+        }
+        rowButtons.onTradeClick = {
+            store.dispatch(WalletAction.DialogAction.ChooseTradeActionDialog)
+        }
+        rowButtons.onSendClick = {
+            store.dispatch(WalletAction.Send())
+        }
     }
 
     private fun setupTestActionButton() {
@@ -114,10 +141,8 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
         setupBalanceData(selectedWallet.currencyData)
         setupButtons(selectedWallet)
 
-        handleDialogs(state.walletDialog)
         handleCurrencyIcon(selectedWallet)
-        handleWalletRent(selectedWallet.warningRent)
-        handleNotEnoughFundsOnMainCurrency(selectedWallet)
+        handleWarnings(selectedWallet)
 
         binding.srlWalletDetails.setOnRefreshListener {
             if (selectedWallet.currencyData.status != BalanceStatus.Loading) {
@@ -147,7 +172,6 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
     }
 
     private fun setupButtons(selectedWallet: WalletData) = with(binding) {
-        btnConfirm.isEnabled = selectedWallet.mainButton.enabled
         lWalletDetails.btnCopy.setOnClickListener {
             selectedWallet.walletAddresses?.selectedAddress?.address?.let { addressString ->
                 store.dispatch(WalletAction.CopyAddress(addressString, requireContext()))
@@ -158,35 +182,20 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
                 store.dispatch(WalletAction.ShareAddress(addressString, requireContext()))
             }
         }
-        btnTrade.isEnabled = selectedWallet.tradeCryptoState.buyingAllowed
-        btnSell.show(selectedWallet.tradeCryptoState.sellingAllowed)
-    }
 
-    private fun handleWalletRent(rent: WalletRent?) = with(binding) {
-        val rent = rent.guard {
-            lWarning.root.hide()
-            return
-        }
-        val warningMessage = requireContext().getString(
-            R.string.solana_rent_warning, rent.minRentValue, rent.rentExemptValue
+        rowButtons.updateButtonsVisibility(
+            buyAllowed = selectedWallet.tradeCryptoState.buyingAllowed,
+            sellAllowed = selectedWallet.tradeCryptoState.sellingAllowed,
+            sendAllowed = selectedWallet.mainButton.enabled,
         )
-        lWarning.tvWarningMessage.text = warningMessage
-        lWarning.root.show()
     }
 
-    private fun handleNotEnoughFundsOnMainCurrency(selectedWalletData: WalletData) = with(binding) {
-        if (selectedWalletData.currency.isBlockchain()) return@with
+    private fun handleWarnings(selectedWallet: WalletData) = with(binding) {
+        val converter = WalletWarningConverter(requireContext())
+        val warningDetails = selectedWallet.assembleWarnings().map { converter.convert(it) }
 
-        if (selectedWalletData.shouldShowCoinAmountWarning()) {
-            val blockchainName = selectedWalletData.currency.blockchain.fullName
-            val warningMessage = requireContext().getString(
-                R.string.token_details_send_blocked_fee_format, blockchainName, blockchainName
-            )
-            lWarning.tvWarningMessage.text = warningMessage
-            lWarning.root.show()
-        } else {
-            lWarning.root.hide()
-        }
+        warningMessagesAdapter.submitList(warningDetails)
+        rvWarningMessages.show(warningDetails.isNotEmpty())
     }
 
     private fun handleCurrencyIcon(wallet: WalletData) = with(binding.lWalletDetails.lBalance) {
@@ -299,23 +308,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
                     )
             }
         }
-        binding.cardPendingTransactionWarning.show(data.status == BalanceStatus.SameCurrencyTransactionInProgress)
     }
-
-    private fun handleDialogs(walletDialog: StateDialog?) {
-        when (walletDialog) {
-            is WalletDialog.SelectAmountToSendDialog -> {
-                if (dialog == null) dialog = AmountToSendDialog(requireContext()).apply {
-                    this.show(walletDialog.amounts)
-                }
-            }
-            null -> {
-                dialog?.dismiss()
-                dialog = null
-            }
-        }
-    }
-
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
