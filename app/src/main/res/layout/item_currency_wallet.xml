@@ -1,205 +1,72 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
 
     <com.google.android.material.card.MaterialCardView
-        android:id="@+id/card_wallet"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginBottom="8dp"
-        android:background="@android:color/white"
-        android:elevation="3dp">
-
-        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/card_wallet"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:minHeight="76dp">
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="8dp"
+            android:background="@android:color/white"
+            android:elevation="3dp">
 
-            <androidx.constraintlayout.utils.widget.ImageFilterView
-                android:id="@+id/iv_currency"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="16dp"
-                android:layout_marginEnd="16dp"
-                android:layout_marginBottom="16dp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                tools:src="@drawable/shape_circle" />
-
-            <TextView
-                android:id="@+id/tv_token_letter"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="2dp"
-                android:textColor="@android:color/white"
-                android:textSize="25sp"
-                android:textStyle="bold"
-                app:layout_constraintBottom_toBottomOf="@id/iv_currency"
-                app:layout_constraintEnd_toEndOf="@id/iv_currency"
-                app:layout_constraintStart_toStartOf="@id/iv_currency"
-                app:layout_constraintTop_toTopOf="@id/iv_currency"
-                tools:text="J" />
-
-            <androidx.constraintlayout.widget.Guideline
-                android:id="@+id/guideline"
+        <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
-                app:layout_constraintGuide_percent="0.5" />
-
-            <TextView
-                android:id="@+id/tv_currency"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:layout_marginEnd="16dp"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:paddingStart="16dp"
-                android:paddingEnd="2dp"
-                android:textColor="@color/darkGray6"
-                android:textSize="17sp"
-                android:textStyle="bold"
-                app:layout_constraintBottom_toBottomOf="@id/guideline"
-                app:layout_constraintEnd_toStartOf="@+id/tv_amount"
-                app:layout_constraintStart_toEndOf="@id/iv_currency"
-                app:layout_constraintTop_toTopOf="parent"
-                tools:text="Binance Smart Chain Optimal" />
-
-            <androidx.constraintlayout.widget.Guideline
-                android:id="@+id/guideline2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:orientation="vertical"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintGuide_percent="0.45"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <TextView
-                android:id="@+id/tv_amount"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:layout_marginEnd="4dp"
-                android:ellipsize="end"
-                android:gravity="end"
-                android:maxEms="12"
-                android:maxLength="12"
-                android:maxLines="1"
-                android:textColor="@color/darkGray6"
-                android:textSize="17sp"
-                android:textStyle="bold"
-                android:visibility="visible"
-                app:layout_constraintEnd_toStartOf="@+id/tv_currency_symbol"
-                app:layout_constraintHorizontal_bias="1.0"
-                app:layout_constraintStart_toStartOf="@+id/guideline2"
-                app:layout_constraintTop_toTopOf="parent"
-                tools:text="1234567890.1234567890" />
-
-            <TextView
-                android:id="@+id/tv_exchange_rate"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
-                android:textColor="@color/darkGray2"
-                android:textSize="14sp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toEndOf="@id/iv_currency"
-                app:layout_constraintTop_toTopOf="@id/guideline"
-                tools:text="USD 3 588" />
-
-            <TextView
-                android:id="@+id/tv_custom_currency"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="12dp"
                 android:layout_marginStart="16dp"
                 android:layout_marginEnd="16dp"
-                android:paddingStart="4dp"
-                android:paddingEnd="4dp"
-                android:paddingTop="3dp"
-                android:paddingBottom="3dp"
-                android:textColor="@color/darkGray2"
-                android:textSize="14sp"
-                android:background="@drawable/shape_rectangle_rounded_4"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toEndOf="@id/iv_currency"
-                app:layout_constraintTop_toTopOf="@id/guideline"
-                android:text="@string/common_custom" />
+                android:animateLayoutChanges="true">
+
+            <androidx.constraintlayout.utils.widget.ImageFilterView
+                    android:id="@+id/iv_currency"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    tools:src="@drawable/shape_circle" />
 
             <TextView
-                android:id="@+id/tv_status_error_message"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:ellipsize="end"
-                android:maxLines="1"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
-                android:textColor="@color/warning"
-                android:textSize="14sp"
-                android:visibility="gone"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toStartOf="@+id/tv_amount_fiat"
-                app:layout_constraintStart_toEndOf="@id/iv_currency"
-                app:layout_constraintTop_toTopOf="@id/guideline"
-                tools:text="@string/lorem_ipsum" />
+                    android:id="@+id/tv_token_letter"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="2dp"
+                    android:textColor="@android:color/white"
+                    android:textSize="25sp"
+                    android:textStyle="bold"
+                    app:layout_constraintBottom_toBottomOf="@id/iv_currency"
+                    app:layout_constraintEnd_toEndOf="@id/iv_currency"
+                    app:layout_constraintStart_toStartOf="@id/iv_currency"
+                    app:layout_constraintTop_toTopOf="@id/iv_currency"
+                    tools:text="J" />
 
-            <TextView
-                android:id="@+id/tv_status_loading"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:drawablePadding="5dp"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
-                android:text="@string/wallet_balance_loading"
-                android:textColor="@color/darkGray6"
-                android:textSize="13sp"
-                android:visibility="gone"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent" />
+            <include
+                    layout="@layout/item_currency_wallet_content"
+                    android:id="@+id/l_content"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="8dp"
+                    android:visibility="gone"
+                    app:layout_constraintStart_toEndOf="@id/iv_currency"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    tools:visibility="visible" />
 
-            <TextView
-                android:id="@+id/tv_currency_symbol"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:layout_marginEnd="16dp"
-                android:gravity="end"
-                android:maxLines="1"
-                android:textColor="@color/darkGray6"
-                android:textSize="17sp"
-                android:textStyle="bold"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_weight="1"
-                app:layout_constraintTop_toTopOf="parent"
-                tools:text="BTC" />
-
-            <TextView
-                android:id="@+id/tv_amount_fiat"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="16dp"
-                android:paddingEnd="16dp"
-                android:textColor="@color/darkGray2"
-                android:textSize="14sp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@id/guideline"
-                tools:text="0.43 USD" />
+            <include
+                    layout="@layout/item_currency_wallet_shimmer"
+                    android:id="@+id/l_shimmer"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="8dp"
+                    app:layout_constraintStart_toEndOf="@id/iv_currency"
+                    app:layout_constraintEnd_toEndOf="parent" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </com.google.android.material.card.MaterialCardView>
-
 </FrameLayout>
-
