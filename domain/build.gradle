@@ -3,6 +3,8 @@ plugins {
     id 'org.jetbrains.kotlin.android'
 }
 
+apply from: '../dependencies.gradle'
+
 android {
     compileSdk 31
 
@@ -12,6 +14,8 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles "consumer-rules.pro"
+        buildConfigField 'Boolean', environmentConfig.testActionEnabled, 'false'
+        buildConfigField 'Boolean', environmentConfig.logEnabled, 'false'
     }
 
     buildTypes {
@@ -19,13 +23,19 @@ android {
             debuggable false
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            buildConfigField 'Boolean', environmentConfig.testActionEnabled, 'false'
+            buildConfigField 'Boolean', environmentConfig.logEnabled, 'false'
         }
         debug {
             debuggable true
             minifyEnabled false
+            buildConfigField 'Boolean', environmentConfig.testActionEnabled, 'true'
+            buildConfigField 'Boolean', environmentConfig.logEnabled, 'true'
         }
         debug_beta {
             initWith release
+            buildConfigField 'Boolean', environmentConfig.testActionEnabled, 'true'
+            buildConfigField 'Boolean', environmentConfig.logEnabled, 'true'
         }
     }
     kotlinOptions {
@@ -49,8 +59,8 @@ dependencies {
     implementation implementation(project(path: ':network'))
     implementation implementation(project(path: ':common'))
 
-    // Tangem sdk's
-    implementation 'com.tangem:blockchain:develop-77'
+    implementation 'com.tangem:blockchain:develop-85'
+//    implementation 'com.tangem:blockchain:0.0.1'
     implementation 'com.tangem.tangem-sdk-kotlin:core:develop-142'
     implementation 'com.tangem.tangem-sdk-kotlin:android:develop-142'
 
