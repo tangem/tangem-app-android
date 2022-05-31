@@ -4,11 +4,8 @@ import com.tangem.blockchain.common.Wallet
 import com.tangem.common.card.Card
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TwinCardNumber
-import com.tangem.network.api.tangemTech.CurrenciesResponse
-import com.tangem.network.api.tangemTech.TangemTechService
 import com.tangem.operations.pins.CheckUserCodesResponse
 import com.tangem.tap.common.redux.NotificationAction
-import com.tangem.tap.common.redux.global.FiatCurrencyName
 import com.tangem.tap.domain.termsOfUse.CardTou
 import com.tangem.wallet.R
 import org.rekotlin.Action
@@ -19,9 +16,6 @@ sealed class DetailsAction : Action {
         val scanResponse: ScanResponse,
         val wallets: List<Wallet>,
         val cardTou: CardTou,
-        val fiatCurrencyName: FiatCurrencyName,
-        val fiatCurrencies: List<FiatCurrencyName>? = null,
-        val tangemTechService: TangemTechService,
     ) : DetailsAction()
 
     object ShowDisclaimer : DetailsAction()
@@ -46,13 +40,6 @@ sealed class DetailsAction : Action {
     }
 
     object CreateBackup : DetailsAction()
-
-    sealed class AppCurrencyAction : DetailsAction() {
-        data class SetCurrencies(val currencies: List<CurrenciesResponse.Currency>) : AppCurrencyAction()
-        object ChooseAppCurrency : AppCurrencyAction()
-        object Cancel : AppCurrencyAction()
-        data class SelectAppCurrency(val fiatCurrencyName: FiatCurrencyName) : AppCurrencyAction()
-    }
 
     sealed class ManageSecurity : DetailsAction() {
         data class CheckCurrentSecurityOption(val card: Card) : ManageSecurity()
