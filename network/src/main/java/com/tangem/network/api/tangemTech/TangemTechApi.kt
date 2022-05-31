@@ -11,8 +11,11 @@ interface TangemTechApi {
     @GET("coins")
     suspend fun coins(
         @Query("contractAddress") contractAddress: String? = null,
-        @Query("networkIds") networkId: String? = null,
+        @Query("networkIds") networkIds: String? = null,
         @Query("active") active: Boolean? = null,
+        @Query("searchText") searchText: String? = null,
+        @Query("offset") offset: Int? = null,
+        @Query("limit") limit: Int? = null
     ): CoinsResponse
 
     @GET("rates")
