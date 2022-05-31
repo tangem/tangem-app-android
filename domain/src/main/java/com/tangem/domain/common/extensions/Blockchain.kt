@@ -91,7 +91,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Stellar, Blockchain.StellarTestnet -> "stellar"
         Blockchain.Cardano, Blockchain.CardanoShelley -> "cardano"
         Blockchain.Polygon, Blockchain.PolygonTestnet -> "matic-network"
-        Blockchain.Arbitrum, Blockchain.ArbitrumTestnet -> "arbitrum-one"
+        Blockchain.Arbitrum, Blockchain.ArbitrumTestnet -> "ethereum"
         Blockchain.Avalanche, Blockchain.AvalancheTestnet -> "avalanche-2"
         Blockchain.Solana, Blockchain.SolanaTestnet -> "solana"
         Blockchain.Fantom, Blockchain.FantomTestnet -> "fantom"
