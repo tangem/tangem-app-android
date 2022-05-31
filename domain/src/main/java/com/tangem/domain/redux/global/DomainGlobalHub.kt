@@ -4,6 +4,7 @@ import android.webkit.ValueCallback
 import com.tangem.common.extensions.toHexString
 import com.tangem.domain.redux.BaseStoreHub
 import com.tangem.domain.redux.DomainState
+import com.tangem.domain.redux.ReStoreReducer
 import com.tangem.network.common.CardPublicKeyHttpInterceptor
 import org.rekotlin.Action
 
@@ -34,17 +35,24 @@ internal class DomainGlobalHub : BaseStoreHub<DomainGlobalState>("DomainGlobalHu
         }
     }
 
-    override fun reduceAction(action: Action, state: DomainGlobalState): DomainGlobalState = when (action) {
-        is DomainGlobalAction.SaveScanNoteResponse -> {
-            val cardPublicKeyHex = action.scanResponse.card.cardPublicKey.toHexString()
-            state.networkServices.tangemTechService.addHeaderInterceptors(
-                listOf(CardPublicKeyHttpInterceptor(cardPublicKeyHex))
-            )
-            state.copy(scanResponse = action.scanResponse)
+    override fun getReducer(): ReStoreReducer<DomainGlobalState> = DomainGlobalReducer()
+}
+
+private class DomainGlobalReducer : ReStoreReducer<DomainGlobalState> {
+
+    override fun reduceAction(action: Action, state: DomainGlobalState): DomainGlobalState {
+        return when (action) {
+            is DomainGlobalAction.SaveScanNoteResponse -> {
+                val cardPublicKeyHex = action.scanResponse.card.cardPublicKey.toHexString()
+                state.networkServices.tangemTechService.addHeaderInterceptors(
+                    listOf(CardPublicKeyHttpInterceptor(cardPublicKeyHex))
+                )
+                state.copy(scanResponse = action.scanResponse)
+            }
+            is DomainGlobalAction.ShowDialog -> {
+                state.copy(dialog = action.stateDialog)
+            }
+            else -> state
         }
-        is DomainGlobalAction.ShowDialog -> {
-            state.copy(dialog = action.stateDialog)
-        }
-        else -> state
     }
 }
