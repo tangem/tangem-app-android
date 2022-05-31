@@ -17,6 +17,7 @@ import com.google.accompanist.appcompattheme.AppCompatTheme
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.tap.common.extensions.copyToClipboard
 import com.tangem.tap.common.extensions.dispatchNotification
+import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.getString
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.tokens.redux.ContractAddress
@@ -46,6 +47,7 @@ class AddTokensFragment : Fragment(R.layout.fragment_add_tokens),
         activity?.onBackPressedDispatcher?.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 store.dispatch(NavigationAction.PopBackTo())
+                store.dispatch(TokensAction.ResetState)
             }
         })
         val inflater = TransitionInflater.from(requireContext())
@@ -81,13 +83,17 @@ class AddTokensFragment : Fragment(R.layout.fragment_add_tokens),
             store.dispatchNotification(R.string.contract_address_copied_message)
         }
 
+        val onLoadMore = {
+            store.dispatch(TokensAction.LoadCurrencies(scanResponse = store.state.globalState.scanResponse))
+        }
+
         cvCurrencies.setContent {
             AppCompatTheme {
                 CurrenciesScreen(
                     tokensState = tokensState,
-                    searchInput = searchInput,
                     onSaveChanges = onSaveChanges,
-                    onNetworkItemClicked = onNetworkItemClicked
+                    onNetworkItemClicked = onNetworkItemClicked,
+                    onLoadMore = onLoadMore
                 )
             }
         }
@@ -123,10 +129,11 @@ class AddTokensFragment : Fragment(R.layout.fragment_add_tokens),
         searchView.queryHint = searchView.getString(R.string.add_token_search_hint)
         searchView.maxWidth = android.R.attr.width
         searchView.inputtedTextAsFlow()
-            .debounce(400)
+            .debounce(800)
             .distinctUntilChanged()
             .onEach {
                 searchInput.value = it.lowercase()
+                dispatchOnMain(TokensAction.SetSearchInput(searchInput.value))
             }
             .launchIn(mainScope)
         return super.onCreateOptionsMenu(menu, inflater)
