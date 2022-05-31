@@ -24,7 +24,11 @@ import com.tangem.tap.domain.statePrinter.printScanResponseState
 import com.tangem.tap.domain.statePrinter.printWalletState
 import com.tangem.tap.domain.termsOfUse.CardTou
 import com.tangem.tap.features.details.redux.DetailsAction
-import com.tangem.tap.features.wallet.redux.*
+import com.tangem.tap.features.wallet.redux.Artwork
+import com.tangem.tap.features.wallet.redux.ErrorType
+import com.tangem.tap.features.wallet.redux.ProgressState
+import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.ui.adapters.WarningMessagesAdapter
 import com.tangem.tap.features.wallet.ui.wallet.MultiWalletView
 import com.tangem.tap.features.wallet.ui.wallet.SingleWalletView
@@ -78,7 +82,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         (activity as? AppCompatActivity)?.setSupportActionBar(binding.toolbar)
 
         binding.toolbar.setNavigationOnClickListener {
-            store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
+            store.dispatch(WalletAction.Scan)
         }
         setupWarningsRecyclerView()
         walletView.changeWalletView(this, binding)
