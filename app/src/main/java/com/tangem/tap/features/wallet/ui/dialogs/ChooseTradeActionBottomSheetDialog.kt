@@ -8,7 +8,7 @@ import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.store
 import com.tangem.wallet.databinding.DialogWalletTradeBinding
 
-class ChooseTradeActionDialog(context: Context) : BottomSheetDialog(context) {
+class ChooseTradeActionBottomSheetDialog(context: Context) : BottomSheetDialog(context) {
 
     var binding: DialogWalletTradeBinding? = null
 
@@ -23,7 +23,7 @@ class ChooseTradeActionDialog(context: Context) : BottomSheetDialog(context) {
 
         this.setOnDismissListener {
             binding = null
-            store.dispatch(WalletAction.HideDialog)
+            store.dispatch(WalletAction.DialogAction.Hide)
         }
 
         binding!!.dialogBtnBuy.setOnClickListener {
