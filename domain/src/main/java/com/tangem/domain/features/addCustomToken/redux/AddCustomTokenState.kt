@@ -14,6 +14,7 @@ import com.tangem.domain.features.addCustomToken.*
 import com.tangem.domain.features.addCustomToken.CustomTokenFieldId.*
 import com.tangem.domain.redux.DomainState
 import com.tangem.domain.redux.state.StringActionStateConverter
+import com.tangem.network.api.tangemTech.CoinsResponse
 import org.rekotlin.Action
 import org.rekotlin.StateType
 
@@ -24,7 +25,7 @@ data class AddCustomTokenState(
     val form: Form = Form(listOf()),
     val formValidators: Map<CustomTokenFieldId, CustomTokenValidator<out Any>> = createFormValidators(),
     val formErrors: Map<CustomTokenFieldId, AddCustomTokenError> = emptyMap(),
-    val tokenId: String? = null,
+    val foundToken: CoinsResponse.Coin? = null,
     val warnings: Set<AddCustomTokenError.Warning> = emptySet(),
     val screenState: ScreenState = createInitialScreenState(),
     val tangemTechServiceManager: AddCustomTokenService? = null
@@ -116,7 +117,7 @@ data class AddCustomTokenState(
             cardDerivationStyle = null,
             form = Form(createFormFields(card, CustomTokenType.Blockchain)),
             formErrors = emptyMap(),
-            tokenId = null,
+            foundToken = null,
             warnings = emptySet(),
             screenState = createInitialScreenState(),
             tangemTechServiceManager = null,
@@ -124,7 +125,7 @@ data class AddCustomTokenState(
     }
 
     private fun getToken(): CustomCurrency.CustomToken {
-        return CustomCurrency.CustomToken.Converter(tokenId, cardDerivationStyle)
+        return CustomCurrency.CustomToken.Converter(foundToken?.id, cardDerivationStyle)
             .apply { visitDataConverter(this) }
             .getConvertedData()
     }
