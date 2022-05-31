@@ -7,6 +7,7 @@ import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.google.firebase.remoteconfig.ktx.remoteConfigSettings
 import com.tangem.Log
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
+import com.tangem.domain.DomainLayer
 import com.tangem.network.common.MoshiConverter
 import com.tangem.tap.common.analytics.GlobalAnalyticsHandler
 import com.tangem.tap.common.images.PicassoHelper
@@ -46,6 +47,7 @@ class TapApplication : Application() {
     override fun onCreate() {
         super.onCreate()
 
+        DomainLayer.init()
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
             Firebase.remoteConfig.setConfigSettingsAsync(remoteConfigSettings {
@@ -60,7 +62,9 @@ class TapApplication : Application() {
         NetworkConnectivity.createInstance(store, this)
         preferencesStorage = PreferencesStorage(this)
         PicassoHelper.initPicassoWithCaching(this)
-        currenciesRepository = CurrenciesRepository(this)
+        currenciesRepository = CurrenciesRepository(
+            this, store.state.domainNetworks.tangemTechService
+        )
         walletConnectRepository = WalletConnectRepository(this)
 
         initFeedbackManager()
