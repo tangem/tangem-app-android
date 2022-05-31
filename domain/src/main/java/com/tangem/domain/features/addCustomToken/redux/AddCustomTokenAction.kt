@@ -8,6 +8,7 @@ import com.tangem.domain.common.form.Field
 import com.tangem.domain.common.form.FieldId
 import com.tangem.domain.features.addCustomToken.CustomCurrency
 import com.tangem.domain.features.addCustomToken.CustomTokenFieldId
+import com.tangem.network.api.tangemTech.CoinsResponse
 import org.rekotlin.Action
 
 /**
@@ -34,7 +35,7 @@ sealed class AddCustomTokenAction : Action {
     data class OnTokenDecimalsChanged(val tokenDecimals: Field.Data<String>) : AddCustomTokenAction()
     object OnAddCustomTokenClicked : AddCustomTokenAction()
 
-    data class SetFoundTokenId(val id: String?) : AddCustomTokenAction()
+    data class SetFoundTokenInfo(val foundToken: CoinsResponse.Coin?) : AddCustomTokenAction()
 
     // form fields
     data class UpdateForm(val state: AddCustomTokenState) : AddCustomTokenAction()
