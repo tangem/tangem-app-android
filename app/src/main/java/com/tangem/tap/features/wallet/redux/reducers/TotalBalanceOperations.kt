@@ -22,9 +22,9 @@ private fun List<WalletData>.mapToTotalBalanceState(): List<TotalBalance.State> 
         when (it.currencyData.status) {
             BalanceStatus.VerifiedOnline,
             BalanceStatus.SameCurrencyTransactionInProgress,
-            BalanceStatus.TransactionInProgress -> TotalBalance.State.Success
+            BalanceStatus.TransactionInProgress,
+            BalanceStatus.NoAccount -> TotalBalance.State.Success
             BalanceStatus.Unreachable,
-            BalanceStatus.NoAccount,
             BalanceStatus.EmptyCard,
             BalanceStatus.UnknownBlockchain -> TotalBalance.State.SomeTokensFailed
             BalanceStatus.Loading,
