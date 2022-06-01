@@ -115,6 +115,8 @@ class WalletAdapter
                 wallet.fiatRateString ?: "—"
             }
 
+            badgeCustomBalance.isVisible = isCustomCurrency
+
             cardWallet.setOnClickListener {
                 store.dispatch(WalletAction.MultiWallet.SelectWallet(wallet))
             }
