@@ -6,16 +6,18 @@ import com.tangem.tap.features.wallet.ui.BalanceStatus
 import java.math.BigDecimal
 
 fun List<WalletData>.findTotalBalanceState(): TotalBalance.State {
-    return this.mapToTotalBalanceState()
+    return this
+        .mapToTotalBalanceState()
         .reduce(TotalBalance.State::or)
 }
 
 fun List<WalletData>.calculateTotalFiatAmount(): BigDecimal {
-    return this.map { it.currencyData.fiatAmount ?: BigDecimal.ZERO }
+    return this
+        .map { it.currencyData.fiatAmount ?: BigDecimal.ZERO }
         .reduce(BigDecimal::plus)
 }
 
-fun List<WalletData>.mapToTotalBalanceState(): List<TotalBalance.State> {
+private fun List<WalletData>.mapToTotalBalanceState(): List<TotalBalance.State> {
     return this.map {
         when (it.currencyData.status) {
             BalanceStatus.VerifiedOnline,
@@ -31,7 +33,7 @@ fun List<WalletData>.mapToTotalBalanceState(): List<TotalBalance.State> {
     }
 }
 
-infix fun TotalBalance.State.or(newState: TotalBalance.State): TotalBalance.State {
+private infix fun TotalBalance.State.or(newState: TotalBalance.State): TotalBalance.State {
     return when (this) {
         TotalBalance.State.Loading -> when (newState) {
             TotalBalance.State.Loading,
