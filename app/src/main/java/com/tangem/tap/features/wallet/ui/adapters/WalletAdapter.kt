@@ -77,9 +77,7 @@ class WalletAdapter
                 BalanceStatus.Unreachable -> {
                     root.getString(R.string.wallet_balance_blockchain_unreachable)
                 }
-                BalanceStatus.NoAccount -> {
-                    root.getString(R.string.wallet_error_no_account)
-                }
+                BalanceStatus.NoAccount,
                 BalanceStatus.VerifiedOnline,
                 BalanceStatus.SameCurrencyTransactionInProgress,
                 BalanceStatus.EmptyCard,
@@ -114,7 +112,7 @@ class WalletAdapter
             lContent.tvExchangeRate.text = if (isCustomCurrency) {
                 root.getString(id = R.string.token_item_no_rate)
             } else {
-                wallet.fiatRateString
+                wallet.fiatRateString ?: "—"
             }
 
             cardWallet.setOnClickListener {
