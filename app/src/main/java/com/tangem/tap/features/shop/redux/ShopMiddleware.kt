@@ -11,6 +11,7 @@ import com.tangem.tap.store
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.Middleware
+import timber.log.Timber
 
 class ShopMiddleware {
 
@@ -88,10 +89,13 @@ private fun handle(action: Action) {
         }
         ShopAction.LoadProducts -> {
             scope.launch {
-                val result = shopService.getProducts()
-                result.onSuccess {
-                    store.dispatchOnMain(ShopAction.LoadProducts.Success(it))
-                }
+                shopService.getProducts().fold(
+                    onSuccess = { store.dispatchOnMain(ShopAction.LoadProducts.Success(it)) },
+                    onFailure = {
+                        Timber.e(it)
+                        store.dispatchOnMain(ShopAction.LoadProducts.Failure)
+                    }
+                )
             }
         }
         is ShopAction.CheckIfGooglePayAvailable -> {
