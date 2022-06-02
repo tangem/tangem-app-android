@@ -45,6 +45,7 @@
     <string name="alert_funds_restoration_message">If you chose the wrong network during your crypto transfer from the exchange, this guide will help you recover your funds</string>
 
     <string name="common_custom">Custom</string>
+    <string name="common_server_unavailable">The server is not available, please try again later</string>
 
     <string name="main_page_balance">Total balance</string>
     <string name="main_processing_full_amount">Some networks are unreachable</string>
