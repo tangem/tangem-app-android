@@ -1,9 +1,15 @@
 package com.tangem.tap.features.wallet.redux
 
 import android.graphics.Bitmap
-import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.DerivationStyle
+import com.tangem.blockchain.common.Token
+import com.tangem.blockchain.common.Wallet
+import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.extensions.isZero
+import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.extensions.canHandleToken
 import com.tangem.domain.common.extensions.toCoinId
 import com.tangem.domain.features.addCustomToken.CustomCurrency
@@ -19,15 +25,21 @@ import com.tangem.tap.domain.extensions.sellIsAllowed
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
 import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
-import com.tangem.tap.features.wallet.models.*
+import com.tangem.tap.features.wallet.models.PendingTransaction
+import com.tangem.tap.features.wallet.models.TotalBalance
+import com.tangem.tap.features.wallet.models.WalletRent
+import com.tangem.tap.features.wallet.models.WalletWarning
+import com.tangem.tap.features.wallet.models.hasPendingTransactions
+import com.tangem.tap.features.wallet.models.hasSendableAmounts
+import com.tangem.tap.features.wallet.models.isSendableAmount
 import com.tangem.tap.features.wallet.redux.reducers.calculateTotalFiatAmount
-import com.tangem.tap.features.wallet.redux.reducers.findTotalBalanceState
+import com.tangem.tap.features.wallet.redux.reducers.findProgressState
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import com.tangem.tap.store
-import org.rekotlin.StateType
 import java.math.BigDecimal
+import org.rekotlin.StateType
 import kotlin.properties.ReadOnlyProperty
 
 data class WalletState(
@@ -191,6 +203,7 @@ data class WalletState(
     fun updateWalletStore(walletStore: WalletStore?): WalletState {
         return copy(wallets = replaceWalletInWallets(walletStore))
             .updateTotalBalance()
+            .updateProgressState()
     }
 
     private fun updateWalletStores(walletStores: List<WalletStore>): WalletState {
@@ -208,6 +221,7 @@ data class WalletState(
         }
         return copy(wallets = updatedWallets + walletStoresMutable)
             .updateTotalBalance()
+            .updateProgressState()
     }
 
     fun removeWallet(walletData: WalletData?): WalletState {
@@ -270,18 +284,42 @@ data class WalletState(
     }
 
     private fun updateTotalBalance(): WalletState {
-        return if (wallets.isNotEmpty()) {
-            val walletsData = wallets.flatMap(WalletStore::walletsData)
+        return if (this.wallets.isNotEmpty()) {
+            val globalState = store.state.globalState
+            val walletsData = this.wallets
+                .flatMap(WalletStore::walletsData)
+                .filterNot { wallet ->
+                    wallet.currency.isCustomCurrency(
+                        derivationStyle = globalState
+                            .scanResponse
+                            ?.card
+                            ?.derivationStyle
+                    )
+                }
+
             this.copy(
                 totalBalance = TotalBalance(
-                    state = walletsData.findTotalBalanceState(),
+                    state = walletsData.findProgressState(),
                     fiatAmount = walletsData.calculateTotalFiatAmount(),
-                    fiatCurrency = store.state.globalState.appCurrency
+                    fiatCurrency = globalState.appCurrency
                 )
             )
         } else this.copy(
             totalBalance = null
         )
+    }
+
+    private fun updateProgressState(): WalletState {
+        return if (this.wallets.isNotEmpty()) {
+            val walletsData = this.wallets
+                .flatMap(WalletStore::walletsData)
+            val newProgressState = walletsData.findProgressState()
+
+            this.copy(
+                state = walletsData.findProgressState(),
+                error = this.error.takeIf { newProgressState == ProgressState.Error }
+            )
+        } else this
     }
 }
 
@@ -295,7 +333,7 @@ sealed interface WalletDialog : StateDialog {
     ) : WalletDialog
 }
 
-enum class ProgressState : WidgetState { Loading, Done, Error }
+enum class ProgressState : WidgetState { Loading, Refreshing, Done, Error }
 
 enum class ErrorType { NoInternetConnection }
 
