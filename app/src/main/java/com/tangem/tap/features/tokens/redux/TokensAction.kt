@@ -21,6 +21,9 @@ sealed class TokensAction : Action {
         object Failure : TokensAction()
     }
 
+    data class LoadMore(val scanResponse: ScanResponse? = null
+    ) : TokensAction()
+
     data class SetAddedCurrencies(
         val wallets: List<WalletData>, val derivationStyle: DerivationStyle?
     ) : TokensAction()
