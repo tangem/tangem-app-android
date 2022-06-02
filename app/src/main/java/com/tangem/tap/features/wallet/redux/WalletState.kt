@@ -33,7 +33,7 @@ import com.tangem.tap.features.wallet.models.hasPendingTransactions
 import com.tangem.tap.features.wallet.models.hasSendableAmounts
 import com.tangem.tap.features.wallet.models.isSendableAmount
 import com.tangem.tap.features.wallet.redux.reducers.calculateTotalFiatAmount
-import com.tangem.tap.features.wallet.redux.reducers.findTotalBalanceState
+import com.tangem.tap.features.wallet.redux.reducers.findProgressState
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
@@ -203,6 +203,7 @@ data class WalletState(
     fun updateWalletStore(walletStore: WalletStore?): WalletState {
         return copy(wallets = replaceWalletInWallets(walletStore))
             .updateTotalBalance()
+            .updateProgressState()
     }
 
     private fun updateWalletStores(walletStores: List<WalletStore>): WalletState {
@@ -220,6 +221,7 @@ data class WalletState(
         }
         return copy(wallets = updatedWallets + walletStoresMutable)
             .updateTotalBalance()
+            .updateProgressState()
     }
 
     fun removeWallet(walletData: WalletData?): WalletState {
@@ -282,9 +284,9 @@ data class WalletState(
     }
 
     private fun updateTotalBalance(): WalletState {
-        return if (wallets.isNotEmpty()) {
+        return if (this.wallets.isNotEmpty()) {
             val globalState = store.state.globalState
-            val walletsData = wallets
+            val walletsData = this.wallets
                 .flatMap(WalletStore::walletsData)
                 .filterNot { wallet ->
                     wallet.currency.isCustomCurrency(
@@ -297,7 +299,7 @@ data class WalletState(
 
             this.copy(
                 totalBalance = TotalBalance(
-                    state = walletsData.findTotalBalanceState(),
+                    state = walletsData.findProgressState(),
                     fiatAmount = walletsData.calculateTotalFiatAmount(),
                     fiatCurrency = globalState.appCurrency
                 )
@@ -305,6 +307,19 @@ data class WalletState(
         } else this.copy(
             totalBalance = null
         )
+    }
+
+    private fun updateProgressState(): WalletState {
+        return if (this.wallets.isNotEmpty()) {
+            val walletsData = this.wallets
+                .flatMap(WalletStore::walletsData)
+            val newProgressState = walletsData.findProgressState()
+
+            this.copy(
+                state = walletsData.findProgressState(),
+                error = this.error.takeIf { newProgressState == ProgressState.Error }
+            )
+        } else this
     }
 }
 
@@ -318,7 +333,7 @@ sealed interface WalletDialog : StateDialog {
     ) : WalletDialog
 }
 
-enum class ProgressState : WidgetState { Loading, Done, Error }
+enum class ProgressState : WidgetState { Loading, Refreshing, Done, Error }
 
 enum class ErrorType { NoInternetConnection }
 
