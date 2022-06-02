@@ -47,6 +47,15 @@
                     app:layout_constraintTop_toTopOf="@id/iv_currency"
                     tools:text="J" />
 
+            <View
+                    android:id="@+id/badge_custom_balance"
+                    android:layout_width="12dp"
+                    android:layout_height="12dp"
+                    android:background="@drawable/shape_badge_custom_currency"
+                    android:visibility="gone"
+                    app:layout_constraintTop_toTopOf="@id/iv_currency"
+                    app:layout_constraintEnd_toEndOf="@id/iv_currency" />
+
             <include
                     layout="@layout/item_currency_wallet_content"
                     android:id="@+id/l_content"
