@@ -11,7 +11,6 @@ import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.wallet.models.filterByToken
 import com.tangem.tap.features.wallet.models.getPendingTransactions
 import com.tangem.tap.features.wallet.models.removeUnknownTransactions
-import com.tangem.tap.features.wallet.models.toPendingTransactions
 import com.tangem.tap.features.wallet.redux.Currency
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletData
@@ -41,8 +40,8 @@ class MultiWalletReducer {
                     }
                     val walletData = WalletData(
                         currencyData = BalanceWidgetData(
-                            BalanceStatus.Loading,
-                            blockchain.blockchain.fullName,
+                            status = BalanceStatus.Loading,
+                            currency = blockchain.blockchain.fullName,
                             currencySymbol = blockchain.blockchain.currency,
                             token = cardToken
                         ),
@@ -77,8 +76,8 @@ class MultiWalletReducer {
 
                 val walletData = WalletData(
                     currencyData = BalanceWidgetData(
-                        BalanceStatus.Loading,
-                        action.blockchain.blockchain.fullName,
+                        status = BalanceStatus.Loading,
+                        currency = action.blockchain.blockchain.fullName,
                         currencySymbol = action.blockchain.blockchain.currency,
                     ),
                     walletAddresses = createAddressList(wallet),
@@ -184,7 +183,7 @@ fun Token.toWallet(state: WalletState, blockchain: BlockchainNetwork): WalletDat
 
     return WalletData(
         currencyData = BalanceWidgetData(
-            BalanceStatus.Loading,
+            status = BalanceStatus.Loading,
             currency = this.name,
             currencySymbol = this.symbol
         ),
