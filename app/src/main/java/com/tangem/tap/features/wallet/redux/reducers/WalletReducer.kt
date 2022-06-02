@@ -25,7 +25,6 @@ import com.tangem.tap.features.wallet.redux.TradeCryptoState
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletAddresses
 import com.tangem.tap.features.wallet.redux.WalletData
-import com.tangem.tap.features.wallet.redux.WalletDialog
 import com.tangem.tap.features.wallet.redux.WalletMainButton
 import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.redux.WalletStore
@@ -135,14 +134,25 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                 error = null,
             )
         }
+        is WalletAction.LoadData.Refresh -> {
+            newState = newState.copy(
+                state = ProgressState.Refreshing,
+                error = null,
+            )
+        }
         is WalletAction.LoadWallet -> {
+            val balanceStatus = if (newState.state == ProgressState.Refreshing) {
+                BalanceStatus.Refreshing
+            } else {
+                BalanceStatus.Loading
+            }
             if (action.blockchain == null) {
                 val wallets = newState.wallets.map {
                     it.copy(
                         walletsData = it.walletsData.map { walletData ->
                             walletData.copy(
                                 currencyData = walletData.currencyData.copy(
-                                    status = BalanceStatus.Loading,
+                                    status = balanceStatus,
                                     currency = walletData.currencyData.currency,
                                     currencySymbol = walletData.currencyData.currencySymbol,
                                 ),
@@ -169,7 +179,7 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                     .map { wallet ->
                         wallet.copy(
                             currencyData = wallet.currencyData.copy(
-                                status = BalanceStatus.Loading,
+                                status = balanceStatus,
                                 currency = wallet.currencyData.currency,
                                 currencySymbol = wallet.currencyData.currencySymbol,
                             ),
