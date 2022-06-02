@@ -64,6 +64,9 @@ class WalletAdapter
 
         fun bind(wallet: WalletData) = with(binding) {
             val status = wallet.currencyData.status
+            // Skip changes when on refreshing status
+            if (status == BalanceStatus.Refreshing) return@with
+
             val isCustomCurrency = wallet.currency.isCustomCurrency(
                 derivationStyle = store.state.globalState
                     .scanResponse
@@ -77,14 +80,13 @@ class WalletAdapter
                 BalanceStatus.Unreachable -> {
                     root.getString(R.string.wallet_balance_blockchain_unreachable)
                 }
-                BalanceStatus.NoAccount -> {
-                    root.getString(R.string.wallet_error_no_account)
-                }
+                BalanceStatus.NoAccount,
                 BalanceStatus.VerifiedOnline,
                 BalanceStatus.SameCurrencyTransactionInProgress,
                 BalanceStatus.EmptyCard,
                 BalanceStatus.UnknownBlockchain,
                 BalanceStatus.Loading,
+                BalanceStatus.Refreshing,
                 null -> null
             }
 
@@ -114,8 +116,10 @@ class WalletAdapter
             lContent.tvExchangeRate.text = if (isCustomCurrency) {
                 root.getString(id = R.string.token_item_no_rate)
             } else {
-                wallet.fiatRateString
+                wallet.fiatRateString ?: "—"
             }
+
+            badgeCustomBalance.isVisible = isCustomCurrency
 
             cardWallet.setOnClickListener {
                 store.dispatch(WalletAction.MultiWallet.SelectWallet(wallet))
