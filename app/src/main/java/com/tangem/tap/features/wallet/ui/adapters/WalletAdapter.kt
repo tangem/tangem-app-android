@@ -64,6 +64,9 @@ class WalletAdapter
 
         fun bind(wallet: WalletData) = with(binding) {
             val status = wallet.currencyData.status
+            // Skip changes when on refreshing status
+            if (status == BalanceStatus.Refreshing) return@with
+
             val isCustomCurrency = wallet.currency.isCustomCurrency(
                 derivationStyle = store.state.globalState
                     .scanResponse
@@ -83,6 +86,7 @@ class WalletAdapter
                 BalanceStatus.EmptyCard,
                 BalanceStatus.UnknownBlockchain,
                 BalanceStatus.Loading,
+                BalanceStatus.Refreshing,
                 null -> null
             }
 
