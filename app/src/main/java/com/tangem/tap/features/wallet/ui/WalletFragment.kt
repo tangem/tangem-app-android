@@ -135,14 +135,13 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
 
         showWarningsIfPresent(state.mainWarningsList)
 
+        binding.srlWallet.isRefreshing = state.state == ProgressState.Refreshing
         binding.srlWallet.setOnRefreshListener {
-            if (state.state != ProgressState.Loading) {
-                store.dispatch(WalletAction.LoadData)
+            if (state.state != ProgressState.Loading ||
+                state.state != ProgressState.Refreshing
+            ) {
+                store.dispatch(WalletAction.LoadData.Refresh)
             }
-        }
-
-        if (state.state != ProgressState.Loading) {
-            binding.srlWallet.isRefreshing = false
         }
     }
 
