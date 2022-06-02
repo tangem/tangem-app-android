@@ -53,7 +53,13 @@ class TokensMiddleware {
                             action.searchInput
                         )
                     }
-
+                    is TokensAction.LoadMore -> {
+                        if (store.state.tokensState.needToLoadMore
+                            && store.state.tokensState.currencies.isNotEmpty()
+                        ) {
+                            handleLoadCurrencies(action.scanResponse)
+                        }
+                    }
                 }
                 next(action)
             }
