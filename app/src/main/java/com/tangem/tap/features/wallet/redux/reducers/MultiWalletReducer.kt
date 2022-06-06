@@ -2,7 +2,6 @@ package com.tangem.tap.features.wallet.redux.reducers
 
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Token
-import com.tangem.blockchain.extensions.isAboveZero
 import com.tangem.common.extensions.guard
 import com.tangem.tap.common.extensions.toFiatString
 import com.tangem.tap.common.extensions.toFormattedCurrencyString
@@ -11,12 +10,7 @@ import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.wallet.models.filterByToken
 import com.tangem.tap.features.wallet.models.getPendingTransactions
 import com.tangem.tap.features.wallet.models.removeUnknownTransactions
-import com.tangem.tap.features.wallet.redux.Currency
-import com.tangem.tap.features.wallet.redux.WalletAction
-import com.tangem.tap.features.wallet.redux.WalletData
-import com.tangem.tap.features.wallet.redux.WalletMainButton
-import com.tangem.tap.features.wallet.redux.WalletState
-import com.tangem.tap.features.wallet.redux.WalletStore
+import com.tangem.tap.features.wallet.redux.*
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.features.wallet.ui.TokenData
@@ -120,7 +114,8 @@ class MultiWalletReducer {
                     else -> BalanceStatus.VerifiedOnline
                 }
                 val tokenWalletData = state.getWalletData(currency)
-                val isTokenSendButtonEnabled = action.amount.isAboveZero() && pendingTransactions.isEmpty()
+                val isTokenSendButtonEnabled = tokenWalletData?.shouldEnableTokenSendButton() == true
+                    && pendingTransactions.isEmpty()
 
                 val newTokenWalletData = tokenWalletData?.copy(
                     currencyData = tokenWalletData.currencyData.copy(
