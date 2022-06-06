@@ -113,11 +113,8 @@ class WalletAdapter
             lContent.tvStatus.text = statusMessage
 
             lContent.tvExchangeRate.isVisible = statusMessage == null
-            lContent.tvExchangeRate.text = if (isCustomCurrency) {
-                root.getString(id = R.string.token_item_no_rate)
-            } else {
-                wallet.fiatRateString ?: "—"
-            }
+            lContent.tvExchangeRate.text = wallet.fiatRateString
+                ?: root.getString(id = R.string.token_item_no_rate)
 
             badgeCustomBalance.isVisible = isCustomCurrency
 
