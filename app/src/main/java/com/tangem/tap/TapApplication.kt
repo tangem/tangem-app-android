@@ -1,7 +1,6 @@
 package com.tangem.tap
 
 import android.app.Application
-import com.appsflyer.AppsFlyerLib
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.google.firebase.remoteconfig.ktx.remoteConfigSettings
@@ -59,20 +58,22 @@ class TapApplication : Application() {
             })
         }
 
-        NetworkConnectivity.createInstance(store, this)
-        preferencesStorage = PreferencesStorage(this)
-        PicassoHelper.initPicassoWithCaching(this)
+        val application = this
+        NetworkConnectivity.createInstance(store, application)
+        preferencesStorage = PreferencesStorage(application)
+        PicassoHelper.initPicassoWithCaching(application)
         currenciesRepository = CurrenciesRepository(
             this, store.state.domainNetworks.tangemTechService
         )
-        walletConnectRepository = WalletConnectRepository(this)
+        walletConnectRepository = WalletConnectRepository(application)
 
         initFeedbackManager()
         loadConfigs()
 
         BlockchainSdkRetrofitBuilder.enableNetworkLogging = BuildConfig.DEBUG
 
-        initAppsFlyer()
+        val analyticsHandler = GlobalAnalyticsHandler.createDefaultAnalyticHandlers(application)
+        store.dispatch(GlobalAction.SetAnanlyticHandlers(analyticsHandler))
     }
 
     private fun loadConfigs() {
@@ -96,14 +97,6 @@ class TapApplication : Application() {
         Log.addLogger(logWriter)
 
         store.dispatch(GlobalAction.SetFeedbackManager(FeedbackManager(infoHolder, logWriter)))
-    }
-
-    private fun initAppsFlyer() {
-        val devKey = store.state.globalState.configManager?.config?.appsFlyerDevKey ?: return
-        AppsFlyerLib.getInstance().init(devKey, null, this)
-        AppsFlyerLib.getInstance().start(this)
-        val analyticsHandler = GlobalAnalyticsHandler.createDefaultAnalyticHandlers(this)
-        store.dispatch(GlobalAction.SetAnanlyticHandlers(analyticsHandler))
     }
 }
 
