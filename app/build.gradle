@@ -127,8 +127,9 @@ dependencies {
     implementation 'com.google.firebase:firebase-config-ktx'
     implementation 'com.google.firebase:firebase-analytics-ktx'
 
-    // AppsFlyer
+    // Analytics
     implementation 'com.appsflyer:af-android-sdk:6.5.1'
+    implementation 'com.amplitude:android-sdk:2.36.1'
 
     // WalletConnect
     implementation 'com.github.salomonbrys.kotson:kotson:2.5.0'
@@ -144,8 +145,8 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp")
     implementation("com.squareup.okhttp3:logging-interceptor")
 
-//
-//    //Crypto
+
+    //Crypto
     implementation "com.madgag.spongycastle:core:1.58.0.0"
 
     // animation
