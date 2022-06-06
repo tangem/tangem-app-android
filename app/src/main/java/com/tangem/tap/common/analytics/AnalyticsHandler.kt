@@ -31,12 +31,16 @@ abstract class AnalyticsHandler {
         params: Map<String, String> = emptyMap()
     )
 
-    protected fun prepareParams(card: Card?, blockchain: String? = null): Map<String, String> {
+    protected fun prepareParams(
+        card: Card?,
+        blockchain: String? = null,
+        params: Map<String, String> = emptyMap()
+    ): Map<String, String> {
         return mapOf(
             AnalyticsParam.FIRMWARE.param to card?.firmwareVersion?.stringValue,
             AnalyticsParam.BATCH_ID.param to card?.batchId,
             AnalyticsParam.BLOCKCHAIN.param to blockchain,
-        ).filterNotNull()
+        ).filterNotNull() + params
     }
 
     fun logWcEvent(event: Analytics.WcAnalyticsEvent) {
