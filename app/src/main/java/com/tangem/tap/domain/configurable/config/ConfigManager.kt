@@ -14,6 +14,7 @@ data class Config(
     val onramperApiKey: String = "pk_test_Ix2aCF3ej_5tcDKkBR7MChIvf5Nb0oPORPQ3Oal5G8I0",
     val moonPayApiSecretKey: String = "sk_test_V8w4M19LbDjjYOt170s0tGuvXAgyEb1C",
     val appsFlyerDevKey: String = "",
+    val amplitudeApiKey: String = "",
     val blockchainSdkConfig: BlockchainSdkConfig = BlockchainSdkConfig(),
     val isSendingToPayIdEnabled: Boolean = true,
     val isTopUpEnabled: Boolean = false,
@@ -91,6 +92,7 @@ class ConfigManager(
                 infuraProjectId = values.infuraProjectId
             ),
             appsFlyerDevKey = values.appsFlyerDevKey,
+            amplitudeApiKey = values.amplitudeApiKey,
             shopify = values.shopifyShop,
         )
         defaultConfig = defaultConfig.copy(
@@ -105,6 +107,7 @@ class ConfigManager(
                 infuraProjectId = values.infuraProjectId
             ),
             appsFlyerDevKey = values.appsFlyerDevKey,
+            amplitudeApiKey = values.amplitudeApiKey,
             shopify = values.shopifyShop,
         )
     }
