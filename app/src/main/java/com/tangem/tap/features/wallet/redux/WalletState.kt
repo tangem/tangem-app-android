@@ -67,13 +67,14 @@ data class WalletState(
     val isTangemTwins: Boolean
         get() = store.state.globalState.scanResponse?.isTangemTwins() == true
 
-    val primaryWallet: WalletData? = if (wallets.isNotEmpty()) wallets[0].walletsData[0] else null
+    val primaryWallet: WalletData? = wallets.firstOrNull()
+        ?.walletsData?.firstOrNull()
     val primaryWalletManager: WalletManager? =
         if (wallets.isNotEmpty()) wallets[0].walletManager else null
 
     val shouldShowDetails: Boolean =
         primaryWallet?.currencyData?.status != BalanceStatus.EmptyCard &&
-            primaryWallet?.currencyData?.status != BalanceStatus.UnknownBlockchain
+                primaryWallet?.currencyData?.status != BalanceStatus.UnknownBlockchain
 
     val blockchains: List<Blockchain>
         get() = wallets.mapNotNull { it.walletManager?.wallet?.blockchain }
@@ -232,6 +233,8 @@ data class WalletState(
                     && it.blockchainNetwork.derivationPath == walletData.currency.derivationPath
             }
             copy(wallets = walletStores)
+                .updateTotalBalance()
+                .updateProgressState()
         } else {
             val walletStore = getWalletStore(walletData.currency)
             val walletDataList = walletStore?.walletsData
@@ -284,19 +287,19 @@ data class WalletState(
     }
 
     private fun updateTotalBalance(): WalletState {
-        return if (this.wallets.isNotEmpty()) {
-            val globalState = store.state.globalState
-            val walletsData = this.wallets
-                .flatMap(WalletStore::walletsData)
-                .filterNot { wallet ->
-                    wallet.currency.isCustomCurrency(
-                        derivationStyle = globalState
-                            .scanResponse
-                            ?.card
-                            ?.derivationStyle
-                    )
-                }
+        val globalState = store.state.globalState
+        val walletsData = this.wallets
+            .flatMap(WalletStore::walletsData)
+            .filterNot { wallet ->
+                wallet.currency.isCustomCurrency(
+                    derivationStyle = globalState
+                        .scanResponse
+                        ?.card
+                        ?.derivationStyle
+                )
+            }
 
+        return if (walletsData.isNotEmpty()) {
             this.copy(
                 totalBalance = TotalBalance(
                     state = walletsData.findProgressState(),
@@ -310,9 +313,10 @@ data class WalletState(
     }
 
     private fun updateProgressState(): WalletState {
-        return if (this.wallets.isNotEmpty()) {
-            val walletsData = this.wallets
-                .flatMap(WalletStore::walletsData)
+        val walletsData = this.wallets
+            .flatMap(WalletStore::walletsData)
+
+        return if (walletsData.isNotEmpty()) {
             val newProgressState = walletsData.findProgressState()
 
             this.copy(
