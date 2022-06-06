@@ -9,7 +9,6 @@ import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.extensions.isZero
-import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.extensions.canHandleToken
 import com.tangem.domain.common.extensions.toCoinId
 import com.tangem.domain.features.addCustomToken.CustomCurrency
@@ -287,24 +286,16 @@ data class WalletState(
     }
 
     private fun updateTotalBalance(): WalletState {
-        val globalState = store.state.globalState
         val walletsData = this.wallets
             .flatMap(WalletStore::walletsData)
-            .filterNot { wallet ->
-                wallet.currency.isCustomCurrency(
-                    derivationStyle = globalState
-                        .scanResponse
-                        ?.card
-                        ?.derivationStyle
-                )
-            }
+            .filter { it.fiatRate != null }
 
         return if (walletsData.isNotEmpty()) {
             this.copy(
                 totalBalance = TotalBalance(
                     state = walletsData.findProgressState(),
                     fiatAmount = walletsData.calculateTotalFiatAmount(),
-                    fiatCurrency = globalState.appCurrency
+                    fiatCurrency = store.state.globalState.appCurrency
                 )
             )
         } else this.copy(
