@@ -9,6 +9,7 @@ import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.toFiatRateString
 import com.tangem.tap.common.extensions.toFiatString
 import com.tangem.tap.common.extensions.toFiatValue
+import com.tangem.tap.common.extensions.toFormattedCurrencyString
 import com.tangem.tap.common.extensions.toFormattedFiatValue
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.TapError
@@ -201,31 +202,37 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
             walletState = newState
         )
         is WalletAction.LoadWallet.NoAccount -> {
-            val walletData = newState.getWalletData(action.blockchain)?.copy(
-                currencyData = BalanceWidgetData(
-                    BalanceStatus.NoAccount, action.wallet.blockchain.fullName,
-                    currencySymbol = action.wallet.blockchain.currency,
-                    amountToCreateAccount = action.amountToCreateAccount
+            val amount = BigDecimal.ZERO
+            val fiatAmount = BigDecimal.ZERO
+            val walletData = newState.getWalletData(action.blockchain)?.let { walletData ->
+                val walletBlockchain = walletData.currency.blockchain
+                walletData.copy(
+                    currencyData = BalanceWidgetData(
+                        status = BalanceStatus.NoAccount,
+                        currency = action.wallet.blockchain.fullName,
+                        currencySymbol = action.wallet.blockchain.currency,
+                        amount = amount,
+                        amountFormatted = amount.toFormattedCurrencyString(
+                            decimals = walletBlockchain.decimals(),
+                            currency = walletBlockchain.currency,
+                        ),
+                        fiatAmount = fiatAmount,
+                        fiatAmountFormatted = fiatAmount.toFiatRateString(
+                            fiatCurrencyName = store.state.globalState.appCurrency.symbol
+                        ),
+                        amountToCreateAccount = action.amountToCreateAccount,
+                    )
                 )
-            )
+            }
             var updatedWalletStore = newState.getWalletStore(action.blockchain)
                 ?.updateWallets(listOfNotNull(walletData))
 
-            val progressState =
-                if (updatedWalletStore?.walletsData?.any { it.currencyData.status == BalanceStatus.Loading } == true) {
-                    ProgressState.Loading
-                } else {
-                    ProgressState.Done
-                }
             updatedWalletStore =
                 updatedWalletStore?.updateWallets(
                     newState.updateTradeCryptoState(exchangeManager, updatedWalletStore.walletsData)
                 )
 
             newState = newState.updateWalletStore(updatedWalletStore)
-                .copy(
-                    state = progressState
-                )
         }
 
         is WalletAction.LoadWallet.Failure -> {
@@ -420,19 +427,24 @@ private fun setMultiWalletFiatRate(
     state: WalletState
 ): WalletState {
     val newWalletsData = fiatRates.mapNotNull { (currency, rate) ->
-        val walletStore = state.getWalletStore(currency) ?: return state
+        val walletStore = state.getWalletStore(currency) ?: return@mapNotNull null
         val wallet = walletStore.walletManager?.wallet
-        val walletData = state.getWalletData(currency) ?: return state
+        val walletData = state.getWalletData(currency) ?: return@mapNotNull null
+        val currencyData = walletData.currencyData
 
-        val fiatAmount = when (currency) {
+        var fiatAmount = when (currency) {
             is Currency.Blockchain ->
                 wallet?.amounts?.get(AmountType.Coin)?.value?.toFiatValue(rate)
             is Currency.Token ->
                 wallet?.getTokenAmount(currency.token)?.value?.toFiatValue(rate)
         }
+        if (currencyData.status == BalanceStatus.NoAccount && fiatAmount == null) {
+            fiatAmount = BigDecimal.ZERO
+        }
         val fiatAmountFormatted = fiatAmount?.toFormattedFiatValue(appCurrency.symbol)
-        state.getWalletData(currency)?.copy(
-            currencyData = walletData.currencyData.copy(
+
+        walletData.copy(
+            currencyData = currencyData.copy(
                 fiatAmountFormatted = fiatAmountFormatted,
                 fiatAmount = fiatAmount
             ),
