@@ -17,7 +17,7 @@ class AppsFlyerAnalyticsHandler(val context: Application): AnalyticsHandler() {
         params: Map<String, String>
     ) {
         AppsFlyerLib.getInstance().logEvent(context,
-            event.event, prepareParams(card, blockchain))
+            event.event, prepareParams(card, blockchain, params))
     }
 
     override fun logCardSdkError(
