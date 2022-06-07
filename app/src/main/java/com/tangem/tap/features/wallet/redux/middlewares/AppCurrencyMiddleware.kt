@@ -8,7 +8,7 @@ import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TapWalletManager
 import com.tangem.tap.features.wallet.redux.WalletAction
-import com.tangem.tap.features.wallet.redux.WalletDialog
+import com.tangem.tap.features.wallet.redux.models.WalletDialog
 import com.tangem.tap.persistence.FiatCurrenciesPrefStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store

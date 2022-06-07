@@ -2,8 +2,8 @@ package com.tangem.tap.common.redux
 
 import com.tangem.common.extensions.VoidCallback
 import com.tangem.tap.common.TestAction
+import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.AddressData
-import com.tangem.tap.features.wallet.redux.Currency
 
 /**
 * [REDACTED_AUTHOR]
