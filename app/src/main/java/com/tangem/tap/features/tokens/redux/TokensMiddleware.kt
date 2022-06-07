@@ -30,7 +30,7 @@ import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.makeWalletManagerForApp
 import com.tangem.tap.domain.tokens.LoadAvailableCoinsService
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
-import com.tangem.tap.features.wallet.redux.Currency
+import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.WalletAction
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -303,7 +303,10 @@ class TokensMiddleware {
         if (currencies.isNotEmpty()) {
             currencies.forEach { currency ->
                 store.state.walletState.getWalletData(currency)?.let {
-                    store.dispatch(WalletAction.MultiWallet.RemoveWallet(it))
+                    store.dispatch(WalletAction.MultiWallet.RemoveWallet(
+                        walletData = it,
+                        fromWalletDetails = false
+                    ))
                 }
             }
         }
