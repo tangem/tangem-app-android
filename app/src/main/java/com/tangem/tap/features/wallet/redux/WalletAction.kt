@@ -10,6 +10,7 @@ import com.tangem.tap.common.redux.NotificationAction
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
+import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.wallet.R
 import org.rekotlin.Action
 import java.math.BigDecimal
@@ -69,7 +70,8 @@ sealed class WalletAction : Action {
         ) : MultiWallet()
 
         data class SelectWallet(val walletData: WalletData?) : MultiWallet()
-        data class RemoveWallet(val walletData: WalletData) : MultiWallet()
+        data class RemoveWallet(val walletData: WalletData, val fromWalletDetails: Boolean = true) : MultiWallet()
+        data class TryToRemoveWallet(val walletData: WalletData) : MultiWallet()
         data class SetPrimaryBlockchain(val blockchain: Blockchain) : MultiWallet()
         data class SetPrimaryToken(val token: Token) : MultiWallet()
     }
