@@ -4,13 +4,10 @@ import android.app.Dialog
 import android.content.Context
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.global.GlobalState
+import com.tangem.tap.common.ui.SimpleAlertDialog
+import com.tangem.tap.common.ui.SimpleCancelableAlertDialog
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectDialog
-import com.tangem.tap.features.details.ui.walletconnect.dialogs.ApproveWcSessionDialog
-import com.tangem.tap.features.details.ui.walletconnect.dialogs.BnbTransactionDialog
-import com.tangem.tap.features.details.ui.walletconnect.dialogs.ClipboardOrScanQrDialog
-import com.tangem.tap.features.details.ui.walletconnect.dialogs.PersonalSignDialog
-import com.tangem.tap.features.details.ui.walletconnect.dialogs.SimpleAlertDialog
-import com.tangem.tap.features.details.ui.walletconnect.dialogs.TransactionDialog
+import com.tangem.tap.features.details.ui.walletconnect.dialogs.*
 import com.tangem.tap.features.onboarding.AddressInfoBottomSheetDialog
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.features.onboarding.products.twins.ui.dialog.CreateWalletInterruptDialog
@@ -19,12 +16,8 @@ import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.AddMoreBack
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.BackupInProgressDialog
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.ConfirmDiscardingBackupDialog
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.UnfinishedBackupFoundDialog
-import com.tangem.tap.features.wallet.redux.WalletDialog
-import com.tangem.tap.features.wallet.ui.dialogs.AmountToSendBottomSheetDialog
-import com.tangem.tap.features.wallet.ui.dialogs.ChooseTradeActionBottomSheetDialog
-import com.tangem.tap.features.wallet.ui.dialogs.ScanFailsDialog
-import com.tangem.tap.features.wallet.ui.dialogs.SignedHashesWarningDialog
-import com.tangem.tap.features.wallet.ui.dialogs.SimpleOkDialog
+import com.tangem.tap.features.wallet.redux.models.WalletDialog
+import com.tangem.tap.features.wallet.ui.dialogs.*
 import com.tangem.tap.features.wallet.ui.wallet.CurrencySelectionDialog
 import com.tangem.tap.store
 import com.tangem.wallet.R
@@ -115,6 +108,20 @@ class DialogManager : StoreSubscriber<GlobalState> {
                 AmountToSendBottomSheetDialog(context, state.dialog)
             is WalletDialog.SignedHashesMultiWalletDialog ->
                 SignedHashesWarningDialog.create(context)
+            is WalletDialog.TokensAreLinkedDialog -> SimpleAlertDialog.create(
+                title = context.getString(state.dialog.titleRes, state.dialog.currencySymbol),
+                message = context.getString(
+                    state.dialog.messageRes, state.dialog.currencySymbol, state.dialog.currencyTitle
+                ),
+                context = context,
+            )
+            is WalletDialog.RemoveWalletDialog -> SimpleCancelableAlertDialog.create(
+                title = context.getString(state.dialog.titleRes, state.dialog.currencyTitle),
+                messageRes = state.dialog.messageRes,
+                context = context,
+                primaryButtonRes = state.dialog.primaryButtonRes,
+                primaryButtonAction = state.dialog.action
+            )
             else -> null
         }
         dialog?.show()
