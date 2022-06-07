@@ -66,7 +66,7 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
         setState(state)
     }
 
-    private fun setState(state: DetailsState)  = with (binding){
+    private fun setState(state: DetailsState)  = with (binding) {
 
         if (state.cardInfo != null) {
             val cardId = if (state.isTangemTwins) {
