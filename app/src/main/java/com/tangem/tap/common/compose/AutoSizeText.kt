@@ -1,4 +1,4 @@
-package com.tangem.tap.features.home.compose.views
+package com.tangem.tap.common.compose
 
 import androidx.compose.material.LocalTextStyle
 import androidx.compose.material.Text
