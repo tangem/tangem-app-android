@@ -1,6 +1,5 @@
-package com.tangem.tap.features.home.compose
+package com.tangem.tap.features.home.compose.views
 
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.material.LocalTextStyle
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -12,7 +11,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 
-@OptIn(ExperimentalAnimationApi::class)
 @Composable
 fun TextAutoSize(
     modifier: Modifier = Modifier,
