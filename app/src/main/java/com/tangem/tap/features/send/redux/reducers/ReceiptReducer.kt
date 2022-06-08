@@ -128,7 +128,8 @@ class ReceiptReducer : SendInternalReducer {
             val totalFiat = amountFiat.plus(feeFiat)
             ReceiptTokenFiat(
                 amountFiat = amountFiat.scaleToFiat(true).stripZeroPlainString(),
-                feeFiat = feeFiat.scaleToFiat(true).stripZeroPlainString(),
+                feeFiat = feeFiat.scaleToFiat(true)
+                    .stripZeroPlainString().addPrecisionSign(),
                 totalFiat = totalFiat.scaleToFiat(true).stripZeroPlainString(),
                 willSentToken = tokensToSend.stripZeroPlainString(),
                 willSentFeeCoin = feeCoin.stripZeroPlainString(),
