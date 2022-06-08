@@ -19,10 +19,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.tangem.tap.features.home.compose.uiTools.StoriesBottomImageAnimation
-import com.tangem.tap.features.home.compose.uiTools.StoriesTextAnimation
-import com.tangem.tap.features.home.compose.views.FontSizeRange
-import com.tangem.tap.features.home.compose.views.TextAutoSize
+import com.tangem.tap.common.compose.FontSizeRange
+import com.tangem.tap.common.compose.TextAutoSize
+import com.tangem.tap.features.home.compose.StoriesBottomImageAnimation
+import com.tangem.tap.features.home.compose.StoriesTextAnimation
 import com.tangem.wallet.R
 
 @Composable
@@ -113,7 +113,7 @@ fun FirstStoriesContent(
                 ) {
                     StoriesBottomImageAnimation(
                         totalDuration = duration,
-                        firstStepDuration = 500,
+                        firstStepDuration = 400,
                     ) { modifier ->
                         Image(
                             modifier = modifier.fillMaxWidth(),
@@ -128,7 +128,7 @@ fun FirstStoriesContent(
     }
 }
 
-enum class StartingScreenState {
+private enum class StartingScreenState {
     INIT, BUY, STORE, SEND, PAY, EXCHANGE, BORROW, LEND, SHOW_CARD, MEET_TANGEM
 }
 
@@ -149,11 +149,6 @@ private fun MutableState<StartingScreenState>.textId(): Int? = when (this.value)
 private fun MutableState<StartingScreenState>.isSplashingTextDisplaying(): Boolean {
     return this.value != StartingScreenState.MEET_TANGEM &&
         this.value != StartingScreenState.SHOW_CARD
-}
-
-private fun MutableState<StartingScreenState>.isTangemCardDisplaying(): Boolean {
-    return this.value == StartingScreenState.SHOW_CARD ||
-        this.value == StartingScreenState.MEET_TANGEM
 }
 
 private fun MutableState<StartingScreenState>.isMeetTangemDisplaying(): Boolean {
