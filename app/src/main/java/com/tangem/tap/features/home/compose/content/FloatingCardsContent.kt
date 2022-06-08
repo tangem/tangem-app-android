@@ -76,7 +76,7 @@ private class FloatingCard {
         fun first(): CardValues = CardValues(
             translateX = -400f to -350f,
             translateY = 30f to 32f,
-            rotationX = 10f to 12f,
+            rotationX = 10f to 15f,
             rotationY = 15f to 15f,
             rotationZ = 40f to 27f,
             scale = 0.6f to 0.6f,
