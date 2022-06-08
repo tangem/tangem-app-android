@@ -11,7 +11,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
@@ -100,7 +99,7 @@ fun FirstStoriesContent(
                                     .alpha(if (screenState.value == StartingScreenState.SHOW_CARD) 0f else 1f),
                                 text = textId?.let { stringResource(textId) } ?: "",
                                 textStyle = style,
-                                fontSizeRange = FontSizeRange(20.sp, 60.sp)
+                                fontSizeRange = FontSizeRange(30.sp, 50.sp)
                             )
                         }
 
@@ -109,7 +108,8 @@ fun FirstStoriesContent(
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .weight(1.25f)
+                        .weight(1.2f)
+                        .wrapContentSize(),
                 ) {
                     StoriesBottomImageAnimation(
                         totalDuration = duration,
@@ -119,7 +119,6 @@ fun FirstStoriesContent(
                             modifier = modifier.fillMaxWidth(),
                             painter = painterResource(id = R.drawable.meet_tangem),
                             contentDescription = "Tangem Wallet card",
-                            contentScale = ContentScale.FillWidth,
                         )
                     }
                 }
