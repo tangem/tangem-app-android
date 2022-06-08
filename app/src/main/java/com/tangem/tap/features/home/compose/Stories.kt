@@ -22,10 +22,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.tangem.tap.common.compose.SpacerS24
 import androidx.compose.ui.unit.sp
+import com.tangem.tap.common.compose.SpacerS24
+import com.tangem.tap.features.home.compose.content.*
+import com.tangem.tap.features.home.compose.views.HomeButtons
+import com.tangem.tap.features.home.compose.views.StoriesProgressBar
 import com.tangem.tap.features.home.redux.HomeState
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.wallet.R
@@ -39,8 +41,6 @@ fun StoriesScreen(
     onSearchTokensClick: () -> Unit,
 ) {
     val steps = 6
-    val stepDuration = 8_000
-
     val currentStep = remember { mutableStateOf(1) }
 
     val isDarkBackground = currentStep.value !in 3..5
@@ -55,7 +55,7 @@ fun StoriesScreen(
     val isPressed = remember { mutableStateOf(false) }
     val needsToBePaused =
         remember(homeState) { mutableStateOf(homeState.value.btnScanState.progressState == ProgressState.Loading) }
-    val pause = isPressed.value || needsToBePaused.value
+    val isPaused = isPressed.value || needsToBePaused.value
 
     val hideContent = remember { mutableStateOf(true) }
 
@@ -122,9 +122,8 @@ fun StoriesScreen(
             StoriesProgressBar(
                 steps = steps,
                 currentStep = currentStep.value,
-//                paused = isPressed.value,
-                stepDuration = stepDuration,
-                paused = pause,
+                stepDuration = currentStep.duration(),
+                paused = isPaused,
                 onStepFinished = goToNextScreen,
             )
             Image(
@@ -139,12 +138,12 @@ fun StoriesScreen(
                 colorFilter = if (isDarkBackground) null else ColorFilter.tint(Color.Black)
             )
             when (currentStep.value) {
-                1 -> FirstStoriesContent(pause, stepDuration) { hideContent.value = it }
-                2 -> StoriesRevolutionaryWallet()
-                3 -> StoriesUltraSecureBackup()
-                4 -> StoriesThousandsOfCurrencies()
-                5 -> StoriesWeb3()
-                6 -> StoriesWalletForEveryone()
+                1 -> FirstStoriesContent(isPaused, currentStep.duration()) { hideContent.value = it }
+                2 -> StoriesRevolutionaryWallet(currentStep.duration())
+                3 -> StoriesUltraSecureBackup(isPaused, currentStep.duration())
+                4 -> StoriesCurrencies(isPaused, currentStep.duration())
+                5 -> StoriesWeb3(isPaused, currentStep.duration())
+                6 -> StoriesWalletForEveryone(currentStep.duration())
             }
         }
         Column(
@@ -157,8 +156,7 @@ fun StoriesScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
-                    .height(48.dp)
-                ,
+                    .height(48.dp),
                 colors = ButtonDefaults.textButtonColors(
                     backgroundColor = Color.White,
                     contentColor = Color(0xFF080C10)
@@ -188,9 +186,7 @@ fun StoriesScreen(
     }
 }
 
-
-@Preview
-@Composable
-fun InstagramScreenPreview() {
-    StoriesScreen(onScanButtonClick = {}, onShopButtonClick = {}, onSearchTokensClick = {})
+private fun MutableState<Int>.duration(): Int = when (this.value) {
+    1 -> 8000
+    else -> 6000
 }
