@@ -1,8 +1,7 @@
-package com.tangem.tap.features.home.compose.uiTools
+package com.tangem.tap.features.home.compose
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.tooling.preview.Preview
-import com.tangem.tap.features.home.compose.StoriesScreen
 import com.tangem.tap.features.home.compose.content.*
 
 /**
