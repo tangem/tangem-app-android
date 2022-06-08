@@ -11,19 +11,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
-import com.tangem.tangem_sdk_new.extensions.dpToPx
-import com.tangem.tangem_sdk_new.extensions.pxToDp
 import com.tangem.tap.common.compose.SpacerH
+import com.tangem.tap.common.compose.extensions.dpSize
+import com.tangem.tap.common.compose.extensions.halfHeight
 import com.tangem.tap.common.compose.extensions.toPx
 import com.tangem.tap.common.extensions.isEven
-import com.tangem.tap.features.home.compose.uiTools.HorizontalSlidingImage
+import com.tangem.tap.features.home.compose.HorizontalSlidingImage
 import com.tangem.wallet.R
 
 @Composable
@@ -89,7 +87,7 @@ fun StoriesWeb3Content(
     }
     val screenWidth = LocalConfiguration.current.screenWidthDp.dp
     val decreaseRate = remember { 1f / dappsItemList.size }
-    val designItemHeight = 50.dp
+    val designItemHeight = 75.dp
 
     LightenBox {
         Column(modifier = Modifier.graphicsLayer(clip = false)) {
@@ -101,7 +99,7 @@ fun StoriesWeb3Content(
 
                 val chessOffset = if (index.isEven()) 0.dp else scaledItemSize.width / 3
                 val animateFrom = chessOffset - moveItemToStartOfScreen
-                val animateTo = 90.dp - (90.dp * index * decreaseRate)
+                val animateTo = 70.dp - (70.dp * index * decreaseRate)
 
                 HorizontalSlidingImage(
                     paused = paused,
@@ -112,7 +110,6 @@ fun StoriesWeb3Content(
                     targetOffset = animateTo.toPx(),
                     contentDescription = "Web3 row",
                 )
-                SpacerH(14.dp)
             }
         }
 
@@ -126,11 +123,13 @@ private fun LightenBox(content: @Composable () -> Unit) {
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 170.dp)
+                .padding(top = 250.dp)
                 .background(
                     brush = Brush.verticalGradient(
                         colors = listOf(
-                            Color.White.copy(alpha = 0.3f),
+                            Color.White.copy(alpha = 0f),
+                            Color.White.copy(alpha = 0.75f),
+                            Color.White.copy(alpha = 0.95f),
                             Color.White
                         )
                     )
@@ -139,23 +138,7 @@ private fun LightenBox(content: @Composable () -> Unit) {
     }
 }
 
-@Composable
-private fun Painter.dpSize(): DpSize = DpSize(
-    intrinsicSize.width.pxToDp().dp,
-    intrinsicSize.height.pxToDp().dp,
-)
-
-@Composable
-private fun Float.dpToPx(): Float = LocalContext.current.dpToPx(this)
-
-@Composable
-private fun Float.pxToDp(): Float = LocalContext.current.pxToDp(this)
-
 private fun scaleToDesignSize(itemSize: DpSize, designItemHeight: Dp): DpSize {
     val scaleRate = itemSize.height / designItemHeight
     return itemSize / scaleRate
 }
-
-private fun DpSize.halfWidth(): Dp = this.width / 2
-
-private fun DpSize.halfHeight(): Dp = this.height / 2
