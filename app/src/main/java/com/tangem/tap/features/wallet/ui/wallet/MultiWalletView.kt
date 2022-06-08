@@ -138,8 +138,7 @@ class MultiWalletView : WalletView {
                 show = totalBalance.state == ProgressState.Error
             )
 
-            tvBalance.text = if (totalBalance.state == ProgressState.Error) "—"
-            else totalBalance.fiatAmount.formatAmountAsSpannedString(
+            tvBalance.text = totalBalance.fiatAmount.formatAmountAsSpannedString(
                 currencySymbol = totalBalance.fiatCurrency.symbol
             )
             tvCurrencyName.text = totalBalance.fiatCurrency.code
