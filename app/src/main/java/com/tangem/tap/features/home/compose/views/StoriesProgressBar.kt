@@ -1,4 +1,4 @@
-package com.tangem.tap.features.home.compose
+package com.tangem.tap.features.home.compose.views
 
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.LinearEasing
