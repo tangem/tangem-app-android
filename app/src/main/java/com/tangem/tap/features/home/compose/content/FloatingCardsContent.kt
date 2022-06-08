@@ -6,9 +6,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
-import com.tangem.tap.features.home.compose.uiTools.AnimatedValue
-import com.tangem.tap.features.home.compose.uiTools.asImageBitmap
-import com.tangem.tap.features.home.compose.uiTools.toAnimatable
+import com.tangem.tap.common.compose.extensions.AnimatedValue
+import com.tangem.tap.common.compose.extensions.asImageBitmap
+import com.tangem.tap.common.compose.extensions.toAnimatable
 import com.tangem.wallet.R
 
 /**
@@ -84,7 +84,7 @@ private class FloatingCard {
 
         fun second(): CardValues = CardValues(
             translateX = 350f to 300f,
-            translateY = 0f to 50f,
+            translateY = -70f to 0f,
             rotationX = 30f to 48f,
             rotationY = 0f to 5f,
             rotationZ = -34f to -42f,
@@ -97,7 +97,7 @@ private class FloatingCard {
             rotationX = 0f to 3f,
             rotationY = 10f to 10f,
             rotationZ = -45f to -30f,
-            scale = 0.6f to 0.7f,
+            scale = 0.6f to 0.75f,
         )
     }
 }
