@@ -26,8 +26,8 @@ import com.tangem.tangem_sdk_new.extensions.dpToPx
 import com.tangem.tap.common.compose.SpacerH
 import com.tangem.tap.common.compose.SpacerH16
 import com.tangem.tap.common.compose.extensions.toAndroidGraphicsColor
-import com.tangem.tap.features.home.compose.uiTools.StoriesBottomImageAnimation
-import com.tangem.tap.features.home.compose.uiTools.StoriesTextAnimation
+import com.tangem.tap.features.home.compose.StoriesBottomImageAnimation
+import com.tangem.tap.features.home.compose.StoriesTextAnimation
 import com.tangem.wallet.R
 
 @Composable
@@ -237,7 +237,7 @@ private fun HtmlText(
 }
 
 @Composable
-fun StoriesImage(
+private fun StoriesImage(
     modifier: Modifier = Modifier,
     @DrawableRes drawableResId: Int,
     isDarkBackground: Boolean,
