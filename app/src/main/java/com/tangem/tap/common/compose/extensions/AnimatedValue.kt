@@ -1,10 +1,13 @@
-package com.tangem.tap.features.home.compose.uiTools
+package com.tangem.tap.common.compose.extensions
 
 import androidx.compose.animation.core.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 
+/**
+[REDACTED_AUTHOR]
+ */
 typealias AnimatedValue = Pair<Float, Float>
 
 @Composable
@@ -24,8 +27,8 @@ fun AnimatedValue.toAnimatable(
 @Composable
 fun animatable(
     values: AnimatedValue,
-    isPaused: Boolean,
     duration: Int,
+    isPaused: Boolean = false,
     easing: Easing = LinearEasing,
 ): Animatable<Float, AnimationVector1D> {
     val animatable = remember { Animatable(values.first) }
