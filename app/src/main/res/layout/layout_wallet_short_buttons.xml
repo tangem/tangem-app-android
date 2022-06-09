@@ -14,8 +14,8 @@
         android:layout_marginBottom="8dp"
         android:text="@string/wallet_button_trade"
         app:icon="@drawable/ic_arrows_up_down"
-        app:layout_constraintBottom_toTopOf="@id/btn_scan"
-        app:layout_constraintEnd_toStartOf="@id/btn_confirm"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/btn_confirm"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintHorizontal_chainStyle="packed"
         app:layout_constraintStart_toStartOf="parent"
@@ -34,29 +34,10 @@
         android:text="@string/wallet_button_send"
         app:icon="@drawable/ic_send"
         app:iconGravity="textEnd"
-        android:textAlignment="center"
-        app:layout_constraintBottom_toTopOf="@id/btn_scan"
-        app:layout_constraintEnd_toEndOf="parent"
+            android:textAlignment="center"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/btn_trade"
         app:layout_constraintVertical_bias="1" />
-
-    <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_scan"
-        style="@style/TapBlackButton"
-        android:layout_width="match_parent"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
-        android:layout_marginTop="30dp"
-        android:layout_marginBottom="33dp"
-        android:gravity="center"
-        android:paddingTop="7dp"
-        android:text="@string/wallet_button_scan"
-        app:icon="@drawable/ic_scan"
-        app:iconGravity="textEnd"
-        android:textAlignment="center"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintVertical_bias="1" />
-
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>
