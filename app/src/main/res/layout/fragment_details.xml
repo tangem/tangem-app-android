@@ -216,8 +216,23 @@
                 android:background="@color/separatorGrey2"
                 app:layout_constraintTop_toBottomOf="@id/tv_settings_title" />
 
+
             <TextView
                 android:id="@+id/tv_app_currency"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="10dp"
+                android:drawablePadding="15dp"
+                android:textColor="@color/darkGray1"
+                android:textSize="16sp"
+                app:drawableEndCompat="@drawable/ic_angle_bracket_right"
+                app:drawableTint="@color/darkGray1"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_settings_title"
+                tools:text="USD" />
+
+            <TextView
+                android:id="@+id/tv_app_currency_title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:paddingTop="7dp"
@@ -225,8 +240,6 @@
                 android:text="@string/details_row_title_currency"
                 android:textColor="@color/darkGray6"
                 android:textSize="16sp"
-                app:drawableEndCompat="@drawable/ic_angle_bracket_right"
-                app:drawableTint="@color/darkGray1"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tv_settings_title" />
 
@@ -243,7 +256,7 @@
                 app:drawableEndCompat="@drawable/ic_angle_bracket_right"
                 app:drawableTint="@color/darkGray1"
                 app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@id/tv_app_currency" />
+                app:layout_constraintTop_toBottomOf="@id/tv_app_currency_title" />
 
             <TextView
                 android:id="@+id/tv_card_tou"
