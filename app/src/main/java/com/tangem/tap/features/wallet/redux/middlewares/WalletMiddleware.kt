@@ -26,6 +26,7 @@ import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.send.redux.PrepareSendScreen
 import com.tangem.tap.features.wallet.models.PendingTransactionType
+import com.tangem.tap.features.wallet.models.filterByCoin
 import com.tangem.tap.features.wallet.models.getPendingTransactions
 import com.tangem.tap.features.wallet.models.getSendableAmounts
 import com.tangem.tap.features.wallet.redux.*
@@ -322,7 +323,10 @@ class WalletMiddleware {
                     }
 
                     val balance = walletManager.wallet.fundsAvailable(AmountType.Coin)
-                    val outgoingTxs = walletManager.wallet.getPendingTransactions(PendingTransactionType.Outgoing)
+                    val outgoingTxs = walletManager.wallet.getPendingTransactions(
+                        PendingTransactionType.Outgoing
+                    ).filterByCoin()
+
                     val rentExempt = result.data
                     val show = if (outgoingTxs.isEmpty()) {
                         isNeedToShowWarning(balance, rentExempt)
