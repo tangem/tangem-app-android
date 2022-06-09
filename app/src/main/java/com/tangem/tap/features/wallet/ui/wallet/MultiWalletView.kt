@@ -192,7 +192,6 @@ class MultiWalletView : WalletView {
     private fun configureButtonsForEmptyWalletState(binding: FragmentWalletBinding) =
         with(binding) {
             lButtonsLong.root.show()
-            lButtonsLong.btnScanLong.setOnClickListener { store.dispatch(WalletAction.Scan) }
             lButtonsLong.btnConfirmLong.setOnClickListener { store.dispatch(WalletAction.CreateWallet) }
             lButtonsLong.btnConfirmLong.text =
                 fragment?.getText(R.string.wallet_button_create_wallet)
