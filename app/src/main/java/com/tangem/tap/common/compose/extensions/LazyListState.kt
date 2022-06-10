@@ -28,8 +28,10 @@ fun LazyListState.HideKeyboardOnScroll() {
     val context = LocalContext.current
     val view = LocalView.current
     LaunchedEffect(firstVisibleItemIndex) {
-        val inputMethodManager =
-            context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        inputMethodManager.hideSoftInputFromWindow(view.windowToken, 0)
+        if (firstVisibleItemIndex > 1) {
+            val inputMethodManager =
+                context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+            inputMethodManager.hideSoftInputFromWindow(view.windowToken, 0)
+        }
     }
 }
