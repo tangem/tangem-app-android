@@ -1,11 +1,9 @@
 package com.tangem.tap.common.compose.extensions
 
-import android.content.Context
-import android.view.inputmethod.InputMethodManager
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.*
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import com.tangem.tap.common.extensions.hideKeyboard
 
 @Composable
 fun LazyListState.OnBottomReached(loadMoreThreshold: Int, loadMore: () -> Unit) {
@@ -25,11 +23,7 @@ fun LazyListState.OnBottomReached(loadMoreThreshold: Int, loadMore: () -> Unit) 
 
 @Composable
 fun LazyListState.HideKeyboardOnScroll() {
-    val context = LocalContext.current
-    val view = LocalView.current
-    LaunchedEffect(firstVisibleItemIndex) {
-        val inputMethodManager =
-            context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        inputMethodManager.hideSoftInputFromWindow(view.windowToken, 0)
+    if (isScrollInProgress) {
+        LocalView.current.hideKeyboard()
     }
 }
