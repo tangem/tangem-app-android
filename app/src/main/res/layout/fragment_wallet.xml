@@ -151,28 +151,6 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/rv_pending_transaction" />
 
-                <include
-                    android:id="@+id/l_buttons_long"
-                    layout="@layout/layout_wallet_long_buttons"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:visibility="gone"
-                    android:layout_marginTop="30dp"
-                    app:layout_constraintTop_toBottomOf="@id/l_address"
-                    app:layout_constraintVertical_bias="1"
-                    app:layout_constraintBottom_toBottomOf="parent" />
-
-                <include
-                    android:id="@+id/l_buttons_short"
-                    layout="@layout/layout_wallet_short_buttons"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:visibility="gone"
-                        android:layout_marginTop="30dp"
-                        app:layout_constraintTop_toBottomOf="@id/l_address"
-                        app:layout_constraintVertical_bias="1"
-                        app:layout_constraintBottom_toBottomOf="parent" />
-
             </androidx.constraintlayout.widget.ConstraintLayout>
 
         </androidx.core.widget.NestedScrollView>
@@ -192,6 +170,28 @@
             android:text="@string/main_manage_tokens"
             android:elevation="4dp"
             app:cornerRadius="8dp"
-            app:layout_constraintBottom_toBottomOf="parent" />
+            tools:visibility="gone" />
+
+    <include
+            android:id="@+id/l_buttons_long"
+            layout="@layout/layout_wallet_long_buttons"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:layout_marginBottom="16dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:visibility="gone" />
+
+    <include
+            android:id="@+id/l_buttons_short"
+            layout="@layout/layout_wallet_short_buttons"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:layout_marginBottom="16dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:visibility="gone" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
