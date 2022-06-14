@@ -126,19 +126,7 @@ class SingleWalletView : WalletView {
             lButtonsLong.btnConfirmLong
         }
 
-        val btnScan = if (state.tradeCryptoState.sellingAllowed ||
-            state.tradeCryptoState.buyingAllowed
-        ) {
-            lButtonsShort.btnScan
-        } else {
-            lButtonsLong.btnScanLong
-        }
-
         setupConfirmButton(state, btnConfirm, isTwinsWallet)
-
-        btnScan.setOnClickListener {
-            store.dispatch(WalletAction.Scan)
-        }
 
         lAddress.btnCopy.setOnClickListener {
             state.walletAddresses?.selectedAddress?.address?.let { addressString ->
