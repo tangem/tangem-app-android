@@ -13,6 +13,7 @@ enum class BalanceStatus {
     SameCurrencyTransactionInProgress,
     Unreachable,
     Loading,
+    Refreshing,
     NoAccount,
     EmptyCard,
     UnknownBlockchain
