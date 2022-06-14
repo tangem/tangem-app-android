@@ -1,11 +1,7 @@
 package com.tangem.tap.features.wallet.ui
 
 import android.os.Bundle
-import android.view.Menu
-import android.view.MenuInflater
-import android.view.MenuItem
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.ColorRes
@@ -18,26 +14,14 @@ import by.kirich1409.viewbindingdelegate.viewBinding
 import com.squareup.picasso.Picasso
 import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.TestActions
-import com.tangem.tap.common.extensions.appendIfNotNull
-import com.tangem.tap.common.extensions.beginDelayedTransition
-import com.tangem.tap.common.extensions.fitChipsByGroupWidth
-import com.tangem.tap.common.extensions.getColor
-import com.tangem.tap.common.extensions.getString
-import com.tangem.tap.common.extensions.hide
-import com.tangem.tap.common.extensions.loadCurrenciesIcon
-import com.tangem.tap.common.extensions.show
-import com.tangem.tap.common.extensions.toQrCode
+import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.recyclerView.SpaceItemDecoration
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.onboarding.getQRReceiveMessage
+import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.PendingTransaction
-import com.tangem.tap.features.wallet.redux.Currency
-import com.tangem.tap.features.wallet.redux.ErrorType
-import com.tangem.tap.features.wallet.redux.ProgressState
-import com.tangem.tap.features.wallet.redux.WalletAction
-import com.tangem.tap.features.wallet.redux.WalletData
-import com.tangem.tap.features.wallet.redux.WalletState
+import com.tangem.tap.features.wallet.redux.*
 import com.tangem.tap.features.wallet.ui.adapters.PendingTransactionsAdapter
 import com.tangem.tap.features.wallet.ui.adapters.WalletDetailWarningMessagesAdapter
 import com.tangem.tap.features.wallet.ui.test.TestWalletDetails
@@ -146,13 +130,15 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
 
         binding.srlWalletDetails.setOnRefreshListener {
             if (selectedWallet.currencyData.status != BalanceStatus.Loading) {
-                store.dispatch(WalletAction.LoadWallet(
-                    blockchain = BlockchainNetwork(
-                        selectedWallet.currency.blockchain,
-                        selectedWallet.currency.derivationPath,
-                        emptyList()
+                store.dispatch(
+                    WalletAction.LoadWallet(
+                        blockchain = BlockchainNetwork(
+                            selectedWallet.currency.blockchain,
+                            selectedWallet.currency.derivationPath,
+                            emptyList()
+                        )
                     )
-                ))
+                )
             }
         }
 
@@ -295,7 +281,10 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
                 lBalance.root.show()
                 lBalance.groupBalance.hide()
                 lBalance.tvError.show()
-                lBalance.tvError.setWarningStatus(R.string.wallet_balance_blockchain_unreachable, data.errorMessage)
+                lBalance.tvError.setWarningStatus(
+                    R.string.wallet_balance_blockchain_unreachable,
+                    data.errorMessage
+                )
             }
             BalanceStatus.NoAccount -> {
                 lBalance.root.hide()
@@ -314,9 +303,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
         return when (item.itemId) {
             R.id.menu_remove -> {
                 store.state.walletState.getSelectedWalletData()?.let { walletData ->
-                    store.dispatch(WalletAction.MultiWallet.RemoveWallet(walletData))
-                    store.dispatch(WalletAction.MultiWallet.SelectWallet(null))
-                    store.dispatch(NavigationAction.PopBackTo())
+                    store.dispatch(WalletAction.MultiWallet.TryToRemoveWallet(walletData))
                     true
                 }
                 false
@@ -327,10 +314,6 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.wallet_details, menu)
-        val walletCanBeRemoved = store.state.walletState.canBeRemoved(
-            store.state.walletState.getSelectedWalletData()
-        )
-        menu.getItem(0).isEnabled = walletCanBeRemoved
     }
 
     private fun TextView.setWarningStatus(mainMessage: Int, error: String? = null) {
@@ -346,7 +329,11 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
         setStatus(getString(mainMessage), R.color.darkGray4, null)
     }
 
-    private fun TextView.setStatus(text: String, @ColorRes color: Int, @DrawableRes drawable: Int?) {
+    private fun TextView.setStatus(
+        text: String,
+        @ColorRes color: Int,
+        @DrawableRes drawable: Int?
+    ) {
         this.text = text
         setTextColor(getColor(color))
         setCompoundDrawablesWithIntrinsicBounds(drawable ?: 0, 0, 0, 0)
