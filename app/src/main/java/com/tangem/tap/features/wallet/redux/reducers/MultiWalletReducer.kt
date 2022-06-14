@@ -7,6 +7,7 @@ import com.tangem.tap.common.extensions.toFiatString
 import com.tangem.tap.common.extensions.toFormattedCurrencyString
 import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
+import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.WalletRent
 import com.tangem.tap.features.wallet.models.filterByToken
 import com.tangem.tap.features.wallet.models.getPendingTransactions
@@ -159,6 +160,7 @@ class MultiWalletReducer {
 //            is WalletAction.MultiWallet.FindTokensInUse -> state
 //            is WalletAction.MultiWallet.FindBlockchainsInUse -> state
             is WalletAction.MultiWallet.SaveCurrencies -> state
+            is WalletAction.MultiWallet.TryToRemoveWallet -> state
         }
     }
 
