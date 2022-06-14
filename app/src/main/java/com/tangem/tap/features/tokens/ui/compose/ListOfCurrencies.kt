@@ -11,6 +11,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.tap.common.compose.extensions.HideKeyboardOnScroll
 import com.tangem.tap.common.compose.extensions.OnBottomReached
 import com.tangem.tap.domain.tokens.Currency
 import com.tangem.tap.features.tokens.redux.ContractAddress
@@ -44,6 +45,8 @@ fun ListOfCurrencies(
     }
 
     val listState = rememberLazyListState()
+    listState.HideKeyboardOnScroll()
+    listState.OnBottomReached(loadMoreThreshold = 40) { onLoadMore() }
 
     LazyColumn(
         state = listState,
@@ -67,7 +70,6 @@ fun ListOfCurrencies(
             )
         }
     }
-    listState.OnBottomReached(loadMoreThreshold = 40) { onLoadMore() }
 }
 
 val Currency.fullName: String
