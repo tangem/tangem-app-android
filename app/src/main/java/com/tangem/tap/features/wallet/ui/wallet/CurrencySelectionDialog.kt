@@ -3,7 +3,7 @@ package com.tangem.tap.features.wallet.ui.wallet
 import android.content.Context
 import androidx.appcompat.app.AlertDialog
 import com.tangem.tap.features.wallet.redux.WalletAction
-import com.tangem.tap.features.wallet.redux.WalletDialog
+import com.tangem.tap.features.wallet.redux.models.WalletDialog
 import com.tangem.tap.store
 import com.tangem.wallet.R
 
