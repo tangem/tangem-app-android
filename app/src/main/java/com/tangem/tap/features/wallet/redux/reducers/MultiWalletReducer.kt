@@ -8,6 +8,7 @@ import com.tangem.tap.common.extensions.toFormattedCurrencyString
 import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.wallet.models.Currency
+import com.tangem.tap.features.wallet.models.WalletRent
 import com.tangem.tap.features.wallet.models.filterByToken
 import com.tangem.tap.features.wallet.models.getPendingTransactions
 import com.tangem.tap.features.wallet.models.removeUnknownTransactions
@@ -103,10 +104,10 @@ class MultiWalletReducer {
             }
             is WalletAction.MultiWallet.TokenLoaded -> {
                 val currency = Currency.fromBlockchainNetwork(action.blockchain, action.token)
-                val wallet = state.getWalletManager(currency)?.wallet.guard {
-                    throw NullPointerException("MultiWallet.TokenLoaded: WalletManager must be no NULL")
+                val walletManager = state.getWalletManager(currency).guard {
+                    throw NullPointerException("MultiWallet.TokenLoaded: WalletManager must be not NULL")
                 }
-
+                val wallet = walletManager.wallet
                 val pendingTransactions = wallet.getPendingTransactions()
                 val tokenPendingTransactions = pendingTransactions.filterByToken(action.token)
                 val tokenBalanceStatus = when {
@@ -137,7 +138,8 @@ class MultiWalletReducer {
                         token = action.token,
                         blockchain = action.blockchain.blockchain,
                         derivationPath = action.blockchain.derivationPath
-                    )
+                    ),
+                    walletRent = findWalletRent(state.getWalletStore(walletManager.wallet))
                 )
                 state.updateWalletData(newTokenWalletData)
             }
@@ -160,6 +162,12 @@ class MultiWalletReducer {
             is WalletAction.MultiWallet.SaveCurrencies -> state
             is WalletAction.MultiWallet.TryToRemoveWallet -> state
         }
+    }
+
+    private fun findWalletRent(walletStore: WalletStore?): WalletRent? {
+        return walletStore?.walletsData?.firstOrNull {
+            it.walletRent != null
+        }?.walletRent
     }
 }
 
