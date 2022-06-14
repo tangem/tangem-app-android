@@ -84,7 +84,11 @@ class AddTokensFragment : Fragment(R.layout.fragment_add_tokens),
         }
 
         val onLoadMore = {
-            store.dispatch(TokensAction.LoadCurrencies(scanResponse = store.state.globalState.scanResponse))
+                store.dispatch(
+                    TokensAction.LoadMore(
+                        scanResponse = store.state.globalState.scanResponse
+                    )
+                )
         }
 
         cvCurrencies.setContent {
