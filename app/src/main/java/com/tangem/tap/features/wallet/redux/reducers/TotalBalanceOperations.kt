@@ -18,8 +18,9 @@ fun List<WalletData>.calculateTotalFiatAmount(): BigDecimal {
 }
 
 private fun List<WalletData>.mapToProgressState(): List<ProgressState> {
-    return this.map {
-        when (it.currencyData.status) {
+    return this.map { wallet ->
+        if (wallet.fiatRate == null) ProgressState.Error
+        else when (wallet.currencyData.status) {
             BalanceStatus.Refreshing -> ProgressState.Refreshing
             BalanceStatus.VerifiedOnline,
             BalanceStatus.SameCurrencyTransactionInProgress,

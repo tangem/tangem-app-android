@@ -31,6 +31,9 @@ private fun internalReduce(action: Action, state: AppState): DetailsState {
         is DetailsAction.ManageSecurity -> {
             handleSecurityAction(action, detailsState)
         }
+        is DetailsAction.ChangeAppCurrency ->
+            detailsState.copy(appCurrency = action.fiatCurrency)
+
         else -> detailsState
     }
 }
