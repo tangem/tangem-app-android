@@ -187,7 +187,7 @@ fun Context.safeStartActivity(
 }
 
 fun View.getString(resId: Int, vararg formatArgs: Any?): String {
-    return context.getString(resId, formatArgs)
+    return context.getString(resId, *formatArgs)
 }
 
 fun View.animateVisibility(
