@@ -8,6 +8,7 @@ import com.tangem.wallet.R
 @DrawableRes
 fun Blockchain.getRoundIconRes(): Int {
     return when (this) {
+        Blockchain.Arbitrum, Blockchain.ArbitrumTestnet -> R.drawable.ic_arbitrum_round
         Blockchain.Ducatus -> R.drawable.ic_ducatus
         Blockchain.Bitcoin, Blockchain.BitcoinTestnet,-> R.drawable.ic_bitcoin_round
         Blockchain.BitcoinCash -> R.drawable.ic_bitcoin_cash_round
@@ -33,6 +34,7 @@ fun Blockchain.getRoundIconRes(): Int {
 @DrawableRes
 fun Blockchain.getGreyedOutIconRes(): Int {
     return when (this) {
+        Blockchain.Arbitrum, Blockchain.ArbitrumTestnet -> R.drawable.ic_arbitrum_no_color
 //        Blockchain.Ducatus -> R.drawable.ic_ducatus
         Blockchain.Bitcoin, Blockchain.BitcoinTestnet,-> R.drawable.ic_bitcoin_no_color
         Blockchain.BitcoinCash -> R.drawable.ic_bitcoin_cash_no_color

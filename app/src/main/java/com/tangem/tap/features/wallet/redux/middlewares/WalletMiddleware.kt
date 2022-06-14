@@ -15,7 +15,12 @@ import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.operations.attestation.Attestation
 import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.tap.common.analytics.Analytics
-import com.tangem.tap.common.extensions.*
+import com.tangem.tap.common.extensions.copyToClipboard
+import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
+import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.extensions.onCardScanned
+import com.tangem.tap.common.extensions.shareText
+import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
@@ -29,12 +34,17 @@ import com.tangem.tap.features.wallet.models.PendingTransactionType
 import com.tangem.tap.features.wallet.models.filterByCoin
 import com.tangem.tap.features.wallet.models.getPendingTransactions
 import com.tangem.tap.features.wallet.models.getSendableAmounts
-import com.tangem.tap.features.wallet.redux.*
+import com.tangem.tap.features.wallet.redux.Currency
+import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.features.wallet.redux.WalletData
+import com.tangem.tap.features.wallet.redux.WalletState
+import com.tangem.tap.features.wallet.redux.WalletStore
 import com.tangem.tap.network.NetworkStateChanged
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
+import java.math.BigDecimal
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
@@ -42,7 +52,6 @@ import org.rekotlin.Action
 import org.rekotlin.DispatchFunction
 import org.rekotlin.Middleware
 import timber.log.Timber
-import java.math.BigDecimal
 
 class WalletMiddleware {
     private val tradeCryptoMiddleware = TradeCryptoMiddleware()
@@ -199,7 +208,8 @@ class WalletMiddleware {
                     store.dispatchOnMain(WalletAction.Warnings.CheckIfNeeded)
                 }
             }
-            is WalletAction.LoadData -> {
+            is WalletAction.LoadData,
+            is WalletAction.LoadData.Refresh -> {
                 scope.launch {
                     val scanNoteResponse = globalState.scanResponse ?: return@launch
                     if (walletState.walletsData.isNotEmpty()) {
