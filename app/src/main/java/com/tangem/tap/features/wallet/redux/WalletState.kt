@@ -288,7 +288,6 @@ data class WalletState(
     private fun updateTotalBalance(): WalletState {
         val walletsData = this.wallets
             .flatMap(WalletStore::walletsData)
-            .filter { it.fiatRate != null }
 
         return if (walletsData.isNotEmpty()) {
             this.copy(
