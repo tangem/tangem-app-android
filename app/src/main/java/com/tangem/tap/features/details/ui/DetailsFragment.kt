@@ -116,6 +116,9 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
         }
 
         tvAppCurrency.show(state.scanResponse?.card?.isMultiwalletAllowed != true)
+        tvAppCurrencyTitle.show(state.scanResponse?.card?.isMultiwalletAllowed != true)
+        tvAppCurrency.text = state.appCurrency.code
+
         tvAppCurrency.setOnClickListener {
             store.dispatch(WalletAction.AppCurrencyAction.ChooseAppCurrency)
         }
