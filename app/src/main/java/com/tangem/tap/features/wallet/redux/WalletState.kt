@@ -1,15 +1,21 @@
 package com.tangem.tap.features.wallet.redux
 
 import android.graphics.Bitmap
+import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.extensions.isZero
 import com.tangem.domain.common.extensions.canHandleToken
+import com.tangem.domain.common.extensions.toCoinId
+import com.tangem.domain.features.addCustomToken.CustomCurrency
 import com.tangem.tap.common.entities.Button
+import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.toQrCode
+import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.common.toggleWidget.WidgetState
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
@@ -17,15 +23,22 @@ import com.tangem.tap.domain.extensions.buyIsAllowed
 import com.tangem.tap.domain.extensions.sellIsAllowed
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
-import com.tangem.tap.features.wallet.models.*
+import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
+import com.tangem.tap.features.wallet.models.PendingTransaction
+import com.tangem.tap.features.wallet.models.TotalBalance
+import com.tangem.tap.features.wallet.models.WalletRent
+import com.tangem.tap.features.wallet.models.WalletWarning
+import com.tangem.tap.features.wallet.models.hasPendingTransactions
+import com.tangem.tap.features.wallet.models.hasSendableAmounts
+import com.tangem.tap.features.wallet.models.isSendableAmount
 import com.tangem.tap.features.wallet.redux.reducers.calculateTotalFiatAmount
-import com.tangem.tap.features.wallet.redux.reducers.findTotalBalanceState
+import com.tangem.tap.features.wallet.redux.reducers.findProgressState
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import com.tangem.tap.store
-import org.rekotlin.StateType
 import java.math.BigDecimal
+import org.rekotlin.StateType
 import kotlin.properties.ReadOnlyProperty
 
 data class WalletState(
@@ -53,13 +66,14 @@ data class WalletState(
     val isTangemTwins: Boolean
         get() = store.state.globalState.scanResponse?.isTangemTwins() == true
 
-    val primaryWallet: WalletData? = if (wallets.isNotEmpty()) wallets[0].walletsData[0] else null
+    val primaryWallet: WalletData? = wallets.firstOrNull()
+        ?.walletsData?.firstOrNull()
     val primaryWalletManager: WalletManager? =
         if (wallets.isNotEmpty()) wallets[0].walletManager else null
 
     val shouldShowDetails: Boolean =
         primaryWallet?.currencyData?.status != BalanceStatus.EmptyCard &&
-            primaryWallet?.currencyData?.status != BalanceStatus.UnknownBlockchain
+                primaryWallet?.currencyData?.status != BalanceStatus.UnknownBlockchain
 
     val blockchains: List<Blockchain>
         get() = wallets.mapNotNull { it.walletManager?.wallet?.blockchain }
@@ -189,6 +203,7 @@ data class WalletState(
     fun updateWalletStore(walletStore: WalletStore?): WalletState {
         return copy(wallets = replaceWalletInWallets(walletStore))
             .updateTotalBalance()
+            .updateProgressState()
     }
 
     private fun updateWalletStores(walletStores: List<WalletStore>): WalletState {
@@ -206,10 +221,10 @@ data class WalletState(
         }
         return copy(wallets = updatedWallets + walletStoresMutable)
             .updateTotalBalance()
+            .updateProgressState()
     }
 
     fun removeWallet(walletData: WalletData?): WalletState {
-        if (walletData == null) return this
         if (walletData == null) return this
         return if (walletData.currency is Currency.Blockchain) {
             val walletStores = wallets.filterNot {
@@ -217,6 +232,8 @@ data class WalletState(
                     && it.blockchainNetwork.derivationPath == walletData.currency.derivationPath
             }
             copy(wallets = walletStores)
+                .updateTotalBalance()
+                .updateProgressState()
         } else {
             val walletStore = getWalletStore(walletData.currency)
             val walletDataList = walletStore?.walletsData
@@ -269,11 +286,13 @@ data class WalletState(
     }
 
     private fun updateTotalBalance(): WalletState {
-        return if (wallets.isNotEmpty()) {
-            val walletsData = wallets.flatMap(WalletStore::walletsData)
+        val walletsData = this.wallets
+            .flatMap(WalletStore::walletsData)
+
+        return if (walletsData.isNotEmpty()) {
             this.copy(
                 totalBalance = TotalBalance(
-                    state = walletsData.findTotalBalanceState(),
+                    state = walletsData.findProgressState(),
                     fiatAmount = walletsData.calculateTotalFiatAmount(),
                     fiatCurrency = store.state.globalState.appCurrency
                 )
@@ -282,9 +301,33 @@ data class WalletState(
             totalBalance = null
         )
     }
+
+    private fun updateProgressState(): WalletState {
+        val walletsData = this.wallets
+            .flatMap(WalletStore::walletsData)
+
+        return if (walletsData.isNotEmpty()) {
+            val newProgressState = walletsData.findProgressState()
+
+            this.copy(
+                state = walletsData.findProgressState(),
+                error = this.error.takeIf { newProgressState == ProgressState.Error }
+            )
+        } else this
+    }
 }
 
-enum class ProgressState : WidgetState { Loading, Done, Error }
+sealed interface WalletDialog : StateDialog {
+    data class SelectAmountToSendDialog(val amounts: List<Amount>?) : WalletDialog
+    object SignedHashesMultiWalletDialog : WalletDialog
+    object ChooseTradeActionDialog : WalletDialog
+    data class CurrencySelectionDialog(
+        val currenciesList: List<FiatCurrency>,
+        val currentAppCurrency: FiatCurrency,
+    ) : WalletDialog
+}
+
+enum class ProgressState : WidgetState { Loading, Refreshing, Done, Error }
 
 enum class ErrorType { NoInternetConnection }
 
@@ -394,6 +437,87 @@ data class WalletData(
     private fun blockchainAmountIsEmpty(): Boolean = currencyData.blockchainAmount?.isZero() == true
 
     private fun tokenAmountIsEmpty(): Boolean = currencyData.amount?.isZero() == true
+}
+
+sealed interface Currency {
+
+    val coinId: String?
+        get() = when (this) {
+            is Blockchain -> blockchain.toCoinId()
+            is Token -> token.id
+        }
+    val blockchain: com.tangem.blockchain.common.Blockchain
+    val currencySymbol: CryptoCurrencyName
+    val derivationPath: String?
+
+    data class Token(
+        val token: com.tangem.blockchain.common.Token,
+        override val blockchain: com.tangem.blockchain.common.Blockchain,
+        override val derivationPath: String?
+    ) : Currency {
+        override val currencySymbol = token.symbol
+    }
+
+    data class Blockchain(
+        override val blockchain: com.tangem.blockchain.common.Blockchain,
+        override val derivationPath: String?
+    ) : Currency {
+        override val currencySymbol: CryptoCurrencyName = blockchain.currency
+    }
+
+    fun isCustomCurrency(derivationStyle: DerivationStyle?): Boolean {
+        if (this is Token && this.token.id == null) return true
+
+        if (derivationPath == null || derivationStyle == null) return false
+
+        return derivationPath != blockchain.derivationPath(derivationStyle)?.rawPath
+    }
+
+    fun isBlockchain(): Boolean = this is Blockchain
+
+    fun isToken(): Boolean = this is Token
+
+    companion object {
+        fun fromBlockchainNetwork(
+            blockchainNetwork: BlockchainNetwork,
+            token: com.tangem.blockchain.common.Token? = null
+        ): Currency {
+            return if (token != null) {
+                Token(
+                    token = token,
+                    blockchain = blockchainNetwork.blockchain,
+                    derivationPath = blockchainNetwork.derivationPath
+                )
+            } else {
+                Blockchain(
+                    blockchain = blockchainNetwork.blockchain,
+                    derivationPath = blockchainNetwork.derivationPath
+                )
+            }
+        }
+
+        fun fromCustomCurrency(customCurrency: CustomCurrency): Currency {
+            return when (customCurrency) {
+                is CustomCurrency.CustomBlockchain -> Blockchain(
+                    blockchain = customCurrency.network,
+                    derivationPath = customCurrency.derivationPath?.rawPath
+                )
+                is CustomCurrency.CustomToken -> Token(
+                    token = customCurrency.token,
+                    blockchain = customCurrency.network,
+                    derivationPath = customCurrency.derivationPath?.rawPath,
+                )
+            }
+        }
+
+        fun fromTokenWithBlockchain(tokenWithBlockchain: TokenWithBlockchain): Token {
+            return Token(
+                token = tokenWithBlockchain.token,
+                blockchain = tokenWithBlockchain.blockchain,
+                derivationPath = null
+            )
+        }
+    }
 }
 
 data class WalletStore(
