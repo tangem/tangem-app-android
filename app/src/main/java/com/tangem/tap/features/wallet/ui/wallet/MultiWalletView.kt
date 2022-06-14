@@ -14,6 +14,7 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.currenciesRepository
 import com.tangem.tap.features.tokens.redux.TokensAction
 import com.tangem.tap.features.wallet.models.TotalBalance
+import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.ui.BalanceStatus
@@ -125,17 +126,19 @@ class MultiWalletView : WalletView {
     ) = with(binding.lCardTotalBalance) {
         root.isVisible = totalBalance != null
         if (totalBalance != null) {
-            if (totalBalance.state == TotalBalance.State.Loading) {
+            // Skip changes when on refreshing state
+            if (totalBalance.state == ProgressState.Refreshing) return@with
+
+            if (totalBalance.state == ProgressState.Loading) {
                 veilBalance.veil()
             } else {
                 veilBalance.unVeil()
             }
             tvProcessing.animateVisibility(
-                show = totalBalance.state == TotalBalance.State.SomeTokensFailed
+                show = totalBalance.state == ProgressState.Error
             )
 
-            tvBalance.text = if (totalBalance.state == TotalBalance.State.SomeTokensFailed) "—"
-            else totalBalance.fiatAmount.formatAmountAsSpannedString(
+            tvBalance.text = totalBalance.fiatAmount.formatAmountAsSpannedString(
                 currencySymbol = totalBalance.fiatCurrency.symbol
             )
             tvCurrencyName.text = totalBalance.fiatCurrency.code
@@ -189,7 +192,6 @@ class MultiWalletView : WalletView {
     private fun configureButtonsForEmptyWalletState(binding: FragmentWalletBinding) =
         with(binding) {
             lButtonsLong.root.show()
-            lButtonsLong.btnScanLong.setOnClickListener { store.dispatch(WalletAction.Scan) }
             lButtonsLong.btnConfirmLong.setOnClickListener { store.dispatch(WalletAction.CreateWallet) }
             lButtonsLong.btnConfirmLong.text =
                 fragment?.getText(R.string.wallet_button_create_wallet)
