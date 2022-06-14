@@ -34,18 +34,18 @@ data class TokensState(
 typealias ContractAddress = String
 
 fun List<WalletData>.toTokensContractAddresses(): List<ContractAddress> {
-    return mapNotNull { (it.currency as? com.tangem.tap.features.wallet.redux.Currency.Token)?.token?.contractAddress }.distinct()
+    return mapNotNull { (it.currency as? com.tangem.tap.features.wallet.models.Currency.Token)?.token?.contractAddress }.distinct()
 }
 
 fun List<WalletData>.toNonCustomTokens(derivationStyle: DerivationStyle?): List<Token> {
     return filter { !it.currency.isCustomCurrency(derivationStyle) }
-        .mapNotNull { (it.currency as? com.tangem.tap.features.wallet.redux.Currency.Token)?.token }
+        .mapNotNull { (it.currency as? com.tangem.tap.features.wallet.models.Currency.Token)?.token }
         .distinct()
 }
 
 fun List<WalletData>.toNonCustomTokensWithBlockchains(derivationStyle: DerivationStyle?): List<TokenWithBlockchain> {
     return mapNotNull {
-        if (it.currency !is com.tangem.tap.features.wallet.redux.Currency.Token) return@mapNotNull null
+        if (it.currency !is com.tangem.tap.features.wallet.models.Currency.Token) return@mapNotNull null
         if (it.currency.isCustomCurrency(derivationStyle)) return@mapNotNull null
         TokenWithBlockchain(it.currency.token, it.currency.blockchain)
     }.distinct()
@@ -56,7 +56,7 @@ fun List<WalletData>.toNonCustomBlockchains(derivationStyle: DerivationStyle?): 
         if (it.currency.isCustomCurrency(derivationStyle)) {
             null
         } else {
-            (it.currency as? com.tangem.tap.features.wallet.redux.Currency.Blockchain)?.blockchain
+            (it.currency as? com.tangem.tap.features.wallet.models.Currency.Blockchain)?.blockchain
         }
     }.distinct()
 }
