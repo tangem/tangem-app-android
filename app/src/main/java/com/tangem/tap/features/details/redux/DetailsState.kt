@@ -4,6 +4,7 @@ import android.net.Uri
 import com.tangem.blockchain.common.Wallet
 import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.entities.Button
+import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
 import com.tangem.tap.store
 import org.rekotlin.StateType
@@ -19,6 +20,7 @@ data class DetailsState(
     val securityScreenState: SecurityScreenState? = null,
     val cardTermsOfUseUrl: Uri? = null,
     val createBackupAllowed: Boolean = false,
+    val appCurrency: FiatCurrency = FiatCurrency.Default
 ) : StateType {
 
     // if you do not delegate - the application crashes on startup,
