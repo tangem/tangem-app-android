@@ -138,8 +138,7 @@ class MultiWalletView : WalletView {
                 show = totalBalance.state == ProgressState.Error
             )
 
-            tvBalance.text = if (totalBalance.state == ProgressState.Error) "—"
-            else totalBalance.fiatAmount.formatAmountAsSpannedString(
+            tvBalance.text = totalBalance.fiatAmount.formatAmountAsSpannedString(
                 currencySymbol = totalBalance.fiatCurrency.symbol
             )
             tvCurrencyName.text = totalBalance.fiatCurrency.code
@@ -193,7 +192,6 @@ class MultiWalletView : WalletView {
     private fun configureButtonsForEmptyWalletState(binding: FragmentWalletBinding) =
         with(binding) {
             lButtonsLong.root.show()
-            lButtonsLong.btnScanLong.setOnClickListener { store.dispatch(WalletAction.Scan) }
             lButtonsLong.btnConfirmLong.setOnClickListener { store.dispatch(WalletAction.CreateWallet) }
             lButtonsLong.btnConfirmLong.text =
                 fragment?.getText(R.string.wallet_button_create_wallet)
