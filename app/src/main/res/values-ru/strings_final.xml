@@ -47,6 +47,7 @@
     <string name="common_custom">Пользовательский</string>
     <string name="common_notice">Уведомление</string>
     <string name="common_attention">Внимание</string>
+    <string name="common_server_unavailable">Сервер недоступен, повторите попытку позднее</string>
 
     <string name="main_page_balance">Баланс</string>
     <string name="main_processing_full_amount">В сумме учтены не все монеты</string>
