@@ -1,6 +1,7 @@
 package com.tangem.tap.domain.extensions
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.Blockchain.Arbitrum
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeStatus
@@ -19,6 +20,7 @@ fun CurrencyExchangeManager.sellIsAllowed(currency: Currency): Boolean {
 
 fun CurrencyExchangeStatus.buyIsAllowed(currency: Currency): Boolean {
     if (store.state.globalState.configManager?.config?.isTopUpEnabled == false) return false
+    if (currency.blockchain == Arbitrum) return false
     if (!isBuyAllowed) return false
 // [REDACTED_TODO_COMMENT]
     return true
