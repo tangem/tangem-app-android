@@ -1,48 +1,60 @@
 package com.tangem.tap.features.wallet.redux.reducers
 
-import com.tangem.tap.features.wallet.models.TotalBalance
+import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.features.wallet.redux.WalletData
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import java.math.BigDecimal
 
-fun List<WalletData>.findTotalBalanceState(): TotalBalance.State {
-    return this.mapToTotalBalanceState()
-        .reduce(TotalBalance.State::or)
+fun List<WalletData>.findProgressState(): ProgressState {
+    return this
+        .mapToProgressState()
+        .reduce(ProgressState::or)
 }
 
 fun List<WalletData>.calculateTotalFiatAmount(): BigDecimal {
-    return this.map { it.currencyData.fiatAmount ?: BigDecimal.ZERO }
+    return this
+        .map { it.currencyData.fiatAmount ?: BigDecimal.ZERO }
         .reduce(BigDecimal::plus)
 }
 
-fun List<WalletData>.mapToTotalBalanceState(): List<TotalBalance.State> {
-    return this.map {
-        when (it.currencyData.status) {
+private fun List<WalletData>.mapToProgressState(): List<ProgressState> {
+    return this.map { wallet ->
+        if (wallet.fiatRate == null) ProgressState.Error
+        else when (wallet.currencyData.status) {
+            BalanceStatus.Refreshing -> ProgressState.Refreshing
             BalanceStatus.VerifiedOnline,
             BalanceStatus.SameCurrencyTransactionInProgress,
-            BalanceStatus.TransactionInProgress -> TotalBalance.State.Success
+            BalanceStatus.TransactionInProgress,
+            BalanceStatus.NoAccount -> ProgressState.Done
             BalanceStatus.Unreachable,
-            BalanceStatus.NoAccount,
             BalanceStatus.EmptyCard,
-            BalanceStatus.UnknownBlockchain -> TotalBalance.State.SomeTokensFailed
+            BalanceStatus.UnknownBlockchain -> ProgressState.Error
             BalanceStatus.Loading,
-            null -> TotalBalance.State.Loading
+            null -> ProgressState.Loading
         }
     }
 }
 
-infix fun TotalBalance.State.or(newState: TotalBalance.State): TotalBalance.State {
+private infix fun ProgressState.or(newState: ProgressState): ProgressState {
     return when (this) {
-        TotalBalance.State.Loading -> when (newState) {
-            TotalBalance.State.Loading,
-            TotalBalance.State.SomeTokensFailed,
-            TotalBalance.State.Success -> this
+        ProgressState.Loading -> when (newState) {
+            ProgressState.Loading,
+            ProgressState.Refreshing,
+            ProgressState.Error,
+            ProgressState.Done -> this
         }
-        TotalBalance.State.Success,
-        TotalBalance.State.SomeTokensFailed -> when (newState) {
-            TotalBalance.State.Loading,
-            TotalBalance.State.SomeTokensFailed -> newState
-            TotalBalance.State.Success -> this
+        ProgressState.Done,
+        ProgressState.Error -> when (newState) {
+            ProgressState.Loading,
+            ProgressState.Refreshing,
+            ProgressState.Error -> newState
+            ProgressState.Done -> this
+        }
+        ProgressState.Refreshing -> when (newState) {
+            ProgressState.Loading -> this
+            ProgressState.Refreshing,
+            ProgressState.Error,
+            ProgressState.Done -> newState
         }
     }
 }
