@@ -34,7 +34,7 @@ import com.tangem.tap.features.wallet.models.PendingTransactionType
 import com.tangem.tap.features.wallet.models.filterByCoin
 import com.tangem.tap.features.wallet.models.getPendingTransactions
 import com.tangem.tap.features.wallet.models.getSendableAmounts
-import com.tangem.tap.features.wallet.redux.Currency
+import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletData
 import com.tangem.tap.features.wallet.redux.WalletState
