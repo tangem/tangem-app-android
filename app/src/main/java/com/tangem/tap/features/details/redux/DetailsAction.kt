@@ -5,6 +5,7 @@ import com.tangem.common.card.Card
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TwinCardNumber
 import com.tangem.operations.pins.CheckUserCodesResponse
+import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.redux.NotificationAction
 import com.tangem.tap.domain.termsOfUse.CardTou
 import com.tangem.wallet.R
@@ -58,4 +59,5 @@ sealed class DetailsAction : Action {
         }
     }
 
+    data class ChangeAppCurrency(val fiatCurrency: FiatCurrency) : DetailsAction()
 }
