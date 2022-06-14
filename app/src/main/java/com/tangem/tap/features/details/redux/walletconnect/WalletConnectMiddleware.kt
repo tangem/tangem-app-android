@@ -21,7 +21,7 @@ import com.tangem.tap.domain.walletconnect.BnbHelper
 import com.tangem.tap.domain.walletconnect.WalletConnectManager
 import com.tangem.tap.domain.walletconnect.WalletConnectNetworkUtils
 import com.tangem.tap.features.demo.DemoHelper
-import com.tangem.tap.features.wallet.redux.Currency
+import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.scope
 import com.tangem.tap.store
