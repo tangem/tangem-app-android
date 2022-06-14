@@ -17,6 +17,7 @@ import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.features.details.redux.SecurityOption
 import com.tangem.tap.features.feedback.FeedbackEmail
+import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentDetailsBinding
@@ -112,6 +113,14 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
         tvCreateBackup.show(state.createBackupAllowed)
         tvCreateBackup.setOnClickListener {
             store.dispatch(DetailsAction.CreateBackup)
+        }
+
+        tvAppCurrency.show(state.scanResponse?.card?.isMultiwalletAllowed != true)
+        tvAppCurrencyTitle.show(state.scanResponse?.card?.isMultiwalletAllowed != true)
+        tvAppCurrency.text = state.appCurrency.code
+
+        tvAppCurrency.setOnClickListener {
+            store.dispatch(WalletAction.AppCurrencyAction.ChooseAppCurrency)
         }
 
         tvSendFeedback.setOnClickListener {
