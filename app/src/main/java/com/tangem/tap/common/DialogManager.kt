@@ -65,6 +65,15 @@ class DialogManager : StoreSubscriber<GlobalState> {
                     messageRes = R.string.wallet_connect_scanner_error_no_ethereum_wallet,
                     context = context
                 )
+            is WalletConnectDialog.AddNetwork ->
+                SimpleAlertDialog.create(
+                    titleRes = R.string.wallet_connect,
+                    message = context.getString(
+                        R.string.wallet_connect_network_not_found_format,
+                        state.dialog.network
+                    ),
+                    context = context
+                )
             is WalletConnectDialog.OpeningSessionRejected -> {
                 SimpleAlertDialog.create(
                     titleRes = R.string.wallet_connect,
