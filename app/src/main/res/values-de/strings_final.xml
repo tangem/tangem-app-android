@@ -47,6 +47,7 @@
     <string name="common_custom">Custom</string>
     <string name="common_notice">Notice</string>
     <string name="common_attention">Attention</string>
+    <string name="common_server_unavailable">The server is not available, please try again later</string>
 
     <string name="token_details_hide_alert_title">Hide %s</string>
     <string name="token_details_hide_alert_hide">Hide</string>
