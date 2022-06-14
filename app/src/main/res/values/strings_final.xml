@@ -48,7 +48,7 @@
     <string name="common_server_unavailable">The server is not available, please try again later</string>
 
     <string name="main_page_balance">Total balance</string>
-    <string name="main_processing_full_amount">Some networks are unreachable</string>
+    <string name="main_processing_full_amount">The amount does not include some of your funds</string>
     <string name="main_manage_tokens">Manage tokens</string>
     <string name="token_item_no_rate">No rate</string>
 </resources>
