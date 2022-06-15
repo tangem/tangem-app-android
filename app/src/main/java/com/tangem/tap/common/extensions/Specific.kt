@@ -1,8 +1,10 @@
 package com.tangem.tap.common.extensions
 
+import android.text.Spanned
+import android.text.SpannedString
+import android.text.style.RelativeSizeSpan
+import androidx.core.text.buildSpannedString
 import com.tangem.common.extensions.isZero
-import com.tangem.network.api.tangemTech.CurrenciesResponse
-import com.tangem.tap.common.redux.global.FiatCurrencyName
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.text.DecimalFormat
@@ -37,10 +39,23 @@ fun BigDecimal.toFormattedCurrencyString(
     return "$formattedAmount $currency"
 }
 
-fun BigDecimal.toFiatString(rateValue: BigDecimal, fiatCurrencyName: FiatCurrencyName): String {
+fun BigDecimal.toFiatRateString(
+    fiatCurrencyName: String
+): String {
+    val value = this
+        .setScale(2, RoundingMode.HALF_UP)
+        .formatWithSpaces()
+    return "$value $fiatCurrencyName"
+}
+
+fun BigDecimal.toFiatString(
+    rateValue: BigDecimal,
+    fiatCurrencyName: String,
+    formatWithSpaces: Boolean = false
+): String {
     var fiatValue = rateValue.multiply(this)
     fiatValue = fiatValue.setScale(2, RoundingMode.HALF_UP)
-    return "≈ ${fiatCurrencyName}  $fiatValue"
+    return fiatValue.toFormattedFiatValue(fiatCurrencyName, formatWithSpaces)
 }
 
 fun BigDecimal.toFiatValue(rateValue: BigDecimal): BigDecimal {
@@ -48,11 +63,13 @@ fun BigDecimal.toFiatValue(rateValue: BigDecimal): BigDecimal {
     return fiatValue.setScale(2, RoundingMode.HALF_UP)
 }
 
-fun BigDecimal.toFormattedFiatValue(fiatCurrencyName: FiatCurrencyName): String {
-    return "≈ ${fiatCurrencyName}  $this"
+fun BigDecimal.toFormattedFiatValue(
+    fiatCurrencyName: String,
+    formatWithSpaces: Boolean = false
+): String {
+    val fiatValue = if (formatWithSpaces) this.formatWithSpaces() else this
+    return " ${fiatValue}  $fiatCurrencyName"
 }
-
-fun CurrenciesResponse.Currency.toFormattedString(): String = "${this.name} (${this.code}) - ${this.unit}"
 
 fun BigDecimal.stripZeroPlainString(): String = this.stripTrailingZeros().toPlainString()
 
@@ -87,4 +104,54 @@ fun BigDecimal.isGreaterThanOrEqual(value: BigDecimal): Boolean {
 fun BigDecimal.isLessThanOrEqual(value: BigDecimal): Boolean {
     val compareResult = this.compareTo(value)
     return compareResult == -1 || compareResult == 0
+}
+
+fun BigDecimal.formatAmountAsSpannedString(
+    currencySymbol: String,
+    reminderPartSizeProportion: Float = 0.7f
+): SpannedString {
+    val amount = this
+        .setScale(2, RoundingMode.HALF_UP)
+        .formatWithSpaces()
+    val integer = amount.substringBefore('.')
+    val reminder = amount.substringAfter('.')
+
+    return buildSpannedString {
+        append(integer)
+        append('.')
+        append(
+            "$reminder $currencySymbol",
+            RelativeSizeSpan(reminderPartSizeProportion),
+            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+        )
+    }
+}
+
+fun BigDecimal.formatWithSpaces(): String {
+    val str = this.toString()
+    var integerStr = str.substringBefore('.')
+    val reminderStr = str.substringAfter('.')
+    val packets = arrayListOf<String>()
+
+    var index: Int = integerStr.length
+    while (0 < index) {
+        if (index <= 3) {
+            packets.add(0, integerStr)
+            break
+        }
+        index -= 3
+        packets.add(integerStr.substring(startIndex = index))
+        integerStr = integerStr.substring(startIndex = 0, endIndex = index)
+    }
+
+    return buildString {
+        packets.forEachIndexed { index, packet ->
+            append(packet)
+            if (index != packets.lastIndex) append(' ')
+        }
+        if (reminderStr.isNotBlank()) {
+            append('.')
+            append(reminderStr)
+        }
+    }
 }
