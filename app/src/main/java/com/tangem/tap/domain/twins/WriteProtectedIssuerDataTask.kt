@@ -63,11 +63,17 @@ class WriteProtectedIssuerDataTask(
         val counter = (readResponse.issuerDataCounter ?: 0) + 1
         val data = twinPublicKey + cardSignature
         val signedByIssuer = FileHashHelper.prepareHashes(
-            cardId, data, counter, issuerKeys.privateKey
+            cardId = cardId,
+            fileData = data,
+            fileCounter = counter,
+            fileName = null,
+            privateKey = issuerKeys.privateKey,
         )
         WriteIssuerDataCommand(
-            data, signedByIssuer.finalizingSignature!!,
-            counter, issuerKeys.publicKey
+            issuerData = data,
+            issuerDataSignature = signedByIssuer.finalizingSignature!!,
+            issuerDataCounter = counter,
+            issuerPublicKey = issuerKeys.publicKey,
         ).run(session, callback)
     }
 }
