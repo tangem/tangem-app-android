@@ -4,6 +4,7 @@ import android.content.SharedPreferences
 import androidx.core.content.edit
 import com.tangem.common.json.MoshiJsonConverter
 import com.tangem.network.api.tangemTech.CurrenciesResponse
+import com.tangem.tap.common.entities.FiatCurrency
 
 /**
 [REDACTED_AUTHOR]
@@ -12,13 +13,23 @@ class FiatCurrenciesPrefStorage(
     private val preferences: SharedPreferences,
     private val converter: MoshiJsonConverter,
 ) {
-    private val FIAT_CURRENCIES_KEY_OLD = "fiatCurrencies"
-    private val FIAT_CURRENCIES_KEY = "fiatCurrencies_v2"
-
     fun migrate() {
         preferences.edit(true) {
             remove(FIAT_CURRENCIES_KEY_OLD)
+            remove(APP_CURRENCY_KEY_OLD)
         }
+    }
+
+    fun getAppCurrency(): FiatCurrency {
+        val json = preferences.getString(APP_CURRENCY_KEY, "")
+        if (json.isNullOrBlank()) return FiatCurrency.Default
+
+        return converter.fromJson(json) ?: FiatCurrency.Default
+    }
+
+    fun saveAppCurrency(fiatCurrency: FiatCurrency) {
+        val json = converter.toJson(fiatCurrency)
+        preferences.edit { putString(APP_CURRENCY_KEY, json) }
     }
 
     fun save(currencies: List<CurrenciesResponse.Currency>) {
@@ -32,5 +43,13 @@ class FiatCurrenciesPrefStorage(
         if (json.isNullOrBlank()) return emptyList()
 
         return converter.fromJson(json, type) ?: emptyList()
+    }
+
+    companion object {
+        private const val FIAT_CURRENCIES_KEY_OLD = "fiatCurrencies"
+        private const val APP_CURRENCY_KEY_OLD = "appCurrency"
+
+        private const val FIAT_CURRENCIES_KEY = "fiatCurrencies_v2"
+        private const val APP_CURRENCY_KEY = "appCurrency_v2"
     }
 }

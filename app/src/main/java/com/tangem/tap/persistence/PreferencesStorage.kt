@@ -5,8 +5,6 @@ import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import com.tangem.common.json.MoshiJsonConverter
-import com.tangem.tap.common.entities.TapCurrency.Companion.DEFAULT_FIAT_CURRENCY
-import com.tangem.tap.common.redux.global.FiatCurrencyName
 import java.util.*
 
 
@@ -25,15 +23,6 @@ class PreferencesStorage(applicationContext: Application) {
         usedCardsPrefStorage.migrate()
         fiatCurrenciesPrefStorage = FiatCurrenciesPrefStorage(preferences, MoshiJsonConverter.INSTANCE)
         fiatCurrenciesPrefStorage.migrate()
-    }
-
-    fun getAppCurrency(): FiatCurrencyName {
-        return preferences.getString(APP_CURRENCY_KEY, DEFAULT_FIAT_CURRENCY)
-            ?: DEFAULT_FIAT_CURRENCY
-    }
-
-    fun saveAppCurrency(fiatCurrencyName: FiatCurrencyName) {
-        preferences.edit { putString(APP_CURRENCY_KEY, fiatCurrencyName) }
     }
 
     fun getCountOfLaunches(): Int = preferences.getInt(APP_LAUNCH_COUNT_KEY, 1)
@@ -74,7 +63,6 @@ class PreferencesStorage(applicationContext: Application) {
 
     companion object {
         private const val PREFERENCES_NAME = "tapPrefs"
-        private const val APP_CURRENCY_KEY = "appCurrency"
         private const val DISCLAIMER_ACCEPTED_KEY = "disclaimerAccepted"
         private const val TWINS_ONBOARDING_SHOWN_KEY = "twinsOnboardingShown"
         private const val APP_LAUNCH_COUNT_KEY = "launchCount"
