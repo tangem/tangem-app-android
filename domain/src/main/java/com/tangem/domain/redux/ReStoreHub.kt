@@ -2,8 +2,6 @@ package com.tangem.domain.redux
 
 import android.webkit.ValueCallback
 import com.tangem.domain.common.FeatureCoroutineExceptionHandler
-import com.tangem.domain.common.extensions.withIOContext
-import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.domain.redux.global.DomainGlobalState
 import kotlinx.coroutines.*
 import org.rekotlin.Action
@@ -105,13 +103,4 @@ internal abstract class BaseStoreHub<State>(
 
     protected abstract fun getHubState(storeState: DomainState): State
     protected abstract fun updateStoreState(storeState: DomainState, newHubState: State): DomainState
-
-}
-
-internal suspend inline fun ReStoreHub<*, *>.dispatchOnMain(vararg actions: Action) {
-    withMainContext { actions.forEach { domainStore.dispatch(it) } }
-}
-
-internal suspend inline fun ReStoreHub<*, *>.dispatchOnIO(vararg actions: Action) {
-    withIOContext { actions.forEach { domainStore.dispatch(it) } }
 }
