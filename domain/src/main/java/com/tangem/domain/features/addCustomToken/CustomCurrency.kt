@@ -11,10 +11,6 @@ import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenState
 /**
 [REDACTED_AUTHOR]
  */
-enum class CompleteDataType {
-    Blockchain, Token
-}
-
 sealed class CustomCurrency(
     val network: Blockchain,
     val derivationPath: DerivationPath?,

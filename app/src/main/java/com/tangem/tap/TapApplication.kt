@@ -62,7 +62,9 @@ class TapApplication : Application() {
         NetworkConnectivity.createInstance(store, this)
         preferencesStorage = PreferencesStorage(this)
         PicassoHelper.initPicassoWithCaching(this)
-        currenciesRepository = CurrenciesRepository(this)
+        currenciesRepository = CurrenciesRepository(
+            this, store.state.domainNetworks.tangemTechService
+        )
         walletConnectRepository = WalletConnectRepository(this)
 
         initFeedbackManager()
