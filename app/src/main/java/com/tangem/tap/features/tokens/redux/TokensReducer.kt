@@ -15,9 +15,24 @@ private fun internalReduce(action: Action, state: AppState): TokensState {
     val tokensState = state.tokensState
     return when (action) {
         is TokensAction.ResetState -> TokensState()
-        is TokensAction.LoadCurrencies -> tokensState.copy(scanResponse = action.scanResponse)
+        is TokensAction.LoadCurrencies -> {
+            val loadingState = if (tokensState.currencies.isEmpty()) {
+                LoadCoinsState.LOADING
+            } else {
+                LoadCoinsState.LOADED
+            }
+            tokensState.copy(
+                scanResponse = action.scanResponse,
+                loadCoinsState = loadingState
+            )
+        }
         is TokensAction.LoadCurrencies.Success -> {
-            tokensState.copy(currencies = action.currencies)
+            tokensState.copy(
+                currencies = tokensState.currencies + action.currencies,
+                needToLoadMore = action.loadMore,
+                pageToLoad = tokensState.pageToLoad + 1,
+                loadCoinsState = LoadCoinsState.LOADED
+            )
         }
         is TokensAction.SetAddedCurrencies -> {
 
@@ -37,6 +52,15 @@ private fun internalReduce(action: Action, state: AppState): TokensState {
 
         is TokensAction.AllowToAddTokens -> {
             tokensState.copy(allowToAdd = action.allow)
+        }
+        is TokensAction.SetSearchInput -> {
+            tokensState.copy(
+                searchInput = action.searchInput.ifBlank { null },
+                needToLoadMore = true,
+                currencies = emptyList(),
+                pageToLoad = 0,
+                loadCoinsState = LoadCoinsState.LOADING
+            )
         }
         else -> tokensState
     }

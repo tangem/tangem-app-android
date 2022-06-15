@@ -4,6 +4,8 @@ import com.tangem.blockchain.common.Blockchain
 
 fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
     return when (networkId) {
+        "arbitrum-one" -> Blockchain.Arbitrum
+        "arbitrum-one/test" -> Blockchain.ArbitrumTestnet
         "avalanche", "avalanche-2" -> Blockchain.Avalanche
         "avalanche/test", "avalanche-2/test" -> Blockchain.AvalancheTestnet
         "binancecoin" -> Blockchain.Binance
@@ -12,6 +14,8 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "binance-smart-chain/test" -> Blockchain.BSCTestnet
         "ethereum" -> Blockchain.Ethereum
         "ethereum/test" -> Blockchain.EthereumTestnet
+        "ethereum-classic" -> Blockchain.EthereumClassic
+        "ethereum-classic/test" -> Blockchain.EthereumClassicTestnet
         "polygon-pos", "matic-network" -> Blockchain.Polygon
         "polygon-pos/test", "matic-network/test" -> Blockchain.PolygonTestnet
         "solana" -> Blockchain.Solana
@@ -30,6 +34,8 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "stellar" -> Blockchain.Stellar
         "stellar/test" -> Blockchain.StellarTestnet
         "tezos" -> Blockchain.Tezos
+        "tron" -> Blockchain.Tron
+        "tron/test" -> Blockchain.TronTestnet
         "xrp", "ripple" -> Blockchain.XRP
         else -> null
     }
@@ -38,6 +44,8 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
 fun Blockchain.toNetworkId(): String {
     return when (this) {
         Blockchain.Unknown -> "unknown"
+        Blockchain.Arbitrum -> "arbitrum-one"
+        Blockchain.ArbitrumTestnet -> "arbitrum/test"
         Blockchain.Avalanche -> "avalanche"
         Blockchain.AvalancheTestnet -> "avalanche/test"
         Blockchain.Binance -> "binancecoin"
@@ -54,6 +62,8 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.Ducatus -> "ducatus"
         Blockchain.Ethereum -> "ethereum"
         Blockchain.EthereumTestnet -> "ethereum/test"
+        Blockchain.EthereumClassic -> "ethereum-classic"
+        Blockchain.EthereumClassicTestnet -> "ethereum-classic/test"
         Blockchain.Fantom -> "fantom"
         Blockchain.FantomTestnet -> "fantom/test"
         Blockchain.Litecoin -> "litecoin"
@@ -66,6 +76,8 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.SolanaTestnet -> "solana/test"
         Blockchain.Tezos -> "tezos"
         Blockchain.XRP -> "xrp"
+        Blockchain.Tron -> "tron"
+        Blockchain.TronTestnet -> "tron/test"
     }
 }
 
@@ -75,9 +87,11 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Bitcoin, Blockchain.BitcoinTestnet -> "bitcoin"
         Blockchain.BitcoinCash, Blockchain.BitcoinCashTestnet -> "bitcoin-cash"
         Blockchain.Ethereum, Blockchain.EthereumTestnet -> "ethereum"
+        Blockchain.EthereumClassic, Blockchain.EthereumClassicTestnet -> "ethereum-classic"
         Blockchain.Stellar, Blockchain.StellarTestnet -> "stellar"
         Blockchain.Cardano, Blockchain.CardanoShelley -> "cardano"
         Blockchain.Polygon, Blockchain.PolygonTestnet -> "matic-network"
+        Blockchain.Arbitrum, Blockchain.ArbitrumTestnet -> "ethereum"
         Blockchain.Avalanche, Blockchain.AvalancheTestnet -> "avalanche-2"
         Blockchain.Solana, Blockchain.SolanaTestnet -> "solana"
         Blockchain.Fantom, Blockchain.FantomTestnet -> "fantom"
@@ -87,6 +101,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Tezos -> "tezos"
         Blockchain.XRP -> "ripple"
         Blockchain.Dogecoin -> "dogecoin"
+        Blockchain.Tron, Blockchain.TronTestnet -> "tron"
         else -> "unknown"
     }
 }
