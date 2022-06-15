@@ -17,6 +17,7 @@ import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.features.details.redux.SecurityOption
 import com.tangem.tap.features.feedback.FeedbackEmail
+import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentDetailsBinding
@@ -24,7 +25,6 @@ import org.rekotlin.StoreSubscriber
 
 class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<DetailsState> {
 
-    private var currencySelectionDialog = CurrencySelectionDialog()
     private val binding: FragmentDetailsBinding by viewBinding(FragmentDetailsBinding::bind)
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -67,7 +67,7 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
         setState(state)
     }
 
-    private fun setState(state: DetailsState)  = with (binding){
+    private fun setState(state: DetailsState)  = with (binding) {
 
         if (state.cardInfo != null) {
             val cardId = if (state.isTangemTwins) {
@@ -115,11 +115,14 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
             store.dispatch(DetailsAction.CreateBackup)
         }
 
-        tvAppCurrency.text = state.appCurrencyState.fiatCurrencyName
+        tvAppCurrency.show(state.scanResponse?.card?.isMultiwalletAllowed != true)
+        tvAppCurrencyTitle.show(state.scanResponse?.card?.isMultiwalletAllowed != true)
+        tvAppCurrency.text = state.appCurrency.code
 
-        tvAppCurrencyTitle.setOnClickListener {
-            store.dispatch(DetailsAction.AppCurrencyAction.ChooseAppCurrency)
+        tvAppCurrency.setOnClickListener {
+            store.dispatch(WalletAction.AppCurrencyAction.ChooseAppCurrency)
         }
+
         tvSendFeedback.setOnClickListener {
             store.dispatch(GlobalAction.SendFeedback(FeedbackEmail()))
         }
@@ -140,17 +143,6 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
             null -> null
         }
         currentSecurity?.let { tvSecurity.text = getString(it) }
-
-        if (state.appCurrencyState.showAppCurrencyDialog &&
-            !state.appCurrencyState.fiatCurrencies.isNullOrEmpty()) {
-            currencySelectionDialog.show(
-                state.appCurrencyState.fiatCurrencies,
-                state.appCurrencyState.fiatCurrencyName,
-                requireContext()
-            )
-        } else {
-            currencySelectionDialog.clear()
-        }
     }
 
 }
