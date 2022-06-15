@@ -16,6 +16,7 @@ fun BlockchainSpinner(
     isEnabled: Boolean = true,
     textFieldConverter: (Blockchain) -> String,
     dropdownItemView: @Composable ((Blockchain) -> Unit)? = null,
+    closePopupTrigger: ClosePopupTrigger = ClosePopupTrigger(),
     onItemSelected: (Blockchain) -> Unit,
 ) {
     OutlinedSpinner(
@@ -26,6 +27,7 @@ fun BlockchainSpinner(
         textFieldConverter = textFieldConverter,
         dropdownItemView = dropdownItemView,
         isEnabled = isEnabled,
-        onItemSelected = onItemSelected
+        onItemSelected = onItemSelected,
+        closePopupTrigger = closePopupTrigger,
     )
 }
