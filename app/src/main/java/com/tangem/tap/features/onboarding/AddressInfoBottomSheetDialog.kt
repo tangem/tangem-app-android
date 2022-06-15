@@ -10,8 +10,8 @@ import com.tangem.tap.common.extensions.dispatchDialogHide
 import com.tangem.tap.common.extensions.dispatchShare
 import com.tangem.tap.common.extensions.dispatchToastNotification
 import com.tangem.tap.common.redux.AppDialog
+import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.AddressData
-import com.tangem.tap.features.wallet.redux.Currency
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.DialogOnboardingAddressInfoBinding
