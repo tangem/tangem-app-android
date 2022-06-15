@@ -13,7 +13,7 @@
     <string name="send_validation_invalid_address">Indirizzo non valido</string>
     <string name="send_validation_invalid_amount">Importo non valido</string>
     <string name="send_validation_invalid_total">Il totale supera il saldo</string>
-    <string name="send_validation_invalid_fee">La commissione supera il saldo </string>
+    <string name="send_validation_invalid_fee">La commissione supera il saldo</string>
     <string name="xtz_withdrawal_message_warning">Per evitare di pagare una commissione maggiore la prossima volta che ricarichi il tuo portafoglio, riduci l\'importo di %s XTZ</string>
     <string name="xtz_withdrawal_message_reduce">Riduci di %s XTZ</string>
     <string name="xtz_withdrawal_message_ignore">No, invia l\'intero importo</string>
