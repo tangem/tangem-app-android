@@ -39,9 +39,26 @@
 
     <string name="currency_subtitle_expanded">Доступные сети</string>
     <string name="alert_manage_tokens_addresses_message">Внимание! Валюты на разных сетях имеют разные адреса. Убедитесь, что адрес соответствует сети, в которой вы отправляете средства.</string>
+    <string name="alert_manage_tokens_unsupported_message">Токены в сети Solana не поддерживаются этой картой из-за ограничений прошивки.</string>
+    <string name="warning_token_send_unsupported_message">Не осуществляйте перевод на токены в данной сети, иначе это может привести к их безвозвратной утере.</string>
     <string name="contract_address_copied_message">Адрес контракта скопирован!</string>
     <string name="alert_funds_restoration_message">Если вы совершили ошибку с выбором сети при переводе средств с биржи, эта инструкция поможет вам восстановить средства</string>
 
     <string name="common_custom">Пользовательский</string>
+    <string name="common_notice">Уведомление</string>
+    <string name="common_attention">Внимание</string>
+    <string name="common_server_unavailable">Сервер недоступен, повторите попытку позднее</string>
 
+    <string name="main_page_balance">Баланс</string>
+    <string name="main_processing_full_amount">В сумме учтены не все монеты</string>
+    <string name="main_manage_tokens">Управление токенами</string>
+    <string name="token_item_no_rate">Нет цены</string>
+
+    <string name="token_details_hide_alert_title">Скрыть %s</string>
+    <string name="token_details_hide_alert_hide">Скрыть</string>
+    <string name="token_details_hide_alert_message">Вы скрываете токен с главного экрана, но в любой момент сможете добавить его обратно.</string>
+    <string name="token_details_unable_hide_alert_title">Невозможно скрыть %s</string>
+    <string name="token_details_unable_hide_alert_message">Токен %s является основной валютой в сети %s и не может быть скрыт, до тех пор пока у вас в списке есть другие токены этой сети.</string>
+
+    <string name="wallet_connect_network_not_found_format">Сеть %s не найдена. Пожалуйста, добавьте её и попробуйте заново.</string>
 </resources>
