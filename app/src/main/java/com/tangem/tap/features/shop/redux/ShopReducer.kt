@@ -65,5 +65,6 @@ private fun internalReduce(action: Action, state: ShopState): ShopState {
         }
         ShopAction.FinishSuccessfulOrder -> state
         ShopAction.ResetState -> ShopState()
+        ShopAction.LoadProducts.Failure -> state
     }
 }

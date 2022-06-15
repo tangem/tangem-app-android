@@ -13,7 +13,9 @@ import androidx.compose.ui.platform.ComposeView
 import com.google.accompanist.appcompattheme.AppCompatTheme
 import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenState
 import com.tangem.domain.redux.domainStore
+import com.tangem.tap.common.compose.ClosePopupTrigger
 import com.tangem.tap.features.BaseStoreFragment
+import com.tangem.tap.features.FragmentOnBackPressedHandler
 import com.tangem.tap.features.addBackPressHandler
 import com.tangem.tap.features.tokens.addCustomToken.compose.AddCustomTokenScreen
 import com.tangem.wallet.R
@@ -48,16 +50,25 @@ class AddCustomTokenFragment : BaseStoreFragment(R.layout.view_compose_fragment)
             it.setTitle(R.string.add_custom_token_title)
         }
 
+        val closePopupTrigger = initClosingPopupTriggerEvent()
         view.findViewById<ComposeView>(R.id.view_compose)?.setContent {
             AppCompatTheme(requireContext()) {
                 Box(modifier = Modifier
                     .fillMaxSize()
                 ) {
-                    AddCustomTokenScreen(state)
+                    AddCustomTokenScreen(state, closePopupTrigger)
                 }
 
             }
         }
-        addBackPressHandler(this)
+
+
+    }
+
+    private fun initClosingPopupTriggerEvent(): ClosePopupTrigger = ClosePopupTrigger().apply {
+        onCloseComplete = ::handleOnBackPressed
+        addBackPressHandler(object : FragmentOnBackPressedHandler {
+            override fun handleOnBackPressed() = close()
+        })
     }
 }

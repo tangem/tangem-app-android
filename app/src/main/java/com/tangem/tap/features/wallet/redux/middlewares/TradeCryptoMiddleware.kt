@@ -2,6 +2,7 @@ package com.tangem.tap.features.wallet.redux.middlewares
 
 import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.common.AmountType
+import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.navigation.AppScreen
@@ -9,7 +10,7 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.send.redux.PrepareSendScreen
 import com.tangem.tap.features.send.redux.SendAction
-import com.tangem.tap.features.wallet.redux.Currency
+import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import com.tangem.tap.network.exchangeServices.buyErc20Tokens
@@ -51,7 +52,10 @@ class TradeCryptoMiddleware {
             currency is Currency.Token && currency.blockchain.isTestnet()
         ) {
             val walletManager = store.state.walletState.getWalletManager(currency)
-            if (walletManager !is EthereumWalletManager) return
+            if (walletManager !is EthereumWalletManager) {
+                store.dispatchDebugErrorNotification("Testnet tokens available only for the ETH")
+                return
+            }
 
             scope.launch { exchangeManager.buyErc20Tokens(walletManager, currency.token) }
             return
@@ -61,8 +65,9 @@ class TradeCryptoMiddleware {
             action = exchangeAction,
             blockchain = currency.blockchain,
             cryptoCurrencyName = currencySymbol,
-            fiatCurrency = appCurrency,
-            walletAddress = defaultAddress)?.let { store.dispatchOnMain(NavigationAction.OpenUrl(it)) }
+            fiatCurrencyName = appCurrency.code,
+            walletAddress = defaultAddress
+        )?.let { store.dispatchOnMain(NavigationAction.OpenUrl(it)) }
 
     }
 
