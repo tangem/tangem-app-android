@@ -128,7 +128,8 @@ class ReceiptReducer : SendInternalReducer {
             val totalFiat = amountFiat.plus(feeFiat)
             ReceiptTokenFiat(
                 amountFiat = amountFiat.scaleToFiat(true).stripZeroPlainString(),
-                feeFiat = feeFiat.scaleToFiat(true).stripZeroPlainString(),
+                feeFiat = feeFiat.scaleToFiat(true)
+                    .stripZeroPlainString().addPrecisionSign(),
                 totalFiat = totalFiat.scaleToFiat(true).stripZeroPlainString(),
                 willSentToken = tokensToSend.stripZeroPlainString(),
                 willSentFeeCoin = feeCoin.stripZeroPlainString(),
@@ -160,14 +161,14 @@ class ReceiptReducer : SendInternalReducer {
 
             ReceiptTokenCrypto(
                 amountToken = tokensToSend.stripZeroPlainString(),
-                feeCoin = feeCoin.stripZeroPlainString(),
+                feeCoin = feeCoin.stripZeroPlainString().addPrecisionSign(),
                 totalFiat = totalFiat.scaleToFiat(true).stripZeroPlainString(),
                 symbols = symbols
             )
         } else {
             ReceiptTokenCrypto(
                 amountToken = tokensToSend.stripZeroPlainString(),
-                feeCoin = feeCoin.stripZeroPlainString(),
+                feeCoin = feeCoin.stripZeroPlainString().addPrecisionSign(),
                 totalFiat = EMPTY,
                 symbols = symbols
             )
@@ -177,7 +178,7 @@ class ReceiptReducer : SendInternalReducer {
 
     private fun determineSymbols(wallet: Wallet, amountType: AmountType): ReceiptSymbols {
         return ReceiptSymbols(
-            fiat = store.state.globalState.appCurrency,
+            fiat = store.state.globalState.appCurrency.code,
             crypto = wallet.blockchain.currency,
             token = when (amountType) {
                 is AmountType.Token -> amountType.token.symbol
@@ -208,4 +209,7 @@ class ReceiptReducer : SendInternalReducer {
             else -> EMPTY
         }
     }
+
+    private fun String.addPrecisionSign(): String =
+        ("${feeState.feePrecision.symbol} $this").trim()
 }
