@@ -57,7 +57,7 @@ fun WalletManager?.getToUpUrl(): String? {
         action = CurrencyExchangeManager.Action.Buy,
         blockchain = wallet.blockchain,
         cryptoCurrencyName = wallet.blockchain.currency,
-        fiatCurrency = globalState.appCurrency,
+        fiatCurrencyName = globalState.appCurrency.code,
         walletAddress = defaultAddress,
     )
 }
