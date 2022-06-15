@@ -10,8 +10,8 @@ import com.tangem.common.hdWallet.DerivationPath
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
-import com.tangem.tap.domain.tokens.BlockchainNetwork
-import com.tangem.tap.features.wallet.redux.Currency
+import com.tangem.tap.domain.tokens.models.BlockchainNetwork
+import com.tangem.tap.features.wallet.models.Currency
 
 fun WalletManagerFactory.makeWalletManagerForApp(
     scanResponse: ScanResponse,
