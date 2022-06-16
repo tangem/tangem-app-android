@@ -58,10 +58,7 @@
     <string name="send_fee_label">Commissione</string>
     <string name="send_total_label">Totale</string>
     <string name="send_max_amount_label">Importo totale</string>
-    <string name="send_validation_invalid_address">Indirizzo non valido</string>
-    <string name="send_validation_invalid_amount">Importo non valido</string>
-    <string name="send_validation_invalid_total">Il totale supera il saldo</string>
-    <string name="send_validation_invalid_fee">La commissione supera il saldo </string>
+
     <string name="send_fee_picker_low">Insufficiente</string>
     <string name="send_fee_picker_normal">Normale</string>
     <string name="send_fee_picker_priority">Prioritario</string>
@@ -71,7 +68,6 @@
     <string name="send_total_subtitle_asset_format">Sarà inviato %1$s %2$s e %1$s %2$s</string>
     <string name="send_balance_subtitle_format">Saldo: %1$s %2$s</string>
     <string name="send_transaction_success">La transazione è stata firmata con successo e inviata al nodo blockchain. Il saldo del portafoglio verrà aggiornato dopo un po\' di tempo </string>
-    <string name="send_error_no_account_xlm">Per creare un account, invia 1+ XLM a questo indirizzo</string>
     <string name="details_title">Requisiti</string>
     <string name="details_row_title_cid">ID carta</string>
     <string name="details_row_title_issuer">Emittente</string>
@@ -159,26 +155,16 @@ Salvo quanto diversamente previsto dalla legge, i proprietari o i contributori d
 Questa nota legale è stata modificata l\'ultima volta 01.10.2020.
 
     </string>
-
-    <string name="send_error_no_target_account">Per creare un account, invia %1$s %2$s a questo indirizzo</string>
-    <string name="send_error_fee_request_failed">Impossibile ottenere la commissione</string>
     <string name="common_accept">Accetta</string>
-    <string name="send_validation_amount_exceeds_balance">L\'importo supera il saldo</string>
     <string name="disclaimer_title">Termini del servizio</string>
     <string name="wallet_notification_no_internet">Nessuna connessione a Internet</string>
 
-    <string name="send_error_unknown">Errore sconosciuto</string>
     <string name="send_error_payid_verification_failed">Verifica del PayString fallita</string>
     <string name="send_error_payid_unsupported_by_blockchain">PayString non supportato dalla blockchain</string>
     <string name="send_error_payid_not_registered">PayString non registrato</string>
     <string name="send_error_payid_request_failed">Richiesta PayString fallita</string>
 
     <string name="send_error_address_same_as_wallet">L\'indirizzo corrisponde all\'indirizzo del tuo portafoglio</string>
-    <string name="send_error_insufficient_balance">Saldo insufficiente</string>
-    <string name="send_error_blockchain_internal">Errore interno della blockchain</string>
-    <string name="send_error_invalid_fee_value">Commissione non valida</string>
-    <string name="send_error_dust_amount_format">L\'importo minimo è di %s</string>
-    <string name="send_error_dust_change">L\'importo residuo è molto basso</string>
 
     <string name="wallet_notification_address_copied">L\'indirizzo è stato copiato con successo</string>
 
@@ -190,9 +176,5 @@ Questa nota legale è stata modificata l\'ultima volta 01.10.2020.
 
     <string name="details_notification_erase_wallet_not_possible">Il tuo saldo su questo portafoglio non è pari a zero o hai transazioni non confermate. Non è possibile eliminare la funzione portafoglio.</string>
     <string name="details_notification_security_option_already_active">E\' l\'opzione attualmente attiva</string>
-
-    <string name="xtz_withdrawal_message_warning">Per evitare di pagare una commissione maggiore la prossima volta che ricarichi il tuo portafoglio, riduci l\'importo di %s XTZ</string>
-    <string name="xtz_withdrawal_message_reduce">Riduci di %s XTZ</string>
-    <string name="xtz_withdrawal_message_ignore">No, invia l\'intero importo</string>
 
 </resources>
