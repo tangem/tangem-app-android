@@ -1,6 +1,11 @@
 package com.tangem.tap.common.extensions
 
-import android.graphics.*
+import android.graphics.Bitmap
+import android.graphics.BitmapShader
+import android.graphics.Canvas
+import android.graphics.Paint
+import android.graphics.RectF
+import android.graphics.Shader
 import android.widget.TextView
 import androidx.constraintlayout.utils.widget.ImageFilterView
 import com.squareup.picasso.Callback
@@ -32,6 +37,28 @@ fun Picasso.loadCurrenciesIcon(
     imageView.colorFilter = null
     textView.text = null
 
+    if (token != null) {
+        setTokenImage(imageView, textView, token, blockchain)
+    }
+    this.load(url)
+        .transform(RoundedCornersTransform())
+        .noPlaceholder()
+        ?.into(imageView,
+            object : Callback {
+                override fun onError(e: Exception?) {
+                    setOfflineCurrencyImage(imageView, textView, token, blockchain)
+                }
+
+                override fun onSuccess() {
+                    if (token != null) {
+                        imageView.colorFilter = null
+                        textView.text = null
+                    }
+                    if (blockchain.isTestnet()) imageView.saturation = 0f
+                }
+            }
+        )
+
     when {
         token?.symbol == QCX -> {
             this.load(R.drawable.ic_qcx)?.into(imageView)
@@ -59,7 +86,8 @@ fun Picasso.loadCurrenciesIcon(
                             }
                             if (blockchain.isTestnet()) imageView.saturation = 0f
                         }
-                    })
+                    }
+                )
         }
         else -> {
             setOfflineCurrencyImage(imageView, textView, token, blockchain)
@@ -70,36 +98,43 @@ fun Picasso.loadCurrenciesIcon(
 private const val QCX = "QCX"
 private const val VOYR = "VOYRME"
 
-private fun setOfflineCurrencyImage(
+private fun Picasso.setOfflineCurrencyImage(
     imageView: ImageFilterView,
     textView: TextView,
     token: Token?,
     blockchain: Blockchain,
 ) {
-    when (token) {
-        null -> setBlockchainImage(imageView, textView, blockchain)
-        else -> setTokenImage(imageView, textView, token, blockchain)
+    if (token == null) {
+        setBlockchainImage(imageView, textView, blockchain)
+    } else {
+        setTokenImage(imageView, textView, token, blockchain)
     }
 }
 
-private fun setBlockchainImage(
+private fun Picasso.setBlockchainImage(
     imageView: ImageFilterView,
     textView: TextView,
     blockchain: Blockchain,
 ) {
-    imageView.setImageResource(blockchain.getRoundIconRes())
+    this
+        .load(blockchain.getRoundIconRes())
+        .into(imageView)
+
     imageView.colorFilter = null
     if (blockchain.isTestnet()) imageView.saturation = 0f
     textView.text = null
 }
 
-private fun setTokenImage(
+private fun Picasso.setTokenImage(
     imageView: ImageFilterView,
     textView: TextView,
     token: Token,
     tokenBlockchain: Blockchain
 ) {
-    imageView.setImageResource(R.drawable.shape_circle)
+    this
+        .load(R.drawable.shape_circle)
+        .into(imageView)
+
     if (tokenBlockchain.isTestnet()) {
         imageView.saturation = 0f
     } else {
