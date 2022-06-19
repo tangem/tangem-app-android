@@ -6,10 +6,19 @@ import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.Snackbar
+import androidx.compose.material.SnackbarDuration
+import androidx.compose.material.SnackbarHost
+import androidx.compose.material.SnackbarHostState
 import androidx.compose.material.Text
+import androidx.compose.material.TextButton
+import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -18,6 +27,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -29,6 +39,8 @@ import androidx.compose.ui.unit.sp
 import com.tangem.tap.features.home.redux.HomeState
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.wallet.R
+import zendesk.chat.ChatEngine
+import zendesk.messaging.MessagingActivity
 import kotlin.math.max
 
 @Composable
@@ -59,6 +71,18 @@ fun StoriesScreen(
 
     val hideContent = remember { mutableStateOf(true) }
 
+    var showErrorMessage by remember(homeState.value.showAskQuestion) {
+        mutableStateOf(homeState.value.showAskQuestion)
+    }
+
+    val snackbarHostState = rememberScaffoldState().snackbarHostState
+    val askSupportDesc = stringResource(R.string.details_support_chat_description)
+    val askSupportTitle = stringResource(R.string.details_support_chat_title)
+    LaunchedEffect(showErrorMessage) {
+        if (showErrorMessage) {
+            snackbarHostState.showSnackbar(askSupportDesc, askSupportTitle, SnackbarDuration.Long)
+        }
+    }
     Box(
         Modifier
             .fillMaxSize()
@@ -138,6 +162,7 @@ fun StoriesScreen(
                     .align(Alignment.Start),
                 colorFilter = if (isDarkBackground) null else ColorFilter.tint(Color.Black)
             )
+
             when (currentStep.value) {
                 1 -> FirstStoriesContent(pause, stepDuration) { hideContent.value = it }
                 2 -> StoriesRevolutionaryWallet()
@@ -147,18 +172,27 @@ fun StoriesScreen(
                 6 -> StoriesWalletForEveryone()
             }
         }
+
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth()
         ) {
+
+            val context = LocalContext.current
+
+            AskSupportSnackbar(onAskClick = {
+                showErrorMessage = false
+                MessagingActivity.builder()
+                    .withEngines(ChatEngine.engine())
+                    .show(context)
+            }, snackbarHostState = snackbarHostState)
             if (currentStep.value == 4) Button(
                 onClick = onSearchTokensClick,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
-                    .height(48.dp)
-                ,
+                    .height(48.dp),
                 colors = ButtonDefaults.textButtonColors(
                     backgroundColor = Color.White,
                     contentColor = Color(0xFF080C10)
@@ -188,6 +222,24 @@ fun StoriesScreen(
     }
 }
 
+@Composable
+private fun AskSupportSnackbar(onAskClick: () -> Unit, snackbarHostState: SnackbarHostState) {
+    SnackbarHost(hostState = snackbarHostState) {
+        Snackbar(
+            modifier = Modifier.padding(16.dp),
+            actionOnNewLine = true,
+            action = {
+                it.actionLabel?.let {
+                    TextButton(onClick = onAskClick) {
+                        Text(text = it)
+                    }
+                }
+            }
+        ) {
+            Text(text = it.message)
+        }
+    }
+}
 
 @Preview
 @Composable

@@ -22,6 +22,8 @@ import com.tangem.tap.store
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentDetailsBinding
 import org.rekotlin.StoreSubscriber
+import zendesk.chat.ChatEngine
+import zendesk.messaging.MessagingActivity
 
 class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<DetailsState> {
 
@@ -130,6 +132,12 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
         tvWalletConnect.show(state.scanResponse?.card?.isMultiwalletAllowed == true)
         tvWalletConnect.setOnClickListener {
             store.dispatch(NavigationAction.NavigateTo(AppScreen.WalletConnectSessions))
+        }
+
+        tvSupport.setOnClickListener {
+            MessagingActivity.builder()
+                .withEngines(ChatEngine.engine())
+                .show(it.context)
         }
 
         llManageSecurity.setOnClickListener {

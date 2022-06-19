@@ -21,6 +21,10 @@ private fun internalReduce(action: Action, state: AppState): HomeState {
         is HomeAction.ChangeScanCardButtonState -> {
             state = state.copy(btnScanState = action.state)
         }
+
+        is HomeAction.ScanError -> {
+            state = state.copy(showAskQuestion = true)
+        }
     }
 
     return state

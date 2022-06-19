@@ -88,6 +88,8 @@
     <string name="details_manage_security_passcode_description">Dovrai inserire una password prima di eseguire qualsiasi comando che modifichi lo stato della carta.</string>
     <string name="details_manage_security_access_code">Codice di accesso</string>
     <string name="details_manage_security_access_code_description">Prima di scansionare la carta sarà necessario inserire il codice di accesso corretto</string>
+    <string name="details_support_chat_title">Fai una domanda</string>
+    <string name="details_support_chat_description">Se qualcosa va storto, scrivici</string>
     <string name="alert_old_device_this_card">Potresti riscontrare problemi con l\'NFC su alcuni iPhone 7/7 + durante la rimozione</string>
     <string name="alert_card_signed_transactions">Questa carta è già stata ricaricata e ha firmato transazioni in passato. Valuta la possibilità di prelevare immediatamente tutti i fondi se hai ricevuto questa carta da una fonte inaffidabile.</string>
     <string name="alert_title">Attenzione</string>

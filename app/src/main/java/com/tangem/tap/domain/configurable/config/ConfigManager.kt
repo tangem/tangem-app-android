@@ -19,7 +19,8 @@ data class Config(
     val isTopUpEnabled: Boolean = false,
     @Deprecated("Not relevant since version 3.23")
     val isCreatingTwinCardsAllowed: Boolean = false,
-    val shopify: ShopifyShop? = null
+    val shopify: ShopifyShop? = null,
+    val zendeskApiKey: String? = null
 )
 
 class ConfigManager(
@@ -92,6 +93,7 @@ class ConfigManager(
             ),
             appsFlyerDevKey = values.appsFlyerDevKey,
             shopify = values.shopifyShop,
+            zendeskApiKey = values.zendeskApiKey
         )
         defaultConfig = defaultConfig.copy(
             coinMarketCapKey = values.coinMarketCapKey,
@@ -106,6 +108,7 @@ class ConfigManager(
             ),
             appsFlyerDevKey = values.appsFlyerDevKey,
             shopify = values.shopifyShop,
+            zendeskApiKey = values.zendeskApiKey
         )
     }
 
