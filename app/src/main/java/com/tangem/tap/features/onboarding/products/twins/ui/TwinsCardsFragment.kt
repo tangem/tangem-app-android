@@ -9,13 +9,18 @@ import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.view.isVisible
 import androidx.transition.TransitionInflater
 import androidx.transition.TransitionManager
-import com.squareup.picasso.Picasso
+import coil.load
 import com.tangem.Message
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.VoidCallback
 import com.tangem.domain.common.TwinCardNumber
 import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.LeapfrogWidget
-import com.tangem.tap.common.extensions.*
+import com.tangem.tap.common.extensions.beginDelayedTransition
+import com.tangem.tap.common.extensions.getDrawableCompat
+import com.tangem.tap.common.extensions.hide
+import com.tangem.tap.common.extensions.readAssetAsString
+import com.tangem.tap.common.extensions.show
+import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.common.redux.navigation.ShareElement
@@ -75,24 +80,28 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
         resources.getValue(R.dimen.device_scale_factor_for_twins_welcome, typedValue, true)
         val deviceScaleFactorForWelcomeState = typedValue.float
 
-        twinsWidget = TwinsCardWidget(LeapfrogWidget(binding.onboardingTopContainer.cardsContainer), deviceScaleFactorForWelcomeState) {
+        twinsWidget = TwinsCardWidget(
+            LeapfrogWidget(binding.onboardingTopContainer.cardsContainer),
+            deviceScaleFactorForWelcomeState
+        ) {
             285f * deviceScaleFactorForWelcomeState
         }
-        btnRefreshBalanceWidget = RefreshBalanceWidget(binding.onboardingTopContainer.onboardingMainContainer)
+        btnRefreshBalanceWidget =
+            RefreshBalanceWidget(binding.onboardingTopContainer.onboardingMainContainer)
 
         binding.toolbar.title = getText(R.string.twins_recreate_toolbar)
 
-        Picasso.get()
-            .load(Artwork.TWIN_CARD_1)
-            .error(R.drawable.card_placeholder_black)
-            .placeholder(R.drawable.card_placeholder_black)
-            ?.into(binding.onboardingTopContainer.imvTwinFrontCard)
+        binding.onboardingTopContainer.imvTwinFrontCard.load(Artwork.TWIN_CARD_1) {
+            placeholder(R.drawable.card_placeholder_black)
+            error(R.drawable.card_placeholder_black)
+            fallback(R.drawable.card_placeholder_black)
+        }
 
-        Picasso.get()
-            .load(Artwork.TWIN_CARD_2)
-            .error(R.drawable.card_placeholder_white)
-            .placeholder(R.drawable.card_placeholder_white)
-            ?.into(binding.onboardingTopContainer.imvTwinBackCard)
+        binding.onboardingTopContainer.imvTwinBackCard.load(Artwork.TWIN_CARD_2) {
+            placeholder(R.drawable.card_placeholder_white)
+            error(R.drawable.card_placeholder_white)
+            fallback(R.drawable.card_placeholder_white)
+        }
     }
 
     private fun reconfigureLayoutForTwins(containerBinding: LayoutOnboardingContainerTopBinding) =
