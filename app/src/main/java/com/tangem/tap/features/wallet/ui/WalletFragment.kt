@@ -12,7 +12,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.transition.TransitionInflater
 import by.kirich1409.viewbindingdelegate.viewBinding
-import com.squareup.picasso.Picasso
+import coil.load
 import com.tangem.tap.MainActivity
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.recyclerView.SpaceItemDecoration
@@ -165,11 +165,11 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     }
 
     private fun setupCardImage(cardImage: Artwork?) {
-        Picasso.get()
-            .load(cardImage?.artworkId)
-            .placeholder(R.drawable.card_placeholder_black)
-            ?.error(R.drawable.card_placeholder_black)
-            ?.into(binding.ivCard)
+        binding.ivCard.load(cardImage?.artworkId) {
+            placeholder(R.drawable.card_placeholder_black)
+            error(R.drawable.card_placeholder_black)
+            fallback(R.drawable.card_placeholder_black)
+        }
     }
 
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
