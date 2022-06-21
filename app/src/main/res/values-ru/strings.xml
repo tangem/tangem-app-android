@@ -347,7 +347,7 @@
     <string name="token_symbol_address_format">%1s (%2s)</string>
     <string name="alert_signed_hashes_message">Эта карта не является векселем на предъявителя. В настоящее время мы не можем сопоставить количество подписей на карте с информацией в блокчейне. Это нормально, но в редких случаях может означать, что предыдущий владелец скрывает автономную подпись, что является проблемой безопасности.\n\nНе принимайте эту карту в качестве физического платежа от кого-то, кому Вы не доверяете.\n\nВо всех остальных отношениях - это совершенно безопасно.\n\nTangem — единственный аппаратный кошелек, предлагающий защиту от подсчета подписей.</string>
     <string name="wallet_connect">WalletConnect</string>
-    <string name="wallet_connect_create_tx_message">Запрос на создание транзакции для %2s\n%3s\n\nСумма: %4s\nКомиссия: %5s\nВсего: %6s\nБаланс: %7s</string>
+    <string name="wallet_connect_create_tx_message">Карта %1s\nЗапрос на создание транзакции для %2s\n%3s\n\nСумма: %4s\nКомиссия: %5s\nВсего: %6s\nБаланс: %7s</string>
     <string name="wallet_connect_request_session_start">Запрос на запуск сеанса для карты с идентификатором %1s\nдля %2s\n\nURL: %3s</string>
     <string name="wallet_connect_sessions_title">Сессии WalletConnect</string>
     <string name="wallet_connect_session_opened">Сеанс WalletConnect открыт с %s</string>
