@@ -10,7 +10,7 @@ import androidx.annotation.LayoutRes
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.view.isVisible
 import androidx.transition.TransitionManager
-import com.squareup.picasso.Picasso
+import coil.load
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.tangem_sdk_new.extensions.fadeIn
 import com.tangem.tangem_sdk_new.extensions.fadeOut
@@ -67,11 +67,11 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
     override fun newState(state: OnboardingNoteState) {
         if (activity == null || view == null) return
 
-        Picasso.get()
-            .load(state.cardArtworkUrl)
-            .error(R.drawable.card_placeholder_black)
-            .placeholder(R.drawable.card_placeholder_black)
-            ?.into(binding.onboardingTopContainer.imvFrontCard)
+        binding.onboardingTopContainer.imvFrontCard.load(state.cardArtworkUrl) {
+            placeholder(R.drawable.card_placeholder_black)
+            error(R.drawable.card_placeholder_black)
+            fallback(R.drawable.card_placeholder_black)
+        }
 
         pbBinding.pbState.max = state.steps.size - 1
         pbBinding.pbState.progress = state.progress
