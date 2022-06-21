@@ -15,7 +15,7 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.transition.TransitionInflater
 import by.kirich1409.viewbindingdelegate.viewBinding
-import com.squareup.picasso.Picasso
+import com.tangem.tangem_sdk_new.extensions.dpToPx
 import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.TestActions
 import com.tangem.tap.common.extensions.appendIfNotNull
@@ -24,7 +24,6 @@ import com.tangem.tap.common.extensions.fitChipsByGroupWidth
 import com.tangem.tap.common.extensions.getColor
 import com.tangem.tap.common.extensions.getString
 import com.tangem.tap.common.extensions.hide
-import com.tangem.tap.common.extensions.loadCurrenciesIcon
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.extensions.toQrCode
 import com.tangem.tap.common.recyclerView.SpaceItemDecoration
@@ -38,8 +37,10 @@ import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletData
 import com.tangem.tap.features.wallet.redux.WalletState
+import com.tangem.tap.features.wallet.redux.WalletState.Companion.UNKNOWN_AMOUNT_SIGN
 import com.tangem.tap.features.wallet.ui.adapters.PendingTransactionsAdapter
 import com.tangem.tap.features.wallet.ui.adapters.WalletDetailWarningMessagesAdapter
+import com.tangem.tap.features.wallet.ui.images.loadCurrencyIcon
 import com.tangem.tap.features.wallet.ui.test.TestWalletDetails
 import com.tangem.tap.store
 import com.tangem.wallet.R
@@ -143,6 +144,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
 
         handleCurrencyIcon(selectedWallet)
         handleWarnings(selectedWallet)
+        updateViewMeasurements()
 
         binding.srlWalletDetails.setOnRefreshListener {
             if (selectedWallet.currencyData.status != BalanceStatus.Loading) {
@@ -161,13 +163,27 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
         }
     }
 
+    private fun updateViewMeasurements() {
+        val tvFiatAmount = binding.lWalletDetails.lBalance.tvFiatAmount
+        val paddingStart = when (tvFiatAmount.text) {
+            UNKNOWN_AMOUNT_SIGN -> 16f
+            else -> 12f
+        }
+        tvFiatAmount.setPadding(
+            tvFiatAmount.dpToPx(paddingStart).toInt(),
+            tvFiatAmount.paddingTop,
+            tvFiatAmount.paddingEnd,
+            tvFiatAmount.paddingBottom,
+        )
+    }
+
     private fun setupCurrency(currencyData: BalanceWidgetData, currency: Currency) = with(binding) {
         tvCurrencyTitle.text = currencyData.currency
         if (currency is Currency.Token) {
-            binding.tvCurrencySubtitle.text = currency.blockchain.tokenDisplayName()
-            binding.tvCurrencySubtitle.show()
+            tvCurrencySubtitle.text = currency.blockchain.tokenDisplayName()
+            tvCurrencySubtitle.show()
         } else {
-            binding.tvCurrencySubtitle.hide()
+            tvCurrencySubtitle.hide()
         }
     }
 
@@ -199,9 +215,9 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
     }
 
     private fun handleCurrencyIcon(wallet: WalletData) = with(binding.lWalletDetails.lBalance) {
-        Picasso.get().loadCurrenciesIcon(
-            imageView = ivCurrency,
-            textView = tvTokenLetter,
+        loadCurrencyIcon(
+            currencyImageView = ivCurrency,
+            currencyTextView = tvTokenLetter,
             blockchain = wallet.currency.blockchain,
             token = (wallet.currency as? Currency.Token)?.token
         )
