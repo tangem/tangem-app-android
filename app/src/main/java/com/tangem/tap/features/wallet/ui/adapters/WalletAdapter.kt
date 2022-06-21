@@ -106,8 +106,8 @@ class WalletAdapter
             )
 
             lContent.tvCurrency.text = wallet.currencyData.currency
-            lContent.tvAmountFiat.text = wallet.currencyData.fiatAmountFormatted ?: "—"
-            lContent.tvAmount.text = wallet.currencyData.amountFormatted ?: "—"
+            lContent.tvAmountFiat.text = wallet.currencyData.fiatAmountFormatted
+            lContent.tvAmount.text = wallet.currencyData.amountFormatted
 
             lContent.tvStatus.isVisible = statusMessage != null
             lContent.tvStatus.text = statusMessage
