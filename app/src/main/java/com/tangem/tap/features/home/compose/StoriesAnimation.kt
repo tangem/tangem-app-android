@@ -97,8 +97,8 @@ fun StoriesBottomImageAnimation(
     totalDuration: Int,
     content: @Composable (Modifier) -> Unit
 ) {
-    val scaleSwitchBarrier = remember { 1.15f }
-    val secondStepDuration = remember { totalDuration - firstStepDuration }
+    val scaleSwitchBarrier = 1.15f
+    val secondStepDuration = totalDuration - firstStepDuration
 
     val isFirstStepLaunched = remember { mutableStateOf(false) }
     val isSecondStepLaunched = remember { mutableStateOf(false) }
