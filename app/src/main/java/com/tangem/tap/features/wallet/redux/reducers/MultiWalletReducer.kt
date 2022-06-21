@@ -11,6 +11,7 @@ import com.tangem.tap.features.wallet.models.filterByToken
 import com.tangem.tap.features.wallet.models.getPendingTransactions
 import com.tangem.tap.features.wallet.models.removeUnknownTransactions
 import com.tangem.tap.features.wallet.redux.*
+import com.tangem.tap.features.wallet.redux.WalletState.Companion.UNKNOWN_AMOUNT_SIGN
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.features.wallet.ui.TokenData
@@ -125,9 +126,8 @@ class MultiWalletReducer {
                             action.amount.decimals, action.amount.currencySymbol
                         ),
                         fiatAmountFormatted = tokenWalletData.fiatRate?.let {
-                            action.amount.value
-                                ?.toFiatString(it, store.state.globalState.appCurrency.symbol)
-                        },
+                            action.amount.value?.toFiatString(it, store.state.globalState.appCurrency.symbol)
+                        } ?: UNKNOWN_AMOUNT_SIGN,
                         blockchainAmount = wallet.amounts[AmountType.Coin]?.value ?: BigDecimal.ZERO
                     ),
                     pendingTransactions = pendingTransactions.removeUnknownTransactions(),
