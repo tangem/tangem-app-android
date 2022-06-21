@@ -11,9 +11,9 @@ import androidx.fragment.app.Fragment
 import androidx.transition.TransitionInflater
 import androidx.transition.TransitionManager
 import by.kirich1409.viewbindingdelegate.viewBinding
+import coil.load
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.tabs.TabLayoutMediator
-import com.squareup.picasso.Picasso
 import com.tangem.common.CardIdFormatter
 import com.tangem.common.core.CardIdDisplayFormat
 import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.LeapfrogWidget
@@ -22,7 +22,12 @@ import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.features.FragmentOnBackPressedHandler
 import com.tangem.tap.features.addBackPressHandler
-import com.tangem.tap.features.onboarding.products.wallet.redux.*
+import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
+import com.tangem.tap.features.onboarding.products.wallet.redux.BackupState
+import com.tangem.tap.features.onboarding.products.wallet.redux.BackupStep
+import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletAction
+import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletState
+import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletStep
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.AccessCodeDialog
 import com.tangem.tap.store
 import com.tangem.wallet.R
@@ -124,11 +129,11 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
     }
 
     private fun loadImageIntoImageView(url: String?, view: ImageView) {
-        Picasso.get()
-            .load(url)
-            .error(R.drawable.card_placeholder_black)
-            .placeholder(R.drawable.card_placeholder_black)
-            ?.into(view)
+        view.load(url) {
+            placeholder(R.drawable.card_placeholder_black)
+            error(R.drawable.card_placeholder_black)
+            fallback(R.drawable.card_placeholder_black)
+        }
     }
 
     private fun setupCreateWalletState() = with(binding) {
