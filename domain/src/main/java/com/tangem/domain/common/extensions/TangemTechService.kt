@@ -16,11 +16,13 @@ suspend fun TangemTechService.getTokens(
 
 suspend fun TangemTechService.getListOfCoins(
     networkIds: List<String>,
+    active: Boolean? = null,
     searchText: String? = null,
     offset: Int? = null,
     limit: Int? = null
 ): Result<CoinsResponse> = coins(
             networkIds = networkIds.joinToString(","),
+            active = active,
             searchText = searchText,
             offset = offset,
             limit = limit
