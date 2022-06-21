@@ -53,6 +53,7 @@ class LoadAvailableCoinsService(
         val networkIds = supportedBlockchains.toSet().map { it.toNetworkId() }
         return networkService.getListOfCoins(
             networkIds = networkIds,
+            active = true,
             offset = offset,
             limit = LOAD_PER_PAGE,
             searchText = searchInput
