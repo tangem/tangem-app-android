@@ -23,8 +23,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import com.tangem.tangem_sdk_new.extensions.dpToPx
-import com.tangem.tap.common.compose.SpacerH
 import com.tangem.tap.common.compose.SpacerH16
+import com.tangem.tap.common.compose.SpacerH32
 import com.tangem.tap.common.compose.extensions.toAndroidGraphicsColor
 import com.tangem.tap.features.home.compose.StoriesBottomImageAnimation
 import com.tangem.tap.features.home.compose.StoriesTextAnimation
@@ -151,7 +151,7 @@ private fun TopContent(
     isDarkBackground: Boolean,
     subtitleTextId: Int? = null,
 ) {
-    SpacerH(32.dp)
+    SpacerH32()
     StoriesTitleText(
         text = titleText,
         isDarkBackground = isDarkBackground,
@@ -161,7 +161,7 @@ private fun TopContent(
         subtitleText = subtitleText,
         subtitleTextId = subtitleTextId,
     )
-    SpacerH(32.dp)
+    SpacerH32()
 }
 
 @Composable
