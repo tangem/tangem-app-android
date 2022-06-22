@@ -24,6 +24,7 @@ import com.tangem.wallet.databinding.FragmentDetailsBinding
 import org.rekotlin.StoreSubscriber
 import zendesk.chat.ChatEngine
 import zendesk.messaging.MessagingActivity
+import zendesk.support.SupportEngine
 
 class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<DetailsState> {
 
@@ -136,7 +137,7 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
 
         tvSupport.setOnClickListener {
             MessagingActivity.builder()
-                .withEngines(ChatEngine.engine())
+                .withEngines(SupportEngine.engine())
                 .show(it.context)
         }
 
