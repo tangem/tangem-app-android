@@ -22,8 +22,9 @@
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
                 app:menu="@menu/wallet"
-                app:navigationIcon="@drawable/ic_scan_card_24"
-                app:navigationIconTint="@color/iconGray"
+                app:navigationIcon="@drawable/ic_wallet_24"
+                app:navigationIconTint="@color/darkGray6"
+                app:titleCentered="true"
                 app:title="@string/wallet_title" />
 
     </com.google.android.material.appbar.AppBarLayout>
