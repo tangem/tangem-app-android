@@ -15,7 +15,6 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.FragmentShareTransition
 import com.tangem.tap.common.redux.navigation.NavigationAction
-import com.tangem.tap.features.home.redux.HomeAction.ScanError
 import com.tangem.tap.features.home.redux.HomeMiddleware.Companion.BUY_WALLET_URL
 import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
@@ -65,9 +64,6 @@ private val homeMiddleware: Middleware<AppState> = { dispatch, state ->
                         params = mapOf(AnalyticsParam.SOURCE.param to GetCardSourceParams.WELCOME.param)
                     )
                 }
-                is HomeAction.ScanError -> {
-
-                }
             }
             next(action)
         }
@@ -101,7 +97,6 @@ private fun handleReadCard() {
                 }
             }
         }, onFailure = {
-            store.dispatch(HomeAction.ScanError)
             changeButtonState(ButtonState.ENABLED)
         }))
     }

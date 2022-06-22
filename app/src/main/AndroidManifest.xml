@@ -127,6 +127,8 @@
 
         <activity android:name="com.tangem.tap.common.qrCodeScan.ScanQrCodeActivity" />
 
+        <activity android:name="zendesk.messaging.MessagingActivity"
+            android:theme="@style/ZendeskTheme" />
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.provider"

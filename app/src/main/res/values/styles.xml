@@ -16,6 +16,11 @@
 
     <style name="AppTheme" parent="BaseAppTheme" />
 
+    <style name="ZendeskTheme" parent="ZendeskSdkTheme.Light">
+        <item name="colorPrimary">@color/darkGray6</item>
+        <item name="colorPrimaryDark">@color/darkGray6</item>
+    </style>
+
     <!-- Toolbar -->
     <style name="DarkToolbarStyle" parent="Theme.AppCompat">
         <item name="android:textColorPrimary">@android:color/white</item>

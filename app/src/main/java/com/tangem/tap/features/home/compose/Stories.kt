@@ -71,18 +71,6 @@ fun StoriesScreen(
 
     val hideContent = remember { mutableStateOf(true) }
 
-    var showErrorMessage by remember(homeState.value.showAskQuestion) {
-        mutableStateOf(homeState.value.showAskQuestion)
-    }
-
-    val snackbarHostState = rememberScaffoldState().snackbarHostState
-    val askSupportDesc = stringResource(R.string.details_support_chat_description)
-    val askSupportTitle = stringResource(R.string.details_support_chat_title)
-    LaunchedEffect(showErrorMessage) {
-        if (showErrorMessage) {
-            snackbarHostState.showSnackbar(askSupportDesc, askSupportTitle, SnackbarDuration.Long)
-        }
-    }
     Box(
         Modifier
             .fillMaxSize()
@@ -179,36 +167,7 @@ fun StoriesScreen(
                 .fillMaxWidth()
         ) {
 
-            val context = LocalContext.current
 
-            AskSupportSnackbar(onAskClick = {
-                showErrorMessage = false
-                MessagingActivity.builder()
-                    .withEngines(ChatEngine.engine())
-                    .show(context)
-            }, snackbarHostState = snackbarHostState)
-            if (currentStep.value == 4) Button(
-                onClick = onSearchTokensClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
-                    .height(48.dp),
-                colors = ButtonDefaults.textButtonColors(
-                    backgroundColor = Color.White,
-                    contentColor = Color(0xFF080C10)
-                )
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_search),
-                    contentDescription = null
-                )
-                Text(
-                    text = stringResource(id = R.string.search_tokens_title),
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 16.sp,
-                    textAlign = TextAlign.Center
-                )
-            }
             HomeButtons(
                 isDarkBackground = isDarkBackground,
                 modifier = Modifier
@@ -219,25 +178,6 @@ fun StoriesScreen(
             )
         }
 
-    }
-}
-
-@Composable
-private fun AskSupportSnackbar(onAskClick: () -> Unit, snackbarHostState: SnackbarHostState) {
-    SnackbarHost(hostState = snackbarHostState) {
-        Snackbar(
-            modifier = Modifier.padding(16.dp),
-            actionOnNewLine = true,
-            action = {
-                it.actionLabel?.let {
-                    TextButton(onClick = onAskClick) {
-                        Text(text = it)
-                    }
-                }
-            }
-        ) {
-            Text(text = it.message)
-        }
     }
 }
 

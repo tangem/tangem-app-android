@@ -7,5 +7,4 @@ import org.rekotlin.StateType
 data class HomeState(
     val shouldScanCardOnResume: Boolean = false,
     val btnScanState: IndeterminateProgressButton = IndeterminateProgressButton(ButtonState.ENABLED),
-    val showAskQuestion: Boolean = false,
 ) : StateType

@@ -145,7 +145,8 @@ dependencies {
     implementation("com.squareup.okhttp3:logging-interceptor")
 
     //Chat
-    implementation("com.zendesk:chat:3.3.4")
+    implementation("com.zendesk:chat:3.3.5")
+    implementation("com.zendesk:support:5.0.9")
     implementation("com.zendesk:messaging:5.2.4")
 
 //

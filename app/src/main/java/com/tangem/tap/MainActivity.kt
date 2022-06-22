@@ -31,7 +31,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import java.lang.ref.WeakReference
-import zendesk.chat.Chat
 import kotlin.coroutines.CoroutineContext
 
 lateinit var tangemSdk: TangemSdk

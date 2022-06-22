@@ -30,7 +30,9 @@ import com.tangem.tap.persistence.PreferencesStorage
 import com.tangem.wallet.BuildConfig
 import org.rekotlin.Store
 import timber.log.Timber
-import zendesk.chat.Chat
+import zendesk.core.Zendesk
+import zendesk.support.Support
+
 
 val store = Store(
     reducer = ::appReducer,
@@ -71,8 +73,18 @@ class TapApplication : Application() {
         initFeedbackManager()
         loadConfigs()
 
-        store.state.globalState.configManager?.config?.zendeskApiKey?.let {
-            Chat.INSTANCE.init(applicationContext, it)
+        val zendeskAppId = store.state.globalState.configManager?.config?.zendesk?.zendeskAppId
+        val zendeskClientId = store.state.globalState.configManager?.config?.zendesk?.zendeskClientId
+        val zendeskUrl = store.state.globalState.configManager?.config?.zendesk?.zendeskUrl
+
+        if (zendeskAppId != null && zendeskClientId != null && zendeskUrl != null) {
+            Zendesk.INSTANCE.init(
+                applicationContext,
+                zendeskUrl,
+                zendeskAppId,
+                zendeskClientId
+            )
+            Support.INSTANCE.init(Zendesk.INSTANCE)
         }
         BlockchainSdkRetrofitBuilder.enableNetworkLogging = BuildConfig.DEBUG
 
@@ -119,4 +131,4 @@ data class LogConfig(
 
     val storeAction: Boolean = BuildConfig.DEBUG,
 
-)
+    )

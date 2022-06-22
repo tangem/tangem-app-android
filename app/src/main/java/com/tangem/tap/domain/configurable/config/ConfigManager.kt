@@ -3,6 +3,7 @@ package com.tangem.tap.domain.configurable.config
 import com.tangem.blockchain.common.BlockchainSdkConfig
 import com.tangem.common.extensions.VoidCallback
 import com.tangem.tap.common.shop.shopify.ShopifyShop
+import com.tangem.tap.common.zendesk.Zendesk
 import com.tangem.tap.domain.configurable.Loader
 
 /**
@@ -20,7 +21,7 @@ data class Config(
     @Deprecated("Not relevant since version 3.23")
     val isCreatingTwinCardsAllowed: Boolean = false,
     val shopify: ShopifyShop? = null,
-    val zendeskApiKey: String? = null
+    val zendesk: Zendesk? = null
 )
 
 class ConfigManager(
@@ -93,7 +94,7 @@ class ConfigManager(
             ),
             appsFlyerDevKey = values.appsFlyerDevKey,
             shopify = values.shopifyShop,
-            zendeskApiKey = values.zendeskApiKey
+            zendesk = values.zendesk
         )
         defaultConfig = defaultConfig.copy(
             coinMarketCapKey = values.coinMarketCapKey,
@@ -108,7 +109,7 @@ class ConfigManager(
             ),
             appsFlyerDevKey = values.appsFlyerDevKey,
             shopify = values.shopifyShop,
-            zendeskApiKey = values.zendeskApiKey
+            zendesk = values.zendesk
         )
     }
 
