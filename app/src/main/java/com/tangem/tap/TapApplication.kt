@@ -30,6 +30,8 @@ import com.tangem.tap.persistence.PreferencesStorage
 import com.tangem.wallet.BuildConfig
 import org.rekotlin.Store
 import timber.log.Timber
+import zendesk.chat.Chat
+import zendesk.core.AnonymousIdentity
 import zendesk.core.Zendesk
 import zendesk.support.Support
 
@@ -85,6 +87,7 @@ class TapApplication : Application() {
                 zendeskClientId
             )
             Support.INSTANCE.init(Zendesk.INSTANCE)
+            Zendesk.INSTANCE.setIdentity(AnonymousIdentity())
         }
         BlockchainSdkRetrofitBuilder.enableNetworkLogging = BuildConfig.DEBUG
 
