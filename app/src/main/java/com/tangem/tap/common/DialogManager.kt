@@ -5,7 +5,12 @@ import android.content.Context
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.global.GlobalState
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectDialog
-import com.tangem.tap.features.details.ui.walletconnect.dialogs.*
+import com.tangem.tap.features.details.ui.walletconnect.dialogs.ApproveWcSessionDialog
+import com.tangem.tap.features.details.ui.walletconnect.dialogs.BnbTransactionDialog
+import com.tangem.tap.features.details.ui.walletconnect.dialogs.ClipboardOrScanQrDialog
+import com.tangem.tap.features.details.ui.walletconnect.dialogs.PersonalSignDialog
+import com.tangem.tap.features.details.ui.walletconnect.dialogs.SimpleAlertDialog
+import com.tangem.tap.features.details.ui.walletconnect.dialogs.TransactionDialog
 import com.tangem.tap.features.onboarding.AddressInfoBottomSheetDialog
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.features.onboarding.products.twins.ui.dialog.CreateWalletInterruptDialog
@@ -14,8 +19,13 @@ import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.AddMoreBack
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.BackupInProgressDialog
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.ConfirmDiscardingBackupDialog
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.UnfinishedBackupFoundDialog
+import com.tangem.tap.features.wallet.redux.WalletDialog
+import com.tangem.tap.features.wallet.ui.dialogs.AmountToSendBottomSheetDialog
+import com.tangem.tap.features.wallet.ui.dialogs.ChooseTradeActionBottomSheetDialog
 import com.tangem.tap.features.wallet.ui.dialogs.ScanFailsDialog
+import com.tangem.tap.features.wallet.ui.dialogs.SignedHashesWarningDialog
 import com.tangem.tap.features.wallet.ui.dialogs.SimpleOkDialog
+import com.tangem.tap.features.wallet.ui.wallet.CurrencySelectionDialog
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import org.rekotlin.StoreSubscriber
@@ -54,7 +64,8 @@ class DialogManager : StoreSubscriber<GlobalState> {
             is AppDialog.ScanFailsDialog -> ScanFailsDialog.create(context)
             is AppDialog.AddressInfoDialog -> AddressInfoBottomSheetDialog(state.dialog, context)
             is AppDialog.TestActionsDialog -> TestActionsBottomSheetDialog(state.dialog, context)
-            is TwinCardsAction.Wallet.ShowInterruptDialog -> CreateWalletInterruptDialog.create(state.dialog, context)
+            is TwinCardsAction.Wallet.ShowInterruptDialog ->
+                CreateWalletInterruptDialog.create(state.dialog, context)
             is WalletConnectDialog.UnsupportedCard ->
                 SimpleAlertDialog.create(
                     titleRes = R.string.wallet_connect,
@@ -96,6 +107,14 @@ class DialogManager : StoreSubscriber<GlobalState> {
             is BackupDialog.BackupInProgress -> BackupInProgressDialog.create(context)
             is BackupDialog.UnfinishedBackupFound -> UnfinishedBackupFoundDialog.create(context)
             is BackupDialog.ConfirmDiscardingBackup -> ConfirmDiscardingBackupDialog.create(context)
+            is WalletDialog.CurrencySelectionDialog ->
+                CurrencySelectionDialog.create(state.dialog, context)
+            is WalletDialog.ChooseTradeActionDialog ->
+                ChooseTradeActionBottomSheetDialog(context)
+            is WalletDialog.SelectAmountToSendDialog ->
+                AmountToSendBottomSheetDialog(context, state.dialog)
+            is WalletDialog.SignedHashesMultiWalletDialog ->
+                SignedHashesWarningDialog.create(context)
             else -> null
         }
         dialog?.show()
