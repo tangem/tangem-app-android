@@ -1,6 +1,8 @@
 package com.tangem.tap
 
 import android.app.Application
+import coil.ImageLoader
+import coil.ImageLoaderFactory
 import com.appsflyer.AppsFlyerLib
 import com.google.firebase.ktx.Firebase
 import com.google.firebase.remoteconfig.ktx.remoteConfig
@@ -10,7 +12,7 @@ import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.domain.DomainLayer
 import com.tangem.network.common.MoshiConverter
 import com.tangem.tap.common.analytics.GlobalAnalyticsHandler
-import com.tangem.tap.common.images.PicassoHelper
+import com.tangem.tap.common.images.createCoilImageLoader
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.appReducer
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -43,7 +45,7 @@ lateinit var currenciesRepository: CurrenciesRepository
 lateinit var walletConnectRepository: WalletConnectRepository
 lateinit var shopService: TangemShopService
 
-class TapApplication : Application() {
+class TapApplication : Application(), ImageLoaderFactory {
     override fun onCreate() {
         super.onCreate()
 
@@ -61,7 +63,6 @@ class TapApplication : Application() {
 
         NetworkConnectivity.createInstance(store, this)
         preferencesStorage = PreferencesStorage(this)
-        PicassoHelper.initPicassoWithCaching(this)
         currenciesRepository = CurrenciesRepository(
             this, store.state.domainNetworks.tangemTechService
         )
@@ -73,6 +74,10 @@ class TapApplication : Application() {
         BlockchainSdkRetrofitBuilder.enableNetworkLogging = BuildConfig.DEBUG
 
         initAppsFlyer()
+    }
+
+    override fun newImageLoader(): ImageLoader {
+        return createCoilImageLoader(context = this)
     }
 
     private fun loadConfigs() {
@@ -108,11 +113,6 @@ class TapApplication : Application() {
 }
 
 data class LogConfig(
-    // disables both [internal, http]
-    val picasso: Boolean = BuildConfig.DEBUG,
-    val picassoInternal: Boolean = true,
-    val picassoHttp: Boolean = true,
-
+    val coil: Boolean = BuildConfig.DEBUG,
     val storeAction: Boolean = BuildConfig.DEBUG,
-
 )
