@@ -2,15 +2,20 @@ package com.tangem.domain.features.addCustomToken.redux
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.DerivationStyle
-import com.tangem.common.card.FirmwareVersion
+import com.tangem.common.card.Card
+import com.tangem.common.json.MoshiJsonConverter
 import com.tangem.domain.AddCustomTokenError
 import com.tangem.domain.DomainWrapped
-import com.tangem.domain.common.extensions.SolanaAvailable
-import com.tangem.domain.common.extensions.SolanaTokensAvailable
+import com.tangem.domain.common.TapWorkarounds.isTestCard
+import com.tangem.domain.common.extensions.supportedBlockchains
+import com.tangem.domain.common.extensions.supportedTokens
 import com.tangem.domain.common.form.*
 import com.tangem.domain.features.addCustomToken.*
 import com.tangem.domain.features.addCustomToken.CustomTokenFieldId.*
-import com.tangem.domain.redux.domainStore
+import com.tangem.domain.redux.DomainState
+import com.tangem.domain.redux.state.StringActionStateConverter
+import com.tangem.network.api.tangemTech.CoinsResponse
+import org.rekotlin.Action
 import org.rekotlin.StateType
 
 data class AddCustomTokenState(
@@ -20,7 +25,7 @@ data class AddCustomTokenState(
     val form: Form = Form(listOf()),
     val formValidators: Map<CustomTokenFieldId, CustomTokenValidator<out Any>> = createFormValidators(),
     val formErrors: Map<CustomTokenFieldId, AddCustomTokenError> = emptyMap(),
-    val tokenId: String? = null,
+    val foundToken: CoinsResponse.Coin? = null,
     val warnings: Set<AddCustomTokenError.Warning> = emptySet(),
     val screenState: ScreenState = createInitialScreenState(),
     val tangemTechServiceManager: AddCustomTokenService? = null
@@ -105,14 +110,14 @@ data class AddCustomTokenState(
         null
     }
 
-    fun reset(): AddCustomTokenState {
+    fun reset(card: Card): AddCustomTokenState {
         return this.copy(
             appSavedCurrencies = null,
             onTokenAddCallback = null,
             cardDerivationStyle = null,
-            form = Form(createFormFields(CustomTokenType.Blockchain)),
+            form = Form(createFormFields(card, CustomTokenType.Blockchain)),
             formErrors = emptyMap(),
-            tokenId = null,
+            foundToken = null,
             warnings = emptySet(),
             screenState = createInitialScreenState(),
             tangemTechServiceManager = null,
@@ -120,7 +125,7 @@ data class AddCustomTokenState(
     }
 
     private fun getToken(): CustomCurrency.CustomToken {
-        return CustomCurrency.CustomToken.Converter(tokenId, cardDerivationStyle)
+        return CustomCurrency.CustomToken.Converter(foundToken?.id, cardDerivationStyle)
             .apply { visitDataConverter(this) }
             .getConvertedData()
     }
@@ -131,8 +136,8 @@ data class AddCustomTokenState(
             .getConvertedData()
     }
 
-    fun getNetworks(type: CustomTokenType): List<Blockchain> {
-        return getNetworksList(type)
+    fun getNetworks(card: Card, type: CustomTokenType): List<Blockchain> {
+        return getNetworksList(card, type)
     }
 
     companion object {
@@ -150,65 +155,45 @@ data class AddCustomTokenState(
             else -> derivationNetwork
         }.derivationPath(derivationStyle)
 
-        internal fun createFormFields(type: CustomTokenType): List<DataField<*>> {
+        internal fun createFormFields(card: Card, type: CustomTokenType): List<DataField<*>> {
             return listOf(
                 TokenField(ContractAddress),
-                TokenBlockchainField(Network, getNetworksList(type)),
+                TokenBlockchainField(Network, getNetworksList(card, type)),
                 TokenField(Name),
                 TokenField(Symbol),
                 TokenField(Decimals),
-                TokenDerivationPathField(DerivationPath, getSupportedDerivations()),
+                TokenDerivationPathField(DerivationPath, getSupportedDerivations(card)),
             )
-        }
-
-        /**
-         * Serves to determine the tokens that can be received from the TangemTech service
-         */
-        internal fun getSupportedTokensBlockchain(): List<Blockchain> {
-            return Blockchain.values()
-                .filter { !it.isTestnet() }
-                .filter { it.canHandleTokens() }
         }
 
         /**
          * Serves to determine the networks (blockchains & tokens) that can be selected by Form.Networks.
          * Blockchain.Unknown - is the default selection
          */
-        private fun getNetworksList(type: CustomTokenType): List<Blockchain> {
+        private fun getNetworksList(card: Card, type: CustomTokenType): List<Blockchain> {
             val evmBlockchains = Blockchain.values()
                 .filter { it.isEvm() }
-                .filter { !it.isTestnet() }
+                .filter { card.isTestCard == it.isTestnet() }
 
             val additionalBlockchains = listOf(
-                Blockchain.Binance,
-                Blockchain.Solana,
+                Blockchain.Binance, Blockchain.BinanceTestnet,
+                Blockchain.Solana, Blockchain.SolanaTestnet,
+                Blockchain.Tron, Blockchain.TronTestnet,
             )
 
-            val networks = (evmBlockchains + additionalBlockchains).toMutableList()
-
-            //life hack
-            val fwCardVersion = domainStore.state.globalState.scanResponse?.card?.firmwareVersion
-                ?: FirmwareVersion(0, 0)
-
-            val solanaUnsupportedByCard = fwCardVersion < FirmwareVersion.SolanaAvailable
-            val solanaTokensUnsupportedByCard = fwCardVersion < FirmwareVersion.SolanaTokensAvailable
-            if (solanaUnsupportedByCard || solanaTokensUnsupportedByCard) networks.remove(Blockchain.Solana)
-
-            if (type == CustomTokenType.Token) networks.removeAll(getUnsupportedTokensBlockchain())
+            val supportedByCard = when (type) {
+                CustomTokenType.Blockchain -> card.supportedBlockchains()
+                CustomTokenType.Token -> card.supportedTokens()
+            }
+            val typedNetworksList = (evmBlockchains + additionalBlockchains)
+                .filter { supportedByCard.contains(it) }
+                .toMutableList()
 
             val default = Blockchain.Unknown
-            networks.add(0, default)
+            typedNetworksList.add(0, default)
 
-            return networks
+            return typedNetworksList.sortByName()
         }
-
-        private fun getUnsupportedTokensBlockchain(): List<Blockchain> {
-            return Blockchain.values()
-                .filter { !it.isTestnet() }
-                .filter { !it.canHandleTokens() }
-                .toMutableList()
-        }
-
 
         private fun createFormValidators(): Map<CustomTokenFieldId, CustomTokenValidator<out Any>> {
             return mapOf(
@@ -220,11 +205,11 @@ data class AddCustomTokenState(
             )
         }
 
-        private fun getSupportedDerivations(): List<Blockchain> {
+        private fun getSupportedDerivations(card: Card): List<Blockchain> {
             val evmBlockchains = Blockchain.values().filter {
-                !it.isTestnet() && it.getChainId() != null
+                card.isTestCard == it.isTestnet() && it.isEvm()
             }
-            return listOf(Blockchain.Unknown) + evmBlockchains
+            return (listOf(Blockchain.Unknown) + evmBlockchains).sortByName()
         }
 
         private fun createInitialScreenState(): ScreenState {
@@ -239,7 +224,61 @@ data class AddCustomTokenState(
             )
         }
     }
+
+    class Converter : StringActionStateConverter<DomainState> {
+        private val jsonConverter: MoshiJsonConverter = MoshiJsonConverter.INSTANCE
+        private var builder: StringBuilder = StringBuilder()
+
+        override fun convert(action: Action, stateHolder: DomainState): String? {
+            val action = (action as? AddCustomTokenAction) ?: return null
+
+            val state = stateHolder.addCustomTokensState
+            val fieldConverter = FieldToJsonConverter(listOf(
+                ContractAddress,
+                Network,
+                Name,
+                Symbol,
+                Decimals,
+                DerivationPath,
+            ), jsonConverter)
+            state.visitDataConverter(fieldConverter)
+            val errors = state.formErrors.map {
+                "${it.key}: ${it.value::class.java.simpleName}"
+            }
+            val warnings = state.warnings.map { it::class.java.simpleName }
+
+            printAction(action, state)
+            printStateValue("fields", fieldConverter.getConvertedData())
+            printStateValue("fieldErrors", toJson(errors))
+            printStateValue("warnings", toJson(warnings))
+            printStateValue("screenState", toJson(state.screenState))
+            printMessage("------------------------------------------------------")
+
+            val printed = builder.toString()
+            builder = StringBuilder()
+
+            return printed
+        }
+
+        private fun printStateValue(name: String, value: String) {
+            printMessage("$name: $value")
+        }
+
+        private fun printAction(action: AddCustomTokenAction, state: AddCustomTokenState) {
+            printMessage("action: $action, state: ${state::class.java.simpleName}")
+        }
+
+        private fun toJson(value: Any): String {
+            return jsonConverter.prettyPrint(value)
+        }
+
+        private fun printMessage(message: String) {
+            builder.append("$message\n")
+        }
+    }
 }
+
+private fun List<Blockchain>.sortByName(): List<Blockchain> = this.sortedBy { it.fullName }
 
 enum class CustomTokenType {
     Token, Blockchain
