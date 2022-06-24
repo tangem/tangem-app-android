@@ -9,7 +9,7 @@ import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.currenciesRepository
 import com.tangem.tap.domain.extensions.makeWalletManagerForApp
-import com.tangem.tap.domain.tokens.BlockchainNetwork
+import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.demo.isDemoCard
 import com.tangem.tap.features.wallet.redux.Currency

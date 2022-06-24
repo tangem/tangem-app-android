@@ -30,7 +30,7 @@ interface ExchangeUrlBuilder {
         action: CurrencyExchangeManager.Action,
         blockchain: Blockchain,
         cryptoCurrencyName: CryptoCurrencyName,
-        fiatCurrency: String,
+        fiatCurrencyName: String,
         walletAddress: String,
     ): String?
 
@@ -74,13 +74,19 @@ class CurrencyExchangeManager(
         action: Action,
         blockchain: Blockchain,
         cryptoCurrencyName: CryptoCurrencyName,
-        fiatCurrency: String,
+        fiatCurrencyName: String,
         walletAddress: String,
     ): String? {
         if (blockchain.isTestnet()) return blockchain.getTestnetTopUpUrl()
 
         val urlBuilder = getExchangeUrlBuilder(action)
-        return urlBuilder.getUrl(action, blockchain, cryptoCurrencyName, fiatCurrency, walletAddress)
+        return urlBuilder.getUrl(
+            action,
+            blockchain,
+            cryptoCurrencyName,
+            fiatCurrencyName,
+            walletAddress
+        )
     }
 
     override fun getSellCryptoReceiptUrl(action: Action, transactionId: String): String? {
