@@ -23,7 +23,9 @@
     <string name="story_awe_title">Revolutionary Hardware Wallet</string>
     <string name="story_awe_description">Store your crypto assets secure while keeping private keys contained in your card</string>
     <string name="story_backup_title">Ultra Secure Backup</string>
-    <string name="story_backup_description">Up to <b>3 physical cards</b> to one wallet</string>
+    <string name="story_backup_description_1">Up to</string>
+    <string name="story_backup_description_2_bold">3 physical cards</string>
+    <string name="story_backup_description_3">to one wallet</string>
     <string name="story_currencies_title">Thousands of Currencies</string>
     <string name="story_currencies_description">A hardware wallet for your Bitcoin, Ethereum and many more currencies simultaneously – all in one card</string>
     <string name="story_web3_title">DeFi Compatible</string>
