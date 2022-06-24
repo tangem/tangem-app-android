@@ -3,6 +3,7 @@ package com.tangem.tap.domain.tokens
 import com.squareup.moshi.JsonClass
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.domain.common.extensions.fromNetworkId
+import com.tangem.network.api.tangemTech.CoinsResponse
 
 @JsonClass(generateAdapter = true)
 data class CurrencyFromJson(
@@ -44,8 +45,18 @@ data class Currency(
                 id = currency.id,
                 name = currency.name,
                 symbol = currency.symbol,
-                iconUrl = getIconUrl(currency.id),
+                iconUrl = getIconUrl(currency.id, null),
                 contracts = currency.networks?.toContracts() ?: emptyList()
+            )
+        }
+
+        fun fromCoinResponse(currency: CoinsResponse.Coin, imageHost: String?): Currency {
+            return Currency(
+                id = currency.id,
+                name = currency.name,
+                symbol = currency.symbol,
+                iconUrl = getIconUrl(currency.id, imageHost),
+                contracts = currency.networks.mapNotNull { Contract.fromNetwork(it, imageHost) }
             )
         }
     }
@@ -67,12 +78,26 @@ data class Contract(
                 blockchain = blockchain,
                 address = contract.contractAddress,
                 decimalCount = contract.decimalCount,
-                iconUrl = getIconUrl(contract.networkId)
+                iconUrl = getIconUrl(contract.networkId, null)
+            )
+        }
+
+        fun fromNetwork(contract: CoinsResponse.Coin.Network, imageHost: String?): Contract? {
+            val blockchain = Blockchain.fromNetworkId(contract.networkId) ?: return null
+            return Contract(
+                networkId = contract.networkId,
+                blockchain = blockchain,
+                address = contract.contractAddress,
+                decimalCount = contract.decimalCount?.toInt(),
+                iconUrl = getIconUrl(contract.networkId, imageHost)
             )
         }
     }
 }
 
-fun getIconUrl(id: String): String {
-    return "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/large/$id.png"
+fun getIconUrl(id: String, imageHost: String? = null): String {
+    return "${imageHost ?: DEFAULT_IMAGE_HOST}large/$id.png"
 }
+
+private const val DEFAULT_IMAGE_HOST =
+    "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/"

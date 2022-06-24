@@ -13,6 +13,7 @@ enum class BalanceStatus {
     SameCurrencyTransactionInProgress,
     Unreachable,
     Loading,
+    Refreshing,
     NoAccount,
     EmptyCard,
     UnknownBlockchain
@@ -25,8 +26,8 @@ data class BalanceWidgetData(
     val blockchainAmount: BigDecimal? = BigDecimal.ZERO,
     val amount: BigDecimal? = null,
     val amountFormatted: String? = null,
-    val fiatAmountFormatted: String? = null,
     val fiatAmount: BigDecimal? = null,
+    val fiatAmountFormatted: String? = null,
     val token: TokenData? = null,
     val amountToCreateAccount: String? = null,
     val errorMessage: String? = null
