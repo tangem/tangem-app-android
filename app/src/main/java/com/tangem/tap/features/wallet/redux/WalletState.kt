@@ -301,6 +301,11 @@ data class WalletState(
             )
         } else this
     }
+
+    companion object {
+        const val UNKNOWN_AMOUNT_SIGN = "—"
+        const val ROUGH_SIGN = "≈"
+    }
 }
 
 sealed interface WalletDialog : StateDialog {
