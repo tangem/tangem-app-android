@@ -23,7 +23,9 @@
     <string name="story_awe_title">Революционный аппаратный кошелек</string>
     <string name="story_awe_description">Держите свои криптосбережения в безопасности. Приватные ключи надежно хранятся на карте.</string>
     <string name="story_backup_title">Все ключи в безопасности</string>
-    <string name="story_backup_description">До <b>трех карт</b> с одним кошельком</string>
+    <string name="story_backup_description_1">До</string>
+    <string name="story_backup_description_2_bold">трех карт</string>
+    <string name="story_backup_description_3">с одним кошельком</string>
     <string name="story_currencies_title">Тысячи криптовалют</string>
     <string name="story_currencies_description">Аппаратный кошелек для ваших биткоинов, эфира и многих других валют одновременно — все в одной карте</string>
     <string name="story_web3_title">Поддержка DeFi</string>
