@@ -11,6 +11,10 @@ enum class FeeType {
     SINGLE, LOW, NORMAL, PRIORITY
 }
 
+enum class FeePrecision(val symbol: String) {
+    PRECISE(""), CAN_BE_LOWER("<")
+}
+
 data class FeeState(
         val selectedFeeType: FeeType = FeeType.NORMAL,
         val feeList: List<Amount>? = null,
@@ -21,6 +25,7 @@ data class FeeState(
         val feeChipGroupIsVisible: Boolean = true,
         val includeFeeSwitcherIsEnabled: Boolean = true,
         val error: FeeAction.Error? = null,
+        val feePrecision: FeePrecision = FeePrecision.PRECISE
 ) : SendScreenState {
 
     override val stateId: StateId = StateId.FEE
