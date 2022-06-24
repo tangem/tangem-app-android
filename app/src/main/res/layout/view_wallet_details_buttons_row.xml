@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<merge xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        xmlns:tools="http://schemas.android.com/tools"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        tools:parentTag="android.widget.LinearLayout"
+        tools:orientation="horizontal">
+
+    <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_trade"
+            style="@style/TapButtonWithIcon"
+            android:layout_width="0dp"
+            android:layout_marginEnd="6dp"
+            android:layout_weight="1"
+            android:visibility="gone"
+            android:text="@string/wallet_button_trade"
+            app:icon="@drawable/ic_arrows_up_down"
+            tools:visibility="visible" />
+
+    <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_buy"
+            style="@style/TapButtonWithIcon"
+            android:layout_width="0dp"
+            android:layout_marginEnd="6dp"
+            android:layout_weight="1"
+            android:visibility="gone"
+            android:text="@string/wallet_button_buy"
+            app:icon="@drawable/ic_arrow_up" />
+
+    <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_sell"
+            style="@style/TapButtonWithIcon"
+            android:layout_width="0dp"
+            android:layout_marginEnd="6dp"
+            android:layout_weight="1"
+            android:visibility="gone"
+            android:text="@string/wallet_button_sell"
+            app:icon="@drawable/ic_arrow_down" />
+
+    <com.google.android.material.button.MaterialButton
+            android:id="@+id/btn_send"
+            style="@style/TapButtonWithIcon"
+            android:layout_width="0dp"
+            android:layout_marginStart="6dp"
+            android:layout_weight="1"
+            android:text="@string/wallet_button_send"
+            app:icon="@drawable/ic_send" />
+
+</merge>
