@@ -16,15 +16,17 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.currenciesRepository
 import com.tangem.tap.domain.extensions.isMultiwalletAllowed
 import com.tangem.tap.domain.extensions.makeWalletManagerForApp
-import com.tangem.tap.domain.tokens.BlockchainNetwork
+import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.domain.walletconnect.BnbHelper
 import com.tangem.tap.domain.walletconnect.WalletConnectManager
 import com.tangem.tap.domain.walletconnect.WalletConnectNetworkUtils
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.wallet.redux.Currency
 import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.wallet.R
+import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.Middleware
 
@@ -257,14 +259,16 @@ class WalletConnectMiddleware {
                 blockchainToMake,
                 card.derivationStyle?.let { DerivationParams.Default(it) }
             )
-            if (currenciesRepository.loadSavedCurrencies(card.cardId, card.settings.isHDWalletAllowed)
-                    .find { it.blockchain == blockchainToMake } != null
-            ) {
-                walletManager?.let {
-                    currenciesRepository.saveUpdatedCurrency(
-                        card.cardId,
-                        BlockchainNetwork.fromWalletManager(walletManager)
-                    )
+            scope.launch {
+                if (currenciesRepository.loadSavedCurrencies(card.cardId, card.settings.isHDWalletAllowed)
+                        .find { it.blockchain == blockchainToMake } != null
+                ) {
+                    walletManager?.let {
+                        currenciesRepository.saveUpdatedCurrency(
+                            card.cardId,
+                            BlockchainNetwork.fromWalletManager(walletManager)
+                        )
+                    }
                 }
             }
             return walletManager

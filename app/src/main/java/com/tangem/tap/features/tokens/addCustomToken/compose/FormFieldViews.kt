@@ -86,7 +86,11 @@ fun TokenNameView(screenFieldData: ScreenFieldData) {
 }
 
 @Composable
-fun TokenNetworkView(screenFieldData: ScreenFieldData, state: AddCustomTokenState) {
+fun TokenNetworkView(
+    screenFieldData: ScreenFieldData,
+    state: AddCustomTokenState,
+    closePopupTrigger: ClosePopupTrigger,
+) {
     if (!screenFieldData.viewState.isVisible) return
 
     val notSelected = stringResource(id = R.string.custom_token_network_input_not_selected)
@@ -98,6 +102,7 @@ fun TokenNetworkView(screenFieldData: ScreenFieldData, state: AddCustomTokenStat
         selectedItem = networkField.data,
         isEnabled = screenFieldData.viewState.isEnabled,
         textFieldConverter = { state.blockchainToName(it) ?: notSelected },
+        closePopupTrigger = closePopupTrigger,
     ) { domainStore.dispatch(OnTokenNetworkChanged(Field.Data(it, true))) }
     SpacerH8()
 }
@@ -138,7 +143,11 @@ fun TokenDecimalsView(screenFieldData: ScreenFieldData) {
 }
 
 @Composable
-fun TokenDerivationPathView(screenFieldData: ScreenFieldData, state: AddCustomTokenState) {
+fun TokenDerivationPathView(
+    screenFieldData: ScreenFieldData,
+    state: AddCustomTokenState,
+    closePopupTrigger: ClosePopupTrigger,
+) {
     if (!screenFieldData.viewState.isVisible) return
 
     val notSelected = stringResource(id = R.string.custom_token_derivation_path_default)
@@ -154,7 +163,8 @@ fun TokenDerivationPathView(screenFieldData: ScreenFieldData, state: AddCustomTo
             val derivationPathName = state.blockchainToName(blockchain, true) ?: notSelected
             val blockchainName = state.blockchainToName(blockchain) ?: notSelected
             TitleSubtitle(derivationPathName, blockchainName)
-        }
+        },
+        closePopupTrigger = closePopupTrigger,
     ) { domainStore.dispatch(OnTokenDerivationPathChanged(Field.Data(it, true))) }
     SpacerH8()
 }
