@@ -185,8 +185,9 @@ class CurrenciesRepository(
         tokens.map {
             async {
                 tangemNetworkService.getTokens(
-                    it.contractAddress,
-                    it.blockchainDao.toBlockchain().toNetworkId()
+                    contractAddress = it.contractAddress,
+                    networkId = it.blockchainDao.toBlockchain().toNetworkId(),
+                    active = true,
                 )
             }
         }.map { it.await() }
