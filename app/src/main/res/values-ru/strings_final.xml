@@ -50,4 +50,7 @@
     <string name="main_processing_full_amount">В сумме учтены не все монеты</string>
     <string name="main_manage_tokens">Управление токенами</string>
     <string name="token_item_no_rate">Нет цены</string>
+
+    <string name="main_no_backup_warning_title">Бэкап кошелька не был произведен</string>
+    <string name="main_no_backup_warning_subtitle">Чтобы защитить свои активы, мы советуем вам выполнить эту процедуру</string>
 </resources>

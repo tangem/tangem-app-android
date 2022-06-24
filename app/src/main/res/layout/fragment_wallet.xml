@@ -18,14 +18,14 @@
         app:liftOnScroll="true">
 
         <com.google.android.material.appbar.MaterialToolbar
-                android:id="@+id/toolbar"
-                android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize"
-                app:menu="@menu/wallet"
-                app:navigationIcon="@drawable/ic_wallet_24"
-                app:navigationIconTint="@color/darkGray6"
-                app:titleCentered="true"
-                app:title="@string/wallet_title" />
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            app:menu="@menu/wallet"
+            app:navigationIcon="@drawable/ic_wallet_24"
+            app:navigationIconTint="@color/darkGray6"
+            app:titleCentered="true"
+            app:title="@string/wallet_title" />
 
     </com.google.android.material.appbar.AppBarLayout>
 
@@ -49,19 +49,20 @@
                     android:paddingBottom="74dp">
 
                 <ImageView
-                        android:id="@+id/iv_card"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:layout_marginStart="16dp"
-                        android:layout_marginTop="8dp"
-                        android:layout_marginEnd="16dp"
-                        android:layout_marginBottom="12dp"
+                    android:id="@+id/iv_card"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="16dp"
+                    android:layout_marginBottom="12dp"
                     android:adjustViewBounds="true"
                     android:elevation="3dp"
                     android:maxHeight="215dp"
                     android:scaleType="fitCenter"
                     android:src="@drawable/card_placeholder_black"
+                    android:contentDescription="@null"
                     app:layout_constraintTop_toTopOf="parent" />
 
                 <TextView
@@ -105,19 +106,33 @@
                     app:layout_constraintTop_toBottomOf="@id/barrier" />
 
                 <include
-                    android:id="@+id/l_card_total_balance"
-                    layout="@layout/card_total_balance"
+                    android:id="@+id/l_wallet_backup_warning"
+                    layout="@layout/layout_wallet_backup_warning"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginEnd="16dp"
                     android:visibility="gone"
-                    app:layout_constraintTop_toBottomOf="@id/rv_warning_messages"
-                    />
+                    app:layout_constraintTop_toBottomOf="@id/rv_warning_messages" />
+
+                <include
+                    android:id="@+id/l_card_total_balance"
+                    layout="@layout/layout_card_total_balance"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginEnd="16dp"
+                    android:layout_marginTop="8dp"
+                    android:visibility="gone"
+                    app:layout_goneMarginTop="16dp"
+                    app:layout_constraintTop_toBottomOf="@id/l_wallet_backup_warning" />
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rv_pending_transaction"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="16dp"
                     app:layout_goneMarginTop="12dp"
                     android:nestedScrollingEnabled="false"
                     android:overScrollMode="never"
@@ -146,7 +161,7 @@
                     android:id="@+id/rv_multiwallet"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="16dp"
                     android:nestedScrollingEnabled="false"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
@@ -169,10 +184,10 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:visibility="gone"
-                        android:layout_marginTop="30dp"
-                        app:layout_constraintTop_toBottomOf="@id/l_address"
-                        app:layout_constraintVertical_bias="1"
-                        app:layout_constraintBottom_toBottomOf="parent" />
+                    android:layout_marginTop="30dp"
+                    app:layout_constraintTop_toBottomOf="@id/l_address"
+                    app:layout_constraintVertical_bias="1"
+                    app:layout_constraintBottom_toBottomOf="parent" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
 
@@ -181,18 +196,18 @@
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
     <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_add_token"
-            style="@style/BaseTapButton"
-            android:layout_width="match_parent"
-            android:layout_height="42dp"
-            android:layout_gravity="bottom"
-            android:layout_marginBottom="16dp"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            android:textSize="16sp"
-            android:text="@string/main_manage_tokens"
-            android:elevation="4dp"
-            app:cornerRadius="8dp"
-            app:layout_constraintBottom_toBottomOf="parent" />
+        android:id="@+id/btn_add_token"
+        style="@style/BaseTapButton"
+        android:layout_width="match_parent"
+        android:layout_height="42dp"
+        android:layout_gravity="bottom"
+        android:layout_marginBottom="16dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:textSize="16sp"
+        android:text="@string/main_manage_tokens"
+        android:elevation="4dp"
+        app:cornerRadius="8dp"
+        app:layout_constraintBottom_toBottomOf="parent" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

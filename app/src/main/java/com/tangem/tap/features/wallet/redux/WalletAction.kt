@@ -77,6 +77,9 @@ sealed class WalletAction : Action {
         data class RemoveWallet(val walletData: WalletData) : MultiWallet()
         data class SetPrimaryBlockchain(val blockchain: Blockchain) : MultiWallet()
         data class SetPrimaryToken(val token: Token) : MultiWallet()
+
+        data class ShowWalletBackupWarning(val show: Boolean) : MultiWallet()
+        object BackupWallet : MultiWallet()
     }
 
     sealed class Warnings : WalletAction() {
