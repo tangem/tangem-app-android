@@ -42,5 +42,6 @@ sealed class AddCustomTokenError(
     sealed class Warning : AddCustomTokenError() {
         object PotentialScamToken : Warning()
         object TokenAlreadyAdded : Warning()
+        object UnsupportedSolanaToken: Warning()
     }
 }
