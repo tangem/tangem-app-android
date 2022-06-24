@@ -112,27 +112,40 @@ private class CreateWalletTangemWallet : ProductCommandProcessor<CreateProductWa
         this.card = card
         val curves = card.getCurvesForNonCreatedWallets()
 
+        if (curves.isEmpty()) {
+            val createWalletResponses = card.wallets.map { CreateWalletResponse(card.cardId, it) }
+            proceedWithCreatedWallets(createWalletResponses, session, callback)
+            return
+        }
+
         CreateWalletsTask(curves).run(session) { result ->
             when (result) {
                 is CompletionResult.Success -> {
-                    val createWalletResponses = result.data.createWalletResponses
-                    when {
-                        card.settings.isBackupAllowed -> {
-                            linkPrimaryCard(createWalletResponses, session, callback)
-                        }
-                        card.settings.isHDWalletAllowed -> {
-                            deriveKeys(createWalletResponses, session, callback)
-                        }
-                        else -> {
-                            callback(
-                                CompletionResult.Success(
-                                    CreateProductWalletTaskResponse(card = session.environment.card!!)
-                                )
-                            )
-                        }
-                    }
+                    proceedWithCreatedWallets(result.data.createWalletResponses, session, callback)
                 }
                 is CompletionResult.Failure -> callback(CompletionResult.Failure(result.error))
+            }
+        }
+    }
+
+    private fun proceedWithCreatedWallets(
+        createWalletResponses: List<CreateWalletResponse>,
+        session: CardSession,
+        callback: (result: CompletionResult<CreateProductWalletTaskResponse>) -> Unit,
+    ) {
+        when {
+            card.settings.isBackupAllowed -> {
+                linkPrimaryCard(createWalletResponses, session, callback)
+            }
+            card.settings.isHDWalletAllowed -> {
+                deriveKeys(createWalletResponses, session, callback)
+            }
+            else -> {
+                callback(
+                    CompletionResult.Success(
+                        CreateProductWalletTaskResponse(card = session.environment.card!!)
+                    )
+                )
             }
         }
     }
