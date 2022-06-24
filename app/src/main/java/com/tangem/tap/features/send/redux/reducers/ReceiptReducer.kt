@@ -7,6 +7,7 @@ import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.features.send.redux.ReceiptAction.RefreshReceipt
 import com.tangem.tap.features.send.redux.SendScreenAction
 import com.tangem.tap.features.send.redux.states.*
+import com.tangem.tap.features.wallet.redux.WalletState.Companion.UNKNOWN_AMOUNT_SIGN
 import com.tangem.tap.store
 import java.math.BigDecimal
 
@@ -14,10 +15,6 @@ import java.math.BigDecimal
 [REDACTED_AUTHOR]
  */
 class ReceiptReducer : SendInternalReducer {
-
-    companion object {
-        const val EMPTY = "-"
-    }
 
     private lateinit var sendState: SendState
     private lateinit var amountState: AmountState
@@ -137,9 +134,9 @@ class ReceiptReducer : SendInternalReducer {
             )
         } else {
             ReceiptTokenFiat(
-                amountFiat = EMPTY,
-                feeFiat = EMPTY,
-                totalFiat = EMPTY,
+                amountFiat = UNKNOWN_AMOUNT_SIGN,
+                feeFiat = UNKNOWN_AMOUNT_SIGN,
+                totalFiat = UNKNOWN_AMOUNT_SIGN,
                 willSentToken = tokensToSend.stripZeroPlainString(),
                 willSentFeeCoin = feeCoin.stripZeroPlainString(),
                 symbols = symbols
@@ -169,7 +166,7 @@ class ReceiptReducer : SendInternalReducer {
             ReceiptTokenCrypto(
                 amountToken = tokensToSend.stripZeroPlainString(),
                 feeCoin = feeCoin.stripZeroPlainString().addPrecisionSign(),
-                totalFiat = EMPTY,
+                totalFiat = UNKNOWN_AMOUNT_SIGN,
                 symbols = symbols
             )
         }
@@ -206,7 +203,7 @@ class ReceiptReducer : SendInternalReducer {
         return when {
             !isToken && sendState.coinIsConvertible() -> sendState.coinConverter!!.toFiatWithPrecision(value).stripZeroPlainString()
             isToken && sendState.tokenIsConvertible() -> sendState.tokenConverter!!.toFiatWithPrecision(value).stripZeroPlainString()
-            else -> EMPTY
+            else -> UNKNOWN_AMOUNT_SIGN
         }
     }
 
