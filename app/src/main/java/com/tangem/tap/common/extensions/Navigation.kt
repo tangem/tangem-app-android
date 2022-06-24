@@ -25,6 +25,7 @@ import com.tangem.tap.features.tokens.ui.AddTokensFragment
 import com.tangem.tap.features.wallet.ui.WalletDetailsFragment
 import com.tangem.tap.features.wallet.ui.WalletFragment
 import com.tangem.wallet.R
+import timber.log.Timber
 
 private class Navigation
 
@@ -52,12 +53,18 @@ fun FragmentActivity.openFragment(
 
 fun FragmentActivity.popBackTo(screen: AppScreen?, inclusive: Boolean = false) {
     val inclusiveFlag = if (inclusive) FragmentManager.POP_BACK_STACK_INCLUSIVE else 0
-    this.supportFragmentManager.popBackStack(screen?.name, inclusiveFlag)
+    try {
+        this.supportFragmentManager.popBackStack(screen?.name, inclusiveFlag)
+    } catch (e: IllegalStateException) {
+        Timber.e(e)
+    }
 }
 
 fun FragmentActivity.getPreviousScreen(): AppScreen? {
     val indexOfLastFragment = this.supportFragmentManager.backStackEntryCount - 1
-    val tag = this.supportFragmentManager.getBackStackEntryAt(indexOfLastFragment).name
+    val tag = if (indexOfLastFragment < this.supportFragmentManager.backStackEntryCount)
+        this.supportFragmentManager.getBackStackEntryAt(indexOfLastFragment).name
+    else null
     return tag?.let { AppScreen.valueOf(tag) }
 }
 
