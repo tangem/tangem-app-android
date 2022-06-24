@@ -75,10 +75,15 @@ sealed class WalletAction : Action {
         ) : MultiWallet()
 
         data class SelectWallet(val walletData: WalletData?) : MultiWallet()
-        data class RemoveWallet(val walletData: WalletData, val fromWalletDetails: Boolean = true) : MultiWallet()
+        data class RemoveWallet(val walletData: WalletData, val fromWalletDetails: Boolean = true) :
+            MultiWallet()
+
         data class TryToRemoveWallet(val walletData: WalletData) : MultiWallet()
         data class SetPrimaryBlockchain(val blockchain: Blockchain) : MultiWallet()
         data class SetPrimaryToken(val token: Token) : MultiWallet()
+
+        data class ShowWalletBackupWarning(val show: Boolean) : MultiWallet()
+        object BackupWallet : MultiWallet()
     }
 
     sealed class Warnings : WalletAction() {
