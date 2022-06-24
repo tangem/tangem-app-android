@@ -93,7 +93,7 @@ dependencies {
     implementation 'com.google.android.play:core-ktx:1.8.1'
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.1.5'
 
-    implementation 'com.tangem:blockchain:develop-88'
+    implementation 'com.tangem:blockchain:develop-90'
 //    implementation 'com.tangem:blockchain:0.0.1'
     implementation 'com.tangem.tangem-sdk-kotlin:core:develop-154'
     implementation 'com.tangem.tangem-sdk-kotlin:android:develop-154'
@@ -118,8 +118,9 @@ dependencies {
     // Camera
     implementation 'com.otaliastudios:cameraview:2.6.3'
 
-    // Image Loading - Picasso
-    implementation 'com.squareup.picasso:picasso:2.71828'
+    // Image Loading
+    implementation 'io.coil-kt:coil:2.1.0'
+    implementation 'io.coil-kt:coil-compose:2.1.0'
 
     // Firebase
     implementation platform('com.google.firebase:firebase-bom:26.0.0')
@@ -171,9 +172,6 @@ dependencies {
     implementation "com.google.accompanist:accompanist-appcompat-theme:0.23.0"
 
     implementation "com.github.skydoves:androidveil:1.1.2"
-
-    implementation("io.coil-kt:coil:2.0.0-rc01")
-    implementation("io.coil-kt:coil-compose:2.0.0-rc01")
 
     implementation 'com.github.kirich1409:viewbindingpropertydelegate-noreflection:1.5.6'
 
