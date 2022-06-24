@@ -1,10 +1,8 @@
 package com.tangem.tap.features.details.redux.walletconnect
 
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.extensions.guard
 import com.tangem.domain.common.ScanResponse
-import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.getFromClipboard
@@ -14,11 +12,10 @@ import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.currenciesRepository
 import com.tangem.tap.domain.extensions.isMultiwalletAllowed
-import com.tangem.tap.domain.extensions.makeWalletManagerForApp
-import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.domain.walletconnect.BnbHelper
 import com.tangem.tap.domain.walletconnect.WalletConnectManager
 import com.tangem.tap.domain.walletconnect.WalletConnectNetworkUtils
+import com.tangem.tap.domain.walletconnect.WcWalletManagerFactory
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.scope
 import com.tangem.tap.store
@@ -159,6 +156,45 @@ class WalletConnectMiddleware {
                     action.id, action.data, action.sessionData
                 )
             }
+            is WalletConnectAction.SwitchBlockchain -> {
+                val blockchain = action.blockchain.guard {
+                    store.dispatchOnMain(GlobalAction.ShowDialog(WalletConnectDialog.UnsupportedCard)) // TODO: add relevant dialog
+                    return
+                }
+
+                val factory = WcWalletManagerFactory(
+                    factory = store.state.globalState.tapWalletManager.walletManagerFactory,
+                    currenciesRepository = currenciesRepository
+                )
+                val walletState = store.state.walletState
+                scope.launch {
+                    val walletManager = factory.getWalletManager(
+                            wallet = action.session.wallet,
+                            blockchain = blockchain,
+                            walletState = walletState
+                        ).guard {
+                        store.dispatchOnMain(
+                            GlobalAction.ShowDialog(
+                                WalletConnectDialog.AddNetwork(blockchain.fullName)
+                            )
+                        )
+                        return@launch
+                    }
+
+                    val updatedWallet = action.session.wallet.copy(
+                        walletPublicKey = walletManager.wallet.publicKey.seedKey,
+                        derivedPublicKey = walletManager.wallet.publicKey.derivedKey,
+                        derivationPath = walletManager.wallet.publicKey.derivationPath,
+                        blockchain = action.blockchain
+
+                    )
+                    val updatedSession = action.session.copy(wallet = updatedWallet)
+                    store.dispatchOnMain(WalletConnectAction.UpdateBlockchain(updatedSession))
+                }
+            }
+            is WalletConnectAction.UpdateBlockchain -> {
+                walletConnectManager.updateBlockchain(action.updatedSession)
+            }
         }
     }
 
@@ -189,8 +225,13 @@ class WalletConnectMiddleware {
             return
         }
 
+        val factory = WcWalletManagerFactory(
+            factory = store.state.globalState.tapWalletManager.walletManagerFactory,
+            currenciesRepository = currenciesRepository
+        )
+        val walletState = store.state.walletState
         scope.launch {
-            val walletManager = getWalletManager(scanResponse, blockchain).guard {
+            val walletManager = factory.getWalletManager(scanResponse, blockchain, walletState).guard {
                 store.dispatchOnMain(WalletConnectAction.FailureEstablishingSession(session.session))
                 store.dispatchOnMain(
                     GlobalAction.ShowDialog(
@@ -231,38 +272,5 @@ class WalletConnectMiddleware {
             }
         }
 
-    }
-
-    private suspend fun getWalletManager(
-        scanResponse: ScanResponse, blockchain: Blockchain
-    ): WalletManager? {
-        val card = scanResponse.card
-        val factory = store.state.globalState.tapWalletManager.walletManagerFactory
-        val blockchainToMake = if (blockchain == Blockchain.Ethereum && card.isTestCard) {
-            Blockchain.EthereumTestnet
-        } else {
-            blockchain
-        }
-
-        val blockchainNetwork = BlockchainNetwork(
-            blockchain = blockchainToMake,
-            card = card
-        )
-
-        return if (store.state.globalState.scanResponse?.card?.cardId == card.cardId) {
-            store.state.walletState.getWalletManager(blockchainNetwork)
-        } else {
-            if (currenciesRepository
-                    .loadSavedCurrencies(card.cardId, card.settings.isHDWalletAllowed)
-                    .contains(blockchainNetwork)
-            ) {
-                factory.makeWalletManagerForApp(
-                    scanResponse = scanResponse,
-                    blockchainNetwork = blockchainNetwork
-                )
-            } else {
-                null
-            }
-        }
     }
 }
