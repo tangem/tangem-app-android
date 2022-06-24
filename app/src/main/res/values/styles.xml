@@ -11,6 +11,7 @@
         <item name="android:windowContentOverlay">@null</item>
         <item name="actionMenuTextColor">@color/menu_accent_color</item>
 
+        <item name="materialCardViewStyle">@style/Widget.AppTheme.CardView</item>
     </style>
 
     <style name="AppTheme" parent="BaseAppTheme" />
@@ -156,6 +157,9 @@
         <item name="android:textColor">@color/selector_chip_shop_text</item>
     </style>
 
+    <style name="Widget.AppTheme.CardView" parent="Widget.MaterialComponents.CardView">
+        <item name="cardCornerRadius">8dp</item>
+    </style>
 </resources>
 
     <!--    android:fontFamily="sans-serif"           // roboto regular  -->
