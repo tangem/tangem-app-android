@@ -1,11 +1,5 @@
 package com.tangem.tap.features.home.compose.content
 
-import android.content.Context
-import android.graphics.Typeface
-import android.util.TypedValue
-import android.view.View
-import android.view.ViewGroup
-import android.widget.TextView
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
@@ -17,15 +11,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
-import com.tangem.tangem_sdk_new.extensions.dpToPx
 import com.tangem.tap.common.compose.SpacerH16
 import com.tangem.tap.common.compose.SpacerH32
-import com.tangem.tap.common.compose.extensions.toAndroidGraphicsColor
 import com.tangem.tap.features.home.compose.StoriesBottomImageAnimation
 import com.tangem.tap.features.home.compose.StoriesTextAnimation
 import com.tangem.wallet.R
@@ -36,7 +31,7 @@ fun StoriesRevolutionaryWallet(stepDuration: Int) {
         topContent = {
             TopContent(
                 titleText = stringResource(id = R.string.story_awe_title),
-                subtitleText = stringResource(id = R.string.story_awe_description),
+                subtitleText = stringResource(id = R.string.story_awe_description).annotated(),
                 isDarkBackground = true,
             )
         },
@@ -57,11 +52,20 @@ fun StoriesRevolutionaryWallet(stepDuration: Int) {
 
 @Composable
 fun StoriesUltraSecureBackup(isPaused: Boolean, stepDuration: Int) {
+    val subtitleText = buildAnnotatedString {
+        append(stringResource(id = R.string.story_backup_description_1))
+        append(" ")
+        withStyle(style = SpanStyle(fontWeight = FontWeight.Bold)) {
+            append(stringResource(id = R.string.story_backup_description_2_bold))
+        }
+        append(" ")
+        append(stringResource(id = R.string.story_backup_description_3))
+    }
     SplitContent(
         topContent = {
             TopContent(
                 titleText = stringResource(id = R.string.story_backup_title),
-                subtitleText = stringResource(id = R.string.story_backup_description),
+                subtitleText = subtitleText,
                 isDarkBackground = false,
             )
         },
@@ -77,7 +81,7 @@ fun StoriesCurrencies(isPaused: Boolean, stepDuration: Int) {
         topContent = {
             TopContent(
                 titleText = stringResource(id = R.string.story_currencies_title),
-                subtitleText = stringResource(id = R.string.story_currencies_description),
+                subtitleText = stringResource(id = R.string.story_currencies_description).annotated(),
                 isDarkBackground = false,
             )
         },
@@ -93,7 +97,7 @@ fun StoriesWeb3(isPaused: Boolean, stepDuration: Int) {
         topContent = {
             TopContent(
                 titleText = stringResource(id = R.string.story_web3_title),
-                subtitleText = stringResource(id = R.string.story_web3_description),
+                subtitleText = stringResource(id = R.string.story_web3_description).annotated(),
                 isDarkBackground = false,
             )
         },
@@ -109,7 +113,7 @@ fun StoriesWalletForEveryone(stepDuration: Int) {
         topContent = {
             TopContent(
                 titleText = stringResource(id = R.string.story_finish_title),
-                subtitleText = stringResource(id = R.string.story_finish_description),
+                subtitleText = stringResource(id = R.string.story_finish_description).annotated(),
                 isDarkBackground = true,
             )
         },
@@ -147,9 +151,8 @@ private fun SplitContent(
 @Composable
 private fun TopContent(
     titleText: String,
-    subtitleText: String,
+    subtitleText: AnnotatedString,
     isDarkBackground: Boolean,
-    subtitleTextId: Int? = null,
 ) {
     SpacerH32()
     StoriesTitleText(
@@ -159,7 +162,6 @@ private fun TopContent(
     SpacerH16()
     StoriesSubtitleText(
         subtitleText = subtitleText,
-        subtitleTextId = subtitleTextId,
     )
     SpacerH32()
 }
@@ -187,8 +189,7 @@ private fun StoriesTitleText(
 
 @Composable
 private fun StoriesSubtitleText(
-    subtitleText: String,
-    subtitleTextId: Int?,
+    subtitleText: AnnotatedString,
 ) {
     val color = Color(0xFFA6AAAD)
 
@@ -196,44 +197,16 @@ private fun StoriesSubtitleText(
         slideInDuration = 500,
         slideInDelay = 400,
     ) { modifier ->
-        val internalModifier = modifier
-            .padding(start = 40.dp, end = 40.dp)
-
-        if (subtitleTextId == null) {
-            Text(
-                text = subtitleText,
-                fontSize = 20.sp,
-                fontWeight = FontWeight.Normal,
-                modifier = internalModifier,
-                color = color,
-                textAlign = TextAlign.Center
-            )
-        } else {
-            HtmlText(
-                modifier = internalModifier,
-                stringResId = subtitleTextId,
-            ) { context ->
-                val padding = context.dpToPx(40f).toInt()
-                TextView(context).apply {
-                    layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-                    setPadding(padding, 0, padding, 0)
-                    textAlignment = View.TEXT_ALIGNMENT_CENTER
-                    typeface = Typeface.DEFAULT
-                    setTextSize(TypedValue.COMPLEX_UNIT_SP, 20f)
-                    setTextColor(color.toAndroidGraphicsColor())
-                }
-            }
-        }
+        Text(
+            modifier = modifier
+                .padding(start = 40.dp, end = 40.dp),
+            fontWeight = FontWeight.Normal,
+            text = subtitleText,
+            fontSize = 20.sp,
+            color = color,
+            textAlign = TextAlign.Center
+        )
     }
-}
-
-@Composable
-private fun HtmlText(
-    stringResId: Int,
-    modifier: Modifier = Modifier,
-    factory: (Context) -> TextView
-) {
-    AndroidView(factory, modifier) { it.text = it.context.getText(stringResId) }
 }
 
 @Composable
@@ -248,4 +221,9 @@ private fun StoriesImage(
         contentScale = if (isDarkBackground) ContentScale.Inside else ContentScale.FillWidth,
         modifier = modifier.fillMaxWidth()
     )
+}
+
+private fun String.annotated(): AnnotatedString {
+    val source = this
+    return buildAnnotatedString { append(source) }
 }
