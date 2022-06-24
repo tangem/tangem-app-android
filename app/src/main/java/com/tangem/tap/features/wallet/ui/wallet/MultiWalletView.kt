@@ -91,6 +91,7 @@ class MultiWalletView : WalletView {
         val binding = binding ?: return
 
         handleTotalBalance(binding, state.totalBalance)
+        handleBackupWarning(binding, state.showBackupWarning)
         walletsAdapter.submitList(state.walletsData, state.primaryBlockchain, state.primaryToken)
 
         binding.btnAddToken.setOnClickListener {
@@ -118,6 +119,16 @@ class MultiWalletView : WalletView {
             store.dispatch(NavigationAction.NavigateTo(AppScreen.AddTokens))
         }
         handleErrorStates(state = state, binding = binding, fragment = fragment)
+    }
+
+    private fun handleBackupWarning(
+        binding: FragmentWalletBinding,
+        showBackupWarning: Boolean
+    ) = with(binding.lWalletBackupWarning) {
+        root.isVisible = showBackupWarning
+        root.setOnClickListener {
+            store.dispatch(WalletAction.MultiWallet.BackupWallet)
+        }
     }
 
     private fun handleTotalBalance(
