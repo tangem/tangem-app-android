@@ -5,11 +5,15 @@ import android.content.Context
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Types
+import com.tangem.common.extensions.hexToBytes
+import com.tangem.common.extensions.toHexString
 import com.tangem.network.common.MoshiConverter
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectSession
 import com.tangem.tap.features.details.redux.walletconnect.WalletForSession
 import com.trustwallet.walletconnect.models.WCPeerMeta
 import com.trustwallet.walletconnect.models.session.WCSession
+import timber.log.Timber
+import java.nio.charset.Charset
 
 class WalletConnectRepository(val context: Application) {
     private val moshi = MoshiConverter.defaultMoshi()
@@ -35,15 +39,27 @@ class WalletConnectRepository(val context: Application) {
     fun loadSavedSessions(): List<WalletConnectSession> {
         return try {
             val json = context.readFileText(FILE_NAME_PREFIX_SESSIONS)
+                .hexToUtf8()
             walletConnectAdapter.fromJson(json)!!.map { it.toSession() }
         } catch (exception: Exception) {
+            Timber.e(exception)
             emptyList()
         }
     }
 
     private fun saveSessions(sessions: List<WalletConnectSession>) {
         val json = walletConnectAdapter.toJson(sessions.map { SessionDao.fromSession(it) })
+            .utf8ToHex() // convert to hex to solve problems with saving text with emojis
+        Timber.e("WC sessions, saving following json: $json")
         context.rewriteFile(json, FILE_NAME_PREFIX_SESSIONS)
+    }
+
+    private fun String.utf8ToHex(): String {
+        return this.toByteArray().toHexString()
+    }
+
+    private fun String.hexToUtf8(): String {
+        return this.hexToBytes().toString(Charset.defaultCharset())
     }
 
     private fun Context.readFileText(fileName: String): String =
