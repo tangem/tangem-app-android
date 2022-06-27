@@ -45,8 +45,8 @@
     <string name="wallet_balance_tx_in_progress">Transaction is in progress…</string>
     <string name="wallet_pending_tx_sending_address_format">to %s</string>
     <string name="wallet_pending_tx_receiving_address_format">from %s</string>
-    <string name="wallet_pending_tx_receiving">Receiving\u0020</string>
-    <string name="wallet_pending_tx_sending">Sending\u0020</string>
+    <string name="wallet_pending_tx_receiving">Receiving</string>
+    <string name="wallet_pending_tx_sending">Sending</string>
 
     <string name="wallet_address_button_explore">Explore address</string>
     <string name="wallet_address_button_create_payid">Create PayString</string>
