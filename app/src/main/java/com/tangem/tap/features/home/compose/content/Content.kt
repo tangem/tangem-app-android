@@ -17,6 +17,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tangem.tap.common.compose.SpacerH16
@@ -226,4 +227,37 @@ private fun StoriesImage(
 private fun String.annotated(): AnnotatedString {
     val source = this
     return buildAnnotatedString { append(source) }
+}
+
+
+@Preview
+@Composable
+private fun RevolutionaryWalletPreview() {
+    StoriesRevolutionaryWallet(6000)
+}
+
+@Preview
+@Composable
+private fun UltraSecureBackupPreview() {
+    StoriesUltraSecureBackup(false, 6000)
+}
+
+@Preview
+@Composable
+private fun CurrenciesPreview() {
+    StoriesCurrencies(false, 6000)
+}
+
+
+@Preview
+@Composable
+private fun Web3Preview() {
+    StoriesWeb3(false, 6000)
+}
+
+
+@Preview
+@Composable
+private fun WalletForEveryonePreview() {
+    StoriesWalletForEveryone(6000)
 }
