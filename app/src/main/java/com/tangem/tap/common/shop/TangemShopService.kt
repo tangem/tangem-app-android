@@ -5,6 +5,7 @@ import android.content.Intent
 import com.google.android.gms.wallet.PaymentData
 import com.shopify.buy3.Storefront
 import com.tangem.tap.common.analytics.AnalyticsHandler
+import com.tangem.tap.common.extensions.filterNotNull
 import com.tangem.tap.common.shop.data.ProductType
 import com.tangem.tap.common.shop.data.TangemProduct
 import com.tangem.tap.common.shop.data.TotalSum
@@ -21,7 +22,6 @@ class TangemShopService(application: Application, shopifyShop: ShopifyShop) {
 
     private val shopifyService = ShopifyService(application, shopifyShop)
 
-    private lateinit var product: Storefront.Product
 
     private val checkouts = mutableMapOf<ProductType, Storefront.Checkout>()
     private val variants = mutableMapOf<ProductType, Storefront.ProductVariant>()
@@ -31,22 +31,19 @@ class TangemShopService(application: Application, shopifyShop: ShopifyShop) {
     suspend fun getProducts(): Result<List<TangemProduct>> {
         val result = shopifyService.getProducts()
 
-        result.onSuccess {
-            product = it.first {
-                val variantsSku = it.variants.edges.map { it.node.sku }
-                variantsSku.contains(ProductType.WALLET_2_CARDS.sku) && variantsSku.contains(
-                    ProductType.WALLET_3_CARDS.sku
-                )
-            }
-            product.variants.edges.map { it.node }
-                .forEach { variant ->
-                    if (variant.sku == ProductType.WALLET_2_CARDS.sku) {
-                        variants[ProductType.WALLET_2_CARDS] = variant
-                    } else if (variant.sku == ProductType.WALLET_3_CARDS.sku) {
-                        variants[ProductType.WALLET_3_CARDS] = variant
-                    }
-                }
+        return result.mapCatching { product ->
+            val availableVariants = product
+                .flatMap { it.variants.edges.map { it.node } }
+                .filter { SKUS_TO_DISPLAY.contains(it.sku) }
+                .associateBy { ProductType.fromSku(it.sku) }
+                .filterNotNull()
+            variants.putAll(availableVariants)
 
+            if (variants.size < SKUS_TO_DISPLAY.size) {
+                return Result.failure(Exception(
+                    "Shopify: products are missing, " +
+                            "\nproducts available: ${variants.keys.map { it.sku }}"))
+            }
 
             val twoCardsProduct = TangemProduct(
                 type = ProductType.WALLET_2_CARDS,
@@ -65,7 +62,6 @@ class TangemShopService(application: Application, shopifyShop: ShopifyShop) {
             createCheckouts()
             return Result.success(listOf(twoCardsProduct, threeCardsProduct))
         }
-        return Result.failure(result.exceptionOrNull()!!)
     }
 
     private suspend fun createCheckouts() {
@@ -214,6 +210,7 @@ class TangemShopService(application: Application, shopifyShop: ShopifyShop) {
     companion object {
         const val TANGEM_WALLET_2_CARDS_SKU = "TG115x2"
         const val TANGEM_WALLET_3_CARDS_SKU = "TG115x3"
+        val SKUS_TO_DISPLAY = listOf(TANGEM_WALLET_2_CARDS_SKU, TANGEM_WALLET_3_CARDS_SKU)
     }
 }
 
