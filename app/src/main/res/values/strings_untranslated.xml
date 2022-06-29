@@ -141,7 +141,7 @@
     <string name="wallet_connect_card_number" translatable="false">Card: %s</string>
     <string name="wallet_connect_scan_card_message" translatable="false">Tap card to bind to wallet connect</string>
 
-    <string name="wallet_connect_create_tx_message" translatable="false">Card: %1s
+    <string name="wallet_connect_create_tx_message" translatable="false">Card: %1s\n
     Request to create transaction for %2s
     \n%3s
 
