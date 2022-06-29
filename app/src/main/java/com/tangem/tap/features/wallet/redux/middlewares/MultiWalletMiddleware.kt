@@ -3,6 +3,8 @@ package com.tangem.tap.features.wallet.redux.middlewares
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.WalletManager
+import com.tangem.common.extensions.guard
+import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.redux.global.GlobalState
 import com.tangem.tap.common.redux.navigation.AppScreen
@@ -12,9 +14,10 @@ import com.tangem.tap.domain.extensions.makeWalletManagerForApp
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.demo.isDemoCard
-import com.tangem.tap.features.wallet.redux.Currency
+import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletState
+import com.tangem.tap.features.wallet.redux.models.WalletDialog
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import kotlinx.coroutines.Dispatchers
@@ -55,22 +58,54 @@ class MultiWalletMiddleware {
                         blockchainNetwork = action.blockchain
                     )
                 }
-                store.dispatch(WalletAction.LoadFiatRate(
-                    coinsList = listOf(
-                        Currency.Blockchain(
-                            action.blockchain.blockchain,
-                            action.blockchain.derivationPath
+                store.dispatch(
+                    WalletAction.LoadFiatRate(
+                        coinsList = listOf(
+                            Currency.Blockchain(
+                                action.blockchain.blockchain,
+                                action.blockchain.derivationPath
+                            )
                         )
                     )
-                ))
-                store.dispatch(WalletAction.LoadWallet(
-                    action.blockchain, action.walletManager
-                ))
+                )
+                store.dispatch(
+                    WalletAction.LoadWallet(
+                        action.blockchain, action.walletManager
+                    )
+                )
             }
             is WalletAction.MultiWallet.SaveCurrencies -> {
                 globalState.scanResponse?.card?.cardId?.let {
                     currenciesRepository.saveCurrencies(it, action.blockchainNetworks)
                 }
+            }
+            is WalletAction.MultiWallet.TryToRemoveWallet -> {
+                val walletState = store.state.walletState
+                val currency = action.walletData.currency
+                val walletCanBeRemoved = store.state.walletState.canBeRemoved(
+                    store.state.walletState.getSelectedWalletData()
+                )
+                if (walletCanBeRemoved) {
+                    store.dispatch(WalletAction.MultiWallet.RemoveWallet(action.walletData))
+                    return
+                }
+
+                val walletManager = walletState.getWalletManager(currency).guard {
+                    store.dispatch(WalletAction.MultiWallet.RemoveWallet(action.walletData))
+                    return
+                }
+
+                val dialog = when {
+                    currency is Currency.Blockchain &&
+                            walletManager.cardTokens.isNotEmpty() ->
+                        WalletDialog.TokensAreLinkedDialog(
+                            currency.currencyName, currency.currencySymbol
+                        )
+
+                    else ->
+                        WalletDialog.RemoveWalletDialog(currency.currencyName, action.walletData)
+                }
+                store.dispatchDialogShow(dialog)
             }
             is WalletAction.MultiWallet.RemoveWallet -> {
                 val cardId = globalState.scanResponse?.card?.cardId
@@ -94,11 +129,17 @@ class MultiWalletMiddleware {
                                 currenciesRepository.removeToken(
                                     cardId = it,
                                     token = currency.token,
-                                    blockchainNetwork = BlockchainNetwork.fromWalletManager(walletManager)
+                                    blockchainNetwork = BlockchainNetwork.fromWalletManager(
+                                        walletManager
+                                    )
                                 )
                             }
                         }
                     }
+                }
+                if (action.fromWalletDetails) {
+                    store.dispatch(WalletAction.MultiWallet.SelectWallet(null))
+                    store.dispatch(NavigationAction.PopBackTo())
                 }
             }
 //            is WalletAction.MultiWallet.FindBlockchainsInUse -> {

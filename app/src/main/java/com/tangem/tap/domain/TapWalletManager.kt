@@ -26,7 +26,7 @@ import kotlinx.coroutines.withContext
 
 class TapWalletManager {
     val walletManagerFactory: WalletManagerFactory
-        by lazy { WalletManagerFactory(blockchainSdkConfig) }
+            by lazy { WalletManagerFactory(blockchainSdkConfig) }
 
     val rates: RatesRepository = RatesRepository()
 
@@ -34,10 +34,10 @@ class TapWalletManager {
         store.state.globalState.configManager?.config?.blockchainSdkConfig ?: BlockchainSdkConfig()
     }
 
-    private val walletManagersThrottler = ThrottlerWithValues<BlockchainNetwork, Result<Wallet>>(10000)
+    private val walletManagersThrottler =
+        ThrottlerWithValues<BlockchainNetwork, Result<Wallet>>(10000)
 
     suspend fun loadWalletData(walletManager: WalletManager) {
-        val blockchain = walletManager.wallet.blockchain
         val blockchainNetwork = BlockchainNetwork.fromWalletManager(walletManager)
         val result = if (walletManagersThrottler.isStillThrottled(blockchainNetwork)) {
             walletManagersThrottler.geValue(blockchainNetwork)!!
@@ -54,17 +54,21 @@ class TapWalletManager {
             is Result.Failure -> {
                 when (result.error) {
                     is TapError.WalletManager.NoAccountError -> {
-                        dispatchOnMain(WalletAction.LoadWallet.NoAccount(
-                            walletManager.wallet,
-                            blockchainNetwork,
-                            (result.error as TapError.WalletManager.NoAccountError).customMessage
-                        ))
+                        dispatchOnMain(
+                            WalletAction.LoadWallet.NoAccount(
+                                walletManager.wallet,
+                                blockchainNetwork,
+                                (result.error as TapError.WalletManager.NoAccountError).customMessage
+                            )
+                        )
                     }
                     else -> {
-                        dispatchOnMain(WalletAction.LoadWallet.Failure(
-                            walletManager.wallet,
-                            result.error.localizedMessage
-                        ))
+                        dispatchOnMain(
+                            WalletAction.LoadWallet.Failure(
+                                walletManager.wallet,
+                                result.error.localizedMessage
+                            )
+                        )
                     }
                 }
             }
@@ -109,6 +113,37 @@ class TapWalletManager {
             return
         }
 
+        if (data.card.isMultiwalletAllowed) {
+            loadMultiWalletData(data)
+        } else {
+            loadSingleWalletData(data)
+        }
+
+        dispatchOnMain(WalletAction.LoadWallet())
+        dispatchOnMain(WalletAction.LoadFiatRate())
+    }
+
+    private suspend fun loadMultiWalletData(
+        scanResponse: ScanResponse
+    ) {
+        val savedCurrencies = currenciesRepository.loadSavedCurrencies(
+            scanResponse.card.cardId, scanResponse.card.settings.isHDWalletAllowed
+        )
+        if (savedCurrencies.isEmpty()) return
+
+        val walletManagers =
+            walletManagerFactory.makeWalletManagersForApp(scanResponse, savedCurrencies)
+        dispatchOnMain(
+            WalletAction.MultiWallet.AddBlockchains(savedCurrencies, walletManagers),
+        )
+        savedCurrencies.map {
+            if (it.tokens.isNotEmpty()) {
+                dispatchOnMain(WalletAction.MultiWallet.AddTokens(it.tokens, it))
+            }
+        }
+    }
+
+    private suspend fun loadSingleWalletData(data: ScanResponse) {
         val blockchain = data.getBlockchain()
         val primaryWalletManager = walletManagerFactory.makePrimaryWalletManager(data)
 
@@ -120,87 +155,12 @@ class TapWalletManager {
                 primaryWalletManager.addToken(primaryToken)
                 dispatchOnMain(WalletAction.MultiWallet.SetPrimaryToken(primaryToken))
             }
-            if (data.card.isMultiwalletAllowed) {
-                loadMultiWalletData(data, blockchain, primaryWalletManager)
-            } else {
-                dispatchOnMain(WalletAction.MultiWallet.AddBlockchains(
+            dispatchOnMain(
+                WalletAction.MultiWallet.AddBlockchains(
                     listOf(BlockchainNetwork.fromWalletManager(primaryWalletManager)),
                     listOf(primaryWalletManager)
-                ))
-            }
-        } else {
-            if (data.card.isMultiwalletAllowed) {
-                loadMultiWalletData(data, blockchain, null)
-            }
-        }
-        dispatchOnMain(WalletAction.LoadWallet())
-        dispatchOnMain(WalletAction.LoadFiatRate())
-    }
-
-    private suspend fun loadMultiWalletData(
-        scanResponse: ScanResponse,
-        primaryBlockchain: Blockchain?,
-        primaryWalletManager: WalletManager?
-    ) {
-        val primaryTokens = primaryWalletManager?.cardTokens?.toList() ?: emptyList()
-        val savedCurrencies = currenciesRepository.loadSavedCurrencies(
-            scanResponse.card.cardId, scanResponse.card.settings.isHDWalletAllowed
-        )
-
-        if (savedCurrencies.isEmpty()) {
-            if (primaryBlockchain != null && primaryWalletManager != null) {
-                val blockchainNetwork = BlockchainNetwork.fromWalletManager(primaryWalletManager)
-                dispatchOnMain(
-                    WalletAction.MultiWallet.SaveCurrencies(listOf(blockchainNetwork)),
-                    WalletAction.MultiWallet.AddBlockchains(
-                        listOf(blockchainNetwork),
-                        listOf(primaryWalletManager)
-                    ),
-                    WalletAction.MultiWallet.AddTokens(primaryTokens.toList(), blockchainNetwork)
                 )
-
-            } else {
-                val blockchainNetworks = listOf(
-                    BlockchainNetwork(Blockchain.Bitcoin, scanResponse.card),
-                    BlockchainNetwork(Blockchain.Ethereum, scanResponse.card)
-                )
-
-                val walletManagers = walletManagerFactory.makeWalletManagersForApp(
-                    scanResponse,
-                    blockchainNetworks
-                )
-
-                dispatchOnMain(
-                    WalletAction.MultiWallet.SaveCurrencies(blockchainNetworks),
-                    WalletAction.MultiWallet.AddBlockchains(blockchainNetworks, walletManagers),
-                )
-            }
-//            dispatchOnMain(
-//                WalletAction.MultiWallet.FindBlockchainsInUse,
-//                WalletAction.MultiWallet.FindTokensInUse,
-//            )
-        } else {
-            val walletManagers = if (
-                primaryTokens.isNotEmpty() &&
-                primaryWalletManager != null &&
-                primaryBlockchain != null && primaryBlockchain != Blockchain.Unknown
-            ) {
-                val blockchainsWithoutPrimary = savedCurrencies.filterNot { it.blockchain == primaryBlockchain }
-                walletManagerFactory.makeWalletManagersForApp(
-                    scanResponse,
-                    blockchainsWithoutPrimary
-                ).plus(primaryWalletManager)
-            } else {
-                walletManagerFactory.makeWalletManagersForApp(scanResponse, savedCurrencies)
-            }
-            dispatchOnMain(
-                WalletAction.MultiWallet.AddBlockchains(savedCurrencies, walletManagers),
             )
-            savedCurrencies.map {
-                if (it.tokens.isNotEmpty()) {
-                    dispatchOnMain(WalletAction.MultiWallet.AddTokens(it.tokens, it))
-                }
-            }
         }
     }
 
