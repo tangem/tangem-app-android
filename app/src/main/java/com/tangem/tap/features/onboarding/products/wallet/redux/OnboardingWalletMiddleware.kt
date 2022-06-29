@@ -1,5 +1,6 @@
 package com.tangem.tap.features.onboarding.products.wallet.redux
 
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.Card
 import com.tangem.domain.common.ScanResponse
@@ -12,9 +13,11 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.extensions.hasWallets
+import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.wallet.redux.Artwork
+import com.tangem.tap.features.wallet.redux.WalletAction
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.Middleware
@@ -84,6 +87,11 @@ private fun handleWalletAction(action: Action) {
                                     primaryCard = result.data.primaryCard
                                 )
                             onboardingManager.scanResponse = updatedResponse
+                            val blockchainNetworks = listOf(
+                                BlockchainNetwork(Blockchain.Bitcoin, result.data.card),
+                                BlockchainNetwork(Blockchain.Ethereum, result.data.card)
+                            )
+                            store.dispatchOnMain(WalletAction.MultiWallet.SaveCurrencies(blockchainNetworks))
                             onboardingManager.activationStarted(updatedResponse.card.cardId)
                             store.dispatch(OnboardingWalletAction.ProceedBackup)
                         }
@@ -260,6 +268,11 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             backupService.proceedBackup { result ->
                 when (result) {
                     is CompletionResult.Success -> {
+                        val blockchainNetworks = listOf(
+                            BlockchainNetwork(Blockchain.Bitcoin, result.data),
+                            BlockchainNetwork(Blockchain.Ethereum, result.data)
+                        )
+                        store.dispatchOnMain(WalletAction.MultiWallet.SaveCurrencies(blockchainNetworks))
                         if (backupService.currentState == BackupService.State.Finished) {
                             store.dispatchOnMain(BackupAction.FinishBackup)
                         } else {
