@@ -59,7 +59,7 @@ dependencies {
     implementation implementation(project(path: ':network'))
     implementation implementation(project(path: ':common'))
 
-    implementation 'com.tangem:blockchain:develop-90'
+    implementation 'com.tangem:blockchain:develop-93'
 //    implementation 'com.tangem:blockchain:0.0.1'
     implementation 'com.tangem.tangem-sdk-kotlin:core:develop-154'
     implementation 'com.tangem.tangem-sdk-kotlin:android:develop-154'
