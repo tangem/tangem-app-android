@@ -7,10 +7,13 @@ import com.tangem.tap.common.extensions.toFiatString
 import com.tangem.tap.common.extensions.toFormattedCurrencyString
 import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
+import com.tangem.tap.features.wallet.models.Currency
+import com.tangem.tap.features.wallet.models.WalletRent
 import com.tangem.tap.features.wallet.models.filterByToken
 import com.tangem.tap.features.wallet.models.getPendingTransactions
 import com.tangem.tap.features.wallet.models.removeUnknownTransactions
 import com.tangem.tap.features.wallet.redux.*
+import com.tangem.tap.features.wallet.redux.WalletState.Companion.UNKNOWN_AMOUNT_SIGN
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.features.wallet.ui.TokenData
@@ -102,10 +105,10 @@ class MultiWalletReducer {
             }
             is WalletAction.MultiWallet.TokenLoaded -> {
                 val currency = Currency.fromBlockchainNetwork(action.blockchain, action.token)
-                val wallet = state.getWalletManager(currency)?.wallet.guard {
-                    throw NullPointerException("MultiWallet.TokenLoaded: WalletManager must be no NULL")
+                val walletManager = state.getWalletManager(currency).guard {
+                    throw NullPointerException("MultiWallet.TokenLoaded: WalletManager must be not NULL")
                 }
-
+                val wallet = walletManager.wallet
                 val pendingTransactions = wallet.getPendingTransactions()
                 val tokenPendingTransactions = pendingTransactions.filterByToken(action.token)
                 val tokenBalanceStatus = when {
@@ -125,9 +128,8 @@ class MultiWalletReducer {
                             action.amount.decimals, action.amount.currencySymbol
                         ),
                         fiatAmountFormatted = tokenWalletData.fiatRate?.let {
-                            action.amount.value
-                                ?.toFiatString(it, store.state.globalState.appCurrency.symbol)
-                        },
+                            action.amount.value?.toFiatString(it, store.state.globalState.appCurrency.symbol)
+                        } ?: UNKNOWN_AMOUNT_SIGN,
                         blockchainAmount = wallet.amounts[AmountType.Coin]?.value ?: BigDecimal.ZERO
                     ),
                     pendingTransactions = pendingTransactions.removeUnknownTransactions(),
@@ -136,7 +138,8 @@ class MultiWalletReducer {
                         token = action.token,
                         blockchain = action.blockchain.blockchain,
                         derivationPath = action.blockchain.derivationPath
-                    )
+                    ),
+                    walletRent = findWalletRent(state.getWalletStore(walletManager.wallet))
                 )
                 state.updateWalletData(newTokenWalletData)
             }
@@ -157,7 +160,14 @@ class MultiWalletReducer {
 //            is WalletAction.MultiWallet.FindTokensInUse -> state
 //            is WalletAction.MultiWallet.FindBlockchainsInUse -> state
             is WalletAction.MultiWallet.SaveCurrencies -> state
+            is WalletAction.MultiWallet.TryToRemoveWallet -> state
         }
+    }
+
+    private fun findWalletRent(walletStore: WalletStore?): WalletRent? {
+        return walletStore?.walletsData?.firstOrNull {
+            it.walletRent != null
+        }?.walletRent
     }
 }
 
