@@ -1,4 +1,4 @@
-package com.tangem.tap.features.home.compose
+package com.tangem.tap.features.home.compose.views
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
