@@ -6,18 +6,17 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.squareup.picasso.Picasso
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.tap.common.extensions.getString
 import com.tangem.tap.common.extensions.hide
-import com.tangem.tap.common.extensions.loadCurrenciesIcon
 import com.tangem.tap.common.extensions.show
-import com.tangem.tap.features.wallet.redux.Currency
+import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletData
 import com.tangem.tap.features.wallet.ui.BalanceStatus
+import com.tangem.tap.features.wallet.ui.images.loadCurrencyIcon
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.ItemCurrencyWalletBinding
@@ -98,16 +97,16 @@ class WalletAdapter
                 lContent.root.show()
             }
 
-            Picasso.get().loadCurrenciesIcon(
-                imageView = ivCurrency,
-                textView = tvTokenLetter,
+            loadCurrencyIcon(
+                currencyImageView = ivCurrency,
+                currencyTextView = tvTokenLetter,
                 token = (wallet.currency as? Currency.Token)?.token,
                 blockchain = wallet.currency.blockchain,
             )
 
             lContent.tvCurrency.text = wallet.currencyData.currency
-            lContent.tvAmountFiat.text = wallet.currencyData.fiatAmountFormatted ?: "—"
-            lContent.tvAmount.text = wallet.currencyData.amountFormatted ?: "—"
+            lContent.tvAmountFiat.text = wallet.currencyData.fiatAmountFormatted
+            lContent.tvAmount.text = wallet.currencyData.amountFormatted
 
             lContent.tvStatus.isVisible = statusMessage != null
             lContent.tvStatus.text = statusMessage
