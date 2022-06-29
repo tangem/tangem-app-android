@@ -2,7 +2,7 @@ package com.tangem.tap.domain.extensions
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Blockchain.Arbitrum
-import com.tangem.tap.features.wallet.redux.Currency
+import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeStatus
 import com.tangem.tap.store
