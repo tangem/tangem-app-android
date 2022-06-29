@@ -61,4 +61,5 @@
     <string name="token_details_unable_hide_alert_message">Токен %s является основной валютой в сети %s и не может быть скрыт, до тех пор пока у вас в списке есть другие токены этой сети.</string>
 
     <string name="wallet_connect_network_not_found_format">Сеть %s не найдена. Пожалуйста, добавьте её и попробуйте заново.</string>
+    <string name="wallet_currency_subtitle">Сеть %s</string>
 </resources>
