@@ -34,10 +34,10 @@
     <string name="wallet_error_unsupported_blockchain">Questa carta non è supportata</string>
     <string name="wallet_error_unsupported_blockchain_subtitle"> La tua carta Tangem è stata creata per funzionare con un\'altra applicazione. Leggere il nome e le istruzioni sulla carta e installare l\'applicazione corretta</string>
     <string name="wallet_balance_tx_in_progress">Transazione in corso&#8230;</string>
-    <string name="wallet_pending_tx_sending">Invia\u0020</string>
-    <string name="wallet_pending_tx_sending_address_format"> su %s </string>
-    <string name="wallet_pending_tx_receiving">Ricevi\u0020</string>
-    <string name="wallet_pending_tx_receiving_address_format"> da %s </string>
+    <string name="wallet_pending_tx_sending">Invia</string>
+    <string name="wallet_pending_tx_sending_address_format">su %s</string>
+    <string name="wallet_pending_tx_receiving">Ricevi</string>
+    <string name="wallet_pending_tx_receiving_address_format">da %s</string>
     <string name="wallet_address_button_explore">Cerca indirizzo</string>
     <string name="wallet_address_button_create_payid">Crea PayString</string>
     <string name="wallet_qr_title_format">portafoglio %s</string>
