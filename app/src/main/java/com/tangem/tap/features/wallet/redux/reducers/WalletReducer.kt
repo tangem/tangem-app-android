@@ -19,7 +19,7 @@ import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.wallet.models.WalletRent
 import com.tangem.tap.features.wallet.redux.AddressData
 import com.tangem.tap.features.wallet.redux.Artwork
-import com.tangem.tap.features.wallet.redux.Currency
+import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.ErrorType
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.features.wallet.redux.TradeCryptoState
@@ -217,8 +217,8 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                             currency = walletBlockchain.currency,
                         ),
                         fiatAmount = fiatAmount,
-                        fiatAmountFormatted = fiatAmount.toFiatRateString(
-                            fiatCurrencyName = store.state.globalState.appCurrency.symbol
+                        fiatAmountFormatted = fiatAmount.toFormattedFiatValue(
+                            fiatCurrencyName = state.globalState.appCurrency.symbol
                         ),
                         amountToCreateAccount = action.amountToCreateAccount,
                     )
@@ -439,7 +439,7 @@ private fun setMultiWalletFiatRate(
                 wallet?.getTokenAmount(currency.token)?.value?.toFiatValue(rate)
         }
         if (currencyData.status == BalanceStatus.NoAccount && fiatAmount == null) {
-            fiatAmount = BigDecimal.ZERO
+            fiatAmount = BigDecimal.ZERO.setScale(2)
         }
         val fiatAmountFormatted = fiatAmount?.toFormattedFiatValue(appCurrency.symbol)
 
