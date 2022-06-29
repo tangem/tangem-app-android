@@ -10,7 +10,7 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.send.redux.PrepareSendScreen
 import com.tangem.tap.features.send.redux.SendAction
-import com.tangem.tap.features.wallet.redux.Currency
+import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import com.tangem.tap.network.exchangeServices.buyErc20Tokens
