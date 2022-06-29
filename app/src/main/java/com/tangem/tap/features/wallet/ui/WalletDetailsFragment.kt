@@ -134,12 +134,12 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
         binding.srlWalletDetails.setOnRefreshListener {
             if (selectedWallet.currencyData.status != BalanceStatus.Loading) {
                 store.dispatch(WalletAction.LoadWallet(
-                        blockchain = BlockchainNetwork(
-                            selectedWallet.currency.blockchain,
-                            selectedWallet.currency.derivationPath,
-                            emptyList()
-                        )
+                    blockchain = BlockchainNetwork(
+                        selectedWallet.currency.blockchain,
+                        selectedWallet.currency.derivationPath,
+                        emptyList()
                     )
+                )
                 )
             }
         }
@@ -165,12 +165,10 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
 
     private fun setupCurrency(currencyData: BalanceWidgetData, currency: Currency) = with(binding) {
         tvCurrencyTitle.text = currencyData.currency
-        if (currency is Currency.Token) {
-            tvCurrencySubtitle.text = currency.blockchain.tokenDisplayName()
-            tvCurrencySubtitle.show()
-        } else {
-            tvCurrencySubtitle.hide()
-        }
+        tvCurrencySubtitle.text = tvCurrencySubtitle.getString(
+            R.string.wallet_currency_subtitle,
+            currency.blockchain.fullName
+        )
     }
 
     private fun setupButtons(selectedWallet: WalletData) = with(binding) {
