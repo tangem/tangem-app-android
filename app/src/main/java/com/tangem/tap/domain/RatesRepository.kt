@@ -3,7 +3,7 @@ package com.tangem.tap.domain
 import com.tangem.common.services.Result
 import com.tangem.domain.common.ThrottlerWithValues
 import com.tangem.network.api.tangemTech.TangemTechService
-import com.tangem.tap.features.wallet.redux.Currency
+import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.store
 import java.math.BigDecimal
 // [REDACTED_TODO_COMMENT]
