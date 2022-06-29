@@ -7,13 +7,12 @@
     android:layout_height="120dp">
 
     <TextView
-        android:id="@+id/tv_amount"
+        android:id="@+id/tv_fiat_amount"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
         android:ellipsize="end"
         android:maxLines="2"
-        android:paddingStart="16dp"
+        android:paddingStart="12dp"
         android:paddingTop="16dp"
         android:paddingEnd="16dp"
         android:textColor="@color/darkGray6"
@@ -23,10 +22,10 @@
         app:layout_constraintHorizontal_weight="1"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        tools:text="2000.43 USD" />
+        tools:text="496304.28 RUB" />
 
     <TextView
-        android:id="@+id/tv_fiat_amount"
+        android:id="@+id/tv_amount"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:paddingStart="16dp"
@@ -37,8 +36,8 @@
         app:layout_constraintEnd_toStartOf="@id/iv_currency"
         app:layout_constraintHorizontal_weight="1"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tv_amount"
-        tools:text="3.588 ETH" />
+        app:layout_constraintTop_toBottomOf="@id/tv_fiat_amount"
+        tools:text="0.43 BTC" />
 
     <androidx.constraintlayout.utils.widget.ImageFilterView
         android:id="@+id/iv_currency"
@@ -73,7 +72,7 @@
         android:paddingEnd="16dp"
         android:textSize="14sp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tv_fiat_amount"
+        app:layout_constraintTop_toBottomOf="@id/tv_amount"
         tools:text="@string/wallet_balance_verified" />
 
     <TextView
@@ -87,17 +86,17 @@
         android:paddingTop="16dp"
         android:paddingEnd="16dp"
         android:textSize="14sp"
-        android:visibility="visible"
+        android:visibility="gone"
         app:layout_constraintEnd_toStartOf="@+id/iv_currency"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tv_fiat_amount"
-        tools:text="@string/lorem_ipsum" />
+        app:layout_constraintTop_toBottomOf="@id/tv_amount"
+        tools:text="Some error" />
 
     <androidx.constraintlayout.widget.Group
         android:id="@+id/group_balance"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:visibility="gone"
+        android:visibility="visible"
         app:constraint_referenced_ids="tv_amount, tv_fiat_amount, tv_status" />
 
 
