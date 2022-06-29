@@ -93,32 +93,39 @@ fun View.invisible(invisible: Boolean = true, invokeBeforeStateChanged: (() -> U
 }
 
 fun Context.dpToPixels(dp: Int): Int =
-        TypedValue.applyDimension(
-                TypedValue.COMPLEX_UNIT_DIP, dp.toFloat(), this.resources.displayMetrics
-        ).toInt()
+    TypedValue.applyDimension(
+        TypedValue.COMPLEX_UNIT_DIP, dp.toFloat(), this.resources.displayMetrics
+    ).toInt()
 
 
 fun Context.pixelsToDp(pixels: Int): Int {
     return (pixels.toFloat() /
-            (resources.displayMetrics.densityDpi.toFloat() / DisplayMetrics.DENSITY_DEFAULT))
+        (resources.displayMetrics.densityDpi.toFloat() / DisplayMetrics.DENSITY_DEFAULT))
         .toInt()
 }
 
+fun Context.dpToPixels(dp: Float): Float =
+    TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, this.resources.displayMetrics)
+
+
+fun Context.pixelsToDp(pixels: Float): Float =
+    (pixels / (resources.displayMetrics.densityDpi.toFloat() / DisplayMetrics.DENSITY_DEFAULT))
+
 tailrec fun Context?.getActivity(): Activity? = this as? Activity
-        ?: (this as? ContextWrapper)?.baseContext?.getActivity()
+    ?: (this as? ContextWrapper)?.baseContext?.getActivity()
 
 fun MaterialCardView.setMargins(
-        marginLeftDp: Int = 16,
-        marginTopDp: Int = 8,
-        marginRightDp: Int = 16,
-        marginBottomDp: Int = 8
+    marginLeftDp: Int = 16,
+    marginTopDp: Int = 8,
+    marginRightDp: Int = 16,
+    marginBottomDp: Int = 8
 ) {
     val params = this.layoutParams
     (params as ViewGroup.MarginLayoutParams).setMargins(
-            context.dpToPixels(marginLeftDp),
-            context.dpToPixels(marginTopDp),
-            context.dpToPixels(marginRightDp),
-            context.dpToPixels(marginBottomDp)
+        context.dpToPixels(marginLeftDp),
+        context.dpToPixels(marginTopDp),
+        context.dpToPixels(marginRightDp),
+        context.dpToPixels(marginBottomDp)
     )
     this.layoutParams = params
 }
@@ -128,11 +135,11 @@ fun Activity.setSystemBarTextColor(setTextDark: Boolean) {
         val flags = this.window.decorView.systemUiVisibility
         // Update the SystemUiVisibility dependening on whether we want a Light or Dark theme.
         this.window.decorView.systemUiVisibility =
-                if (setTextDark) {
-                    flags and View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR.inv()
-                } else {
-                    flags or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
-                }
+            if (setTextDark) {
+                flags and View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR.inv()
+            } else {
+                flags or View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+            }
     }
 }
 
@@ -150,7 +157,7 @@ fun Context.copyToClipboard(value: Any, label: String = "") {
 
 fun Context.getFromClipboard(default: CharSequence? = null): CharSequence? {
     val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
-            ?: return default
+        ?: return default
     val clipData = clipboard.primaryClip ?: return default
     if (clipData.itemCount == 0) return default
 
@@ -172,10 +179,10 @@ fun Fragment.shareText(text: String) {
 }
 
 fun Context.safeStartActivity(
-        intent: Intent,
-        options: Bundle? = null,
-        fallback: ((ActivityNotFoundException) -> Unit)? = null,
-        finally: VoidCallback? = null
+    intent: Intent,
+    options: Bundle? = null,
+    fallback: ((ActivityNotFoundException) -> Unit)? = null,
+    finally: VoidCallback? = null
 ) {
     try {
         this.startActivity(intent, options)
