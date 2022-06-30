@@ -6,6 +6,7 @@ import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.extensions.guard
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.safeUpdate
+import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.global.GlobalState
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
@@ -20,10 +21,10 @@ import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.redux.models.WalletDialog
 import com.tangem.tap.scope
 import com.tangem.tap.store
+import java.math.BigDecimal
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.math.BigDecimal
 
 class MultiWalletMiddleware {
     fun handle(
@@ -140,6 +141,13 @@ class MultiWalletMiddleware {
                 if (action.fromWalletDetails) {
                     store.dispatch(WalletAction.MultiWallet.SelectWallet(null))
                     store.dispatch(NavigationAction.PopBackTo())
+                }
+            }
+            is WalletAction.MultiWallet.ShowWalletBackupWarning -> Unit
+            is WalletAction.MultiWallet.BackupWallet -> {
+                store.state.globalState.scanResponse?.let {
+                    store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingWallet))
+                    store.dispatch(GlobalAction.Onboarding.Start(it, fromHomeScreen = false))
                 }
             }
 //            is WalletAction.MultiWallet.FindBlockchainsInUse -> {
