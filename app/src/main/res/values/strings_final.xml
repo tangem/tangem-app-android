@@ -64,4 +64,7 @@
 
     <string name="wallet_connect_network_not_found_format">%s network not found. Please, add it first and try again.</string>
     <string name="wallet_currency_subtitle">%s network</string>
+
+    <string name="main_no_backup_warning_title">Your wallet has not been backed up</string>
+    <string name="main_no_backup_warning_subtitle">To protect your assets, we advise you to carry out this procedure</string>
 </resources>
