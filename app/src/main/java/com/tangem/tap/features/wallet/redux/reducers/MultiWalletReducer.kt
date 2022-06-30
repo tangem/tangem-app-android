@@ -12,8 +12,12 @@ import com.tangem.tap.features.wallet.models.WalletRent
 import com.tangem.tap.features.wallet.models.filterByToken
 import com.tangem.tap.features.wallet.models.getPendingTransactions
 import com.tangem.tap.features.wallet.models.removeUnknownTransactions
-import com.tangem.tap.features.wallet.redux.*
+import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.features.wallet.redux.WalletData
+import com.tangem.tap.features.wallet.redux.WalletMainButton
+import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.redux.WalletState.Companion.UNKNOWN_AMOUNT_SIGN
+import com.tangem.tap.features.wallet.redux.WalletStore
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.features.wallet.ui.TokenData
@@ -161,6 +165,10 @@ class MultiWalletReducer {
 //            is WalletAction.MultiWallet.FindBlockchainsInUse -> state
             is WalletAction.MultiWallet.SaveCurrencies -> state
             is WalletAction.MultiWallet.TryToRemoveWallet -> state
+            is WalletAction.MultiWallet.ShowWalletBackupWarning -> state.copy(
+                showBackupWarning = action.show
+            )
+            is WalletAction.MultiWallet.BackupWallet -> state
         }
     }
 
