@@ -50,4 +50,7 @@
     <string name="main_processing_full_amount">The amount does not include some of your funds</string>
     <string name="main_manage_tokens">Manage tokens</string>
     <string name="token_item_no_rate">No rate</string>
+
+    <string name="main_no_backup_warning_title">Your wallet has not been backed up</string>
+    <string name="main_no_backup_warning_subtitle">To protect your assets, we advise you to carry out this procedure</string>
 </resources>
