@@ -64,4 +64,7 @@
 
     <string name="wallet_connect_network_not_found_format">Сеть %s не найдена. Пожалуйста, добавьте её и попробуйте заново.</string>
     <string name="wallet_currency_subtitle">Сеть %s</string>
+
+    <string name="main_no_backup_warning_title">Бэкап кошелька не был произведен</string>
+    <string name="main_no_backup_warning_subtitle">Чтобы защитить свои активы, мы советуем вам выполнить эту процедуру</string>
 </resources>
