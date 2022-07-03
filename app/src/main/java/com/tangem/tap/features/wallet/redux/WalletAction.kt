@@ -1,23 +1,20 @@
 package com.tangem.tap.features.wallet.redux
 
 import android.content.Context
-import com.tangem.blockchain.common.Amount
-import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.Token
-import com.tangem.blockchain.common.Wallet
-import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.card.Card
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.redux.ErrorAction
 import com.tangem.tap.common.redux.NotificationAction
+import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.wallet.R
-import java.math.BigDecimal
 import org.rekotlin.Action
+import java.math.BigDecimal
 
 sealed class WalletAction : Action {
 
@@ -75,10 +72,13 @@ sealed class WalletAction : Action {
         ) : MultiWallet()
 
         data class SelectWallet(val walletData: WalletData?) : MultiWallet()
-        data class RemoveWallet(val walletData: WalletData, val fromWalletDetails: Boolean = true) :
-            MultiWallet()
 
-        data class TryToRemoveWallet(val walletData: WalletData) : MultiWallet()
+        data class TryToRemoveWallet(val currency: Currency) : MultiWallet()
+        data class RemoveWallet(
+            val currency: Currency,
+            val fromScreen: AppScreen
+        ) : MultiWallet()
+
         data class SetPrimaryBlockchain(val blockchain: Blockchain) : MultiWallet()
         data class SetPrimaryToken(val token: Token) : MultiWallet()
 
