@@ -56,6 +56,7 @@
     <string name="main_manage_tokens">Управление токенами</string>
     <string name="token_item_no_rate">Нет цены</string>
 
+    <string name="token_details_hide_token">Скрыть токен</string>
     <string name="token_details_hide_alert_title">Скрыть %s</string>
     <string name="token_details_hide_alert_hide">Скрыть</string>
     <string name="token_details_hide_alert_message">Вы скрываете токен с главного экрана, но в любой момент сможете добавить его обратно.</string>
