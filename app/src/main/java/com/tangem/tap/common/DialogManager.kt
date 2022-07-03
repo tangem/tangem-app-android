@@ -129,7 +129,7 @@ class DialogManager : StoreSubscriber<GlobalState> {
                 messageRes = state.dialog.messageRes,
                 context = context,
                 primaryButtonRes = state.dialog.primaryButtonRes,
-                primaryButtonAction = state.dialog.action
+                primaryButtonAction = state.dialog.onOk
             )
             else -> null
         }
