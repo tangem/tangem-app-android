@@ -51,6 +51,7 @@
     <string name="common_attention">Attention</string>
     <string name="common_server_unavailable">The server is not available, please try again later</string>
 
+    <string name="token_details_hide_token">Hide token</string>
     <string name="token_details_hide_alert_title">Hide %s</string>
     <string name="token_details_hide_alert_hide">Hide</string>
     <string name="token_details_hide_alert_message">You hide the token from the main screen, but you can add it back at any time.</string>
