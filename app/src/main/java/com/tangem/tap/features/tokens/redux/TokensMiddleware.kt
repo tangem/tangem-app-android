@@ -308,12 +308,10 @@ class TokensMiddleware {
     private fun removeCurrenciesIfNeeded(currencies: List<Currency>) {
         if (currencies.isNotEmpty()) {
             currencies.forEach { currency ->
-                store.state.walletState.getWalletData(currency)?.let {
-                    store.dispatch(WalletAction.MultiWallet.RemoveWallet(
-                        walletData = it,
-                        fromWalletDetails = false
-                    ))
-                }
+                store.dispatch(WalletAction.MultiWallet.RemoveWallet(
+                    currency = currency,
+                    fromScreen = AppScreen.AddTokens
+                ))
             }
         }
     }
