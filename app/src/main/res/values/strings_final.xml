@@ -56,6 +56,7 @@
     <string name="main_manage_tokens">Manage tokens</string>
     <string name="token_item_no_rate">No rate</string>
 
+    <string name="token_details_hide_token">Hide token</string>
     <string name="token_details_hide_alert_title">Hide %s</string>
     <string name="token_details_hide_alert_hide">Hide</string>
     <string name="token_details_hide_alert_message">You are about to hide this token from the main screen. You can add it back anytime.</string>
