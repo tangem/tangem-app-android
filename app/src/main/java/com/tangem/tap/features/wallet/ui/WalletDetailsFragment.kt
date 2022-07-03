@@ -317,7 +317,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
         return when (item.itemId) {
             R.id.menu_remove -> {
                 store.state.walletState.getSelectedWalletData()?.let { walletData ->
-                    store.dispatch(WalletAction.MultiWallet.TryToRemoveWallet(walletData))
+                    store.dispatch(WalletAction.MultiWallet.TryToRemoveWallet(walletData.currency))
                     true
                 }
                 false
