@@ -1,8 +1,6 @@
 package com.tangem.tap.features.wallet.models
 
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.DerivationStyle
-import com.tangem.blockchain.common.Token
 import com.tangem.domain.common.extensions.toCoinId
 import com.tangem.domain.features.addCustomToken.CustomCurrency
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
