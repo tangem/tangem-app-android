@@ -58,7 +58,7 @@
 
     <string name="token_details_hide_alert_title">Hide %s</string>
     <string name="token_details_hide_alert_hide">Hide</string>
-    <string name="token_details_hide_alert_message">You hide the token from the main screen, but you can add it back at any time.</string>
+    <string name="token_details_hide_alert_message">You are about to hide this token from the main screen. You can add it back anytime.</string>
     <string name="token_details_unable_hide_alert_title">Unable to hide %s</string>
     <string name="token_details_unable_hide_alert_message">The %s token is the main currency on the %s network and cannot be hidden as long as you have other tokens on this network in the list.</string>
 
@@ -67,4 +67,6 @@
 
     <string name="main_no_backup_warning_title">Your wallet has not been backed up</string>
     <string name="main_no_backup_warning_subtitle">To protect your assets, we advise you to carry out this procedure</string>
+    <string name="wallet_hide_token" translatable="false">Remove token</string>
+
 </resources>
