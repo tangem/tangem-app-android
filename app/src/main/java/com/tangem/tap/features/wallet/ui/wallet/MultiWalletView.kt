@@ -112,10 +112,6 @@ class MultiWalletView : WalletView {
                     derivationStyle = card.derivationStyle
                 )
             )
-            store.dispatch(
-                TokensAction.SetNonRemovableCurrencies(
-                    state.walletsData.filterNot { state.canBeRemoved(it) })
-            )
             store.dispatch(NavigationAction.NavigateTo(AppScreen.AddTokens))
         }
         handleErrorStates(state = state, binding = binding, fragment = fragment)
