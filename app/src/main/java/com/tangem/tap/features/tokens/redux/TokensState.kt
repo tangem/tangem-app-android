@@ -14,8 +14,6 @@ data class TokensState(
     val addedWallets: List<WalletData> = emptyList(),
     val addedTokens: List<TokenWithBlockchain> = emptyList(),
     val addedBlockchains: List<Blockchain> = emptyList(),
-    val nonRemovableTokens: List<ContractAddress> = emptyList(),
-    val nonRemovableBlockchains: List<Blockchain> = emptyList(),
     val currencies: List<Currency> = emptyList(),
     val searchInput: String? = null,
     val allowToAdd: Boolean = true,
