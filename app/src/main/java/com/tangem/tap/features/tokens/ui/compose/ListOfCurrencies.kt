@@ -22,8 +22,6 @@ import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
 fun ListOfCurrencies(
     header: @Composable () -> Unit,
     currencies: List<Currency>,
-    nonRemovableTokens: List<ContractAddress>,
-    nonRemovableBlockchains: List<Blockchain>,
     addedTokens: List<TokenWithBlockchain>,
     addedBlockchains: List<Blockchain>,
     allowToAdd: Boolean,
@@ -58,8 +56,6 @@ fun ListOfCurrencies(
         itemsIndexed(currencies) { index, currency ->
             CurrencyItem(
                 currency = currency,
-                nonRemovableTokens = nonRemovableTokens,
-                nonRemovableBlockchains = nonRemovableBlockchains,
                 addedTokens = addedTokens,
                 addedBlockchains = addedBlockchains,
                 allowToAdd = allowToAdd,
