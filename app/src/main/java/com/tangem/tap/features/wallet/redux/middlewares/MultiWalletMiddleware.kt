@@ -127,12 +127,13 @@ class MultiWalletMiddleware {
                         )
                     }
                     is Currency.Token -> {
-                        walletState?.getWalletManager(currency)?.let {
-                            it.removeToken(currency.token)
+                        val walletManager = walletState?.getWalletManager(currency)
+                        if (walletManager != null) {
+                            walletManager.removeToken(currency.token)
                             currenciesRepository.removeToken(
                                 cardId = cardId,
                                 token = currency.token,
-                                blockchainNetwork = BlockchainNetwork.fromWalletManager(it)
+                                blockchainNetwork = BlockchainNetwork.fromWalletManager(walletManager)
                             )
                         }
                     }
