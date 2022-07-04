@@ -28,8 +28,6 @@ sealed class TokensAction : Action {
         val wallets: List<WalletData>, val derivationStyle: DerivationStyle?
     ) : TokensAction()
 
-    data class SetNonRemovableCurrencies(val wallets: List<WalletData>) : TokensAction()
-
     data class SaveChanges(
         val addedTokens: List<TokenWithBlockchain>,
         val addedBlockchains: List<Blockchain>
