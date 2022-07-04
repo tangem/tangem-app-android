@@ -139,7 +139,6 @@ class MultiWalletMiddleware {
                 }
                 if (action.fromScreen == AppScreen.AddTokens) {
                     store.dispatch(WalletAction.MultiWallet.SelectWallet(null))
-                    store.dispatch(NavigationAction.PopBackTo())
                 }
             }
             is WalletAction.MultiWallet.ShowWalletBackupWarning -> Unit
