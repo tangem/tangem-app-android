@@ -44,13 +44,13 @@ class TokensMiddleware {
                 when (action) {
                     is TokensAction.LoadCurrencies -> handleLoadCurrencies(action.scanResponse)
                     is TokensAction.SaveChanges -> handleSaveChanges(action)
-                    is TokensAction.PrepareAndNavigateToAddCustomToken -> handleAddingCustomToken(
-                        action
-                    )
+                    is TokensAction.PrepareAndNavigateToAddCustomToken -> {
+                        handleAddingCustomToken(action)
+                    }
                     is TokensAction.SetSearchInput -> {
                         handleLoadCurrencies(
                             scanResponse = store.state.globalState.scanResponse,
-                            action.searchInput
+                            newSearchInput = action.searchInput
                         )
                     }
                     is TokensAction.LoadMore -> {
@@ -138,7 +138,9 @@ class TokensMiddleware {
             )
         )
 
-        if (tokensToAdd.isEmpty() && blockchainsToAdd.isEmpty()) {
+        if (tokensToAdd.isEmpty() && tokensToRemove.isEmpty()
+            && blockchainsToAdd.isEmpty() && blockchainsToRemove.isEmpty()
+        ) {
             store.dispatchDebugErrorNotification("Nothing to save")
             store.dispatch(NavigationAction.PopBackTo())
             return
