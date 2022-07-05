@@ -32,6 +32,10 @@ android {
             buildConfigField 'Boolean', environmentConfig.testActionEnabled, 'false'
             buildConfigField 'Boolean', environmentConfig.logEnabled, 'false'
         }
+        release_debubable {
+            initWith release
+            debuggable false
+        }
         debug {
             debuggable true
             minifyEnabled false
