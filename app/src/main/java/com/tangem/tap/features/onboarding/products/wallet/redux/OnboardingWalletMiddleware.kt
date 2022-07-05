@@ -91,7 +91,12 @@ private fun handleWalletAction(action: Action) {
                                 BlockchainNetwork(Blockchain.Bitcoin, result.data.card),
                                 BlockchainNetwork(Blockchain.Ethereum, result.data.card)
                             )
-                            store.dispatchOnMain(WalletAction.MultiWallet.SaveCurrencies(blockchainNetworks))
+                            store.dispatchOnMain(
+                                WalletAction.MultiWallet.SaveCurrencies(
+                                    blockchainNetworks = blockchainNetworks,
+                                    cardId = result.data.card.cardId
+                                )
+                            )
                             onboardingManager.activationStarted(updatedResponse.card.cardId)
                             store.dispatch(OnboardingWalletAction.ProceedBackup)
                         }
