@@ -58,14 +58,14 @@ fun CurrenciesScreen(
                 blockchain,
                 blockchainsAddedOnMainScreen,
                 addedBlockchainsState,
-                addedTokensState,
+                addedTokensState.value,
             )
         } else if (token != null) {
             toggleToken(
                 token,
                 tokensAddedOnMainScreen,
                 addedTokensState,
-                tokensState,
+                tokensState.value,
             )
         }
     }
@@ -122,11 +122,11 @@ private fun toggleBlockchain(
     blockchain: Blockchain,
     blockchainsAddedOnMainScreen: List<Blockchain>,
     addedBlockchainsState: MutableState<List<Blockchain>>,
-    addedTokensState: MutableState<List<TokenWithBlockchain>>
+    addedTokens: List<TokenWithBlockchain>
 ) {
     val isTryingToRemove = addedBlockchainsState.value.contains(blockchain)
     val isAddedOnMainScreen = blockchainsAddedOnMainScreen.contains(blockchain)
-    val isTokenWithSameBlockchainFound = addedTokensState.value.any { it.blockchain == blockchain }
+    val isTokenWithSameBlockchainFound = addedTokens.any { it.blockchain == blockchain }
 
     if (isTryingToRemove) {
         if (isTokenWithSameBlockchainFound) {
@@ -153,11 +153,11 @@ private fun toggleToken(
     token: TokenWithBlockchain,
     tokensAddedOnMainScreen: List<TokenWithBlockchain>,
     addedTokensState: MutableState<List<TokenWithBlockchain>>,
-    tokensState: MutableState<TokensState>,
+    tokensState: TokensState,
 ) {
     val isTryingToRemove = addedTokensState.value.contains(token)
     val isAddedOnMainScreen = tokensAddedOnMainScreen.contains(token)
-    val isUnsupportedToken = !tokensState.value.canHandleToken(token)
+    val isUnsupportedToken = !tokensState.canHandleToken(token)
 
     if (isTryingToRemove) {
         if (isAddedOnMainScreen) {
