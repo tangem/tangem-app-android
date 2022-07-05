@@ -27,7 +27,7 @@ class ChooseTradeActionBottomSheetDialog(context: Context) : BottomSheetDialog(c
         }
 
         binding!!.dialogBtnBuy.setOnClickListener {
-            store.dispatch(WalletAction.TradeCryptoAction.Buy)
+            store.dispatch(WalletAction.TradeCryptoAction.Buy())
             dismiss()
         }
         binding!!.dialogBtnSell.setOnClickListener {

@@ -9,6 +9,8 @@ sealed interface WalletDialog : StateDialog {
     data class SelectAmountToSendDialog(val amounts: List<Amount>?) : WalletDialog
     object SignedHashesMultiWalletDialog : WalletDialog
     object ChooseTradeActionDialog : WalletDialog
+    object RussianCardholdersWarningDialog : WalletDialog
+
     data class CurrencySelectionDialog(
         val currenciesList: List<FiatCurrency>,
         val currentAppCurrency: FiatCurrency,

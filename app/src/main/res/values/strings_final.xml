@@ -70,4 +70,8 @@
     <string name="main_no_backup_warning_subtitle">To protect your assets, we advise you to carry out this procedure</string>
     <string name="wallet_hide_token" translatable="false">Remove token</string>
 
+    <string name="title_warning_russian_bank_card">Карты банков РФ в данный момент не принимаются.</string>
+    <string name="subtitle_warning_russian_bank_card">У вас есть карта банка другой страны или платежной системы UnionPay?</string>
+    <string name="yes_word">Yes</string>
+    <string name="no_word">No</string>
 </resources>

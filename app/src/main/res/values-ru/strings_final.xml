@@ -68,4 +68,8 @@
 
     <string name="main_no_backup_warning_title">Бэкап кошелька не был произведен</string>
     <string name="main_no_backup_warning_subtitle">Чтобы защитить свои активы, мы советуем вам выполнить эту процедуру</string>
+    <string name="title_warning_russian_bank_card">Карты банков РФ в данный момент не принимаются.</string>
+    <string name="subtitle_warning_russian_bank_card">У вас есть карта банка другой страны или платежной системы UnionPay?</string>
+    <string name="yes_word">Да</string>
+    <string name="no_word">Нет</string>
 </resources>

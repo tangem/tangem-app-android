@@ -117,10 +117,12 @@ class DialogManager : StoreSubscriber<GlobalState> {
                 AmountToSendBottomSheetDialog(context, state.dialog)
             is WalletDialog.SignedHashesMultiWalletDialog ->
                 SignedHashesWarningDialog.create(context)
+            is WalletDialog.RussianCardholdersWarningDialog ->
+                RussianCardholdersWarningBottomSheetDialog(context)
             is WalletDialog.TokensAreLinkedDialog -> SimpleAlertDialog.create(
                 title = context.getString(state.dialog.titleRes, state.dialog.currencySymbol),
                 message = context.getString(
-                    state.dialog.messageRes, state.dialog.currencySymbol, state.dialog.currencyTitle
+                        state.dialog.messageRes, state.dialog.currencySymbol, state.dialog.currencyTitle
                 ),
                 context = context,
             )
