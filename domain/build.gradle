@@ -60,7 +60,6 @@ dependencies {
     implementation implementation(project(path: ':common'))
 
     implementation "com.tangem:blockchain:${versions.tamgem_blockchain_sdk}"
-//    implementation 'com.tangem:blockchain:0.0.1'
     implementation "com.tangem.tangem-sdk-kotlin:core:${versions.tamgem_card_sdk}"
     implementation "com.tangem.tangem-sdk-kotlin:android:${versions.tamgem_card_sdk}"
 
