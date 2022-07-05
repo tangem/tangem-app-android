@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.tangem.tap.common.extensions.dispatchDialogHide
+import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.store
 import com.tangem.wallet.databinding.DialogRussiansCardholdersWarningBinding
@@ -28,12 +29,16 @@ class RussianCardholdersWarningBottomSheetDialog(context: Context) : BottomSheet
         }
 
         binding?.btnYes?.setOnClickListener {
-            // TODO: Open instruction WebView
+            store.dispatch(NavigationAction.OpenUrl(INSTRUCTION_URL))
             dismiss()
         }
         binding?.btnNo?.setOnClickListener {
             store.dispatch(WalletAction.TradeCryptoAction.Buy(checkUserLocation = false))
             dismiss()
         }
+    }
+
+    companion object {
+        private const val INSTRUCTION_URL = "https://tangem.com/howtobuy.html"
     }
 }
