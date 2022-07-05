@@ -21,10 +21,10 @@ import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.redux.models.WalletDialog
 import com.tangem.tap.scope
 import com.tangem.tap.store
-import java.math.BigDecimal
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.math.BigDecimal
 
 class MultiWalletMiddleware {
     fun handle(
@@ -76,9 +76,8 @@ class MultiWalletMiddleware {
                 )
             }
             is WalletAction.MultiWallet.SaveCurrencies -> {
-                globalState.scanResponse?.card?.cardId?.let {
-                    currenciesRepository.saveCurrencies(it, action.blockchainNetworks)
-                }
+                val cardId = action.cardId ?: globalState.scanResponse?.card?.cardId ?: return
+                currenciesRepository.saveCurrencies(cardId, action.blockchainNetworks)
             }
             is WalletAction.MultiWallet.TryToRemoveWallet -> {
                 val walletState = store.state.walletState
