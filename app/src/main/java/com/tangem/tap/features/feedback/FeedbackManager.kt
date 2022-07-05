@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.os.Build
 import com.tangem.Log
+import com.tangem.LogFormat
 import com.tangem.TangemSdkLogger
 import com.tangem.blockchain.common.*
 import com.tangem.domain.common.ScanResponse
@@ -81,23 +82,28 @@ class FeedbackManager(
     }
 }
 
-class TangemLogCollector : TangemSdkLogger {
+class TangemLogCollector(
+    private val levels: List<Log.Level>,
+    private val messageFormatter: LogFormat
+) : TangemSdkLogger {
+
     private val dateFormatter = SimpleDateFormat("HH:mm:ss.SSS")
     private val logs = mutableListOf<String>()
     private val mutex = Object()
 
     override fun log(message: () -> String, level: Log.Level) {
-        val time = dateFormatter.format(Date())
+        if (!levels.contains(level)) return
+
         synchronized(mutex) {
-            logs.add("$time: ${message()}\n")
+            val formattedMessage = messageFormatter.format(message, level)
+            val logMessage = "${dateFormatter.format(Date())}: $formattedMessage"
+            logs.add("$logMessage\n")
         }
     }
 
     fun getLogs(): List<String> = synchronized(mutex) { logs.toList() }
 
-    fun clearLogs() {
-        synchronized(mutex) { logs.clear() }
-    }
+    fun clearLogs() = synchronized(mutex) { logs.clear() }
 }
 
 class AdditionalEmailInfo {
