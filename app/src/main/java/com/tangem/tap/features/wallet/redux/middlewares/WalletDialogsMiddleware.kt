@@ -27,9 +27,12 @@ class WalletDialogsMiddleware {
             is WalletAction.DialogAction.ChooseCurrency -> {
                 store.dispatchDialogShow(
                     WalletDialog.SelectAmountToSendDialog(
-                        amounts = action.amounts
+                            amounts = action.amounts
                     )
                 )
+            }
+            is WalletAction.DialogAction.RussianCardholdersWarningDialog -> {
+                store.dispatchDialogShow(WalletDialog.RussianCardholdersWarningDialog)
             }
             is WalletAction.DialogAction.Hide -> {
                 store.dispatchDialogHide()
