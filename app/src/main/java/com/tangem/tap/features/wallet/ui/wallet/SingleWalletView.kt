@@ -149,7 +149,7 @@ class SingleWalletView : WalletView {
         val allowedToBuy = tradeCryptoState.isAvailableToBuy()
         val allowedToSell = tradeCryptoState.isAvailableToSell()
         val action = when {
-            allowedToBuy && !allowedToSell -> WalletAction.TradeCryptoAction.Buy
+            allowedToBuy && !allowedToSell -> WalletAction.TradeCryptoAction.Buy()
             !allowedToBuy && allowedToSell -> WalletAction.TradeCryptoAction.Sell
             allowedToBuy && allowedToSell -> WalletAction.DialogAction.ChooseTradeActionDialog
             else -> null
