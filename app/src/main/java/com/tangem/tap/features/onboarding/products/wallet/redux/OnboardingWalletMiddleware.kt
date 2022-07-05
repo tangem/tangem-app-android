@@ -277,7 +277,11 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                             BlockchainNetwork(Blockchain.Bitcoin, result.data),
                             BlockchainNetwork(Blockchain.Ethereum, result.data)
                         )
-                        store.dispatchOnMain(WalletAction.MultiWallet.SaveCurrencies(blockchainNetworks))
+                        store.dispatchOnMain(
+                            WalletAction.MultiWallet.SaveCurrencies(
+                                blockchainNetworks = blockchainNetworks, cardId = result.data.cardId
+                            )
+                        )
                         if (backupService.currentState == BackupService.State.Finished) {
                             store.dispatchOnMain(BackupAction.FinishBackup)
                         } else {
