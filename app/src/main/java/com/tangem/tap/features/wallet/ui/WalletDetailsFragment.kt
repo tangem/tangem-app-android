@@ -91,7 +91,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
 
     private fun setupButtons() = with(binding) {
         rowButtons.onBuyClick = {
-            store.dispatch(WalletAction.TradeCryptoAction.Buy)
+            store.dispatch(WalletAction.TradeCryptoAction.Buy())
         }
         rowButtons.onSellClick = {
             store.dispatch(WalletAction.TradeCryptoAction.Sell)
