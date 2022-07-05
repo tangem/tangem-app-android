@@ -28,6 +28,7 @@ data class GlobalState(
     val exchangeManager: CurrencyExchangeManager? = null,
     val resources: AndroidResources = AndroidResources(),
     val analyticsHandlers: AnalyticsHandler? = null,
+    val userCountry: String? = null,
 ) : StateType
 
 
