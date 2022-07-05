@@ -8,8 +8,9 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.extensions.isWalletDataSupported
 import com.tangem.tap.domain.extensions.signedHashesCount
 import com.tangem.tap.features.wallet.models.hasSendableAmountsOrPendingTransactions
+import com.tangem.tap.store
+import java.util.EnumSet
 import org.rekotlin.Action
-import java.util.*
 
 class DetailsReducer {
     companion object {
@@ -49,6 +50,7 @@ private fun handlePrepareScreen(
         cardInfo = action.scanResponse.card.toCardInfo(),
         cardTermsOfUseUrl = action.cardTou.getUrl(action.scanResponse.card),
         createBackupAllowed = action.scanResponse.card.backupStatus == Card.BackupStatus.NoBackup,
+        appCurrency = store.state.globalState.appCurrency
     )
 }
 
