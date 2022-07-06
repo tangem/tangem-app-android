@@ -60,4 +60,13 @@
 
     <string name="wallet_connect_network_not_found_format">%s network not found. Please, add it first and try again.</string>
     <string name="wallet_currency_subtitle">%s network</string>
+
+    <string name="security_and_privacy_title">Security &amp; Privacy</string>
+    <string name="security_and_privacy_security">Security</string>
+    <string name="security_and_privacy_privacy">Privacy</string>
+    <string name="security_and_privacy_change_password">Change access code</string>
+    <string name="security_and_privacy_access_method">Change access method</string>
+    <string name="security_and_privacy_access_method_title">Change Access Method</string>
+    <string name="security_and_privacy_save_card_switch">Save cards</string>
+    <string name="security_and_privacy_save_password_switch">Save passwords</string>
 </resources>
