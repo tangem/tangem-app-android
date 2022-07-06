@@ -70,4 +70,14 @@
     <string name="main_no_backup_warning_subtitle">To protect your assets, we advise you to carry out this procedure</string>
     <string name="wallet_hide_token" translatable="false">Remove token</string>
 
+    <string name="security_and_privacy_title">Security &amp; Privacy</string>
+    <string name="security_and_privacy_security">Security</string>
+    <string name="security_and_privacy_privacy">Privacy</string>
+    <string name="security_and_privacy_change_password">Change access code</string>
+    <string name="security_and_privacy_access_method">Change access method</string>
+    <string name="security_and_privacy_access_method_title">Change Access Method</string>
+    <string name="security_and_privacy_save_card_switch">Save cards</string>
+    <string name="security_and_privacy_save_password_switch">Save passwords</string>
+    <string name="security_and_privacy_save_card_disable_warning">При отключении данной опции все сохраненные карты и пароли будут сброшены, все данные удалены. Для входа в приложение понадобится прикладывать карту.</string>
+    <string name="security_and_privacy_save_password_disable_warning">Все сохраненные пароли от карт будут удалены. Для проведения операций с картой вам необходимо будет вводить пароль.</string>
 </resources>

@@ -6,6 +6,7 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.operations.pins.CheckUserCodesResponse
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.AnalyticsParam
+import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
@@ -28,24 +29,28 @@ import org.rekotlin.Middleware
 class DetailsMiddleware {
     private val eraseWalletMiddleware = EraseWalletMiddleware()
     private val manageSecurityMiddleware = ManageSecurityMiddleware()
+    private val managePrivacyMiddleware = ManagePrivacyMiddleware()
     val detailsMiddleware: Middleware<AppState> = { _, _ ->
         { next ->
             { action ->
                 when (action) {
                     is DetailsAction.ResetToFactory -> eraseWalletMiddleware.handle(action)
                     is DetailsAction.ManageSecurity -> manageSecurityMiddleware.handle(action)
+                    is DetailsAction.ManagePrivacy -> managePrivacyMiddleware.handle(action)
                     is DetailsAction.ShowDisclaimer -> {
                         store.dispatch(DisclaimerAction.ShowAcceptedDisclaimer)
                         store.dispatch(NavigationAction.NavigateTo(AppScreen.Disclaimer))
                     }
                     is DetailsAction.ReCreateTwinsWallet -> {
-                        val wallet = store.state.walletState.walletManagers.map { it.wallet }.firstOrNull()
+                        val wallet =
+                            store.state.walletState.walletManagers.map { it.wallet }.firstOrNull()
                         if (wallet == null) {
                             store.dispatch(TwinCardsAction.SetMode(CreateTwinWalletMode.RecreateWallet))
                             store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingTwins))
                         } else {
                             if (wallet.hasSendableAmountsOrPendingTransactions()) {
-                                val walletIsNotEmpty = store.state.globalState.resources.strings.walletIsNotEmpty
+                                val walletIsNotEmpty =
+                                    store.state.globalState.resources.strings.walletIsNotEmpty
                                 store.dispatchNotification(walletIsNotEmpty)
                             } else {
                                 store.dispatch(TwinCardsAction.SetMode(CreateTwinWalletMode.RecreateWallet))
@@ -56,7 +61,12 @@ class DetailsMiddleware {
                     is DetailsAction.CreateBackup -> {
                         store.state.detailsState.scanResponse?.let {
                             store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingWallet))
-                            store.dispatch(GlobalAction.Onboarding.Start(it, fromHomeScreen = false))
+                            store.dispatch(
+                                GlobalAction.Onboarding.Start(
+                                    it,
+                                    fromHomeScreen = false
+                                )
+                            )
                         }
                     }
                 }
@@ -121,13 +131,22 @@ class DetailsMiddleware {
                         val simulatedResponse = CheckUserCodesResponse(
                             action.card.isAccessCodeSet, action.card.isPasscodeSet ?: false
                         )
-                        store.dispatch(DetailsAction.ManageSecurity.SetCurrentOption(simulatedResponse))
+                        store.dispatch(
+                            DetailsAction.ManageSecurity.SetCurrentOption(
+                                simulatedResponse
+                            )
+                        )
                         store.dispatch(DetailsAction.ManageSecurity.OpenSecurity)
                     } else {
                         scope.launch {
-                            when (val response = tangemSdkManager.checkUserCodes(action.card.cardId)) {
+                            when (val response =
+                                tangemSdkManager.checkUserCodes(action.card.cardId)) {
                                 is CompletionResult.Success -> {
-                                    store.dispatchOnMain(DetailsAction.ManageSecurity.SetCurrentOption(response.data))
+                                    store.dispatchOnMain(
+                                        DetailsAction.ManageSecurity.SetCurrentOption(
+                                            response.data
+                                        )
+                                    )
                                     store.dispatchOnMain(DetailsAction.ManageSecurity.OpenSecurity)
                                 }
                                 is CompletionResult.Failure -> {
@@ -152,7 +171,8 @@ class DetailsMiddleware {
                 }
                 is DetailsAction.ManageSecurity.SaveChanges -> {
                     val cardId = store.state.detailsState.scanResponse?.card?.cardId
-                    val selectedOption = store.state.detailsState.securityScreenState?.selectedOption
+                    val selectedOption =
+                        store.state.detailsState.securityScreenState?.selectedOption
                     scope.launch {
                         val result = when (selectedOption) {
                             SecurityOption.LongTap -> tangemSdkManager.setLongTap(cardId)
@@ -192,6 +212,28 @@ class DetailsMiddleware {
                     }
                 }
                 else -> { /* no-op */
+                }
+            }
+        }
+    }
+
+    class ManagePrivacyMiddleware {
+        fun handle(action: DetailsAction.ManagePrivacy) {
+            when (action) {
+                is DetailsAction.ManagePrivacy.ConfirmSwitchingSetting -> {
+//                    TODO()
+                }
+                is DetailsAction.ManagePrivacy.SwitchPrivacySetting -> {
+                    if (action.allow) {
+                        store.dispatch(
+                            DetailsAction.ManagePrivacy.ConfirmSwitchingSetting(
+                                action.allow,
+                                action.setting
+                            )
+                        )
+                    } else {
+                        store.dispatchDialogShow(DetailsDialog.ConfirmDisablingSaving(action.setting))
+                    }
                 }
             }
         }
