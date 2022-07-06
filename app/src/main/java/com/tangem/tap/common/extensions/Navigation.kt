@@ -10,6 +10,8 @@ import com.tangem.tap.common.redux.navigation.FragmentShareTransition
 import com.tangem.tap.features.details.ui.DetailsConfirmFragment
 import com.tangem.tap.features.details.ui.DetailsFragment
 import com.tangem.tap.features.details.ui.DetailsSecurityFragment
+import com.tangem.tap.features.details.ui.securityprivacy.ChangeAccessCodeFragment
+import com.tangem.tap.features.details.ui.securityprivacy.SecurityAndPrivacyFragment
 import com.tangem.tap.features.details.ui.walletconnect.QrScanFragment
 import com.tangem.tap.features.details.ui.walletconnect.WalletConnectSessionsFragment
 import com.tangem.tap.features.disclaimer.ui.DisclaimerFragment
@@ -90,6 +92,8 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
         AppScreen.Details -> DetailsFragment()
         AppScreen.DetailsConfirm -> DetailsConfirmFragment()
         AppScreen.DetailsSecurity -> DetailsSecurityFragment()
+        AppScreen.SecurityAndPrivacy -> SecurityAndPrivacyFragment()
+        AppScreen.ChangeAccessCode -> ChangeAccessCodeFragment()
         AppScreen.Disclaimer -> DisclaimerFragment()
         AppScreen.AddTokens -> AddTokensFragment()
         AppScreen.AddCustomToken -> AddCustomTokenFragment()
