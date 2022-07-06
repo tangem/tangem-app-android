@@ -15,7 +15,6 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.extensions.isMultiwalletAllowed
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
-import com.tangem.tap.features.details.redux.SecurityOption
 import com.tangem.tap.features.feedback.FeedbackEmail
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.store
@@ -132,17 +131,10 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
             store.dispatch(NavigationAction.NavigateTo(AppScreen.WalletConnectSessions))
         }
 
-        llManageSecurity.setOnClickListener {
-            store.dispatch(DetailsAction.ManageSecurity.CheckCurrentSecurityOption(state.scanResponse!!.card))
+        tvSecurityAndPrivacy.setOnClickListener {
+            store.dispatch(NavigationAction.NavigateTo(AppScreen.SecurityAndPrivacy))
         }
 
-        val currentSecurity = when (state.securityScreenState?.currentOption) {
-            SecurityOption.LongTap -> R.string.details_manage_security_long_tap
-            SecurityOption.PassCode -> R.string.details_manage_security_passcode
-            SecurityOption.AccessCode -> R.string.details_manage_security_access_code
-            null -> null
-        }
-        currentSecurity?.let { tvSecurity.text = getString(it) }
     }
 
 }
