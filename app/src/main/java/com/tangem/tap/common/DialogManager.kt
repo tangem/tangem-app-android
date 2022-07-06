@@ -6,6 +6,8 @@ import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.global.GlobalState
 import com.tangem.tap.common.ui.SimpleAlertDialog
 import com.tangem.tap.common.ui.SimpleCancelableAlertDialog
+import com.tangem.tap.features.details.redux.DetailsDialog
+import com.tangem.tap.features.details.redux.PrivacySetting
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectDialog
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.*
 import com.tangem.tap.features.onboarding.AddressInfoBottomSheetDialog
@@ -131,6 +133,18 @@ class DialogManager : StoreSubscriber<GlobalState> {
                 primaryButtonRes = state.dialog.primaryButtonRes,
                 primaryButtonAction = state.dialog.onOk
             )
+            is DetailsDialog.ConfirmDisablingSaving -> {
+                val messageRes = when (state.dialog.setting) {
+                    PrivacySetting.SAVE_CARDS -> R.string.security_and_privacy_save_card_disable_warning
+                    PrivacySetting.SAVE_ACCESS_CODE -> R.string.security_and_privacy_save_password_disable_warning
+                }
+                SimpleCancelableAlertDialog.create(
+                    titleRes = R.string.common_warning,
+                    messageRes = messageRes,
+                    context = context,
+                    primaryButtonAction = state.dialog.onOk
+                )
+            }
             else -> null
         }
         dialog?.show()
