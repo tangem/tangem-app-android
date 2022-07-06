@@ -5,6 +5,7 @@ import com.tangem.blockchain.common.Wallet
 import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.entities.Button
 import com.tangem.tap.common.entities.FiatCurrency
+import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
 import com.tangem.tap.store
 import org.rekotlin.StateType
@@ -20,7 +21,9 @@ data class DetailsState(
     val securityScreenState: SecurityScreenState? = null,
     val cardTermsOfUseUrl: Uri? = null,
     val createBackupAllowed: Boolean = false,
-    val appCurrency: FiatCurrency = FiatCurrency.Default
+    val appCurrency: FiatCurrency = FiatCurrency.Default,
+    val saveCards: Boolean = true,
+    val savePasswords: Boolean = true
 ) : StateType {
 
     // if you do not delegate - the application crashes on startup,
@@ -49,3 +52,15 @@ data class SecurityScreenState(
 )
 
 enum class SecurityOption { LongTap, PassCode, AccessCode }
+
+
+sealed interface DetailsDialog : StateDialog {
+    data class ConfirmDisablingSaving(val setting: PrivacySetting) : DetailsDialog {
+        val onOk: () -> Unit =
+            { store.dispatch(DetailsAction.ManagePrivacy.ConfirmSwitchingSetting(false, setting)) }
+    }
+}
+
+enum class PrivacySetting {
+    SAVE_CARDS, SAVE_ACCESS_CODE
+}
