@@ -20,6 +20,10 @@ import kotlinx.coroutines.launch
 
 
 class TradeCryptoMiddleware {
+    companion object {
+        private const val RUSSIA_COUNTRY_CODE = "ru"
+    }
+
     fun handle(state: () -> AppState?, action: WalletAction.TradeCryptoAction) {
         if (DemoHelper.tryHandle(state, action)) return
 
@@ -35,7 +39,7 @@ class TradeCryptoMiddleware {
         state: () -> AppState?,
         action: WalletAction.TradeCryptoAction.Buy,
     ) {
-        if (action.checkUserLocation && state()?.globalState?.userCountry == "RU") {
+        if (action.checkUserLocation && state()?.globalState?.userCountry == RUSSIA_COUNTRY_CODE) {
             store.dispatchOnMain(
                 WalletAction.DialogAction.RussianCardholdersWarningDialog
             )

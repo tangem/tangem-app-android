@@ -80,4 +80,8 @@ sealed class GlobalAction : Action {
     object InitCurrencyExchangeManager : GlobalAction() {
         data class Success(val exchangeManager: CurrencyExchangeManager) : GlobalAction()
     }
+
+    object FetchUserCountry : GlobalAction() {
+        data class Success(val countryCode: String) : GlobalAction()
+    }
 }

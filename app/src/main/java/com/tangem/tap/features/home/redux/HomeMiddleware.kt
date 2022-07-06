@@ -35,7 +35,7 @@ class HomeMiddleware {
     }
 }
 
-private val homeMiddleware: Middleware<AppState> = { dispatch, state ->
+private val homeMiddleware: Middleware<AppState> = { _, _ ->
     { next ->
         { action ->
             when (action) {
@@ -43,6 +43,7 @@ private val homeMiddleware: Middleware<AppState> = { dispatch, state ->
                     store.dispatch(GlobalAction.RestoreAppCurrency)
                     store.dispatch(GlobalAction.InitCurrencyExchangeManager)
                     store.dispatch(HomeAction.SetTermsOfUseState(preferencesStorage.wasDisclaimerAccepted()))
+                    store.dispatch(GlobalAction.FetchUserCountry)
                 }
                 is HomeAction.ShouldScanCardOnResume -> {
                     if (action.shouldScanCard) {
@@ -55,7 +56,7 @@ private val homeMiddleware: Middleware<AppState> = { dispatch, state ->
 //                    store.dispatch(NavigationAction.NavigateTo(AppScreen.AddCustomTokens))
                 }
                 is HomeAction.GoToShop -> {
-                    when (action.regionProvider.getRegion()?.toLowerCase()) {
+                    when (action.regionProvider.getRegion()?.lowercase()) {
                         "ru" -> store.dispatchOpenUrl(BUY_WALLET_URL)
                         else -> store.dispatch(NavigationAction.NavigateTo(AppScreen.Shop))
                     }

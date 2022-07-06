@@ -3,6 +3,7 @@ package com.tangem.tap.common.redux.global
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.ifNotNull
+import com.tangem.common.services.Result
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.*
 import com.tangem.tap.common.extensions.dispatchDialogShow
@@ -61,7 +62,6 @@ private val globalMiddlewareHandler: Middleware<AppState> = { _, appState ->
                         }
                     }
                 }
-
                 is GlobalAction.SendFeedback -> {
                     store.state.globalState.feedbackManager?.send(action.emailData)
                 }
@@ -107,6 +107,21 @@ private val globalMiddlewareHandler: Middleware<AppState> = { _, appState ->
                                     action.onFailure?.invoke(result.error)
                                 }
                             }
+                        }
+                    }
+                }
+                is GlobalAction.FetchUserCountry -> {
+                    scope.launch {
+                        val techService = store.state.domainNetworks.tangemTechService
+                        when (val result = techService.userCountry()) {
+                            is Result.Success -> {
+                                store.dispatch(
+                                    GlobalAction.FetchUserCountry.Success(
+                                        countryCode = result.data.code.lowercase()
+                                    )
+                                )
+                            }
+                            is Result.Failure -> Unit
                         }
                     }
                 }
