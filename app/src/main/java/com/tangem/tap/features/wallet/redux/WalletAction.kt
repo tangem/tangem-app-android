@@ -61,7 +61,9 @@ sealed class WalletAction : Action {
             MultiWallet()
 
         data class AddToken(val token: Token, val blockchain: BlockchainNetwork) : MultiWallet()
-        data class SaveCurrencies(val blockchainNetworks: List<BlockchainNetwork>) : MultiWallet()
+        data class SaveCurrencies(
+            val blockchainNetworks: List<BlockchainNetwork>, val cardId: String? = null
+        ) : MultiWallet()
 //        object FindTokensInUse : MultiWallet()
 //        object FindBlockchainsInUse : MultiWallet()
 
