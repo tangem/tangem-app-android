@@ -8,6 +8,7 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.demo.DemoHelper
+import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
 import com.tangem.tap.features.send.redux.PrepareSendScreen
 import com.tangem.tap.features.send.redux.SendAction
 import com.tangem.tap.features.wallet.redux.Currency
@@ -35,7 +36,7 @@ class TradeCryptoMiddleware {
         state: () -> AppState?,
         action: WalletAction.TradeCryptoAction.Buy,
     ) {
-        if (action.checkUserLocation && state()?.globalState?.userCountry == "RU") {
+        if (action.checkUserLocation && state()?.globalState?.userCountryCode == RUSSIA_COUNTRY_CODE) {
             store.dispatchOnMain(
                 WalletAction.DialogAction.RussianCardholdersWarningDialog
             )
