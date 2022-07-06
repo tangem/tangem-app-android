@@ -9,8 +9,8 @@ import com.tangem.tap.domain.extensions.isWalletDataSupported
 import com.tangem.tap.domain.extensions.signedHashesCount
 import com.tangem.tap.features.wallet.models.hasSendableAmountsOrPendingTransactions
 import com.tangem.tap.store
-import java.util.EnumSet
 import org.rekotlin.Action
+import java.util.*
 
 class DetailsReducer {
     companion object {
@@ -31,6 +31,9 @@ private fun internalReduce(action: Action, state: AppState): DetailsState {
         }
         is DetailsAction.ManageSecurity -> {
             handleSecurityAction(action, detailsState)
+        }
+        is DetailsAction.ManagePrivacy -> {
+            handlePrivacyAction(action, detailsState)
         }
         is DetailsAction.ChangeAppCurrency ->
             detailsState.copy(appCurrency = action.fiatCurrency)
@@ -151,6 +154,20 @@ private fun handleSecurityAction(
         }
 
         else -> state
+    }
+}
+
+private fun handlePrivacyAction(
+    action: DetailsAction.ManagePrivacy, state: DetailsState,
+): DetailsState {
+    return when (action) {
+        is DetailsAction.ManagePrivacy.ConfirmSwitchingSetting -> {
+            when (action.setting) {
+                PrivacySetting.SAVE_CARDS -> state.copy(saveCards = action.allow)
+                PrivacySetting.SAVE_ACCESS_CODE -> state.copy(savePasswords = action.allow)
+            }
+        }
+        is DetailsAction.ManagePrivacy.SwitchPrivacySetting -> state
     }
 }
 
