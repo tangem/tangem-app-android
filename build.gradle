@@ -1,3 +1,5 @@
+apply from: 'linter.gradle'
+
 buildscript {
     apply from: 'dependencies.gradle'
 

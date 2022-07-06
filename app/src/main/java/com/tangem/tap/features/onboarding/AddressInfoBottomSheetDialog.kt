@@ -21,7 +21,7 @@ import com.tangem.wallet.databinding.DialogOnboardingAddressInfoBinding
  */
 class AddressInfoBottomSheetDialog(
     private val stateDialog: AppDialog.AddressInfoDialog,
-    context: Context
+    context: Context,
 ) : BottomSheetDialog(context) {
 
     var binding: DialogOnboardingAddressInfoBinding? = null
@@ -67,7 +67,7 @@ fun getQRReceiveMessage(context: Context, currency: Currency): String {
             context.getString(
                 R.string.address_qr_code_message_format,
                 currency.blockchain.fullName,
-                currency.currencySymbol
+                currency.currencySymbol,
             )
         }
         is Currency.Token -> {
@@ -75,7 +75,7 @@ fun getQRReceiveMessage(context: Context, currency: Currency): String {
                 R.string.address_qr_code_message_token_format,
                 currency.token.name,
                 currency.currencySymbol,
-                currency.blockchain.fullName
+                currency.blockchain.fullName,
             )
         }
     }

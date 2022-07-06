@@ -18,7 +18,6 @@ import com.tangem.tap.scope
 import com.tangem.tap.store
 import kotlinx.coroutines.launch
 
-
 class TradeCryptoMiddleware {
     fun handle(state: () -> AppState?, action: WalletAction.TradeCryptoAction) {
         if (DemoHelper.tryHandle(state, action)) return
@@ -66,25 +65,28 @@ class TradeCryptoMiddleware {
             blockchain = currency.blockchain,
             cryptoCurrencyName = currencySymbol,
             fiatCurrencyName = appCurrency.code,
-            walletAddress = defaultAddress
+            walletAddress = defaultAddress,
         )?.let { store.dispatchOnMain(NavigationAction.OpenUrl(it)) }
-
     }
 
     private fun preconfigureAndOpenSendScreen(action: WalletAction.TradeCryptoAction.SendCrypto) {
         val selectedWalletData = store.state.walletState.getSelectedWalletData() ?: return
         val walletManager =
             store.state.walletState.getWalletManager(selectedWalletData.currency)
-        store.dispatchOnMain(PrepareSendScreen(
-            coinAmount = walletManager?.wallet?.amounts?.get(AmountType.Coin),
-            coinRate = selectedWalletData.fiatRate,
-            walletManager = walletManager
-        ))
-        store.dispatchOnMain(SendAction.SendSpecificTransaction(
-            sendAmount = action.amount,
-            destinationAddress = action.destinationAddress,
-            transactionId = action.transactionId
-        ))
+        store.dispatchOnMain(
+            PrepareSendScreen(
+                coinAmount = walletManager?.wallet?.amounts?.get(AmountType.Coin),
+                coinRate = selectedWalletData.fiatRate,
+                walletManager = walletManager,
+            ),
+        )
+        store.dispatchOnMain(
+            SendAction.SendSpecificTransaction(
+                sendAmount = action.amount,
+                destinationAddress = action.destinationAddress,
+                transactionId = action.transactionId,
+            ),
+        )
         store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Send))
     }
 

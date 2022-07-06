@@ -6,23 +6,26 @@ import android.app.Activity.RESULT_OK
 import android.content.Intent
 import android.util.Log
 import com.google.android.gms.common.api.ApiException
-import com.google.android.gms.wallet.*
+import com.google.android.gms.wallet.AutoResolveHelper
+import com.google.android.gms.wallet.IsReadyToPayRequest
+import com.google.android.gms.wallet.PaymentData
+import com.google.android.gms.wallet.PaymentDataRequest
+import com.google.android.gms.wallet.PaymentsClient
 import com.tangem.common.core.TangemSdkError
 import com.tangem.tap.common.shop.googlepay.GooglePayUtil
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.json.JSONException
 import org.json.JSONObject
 import timber.log.Timber
-import kotlin.coroutines.resume
-import kotlin.coroutines.suspendCoroutine
 
 class GooglePayService(private val paymentsClient: PaymentsClient, private val activity: Activity) {
 
 //    var responseCallback: ((Result<PaymentData>) -> Unit)? = null
 
     suspend fun checkIfGooglePayAvailable(): Result<Boolean> {
-
         val isReadyToPayJson = GooglePayUtil.isReadyToPayRequest() ?: return Result.success(false)
         val request = IsReadyToPayRequest.fromJson(isReadyToPayJson.toString())
 
@@ -48,7 +51,7 @@ class GooglePayService(private val paymentsClient: PaymentsClient, private val a
             totalPriceCents,
             currencyCode = currencyCode,
             countryCode = "RU",
-            merchantID = merchantID
+            merchantID = merchantID,
         )
         if (paymentDataRequestJson == null) {
             Timber.e("RequestPayment: can't fetch payment data request")
@@ -57,7 +60,9 @@ class GooglePayService(private val paymentsClient: PaymentsClient, private val a
         val request = PaymentDataRequest.fromJson(paymentDataRequestJson.toString())
 
         AutoResolveHelper.resolveTask(
-            paymentsClient.loadPaymentData(request), activity, LOAD_PAYMENT_DATA_REQUEST_CODE
+            paymentsClient.loadPaymentData(request),
+            activity,
+            LOAD_PAYMENT_DATA_REQUEST_CODE,
         )
     }
 
@@ -81,7 +86,6 @@ class GooglePayService(private val paymentsClient: PaymentsClient, private val a
                 } else {
                     Result.failure(Exception("$statusCode"))
                 }
-
             }
             else -> Result.failure(Exception("Unknown Status"))
         }
@@ -117,7 +121,6 @@ class GooglePayService(private val paymentsClient: PaymentsClient, private val a
                 .getString("token")
 
             return GooglePayResponse(address, token)
-
         } catch (e: JSONException) {
             Log.e("handlePaymentSuccess", "Error: " + e.toString())
         }
@@ -144,5 +147,5 @@ data class Address(
     val address3: String,
     val locality: String,
     val administrativeArea: String,
-    val sortingCode: String
+    val sortingCode: String,
 )

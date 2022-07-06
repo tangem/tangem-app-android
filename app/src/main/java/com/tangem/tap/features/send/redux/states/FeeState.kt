@@ -16,16 +16,16 @@ enum class FeePrecision(val symbol: String) {
 }
 
 data class FeeState(
-        val selectedFeeType: FeeType = FeeType.NORMAL,
-        val feeList: List<Amount>? = null,
-        val currentFee: Amount? = null,
-        val feeIsIncluded: Boolean = false,
-        val mainLayoutIsVisible: Boolean = false,
-        val controlsLayoutIsVisible: Boolean = false,
-        val feeChipGroupIsVisible: Boolean = true,
-        val includeFeeSwitcherIsEnabled: Boolean = true,
-        val error: FeeAction.Error? = null,
-        val feePrecision: FeePrecision = FeePrecision.PRECISE
+    val selectedFeeType: FeeType = FeeType.NORMAL,
+    val feeList: List<Amount>? = null,
+    val currentFee: Amount? = null,
+    val feeIsIncluded: Boolean = false,
+    val mainLayoutIsVisible: Boolean = false,
+    val controlsLayoutIsVisible: Boolean = false,
+    val feeChipGroupIsVisible: Boolean = true,
+    val includeFeeSwitcherIsEnabled: Boolean = true,
+    val error: FeeAction.Error? = null,
+    val feePrecision: FeePrecision = FeePrecision.PRECISE,
 ) : SendScreenState {
 
     override val stateId: StateId = StateId.FEE

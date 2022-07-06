@@ -25,12 +25,15 @@ private fun List<WalletData>.mapToProgressState(): List<ProgressState> {
             BalanceStatus.VerifiedOnline,
             BalanceStatus.SameCurrencyTransactionInProgress,
             BalanceStatus.TransactionInProgress,
-            BalanceStatus.NoAccount -> ProgressState.Done
+            BalanceStatus.NoAccount,
+            -> ProgressState.Done
             BalanceStatus.Unreachable,
             BalanceStatus.EmptyCard,
-            BalanceStatus.UnknownBlockchain -> ProgressState.Error
+            BalanceStatus.UnknownBlockchain,
+            -> ProgressState.Error
             BalanceStatus.Loading,
-            null -> ProgressState.Loading
+            null,
+            -> ProgressState.Loading
         }
     }
 }
@@ -41,20 +44,24 @@ private infix fun ProgressState.or(newState: ProgressState): ProgressState {
             ProgressState.Loading,
             ProgressState.Refreshing,
             ProgressState.Error,
-            ProgressState.Done -> this
+            ProgressState.Done,
+            -> this
         }
         ProgressState.Done,
-        ProgressState.Error -> when (newState) {
+        ProgressState.Error,
+        -> when (newState) {
             ProgressState.Loading,
             ProgressState.Refreshing,
-            ProgressState.Error -> newState
+            ProgressState.Error,
+            -> newState
             ProgressState.Done -> this
         }
         ProgressState.Refreshing -> when (newState) {
             ProgressState.Loading -> this
             ProgressState.Refreshing,
             ProgressState.Error,
-            ProgressState.Done -> newState
+            ProgressState.Done,
+            -> newState
         }
     }
 }

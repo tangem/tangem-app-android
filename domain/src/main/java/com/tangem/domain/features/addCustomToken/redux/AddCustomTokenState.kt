@@ -9,9 +9,25 @@ import com.tangem.domain.DomainWrapped
 import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.domain.common.extensions.supportedBlockchains
 import com.tangem.domain.common.extensions.supportedTokens
-import com.tangem.domain.common.form.*
-import com.tangem.domain.features.addCustomToken.*
-import com.tangem.domain.features.addCustomToken.CustomTokenFieldId.*
+import com.tangem.domain.common.form.CustomTokenValidator
+import com.tangem.domain.common.form.DataField
+import com.tangem.domain.common.form.FieldDataConverter
+import com.tangem.domain.common.form.FieldId
+import com.tangem.domain.common.form.FieldToJsonConverter
+import com.tangem.domain.common.form.Form
+import com.tangem.domain.common.form.StringIsEmptyValidator
+import com.tangem.domain.common.form.StringIsNotEmptyValidator
+import com.tangem.domain.common.form.TokenContractAddressValidator
+import com.tangem.domain.common.form.TokenDecimalsValidator
+import com.tangem.domain.common.form.TokenNameValidator
+import com.tangem.domain.common.form.TokenNetworkValidator
+import com.tangem.domain.common.form.TokenSymbolValidator
+import com.tangem.domain.features.addCustomToken.AddCustomTokenService
+import com.tangem.domain.features.addCustomToken.CustomCurrency
+import com.tangem.domain.features.addCustomToken.CustomTokenFieldId
+import com.tangem.domain.features.addCustomToken.TokenBlockchainField
+import com.tangem.domain.features.addCustomToken.TokenDerivationPathField
+import com.tangem.domain.features.addCustomToken.TokenField
 import com.tangem.domain.redux.DomainState
 import com.tangem.domain.redux.state.StringActionStateConverter
 import com.tangem.network.api.tangemTech.CoinsResponse
@@ -23,12 +39,13 @@ data class AddCustomTokenState(
     val onTokenAddCallback: ((CustomCurrency) -> Unit)? = null,
     val cardDerivationStyle: DerivationStyle? = null,
     val form: Form = Form(listOf()),
-    val formValidators: Map<CustomTokenFieldId, CustomTokenValidator<out Any>> = createFormValidators(),
+    val formValidators: Map<CustomTokenFieldId, CustomTokenValidator<out Any>> =
+        createFormValidators(),
     val formErrors: Map<CustomTokenFieldId, AddCustomTokenError> = emptyMap(),
     val foundToken: CoinsResponse.Coin? = null,
     val warnings: Set<AddCustomTokenError.Warning> = emptySet(),
     val screenState: ScreenState = createInitialScreenState(),
-    val tangemTechServiceManager: AddCustomTokenService? = null
+    val tangemTechServiceManager: AddCustomTokenService? = null,
 ) : StateType {
 
     inline fun <reified T> getField(id: FieldId): T = form.getField(id) as T
@@ -62,7 +79,12 @@ data class AddCustomTokenState(
 
     // except network
     fun tokensFieldsIsFilled(): Boolean {
-        val idsToCheck = listOf(ContractAddress, Name, Symbol, Decimals)
+        val idsToCheck = listOf(
+            CustomTokenFieldId.ContractAddress,
+            CustomTokenFieldId.Name,
+            CustomTokenFieldId.Symbol,
+            CustomTokenFieldId.Decimals,
+        )
         val fieldsToCheck = form.fieldList.filter { idsToCheck.contains(it.id) }
         val validator = StringIsNotEmptyValidator()
         fieldsToCheck.forEach { field ->
@@ -74,7 +96,12 @@ data class AddCustomTokenState(
 
     // except network
     fun tokensAnyFieldsIsFilled(): Boolean {
-        val idsToCheck = listOf(ContractAddress, Name, Symbol, Decimals)
+        val idsToCheck = listOf(
+            CustomTokenFieldId.ContractAddress,
+            CustomTokenFieldId.Name,
+            CustomTokenFieldId.Symbol,
+            CustomTokenFieldId.Decimals,
+        )
         val fieldsToCheck = form.fieldList.filter { idsToCheck.contains(it.id) }
         val validator = StringIsEmptyValidator()
         val errorsList = fieldsToCheck.mapNotNull { field ->
@@ -84,12 +111,12 @@ data class AddCustomTokenState(
     }
 
     fun networkIsSelected(): Boolean {
-        val network = getField<TokenBlockchainField>(Network)
+        val network = getField<TokenBlockchainField>(CustomTokenFieldId.Network)
         return network.data.value != Blockchain.Unknown
     }
 
     fun derivationPathIsSelected(): Boolean {
-        val network = getField<TokenDerivationPathField>(DerivationPath)
+        val network = getField<TokenDerivationPathField>(CustomTokenFieldId.DerivationPath)
         return network.data.value != Blockchain.Unknown
     }
 
@@ -149,7 +176,7 @@ data class AddCustomTokenState(
         internal fun getDerivationPath(
             mainNetwork: Blockchain,
             derivationNetwork: Blockchain,
-            derivationStyle: DerivationStyle?
+            derivationStyle: DerivationStyle?,
         ): com.tangem.common.hdWallet.DerivationPath? = when (derivationNetwork) {
             Blockchain.Unknown -> mainNetwork
             else -> derivationNetwork
@@ -157,12 +184,18 @@ data class AddCustomTokenState(
 
         internal fun createFormFields(card: Card, type: CustomTokenType): List<DataField<*>> {
             return listOf(
-                TokenField(ContractAddress),
-                TokenBlockchainField(Network, getNetworksList(card, type)),
-                TokenField(Name),
-                TokenField(Symbol),
-                TokenField(Decimals),
-                TokenDerivationPathField(DerivationPath, getSupportedDerivations(card)),
+                TokenField(CustomTokenFieldId.ContractAddress),
+                TokenBlockchainField(
+                    CustomTokenFieldId.Network,
+                    getNetworksList(card, type),
+                ),
+                TokenField(CustomTokenFieldId.Name),
+                TokenField(CustomTokenFieldId.Symbol),
+                TokenField(CustomTokenFieldId.Decimals),
+                TokenDerivationPathField(
+                    CustomTokenFieldId.DerivationPath,
+                    getSupportedDerivations(card),
+                ),
             )
         }
 
@@ -176,9 +209,12 @@ data class AddCustomTokenState(
                 .filter { card.isTestCard == it.isTestnet() }
 
             val additionalBlockchains = listOf(
-                Blockchain.Binance, Blockchain.BinanceTestnet,
-                Blockchain.Solana, Blockchain.SolanaTestnet,
-                Blockchain.Tron, Blockchain.TronTestnet,
+                Blockchain.Binance,
+                Blockchain.BinanceTestnet,
+                Blockchain.Solana,
+                Blockchain.SolanaTestnet,
+                Blockchain.Tron,
+                Blockchain.TronTestnet,
             )
 
             val supportedByCard = when (type) {
@@ -197,11 +233,11 @@ data class AddCustomTokenState(
 
         private fun createFormValidators(): Map<CustomTokenFieldId, CustomTokenValidator<out Any>> {
             return mapOf(
-                ContractAddress to TokenContractAddressValidator(),
-                Network to TokenNetworkValidator(),
-                Name to TokenNameValidator(),
-                Symbol to TokenSymbolValidator(),
-                Decimals to TokenDecimalsValidator(),
+                CustomTokenFieldId.ContractAddress to TokenContractAddressValidator(),
+                CustomTokenFieldId.Network to TokenNetworkValidator(),
+                CustomTokenFieldId.Name to TokenNameValidator(),
+                CustomTokenFieldId.Symbol to TokenSymbolValidator(),
+                CustomTokenFieldId.Decimals to TokenDecimalsValidator(),
             )
         }
 
@@ -220,7 +256,7 @@ data class AddCustomTokenState(
                 symbol = ViewStates.TokenField(isEnabled = false),
                 decimals = ViewStates.TokenField(isEnabled = false),
                 derivationPath = ViewStates.TokenField(),
-                addButton = ViewStates.AddButton(isEnabled = false)
+                addButton = ViewStates.AddButton(isEnabled = false),
             )
         }
     }
@@ -233,14 +269,17 @@ data class AddCustomTokenState(
             val action = (action as? AddCustomTokenAction) ?: return null
 
             val state = stateHolder.addCustomTokensState
-            val fieldConverter = FieldToJsonConverter(listOf(
-                ContractAddress,
-                Network,
-                Name,
-                Symbol,
-                Decimals,
-                DerivationPath,
-            ), jsonConverter)
+            val fieldConverter = FieldToJsonConverter(
+                listOf(
+                    CustomTokenFieldId.ContractAddress,
+                    CustomTokenFieldId.Network,
+                    CustomTokenFieldId.Name,
+                    CustomTokenFieldId.Symbol,
+                    CustomTokenFieldId.Decimals,
+                    CustomTokenFieldId.DerivationPath,
+                ),
+                jsonConverter,
+            )
             state.visitDataConverter(fieldConverter)
             val errors = state.formErrors.map {
                 "${it.key}: ${it.value::class.java.simpleName}"

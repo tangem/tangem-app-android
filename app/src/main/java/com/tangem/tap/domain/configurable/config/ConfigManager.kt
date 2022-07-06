@@ -19,12 +19,12 @@ data class Config(
     val isTopUpEnabled: Boolean = false,
     @Deprecated("Not relevant since version 3.23")
     val isCreatingTwinCardsAllowed: Boolean = false,
-    val shopify: ShopifyShop? = null
+    val shopify: ShopifyShop? = null,
 )
 
 class ConfigManager(
     private val localLoader: Loader<ConfigModel>,
-    private val remoteLoader: Loader<ConfigModel>
+    private val remoteLoader: Loader<ConfigModel>,
 ) {
 
     var config: Config = Config()
@@ -54,11 +54,15 @@ class ConfigManager(
 
     fun resetToDefault(name: String) {
         when (name) {
-            isSendingToPayIdEnabled -> config =
-                config.copy(isSendingToPayIdEnabled = defaultConfig.isSendingToPayIdEnabled)
+            isSendingToPayIdEnabled ->
+                config =
+                    config.copy(isSendingToPayIdEnabled = defaultConfig.isSendingToPayIdEnabled)
             isTopUpEnabled -> config = config.copy(isTopUpEnabled = defaultConfig.isTopUpEnabled)
-            isCreatingTwinCardsAllowed -> config =
-                config.copy(isCreatingTwinCardsAllowed = defaultConfig.isCreatingTwinCardsAllowed)
+            isCreatingTwinCardsAllowed ->
+                config =
+                    config.copy(
+                        isCreatingTwinCardsAllowed = defaultConfig.isCreatingTwinCardsAllowed,
+                    )
         }
     }
 
@@ -68,12 +72,12 @@ class ConfigManager(
         config = config.copy(
             isTopUpEnabled = model.isTopUpEnabled,
             isSendingToPayIdEnabled = model.isSendingToPayIdEnabled,
-            isCreatingTwinCardsAllowed = model.isCreatingTwinCardsAllowed
+            isCreatingTwinCardsAllowed = model.isCreatingTwinCardsAllowed,
         )
         defaultConfig = defaultConfig.copy(
             isTopUpEnabled = model.isTopUpEnabled,
             isSendingToPayIdEnabled = model.isSendingToPayIdEnabled,
-            isCreatingTwinCardsAllowed = model.isCreatingTwinCardsAllowed
+            isCreatingTwinCardsAllowed = model.isCreatingTwinCardsAllowed,
         )
     }
 
@@ -88,7 +92,7 @@ class ConfigManager(
                 blockchairApiKey = values.blockchairApiKey,
                 blockchairAuthorizationToken = values.blockchairAuthorizationToken,
                 blockcypherTokens = values.blockcypherTokens,
-                infuraProjectId = values.infuraProjectId
+                infuraProjectId = values.infuraProjectId,
             ),
             appsFlyerDevKey = values.appsFlyerDevKey,
             shopify = values.shopifyShop,
@@ -102,7 +106,7 @@ class ConfigManager(
                 blockchairApiKey = values.blockchairApiKey,
                 blockchairAuthorizationToken = values.blockchairAuthorizationToken,
                 blockcypherTokens = values.blockcypherTokens,
-                infuraProjectId = values.infuraProjectId
+                infuraProjectId = values.infuraProjectId,
             ),
             appsFlyerDevKey = values.appsFlyerDevKey,
             shopify = values.shopifyShop,

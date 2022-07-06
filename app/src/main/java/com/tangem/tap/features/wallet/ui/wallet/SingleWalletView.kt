@@ -12,7 +12,11 @@ import com.tangem.tap.common.extensions.show
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.PendingTransaction
-import com.tangem.tap.features.wallet.redux.*
+import com.tangem.tap.features.wallet.redux.TradeCryptoState
+import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.features.wallet.redux.WalletData
+import com.tangem.tap.features.wallet.redux.WalletMainButton
+import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.ui.BalanceWidget
 import com.tangem.tap.features.wallet.ui.MultipleAddressUiHelper
 import com.tangem.tap.features.wallet.ui.WalletFragment
@@ -55,7 +59,6 @@ class SingleWalletView : WalletView {
         setupTransactionsRecyclerView()
     }
 
-
     private fun setupTransactionsRecyclerView() {
         val fragment = fragment ?: return
         pendingTransactionAdapter = PendingTransactionsAdapter()
@@ -81,7 +84,6 @@ class SingleWalletView : WalletView {
         binding?.rvPendingTransaction?.show(pendingTransactions.isNotEmpty())
     }
 
-
     private fun setupBalance(state: WalletState, primaryWallet: WalletData) {
         val fragment = fragment ?: return
         binding?.apply {
@@ -90,13 +92,14 @@ class SingleWalletView : WalletView {
                 binding = this.lCardBalance,
                 fragment = fragment,
                 data = primaryWallet.currencyData,
-                isTwinCard = state.isTangemTwins
+                isTwinCard = state.isTangemTwins,
             ).setup()
         }
     }
 
     private fun setupTwinCards(
-        twinCardsState: TwinCardsState?, binding: FragmentWalletBinding
+        twinCardsState: TwinCardsState?,
+        binding: FragmentWalletBinding,
     ) = with(binding) {
         twinCardsState?.cardNumber?.let { cardNumber ->
             tvTwinCardNumber.show()
@@ -113,9 +116,10 @@ class SingleWalletView : WalletView {
     }
 
     private fun setupButtons(
-        state: WalletData, isTwinsWallet: Boolean, binding: FragmentWalletBinding
+        state: WalletData,
+        isTwinsWallet: Boolean,
+        binding: FragmentWalletBinding,
     ) = with(binding) {
-
         setupButtonsType(state, binding)
 
         val btnConfirm = if (state.tradeCryptoState.sellingAllowed ||
@@ -138,8 +142,8 @@ class SingleWalletView : WalletView {
                 store.dispatch(
                     WalletAction.DialogAction.QrCode(
                         currency = state.currency,
-                        selectedAddress = selectedAddress
-                    )
+                        selectedAddress = selectedAddress,
+                    ),
                 )
             }
         }
@@ -188,7 +192,9 @@ class SingleWalletView : WalletView {
     }
 
     private fun setupConfirmButton(
-        state: WalletData, btnConfirm: Button, isTwinsWallet: Boolean,
+        state: WalletData,
+        btnConfirm: Button,
+        isTwinsWallet: Boolean,
     ) {
         val buttonTitle = when (state.mainButton) {
             is WalletMainButton.SendButton -> R.string.wallet_button_send
@@ -210,8 +216,9 @@ class SingleWalletView : WalletView {
         }
     }
 
-
-    private fun setupAddressCard(state: WalletData, binding: FragmentWalletBinding) = with(binding.lAddress) {
+    private fun setupAddressCard(state: WalletData, binding: FragmentWalletBinding) = with(
+        binding.lAddress,
+    ) {
         if (state.walletAddresses != null && state.currency is Currency.Blockchain) {
             binding.lAddress.root.show()
             if (state.shouldShowMultipleAddress()) {
@@ -237,8 +244,8 @@ class SingleWalletView : WalletView {
                 store.dispatch(
                     WalletAction.ExploreAddress(
                         state.walletAddresses.selectedAddress.exploreUrl,
-                        fragment!!.requireContext()
-                    )
+                        fragment!!.requireContext(),
+                    ),
                 )
             }
         } else {

@@ -20,9 +20,12 @@ class CreateSecondTwinWalletTask(
     private val firstCardId: String,
     private val issuerKeys: KeyPair,
     private val preparingMessage: Message,
-    private val creatingWalletMessage: Message
+    private val creatingWalletMessage: Message,
 ) : CardSessionRunnable<CreateWalletResponse> {
-    override fun run(session: CardSession, callback: (result: CompletionResult<CreateWalletResponse>) -> Unit) {
+    override fun run(
+        session: CardSession,
+        callback: (result: CompletionResult<CreateWalletResponse>) -> Unit,
+    ) {
         val card = session.environment.card
         val publicKey = card?.getSingleWallet()?.publicKey
         if (publicKey != null) {
@@ -38,7 +41,9 @@ class CreateSecondTwinWalletTask(
                         session.environment.card = session.environment.card?.setWallets(emptyList())
                         finishTask(session, callback)
                     }
-                    is CompletionResult.Failure -> callback(CompletionResult.Failure(response.error))
+                    is CompletionResult.Failure -> callback(
+                        CompletionResult.Failure(response.error),
+                    )
                 }
             }
         } else {
@@ -46,15 +51,21 @@ class CreateSecondTwinWalletTask(
         }
     }
 
-    private fun finishTask(session: CardSession, callback: (result: CompletionResult<CreateWalletResponse>) -> Unit) {
+    private fun finishTask(
+        session: CardSession,
+        callback: (result: CompletionResult<CreateWalletResponse>) -> Unit,
+    ) {
         session.setMessage(creatingWalletMessage)
         CreateWalletTask(EllipticCurve.Secp256k1).run(session) { result ->
             when (result) {
                 is CompletionResult.Success -> {
-                    session.environment.card = session.environment.card?.updateWallet(result.data.wallet)
+                    session.environment.card = session.environment.card?.updateWallet(
+                        result.data.wallet,
+                    )
 
                     WriteProtectedIssuerDataTask(
-                            firstPublicKey.hexToBytes(), issuerKeys
+                        firstPublicKey.hexToBytes(),
+                        issuerKeys,
                     ).run(session) { writeResult ->
                         when (writeResult) {
                             is CompletionResult.Success -> callback(result)
@@ -74,4 +85,3 @@ class CreateSecondTwinWalletTask(
         override val messageResId = R.string.twins_wrong_card_error
     }
 }
-

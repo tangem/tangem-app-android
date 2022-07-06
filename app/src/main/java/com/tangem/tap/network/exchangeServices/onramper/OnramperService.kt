@@ -13,14 +13,14 @@ import com.tangem.tap.network.exchangeServices.ExchangeService
 import com.tangem.tap.network.exchangeServices.ExchangeUrlBuilder
 import com.tangem.tap.network.exchangeServices.ExchangeUrlBuilder.Companion.SCHEME
 import com.tangem.tap.network.exchangeServices.ExchangeUrlBuilder.Companion.SUCCESS_URL
-import kotlinx.coroutines.coroutineScope
 import java.util.*
+import kotlinx.coroutines.coroutineScope
 
 /**
  * Created by Anton Zhilenkov on 02/03/2022.
  */
 class OnramperService(
-    val apiKey: String
+    val apiKey: String,
 ) : ExchangeService, ExchangeUrlBuilder {
 
     private val api: OnramperApi by lazy {
@@ -28,7 +28,7 @@ class OnramperService(
             baseUrl = OnramperApi.BASE_URL,
             interceptors = listOf(
                 AddHeaderInterceptor(mapOf("Authorization" to "Basic $apiKey")),
-            )
+            ),
         ).create(OnramperApi::class.java)
     }
 
@@ -100,17 +100,19 @@ class OnramperService(
         status?.apply {
             val gateways = responseGateways.gateways.joinToString(",") { it.identifier }.urlEncode()
             builder.appendQueryParameter("onlyGateways", gateways)
-
         }
 
         val url = builder.build().toString()
         return url
     }
 
-    override fun getSellCryptoReceiptUrl(action: CurrencyExchangeManager.Action, transactionId: String): String? = null
+    override fun getSellCryptoReceiptUrl(
+        action: CurrencyExchangeManager.Action,
+        transactionId: String,
+    ): String? = null
 }
 
 private data class OnramperStatus(
     val availableToBuy: List<String>,
-    val responseGateways: GatewaysResponse
+    val responseGateways: GatewaysResponse,
 )

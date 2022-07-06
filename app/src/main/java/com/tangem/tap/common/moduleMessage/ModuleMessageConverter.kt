@@ -7,7 +7,7 @@ import com.tangem.domain.DomainModuleMessage
 import com.tangem.tap.common.moduleMessage.domain.DomainMessageConverter
 
 class ModuleMessageConverter(
-    private val context: Context
+    private val context: Context,
 ) : ModuleMessageConverter<ModuleMessage, String> {
 
     override fun convert(message: ModuleMessage): String {

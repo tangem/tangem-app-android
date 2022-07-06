@@ -15,7 +15,7 @@ import com.trustwallet.walletconnect.models.session.WCSession
 data class WalletConnectState(
     val loading: Boolean = false,
     val sessions: List<WalletConnectSession> = listOf(),
-    val scanResponse: ScanResponse? = null
+    val scanResponse: ScanResponse? = null,
 )
 
 data class WalletConnectSession(
@@ -38,7 +38,7 @@ data class WalletForSession(
     val derivedPublicKey: ByteArray? = null,
     val derivationPath: DerivationPath? = null,
     val isTestNet: Boolean = false,
-    val blockchain: Blockchain? = if (isTestNet) Blockchain.EthereumTestnet else Blockchain.Ethereum
+    val blockchain: Blockchain? = if (isTestNet) Blockchain.EthereumTestnet else Blockchain.Ethereum,
 ) {
 
     fun getBlockchainForSession(): Blockchain {
@@ -78,7 +78,6 @@ data class WalletForSession(
     }
 }
 
-
 sealed class WalletConnectDialog : StateDialog {
     data class ClipboardOrScanQr(val clipboardUri: String) : WalletConnectDialog()
     object UnsupportedCard : WalletConnectDialog()
@@ -90,11 +89,12 @@ sealed class WalletConnectDialog : StateDialog {
         WalletConnectDialog()
 
     data class PersonalSign(val data: PersonalSignDialogData) : WalletConnectDialog()
-    data class BnbTransactionDialog(val data: BinanceMessageData,
-                                    val session: WCSession,
-                                    val sessionId: Long,
-                                    val cardId: String,
-                                    val dAppName: String
+    data class BnbTransactionDialog(
+        val data: BinanceMessageData,
+        val session: WCSession,
+        val sessionId: Long,
+        val cardId: String,
+        val dAppName: String,
     ) : WalletConnectDialog()
 }
 
@@ -118,7 +118,7 @@ data class WcPersonalSignData(
     val id: Long,
     val dialogData: PersonalSignDialogData,
 
-    )
+)
 
 sealed class BinanceMessageData(
     val address: String,
@@ -142,5 +142,5 @@ data class TradeData(
     val price: String,
     val quantity: String,
     val amount: String,
-    val symbol: String
+    val symbol: String,
 )

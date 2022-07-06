@@ -1,11 +1,25 @@
 package com.tangem.tap.common.compose
 
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.*
-import androidx.compose.runtime.*
+import androidx.compose.material.AlertDialog
+import androidx.compose.material.Button
+import androidx.compose.material.LocalTextStyle
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Surface
+import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -38,16 +52,22 @@ fun ComposeDialogManager() {
 
     ShowTheDialog(dialogSate)
 
-    LaunchedEffect(key1 = Unit, block = {
-        domainStore.subscribe(subscriber) { state ->
-            state.skipRepeats { oldState, newState ->
-                oldState.globalState == newState.globalState
-            }.select { it.globalState }
-        }
-    })
-    DisposableEffect(key1 = Unit, effect = {
-        onDispose { domainStore.unsubscribe(subscriber) }
-    })
+    LaunchedEffect(
+        key1 = Unit,
+        block = {
+            domainStore.subscribe(subscriber) { state ->
+                state.skipRepeats { oldState, newState ->
+                    oldState.globalState == newState.globalState
+                }.select { it.globalState }
+            }
+        },
+    )
+    DisposableEffect(
+        key1 = Unit,
+        effect = {
+            onDispose { domainStore.unsubscribe(subscriber) }
+        },
+    )
 }
 
 @Composable
@@ -62,7 +82,7 @@ private fun ShowTheDialog(dialogState: MutableState<DomainDialog?>) {
         is DomainDialog.DialogError -> ErrorDialog(
             title = stringResource(id = R.string.common_error),
             body = errorConverter.convert(dialog.error),
-            onDismissRequest
+            onDismissRequest,
         )
         is DomainDialog.SelectTokenDialog -> SelectTokenNetworkDialog(dialog, onDismissRequest)
     }
@@ -81,14 +101,14 @@ fun <T> SimpleDialog(
 ) {
     Dialog(
         properties = DialogProperties(false, false),
-        onDismissRequest = { }
+        onDismissRequest = { },
     ) {
         Surface(
             modifier = Modifier.fillMaxWidth(),
-            shape = MaterialTheme.shapes.medium
+            shape = MaterialTheme.shapes.medium,
         ) {
             Column(
-                modifier = Modifier.padding(22.dp)
+                modifier = Modifier.padding(22.dp),
             ) {
                 DialogTitle(title = title)
                 LazyColumn() {
@@ -117,9 +137,9 @@ private fun DialogTitle(title: String) {
         style = LocalTextStyle.provides(
             TextStyle(
                 fontWeight = FontWeight.Bold,
-                fontSize = 20.sp
-            )
-        ).value
+                fontSize = 20.sp,
+            ),
+        ).value,
     )
     SpacerH16()
 }
@@ -138,7 +158,6 @@ fun ErrorDialog(
             Button(onClick = onDismissRequest) {
                 Text(text = stringResource(id = R.string.common_ok))
             }
-        }
+        },
     )
 }
-

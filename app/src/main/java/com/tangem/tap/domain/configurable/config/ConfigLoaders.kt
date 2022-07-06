@@ -14,19 +14,24 @@ import timber.log.Timber
  * Created by Anton Zhilenkov on 16/02/2021.
  */
 class FeaturesLocalLoader(
-        private val context: Context,
-        private val moshi: Moshi,
+    private val context: Context,
+    private val moshi: Moshi,
 ) : Loader<ConfigModel> {
 
     override fun load(onComplete: (ConfigModel) -> Unit) {
         val config = try {
             val featureAdapter: JsonAdapter<FeatureModel> = moshi.adapter(FeatureModel::class.java)
-            val valuesAdapter: JsonAdapter<ConfigValueModel> = moshi.adapter(ConfigValueModel::class.java)
+            val valuesAdapter: JsonAdapter<ConfigValueModel> = moshi.adapter(
+                ConfigValueModel::class.java,
+            )
 
             val jsonFeatures = context.readAssetAsString(Loader.featuresName)
             val jsonConfigValues = context.readAssetAsString(Loader.configValuesName)
 
-            ConfigModel(featureAdapter.fromJson(jsonFeatures), valuesAdapter.fromJson(jsonConfigValues))
+            ConfigModel(
+                featureAdapter.fromJson(jsonFeatures),
+                valuesAdapter.fromJson(jsonConfigValues),
+            )
         } catch (ex: Exception) {
             Timber.e(ex)
             ConfigModel.empty()
@@ -36,7 +41,7 @@ class FeaturesLocalLoader(
 }
 
 class FeaturesRemoteLoader(
-        private val moshi: Moshi,
+    private val moshi: Moshi,
 ) : Loader<ConfigModel> {
 
     override fun load(onComplete: (ConfigModel) -> Unit) {
@@ -50,7 +55,9 @@ class FeaturesRemoteLoader(
                     onComplete(emptyConfig)
                     return@addOnCompleteListener
                 }
-                val featureAdapter: JsonAdapter<FeatureModel> = moshi.adapter(FeatureModel::class.java)
+                val featureAdapter: JsonAdapter<FeatureModel> = moshi.adapter(
+                    FeatureModel::class.java,
+                )
                 onComplete(ConfigModel(featureAdapter.fromJson(jsonConfig), null))
             } else {
                 onComplete(emptyConfig)

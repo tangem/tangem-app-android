@@ -27,7 +27,9 @@ fun Card.supportedBlockchains(): List<Blockchain> {
 }
 
 fun Card.supportedTokens(): List<Blockchain> {
-    val tokensSupportedByBlockchain = supportedBlockchains().filter { it.canHandleTokens() }.toMutableList()
+    val tokensSupportedByBlockchain = supportedBlockchains()
+        .filter { it.canHandleTokens() }
+        .toMutableList()
     val tokensSupportedByCard = when {
         firmwareVersion >= FirmwareVersion.SolanaTokensAvailable -> tokensSupportedByBlockchain
         else -> {

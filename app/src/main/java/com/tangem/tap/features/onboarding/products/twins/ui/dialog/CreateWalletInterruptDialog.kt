@@ -15,10 +15,10 @@ class CreateWalletInterruptDialog {
     companion object {
         fun create(state: TwinCardsAction.Wallet.ShowInterruptDialog, context: Context): AlertDialog {
             return MaterialAlertDialogBuilder(context)
-                    .setMessage(R.string.onboarding_twin_exit_warning)
-                    .setPositiveButton(R.string.warning_button_ok) { _, _ -> }
-                    .setOnDismissListener { store.dispatchDialogHide() }
-                    .create()
+                .setMessage(R.string.onboarding_twin_exit_warning)
+                .setPositiveButton(R.string.warning_button_ok) { _, _ -> }
+                .setOnDismissListener { store.dispatchDialogHide() }
+                .create()
         }
     }
 }

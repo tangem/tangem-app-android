@@ -17,24 +17,25 @@ import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentWalletConnectSessionsBinding
 import org.rekotlin.StoreSubscriber
 
-
-class WalletConnectSessionsFragment : Fragment(R.layout.fragment_wallet_connect_sessions),
+class WalletConnectSessionsFragment :
+    Fragment(R.layout.fragment_wallet_connect_sessions),
     StoreSubscriber<WalletConnectState> {
 
     private lateinit var walletConnectSessionsAdapter: WalletConnectSessionsAdapter
     private val binding: FragmentWalletConnectSessionsBinding by viewBinding(
-        FragmentWalletConnectSessionsBinding::bind
+        FragmentWalletConnectSessionsBinding::bind,
     )
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         activity?.onBackPressedDispatcher?.addCallback(
-            this, object : OnBackPressedCallback(true) {
+            this,
+            object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
                     store.dispatch(NavigationAction.PopBackTo())
                 }
-            })
+            },
+        )
         val inflater = TransitionInflater.from(requireContext())
         enterTransition = inflater.inflateTransition(R.transition.slide_right)
         exitTransition = inflater.inflateTransition(R.transition.fade)

@@ -3,7 +3,15 @@ package com.tangem.tap.features.home.compose
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Text
@@ -26,7 +34,12 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tangem.tap.common.compose.SpacerS24
-import com.tangem.tap.features.home.compose.content.*
+import com.tangem.tap.features.home.compose.content.FirstStoriesContent
+import com.tangem.tap.features.home.compose.content.StoriesCurrencies
+import com.tangem.tap.features.home.compose.content.StoriesRevolutionaryWallet
+import com.tangem.tap.features.home.compose.content.StoriesUltraSecureBackup
+import com.tangem.tap.features.home.compose.content.StoriesWalletForEveryone
+import com.tangem.tap.features.home.compose.content.StoriesWeb3
 import com.tangem.tap.features.home.compose.views.HomeButtons
 import com.tangem.tap.features.home.compose.views.StoriesProgressBar
 import com.tangem.tap.features.home.redux.HomeState
@@ -63,10 +76,10 @@ fun StoriesScreen(
     Box(
         Modifier
             .fillMaxSize()
-            .background(Color(0xFF090E13))
+            .background(Color(0xFF090E13)),
     ) {
         Row(
-            Modifier.fillMaxSize()
+            Modifier.fillMaxSize(),
         ) {
             Box(
                 Modifier
@@ -84,7 +97,7 @@ fun StoriesScreen(
                                 isPressed.value = false
                             },
                         )
-                    }
+                    },
             )
             Box(
                 Modifier
@@ -102,7 +115,7 @@ fun StoriesScreen(
                                 isPressed.value = false
                             },
                         )
-                    }
+                    },
             )
         }
         if (!isDarkBackground) {
@@ -111,13 +124,13 @@ fun StoriesScreen(
                 contentDescription = null,
                 modifier = Modifier
                     .fillMaxSize(),
-                contentScale = ContentScale.FillBounds
+                contentScale = ContentScale.FillBounds,
             )
         }
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier.fillMaxWidth(),
         ) {
             SpacerS24()
             StoriesProgressBar(
@@ -136,7 +149,7 @@ fun StoriesScreen(
                     .height(17.dp)
                     .alpha(if (hideContent.value) 0f else 1f)
                     .align(Alignment.Start),
-                colorFilter = if (isDarkBackground) null else ColorFilter.tint(Color.Black)
+                colorFilter = if (isDarkBackground) null else ColorFilter.tint(Color.Black),
             )
             when (currentStep.value) {
                 1 -> FirstStoriesContent(isPaused, currentStep.duration()) { hideContent.value = it }
@@ -150,7 +163,7 @@ fun StoriesScreen(
         Column(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .fillMaxWidth()
+                .fillMaxWidth(),
         ) {
             if (currentStep.value == 4) Button(
                 onClick = onSearchTokensClick,
@@ -160,18 +173,18 @@ fun StoriesScreen(
                     .height(48.dp),
                 colors = ButtonDefaults.textButtonColors(
                     backgroundColor = Color.White,
-                    contentColor = Color(0xFF080C10)
-                )
+                    contentColor = Color(0xFF080C10),
+                ),
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.ic_search),
-                    contentDescription = null
+                    contentDescription = null,
                 )
                 Text(
                     text = stringResource(id = R.string.search_tokens_title),
                     fontWeight = FontWeight.Medium,
                     fontSize = 16.sp,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
                 )
             }
             HomeButtons(
@@ -180,10 +193,9 @@ fun StoriesScreen(
                     .padding(start = 16.dp, top = 0.dp, end = 16.dp, bottom = 37.dp)
                     .fillMaxWidth(),
                 onScanButtonClick = onScanButtonClick,
-                onShopButtonClick = onShopButtonClick
+                onShopButtonClick = onShopButtonClick,
             )
         }
-
     }
 }
 

@@ -5,5 +5,4 @@ package com.tangem.network.common
  */
 interface NetworkInternalException
 
-sealed class NetworkException(message: String?) : Throwable(message), NetworkInternalException {
-}
+sealed class NetworkException(message: String?) : Throwable(message), NetworkInternalException

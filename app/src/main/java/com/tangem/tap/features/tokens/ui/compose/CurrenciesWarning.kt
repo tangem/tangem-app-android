@@ -24,17 +24,16 @@ fun CurrenciesWarning() {
         contentAlignment = Alignment.Center,
         modifier = Modifier
             .padding(16.dp)
-            .background(Color(0xFFF2F2F2), shape = RoundedCornerShape(10.dp))
-    )
-    {
+            .background(Color(0xFFF2F2F2), shape = RoundedCornerShape(10.dp)),
+    ) {
         val warning = stringResource(id = R.string.alert_manage_tokens_addresses_message)
         val end = warning.indexOf(" ")
         val spanStyles = listOf(
             AnnotatedString.Range(
                 SpanStyle(fontWeight = FontWeight.Bold),
                 start = 0,
-                end = end
-            )
+                end = end,
+            ),
         )
         Text(
             text = AnnotatedString(text = warning, spanStyles = spanStyles),
@@ -44,7 +43,7 @@ fun CurrenciesWarning() {
                 top = 8.dp,
                 bottom = 8.dp,
                 start = 16.dp,
-                end = 16.dp
+                end = 16.dp,
             ),
             fontSize = 13.sp,
             fontWeight = FontWeight.Normal,

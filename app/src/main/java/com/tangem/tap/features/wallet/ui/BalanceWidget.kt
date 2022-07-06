@@ -30,7 +30,7 @@ data class BalanceWidgetData(
     val fiatAmountFormatted: String? = null,
     val token: TokenData? = null,
     val amountToCreateAccount: String? = null,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
 )
 
 data class TokenData(
@@ -41,7 +41,6 @@ data class TokenData(
     val fiatRate: BigDecimal? = null,
 )
 
-
 class BalanceWidget(
     private val binding: CardBalanceBinding,
     private val fragment: WalletFragment,
@@ -50,7 +49,6 @@ class BalanceWidget(
 ) {
 
     fun setup() {
-
         when (data.status) {
             BalanceStatus.Loading -> {
                 with(binding) {
@@ -62,7 +60,6 @@ class BalanceWidget(
                     lBalance.tvAmount.text = ""
                 }
 
-
                 showStatus(R.id.tv_status_loading)
 
                 if (data.token != null) {
@@ -71,7 +68,9 @@ class BalanceWidget(
                     showBalanceWithoutToken(data, false)
                 }
             }
-            BalanceStatus.VerifiedOnline, BalanceStatus.TransactionInProgress -> with(binding.lBalance) {
+            BalanceStatus.VerifiedOnline, BalanceStatus.TransactionInProgress -> with(
+                binding.lBalance,
+            ) {
                 root.show()
                 binding.lBalanceError.root.hide()
                 val statusView = if (data.status == BalanceStatus.VerifiedOnline) {
@@ -127,7 +126,8 @@ class BalanceWidget(
                 tvErrorDescriptions.text =
                     fragment.getString(
                         R.string.wallet_error_no_account_subtitle_format,
-                        data.amountToCreateAccount, data.currencySymbol
+                        data.amountToCreateAccount,
+                        data.currencySymbol,
                     )
             }
             BalanceStatus.UnknownBlockchain -> with(binding.lBalanceError) {
@@ -147,7 +147,9 @@ class BalanceWidget(
         tvStatusVerified.show(viewRes == R.id.tv_status_verified)
     }
 
-    private fun showBalanceWithToken(data: BalanceWidgetData, showAmount: Boolean) = with(binding.lBalance) {
+    private fun showBalanceWithToken(data: BalanceWidgetData, showAmount: Boolean) = with(
+        binding.lBalance,
+    ) {
         groupBaseCurrency.show()
         tvCurrency.text = data.token?.tokenSymbol
         tvBaseCurrency.text = data.currency

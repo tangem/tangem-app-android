@@ -15,8 +15,9 @@ import com.tangem.wallet.databinding.TestLeapfrogFragmentBinding
 class TestLeapfrogFragment : Fragment(R.layout.test_leapfrog_fragment) {
 
     private lateinit var twinsCardWidget: TwinsCardWidget
-    private val binding: TestLeapfrogFragmentBinding by viewBinding(TestLeapfrogFragmentBinding::bind)
-
+    private val binding: TestLeapfrogFragmentBinding by viewBinding(
+        TestLeapfrogFragmentBinding::bind,
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

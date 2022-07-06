@@ -5,7 +5,11 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.ViewGroup
 import androidx.appcompat.view.ContextThemeWrapper
-import androidx.recyclerview.widget.*
+import androidx.recyclerview.widget.DiffUtil
+import androidx.recyclerview.widget.DividerItemDecoration
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.ListAdapter
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.tangem.blockchain.common.Amount
 import com.tangem.tap.common.extensions.toFormattedString
@@ -40,7 +44,7 @@ class AmountToSendBottomSheetDialog(
         binding!!.rvAmountsToSend.layoutManager = LinearLayoutManager(context)
         val dividerItemDecoration = DividerItemDecoration(
             ContextThemeWrapper(binding!!.root.context, R.style.AppTheme),
-            DividerItemDecoration.VERTICAL
+            DividerItemDecoration.VERTICAL,
         )
         binding!!.rvAmountsToSend.addItemDecoration(dividerItemDecoration)
 
@@ -51,13 +55,14 @@ class AmountToSendBottomSheetDialog(
     }
 }
 
-
-class ChooseAmountAdapter
-    : ListAdapter<Amount, ChooseAmountAdapter.AmountViewHolder>(DiffUtilCallback) {
+class ChooseAmountAdapter :
+    ListAdapter<Amount, ChooseAmountAdapter.AmountViewHolder>(DiffUtilCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AmountViewHolder {
         val binding = ItemWalletAmountToSendBinding.inflate(
-            LayoutInflater.from(parent.context), parent, false
+            LayoutInflater.from(parent.context),
+            parent,
+            false,
         )
         return AmountViewHolder(binding)
     }
@@ -68,11 +73,13 @@ class ChooseAmountAdapter
 
     object DiffUtilCallback : DiffUtil.ItemCallback<Amount>() {
         override fun areContentsTheSame(
-            oldItem: Amount, newItem: Amount
+            oldItem: Amount,
+            newItem: Amount,
         ) = oldItem.currencySymbol == newItem.currencySymbol
 
         override fun areItemsTheSame(
-            oldItem: Amount, newItem: Amount
+            oldItem: Amount,
+            newItem: Amount,
         ) = oldItem == newItem
     }
 

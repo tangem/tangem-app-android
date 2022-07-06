@@ -19,21 +19,20 @@ import androidx.compose.ui.unit.dp
 fun ErrorView(
     text: String,
     modifier: Modifier = Modifier,
-    style: TextStyle = LocalTextStyle.current
+    style: TextStyle = LocalTextStyle.current,
 ) {
     Text(
         text,
         color = MaterialTheme.colors.error,
         modifier = modifier,
-        style = style
+        style = style,
     )
 }
 
 @Preview
 @Composable
 fun ErrorViewTest() {
-    Scaffold(
-    ) {
+    Scaffold() {
         Box(Modifier.padding(16.dp)) {
             ErrorView(text = "Some error description")
         }

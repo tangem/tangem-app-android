@@ -85,7 +85,7 @@ class CurrencyExchangeManager(
             blockchain,
             cryptoCurrencyName,
             fiatCurrencyName,
-            walletAddress
+            walletAddress,
         )
     }
 
@@ -111,14 +111,19 @@ data class CurrencyExchangeStatus(
     val availableToSell: List<String>,
 )
 
-suspend fun CurrencyExchangeManager.buyErc20Tokens(walletManager: EthereumWalletManager, token: Token) {
+suspend fun CurrencyExchangeManager.buyErc20Tokens(
+    walletManager: EthereumWalletManager,
+    token: Token,
+) {
     walletManager.safeUpdate()
 
     val amountToSend = Amount(walletManager.wallet.blockchain)
     val destinationAddress = token.contractAddress
 
-    val feeResult = walletManager.getFee(amountToSend,
-        destinationAddress) as? Result.Success ?: return
+    val feeResult = walletManager.getFee(
+        amountToSend,
+        destinationAddress,
+    ) as? Result.Success ?: return
     val fee = feeResult.data[0]
 
     if ((walletManager.wallet.amounts[AmountType.Coin]?.value ?: BigDecimal.ZERO) < fee.value) {
@@ -128,14 +133,15 @@ suspend fun CurrencyExchangeManager.buyErc20Tokens(walletManager: EthereumWallet
     val transaction = walletManager.createTransaction(amountToSend, fee, destinationAddress)
 
     val signer = TangemSigner(
-        tangemSdk = tangemSdk, Message()
+        tangemSdk = tangemSdk,
+        Message(),
     ) { signResponse ->
         store.dispatch(
             GlobalAction.UpdateWalletSignedHashes(
                 walletSignedHashes = signResponse.totalSignedHashes,
                 walletPublicKey = walletManager.wallet.publicKey.seedKey,
-                remainingSignatures = signResponse.remainingSignatures
-            )
+                remainingSignatures = signResponse.remainingSignatures,
+            ),
         )
     }
     walletManager.send(transaction, signer)

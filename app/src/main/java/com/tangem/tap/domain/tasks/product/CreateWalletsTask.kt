@@ -13,7 +13,7 @@ import com.tangem.operations.wallet.CreateWalletTask
  * Created by Anton Zhilenkov on 13/10/2021.
  */
 class CreateWalletsResponse(
-    val createWalletResponses: List<CreateWalletResponse>
+    val createWalletResponses: List<CreateWalletResponse>,
 ) : CommandResponse
 
 class CreateWalletsTask(
@@ -22,8 +22,11 @@ class CreateWalletsTask(
 
     private val createdWalletsResponses = mutableListOf<CreateWalletResponse>()
 
-    override fun run(session: CardSession, callback: (result: CompletionResult<CreateWalletsResponse>) -> Unit) {
-        if (curves.isEmpty()){
+    override fun run(
+        session: CardSession,
+        callback: (result: CompletionResult<CreateWalletsResponse>) -> Unit,
+    ) {
+        if (curves.isEmpty()) {
             callback(CompletionResult.Failure(TangemSdkError.WalletIsNotCreated()))
             return
         }
@@ -35,14 +38,16 @@ class CreateWalletsTask(
     private fun createWallet(
         curve: EllipticCurve,
         session: CardSession,
-        callback: (result: CompletionResult<CreateWalletsResponse>) -> Unit
+        callback: (result: CompletionResult<CreateWalletsResponse>) -> Unit,
     ) {
         CreateWalletTask(curve).run(session) { result ->
             when (result) {
                 is CompletionResult.Success -> {
                     createdWalletsResponses.add(result.data)
                     if (createdWalletsResponses.size == curves.size) {
-                        callback(CompletionResult.Success(CreateWalletsResponse(createdWalletsResponses)))
+                        callback(
+                            CompletionResult.Success(CreateWalletsResponse(createdWalletsResponses)),
+                        )
                         return@run
                     }
                     createWallet(curves[createdWalletsResponses.size], session, callback)

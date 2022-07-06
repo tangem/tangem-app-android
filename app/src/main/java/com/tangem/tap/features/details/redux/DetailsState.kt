@@ -7,9 +7,9 @@ import com.tangem.tap.common.entities.Button
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
 import com.tangem.tap.store
-import org.rekotlin.StateType
 import java.util.*
 import kotlin.properties.ReadOnlyProperty
+import org.rekotlin.StateType
 
 data class DetailsState(
     val scanResponse: ScanResponse? = null,
@@ -20,7 +20,7 @@ data class DetailsState(
     val securityScreenState: SecurityScreenState? = null,
     val cardTermsOfUseUrl: Uri? = null,
     val createBackupAllowed: Boolean = false,
-    val appCurrency: FiatCurrency = FiatCurrency.Default
+    val appCurrency: FiatCurrency = FiatCurrency.Default,
 ) : StateType {
 
     // if you do not delegate - the application crashes on startup,

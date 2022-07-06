@@ -39,7 +39,6 @@ import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentWalletBinding
 import org.rekotlin.StoreSubscriber
 
-
 class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<WalletState> {
 
     private lateinit var warningsAdapter: WarningMessagesAdapter
@@ -51,11 +50,14 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
-        activity?.onBackPressedDispatcher?.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
-            }
-        })
+        activity?.onBackPressedDispatcher?.addCallback(
+            this,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
+                }
+            },
+        )
         val inflater = TransitionInflater.from(requireContext())
         enterTransition = inflater.inflateTransition(R.transition.slide_right)
         exitTransition = inflater.inflateTransition(R.transition.fade)
@@ -108,7 +110,6 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         }
     }
 
-
     override fun newState(state: WalletState) {
         if (activity == null || view == null) return
 
@@ -156,7 +157,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
                 binding.srlWallet.isRefreshing = false
                 (activity as? MainActivity)?.showSnackbar(
                     text = R.string.wallet_notification_no_internet,
-                    buttonTitle = R.string.common_retry
+                    buttonTitle = R.string.common_retry,
                 ) { store.dispatch(WalletAction.LoadData) }
             }
         } else {
@@ -175,13 +176,17 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.details_menu -> {
-                store.dispatch(GlobalAction.UpdateFeedbackInfo(store.state.walletState.walletManagers))
+                store.dispatch(
+                    GlobalAction.UpdateFeedbackInfo(store.state.walletState.walletManagers),
+                )
                 store.state.globalState.scanResponse?.let { scanNoteResponse ->
-                    store.dispatch(DetailsAction.PrepareScreen(
-                        scanNoteResponse,
-                        store.state.walletState.walletManagers.map { it.wallet },
-                        CardTou(),
-                    ))
+                    store.dispatch(
+                        DetailsAction.PrepareScreen(
+                            scanNoteResponse,
+                            store.state.walletState.walletManagers.map { it.wallet },
+                            CardTou(),
+                        ),
+                    )
                     store.dispatch(NavigationAction.NavigateTo(AppScreen.Details))
                     true
                 }
@@ -194,5 +199,4 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         if (store.state.walletState.shouldShowDetails) inflater.inflate(R.menu.wallet, menu)
     }
-
 }

@@ -30,7 +30,6 @@ data class GlobalState(
     val analyticsHandlers: AnalyticsHandler? = null,
 ) : StateType
 
-
 data class AndroidResources(
     val strings: RString = RString(),
 ) {

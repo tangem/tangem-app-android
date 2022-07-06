@@ -10,7 +10,7 @@ import com.tangem.wallet.R
 object CurrencySelectionDialog {
     fun create(
         dialog: WalletDialog.CurrencySelectionDialog,
-        context: Context
+        context: Context,
     ): AlertDialog {
         val currenciesToShow = dialog.currenciesList
             .map { it.displayName }
@@ -28,8 +28,8 @@ object CurrencySelectionDialog {
                 dialog.currenciesList.getOrNull(which)?.let { selectedCurrency ->
                     store.dispatch(
                         WalletAction.AppCurrencyAction.SelectAppCurrency(
-                            fiatCurrency = selectedCurrency
-                        )
+                            fiatCurrency = selectedCurrency,
+                        ),
                     )
                     store.dispatch(WalletAction.DialogAction.Hide)
                 }

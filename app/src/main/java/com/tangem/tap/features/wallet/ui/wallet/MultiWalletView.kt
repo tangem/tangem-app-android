@@ -24,7 +24,6 @@ import com.tangem.tap.store
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentWalletBinding
 
-
 class MultiWalletView : WalletView {
 
     private var fragment: WalletFragment? = null
@@ -32,13 +31,11 @@ class MultiWalletView : WalletView {
 
     private lateinit var walletsAdapter: WalletAdapter
 
-
     override fun changeWalletView(fragment: WalletFragment, binding: FragmentWalletBinding) {
         setFragment(fragment, binding)
         onViewCreated()
         showMultiWalletView(binding)
     }
-
 
     private fun showMultiWalletView(binding: FragmentWalletBinding) = with(binding) {
         tvTwinCardNumber.hide()
@@ -100,17 +97,17 @@ class MultiWalletView : WalletView {
                 TokensAction.LoadCurrencies(
                     supportedBlockchains = currenciesRepository.getBlockchains(
                         card.firmwareVersion,
-                        card.isTestCard
+                        card.isTestCard,
                     ),
-                    scanResponse = store.state.globalState.scanResponse
-                )
+                    scanResponse = store.state.globalState.scanResponse,
+                ),
             )
             store.dispatch(TokensAction.AllowToAddTokens(true))
             store.dispatch(
                 TokensAction.SetAddedCurrencies(
                     wallets = state.walletsData,
-                    derivationStyle = card.derivationStyle
-                )
+                    derivationStyle = card.derivationStyle,
+                ),
             )
             store.dispatch(NavigationAction.NavigateTo(AppScreen.AddTokens))
         }
@@ -119,7 +116,7 @@ class MultiWalletView : WalletView {
 
     private fun handleBackupWarning(
         binding: FragmentWalletBinding,
-        showBackupWarning: Boolean
+        showBackupWarning: Boolean,
     ) = with(binding.lWalletBackupWarning) {
         root.isVisible = showBackupWarning
         root.setOnClickListener {
@@ -142,11 +139,11 @@ class MultiWalletView : WalletView {
                 veilBalance.unVeil()
             }
             tvProcessing.animateVisibility(
-                show = totalBalance.state == ProgressState.Error
+                show = totalBalance.state == ProgressState.Error,
             )
 
             tvBalance.text = totalBalance.fiatAmount.formatAmountAsSpannedString(
-                currencySymbol = totalBalance.fiatCurrency.symbol
+                currencySymbol = totalBalance.fiatCurrency.symbol,
             )
             tvCurrencyName.text = totalBalance.fiatCurrency.code
 
@@ -159,14 +156,14 @@ class MultiWalletView : WalletView {
     private fun handleErrorStates(
         state: WalletState,
         binding: FragmentWalletBinding,
-        fragment: WalletFragment
+        fragment: WalletFragment,
     ) {
         when (state.primaryWallet?.currencyData?.status) {
             BalanceStatus.EmptyCard -> {
                 showErrorState(
                     binding,
                     fragment.getText(R.string.wallet_error_empty_card),
-                    fragment.getString(R.string.wallet_error_empty_card_subtitle)
+                    fragment.getString(R.string.wallet_error_empty_card_subtitle),
                 )
                 configureButtonsForEmptyWalletState(binding)
             }
@@ -174,7 +171,7 @@ class MultiWalletView : WalletView {
                 showErrorState(
                     binding,
                     fragment.getText(R.string.wallet_error_unsupported_blockchain),
-                    fragment.getString(R.string.wallet_error_unsupported_blockchain_subtitle)
+                    fragment.getString(R.string.wallet_error_unsupported_blockchain_subtitle),
                 )
             }
             else -> { /* no-op */
@@ -183,7 +180,9 @@ class MultiWalletView : WalletView {
     }
 
     private fun showErrorState(
-        binding: FragmentWalletBinding, errorTitle: CharSequence, errorDescription: CharSequence,
+        binding: FragmentWalletBinding,
+        errorTitle: CharSequence,
+        errorDescription: CharSequence,
     ) = with(binding) {
         lCardBalance.root.show()
         with(lCardBalance) {

@@ -19,14 +19,20 @@ class SignHashesTask(
     private val publicKey: Wallet.PublicKey,
 ) : CardSessionRunnable<TangemSignHashesResponse> {
     override fun run(session: CardSession, callback: CompletionCallback<TangemSignHashesResponse>) {
-        SignHashesCommand(hashes.toTypedArray(), publicKey.seedKey, publicKey.derivationPath).run(session) { response ->
+        SignHashesCommand(hashes.toTypedArray(), publicKey.seedKey, publicKey.derivationPath).run(
+            session,
+        ) { response ->
             when (response) {
                 is CompletionResult.Success -> {
-                    callback(CompletionResult.Success(TangemSignHashesResponse(
-                        response.data.signatures,
-                        response.data.totalSignedHashes,
-                        session.environment.card?.wallet(publicKey.seedKey)?.remainingSignatures
-                    )))
+                    callback(
+                        CompletionResult.Success(
+                            TangemSignHashesResponse(
+                                response.data.signatures,
+                                response.data.totalSignedHashes,
+                                session.environment.card?.wallet(publicKey.seedKey)?.remainingSignatures,
+                            ),
+                        ),
+                    )
                 }
                 is CompletionResult.Failure ->
                     callback(CompletionResult.Failure(response.error))

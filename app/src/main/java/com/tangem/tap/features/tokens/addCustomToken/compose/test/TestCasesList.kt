@@ -20,15 +20,15 @@ import com.tangem.wallet.R
  */
 @Composable
 fun TestCasesList(
-    onItemClick: (TestCase) -> Unit
+    onItemClick: (TestCase) -> Unit,
 ) {
     if (!BuildConfig.TEST_ACTION_ENABLED) return
 
     Surface(
-        color = colorResource(id = R.color.lightGray5)
+        color = colorResource(id = R.color.lightGray5),
     ) {
         Column(
-            Modifier.padding(horizontal = 16.dp)
+            Modifier.padding(horizontal = 16.dp),
         ) {
             listOf(
                 TestCase.ContractAddress,
@@ -51,7 +51,7 @@ fun TestCaseListItem(
             text = testCase.description,
         )
         Button(
-            onClick = { onItemClick(testCase) }
+            onClick = { onItemClick(testCase) },
         ) { Text("Start") }
     }
 }

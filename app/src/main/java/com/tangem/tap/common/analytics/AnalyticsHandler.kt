@@ -5,30 +5,29 @@ import com.tangem.common.card.Card
 import com.tangem.common.core.TangemSdkError
 import com.tangem.tap.common.extensions.filterNotNull
 
-
 abstract class AnalyticsHandler {
     abstract fun triggerEvent(
         event: AnalyticsEvent,
         card: Card? = null,
         blockchain: String? = null,
-        params: Map<String, String> = emptyMap()
+        params: Map<String, String> = emptyMap(),
     )
 
     abstract fun triggerEvent(
         event: String,
-        params: Map<String, String>
+        params: Map<String, String>,
     )
 
     abstract fun logCardSdkError(
         error: TangemSdkError,
         actionToLog: Analytics.ActionToLog,
         parameters: Map<AnalyticsParam, String>? = null,
-        card: Card? = null
+        card: Card? = null,
     )
 
     abstract fun logError(
         error: Throwable,
-        params: Map<String, String> = emptyMap()
+        params: Map<String, String> = emptyMap(),
     )
 
     protected fun prepareParams(card: Card?, blockchain: String? = null): Map<String, String> {
@@ -45,14 +44,14 @@ abstract class AnalyticsHandler {
                 triggerEvent(
                     event = AnalyticsEvent.WC_SUCCESS_RESPONSE,
                     params = mapOf(
-                        AnalyticsParam.WALLET_CONNECT_ACTION.param to event.action.name
-                    )
+                        AnalyticsParam.WALLET_CONNECT_ACTION.param to event.action.name,
+                    ),
                 )
             }
             is Analytics.WcAnalyticsEvent.Error -> {
                 val params = mapOf(
                     AnalyticsParam.WALLET_CONNECT_ACTION.param to event.action?.name,
-                    AnalyticsParam.ERROR_DESCRIPTION.param to event.error.message
+                    AnalyticsParam.ERROR_DESCRIPTION.param to event.error.message,
                 )
                     .filterNotNull()
                 logError(event.error, params)
@@ -61,8 +60,8 @@ abstract class AnalyticsHandler {
                 triggerEvent(
                     event = AnalyticsEvent.WC_INVALID_REQUEST,
                     params = mapOf(
-                        AnalyticsParam.WALLET_CONNECT_REQUEST.param to event.json
-                    ).filterNotNull()
+                        AnalyticsParam.WALLET_CONNECT_REQUEST.param to event.json,
+                    ).filterNotNull(),
                 )
             is Analytics.WcAnalyticsEvent.Session -> {
                 val analyticsEvent = when (event.event) {
@@ -72,8 +71,8 @@ abstract class AnalyticsHandler {
                 triggerEvent(
                     event = analyticsEvent,
                     params = mapOf(
-                        AnalyticsParam.WALLET_CONNECT_DAPP_URL.param to event.url
-                    ).filterNotNull()
+                        AnalyticsParam.WALLET_CONNECT_DAPP_URL.param to event.url,
+                    ).filterNotNull(),
                 )
             }
         }

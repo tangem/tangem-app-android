@@ -15,7 +15,7 @@ fun CurrencyItem(
     expanded: Boolean,
     onCurrencyClick: (String) -> Unit,
     onAddCurrencyToggled: (Currency, TokenWithBlockchain?) -> Unit,
-    onNetworkItemClicked: (ContractAddress) -> Unit
+    onNetworkItemClicked: (ContractAddress) -> Unit,
 ) {
     if (expanded) {
         ExpandedCurrencyItem(
@@ -23,13 +23,16 @@ fun CurrencyItem(
             addedTokens = addedTokens,
             addedBlockchains = addedBlockchains,
             allowToAdd = allowToAdd,
-            onCurrencyClick = onCurrencyClick, onAddCurrencyToggled = onAddCurrencyToggled,
-            onNetworkItemClicked = onNetworkItemClicked
+            onCurrencyClick = onCurrencyClick,
+            onAddCurrencyToggled = onAddCurrencyToggled,
+            onNetworkItemClicked = onNetworkItemClicked,
         )
     } else {
         CollapsedCurrencyItem(
-            currency = currency, addedTokens = addedTokens,
-            addedBlockchains = addedBlockchains, onCurrencyClick
+            currency = currency,
+            addedTokens = addedTokens,
+            addedBlockchains = addedBlockchains,
+            onCurrencyClick,
         )
     }
 }

@@ -26,8 +26,14 @@ class WalletCardsWidget(
         val animator = createAnimator(animate, onEnd)
         animator.playTogether(
             createAnimator(BackupCardType.ORIGIN, createWelcomeProperties(BackupCardType.ORIGIN)),
-            createAnimator(BackupCardType.FIRST_BACKUP, createWelcomeProperties(BackupCardType.FIRST_BACKUP)),
-            createAnimator(BackupCardType.SECOND_BACKUP, createWelcomeProperties(BackupCardType.SECOND_BACKUP))
+            createAnimator(
+                BackupCardType.FIRST_BACKUP,
+                createWelcomeProperties(BackupCardType.FIRST_BACKUP),
+            ),
+            createAnimator(
+                BackupCardType.SECOND_BACKUP,
+                createWelcomeProperties(BackupCardType.SECOND_BACKUP),
+            ),
         )
         leapfrogWidget.fold { animator.start() }
     }
@@ -40,8 +46,14 @@ class WalletCardsWidget(
         val animator = createAnimator(animate, onEnd)
         animator.playTogether(
             createAnimator(BackupCardType.ORIGIN, createLeapfrogProperties(BackupCardType.ORIGIN)),
-            createAnimator(BackupCardType.FIRST_BACKUP, createLeapfrogProperties(BackupCardType.FIRST_BACKUP)),
-            createAnimator(BackupCardType.SECOND_BACKUP, createLeapfrogProperties(BackupCardType.SECOND_BACKUP))
+            createAnimator(
+                BackupCardType.FIRST_BACKUP,
+                createLeapfrogProperties(BackupCardType.FIRST_BACKUP),
+            ),
+            createAnimator(
+                BackupCardType.SECOND_BACKUP,
+                createLeapfrogProperties(BackupCardType.SECOND_BACKUP),
+            ),
         )
         leapfrogWidget.fold(animate) { animator.start() }
     }
@@ -54,8 +66,14 @@ class WalletCardsWidget(
         val animator = createAnimator(animate, onEnd)
         animator.playTogether(
             createAnimator(BackupCardType.ORIGIN, createFanProperties(BackupCardType.ORIGIN)),
-            createAnimator(BackupCardType.FIRST_BACKUP, createFanProperties(BackupCardType.FIRST_BACKUP)),
-            createAnimator(BackupCardType.SECOND_BACKUP, createFanProperties(BackupCardType.SECOND_BACKUP))
+            createAnimator(
+                BackupCardType.FIRST_BACKUP,
+                createFanProperties(BackupCardType.FIRST_BACKUP),
+            ),
+            createAnimator(
+                BackupCardType.SECOND_BACKUP,
+                createFanProperties(BackupCardType.SECOND_BACKUP),
+            ),
         )
         leapfrogWidget.fold { animator.start() }
     }
@@ -66,8 +84,14 @@ class WalletCardsWidget(
         val animator = createAnimator(animate, onEnd)
         animator.playTogether(
             createAnimator(BackupCardType.ORIGIN, createLeapfrogProperties(BackupCardType.ORIGIN)),
-            createAnimator(BackupCardType.FIRST_BACKUP, createLeapfrogProperties(BackupCardType.FIRST_BACKUP)),
-            createAnimator(BackupCardType.SECOND_BACKUP, createLeapfrogProperties(BackupCardType.SECOND_BACKUP))
+            createAnimator(
+                BackupCardType.FIRST_BACKUP,
+                createLeapfrogProperties(BackupCardType.FIRST_BACKUP),
+            ),
+            createAnimator(
+                BackupCardType.SECOND_BACKUP,
+                createLeapfrogProperties(BackupCardType.SECOND_BACKUP),
+            ),
         )
         leapfrogWidget.fold {
             animator.doOnEnd {
@@ -90,8 +114,10 @@ class WalletCardsWidget(
         properties: CardProperties,
     ): ObjectAnimator {
         val view = getLeapViewByCardNumber(cardType).view
-        val animator = ObjectAnimator.ofPropertyValuesHolder(view,
-            *properties.createValuesHolders().toTypedArray())
+        val animator = ObjectAnimator.ofPropertyValuesHolder(
+            view,
+            *properties.createValuesHolders().toTypedArray(),
+        )
         view.elevation = properties.elevation
         return animator
     }
@@ -208,9 +234,7 @@ class WalletCardsWidget(
     enum class WidgetState { WELCOME, FOLDED, FAN, LEAPFROG }
 }
 
-
 enum class BackupCardType { ORIGIN, FIRST_BACKUP, SECOND_BACKUP }
-
 
 private data class CardProperties(
     val xTranslation: Float = 0f,

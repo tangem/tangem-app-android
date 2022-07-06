@@ -14,11 +14,11 @@ import com.tangem.tap.features.send.redux.ReceiptAction
 import com.tangem.tap.features.send.redux.SendAction
 import com.tangem.tap.features.send.redux.states.SendState
 import com.tangem.tap.scope
+import java.math.BigDecimal
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.rekotlin.DispatchFunction
-import java.math.BigDecimal
 
 /**
  * Created by Anton Zhilenkov on 11/09/2020.
@@ -30,7 +30,9 @@ class RequestFeeMiddleware {
         val walletManager = sendState.walletManager ?: return
 
         if (!SendState.isReadyToRequestFee()) {
-            dispatch(FeeAction.FeeCalculation.SetFeeError(FeeAction.Error.ADDRESS_OR_AMOUNT_IS_EMPTY))
+            dispatch(
+                FeeAction.FeeCalculation.SetFeeError(FeeAction.Error.ADDRESS_OR_AMOUNT_IS_EMPTY),
+            )
 //            dispatch(FeeAction.ChangeLayoutVisibility(main = false, chipGroup = true))
             dispatch(ReceiptAction.RefreshReceipt)
             dispatch(SendAction.ChangeSendButtonState(sendState.getButtonState()))
@@ -58,21 +60,26 @@ class RequestFeeMiddleware {
                             if (fee.isZero()) {
                                 dispatch(FeeAction.ChangeLayoutVisibility(main = false))
                             } else {
-                                dispatch(FeeAction.ChangeLayoutVisibility(main = true, chipGroup = false))
+                                dispatch(
+                                    FeeAction.ChangeLayoutVisibility(main = true, chipGroup = false),
+                                )
                             }
                         } else {
-                            dispatch(FeeAction.ChangeLayoutVisibility(main = true, chipGroup = true))
+                            dispatch(
+                                FeeAction.ChangeLayoutVisibility(main = true, chipGroup = true),
+                            )
                         }
                     }
                     is Result.Failure -> {
-                        dispatch(FeeAction.FeeCalculation.SetFeeError(FeeAction.Error.REQUEST_FAILED))
+                        dispatch(
+                            FeeAction.FeeCalculation.SetFeeError(FeeAction.Error.REQUEST_FAILED),
+                        )
                         dispatch(FeeAction.ChangeLayoutVisibility(main = false))
                     }
                 }
                 dispatch(AmountActionUi.CheckAmountToSend)
             }
         }
-
     }
 }
 
@@ -85,22 +92,28 @@ class FeeMock {
 //            return feeZero(blockchain)
         }
 
-        suspend fun feeStellar(blockchain: Blockchain): List<Amount> = listOf(Amount(0.0001.toBigDecimal(), blockchain))
+        suspend fun feeStellar(blockchain: Blockchain): List<Amount> = listOf(
+            Amount(0.0001.toBigDecimal(), blockchain),
+        )
 
-        suspend fun feeZero(blockchain: Blockchain): List<Amount> = listOf(Amount(BigDecimal.ZERO, blockchain))
+        suspend fun feeZero(blockchain: Blockchain): List<Amount> = listOf(
+            Amount(BigDecimal.ZERO, blockchain),
+        )
 
         suspend fun feeStandard(blockchain: Blockchain): List<Amount> = listOf(
             Amount(0.001500.toBigDecimal(), blockchain),
             Amount(0.0030.toBigDecimal(), blockchain),
-            Amount(0.0045001.toBigDecimal(), blockchain)
+            Amount(0.0045001.toBigDecimal(), blockchain),
         )
 
         suspend fun feeStandardBig(blockchain: Blockchain): List<Amount> = listOf(
             Amount(1.76.toBigDecimal(), blockchain),
             Amount(2.30.toBigDecimal(), blockchain),
-            Amount(3.45.toBigDecimal(), blockchain)
+            Amount(3.45.toBigDecimal(), blockchain),
         )
 
-        suspend fun feeSingle(blockchain: Blockchain): List<Amount> = listOf(Amount(0.0015.toBigDecimal(), blockchain))
+        suspend fun feeSingle(blockchain: Blockchain): List<Amount> = listOf(
+            Amount(0.0015.toBigDecimal(), blockchain),
+        )
     }
 }

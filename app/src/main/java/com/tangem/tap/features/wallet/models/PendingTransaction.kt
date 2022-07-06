@@ -1,6 +1,11 @@
 package com.tangem.tap.features.wallet.models
 
-import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.AmountType
+import com.tangem.blockchain.common.Token
+import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.common.TransactionStatus
+import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.extensions.isAboveZero
 import com.tangem.tap.common.extensions.toFormattedString
 import java.math.BigDecimal
@@ -92,7 +97,6 @@ fun Wallet.hasSendableAmountsOrPendingTransactions(): Boolean {
 
 fun Wallet.isSendableAmount(type: AmountType): Boolean {
     return amounts[type]?.isAboveZero() == true
-
 }
 
 fun Wallet.isSendableAmount(token: Token): Boolean {

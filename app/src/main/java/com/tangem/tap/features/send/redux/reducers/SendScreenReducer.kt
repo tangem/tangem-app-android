@@ -3,12 +3,23 @@ package com.tangem.tap.features.send.redux.reducers
 import com.tangem.blockchain.common.AmountType
 import com.tangem.tap.common.CurrencyConverter
 import com.tangem.tap.common.entities.IndeterminateProgressButton
-import com.tangem.tap.features.send.redux.*
+import com.tangem.tap.features.send.redux.AddressPayIdActionUi
+import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction
+import com.tangem.tap.features.send.redux.AmountAction
+import com.tangem.tap.features.send.redux.AmountActionUi
+import com.tangem.tap.features.send.redux.FeeAction
+import com.tangem.tap.features.send.redux.FeeActionUi
+import com.tangem.tap.features.send.redux.PrepareSendScreen
+import com.tangem.tap.features.send.redux.ReceiptAction
+import com.tangem.tap.features.send.redux.ReleaseSendState
+import com.tangem.tap.features.send.redux.SendAction
+import com.tangem.tap.features.send.redux.SendScreenAction
+import com.tangem.tap.features.send.redux.TransactionExtrasAction
 import com.tangem.tap.features.send.redux.states.ExternalTransactionData
 import com.tangem.tap.features.send.redux.states.IdStateHolder
 import com.tangem.tap.features.send.redux.states.SendState
-import org.rekotlin.Action
 import java.math.BigDecimal
+import org.rekotlin.Action
 
 /**
  * Created by Anton Zhilenkov on 31/08/2020.
@@ -58,19 +69,24 @@ private class SendReducer : SendInternalReducer {
     }
 
     private fun handleSendSpecificTransactionAction(
-        action: SendAction.SendSpecificTransaction, state: SendState
+        action: SendAction.SendSpecificTransaction,
+        state: SendState,
     ): SendState {
         return state.copy(
             externalTransactionData =
-            ExternalTransactionData(action.sendAmount, action.destinationAddress, action.transactionId),
+            ExternalTransactionData(
+                action.sendAmount,
+                action.destinationAddress,
+                action.transactionId,
+            ),
             feeState = state.feeState.copy(
-                includeFeeSwitcherIsEnabled = false
+                includeFeeSwitcherIsEnabled = false,
             ),
             amountState = state.amountState.copy(
-                inputIsEnabled = false
+                inputIsEnabled = false,
             ),
             addressPayIdState = state.addressPayIdState.copy(
-                inputIsEnabled = false
+                inputIsEnabled = false,
             ),
         )
     }
@@ -88,17 +104,17 @@ private class PrepareSendScreenStatesReducer : SendInternalReducer {
         val decimals = amountToExtract.decimals
 
         return sendState.copy(
-                walletManager = walletManager,
-                coinConverter = action.coinRate?.let { CurrencyConverter(it, decimals) },
-                tokenConverter = action.tokenRate?.let { CurrencyConverter(it, decimals) },
-                amountState = sendState.amountState.copy(
-                        amountToExtract = amountToExtract,
-                        typeOfAmount = amountToExtract.type,
-                        balanceCrypto = amountToExtract.value ?: BigDecimal.ZERO
-                ),
-                feeState = sendState.feeState.copy(
-                        includeFeeSwitcherIsEnabled = amountToExtract.type == AmountType.Coin
-                )
+            walletManager = walletManager,
+            coinConverter = action.coinRate?.let { CurrencyConverter(it, decimals) },
+            tokenConverter = action.tokenRate?.let { CurrencyConverter(it, decimals) },
+            amountState = sendState.amountState.copy(
+                amountToExtract = amountToExtract,
+                typeOfAmount = amountToExtract.type,
+                balanceCrypto = amountToExtract.value ?: BigDecimal.ZERO,
+            ),
+            feeState = sendState.feeState.copy(
+                includeFeeSwitcherIsEnabled = amountToExtract.type == AmountType.Coin,
+            ),
         )
     }
 }
@@ -107,4 +123,3 @@ internal fun updateLastState(sendState: SendState, lastChangedState: IdStateHold
     sendState.lastChangedStates.add(lastChangedState.stateId)
     return sendState
 }
-

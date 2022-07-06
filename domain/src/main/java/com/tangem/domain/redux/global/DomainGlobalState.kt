@@ -17,6 +17,5 @@ data class DomainGlobalState(
 )
 
 data class NetworkServices(
-    val tangemTechService: TangemTechService = TangemTechService()
+    val tangemTechService: TangemTechService = TangemTechService(),
 )
-

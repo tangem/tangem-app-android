@@ -23,11 +23,14 @@ class QrScanFragment : Fragment(0), ZXingScannerView.ResultHandler {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        activity?.onBackPressedDispatcher?.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                store.dispatch(NavigationAction.PopBackTo())
-            }
-        })
+        activity?.onBackPressedDispatcher?.addCallback(
+            this,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    store.dispatch(NavigationAction.PopBackTo())
+                }
+            },
+        )
     }
 
     override fun onCreateView(
@@ -86,5 +89,4 @@ class QrScanFragment : Fragment(0), ZXingScannerView.ResultHandler {
     private fun requestPermission() {
         requestPermissions(arrayOf(Manifest.permission.CAMERA), CameraView.PERMISSION_REQUEST_CODE)
     }
-
 }

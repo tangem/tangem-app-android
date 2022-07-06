@@ -7,9 +7,17 @@ import com.tangem.tap.common.extensions.toFiatString
 import com.tangem.tap.common.extensions.toFormattedCurrencyString
 import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
-import com.tangem.tap.features.wallet.models.*
-import com.tangem.tap.features.wallet.redux.*
+import com.tangem.tap.features.wallet.models.Currency
+import com.tangem.tap.features.wallet.models.WalletRent
+import com.tangem.tap.features.wallet.models.filterByToken
+import com.tangem.tap.features.wallet.models.getPendingTransactions
+import com.tangem.tap.features.wallet.models.removeUnknownTransactions
+import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.features.wallet.redux.WalletData
+import com.tangem.tap.features.wallet.redux.WalletMainButton
+import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.redux.WalletState.Companion.UNKNOWN_AMOUNT_SIGN
+import com.tangem.tap.features.wallet.redux.WalletStore
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.features.wallet.ui.TokenData
@@ -36,20 +44,20 @@ class MultiWalletReducer {
                             status = BalanceStatus.Loading,
                             currency = blockchain.blockchain.fullName,
                             currencySymbol = blockchain.blockchain.currency,
-                            token = cardToken
+                            token = cardToken,
                         ),
                         walletAddresses = createAddressList(wallet),
                         mainButton = WalletMainButton.SendButton(false),
                         currency = Currency.Blockchain(
                             blockchain.blockchain,
-                            blockchain.derivationPath
+                            blockchain.derivationPath,
                         ),
                     )
 
                     WalletStore(
                         walletManager = walletManager,
                         blockchainNetwork = blockchain,
-                        walletsData = listOf(walletData)
+                        walletsData = listOf(walletData),
                     )
                 }
 
@@ -60,11 +68,13 @@ class MultiWalletReducer {
                 }
                 state.copy(
                     wallets = wallets,
-                    selectedCurrency = selectedCurrency
+                    selectedCurrency = selectedCurrency,
                 )
             }
             is WalletAction.MultiWallet.AddBlockchain -> {
-                val walletManager = action.walletManager ?: state.getWalletManager(action.blockchain)
+                val walletManager = action.walletManager ?: state.getWalletManager(
+                    action.blockchain,
+                )
                 val wallet = walletManager?.wallet
 
                 val walletData = WalletData(
@@ -77,13 +87,13 @@ class MultiWalletReducer {
                     mainButton = WalletMainButton.SendButton(false),
                     currency = Currency.Blockchain(
                         action.blockchain.blockchain,
-                        action.blockchain.derivationPath
+                        action.blockchain.derivationPath,
                     ),
                 )
                 val walletStore = WalletStore(
                     walletManager = walletManager,
                     blockchainNetwork = action.blockchain,
-                    walletsData = listOf(walletData)
+                    walletsData = listOf(walletData),
                 )
 
                 val newState = state.updateWalletStore(walletStore)
@@ -102,7 +112,9 @@ class MultiWalletReducer {
             is WalletAction.MultiWallet.TokenLoaded -> {
                 val currency = Currency.fromBlockchainNetwork(action.blockchain, action.token)
                 val walletManager = state.getWalletManager(currency).guard {
-                    throw NullPointerException("MultiWallet.TokenLoaded: WalletManager must be not NULL")
+                    throw NullPointerException(
+                        "MultiWallet.TokenLoaded: WalletManager must be not NULL",
+                    )
                 }
                 val wallet = walletManager.wallet
                 val pendingTransactions = wallet.getPendingTransactions()
@@ -113,29 +125,33 @@ class MultiWalletReducer {
                     else -> BalanceStatus.VerifiedOnline
                 }
                 val tokenWalletData = state.getWalletData(currency)
-                val isTokenSendButtonEnabled = tokenWalletData?.shouldEnableTokenSendButton() == true
-                    && pendingTransactions.isEmpty()
+                val isTokenSendButtonEnabled = tokenWalletData?.shouldEnableTokenSendButton() == true &&
+                    pendingTransactions.isEmpty()
 
                 val newTokenWalletData = tokenWalletData?.copy(
                     currencyData = tokenWalletData.currencyData.copy(
                         status = tokenBalanceStatus,
                         amount = action.amount.value,
                         amountFormatted = action.amount.value?.toFormattedCurrencyString(
-                            action.amount.decimals, action.amount.currencySymbol
+                            action.amount.decimals,
+                            action.amount.currencySymbol,
                         ),
                         fiatAmountFormatted = tokenWalletData.fiatRate?.let {
-                            action.amount.value?.toFiatString(it, store.state.globalState.appCurrency.symbol)
+                            action.amount.value?.toFiatString(
+                                it,
+                                store.state.globalState.appCurrency.symbol,
+                            )
                         } ?: UNKNOWN_AMOUNT_SIGN,
-                        blockchainAmount = wallet.amounts[AmountType.Coin]?.value ?: BigDecimal.ZERO
+                        blockchainAmount = wallet.amounts[AmountType.Coin]?.value ?: BigDecimal.ZERO,
                     ),
                     pendingTransactions = pendingTransactions.removeUnknownTransactions(),
                     mainButton = WalletMainButton.SendButton(isTokenSendButtonEnabled),
                     currency = Currency.Token(
                         token = action.token,
                         blockchain = action.blockchain.blockchain,
-                        derivationPath = action.blockchain.derivationPath
+                        derivationPath = action.blockchain.derivationPath,
                     ),
-                    walletRent = findWalletRent(state.getWalletStore(walletManager.wallet))
+                    walletRent = findWalletRent(state.getWalletStore(walletManager.wallet)),
                 )
                 state.updateWalletData(newTokenWalletData)
             }
@@ -155,7 +171,7 @@ class MultiWalletReducer {
                 state.copy(primaryToken = action.token)
             is WalletAction.MultiWallet.SaveCurrencies -> state
             is WalletAction.MultiWallet.ShowWalletBackupWarning -> state.copy(
-                showBackupWarning = action.show
+                showBackupWarning = action.show,
             )
             is WalletAction.MultiWallet.BackupWallet -> state
         }
@@ -169,7 +185,9 @@ class MultiWalletReducer {
 }
 
 private fun addTokens(
-    tokens: List<Token>, blockchain: BlockchainNetwork, state: WalletState
+    tokens: List<Token>,
+    blockchain: BlockchainNetwork,
+    state: WalletState,
 ): WalletState {
     val wallets = tokens.mapNotNull { token -> token.toWallet(state, blockchain) }
     return state.updateWalletsData(wallets)
@@ -187,10 +205,10 @@ fun Token.toWallet(state: WalletState, blockchain: BlockchainNetwork): WalletDat
         currencyData = BalanceWidgetData(
             status = BalanceStatus.Loading,
             currency = this.name,
-            currencySymbol = this.symbol
+            currencySymbol = this.symbol,
         ),
         walletAddresses = walletAddresses,
         mainButton = WalletMainButton.SendButton(false),
-        currency = currency
+        currency = currency,
     )
 }

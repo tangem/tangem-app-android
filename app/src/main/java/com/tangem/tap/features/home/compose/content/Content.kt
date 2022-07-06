@@ -2,7 +2,11 @@ package com.tangem.tap.features.home.compose.content
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -47,7 +51,7 @@ fun StoriesRevolutionaryWallet(stepDuration: Int) {
                     isDarkBackground = true,
                 )
             }
-        }
+        },
     )
 }
 
@@ -72,7 +76,7 @@ fun StoriesUltraSecureBackup(isPaused: Boolean, stepDuration: Int) {
         },
         bottomContent = {
             FloatingCardsContent(isPaused, stepDuration)
-        }
+        },
     )
 }
 
@@ -88,7 +92,7 @@ fun StoriesCurrencies(isPaused: Boolean, stepDuration: Int) {
         },
         bottomContent = {
             StoriesCurrenciesContent(paused = isPaused, duration = stepDuration)
-        }
+        },
     )
 }
 
@@ -104,7 +108,7 @@ fun StoriesWeb3(isPaused: Boolean, stepDuration: Int) {
         },
         bottomContent = {
             StoriesWeb3Content(paused = isPaused, duration = stepDuration)
-        }
+        },
     )
 }
 
@@ -129,7 +133,7 @@ fun StoriesWalletForEveryone(stepDuration: Int) {
                     isDarkBackground = true,
                 )
             }
-        }
+        },
     )
 }
 
@@ -142,7 +146,7 @@ private fun SplitContent(
         modifier = Modifier
             .fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Top
+        verticalArrangement = Arrangement.Top,
     ) {
         topContent()
         bottomContent()
@@ -183,7 +187,7 @@ private fun StoriesTitleText(
             fontSize = 32.sp,
             fontWeight = FontWeight.SemiBold,
             color = if (isDarkBackground) Color.White else Color(0xFF090E13),
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
     }
 }
@@ -205,7 +209,7 @@ private fun StoriesSubtitleText(
             text = subtitleText,
             fontSize = 20.sp,
             color = color,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
         )
     }
 }
@@ -220,7 +224,7 @@ private fun StoriesImage(
         painter = painterResource(id = drawableResId),
         contentDescription = null,
         contentScale = if (isDarkBackground) ContentScale.Inside else ContentScale.FillWidth,
-        modifier = modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth(),
     )
 }
 
@@ -228,7 +232,6 @@ private fun String.annotated(): AnnotatedString {
     val source = this
     return buildAnnotatedString { append(source) }
 }
-
 
 @Preview
 @Composable
@@ -248,13 +251,11 @@ private fun CurrenciesPreview() {
     StoriesCurrencies(false, 6000)
 }
 
-
 @Preview
 @Composable
 private fun Web3Preview() {
     StoriesWeb3(false, 6000)
 }
-
 
 @Preview
 @Composable

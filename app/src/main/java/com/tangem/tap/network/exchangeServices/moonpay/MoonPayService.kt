@@ -13,9 +13,9 @@ import com.tangem.tap.network.exchangeServices.ExchangeService
 import com.tangem.tap.network.exchangeServices.ExchangeUrlBuilder
 import com.tangem.tap.network.exchangeServices.ExchangeUrlBuilder.Companion.SCHEME
 import com.tangem.tap.network.exchangeServices.ExchangeUrlBuilder.Companion.URL_SELL
-import kotlinx.coroutines.coroutineScope
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
+import kotlinx.coroutines.coroutineScope
 
 class MoonPayService(
     private val apiKey: String,
@@ -96,7 +96,7 @@ class MoonPayService(
         blockchain: Blockchain,
         cryptoCurrencyName: CryptoCurrencyName,
         fatCurrency: String,
-        walletAddress: String
+        walletAddress: String,
     ): String? {
         if (action == CurrencyExchangeManager.Action.Buy) throw UnsupportedOperationException()
 
@@ -116,14 +116,16 @@ class MoonPayService(
         return url
     }
 
-    override fun getSellCryptoReceiptUrl(action: CurrencyExchangeManager.Action, transactionId: String): String? {
+    override fun getSellCryptoReceiptUrl(
+        action: CurrencyExchangeManager.Action,
+        transactionId: String,
+    ): String? {
         val url = Uri.Builder()
             .scheme(SCHEME)
             .authority(URL_SELL)
             .appendPath("transaction_receipt")
             .appendQueryParameter("transactionId", transactionId).build().toString()
         return url
-
     }
 
     private fun createSignature(data: String): String {
@@ -138,5 +140,5 @@ class MoonPayService(
 private data class MoonPayStatus(
     val availableToSell: List<String>,
     val responseUserStatus: MoonPayUserStatus,
-    val responseCurrencies: List<MoonPayCurrencies>
+    val responseCurrencies: List<MoonPayCurrencies>,
 )

@@ -82,7 +82,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
 
         twinsWidget = TwinsCardWidget(
             LeapfrogWidget(binding.onboardingTopContainer.cardsContainer),
-            deviceScaleFactorForWelcomeState
+            deviceScaleFactorForWelcomeState,
         ) {
             285f * deviceScaleFactorForWelcomeState
         }
@@ -171,7 +171,11 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
     }
 
     private fun setupWelcomeState(state: TwinCardsState) {
-        setupWelcomeState(state) { store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.CreateFirstWallet)) }
+        setupWelcomeState(state) {
+            store.dispatch(
+                TwinCardsAction.SetStepOfScreen(TwinCardsStep.CreateFirstWallet),
+            )
+        }
     }
 
     private fun setupWelcomeState(state: TwinCardsState, mainAction: VoidCallback) =
@@ -184,7 +188,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
             tvHeader.setText(R.string.twins_onboarding_subtitle)
             tvBody.text = getString(
                 R.string.twins_onboarding_description_format,
-                state.cardNumber?.pairIndexNumber()
+                state.cardNumber?.pairIndexNumber(),
             )
 
             btnMainAction.setText(R.string.common_continue)
@@ -230,7 +234,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
                             TwinCardNumber.Second -> {
                                 switchToCard(
                                     state.cardNumber,
-                                    false
+                                    false,
                                 ) { startPostponedEnterTransition() }
                             }
                         }
@@ -250,8 +254,8 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
                 store.dispatch(
                     TwinCardsAction.Wallet.LaunchFirstStep(
                         Message(getString(R.string.twins_recreate_title_format, twinIndexNumber)),
-                        assetReader
-                    )
+                        assetReader,
+                    ),
                 )
             }
 
@@ -275,12 +279,12 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
                         Message(
                             getString(
                                 R.string.twins_recreate_title_format,
-                                twinPairIndexNumber
-                            )
+                                twinPairIndexNumber,
+                            ),
                         ),
                         Message(getString(R.string.twins_recreate_title_preparing)),
                         Message(getString(R.string.twins_recreate_title_creating_wallet)),
-                    )
+                    ),
                 )
             }
         }
@@ -297,12 +301,11 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
             btnMainAction.setOnClickListener {
                 store.dispatch(
                     TwinCardsAction.Wallet.LaunchThirdStep(
-                        Message(getString(R.string.twins_recreate_title_format, twinIndexNumber))
-                    )
+                        Message(getString(R.string.twins_recreate_title_format, twinIndexNumber)),
+                    ),
                 )
             }
         }
-
 
     private fun setupTopUpWalletState(state: TwinCardsState) =
         with(binding.onboardingActionContainer) {
@@ -359,7 +362,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
                 }
             }
             binding.onboardingTopContainer.imvCardBackground.setBackgroundDrawable(
-                requireContext().getDrawableCompat(R.drawable.shape_rectangle_rounded_8)
+                requireContext().getDrawableCompat(R.drawable.shape_rectangle_rounded_8),
             )
             updateConstraints(state.currentStep, R.layout.lp_onboarding_topup_wallet_twins)
         }
@@ -401,7 +404,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
     private fun switchToCard(
         cardNumber: TwinCardNumber?,
         animate: Boolean = true,
-        onEnd: VoidCallback = {}
+        onEnd: VoidCallback = {},
     ) {
         val position = cardNumber?.number ?: return
 
@@ -413,12 +416,14 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
     }
 
     override fun handleOnBackPressed() {
-        store.dispatch(TwinCardsAction.Wallet.HandleOnBackPressed { should, popAction ->
-            store.dispatch(TwinCardsAction.Confetti.Hide)
-            showConfetti(false)
-            if (should) switchToCard(TwinCardNumber.First, true, popAction)
-            else popAction()
-        })
+        store.dispatch(
+            TwinCardsAction.Wallet.HandleOnBackPressed { should, popAction ->
+                store.dispatch(TwinCardsAction.Confetti.Hide)
+                showConfetti(false)
+                if (should) switchToCard(TwinCardNumber.First, true, popAction)
+                else popAction()
+            },
+        )
     }
 }
 

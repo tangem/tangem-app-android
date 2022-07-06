@@ -18,45 +18,47 @@ sealed class CustomCurrency(
 
     class CustomBlockchain(
         network: Blockchain,
-        derivationPath: DerivationPath?
+        derivationPath: DerivationPath?,
     ) : CustomCurrency(network, derivationPath) {
 
         class Converter(
-            private val derivationStyle: DerivationStyle?
+            private val derivationStyle: DerivationStyle?,
         ) : BaseFieldDataConverter<CustomBlockchain>() {
             override fun getConvertedData(): CustomBlockchain {
                 val mainNetwork = collectedData[CustomTokenFieldId.Network] as Blockchain
-                val derivationPathNetwork = collectedData[CustomTokenFieldId.DerivationPath] as Blockchain
                 val derivationPath = AddCustomTokenState.getDerivationPath(
-                    mainNetwork,
-                    derivationPathNetwork,
-                    derivationStyle
+                    mainNetwork = mainNetwork,
+                    derivationNetwork = collectedData[CustomTokenFieldId.DerivationPath]
+                        as Blockchain,
+                    derivationStyle = derivationStyle,
                 )
                 return CustomBlockchain(mainNetwork, derivationPath)
             }
 
-            override fun getIdToCollect(): List<FieldId> = listOf(CustomTokenFieldId.Network, CustomTokenFieldId.DerivationPath)
+            override fun getIdToCollect(): List<FieldId> = listOf(
+                CustomTokenFieldId.Network,
+                CustomTokenFieldId.DerivationPath,
+            )
         }
     }
 
     class CustomToken(
         val token: Token,
         network: Blockchain,
-        derivationPath: DerivationPath?
+        derivationPath: DerivationPath?,
     ) : CustomCurrency(network, derivationPath) {
 
         class Converter(
             private val tokenId: String?,
-            private val derivationStyle: DerivationStyle?
+            private val derivationStyle: DerivationStyle?,
         ) : BaseFieldDataConverter<CustomToken>() {
 
             override fun getConvertedData(): CustomToken {
-                val mainNetwork = collectedData[CustomTokenFieldId.Network] as Blockchain
-                val derivationPathNetwork = collectedData[CustomTokenFieldId.DerivationPath] as Blockchain
                 val derivationPath = AddCustomTokenState.getDerivationPath(
-                    mainNetwork,
-                    derivationPathNetwork,
-                    derivationStyle
+                    mainNetwork = collectedData[CustomTokenFieldId.Network] as Blockchain,
+                    derivationNetwork = collectedData[CustomTokenFieldId.DerivationPath]
+                        as Blockchain,
+                    derivationStyle = derivationStyle,
                 )
 
                 val token = Token(

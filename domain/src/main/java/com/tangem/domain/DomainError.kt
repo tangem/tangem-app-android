@@ -25,7 +25,7 @@ sealed class DomainError(
 }
 
 sealed class AddCustomTokenError(
-    subCode: Int = 0
+    subCode: Int = 0,
 ) : DomainError(ERROR_CODE_ADD_CUSTOM_TOKEN + subCode, this::class.java.simpleName, null) {
 
     object FieldIsEmpty : AddCustomTokenError()
@@ -42,6 +42,6 @@ sealed class AddCustomTokenError(
     sealed class Warning : AddCustomTokenError() {
         object PotentialScamToken : Warning()
         object TokenAlreadyAdded : Warning()
-        object UnsupportedSolanaToken: Warning()
+        object UnsupportedSolanaToken : Warning()
     }
 }

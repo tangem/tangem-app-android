@@ -16,13 +16,13 @@ class SpaceItemDecoration(
         outRect: Rect,
         view: View,
         parent: RecyclerView,
-        state: RecyclerView.State
+        state: RecyclerView.State,
     ) {
         if (state.itemCount == 0) return
         if (!::space.isInitialized) {
             space = Space(
                 view.dpToPx(horizontalSpaceDp).toInt(),
-                view.dpToPx(verticalSpaceDp).toInt()
+                view.dpToPx(verticalSpaceDp).toInt(),
             )
         }
 

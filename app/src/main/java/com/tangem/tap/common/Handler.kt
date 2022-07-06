@@ -5,7 +5,9 @@ import android.os.HandlerThread
 import android.os.Looper
 
 private val uiHandler = Handler(Looper.getMainLooper())
-private val backgroundHandler = Handler(HandlerThread("AppMainHandlerThread").apply { start() }.looper)
+private val backgroundHandler = Handler(
+    HandlerThread("AppMainHandlerThread").apply { start() }.looper,
+)
 
 fun postUi(ms: Long = 0, func: Runnable) {
     if (ms == 0L) uiHandler.post { func.run() } else uiHandler.postDelayed(func, ms)

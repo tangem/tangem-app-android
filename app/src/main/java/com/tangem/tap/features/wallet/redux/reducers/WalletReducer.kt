@@ -16,10 +16,10 @@ import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.getArtworkUrl
 import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
+import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.WalletRent
 import com.tangem.tap.features.wallet.redux.AddressData
 import com.tangem.tap.features.wallet.redux.Artwork
-import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.ErrorType
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.features.wallet.redux.TradeCryptoState
@@ -42,7 +42,6 @@ class WalletReducer {
 }
 
 private fun internalReduce(action: Action, state: AppState): WalletState {
-
     val multiWalletReducer = MultiWalletReducer()
     val onWalletLoadedReducer = OnWalletLoadedReducer()
     val appCurrencyReducer = AppCurrencyReducer()
@@ -67,17 +66,17 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                         blockchainNetwork = BlockchainNetwork(
                             Blockchain.Unknown,
                             null,
-                            emptyList()
+                            emptyList(),
                         ),
                         walletsData = listOf(
                             WalletData(
                                 currencyData = BalanceWidgetData(BalanceStatus.EmptyCard),
                                 mainButton = WalletMainButton.CreateWalletButton(true),
-                                currency = Currency.Blockchain(Blockchain.Unknown, null)
-                            )
-                        )
-                    )
-                )
+                                currency = Currency.Blockchain(Blockchain.Unknown, null),
+                            ),
+                        ),
+                    ),
+                ),
             )
         }
         is WalletAction.LoadData.Failure -> {
@@ -89,18 +88,17 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                                 walletsData = store.walletsData.map {
                                     it.copy(
                                         currencyData = it.currencyData.copy(
-                                            status = BalanceStatus.Unreachable
-                                        )
+                                            status = BalanceStatus.Unreachable,
+                                        ),
                                     )
-                                }
-
+                                },
                             )
                         }
 
                     newState = newState.copy(
                         state = ProgressState.Error,
                         error = ErrorType.NoInternetConnection,
-                        wallets = wallets
+                        wallets = wallets,
                     )
                 }
                 is TapError.UnknownBlockchain -> {
@@ -112,16 +110,18 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                                 blockchainNetwork = BlockchainNetwork(
                                     Blockchain.Unknown,
                                     null,
-                                    emptyList()
+                                    emptyList(),
                                 ),
                                 walletsData = listOf(
                                     WalletData(
-                                        currencyData = BalanceWidgetData(BalanceStatus.UnknownBlockchain),
-                                        currency = Currency.Blockchain(Blockchain.Unknown, null)
-                                    )
-                                )
-                            )
-                        )
+                                        currencyData = BalanceWidgetData(
+                                            BalanceStatus.UnknownBlockchain,
+                                        ),
+                                        currency = Currency.Blockchain(Blockchain.Unknown, null),
+                                    ),
+                                ),
+                            ),
+                        ),
                     )
                 }
                 else -> { /* no-op */
@@ -160,10 +160,10 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                                 mainButton = WalletMainButton.SendButton(false),
                                 tradeCryptoState = TradeCryptoState.from(
                                     exchangeManager,
-                                    walletData
-                                )
+                                    walletData,
+                                ),
                             )
-                        }
+                        },
                     )
                 }
                 newState = newState.copy(
@@ -185,12 +185,12 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                                 currencySymbol = wallet.currencyData.currencySymbol,
                             ),
                             mainButton = WalletMainButton.SendButton(false),
-                            tradeCryptoState = TradeCryptoState.from(exchangeManager, wallet)
+                            tradeCryptoState = TradeCryptoState.from(exchangeManager, wallet),
                         )
                     }
                 val wallets = newState.updateTradeCryptoState(
                     exchangeManager,
-                    newState.replaceSomeWallets(newWallets)
+                    newState.replaceSomeWallets(newWallets),
                 )
                 val walletStore = newState.getWalletStore(action.blockchain)?.updateWallets(wallets)
                 newState = newState.updateWalletStore(walletStore)
@@ -199,7 +199,7 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
         is WalletAction.LoadWallet.Success -> newState = onWalletLoadedReducer.reduce(
             wallet = action.wallet,
             blockchainNetwork = action.blockchain,
-            walletState = newState
+            walletState = newState,
         )
         is WalletAction.LoadWallet.NoAccount -> {
             val amount = BigDecimal.ZERO
@@ -218,10 +218,10 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                         ),
                         fiatAmount = fiatAmount,
                         fiatAmountFormatted = fiatAmount.toFormattedFiatValue(
-                            fiatCurrencyName = state.globalState.appCurrency.symbol
+                            fiatCurrencyName = state.globalState.appCurrency.symbol,
                         ),
                         amountToCreateAccount = action.amountToCreateAccount,
-                    )
+                    ),
                 )
             }
             var updatedWalletStore = newState.getWalletStore(action.blockchain)
@@ -229,7 +229,7 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
 
             updatedWalletStore =
                 updatedWalletStore?.updateWallets(
-                    newState.updateTradeCryptoState(exchangeManager, updatedWalletStore.walletsData)
+                    newState.updateTradeCryptoState(exchangeManager, updatedWalletStore.walletsData),
                 )
 
             newState = newState.updateWalletStore(updatedWalletStore)
@@ -246,7 +246,7 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
             val newWalletData = walletData?.copy(
                 currencyData = walletData.currencyData.copy(
                     status = BalanceStatus.Unreachable,
-                    errorMessage = message
+                    errorMessage = message,
                 ),
             )
             val tokenWallets = action.wallet.getTokens()
@@ -258,14 +258,15 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                 .map {
                     it.copy(
                         currencyData = it.currencyData.copy(
-                            status = BalanceStatus.Unreachable, errorMessage = message
-                        )
+                            status = BalanceStatus.Unreachable,
+                            errorMessage = message,
+                        ),
                     )
                 }
             val updatedWallets =
                 newState.updateTradeCryptoState(
                     exchangeManager,
-                    walletStore!!.updateWallets(listOfNotNull(newWalletData) + tokenWallets).walletsData
+                    walletStore!!.updateWallets(listOfNotNull(newWalletData) + tokenWallets).walletsData,
                 )
 
             newState = newState.updateWalletsData(updatedWallets)
@@ -314,9 +315,9 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                 selectedWalletData?.copy(
                     walletAddresses = WalletAddresses(
                         address,
-                        walletAddresses.list
-                    )
-                )
+                        walletAddresses.list,
+                    ),
+                ),
             )
         }
         is WalletAction.SetWalletRent -> {
@@ -361,7 +362,7 @@ fun Wallet.createAddressesData(): List<AddressData> {
             it.value,
             it.type,
             getShareUri(it.value),
-            getExploreUrl(it.value)
+            getExploreUrl(it.value),
         )
         if (it.type == blockchain.defaultAddressType()) {
             listOfAddressData.add(0, addressData)
@@ -374,27 +375,28 @@ fun Wallet.createAddressesData(): List<AddressData> {
 
 private fun handleCheckSignedHashesActions(
     action: WalletAction.Warnings,
-    state: WalletState
+    state: WalletState,
 ): WalletState {
     return when (action) {
-        WalletAction.Warnings.CheckHashesCount.ConfirmHashesCount -> state.copy(hashesCountVerified = true)
+        WalletAction.Warnings.CheckHashesCount.ConfirmHashesCount -> state.copy(
+            hashesCountVerified = true,
+        )
         WalletAction.Warnings.CheckHashesCount.NeedToCheckHashesCountOnline -> state.copy(
-            hashesCountVerified = false
+            hashesCountVerified = false,
         )
         is WalletAction.Warnings.Set -> state.copy(mainWarningsList = action.warningList)
         else -> state
     }
 }
 
-
 private fun setNewFiatRate(
     fiatRates: Map<Currency, BigDecimal?>,
     appCurrency: FiatCurrency,
-    state: WalletState
+    state: WalletState,
 ): WalletState {
     val rateFormatter: (BigDecimal) -> String = { rate: BigDecimal ->
         rate.toFiatRateString(
-            fiatCurrencyName = appCurrency.symbol
+            fiatCurrencyName = appCurrency.symbol,
         )
     }
 
@@ -403,7 +405,7 @@ private fun setNewFiatRate(
             fiatRates = fiatRates.mapNotNullValues { it.value },
             rateFormatter = rateFormatter,
             appCurrency = appCurrency,
-            state = state
+            state = state,
         )
     } else {
         val fiatRate = fiatRates.entries.firstOrNull()
@@ -415,7 +417,7 @@ private fun setNewFiatRate(
             rateFormatted = rateFormatter(rate),
             currency = currency,
             appCurrency = appCurrency,
-            state = state
+            state = state,
         )
     }
 }
@@ -424,7 +426,7 @@ private fun setMultiWalletFiatRate(
     fiatRates: Map<Currency, BigDecimal>,
     rateFormatter: (BigDecimal) -> String,
     appCurrency: FiatCurrency,
-    state: WalletState
+    state: WalletState,
 ): WalletState {
     val newWalletsData = fiatRates.mapNotNull { (currency, rate) ->
         val walletStore = state.getWalletStore(currency) ?: return@mapNotNull null
@@ -446,10 +448,10 @@ private fun setMultiWalletFiatRate(
         walletData.copy(
             currencyData = currencyData.copy(
                 fiatAmountFormatted = fiatAmountFormatted,
-                fiatAmount = fiatAmount
+                fiatAmount = fiatAmount,
             ),
             fiatRate = rate,
-            fiatRateString = rateFormatter(rate)
+            fiatRateString = rateFormatter(rate),
         )
     }
 
@@ -462,7 +464,7 @@ private fun setSingleWalletFiatRate(
     rateFormatted: String,
     currency: Currency,
     appCurrency: FiatCurrency,
-    state: WalletState
+    state: WalletState,
 ): WalletState {
     val wallet = state.primaryWalletManager?.wallet ?: return state
     val token = wallet.getFirstToken()
@@ -473,7 +475,7 @@ private fun setSingleWalletFiatRate(
         val walletData = state.primaryWallet.copy(
             currencyData = state.primaryWallet.currencyData.copy(fiatAmountFormatted = fiatAmount),
             fiatRate = rate,
-            fiatRateString = rateFormatted
+            fiatRateString = rateFormatted,
         )
         return state.updateWalletData(walletData)
     } else if (currency is Currency.Token && currency.token == token) {
@@ -483,13 +485,13 @@ private fun setSingleWalletFiatRate(
         val tokenData = state.primaryWallet?.currencyData?.token?.copy(
             fiatAmount = tokenFiatAmount,
             fiatRate = rate,
-            fiatRateString = rateFormatted
+            fiatRateString = rateFormatted,
         )
 
         val walletData = state.primaryWallet?.copy(
             currencyData = state.primaryWallet.currencyData.copy(
-                token = tokenData
-            )
+                token = tokenData,
+            ),
         )
         val wallets = walletData?.let { listOf(walletData) } ?: emptyList()
         return state.updateWalletsData(wallets)

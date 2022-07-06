@@ -22,7 +22,7 @@ import com.tangem.domain.redux.domainStore
  */
 @Composable
 fun ContractAddressTests(
-    onItemClick: VoidCallback
+    onItemClick: VoidCallback,
 ) {
     val casesInfo = listOf(
         "USDC on ETH" to "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
@@ -38,7 +38,7 @@ fun ContractAddressTests(
 
 @Composable
 fun SolanaAddressTests(
-    onItemClick: VoidCallback
+    onItemClick: VoidCallback,
 ) {
     val casesInfo = listOf(
         "USDT (full)" to "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB",
@@ -54,44 +54,54 @@ private fun CasesListContent(
     casesList: List<Pair<String, String>>,
     onItemClick: VoidCallback,
 ) {
-    LazyColumn(content = {
-        item {
-            Row() {
-                ResetContractAddressButton(onItemClick)
-                Text("", modifier = Modifier.weight(1f))
-                ResetAllFieldsButton(onItemClick)
+    LazyColumn(
+        content = {
+            item {
+                Row() {
+                    ResetContractAddressButton(onItemClick)
+                    Text("", modifier = Modifier.weight(1f))
+                    ResetAllFieldsButton(onItemClick)
+                }
+                Divider()
             }
-            Divider()
-        }
-        items(casesList.size) {
-            val (info, address) = casesList[it]
-            ContractAddressButton(info, address, onItemClick)
-        }
-    })
+            items(casesList.size) {
+                val (info, address) = casesList[it]
+                ContractAddressButton(info, address, onItemClick)
+            }
+        },
+    )
 }
 
 @Composable
 fun ResetAllFieldsButton(
-    onItemClick: VoidCallback
+    onItemClick: VoidCallback,
 ) {
     ActionButton(name = "Reset") {
         onItemClick()
-        domainStore.dispatch(AddCustomTokenAction.OnTokenContractAddressChanged(Field.Data("", false)))
-        domainStore.dispatch(AddCustomTokenAction.OnTokenNetworkChanged(Field.Data(Blockchain.Unknown, false)))
+        domainStore.dispatch(
+            AddCustomTokenAction.OnTokenContractAddressChanged(Field.Data("", false)),
+        )
+        domainStore.dispatch(
+            AddCustomTokenAction.OnTokenNetworkChanged(Field.Data(Blockchain.Unknown, false)),
+        )
         domainStore.dispatch(AddCustomTokenAction.OnTokenNameChanged(Field.Data("", false)))
         domainStore.dispatch(AddCustomTokenAction.OnTokenSymbolChanged(Field.Data("", false)))
         domainStore.dispatch(AddCustomTokenAction.OnTokenDecimalsChanged(Field.Data("", false)))
-        domainStore.dispatch(AddCustomTokenAction.OnTokenDerivationPathChanged(Field.Data(Blockchain.Unknown, false)))
+        domainStore.dispatch(
+            AddCustomTokenAction.OnTokenDerivationPathChanged(Field.Data(Blockchain.Unknown, false)),
+        )
     }
 }
 
 @Composable
 fun ResetContractAddressButton(
-    onItemClick: VoidCallback
+    onItemClick: VoidCallback,
 ) {
     ActionButton(name = "Set empty address") {
         onItemClick()
-        domainStore.dispatch(AddCustomTokenAction.OnTokenContractAddressChanged(Field.Data("", false)))
+        domainStore.dispatch(
+            AddCustomTokenAction.OnTokenContractAddressChanged(Field.Data("", false)),
+        )
     }
 }
 
@@ -99,14 +109,16 @@ fun ResetContractAddressButton(
 private fun ContractAddressButton(
     name: String,
     address: String,
-    onItemClick: VoidCallback
+    onItemClick: VoidCallback,
 ) {
     ActionButton(
         modifier = Modifier.fillMaxWidth(),
         name = name,
     ) {
         onItemClick()
-        domainStore.dispatch(AddCustomTokenAction.OnTokenContractAddressChanged(Field.Data(address, false)))
+        domainStore.dispatch(
+            AddCustomTokenAction.OnTokenContractAddressChanged(Field.Data(address, false)),
+        )
     }
 }
 
@@ -118,6 +130,6 @@ fun ActionButton(
 ) {
     Button(
         modifier = modifier.padding(horizontal = 8.dp),
-        onClick = onClick
+        onClick = onClick,
     ) { Text(name, fontSize = 12.sp) }
 }

@@ -27,7 +27,7 @@ class EthSignHelper {
                         request.params[0].asString,
                         request.params[1].asString,
                     ),
-                    WCEthereumSignMessage.WCSignType.TYPED_MESSAGE
+                    WCEthereumSignMessage.WCSignType.TYPED_MESSAGE,
                 )
             } else {
                 null
@@ -41,14 +41,13 @@ class EthSignHelper {
                     .removePrefix("\"")
                     .removeSuffix("\"")
                 val messageJson = JsonParser().parse(messageString)
-                val filteredMap = gson.fromJson<Map<*,*>>(messageJson)
-                    .filterKeys { it == "domain" || it == "message"}
+                val filteredMap = gson.fromJson<Map<*, *>>(messageJson)
+                    .filterKeys { it == "domain" || it == "message" }
 
                 gson.toJson(filteredMap)
             } catch (exception: Exception) {
                 null
             }
-
         }
     }
 }
@@ -57,7 +56,7 @@ data class CustomJsonRpcRequests(
     val id: Long,
     val jsonrpc: String = JSONRPC_VERSION,
     val method: WCMethodExtended?,
-    val params: JsonArray
+    val params: JsonArray,
 )
 
 enum class WCMethodExtended {

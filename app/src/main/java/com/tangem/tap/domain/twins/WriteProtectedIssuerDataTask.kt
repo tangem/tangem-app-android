@@ -16,7 +16,8 @@ import com.tangem.operations.sign.SignHashCommand
 import com.tangem.tap.domain.extensions.getSingleWallet
 
 class WriteProtectedIssuerDataTask(
-    private val twinPublicKey: ByteArray, private val issuerKeys: KeyPair,
+    private val twinPublicKey: ByteArray,
+    private val issuerKeys: KeyPair,
 ) : CardSessionRunnable<SuccessResponse> {
 
     override fun run(
@@ -25,7 +26,7 @@ class WriteProtectedIssuerDataTask(
     ) {
         SignHashCommand(
             twinPublicKey.calculateSha256(),
-            session.environment.card!!.getSingleWallet()!!.publicKey
+            session.environment.card!!.getSingleWallet()!!.publicKey,
         )
             .run(session) { signResult ->
                 when (signResult) {
@@ -34,22 +35,33 @@ class WriteProtectedIssuerDataTask(
                             when (readResult) {
                                 is CompletionResult.Success -> {
                                     writeIssuerData(
-                                        twinPublicKey, issuerKeys, signResult.data.signature,
-                                        readResult.data, session, callback
+                                        twinPublicKey,
+                                        issuerKeys,
+                                        signResult.data.signature,
+                                        readResult.data,
+                                        session,
+                                        callback,
                                     )
                                 }
-                                is CompletionResult.Failure -> callback(CompletionResult.Failure(
-                                    readResult.error))
+                                is CompletionResult.Failure -> callback(
+                                    CompletionResult.Failure(
+                                        readResult.error,
+                                    ),
+                                )
                             }
                         }
                     }
-                    is CompletionResult.Failure -> callback(CompletionResult.Failure(signResult.error))
+                    is CompletionResult.Failure -> callback(
+                        CompletionResult.Failure(signResult.error),
+                    )
                 }
             }
     }
 
     private fun writeIssuerData(
-        twinPublicKey: ByteArray, issuerKeys: KeyPair, cardSignature: ByteArray,
+        twinPublicKey: ByteArray,
+        issuerKeys: KeyPair,
+        cardSignature: ByteArray,
         readResponse: ReadIssuerDataResponse,
         session: CardSession,
         callback: (

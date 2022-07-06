@@ -2,7 +2,16 @@ package com.tangem.tap.features.tokens.ui.compose
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Divider
 import androidx.compose.material.Text
@@ -33,13 +42,13 @@ fun ExpandedCurrencyItem(
     allowToAdd: Boolean,
     onCurrencyClick: (String) -> Unit,
     onAddCurrencyToggled: (Currency, TokenWithBlockchain?) -> Unit,
-    onNetworkItemClicked: (ContractAddress) -> Unit
+    onNetworkItemClicked: (ContractAddress) -> Unit,
 ) {
     Column {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable(onClick = { onCurrencyClick(currency.id) })
+                .clickable(onClick = { onCurrencyClick(currency.id) }),
         ) {
             SubcomposeAsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
@@ -59,7 +68,7 @@ fun ExpandedCurrencyItem(
                     .fillMaxHeight()
                     .weight(1f)
                     .padding(top = 14.dp)
-                    .align(Alignment.CenterVertically)
+                    .align(Alignment.CenterVertically),
             ) {
                 Text(
                     text = currency.fullName,
@@ -80,7 +89,7 @@ fun ExpandedCurrencyItem(
                 contentDescription = null,
                 Modifier
                     .padding(20.dp)
-                    .align(Alignment.CenterVertically)
+                    .align(Alignment.CenterVertically),
             )
         }
 
@@ -89,7 +98,7 @@ fun ExpandedCurrencyItem(
         Row {
             Box(
                 modifier = Modifier
-                    .fillMaxHeight()
+                    .fillMaxHeight(),
             ) {
                 if (blockchains.size > 1) {
                     val dividerHeight = if (blockchains.size == 2) {
@@ -104,7 +113,7 @@ fun ExpandedCurrencyItem(
                         modifier = Modifier
                             .height(dividerHeight.dp)
                             .padding(start = 37.5.dp)
-                            .width(1.dp)
+                            .width(1.dp),
                     )
                 }
 
@@ -116,7 +125,7 @@ fun ExpandedCurrencyItem(
                             Modifier
                                 .padding(
                                     start = 37.dp,
-                                )
+                                ),
                         )
                         Spacer(modifier = Modifier.size(13.5.dp))
                     }

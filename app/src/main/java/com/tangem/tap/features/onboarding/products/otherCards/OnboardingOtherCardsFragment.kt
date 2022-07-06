@@ -71,10 +71,13 @@ class OnboardingOtherCardsFragment : BaseOnboardingFragment<OnboardingOtherCards
     }
 
     private fun setupCreateWalletState() = with(binding) {
-
         with(onboardingActionContainer) {
             btnMainAction.setText(R.string.onboarding_create_wallet_button_create_wallet)
-            btnMainAction.setOnClickListener { store.dispatch(OnboardingOtherCardsAction.CreateWallet) }
+            btnMainAction.setOnClickListener {
+                store.dispatch(
+                    OnboardingOtherCardsAction.CreateWallet,
+                )
+            }
             btnAlternativeAction.setText(R.string.onboarding_button_what_does_it_mean)
             btnAlternativeAction.setOnClickListener { }
 
@@ -84,12 +87,10 @@ class OnboardingOtherCardsFragment : BaseOnboardingFragment<OnboardingOtherCards
             btnAlternativeAction.isVisible = false // temporary
         }
 
-
         binding.onboardingTopContainer.imvCardBackground.setBackgroundDrawable(
-            requireContext().getDrawableCompat(R.drawable.shape_circle)
+            requireContext().getDrawableCompat(R.drawable.shape_circle),
         )
         updateConstraints(R.layout.lp_onboarding_create_wallet)
-
     }
 
     private fun setupDoneState() = with(binding.onboardingActionContainer) {
@@ -107,7 +108,7 @@ class OnboardingOtherCardsFragment : BaseOnboardingFragment<OnboardingOtherCards
         tvBody.setText(R.string.onboarding_done_body)
 
         binding.onboardingTopContainer.imvCardBackground?.setBackgroundDrawable(
-            requireContext().getDrawableCompat(R.drawable.shape_rectangle_rounded_8)
+            requireContext().getDrawableCompat(R.drawable.shape_rectangle_rounded_8),
         )
         updateConstraints(R.layout.lp_onboarding_done)
     }

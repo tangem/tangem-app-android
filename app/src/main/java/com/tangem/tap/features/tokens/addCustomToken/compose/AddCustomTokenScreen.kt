@@ -1,11 +1,37 @@
 package com.tangem.tap.features.tokens.addCustomToken.compose
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.*
+import androidx.compose.material.BottomSheetScaffold
+import androidx.compose.material.BottomSheetScaffoldState
+import androidx.compose.material.BottomSheetState
+import androidx.compose.material.BottomSheetValue
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.ExtendedFloatingActionButton
+import androidx.compose.material.FabPosition
+import androidx.compose.material.FloatingActionButtonDefaults
+import androidx.compose.material.Icon
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Surface
+import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.runtime.*
+import androidx.compose.material.rememberBottomSheetScaffoldState
+import androidx.compose.material.rememberScaffoldState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
@@ -15,13 +41,22 @@ import androidx.compose.ui.unit.dp
 import com.tangem.domain.AddCustomTokenError
 import com.tangem.domain.common.form.DataField
 import com.tangem.domain.common.form.FieldId
-import com.tangem.domain.features.addCustomToken.CustomTokenFieldId.*
+import com.tangem.domain.features.addCustomToken.CustomTokenFieldId.ContractAddress
+import com.tangem.domain.features.addCustomToken.CustomTokenFieldId.Decimals
+import com.tangem.domain.features.addCustomToken.CustomTokenFieldId.DerivationPath
+import com.tangem.domain.features.addCustomToken.CustomTokenFieldId.Name
+import com.tangem.domain.features.addCustomToken.CustomTokenFieldId.Network
+import com.tangem.domain.features.addCustomToken.CustomTokenFieldId.Symbol
 import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction
 import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenState
 import com.tangem.domain.features.addCustomToken.redux.ScreenState
 import com.tangem.domain.features.addCustomToken.redux.ViewStates
 import com.tangem.domain.redux.domainStore
-import com.tangem.tap.common.compose.*
+import com.tangem.tap.common.compose.AddCustomTokenWarning
+import com.tangem.tap.common.compose.ClosePopupTrigger
+import com.tangem.tap.common.compose.ComposeDialogManager
+import com.tangem.tap.common.compose.ToggledRippleTheme
+import com.tangem.tap.common.compose.keyboardAsState
 import com.tangem.tap.common.moduleMessage.ModuleMessageConverter
 import com.tangem.tap.features.tokens.addCustomToken.compose.test.TestCase
 import com.tangem.tap.features.tokens.addCustomToken.compose.test.TestCasesList
@@ -31,7 +66,7 @@ import kotlinx.coroutines.launch
 /**
  * Created by Anton Zhilenkov on 23/03/2022.
  */
-private class AddCustomTokenScreen {} // for simple search
+private class AddCustomTokenScreen // for simple search
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -42,7 +77,7 @@ fun AddCustomTokenScreen(
     val selectedTestCase = remember { mutableStateOf(TestCase.ContractAddress) }
 
     val bottomSheetScaffoldState = rememberBottomSheetScaffoldState(
-        bottomSheetState = BottomSheetState(BottomSheetValue.Collapsed)
+        bottomSheetState = BottomSheetState(BottomSheetValue.Collapsed),
     )
     val coroutineScope = rememberCoroutineScope()
     val toggleBottomSheet = { coroutineScope.launch { bottomSheetScaffoldState.toggle() } }
@@ -57,17 +92,22 @@ fun AddCustomTokenScreen(
         sheetPeekHeight = 0.dp,
     ) {
         Column() {
-            TestCasesList(onItemClick = {
-                selectedTestCase.value = it
-                toggleBottomSheet()
-            })
+            TestCasesList(
+                onItemClick = {
+                    selectedTestCase.value = it
+                    toggleBottomSheet()
+                },
+            )
             ScreenContent(state, closePopupTrigger)
         }
     }
 
     ComposeDialogManager()
     LaunchedEffect(key1 = Unit, block = { domainStore.dispatch(AddCustomTokenAction.OnCreate) })
-    DisposableEffect(key1 = Unit, effect = { onDispose { domainStore.dispatch(AddCustomTokenAction.OnDestroy) } })
+    DisposableEffect(
+        key1 = Unit,
+        effect = { onDispose { domainStore.dispatch(AddCustomTokenAction.OnDestroy) } },
+    )
 }
 
 @OptIn(ExperimentalMaterialApi::class)
@@ -109,7 +149,7 @@ private fun ScreenContent(
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(16.dp)
+                                .padding(16.dp),
                         ) {
                             FormFields(state, closePopupTrigger)
                         }
@@ -160,7 +200,7 @@ fun Warnings(warnings: List<AddCustomTokenError.Warning>) {
             AddCustomTokenWarning(
                 modifier = modifier.fillMaxWidth(),
                 warning = item,
-                converter = warningConverter
+                converter = warningConverter,
             )
         }
     }
@@ -171,7 +211,7 @@ private fun AddButton(state: MutableState<AddCustomTokenState>) {
     AddCustomTokenFab(
         modifier = Modifier
             .widthIn(210.dp, 280.dp),
-        isEnabled = state.value.screenState.addButton.isEnabled
+        isEnabled = state.value.screenState.addButton.isEnabled,
     ) { domainStore.dispatch(AddCustomTokenAction.OnAddCustomTokenClicked) }
 }
 
@@ -179,7 +219,7 @@ private fun AddButton(state: MutableState<AddCustomTokenState>) {
 private fun AddCustomTokenFab(
     modifier: Modifier = Modifier,
     isEnabled: Boolean = true,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     val contentColor = Color.White
     val backgroundColor = if (isEnabled) {
@@ -216,19 +256,19 @@ data class ScreenFieldData(
     val field: DataField<*>,
     val error: AddCustomTokenError?,
     val errorConverter: ModuleMessageConverter,
-    val viewState: ViewStates.TokenField
+    val viewState: ViewStates.TokenField,
 ) {
     companion object {
         fun fromState(
             field: DataField<*>,
             state: AddCustomTokenState,
-            errorConverter: ModuleMessageConverter
+            errorConverter: ModuleMessageConverter,
         ): ScreenFieldData {
             return ScreenFieldData(
                 field = field,
                 error = state.getError(field.id),
                 errorConverter = errorConverter,
-                viewState = selectField(field.id, state.screenState)
+                viewState = selectField(field.id, state.screenState),
             )
         }
 

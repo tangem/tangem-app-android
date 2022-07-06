@@ -15,15 +15,17 @@ class ApproveWcSessionDialog {
                 R.string.wallet_connect_request_session_start,
                 session.wallet.cardId,
                 session.peerMeta.name,
-                session.peerMeta.url
+                session.peerMeta.url,
             )
             return AlertDialog.Builder(context).apply {
                 setTitle(context.getString(R.string.wallet_connect))
                 setMessage(message)
                 setPositiveButton(context.getText(R.string.common_start)) { _, _ ->
-                    store.dispatch(WalletConnectAction.ApproveSession(
-                        session.session
-                    ))
+                    store.dispatch(
+                        WalletConnectAction.ApproveSession(
+                            session.session,
+                        ),
+                    )
                 }
                 setNegativeButton(context.getText(R.string.common_reject)) { _, _ ->
                     store.dispatch(WalletConnectAction.FailureEstablishingSession(session.session))

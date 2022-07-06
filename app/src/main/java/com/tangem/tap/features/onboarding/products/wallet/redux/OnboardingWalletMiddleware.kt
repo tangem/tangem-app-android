@@ -6,7 +6,7 @@ import com.tangem.common.card.Card
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.operations.backup.BackupService
-import com.tangem.tap.*
+import com.tangem.tap.backupService
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -18,6 +18,10 @@ import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.wallet.redux.Artwork
 import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.preferencesStorage
+import com.tangem.tap.scope
+import com.tangem.tap.store
+import com.tangem.tap.tangemSdkManager
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.Middleware
@@ -79,19 +83,21 @@ private fun handleWalletAction(action: Action) {
                 withMainContext {
                     when (result) {
                         is CompletionResult.Success -> {
-                            //here we must use updated scanResponse after createWallet & derivation
+                            // here we must use updated scanResponse after createWallet & derivation
                             val updatedResponse =
                                 globalState.onboardingState.onboardingManager.scanResponse.copy(
                                     card = result.data.card,
                                     derivedKeys = result.data.derivedKeys,
-                                    primaryCard = result.data.primaryCard
+                                    primaryCard = result.data.primaryCard,
                                 )
                             onboardingManager.scanResponse = updatedResponse
                             val blockchainNetworks = listOf(
                                 BlockchainNetwork(Blockchain.Bitcoin, result.data.card),
-                                BlockchainNetwork(Blockchain.Ethereum, result.data.card)
+                                BlockchainNetwork(Blockchain.Ethereum, result.data.card),
                             )
-                            store.dispatchOnMain(WalletAction.MultiWallet.SaveCurrencies(blockchainNetworks))
+                            store.dispatchOnMain(
+                                WalletAction.MultiWallet.SaveCurrencies(blockchainNetworks),
+                            )
                             onboardingManager.activationStarted(updatedResponse.card.cardId)
                             store.dispatch(OnboardingWalletAction.ProceedBackup)
                         }
@@ -118,7 +124,9 @@ private fun handleWalletAction(action: Action) {
         OnboardingWalletAction.ProceedBackup -> {
             val newAction = when (val backupState = backupService.currentState) {
                 BackupService.State.FinalizingPrimaryCard -> BackupAction.PrepareToWritePrimaryCard
-                is BackupService.State.FinalizingBackupCard -> BackupAction.PrepareToWriteBackupCard(backupState.index)
+                is BackupService.State.FinalizingBackupCard -> BackupAction.PrepareToWriteBackupCard(
+                    backupState.index,
+                )
                 else -> {
                     if (walletState.backupState.backupStep == BackupStep.InitBackup ||
                         walletState.backupState.backupStep == BackupStep.Finished
@@ -133,7 +141,9 @@ private fun handleWalletAction(action: Action) {
         }
         OnboardingWalletAction.OnBackPressed -> {
             when (walletState.backupState.backupStep) {
-                BackupStep.InitBackup, BackupStep.Finished -> store.dispatch(NavigationAction.PopBackTo())
+                BackupStep.InitBackup, BackupStep.Finished -> store.dispatch(
+                    NavigationAction.PopBackTo(),
+                )
                 BackupStep.ScanOriginCard, BackupStep.AddBackupCards, BackupStep.EnterAccessCode,
                 BackupStep.ReenterAccessCode, BackupStep.SetAccessCode, BackupStep.WritePrimaryCard,
                 -> {
@@ -148,13 +158,14 @@ private fun handleWalletAction(action: Action) {
 }
 
 private fun updateScanResponseAfterBackup(
-    scanResponse: ScanResponse, backupState: BackupState,
+    scanResponse: ScanResponse,
+    backupState: BackupState,
 ): ScanResponse {
     val card = if (backupState.backupCardsNumber > 0) {
         val cardsCount = backupState.backupCardsNumber
         scanResponse.card.copy(
             backupStatus = Card.BackupStatus.Active(cardCount = cardsCount),
-            isAccessCodeSet = true
+            isAccessCodeSet = true,
         )
     } else {
         scanResponse.card
@@ -213,7 +224,6 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                         store.dispatchOnMain(BackupAction.AddBackupCard.Success)
                     }
                     is CompletionResult.Failure -> {
-
                     }
                 }
             }
@@ -230,8 +240,8 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             if (action.accessCode.length < 4) {
                 store.dispatch(
                     BackupAction.SetAccessCodeError(
-                        AccessCodeError.CodeTooShort
-                    )
+                        AccessCodeError.CodeTooShort,
+                    ),
                 )
             } else {
                 store.dispatch(BackupAction.SetAccessCodeError(null))
@@ -246,8 +256,8 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             } else {
                 store.dispatch(
                     BackupAction.SetAccessCodeError(
-                        AccessCodeError.CodesDoNotMatch
-                    )
+                        AccessCodeError.CodesDoNotMatch,
+                    ),
                 )
             }
         }
@@ -256,7 +266,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                 when (result) {
                     is CompletionResult.Success -> {
                         store.dispatchOnMain(
-                            BackupAction.PrepareToWriteBackupCard(1)
+                            BackupAction.PrepareToWriteBackupCard(1),
                         )
                     }
                     is CompletionResult.Failure -> {
@@ -270,19 +280,20 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                     is CompletionResult.Success -> {
                         val blockchainNetworks = listOf(
                             BlockchainNetwork(Blockchain.Bitcoin, result.data),
-                            BlockchainNetwork(Blockchain.Ethereum, result.data)
+                            BlockchainNetwork(Blockchain.Ethereum, result.data),
                         )
-                        store.dispatchOnMain(WalletAction.MultiWallet.SaveCurrencies(blockchainNetworks))
+                        store.dispatchOnMain(
+                            WalletAction.MultiWallet.SaveCurrencies(blockchainNetworks),
+                        )
                         if (backupService.currentState == BackupService.State.Finished) {
                             store.dispatchOnMain(BackupAction.FinishBackup)
                         } else {
                             store.dispatchOnMain(
-                                BackupAction.PrepareToWriteBackupCard(action.cardNumber + 1)
+                                BackupAction.PrepareToWriteBackupCard(action.cardNumber + 1),
                             )
                         }
                     }
                     is CompletionResult.Failure -> {
-
                     }
                 }
             }

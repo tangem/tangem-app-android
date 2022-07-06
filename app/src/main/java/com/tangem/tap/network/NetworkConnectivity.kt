@@ -7,16 +7,16 @@ import android.content.IntentFilter
 import android.net.ConnectivityManager
 import android.net.NetworkCapabilities
 import android.os.Build
+import java.lang.ref.WeakReference
 import org.rekotlin.Action
 import org.rekotlin.Store
-import java.lang.ref.WeakReference
 
 /**
  * Created by Anton Zhilenkov on 1/09/2020.
  */
 class NetworkConnectivity(
-        private val store: Store<*>,
-        context: Context
+    private val store: Store<*>,
+    context: Context,
 ) {
 
     private val wContext: WeakReference<Context> = WeakReference(context)
@@ -34,19 +34,19 @@ class NetworkConnectivity(
         store.dispatch(NetworkStateChanged(isOnlineOrConnecting()))
     }
 
-
     fun isOnlineOrConnecting(): Boolean {
         val connectivityManager = getConnectivityManager() ?: return false
 
         return if (Build.VERSION.SDK_INT >= 23) {
             val capabilities =
-                    connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
+                connectivityManager.getNetworkCapabilities(connectivityManager.activeNetwork)
             (capabilities != null) &&
-                    (capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ||
-                            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
-                            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN) ||
-                            capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET))
-
+                (
+                    capabilities.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR) ||
+                        capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
+                        capabilities.hasTransport(NetworkCapabilities.TRANSPORT_VPN) ||
+                        capabilities.hasTransport(NetworkCapabilities.TRANSPORT_ETHERNET)
+                    )
         } else {
             val networkInfo = connectivityManager.activeNetworkInfo
             networkInfo != null && networkInfo.isConnectedOrConnecting
@@ -55,7 +55,7 @@ class NetworkConnectivity(
 
     private fun getConnectivityManager(): ConnectivityManager? {
         return wContext.get()?.applicationContext
-                ?.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+            ?.getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
     }
 
     companion object {

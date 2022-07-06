@@ -9,21 +9,21 @@ import com.tangem.network.api.tangemTech.TangemTechService
 
 class LoadAvailableCoinsService(
     private val networkService: TangemTechService,
-    private val currenciesRepository: CurrenciesRepository
+    private val currenciesRepository: CurrenciesRepository,
 ) {
 
     suspend fun getSupportedTokens(
         isTestNet: Boolean = false,
         supportedBlockchains: List<Blockchain>,
         page: Int,
-        searchInput: String? = null
+        searchInput: String? = null,
     ): Result<LoadedCoins> {
         if (isTestNet) {
             return Result.Success(
                 LoadedCoins(
                     currencies = currenciesRepository.getTestnetCoins().filter(searchInput),
                     moreAvailable = false,
-                )
+                ),
             )
         }
         val offset = page * LOAD_PER_PAGE
@@ -34,9 +34,10 @@ class LoadAvailableCoinsService(
                 val data = result.data
                 Result.Success(
                     LoadedCoins(
-                        currencies = data.coins.map { Currency.fromCoinResponse(it, data.imageHost) },
+                        currencies = data.coins
+                            .map { Currency.fromCoinResponse(it, data.imageHost) },
                         moreAvailable = data.total > offset + LOAD_PER_PAGE,
-                    )
+                    ),
                 )
             }
             is Result.Failure -> {
@@ -48,7 +49,7 @@ class LoadAvailableCoinsService(
     private suspend fun loadCoins(
         supportedBlockchains: List<Blockchain>,
         offset: Int,
-        searchInput: String? = null
+        searchInput: String? = null,
     ): Result<CoinsResponse> {
         val networkIds = supportedBlockchains.toSet().map { it.toNetworkId() }
         return networkService.getListOfCoins(
@@ -56,16 +57,16 @@ class LoadAvailableCoinsService(
             active = true,
             offset = offset,
             limit = LOAD_PER_PAGE,
-            searchText = searchInput
+            searchText = searchInput,
         )
     }
 
     private fun List<Currency>.filter(searchInput: String?): List<Currency> {
         if (searchInput.isNullOrBlank()) return this
 
-        return filter{
+        return filter {
             it.symbol.contains(searchInput, ignoreCase = true) ||
-                    it.name.contains(searchInput, ignoreCase = true)
+                it.name.contains(searchInput, ignoreCase = true)
         }
     }
 
@@ -73,7 +74,6 @@ class LoadAvailableCoinsService(
         const val LOAD_PER_PAGE = 100
     }
 }
-
 
 data class LoadedCoins(
     val currencies: List<Currency>,

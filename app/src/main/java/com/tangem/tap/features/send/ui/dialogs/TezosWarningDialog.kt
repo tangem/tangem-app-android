@@ -17,7 +17,9 @@ class TezosWarningDialog(context: Context) : AlertDialog(context) {
                 setNegativeButton(R.string.xtz_withdrawal_message_ignore) { _, _ ->
                     showDialogData.sendAllCallback()
                 }
-                setPositiveButton(context.getString(R.string.xtz_withdrawal_message_reduce, reduceAmount)) { _, _ ->
+                setPositiveButton(
+                    context.getString(R.string.xtz_withdrawal_message_reduce, reduceAmount),
+                ) { _, _ ->
                     showDialogData.reduceCallback()
                 }
                 setOnDismissListener {

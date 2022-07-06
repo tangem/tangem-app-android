@@ -14,7 +14,7 @@ data class TokenDao(
     @Json(name = "blockchain")
     val blockchainDao: BlockchainDao,
     val customIconUrl: String? = null,
-    val type: String? = null
+    val type: String? = null,
 ) {
     fun toToken(): Token {
         return Token(
@@ -26,5 +26,4 @@ data class TokenDao(
             customIconUrl?.let { this.setCustomIconUrl(it) }
         }
     }
-
 }

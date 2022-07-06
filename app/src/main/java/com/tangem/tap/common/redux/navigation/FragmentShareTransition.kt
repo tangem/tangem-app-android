@@ -10,7 +10,7 @@ import java.lang.ref.WeakReference
 data class FragmentShareTransition(
     val shareElements: List<ShareElement>,
     val enterTransitionSet: TransitionSet,
-    val exitTransitionSet: TransitionSet
+    val exitTransitionSet: TransitionSet,
 )
 
 /**
@@ -24,7 +24,7 @@ class ShareElement(view: View, name: String? = null) {
     init {
         name?.let { view.transitionName = it }
         elementName = view.transitionName
-                ?: throw UnsupportedOperationException("ShareElement require the name")
+            ?: throw UnsupportedOperationException("ShareElement require the name")
         wView = WeakReference(view)
     }
 

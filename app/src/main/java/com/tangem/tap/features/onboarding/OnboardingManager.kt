@@ -16,8 +16,8 @@ import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.hasPendingTransactions
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.persistence.UsedCardsPrefStorage
-import timber.log.Timber
 import java.math.BigDecimal
+import timber.log.Timber
 
 /**
  * Created by Anton Zhilenkov on 17/10/2021.
@@ -32,7 +32,10 @@ class OnboardingManager(
 
     suspend fun loadArtworkUrl(): String {
         val cardInfo = cardInfo
-            ?: OnlineCardVerifier().getCardInfo(scanResponse.card.cardId, scanResponse.card.cardPublicKey)
+            ?: OnlineCardVerifier().getCardInfo(
+                scanResponse.card.cardId,
+                scanResponse.card.cardPublicKey,
+            )
         this.cardInfo = cardInfo
         return scanResponse.card.getOrLoadCardArtworkUrl(cardInfo)
     }
@@ -61,14 +64,19 @@ class OnboardingManager(
                     // NoInternetConnection, WalletManager.InternalError
                     else -> {
                         Timber.e(error.localizedMessage)
-                        OnboardingWalletBalance.criticalError(TapError.WalletManager.BlockchainIsUnreachableTryLater)
+                        OnboardingWalletBalance.criticalError(
+                            TapError.WalletManager.BlockchainIsUnreachableTryLater,
+                        )
                     }
                 }
             }
         }
 
-        return balance.copy(currency = Currency.Blockchain(
-            walletManager.wallet.blockchain, walletManager.wallet.publicKey.derivationPath?.rawPath)
+        return balance.copy(
+            currency = Currency.Blockchain(
+                walletManager.wallet.blockchain,
+                walletManager.wallet.publicKey.derivationPath?.rawPath,
+            ),
         )
     }
 
@@ -98,23 +106,23 @@ data class OnboardingWalletBalance(
     companion object {
         fun error(error: TapError): OnboardingWalletBalance = OnboardingWalletBalance(
             state = ProgressState.Error,
-            error = error
+            error = error,
         )
 
         fun criticalError(error: TapError): OnboardingWalletBalance = OnboardingWalletBalance(
             state = ProgressState.Error,
-            criticalError = error
+            criticalError = error,
         )
 
         fun loading(value: BigDecimal = BigDecimal.ZERO): OnboardingWalletBalance = OnboardingWalletBalance(
             value,
-            state = ProgressState.Loading
+            state = ProgressState.Loading,
         )
 
         fun done(value: BigDecimal, hasTransactions: Boolean): OnboardingWalletBalance = OnboardingWalletBalance(
             value,
             hasIncomingTransaction = hasTransactions,
-            state = ProgressState.Done
+            state = ProgressState.Done,
         )
     }
 }

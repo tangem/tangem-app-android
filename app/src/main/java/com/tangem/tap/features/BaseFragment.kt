@@ -33,7 +33,11 @@ abstract class BaseFragment(layoutId: Int) : Fragment(layoutId), FragmentOnBackP
         exitTransition = inflater.inflateTransition(R.transition.fade)
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?,
+    ): View? {
         mainView = super.onCreateView(inflater, container, savedInstanceState)!!
         return mainView
     }
@@ -57,10 +61,13 @@ interface FragmentOnBackPressedHandler {
 
 @SuppressLint("FragmentBackPressedCallback")
 fun Fragment.addBackPressHandler(handler: FragmentOnBackPressedHandler) {
-    activity?.onBackPressedDispatcher?.addCallback(this, object : OnBackPressedCallback(true) {
-        override fun handleOnBackPressed() {
-            handler.handleOnBackPressed()
-        }
-    })
+    activity?.onBackPressedDispatcher?.addCallback(
+        this,
+        object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                handler.handleOnBackPressed()
+            }
+        },
+    )
     view?.findViewById<Toolbar>(R.id.toolbar)?.setNavigationOnClickListener { activity?.onBackPressed() }
 }

@@ -57,5 +57,4 @@ class KeyboardObserver(activity: Activity) {
 
         return realDisplayHeight - applicationDisplayHeight
     }
-
 }

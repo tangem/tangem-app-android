@@ -11,17 +11,16 @@ import retrofit2.http.Path
 interface PayIdVerifyApi {
     @GET("{user}")
     suspend fun verifyAddress(
-            @Path("user") user: String,
-            @Header("Accept") acceptNetworkHeader: String,
-            @Header("PayID-Version") payIdVersion: String = "1.0"
+        @Path("user") user: String,
+        @Header("Accept") acceptNetworkHeader: String,
+        @Header("PayID-Version") payIdVersion: String = "1.0",
     ): VerifyPayIdResponse
 }
 
-
 @JsonClass(generateAdapter = true)
 data class VerifyPayIdResponse(
-        val addresses: List<PayIdAddress> = mutableListOf(),
-        val payId: String? = null,
+    val addresses: List<PayIdAddress> = mutableListOf(),
+    val payId: String? = null,
 ) {
     fun getAddressDetails(): PayIdAddressDetails? {
         return if (addresses.isEmpty()) null
@@ -31,14 +30,14 @@ data class VerifyPayIdResponse(
 
 @JsonClass(generateAdapter = true)
 data class PayIdAddress(
-        var paymentNetwork: String,
-        var environment: String,
-        var addressDetailsType: String,
-        var addressDetails: PayIdAddressDetails
+    var paymentNetwork: String,
+    var environment: String,
+    var addressDetailsType: String,
+    var addressDetails: PayIdAddressDetails,
 )
 
 @JsonClass(generateAdapter = true)
 data class PayIdAddressDetails(
-        var address: String,
-        var tag: String? = null
+    var address: String,
+    var tag: String? = null,
 )

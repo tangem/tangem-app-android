@@ -18,7 +18,7 @@ private fun internalReduce(action: Action, appState: AppState): OnboardingWallet
     return when (action) {
         is BackupAction -> state.copy(backupState = BackupReducer.reduce(action, state.backupState))
         is GlobalAction.Onboarding.Start -> OnboardingWalletState(
-            backupState = state.backupState.copy(canSkipBackup = action.fromHomeScreen)
+            backupState = state.backupState.copy(canSkipBackup = action.fromHomeScreen),
         )
         is OnboardingWalletAction.GetToCreateWalletStep ->
             OnboardingWalletState(step = OnboardingWalletStep.CreateWallet)
@@ -31,19 +31,20 @@ private fun internalReduce(action: Action, appState: AppState): OnboardingWallet
     }
 }
 
-
 class BackupReducer {
     companion object {
         fun reduce(
-            action: BackupAction, state: BackupState,
+            action: BackupAction,
+            state: BackupState,
         ): BackupState {
-
             return when (action) {
                 is BackupAction.IntroduceBackup -> BackupState(
                     backupStep = BackupStep.InitBackup,
                     canSkipBackup = state.canSkipBackup,
                 )
-                BackupAction.StartAddingPrimaryCard -> state.copy(backupStep = BackupStep.ScanOriginCard)
+                BackupAction.StartAddingPrimaryCard -> state.copy(
+                    backupStep = BackupStep.ScanOriginCard,
+                )
                 BackupAction.StartAddingBackupCards -> {
                     state.copy(backupStep = BackupStep.AddBackupCards)
                 }
@@ -62,12 +63,12 @@ class BackupReducer {
                 is BackupAction.SaveFirstAccessCode -> {
                     state.copy(
                         backupStep = BackupStep.ReenterAccessCode,
-                        accessCode = action.accessCode
+                        accessCode = action.accessCode,
                     )
                 }
                 is BackupAction.SetAccessCodeError -> {
                     state.copy(
-                        accessCodeError = action.error
+                        accessCodeError = action.error,
                     )
                 }
                 is BackupAction.PrepareToWritePrimaryCard -> {
@@ -76,11 +77,11 @@ class BackupReducer {
                             primaryCardId = backupService.primaryCardId,
                             backupCardIds = backupService.backupCardIds,
                             backupCardsNumber = backupService.backupCardIds.size,
-                            backupStep = BackupStep.WritePrimaryCard
+                            backupStep = BackupStep.WritePrimaryCard,
                         )
                     } else {
                         state.copy(
-                            backupStep = BackupStep.WritePrimaryCard
+                            backupStep = BackupStep.WritePrimaryCard,
                         )
                     }
                 }
@@ -90,18 +91,18 @@ class BackupReducer {
                             primaryCardId = backupService.primaryCardId,
                             backupCardIds = backupService.backupCardIds,
                             backupCardsNumber = backupService.backupCardIds.size,
-                            backupStep = BackupStep.WriteBackupCard(action.cardNumber)
+                            backupStep = BackupStep.WriteBackupCard(action.cardNumber),
                         )
                     } else {
                         state.copy(
-                            backupStep = BackupStep.WriteBackupCard(action.cardNumber)
+                            backupStep = BackupStep.WriteBackupCard(action.cardNumber),
                         )
                     }
                 }
 
                 is BackupAction.FinishBackup -> {
                     state.copy(
-                        backupStep = BackupStep.Finished
+                        backupStep = BackupStep.Finished,
                     )
                 }
 
@@ -126,7 +127,6 @@ class BackupReducer {
                 BackupAction.DiscardSavedBackup -> state
                 BackupAction.StartBackup -> state
             }
-
         }
     }
 }

@@ -34,13 +34,13 @@ data class ButtonData(
     val action: () -> Unit,
 )
 
-//class WcDialogMessageBuilder(val messageRes: Int, val data: DialogMessageData? = null) {
+// class WcDialogMessageBuilder(val messageRes: Int, val data: DialogMessageData? = null) {
 //    fun build(context: Context): String {
 //        when (data) {
 //            null -> context.getString(messageRes)
 //        }
 //    }
-//}
+// }
 
 interface DialogMessageData
 

@@ -63,5 +63,4 @@ sealed class BackupAction : Action {
     object DiscardBackup : BackupAction()
     object DiscardSavedBackup : BackupAction()
     object ResumeBackup : BackupAction()
-
 }

@@ -22,7 +22,9 @@ class CreateFirstTwinWalletTask : CardSessionRunnable<CreateWalletResponse> {
                         session.environment.card = session.environment.card?.setWallets(emptyList())
                         CreateWalletTask(EllipticCurve.Secp256k1).run(session) { callback(it) }
                     }
-                    is CompletionResult.Failure -> callback(CompletionResult.Failure(response.error))
+                    is CompletionResult.Failure -> callback(
+                        CompletionResult.Failure(response.error),
+                    )
                 }
             }
         } else {

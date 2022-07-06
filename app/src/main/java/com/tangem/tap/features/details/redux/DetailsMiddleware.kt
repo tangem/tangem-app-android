@@ -41,22 +41,30 @@ class DetailsMiddleware {
                     is DetailsAction.ReCreateTwinsWallet -> {
                         val wallet = store.state.walletState.walletManagers.map { it.wallet }.firstOrNull()
                         if (wallet == null) {
-                            store.dispatch(TwinCardsAction.SetMode(CreateTwinWalletMode.RecreateWallet))
+                            store.dispatch(
+                                TwinCardsAction.SetMode(CreateTwinWalletMode.RecreateWallet),
+                            )
                             store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingTwins))
                         } else {
                             if (wallet.hasSendableAmountsOrPendingTransactions()) {
                                 val walletIsNotEmpty = store.state.globalState.resources.strings.walletIsNotEmpty
                                 store.dispatchNotification(walletIsNotEmpty)
                             } else {
-                                store.dispatch(TwinCardsAction.SetMode(CreateTwinWalletMode.RecreateWallet))
-                                store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingTwins))
+                                store.dispatch(
+                                    TwinCardsAction.SetMode(CreateTwinWalletMode.RecreateWallet),
+                                )
+                                store.dispatch(
+                                    NavigationAction.NavigateTo(AppScreen.OnboardingTwins),
+                                )
                             }
                         }
                     }
                     is DetailsAction.CreateBackup -> {
                         store.state.detailsState.scanResponse?.let {
                             store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingWallet))
-                            store.dispatch(GlobalAction.Onboarding.Start(it, fromHomeScreen = false))
+                            store.dispatch(
+                                GlobalAction.Onboarding.Start(it, fromHomeScreen = false),
+                            )
                         }
                     }
                 }
@@ -98,7 +106,7 @@ class DetailsMiddleware {
                                         store.state.globalState.analyticsHandlers?.logCardSdkError(
                                             error,
                                             Analytics.ActionToLog.PurgeWallet,
-                                            card = store.state.detailsState.scanResponse?.card
+                                            card = store.state.detailsState.scanResponse?.card,
                                         )
                                     }
                                 }
@@ -119,15 +127,20 @@ class DetailsMiddleware {
                     if (action.card.firmwareVersion >= FirmwareVersion.IsAccessCodeStatusAvailable) {
                         // for a card that meets this condition, we can get these statuses from it
                         val simulatedResponse = CheckUserCodesResponse(
-                            action.card.isAccessCodeSet, action.card.isPasscodeSet ?: false
+                            action.card.isAccessCodeSet,
+                            action.card.isPasscodeSet ?: false,
                         )
-                        store.dispatch(DetailsAction.ManageSecurity.SetCurrentOption(simulatedResponse))
+                        store.dispatch(
+                            DetailsAction.ManageSecurity.SetCurrentOption(simulatedResponse),
+                        )
                         store.dispatch(DetailsAction.ManageSecurity.OpenSecurity)
                     } else {
                         scope.launch {
                             when (val response = tangemSdkManager.checkUserCodes(action.card.cardId)) {
                                 is CompletionResult.Success -> {
-                                    store.dispatchOnMain(DetailsAction.ManageSecurity.SetCurrentOption(response.data))
+                                    store.dispatchOnMain(
+                                        DetailsAction.ManageSecurity.SetCurrentOption(response.data),
+                                    )
                                     store.dispatchOnMain(DetailsAction.ManageSecurity.OpenSecurity)
                                 }
                                 is CompletionResult.Failure -> {
@@ -178,9 +191,9 @@ class DetailsMiddleware {
                                             actionToLog = Analytics.ActionToLog.ChangeSecOptions,
                                             parameters = mapOf(
                                                 AnalyticsParam.NEW_SECURITY_OPTION to
-                                                        (selectedOption?.name ?: "")
+                                                    (selectedOption?.name ?: ""),
                                             ),
-                                            card = store.state.detailsState.scanResponse?.card
+                                            card = store.state.detailsState.scanResponse?.card,
                                         )
                                     }
                                     store.dispatch(DetailsAction.ManageSecurity.SaveChanges.Failure)

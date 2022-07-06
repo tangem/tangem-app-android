@@ -40,7 +40,7 @@ typealias TestAction = Pair<String, () -> Unit>
 
 class TestActionsBottomSheetDialog(
     private val appDialog: AppDialog.TestActionsDialog,
-    context: Context
+    context: Context,
 ) : BottomSheetDialog(context) {
 
     override fun onCreate(savedInstanceState: Bundle?) {

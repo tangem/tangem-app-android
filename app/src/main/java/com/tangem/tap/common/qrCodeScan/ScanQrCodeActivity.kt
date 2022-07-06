@@ -29,7 +29,6 @@ class ScanQrCodeActivity : AppCompatActivity(), ZXingScannerView.ResultHandler {
         setContentView(mScannerView)
 
         if (!permissionIsGranted()) requestPermission()
-
     }
 
     override fun onResume() {
@@ -48,7 +47,11 @@ class ScanQrCodeActivity : AppCompatActivity(), ZXingScannerView.ResultHandler {
         finish()
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray,
+    ) {
         if (requestCode != PERMISSION_REQUEST_CODE) return
 
         if (grantResults.isEmpty() || grantResults[0] != PackageManager.PERMISSION_GRANTED) {
@@ -58,12 +61,19 @@ class ScanQrCodeActivity : AppCompatActivity(), ZXingScannerView.ResultHandler {
 
     private fun permissionIsGranted(): Boolean {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val cameraPermission = ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+            val cameraPermission = ContextCompat.checkSelfPermission(
+                this,
+                Manifest.permission.CAMERA,
+            )
             cameraPermission == PackageManager.PERMISSION_GRANTED
         } else true
     }
 
     private fun requestPermission() {
-        ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), PERMISSION_REQUEST_CODE)
+        ActivityCompat.requestPermissions(
+            this,
+            arrayOf(Manifest.permission.CAMERA),
+            PERMISSION_REQUEST_CODE,
+        )
     }
 }

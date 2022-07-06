@@ -23,7 +23,7 @@ interface OnramperApi {
 
 @JsonClass(generateAdapter = true)
 data class GatewaysResponse(
-    val gateways: List<OnramperGateway>
+    val gateways: List<OnramperGateway>,
 )
 
 @JsonClass(generateAdapter = true)
@@ -31,14 +31,14 @@ data class OnramperGateway(
     val identifier: String,
     val paymentMethods: List<String>,
     val fiatCurrencies: List<OnramperCurrency>,
-    val cryptoCurrencies: List<OnramperCurrency>
+    val cryptoCurrencies: List<OnramperCurrency>,
 )
 
 @JsonClass(generateAdapter = true)
 data class OnramperCurrency(
     val id: String,
     val code: String,
-    val precision: Int
+    val precision: Int,
 )
 
 @JsonClass(generateAdapter = true)
@@ -59,7 +59,7 @@ data class OnramperNextStep(
     val type: String,
     val url: String,
     val message: String,
-    val extraData: List<OnramperExtraData>
+    val extraData: List<OnramperExtraData>,
 )
 
 @JsonClass(generateAdapter = true)
@@ -72,12 +72,12 @@ data class OnramperExtraData(
 @JsonClass(generateAdapter = true)
 data class OnramperDuration(
     val seconds: Long,
-    val message: String
+    val message: String,
 )
 
 @JsonClass(generateAdapter = true)
 data class OnramperError(
     val type: String,
     val message: String,
-    val limit: Double
+    val limit: Double,
 )

@@ -2,7 +2,14 @@ package com.tangem.tap.common.toggleWidget
 
 import android.view.View
 import android.view.ViewGroup
-import android.view.animation.*
+import android.view.animation.AccelerateInterpolator
+import android.view.animation.AlphaAnimation
+import android.view.animation.Animation
+import android.view.animation.AnimationSet
+import android.view.animation.AnticipateOvershootInterpolator
+import android.view.animation.LinearInterpolator
+import android.view.animation.RotateAnimation
+import android.view.animation.ScaleAnimation
 import android.widget.ViewSwitcher
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.wallet.R
@@ -11,7 +18,7 @@ import com.tangem.wallet.R
  * Created by Anton Zhilenkov on 09/04/2021.
  */
 class RefreshBalanceWidget(
-    private val root: ViewGroup
+    private val root: ViewGroup,
 ) : ViewStateWidget {
 
     var isShowing: Boolean? = null
@@ -19,8 +26,11 @@ class RefreshBalanceWidget(
 
     override val mainView: View = root.findViewById(R.id.btn_refresh_balance)
 
-
-    private val viewSwitcher: ViewSwitcher by lazy { mainView.findViewById(R.id.switcher_refresh_arrow_to_progress) }
+    private val viewSwitcher: ViewSwitcher by lazy {
+        mainView.findViewById(
+            R.id.switcher_refresh_arrow_to_progress,
+        )
+    }
 
     private val arrowView = mainView.findViewById<View>(R.id.imv_arrow_refresh)
 
@@ -58,9 +68,12 @@ class RefreshBalanceWidget(
             }
             ProgressState.Loading -> {
                 progressViewAnimation = RotateAnimation(
-                    0f, 360f,
-                    Animation.RELATIVE_TO_SELF, 0.5f,
-                    Animation.RELATIVE_TO_SELF, 0.5f
+                    0f,
+                    360f,
+                    Animation.RELATIVE_TO_SELF,
+                    0.5f,
+                    Animation.RELATIVE_TO_SELF,
+                    0.5f,
                 )
                 progressViewAnimation?.duration = 700
                 progressViewAnimation?.interpolator = AccelerateInterpolator()
@@ -88,11 +101,17 @@ class RefreshBalanceWidget(
 
 class ShowAnimation : AnimationSet(true) {
     init {
-        addAnimation(ScaleAnimation(
-            0f, 1f,
-            0f, 1f,
-            Animation.RELATIVE_TO_SELF, 0.5f,
-            Animation.RELATIVE_TO_SELF, 0.5f)
+        addAnimation(
+            ScaleAnimation(
+                0f,
+                1f,
+                0f,
+                1f,
+                Animation.RELATIVE_TO_SELF,
+                0.5f,
+                Animation.RELATIVE_TO_SELF,
+                0.5f,
+            ),
         )
         addAnimation(AlphaAnimation(0f, 1f))
         duration = 300

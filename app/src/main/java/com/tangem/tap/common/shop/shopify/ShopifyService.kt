@@ -4,22 +4,44 @@ import android.app.Application
 import com.shopify.buy3.GraphCallResult
 import com.shopify.buy3.GraphClient
 import com.shopify.buy3.RetryHandler
-import com.shopify.buy3.Storefront.*
+import com.shopify.buy3.Storefront.Checkout
+import com.shopify.buy3.Storefront.CheckoutCompleteWithTokenizedPaymentV3PayloadQuery
+import com.shopify.buy3.Storefront.CheckoutCreateInput
+import com.shopify.buy3.Storefront.CheckoutCreatePayloadQuery
+import com.shopify.buy3.Storefront.CheckoutDiscountCodeApplyV2PayloadQuery
+import com.shopify.buy3.Storefront.CheckoutDiscountCodeRemovePayloadQuery
+import com.shopify.buy3.Storefront.CheckoutEmailUpdateV2PayloadQuery
+import com.shopify.buy3.Storefront.CheckoutLineItemInput
+import com.shopify.buy3.Storefront.CheckoutLineItemsReplacePayloadQuery
+import com.shopify.buy3.Storefront.CheckoutQuery
+import com.shopify.buy3.Storefront.CheckoutShippingAddressUpdateV2PayloadQuery
+import com.shopify.buy3.Storefront.CheckoutShippingLineUpdatePayloadQuery
+import com.shopify.buy3.Storefront.CheckoutUserErrorQuery
+import com.shopify.buy3.Storefront.MailingAddress
+import com.shopify.buy3.Storefront.MailingAddressInput
+import com.shopify.buy3.Storefront.Mutation
+import com.shopify.buy3.Storefront.MutationQuery
+import com.shopify.buy3.Storefront.PaymentQuery
+import com.shopify.buy3.Storefront.Product
+import com.shopify.buy3.Storefront.QueryRoot
+import com.shopify.buy3.Storefront.QueryRootQuery
+import com.shopify.buy3.Storefront.ShopQuery
+import com.shopify.buy3.Storefront.TokenizedPaymentInputV3
+import com.shopify.buy3.Storefront.mutation
+import com.shopify.buy3.Storefront.query
 import com.shopify.graphql.support.ID
 import com.shopify.graphql.support.Input
 import com.tangem.tap.common.shop.shopify.data.CheckoutItem
 import com.tangem.tap.common.shop.shopify.data.checkoutFieldsFragment
 import com.tangem.tap.common.shop.shopify.data.collectionFieldsFragment
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
-
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 class ShopifyService(private val application: Application, val shop: ShopifyShop) {
     val client: GraphClient by lazy { initClient() }
-
 
     suspend fun getShopName(): Result<String> {
         val query = query { rootQuery: QueryRootQuery ->
@@ -66,7 +88,6 @@ class ShopifyService(private val application: Application, val shop: ShopifyShop
     }
 
     suspend fun checkout(pollUntilOrder: Boolean, checkoutID: ID): Result<Checkout> {
-
         val query = query { rootQuery: QueryRootQuery ->
             rootQuery
                 .node(checkoutID) { query ->
@@ -78,7 +99,8 @@ class ShopifyService(private val application: Application, val shop: ShopifyShop
                 }
         }
         val retryHandler = RetryHandler.build<QueryRoot>(
-            1, TimeUnit.SECONDS
+            1,
+            TimeUnit.SECONDS,
         ) {
             this.retryWhen { result ->
                 when (result) {
@@ -100,7 +122,6 @@ class ShopifyService(private val application: Application, val shop: ShopifyShop
                 } else {
                     Result.failure(ShopifyError.Unknown)
                 }
-
             }
             is GraphCallResult.Failure -> {
                 Result.failure(result.error)
@@ -110,10 +131,8 @@ class ShopifyService(private val application: Application, val shop: ShopifyShop
 
     suspend fun createCheckout(
         checkoutItems: List<CheckoutItem>,
-        checkoutID: ID? = null
+        checkoutID: ID? = null,
     ): Result<Checkout> {
-
-
         val storefrontLineItems: MutableList<CheckoutLineItemInput> = checkoutItems
             .map { CheckoutLineItemInput(it.quantity, it.id) }.toMutableList()
 
@@ -121,7 +140,8 @@ class ShopifyService(private val application: Application, val shop: ShopifyShop
             mutation { mutationQuery: MutationQuery ->
                 mutationQuery
                     .checkoutLineItemsReplace(
-                        storefrontLineItems, checkoutID
+                        storefrontLineItems,
+                        checkoutID,
                     ) { payloadQuery: CheckoutLineItemsReplacePayloadQuery ->
                         payloadQuery
                             .checkout { checkoutQuery: CheckoutQuery ->
@@ -137,12 +157,12 @@ class ShopifyService(private val application: Application, val shop: ShopifyShop
         } else {
             val input = CheckoutCreateInput()
                 .setLineItemsInput(
-                    Input.value(storefrontLineItems)
+                    Input.value(storefrontLineItems),
                 )
             mutation { mutationQuery: MutationQuery ->
                 mutationQuery
                     .checkoutCreate(
-                        input
+                        input,
                     ) { payloadQuery: CheckoutCreatePayloadQuery ->
                         payloadQuery
                             .checkout { checkoutQuery: CheckoutQuery ->
@@ -163,7 +183,8 @@ class ShopifyService(private val application: Application, val shop: ShopifyShop
         val query = mutation { mutationQuery: MutationQuery ->
             mutationQuery
                 .checkoutDiscountCodeApplyV2(
-                    discountCode, checkoutID
+                    discountCode,
+                    checkoutID,
                 ) { payloadQuery: CheckoutDiscountCodeApplyV2PayloadQuery ->
                     payloadQuery
                         .checkout { checkoutQuery: CheckoutQuery ->
@@ -183,7 +204,7 @@ class ShopifyService(private val application: Application, val shop: ShopifyShop
         val query = mutation { mutationQuery: MutationQuery ->
             mutationQuery
                 .checkoutDiscountCodeRemove(
-                    checkoutID
+                    checkoutID,
                 ) { payloadQuery: CheckoutDiscountCodeRemovePayloadQuery ->
                     payloadQuery
                         .checkout { checkoutQuery: CheckoutQuery ->
@@ -202,7 +223,7 @@ class ShopifyService(private val application: Application, val shop: ShopifyShop
     suspend fun updateAddress(
         address: MailingAddress,
         checkoutID: ID,
-        waitForShippingRates: Boolean
+        waitForShippingRates: Boolean,
     ): Result<Checkout> {
         val input = MailingAddressInput()
             .setAddress1(address.address1)
@@ -218,7 +239,8 @@ class ShopifyService(private val application: Application, val shop: ShopifyShop
         val query = mutation { mutationQuery: MutationQuery ->
             mutationQuery
                 .checkoutShippingAddressUpdateV2(
-                    input, checkoutID
+                    input,
+                    checkoutID,
                 ) { shippingAddressUpdatePayloadQuery: CheckoutShippingAddressUpdateV2PayloadQuery ->
                     shippingAddressUpdatePayloadQuery
                         .checkout { checkoutQuery: CheckoutQuery ->
@@ -239,7 +261,8 @@ class ShopifyService(private val application: Application, val shop: ShopifyShop
         val query = mutation { mutationQuery: MutationQuery ->
             mutationQuery
                 .checkoutEmailUpdateV2(
-                    checkoutID, email
+                    checkoutID,
+                    email,
                 ) { emailUpdatePayloadQuery: CheckoutEmailUpdateV2PayloadQuery ->
                     emailUpdatePayloadQuery
                         .checkout { checkoutQuery: CheckoutQuery ->
@@ -259,7 +282,8 @@ class ShopifyService(private val application: Application, val shop: ShopifyShop
         val query = mutation { mutationQuery: MutationQuery ->
             mutationQuery
                 .checkoutShippingLineUpdate(
-                    checkoutID, handle
+                    checkoutID,
+                    handle,
                 ) { shippingLineUpdatePayloadQuery: CheckoutShippingLineUpdatePayloadQuery ->
                     shippingLineUpdatePayloadQuery
                         .checkout { checkoutQuery: CheckoutQuery ->
@@ -277,13 +301,13 @@ class ShopifyService(private val application: Application, val shop: ShopifyShop
 
     suspend fun completeWithTokenizedPayment(
         payment: TokenizedPaymentInputV3,
-        checkoutID: ID
+        checkoutID: ID,
     ): Result<Checkout> {
-
         val query = mutation { mutationQuery: MutationQuery ->
             mutationQuery
                 .checkoutCompleteWithTokenizedPaymentV3(
-                    checkoutID, payment
+                    checkoutID,
+                    payment,
                 ) { payloadQuery: CheckoutCompleteWithTokenizedPaymentV3PayloadQuery ->
                     payloadQuery
                         .payment { paymentQuery: PaymentQuery ->
@@ -322,13 +346,13 @@ class ShopifyService(private val application: Application, val shop: ShopifyShop
 
                 Result.success(checkout)
             }
-                    is GraphCallResult.Failure -> Result.failure(result.error)
+            is GraphCallResult.Failure -> Result.failure(result.error)
         }
     }
 
     private suspend fun queryAsync(
         query: QueryRootQuery,
-        retryHandler: RetryHandler<QueryRoot>
+        retryHandler: RetryHandler<QueryRoot>,
     ): GraphCallResult<QueryRoot> =
         withContext(Dispatchers.IO) {
             suspendCoroutine { continuation ->
@@ -358,12 +382,11 @@ class ShopifyService(private val application: Application, val shop: ShopifyShop
             }
         }
 
-
     private fun initClient(): GraphClient {
         return GraphClient.build(
             application,
             shop.domain,
-            shop.storefrontApiKey
+            shop.storefrontApiKey,
         ) {
 //            httpCache(application.filesDir) {
 //                cacheMaxSizeBytes = (1024 * 1024 * 10)
@@ -371,10 +394,8 @@ class ShopifyService(private val application: Application, val shop: ShopifyShop
 //                    HttpCachePolicy.Default.CACHE_FIRST.expireAfter(20, TimeUnit.MINUTES)
 //            }
         }
-
     }
 }
-
 
 sealed class ShopifyError : Throwable() {
     object Unknown : ShopifyError()

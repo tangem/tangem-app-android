@@ -13,8 +13,8 @@ import com.tangem.tap.features.send.redux.states.ButtonState
 import com.tangem.tap.features.send.redux.states.FeeType
 import com.tangem.tap.features.send.redux.states.MainCurrencyType
 import com.tangem.wallet.R
-import org.rekotlin.Action
 import java.math.BigDecimal
+import org.rekotlin.Action
 
 /**
  * Created by Anton Zhilenkov on 31/08/2020.
@@ -25,11 +25,11 @@ interface SendScreenActionUi : SendScreenAction
 object ReleaseSendState : Action
 
 data class PrepareSendScreen(
-        val coinAmount: Amount?,
-        val coinRate: BigDecimal?,
-        val walletManager: WalletManager?,
-        val tokenAmount: Amount? = null,
-        val tokenRate: BigDecimal? = null
+    val coinAmount: Amount?,
+    val coinRate: BigDecimal?,
+    val walletManager: WalletManager?,
+    val tokenAmount: Amount? = null,
+    val tokenRate: BigDecimal? = null,
 ) : SendScreenAction
 
 // Address or PayId
@@ -43,18 +43,17 @@ sealed class AddressPayIdActionUi : SendScreenActionUi {
     data class ChangePayIdState(val sendingToPayIdEnabled: Boolean) : AddressPayIdActionUi()
 }
 
-
 sealed class TransactionExtrasAction : SendScreenActionUi {
     data class Prepare(
-            val blockchain: Blockchain,
-            val walletAddress: String,
-            val xrpTag: String?,
+        val blockchain: Blockchain,
+        val walletAddress: String,
+        val xrpTag: String?,
     ) : TransactionExtrasAction()
 
     object Release : TransactionExtrasAction()
 
     sealed class XlmMemo : TransactionExtrasAction() {
-  //        data class ChangeSelectedMemo(val memoType: XlmMemoType) : XlmMemo()
+        //        data class ChangeSelectedMemo(val memoType: XlmMemoType) : XlmMemo()
         data class HandleUserInput(val data: String) : XlmMemo()
     }
 
@@ -80,7 +79,11 @@ sealed class AddressPayIdVerifyAction : SendScreenAction {
 
     sealed class PayIdVerification : AddressPayIdVerifyAction() {
         data class SetPayIdError(val error: Error?) : PayIdVerification()
-        data class SetPayIdWalletAddress(val payId: String, val payIdWalletAddress: String, val isUserInput: Boolean) : PayIdVerification()
+        data class SetPayIdWalletAddress(
+            val payId: String,
+            val payIdWalletAddress: String,
+            val isUserInput: Boolean,
+        ) : PayIdVerification()
     }
 
     sealed class AddressVerification : AddressPayIdVerifyAction() {
@@ -124,9 +127,9 @@ sealed class FeeAction : SendScreenAction {
     }
 
     data class ChangeLayoutVisibility(
-            val main: Boolean? = null,
-            val controls: Boolean? = null,
-            val chipGroup: Boolean? = null,
+        val main: Boolean? = null,
+        val controls: Boolean? = null,
+        val chipGroup: Boolean? = null,
     ) : FeeAction()
 }
 
@@ -150,9 +153,9 @@ sealed class SendAction : SendScreenAction {
 
     sealed class Dialog : SendAction(), StateDialog {
         data class TezosWarningDialog(
-                val reduceCallback: () -> Unit,
-                val sendAllCallback: () -> Unit,
-                val reduceAmount: BigDecimal,
+            val reduceCallback: () -> Unit,
+            val sendAllCallback: () -> Unit,
+            val reduceAmount: BigDecimal,
         ) : Dialog()
 
         data class SendTransactionFails(val errorMessage: String) : Dialog()
@@ -167,7 +170,6 @@ sealed class SendAction : SendScreenAction {
     data class SendSpecificTransaction(
         val sendAmount: String,
         val destinationAddress: String,
-        val transactionId: String
+        val transactionId: String,
     ) : SendAction()
-
 }

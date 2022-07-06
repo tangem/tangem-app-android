@@ -3,7 +3,14 @@ package com.tangem.tap.features.tokens.ui.compose
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -31,12 +38,12 @@ fun CollapsedCurrencyItem(
     currency: Currency,
     addedTokens: List<TokenWithBlockchain>,
     addedBlockchains: List<Blockchain>,
-    onCurrencyClick: (String) -> Unit
+    onCurrencyClick: (String) -> Unit,
 ) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(onClick = { onCurrencyClick(currency.id) })
+            .clickable(onClick = { onCurrencyClick(currency.id) }),
     ) {
         val blockchain = Blockchain.fromNetworkId(currency.id)
 
@@ -57,7 +64,7 @@ fun CollapsedCurrencyItem(
             modifier = Modifier
                 .fillMaxHeight()
                 .weight(1f)
-                .align(Alignment.CenterVertically)
+                .align(Alignment.CenterVertically),
         ) {
             Text(
                 text = currency.fullName,
@@ -73,7 +80,7 @@ fun CollapsedCurrencyItem(
                             BlockchainNetworkItem(
                                 blockchain = contract.blockchain,
                                 isMainNetwork = true,
-                                addedBlockchains = addedBlockchains
+                                addedBlockchains = addedBlockchains,
                             )
                         } else {
                             val added =
@@ -88,17 +95,16 @@ fun CollapsedCurrencyItem(
                                 painter = painterResource(id = icon),
                                 contentDescription = null,
                                 Modifier
-                                    .size(20.dp)
+                                    .size(20.dp),
                             )
                             Spacer(modifier = Modifier.size(5.dp))
                         }
-
                     }
                 } else {
                     BlockchainNetworkItem(
                         blockchain = blockchain,
                         isMainNetwork = false,
-                        addedBlockchains = addedBlockchains
+                        addedBlockchains = addedBlockchains,
                     )
                 }
             }
@@ -108,7 +114,7 @@ fun CollapsedCurrencyItem(
             contentDescription = null,
             Modifier
                 .padding(20.dp)
-                .align(Alignment.CenterVertically)
+                .align(Alignment.CenterVertically),
 
         )
     }
@@ -118,19 +124,21 @@ fun CollapsedCurrencyItem(
 fun BlockchainNetworkItem(
     blockchain: Blockchain?,
     isMainNetwork: Boolean,
-    addedBlockchains: List<Blockchain>
+    addedBlockchains: List<Blockchain>,
 ) {
     val added = addedBlockchains.contains(blockchain)
     val icon =
         if (added) blockchain?.getRoundIconRes() else blockchain?.getGreyedOutIconRes()
     if (icon != null) {
-        Box(Modifier
-            .size(20.dp)) {
+        Box(
+            Modifier
+                .size(20.dp),
+        ) {
             Image(
                 painter = painterResource(id = icon),
                 contentDescription = null,
                 Modifier
-                    .size(20.dp)
+                    .size(20.dp),
             )
             if (isMainNetwork) {
                 Box(
@@ -138,14 +146,14 @@ fun BlockchainNetworkItem(
                         .align(Alignment.TopEnd)
                         .size(7.dp)
                         .clip(CircleShape)
-                        .background(Color.White)
+                        .background(Color.White),
                 ) {
                     Box(
                         modifier = Modifier
                             .align(Alignment.Center)
                             .size(5.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFF1ACE80))
+                            .background(Color(0xFF1ACE80)),
                     )
                 }
             }

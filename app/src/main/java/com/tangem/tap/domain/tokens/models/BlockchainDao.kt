@@ -10,7 +10,7 @@ data class BlockchainDao(
     @Json(name = "key")
     val name: String,
     @Json(name = "testnet")
-    val isTestNet: Boolean
+    val isTestNet: Boolean,
 ) {
     @Deprecated("The method is used only for migration from older versions of the app")
     fun toBlockchain(): Blockchain {

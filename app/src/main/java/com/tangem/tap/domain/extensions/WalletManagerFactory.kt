@@ -1,6 +1,10 @@
 package com.tangem.tap.domain.extensions
 
-import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.DerivationParams
+import com.tangem.blockchain.common.DerivationStyle
+import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.common.card.Card
 import com.tangem.common.card.CardWallet
 import com.tangem.common.card.EllipticCurve
@@ -16,7 +20,7 @@ import com.tangem.tap.features.wallet.models.Currency
 fun WalletManagerFactory.makeWalletManagerForApp(
     scanResponse: ScanResponse,
     blockchain: Blockchain,
-    derivationParams: DerivationParams?
+    derivationParams: DerivationParams?,
 ): WalletManager? {
     val card = scanResponse.card
     if (card.isTestCard && blockchain.getTestnetVersion() == null) return null
@@ -33,8 +37,10 @@ fun WalletManagerFactory.makeWalletManagerForApp(
         scanResponse.isTangemTwins() && scanResponse.secondTwinPublicKey != null -> {
             makeTwinWalletManager(
                 card.cardId,
-                wallet.publicKey, scanResponse.secondTwinPublicKey!!.hexToBytes(),
-                environmentBlockchain, wallet.curve
+                wallet.publicKey,
+                scanResponse.secondTwinPublicKey!!.hexToBytes(),
+                environmentBlockchain,
+                wallet.curve,
             )
         }
         seedKey != null && derivationParams != null -> {
@@ -51,7 +57,7 @@ fun WalletManagerFactory.makeWalletManagerForApp(
                 blockchain = environmentBlockchain,
                 seedKey = wallet.publicKey,
                 derivedKey = derivedKey,
-                derivation = derivationParams
+                derivation = derivationParams,
             )
         }
         else -> {
@@ -59,26 +65,27 @@ fun WalletManagerFactory.makeWalletManagerForApp(
                 cardId = card.cardId,
                 blockchain = environmentBlockchain,
                 walletPublicKey = wallet.publicKey,
-                curve = wallet.curve
+                curve = wallet.curve,
             )
         }
     }
 }
 
 fun WalletManagerFactory.makeWalletManagerForApp(
-    scanResponse: ScanResponse, blockchainNetwork: BlockchainNetwork
+    scanResponse: ScanResponse,
+    blockchainNetwork: BlockchainNetwork,
 ): WalletManager? {
     return makeWalletManagerForApp(
         scanResponse,
         blockchain = blockchainNetwork.blockchain,
-        derivationParams = getDerivationParams(blockchainNetwork.derivationPath, scanResponse.card)
+        derivationParams = getDerivationParams(blockchainNetwork.derivationPath, scanResponse.card),
     )
 }
 
 private fun getDerivationParams(derivationPath: String?, card: Card): DerivationParams? {
     return derivationPath?.let {
         DerivationParams.Custom(
-            DerivationPath(it)
+            DerivationPath(it),
         )
     } ?: if (!card.settings.isHDWalletAllowed) {
         null
@@ -90,17 +97,19 @@ private fun getDerivationParams(derivationPath: String?, card: Card): Derivation
 }
 
 fun WalletManagerFactory.makeWalletManagerForApp(
-    scanResponse: ScanResponse, currency: Currency
+    scanResponse: ScanResponse,
+    currency: Currency,
 ): WalletManager? {
     return makeWalletManagerForApp(
         scanResponse,
         blockchain = currency.blockchain,
-        derivationParams = getDerivationParams(currency.derivationPath, scanResponse.card)
+        derivationParams = getDerivationParams(currency.derivationPath, scanResponse.card),
     )
 }
 
 fun WalletManagerFactory.makeWalletManagersForApp(
-    scanResponse: ScanResponse, blockchains: List<BlockchainNetwork>,
+    scanResponse: ScanResponse,
+    blockchains: List<BlockchainNetwork>,
 ): List<WalletManager> {
     return blockchains.mapNotNull { this.makeWalletManagerForApp(scanResponse, it) }
 }
@@ -117,7 +126,7 @@ fun WalletManagerFactory.makePrimaryWalletManager(
     return makeWalletManagerForApp(
         scanResponse = scanResponse,
         blockchain = blockchain,
-        derivationParams = derivationParams
+        derivationParams = derivationParams,
     )
 }
 

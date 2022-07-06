@@ -46,7 +46,7 @@ fun TextAutoSize(
             } else {
                 readyToDraw.value = true
             }
-        }
+        },
     )
 }
 

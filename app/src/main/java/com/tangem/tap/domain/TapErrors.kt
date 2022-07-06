@@ -17,7 +17,7 @@ interface MultiMessageError : TapErrors {
 
 sealed class TapError(
     @StringRes val messageResource: Int,
-    override val args: List<Any>? = null
+    override val args: List<Any>? = null,
 ) : Throwable(), TapErrors, ArgError {
 
     object UnknownError : TapError(R.string.send_error_unknown)
@@ -41,7 +41,7 @@ sealed class TapError(
 
     data class UnsupportedState(
         val stateError: String,
-        val customMessage: String = "Unsupported state:"
+        val customMessage: String = "Unsupported state:",
     ) : TapError(R.string.common_custom_string, listOf("$customMessage $stateError"))
 
     sealed class XmlError {
@@ -58,7 +58,7 @@ sealed class TapError(
 
     data class ValidateTransactionErrors(
         override val errorList: List<TapError>,
-        override val builder: (List<String>) -> String
+        override val builder: (List<String>) -> String,
     ) : TapError(-1), MultiMessageError
 }
 
@@ -69,7 +69,6 @@ sealed class TapSdkError(override val messageResId: Int?) : Throwable(), TangemE
     object CardForDifferentApp : TapSdkError(R.string.alert_unsupported_card)
     object CardNotSupportedByRelease : TapSdkError(R.string.error_update_app)
 }
-
 
 fun TapErrors.assembleErrors(): MutableList<Pair<Int, List<Any>?>> {
     val idList = mutableListOf<Pair<Int, List<Any>?>>()

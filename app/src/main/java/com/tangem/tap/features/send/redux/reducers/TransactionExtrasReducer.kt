@@ -3,8 +3,15 @@ package com.tangem.tap.features.send.redux.reducers
 import com.tangem.blockchain.blockchains.stellar.StellarMemo
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.tap.features.send.redux.SendScreenAction
-import com.tangem.tap.features.send.redux.TransactionExtrasAction.*
-import com.tangem.tap.features.send.redux.states.*
+import com.tangem.tap.features.send.redux.TransactionExtrasAction
+import com.tangem.tap.features.send.redux.states.BinanceMemoState
+import com.tangem.tap.features.send.redux.states.InputViewValue
+import com.tangem.tap.features.send.redux.states.SendState
+import com.tangem.tap.features.send.redux.states.TransactionExtraError
+import com.tangem.tap.features.send.redux.states.TransactionExtrasState
+import com.tangem.tap.features.send.redux.states.XlmMemoState
+import com.tangem.tap.features.send.redux.states.XlmMemoType
+import com.tangem.tap.features.send.redux.states.XrpDestinationTagState
 
 /**
  * Created by Anton Zhilenkov on 16/12/2020.
@@ -12,16 +19,34 @@ import com.tangem.tap.features.send.redux.states.*
 class TransactionExtrasReducer : SendInternalReducer {
     override fun handle(action: SendScreenAction, sendState: SendState): SendState {
         return when (action) {
-            is Prepare -> handleInitialization(action, sendState)
-            Release -> handleRelease(action, sendState)
-            is XlmMemo -> handleXlmMemo(action, sendState, sendState.transactionExtrasState)
-            is BinanceMemo -> handleBinanceMemo(action, sendState, sendState.transactionExtrasState)
-            is XrpDestinationTag -> handleXrpTag(action, sendState, sendState.transactionExtrasState)
+            is TransactionExtrasAction.Prepare -> handleInitialization(
+                action = action,
+                sendState = sendState,
+            )
+            is TransactionExtrasAction.Release -> handleRelease(
+                action = action,
+                sendState = sendState,
+            )
+            is TransactionExtrasAction.XlmMemo -> handleXlmMemo(
+                action = action,
+                sendState = sendState,
+                infoState = sendState.transactionExtrasState,
+            )
+            is TransactionExtrasAction.BinanceMemo -> handleBinanceMemo(
+                action = action,
+                sendState = sendState,
+                infoState = sendState.transactionExtrasState,
+            )
+            is TransactionExtrasAction.XrpDestinationTag -> handleXrpTag(
+                action = action,
+                sendState = sendState,
+                infoState = sendState.transactionExtrasState,
+            )
             else -> sendState
         }
     }
 
-    private fun handleInitialization(action: Prepare, sendState: SendState): SendState {
+    private fun handleInitialization(action: TransactionExtrasAction.Prepare, sendState: SendState): SendState {
         val emptyResult = TransactionExtrasState()
         val result = when (action.blockchain) {
             Blockchain.XRP -> {
@@ -32,8 +57,11 @@ class TransactionExtrasReducer : SendInternalReducer {
                     if (tag == null) {
                         TransactionExtrasState(xrpDestinationTag = XrpDestinationTagState())
                     } else {
-                        TransactionExtrasState(xrpDestinationTag = XrpDestinationTagState(
-                                InputViewValue("$tag", false), tag)
+                        TransactionExtrasState(
+                            xrpDestinationTag = XrpDestinationTagState(
+                                InputViewValue("$tag", false),
+                                tag,
+                            ),
                         )
                     }
                 } else {
@@ -53,11 +81,15 @@ class TransactionExtrasReducer : SendInternalReducer {
     }
 
     private fun handleXlmMemo(
-            action: XlmMemo,
-            sendState: SendState,
-            infoState: TransactionExtrasState,
+        action: TransactionExtrasAction.XlmMemo,
+        sendState: SendState,
+        infoState: TransactionExtrasState,
     ): SendState {
-        fun clearMemo(memo: XlmMemoState): XlmMemoState = memo.copy(text = null, id = null, error = null)
+        fun clearMemo(memo: XlmMemoState): XlmMemoState = memo.copy(
+            text = null,
+            id = null,
+            error = null,
+        )
 
         val result = when (action) {
 //            is XlmMemo.ChangeSelectedMemo -> {
@@ -69,10 +101,10 @@ class TransactionExtrasReducer : SendInternalReducer {
 //
 //                infoState.copy(xlmMemo = clearMemo(memo))
 //            }
-            is XlmMemo.HandleUserInput -> {
+            is TransactionExtrasAction.XlmMemo.HandleUserInput -> {
                 val inputViewValue = InputViewValue(action.data, true)
                 var memo = infoState.xlmMemo?.copy(viewFieldValue = inputViewValue)
-                        ?: XlmMemoState(inputViewValue)
+                    ?: XlmMemoState(inputViewValue)
                 memo = clearMemo(memo)
                 memo = when (infoState.xlmMemo?.selectedMemoType) {
                     XlmMemoType.TEXT -> memo.copy(text = StellarMemo.Text(action.data))
@@ -97,12 +129,12 @@ class TransactionExtrasReducer : SendInternalReducer {
     }
 
     private fun handleBinanceMemo(
-        action: BinanceMemo,
+        action: TransactionExtrasAction.BinanceMemo,
         sendState: SendState,
         infoState: TransactionExtrasState,
     ): SendState {
         val result = when (action) {
-            is BinanceMemo.HandleUserInput -> {
+            is TransactionExtrasAction.BinanceMemo.HandleUserInput -> {
                 val tag = action.data.toBigIntegerOrNull()
                 if (tag != null) {
                     val input = InputViewValue(action.data, true)
@@ -117,19 +149,22 @@ class TransactionExtrasReducer : SendInternalReducer {
     }
 
     private fun handleXrpTag(
-            action: XrpDestinationTag,
-            sendState: SendState,
-            infoState: TransactionExtrasState,
+        action: TransactionExtrasAction.XrpDestinationTag,
+        sendState: SendState,
+        infoState: TransactionExtrasState,
     ): SendState {
         val result = when (action) {
-            is XrpDestinationTag.HandleUserInput -> {
+            is TransactionExtrasAction.XrpDestinationTag.HandleUserInput -> {
                 val tag = action.data.toLongOrNull()
                 if (tag != null) {
                     val input = InputViewValue(action.data, true)
-                    val tagState = if (tag <= XrpDestinationTagState.MAX_NUMBER){
+                    val tagState = if (tag <= XrpDestinationTagState.MAX_NUMBER) {
                         XrpDestinationTagState(input, tag)
                     } else {
-                        XrpDestinationTagState(input, error = TransactionExtraError.INVALID_DESTINATION_TAG)
+                        XrpDestinationTagState(
+                            input,
+                            error = TransactionExtraError.INVALID_DESTINATION_TAG,
+                        )
                     }
                     infoState.copy(xrpDestinationTag = tagState)
                 } else {

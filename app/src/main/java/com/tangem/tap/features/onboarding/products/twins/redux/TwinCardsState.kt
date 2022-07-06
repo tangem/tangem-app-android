@@ -7,8 +7,8 @@ import com.tangem.tap.domain.extensions.buyIsAllowed
 import com.tangem.tap.domain.twins.TwinCardsManager
 import com.tangem.tap.features.onboarding.OnboardingWalletBalance
 import com.tangem.tap.store
-import org.rekotlin.StateType
 import kotlin.properties.ReadOnlyProperty
+import org.rekotlin.StateType
 
 /**
  * Created by Anton Zhilenkov on 21/10/2021.
@@ -39,14 +39,14 @@ data class TwinCardsState(
                 TwinCardsStep.CreateSecondWallet,
                 TwinCardsStep.CreateThirdWallet,
                 TwinCardsStep.TopUpWallet,
-                TwinCardsStep.Done
+                TwinCardsStep.Done,
             )
             CreateTwinWalletMode.RecreateWallet -> listOf(
                 TwinCardsStep.None,
                 TwinCardsStep.CreateFirstWallet,
                 TwinCardsStep.CreateSecondWallet,
                 TwinCardsStep.CreateThirdWallet,
-                TwinCardsStep.Done
+                TwinCardsStep.Done,
             )
         }
 

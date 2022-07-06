@@ -27,11 +27,11 @@ import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.shop.redux.ShopAction
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.ActivityMainBinding
+import java.lang.ref.WeakReference
+import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import java.lang.ref.WeakReference
-import kotlin.coroutines.CoroutineContext
 
 lateinit var tangemSdk: TangemSdk
 lateinit var tangemSdkManager: TangemSdkManager
@@ -68,18 +68,17 @@ class MainActivity : AppCompatActivity(), SnackbarHandler {
         store.dispatch(WalletConnectAction.RestoreSessions)
         store.dispatch(
             ShopAction.CheckIfGooglePayAvailable(
-                GooglePayService(createPaymentsClient(this), this)
-            )
+                GooglePayService(createPaymentsClient(this), this),
+            ),
         )
     }
-
 
     private fun getAndroidResources(): AndroidResources {
         return AndroidResources(
             AndroidResources.RString(
                 R.string.copy_toast_msg,
-                R.string.details_notification_erase_wallet_not_possible
-            )
+                R.string.details_notification_erase_wallet_not_possible,
+            ),
         )
     }
 
@@ -128,7 +127,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler {
         if (snackbar != null) return
 
         snackbar = Snackbar.make(
-            binding.fragmentContainer, getString(text), Snackbar.LENGTH_INDEFINITE
+            binding.fragmentContainer,
+            getString(text),
+            Snackbar.LENGTH_INDEFINITE,
         )
         if (buttonTitle != null && action != null) {
             snackbar?.setAction(getString(buttonTitle), action)
@@ -146,7 +147,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler {
         when (requestCode) {
             LOAD_PAYMENT_DATA_REQUEST_CODE -> {
                 store.dispatch(
-                    ShopAction.BuyWithGooglePay.HandleGooglePayResponse(resultCode, data)
+                    ShopAction.BuyWithGooglePay.HandleGooglePayResponse(resultCode, data),
                 )
             }
         }

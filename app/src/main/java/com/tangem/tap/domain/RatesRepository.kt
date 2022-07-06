@@ -7,7 +7,7 @@ import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.store
 import java.math.BigDecimal
 
-//TODO: refactoring: move to domain
+// TODO: refactoring: move to domain
 class RatesRepository {
 
     private val tangemTechService: TangemTechService
@@ -67,10 +67,12 @@ class RatesRepository {
     }
 
     companion object {
-        val EMPTY_RESULT = Result.Success(Pair(
-            mutableMapOf<Currency, BigDecimal>(),
-            mutableMapOf<Currency, Throwable>()
-        ))
+        val EMPTY_RESULT = Result.Success(
+            Pair(
+                mutableMapOf<Currency, BigDecimal>(),
+                mutableMapOf<Currency, Throwable>(),
+            ),
+        )
     }
 }
 

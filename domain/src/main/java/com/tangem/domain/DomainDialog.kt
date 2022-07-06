@@ -14,6 +14,6 @@ sealed interface DomainDialog {
         val items: List<CoinsResponse.Coin.Network>,
         val networkIdConverter: (String) -> String,
         val onSelect: (CoinsResponse.Coin.Network) -> Unit,
-        val onClose: VoidCallback = {}
+        val onClose: VoidCallback = {},
     ) : DomainDialog
 }

@@ -10,12 +10,14 @@ sealed class DomainException(override val message: String) : Throwable(message),
 
 sealed class AddCustomTokenException(message: String) : DomainException(message) {
 
-    data class SelectTokeNetworkException(val networkId: String) : AddCustomTokenException(
-        "Unknown network [$networkId] should not be included in the network selection dialog."
-    ), FbConsumeException
+    data class SelectTokeNetworkException(val networkId: String) :
+        AddCustomTokenException(
+            "Unknown network [$networkId] should not be included in the network selection dialog.",
+        ),
+        FbConsumeException
 
     data class UnAppropriateInitializationException(
         val of: String,
-        val info: String? = null
+        val info: String? = null,
     ) : AddCustomTokenException("The [$of], must be properly initialized. Info [$info]")
 }

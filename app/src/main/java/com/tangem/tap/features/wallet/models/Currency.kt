@@ -27,14 +27,14 @@ sealed interface Currency {
     data class Token(
         val token: com.tangem.blockchain.common.Token,
         override val blockchain: com.tangem.blockchain.common.Blockchain,
-        override val derivationPath: String?
+        override val derivationPath: String?,
     ) : Currency {
         override val currencySymbol = token.symbol
     }
 
     data class Blockchain(
         override val blockchain: com.tangem.blockchain.common.Blockchain,
-        override val derivationPath: String?
+        override val derivationPath: String?,
     ) : Currency {
         override val currencySymbol: CryptoCurrencyName = blockchain.currency
     }
@@ -54,18 +54,18 @@ sealed interface Currency {
     companion object {
         fun fromBlockchainNetwork(
             blockchainNetwork: BlockchainNetwork,
-            token: com.tangem.blockchain.common.Token? = null
+            token: com.tangem.blockchain.common.Token? = null,
         ): Currency {
             return if (token != null) {
                 Token(
                     token = token,
                     blockchain = blockchainNetwork.blockchain,
-                    derivationPath = blockchainNetwork.derivationPath
+                    derivationPath = blockchainNetwork.derivationPath,
                 )
             } else {
                 Blockchain(
                     blockchain = blockchainNetwork.blockchain,
-                    derivationPath = blockchainNetwork.derivationPath
+                    derivationPath = blockchainNetwork.derivationPath,
                 )
             }
         }
@@ -74,7 +74,7 @@ sealed interface Currency {
             return when (customCurrency) {
                 is CustomCurrency.CustomBlockchain -> Blockchain(
                     blockchain = customCurrency.network,
-                    derivationPath = customCurrency.derivationPath?.rawPath
+                    derivationPath = customCurrency.derivationPath?.rawPath,
                 )
                 is CustomCurrency.CustomToken -> Token(
                     token = customCurrency.token,
@@ -88,7 +88,7 @@ sealed interface Currency {
             return Token(
                 token = tokenWithBlockchain.token,
                 blockchain = tokenWithBlockchain.blockchain,
-                derivationPath = null
+                derivationPath = null,
             )
         }
     }

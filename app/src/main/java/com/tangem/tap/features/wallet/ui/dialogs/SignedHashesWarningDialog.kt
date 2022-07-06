@@ -18,8 +18,8 @@ class SignedHashesWarningDialog {
                     store.dispatch(WalletAction.Warnings.CheckHashesCount.SaveCardId)
                     store.dispatch(
                         GlobalAction.HideWarningMessage(
-                            WarningMessagesManager.signedHashesMultiWalletWarning()
-                        )
+                            WarningMessagesManager.signedHashesMultiWalletWarning(),
+                        ),
                     )
                 }
                 setNegativeButton(R.string.common_cancel) { _, _ -> }
@@ -29,5 +29,4 @@ class SignedHashesWarningDialog {
             }.create()
         }
     }
-
 }

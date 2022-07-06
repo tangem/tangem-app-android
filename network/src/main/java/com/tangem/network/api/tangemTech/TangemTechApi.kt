@@ -15,7 +15,7 @@ interface TangemTechApi {
         @Query("active") active: Boolean? = null,
         @Query("searchText") searchText: String? = null,
         @Query("offset") offset: Int? = null,
-        @Query("limit") limit: Int? = null
+        @Query("limit") limit: Int? = null,
     ): CoinsResponse
 
     @GET("rates")
@@ -26,5 +26,4 @@ interface TangemTechApi {
 
     @GET("currencies")
     suspend fun currencies(): CurrenciesResponse
-
 }

@@ -19,25 +19,25 @@ import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.domain.tokens.models.ObsoleteTokenDao
 import com.tangem.tap.domain.tokens.models.TokenDao
 import com.tangem.tap.features.demo.DemoHelper
+import java.util.*
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import timber.log.Timber
-import java.util.*
 
 class CurrenciesRepository(
     private val context: Application,
-    private val tangemNetworkService: TangemTechService
+    private val tangemNetworkService: TangemTechService,
 ) {
 
     private val moshi = MoshiConverter.defaultMoshi()
     private val blockchainsAdapter: JsonAdapter<List<Blockchain>> = moshi.adapter(
-        Types.newParameterizedType(List::class.java, Blockchain::class.java)
+        Types.newParameterizedType(List::class.java, Blockchain::class.java),
     )
     private val tokensAdapter: JsonAdapter<List<TokenDao>> = moshi.adapter(
-        Types.newParameterizedType(List::class.java, TokenDao::class.java)
+        Types.newParameterizedType(List::class.java, TokenDao::class.java),
     )
     private val obsoleteTokensAdapter: JsonAdapter<List<ObsoleteTokenDao>> = moshi.adapter(
-        Types.newParameterizedType(List::class.java, ObsoleteTokenDao::class.java)
+        Types.newParameterizedType(List::class.java, ObsoleteTokenDao::class.java),
     )
     private val currenciesAdapter: JsonAdapter<CurrenciesFromJson> =
         moshi.adapter(CurrenciesFromJson::class.java)
@@ -107,7 +107,7 @@ class CurrenciesRepository(
 
     suspend fun loadSavedCurrencies(
         cardId: String,
-        isHdWalletSupported: Boolean = false
+        isHdWalletSupported: Boolean = false,
     ): List<BlockchainNetwork> {
         if (DemoHelper.isDemoCardId(cardId)) {
             return loadDemoCurrencies()
@@ -139,19 +139,19 @@ class CurrenciesRepository(
             BlockchainNetwork(
                 blockchain = it,
                 derivationPath = it.derivationPath(DerivationStyle.LEGACY)?.rawPath,
-                tokens = emptyList()
+                tokens = emptyList(),
             )
         }
     }
 
     private suspend fun tryToLoadPreviousFormatAndMigrate(
         cardId: String,
-        isHdWalletSupported: Boolean = false
+        isHdWalletSupported: Boolean = false,
     ): List<BlockchainNetwork> {
         return try {
             loadSavedCurrenciesOldWay(
                 cardId,
-                isHdWalletSupported
+                isHdWalletSupported,
             )
         } catch (exception: Exception) {
             emptyList()
@@ -159,7 +159,8 @@ class CurrenciesRepository(
     }
 
     private suspend fun loadSavedCurrenciesOldWay(
-        cardId: String, isHdWalletSupported: Boolean = false
+        cardId: String,
+        isHdWalletSupported: Boolean = false,
     ): List<BlockchainNetwork> {
         val blockchains = loadSavedBlockchains(cardId)
         val tokens = loadSavedTokens(cardId)
@@ -174,7 +175,7 @@ class CurrenciesRepository(
                     .map {
                         val token = it.toToken()
                         token.copy(id = ids[token.contractAddress])
-                    }
+                    },
             )
         }
         saveCurrencies(cardId, blockchainNetworks) // migrate saved currencies
@@ -241,12 +242,14 @@ class CurrenciesRepository(
 
     fun getBlockchains(
         cardFirmware: FirmwareVersion,
-        isTestNet: Boolean = false
+        isTestNet: Boolean = false,
     ): List<Blockchain> {
         val blockchains = if (cardFirmware < FirmwareVersion.MultiWalletAvailable) {
             Blockchain.secp256k1Blockchains(isTestNet)
         } else {
-            Blockchain.secp256k1Blockchains(isTestNet) + Blockchain.ed25519OnlyBlockchains(isTestNet)
+            Blockchain.secp256k1Blockchains(isTestNet) + Blockchain.ed25519OnlyBlockchains(
+                isTestNet,
+            )
         }
         return excludeUnsupportedBlockchains(blockchains)
     }
@@ -255,9 +258,7 @@ class CurrenciesRepository(
     private fun excludeUnsupportedBlockchains(blockchains: List<Blockchain>): List<Blockchain> {
         return blockchains.toMutableList().apply {
             removeAll(
-                listOf(
-//                Any blockchain
-                )
+                listOf(/* Any blockchain */),
             )
         }
     }
@@ -279,4 +280,3 @@ fun Blockchain.getTokensName(): String {
         else -> this.fullName
     }
 }
-

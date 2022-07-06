@@ -16,7 +16,11 @@ class TangemSigner(
     private val signerCallback: (TangemSignerResponse) -> Unit,
 ) : TransactionSigner {
 
-    override suspend fun sign(hash: ByteArray, cardId: String, publicKey: Wallet.PublicKey): CompletionResult<ByteArray> {
+    override suspend fun sign(
+        hash: ByteArray,
+        cardId: String,
+        publicKey: Wallet.PublicKey,
+    ): CompletionResult<ByteArray> {
         return suspendCoroutine { continuation ->
             val command = SignHashTask(hash, publicKey)
             tangemSdk.startSessionWithRunnable(
@@ -29,8 +33,8 @@ class TangemSigner(
                         signerCallback(
                             TangemSignerResponse(
                                 result.data.totalSignedHashes,
-                                result.data.remainingSignatures
-                            )
+                                result.data.remainingSignatures,
+                            ),
                         )
                         continuation.resume(CompletionResult.Success(result.data.signature))
                     }
@@ -41,7 +45,11 @@ class TangemSigner(
         }
     }
 
-    override suspend fun sign(hashes: List<ByteArray>, cardId: String, publicKey: Wallet.PublicKey): CompletionResult<List<ByteArray>> {
+    override suspend fun sign(
+        hashes: List<ByteArray>,
+        cardId: String,
+        publicKey: Wallet.PublicKey,
+    ): CompletionResult<List<ByteArray>> {
         return suspendCoroutine { continuation ->
             val task = SignHashesTask(hashes, publicKey)
             tangemSdk.startSessionWithRunnable(
@@ -54,8 +62,8 @@ class TangemSigner(
                         signerCallback(
                             TangemSignerResponse(
                                 result.data.totalSignedHashes,
-                                result.data.remainingSignatures
-                            )
+                                result.data.remainingSignatures,
+                            ),
                         )
                         continuation.resume(CompletionResult.Success(result.data.signatures))
                     }

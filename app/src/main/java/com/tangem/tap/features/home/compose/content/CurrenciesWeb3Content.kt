@@ -112,7 +112,6 @@ fun StoriesWeb3Content(
                 )
             }
         }
-
     }
 }
 
@@ -130,10 +129,10 @@ private fun LightenBox(content: @Composable () -> Unit) {
                             Color.White.copy(alpha = 0f),
                             Color.White.copy(alpha = 0.75f),
                             Color.White.copy(alpha = 0.95f),
-                            Color.White
-                        )
-                    )
-                )
+                            Color.White,
+                        ),
+                    ),
+                ),
         ) {}
     }
 }

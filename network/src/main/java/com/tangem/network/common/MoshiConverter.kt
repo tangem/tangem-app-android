@@ -6,9 +6,9 @@ import com.squareup.moshi.ToJson
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.tangem.common.json.MoshiJsonConverter
 import com.tangem.common.json.TangemSdkAdapter
+import java.math.BigDecimal
 import retrofit2.Converter
 import retrofit2.converter.moshi.MoshiConverterFactory
-import java.math.BigDecimal
 
 /**
  * Created by Anton Zhilenkov on 02/04/2022.
@@ -16,7 +16,9 @@ import java.math.BigDecimal
 class MoshiConverter {
 
     companion object {
-        fun createFactory(moshi: Moshi = defaultMoshi()): Converter.Factory = MoshiConverterFactory.create(moshi)
+        fun createFactory(moshi: Moshi = defaultMoshi()): Converter.Factory {
+            return MoshiConverterFactory.create(moshi)
+        }
 
         fun defaultMoshi(): Moshi = Moshi.Builder()
             .add(BigDecimalAdapter)

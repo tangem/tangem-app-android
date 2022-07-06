@@ -11,7 +11,7 @@ sealed interface TangemTechResponse : HttpResponse
 data class CoinsResponse(
     val imageHost: String?,
     val coins: List<Coin>,
-    val total: Int
+    val total: Int,
 ) : TangemTechResponse {
 
     data class Coin(
@@ -19,7 +19,7 @@ data class CoinsResponse(
         val name: String,
         val symbol: String,
         val active: Boolean,
-        val networks: List<Network> = listOf()
+        val networks: List<Network> = listOf(),
     ) : TangemTechResponse {
 
         data class Network(
@@ -30,17 +30,17 @@ data class CoinsResponse(
     }
 }
 
-//rates.keys = networkId's
+// rates.keys = networkId's
 data class RatesResponse(val rates: Map<String, Double>) : TangemTechResponse
 
 data class CurrenciesResponse(val currencies: List<Currency>) {
 
     data class Currency(
         val id: String,
-        val code: String,       // this is an uppercase id
+        val code: String, // this is an uppercase id
         val name: String,
         val rateBTC: String,
-        val unit: String,       // $, €, ₽
+        val unit: String, // $, €, ₽
         val type: String,
     ) : TangemTechResponse
 }

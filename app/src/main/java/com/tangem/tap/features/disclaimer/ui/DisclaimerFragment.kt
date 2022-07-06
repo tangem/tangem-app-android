@@ -15,18 +15,22 @@ import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentDisclaimerBinding
 import org.rekotlin.StoreSubscriber
 
-class DisclaimerFragment : Fragment(R.layout.fragment_disclaimer),
-        StoreSubscriber<DisclaimerState> {
+class DisclaimerFragment :
+    Fragment(R.layout.fragment_disclaimer),
+    StoreSubscriber<DisclaimerState> {
 
     private val binding: FragmentDisclaimerBinding by viewBinding(FragmentDisclaimerBinding::bind)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        activity?.onBackPressedDispatcher?.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                store.dispatch(NavigationAction.PopBackTo())
-            }
-        })
+        activity?.onBackPressedDispatcher?.addCallback(
+            this,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    store.dispatch(NavigationAction.PopBackTo())
+                }
+            },
+        )
         val inflater = TransitionInflater.from(requireContext())
         enterTransition = inflater.inflateTransition(android.R.transition.slide_bottom)
         exitTransition = inflater.inflateTransition(android.R.transition.slide_top)

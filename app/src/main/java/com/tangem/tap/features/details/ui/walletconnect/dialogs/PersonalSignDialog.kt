@@ -16,9 +16,11 @@ class PersonalSignDialog {
         ): AlertDialog {
             val message =
                 context.getString(R.string.wallet_connect_alert_sign_message, data.cardId) +
-                        context.getString(R.string.wallet_connect_personal_sign_message,
-                            data.dAppName,
-                            data.message)
+                    context.getString(
+                        R.string.wallet_connect_personal_sign_message,
+                        data.dAppName,
+                        data.message,
+                    )
             return AlertDialog.Builder(context).apply {
                 setTitle(context.getString(R.string.wallet_connect))
                 setMessage(message)

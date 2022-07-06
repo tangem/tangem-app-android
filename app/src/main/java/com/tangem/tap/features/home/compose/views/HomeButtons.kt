@@ -19,16 +19,17 @@ import com.tangem.wallet.R
 
 @Composable
 fun HomeButtons(
-    isDarkBackground: Boolean, modifier: Modifier = Modifier,
+    isDarkBackground: Boolean,
+    modifier: Modifier = Modifier,
     onScanButtonClick: () -> Unit,
-    onShopButtonClick: () -> Unit
+    onShopButtonClick: () -> Unit,
 ) {
     val darkColorBackground = Color(0xFF26292E)
     val darkColorButton = Color(0xFF080C10)
 
     Row(
         horizontalArrangement = Arrangement.SpaceEvenly,
-        modifier = modifier
+        modifier = modifier,
     ) {
         Button(
             modifier = Modifier
@@ -37,15 +38,15 @@ fun HomeButtons(
             onClick = onScanButtonClick,
             colors = ButtonDefaults.textButtonColors(
                 backgroundColor = if (isDarkBackground) darkColorBackground else Color.White,
-                contentColor = if (isDarkBackground) Color.White else darkColorButton
-            )
+                contentColor = if (isDarkBackground) Color.White else darkColorButton,
+            ),
         ) {
             Text(
                 text = stringResource(id = R.string.home_button_scan),
                 fontWeight = FontWeight.Medium,
                 fontSize = 16.sp,
                 textAlign = TextAlign.Center,
-                maxLines = 1
+                maxLines = 1,
             )
         }
         SpacerS8()
@@ -56,15 +57,15 @@ fun HomeButtons(
             onClick = onShopButtonClick,
             colors = ButtonDefaults.textButtonColors(
                 backgroundColor = if (isDarkBackground) Color.White else darkColorBackground,
-                contentColor = if (isDarkBackground) darkColorButton else Color.White
-            )
+                contentColor = if (isDarkBackground) darkColorButton else Color.White,
+            ),
         ) {
             Text(
                 text = stringResource(id = R.string.home_button_order),
                 fontWeight = FontWeight.Medium,
                 fontSize = 16.sp,
                 textAlign = TextAlign.Center,
-                maxLines = 1
+                maxLines = 1,
             )
         }
     }

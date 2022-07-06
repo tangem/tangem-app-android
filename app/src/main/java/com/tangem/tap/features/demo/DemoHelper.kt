@@ -1,7 +1,12 @@
 package com.tangem.tap.features.demo
 
 import com.tangem.blockchain.blockchains.bitcoin.BitcoinWalletManager
-import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.common.TransactionSender
+import com.tangem.blockchain.common.TransactionSigner
+import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.common.CompletionResult
@@ -14,8 +19,8 @@ import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.store
 import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
-import org.rekotlin.Action
 import java.math.BigDecimal
+import org.rekotlin.Action
 
 /**
  * Created by Anton Zhilenkov on 21/02/2022.
@@ -36,7 +41,7 @@ object DemoHelper {
         WalletAction.TradeCryptoAction.Buy::class.java,
         WalletAction.TradeCryptoAction.Sell::class.java,
         BackupAction.StartBackup::class.java,
-        WalletAction.ExploreAddress::class.java
+        WalletAction.ExploreAddress::class.java,
     )
 
     fun isDemoCard(scanResponse: ScanResponse): Boolean = isDemoCardId(scanResponse.card.cardId)
@@ -104,9 +109,11 @@ class DemoConfig {
         ?: Amount(BigDecimal.ZERO, blockchain).copy()
 
     private fun getReleaseIds(): List<String> {
-        return (releaseDemoCardIds +
-            releaseDemoCardIds_19042022 +
-                testDemoCardIds).distinct()
+        return (
+            releaseDemoCardIds +
+                releaseDemoCardIds_19042022 +
+                testDemoCardIds
+            ).distinct()
     }
 
     private val releaseDemoCardIds = mutableListOf<String>(
@@ -260,31 +267,35 @@ class DemoConfig {
         "FB30000000000176", // Wallet
     )
 
-    private val debugTestDemoCardIds = listOf<String>(
-    )
+    private val debugTestDemoCardIds = listOf<String>()
 }
 
 class DemoTransactionSender(
     private val walletManager: WalletManager,
-    private val sender: TransactionSender = walletManager as TransactionSender
+    private val sender: TransactionSender = walletManager as TransactionSender,
 ) : TransactionSender {
 
     override suspend fun getFee(amount: Amount, destination: String): Result<List<Amount>> {
         val blockchain = walletManager.wallet.blockchain
         return when (walletManager) {
-            is BitcoinWalletManager -> Result.Success(listOf(
-                Amount(0.0001.toBigDecimal(), blockchain),
-                Amount(0.0003.toBigDecimal(), blockchain),
-                Amount(0.00055.toBigDecimal(), blockchain),
-            ))
+            is BitcoinWalletManager -> Result.Success(
+                listOf(
+                    Amount(0.0001.toBigDecimal(), blockchain),
+                    Amount(0.0003.toBigDecimal(), blockchain),
+                    Amount(0.00055.toBigDecimal(), blockchain),
+                ),
+            )
             else -> sender.getFee(amount, destination)
         }
     }
 
-
     override suspend fun send(transactionData: TransactionData, signer: TransactionSigner): SimpleResult {
         val dataToSign = randomString(32).toByteArray()
-        val signerResponse = signer.sign(dataToSign, walletManager.wallet.cardId, walletManager.wallet.publicKey)
+        val signerResponse = signer.sign(
+            dataToSign,
+            walletManager.wallet.cardId,
+            walletManager.wallet.publicKey,
+        )
         return when (signerResponse) {
             is CompletionResult.Success -> SimpleResult.Failure(Exception(ID))
             is CompletionResult.Failure -> SimpleResult.fromTangemSdkError(signerResponse.error)
@@ -304,5 +315,4 @@ class DemoTransactionSender(
     companion object {
         val ID = DemoTransactionSender::class.java.simpleName
     }
-
 }

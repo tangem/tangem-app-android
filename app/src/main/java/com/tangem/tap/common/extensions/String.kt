@@ -29,7 +29,7 @@ fun String.colorSegment(
     context: Context,
     color: Int,
     startIndex: Int = 0,
-    endIndex: Int = this.length
+    endIndex: Int = this.length,
 ): Spannable {
     return this.toSpannable()
         .also { spannable ->
@@ -37,7 +37,7 @@ fun String.colorSegment(
                 ForegroundColorSpan(ContextCompat.getColor(context, color)),
                 startIndex,
                 endIndex,
-                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE
+                Spannable.SPAN_EXCLUSIVE_EXCLUSIVE,
             )
         }
 }

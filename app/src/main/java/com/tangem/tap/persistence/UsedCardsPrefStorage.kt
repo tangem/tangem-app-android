@@ -11,7 +11,7 @@ import timber.log.Timber
  */
 class UsedCardsPrefStorage(
     private val preferences: SharedPreferences,
-    private val jsonConverter: MoshiJsonConverter
+    private val jsonConverter: MoshiJsonConverter,
 ) {
 
     internal fun migrate() {

@@ -11,11 +11,15 @@ import com.tangem.tap.features.wallet.redux.AddressData
 interface StateDialog
 
 sealed class AppDialog : StateDialog {
-    data class SimpleOkDialog(val header: String, val message: String, val onOk: VoidCallback? = null) : AppDialog()
+    data class SimpleOkDialog(
+        val header: String,
+        val message: String,
+        val onOk: VoidCallback? = null,
+    ) : AppDialog()
     data class SimpleOkDialogRes(
         val headerId: Int,
         val messageId: Int,
-        val onOk: VoidCallback? = null
+        val onOk: VoidCallback? = null,
     ) : AppDialog()
 
     object ScanFailsDialog : AppDialog()
@@ -25,6 +29,6 @@ sealed class AppDialog : StateDialog {
     ) : AppDialog()
 
     data class TestActionsDialog(
-        val actionsList: List<TestAction>
+        val actionsList: List<TestAction>,
     ) : AppDialog()
 }

@@ -42,7 +42,9 @@ private val homeMiddleware: Middleware<AppState> = { dispatch, state ->
                 is HomeAction.Init -> {
                     store.dispatch(GlobalAction.RestoreAppCurrency)
                     store.dispatch(GlobalAction.InitCurrencyExchangeManager)
-                    store.dispatch(HomeAction.SetTermsOfUseState(preferencesStorage.wasDisclaimerAccepted()))
+                    store.dispatch(
+                        HomeAction.SetTermsOfUseState(preferencesStorage.wasDisclaimerAccepted()),
+                    )
                 }
                 is HomeAction.ShouldScanCardOnResume -> {
                     if (action.shouldScanCard) {
@@ -61,7 +63,9 @@ private val homeMiddleware: Middleware<AppState> = { dispatch, state ->
                     }
                     store.state.globalState.analyticsHandlers?.triggerEvent(
                         event = AnalyticsEvent.GET_CARD,
-                        params = mapOf(AnalyticsParam.SOURCE.param to GetCardSourceParams.WELCOME.param)
+                        params = mapOf(
+                            AnalyticsParam.SOURCE.param to GetCardSourceParams.WELCOME.param,
+                        ),
                     )
                 }
             }
@@ -75,30 +79,37 @@ private fun handleReadCard() {
         store.dispatch(NavigationAction.NavigateTo(AppScreen.Disclaimer))
     } else {
         changeButtonState(ButtonState.PROGRESS)
-        store.dispatch(GlobalAction.ScanCard(onSuccess = { scanResponse ->
-            store.state.globalState.tapWalletManager.updateConfigManager(scanResponse)
-            store.dispatch(TwinCardsAction.IfTwinsPrepareState(scanResponse))
+        store.dispatch(
+            GlobalAction.ScanCard(
+                onSuccess = { scanResponse ->
+                    store.state.globalState.tapWalletManager.updateConfigManager(scanResponse)
+                    store.dispatch(TwinCardsAction.IfTwinsPrepareState(scanResponse))
 
-            if (OnboardingHelper.isOnboardingCase(scanResponse)) {
-                val navigateTo = OnboardingHelper.whereToNavigate(scanResponse)
-                store.dispatch(GlobalAction.Onboarding.Start(scanResponse))
-                navigateTo(navigateTo)
-            } else {
-                scope.launch {
-                    store.onCardScanned(scanResponse)
-                    withMainContext {
-                        if (scanResponse.twinsIsTwinned() && !preferencesStorage.wasTwinsOnboardingShown()) {
-                            store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.WelcomeOnly))
-                            navigateTo(AppScreen.OnboardingTwins)
-                        } else {
-                            navigateTo(AppScreen.Wallet, null)
+                    if (OnboardingHelper.isOnboardingCase(scanResponse)) {
+                        val navigateTo = OnboardingHelper.whereToNavigate(scanResponse)
+                        store.dispatch(GlobalAction.Onboarding.Start(scanResponse))
+                        navigateTo(navigateTo)
+                    } else {
+                        scope.launch {
+                            store.onCardScanned(scanResponse)
+                            withMainContext {
+                                if (scanResponse.twinsIsTwinned() && !preferencesStorage.wasTwinsOnboardingShown()) {
+                                    store.dispatch(
+                                        TwinCardsAction.SetStepOfScreen(TwinCardsStep.WelcomeOnly),
+                                    )
+                                    navigateTo(AppScreen.OnboardingTwins)
+                                } else {
+                                    navigateTo(AppScreen.Wallet, null)
+                                }
+                            }
                         }
                     }
-                }
-            }
-        }, onFailure = {
-            changeButtonState(ButtonState.ENABLED)
-        }))
+                },
+                onFailure = {
+                    changeButtonState(ButtonState.ENABLED)
+                },
+            ),
+        )
     }
 }
 

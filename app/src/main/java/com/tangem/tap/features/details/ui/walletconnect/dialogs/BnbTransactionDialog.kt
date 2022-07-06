@@ -19,7 +19,6 @@ class BnbTransactionDialog {
             dAppName: String,
             context: Context,
         ): AlertDialog {
-
             val message = when (data) {
                 is BinanceMessageData.Trade -> data.tradeData.map {
                     context.getString(
@@ -27,20 +26,22 @@ class BnbTransactionDialog {
                         it.symbol,
                         it.price,
                         it.quantity,
-                        it.amount
+                        it.amount,
                     )
-                }.joinToString ( "\n\n" )
+                }.joinToString("\n\n")
                 is BinanceMessageData.Transfer -> context.getString(
                     R.string.wallet_connect_bnb_transaction_message,
                     data.address,
                     data.outputAddress,
-                    data.amount
+                    data.amount,
                 )
             }
 
             val fullMessage = context.getString(
                 R.string.wallet_connect_bnb_sign_message,
-                dAppName, cardId, message
+                dAppName,
+                cardId,
+                message,
             )
             val positiveButtonTitle = context.getText(R.string.common_sign)
 
@@ -48,11 +49,13 @@ class BnbTransactionDialog {
                 setTitle(context.getString(R.string.wallet_connect))
                 setMessage(fullMessage)
                 setPositiveButton(positiveButtonTitle) { _, _ ->
-                        store.dispatch(WalletConnectAction.BinanceTransaction.Sign(
+                    store.dispatch(
+                        WalletConnectAction.BinanceTransaction.Sign(
                             id = sessionId,
                             data = data.data,
-                            sessionData = session
-                        ))
+                            sessionData = session,
+                        ),
+                    )
                 }
                 setNegativeButton(context.getText(R.string.common_reject)) { _, _ ->
                     store.dispatch(WalletConnectAction.RejectRequest(session, sessionId))

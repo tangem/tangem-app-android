@@ -10,7 +10,9 @@ import java.util.*
  * Created by Anton Zhilenkov on 19/02/2021.
  */
 class CardTou {
-    private val locale: Locale = ConfigurationCompat.getLocales(Resources.getSystem().configuration).get(0)
+    private val locale: Locale = ConfigurationCompat
+        .getLocales(Resources.getSystem().configuration)
+        .get(0)
 
     fun getUrl(card: Card): Uri? {
         val issuerName = card.issuer.name ?: return null

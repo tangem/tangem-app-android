@@ -23,7 +23,7 @@ class SimpleAlertDialog {
                 message = message,
                 primaryButtonRes = primaryButtonRes,
                 secondaryButtonRes = null,
-                context = context
+                context = context,
             )
         }
     }
@@ -42,13 +42,12 @@ class SimpleCancelableAlertDialog {
             secondaryButtonAction: () -> Unit = {},
             context: Context,
         ): AlertDialog {
-
             return AlertDialog.Builder(context).apply {
-                setTitle(titleRes?.let { context.getString(it) } ?: title )
+                setTitle(titleRes?.let { context.getString(it) } ?: title)
                 setMessage(messageRes?.let { context.getString(it) } ?: message)
                 setPositiveButton(context.getText(primaryButtonRes)) { _, _ -> primaryButtonAction() }
                 if (secondaryButtonRes != null) {
-                    setNegativeButton(context.getText(secondaryButtonRes)) { _, _ -> secondaryButtonAction()}
+                    setNegativeButton(context.getText(secondaryButtonRes)) { _, _ -> secondaryButtonAction() }
                 }
                 setOnDismissListener {
                     store.dispatch(GlobalAction.HideDialog)

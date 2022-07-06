@@ -37,7 +37,7 @@ class BnbHelper {
                 outputAddress = output.address,
                 amount = amount,
                 address = input.address,
-                data = gson.toJson(order).toByteArray().calculateSha256()
+                data = gson.toJson(order).toByteArray().calculateSha256(),
             )
         }
 
@@ -59,7 +59,7 @@ class BnbHelper {
                     price = "$price ${Blockchain.Binance.currency}",
                     quantity = "$quantity $symbol",
                     amount = "$amount ${Blockchain.Binance.currency}",
-                    symbol = symbol
+                    symbol = symbol,
                 )
             }
             val gson = GsonBuilder()
@@ -72,10 +72,8 @@ class BnbHelper {
             return BinanceMessageData.Trade(
                 tradeData = tradeData,
                 address = address,
-                data = serialized.toByteArray().calculateSha256()
+                data = serialized.toByteArray().calculateSha256(),
             )
         }
-
     }
 }
-

@@ -17,7 +17,6 @@ import com.tangem.tap.domain.tokens.Currency
 import com.tangem.tap.features.tokens.redux.ContractAddress
 import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
 
-
 @Composable
 fun ListOfCurrencies(
     header: @Composable () -> Unit,
@@ -27,9 +26,8 @@ fun ListOfCurrencies(
     allowToAdd: Boolean,
     onAddCurrencyToggled: (Currency, TokenWithBlockchain?) -> Unit,
     onNetworkItemClicked: (ContractAddress) -> Unit,
-    onLoadMore: () -> Unit
+    onLoadMore: () -> Unit,
 ) {
-
     val expandedCurrencies = remember { mutableStateOf(listOf("")) }
 
     val onCurrencyClick = { currencyId: String ->
@@ -50,7 +48,7 @@ fun ListOfCurrencies(
         state = listState,
         modifier = Modifier
             .fillMaxSize(),
-        contentPadding = PaddingValues(bottom = 90.dp)
+        contentPadding = PaddingValues(bottom = 90.dp),
     ) {
         item { header() }
         itemsIndexed(currencies) { index, currency ->
@@ -62,7 +60,7 @@ fun ListOfCurrencies(
                 expanded = expandedCurrencies.value.contains(currency.id),
                 onCurrencyClick = onCurrencyClick,
                 onAddCurrencyToggled = onAddCurrencyToggled,
-                onNetworkItemClicked = onNetworkItemClicked
+                onNetworkItemClicked = onNetworkItemClicked,
             )
         }
     }

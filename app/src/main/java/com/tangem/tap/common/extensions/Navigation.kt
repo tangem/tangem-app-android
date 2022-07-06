@@ -32,7 +32,7 @@ private class Navigation
 fun FragmentActivity.openFragment(
     screen: AppScreen,
     addToBackstack: Boolean,
-    fgShareTransition: FragmentShareTransition? = null
+    fgShareTransition: FragmentShareTransition? = null,
 ) {
     val transaction = this.supportFragmentManager.beginTransaction()
     val fragment = fragmentFactory(screen)
@@ -62,20 +62,22 @@ fun FragmentActivity.popBackTo(screen: AppScreen?, inclusive: Boolean = false) {
 
 fun FragmentActivity.getPreviousScreen(): AppScreen? {
     val indexOfLastFragment = this.supportFragmentManager.backStackEntryCount - 1
-    val tag = if (indexOfLastFragment < this.supportFragmentManager.backStackEntryCount)
+    val tag = if (indexOfLastFragment < this.supportFragmentManager.backStackEntryCount) {
         this.supportFragmentManager.getBackStackEntryAt(indexOfLastFragment).name
-    else null
+    } else null
     return tag?.let { AppScreen.valueOf(tag) }
 }
 
 fun FragmentActivity.addOnBackPressedDispatcher(
     isEnabled: Boolean = true,
-    onBackPressed: VoidCallback
-): OnBackPressedCallback = (object : OnBackPressedCallback(isEnabled) {
-    override fun handleOnBackPressed() {
-        onBackPressed()
+    onBackPressed: VoidCallback,
+): OnBackPressedCallback = (
+    object : OnBackPressedCallback(isEnabled) {
+        override fun handleOnBackPressed() {
+            onBackPressed()
+        }
     }
-}).also { this.onBackPressedDispatcher.addCallback(it) }
+    ).also { this.onBackPressedDispatcher.addCallback(it) }
 
 private fun fragmentFactory(screen: AppScreen): Fragment {
     return when (screen) {

@@ -7,7 +7,11 @@ import com.tangem.common.core.TangemError
 import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.analytics.GlobalAnalyticsHandler
 import com.tangem.tap.common.entities.FiatCurrency
-import com.tangem.tap.common.redux.*
+import com.tangem.tap.common.redux.DebugErrorAction
+import com.tangem.tap.common.redux.ErrorAction
+import com.tangem.tap.common.redux.NotificationAction
+import com.tangem.tap.common.redux.StateDialog
+import com.tangem.tap.common.redux.ToastNotificationAction
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.configurable.config.ConfigManager
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage

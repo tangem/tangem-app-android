@@ -1,7 +1,17 @@
 package com.tangem.tap.common.compose
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
 import androidx.compose.material.ripple.LocalRippleTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -60,7 +70,7 @@ private fun TextInButton(
             fontSize = 16.sp,
             lineHeight = 20.sp,
             fontWeight = FontWeight.Medium,
-        )
+        ),
     )
 }
 
@@ -71,7 +81,7 @@ fun PasteButton(
     dpSize: DpSize = DpSize(40.dp, 40.dp),
     onClick: () -> Unit,
     tint: Color? = null,
-    content: @Composable (() -> Unit)? = null
+    content: @Composable (() -> Unit)? = null,
 ) {
     IconButton(
         modifier = modifier.size(dpSize),
@@ -100,7 +110,7 @@ fun ClearButton(
     dpSize: DpSize = DpSize(40.dp, 40.dp),
     onClick: () -> Unit,
     tint: Color? = null,
-    content: @Composable (() -> Unit)? = null
+    content: @Composable (() -> Unit)? = null,
 ) {
     IconButton(
         modifier = modifier.size(dpSize),
@@ -137,8 +147,7 @@ fun ToggledRippleTheme(
 @Preview
 @Composable
 fun ButtonTest() {
-    Scaffold(
-    ) {
+    Scaffold() {
         Column(modifier = Modifier.padding(16.dp)) {
             PreviewItem("Button") {
                 RectangleButton(text = "Some button") {}

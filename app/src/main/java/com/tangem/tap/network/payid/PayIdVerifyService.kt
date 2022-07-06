@@ -8,7 +8,7 @@ import com.tangem.network.common.createRetrofitInstance
  * Created by Anton Zhilenkov on 03/09/2020.
  */
 class PayIdVerifyService(
-        private val baseUrl: String
+    private val baseUrl: String,
 ) {
 
     private val api = createRetrofitInstance(baseUrl).create(PayIdVerifyApi::class.java)

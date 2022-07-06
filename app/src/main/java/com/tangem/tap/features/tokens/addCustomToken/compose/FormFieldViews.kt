@@ -10,10 +10,16 @@ import com.tangem.domain.common.form.Field
 import com.tangem.domain.features.addCustomToken.TokenBlockchainField
 import com.tangem.domain.features.addCustomToken.TokenDerivationPathField
 import com.tangem.domain.features.addCustomToken.TokenField
-import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction.*
+import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction
 import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenState
 import com.tangem.domain.redux.domainStore
-import com.tangem.tap.common.compose.*
+import com.tangem.tap.common.compose.BlockchainSpinner
+import com.tangem.tap.common.compose.ClearButton
+import com.tangem.tap.common.compose.ClosePopupTrigger
+import com.tangem.tap.common.compose.OutlinedTextFieldWidget
+import com.tangem.tap.common.compose.PasteButton
+import com.tangem.tap.common.compose.SpacerH8
+import com.tangem.tap.common.compose.TitleSubtitle
 import com.tangem.tap.common.extensions.getFromClipboard
 import com.tangem.wallet.R
 
@@ -36,7 +42,14 @@ fun TokenContractAddressView(screenFieldData: ScreenFieldData) {
         errorConverter = screenFieldData.errorConverter,
 //        trailingIcon = { PasteClearButton(showFirst = tokenField.data.value.isEmpty()) }
     ) {
-        domainStore.dispatch(OnTokenContractAddressChanged(Field.Data(it, true)))
+        domainStore.dispatch(
+            AddCustomTokenAction.OnTokenContractAddressChanged(
+                Field.Data(
+                    it,
+                    true,
+                ),
+            ),
+        )
     }
     SpacerH8()
 }
@@ -51,17 +64,20 @@ private fun PasteClearButton(
             onClick = {
                 context.getFromClipboard()?.let {
                     val fieldData = Field.Data(it.toString(), false)
-                    domainStore.dispatch(OnTokenContractAddressChanged(fieldData))
+                    domainStore.dispatch(
+                        AddCustomTokenAction.OnTokenContractAddressChanged(
+                            fieldData,
+                        ),
+                    )
                 }
-
-            }
+            },
         )
     } else {
         ClearButton(
             onClick = {
                 val fieldData = Field.Data("", false)
-                domainStore.dispatch(OnTokenContractAddressChanged(fieldData))
-            }
+                domainStore.dispatch(AddCustomTokenAction.OnTokenContractAddressChanged(fieldData))
+            },
         )
     }
 }
@@ -80,7 +96,11 @@ fun TokenNameView(screenFieldData: ScreenFieldData) {
         error = screenFieldData.error,
         errorConverter = screenFieldData.errorConverter,
     ) {
-        domainStore.dispatch(OnTokenNameChanged(Field.Data(it, true)))
+        domainStore.dispatch(
+            AddCustomTokenAction.OnTokenNameChanged(
+                Field.Data(it, true),
+            ),
+        )
     }
     SpacerH8()
 }
@@ -103,7 +123,13 @@ fun TokenNetworkView(
         isEnabled = screenFieldData.viewState.isEnabled,
         textFieldConverter = { state.blockchainToName(it) ?: notSelected },
         closePopupTrigger = closePopupTrigger,
-    ) { domainStore.dispatch(OnTokenNetworkChanged(Field.Data(it, true))) }
+    ) {
+        domainStore.dispatch(
+            AddCustomTokenAction.OnTokenNetworkChanged(
+                Field.Data(it, true),
+            ),
+        )
+    }
     SpacerH8()
 }
 
@@ -120,7 +146,13 @@ fun TokenSymbolView(screenFieldData: ScreenFieldData) {
         isEnabled = screenFieldData.viewState.isEnabled,
         error = screenFieldData.error,
         errorConverter = screenFieldData.errorConverter,
-    ) { domainStore.dispatch(OnTokenSymbolChanged(Field.Data(it, true))) }
+    ) {
+        domainStore.dispatch(
+            AddCustomTokenAction.OnTokenSymbolChanged(
+                Field.Data(it, true),
+            ),
+        )
+    }
     SpacerH8()
 }
 
@@ -138,7 +170,13 @@ fun TokenDecimalsView(screenFieldData: ScreenFieldData) {
         error = screenFieldData.error,
         errorConverter = screenFieldData.errorConverter,
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-    ) { domainStore.dispatch(OnTokenDecimalsChanged(Field.Data(it, true))) }
+    ) {
+        domainStore.dispatch(
+            AddCustomTokenAction.OnTokenDecimalsChanged(
+                Field.Data(it, true),
+            ),
+        )
+    }
     SpacerH8()
 }
 
@@ -160,17 +198,26 @@ fun TokenDerivationPathView(
         isEnabled = screenFieldData.viewState.isEnabled,
         textFieldConverter = { state.blockchainToName(it) ?: notSelected },
         dropdownItemView = { blockchain ->
-            val derivationPathName = state.blockchainToName(blockchain, true) ?: notSelected
+            val derivationPathName = state.blockchainToName(blockchain, true)
+                ?: notSelected
             val blockchainName = state.blockchainToName(blockchain) ?: notSelected
             TitleSubtitle(derivationPathName, blockchainName)
         },
         closePopupTrigger = closePopupTrigger,
-    ) { domainStore.dispatch(OnTokenDerivationPathChanged(Field.Data(it, true))) }
+    ) {
+        domainStore.dispatch(
+            AddCustomTokenAction.OnTokenDerivationPathChanged(
+                Field.Data(
+                    it,
+                    true,
+                ),
+            ),
+        )
+    }
     SpacerH8()
 }
 
 @Preview
 @Composable
 fun TestTokenContractAddressView() {
-
 }

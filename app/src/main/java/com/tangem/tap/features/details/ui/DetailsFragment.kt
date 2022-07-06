@@ -29,11 +29,14 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        activity?.onBackPressedDispatcher?.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                store.dispatch(NavigationAction.PopBackTo())
-            }
-        })
+        activity?.onBackPressedDispatcher?.addCallback(
+            this,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    store.dispatch(NavigationAction.PopBackTo())
+                }
+            },
+        )
         val inflater = TransitionInflater.from(requireContext())
         enterTransition = inflater.inflateTransition(R.transition.slide_right)
         exitTransition = inflater.inflateTransition(R.transition.fade)
@@ -61,14 +64,12 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
         }
     }
 
-
     override fun newState(state: DetailsState) {
         if (activity == null || view == null) return
         setState(state)
     }
 
-    private fun setState(state: DetailsState)  = with (binding) {
-
+    private fun setState(state: DetailsState) = with(binding) {
         if (state.cardInfo != null) {
             val cardId = if (state.isTangemTwins) {
                 state.scanResponse?.card?.getTwinCardIdForUser()
@@ -79,7 +80,7 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
             tvIssuer.text = state.cardInfo.issuer
             tvSignedHashes.text = getString(
                 R.string.details_row_subtitle_signed_hashes_format,
-                state.cardInfo.signedHashes.toString()
+                state.cardInfo.signedHashes.toString(),
             )
         }
 
@@ -133,7 +134,9 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
         }
 
         llManageSecurity.setOnClickListener {
-            store.dispatch(DetailsAction.ManageSecurity.CheckCurrentSecurityOption(state.scanResponse!!.card))
+            store.dispatch(
+                DetailsAction.ManageSecurity.CheckCurrentSecurityOption(state.scanResponse!!.card),
+            )
         }
 
         val currentSecurity = when (state.securityScreenState?.currentOption) {
@@ -144,5 +147,4 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
         }
         currentSecurity?.let { tvSecurity.text = getString(it) }
     }
-
 }

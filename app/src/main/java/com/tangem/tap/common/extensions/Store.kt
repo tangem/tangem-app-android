@@ -47,7 +47,6 @@ fun Store<*>.dispatchToastNotification(resId: Int) {
     }
 }
 
-
 fun Store<*>.dispatchErrorNotification(error: TapError) {
     scope.launch(Dispatchers.Main) {
         store.dispatch(GlobalAction.ShowErrorNotification(error))
@@ -79,4 +78,3 @@ fun Store<*>.dispatchDialogHide() {
         store.dispatch(GlobalAction.HideDialog)
     }
 }
-

@@ -21,14 +21,14 @@ class WalletDialogsMiddleware {
                     AppDialog.AddressInfoDialog(
                         currency = action.currency,
                         addressData = action.selectedAddress,
-                    )
+                    ),
                 )
             }
             is WalletAction.DialogAction.ChooseCurrency -> {
                 store.dispatchDialogShow(
                     WalletDialog.SelectAmountToSendDialog(
-                        amounts = action.amounts
-                    )
+                        amounts = action.amounts,
+                    ),
                 )
             }
             is WalletAction.DialogAction.Hide -> {

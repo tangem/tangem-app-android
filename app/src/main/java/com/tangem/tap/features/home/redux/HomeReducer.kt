@@ -10,7 +10,6 @@ class HomeReducer {
 }
 
 private fun internalReduce(action: Action, state: AppState): HomeState {
-
     if (action !is HomeAction) return state.homeState
 
     var state = state.homeState

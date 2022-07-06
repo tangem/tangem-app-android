@@ -6,7 +6,10 @@ import org.rekotlin.Action
 
 class OnboardingNoteReducer {
     companion object {
-        fun reduce(action: Action, state: AppState): OnboardingNoteState = internalReduce(action, state)
+        fun reduce(action: Action, state: AppState): OnboardingNoteState = internalReduce(
+            action,
+            state,
+        )
     }
 }
 

@@ -8,7 +8,12 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.text.bold
 import com.tangem.common.extensions.remove
-import com.tangem.tap.common.extensions.*
+import com.tangem.tap.common.extensions.beginDelayedTransition
+import com.tangem.tap.common.extensions.enableError
+import com.tangem.tap.common.extensions.getColor
+import com.tangem.tap.common.extensions.getString
+import com.tangem.tap.common.extensions.show
+import com.tangem.tap.common.extensions.update
 import com.tangem.tap.common.redux.getMessageString
 import com.tangem.tap.common.text.DecimalDigitsInputFilter
 import com.tangem.tap.domain.MultiMessageError
@@ -17,7 +22,17 @@ import com.tangem.tap.features.BaseStoreFragment
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.Error
 import com.tangem.tap.features.send.redux.FeeAction
 import com.tangem.tap.features.send.redux.SendAction
-import com.tangem.tap.features.send.redux.states.*
+import com.tangem.tap.features.send.redux.states.AddressPayIdState
+import com.tangem.tap.features.send.redux.states.AmountState
+import com.tangem.tap.features.send.redux.states.FeeState
+import com.tangem.tap.features.send.redux.states.MainCurrencyType
+import com.tangem.tap.features.send.redux.states.ReceiptLayoutType
+import com.tangem.tap.features.send.redux.states.ReceiptState
+import com.tangem.tap.features.send.redux.states.SendState
+import com.tangem.tap.features.send.redux.states.StateId
+import com.tangem.tap.features.send.redux.states.TransactionExtraError
+import com.tangem.tap.features.send.redux.states.TransactionExtrasState
+import com.tangem.tap.features.send.redux.states.XlmMemoType
 import com.tangem.tap.features.send.ui.FeeUiHelper
 import com.tangem.tap.features.send.ui.SendFragment
 import com.tangem.tap.features.send.ui.dialogs.SendTransactionFailsDialog
@@ -49,7 +64,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
                 StateId.ADDRESS_PAY_ID -> handleAddressPayIdState(fg, state.addressPayIdState)
                 StateId.TRANSACTION_EXTRAS -> handleTransactionExtrasState(
                     fg,
-                    state.transactionExtrasState
+                    state.transactionExtrasState,
                 )
                 StateId.AMOUNT -> handleAmountState(fg, state.amountState)
                 StateId.FEE -> handleFeeState(fg, state.feeState)
@@ -60,7 +75,6 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
 
     private fun handleTransactionExtrasState(fg: SendFragment, infoState: TransactionExtrasState) =
         with(fg.binding.lSendAddressPayid) {
-
             fun showView(view: View, info: Any?) {
                 view.show(info != null)
             }
@@ -140,7 +154,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
 
         toolbar.title = fg.getString(
             R.string.send_title_currency_format,
-            state.amountState.mainCurrency.currencySymbol
+            state.amountState.mainCurrency.currencySymbol,
         )
     }
 
@@ -184,7 +198,9 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
             if (!state.viewFieldValue.isFromUserInput) et.update(state.viewFieldValue.value)
         }
 
-    private fun handleAmountState(fg: SendFragment, state: AmountState) = with(fg.binding.lSendAmount) {
+    private fun handleAmountState(fg: SendFragment, state: AmountState) = with(
+        fg.binding.lSendAmount,
+    ) {
         if (state.error != null) {
             val context = fg.requireContext()
             val message = when (state.error) {
@@ -212,11 +228,13 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
         val balanceText = when (state.mainCurrency.type) {
             MainCurrencyType.FIAT -> fg.getString(
                 R.string.send_balance_subtitle_format,
-                state.viewBalanceValue, state.mainCurrency.currencySymbol
+                state.viewBalanceValue,
+                state.mainCurrency.currencySymbol,
             ).remove(":")
             MainCurrencyType.CRYPTO -> fg.getString(
                 R.string.send_balance_subtitle_format,
-                state.mainCurrency.currencySymbol, state.viewBalanceValue
+                state.mainCurrency.currencySymbol,
+                state.viewBalanceValue,
             )
         }
 
@@ -244,7 +262,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
 
         if (state.error == FeeAction.Error.REQUEST_FAILED) {
             fg.showRetrySnackbar(
-                fg.requireContext().getString(R.string.send_error_fee_request_failed)
+                fg.requireContext().getString(R.string.send_error_fee_request_failed),
             ) {
                 store.dispatch(FeeAction.RequestFee)
             }
@@ -254,12 +272,17 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
         if (chipGroup.checkedChipId != chipId && chipId != View.NO_ID) chipGroup.check(chipId)
     }
 
-    private fun handleReceiptState(fg: SendFragment, state: ReceiptState) = with(fg.binding.clReceiptContainer) {
+    private fun handleReceiptState(fg: SendFragment, state: ReceiptState) = with(
+        fg.binding.clReceiptContainer,
+    ) {
         val mainLayout = clReceiptContainer as ViewGroup
         val totalLayout = llTotalContainer.llTotal as ViewGroup
         val totalTokenLayout = llTotalContainer.flTotalTokenCrypto as ViewGroup
 
-        fun getString(id: Int, vararg formatStrings: String): String = mainLayout.getString(id, *formatStrings)
+        fun getString(id: Int, vararg formatStrings: String): String = mainLayout.getString(
+            id,
+            *formatStrings,
+        )
 
         fun roughOrEmpty(value: String): String {
             return if (value == UNKNOWN_AMOUNT_SIGN) value else "$ROUGH_SIGN $value"
@@ -274,14 +297,16 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
                 totalTokenLayout.show(false)
                 tvReceiptAmountValue.update("${receipt.amountFiat} ${receipt.symbols.fiat}")
                 tvReceiptFeeValue.update("${receipt.feeFiat} ${receipt.symbols.fiat}")
-                llTotalContainer.tvTotalValue.update("${roughOrEmpty(receipt.totalFiat)} ${receipt.symbols.fiat}")
+                llTotalContainer.tvTotalValue.update(
+                    "${roughOrEmpty(receipt.totalFiat)} ${receipt.symbols.fiat}",
+                )
 
                 val willSent = getString(
                     R.string.send_total_subtitle_format,
-                    receipt.willSentCrypto, receipt.symbols.crypto
+                    receipt.willSentCrypto,
+                    receipt.symbols.crypto,
                 )
                 llTotalContainer.tvWillBeSentValue.update(willSent)
-
             }
             ReceiptLayoutType.CRYPTO -> {
                 val receipt = state.crypto ?: return
@@ -290,7 +315,9 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
                 totalTokenLayout.show(false)
                 tvReceiptAmountValue.update("${receipt.amountCrypto} ${receipt.symbols.crypto}")
                 tvReceiptFeeValue.update("${receipt.feeCrypto} ${receipt.symbols.crypto}")
-                llTotalContainer.tvTotalValue.update("${receipt.totalCrypto} ${receipt.symbols.crypto}")
+                llTotalContainer.tvTotalValue.update(
+                    "${receipt.totalCrypto} ${receipt.symbols.crypto}",
+                )
 
                 val willSent = SpannableStringBuilder()
                     .bold {
@@ -308,12 +335,16 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
                 totalTokenLayout.show(false)
                 tvReceiptAmountValue.update("${receipt.amountFiat} ${receipt.symbols.fiat}")
                 tvReceiptFeeValue.update("${receipt.feeFiat} ${receipt.symbols.fiat}")
-                llTotalContainer.tvTotalValue.update("${roughOrEmpty(receipt.totalFiat)} ${receipt.symbols.fiat}")
+                llTotalContainer.tvTotalValue.update(
+                    "${roughOrEmpty(receipt.totalFiat)} ${receipt.symbols.fiat}",
+                )
 
                 val willSent = getString(
                     R.string.send_total_subtitle_asset_format,
-                    receipt.symbols.token ?: "", receipt.willSentToken,
-                    receipt.symbols.crypto, receipt.willSentFeeCoin
+                    receipt.symbols.token ?: "",
+                    receipt.willSentToken,
+                    receipt.symbols.crypto,
+                    receipt.willSentFeeCoin,
                 )
                 llTotalContainer.tvWillBeSentValue.update(willSent)
             }

@@ -6,7 +6,12 @@ import com.tangem.common.extensions.guard
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
-import com.tangem.tap.common.extensions.*
+import com.tangem.tap.common.extensions.dispatchDialogShow
+import com.tangem.tap.common.extensions.dispatchErrorNotification
+import com.tangem.tap.common.extensions.dispatchOpenUrl
+import com.tangem.tap.common.extensions.getAddressData
+import com.tangem.tap.common.extensions.getToUpUrl
+import com.tangem.tap.common.extensions.onCardScanned
 import com.tangem.tap.common.postUi
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
@@ -59,7 +64,9 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
     fun updateScanResponse(response: ScanResponse) {
         when (twinCardsState.mode) {
             CreateTwinWalletMode.CreateWallet -> onboardingManager?.scanResponse = response
-            CreateTwinWalletMode.RecreateWallet -> store.dispatch(GlobalAction.SaveScanNoteResponse(response))
+            CreateTwinWalletMode.RecreateWallet -> store.dispatch(
+                GlobalAction.SaveScanNoteResponse(response),
+            )
         }
     }
 
@@ -99,9 +106,9 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
             }
         }
         is TwinCardsAction.Wallet.HandleOnBackPressed -> {
-            val shouldReturnCardBack = twinCardsState.mode == CreateTwinWalletMode.CreateWallet
-                    && twinCardsState.currentStep != TwinCardsStep.TopUpWallet
-                    && twinCardsState.currentStep != TwinCardsStep.Done
+            val shouldReturnCardBack = twinCardsState.mode == CreateTwinWalletMode.CreateWallet &&
+                twinCardsState.currentStep != TwinCardsStep.TopUpWallet &&
+                twinCardsState.currentStep != TwinCardsStep.Done
 
             if (twinCardsState.showAlert) {
                 val onInterruptPrompt = {
@@ -134,7 +141,7 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
             val manager = TwinCardsManager(
                 card = getScanResponse().card,
                 assetReader = action.reader,
-                analyticsHandler = store.state.globalState.analyticsHandlers
+                analyticsHandler = store.state.globalState.analyticsHandlers,
             )
             store.dispatch(TwinCardsAction.CardsManager.Set(manager))
 
@@ -144,7 +151,9 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
                         startCardActivation(result.data.cardId)
                         delay(DELAY_SDK_DIALOG_CLOSE)
                         withMainContext {
-                            store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.CreateSecondWallet))
+                            store.dispatch(
+                                TwinCardsAction.SetStepOfScreen(TwinCardsStep.CreateSecondWallet),
+                            )
                         }
                     }
                     is CompletionResult.Failure -> {
@@ -159,7 +168,7 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
                 val result = manager.createSecondWallet(
                     action.initialMessage,
                     action.preparingMessage,
-                    action.creatingWalletMessage
+                    action.creatingWalletMessage,
                 )
                 when (result) {
                     is CompletionResult.Success -> {
@@ -167,7 +176,9 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
                         delay(DELAY_SDK_DIALOG_CLOSE)
                         withMainContext {
                             store.dispatch(TwinCardsAction.SetPairCardId(result.data.cardId))
-                            store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.CreateThirdWallet))
+                            store.dispatch(
+                                TwinCardsAction.SetStepOfScreen(TwinCardsStep.CreateThirdWallet),
+                            )
                         }
                     }
                     is CompletionResult.Failure -> {
@@ -186,10 +197,14 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
                         withMainContext {
                             when (twinCardsState.mode) {
                                 CreateTwinWalletMode.CreateWallet -> {
-                                    store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.TopUpWallet))
+                                    store.dispatch(
+                                        TwinCardsAction.SetStepOfScreen(TwinCardsStep.TopUpWallet),
+                                    )
                                 }
                                 CreateTwinWalletMode.RecreateWallet -> {
-                                    store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.Done))
+                                    store.dispatch(
+                                        TwinCardsAction.SetStepOfScreen(TwinCardsStep.Done),
+                                    )
                                 }
                             }
                         }
@@ -217,11 +232,11 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
             val balanceIsLoading = twinCardsState.walletBalance.copy(
                 currency = Currency.Blockchain(
                     walletManager.wallet.blockchain,
-                    walletManager.wallet.publicKey.derivationPath?.rawPath
+                    walletManager.wallet.publicKey.derivationPath?.rawPath,
                 ),
                 state = ProgressState.Loading,
                 error = null,
-                criticalError = null
+                criticalError = null,
             )
             store.dispatch(TwinCardsAction.Balance.Set(balanceIsLoading))
 
@@ -231,23 +246,31 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
                 delay(if (isLoadedBefore) 0 else 300)
                 withMainContext {
                     store.dispatch(TwinCardsAction.Balance.Set(loadedBalance))
-                    store.dispatch(TwinCardsAction.Balance.SetCriticalError(loadedBalance.criticalError))
+                    store.dispatch(
+                        TwinCardsAction.Balance.SetCriticalError(loadedBalance.criticalError),
+                    )
                     store.dispatch(TwinCardsAction.Balance.SetNonCriticalError(loadedBalance.error))
                 }
             }
-
         }
         is TwinCardsAction.Balance.Set -> {
             if (action.balance.balanceIsToppedUp()) {
                 scope.launch {
-                    withMainContext { store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.Done)) }
+                    withMainContext {
+                        store.dispatch(
+                            TwinCardsAction.SetStepOfScreen(TwinCardsStep.Done),
+                        )
+                    }
                 }
             }
         }
         is TwinCardsAction.ShowAddressInfoDialog -> {
             val addressData = twinCardsState.walletManager?.getAddressData() ?: return
 
-            val appDialog = AppDialog.AddressInfoDialog(twinCardsState.walletBalance.currency, addressData)
+            val appDialog = AppDialog.AddressInfoDialog(
+                twinCardsState.walletBalance.currency,
+                addressData,
+            )
             store.dispatchDialogShow(appDialog)
         }
         is TwinCardsAction.TopUp -> {
@@ -273,4 +296,3 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
         }
     }
 }
-

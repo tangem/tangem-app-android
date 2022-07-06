@@ -83,25 +83,53 @@ fun Blockchain.toNetworkId(): String {
 
 fun Blockchain.toCoinId(): String {
     return when (this) {
-        Blockchain.Binance, Blockchain.BinanceTestnet, Blockchain.BSC, Blockchain.BSCTestnet -> "binancecoin"
-        Blockchain.Bitcoin, Blockchain.BitcoinTestnet -> "bitcoin"
-        Blockchain.BitcoinCash, Blockchain.BitcoinCashTestnet -> "bitcoin-cash"
-        Blockchain.Ethereum, Blockchain.EthereumTestnet -> "ethereum"
-        Blockchain.EthereumClassic, Blockchain.EthereumClassicTestnet -> "ethereum-classic"
-        Blockchain.Stellar, Blockchain.StellarTestnet -> "stellar"
-        Blockchain.Cardano, Blockchain.CardanoShelley -> "cardano"
-        Blockchain.Polygon, Blockchain.PolygonTestnet -> "matic-network"
-        Blockchain.Arbitrum, Blockchain.ArbitrumTestnet -> "ethereum"
-        Blockchain.Avalanche, Blockchain.AvalancheTestnet -> "avalanche-2"
-        Blockchain.Solana, Blockchain.SolanaTestnet -> "solana"
-        Blockchain.Fantom, Blockchain.FantomTestnet -> "fantom"
+        Blockchain.Binance,
+        Blockchain.BinanceTestnet,
+        Blockchain.BSC,
+        Blockchain.BSCTestnet,
+        -> "binancecoin"
+        Blockchain.Bitcoin,
+        Blockchain.BitcoinTestnet,
+        -> "bitcoin"
+        Blockchain.BitcoinCash,
+        Blockchain.BitcoinCashTestnet,
+        -> "bitcoin-cash"
+        Blockchain.Ethereum,
+        Blockchain.EthereumTestnet,
+        -> "ethereum"
+        Blockchain.EthereumClassic,
+        Blockchain.EthereumClassicTestnet,
+        -> "ethereum-classic"
+        Blockchain.Stellar,
+        Blockchain.StellarTestnet,
+        -> "stellar"
+        Blockchain.Cardano,
+        Blockchain.CardanoShelley,
+        -> "cardano"
+        Blockchain.Polygon,
+        Blockchain.PolygonTestnet,
+        -> "matic-network"
+        Blockchain.Arbitrum,
+        Blockchain.ArbitrumTestnet,
+        -> "ethereum"
+        Blockchain.Avalanche,
+        Blockchain.AvalancheTestnet,
+        -> "avalanche-2"
+        Blockchain.Solana,
+        Blockchain.SolanaTestnet,
+        -> "solana"
+        Blockchain.Fantom,
+        Blockchain.FantomTestnet,
+        -> "fantom"
         Blockchain.Ducatus -> "ducatus"
         Blockchain.Litecoin -> "litecoin"
         Blockchain.RSK -> "rootstock"
         Blockchain.Tezos -> "tezos"
         Blockchain.XRP -> "ripple"
         Blockchain.Dogecoin -> "dogecoin"
-        Blockchain.Tron, Blockchain.TronTestnet -> "tron"
+        Blockchain.Tron,
+        Blockchain.TronTestnet,
+        -> "tron"
         else -> "unknown"
     }
 }

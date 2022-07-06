@@ -15,6 +15,4 @@ sealed class HomeAction : Action {
 
     data class SetTermsOfUseState(val isDisclaimerAccepted: Boolean) : HomeAction()
     data class ChangeScanCardButtonState(val state: IndeterminateProgressButton) : HomeAction()
-
 }
-

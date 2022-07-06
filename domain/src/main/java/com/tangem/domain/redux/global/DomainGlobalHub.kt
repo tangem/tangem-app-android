@@ -11,21 +11,24 @@ import org.rekotlin.Action
 /**
  * Created by Anton Zhilenkov on 07/04/2022.
  */
-//TODO: refactoring: is alias for the GlobalMiddleware and the GlobalReducer
+// TODO: refactoring: is alias for the GlobalMiddleware and the GlobalReducer
 internal class DomainGlobalHub : BaseStoreHub<DomainGlobalState>("DomainGlobalHub") {
 
     override fun getHubState(storeState: DomainState): DomainGlobalState {
         return storeState.globalState
     }
 
-    override fun updateStoreState(storeState: DomainState, newHubState: DomainGlobalState): DomainState {
+    override fun updateStoreState(
+        storeState: DomainState,
+        newHubState: DomainGlobalState,
+    ): DomainState {
         return storeState.copy(globalState = newHubState)
     }
 
     override suspend fun handleAction(
         action: Action,
         storeState: DomainState,
-        cancel: ValueCallback<Action>
+        cancel: ValueCallback<Action>,
     ) {
         if (action !is DomainGlobalAction) return
 
@@ -45,7 +48,7 @@ private class DomainGlobalReducer : ReStoreReducer<DomainGlobalState> {
             is DomainGlobalAction.SaveScanNoteResponse -> {
                 val cardPublicKeyHex = action.scanResponse.card.cardPublicKey.toHexString()
                 state.networkServices.tangemTechService.addHeaderInterceptors(
-                    listOf(CardPublicKeyHttpInterceptor(cardPublicKeyHex))
+                    listOf(CardPublicKeyHttpInterceptor(cardPublicKeyHex)),
                 )
                 state.copy(scanResponse = action.scanResponse)
             }

@@ -8,8 +8,16 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.*
-import androidx.compose.runtime.*
+import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.ExtendedFloatingActionButton
+import androidx.compose.material.FabPosition
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -41,7 +49,7 @@ fun CurrenciesScreen(
     tokensState: MutableState<TokensState> = mutableStateOf(store.state.tokensState),
     onSaveChanges: (List<TokenWithBlockchain>, List<Blockchain>) -> Unit,
     onNetworkItemClicked: (ContractAddress) -> Unit,
-    onLoadMore: () -> Unit
+    onLoadMore: () -> Unit,
 ) {
     val tokensAddedOnMainScreen = remember { tokensState.value.addedTokens }
     val blockchainsAddedOnMainScreen = remember { tokensState.value.addedBlockchains }
@@ -78,25 +86,24 @@ fun CurrenciesScreen(
         },
         floatingActionButtonPosition = FabPosition.Center,
     ) {
-
         AnimatedVisibility(
             visible = tokensState.value.loadCoinsState == LoadCoinsState.LOADING,
             enter = fadeIn(),
-            exit = fadeOut()
+            exit = fadeOut(),
         ) {
             Box(
                 contentAlignment = Alignment.Center,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
             ) {
                 CircularProgressIndicator(
-                    color = Color(0xFF1ACE80)
+                    color = Color(0xFF1ACE80),
                 )
             }
         }
         AnimatedVisibility(
             visible = tokensState.value.loadCoinsState == LoadCoinsState.LOADED,
             enter = fadeIn(animationSpec = tween(1000)),
-            exit = fadeOut(animationSpec = tween(1000))
+            exit = fadeOut(animationSpec = tween(1000)),
         ) {
             Column {
                 val showHeader = tokensState.value.scanResponse?.card?.useOldStyleDerivation == true
@@ -110,11 +117,10 @@ fun CurrenciesScreen(
                         onAddCurrencyToggleClick(currency, token)
                     },
                     onNetworkItemClicked = onNetworkItemClicked,
-                    onLoadMore = onLoadMore
+                    onLoadMore = onLoadMore,
                 )
             }
         }
-
     }
 }
 
@@ -122,7 +128,7 @@ private fun toggleBlockchain(
     blockchain: Blockchain,
     blockchainsAddedOnMainScreen: List<Blockchain>,
     addedBlockchainsState: MutableState<List<Blockchain>>,
-    addedTokens: List<TokenWithBlockchain>
+    addedTokens: List<TokenWithBlockchain>,
 ) {
     val isTryingToRemove = addedBlockchainsState.value.contains(blockchain)
     val isAddedOnMainScreen = blockchainsAddedOnMainScreen.contains(blockchain)
@@ -130,16 +136,20 @@ private fun toggleBlockchain(
 
     if (isTryingToRemove) {
         if (isTokenWithSameBlockchainFound) {
-            store.dispatchDialogShow(WalletDialog.TokensAreLinkedDialog(
-                currencyTitle = blockchain.name,
-                currencySymbol = blockchain.currency
-            ))
+            store.dispatchDialogShow(
+                WalletDialog.TokensAreLinkedDialog(
+                    currencyTitle = blockchain.name,
+                    currencySymbol = blockchain.currency,
+                ),
+            )
         } else {
             if (isAddedOnMainScreen) {
-                store.dispatchDialogShow(WalletDialog.RemoveWalletDialog(
-                    currencyTitle = blockchain.name,
-                    onOk = { addedBlockchainsState.removeAndNotify(blockchain) }
-                ))
+                store.dispatchDialogShow(
+                    WalletDialog.RemoveWalletDialog(
+                        currencyTitle = blockchain.name,
+                        onOk = { addedBlockchainsState.removeAndNotify(blockchain) },
+                    ),
+                )
             } else {
                 addedBlockchainsState.removeAndNotify(blockchain)
             }
@@ -161,19 +171,23 @@ private fun toggleToken(
 
     if (isTryingToRemove) {
         if (isAddedOnMainScreen) {
-            store.dispatchDialogShow(WalletDialog.RemoveWalletDialog(
-                currencyTitle = token.token.name,
-                onOk = { addedTokensState.removeAndNotify(token) }
-            ))
+            store.dispatchDialogShow(
+                WalletDialog.RemoveWalletDialog(
+                    currencyTitle = token.token.name,
+                    onOk = { addedTokensState.removeAndNotify(token) },
+                ),
+            )
         } else {
             addedTokensState.removeAndNotify(token)
         }
     } else {
         if (isUnsupportedToken) {
-            store.dispatchDialogShow(AppDialog.SimpleOkDialogRes(
-                headerId = R.string.common_warning,
-                messageId = R.string.alert_manage_tokens_unsupported_message,
-            ))
+            store.dispatchDialogShow(
+                AppDialog.SimpleOkDialogRes(
+                    headerId = R.string.common_warning,
+                    messageId = R.string.alert_manage_tokens_unsupported_message,
+                ),
+            )
         } else {
             addedTokensState.addAndNotify(token)
         }
@@ -182,7 +196,6 @@ private fun toggleToken(
 
 @Composable
 fun SaveChangesButton(keyboardState: Keyboard, onSaveChanges: () -> Unit) {
-
     val padding = if (keyboardState is Keyboard.Opened) {
         LocalContext.current.pixelsToDp(keyboardState.height)
     } else {
@@ -198,6 +211,6 @@ fun SaveChangesButton(keyboardState: Keyboard, onSaveChanges: () -> Unit) {
         onClick = onSaveChanges,
         backgroundColor = colorResource(id = R.color.accent),
         contentColor = Color.White,
-        modifier = Modifier.padding(bottom = padding.dp)
+        modifier = Modifier.padding(bottom = padding.dp),
     )
 }

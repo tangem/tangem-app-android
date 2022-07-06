@@ -11,9 +11,9 @@ import com.tangem.tap.features.wallet.redux.ProgressState
  * Created by Anton Zhilenkov on 09/04/2021.
  */
 open class IndeterminateProgressButtonWidget(
-        private val button: MaterialButton,
-        private val progress: View,
-        initialState: ProgressState = ProgressState.Done
+    private val button: MaterialButton,
+    private val progress: View,
+    initialState: ProgressState = ProgressState.Done,
 ) : ViewStateWidget {
 
     private var initialButtonText: CharSequence = button.text

@@ -13,7 +13,7 @@ import kotlinx.coroutines.withContext
  */
 class TangemTechService {
     private val headerInterceptors = mutableListOf<AddHeaderInterceptor>(
-        CacheControlHttpInterceptor(cacheMaxAge)
+        CacheControlHttpInterceptor(cacheMaxAge),
     )
 
     private var api: TangemTechApi = createApi()
@@ -24,7 +24,7 @@ class TangemTechService {
         active: Boolean? = null,
         searchText: String? = null,
         offset: Int? = null,
-        limit: Int? = null
+        limit: Int? = null,
     ): Result<CoinsResponse> = withContext(Dispatchers.IO) {
         performRequest {
             api.coins(
@@ -33,14 +33,14 @@ class TangemTechService {
                 active = active,
                 searchText = searchText,
                 offset = offset,
-                limit = limit
+                limit = limit,
             )
         }
     }
 
     suspend fun rates(
         currency: String,
-        ids: List<String>
+        ids: List<String>,
     ): Result<RatesResponse> = withContext(Dispatchers.IO) {
         performRequest {
             api.rates(currency.lowercase(), ids.joinToString(","))

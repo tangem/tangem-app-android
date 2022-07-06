@@ -5,7 +5,8 @@ import org.rekotlin.Action
 class WalletConnectReducer {
     companion object {
         fun reduce(
-            action: Action, state: WalletConnectState,
+            action: Action,
+            state: WalletConnectState,
         ): WalletConnectState {
             if (action !is WalletConnectAction) return state
 
@@ -13,10 +14,10 @@ class WalletConnectReducer {
                 is WalletConnectAction.ApproveSession.Success -> {
                     state.copy(
                         loading = false,
-                        sessions = state.sessions + action.session
+                        sessions = state.sessions + action.session,
                     )
                 }
-                is  WalletConnectAction.OpenSession -> {
+                is WalletConnectAction.OpenSession -> {
                     state.copy(loading = true)
                 }
                 is WalletConnectAction.AddScanResponse -> {
@@ -38,6 +39,5 @@ class WalletConnectReducer {
                 else -> state
             }
         }
-
     }
 }

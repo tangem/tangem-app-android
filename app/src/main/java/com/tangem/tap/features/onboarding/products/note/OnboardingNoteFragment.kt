@@ -49,7 +49,9 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
         startPostponedEnterTransition()
 
         binding.toolbar.setTitle(R.string.onboarding_title)
-        btnRefreshBalanceWidget = RefreshBalanceWidget(binding.onboardingTopContainer.onboardingMainContainer)
+        btnRefreshBalanceWidget = RefreshBalanceWidget(
+            binding.onboardingTopContainer.onboardingMainContainer,
+        )
 
         store.dispatch(OnboardingNoteAction.LoadCardArtwork)
         store.dispatch(OnboardingNoteAction.DetermineStepOfScreen)
@@ -90,7 +92,7 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
     private fun setBalance(state: OnboardingNoteState) {
         if (state.walletBalance.currency.blockchain == Blockchain.Unknown) return
 
-        with (binding.onboardingTopContainer.onboardingTvBalance) {
+        with(binding.onboardingTopContainer.onboardingTvBalance) {
             if (state.balanceCriticalError == null) {
                 val balanceValue = state.walletBalance.value.stripZeroPlainString()
                 tvBalanceValue.text = balanceValue
@@ -128,14 +130,16 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
             tvBody.setText(R.string.onboarding_create_wallet_body)
 
             binding.onboardingTopContainer.imvCardBackground.setBackgroundDrawable(
-                requireContext().getDrawableCompat(R.drawable.shape_circle)
+                requireContext().getDrawableCompat(R.drawable.shape_circle),
             )
             updateConstraints(state.currentStep, R.layout.lp_onboarding_create_wallet)
 
             btnAlternativeAction.isVisible = false // temporary
         }
 
-    private fun setupTopUpWalletState(state: OnboardingNoteState) = with(binding.onboardingActionContainer) {
+    private fun setupTopUpWalletState(state: OnboardingNoteState) = with(
+        binding.onboardingActionContainer,
+    ) {
         if (state.isBuyAllowed) {
             btnMainAction.setText(R.string.onboarding_top_up_button_but_crypto)
             btnMainAction.setOnClickListener {
@@ -163,7 +167,8 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
             state.walletBalance.amountToCreateAccount?.let { amount ->
                 val tvBodyMessage = getString(
                     R.string.onboarding_top_up_body_no_account_error,
-                    amount, state.walletBalance.currency.currencySymbol
+                    amount,
+                    state.walletBalance.currency.currencySymbol,
                 )
                 tvBody.text = tvBodyMessage
             }
@@ -176,7 +181,9 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
             }
         }
         binding.onboardingTopContainer.imvCardBackground
-            .setBackgroundDrawable(requireContext().getDrawableCompat(R.drawable.shape_rectangle_rounded_8))
+            .setBackgroundDrawable(
+                requireContext().getDrawableCompat(R.drawable.shape_rectangle_rounded_8),
+            )
         updateConstraints(state.currentStep, R.layout.lp_onboarding_topup_wallet)
     }
 
@@ -196,7 +203,7 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
         tvBody.setText(R.string.onboarding_done_body)
 
         binding.onboardingTopContainer.imvCardBackground.setBackgroundDrawable(
-            requireContext().getDrawableCompat(R.drawable.shape_rectangle_rounded_8)
+            requireContext().getDrawableCompat(R.drawable.shape_rectangle_rounded_8),
         )
         updateConstraints(state.currentStep, R.layout.lp_onboarding_done_activation)
     }

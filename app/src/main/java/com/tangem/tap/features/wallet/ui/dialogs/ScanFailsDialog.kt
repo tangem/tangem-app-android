@@ -26,5 +26,4 @@ class ScanFailsDialog {
             }.create()
         }
     }
-
 }

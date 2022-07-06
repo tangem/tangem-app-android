@@ -4,11 +4,16 @@ import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.TransactionError
 import com.tangem.common.extensions.isZero
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.features.send.redux.*
+import com.tangem.tap.features.send.redux.AmountAction
+import com.tangem.tap.features.send.redux.AmountActionUi
+import com.tangem.tap.features.send.redux.FeeAction
+import com.tangem.tap.features.send.redux.FeeActionUi
+import com.tangem.tap.features.send.redux.ReceiptAction
+import com.tangem.tap.features.send.redux.SendAction
 import com.tangem.tap.features.send.redux.states.MainCurrencyType
 import com.tangem.tap.features.send.redux.states.SendState
-import org.rekotlin.Action
 import java.math.BigDecimal
+import org.rekotlin.Action
 
 /**
  * Created by Anton Zhilenkov on 11/09/2020.
@@ -61,7 +66,10 @@ class AmountMiddleware {
         }
 
         val amountToSend = Amount(typedAmount, sendState.getTotalAmountToSend(inputCrypto))
-        val transactionErrors = walletManager.validateTransaction(amountToSend, sendState.feeState.currentFee)
+        val transactionErrors = walletManager.validateTransaction(
+            amountToSend,
+            sendState.feeState.currentFee,
+        )
         transactionErrors.remove(TransactionError.TezosSendAll)
         if (transactionErrors.isEmpty()) {
             dispatch(AmountAction.SetAmountError(null))
@@ -69,10 +77,18 @@ class AmountMiddleware {
             val amountErrors = extractErrorsForAmountField(transactionErrors)
             if (amountErrors.isNotEmpty()) {
                 transactionErrors.removeAll(amountErrors)
-                dispatch(AmountAction.SetAmountError(createValidateTransactionError(amountErrors, walletManager)))
+                dispatch(
+                    AmountAction.SetAmountError(
+                        createValidateTransactionError(amountErrors, walletManager),
+                    ),
+                )
             }
             if (transactionErrors.isNotEmpty()) {
-                dispatch(SendAction.SendError(createValidateTransactionError(transactionErrors, walletManager)))
+                dispatch(
+                    SendAction.SendError(
+                        createValidateTransactionError(transactionErrors, walletManager),
+                    ),
+                )
             }
         }
         dispatch(ReceiptAction.RefreshReceipt)

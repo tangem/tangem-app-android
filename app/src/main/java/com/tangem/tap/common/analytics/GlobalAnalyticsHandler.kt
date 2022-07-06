@@ -11,7 +11,7 @@ class GlobalAnalyticsHandler(val analyticsHandlers: List<AnalyticsHandler>) :
         event: AnalyticsEvent,
         card: Card?,
         blockchain: String?,
-        params: Map<String, String>
+        params: Map<String, String>,
     ) {
         analyticsHandlers.forEach { it.triggerEvent(event, card, blockchain, params) }
     }
@@ -24,7 +24,7 @@ class GlobalAnalyticsHandler(val analyticsHandlers: List<AnalyticsHandler>) :
         error: TangemSdkError,
         actionToLog: Analytics.ActionToLog,
         parameters: Map<AnalyticsParam, String>?,
-        card: Card?
+        card: Card?,
     ) {
         analyticsHandlers.forEach { it.logCardSdkError(error, actionToLog, parameters, card) }
     }
@@ -38,7 +38,7 @@ class GlobalAnalyticsHandler(val analyticsHandlers: List<AnalyticsHandler>) :
     }
 
     override fun getOrderParams(order: Storefront.Order): Map<String, String> {
-       return emptyMap()
+        return emptyMap()
     }
 
     companion object {
@@ -46,8 +46,8 @@ class GlobalAnalyticsHandler(val analyticsHandlers: List<AnalyticsHandler>) :
             return GlobalAnalyticsHandler(
                 listOf(
                     FirebaseAnalyticsHandler,
-                    AppsFlyerAnalyticsHandler(context)
-                )
+                    AppsFlyerAnalyticsHandler(context),
+                ),
             )
         }
     }

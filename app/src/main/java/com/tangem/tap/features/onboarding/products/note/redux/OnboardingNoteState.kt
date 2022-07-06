@@ -5,8 +5,8 @@ import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.buyIsAllowed
 import com.tangem.tap.features.onboarding.OnboardingWalletBalance
 import com.tangem.tap.store
-import org.rekotlin.StateType
 import kotlin.properties.ReadOnlyProperty
+import org.rekotlin.StateType
 
 /**
  * Created by Anton Zhilenkov on 23/09/2021.

@@ -35,17 +35,19 @@ import com.tangem.wallet.databinding.FragmentOnboardingWalletBinding
 import com.tangem.wallet.databinding.ViewOnboardingProgressBinding
 import org.rekotlin.StoreSubscriber
 
-class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
-    StoreSubscriber<OnboardingWalletState>, FragmentOnBackPressedHandler {
+class OnboardingWalletFragment :
+    Fragment(R.layout.fragment_onboarding_wallet),
+    StoreSubscriber<OnboardingWalletState>,
+    FragmentOnBackPressedHandler {
 
     private var accessCodeDialog: AccessCodeDialog? = null
     private lateinit var cardsWidget: WalletCardsWidget
     private val binding: FragmentOnboardingWalletBinding by viewBinding(
-        FragmentOnboardingWalletBinding::bind
+        FragmentOnboardingWalletBinding::bind,
     )
     private val pbBinding: ViewOnboardingProgressBinding by viewBinding(
-        ViewOnboardingProgressBinding::bind)
-
+        ViewOnboardingProgressBinding::bind,
+    )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -74,9 +76,9 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
         binding.viewPagerBackupInfo.adapter = BackupInfoAdapter()
         TabLayoutMediator(
             binding.tabLayoutBackupInfo,
-            binding.viewPagerBackupInfo
+            binding.viewPagerBackupInfo,
         ) { tab, position ->
-            //Some implementation
+            // Some implementation
         }.attach()
 
         (activity as? AppCompatActivity)?.setSupportActionBar(binding.toolbar)
@@ -123,7 +125,6 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
             OnboardingWalletStep.CreateWallet -> setupCreateWalletState()
             OnboardingWalletStep.Backup -> setBackupState(state.backupState)
             OnboardingWalletStep.Done -> {
-
             }
         }
     }
@@ -137,8 +138,14 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
     }
 
     private fun setupCreateWalletState() = with(binding) {
-        layoutButtonsCommon.btnMainAction.setText(R.string.onboarding_create_wallet_button_create_wallet)
-        layoutButtonsCommon.btnMainAction.setOnClickListener { store.dispatch(OnboardingWalletAction.CreateWallet) }
+        layoutButtonsCommon.btnMainAction.setText(
+            R.string.onboarding_create_wallet_button_create_wallet,
+        )
+        layoutButtonsCommon.btnMainAction.setOnClickListener {
+            store.dispatch(
+                OnboardingWalletAction.CreateWallet,
+            )
+        }
         layoutButtonsCommon.btnAlternativeAction.hide()
 
         toolbar.title = getText(R.string.onboarding_getting_started)
@@ -148,7 +155,6 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
 
         cardsWidget.toFolded(false) { startPostponedEnterTransition() }
     }
-
 
     private fun setBackupState(state: BackupState) {
         when (state.backupStep) {
@@ -225,7 +231,11 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
         layoutButtonsCommon.root.hide()
         layoutButtonsAddCards.btnAddCard.text = getText(R.string.onboarding_button_add_backup_card)
         if (state.backupCardsNumber < state.maxBackupCards) {
-            layoutButtonsAddCards.btnAddCard.setOnClickListener { store.dispatch(BackupAction.AddBackupCard) }
+            layoutButtonsAddCards.btnAddCard.setOnClickListener {
+                store.dispatch(
+                    BackupAction.AddBackupCard,
+                )
+            }
         } else {
             layoutButtonsAddCards.btnAddCard.isEnabled = false
         }
@@ -258,7 +268,11 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
         }
 
         layoutButtonsAddCards.btnContinue.text = getText(R.string.onboarding_button_finalize_backup)
-        layoutButtonsAddCards.btnContinue.setOnClickListener { store.dispatch(BackupAction.FinishAddingBackupCards) }
+        layoutButtonsAddCards.btnContinue.setOnClickListener {
+            store.dispatch(
+                BackupAction.FinishAddingBackupCards,
+            )
+        }
         layoutButtonsAddCards.btnContinue.isEnabled = state.backupCardsNumber != 0
     }
 
@@ -305,11 +319,14 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
         tvHeader.text = getText(R.string.onboarding_title_prepare_origin)
         tvBody.text = getString(
             R.string.onboarding_subtitle_scan_primary_card_format,
-            state.primaryCardId?.let { cardIdFormatter.getFormattedCardId(it) }
+            state.primaryCardId?.let { cardIdFormatter.getFormattedCardId(it) },
         )
         layoutButtonsCommon.btnMainAction.text = getText(R.string.onboarding_button_backup_origin)
-        layoutButtonsCommon.btnMainAction.setOnClickListener { store.dispatch(BackupAction.WritePrimaryCard) }
-
+        layoutButtonsCommon.btnMainAction.setOnClickListener {
+            store.dispatch(
+                BackupAction.WritePrimaryCard,
+            )
+        }
     }
 
     private fun prepareViewForFinalizeStep() = with(binding) {
@@ -352,11 +369,11 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
             getString(R.string.onboarding_title_backup_card_format, cardNumber)
         tvBody.text = getString(
             R.string.onboarding_subtitle_scan_backup_card_format,
-            cardIdFormatter.getFormattedCardId(state.backupCardIds[cardNumber - 1])
+            cardIdFormatter.getFormattedCardId(state.backupCardIds[cardNumber - 1]),
         )
         layoutButtonsCommon.btnMainAction.text = getString(
             R.string.onboarding_button_backup_card_format,
-            cardNumber
+            cardNumber,
         )
         layoutButtonsCommon.btnMainAction.setOnClickListener {
             store.dispatch(BackupAction.WriteBackupCard(cardNumber))

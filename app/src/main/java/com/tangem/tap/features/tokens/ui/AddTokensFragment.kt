@@ -30,11 +30,16 @@ import com.tangem.tap.store
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentAddTokensBinding
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import org.rekotlin.StoreSubscriber
 
-
-class AddTokensFragment : Fragment(R.layout.fragment_add_tokens),
+class AddTokensFragment :
+    Fragment(R.layout.fragment_add_tokens),
     StoreSubscriber<TokensState> {
 
     private val binding: FragmentAddTokensBinding by viewBinding(FragmentAddTokensBinding::bind)
@@ -44,12 +49,15 @@ class AddTokensFragment : Fragment(R.layout.fragment_add_tokens),
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
-        activity?.onBackPressedDispatcher?.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                store.dispatch(NavigationAction.PopBackTo())
-                store.dispatch(TokensAction.ResetState)
-            }
-        })
+        activity?.onBackPressedDispatcher?.addCallback(
+            this,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    store.dispatch(NavigationAction.PopBackTo())
+                    store.dispatch(TokensAction.ResetState)
+                }
+            },
+        )
         val inflater = TransitionInflater.from(requireContext())
         enterTransition = inflater.inflateTransition(R.transition.slide_right)
         exitTransition = inflater.inflateTransition(R.transition.fade)
@@ -84,11 +92,11 @@ class AddTokensFragment : Fragment(R.layout.fragment_add_tokens),
         }
 
         val onLoadMore = {
-                store.dispatch(
-                    TokensAction.LoadMore(
-                        scanResponse = store.state.globalState.scanResponse
-                    )
-                )
+            store.dispatch(
+                TokensAction.LoadMore(
+                    scanResponse = store.state.globalState.scanResponse,
+                ),
+            )
         }
 
         cvCurrencies.setContent {
@@ -97,7 +105,7 @@ class AddTokensFragment : Fragment(R.layout.fragment_add_tokens),
                     tokensState = tokensState,
                     onSaveChanges = onSaveChanges,
                     onNetworkItemClicked = onNetworkItemClicked,
-                    onLoadMore = onLoadMore
+                    onLoadMore = onLoadMore,
                 )
             }
         }
@@ -150,15 +158,17 @@ class AddTokensFragment : Fragment(R.layout.fragment_add_tokens),
 }
 
 fun SearchView.inputtedTextAsFlow(): Flow<String> = callbackFlow {
-    val watcher = setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-        override fun onQueryTextSubmit(query: String?): Boolean {
-            return false
-        }
+    val watcher = setOnQueryTextListener(
+        object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean {
+                return false
+            }
 
-        override fun onQueryTextChange(newText: String?): Boolean {
-            trySend(newText ?: "")
-            return false
-        }
-    })
+            override fun onQueryTextChange(newText: String?): Boolean {
+                trySend(newText ?: "")
+                return false
+            }
+        },
+    )
     awaitClose { (watcher) }
 }

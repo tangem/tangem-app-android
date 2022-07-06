@@ -1,6 +1,11 @@
 package com.tangem.tap.common.compose
 
-import androidx.compose.animation.*
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -67,7 +72,7 @@ fun OutlinedTextFieldWidget(
             debounce = debounceTextChanges,
             visualTransformation = visualTransformation,
             keyboardOptions = keyboardOptions,
-            onTextChanged = onTextChanged
+            onTextChanged = onTextChanged,
         )
         errorConverter?.let { AnimatedErrorView(error, it) }
     }
@@ -103,12 +108,17 @@ private fun OutlinedProgressTextField(
             textValueState.value = it
         },
         onValueChanged = {
-            logger.log("DEBOUNCER: onValueChanged:  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  dispatch.toStore([$it])")
+            logger.log(
+                "DEBOUNCER: onValueChanged:  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  dispatch.toStore([$it])",
+            )
             onTextChanged(it)
-        })
+        },
+    )
 
-    logger.log("RECOMPOSE ---------------------------------------------------------------START [${logger.count}]")
-    logger.log("RECOMPOSE --data: fieldData.value: [${fieldData}]")
+    logger.log(
+        "RECOMPOSE ---------------------------------------------------------------START [${logger.count}]",
+    )
+    logger.log("RECOMPOSE --data: fieldData.value: [$fieldData]")
     logger.log("RECOMPOSE --data: textValueState.value: [${textValueState.value}]")
     logger.log("RECOMPOSE --data: textDebouncer.emittedValue = [${textDebouncer.emittedValue}]")
     logger.log("RECOMPOSE --data: textDebouncer.debounced = [${textDebouncer.debounced}]")
@@ -121,27 +131,48 @@ private fun OutlinedProgressTextField(
             logger.log("$isNotUserInput: внешние данные ОДИНАКОВЫ с данными в поле")
         } else {
             logger.log("$isNotUserInput: внешние данные РАЗЛИЧАЮТСЯ с данными в поле")
-            if ((textDebouncer.emittedValue != textDebouncer.debounced) || textDebouncer.emitsCountBeforeDebounce > 0) {
-                logger.log("$isNotUserInput: пользователь ВВОДИТ данные -> внешние данные игнорируем, ждем RECOMPOSE")
+            if ((textDebouncer.emittedValue != textDebouncer.debounced) ||
+                textDebouncer.emitsCountBeforeDebounce > 0
+            ) {
+                logger.log(
+                    "$isNotUserInput: пользователь ВВОДИТ данные -> внешние данные игнорируем, ждем RECOMPOSE",
+                )
             } else {
-                logger.log("$isNotUserInput: пользователь НЕ вводит данные -> пытаемся обработать внешние данные")
-                if (textValueState.value != textDebouncer.emittedValue || textValueState.value != textDebouncer.debounced) {
-                    logger.log("$isNotUserInput: даннные в поле не соответствуют данным из textDebouncer")
+                logger.log(
+                    "$isNotUserInput: пользователь НЕ вводит данные -> пытаемся обработать внешние данные",
+                )
+                if (textValueState.value != textDebouncer.emittedValue ||
+                    textValueState.value != textDebouncer.debounced
+                ) {
+                    logger.log(
+                        "$isNotUserInput: даннные в поле не соответствуют данным из textDebouncer",
+                    )
                     if (textDebouncer.emittedValue.isEmpty() && textDebouncer.debounced.isEmpty()) {
-                        logger.log("$isNotUserInput: даннные в textDebouncer ПУСТЫ -> start RECOMPOSE новые данные для textValueState.value = [${fieldData.value}]")
+                        logger.log(
+                            "$isNotUserInput: даннные в textDebouncer ПУСТЫ -> " +
+                                "start RECOMPOSE новые данные для textValueState.value = [${fieldData.value}]",
+                        )
                         textValueState.value = fieldData.value
                     } else {
-                        logger.log("$isNotUserInput: даннные в textDebouncer НЕ ПУСТЫ  -> start RECOMPOSE новые данные для textValueState.value = [${fieldData.value}]")
+                        logger.log(
+                            "$isNotUserInput: даннные в textDebouncer НЕ ПУСТЫ  -> " +
+                                "start RECOMPOSE новые данные для textValueState.value = [${fieldData.value}]",
+                        )
                         textValueState.value = fieldData.value
                     }
                 } else {
-                    logger.log("$isNotUserInput: в пустое поле вставляются данные -> start RECOMPOSE новые данные для textValueState.value = [${fieldData.value}]")
+                    logger.log(
+                        "$isNotUserInput: в пустое поле вставляются данные -> " +
+                            "start RECOMPOSE новые данные для textValueState.value = [${fieldData.value}]",
+                    )
                     textValueState.value = fieldData.value
                 }
             }
         }
     }
-    logger.log("recompose --------------------------------------------------------------FINISH [${logger.count}]")
+    logger.log(
+        "recompose --------------------------------------------------------------FINISH [${logger.count}]",
+    )
 
     Box {
         OutlinedTextField(
@@ -208,10 +239,8 @@ fun OutlinedTextFieldWithErrorTest() {
     val modifier = Modifier
         .fillMaxWidth()
         .padding(16.dp)
-    Scaffold(
-    ) {
-        Column(
-        ) {
+    Scaffold() {
+        Column() {
             OutlinedTextFieldWidget(
                 modifier = modifier,
                 fieldData = Field.Data("", false),

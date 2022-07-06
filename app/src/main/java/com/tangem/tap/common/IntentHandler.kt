@@ -26,9 +26,10 @@ class IntentHandler {
     }
 
     private fun handleBackgroundScan(intent: Intent?) {
-        if (intent != null && (NfcAdapter.ACTION_TECH_DISCOVERED == intent.action ||
+        if (intent != null && (
+            NfcAdapter.ACTION_TECH_DISCOVERED == intent.action ||
                 NfcAdapter.ACTION_NDEF_DISCOVERED == intent.action
-                )
+            )
         ) {
             val tag = intent.getParcelableExtra<Tag>(NfcAdapter.EXTRA_TAG)
             if (tag != null) {
@@ -60,16 +61,16 @@ class IntentHandler {
 
             Timber.d("MoonPay Sell: $amount $currency to $destinationAddress")
 
-            store.dispatch(WalletAction.TradeCryptoAction.SendCrypto(
-                currencyId = currency,
-                amount = amount,
-                destinationAddress = destinationAddress,
-                transactionId = transactionID
-            ))
+            store.dispatch(
+                WalletAction.TradeCryptoAction.SendCrypto(
+                    currencyId = currency,
+                    amount = amount,
+                    destinationAddress = destinationAddress,
+                    transactionId = transactionID,
+                ),
+            )
         } catch (exception: Exception) {
             Timber.d("Not MoonPay URL")
         }
     }
-
-
 }

@@ -16,6 +16,11 @@ fun SelectTokenNetworkDialog(dialog: DomainDialog.SelectTokenDialog, onDismissRe
         title = stringResource(id = R.string.custom_token_type_network),
         items = dialog.items,
         onSelect = dialog.onSelect,
-        onDismissRequest = onDismissRequest
-    ) { network -> TitleSubtitle(dialog.networkIdConverter(network.networkId), network.contractAddress ?: "") }
+        onDismissRequest = onDismissRequest,
+    ) { network ->
+        TitleSubtitle(
+            dialog.networkIdConverter(network.networkId),
+            network.contractAddress ?: "",
+        )
+    }
 }

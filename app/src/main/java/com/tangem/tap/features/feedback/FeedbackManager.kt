@@ -6,19 +6,23 @@ import android.content.pm.PackageManager
 import android.os.Build
 import com.tangem.Log
 import com.tangem.TangemSdkLogger
-import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.AmountType
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.Token
+import com.tangem.blockchain.common.Wallet
+import com.tangem.blockchain.common.WalletManager
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds
 import com.tangem.tap.common.extensions.sendEmail
 import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.wallet.R
-import timber.log.Timber
 import java.io.File
 import java.io.FileWriter
 import java.io.StringWriter
 import java.text.SimpleDateFormat
 import java.util.*
-
+import timber.log.Timber
 
 /**
  * Created by Anton Zhilenkov on 25/02/2021.
@@ -44,7 +48,7 @@ class FeedbackManager(
             subject = activity.getString(emailData.subjectResId),
             message = emailData.joinTogether(activity, infoHolder),
             file = fileLog,
-            onFail = onFail
+            onFail = onFail,
         )
     }
 
@@ -161,8 +165,8 @@ class AdditionalEmailInfo {
                     address = getAddress(manager.wallet),
                     explorerLink = getExploreUri(manager.wallet),
                     host = manager.currentHost,
-                    derivationPath = manager.wallet.publicKey.derivationPath?.rawPath ?: ""
-                )
+                    derivationPath = manager.wallet.publicKey.derivationPath?.rawPath ?: "",
+                ),
             )
             if (manager.cardTokens.isNotEmpty()) {
                 tokens[manager.wallet.blockchain] = manager.cardTokens
@@ -170,13 +174,19 @@ class AdditionalEmailInfo {
         }
     }
 
-    fun updateOnSendError(wallet: Wallet, host: String, amountToSend: Amount, feeAmount: Amount, destinationAddress: String) {
+    fun updateOnSendError(
+        wallet: Wallet,
+        host: String,
+        amountToSend: Amount,
+        feeAmount: Amount,
+        destinationAddress: String,
+    ) {
         onSendErrorWalletInfo = EmailWalletInfo(
             blockchain = wallet.blockchain,
             address = getAddress(wallet),
             explorerLink = getExploreUri(wallet),
             host = host,
-            derivationPath = wallet.publicKey.derivationPath?.rawPath ?: ""
+            derivationPath = wallet.publicKey.derivationPath?.rawPath ?: "",
         )
 
         this.destinationAddress = destinationAddress
@@ -233,7 +243,9 @@ class RateCanBeBetterEmail : EmailData {
     override val subjectResId: Int = R.string.feedback_subject_rate_negative
     override val mainMessageResId: Int = R.string.feedback_preface_rate_negative
 
-    override fun createOptionalMessage(infoHolder: AdditionalEmailInfo): String = EmailDataBuilder(infoHolder)
+    override fun createOptionalMessage(infoHolder: AdditionalEmailInfo): String = EmailDataBuilder(
+        infoHolder,
+    )
         .appendCardInfo()
         .appendLine()
         .appendPhoneInfo()
@@ -251,19 +263,23 @@ class ScanFailsEmail : EmailData {
         append(createOptionalMessage(infoHolder))
     }.toString()
 
-    override fun createOptionalMessage(infoHolder: AdditionalEmailInfo): String = EmailDataBuilder(infoHolder)
+    override fun createOptionalMessage(infoHolder: AdditionalEmailInfo): String = EmailDataBuilder(
+        infoHolder,
+    )
         .appendPhoneInfo()
         .build()
 }
 
 class SendTransactionFailedEmail(
-    val error: String
+    val error: String,
 ) : EmailData {
 
     override val subjectResId: Int = R.string.feedback_subject_tx_failed
     override val mainMessageResId: Int = R.string.feedback_preface_tx_failed
 
-    override fun createOptionalMessage(infoHolder: AdditionalEmailInfo): String = EmailDataBuilder(infoHolder)
+    override fun createOptionalMessage(infoHolder: AdditionalEmailInfo): String = EmailDataBuilder(
+        infoHolder,
+    )
         .appendCardInfo()
         .appendDelimiter()
         .appendTxFailedBlockchainInfo(error)
@@ -290,7 +306,9 @@ class FeedbackEmail : EmailData {
         isS2CCard = TapWorkarounds.isStart2CoinIssuer(infoHolder.cardIssuer)
     }
 
-    override fun createOptionalMessage(infoHolder: AdditionalEmailInfo): String = EmailDataBuilder(infoHolder)
+    override fun createOptionalMessage(infoHolder: AdditionalEmailInfo): String = EmailDataBuilder(
+        infoHolder,
+    )
         .appendCardInfo()
         .appendWalletsInfo()
         .appendLine()
@@ -298,9 +316,8 @@ class FeedbackEmail : EmailData {
         .build()
 }
 
-
 class EmailDataBuilder(
-    private val infoHolder: AdditionalEmailInfo
+    private val infoHolder: AdditionalEmailInfo,
 ) {
     val builder = StringBuilder()
 

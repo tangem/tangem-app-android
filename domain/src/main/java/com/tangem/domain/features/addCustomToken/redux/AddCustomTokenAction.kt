@@ -16,23 +16,41 @@ import org.rekotlin.Action
  */
 sealed class AddCustomTokenAction : Action {
     sealed class Init : AddCustomTokenAction() {
-        data class SetAddedCurrencies(val addedCurrencies: List<DomainWrapped.Currency>) : AddCustomTokenAction()
-        data class SetOnAddTokenCallback(val callback: (CustomCurrency) -> Unit) : AddCustomTokenAction()
+        data class SetAddedCurrencies(
+            val addedCurrencies: List<DomainWrapped.Currency>,
+        ) : AddCustomTokenAction()
+        data class SetOnAddTokenCallback(
+            val callback: (CustomCurrency) -> Unit,
+        ) : AddCustomTokenAction()
     }
 
     object OnCreate : AddCustomTokenAction() {
-        data class SetDerivationStyle(val derivationStyle: DerivationStyle?) : AddCustomTokenAction()
+        data class SetDerivationStyle(
+            val derivationStyle: DerivationStyle?,
+        ) : AddCustomTokenAction()
     }
 
     object OnDestroy : AddCustomTokenAction()
 
     // from user, ui
-    data class OnTokenContractAddressChanged(val contractAddress: Field.Data<String>) : AddCustomTokenAction()
-    data class OnTokenNetworkChanged(val blockchainNetwork: Field.Data<Blockchain>) : AddCustomTokenAction()
-    data class OnTokenNameChanged(val tokenName: Field.Data<String>) : AddCustomTokenAction()
-    data class OnTokenSymbolChanged(val tokenSymbol: Field.Data<String>) : AddCustomTokenAction()
-    data class OnTokenDerivationPathChanged(val blockchainDerivationPath: Field.Data<Blockchain>) : AddCustomTokenAction()
-    data class OnTokenDecimalsChanged(val tokenDecimals: Field.Data<String>) : AddCustomTokenAction()
+    data class OnTokenContractAddressChanged(
+        val contractAddress: Field.Data<String>,
+    ) : AddCustomTokenAction()
+    data class OnTokenNetworkChanged(
+        val blockchainNetwork: Field.Data<Blockchain>,
+    ) : AddCustomTokenAction()
+    data class OnTokenNameChanged(
+        val tokenName: Field.Data<String>,
+    ) : AddCustomTokenAction()
+    data class OnTokenSymbolChanged(
+        val tokenSymbol: Field.Data<String>,
+    ) : AddCustomTokenAction()
+    data class OnTokenDerivationPathChanged(
+        val blockchainDerivationPath: Field.Data<Blockchain>,
+    ) : AddCustomTokenAction()
+    data class OnTokenDecimalsChanged(
+        val tokenDecimals: Field.Data<String>,
+    ) : AddCustomTokenAction()
     object OnAddCustomTokenClicked : AddCustomTokenAction()
 
     data class SetFoundTokenInfo(val foundToken: CoinsResponse.Coin?) : AddCustomTokenAction()
@@ -51,13 +69,15 @@ sealed class AddCustomTokenAction : Action {
         data class Remove(val warnings: Set<AddCustomTokenError.Warning>) : Warning()
         data class Replace(
             val remove: Set<AddCustomTokenError.Warning>,
-            val add: Set<AddCustomTokenError.Warning>
+            val add: Set<AddCustomTokenError.Warning>,
         ) : Warning()
     }
 
     // To change the screenState
     sealed class Screen : AddCustomTokenAction() {
-        data class UpdateTokenFields(val pairs: List<Pair<FieldId, ViewStates.TokenField>>) : Screen()
+        data class UpdateTokenFields(
+            val pairs: List<Pair<FieldId, ViewStates.TokenField>>,
+        ) : Screen()
         data class UpdateAddButton(val addButton: ViewStates.AddButton) : Screen()
     }
 }

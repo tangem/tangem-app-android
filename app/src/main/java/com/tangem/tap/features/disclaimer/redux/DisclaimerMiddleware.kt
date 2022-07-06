@@ -17,7 +17,7 @@ class DisclaimerMiddleware {
                         preferencesStorage.saveDisclaimerAccepted()
                         store.dispatch(NavigationAction.PopBackTo())
 
-                        //delayed sending used for better animation
+                        // delayed sending used for better animation
                         post(550) { store.dispatch(HomeAction.ReadCard) }
                     }
                 }

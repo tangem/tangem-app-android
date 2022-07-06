@@ -29,10 +29,9 @@ import com.tangem.tap.store
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-
 class TapWalletManager {
     val walletManagerFactory: WalletManagerFactory
-            by lazy { WalletManagerFactory(blockchainSdkConfig) }
+        by lazy { WalletManagerFactory(blockchainSdkConfig) }
 
     val rates: RatesRepository = RatesRepository()
 
@@ -64,16 +63,16 @@ class TapWalletManager {
                             WalletAction.LoadWallet.NoAccount(
                                 walletManager.wallet,
                                 blockchainNetwork,
-                                (result.error as TapError.WalletManager.NoAccountError).customMessage
-                            )
+                                (result.error as TapError.WalletManager.NoAccountError).customMessage,
+                            ),
                         )
                     }
                     else -> {
                         dispatchOnMain(
                             WalletAction.LoadWallet.Failure(
                                 walletManager.wallet,
-                                result.error.localizedMessage
-                            )
+                                result.error.localizedMessage,
+                            ),
                         )
                     }
                 }
@@ -93,9 +92,9 @@ class TapWalletManager {
             store.dispatch(WalletAction.MultiWallet.SetIsMultiwalletAllowed(data.card.isMultiwalletAllowed))
             store.dispatch(
                 WalletAction.MultiWallet.ShowWalletBackupWarning(
-                    show = data.card.settings.isBackupAllowed
-                        && data.card.backupStatus == Card.BackupStatus.NoBackup
-                )
+                    show = data.card.settings.isBackupAllowed &&
+                        data.card.backupStatus == Card.BackupStatus.NoBackup,
+                ),
             )
             loadData(data)
         }
@@ -107,8 +106,8 @@ class TapWalletManager {
         if (data.card.isStart2Coin) {
             configManager?.turnOff(ConfigManager.isSendingToPayIdEnabled)
             configManager?.turnOff(ConfigManager.isTopUpEnabled)
-        } else if (blockchain == Blockchain.Bitcoin
-            || data.walletData?.blockchain == Blockchain.Bitcoin.id
+        } else if (blockchain == Blockchain.Bitcoin ||
+            data.walletData?.blockchain == Blockchain.Bitcoin.id
         ) {
             configManager?.resetToDefault(ConfigManager.isSendingToPayIdEnabled)
             configManager?.resetToDefault(ConfigManager.isTopUpEnabled)
@@ -136,10 +135,11 @@ class TapWalletManager {
     }
 
     private suspend fun loadMultiWalletData(
-        scanResponse: ScanResponse
+        scanResponse: ScanResponse,
     ) {
         val savedCurrencies = currenciesRepository.loadSavedCurrencies(
-            scanResponse.card.cardId, scanResponse.card.settings.isHDWalletAllowed
+            scanResponse.card.cardId,
+            scanResponse.card.settings.isHDWalletAllowed,
         )
         if (savedCurrencies.isEmpty()) return
 
@@ -170,8 +170,8 @@ class TapWalletManager {
             dispatchOnMain(
                 WalletAction.MultiWallet.AddBlockchains(
                     listOf(BlockchainNetwork.fromWalletManager(primaryWalletManager)),
-                    listOf(primaryWalletManager)
-                )
+                    listOf(primaryWalletManager),
+                ),
             )
         }
     }

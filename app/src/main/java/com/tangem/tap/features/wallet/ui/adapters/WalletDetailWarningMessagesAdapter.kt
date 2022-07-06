@@ -13,8 +13,8 @@ import com.tangem.wallet.databinding.LayoutWarningCardBinding
 /**
  * Created by Anton Zhilenkov on 18/05/2022.
  */
-class WalletDetailWarningMessagesAdapter
-    : ListAdapter<WalletWarningDescription, WalletDetailsWarningMessageVH>(DiffUtilCallback()) {
+class WalletDetailWarningMessagesAdapter :
+    ListAdapter<WalletWarningDescription, WalletDetailsWarningMessageVH>(DiffUtilCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): WalletDetailsWarningMessageVH {
         val inflater = LayoutInflater.from(parent.context)
@@ -28,16 +28,22 @@ class WalletDetailWarningMessagesAdapter
     }
 
     private class DiffUtilCallback : DiffUtil.ItemCallback<WalletWarningDescription>() {
-        override fun areContentsTheSame(oldItem: WalletWarningDescription, newItem: WalletWarningDescription) =
+        override fun areContentsTheSame(
+            oldItem: WalletWarningDescription,
+            newItem: WalletWarningDescription,
+        ) =
             oldItem == newItem
 
-        override fun areItemsTheSame(oldItem: WalletWarningDescription, newItem: WalletWarningDescription) =
+        override fun areItemsTheSame(
+            oldItem: WalletWarningDescription,
+            newItem: WalletWarningDescription,
+        ) =
             oldItem == newItem
     }
 }
 
 class WalletDetailsWarningMessageVH(
-    val binding: LayoutWarningCardBinding
+    val binding: LayoutWarningCardBinding,
 ) : RecyclerView.ViewHolder(binding.root) {
 
     fun bind(warning: WalletWarningDescription) {

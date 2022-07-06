@@ -1,27 +1,27 @@
-//package com.tangem.tap.domain.tasks
+// package com.tangem.tap.domain.tasks
 //
-//import com.tangem.common.CompletionResult
-//import com.tangem.common.core.CardSession
-//import com.tangem.common.core.CardSessionRunnable
-//import com.tangem.common.core.CompletionCallback
-//import com.tangem.common.hdWallet.DerivationPath
-//import com.tangem.common.hdWallet.ExtendedPublicKey
-//import com.tangem.operations.CommandResponse
-//import com.tangem.operations.derivation.DeriveWalletPublicKeysTask
-//import com.tangem.tap.common.extensions.ByteArrayKey
+// import com.tangem.common.CompletionResult
+// import com.tangem.common.core.CardSession
+// import com.tangem.common.core.CardSessionRunnable
+// import com.tangem.common.core.CompletionCallback
+// import com.tangem.common.hdWallet.DerivationPath
+// import com.tangem.common.hdWallet.ExtendedPublicKey
+// import com.tangem.operations.CommandResponse
+// import com.tangem.operations.derivation.DeriveWalletPublicKeysTask
+// import com.tangem.tap.common.extensions.ByteArrayKey
 //
-//class ExtendedPublicKeyList(
+// class ExtendedPublicKeyList(
 //    items: Collection<ExtendedPublicKey>
-//): ArrayList<ExtendedPublicKey>(items), CommandResponse
+// ): ArrayList<ExtendedPublicKey>(items), CommandResponse
 //
 //
-//class DerivationTaskResponse(
+// class DerivationTaskResponse(
 //    val entries: Map<ByteArrayKey, ExtendedPublicKeyList>
-//): CommandResponse
+// ): CommandResponse
 //
-//class DerivationTask(
+// class DerivationTask(
 //    private val derivations: Map<ByteArrayKey, List<DerivationPath>>
-//) : CardSessionRunnable<DerivationTaskResponse> {
+// ) : CardSessionRunnable<DerivationTaskResponse> {
 //
 //    val response: MutableMap<ByteArrayKey, ExtendedPublicKeyList> = mutableMapOf()
 //
@@ -52,4 +52,4 @@
 //            }
 //        }
 //    }
-//}
+// }

@@ -4,7 +4,12 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Switch
 import androidx.compose.material.SwitchDefaults
@@ -41,9 +46,8 @@ fun NetworkItem(
     allowToAdd: Boolean,
     added: Boolean,
     onAddCurrencyToggled: (Currency, TokenWithBlockchain?) -> Unit,
-    onNetworkItemClicked: (ContractAddress) -> Unit
+    onNetworkItemClicked: (ContractAddress) -> Unit,
 ) {
-
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -54,13 +58,13 @@ fun NetworkItem(
                 },
                 onClick = {},
                 indication = null,
-                interactionSource = remember { MutableInteractionSource() }
-            )
+                interactionSource = remember { MutableInteractionSource() },
+            ),
     ) {
         Box(
             modifier = Modifier
                 .align(Alignment.CenterVertically)
-                .padding(start = 8.dp, top = 16.dp, bottom = 16.dp, end = 6.dp)
+                .padding(start = 8.dp, top = 16.dp, bottom = 16.dp, end = 6.dp),
         ) {
             SubcomposeAsyncImage(
                 model = if (added) blockchain.getRoundIconRes() else blockchain.getGreyedOutIconRes(),
@@ -68,7 +72,7 @@ fun NetworkItem(
                 loading = { CurrencyPlaceholderIcon(blockchain.id) },
                 error = { CurrencyPlaceholderIcon(blockchain.id) },
                 modifier = Modifier
-                    .size(20.dp)
+                    .size(20.dp),
             )
             if (contract.address == null) {
                 Box(
@@ -76,14 +80,14 @@ fun NetworkItem(
                         .align(Alignment.TopEnd)
                         .size(7.dp)
                         .clip(CircleShape)
-                        .background(Color.White)
+                        .background(Color.White),
                 ) {
                     Box(
                         modifier = Modifier
                             .align(Alignment.Center)
                             .size(5.dp)
                             .clip(CircleShape)
-                            .background(Color(0xFF1ACE80))
+                            .background(Color(0xFF1ACE80)),
                     )
                 }
             }
@@ -92,12 +96,12 @@ fun NetworkItem(
             modifier = Modifier
                 .fillMaxHeight()
                 .weight(1f)
-                .align(Alignment.CenterVertically)
+                .align(Alignment.CenterVertically),
         ) {
             Text(
                 text = prepareNetworkNameSpannableText(
                     blockchain = blockchain,
-                    contractAddress = contract.address
+                    contractAddress = contract.address,
                 ),
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 13.sp,
@@ -131,20 +135,18 @@ fun NetworkItem(
                 onCheckedChange = { onAddCurrencyToggled(currencyToSave, tokenWithBlockchain) },
                 modifier = Modifier.padding(start = 16.dp, end = 16.dp),
                 colors = SwitchDefaults.colors(
-                    checkedThumbColor = Color(0xFF1ACE80)
-                )
+                    checkedThumbColor = Color(0xFF1ACE80),
+                ),
             )
         }
     }
 }
 
-
 @Composable
 fun prepareNetworkNameSpannableText(
     blockchain: Blockchain,
-    contractAddress: String?
+    contractAddress: String?,
 ): AnnotatedString {
-
     val blockchainName = blockchain.fullNameWithoutTestnet.uppercase()
     val additionalText =
         if (contractAddress == null) "MAIN" else blockchain.getNetworkName().uppercase()
@@ -158,11 +160,11 @@ fun prepareNetworkNameSpannableText(
         AnnotatedString.Range(
             SpanStyle(
                 fontWeight = FontWeight.Normal,
-                color = if (contractAddress != null) Color(0xFF8E8E93) else Color(0xFF1ACE80)
+                color = if (contractAddress != null) Color(0xFF8E8E93) else Color(0xFF1ACE80),
             ),
             start = startOfAdditionalText,
-            end = text.length
-        )
+            end = text.length,
+        ),
     )
     return AnnotatedString(text = text, spanStyles = spanStyles)
 }

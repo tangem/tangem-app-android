@@ -4,7 +4,12 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.guard
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
-import com.tangem.tap.common.extensions.*
+import com.tangem.tap.common.extensions.dispatchDialogShow
+import com.tangem.tap.common.extensions.dispatchErrorNotification
+import com.tangem.tap.common.extensions.dispatchOpenUrl
+import com.tangem.tap.common.extensions.getAddressData
+import com.tangem.tap.common.extensions.getToUpUrl
+import com.tangem.tap.common.extensions.onCardScanned
 import com.tangem.tap.common.postUi
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
@@ -74,7 +79,11 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
                 }
                 OnboardingNoteStep.Done -> {
                     onboardingManager.activationFinished(card.cardId)
-                    postUi(DELAY_SDK_DIALOG_CLOSE) { store.dispatch(OnboardingNoteAction.Confetti.Show) }
+                    postUi(DELAY_SDK_DIALOG_CLOSE) {
+                        store.dispatch(
+                            OnboardingNoteAction.Confetti.Show,
+                        )
+                    }
                 }
             }
         }
@@ -87,7 +96,9 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
                             val updatedResponse = scanResponse.copy(card = result.data.card)
                             onboardingManager.scanResponse = updatedResponse
                             onboardingManager.activationStarted(updatedResponse.card.cardId)
-                            store.dispatch(OnboardingNoteAction.SetStepOfScreen(OnboardingNoteStep.TopUpWallet))
+                            store.dispatch(
+                                OnboardingNoteAction.SetStepOfScreen(OnboardingNoteStep.TopUpWallet),
+                            )
                         }
                         is CompletionResult.Failure -> {
 //                            do nothing
@@ -115,11 +126,11 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
             val balanceIsLoading = noteState.walletBalance.copy(
                 currency = Currency.Blockchain(
                     walletManager.wallet.blockchain,
-                    walletManager.wallet.publicKey.derivationPath?.rawPath
+                    walletManager.wallet.publicKey.derivationPath?.rawPath,
                 ),
                 state = ProgressState.Loading,
                 error = null,
-                criticalError = null
+                criticalError = null,
             )
             store.dispatch(OnboardingNoteAction.Balance.Set(balanceIsLoading))
 
@@ -129,8 +140,12 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
                 loadedBalance.criticalError?.let { store.dispatchErrorNotification(it) }
                 withMainContext {
                     store.dispatch(OnboardingNoteAction.Balance.Set(loadedBalance))
-                    store.dispatch(OnboardingNoteAction.Balance.SetCriticalError(loadedBalance.criticalError))
-                    store.dispatch(OnboardingNoteAction.Balance.SetNonCriticalError(loadedBalance.error))
+                    store.dispatch(
+                        OnboardingNoteAction.Balance.SetCriticalError(loadedBalance.criticalError),
+                    )
+                    store.dispatch(
+                        OnboardingNoteAction.Balance.SetNonCriticalError(loadedBalance.error),
+                    )
                 }
             }
         }
@@ -142,7 +157,10 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
         is OnboardingNoteAction.ShowAddressInfoDialog -> {
             val addressData = noteState.walletManager?.getAddressData() ?: return
 
-            val appDialog = AppDialog.AddressInfoDialog(noteState.walletBalance.currency, addressData)
+            val appDialog = AppDialog.AddressInfoDialog(
+                noteState.walletBalance.currency,
+                addressData,
+            )
             store.dispatchDialogShow(appDialog)
         }
         is OnboardingNoteAction.TopUp -> {

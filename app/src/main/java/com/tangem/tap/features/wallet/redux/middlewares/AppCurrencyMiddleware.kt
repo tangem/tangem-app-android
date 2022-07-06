@@ -34,8 +34,8 @@ class AppCurrencyMiddleware(
             store.dispatchDialogShow(
                 WalletDialog.CurrencySelectionDialog(
                     currenciesList = storedFiatCurrencies.mapToUiModel(),
-                    currentAppCurrency = appCurrencyProvider.invoke()
-                )
+                    currentAppCurrency = appCurrencyProvider.invoke(),
+                ),
             )
         }
 
@@ -50,8 +50,8 @@ class AppCurrencyMiddleware(
                         store.dispatchDialogShow(
                             WalletDialog.CurrencySelectionDialog(
                                 currenciesList = currenciesList.mapToUiModel(),
-                                currentAppCurrency = appCurrencyProvider.invoke()
-                            )
+                                currentAppCurrency = appCurrencyProvider.invoke(),
+                            ),
                         )
                     }
                 }
@@ -73,7 +73,7 @@ class AppCurrencyMiddleware(
             FiatCurrency(
                 code = it.code,
                 name = it.name,
-                symbol = it.unit
+                symbol = it.unit,
             )
         }
     }

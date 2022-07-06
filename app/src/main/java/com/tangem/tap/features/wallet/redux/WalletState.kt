@@ -71,7 +71,7 @@ data class WalletState(
 
     val shouldShowDetails: Boolean =
         primaryWallet?.currencyData?.status != BalanceStatus.EmptyCard &&
-                primaryWallet?.currencyData?.status != BalanceStatus.UnknownBlockchain
+            primaryWallet?.currencyData?.status != BalanceStatus.UnknownBlockchain
 
     val blockchains: List<Blockchain>
         get() = wallets.mapNotNull { it.walletManager?.wallet?.blockchain }
@@ -162,10 +162,14 @@ data class WalletState(
     }
 
     private fun isPrimaryCurrency(walletData: WalletData): Boolean {
-        return (walletData.currency is Currency.Blockchain &&
-            walletData.currency.blockchain == store.state.walletState.primaryBlockchain)
-            || (walletData.currency is Currency.Token &&
-            walletData.currency.token == store.state.walletState.primaryToken)
+        return (
+            walletData.currency is Currency.Blockchain &&
+                walletData.currency.blockchain == store.state.walletState.primaryBlockchain
+            ) ||
+            (
+                walletData.currency is Currency.Token &&
+                    walletData.currency.token == store.state.walletState.primaryToken
+                )
     }
 
     fun replaceWalletInWallets(wallet: WalletStore?): List<WalletStore> {
@@ -188,11 +192,16 @@ data class WalletState(
     }
 
     fun updateWalletsData(
-        walletsData: List<WalletData>
+        walletsData: List<WalletData>,
     ): WalletState {
-
         val walletStores = walletsData
-            .map { BlockchainNetwork(it.currency.blockchain, it.currency.derivationPath, emptyList()) }
+            .map {
+                BlockchainNetwork(
+                    it.currency.blockchain,
+                    it.currency.derivationPath,
+                    emptyList(),
+                )
+            }
             .distinct().map { getWalletStore(it) }.mapNotNull { it?.updateWallets(walletsData) }
 
         return updateWalletStores(walletStores)
@@ -226,8 +235,8 @@ data class WalletState(
         if (walletData == null) return this
         return if (walletData.currency is Currency.Blockchain) {
             val walletStores = wallets.filterNot {
-                it.blockchainNetwork.blockchain == walletData.currency.blockchain
-                    && it.blockchainNetwork.derivationPath == walletData.currency.derivationPath
+                it.blockchainNetwork.blockchain == walletData.currency.blockchain &&
+                    it.blockchainNetwork.derivationPath == walletData.currency.derivationPath
             }
             copy(wallets = walletStores)
                 .updateTotalBalance()
@@ -259,26 +268,26 @@ data class WalletState(
 
     fun updateTradeCryptoState(
         exchangeManager: CurrencyExchangeManager?,
-        walletData: WalletData
+        walletData: WalletData,
     ): WalletData {
         return walletData.copy(
             tradeCryptoState = TradeCryptoState.from(
                 exchangeManager,
-                walletData
-            )
+                walletData,
+            ),
         )
     }
 
     fun updateTradeCryptoState(
         exchangeManager: CurrencyExchangeManager?,
-        walletDataList: List<WalletData>
+        walletDataList: List<WalletData>,
     ): List<WalletData> {
         return walletDataList.map {
             it.copy(
                 tradeCryptoState = TradeCryptoState.from(
                     exchangeManager,
-                    it
-                )
+                    it,
+                ),
             )
         }
     }
@@ -292,11 +301,11 @@ data class WalletState(
                 totalBalance = TotalBalance(
                     state = walletsData.findProgressState(),
                     fiatAmount = walletsData.calculateTotalFiatAmount(),
-                    fiatCurrency = store.state.globalState.appCurrency
-                )
+                    fiatCurrency = store.state.globalState.appCurrency,
+                ),
             )
         } else this.copy(
-            totalBalance = null
+            totalBalance = null,
         )
     }
 
@@ -309,7 +318,7 @@ data class WalletState(
 
             this.copy(
                 state = walletsData.findProgressState(),
-                error = this.error.takeIf { newProgressState == ProgressState.Error }
+                error = this.error.takeIf { newProgressState == ProgressState.Error },
             )
         } else this
     }
@@ -341,7 +350,7 @@ sealed class WalletMainButton(enabled: Boolean) : Button(enabled) {
 
 data class WalletAddresses(
     val selectedAddress: AddressData,
-    val list: List<AddressData>
+    val list: List<AddressData>,
 )
 
 data class AddressData(
@@ -355,7 +364,7 @@ data class AddressData(
 
 data class Artwork(
     val artworkId: String,
-    val artwork: Bitmap? = null
+    val artwork: Bitmap? = null,
 ) {
     companion object {
         const val DEFAULT_IMG_URL = "https://app.tangem.com/cards/card_default.png"
@@ -367,7 +376,9 @@ data class Artwork(
         const val TWIN_CARD_2 = "https://app.tangem.com/cards/card_tg086.png"
 
         const val TEMP_CARDANO =
-            "https://verify.tangem.com/card/artwork?artworkId=card_ru039&CID=CB19000000040976&publicKey=0416E29423A6CC77CD07CBA52873E8F6F894B1AFB18EB3688ACC2C8D8E5AC84B80B0BA1B17B85E578E47044CE96BCFF3FB4499FA4941CAD3C1EF300A492B5B9659"
+            "https://verify.tangem.com/card/artwork?artworkId=card_ru039&CID=CB19000000040976&publicKey=" +
+                "0416E29423A6CC77CD07CBA52873E8F6F894B1AFB18EB3688ACC2C8D8E5AC84B80B0BA1B17B85E578E4" +
+                "7044CE96BCFF3FB4499FA4941CAD3C1EF300A492B5B9659"
     }
 }
 
@@ -378,7 +389,7 @@ data class TradeCryptoState(
     companion object {
         fun from(
             exchangeManager: CurrencyExchangeManager?,
-            walletData: WalletData
+            walletData: WalletData,
         ): TradeCryptoState {
             val status = exchangeManager ?: return walletData.tradeCryptoState
             val currency = walletData.currency
@@ -445,7 +456,7 @@ data class WalletData(
 data class WalletStore(
     val walletManager: WalletManager?,
     val blockchainNetwork: BlockchainNetwork,
-    val walletsData: List<WalletData>
+    val walletsData: List<WalletData>,
 ) {
     fun updateWallets(walletDataList: List<WalletData>): WalletStore {
         val relevantWalletDataList = walletDataList.filter {

@@ -1,9 +1,9 @@
 package com.tangem.tap.features.send.ui.stateSubscribers
 
 import com.tangem.tap.features.BaseStoreFragment
+import java.lang.ref.WeakReference
 import org.rekotlin.StateType
 import org.rekotlin.StoreSubscriber
-import java.lang.ref.WeakReference
 
 /**
  * Created by Anton Zhilenkov on 31/08/2020.

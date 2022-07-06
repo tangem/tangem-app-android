@@ -23,7 +23,7 @@ data class ScanResponse(
     val walletData: WalletData?,
     val secondTwinPublicKey: String? = null,
     val derivedKeys: Map<KeyWalletPublicKey, ExtendedPublicKeysMap> = mapOf(),
-    val primaryCard: PrimaryCard? = null
+    val primaryCard: PrimaryCard? = null,
 ) : CommandResponse {
 
     fun getBlockchain(): Blockchain {

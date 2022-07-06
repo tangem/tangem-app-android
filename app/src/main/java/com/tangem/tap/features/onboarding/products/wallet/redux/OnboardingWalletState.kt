@@ -72,7 +72,7 @@ sealed class BackupStep {
     object Finished : BackupStep()
 }
 
-sealed class BackupDialog: StateDialog {
+sealed class BackupDialog : StateDialog {
     object AddMoreBackupCards : StateDialog
     object BackupInProgress : StateDialog
     object UnfinishedBackupFound : StateDialog

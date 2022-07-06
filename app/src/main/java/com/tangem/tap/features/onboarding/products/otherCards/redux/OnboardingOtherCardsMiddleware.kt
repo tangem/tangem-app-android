@@ -48,7 +48,11 @@ private fun handleOtherCardsAction(action: Action, dispatch: DispatchFunction) {
         is OnboardingOtherCardsAction.LoadCardArtwork -> {
             scope.launch {
                 val artworkUrl = onboardingManager.loadArtworkUrl()
-                withMainContext { store.dispatch(OnboardingOtherCardsAction.SetArtworkUrl(artworkUrl)) }
+                withMainContext {
+                    store.dispatch(
+                        OnboardingOtherCardsAction.SetArtworkUrl(artworkUrl),
+                    )
+                }
             }
         }
         is OnboardingOtherCardsAction.DetermineStepOfScreen -> {
@@ -71,7 +75,7 @@ private fun handleOtherCardsAction(action: Action, dispatch: DispatchFunction) {
                     when (result) {
                         is CompletionResult.Success -> {
                             val updatedResponse = onboardingManager.scanResponse.copy(
-                                card = result.data.card
+                                card = result.data.card,
                             )
                             onboardingManager.scanResponse = updatedResponse
                             onboardingManager.activationStarted(updatedResponse.card.cardId)
@@ -79,20 +83,30 @@ private fun handleOtherCardsAction(action: Action, dispatch: DispatchFunction) {
                             val primaryBlockchain = updatedResponse.getBlockchain()
                             val blockchainNetworks = if (primaryBlockchain != Blockchain.Unknown) {
                                 val primaryToken = updatedResponse.getPrimaryToken()
-                                val blockchainNetwork = BlockchainNetwork(primaryBlockchain, updatedResponse.card).updateTokens(
-                                    listOfNotNull(primaryToken))
+                                val blockchainNetwork = BlockchainNetwork(
+                                    primaryBlockchain,
+                                    updatedResponse.card,
+                                ).updateTokens(
+                                    listOfNotNull(primaryToken),
+                                )
                                 listOf(blockchainNetwork)
                             } else {
                                 listOf(
                                     BlockchainNetwork(Blockchain.Bitcoin, updatedResponse.card),
-                                    BlockchainNetwork(Blockchain.Ethereum, updatedResponse.card)
+                                    BlockchainNetwork(Blockchain.Ethereum, updatedResponse.card),
                                 )
                             }
 
-                            store.dispatch(WalletAction.MultiWallet.SaveCurrencies(blockchainNetworks))
+                            store.dispatch(
+                                WalletAction.MultiWallet.SaveCurrencies(blockchainNetworks),
+                            )
 
                             delay(DELAY_SDK_DIALOG_CLOSE)
-                            store.dispatch(OnboardingOtherCardsAction.SetStepOfScreen(OnboardingOtherCardsStep.Done))
+                            store.dispatch(
+                                OnboardingOtherCardsAction.SetStepOfScreen(
+                                    OnboardingOtherCardsStep.Done,
+                                ),
+                            )
                         }
                         is CompletionResult.Failure -> {
 //                            do nothing

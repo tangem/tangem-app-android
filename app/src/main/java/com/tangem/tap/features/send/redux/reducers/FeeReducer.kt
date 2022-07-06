@@ -24,14 +24,15 @@ class FeeReducer : SendInternalReducer {
 
     private fun handleUiAction(action: FeeActionUi, sendState: SendState, state: FeeState): SendState {
         val result = when (action) {
-            is FeeActionUi.ToggleControlsVisibility -> state.copy(controlsLayoutIsVisible = !state.controlsLayoutIsVisible)
+            is FeeActionUi.ToggleControlsVisibility -> state.copy(
+                controlsLayoutIsVisible = !state.controlsLayoutIsVisible,
+            )
             is FeeActionUi.ChangeSelectedFee -> {
                 val currentFee = createValueOfFeeAmount(action.feeType, state.feeList)
                 state.copy(
-                        selectedFeeType = action.feeType,
-                        currentFee = currentFee
+                    selectedFeeType = action.feeType,
+                    currentFee = currentFee,
                 )
-
             }
             is FeeActionUi.ChangeIncludeFee -> state.copy(feeIsIncluded = action.isIncluded)
         }
@@ -46,9 +47,15 @@ class FeeReducer : SendInternalReducer {
             is FeeAction.ChangeLayoutVisibility -> {
                 fun getVisibility(current: Boolean, proposed: Boolean?): Boolean = proposed ?: current
                 state.copy(
-                        mainLayoutIsVisible = getVisibility(state.mainLayoutIsVisible, action.main),
-                        controlsLayoutIsVisible = getVisibility(state.controlsLayoutIsVisible, action.controls),
-                        feeChipGroupIsVisible = getVisibility(state.feeChipGroupIsVisible, action.chipGroup)
+                    mainLayoutIsVisible = getVisibility(state.mainLayoutIsVisible, action.main),
+                    controlsLayoutIsVisible = getVisibility(
+                        state.controlsLayoutIsVisible,
+                        action.controls,
+                    ),
+                    feeChipGroupIsVisible = getVisibility(
+                        state.feeChipGroupIsVisible,
+                        action.chipGroup,
+                    ),
                 )
             }
             is FeeAction.FeeCalculation.SetFeeResult -> {
@@ -58,30 +65,30 @@ class FeeReducer : SendInternalReducer {
                     val currentFee = createValueOfFeeAmount(feeType, fees)
 
                     state.copy(
-                            selectedFeeType = feeType,
-                            feeList = fees,
-                            currentFee = currentFee,
-                            error = null,
-                            feePrecision = getFeePrecision(sendState)
+                        selectedFeeType = feeType,
+                        feeList = fees,
+                        currentFee = currentFee,
+                        error = null,
+                        feePrecision = getFeePrecision(sendState),
                     )
                 } else {
                     val feeType = getCurrentFeeType(state)
                     val currentFee = createValueOfFeeAmount(feeType, fees)
 
                     state.copy(
-                            selectedFeeType = feeType,
-                            feeList = fees,
-                            currentFee = currentFee,
-                            error = null,
-                            feePrecision = getFeePrecision(sendState)
+                        selectedFeeType = feeType,
+                        feeList = fees,
+                        currentFee = currentFee,
+                        error = null,
+                        feePrecision = getFeePrecision(sendState),
                     )
                 }
             }
             is FeeAction.FeeCalculation.SetFeeError -> {
                 state.copy(
-                        feeList = null,
-                        currentFee = null,
-                        error = action.error
+                    feeList = null,
+                    currentFee = null,
+                    error = action.error,
                 )
             }
         }
@@ -106,14 +113,17 @@ class FeeReducer : SendInternalReducer {
 
     private fun getFeePrecision(sendState: SendState): FeePrecision {
         val blockchain = sendState.walletManager?.wallet?.blockchain
-        return if ((blockchain?.fullNameWithoutTestnet == Blockchain.Arbitrum.fullName || blockchain?.fullNameWithoutTestnet == Blockchain.Tron.fullName) &&
-            sendState.amountState.typeOfAmount is AmountType.Token) {
+        return if ((
+            blockchain?.fullNameWithoutTestnet == Blockchain.Arbitrum.fullName ||
+                blockchain?.fullNameWithoutTestnet == Blockchain.Tron.fullName
+            ) &&
+            sendState.amountState.typeOfAmount is AmountType.Token
+        ) {
             FeePrecision.CAN_BE_LOWER
         } else {
             FeePrecision.PRECISE
         }
     }
-
 
     private fun getCurrentFeeType(state: FeeState): FeeType {
         return if (state.selectedFeeType == FeeType.SINGLE) FeeType.NORMAL else state.selectedFeeType

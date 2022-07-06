@@ -14,10 +14,14 @@ import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.toHexString
 import com.tangem.common.extensions.toMapKey
 import com.tangem.common.hdWallet.DerivationPath
-import com.tangem.domain.common.*
+import com.tangem.domain.common.ProductType
+import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.common.TapWorkarounds
 import com.tangem.domain.common.TapWorkarounds.isExcluded
 import com.tangem.domain.common.TapWorkarounds.isNotSupportedInThatRelease
 import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
+import com.tangem.domain.common.TwinsHelper
+import com.tangem.domain.common.isTangemTwins
 import com.tangem.operations.PreflightReadMode
 import com.tangem.operations.PreflightReadTask
 import com.tangem.operations.ScanTask
@@ -37,7 +41,7 @@ import kotlinx.coroutines.launch
 class ScanProductTask(
     val card: Card? = null,
     private val currenciesRepository: CurrenciesRepository?,
-    private val additionalBlockchainsToDerive: Collection<Blockchain>? = null
+    private val additionalBlockchainsToDerive: Collection<Blockchain>? = null,
 ) : CardSessionRunnable<ScanResponse> {
 
     override fun run(
@@ -66,17 +70,19 @@ class ScanProductTask(
                     when (scanTaskResult) {
                         is CompletionResult.Success -> callback(
                             CompletionResult.Success(
-                                processorResult.data
-                            )
+                                processorResult.data,
+                            ),
                         )
                         is CompletionResult.Failure -> callback(
                             CompletionResult.Failure(
-                                scanTaskResult.error
-                            )
+                                scanTaskResult.error,
+                            ),
                         )
                     }
                 }
-                is CompletionResult.Failure -> callback(CompletionResult.Failure(processorResult.error))
+                is CompletionResult.Failure -> callback(
+                    CompletionResult.Failure(processorResult.error),
+                )
             }
         }
     }
@@ -93,23 +99,23 @@ private class ScanNoteProcessor : ProductCommandProcessor<ScanResponse> {
     override fun proceed(
         card: Card,
         session: CardSession,
-        callback: (result: CompletionResult<ScanResponse>) -> Unit
+        callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
         callback(
             CompletionResult.Success(
                 ScanResponse(
-                    card,
-                    ProductType.Note,
-                    session.environment.walletData
-                )
-            )
+                    card = card,
+                    productType = ProductType.Note,
+                    walletData = session.environment.walletData,
+                ),
+            ),
         )
     }
 }
 
 private class ScanWalletProcessor(
     private val currenciesRepository: CurrenciesRepository?,
-    private val additionalBlockchainsToDerive: Collection<Blockchain>? = null
+    private val additionalBlockchainsToDerive: Collection<Blockchain>? = null,
 ) : ProductCommandProcessor<ScanResponse> {
 
     var primaryCard: PrimaryCard? = null
@@ -117,7 +123,7 @@ private class ScanWalletProcessor(
     override fun proceed(
         card: Card,
         session: CardSession,
-        callback: (result: CompletionResult<ScanResponse>) -> Unit
+        callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
         createMissingWalletsIfNeeded(card, session, callback)
     }
@@ -125,7 +131,7 @@ private class ScanWalletProcessor(
     private fun createMissingWalletsIfNeeded(
         card: Card,
         session: CardSession,
-        callback: (result: CompletionResult<ScanResponse>) -> Unit
+        callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
         if (card.wallets.isEmpty() || card.firmwareVersion < FirmwareVersion.MultiWalletAvailable) {
             startLinkingForBackupIfNeeded(card, session, callback)
@@ -143,7 +149,7 @@ private class ScanWalletProcessor(
                 is CompletionResult.Success -> {
                     PreflightReadTask(
                         PreflightReadMode.FullCardRead,
-                        card.cardId
+                        card.cardId,
                     ).run(session) { readResult ->
                         when (readResult) {
                             is CompletionResult.Success -> {
@@ -151,8 +157,8 @@ private class ScanWalletProcessor(
                             }
                             is CompletionResult.Failure -> callback(
                                 CompletionResult.Failure(
-                                    readResult.error
-                                )
+                                    readResult.error,
+                                ),
                             )
                         }
                     }
@@ -165,7 +171,7 @@ private class ScanWalletProcessor(
     private fun startLinkingForBackupIfNeeded(
         card: Card,
         session: CardSession,
-        callback: (result: CompletionResult<ScanResponse>) -> Unit
+        callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
         val activationIsFinished =
             preferencesStorage.usedCardsPrefStorage.isActivationFinished(card.cardId)
@@ -192,7 +198,7 @@ private class ScanWalletProcessor(
     private fun deriveKeysIfNeeded(
         card: Card,
         session: CardSession,
-        callback: (result: CompletionResult<ScanResponse>) -> Unit
+        callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
         scope.launch {
             val derivations = collectDerivations(card)
@@ -203,9 +209,9 @@ private class ScanWalletProcessor(
                             card = card,
                             productType = ProductType.Wallet,
                             walletData = session.environment.walletData,
-                            primaryCard = primaryCard
-                        )
-                    )
+                            primaryCard = primaryCard,
+                        ),
+                    ),
                 )
                 return@launch
             }
@@ -218,7 +224,7 @@ private class ScanWalletProcessor(
                             productType = ProductType.Wallet,
                             walletData = session.environment.walletData,
                             derivedKeys = result.data.entries,
-                            primaryCard = primaryCard
+                            primaryCard = primaryCard,
                         )
                         callback(CompletionResult.Success(response))
                     }
@@ -231,12 +237,15 @@ private class ScanWalletProcessor(
     private suspend fun getBlockchainsToDerive(card: Card): List<BlockchainNetwork> {
         val currenciesRepository = currenciesRepository ?: return emptyList()
 
-        val cardCurrencies = currenciesRepository.loadSavedCurrencies(card.cardId, card.settings.isHDWalletAllowed).toMutableList()
+        val cardCurrencies = currenciesRepository.loadSavedCurrencies(
+            card.cardId,
+            card.settings.isHDWalletAllowed,
+        ).toMutableList()
 
         val blockchainsToDerive = cardCurrencies.ifEmpty {
             mutableListOf(
                 BlockchainNetwork(Blockchain.Bitcoin, card),
-                BlockchainNetwork(Blockchain.Ethereum, card)
+                BlockchainNetwork(Blockchain.Ethereum, card),
             )
         }
 
@@ -244,12 +253,14 @@ private class ScanWalletProcessor(
             blockchainsToDerive.addAll(
                 listOf(
                     BlockchainNetwork(Blockchain.Ethereum, card),
-                    BlockchainNetwork(Blockchain.EthereumTestnet, card)
-                )
+                    BlockchainNetwork(Blockchain.EthereumTestnet, card),
+                ),
             )
         }
         if (additionalBlockchainsToDerive != null) {
-            blockchainsToDerive.addAll(additionalBlockchainsToDerive.map { BlockchainNetwork(it, card) })
+            blockchainsToDerive.addAll(
+                additionalBlockchainsToDerive.map { BlockchainNetwork(it, card) },
+            )
         }
         if (!card.useOldStyleDerivation) {
             blockchainsToDerive.removeAll(
@@ -259,7 +270,7 @@ private class ScanWalletProcessor(
                     Blockchain.RSK,
                     Blockchain.Fantom, Blockchain.FantomTestnet,
                     Blockchain.Avalanche, Blockchain.AvalancheTestnet,
-                ).map { BlockchainNetwork(it, card) }
+                ).map { BlockchainNetwork(it, card) },
             )
         }
         return blockchainsToDerive.distinct()
@@ -306,9 +317,9 @@ private class ScanTwinProcessor : ProductCommandProcessor<ScanResponse> {
                                 ScanResponse(
                                     card,
                                     ProductType.Twins,
-                                    null
-                                )
-                            )
+                                    null,
+                                ),
+                            ),
                         )
                         return@run
                     }
@@ -321,7 +332,7 @@ private class ScanTwinProcessor : ProductCommandProcessor<ScanResponse> {
                             card,
                             ProductType.Twins,
                             walletData,
-                            twinPublicKey.toHexString()
+                            twinPublicKey.toHexString(),
                         )
                         callback(CompletionResult.Success(response))
                     } else {
@@ -330,9 +341,9 @@ private class ScanTwinProcessor : ProductCommandProcessor<ScanResponse> {
                                 ScanResponse(
                                     card,
                                     ProductType.Twins,
-                                    null
-                                )
-                            )
+                                    null,
+                                ),
+                            ),
                         )
                     }
                 }
@@ -341,7 +352,6 @@ private class ScanTwinProcessor : ProductCommandProcessor<ScanResponse> {
             }
         }
     }
-
 }
 
 fun Card.getCurvesForNonCreatedWallets(): List<EllipticCurve> {

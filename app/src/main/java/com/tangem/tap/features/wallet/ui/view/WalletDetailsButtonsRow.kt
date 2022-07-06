@@ -14,7 +14,7 @@ internal class WalletDetailsButtonsRow @JvmOverloads constructor(
 ) : LinearLayout(context, attrs, defStyleAttr) {
     private val binding = ViewWalletDetailsButtonsRowBinding.inflate(
         LayoutInflater.from(context),
-        this
+        this,
     )
 
     var onBuyClick: (() -> Unit)? = null
@@ -36,7 +36,7 @@ internal class WalletDetailsButtonsRow @JvmOverloads constructor(
     fun updateButtonsVisibility(
         buyAllowed: Boolean,
         sellAllowed: Boolean,
-        sendAllowed: Boolean
+        sendAllowed: Boolean,
     ) = with(binding) {
         btnBuy.isVisible = (buyAllowed && !sellAllowed) || (!buyAllowed && !sellAllowed)
         btnBuy.isEnabled = buyAllowed

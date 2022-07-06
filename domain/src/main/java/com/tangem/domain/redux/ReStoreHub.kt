@@ -3,11 +3,17 @@ package com.tangem.domain.redux
 import android.webkit.ValueCallback
 import com.tangem.domain.common.FeatureCoroutineExceptionHandler
 import com.tangem.domain.redux.global.DomainGlobalState
-import kotlinx.coroutines.*
+import java.util.concurrent.Executors
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.job
+import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.DispatchFunction
 import org.rekotlin.Middleware
-import java.util.concurrent.Executors
 
 /**
  * Created by Anton Zhilenkov on 30/03/2022.
@@ -38,14 +44,18 @@ internal interface ReStoreReducer<State> {
  */
 internal abstract class BaseStoreHub<State>(
     private val name: String,
-    private val dispatcher: CoroutineDispatcher = Executors.newFixedThreadPool(1).asCoroutineDispatcher()
+    private val dispatcher: CoroutineDispatcher = Executors.newFixedThreadPool(1)
+        .asCoroutineDispatcher(),
 ) : ReStoreHub<DomainState, State> {
 
     val globalState: DomainGlobalState
         get() = domainStore.state.globalState
 
     val hubScope = CoroutineScope(
-        Job() + dispatcher + CoroutineName(name) + FeatureCoroutineExceptionHandler.create(name)
+        Job() +
+            dispatcher +
+            CoroutineName(name) +
+            FeatureCoroutineExceptionHandler.create(name),
     )
 
     private val actionsAndJobs = mutableMapOf<Action, Job>()
@@ -66,7 +76,11 @@ internal abstract class BaseStoreHub<State>(
      * through invoking the cancelActionJob() function inside a middleware).
      * Removes the action when job is completed.
      */
-    protected open fun handle(storeStateHolder: () -> DomainState?, action: Action, dispatch: DispatchFunction) {
+    protected open fun handle(
+        storeStateHolder: () -> DomainState?,
+        action: Action,
+        dispatch: DispatchFunction,
+    ) {
         val storeState = storeStateHolder()
             ?: throw UnsupportedOperationException("StoreState for the $name can't be NULL")
 
@@ -98,9 +112,16 @@ internal abstract class BaseStoreHub<State>(
         actionsAndJobs.forEach { (_, job) -> job.cancel() }
     }
 
-    protected abstract suspend fun handleAction(action: Action, storeState: DomainState, cancel: ValueCallback<Action>)
+    protected abstract suspend fun handleAction(
+        action: Action,
+        storeState: DomainState,
+        cancel: ValueCallback<Action>,
+    )
     protected abstract fun getReducer(): ReStoreReducer<State>
 
     protected abstract fun getHubState(storeState: DomainState): State
-    protected abstract fun updateStoreState(storeState: DomainState, newHubState: State): DomainState
+    protected abstract fun updateStoreState(
+        storeState: DomainState,
+        newHubState: State,
+    ): DomainState
 }

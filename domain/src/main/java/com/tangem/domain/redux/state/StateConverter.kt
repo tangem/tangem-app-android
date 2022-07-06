@@ -15,9 +15,13 @@ interface StringActionStateConverter<StateHolder> {
 }
 
 class ActionStateConvertersFactory {
-    private val stateConverters = mutableMapOf<Class<out Action>, StringActionStateConverter<DomainState>>()
+    private val stateConverters =
+        mutableMapOf<Class<out Action>, StringActionStateConverter<DomainState>>()
 
-    fun addConverter(classOfAction: Class<out Action>, converter: StringActionStateConverter<DomainState>) {
+    fun addConverter(
+        classOfAction: Class<out Action>,
+        converter: StringActionStateConverter<DomainState>,
+    ) {
         stateConverters[classOfAction] = converter
     }
 

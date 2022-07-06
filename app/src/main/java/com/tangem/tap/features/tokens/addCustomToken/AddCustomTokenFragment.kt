@@ -24,9 +24,13 @@ import org.rekotlin.StoreSubscriber
 /**
  * Created by Anton Zhilenkov on 23/03/2022.
  */
-class AddCustomTokenFragment : BaseStoreFragment(R.layout.view_compose_fragment), StoreSubscriber<AddCustomTokenState> {
+class AddCustomTokenFragment :
+    BaseStoreFragment(R.layout.view_compose_fragment),
+    StoreSubscriber<AddCustomTokenState> {
 
-    private var state: MutableState<AddCustomTokenState> = mutableStateOf(domainStore.state.addCustomTokensState)
+    private var state: MutableState<AddCustomTokenState> = mutableStateOf(
+        domainStore.state.addCustomTokensState,
+    )
 
     override fun subscribeToStore() {
         domainStore.subscribe(this) { state ->
@@ -45,7 +49,9 @@ class AddCustomTokenFragment : BaseStoreFragment(R.layout.view_compose_fragment)
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        requireActivity().window.setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
+        requireActivity().window.setSoftInputMode(
+            WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE,
+        )
         view.findViewById<Toolbar>(R.id.toolbar)?.let {
             it.setTitle(R.string.add_custom_token_title)
         }
@@ -53,22 +59,22 @@ class AddCustomTokenFragment : BaseStoreFragment(R.layout.view_compose_fragment)
         val closePopupTrigger = initClosingPopupTriggerEvent()
         view.findViewById<ComposeView>(R.id.view_compose)?.setContent {
             AppCompatTheme(requireContext()) {
-                Box(modifier = Modifier
-                    .fillMaxSize()
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize(),
                 ) {
                     AddCustomTokenScreen(state, closePopupTrigger)
                 }
-
             }
         }
-
-
     }
 
     private fun initClosingPopupTriggerEvent(): ClosePopupTrigger = ClosePopupTrigger().apply {
         onCloseComplete = ::handleOnBackPressed
-        addBackPressHandler(object : FragmentOnBackPressedHandler {
-            override fun handleOnBackPressed() = close()
-        })
+        addBackPressHandler(
+            object : FragmentOnBackPressedHandler {
+                override fun handleOnBackPressed() = close()
+            },
+        )
     }
 }

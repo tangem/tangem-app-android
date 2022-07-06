@@ -15,7 +15,6 @@ import com.tangem.operations.attestation.CardVerifyAndGetInfo
 import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.tap.features.wallet.redux.Artwork
 
-
 val Card.remainingSignatures: Int?
     get() = this.getSingleWallet()?.remainingSignatures
 
@@ -24,9 +23,11 @@ val Card.isWalletDataSupported: Boolean
 
 val Card.isMultiwalletAllowed: Boolean
     get() {
-        return !isTangemTwin() && !isStart2Coin && !TapWorkarounds.isTangemNote(this)
-            && (firmwareVersion >= FirmwareVersion.MultiWalletAvailable ||
-            getSingleWallet()?.curve == EllipticCurve.Secp256k1)
+        return !isTangemTwin() && !isStart2Coin && !TapWorkarounds.isTangemNote(this) &&
+            (
+                firmwareVersion >= FirmwareVersion.MultiWalletAvailable ||
+                    getSingleWallet()?.curve == EllipticCurve.Secp256k1
+                )
     }
 
 fun Card.getSingleWallet(): CardWallet? {
@@ -47,7 +48,9 @@ fun Card.signedHashesCount(): Int {
     return wallets.map { it.totalSignedHashes ?: 0 }.sum()
 }
 
-suspend fun Card.getOrLoadCardArtworkUrl(cardInfo: Result<CardVerifyAndGetInfo.Response.Item>? = null): String {
+suspend fun Card.getOrLoadCardArtworkUrl(
+    cardInfo: Result<CardVerifyAndGetInfo.Response.Item>? = null,
+): String {
     fun ifAnyError(): String {
         return when {
             cardId.startsWith(Artwork.SERGIO_CARD_ID) -> Artwork.SERGIO_CARD_URL

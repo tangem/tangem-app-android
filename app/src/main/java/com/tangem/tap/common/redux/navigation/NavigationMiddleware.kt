@@ -15,9 +15,9 @@ val navigationMiddleware: Middleware<AppState> = { dispatch, state ->
                 when (action) {
                     is NavigationAction.NavigateTo -> {
                         navState?.activity?.get()?.openFragment(
-                                action.screen,
-                                action.addToBackstack,
-                                action.fragmentShareTransition
+                            action.screen,
+                            action.addToBackstack,
+                            action.fragmentShareTransition,
                         )
                     }
                     is NavigationAction.PopBackTo -> {

@@ -30,7 +30,9 @@ class WarningMessagesAdapter : ListAdapter<WarningMessage, WarningMessageVH>(Dif
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): WarningMessageVH {
         val binding = LayoutWarningCardActionBinding.inflate(
-            LayoutInflater.from(parent.context), parent, false
+            LayoutInflater.from(parent.context),
+            parent,
+            false,
         )
         return WarningMessageVH(binding)
     }
@@ -48,7 +50,9 @@ class WarningMessagesAdapter : ListAdapter<WarningMessage, WarningMessageVH>(Dif
     }
 }
 
-class WarningMessageVH(val binding: LayoutWarningCardActionBinding) : RecyclerView.ViewHolder(binding.root) {
+class WarningMessageVH(val binding: LayoutWarningCardActionBinding) : RecyclerView.ViewHolder(
+    binding.root,
+) {
 
     fun bind(warning: WarningMessage) {
         setBgColor(warning.priority)
@@ -64,7 +68,7 @@ class WarningMessageVH(val binding: LayoutWarningCardActionBinding) : RecyclerVi
         tvMessage.text = getString(
             resId = warning.messageResId,
             default = warning.message,
-            formatArgs = warning.messageFormatArg
+            formatArgs = warning.messageFormatArg,
         )
     }
 
@@ -116,7 +120,7 @@ class WarningMessageVH(val binding: LayoutWarningCardActionBinding) : RecyclerVi
                     }
                 }
             val buttonTitle = binding.root.getString(
-                warning.buttonTextId ?: R.string.how_to_got_it_button
+                warning.buttonTextId ?: R.string.how_to_got_it_button,
             )
             binding.btnGotIt.setOnClickListener(buttonAction)
             binding.btnGotIt.text = buttonTitle

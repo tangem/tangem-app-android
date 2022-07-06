@@ -65,9 +65,9 @@ class WalletConnectMiddleware {
                 store.dispatchOnMain(
                     GlobalAction.ShowDialog(
                         WalletConnectDialog.ClipboardOrScanQr(
-                            action.wcUri
-                        )
-                    )
+                            action.wcUri,
+                        ),
+                    ),
                 )
             }
             is WalletConnectAction.OpeningSessionTimeout -> {
@@ -89,8 +89,8 @@ class WalletConnectMiddleware {
             is WalletConnectAction.RefuseOpeningSession -> {
                 store.dispatch(
                     GlobalAction.ShowDialog(
-                        WalletConnectDialog.OpeningSessionRejected
-                    )
+                        WalletConnectDialog.OpeningSessionRejected,
+                    ),
                 )
             }
             is WalletConnectAction.ScanCard -> {
@@ -107,14 +107,14 @@ class WalletConnectMiddleware {
                     transaction = action.transaction,
                     session = action.session,
                     id = action.id,
-                    type = action.type
+                    type = action.type,
                 )
             }
             is WalletConnectAction.HandlePersonalSignRequest -> {
                 walletConnectManager.handlePersonalSignRequest(
                     message = action.message,
                     session = action.session,
-                    id = action.id
+                    id = action.id,
                 )
             }
             is WalletConnectAction.RejectRequest -> {
@@ -135,9 +135,9 @@ class WalletConnectMiddleware {
                             session = action.sessionData.session,
                             sessionId = action.id,
                             cardId = action.sessionData.wallet.cardId,
-                            dAppName = action.sessionData.peerMeta.name
-                        )
-                    )
+                            dAppName = action.sessionData.peerMeta.name,
+                        ),
+                    ),
                 )
             }
             is WalletConnectAction.BinanceTransaction.Transfer -> {
@@ -149,14 +149,16 @@ class WalletConnectMiddleware {
                             session = action.sessionData.session,
                             sessionId = action.id,
                             cardId = action.sessionData.wallet.cardId,
-                            dAppName = action.sessionData.peerMeta.name
-                        )
-                    )
+                            dAppName = action.sessionData.peerMeta.name,
+                        ),
+                    ),
                 )
             }
             is WalletConnectAction.BinanceTransaction.Sign -> {
                 walletConnectManager.signBnb(
-                    action.id, action.data, action.sessionData
+                    action.id,
+                    action.data,
+                    action.sessionData,
                 )
             }
         }
@@ -164,7 +166,8 @@ class WalletConnectMiddleware {
 
     private fun scanCard(session: WalletConnectSession, chainId: Int?) {
         val blockchain = WalletConnectNetworkUtils.parseBlockchain(
-            chainId = chainId, peer = session.peerMeta
+            chainId = chainId,
+            peer = session.peerMeta,
         ) ?: Blockchain.Ethereum
 
         store.dispatch(
@@ -175,13 +178,16 @@ class WalletConnectMiddleware {
                 },
                 onFailure = {
                     store.dispatchOnMain(WalletConnectAction.FailureEstablishingSession(null))
-                }, R.string.wallet_connect_scan_card_message
-            )
+                },
+                R.string.wallet_connect_scan_card_message,
+            ),
         )
     }
 
     private fun handleScanResponse(
-        scanResponse: ScanResponse, session: WalletConnectSession, blockchain: Blockchain
+        scanResponse: ScanResponse,
+        session: WalletConnectSession,
+        blockchain: Blockchain,
     ) {
         val card = scanResponse.card
         if (!card.isMultiwalletAllowed) {
@@ -191,11 +197,13 @@ class WalletConnectMiddleware {
 
         scope.launch {
             val walletManager = getWalletManager(scanResponse, blockchain).guard {
-                store.dispatchOnMain(WalletConnectAction.FailureEstablishingSession(session.session))
+                store.dispatchOnMain(
+                    WalletConnectAction.FailureEstablishingSession(session.session),
+                )
                 store.dispatchOnMain(
                     GlobalAction.ShowDialog(
-                        WalletConnectDialog.AddNetwork(blockchain.fullName)
-                    )
+                        WalletConnectDialog.AddNetwork(blockchain.fullName),
+                    ),
                 )
                 return@launch
             }
@@ -212,7 +220,7 @@ class WalletConnectMiddleware {
                 walletPublicKey = wallet.publicKey.seedKey,
                 derivedPublicKey = derivedKey,
                 derivationPath = wallet.publicKey.derivationPath,
-                blockchain = wallet.blockchain
+                blockchain = wallet.blockchain,
             )
 
             withMainContext {
@@ -224,17 +232,17 @@ class WalletConnectMiddleware {
                 store.dispatch(
                     GlobalAction.ShowDialog(
                         WalletConnectDialog.ApproveWcSession(
-                            updatedSession
-                        )
-                    )
+                            updatedSession,
+                        ),
+                    ),
                 )
             }
         }
-
     }
 
     private suspend fun getWalletManager(
-        scanResponse: ScanResponse, blockchain: Blockchain
+        scanResponse: ScanResponse,
+        blockchain: Blockchain,
     ): WalletManager? {
         val card = scanResponse.card
         val factory = store.state.globalState.tapWalletManager.walletManagerFactory
@@ -246,19 +254,19 @@ class WalletConnectMiddleware {
 
         val blockchainNetwork = BlockchainNetwork(
             blockchain = blockchainToMake,
-            card = card
+            card = card,
         )
 
         return if (store.state.globalState.scanResponse?.card?.cardId == card.cardId) {
             store.state.walletState.getWalletManager(blockchainNetwork)
         } else {
             if (currenciesRepository
-                    .loadSavedCurrencies(card.cardId, card.settings.isHDWalletAllowed)
-                    .contains(blockchainNetwork)
+                .loadSavedCurrencies(card.cardId, card.settings.isHDWalletAllowed)
+                .contains(blockchainNetwork)
             ) {
                 factory.makeWalletManagerForApp(
                     scanResponse = scanResponse,
-                    blockchainNetwork = blockchainNetwork
+                    blockchainNetwork = blockchainNetwork,
                 )
             } else {
                 null

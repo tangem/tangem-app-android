@@ -57,11 +57,11 @@ object TapWorkarounds {
         "0027",
         "0030",
         "0031",
-        "0035"
+        "0035",
     )
 
     private val excludedIssuers = listOf(
-        "TTM BANK"
+        "TTM BANK",
     )
 
     private val tangemWalletBatches = listOf("AC01")
@@ -75,13 +75,15 @@ object TapWorkarounds {
         "AB06" to Blockchain.XRP,
         "AB07" to Blockchain.Bitcoin,
         "AB08" to Blockchain.Ethereum,
-        "AB09" to Blockchain.Bitcoin,       // new batches for 3.34
+        "AB09" to Blockchain.Bitcoin, // new batches for 3.34
         "AB10" to Blockchain.Ethereum,
         "AB11" to Blockchain.Bitcoin,
         "AB12" to Blockchain.Ethereum,
     )
 
     private val tangemWalletBatchesWithStandardDerivationType = listOf(
-        "AC01", "AC02", "CB95"
+        "AC01",
+        "AC02",
+        "CB95",
     )
 }

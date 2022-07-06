@@ -12,9 +12,9 @@ import com.tangem.tap.domain.assembleErrors
 import com.tangem.tap.notificationsHandler
 import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
+import java.lang.ref.WeakReference
 import org.rekotlin.Action
 import org.rekotlin.Middleware
-import java.lang.ref.WeakReference
 
 class NotificationsHandler(coordinatorLayout: CoordinatorLayout) {
     private val basicCoordinatorLayout = WeakReference(coordinatorLayout)
@@ -53,7 +53,11 @@ class NotificationsHandler(coordinatorLayout: CoordinatorLayout) {
 
     fun showToastNotification(message: Int, args: List<Any>? = null) {
         baseLayout.get()?.let {
-            Toast.makeText(it.context, getMessageString(it.context, message, args), Toast.LENGTH_LONG).show()
+            Toast.makeText(
+                it.context,
+                getMessageString(it.context, message, args),
+                Toast.LENGTH_LONG,
+            ).show()
         }
     }
 
@@ -95,20 +99,31 @@ private fun handleNotificationAction(action: Action) {
         is NotificationAction -> {
             notificationsHandler?.showNotification(action.messageResource)
         }
-        is ToastNotificationAction -> notificationsHandler?.showToastNotification(action.messageResource)
+        is ToastNotificationAction -> notificationsHandler?.showToastNotification(
+            action.messageResource,
+        )
         is ErrorAction -> {
             when (action) {
                 is Debug -> {
                     val args = (action.error as? ArgError)?.args ?: listOf()
                     when (action) {
                         is DebugNotification -> {
-                            notificationsHandler?.showNotification(action.error.messageResource, args)
+                            notificationsHandler?.showNotification(
+                                action.error.messageResource,
+                                args,
+                            )
                         }
                         is DebugToastNotification -> {
-                            notificationsHandler?.showToastNotification(action.error.messageResource, args)
+                            notificationsHandler?.showToastNotification(
+                                action.error.messageResource,
+                                args,
+                            )
                         }
                         is DebugErrorAction -> {
-                            notificationsHandler?.showDebugErrorNotification(action.error.messageResource, args)
+                            notificationsHandler?.showDebugErrorNotification(
+                                action.error.messageResource,
+                                args,
+                            )
                         }
                     }
                 }
@@ -116,11 +131,17 @@ private fun handleNotificationAction(action: Action) {
                     when (action.error) {
                         is MultiMessageError -> {
                             val multiError = action.error as MultiMessageError
-                            notificationsHandler?.showNotification(multiError.assembleErrors(), multiError.builder)
+                            notificationsHandler?.showNotification(
+                                multiError.assembleErrors(),
+                                multiError.builder,
+                            )
                         }
                         else -> {
                             val args = (action.error as? ArgError)?.args ?: listOf()
-                            notificationsHandler?.showNotification(action.error.messageResource, args)
+                            notificationsHandler?.showNotification(
+                                action.error.messageResource,
+                                args,
+                            )
                         }
                     }
                 }

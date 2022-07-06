@@ -30,7 +30,7 @@ sealed class TwinCardsAction : Action {
     sealed class Wallet : TwinCardsAction() {
         data class HandleOnBackPressed(
             // this is necessary for the correct animation of the return of cards to the Home screen
-            val shouldResetTwinCardsWidget: (should: Boolean, popAction: VoidCallback) -> Unit
+            val shouldResetTwinCardsWidget: (should: Boolean, popAction: VoidCallback) -> Unit,
         ) : TwinCardsAction()
 
         data class ShowInterruptDialog(val onOk: VoidCallback) : TwinCardsAction(), StateDialog
@@ -44,7 +44,6 @@ sealed class TwinCardsAction : Action {
 
         data class LaunchThirdStep(val message: Message) : TwinCardsAction()
     }
-
 
     // for the onboarding
     data class SetPairCardId(val cardId: String) : TwinCardsAction()

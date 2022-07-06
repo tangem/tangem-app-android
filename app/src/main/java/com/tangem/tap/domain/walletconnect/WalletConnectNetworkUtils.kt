@@ -29,10 +29,9 @@ class WalletConnectNetworkUtils {
                     Blockchain.BSC
                 }
                 else -> {
-                   Blockchain.Ethereum
+                    Blockchain.Ethereum
                 }
             }
         }
-
     }
 }

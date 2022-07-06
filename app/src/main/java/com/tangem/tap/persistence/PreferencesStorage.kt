@@ -7,10 +7,12 @@ import androidx.core.content.edit
 import com.tangem.common.json.MoshiJsonConverter
 import java.util.*
 
-
 class PreferencesStorage(applicationContext: Application) {
 
-    private val preferences: SharedPreferences = applicationContext.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
+    private val preferences: SharedPreferences = applicationContext.getSharedPreferences(
+        PREFERENCES_NAME,
+        Context.MODE_PRIVATE,
+    )
 
     val appRatingLaunchObserver: AppRatingLaunchObserver
     val usedCardsPrefStorage: UsedCardsPrefStorage
@@ -21,7 +23,10 @@ class PreferencesStorage(applicationContext: Application) {
         appRatingLaunchObserver = AppRatingLaunchObserver(preferences, getCountOfLaunches())
         usedCardsPrefStorage = UsedCardsPrefStorage(preferences, MoshiJsonConverter.INSTANCE)
         usedCardsPrefStorage.migrate()
-        fiatCurrenciesPrefStorage = FiatCurrenciesPrefStorage(preferences, MoshiJsonConverter.INSTANCE)
+        fiatCurrenciesPrefStorage = FiatCurrenciesPrefStorage(
+            preferences,
+            MoshiJsonConverter.INSTANCE,
+        )
         fiatCurrenciesPrefStorage.migrate()
     }
 
@@ -68,7 +73,6 @@ class PreferencesStorage(applicationContext: Application) {
         private const val APP_LAUNCH_COUNT_KEY = "launchCount"
         private const val RESTORE_FUNDS_CLOSED_KEY = "restoreFundsClosed"
     }
-
 }
 
 class AppRatingLaunchObserver(
@@ -85,7 +89,10 @@ class AppRatingLaunchObserver(
     private var fundsFoundDate: Calendar? = null
 
     init {
-        val msWhenFundsWasFound = preferences.getLong(K_FUNDS_FOUND_DATE, FUNDS_FOUND_DATE_UNDEFINED)
+        val msWhenFundsWasFound = preferences.getLong(
+            K_FUNDS_FOUND_DATE,
+            FUNDS_FOUND_DATE_UNDEFINED,
+        )
         if (msWhenFundsWasFound != FUNDS_FOUND_DATE_UNDEFINED) {
             fundsFoundDate = Calendar.getInstance().apply { timeInMillis = msWhenFundsWasFound }
         }
@@ -129,6 +136,12 @@ class AppRatingLaunchObserver(
         editor.apply()
     }
 
-    private fun userWasInteractWithRating(): Boolean = preferences.getBoolean(K_USER_WAS_INTERACT_WITH_RATING, false)
-    private fun getCounterOfNextShowing(): Int = preferences.getInt(K_SHOW_RATING_AT_LAUNCH_COUNT, firstShowing)
+    private fun userWasInteractWithRating(): Boolean = preferences.getBoolean(
+        K_USER_WAS_INTERACT_WITH_RATING,
+        false,
+    )
+    private fun getCounterOfNextShowing(): Int = preferences.getInt(
+        K_SHOW_RATING_AT_LAUNCH_COUNT,
+        firstShowing,
+    )
 }

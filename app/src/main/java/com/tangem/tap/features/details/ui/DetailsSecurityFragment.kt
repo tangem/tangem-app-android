@@ -15,23 +15,27 @@ import com.tangem.tap.features.details.redux.SecurityOption
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentDetailsSecurityBinding
-import org.rekotlin.StoreSubscriber
 import java.util.*
+import org.rekotlin.StoreSubscriber
 
-class DetailsSecurityFragment : Fragment(R.layout.fragment_details_security),
-        StoreSubscriber<DetailsState> {
+class DetailsSecurityFragment :
+    Fragment(R.layout.fragment_details_security),
+    StoreSubscriber<DetailsState> {
 
     private val binding: FragmentDetailsSecurityBinding by viewBinding(
-        FragmentDetailsSecurityBinding::bind
+        FragmentDetailsSecurityBinding::bind,
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        activity?.onBackPressedDispatcher?.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                store.dispatch(NavigationAction.PopBackTo())
-            }
-        })
+        activity?.onBackPressedDispatcher?.addCallback(
+            this,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    store.dispatch(NavigationAction.PopBackTo())
+                }
+            },
+        )
         val inflater = TransitionInflater.from(requireContext())
         enterTransition = inflater.inflateTransition(R.transition.slide_right)
         exitTransition = inflater.inflateTransition(R.transition.fade)
@@ -73,23 +77,23 @@ class DetailsSecurityFragment : Fragment(R.layout.fragment_details_security),
         selectSecurityOption(state.securityScreenState?.selectedOption)
         for (option in SecurityOption.values()) {
             setupOption(
-                    option,
-                    state.securityScreenState?.allowedOptions
-                            ?: EnumSet.noneOf(SecurityOption::class.java)
+                option,
+                state.securityScreenState?.allowedOptions
+                    ?: EnumSet.noneOf(SecurityOption::class.java),
             )
         }
         binding.tvAccessCodeUnavailableDisclaimer.show(
-            state.scanResponse?.card?.backupStatus == Card.BackupStatus.NoBackup
+            state.scanResponse?.card?.backupStatus == Card.BackupStatus.NoBackup,
         )
     }
 
     private fun selectSecurityOption(securityOption: SecurityOption?) = with(binding) {
         radiobuttonLongTap.isChecked =
-                securityOption == SecurityOption.LongTap && radiobuttonLongTap.isEnabled
+            securityOption == SecurityOption.LongTap && radiobuttonLongTap.isEnabled
         radiobuttonPasscode.isChecked =
-                securityOption == SecurityOption.PassCode && radiobuttonPasscode.isEnabled
+            securityOption == SecurityOption.PassCode && radiobuttonPasscode.isEnabled
         radiobuttonAccessCode.isChecked =
-                securityOption == SecurityOption.AccessCode && radiobuttonAccessCode.isEnabled
+            securityOption == SecurityOption.AccessCode && radiobuttonAccessCode.isEnabled
     }
 
     private fun setupOption(option: SecurityOption, allowedOptions: EnumSet<SecurityOption>) {

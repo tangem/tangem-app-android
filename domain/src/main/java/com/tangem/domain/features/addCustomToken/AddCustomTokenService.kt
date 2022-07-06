@@ -45,6 +45,5 @@ class AddCustomTokenService(
 
     private fun selectNetworksForSearch(networkId: String?): String {
         return networkId ?: supportedTokenNetworkIds.joinToString(",")
-
     }
 }

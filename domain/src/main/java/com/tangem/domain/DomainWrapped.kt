@@ -6,7 +6,7 @@ import com.tangem.blockchain.common.DerivationStyle
  * Created by Anton Zhilenkov on 14/04/2022.
  * Provides a temporary copies of the app module classes, data structures, etc.
  */
-//TODO: refactoring: : after refactoring they should be unwrapped and moved
+// TODO: refactoring: : after refactoring they should be unwrapped and moved
 // to appropriate parts of module
 sealed interface DomainWrapped {
 
@@ -19,14 +19,14 @@ sealed interface DomainWrapped {
         data class Token(
             val token: com.tangem.blockchain.common.Token,
             override val blockchain: com.tangem.blockchain.common.Blockchain,
-            override val derivationPath: String?
+            override val derivationPath: String?,
         ) : Currency {
             override val currencySymbol = token.symbol
         }
 
         data class Blockchain(
             override val blockchain: com.tangem.blockchain.common.Blockchain,
-            override val derivationPath: String?
+            override val derivationPath: String?,
         ) : Currency {
             override val currencySymbol: String = blockchain.currency
         }

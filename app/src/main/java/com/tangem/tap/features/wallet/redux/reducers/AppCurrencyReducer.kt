@@ -10,7 +10,8 @@ class AppCurrencyReducer {
     ): WalletState {
         return when (action) {
             is WalletAction.AppCurrencyAction.SelectAppCurrency,
-            is WalletAction.AppCurrencyAction.ChooseAppCurrency -> state
+            is WalletAction.AppCurrencyAction.ChooseAppCurrency,
+            -> state
         }
     }
 }

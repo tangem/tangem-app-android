@@ -62,10 +62,11 @@ class AccessCodeDialog(context: Context) : BottomSheetDialog(context) {
             etAccessCode.setText("")
             btnAccessCodeSubmit.text = context.getText(R.string.common_submit)
             btnAccessCodeSubmit.setOnClickListener {
-                store.dispatch(BackupAction.SaveAccessCodeConfirmation(etAccessCode.text.toString()))
+                store.dispatch(
+                    BackupAction.SaveAccessCodeConfirmation(etAccessCode.text.toString()),
+                )
             }
         }
-
     }
 
     fun showError(error: AccessCodeError?) = with(binding!!.layoutBackupAccessCodeSubmit) {
@@ -73,7 +74,9 @@ class AccessCodeDialog(context: Context) : BottomSheetDialog(context) {
             AccessCodeError.CodeTooShort ->
                 tilAccessCode.error = context.getString(R.string.onboarding_access_code_too_short)
             AccessCodeError.CodesDoNotMatch ->
-                tilAccessCode.error = context.getString(R.string.onboarding_access_codes_doesnt_match)
+                tilAccessCode.error = context.getString(
+                    R.string.onboarding_access_codes_doesnt_match,
+                )
             null -> tilAccessCode.error = null
         }
     }

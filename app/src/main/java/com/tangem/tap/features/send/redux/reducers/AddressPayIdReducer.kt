@@ -19,45 +19,66 @@ class AddressPayIdReducer : SendInternalReducer {
         else -> sendState
     }
 
-    private fun handleUiAction(action: AddressPayIdActionUi, sendState: SendState, state: AddressPayIdState): SendState {
+    private fun handleUiAction(
+        action: AddressPayIdActionUi,
+        sendState: SendState,
+        state: AddressPayIdState,
+    ): SendState {
         val result = when (action) {
             is AddressPayIdActionUi.HandleUserInput -> state
-            is AddressPayIdActionUi.SetTruncateHandler -> state.copy(truncateHandler = action.handler)
+            is AddressPayIdActionUi.SetTruncateHandler -> state.copy(
+                truncateHandler = action.handler,
+            )
             is AddressPayIdActionUi.TruncateOrRestore -> {
-                val value = if (action.truncate) state.truncatedFieldValue ?: "" else state.normalFieldValue ?: ""
+                val value = if (action.truncate) state.truncatedFieldValue ?: ""
+                else state.normalFieldValue ?: ""
                 state.copy(viewFieldValue = state.viewFieldValue.copy(value = value))
             }
             is AddressPayIdActionUi.PasteAddressPayId -> return sendState
             is AddressPayIdActionUi.CheckClipboard -> return sendState
             is AddressPayIdActionUi.CheckAddressPayId -> return sendState
-            is AddressPayIdActionUi.ChangePayIdState -> state.copy(sendingToPayIdEnabled = action.sendingToPayIdEnabled)
+            is AddressPayIdActionUi.ChangePayIdState -> state.copy(
+                sendingToPayIdEnabled = action.sendingToPayIdEnabled,
+            )
         }
         return updateLastState(sendState.copy(addressPayIdState = result), result)
     }
 
-    private fun handleAction(action: AddressPayIdVerifyAction, sendState: SendState, state: AddressPayIdState): SendState {
+    private fun handleAction(
+        action: AddressPayIdVerifyAction,
+        sendState: SendState,
+        state: AddressPayIdState,
+    ): SendState {
         val result = when (action) {
             is PayIdVerification.SetPayIdWalletAddress -> {
                 state.copy(
-                        viewFieldValue = InputViewValue(action.payId, action.isUserInput),
-                        normalFieldValue = action.payId,
-                        truncatedFieldValue = state.truncate(action.payId),
-                        destinationWalletAddress = action.payIdWalletAddress,
-                        error = null
+                    viewFieldValue = InputViewValue(action.payId, action.isUserInput),
+                    normalFieldValue = action.payId,
+                    truncatedFieldValue = state.truncate(action.payId),
+                    destinationWalletAddress = action.payIdWalletAddress,
+                    error = null,
                 )
             }
             is AddressVerification.SetWalletAddress -> {
                 state.copy(
-                        viewFieldValue = InputViewValue(action.address, action.isUserInput),
-                        normalFieldValue = action.address,
-                        truncatedFieldValue = state.truncate(action.address),
-                        destinationWalletAddress = action.address,
-                        error = null
+                    viewFieldValue = InputViewValue(action.address, action.isUserInput),
+                    normalFieldValue = action.address,
+                    truncatedFieldValue = state.truncate(action.address),
+                    destinationWalletAddress = action.address,
+                    error = null,
                 )
             }
-            is AddressPayIdVerifyAction.ChangePasteBtnEnableState -> state.copy(pasteIsEnabled = action.isEnabled)
-            is AddressVerification.SetAddressError -> state.copy(error = action.error, destinationWalletAddress = null)
-            is PayIdVerification.SetPayIdError -> state.copy(error = action.error, destinationWalletAddress = null)
+            is AddressPayIdVerifyAction.ChangePasteBtnEnableState -> state.copy(
+                pasteIsEnabled = action.isEnabled,
+            )
+            is AddressVerification.SetAddressError -> state.copy(
+                error = action.error,
+                destinationWalletAddress = null,
+            )
+            is PayIdVerification.SetPayIdError -> state.copy(
+                error = action.error,
+                destinationWalletAddress = null,
+            )
         }
         return updateLastState(sendState.copy(addressPayIdState = result), result)
     }

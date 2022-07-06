@@ -15,18 +15,21 @@ object FirebaseAnalyticsHandler : AnalyticsHandler() {
         event: AnalyticsEvent,
         card: Card?,
         blockchain: String?,
-        params: Map<String, String>
+        params: Map<String, String>,
     ) {
         val fullParams = prepareParams(card, blockchain) + params
         Firebase.analytics.logEvent(event.event, fullParams.toBundle())
     }
 
     fun logException(name: String, throwable: Throwable) {
-        Firebase.analytics.logEvent(name, bundleOf(
-            "message" to (throwable.message ?: "none"),
-            "cause_message" to (throwable.cause?.message ?: "none"),
-            "stack_trace" to throwable.stackTraceToString()
-        ))
+        Firebase.analytics.logEvent(
+            name,
+            bundleOf(
+                "message" to (throwable.message ?: "none"),
+                "cause_message" to (throwable.cause?.message ?: "none"),
+                "stack_trace" to throwable.stackTraceToString(),
+            ),
+        )
     }
 
     private fun Map<String, String>.toBundle(): Bundle {
@@ -51,7 +54,7 @@ object FirebaseAnalyticsHandler : AnalyticsHandler() {
         params.forEach {
             FirebaseCrashlytics.getInstance().setCustomKey(it.key.param, it.value)
         }
-        val cardError = TangemSdk.map(error)
+        val cardError = TangemSdkErrors.map(error)
         FirebaseCrashlytics.getInstance().recordException(cardError)
     }
 
@@ -63,13 +66,12 @@ object FirebaseAnalyticsHandler : AnalyticsHandler() {
     override fun getOrderEvent(): String = FirebaseAnalytics.Event.PURCHASE
 
     override fun getOrderParams(order: Storefront.Order): Map<String, String> {
-
         val sku = order.lineItems.edges.firstOrNull()?.node?.variant?.sku ?: "unknown"
 
         val discountCode =
             (order.discountApplications.edges.firstOrNull()?.node as? Storefront.DiscountCodeApplication)?.code
 
-        val discountParams = if (discountCode != null ){
+        val discountParams = if (discountCode != null) {
             mapOf(FirebaseAnalytics.Param.DISCOUNT to discountCode)
         } else {
             mapOf()
@@ -78,7 +80,7 @@ object FirebaseAnalyticsHandler : AnalyticsHandler() {
         return mapOf(
             FirebaseAnalytics.Param.ITEM_ID to sku,
             FirebaseAnalytics.Param.VALUE to order.totalPriceV2.amount,
-            FirebaseAnalytics.Param.CURRENCY to order.currencyCode.name
+            FirebaseAnalytics.Param.CURRENCY to order.currencyCode.name,
         ) + discountParams
     }
 

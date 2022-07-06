@@ -31,7 +31,7 @@ abstract class BaseFieldDataConverter<Result>() : FieldDataConverter<Result> {
 
 class FieldToJsonConverter(
     private val fieldsToConvert: List<FieldId> = listOf(),
-    protected val jsonConverter: MoshiJsonConverter
+    protected val jsonConverter: MoshiJsonConverter,
 ) : BaseFieldDataConverter<String>() {
 
     override fun getConvertedData(): String = jsonConverter.toJson(collectedData, "  ")

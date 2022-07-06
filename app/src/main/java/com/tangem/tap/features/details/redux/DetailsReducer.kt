@@ -1,6 +1,5 @@
 package com.tangem.tap.features.details.redux
 
-
 import com.tangem.common.card.Card
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.isTangemTwin
@@ -43,14 +42,13 @@ private fun handlePrepareScreen(
     action: DetailsAction.PrepareScreen,
     state: DetailsState,
 ): DetailsState {
-
     return DetailsState(
         scanResponse = action.scanResponse,
         wallets = action.wallets,
         cardInfo = action.scanResponse.card.toCardInfo(),
         cardTermsOfUseUrl = action.cardTou.getUrl(action.scanResponse.card),
         createBackupAllowed = action.scanResponse.card.backupStatus == Card.BackupStatus.NoBackup,
-        appCurrency = store.state.globalState.appCurrency
+        appCurrency = store.state.globalState.appCurrency,
     )
 }
 
@@ -63,8 +61,10 @@ private fun handleEraseWallet(
             val card = state.scanResponse?.card
             val notAllowedByAnyWallet = card?.wallets?.any { it.settings.isPermanent } ?: false
             val notAllowedByCard = notAllowedByAnyWallet ||
-                (card?.isWalletDataSupported == true &&
-                    (!state.scanResponse.isTangemNote() && !state.scanResponse.supportsBackup()))
+                (
+                    card?.isWalletDataSupported == true &&
+                        (!state.scanResponse.isTangemNote() && !state.scanResponse.supportsBackup())
+                    )
 
             val notEmpty = state.wallets.any { it.hasSendableAmountsOrPendingTransactions() }
             val eraseWalletState = when {
@@ -89,7 +89,8 @@ private fun handleEraseWallet(
 }
 
 private fun handleSecurityAction(
-    action: DetailsAction.ManageSecurity, state: DetailsState,
+    action: DetailsAction.ManageSecurity,
+    state: DetailsState,
 ): DetailsState {
     return when (action) {
         is DetailsAction.ManageSecurity.SetCurrentOption -> {
@@ -116,18 +117,23 @@ private fun handleSecurityAction(
                     EnumSet.of(state.securityScreenState?.currentOption)
                 }
                 else -> prepareAllowedSecurityOptions(
-                    state.scanResponse?.card, state.securityScreenState?.currentOption
+                    state.scanResponse?.card,
+                    state.securityScreenState?.currentOption,
                 )
             }
-            state.copy(securityScreenState = state.securityScreenState?.copy(
-                allowedOptions = allowedSecurityOptions,
-                selectedOption = state.securityScreenState.currentOption
-            ))
+            state.copy(
+                securityScreenState = state.securityScreenState?.copy(
+                    allowedOptions = allowedSecurityOptions,
+                    selectedOption = state.securityScreenState.currentOption,
+                ),
+            )
         }
         is DetailsAction.ManageSecurity.SelectOption -> {
-            state.copy(securityScreenState = state.securityScreenState?.copy(
-                selectedOption = action.option
-            ))
+            state.copy(
+                securityScreenState = state.securityScreenState?.copy(
+                    selectedOption = action.option,
+                ),
+            )
         }
         is DetailsAction.ManageSecurity.ConfirmSelection -> {
             val confirmScreenState = when (action.option) {
@@ -144,10 +150,12 @@ private fun handleSecurityAction(
                     currentOption = state.securityScreenState.selectedOption,
                     allowedOptions = state.scanResponse?.card?.let {
                         prepareAllowedSecurityOptions(
-                            it, state.securityScreenState.selectedOption
+                            it,
+                            state.securityScreenState.selectedOption,
                         )
-                    } ?: EnumSet.of(SecurityOption.LongTap)
-                ))
+                    } ?: EnumSet.of(SecurityOption.LongTap),
+                ),
+            )
         }
 
         else -> state
@@ -155,7 +163,8 @@ private fun handleSecurityAction(
 }
 
 private fun prepareAllowedSecurityOptions(
-    card: Card?, currentSecurityOption: SecurityOption?,
+    card: Card?,
+    currentSecurityOption: SecurityOption?,
 ): EnumSet<SecurityOption> {
     val allowedSecurityOptions = EnumSet.of(SecurityOption.LongTap)
 
@@ -170,7 +179,6 @@ private fun prepareAllowedSecurityOptions(
     }
     return allowedSecurityOptions
 }
-
 
 private fun Card.toCardInfo(): CardInfo {
     val cardId = this.cardId.chunked(4).joinToString(separator = " ")

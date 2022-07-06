@@ -10,7 +10,7 @@ class PayIdService {
 
     private val payIdApi: PayIdApi by lazy {
         provideRetrofit()
-                .create(PayIdApi::class.java)
+            .create(PayIdApi::class.java)
     }
 
     suspend fun getPayId(cardId: String, publicKey: String): Result<PayIdResponse> {
@@ -18,22 +18,24 @@ class PayIdService {
     }
 
     suspend fun setPayId(
-            cardId: String, publicKey: String, payId: String, address: String, network: String
+        cardId: String,
+        publicKey: String,
+        payId: String,
+        address: String,
+        network: String,
     ): Result<SetPayIdResponse> {
         return performRequest { payIdApi.setPayId(cardId, publicKey, payId, address, network) }
     }
 
     private fun provideRetrofit(): Retrofit = createRetrofitInstance("https://tangem.com/")
-
 }
 
 @JsonClass(generateAdapter = true)
 data class PayIdResponse(
-        val payId: String
+    val payId: String,
 )
 
 @JsonClass(generateAdapter = true)
 data class SetPayIdResponse(
-        val success: Boolean
+    val success: Boolean,
 )
-

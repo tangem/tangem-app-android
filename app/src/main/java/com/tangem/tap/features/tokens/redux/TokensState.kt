@@ -32,7 +32,11 @@ data class TokensState(
 typealias ContractAddress = String
 
 fun List<WalletData>.toTokensContractAddresses(): List<ContractAddress> {
-    return mapNotNull { (it.currency as? com.tangem.tap.features.wallet.models.Currency.Token)?.token?.contractAddress }.distinct()
+    return mapNotNull {
+        (it.currency as? com.tangem.tap.features.wallet.models.Currency.Token)
+            ?.token
+            ?.contractAddress
+    }.distinct()
 }
 
 fun List<WalletData>.toNonCustomTokens(derivationStyle: DerivationStyle?): List<Token> {
@@ -61,20 +65,23 @@ fun List<WalletData>.toNonCustomBlockchains(derivationStyle: DerivationStyle?): 
 
 data class TokenWithBlockchain(
     val token: Token,
-    val blockchain: Blockchain
+    val blockchain: Blockchain,
 )
 
 fun List<Currency>.filter(supportedBlockchains: Set<Blockchain>?): List<Currency> {
     if (supportedBlockchains == null) return this
     return map {
-        it.copy(contracts =
-        it.contracts.filter {
-            supportedBlockchains.contains(it.blockchain) &&
-                (it.blockchain.canHandleTokens() || it.address == null)
-        }
+        it.copy(
+            contracts =
+            it.contracts.filter {
+                supportedBlockchains.contains(it.blockchain) &&
+                    (it.blockchain.canHandleTokens() || it.address == null)
+            },
         )
     }.filterNot {
-        it.contracts.isNullOrEmpty() && !supportedBlockchains.contains(Blockchain.fromNetworkId(it.id))
+        it.contracts.isNullOrEmpty() && !supportedBlockchains.contains(
+            Blockchain.fromNetworkId(it.id),
+        )
     }
 }
 

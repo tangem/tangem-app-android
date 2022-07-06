@@ -32,7 +32,6 @@ class HomeFragment : Fragment(R.layout.fragment_home), StoreSubscriber<HomeState
 
         store.dispatch(BackupAction.CheckForUnfinishedBackup)
 
-
         getView()?.findViewById<ComposeView>(R.id.cv_stories)?.setContent {
             AppCompatTheme {
                 StoriesScreen(
@@ -43,7 +42,7 @@ class HomeFragment : Fragment(R.layout.fragment_home), StoreSubscriber<HomeState
                         store.dispatch(NavigationAction.NavigateTo(AppScreen.AddTokens))
                         store.dispatch(TokensAction.AllowToAddTokens(false))
                         store.dispatch(TokensAction.LoadCurrencies())
-                    }
+                    },
                 )
             }
         }
@@ -52,8 +51,8 @@ class HomeFragment : Fragment(R.layout.fragment_home), StoreSubscriber<HomeState
     private fun getRegionProvider(): RegionProvider = RegionService(
         listOf(
 //            TelephonyManagerRegionProvider(requireContext()),
-            LocaleRegionProvider()
-        )
+            LocaleRegionProvider(),
+        ),
     )
 
     override fun onStart() {
@@ -70,11 +69,9 @@ class HomeFragment : Fragment(R.layout.fragment_home), StoreSubscriber<HomeState
         store.unsubscribe(this)
     }
 
-
     override fun newState(state: HomeState) {
         if (activity == null || view == null) return
 
         homeState.value = state
     }
-
 }

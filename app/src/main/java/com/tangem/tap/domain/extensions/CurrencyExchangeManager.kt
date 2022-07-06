@@ -23,7 +23,7 @@ fun CurrencyExchangeStatus.buyIsAllowed(currency: Currency): Boolean {
     if (currency.blockchain == Arbitrum) return false
     if (!isBuyAllowed) return false
 
-    //TODO: temporary, for the 3.32 release, unlock all buy button
+    // TODO: temporary, for the 3.32 release, unlock all buy button
     return true
 
     return when (currency) {

@@ -15,5 +15,4 @@ interface WalletView {
     fun onViewCreated()
 
     fun onNewState(state: WalletState)
-
 }

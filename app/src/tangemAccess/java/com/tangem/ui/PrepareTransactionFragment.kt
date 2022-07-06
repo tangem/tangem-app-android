@@ -22,10 +22,13 @@ import com.tangem.util.extensions.isStart2CoinCard
 import com.tangem.wallet.CoinEngineFactory
 import com.tangem.wallet.R
 import com.tangem.wallet.TangemContext
-import kotlinx.android.synthetic.tangemAccess.fragment_prepare_transaction.*
 import java.io.IOException
+import kotlinx.android.synthetic.tangemAccess.fragment_prepare_transaction.*
 
-class PrepareTransactionFragment : BaseFragment(), NavigationResultListener, NfcAdapter.ReaderCallback {
+class PrepareTransactionFragment :
+    BaseFragment(),
+    NavigationResultListener,
+    NfcAdapter.ReaderCallback {
     companion object {
         val TAG: String = PrepareTransactionFragment::class.java.simpleName
     }
@@ -33,7 +36,11 @@ class PrepareTransactionFragment : BaseFragment(), NavigationResultListener, Nfc
     override val layoutId = R.layout.fragment_prepare_transaction
 
     private val ctx: TangemContext by lazy { TangemContext.loadFromBundle(context, arguments) }
-    private val cameraPermissionManager: CameraPermissionManager by lazy { CameraPermissionManager(this) }
+    private val cameraPermissionManager: CameraPermissionManager by lazy {
+        CameraPermissionManager(
+            this,
+        )
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -41,10 +48,12 @@ class PrepareTransactionFragment : BaseFragment(), NavigationResultListener, Nfc
         tvCardID.text = ctx.card?.cidDescription
         val engine = CoinEngineFactory.create(ctx)
 
-        @Suppress("DEPRECATION") val html = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
+        @Suppress("DEPRECATION")
+        val html = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             Html.fromHtml(engine!!.balanceHTML, Html.FROM_HTML_MODE_LEGACY)
-        else
+        } else {
             Html.fromHtml(engine!!.balanceHTML)
+        }
         tvBalance.text = html
 
         if (ctx.blockchain.isPayIdSupported() && !ctx.card.isStart2CoinCard()) {
@@ -63,11 +72,11 @@ class PrepareTransactionFragment : BaseFragment(), NavigationResultListener, Nfc
 
         if (ctx.card.remainingSignatures == 1) {
             androidx.appcompat.app.AlertDialog.Builder(requireContext())
-                    .setTitle(R.string.prepare_transaction_warning_last_signature)
-                    .setMessage(R.string.prepare_transaction_warning_send_full_amount)
-                    .setPositiveButton(R.string.general_ok) { _, _ -> }
-                    .create()
-                    .show()
+                .setTitle(R.string.prepare_transaction_warning_last_signature)
+                .setMessage(R.string.prepare_transaction_warning_send_full_amount)
+                .setPositiveButton(R.string.general_ok) { _, _ -> }
+                .create()
+                .show()
         }
 
         tvCurrency.text = engine.balance.currency
@@ -79,7 +88,8 @@ class PrepareTransactionFragment : BaseFragment(), NavigationResultListener, Nfc
         // set listeners
         etAmount.setOnEditorActionListener { lv, actionId, _ ->
             if (actionId == EditorInfo.IME_ACTION_DONE) {
-                val imm = lv.context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                val imm = lv.context.getSystemService(Context.INPUT_METHOD_SERVICE)
+                    as InputMethodManager
                 imm.hideSoftInputFromWindow(lv.windowToken, 0)
                 lv.clearFocus()
                 true
@@ -90,19 +100,27 @@ class PrepareTransactionFragment : BaseFragment(), NavigationResultListener, Nfc
 
         btnVerify.setOnClickListener {
             if (!UtilHelper.isOnline(requireContext())) {
-                Toast.makeText(context, R.string.general_error_no_connection, Toast.LENGTH_LONG).show()
+                Toast.makeText(
+                    context,
+                    R.string.general_error_no_connection,
+                    Toast.LENGTH_LONG,
+                ).show()
                 return@setOnClickListener
             }
 
             val engine1 = CoinEngineFactory.create(ctx)
             val strAmount: String = etAmount.text.toString().replace(",", ".")
-            val amount = engine1!!.convertToAmount(etAmount.text.toString(), tvCurrency.text.toString())
+            val amount = engine1!!.convertToAmount(
+                etAmount.text.toString(),
+                tvCurrency.text.toString(),
+            )
 
             try {
-                if (!engine.checkNewTransactionAmount(amount))
+                if (!engine.checkNewTransactionAmount(amount)) {
                     etAmount.error = getString(R.string.prepare_transaction_error_not_enough_funds)
-                else
+                } else {
                     etAmount.error = null
+                }
             } catch (e: Exception) {
                 etAmount.error = getString(R.string.prepare_transaction_error_unknown_amount_format)
             }
@@ -111,8 +129,9 @@ class PrepareTransactionFragment : BaseFragment(), NavigationResultListener, Nfc
             if (!engine1.validateAddress(etWallet.text.toString())) {
                 etWallet.error = getString(R.string.prepare_transaction_error_incorrect_destination)
                 return@setOnClickListener
-            } else
+            } else {
                 etWallet.error = null
+            }
 
             if (etWallet.text.toString() == ctx.coinData!!.wallet) {
                 etWallet.error = getString(R.string.prepare_transaction_error_same_address)
@@ -126,33 +145,49 @@ class PrepareTransactionFragment : BaseFragment(), NavigationResultListener, Nfc
             val data = Bundle()
             ctx.saveToBundle(data)
             data.putString(Constant.EXTRA_TARGET_ADDRESS, etWallet!!.text.toString())
-            data.putBoolean(Constant.EXTRA_FEE_INCLUDED, (rgIncFee!!.checkedRadioButtonId == R.id.rbFeeIn))
+            data.putBoolean(
+                Constant.EXTRA_FEE_INCLUDED,
+                (rgIncFee!!.checkedRadioButtonId == R.id.rbFeeIn),
+            )
             data.putString(Constant.EXTRA_AMOUNT, strAmount)
             data.putString(Constant.EXTRA_AMOUNT_CURRENCY, tvCurrency.text.toString())
             navigateForResult(
-                    Constant.REQUEST_CODE_SEND_TRANSACTION__,
-                    R.id.action_prepareTransactionFragment_to_confirmTransactionFragment,
-                    data)
+                Constant.REQUEST_CODE_SEND_TRANSACTION__,
+                R.id.action_prepareTransactionFragment_to_confirmTransactionFragment,
+                data,
+            )
         }
 
         ivCamera.setOnClickListener {
             if (cameraPermissionManager.isPermissionGranted()) {
-                navigateForResult(Constant.REQUEST_CODE_SCAN_QR, R.id.action_prepareTransactionFragment_to_qrScanFragment)
+                navigateForResult(
+                    Constant.REQUEST_CODE_SCAN_QR,
+                    R.id.action_prepareTransactionFragment_to_qrScanFragment,
+                )
             } else {
                 cameraPermissionManager.requirePermission()
             }
         }
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray,
+    ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         cameraPermissionManager.handleRequestPermissionResult(requestCode, grantResults) {
-            navigateForResult(Constant.REQUEST_CODE_SCAN_QR, R.id.action_prepareTransactionFragment_to_qrScanFragment)
+            navigateForResult(
+                Constant.REQUEST_CODE_SCAN_QR,
+                R.id.action_prepareTransactionFragment_to_qrScanFragment,
+            )
         }
     }
 
     override fun onNavigationResult(requestCode: String, resultCode: Int, data: Bundle?) {
-        if (requestCode == Constant.REQUEST_CODE_SCAN_QR && resultCode == Activity.RESULT_OK && data != null && data.containsKey("QRCode")) {
+        if (requestCode == Constant.REQUEST_CODE_SCAN_QR && resultCode == Activity.RESULT_OK &&
+            data != null && data.containsKey("QRCode")
+        ) {
             val code = data.getString("QRCode")
             val schemeSplit = code!!.split(":")
             when (schemeSplit.size) {

@@ -16,13 +16,20 @@ import java.math.BigDecimal
  * Created by Anton Zhilenkov on 08/09/2020.
  */
 class AmountReducer : SendInternalReducer {
-    override fun handle(action: SendScreenAction, sendState: SendState): SendState = when (action) {
+    override fun handle(
+        action: SendScreenAction,
+        sendState: SendState,
+    ): SendState = when (action) {
         is AmountActionUi -> handleUiAction(action, sendState, sendState.amountState)
         is AmountAction -> handleAction(action, sendState, sendState.amountState)
         else -> sendState
     }
 
-    private fun handleUiAction(action: AmountActionUi, sendState: SendState, state: AmountState): SendState {
+    private fun handleUiAction(
+        action: AmountActionUi,
+        sendState: SendState,
+        state: AmountState,
+    ): SendState {
         val result = when (action) {
             is SetMainCurrency -> {
                 val currencyCanBeSwitched = sendState.mainCurrencyCanBeSwitched()
@@ -34,24 +41,31 @@ class AmountReducer : SendInternalReducer {
                         } else {
                             sendState.convertExtractCryptoToFiat(state.amountToSendCrypto)
                         }
-                        val rescaledBalance = sendState.convertExtractCryptoToFiat(state.balanceCrypto, true)
-                        val viewValue = state.restoreDecimalSeparator(fiatToSend.stripZeroPlainString())
+                        val rescaledBalance = sendState.convertExtractCryptoToFiat(
+                            state.balanceCrypto,
+                            true,
+                        )
+                        val viewValue = state.restoreDecimalSeparator(
+                            fiatToSend.stripZeroPlainString(),
+                        )
                         state.copy(
-                                viewAmountValue = InputViewValue(viewValue),
-                                viewBalanceValue = rescaledBalance.stripZeroPlainString(),
-                                mainCurrency = state.createMainCurrency(currency, currencyCanBeSwitched),
-                                maxLengthOfAmount = sendState.getDecimals(currency),
-                                cursorAtTheSamePosition = false
+                            viewAmountValue = InputViewValue(viewValue),
+                            viewBalanceValue = rescaledBalance.stripZeroPlainString(),
+                            mainCurrency = state.createMainCurrency(currency, currencyCanBeSwitched),
+                            maxLengthOfAmount = sendState.getDecimals(currency),
+                            cursorAtTheSamePosition = false,
                         )
                     }
                     MainCurrencyType.CRYPTO -> {
-                        val viewValue = state.restoreDecimalSeparator(state.amountToSendCrypto.stripZeroPlainString())
+                        val viewValue = state.restoreDecimalSeparator(
+                            state.amountToSendCrypto.stripZeroPlainString(),
+                        )
                         state.copy(
-                                viewAmountValue = InputViewValue(viewValue),
-                                viewBalanceValue = state.balanceCrypto.stripZeroPlainString(),
-                                mainCurrency = state.createMainCurrency(currency, currencyCanBeSwitched),
-                                maxLengthOfAmount = sendState.getDecimals(currency),
-                                cursorAtTheSamePosition = false
+                            viewAmountValue = InputViewValue(viewValue),
+                            viewBalanceValue = state.balanceCrypto.stripZeroPlainString(),
+                            mainCurrency = state.createMainCurrency(currency, currencyCanBeSwitched),
+                            maxLengthOfAmount = sendState.getDecimals(currency),
+                            cursorAtTheSamePosition = false,
                         )
                     }
                 }
@@ -62,7 +76,11 @@ class AmountReducer : SendInternalReducer {
         return updateLastState(sendState.copy(amountState = result), result)
     }
 
-    private fun handleAction(action: AmountAction, sendState: SendState, state: AmountState): SendState {
+    private fun handleAction(
+        action: AmountAction,
+        sendState: SendState,
+        state: AmountState,
+    ): SendState {
         val result = when (action) {
             is AmountAction.SetAmount -> {
                 val amount = if (state.mainCurrency.type == MainCurrencyType.CRYPTO) {
@@ -72,10 +90,10 @@ class AmountReducer : SendInternalReducer {
                 }
                 val viewValue = state.restoreDecimalSeparator(amount.stripZeroPlainString())
                 state.copy(
-                        viewAmountValue = InputViewValue(viewValue, action.isUserInput),
-                        amountToSendCrypto = action.amountCrypto,
-                        cursorAtTheSamePosition = true,
-                        error = null
+                    viewAmountValue = InputViewValue(viewValue, action.isUserInput),
+                    amountToSendCrypto = action.amountCrypto,
+                    cursorAtTheSamePosition = true,
+                    error = null,
                 )
             }
             is AmountAction.SetAmountError -> state.copy(error = action.error)

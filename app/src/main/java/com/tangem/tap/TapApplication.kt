@@ -1,7 +1,6 @@
 package com.tangem.tap
 
 import android.app.Application
-import coil.ImageLoader
 import coil.ImageLoaderFactory
 import com.appsflyer.AppsFlyerLib
 import com.google.firebase.ktx.Firebase
@@ -12,7 +11,7 @@ import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.domain.DomainLayer
 import com.tangem.network.common.MoshiConverter
 import com.tangem.tap.common.analytics.GlobalAnalyticsHandler
-import com.tangem.tap.common.images.createCoilImageLoader
+import com.tangem.tap.common.images.ImageLoader
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.appReducer
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -32,11 +31,12 @@ import com.tangem.tap.persistence.PreferencesStorage
 import com.tangem.wallet.BuildConfig
 import org.rekotlin.Store
 import timber.log.Timber
+import coil.ImageLoader as CoilImageLoader
 
 val store = Store(
     reducer = ::appReducer,
     middleware = AppState.getMiddleware(),
-    state = AppState()
+    state = AppState(),
 )
 val logConfig = LogConfig()
 
@@ -52,19 +52,24 @@ class TapApplication : Application(), ImageLoaderFactory {
         DomainLayer.init()
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
-            Firebase.remoteConfig.setConfigSettingsAsync(remoteConfigSettings {
-                this.minimumFetchIntervalInSeconds = 60
-            })
+            Firebase.remoteConfig.setConfigSettingsAsync(
+                remoteConfigSettings {
+                    this.minimumFetchIntervalInSeconds = 60
+                },
+            )
         } else {
-            Firebase.remoteConfig.setConfigSettingsAsync(remoteConfigSettings {
-                this.minimumFetchIntervalInSeconds = 3600
-            })
+            Firebase.remoteConfig.setConfigSettingsAsync(
+                remoteConfigSettings {
+                    this.minimumFetchIntervalInSeconds = 3600
+                },
+            )
         }
 
         NetworkConnectivity.createInstance(store, this)
         preferencesStorage = PreferencesStorage(this)
         currenciesRepository = CurrenciesRepository(
-            this, store.state.domainNetworks.tangemTechService
+            this,
+            store.state.domainNetworks.tangemTechService,
         )
         walletConnectRepository = WalletConnectRepository(this)
 
@@ -76,8 +81,8 @@ class TapApplication : Application(), ImageLoaderFactory {
         initAppsFlyer()
     }
 
-    override fun newImageLoader(): ImageLoader {
-        return createCoilImageLoader(context = this)
+    override fun newImageLoader(): CoilImageLoader {
+        return ImageLoader.create(context = this)
     }
 
     private fun loadConfigs() {

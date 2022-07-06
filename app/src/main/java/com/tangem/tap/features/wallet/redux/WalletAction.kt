@@ -1,7 +1,11 @@
 package com.tangem.tap.features.wallet.redux
 
 import android.content.Context
-import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.Token
+import com.tangem.blockchain.common.Wallet
+import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.card.Card
 import com.tangem.tap.common.entities.FiatCurrency
@@ -13,8 +17,8 @@ import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.wallet.R
-import org.rekotlin.Action
 import java.math.BigDecimal
+import org.rekotlin.Action
 
 sealed class WalletAction : Action {
 
@@ -27,16 +31,15 @@ sealed class WalletAction : Action {
         data class Failure(val error: TapError) : WalletAction()
     }
 
-
     data class LoadWallet(
         val blockchain: BlockchainNetwork? = null,
-        val walletManager: WalletManager? = null
+        val walletManager: WalletManager? = null,
     ) : WalletAction() {
         data class Success(val wallet: Wallet, val blockchain: BlockchainNetwork) : WalletAction()
         data class NoAccount(
             val wallet: Wallet,
             val blockchain: BlockchainNetwork,
-            val amountToCreateAccount: String
+            val amountToCreateAccount: String,
         ) : WalletAction()
 
         data class Failure(val wallet: Wallet, val errorMessage: String? = null) : WalletAction()
@@ -44,17 +47,17 @@ sealed class WalletAction : Action {
 
     data class SetArtworkId(val artworkId: String?) : WalletAction()
 
-
     sealed class MultiWallet : WalletAction() {
         data class SetIsMultiwalletAllowed(val isMultiwalletAllowed: Boolean) : MultiWallet()
 
         data class AddBlockchain(
             val blockchain: BlockchainNetwork,
-            val walletManager: WalletManager?
+            val walletManager: WalletManager?,
         ) : MultiWallet()
 
         data class AddBlockchains(
-            val blockchains: List<BlockchainNetwork>, val walletManagers: List<WalletManager>
+            val blockchains: List<BlockchainNetwork>,
+            val walletManagers: List<WalletManager>,
         ) : MultiWallet()
 
         data class AddTokens(val tokens: List<Token>, val blockchain: BlockchainNetwork) :
@@ -68,7 +71,7 @@ sealed class WalletAction : Action {
         data class TokenLoaded(
             val amount: Amount,
             val token: Token,
-            val blockchain: BlockchainNetwork
+            val blockchain: BlockchainNetwork,
         ) : MultiWallet()
 
         data class SelectWallet(val walletData: WalletData?) : MultiWallet()
@@ -76,7 +79,7 @@ sealed class WalletAction : Action {
         data class TryToRemoveWallet(val currency: Currency) : MultiWallet()
         data class RemoveWallet(
             val currency: Currency,
-            val fromScreen: AppScreen
+            val fromScreen: AppScreen,
         ) : MultiWallet()
 
         data class SetPrimaryBlockchain(val blockchain: Blockchain) : MultiWallet()
@@ -109,10 +112,11 @@ sealed class WalletAction : Action {
     }
 
     data class LoadFiatRate(
-        val wallet: Wallet? = null, val coinsList: List<Currency>? = null,
+        val wallet: Wallet? = null,
+        val coinsList: List<Currency>? = null,
     ) : WalletAction() {
         data class Success(
-            val fiatRates: Map<Currency, BigDecimal?>
+            val fiatRates: Map<Currency, BigDecimal?>,
         ) : WalletAction()
 
         object Failure : WalletAction()
@@ -169,7 +173,7 @@ sealed class WalletAction : Action {
             val currencyId: String,
             val amount: String,
             val destinationAddress: String,
-            val transactionId: String
+            val transactionId: String,
         ) : TradeCryptoAction()
     }
 
@@ -178,7 +182,7 @@ sealed class WalletAction : Action {
     data class SetWalletRent(
         val wallet: Wallet,
         val minRent: String,
-        val rentExempt: String
+        val rentExempt: String,
     ) : WalletAction()
 
     data class RemoveWalletRent(val wallet: Wallet) : WalletAction()
