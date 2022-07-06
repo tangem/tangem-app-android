@@ -59,5 +59,13 @@ sealed class DetailsAction : Action {
         }
     }
 
+    sealed class ManagePrivacy : DetailsAction() {
+        data class SwitchPrivacySetting(val allow: Boolean, val setting: PrivacySetting) :
+            ManagePrivacy()
+
+        data class ConfirmSwitchingSetting(val allow: Boolean, val setting: PrivacySetting) :
+            ManagePrivacy()
+    }
+
     data class ChangeAppCurrency(val fiatCurrency: FiatCurrency) : DetailsAction()
 }
