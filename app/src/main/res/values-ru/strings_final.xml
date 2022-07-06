@@ -68,4 +68,13 @@
 
     <string name="main_no_backup_warning_title">Бэкап кошелька не был произведен</string>
     <string name="main_no_backup_warning_subtitle">Чтобы защитить свои активы, мы советуем вам выполнить эту процедуру</string>
+
+    <string name="security_and_privacy_title">Безопасность и приватность</string>
+    <string name="security_and_privacy_security">Безопасность</string>
+    <string name="security_and_privacy_privacy">Приватность</string>
+    <string name="security_and_privacy_change_password">Изменить код доступа</string>
+    <string name="security_and_privacy_access_method">Изменить защиту доступа</string>
+    <string name="security_and_privacy_access_method_title">Изменить защиту доступа</string>
+    <string name="security_and_privacy_save_card_switch">Сохранять карты</string>
+    <string name="security_and_privacy_save_password_switch">Сохранять пароли</string>
 </resources>
