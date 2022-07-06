@@ -2,7 +2,9 @@ package com.tangem.tap.features.details.ui.securityprivacy
 
 import android.os.Bundle
 import android.view.View
+import androidx.activity.OnBackPressedCallback
 import by.kirich1409.viewbindingdelegate.viewBinding
+import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.BaseStoreFragment
@@ -22,42 +24,62 @@ class SecurityAndPrivacyFragment : BaseStoreFragment(R.layout.fragment_details_s
             by viewBinding(FragmentDetailsSecurityPrivacyBinding::bind)
 
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        activity?.onBackPressedDispatcher?.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                store.dispatch(NavigationAction.PopBackTo())
+            }
+        })
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        with(binding) {
-            tvAccessCode.setOnClickListener {
-                store.dispatch(NavigationAction.NavigateTo(AppScreen.ChangeAccessCode))
-            }
+        binding.toolbar.setNavigationOnClickListener {
+            store.dispatch(NavigationAction.PopBackTo())
+        }
+        setListeners()
 
-            switchSaveCards.setOnCheckedChangeListener { _, isChecked ->
-                store.dispatch(
-                    DetailsAction.ManagePrivacy.SwitchPrivacySetting(
-                        isChecked,
-                        PrivacySetting.SAVE_CARDS
-                    )
-                )
-            }
+    }
 
-            switchSavePasswords.setOnCheckedChangeListener { _, isChecked ->
-                store.dispatch(
-                    DetailsAction.ManagePrivacy.SwitchPrivacySetting(
-                        isChecked,
-                        PrivacySetting.SAVE_ACCESS_CODE
-                    )
+    private fun setListeners() = with(binding) {
+        tvAccessCode.setOnClickListener {
+            store.dispatch(NavigationAction.NavigateTo(AppScreen.ChangeAccessCode))
+        }
+
+        switchSaveCards.setOnCheckedChangeListener { _, isChecked ->
+            store.dispatch(
+                DetailsAction.ManagePrivacy.SwitchPrivacySetting(
+                    allow = isChecked,
+                    setting = PrivacySetting.SAVE_CARDS
                 )
-            }
+            )
+        }
+
+        switchSavePasswords.setOnCheckedChangeListener { _, isChecked ->
+            store.dispatch(
+                DetailsAction.ManagePrivacy.SwitchPrivacySetting(
+                    allow = isChecked,
+                    setting = PrivacySetting.SAVE_ACCESS_CODE
+                )
+            )
         }
     }
 
     override fun newState(state: DetailsState) {
         with(binding) {
-            llAccessManagement.setOnClickListener {
-                store.dispatch(
-                    DetailsAction.ManageSecurity.CheckCurrentSecurityOption(
-                        state.scanResponse!!.card
+
+            val card = state.scanResponse?.card
+            llAccessManagement.show(card != null)
+            if (card != null) {
+                llAccessManagement.setOnClickListener {
+                    store.dispatch(
+                        DetailsAction.ManageSecurity.CheckCurrentSecurityOption(
+                            card
+                        )
                     )
-                )
+                }
             }
 
             val currentSecurity = when (state.securityScreenState?.currentOption) {
@@ -70,6 +92,8 @@ class SecurityAndPrivacyFragment : BaseStoreFragment(R.layout.fragment_details_s
 
             switchSaveCards.isChecked = state.saveCards
             switchSavePasswords.isChecked = state.savePasswords
+
+            tvAccessCode.show(state.scanResponse?.card?.isAccessCodeSet == true)
         }
 
     }
