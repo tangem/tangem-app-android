@@ -44,5 +44,7 @@ class TelephonyManagerRegionProvider(context: Context) : RegionProvider {
 }
 
 class LocaleRegionProvider : RegionProvider {
-    override fun getRegion(): String? = Locale.current.region
+    override fun getRegion(): String = Locale.current.region
 }
+
+const val RUSSIA_COUNTRY_CODE = "ru"
