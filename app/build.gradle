@@ -144,8 +144,11 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp")
     implementation("com.squareup.okhttp3:logging-interceptor")
 
-//
-//    //Crypto
+    // Support
+    implementation("com.zendesk:support:5.0.9")
+    implementation("com.zendesk:messaging:5.2.4")
+
+    //Crypto
     implementation "com.madgag.spongycastle:core:1.58.0.0"
 
     // animation
