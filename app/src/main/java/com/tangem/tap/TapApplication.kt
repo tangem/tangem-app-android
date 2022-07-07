@@ -40,6 +40,8 @@ val store = Store(
 )
 val logConfig = LogConfig()
 
+lateinit var foregroundActivityObserver: ForegroundActivityObserver
+
 lateinit var preferencesStorage: PreferencesStorage
 lateinit var currenciesRepository: CurrenciesRepository
 lateinit var walletConnectRepository: WalletConnectRepository
@@ -68,6 +70,8 @@ class TapApplication : Application(), ImageLoaderFactory {
         )
         walletConnectRepository = WalletConnectRepository(this)
 
+        foregroundActivityObserver = ForegroundActivityObserver()
+        registerActivityLifecycleCallbacks(foregroundActivityObserver.callbacks)
         initFeedbackManager()
         loadConfigs()
 
