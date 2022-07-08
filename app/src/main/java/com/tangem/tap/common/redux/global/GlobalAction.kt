@@ -15,7 +15,6 @@ import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.features.details.redux.SecurityOption
 import com.tangem.tap.features.feedback.EmailData
 import com.tangem.tap.features.feedback.FeedbackManager
-import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import org.rekotlin.Action
 
 sealed class GlobalAction : Action {
@@ -77,7 +76,13 @@ sealed class GlobalAction : Action {
     data class SendFeedback(val emailData: EmailData) : GlobalAction()
     data class UpdateFeedbackInfo(val walletManagers: List<WalletManager>) : GlobalAction()
 
-    object InitCurrencyExchangeManager : GlobalAction() {
-        data class Success(val exchangeManager: CurrencyExchangeManager) : GlobalAction()
+    object ExchangeManager : GlobalAction() {
+        object Init : GlobalAction() {
+            data class Success(
+                val exchangeManager: com.tangem.tap.network.exchangeServices.CurrencyExchangeManager,
+            ) : GlobalAction()
+        }
+
+        object Update : GlobalAction()
     }
 }
