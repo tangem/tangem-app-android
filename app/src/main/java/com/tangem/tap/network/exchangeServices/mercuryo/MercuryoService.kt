@@ -2,6 +2,8 @@ package com.tangem.tap.network.exchangeServices.mercuryo
 
 import android.net.Uri
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.common.extensions.calculateSha512
+import com.tangem.common.extensions.toHexString
 import com.tangem.common.services.Result
 import com.tangem.common.services.performRequest
 import com.tangem.network.common.createRetrofitInstance
@@ -18,6 +20,7 @@ import com.tangem.tap.network.exchangeServices.ExchangeUrlBuilder
 class MercuryoService(
     private val apiVersion: String,
     private val mercuryoWidgetId: String,
+    private val secret: String,
 ) : ExchangeService, ExchangeUrlBuilder {
 
     private val api: MercuryoApi = createRetrofitInstance(MercuryoApi.BASE_URL)
@@ -107,12 +110,18 @@ class MercuryoService(
             .appendQueryParameter("type", action.name.lowercase())
             .appendQueryParameter("currency", cryptoCurrencyName)
             .appendQueryParameter("address", walletAddress.urlEncode())
+            .appendQueryParameter("signature", signature(walletAddress).urlEncode())
             .appendQueryParameter("fix_currency", "true")
             .appendQueryParameter("return_url", ExchangeUrlBuilder.SUCCESS_URL)
 
         val url = builder.build().toString()
         return url
     }
+
+    private fun signature(address: String): String {
+        return (address + secret).calculateSha512().toHexString().lowercase()
+    }
+
 
     override fun getSellCryptoReceiptUrl(
         action: CurrencyExchangeManager.Action,
