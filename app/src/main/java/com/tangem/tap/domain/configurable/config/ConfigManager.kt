@@ -13,6 +13,7 @@ data class Config(
     val moonPayApiKey: String = "pk_test_kc90oYTANy7UQdBavDKGfL4K9l6VEPE",
     val moonPayApiSecretKey: String = "sk_test_V8w4M19LbDjjYOt170s0tGuvXAgyEb1C",
     val mercuryoWidgetId: String = "",
+    val mercuryoSecret: String = "",
     val appsFlyerDevKey: String = "",
     val blockchainSdkConfig: BlockchainSdkConfig = BlockchainSdkConfig(),
     val isSendingToPayIdEnabled: Boolean = true,
@@ -98,6 +99,7 @@ class ConfigManager(
             moonPayApiKey = values.moonPayApiKey,
             moonPayApiSecretKey = values.moonPayApiSecretKey,
             mercuryoWidgetId = values.mercuryoWidgetId,
+            mercuryoSecret = values.mercuryoSecret,
             blockchainSdkConfig = BlockchainSdkConfig(
                 blockchairApiKey = values.blockchairApiKey,
                 blockchairAuthorizationToken = values.blockchairAuthorizationToken,
