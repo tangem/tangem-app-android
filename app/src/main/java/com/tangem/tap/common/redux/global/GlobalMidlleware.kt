@@ -80,7 +80,7 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
             }
         }
         is GlobalAction.SendFeedback -> {
-            store.state.globalState.feedbackManager?.send(action.emailData)
+            store.state.globalState.feedbackManager?.sendEmail(action.feedbackData)
         }
         is GlobalAction.UpdateWalletSignedHashes -> {
             store.dispatch(WalletAction.Warnings.CheckRemainingSignatures(action.remainingSignatures))

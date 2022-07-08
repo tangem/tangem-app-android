@@ -12,7 +12,10 @@ import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.domain.DomainLayer
 import com.tangem.network.common.MoshiConverter
 import com.tangem.tap.common.analytics.GlobalAnalyticsHandler
+import com.tangem.tap.common.feedback.AdditionalFeedbackInfo
+import com.tangem.tap.common.feedback.FeedbackManager
 import com.tangem.tap.common.images.createCoilImageLoader
+import com.tangem.tap.common.log.TangemLogCollector
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.appReducer
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -24,9 +27,6 @@ import com.tangem.tap.domain.configurable.warningMessage.RemoteWarningLoader
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.domain.tokens.CurrenciesRepository
 import com.tangem.tap.domain.walletconnect.WalletConnectRepository
-import com.tangem.tap.features.feedback.AdditionalEmailInfo
-import com.tangem.tap.features.feedback.FeedbackManager
-import com.tangem.tap.features.feedback.TangemLogCollector
 import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.tap.persistence.PreferencesStorage
 import com.tangem.wallet.BuildConfig
@@ -98,7 +98,7 @@ class TapApplication : Application(), ImageLoaderFactory {
     }
 
     private fun initFeedbackManager() {
-        val infoHolder = AdditionalEmailInfo()
+        val infoHolder = AdditionalFeedbackInfo()
         infoHolder.setAppVersion(this)
 
         val logWriter = TangemLogCollector()
