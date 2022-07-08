@@ -41,7 +41,7 @@ private val homeMiddleware: Middleware<AppState> = { dispatch, state ->
             when (action) {
                 is HomeAction.Init -> {
                     store.dispatch(GlobalAction.RestoreAppCurrency)
-                    store.dispatch(GlobalAction.InitCurrencyExchangeManager)
+                    store.dispatch(GlobalAction.ExchangeManager.Init)
                     store.dispatch(HomeAction.SetTermsOfUseState(preferencesStorage.wasDisclaimerAccepted()))
                 }
                 is HomeAction.ShouldScanCardOnResume -> {
