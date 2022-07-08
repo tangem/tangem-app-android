@@ -16,6 +16,7 @@ class FeatureModel(
 class ConfigValueModel(
         val coinMarketCapKey: String,
         val mercuryoWidgetId: String,
+        val mercuryoSecret: String,
         val moonPayApiKey: String,
         val moonPayApiSecretKey: String,
         val blockchairApiKey: String?,
