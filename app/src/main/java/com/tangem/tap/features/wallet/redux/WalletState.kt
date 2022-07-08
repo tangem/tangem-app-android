@@ -14,8 +14,6 @@ import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.common.toggleWidget.WidgetState
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
-import com.tangem.tap.domain.extensions.buyIsAllowed
-import com.tangem.tap.domain.extensions.sellIsAllowed
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
 import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
@@ -62,7 +60,7 @@ data class WalletState(
 
     val shouldShowDetails: Boolean =
         primaryWallet?.currencyData?.status != BalanceStatus.EmptyCard &&
-                primaryWallet?.currencyData?.status != BalanceStatus.UnknownBlockchain
+            primaryWallet?.currencyData?.status != BalanceStatus.UnknownBlockchain
 
     val blockchains: List<Blockchain>
         get() = wallets.mapNotNull { it.walletManager?.wallet?.blockchain }
@@ -363,18 +361,21 @@ data class Artwork(
 }
 
 data class TradeCryptoState(
-    val sellingAllowed: Boolean = false,
-    val buyingAllowed: Boolean = false,
+    val isAvailableToSell: () -> Boolean = { false },
+    val isAvailableToBuy: () -> Boolean = { false },
 ) {
     companion object {
         fun from(
             exchangeManager: CurrencyExchangeManager?,
             walletData: WalletData
         ): TradeCryptoState {
-            val status = exchangeManager ?: return walletData.tradeCryptoState
+            val exchanger = exchangeManager ?: return walletData.tradeCryptoState
             val currency = walletData.currency
 
-            return TradeCryptoState(status.sellIsAllowed(currency), status.buyIsAllowed(currency))
+            return TradeCryptoState(
+                isAvailableToSell = { exchanger.availableForSell(currency) },
+                isAvailableToBuy = { exchanger.availableForBuy(currency) },
+            )
         }
     }
 }
