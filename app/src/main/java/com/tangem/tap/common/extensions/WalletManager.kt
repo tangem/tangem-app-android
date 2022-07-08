@@ -49,11 +49,11 @@ suspend fun WalletManager.safeUpdate(): Result<Wallet> = try {
 
 fun WalletManager?.getToUpUrl(): String? {
     val globalState = store.state.globalState
-    val currencyExchangeManager = globalState.currencyExchangeManager ?: return null
+    val exchangeManager = globalState.exchangeManager ?: return null
     val wallet = this?.wallet ?: return null
 
     val defaultAddress = wallet.address
-    return currencyExchangeManager.getUrl(
+    return exchangeManager.getUrl(
         action = CurrencyExchangeManager.Action.Buy,
         blockchain = wallet.blockchain,
         cryptoCurrencyName = wallet.blockchain.currency,
