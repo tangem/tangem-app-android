@@ -15,6 +15,7 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.FragmentShareTransition
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.features.home.BELARUS_COUNTRY_CODE
 import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
 import com.tangem.tap.features.home.redux.HomeMiddleware.Companion.BUY_WALLET_URL
 import com.tangem.tap.features.onboarding.OnboardingHelper
@@ -31,8 +32,7 @@ class HomeMiddleware {
     companion object {
         val handler = homeMiddleware
 
-        const val CARD_SHOP_URI = "http://cards.tangem.com/"
-        const val BUY_WALLET_URL = "https://mv.tangem.com/"
+        const val BUY_WALLET_URL = "https://tangem.com/ru/resellers/"
     }
 }
 
@@ -57,8 +57,9 @@ private val homeMiddleware: Middleware<AppState> = { _, _ ->
 //                    store.dispatch(NavigationAction.NavigateTo(AppScreen.AddCustomTokens))
                 }
                 is HomeAction.GoToShop -> {
-                    when (action.regionProvider.getRegion()?.lowercase()) {
-                        RUSSIA_COUNTRY_CODE -> store.dispatchOpenUrl(BUY_WALLET_URL)
+                    when (action.userCountryCode) {
+                        RUSSIA_COUNTRY_CODE, BELARUS_COUNTRY_CODE ->
+                            store.dispatchOpenUrl(BUY_WALLET_URL)
                         else -> store.dispatch(NavigationAction.NavigateTo(AppScreen.Shop))
                     }
                     store.state.globalState.analyticsHandlers?.triggerEvent(
