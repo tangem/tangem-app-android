@@ -87,11 +87,16 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
             val config = appState()?.globalState?.configManager?.config
             ifNotNull(
                 config?.mercuryoWidgetId,
+                config?.mercuryoSecret,
                 config?.moonPayApiKey,
                 config?.moonPayApiSecretKey,
-            ) { mercuryoWidgetId, moonPayKey, moonPaySecretKey ->
+            ) { mercuryoWidgetId, mercuryoSecret, moonPayKey, moonPaySecretKey ->
                 scope.launch {
-                    val buyService = MercuryoService(MercuryoApi.API_VERSION, mercuryoWidgetId, "")
+                    val buyService = MercuryoService(
+                        apiVersion = MercuryoApi.API_VERSION,
+                        mercuryoWidgetId = mercuryoWidgetId,
+                        secret = mercuryoSecret,
+                    )
                     val sellService = MoonPayService(moonPayKey, moonPaySecretKey)
                     val exchangeManager = CurrencyExchangeManager(buyService, sellService)
                     store.dispatchOnMain(GlobalAction.ExchangeManager.Init.Success(exchangeManager))
