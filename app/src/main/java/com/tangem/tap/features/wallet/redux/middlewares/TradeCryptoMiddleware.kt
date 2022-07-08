@@ -13,7 +13,7 @@ import com.tangem.tap.features.send.redux.SendAction
 import com.tangem.tap.features.wallet.redux.Currency
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
-import com.tangem.tap.network.exchangeServices.buyErc20Tokens
+import com.tangem.tap.network.exchangeServices.buyErc20TestnetTokens
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import kotlinx.coroutines.launch
@@ -33,7 +33,7 @@ class TradeCryptoMiddleware {
 
     private fun startExchange(action: WalletAction.TradeCryptoAction) {
         val selectedWalletData = store.state.walletState.getSelectedWalletData()
-        val exchangeManager = store.state.globalState.currencyExchangeManager ?: return
+        val exchangeManager = store.state.globalState.exchangeManager ?: return
         val addresses = selectedWalletData?.walletAddresses ?: return
         if (addresses.list.isEmpty()) return
         val appCurrency = store.state.globalState.appCurrency
@@ -53,11 +53,11 @@ class TradeCryptoMiddleware {
         ) {
             val walletManager = store.state.walletState.getWalletManager(currency)
             if (walletManager !is EthereumWalletManager) {
-                store.dispatchDebugErrorNotification("Testnet tokens available only for the ETH")
+                store.dispatchDebugErrorNotification("Testnet tokens available only for the Ethereum")
                 return
             }
 
-            scope.launch { exchangeManager.buyErc20Tokens(walletManager, currency.token) }
+            scope.launch { exchangeManager.buyErc20TestnetTokens(walletManager, currency.token) }
             return
         }
 
@@ -89,7 +89,7 @@ class TradeCryptoMiddleware {
     }
 
     private fun openReceiptUrl(transactionId: String) {
-        val exchangeManager = store.state.globalState.currencyExchangeManager ?: return
+        val exchangeManager = store.state.globalState.exchangeManager ?: return
 
         store.dispatchOnMain(NavigationAction.PopBackTo())
         exchangeManager.getSellCryptoReceiptUrl(CurrencyExchangeManager.Action.Sell, transactionId)?.let {
