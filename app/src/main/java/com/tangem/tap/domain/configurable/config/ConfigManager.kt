@@ -85,6 +85,7 @@ class ConfigManager(
             moonPayApiKey = values.moonPayApiKey,
             moonPayApiSecretKey = values.moonPayApiSecretKey,
             mercuryoWidgetId = values.mercuryoWidgetId,
+            mercuryoSecret = values.mercuryoSecret,
             blockchainSdkConfig = BlockchainSdkConfig(
                 blockchairApiKey = values.blockchairApiKey,
                 blockchairAuthorizationToken = values.blockchairAuthorizationToken,
