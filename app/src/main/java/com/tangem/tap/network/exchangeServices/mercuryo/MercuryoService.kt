@@ -6,6 +6,7 @@ import com.tangem.common.extensions.calculateSha512
 import com.tangem.common.extensions.toHexString
 import com.tangem.common.services.Result
 import com.tangem.common.services.performRequest
+import com.tangem.domain.common.extensions.removePrefixFromAddress
 import com.tangem.network.common.createRetrofitInstance
 import com.tangem.tap.common.extensions.urlEncode
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
@@ -103,14 +104,15 @@ class MercuryoService(
     ): String? {
         if (action == CurrencyExchangeManager.Action.Sell) throw UnsupportedOperationException()
 
+        val walletAddressCorrected = blockchain.removePrefixFromAddress(walletAddress)
         val builder = Uri.Builder()
             .scheme(ExchangeUrlBuilder.SCHEME)
             .authority("exchange.mercuryo.io")
             .appendQueryParameter("widget_id", mercuryoWidgetId)
             .appendQueryParameter("type", action.name.lowercase())
             .appendQueryParameter("currency", cryptoCurrencyName)
-            .appendQueryParameter("address", walletAddress.urlEncode())
-            .appendQueryParameter("signature", signature(walletAddress).urlEncode())
+            .appendQueryParameter("address", walletAddressCorrected.urlEncode())
+            .appendQueryParameter("signature", signature(walletAddressCorrected).urlEncode())
             .appendQueryParameter("fix_currency", "true")
             .appendQueryParameter("return_url", ExchangeUrlBuilder.SUCCESS_URL)
 
