@@ -4,13 +4,14 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.ifNotNull
+import com.tangem.common.services.Result
 import com.tangem.domain.common.extensions.withMainContext
-import com.tangem.tap.*
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
+import com.tangem.tap.currenciesRepository
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.features.send.redux.SendAction
 import com.tangem.tap.features.wallet.redux.WalletAction
@@ -18,6 +19,11 @@ import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import com.tangem.tap.network.exchangeServices.mercuryo.MercuryoApi
 import com.tangem.tap.network.exchangeServices.mercuryo.MercuryoService
 import com.tangem.tap.network.exchangeServices.moonpay.MoonPayService
+import com.tangem.tap.preferencesStorage
+import com.tangem.tap.scope
+import com.tangem.tap.store
+import com.tangem.tap.tangemSdkManager
+import java.util.Locale
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.DispatchFunction
@@ -130,6 +136,27 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
                         is CompletionResult.Failure -> {
                             action.onFailure?.invoke(result.error)
                         }
+                    }
+                }
+            }
+        }
+        is GlobalAction.FetchUserCountry -> {
+            scope.launch {
+                val techService = store.state.domainNetworks.tangemTechService
+                when (val result = techService.userCountry()) {
+                    is Result.Success -> {
+                        store.dispatch(
+                            GlobalAction.FetchUserCountry.Success(
+                                countryCode = result.data.code.lowercase()
+                            )
+                        )
+                    }
+                    is Result.Failure -> {
+                        store.dispatch(
+                            GlobalAction.FetchUserCountry.Success(
+                                countryCode = Locale.getDefault().country.lowercase()
+                            )
+                        )
                     }
                 }
             }
