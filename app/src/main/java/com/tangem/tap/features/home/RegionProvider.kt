@@ -48,3 +48,4 @@ class LocaleRegionProvider : RegionProvider {
 }
 
 const val RUSSIA_COUNTRY_CODE = "ru"
+const val BELARUS_COUNTRY_CODE = "by"
