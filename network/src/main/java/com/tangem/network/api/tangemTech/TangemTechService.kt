@@ -47,6 +47,10 @@ class TangemTechService {
         }
     }
 
+    suspend fun userCountry(): Result<GeoResponse> = withContext(Dispatchers.IO) {
+        performRequest { api.geo() }
+    }
+
     suspend fun currencies(): Result<CurrenciesResponse> = withContext(Dispatchers.IO) {
         performRequest { api.currencies() }
     }
