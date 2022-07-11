@@ -75,7 +75,9 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
         }
         is GlobalAction.SetIfCardVerifiedOnline ->
             globalState.copy(cardVerifiedOnline = action.verified)
-
+        is GlobalAction.FetchUserCountry.Success -> globalState.copy(
+            userCountryCode = action.countryCode
+        )
         else -> globalState
     }
 }
