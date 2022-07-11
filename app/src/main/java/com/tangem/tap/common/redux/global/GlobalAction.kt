@@ -85,4 +85,8 @@ sealed class GlobalAction : Action {
 
         object Update : GlobalAction()
     }
+
+    object FetchUserCountry : GlobalAction() {
+        data class Success(val countryCode: String) : GlobalAction()
+    }
 }
