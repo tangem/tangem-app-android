@@ -89,9 +89,16 @@ class TapApplication : Application(), ImageLoaderFactory {
         val localLoader = FeaturesLocalLoader(this, moshi)
         val remoteLoader = FeaturesRemoteLoader(moshi)
         val configManager = ConfigManager(localLoader, remoteLoader)
-        configManager.load {
+        configManager.load { config ->
             store.dispatch(GlobalAction.SetConfigManager(configManager))
-            shopService = TangemShopService(this, configManager.config.shopify!!)
+            shopService = TangemShopService(
+                application = this,
+                shopifyShop = config.shopify!!
+            )
+            store.state.globalState.feedbackManager?.initChat(
+                context = this,
+                zendeskConfig = config.zendesk!!
+            )
         }
         val warningsManager = WarningMessagesManager(RemoteWarningLoader(moshi))
         warningsManager.load { store.dispatch(GlobalAction.SetWarningManager(warningsManager)) }
