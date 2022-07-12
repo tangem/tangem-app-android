@@ -74,4 +74,6 @@
     <string name="russian_bank_card_warning_subtitle">Do you have a bank card of another country or a UnionPay card?</string>
     <string name="common_yes">Yes</string>
     <string name="common_no">No</string>
+
+    <string name="details_ask_a_question">Ask a question</string>
 </resources>
