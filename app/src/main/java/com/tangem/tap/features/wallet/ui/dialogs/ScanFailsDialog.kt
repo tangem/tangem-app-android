@@ -19,7 +19,7 @@ class ScanFailsDialog {
                 setTitle(context.getString(R.string.common_warning))
                 setMessage(R.string.alert_troubleshooting_scan_card_title)
                 setPositiveButton(R.string.alert_button_request_support) { _, _ ->
-                    store.dispatch(GlobalAction.SendFeedback(ScanFailsEmail()))
+                    store.dispatch(GlobalAction.SendEmail(ScanFailsEmail()))
                 }
                 setNeutralButton(R.string.alert_troubleshooting_scan_card_ok) { _, _ -> }
                 setOnDismissListener { store.dispatchDialogHide() }

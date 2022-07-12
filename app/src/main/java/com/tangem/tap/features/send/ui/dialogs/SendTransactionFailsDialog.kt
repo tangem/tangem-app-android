@@ -19,7 +19,7 @@ class SendTransactionFailsDialog {
                 setTitle(R.string.alert_failed_to_send_transaction_title)
                 setMessage(context.getString(R.string.alert_failed_to_send_transaction_message, dialog.errorMessage))
                 setNeutralButton(R.string.alert_button_send_feedback) { _, _ ->
-                    store.dispatch(GlobalAction.SendFeedback(SendTransactionFailedEmail(dialog.errorMessage)))
+                    store.dispatch(GlobalAction.SendEmail(SendTransactionFailedEmail(dialog.errorMessage)))
                 }
                 setPositiveButton(R.string.common_no) { _, _ -> }
                 setOnDismissListener { store.dispatch(SendAction.Dialog.Hide) }
