@@ -18,13 +18,6 @@ import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.ConfirmDisc
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.UnfinishedBackupFoundDialog
 import com.tangem.tap.features.wallet.redux.models.WalletDialog
 import com.tangem.tap.features.wallet.ui.dialogs.*
-import com.tangem.tap.features.wallet.redux.WalletDialog
-import com.tangem.tap.features.wallet.ui.dialogs.AmountToSendBottomSheetDialog
-import com.tangem.tap.features.wallet.ui.dialogs.ChooseTradeActionBottomSheetDialog
-import com.tangem.tap.features.wallet.ui.dialogs.RussianCardholdersWarningBottomSheetDialog
-import com.tangem.tap.features.wallet.ui.dialogs.ScanFailsDialog
-import com.tangem.tap.features.wallet.ui.dialogs.SignedHashesWarningDialog
-import com.tangem.tap.features.wallet.ui.dialogs.SimpleOkDialog
 import com.tangem.tap.features.wallet.ui.wallet.CurrencySelectionDialog
 import com.tangem.tap.store
 import com.tangem.wallet.R
