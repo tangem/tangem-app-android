@@ -1,14 +1,7 @@
 package com.tangem.tap.features.wallet.redux
 
 import android.graphics.Bitmap
-import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.Token
-import com.tangem.blockchain.common.Wallet
-import com.tangem.blockchain.common.WalletManager
-import com.tangem.blockchain.common.Amount
-import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManager
@@ -16,40 +9,22 @@ import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.extensions.isZero
 import com.tangem.domain.common.extensions.canHandleToken
 import com.tangem.tap.common.entities.Button
-import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.toQrCode
-import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.common.toggleWidget.WidgetState
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
-import com.tangem.tap.features.wallet.models.Currency
-import com.tangem.tap.features.wallet.models.PendingTransaction
-import com.tangem.tap.features.wallet.models.TotalBalance
-import com.tangem.tap.features.wallet.models.WalletRent
-import com.tangem.tap.features.wallet.models.WalletWarning
-import com.tangem.tap.features.wallet.models.hasPendingTransactions
-import com.tangem.tap.features.wallet.models.hasSendableAmounts
-import com.tangem.tap.features.wallet.models.isSendableAmount
-import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
-import com.tangem.tap.features.wallet.models.PendingTransaction
-import com.tangem.tap.features.wallet.models.TotalBalance
-import com.tangem.tap.features.wallet.models.WalletRent
-import com.tangem.tap.features.wallet.models.WalletWarning
-import com.tangem.tap.features.wallet.models.hasPendingTransactions
-import com.tangem.tap.features.wallet.models.hasSendableAmounts
-import com.tangem.tap.features.wallet.models.isSendableAmount
+import com.tangem.tap.features.wallet.models.*
 import com.tangem.tap.features.wallet.redux.reducers.calculateTotalFiatAmount
 import com.tangem.tap.features.wallet.redux.reducers.findProgressState
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import com.tangem.tap.store
+import org.rekotlin.StateType
 import java.math.BigDecimal
-import org.rekotlin.StateType
 import kotlin.properties.ReadOnlyProperty
-import org.rekotlin.StateType
 
 data class WalletState(
     val state: ProgressState = ProgressState.Done,
@@ -331,17 +306,6 @@ data class WalletState(
         const val UNKNOWN_AMOUNT_SIGN = "—"
         const val ROUGH_SIGN = "≈"
     }
-}
-
-sealed interface WalletDialog : StateDialog {
-    data class SelectAmountToSendDialog(val amounts: List<Amount>?) : WalletDialog
-    object SignedHashesMultiWalletDialog : WalletDialog
-    object ChooseTradeActionDialog : WalletDialog
-    data class CurrencySelectionDialog(
-        val currenciesList: List<FiatCurrency>,
-        val currentAppCurrency: FiatCurrency,
-    ) : WalletDialog
-    object RussianCardholdersWarningDialog : WalletDialog
 }
 
 enum class ProgressState : WidgetState { Loading, Refreshing, Done, Error }
