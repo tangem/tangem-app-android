@@ -10,6 +10,7 @@ import by.kirich1409.viewbindingdelegate.viewBinding
 import com.tangem.domain.common.getTwinCardIdForUser
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.feedback.FeedbackEmail
+import com.tangem.tap.common.feedback.SupportInfo
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
@@ -124,12 +125,16 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
         }
 
         tvSendFeedback.setOnClickListener {
-            store.dispatch(GlobalAction.SendFeedback(FeedbackEmail()))
+            store.dispatch(GlobalAction.SendEmail(FeedbackEmail()))
         }
 
         tvWalletConnect.show(state.scanResponse?.card?.isMultiwalletAllowed == true)
         tvWalletConnect.setOnClickListener {
             store.dispatch(NavigationAction.NavigateTo(AppScreen.WalletConnectSessions))
+        }
+
+        tvSupport.setOnClickListener {
+            store.dispatch(GlobalAction.OpenChat(SupportInfo()))
         }
 
         llManageSecurity.setOnClickListener {
