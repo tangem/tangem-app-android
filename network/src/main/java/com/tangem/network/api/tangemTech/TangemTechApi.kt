@@ -27,4 +27,6 @@ interface TangemTechApi {
     @GET("currencies")
     suspend fun currencies(): CurrenciesResponse
 
+    @GET("geo")
+    suspend fun geo(): GeoResponse
 }
