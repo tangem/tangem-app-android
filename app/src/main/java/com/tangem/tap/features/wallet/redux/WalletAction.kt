@@ -154,6 +154,7 @@ sealed class WalletAction : Action {
         object SignedHashesMultiWalletDialog : DialogAction()
         object ChooseTradeActionDialog : DialogAction()
         data class ChooseCurrency(val amounts: List<Amount>?) : DialogAction()
+        object RussianCardholdersWarningDialog : DialogAction()
 
         object Hide : DialogAction()
     }
@@ -164,8 +165,10 @@ sealed class WalletAction : Action {
     object EmptyWallet : WalletAction()
 
     sealed class TradeCryptoAction : WalletAction() {
-        object Buy : TradeCryptoAction()
         object Sell : TradeCryptoAction()
+        data class Buy(
+            val checkUserLocation: Boolean = true,
+        ) : TradeCryptoAction()
         data class FinishSelling(val transactionId: String) : TradeCryptoAction()
         data class SendCrypto(
             val currencyId: String,
