@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="common_no">Non</string>
     <string name="common_save_changes">Sauvegarder les modifications</string>
     <string name="common_warning">Alerte</string>
     <string name="common_retry">Réessayer</string>
