@@ -1,6 +1,5 @@
 package com.tangem.domain.common.extensions
 
-import com.tangem.blockchain.blockchains.bitcoincash.cashaddr.CashAddr
 import com.tangem.blockchain.common.Blockchain
 
 fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
@@ -104,13 +103,5 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Dogecoin -> "dogecoin"
         Blockchain.Tron, Blockchain.TronTestnet -> "tron"
         else -> "unknown"
-    }
-}
-
-fun Blockchain.removePrefixFromAddress(address: String): String {
-    return when (this) {
-        Blockchain.BitcoinCash -> address
-            .removePrefix(CashAddr.MAIN_NET_PREFIX).removePrefix(":")
-        else -> address
     }
 }
