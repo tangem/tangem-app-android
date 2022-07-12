@@ -93,3 +93,16 @@ class FeedbackEmail : FeedbackData {
         .appendPhoneInfo()
         .build()
 }
+
+class SupportInfo : FeedbackData {
+    override val subjectResId: Int = R.string.details_ask_a_question
+    override val mainMessageResId: Int = R.string.details_ask_a_question
+
+    override fun createOptionalMessage(infoHolder: AdditionalFeedbackInfo): String {
+        return FeedbackDataBuilder(infoHolder)
+            .appendCardInfo()
+            .appendDelimiter()
+            .appendPhoneInfo()
+            .build()
+    }
+}
