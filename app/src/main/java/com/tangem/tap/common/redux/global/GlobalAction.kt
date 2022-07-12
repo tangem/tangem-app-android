@@ -77,7 +77,8 @@ sealed class GlobalAction : Action {
     data class SetFeedbackManager(val feedbackManager: FeedbackManager) : GlobalAction()
     data class SetAnanlyticHandlers(val analyticsHandlers: GlobalAnalyticsHandler) : GlobalAction()
 
-    data class SendFeedback(val feedbackData: FeedbackData) : GlobalAction()
+    data class SendEmail(val feedbackData: FeedbackData) : GlobalAction()
+    data class OpenChat(val feedbackData: FeedbackData) : GlobalAction()
     data class UpdateFeedbackInfo(val walletManagers: List<WalletManager>) : GlobalAction()
 
     object ExchangeManager : GlobalAction() {
