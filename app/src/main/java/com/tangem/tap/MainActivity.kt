@@ -27,11 +27,11 @@ import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.shop.redux.ShopAction
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.ActivityMainBinding
+import java.lang.ref.WeakReference
+import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
-import java.lang.ref.WeakReference
-import kotlin.coroutines.CoroutineContext
 
 lateinit var tangemSdk: TangemSdk
 lateinit var tangemSdkManager: TangemSdkManager
@@ -57,7 +57,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         systemActions()
-        store.state.globalState.feedbackManager?.updateActivity(this)
         store.dispatch(NavigationAction.ActivityCreated(WeakReference(this)))
 
         tangemSdk = TangemSdk.init(this, TangemSdkManager.config)
