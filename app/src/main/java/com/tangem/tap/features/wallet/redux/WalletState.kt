@@ -6,6 +6,12 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.DerivationStyle
+import com.tangem.blockchain.common.Token
+import com.tangem.blockchain.common.Wallet
+import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.extensions.isZero
 import com.tangem.domain.common.extensions.canHandleToken
@@ -16,11 +22,17 @@ import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.common.toggleWidget.WidgetState
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
-import com.tangem.tap.domain.extensions.buyIsAllowed
-import com.tangem.tap.domain.extensions.sellIsAllowed
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
 import com.tangem.tap.features.wallet.models.Currency
+import com.tangem.tap.features.wallet.models.PendingTransaction
+import com.tangem.tap.features.wallet.models.TotalBalance
+import com.tangem.tap.features.wallet.models.WalletRent
+import com.tangem.tap.features.wallet.models.WalletWarning
+import com.tangem.tap.features.wallet.models.hasPendingTransactions
+import com.tangem.tap.features.wallet.models.hasSendableAmounts
+import com.tangem.tap.features.wallet.models.isSendableAmount
+import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
 import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.models.TotalBalance
 import com.tangem.tap.features.wallet.models.WalletRent
@@ -35,6 +47,7 @@ import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import com.tangem.tap.store
 import java.math.BigDecimal
+import org.rekotlin.StateType
 import kotlin.properties.ReadOnlyProperty
 import org.rekotlin.StateType
 
@@ -71,7 +84,7 @@ data class WalletState(
 
     val shouldShowDetails: Boolean =
         primaryWallet?.currencyData?.status != BalanceStatus.EmptyCard &&
-                primaryWallet?.currencyData?.status != BalanceStatus.UnknownBlockchain
+            primaryWallet?.currencyData?.status != BalanceStatus.UnknownBlockchain
 
     val blockchains: List<Blockchain>
         get() = wallets.mapNotNull { it.walletManager?.wallet?.blockchain }
@@ -328,6 +341,7 @@ sealed interface WalletDialog : StateDialog {
         val currenciesList: List<FiatCurrency>,
         val currentAppCurrency: FiatCurrency,
     ) : WalletDialog
+    object RussianCardholdersWarningDialog : WalletDialog
 }
 
 enum class ProgressState : WidgetState { Loading, Refreshing, Done, Error }
@@ -372,18 +386,21 @@ data class Artwork(
 }
 
 data class TradeCryptoState(
-    val sellingAllowed: Boolean = false,
-    val buyingAllowed: Boolean = false,
+    val isAvailableToSell: () -> Boolean = { false },
+    val isAvailableToBuy: () -> Boolean = { false },
 ) {
     companion object {
         fun from(
             exchangeManager: CurrencyExchangeManager?,
             walletData: WalletData
         ): TradeCryptoState {
-            val status = exchangeManager ?: return walletData.tradeCryptoState
+            val exchanger = exchangeManager ?: return walletData.tradeCryptoState
             val currency = walletData.currency
 
-            return TradeCryptoState(status.sellIsAllowed(currency), status.buyIsAllowed(currency))
+            return TradeCryptoState(
+                isAvailableToSell = { exchanger.availableForSell(currency) },
+                isAvailableToBuy = { exchanger.availableForBuy(currency) },
+            )
         }
     }
 }
