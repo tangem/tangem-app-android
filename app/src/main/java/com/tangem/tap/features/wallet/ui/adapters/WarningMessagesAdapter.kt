@@ -135,7 +135,7 @@ class WarningMessageVH(val binding: LayoutWarningCardActionBinding) : RecyclerVi
                 analyticsHandler?.triggerEvent(AnalyticsEvent.APP_RATING_NEGATIVE)
                 store.dispatch(WalletAction.Warnings.AppRating.SetNeverToShow)
                 store.dispatch(GlobalAction.HideWarningMessage(warning))
-                store.dispatch(GlobalAction.SendFeedback(RateCanBeBetterEmail()))
+                store.dispatch(GlobalAction.SendEmail(RateCanBeBetterEmail()))
             }
             binding.btnReallyCool.setOnClickListener {
                 val activity = binding.root.context.getActivity() ?: return@setOnClickListener
