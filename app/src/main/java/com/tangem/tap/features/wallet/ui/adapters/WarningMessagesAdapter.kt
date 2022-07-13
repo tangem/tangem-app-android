@@ -16,10 +16,10 @@ import com.tangem.tap.common.extensions.getColor
 import com.tangem.tap.common.extensions.getString
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
+import com.tangem.tap.common.feedback.RateCanBeBetterEmail
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
-import com.tangem.tap.features.feedback.RateCanBeBetterEmail
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.store
 import com.tangem.wallet.R
@@ -135,7 +135,7 @@ class WarningMessageVH(val binding: LayoutWarningCardActionBinding) : RecyclerVi
                 analyticsHandler?.triggerEvent(AnalyticsEvent.APP_RATING_NEGATIVE)
                 store.dispatch(WalletAction.Warnings.AppRating.SetNeverToShow)
                 store.dispatch(GlobalAction.HideWarningMessage(warning))
-                store.dispatch(GlobalAction.SendFeedback(RateCanBeBetterEmail()))
+                store.dispatch(GlobalAction.SendEmail(RateCanBeBetterEmail()))
             }
             binding.btnReallyCool.setOnClickListener {
                 val activity = binding.root.context.getActivity() ?: return@setOnClickListener
