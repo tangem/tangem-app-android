@@ -9,7 +9,6 @@ import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.extensions.isZero
-import com.tangem.domain.common.extensions.canHandleToken
 import com.tangem.domain.common.extensions.toCoinId
 import com.tangem.domain.features.addCustomToken.CustomCurrency
 import com.tangem.tap.common.entities.Button
@@ -36,8 +35,8 @@ import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import com.tangem.tap.store
 import java.math.BigDecimal
-import org.rekotlin.StateType
 import kotlin.properties.ReadOnlyProperty
+import org.rekotlin.StateType
 
 data class WalletState(
     val state: ProgressState = ProgressState.Done,
@@ -417,18 +416,9 @@ data class WalletData(
     }
 
     fun assembleWarnings(): List<WalletWarning> {
-        val blockchain = currency.blockchain
         val walletWarnings = mutableListOf<WalletWarning>()
         if (currencyData.status == BalanceStatus.SameCurrencyTransactionInProgress) {
             walletWarnings.add(WalletWarning.TransactionInProgress)
-        }
-        if (currency.isBlockchain()) {
-            if (blockchain == Blockchain.Solana || blockchain == Blockchain.SolanaTestnet) {
-                val card = store.state.globalState.scanResponse?.card
-                if (card?.canHandleToken(blockchain) == false) {
-                    walletWarnings.add(WalletWarning.SolanaTokensUnsupported)
-                }
-            }
         }
         if (walletRent != null) {
             walletWarnings.add(WalletWarning.Rent(walletRent))
