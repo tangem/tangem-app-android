@@ -21,9 +21,6 @@ class WalletWarningConverter(
                     message.blockchainFullName, message.blockchainFullName
                 )
             }
-            WalletWarning.SolanaTokensUnsupported -> {
-                context.getString(R.string.warning_token_send_unsupported_message)
-            }
             WalletWarning.TransactionInProgress -> {
                 context.getString(R.string.wallet_pending_transaction_warning)
             }
