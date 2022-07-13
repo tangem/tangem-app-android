@@ -5,7 +5,6 @@ import android.widget.TextView
 import androidx.constraintlayout.utils.widget.ImageFilterView
 import coil.imageLoader
 import coil.request.ImageRequest
-import coil.transform.RoundedCornersTransformation
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.IconsUtil
 import com.tangem.blockchain.common.Token
@@ -21,13 +20,13 @@ private const val QCX = "QCX"
 private const val VOYR = "VOYRME"
 
 fun loadCurrencyIcon(
-    currencyImageView: ImageFilterView,
+    currencyImageView: CurrencyIconView,
     currencyTextView: TextView,
     token: Token?,
     blockchain: Blockchain,
 ) {
     CurrencyIconLoader(
-        currencyImageView = currencyImageView,
+        currencyImageView = currencyImageView.imageView,
         currencyTextView = currencyTextView,
         token = token,
         blockchain = blockchain
@@ -135,14 +134,6 @@ private inline fun ImageView.loadIcon(
         .placeholder(placeholderRes)
         .error(placeholderRes)
         .fallback(placeholderRes)
-        .transformations(
-            RoundedCornersTransformation(
-                topLeft = 32f,
-                topRight = 32f,
-                bottomLeft = 32f,
-                bottomRight = 32f
-            )
-        )
         .listener(
             onStart = { onStart() },
             onSuccess = { _, _ -> onSuccess() },
