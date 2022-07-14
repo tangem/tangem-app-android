@@ -35,9 +35,11 @@ import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun NetworkItem(
-    currency: Currency, contract: Contract,
-    blockchain: Blockchain, allowToAdd: Boolean,
-    added: Boolean, canBeRemoved: Boolean,
+    currency: Currency,
+    contract: Contract,
+    blockchain: Blockchain,
+    allowToAdd: Boolean,
+    added: Boolean,
     onAddCurrencyToggled: (Currency, TokenWithBlockchain?) -> Unit,
     onNetworkItemClicked: (ContractAddress) -> Unit
 ) {
@@ -126,7 +128,6 @@ fun NetworkItem(
 
             Switch(
                 checked = added,
-                enabled = canBeRemoved,
                 onCheckedChange = { onAddCurrencyToggled(currencyToSave, tokenWithBlockchain) },
                 modifier = Modifier.padding(start = 16.dp, end = 16.dp),
                 colors = SwitchDefaults.colors(
