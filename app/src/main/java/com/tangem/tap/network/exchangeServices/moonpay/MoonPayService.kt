@@ -5,15 +5,15 @@ import android.util.Base64
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.services.Result
 import com.tangem.common.services.performRequest
+import com.tangem.domain.common.extensions.withIOContext
 import com.tangem.network.common.createRetrofitInstance
 import com.tangem.tap.common.extensions.urlEncode
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
+import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import com.tangem.tap.network.exchangeServices.ExchangeService
 import com.tangem.tap.network.exchangeServices.ExchangeUrlBuilder
 import com.tangem.tap.network.exchangeServices.ExchangeUrlBuilder.Companion.SCHEME
-import com.tangem.tap.network.exchangeServices.ExchangeUrlBuilder.Companion.URL_SELL
-import kotlinx.coroutines.coroutineScope
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
@@ -29,14 +29,14 @@ class MoonPayService(
 
     private var status: MoonPayStatus? = null
 
-    private suspend fun updateStatus() {
-        try {
-            coroutineScope {
+    override suspend fun update() {
+        withIOContext {
+            performRequest {
                 val userStatusResult = performRequest { api.getUserStatus(apiKey) }
-                if (userStatusResult is Result.Failure) return@coroutineScope userStatusResult
+                if (userStatusResult is Result.Failure) return@performRequest
 
                 val currenciesResult = performRequest { api.getCurrencies(apiKey) }
-                if (currenciesResult is Result.Failure) return@coroutineScope currenciesResult
+                if (currenciesResult is Result.Failure) return@performRequest
 
                 val userStatus = (userStatusResult as Result.Success).data
                 val currencies = (currenciesResult as Result.Success).data
@@ -65,29 +65,31 @@ class MoonPayService(
 
                 status = MoonPayStatus(currenciesToSell, userStatus, currencies)
             }
-        } catch (error: Error) {
-            status = null
-            Result.Failure(error)
         }
     }
 
-    override suspend fun isBuyAllowed(): Boolean = false
+    override fun isBuyAllowed(): Boolean = false
 
-    override suspend fun availableToBuy(): List<String> = listOf()
-
-    override suspend fun isSellAllowed(): Boolean {
-        refreshStatus()
+    override fun isSellAllowed(): Boolean {
         return status?.responseUserStatus?.isSellAllowed ?: false
     }
 
-    override suspend fun availableToSell(): List<String> {
-        refreshStatus()
-        return status?.availableToSell ?: emptyList()
-    }
+    override fun availableForBuy(currency: Currency): Boolean = false
 
-    private suspend fun refreshStatus() {
-        if (status == null) {
-            updateStatus()
+    override fun availableForSell(currency: Currency): Boolean {
+        val availableForSell = status?.availableForSell ?: return false
+        if (!isSellAllowed()) return false
+
+        return when (currency) {
+            is Currency.Blockchain -> {
+                val blockchain = currency.blockchain
+                when {
+                    blockchain.isTestnet() -> false
+                    blockchain == Blockchain.Unknown || currency.blockchain == Blockchain.BSC -> false
+                    else -> availableForSell.contains(currency.currencySymbol)
+                }
+            }
+            is Currency.Token -> false
         }
     }
 
@@ -133,10 +135,14 @@ class MoonPayService(
         val sha256encoded = sha256Hmac.doFinal(data.toByteArray())
         return Base64.encodeToString(sha256encoded, Base64.NO_WRAP)
     }
+
+    companion object {
+        const val URL_SELL = "sell.moonpay.com"
+    }
 }
 
 private data class MoonPayStatus(
-    val availableToSell: List<String>,
+    val availableForSell: List<String>,
     val responseUserStatus: MoonPayUserStatus,
     val responseCurrencies: List<MoonPayCurrencies>
 )
