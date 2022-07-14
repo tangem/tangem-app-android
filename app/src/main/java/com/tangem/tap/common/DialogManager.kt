@@ -105,6 +105,12 @@ class DialogManager : StoreSubscriber<GlobalState> {
                     dAppName = state.dialog.dAppName,
                     context = context
                 )
+            is WalletConnectDialog.UnsupportedNetwork ->
+                SimpleAlertDialog.create(
+                    titleRes = R.string.wallet_connect,
+                    messageRes = R.string.wallet_connect_unsupported_blockchain,
+                    context = context
+                )
             is BackupDialog.AddMoreBackupCards -> AddMoreBackupCardsDialog.create(context)
             is BackupDialog.BackupInProgress -> BackupInProgressDialog.create(context)
             is BackupDialog.UnfinishedBackupFound -> UnfinishedBackupFoundDialog.create(context)
