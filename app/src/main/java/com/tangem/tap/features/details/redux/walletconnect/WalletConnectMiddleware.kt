@@ -158,7 +158,7 @@ class WalletConnectMiddleware {
             }
             is WalletConnectAction.SwitchBlockchain -> {
                 val blockchain = action.blockchain.guard {
-                    store.dispatchOnMain(GlobalAction.ShowDialog(WalletConnectDialog.UnsupportedCard)) // TODO: add relevant dialog
+                    store.dispatchOnMain(GlobalAction.ShowDialog(WalletConnectDialog.UnsupportedNetwork))
                     return
                 }
 
