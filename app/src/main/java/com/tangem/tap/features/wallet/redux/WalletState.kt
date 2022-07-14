@@ -1,19 +1,18 @@
 package com.tangem.tap.features.wallet.redux
 
 import android.graphics.Bitmap
-import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.Token
+import com.tangem.blockchain.common.Wallet
+import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.extensions.isZero
 import com.tangem.domain.common.extensions.canHandleToken
 import com.tangem.tap.common.entities.Button
-import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.toQrCode
-import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.common.toggleWidget.WidgetState
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
-import com.tangem.tap.domain.extensions.buyIsAllowed
-import com.tangem.tap.domain.extensions.sellIsAllowed
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
 import com.tangem.tap.features.wallet.models.*
@@ -41,6 +40,7 @@ data class WalletState(
     val primaryToken: Token? = null,
     val isTestnet: Boolean = false,
     val totalBalance: TotalBalance? = null,
+    val showBackupWarning: Boolean = false,
 ) : StateType {
 
     // if you do not delegate - the application crashes on startup,
@@ -59,7 +59,7 @@ data class WalletState(
 
     val shouldShowDetails: Boolean =
         primaryWallet?.currencyData?.status != BalanceStatus.EmptyCard &&
-                primaryWallet?.currencyData?.status != BalanceStatus.UnknownBlockchain
+            primaryWallet?.currencyData?.status != BalanceStatus.UnknownBlockchain
 
     val blockchains: List<Blockchain>
         get() = wallets.mapNotNull { it.walletManager?.wallet?.blockchain }
@@ -304,16 +304,11 @@ data class WalletState(
             )
         } else this
     }
-}
 
-sealed interface WalletDialog : StateDialog {
-    data class SelectAmountToSendDialog(val amounts: List<Amount>?) : WalletDialog
-    object SignedHashesMultiWalletDialog : WalletDialog
-    object ChooseTradeActionDialog : WalletDialog
-    data class CurrencySelectionDialog(
-        val currenciesList: List<FiatCurrency>,
-        val currentAppCurrency: FiatCurrency,
-    ) : WalletDialog
+    companion object {
+        const val UNKNOWN_AMOUNT_SIGN = "—"
+        const val ROUGH_SIGN = "≈"
+    }
 }
 
 enum class ProgressState : WidgetState { Loading, Refreshing, Done, Error }
@@ -358,18 +353,21 @@ data class Artwork(
 }
 
 data class TradeCryptoState(
-    val sellingAllowed: Boolean = false,
-    val buyingAllowed: Boolean = false,
+    val isAvailableToSell: () -> Boolean = { false },
+    val isAvailableToBuy: () -> Boolean = { false },
 ) {
     companion object {
         fun from(
             exchangeManager: CurrencyExchangeManager?,
             walletData: WalletData
         ): TradeCryptoState {
-            val status = exchangeManager ?: return walletData.tradeCryptoState
+            val exchanger = exchangeManager ?: return walletData.tradeCryptoState
             val currency = walletData.currency
 
-            return TradeCryptoState(status.sellIsAllowed(currency), status.buyIsAllowed(currency))
+            return TradeCryptoState(
+                isAvailableToSell = { exchanger.availableForSell(currency) },
+                isAvailableToBuy = { exchanger.availableForBuy(currency) },
+            )
         }
     }
 }
