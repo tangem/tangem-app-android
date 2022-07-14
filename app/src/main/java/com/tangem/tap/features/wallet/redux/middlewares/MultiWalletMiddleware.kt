@@ -5,11 +5,14 @@ import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.extensions.guard
 import com.tangem.tap.common.extensions.dispatchDialogShow
+import com.tangem.tap.common.extensions.dispatchErrorNotification
 import com.tangem.tap.common.extensions.safeUpdate
+import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.global.GlobalState
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.currenciesRepository
+import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.makeWalletManagerForApp
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.demo.DemoHelper
@@ -30,7 +33,6 @@ class MultiWalletMiddleware {
         action: WalletAction.MultiWallet, walletState: WalletState?, globalState: GlobalState?,
     ) {
         val globalState = globalState ?: return
-//        val tapWalletManager = globalState.tapWalletManager
 
         when (action) {
             is WalletAction.MultiWallet.AddBlockchains -> {
@@ -75,71 +77,75 @@ class MultiWalletMiddleware {
                 )
             }
             is WalletAction.MultiWallet.SaveCurrencies -> {
-                globalState.scanResponse?.card?.cardId?.let {
-                    currenciesRepository.saveCurrencies(it, action.blockchainNetworks)
-                }
+                val cardId = action.cardId ?: globalState.scanResponse?.card?.cardId ?: return
+                currenciesRepository.saveCurrencies(cardId, action.blockchainNetworks)
             }
             is WalletAction.MultiWallet.TryToRemoveWallet -> {
-                val walletState = store.state.walletState
-                val currency = action.walletData.currency
-                val walletCanBeRemoved = store.state.walletState.canBeRemoved(
-                    store.state.walletState.getSelectedWalletData()
-                )
-                if (walletCanBeRemoved) {
-                    store.dispatch(WalletAction.MultiWallet.RemoveWallet(action.walletData))
+                val currency = action.currency
+                val walletManager = walletState?.getWalletManager(currency).guard {
+                    store.dispatchErrorNotification(TapError.UnsupportedState("walletManager is NULL"))
+                    store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
                     return
                 }
 
-                val walletManager = walletState.getWalletManager(currency).guard {
-                    store.dispatch(WalletAction.MultiWallet.RemoveWallet(action.walletData))
-                    return
+                if (currency.isBlockchain() && walletManager.cardTokens.isNotEmpty()) {
+                    store.dispatchDialogShow(WalletDialog.TokensAreLinkedDialog(
+                        currencyTitle = currency.currencyName,
+                        currencySymbol = currency.currencySymbol
+                    ))
+                } else {
+                    store.dispatchDialogShow(WalletDialog.RemoveWalletDialog(
+                        currencyTitle = currency.currencyName,
+                        onOk = {
+                            store.dispatch(WalletAction.MultiWallet.RemoveWallet(
+                                currency = currency,
+                                fromScreen = AppScreen.WalletDetails
+                            ))
+                            store.dispatch(NavigationAction.PopBackTo())
+                        }
+                    ))
                 }
-
-                val dialog = when {
-                    currency is Currency.Blockchain &&
-                            walletManager.cardTokens.isNotEmpty() ->
-                        WalletDialog.TokensAreLinkedDialog(
-                            currency.currencyName, currency.currencySymbol
-                        )
-
-                    else ->
-                        WalletDialog.RemoveWalletDialog(currency.currencyName, action.walletData)
-                }
-                store.dispatchDialogShow(dialog)
             }
             is WalletAction.MultiWallet.RemoveWallet -> {
-                val cardId = globalState.scanResponse?.card?.cardId
-                when (val currency = action.walletData.currency) {
+                val currency = action.currency
+                val cardId = globalState.scanResponse?.card?.cardId.guard {
+                    store.dispatchErrorNotification(TapError.UnsupportedState("cardId is NULL"))
+                    store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
+                    return
+                }
+
+                when (currency) {
                     is Currency.Blockchain -> {
-                        cardId?.let {
-                            currenciesRepository.removeBlockchain(
-                                cardId = it,
-                                blockchainNetwork = BlockchainNetwork(
-                                    currency.blockchain, currency.derivationPath,
-                                    emptyList()
-                                )
+                        currenciesRepository.removeBlockchain(
+                            cardId = cardId,
+                            blockchainNetwork = BlockchainNetwork(
+                                blockchain = currency.blockchain,
+                                derivationPath = currency.derivationPath,
+                                tokens = emptyList()
                             )
-                        }
+                        )
                     }
                     is Currency.Token -> {
                         val walletManager = walletState?.getWalletManager(currency)
                         if (walletManager != null) {
                             walletManager.removeToken(currency.token)
-                            cardId?.let {
-                                currenciesRepository.removeToken(
-                                    cardId = it,
-                                    token = currency.token,
-                                    blockchainNetwork = BlockchainNetwork.fromWalletManager(
-                                        walletManager
-                                    )
-                                )
-                            }
+                            currenciesRepository.removeToken(
+                                cardId = cardId,
+                                token = currency.token,
+                                blockchainNetwork = BlockchainNetwork.fromWalletManager(walletManager)
+                            )
                         }
                     }
                 }
-                if (action.fromWalletDetails) {
+                if (action.fromScreen == AppScreen.AddTokens) {
                     store.dispatch(WalletAction.MultiWallet.SelectWallet(null))
-                    store.dispatch(NavigationAction.PopBackTo())
+                }
+            }
+            is WalletAction.MultiWallet.ShowWalletBackupWarning -> Unit
+            is WalletAction.MultiWallet.BackupWallet -> {
+                store.state.globalState.scanResponse?.let {
+                    store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingWallet))
+                    store.dispatch(GlobalAction.Onboarding.Start(it, fromHomeScreen = false))
                 }
             }
 //            is WalletAction.MultiWallet.FindBlockchainsInUse -> {
