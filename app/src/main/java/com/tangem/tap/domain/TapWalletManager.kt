@@ -1,6 +1,12 @@
 package com.tangem.tap.domain
 
-import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.BlockchainSdkConfig
+import com.tangem.blockchain.common.Token
+import com.tangem.blockchain.common.Wallet
+import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.common.WalletManagerFactory
+import com.tangem.common.card.Card
 import com.tangem.common.services.Result
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
@@ -85,6 +91,12 @@ class TapWalletManager {
             store.dispatch(GlobalAction.SaveScanNoteResponse(data))
             store.dispatch(WalletAction.SetIfTestnetCard(data.card.isTestCard))
             store.dispatch(WalletAction.MultiWallet.SetIsMultiwalletAllowed(data.card.isMultiwalletAllowed))
+            store.dispatch(
+                WalletAction.MultiWallet.ShowWalletBackupWarning(
+                    show = data.card.settings.isBackupAllowed
+                        && data.card.backupStatus == Card.BackupStatus.NoBackup
+                )
+            )
             loadData(data)
         }
     }
