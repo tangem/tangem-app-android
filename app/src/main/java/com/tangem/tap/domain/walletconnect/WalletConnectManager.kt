@@ -444,7 +444,7 @@ class WalletConnectManager {
                     }
                 }
                 else -> {
-
+                    Timber.d("WC: unrecognized custom request")
                 }
             }
         }
