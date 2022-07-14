@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
     <string name="app_name">Tangem</string>
-    <string name="common_no">Нет</string>
     <string name="common_save_changes">Сохранить изменения</string>
     <string name="common_warning">Предупреждение</string>
     <string name="common_retry">Повторить попытку</string>
@@ -38,8 +37,8 @@
     <string name="wallet_balance_tx_in_progress">Транзакция в процессе…</string>
     <string name="wallet_pending_tx_sending_address_format">до %s</string>
     <string name="wallet_pending_tx_receiving_address_format">от %s</string>
-    <string name="wallet_pending_tx_receiving">Получение\u0020</string>
-    <string name="wallet_pending_tx_sending">Отправка\u0020</string>
+    <string name="wallet_pending_tx_receiving">Получение</string>
+    <string name="wallet_pending_tx_sending">Отправка</string>
     <string name="wallet_address_button_explore">Посмотреть адрес</string>
     <string name="wallet_address_button_create_payid">Создать PayString</string>
     <string name="wallet_qr_title_format">%s кошелек</string>
@@ -182,7 +181,6 @@
     <string name="add_custom">Добавить пользовательский</string>
     <string name="add_token_section_title_popular_tokens">Популярные токены</string>
     <string name="add_token_added">Добавлен</string>
-    <string name="remove_token">Удалить токен</string>
     <string name="token_icon">Значок токена</string>
     <string name="add_custom_token_title" translatable="false">Добавить токен</string>
     <string name="custom_token_contract_address_input_title">Адрес контракта</string>
@@ -331,7 +329,7 @@
     <string name="token_symbol_address_format">%1s (%2s)</string>
     <string name="alert_signed_hashes_message">Эта карта не является векселем на предъявителя. В настоящее время мы не можем сопоставить количество подписей на карте с информацией в блокчейне. Это нормально, но в редких случаях может означать, что предыдущий владелец скрывает автономную подпись, что является проблемой безопасности.\n\nНе принимайте эту карту в качестве физического платежа от кого-то, кому Вы не доверяете.\n\nВо всех остальных отношениях - это совершенно безопасно.\n\nTangem — единственный аппаратный кошелек, предлагающий защиту от подсчета подписей.</string>
     <string name="wallet_connect">WalletConnect</string>
-    <string name="wallet_connect_create_tx_message">Запрос на создание транзакции для %2s\n%3s\n\nСумма: %4s\nКомиссия: %5s\nВсего: %6s\nБаланс: %7s</string>
+    <string name="wallet_connect_create_tx_message">Карта %1s\nЗапрос на создание транзакции для %2s\n%3s\n\nСумма: %4s\nКомиссия: %5s\nВсего: %6s\nБаланс: %7s</string>
     <string name="wallet_connect_request_session_start">Запрос на запуск сеанса для карты с идентификатором %1s\nдля %2s\n\nURL: %3s</string>
     <string name="wallet_connect_sessions_title">Сессии WalletConnect</string>
     <string name="wallet_connect_session_opened">Сеанс WalletConnect открыт с %s</string>
@@ -366,4 +364,5 @@
     <string name="feedback_preface_support">Привет, команда поддержки,</string>
     <string name="feedback_preface_tx_push_failed">Пожалуйста, расскажите нам больше о Вашей проблеме. Каждая деталь может быть полезной.</string>
     <string name="feedback_data_collection_message">Информация ниже не является обязательной. Вы можете стереть её, если хотите.</string>
+    <string name="common_no">Нет</string>
 </resources>
