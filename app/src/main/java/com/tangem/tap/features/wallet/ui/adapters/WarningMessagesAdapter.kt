@@ -1,16 +1,13 @@
 package com.tangem.tap.features.wallet.ui.adapters
 
-import android.content.res.Resources
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.os.ConfigurationCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.play.core.review.ReviewManagerFactory
 import com.tangem.tap.common.analytics.AnalyticsEvent
-import com.tangem.tap.common.extensions.dispatchOpenUrl
 import com.tangem.tap.common.extensions.getActivity
 import com.tangem.tap.common.extensions.getColor
 import com.tangem.tap.common.extensions.getString
@@ -19,7 +16,6 @@ import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.feedback.RateCanBeBetterEmail
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
-import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.store
 import com.tangem.wallet.R
@@ -89,24 +85,10 @@ class WarningMessageVH(val binding: LayoutWarningCardActionBinding) : RecyclerVi
             binding.btnClose.hide()
 
             val buttonAction =
-                when {
-                    warning.titleResId == R.string.warning_important_security_info -> {
+                when (warning.titleResId) {
+                    R.string.warning_important_security_info -> {
                         View.OnClickListener {
                             store.dispatch(WalletAction.DialogAction.SignedHashesMultiWalletDialog)
-                        }
-                    }
-                    warning.messageResId == R.string.alert_funds_restoration_message -> {
-                        binding.btnClose.show()
-                        binding.btnClose.setOnClickListener {
-                            store.dispatch(GlobalAction.HideWarningMessage(warning))
-                            store.dispatch(WalletAction.Warnings.RestoreFundsWarningClosed)
-                        }
-                        val locale = ConfigurationCompat
-                            .getLocales(Resources.getSystem().configuration)
-                            .get(0)
-                        val url = WarningMessagesManager.getRestoreFundsGuideUrl(locale.language)
-                        View.OnClickListener {
-                            store.dispatchOpenUrl(url)
                         }
                     }
                     else -> {
