@@ -5,6 +5,7 @@ import android.widget.TextView
 import androidx.constraintlayout.utils.widget.ImageFilterView
 import coil.imageLoader
 import coil.request.ImageRequest
+import coil.transform.RoundedCornersTransformation
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.IconsUtil
 import com.tangem.blockchain.common.Token
@@ -134,7 +135,9 @@ private inline fun ImageView.loadIcon(
         .placeholder(placeholderRes)
         .error(placeholderRes)
         .fallback(placeholderRes)
-        .transformations(RoundedCornersCropTransformation(16f))
+        .transformations(
+            RoundedCornersTransformation(radius = 8f)
+        )
         .listener(
             onStart = { onStart() },
             onSuccess = { _, _ -> onSuccess() },
