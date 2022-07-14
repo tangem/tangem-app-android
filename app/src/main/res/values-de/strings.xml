@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="common_no">Nein</string>
     <string name="common_save_changes">Änderungen speichern</string>
     <string name="common_warning">Warnung</string>
     <string name="common_retry">Erneut versuchen</string>
@@ -35,10 +34,10 @@
     <string name="wallet_error_unsupported_blockchain">Diese Karte wird nicht unterstützt</string>
     <string name="wallet_error_unsupported_blockchain_subtitle">Ihre Tangem-Karte wurde für die Arbeit mit einer anderen App ausgestellt. Bitte sehen Sie sich den Namen und die Anleitung auf Ihrer Karte an und installieren Sie eine korrekte App</string>
     <string name="wallet_balance_tx_in_progress">Die Transaktion läuft…</string>
-    <string name="wallet_pending_tx_sending">Senden\u0020</string>
-    <string name="wallet_pending_tx_sending_address_format">an %s </string>
-    <string name="wallet_pending_tx_receiving">Erhalten\u0020</string>
-    <string name="wallet_pending_tx_receiving_address_format">von %s </string>
+    <string name="wallet_pending_tx_sending">Senden</string>
+    <string name="wallet_pending_tx_sending_address_format">an %s</string>
+    <string name="wallet_pending_tx_receiving">Erhalten</string>
+    <string name="wallet_pending_tx_receiving_address_format">von %s</string>
     <string name="wallet_address_button_explore">Adresse erkunden</string>
     <string name="wallet_address_button_create_payid">PayString erstellen</string>
     <string name="wallet_qr_title_format">%s Wallet</string>
