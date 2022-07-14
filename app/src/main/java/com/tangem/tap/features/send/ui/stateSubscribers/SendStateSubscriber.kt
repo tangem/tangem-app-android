@@ -17,12 +17,13 @@ import com.tangem.tap.features.BaseStoreFragment
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.Error
 import com.tangem.tap.features.send.redux.FeeAction
 import com.tangem.tap.features.send.redux.SendAction
-import com.tangem.tap.features.send.redux.reducers.ReceiptReducer
 import com.tangem.tap.features.send.redux.states.*
 import com.tangem.tap.features.send.ui.FeeUiHelper
 import com.tangem.tap.features.send.ui.SendFragment
 import com.tangem.tap.features.send.ui.dialogs.SendTransactionFailsDialog
 import com.tangem.tap.features.send.ui.dialogs.TezosWarningDialog
+import com.tangem.tap.features.wallet.redux.WalletState.Companion.ROUGH_SIGN
+import com.tangem.tap.features.wallet.redux.WalletState.Companion.UNKNOWN_AMOUNT_SIGN
 import com.tangem.tap.features.wallet.ui.adapters.WarningMessagesAdapter
 import com.tangem.tap.store
 import com.tangem.wallet.R
@@ -257,12 +258,12 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
         val mainLayout = clReceiptContainer as ViewGroup
         val totalLayout = llTotalContainer.llTotal as ViewGroup
         val totalTokenLayout = llTotalContainer.flTotalTokenCrypto as ViewGroup
-        fun getString(id: Int, vararg formatStrings: String): String =
-            mainLayout.context.getString(id, *formatStrings)
 
-        val rough = getString(R.string.sign_rough)
-        fun roughOrEmpty(value: String): String =
-            if (value == ReceiptReducer.EMPTY) value else "$rough $value"
+        fun getString(id: Int, vararg formatStrings: String): String = mainLayout.getString(id, *formatStrings)
+
+        fun roughOrEmpty(value: String): String {
+            return if (value == UNKNOWN_AMOUNT_SIGN) value else "$ROUGH_SIGN $value"
+        }
 
         when (state.visibleTypeOfReceipt) {
             ReceiptLayoutType.FIAT -> {
