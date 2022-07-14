@@ -62,6 +62,7 @@ fun Blockchain.getNetworkName(): String {
         Blockchain.Ethereum, Blockchain.EthereumTestnet -> "ERC20"
         Blockchain.BSC, Blockchain.BSCTestnet -> "BEP20"
         Blockchain.Binance, Blockchain.BinanceTestnet -> "BEP2"
+        Blockchain.Tron, Blockchain.TronTestnet -> "TRC20"
         else -> ""
     }
 }
