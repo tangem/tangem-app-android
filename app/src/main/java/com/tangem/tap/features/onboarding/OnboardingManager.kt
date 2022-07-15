@@ -12,8 +12,8 @@ import com.tangem.tap.common.extensions.isPositive
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.getOrLoadCardArtworkUrl
+import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.hasPendingTransactions
-import com.tangem.tap.features.wallet.redux.Currency
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.persistence.UsedCardsPrefStorage
 import timber.log.Timber

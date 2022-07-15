@@ -1,6 +1,7 @@
 package com.tangem.tap.domain.configurable.config
 
 import com.tangem.tap.common.shop.shopify.ShopifyShop
+import com.tangem.tap.common.zendesk.ZendeskConfig
 
 /**
  * Created by Anton Zhilenkov on 12/11/2020.
@@ -26,6 +27,7 @@ class ConfigValueModel(
         val appsFlyerDevKey: String,
         val shopifyShop: ShopifyShop?,
         val tronGridApiKey: String,
+        val zendesk: ZendeskConfig?,
 )
 
 class ConfigModel(val features: FeatureModel?, val configValues: ConfigValueModel?) {

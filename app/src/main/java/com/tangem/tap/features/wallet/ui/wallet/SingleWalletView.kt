@@ -10,6 +10,7 @@ import com.tangem.tap.common.extensions.fitChipsByGroupWidth
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
+import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.redux.*
 import com.tangem.tap.features.wallet.ui.BalanceWidget
