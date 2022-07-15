@@ -9,7 +9,6 @@ import com.tangem.domain.AddCustomTokenError.Warning.*
 import com.tangem.domain.AddCustomTokenException
 import com.tangem.domain.DomainDialog
 import com.tangem.domain.DomainWrapped
-import com.tangem.domain.common.TapWorkarounds.allowToAddCustomDerivation
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.extensions.canHandleToken
 import com.tangem.domain.common.extensions.fromNetworkId
@@ -571,18 +570,11 @@ private class AddCustomTokenReducer(
                     supportedTokenNetworkIds = supportedTokenNetworkIds
                 )
 
-                var derivationPathState = state.screenState.derivationPath
-                derivationPathState = if (card.allowToAddCustomDerivation) {
-                    derivationPathState.copy(isVisible = true)
-                } else {
-                    derivationPathState.copy(isVisible = false)
-                }
                 val form = Form(AddCustomTokenState.createFormFields(card, CustomTokenType.Blockchain))
                 state.copy(
                     cardDerivationStyle = card.derivationStyle,
                     form = form,
                     tangemTechServiceManager = tangemTechServiceManager,
-                    screenState = state.screenState.copy(derivationPath = derivationPathState)
                 )
             }
             is OnDestroy -> {
