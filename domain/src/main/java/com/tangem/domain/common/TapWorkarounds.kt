@@ -32,10 +32,6 @@ object TapWorkarounds {
             DerivationStyle.NEW
         }
 
-    val Card.allowToAddCustomDerivation: Boolean
-        get() = useOldStyleDerivation || batchId == "AC03"
-    // To recover funds for users who scanned AC03 batch on old app version and got old style derivation
-
     fun Card.isExcluded(): Boolean {
         val excludedBatch = excludedBatches.contains(batchId)
         val excludedIssuerName = excludedIssuers.contains(issuer.name.uppercase(Locale.ROOT))
