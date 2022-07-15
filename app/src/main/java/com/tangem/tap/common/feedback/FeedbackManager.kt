@@ -12,6 +12,7 @@ import java.io.FileWriter
 import java.io.StringWriter
 import timber.log.Timber
 import zendesk.configurations.Configuration
+import zendesk.core.AnonymousIdentity
 import zendesk.core.Zendesk
 import zendesk.support.Support
 import zendesk.support.request.RequestConfiguration
@@ -36,6 +37,7 @@ class FeedbackManager(
             /* oauthClientId = */ zendeskConfig.clientId,
         )
         Support.INSTANCE.init(Zendesk.INSTANCE)
+        Zendesk.INSTANCE.setIdentity(AnonymousIdentity())
     }
 
     fun sendEmail(feedbackData: FeedbackData, onFail: ((Exception) -> Unit)? = null) {
