@@ -2,7 +2,6 @@ package com.tangem.domain.features.addCustomToken.redux
 
 import android.webkit.ValueCallback
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.common.extensions.guard
 import com.tangem.common.services.Result
 import com.tangem.domain.AddCustomTokenError
@@ -10,6 +9,7 @@ import com.tangem.domain.AddCustomTokenError.Warning.*
 import com.tangem.domain.AddCustomTokenException
 import com.tangem.domain.DomainDialog
 import com.tangem.domain.DomainWrapped
+import com.tangem.domain.common.TapWorkarounds.allowToAddCustomDerivation
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.extensions.canHandleToken
 import com.tangem.domain.common.extensions.fromNetworkId
@@ -572,9 +572,10 @@ private class AddCustomTokenReducer(
                 )
 
                 var derivationPathState = state.screenState.derivationPath
-                derivationPathState = when (card.derivationStyle) {
-                    DerivationStyle.LEGACY -> derivationPathState.copy(isVisible = true)
-                    null, DerivationStyle.NEW -> derivationPathState.copy(isVisible = false)
+                derivationPathState = if (card.allowToAddCustomDerivation) {
+                    derivationPathState.copy(isVisible = true)
+                } else {
+                    derivationPathState.copy(isVisible = false)
                 }
                 val form = Form(AddCustomTokenState.createFormFields(card, CustomTokenType.Blockchain))
                 state.copy(
