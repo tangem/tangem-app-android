@@ -283,6 +283,20 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@id/tv_send_feedback" />
 
+            <TextView
+                android:id="@+id/tv_support"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="7dp"
+                android:paddingBottom="7dp"
+                android:text="@string/details_ask_a_question"
+                android:textColor="@color/darkGray6"
+                android:textSize="16sp"
+                app:drawableEndCompat="@drawable/ic_angle_bracket_right"
+                app:drawableTint="@color/darkGray1"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_wallet_connect" />
+
         </androidx.constraintlayout.widget.ConstraintLayout>
 
     </androidx.core.widget.NestedScrollView>
