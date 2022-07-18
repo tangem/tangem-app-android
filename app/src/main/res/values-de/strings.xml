@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="common_no">Nein</string>
     <string name="common_save_changes">Änderungen speichern</string>
     <string name="common_warning">Warnung</string>
     <string name="common_retry">Erneut versuchen</string>
