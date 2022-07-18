@@ -133,6 +133,8 @@ class DialogManager : StoreSubscriber<GlobalState> {
                 primaryButtonRes = state.dialog.primaryButtonRes,
                 primaryButtonAction = state.dialog.onOk
             )
+            is WalletDialog.RussianCardholdersWarningDialog ->
+                RussianCardholdersWarningBottomSheetDialog(context)
             is DetailsDialog.ConfirmDisablingSaving -> {
                 val messageRes = when (state.dialog.setting) {
                     PrivacySetting.SAVE_CARDS -> R.string.security_and_privacy_save_card_disable_warning
