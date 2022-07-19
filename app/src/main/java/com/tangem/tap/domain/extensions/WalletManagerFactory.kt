@@ -32,9 +32,10 @@ fun WalletManagerFactory.makeWalletManagerForApp(
     return when {
         scanResponse.isTangemTwins() && scanResponse.secondTwinPublicKey != null -> {
             makeTwinWalletManager(
-                card.cardId,
-                wallet.publicKey, scanResponse.secondTwinPublicKey!!.hexToBytes(),
-                environmentBlockchain, wallet.curve
+                walletPublicKey = wallet.publicKey,
+                pairPublicKey = scanResponse.secondTwinPublicKey!!.hexToBytes(),
+                blockchain = environmentBlockchain,
+                curve = wallet.curve
             )
         }
         seedKey != null && derivationParams != null -> {
@@ -47,7 +48,6 @@ fun WalletManagerFactory.makeWalletManagerForApp(
                 ?: return null
 
             makeWalletManager(
-                cardId = card.cardId,
                 blockchain = environmentBlockchain,
                 seedKey = wallet.publicKey,
                 derivedKey = derivedKey,
@@ -56,7 +56,6 @@ fun WalletManagerFactory.makeWalletManagerForApp(
         }
         else -> {
             makeWalletManager(
-                cardId = card.cardId,
                 blockchain = environmentBlockchain,
                 walletPublicKey = wallet.publicKey,
                 curve = wallet.curve
