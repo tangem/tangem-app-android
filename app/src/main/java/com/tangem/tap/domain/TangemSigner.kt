@@ -16,12 +16,14 @@ class TangemSigner(
     private val signerCallback: (TangemSignerResponse) -> Unit,
 ) : TransactionSigner {
 
-    override suspend fun sign(hash: ByteArray, cardId: String, publicKey: Wallet.PublicKey): CompletionResult<ByteArray> {
+    override suspend fun sign(
+        hash: ByteArray,
+        publicKey: Wallet.PublicKey
+    ): CompletionResult<ByteArray> {
         return suspendCoroutine { continuation ->
             val command = SignHashTask(hash, publicKey)
             tangemSdk.startSessionWithRunnable(
                 runnable = command,
-                cardId = cardId,
                 initialMessage = initialMessage,
             ) { result ->
                 when (result) {
@@ -41,12 +43,14 @@ class TangemSigner(
         }
     }
 
-    override suspend fun sign(hashes: List<ByteArray>, cardId: String, publicKey: Wallet.PublicKey): CompletionResult<List<ByteArray>> {
+    override suspend fun sign(
+        hashes: List<ByteArray>,
+        publicKey: Wallet.PublicKey
+    ): CompletionResult<List<ByteArray>> {
         return suspendCoroutine { continuation ->
             val task = SignHashesTask(hashes, publicKey)
             tangemSdk.startSessionWithRunnable(
                 runnable = task,
-                cardId = cardId,
                 initialMessage = initialMessage,
             ) { result ->
                 when (result) {
