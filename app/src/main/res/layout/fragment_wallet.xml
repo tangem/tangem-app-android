@@ -43,27 +43,26 @@
             android:overScrollMode="never">
 
             <androidx.constraintlayout.widget.ConstraintLayout
-                    android:id="@+id/cl_wallet"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:paddingBottom="74dp">
+                android:id="@+id/cl_wallet"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingBottom="74dp">
 
                 <ImageView
-                        android:id="@+id/iv_card"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:layout_marginStart="16dp"
-                        android:layout_marginTop="8dp"
-                        android:layout_marginEnd="16dp"
-                        android:layout_marginBottom="12dp"
-                        android:adjustViewBounds="true"
-                        android:elevation="3dp"
-                        android:maxHeight="215dp"
-                        android:scaleType="fitCenter"
-                        android:src="@drawable/card_placeholder_black"
-                        android:contentDescription="@null"
-                        app:layout_constraintTop_toTopOf="parent" />
+                    android:id="@+id/iv_card"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginEnd="16dp"
+                    android:layout_marginBottom="12dp"
+                    android:scaleType="fitCenter"
+                    android:adjustViewBounds="true"
+                    android:elevation="3dp"
+                    android:maxHeight="215dp"
+                    android:contentDescription="@null"
+                    app:layout_constraintTop_toTopOf="parent"
+                    tools:src="@drawable/card_placeholder_black" />
 
                 <TextView
                     android:id="@+id/tv_twin_card_number"
