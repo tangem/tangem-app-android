@@ -175,7 +175,11 @@ private fun sendTransaction(
             tangemSdk.config.linkedTerminal = false
         }
 
-        val signer = TangemSigner(tangemSdk, action.messageForSigner) { signResponse ->
+        val signer = TangemSigner(
+            card = card,
+            tangemSdk = tangemSdk,
+            initialMessage = action.messageForSigner
+        ) { signResponse ->
             store.dispatch(
                 GlobalAction.UpdateWalletSignedHashes(
                     walletSignedHashes = signResponse.totalSignedHashes,
