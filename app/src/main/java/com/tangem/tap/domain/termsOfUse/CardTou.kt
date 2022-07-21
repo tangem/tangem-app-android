@@ -4,16 +4,17 @@ import android.content.res.Resources
 import android.net.Uri
 import androidx.core.os.ConfigurationCompat
 import com.tangem.common.card.Card
-import java.util.*
+import java.util.Locale
 
 /**
 [REDACTED_AUTHOR]
  */
 class CardTou {
-    private val locale: Locale = ConfigurationCompat.getLocales(Resources.getSystem().configuration).get(0)
+    private val locale: Locale =
+        ConfigurationCompat.getLocales(Resources.getSystem().configuration).get(0)!!
 
     fun getUrl(card: Card): Uri? {
-        val issuerName = card.issuer.name ?: return null
+        val issuerName = card.issuer.name
         if (issuerName.lowercase(Locale.getDefault()) != "start2coin") return null
 
         val baseUrl = "https://app.tangem.com/tou/"
