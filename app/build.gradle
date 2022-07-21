@@ -6,13 +6,13 @@ apply plugin: 'com.google.firebase.crashlytics'
 apply from: '../dependencies.gradle'
 
 android {
-    compileSdkVersion 31
+    compileSdkVersion 32
     defaultConfig {
         applicationId "com.tangem.wallet"
         versionCode project.hasProperty('versionCode') ? project.property('versionCode') as int : 1
         versionName project.hasProperty('versionName') ? project.property('versionName') : "1.0.0.-SNAPSHOT"
         minSdkVersion 21
-        targetSdkVersion 31
+        targetSdkVersion 32
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField 'Boolean', environmentConfig.testActionEnabled, 'false'
