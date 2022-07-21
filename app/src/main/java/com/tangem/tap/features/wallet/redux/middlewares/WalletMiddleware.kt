@@ -15,12 +15,7 @@ import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.operations.attestation.Attestation
 import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.tap.common.analytics.Analytics
-import com.tangem.tap.common.extensions.copyToClipboard
-import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
-import com.tangem.tap.common.extensions.dispatchOnMain
-import com.tangem.tap.common.extensions.onCardScanned
-import com.tangem.tap.common.extensions.shareText
-import com.tangem.tap.common.extensions.stripZeroPlainString
+import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
@@ -29,6 +24,7 @@ import com.tangem.tap.domain.failedRates
 import com.tangem.tap.domain.loadedRates
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.redux.HomeAction
+import com.tangem.tap.features.home.redux.HomeMiddleware
 import com.tangem.tap.features.send.redux.PrepareSendScreen
 import com.tangem.tap.features.wallet.models.PendingTransactionType
 import com.tangem.tap.features.wallet.models.filterByCoin
@@ -233,9 +229,7 @@ class WalletMiddleware {
                 action.context.shareText(action.address)
             }
             is WalletAction.ExploreAddress -> {
-                val uri = Uri.parse(action.exploreUrl)
-                val intent = Intent(Intent.ACTION_VIEW, uri)
-                ContextCompat.startActivity(action.context, intent, null)
+                store.dispatchOpenUrl(action.exploreUrl)
             }
             is WalletAction.Send -> {
                 val newAction = prepareSendAction(action.amount, store.state.walletState)
