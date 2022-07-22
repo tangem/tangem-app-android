@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.google.android.material.snackbar.Snackbar
 import com.tangem.TangemSdk
@@ -28,11 +29,11 @@ import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.shop.redux.ShopAction
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.ActivityMainBinding
-import java.lang.ref.WeakReference
-import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import java.lang.ref.WeakReference
+import kotlin.coroutines.CoroutineContext
 
 lateinit var tangemSdk: TangemSdk
 lateinit var tangemSdkManager: TangemSdkManager
@@ -85,6 +86,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler {
 
     private fun systemActions() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
+        WindowInsetsControllerCompat(window, binding.root)
+            .isAppearanceLightStatusBars = true
+
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
     }
 
