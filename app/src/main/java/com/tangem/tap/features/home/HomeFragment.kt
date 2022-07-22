@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.ComposeView
+import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.Fragment
 import com.google.accompanist.appcompattheme.AppCompatTheme
 import com.tangem.tap.common.redux.navigation.AppScreen
@@ -23,7 +24,7 @@ import org.rekotlin.StoreSubscriber
 class HomeFragment : Fragment(), StoreSubscriber<HomeState> {
 
     private var homeState: MutableState<HomeState> = mutableStateOf(store.state.homeState)
-    var composeView: ComposeView? = null
+    private var composeView: ComposeView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -65,6 +66,7 @@ class HomeFragment : Fragment(), StoreSubscriber<HomeState> {
 
     override fun onDestroyView() {
         super.onDestroyView()
+        rollbackStatusBarIconsColor()
         composeView = null
     }
 
@@ -90,5 +92,16 @@ class HomeFragment : Fragment(), StoreSubscriber<HomeState> {
                 store.dispatch(TokensAction.LoadCurrencies())
             }
         )
+    }
+
+    /*
+    * !!! Workaround !!!
+    * Used to roll back the color of icons in the status bar after the stories screen
+    * */
+    private fun rollbackStatusBarIconsColor() {
+        WindowInsetsControllerCompat(
+            activity?.window ?: return,
+            view ?: return,
+        ).isAppearanceLightStatusBars = true
     }
 }
