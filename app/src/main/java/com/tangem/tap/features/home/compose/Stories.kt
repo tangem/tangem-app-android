@@ -55,8 +55,8 @@ fun StoriesScreen(
 
     val isPressed = remember { mutableStateOf(false) }
     val needsToBePaused =
-        remember(homeState) { mutableStateOf(homeState.value.btnScanState.progressState == ProgressState.Loading) }
-    val isPaused = isPressed.value || needsToBePaused.value
+        remember(homeState) { mutableStateOf(homeState) }
+    val isPaused = isPressed.value || needsToBePaused.value.value.btnScanState.progressState == ProgressState.Loading
 
     val hideContent = remember { mutableStateOf(true) }
 
@@ -139,11 +139,11 @@ fun StoriesScreen(
                 colorFilter = if (isDarkBackground) null else ColorFilter.tint(Color.Black)
             )
             when (currentStep.value) {
-                1 -> FirstStoriesContent(needsToBePaused.value, currentStep.duration()) { hideContent.value = it }
+                1 -> FirstStoriesContent(needsToBePaused.value.value.btnScanState.progressState == ProgressState.Loading, currentStep.duration()) { hideContent.value = it }
                 2 -> StoriesRevolutionaryWallet(currentStep.duration())
-                3 -> StoriesUltraSecureBackup(needsToBePaused.value, currentStep.duration())
-                4 -> StoriesCurrencies(needsToBePaused.value, currentStep.duration())
-                5 -> StoriesWeb3(needsToBePaused.value, currentStep.duration())
+                3 -> StoriesUltraSecureBackup(needsToBePaused.value.value.btnScanState.progressState == ProgressState.Loading, currentStep.duration())
+                4 -> StoriesCurrencies(needsToBePaused.value.value.btnScanState.progressState == ProgressState.Loading, currentStep.duration())
+                5 -> StoriesWeb3(needsToBePaused.value.value.btnScanState.progressState == ProgressState.Loading, currentStep.duration())
                 6 -> StoriesWalletForEveryone(currentStep.duration())
             }
         }
