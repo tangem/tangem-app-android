@@ -139,11 +139,11 @@ fun StoriesScreen(
                 colorFilter = if (isDarkBackground) null else ColorFilter.tint(Color.Black)
             )
             when (currentStep.value) {
-                1 -> FirstStoriesContent(isPaused, currentStep.duration()) { hideContent.value = it }
+                1 -> FirstStoriesContent(needsToBePaused.value, currentStep.duration()) { hideContent.value = it }
                 2 -> StoriesRevolutionaryWallet(currentStep.duration())
-                3 -> StoriesUltraSecureBackup(isPaused, currentStep.duration())
-                4 -> StoriesCurrencies(isPaused, currentStep.duration())
-                5 -> StoriesWeb3(isPaused, currentStep.duration())
+                3 -> StoriesUltraSecureBackup(needsToBePaused.value, currentStep.duration())
+                4 -> StoriesCurrencies(needsToBePaused.value, currentStep.duration())
+                5 -> StoriesWeb3(needsToBePaused.value, currentStep.duration())
                 6 -> StoriesWalletForEveryone(currentStep.duration())
             }
         }
