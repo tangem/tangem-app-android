@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.View
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
 import com.google.accompanist.appcompattheme.AppCompatTheme
@@ -17,7 +16,6 @@ import com.tangem.tap.features.home.redux.HomeState
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
 import com.tangem.tap.features.send.redux.states.ButtonState
 import com.tangem.tap.features.tokens.redux.TokensAction
-import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import org.rekotlin.StoreSubscriber
@@ -36,17 +34,17 @@ class HomeFragment : Fragment(R.layout.fragment_home), StoreSubscriber<HomeState
 
         store.dispatch(BackupAction.CheckForUnfinishedBackup)
 
-
         getView()?.findViewById<ComposeView>(R.id.cv_stories)?.setContent {
             AppCompatTheme {
                 StoriesScreen(
                     homeState,
                     onScanButtonClick = {
-                        store.dispatch(HomeAction.ReadCard)
-                        homeState.value = HomeState(store.state.homeState.shouldScanCardOnResume,
+                        homeState.value = HomeState(
+                            store.state.homeState.shouldScanCardOnResume,
                             IndeterminateProgressButton(ButtonState.PROGRESS)
                         )
-                                        },
+                        store.dispatch(HomeAction.ReadCard)
+                    },
                     onShopButtonClick = {
                         store.dispatch(HomeAction.GoToShop(store.state.globalState.userCountryCode))
                     },
