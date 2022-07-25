@@ -61,9 +61,9 @@ fun FragmentActivity.popBackTo(screen: AppScreen?, inclusive: Boolean = false) {
 }
 
 fun FragmentActivity.getPreviousScreen(): AppScreen? {
-    val indexOfLastFragment = if(this.supportFragmentManager.backStackEntryCount>0) {
+    val indexOfLastFragment = if (this.supportFragmentManager.backStackEntryCount > 0) {
         this.supportFragmentManager.backStackEntryCount - 1
-    }else{
+    } else {
         0
     }
     val tag = if (indexOfLastFragment < this.supportFragmentManager.backStackEntryCount)
