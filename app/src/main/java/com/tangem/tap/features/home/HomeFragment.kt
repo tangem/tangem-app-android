@@ -39,15 +39,6 @@ class HomeFragment : Fragment(R.layout.fragment_home), StoreSubscriber<HomeState
                 StoriesScreen(
                     homeState,
                     onScanButtonClick = {
-//                        store.dispatch(HomeAction.ChangeScanCardButtonState(IndeterminateProgressButton(ButtonState.PROGRESS)))
-//                        newState(HomeState(
-//                            store.state.homeState.shouldScanCardOnResume,
-//                            IndeterminateProgressButton(ButtonState.PROGRESS)
-//                        ))
-//                        homeState.value = HomeState(
-//                            store.state.homeState.shouldScanCardOnResume,
-//                            IndeterminateProgressButton(ButtonState.PROGRESS)
-//                        )
                         store.dispatch(HomeAction.ReadCard)
                     },
                     onShopButtonClick = {
