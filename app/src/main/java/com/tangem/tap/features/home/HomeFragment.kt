@@ -31,9 +31,7 @@ class HomeFragment : Fragment(R.layout.fragment_home), StoreSubscriber<HomeState
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-
         store.dispatch(BackupAction.CheckForUnfinishedBackup)
-
         getView()?.findViewById<ComposeView>(R.id.cv_stories)?.setContent {
             AppCompatTheme {
                 StoriesScreen(
