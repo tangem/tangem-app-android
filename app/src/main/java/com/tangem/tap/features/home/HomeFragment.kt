@@ -7,14 +7,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
 import com.google.accompanist.appcompattheme.AppCompatTheme
-import com.tangem.tap.common.entities.IndeterminateProgressButton
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.home.compose.StoriesScreen
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.home.redux.HomeState
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
-import com.tangem.tap.features.send.redux.states.ButtonState
 import com.tangem.tap.features.tokens.redux.TokensAction
 import com.tangem.tap.store
 import com.tangem.wallet.R
