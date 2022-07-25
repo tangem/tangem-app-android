@@ -108,7 +108,7 @@ class DialogManager : StoreSubscriber<GlobalState> {
             is WalletConnectDialog.UnsupportedNetwork ->
                 SimpleAlertDialog.create(
                     titleRes = R.string.wallet_connect,
-                    messageRes = R.string.wallet_connect_unsupported_blockchain,
+                    messageRes = R.string.wallet_connect_scanner_error_unsupported_network,
                     context = context
                 )
             is BackupDialog.AddMoreBackupCards -> AddMoreBackupCardsDialog.create(context)
