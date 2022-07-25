@@ -1,8 +1,5 @@
 package com.tangem.tap.features.wallet.redux.middlewares
 
-import android.content.Intent
-import android.net.Uri
-import androidx.core.content.ContextCompat
 import com.tangem.blockchain.blockchains.solana.RentProvider
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
@@ -24,7 +21,6 @@ import com.tangem.tap.domain.failedRates
 import com.tangem.tap.domain.loadedRates
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.redux.HomeAction
-import com.tangem.tap.features.home.redux.HomeMiddleware
 import com.tangem.tap.features.send.redux.PrepareSendScreen
 import com.tangem.tap.features.wallet.models.PendingTransactionType
 import com.tangem.tap.features.wallet.models.filterByCoin
