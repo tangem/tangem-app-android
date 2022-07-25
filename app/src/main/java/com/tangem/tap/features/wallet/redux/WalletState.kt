@@ -73,6 +73,9 @@ data class WalletState(
     val walletManagers: List<WalletManager>
         get() = wallets.mapNotNull { it.walletManager }
 
+    val cardId: String?
+        get() = wallets.firstOrNull()?.walletManager?.wallet?.cardId
+
     fun getWalletManager(currency: Currency?): WalletManager? {
         if (currency?.blockchain == null) return null
         return getWalletStore(currency)?.walletManager
