@@ -3,12 +3,25 @@ package com.tangem.tap.features.home.compose
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -25,8 +38,13 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.tangem.tap.common.compose.SpacerS24
-import com.tangem.tap.features.home.compose.content.*
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.tangem.tap.features.home.compose.content.FirstStoriesContent
+import com.tangem.tap.features.home.compose.content.StoriesCurrencies
+import com.tangem.tap.features.home.compose.content.StoriesRevolutionaryWallet
+import com.tangem.tap.features.home.compose.content.StoriesUltraSecureBackup
+import com.tangem.tap.features.home.compose.content.StoriesWalletForEveryone
+import com.tangem.tap.features.home.compose.content.StoriesWeb3
 import com.tangem.tap.features.home.compose.views.HomeButtons
 import com.tangem.tap.features.home.compose.views.StoriesProgressBar
 import com.tangem.tap.features.home.redux.HomeState
@@ -43,6 +61,7 @@ fun StoriesScreen(
 ) {
     val steps = 6
     val currentStep = remember { mutableStateOf(1) }
+    val systemUiController = rememberSystemUiController()
 
     val isDarkBackground = currentStep.value !in 3..5
 
@@ -58,13 +77,20 @@ fun StoriesScreen(
 
     val hideContent = remember { mutableStateOf(true) }
 
+    SideEffect {
+        systemUiController.setSystemBarsColor(
+            color = Color.Transparent,
+            darkIcons = false,
+        )
+    }
+
     Box(
-        Modifier
+        modifier = Modifier
             .fillMaxSize()
             .background(Color(0xFF090E13))
     ) {
         Row(
-            Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize()
         ) {
             Box(
                 Modifier
@@ -105,19 +131,23 @@ fun StoriesScreen(
         }
         if (!isDarkBackground) {
             Image(
+                modifier = Modifier.fillMaxSize(),
                 painter = painterResource(id = R.drawable.ic_overlay),
                 contentDescription = null,
-                modifier = Modifier
-                    .fillMaxSize(),
                 contentScale = ContentScale.FillBounds
             )
         }
+
+        val insets = WindowInsets.systemBars
+            .union(WindowInsets(top = 32.dp))
+
         Column(
+            modifier = Modifier
+                .windowInsetsPadding(insets)
+                .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxWidth()
         ) {
-            SpacerS24()
             StoriesProgressBar(
                 steps = steps,
                 currentStep = currentStep.value,

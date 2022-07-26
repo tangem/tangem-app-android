@@ -1,8 +1,5 @@
 package com.tangem.tap.features.wallet.redux.middlewares
 
-import android.content.Intent
-import android.net.Uri
-import androidx.core.content.ContextCompat
 import com.tangem.blockchain.blockchains.solana.RentProvider
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
@@ -15,12 +12,7 @@ import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.operations.attestation.Attestation
 import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.tap.common.analytics.Analytics
-import com.tangem.tap.common.extensions.copyToClipboard
-import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
-import com.tangem.tap.common.extensions.dispatchOnMain
-import com.tangem.tap.common.extensions.onCardScanned
-import com.tangem.tap.common.extensions.shareText
-import com.tangem.tap.common.extensions.stripZeroPlainString
+import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
@@ -233,9 +225,7 @@ class WalletMiddleware {
                 action.context.shareText(action.address)
             }
             is WalletAction.ExploreAddress -> {
-                val uri = Uri.parse(action.exploreUrl)
-                val intent = Intent(Intent.ACTION_VIEW, uri)
-                ContextCompat.startActivity(action.context, intent, null)
+                store.dispatchOpenUrl(action.exploreUrl)
             }
             is WalletAction.Send -> {
                 val newAction = prepareSendAction(action.amount, store.state.walletState)

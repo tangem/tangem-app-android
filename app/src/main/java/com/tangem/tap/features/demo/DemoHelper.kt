@@ -109,7 +109,7 @@ class DemoConfig {
                 testDemoCardIds).distinct()
     }
 
-    private val releaseDemoCardIds = mutableListOf<String>(
+    private val releaseDemoCardIds = mutableListOf(
 //        Tangem Wallet:
         "AC01000000041100",
         "AC01000000042462",
@@ -284,7 +284,10 @@ class DemoTransactionSender(
 
     override suspend fun send(transactionData: TransactionData, signer: TransactionSigner): SimpleResult {
         val dataToSign = randomString(32).toByteArray()
-        val signerResponse = signer.sign(dataToSign, walletManager.wallet.cardId, walletManager.wallet.publicKey)
+        val signerResponse = signer.sign(
+            hash = dataToSign,
+            publicKey = walletManager.wallet.publicKey
+        )
         return when (signerResponse) {
             is CompletionResult.Success -> SimpleResult.Failure(Exception(ID))
             is CompletionResult.Failure -> SimpleResult.fromTangemSdkError(signerResponse.error)
