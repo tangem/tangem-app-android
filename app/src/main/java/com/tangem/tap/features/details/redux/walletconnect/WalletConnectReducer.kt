@@ -34,6 +34,11 @@ class WalletConnectReducer {
                 is WalletConnectAction.RefuseOpeningSession -> state.copy(loading = false)
                 is WalletConnectAction.OpeningSessionTimeout -> state.copy(loading = false)
                 is WalletConnectAction.FailureEstablishingSession -> state.copy(loading = false)
+                is WalletConnectAction.UpdateBlockchain -> state.copy(
+                    sessions = state.sessions
+                        .filterNot { it.peerId == action.updatedSession.peerId }
+                            + action.updatedSession
+                )
 
                 else -> state
             }
