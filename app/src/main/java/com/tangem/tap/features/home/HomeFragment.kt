@@ -31,8 +31,6 @@ class HomeFragment : Fragment(), StoreSubscriber<HomeState> {
         store.dispatch(HomeAction.Init)
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -41,22 +39,6 @@ class HomeFragment : Fragment(), StoreSubscriber<HomeState> {
         val context = container?.context ?: return null
 
         store.dispatch(BackupAction.CheckForUnfinishedBackup)
-        getView()?.findViewById<ComposeView>(R.id.cv_stories)?.setContent {
-            AppCompatTheme {
-                StoriesScreen(
-                    homeState,
-                    onScanButtonClick = {
-                        store.dispatch(HomeAction.ReadCard)
-                    },
-                    onShopButtonClick = {
-                        store.dispatch(HomeAction.GoToShop(store.state.globalState.userCountryCode))
-                    },
-                    onSearchTokensClick = {
-                        store.dispatch(NavigationAction.NavigateTo(AppScreen.AddTokens))
-                        store.dispatch(TokensAction.AllowToAddTokens(false))
-                        store.dispatch(TokensAction.LoadCurrencies())
-                    }
-                )
         composeView = ComposeView(context).apply {
             setContent {
                 AppCompatTheme {
