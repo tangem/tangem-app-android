@@ -1,6 +1,7 @@
 package com.tangem.tap.features.details.redux.walletconnect
 
 import android.app.Activity
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.redux.NotificationAction
 import com.tangem.wallet.R
@@ -46,6 +47,16 @@ sealed class WalletConnectAction : Action {
     ) : WalletConnectAction() {
         data class Success(val session: WalletConnectSession) : WalletConnectAction()
     }
+
+    data class SwitchBlockchain(
+        val blockchain: Blockchain?,
+        val session: WalletConnectSession
+    ) : WalletConnectAction()
+
+    data class UpdateBlockchain(
+        val updatedSession: WalletConnectSession
+    ) : WalletConnectAction()
+
 
     data class FailureEstablishingSession(val session: WCSession?) : WalletConnectAction()
 
