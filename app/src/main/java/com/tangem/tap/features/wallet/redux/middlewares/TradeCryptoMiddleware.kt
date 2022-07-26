@@ -45,6 +45,7 @@ class TradeCryptoMiddleware {
 
         val selectedWalletData = store.state.walletState.getSelectedWalletData() ?: return
         val exchangeManager = store.state.globalState.exchangeManager ?: return
+        val card = store.state.globalState.scanResponse?.card ?: return
         val appCurrency = store.state.globalState.appCurrency
 
         val addresses = selectedWalletData.walletAddresses?.list.orEmpty()
@@ -59,7 +60,13 @@ class TradeCryptoMiddleware {
                 return
             }
 
-            scope.launch { exchangeManager.buyErc20TestnetTokens(walletManager, currency.token) }
+            scope.launch {
+                exchangeManager.buyErc20TestnetTokens(
+                    card = card,
+                    walletManager = walletManager,
+                    token = currency.token
+                )
+            }
             return
         }
 
