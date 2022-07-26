@@ -57,7 +57,6 @@ class WalletStateConverter : StringStateConverter<AppState> {
         walletMap["publicKey"] = publicKeyMap
         walletMap["amounts"] = amounts
         walletMap["addresses"] = wallet.addresses.toString()
-        walletMap["cardId"] = wallet.cardId
 
         return walletMap
     }
