@@ -8,7 +8,6 @@ import com.tangem.common.card.Card
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.isTestCard
-import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
 import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.isGreaterThan
@@ -26,15 +25,15 @@ import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.wallet.R
+import java.math.BigDecimal
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.math.BigDecimal
 
 class WarningsMiddleware {
     fun handle(action: WalletAction.Warnings, globalState: GlobalState?) {
         when (action) {
-            WalletAction.Warnings.Update -> setWarningMessages()
+            is WalletAction.Warnings.Update -> setWarningMessages()
             is WalletAction.Warnings.CheckIfNeeded -> {
                 showCardWarningsIfNeeded(globalState)
                 val readyToShow = preferencesStorage.appRatingLaunchObserver.isReadyToShow()
@@ -66,9 +65,11 @@ class WarningsMiddleware {
                     )
                 }
             }
-            is WalletAction.Warnings.RestoreFundsWarningClosed -> {
-                preferencesStorage.saveRestoreFundsWarningClosed()
-            }
+            is WalletAction.Warnings.AppRating,
+            is WalletAction.Warnings.CheckHashesCount,
+            is WalletAction.Warnings.CheckHashesCount.ConfirmHashesCount,
+            is WalletAction.Warnings.CheckHashesCount.NeedToCheckHashesCountOnline,
+            is WalletAction.Warnings.Set -> Unit
         }
     }
 
@@ -92,9 +93,6 @@ class WarningsMiddleware {
             if (card.isTestCard) {
                 addWarningMessage(WarningMessagesManager.testCardWarning(), autoUpdate = true)
                 return@let
-            }
-            if (card.useOldStyleDerivation && !preferencesStorage.wasRestoreFundsWarningClosed()) {
-                addWarningMessage(warning = WarningMessagesManager.restoreFundsWarning())
             }
 
             showWarningLowRemainingSignaturesIfNeeded(card)
@@ -190,6 +188,7 @@ class WarningsMiddleware {
                                 true
                             )
                         }
+                    null -> Unit
                 }
             }
         }
