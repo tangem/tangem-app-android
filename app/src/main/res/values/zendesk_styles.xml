@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="ZendeskTheme" parent="ZendeskSdkTheme.Light">
+        <item name="colorPrimary">@color/darkGray6</item>
+        <item name="colorPrimaryDark">@color/darkGray6</item>
+    </style>
+
+    // Contact us FAB style
+    <style name="zs_contact_us_fab">
+        <item name="android:gravity">bottom|end</item>
+        <item name="android:layout_margin">@dimen/zs_fab_margin</item>
+        <item name="android:contentDescription">@string/zs_general_contact_us_button_label_accessibility</item>
+        <item name="android:visibility">gone</item>
+        <item name="backgroundTint">@color/selector_btn_green</item>
+        <item name="srcCompat">@drawable/zs_create_ticket_fab</item>
+        <item name="tint">@color/white</item>
+    </style>
+</resources>
