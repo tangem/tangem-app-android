@@ -2,7 +2,6 @@
 
     <string name="app_name" translatable="false">Tangem</string>
 
-    <string name="common_no">No</string>
     <string name="common_save_changes">Save changes</string>
     <string name="common_warning">Warning</string>
     <string name="common_retry">Retry</string>
