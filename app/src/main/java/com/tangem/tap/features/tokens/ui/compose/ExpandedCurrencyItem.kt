@@ -2,7 +2,16 @@ package com.tangem.tap.features.tokens.ui.compose
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Divider
 import androidx.compose.material.Text
@@ -132,7 +141,9 @@ fun ExpandedCurrencyItem(
                     val contract = currency.contracts.firstOrNull { it.blockchain == blockchain }
                         ?: return@map
                     val added = if (contract.address != null) {
-                        addedTokens.map { it.token.contractAddress }.contains(contract.address)
+                        addedTokens.any {
+                            it.token.contractAddress == contract.address && it.blockchain == contract.blockchain
+                        }
                     } else {
                         addedBlockchains.contains(blockchain)
                     }
