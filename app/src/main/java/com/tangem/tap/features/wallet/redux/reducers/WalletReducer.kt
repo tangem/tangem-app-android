@@ -12,20 +12,9 @@ import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.getArtworkUrl
 import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
+import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.WalletRent
 import com.tangem.tap.features.wallet.redux.*
-import com.tangem.tap.features.wallet.redux.AddressData
-import com.tangem.tap.features.wallet.redux.Artwork
-import com.tangem.tap.features.wallet.models.Currency
-import com.tangem.tap.features.wallet.redux.ErrorType
-import com.tangem.tap.features.wallet.redux.ProgressState
-import com.tangem.tap.features.wallet.redux.TradeCryptoState
-import com.tangem.tap.features.wallet.redux.WalletAction
-import com.tangem.tap.features.wallet.redux.WalletAddresses
-import com.tangem.tap.features.wallet.redux.WalletData
-import com.tangem.tap.features.wallet.redux.WalletMainButton
-import com.tangem.tap.features.wallet.redux.WalletState
-import com.tangem.tap.features.wallet.redux.WalletStore
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.store
@@ -53,7 +42,7 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
         is WalletAction.Warnings -> newState = handleCheckSignedHashesActions(action, newState)
         is WalletAction.MultiWallet -> newState = multiWalletReducer.reduce(action, newState)
 
-        is WalletAction.ResetState -> newState = WalletState()
+        is WalletAction.ResetState -> newState = WalletState(cardId = action.newCardId)
         is WalletAction.SetIfTestnetCard -> newState = newState.copy(isTestnet = action.isTestnet)
         is WalletAction.EmptyWallet -> {
             newState = newState.copy(
