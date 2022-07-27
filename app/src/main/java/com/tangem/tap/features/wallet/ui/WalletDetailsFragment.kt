@@ -92,7 +92,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
 
     private fun setupButtons() = with(binding) {
         rowButtons.onBuyClick = {
-            store.dispatch(WalletAction.TradeCryptoAction.Buy)
+            store.dispatch(WalletAction.TradeCryptoAction.Buy())
         }
         rowButtons.onSellClick = {
             store.dispatch(WalletAction.TradeCryptoAction.Sell)
@@ -184,8 +184,8 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
         }
 
         rowButtons.updateButtonsVisibility(
-            buyAllowed = selectedWallet.tradeCryptoState.buyingAllowed,
-            sellAllowed = selectedWallet.tradeCryptoState.sellingAllowed,
+            buyAllowed = selectedWallet.tradeCryptoState.isAvailableToBuy(),
+            sellAllowed = selectedWallet.tradeCryptoState.isAvailableToSell(),
             sendAllowed = selectedWallet.mainButton.enabled,
         )
     }
