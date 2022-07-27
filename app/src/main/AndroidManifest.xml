@@ -128,6 +128,21 @@
 
         <activity android:name="com.tangem.tap.common.qrCodeScan.ScanQrCodeActivity" />
 
+        <activity android:name="zendesk.messaging.MessagingActivity"
+            android:theme="@style/ZendeskTheme" />
+
+        <activity android:name="zendesk.support.guide.HelpCenterActivity"
+            android:theme="@style/ZendeskTheme" />
+
+        <activity android:name="zendesk.support.guide.ViewArticleActivity"
+            android:theme="@style/ZendeskTheme" />
+
+        <activity android:name="zendesk.support.request.RequestActivity"
+            android:theme="@style/ZendeskTheme" />
+
+        <activity android:name="zendesk.support.requestlist.RequestListActivity"
+            android:theme="@style/ZendeskTheme" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.provider"
