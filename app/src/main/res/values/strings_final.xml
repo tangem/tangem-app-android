@@ -64,10 +64,18 @@
     <string name="token_details_unable_hide_alert_message">The %s token is the main currency on the %s network and cannot be hidden as long as you have other tokens on this network in the list.</string>
 
     <string name="wallet_connect_network_not_found_format">%s network not found. Please, add it first and try again.</string>
+    <string name="wallet_connect_scanner_error_unsupported_network">This network is not supported. Please select another network.</string>
+
     <string name="wallet_currency_subtitle">%s network</string>
 
     <string name="main_no_backup_warning_title">Your wallet has not been backed up</string>
     <string name="main_no_backup_warning_subtitle">To protect your assets, we advise you to carry out this procedure</string>
     <string name="wallet_hide_token" translatable="false">Remove token</string>
 
+    <string name="russian_bank_card_warning_title">Russian bank cards are not accepted at the moment</string>
+    <string name="russian_bank_card_warning_subtitle">Do you have a bank card of another country or a UnionPay card?</string>
+    <string name="common_yes">Yes</string>
+    <string name="common_no">No</string>
+
+    <string name="details_ask_a_question">Ask a question</string>
 </resources>
