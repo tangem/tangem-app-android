@@ -105,6 +105,12 @@ class DialogManager : StoreSubscriber<GlobalState> {
                     dAppName = state.dialog.dAppName,
                     context = context
                 )
+            is WalletConnectDialog.UnsupportedNetwork ->
+                SimpleAlertDialog.create(
+                    titleRes = R.string.wallet_connect,
+                    messageRes = R.string.wallet_connect_scanner_error_unsupported_network,
+                    context = context
+                )
             is BackupDialog.AddMoreBackupCards -> AddMoreBackupCardsDialog.create(context)
             is BackupDialog.BackupInProgress -> BackupInProgressDialog.create(context)
             is BackupDialog.UnfinishedBackupFound -> UnfinishedBackupFoundDialog.create(context)
@@ -131,6 +137,8 @@ class DialogManager : StoreSubscriber<GlobalState> {
                 primaryButtonRes = state.dialog.primaryButtonRes,
                 primaryButtonAction = state.dialog.onOk
             )
+            is WalletDialog.RussianCardholdersWarningDialog ->
+                RussianCardholdersWarningBottomSheetDialog(context)
             else -> null
         }
         dialog?.show()
