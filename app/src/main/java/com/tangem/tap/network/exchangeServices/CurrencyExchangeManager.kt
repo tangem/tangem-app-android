@@ -7,10 +7,12 @@ import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.extensions.Result
+import com.tangem.common.card.Card
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TangemSigner
+import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdk
 import java.math.BigDecimal
@@ -18,57 +20,20 @@ import java.math.BigDecimal
 /**
 [REDACTED_AUTHOR]
  */
-interface ExchangeService {
-    suspend fun isBuyAllowed(): Boolean
-    suspend fun availableToBuy(): List<String>
-    suspend fun isSellAllowed(): Boolean
-    suspend fun availableToSell(): List<String>
-}
-
-interface ExchangeUrlBuilder {
-    fun getUrl(
-        action: CurrencyExchangeManager.Action,
-        blockchain: Blockchain,
-        cryptoCurrencyName: CryptoCurrencyName,
-        fiatCurrencyName: String,
-        walletAddress: String,
-    ): String?
-
-    fun getSellCryptoReceiptUrl(action: CurrencyExchangeManager.Action, transactionId: String): String?
-
-    companion object {
-        const val SCHEME = "https"
-        const val URL_SELL = "sell.moonpay.com"
-        const val SUCCESS_URL = "tangem://success.tangem.com"
-    }
-}
-
 class CurrencyExchangeManager(
-    private val onramperService: ExchangeService,
-    private val moonPayService: ExchangeService,
+    private val buyService: ExchangeService,
+    private val sellService: ExchangeService,
 ) : ExchangeService, ExchangeUrlBuilder {
 
-    var status: CurrencyExchangeStatus? = null
-        private set
-
-    suspend fun getStatus(): CurrencyExchangeStatus {
-        val isBuyAllowed = isBuyAllowed()
-        val isSellAllowed = isSellAllowed()
-        val availableToBuy = availableToBuy()
-        val availableToSell = availableToSell()
-        status = CurrencyExchangeStatus(
-            isBuyAllowed,
-            isSellAllowed,
-            availableToBuy,
-            availableToSell,
-        )
-        return status!!
+    override suspend fun update() {
+        buyService.update()
+        sellService.update()
     }
 
-    override suspend fun isBuyAllowed(): Boolean = onramperService.isBuyAllowed()
-    override suspend fun availableToBuy(): List<String> = onramperService.availableToBuy()
-    override suspend fun isSellAllowed(): Boolean = moonPayService.isSellAllowed()
-    override suspend fun availableToSell(): List<String> = moonPayService.availableToSell()
+    override fun isBuyAllowed(): Boolean = buyService.isBuyAllowed()
+    override fun isSellAllowed(): Boolean = sellService.isSellAllowed()
+    override fun availableForBuy(currency: Currency): Boolean = buyService.availableForBuy(currency)
+    override fun availableForSell(currency: Currency): Boolean = sellService.availableForSell(currency)
 
     override fun getUrl(
         action: Action,
@@ -96,22 +61,19 @@ class CurrencyExchangeManager(
 
     private fun getExchangeUrlBuilder(action: Action): ExchangeUrlBuilder {
         return when (action) {
-            Action.Buy -> onramperService
-            Action.Sell -> moonPayService
+            Action.Buy -> buyService
+            Action.Sell -> sellService
         } as ExchangeUrlBuilder
     }
 
     enum class Action { Buy, Sell }
 }
 
-data class CurrencyExchangeStatus(
-    val isBuyAllowed: Boolean,
-    val isSellAllowed: Boolean,
-    val availableToBuy: List<String>,
-    val availableToSell: List<String>,
-)
-
-suspend fun CurrencyExchangeManager.buyErc20Tokens(walletManager: EthereumWalletManager, token: Token) {
+suspend fun CurrencyExchangeManager.buyErc20TestnetTokens(
+    card: Card,
+    walletManager: EthereumWalletManager,
+    token: Token,
+) {
     walletManager.safeUpdate()
 
     val amountToSend = Amount(walletManager.wallet.blockchain)
@@ -128,7 +90,9 @@ suspend fun CurrencyExchangeManager.buyErc20Tokens(walletManager: EthereumWallet
     val transaction = walletManager.createTransaction(amountToSend, fee, destinationAddress)
 
     val signer = TangemSigner(
-        tangemSdk = tangemSdk, Message()
+        card = card,
+        tangemSdk = tangemSdk,
+        initialMessage = Message(),
     ) { signResponse ->
         store.dispatch(
             GlobalAction.UpdateWalletSignedHashes(
