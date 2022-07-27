@@ -45,7 +45,6 @@ class WcWalletManagerFactory(
 
             if (blockchainNetworkWithTokens != null) {
                 factory.makeWalletManager(
-                    cardId = wallet.cardId,
                     blockchain = blockchainToMake,
                     publicKey = Wallet.PublicKey(
                         wallet.walletPublicKey!!,
