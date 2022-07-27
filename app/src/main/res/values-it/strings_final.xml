@@ -59,6 +59,8 @@
     <string name="token_details_unable_hide_alert_message">The %s token is the main currency on the %s network and cannot be hidden as long as you have other tokens on this network in the list.</string>
 
     <string name="wallet_connect_network_not_found_format">%s network not found. Please, add it first and try again.</string>
+    <string name="wallet_connect_scanner_error_unsupported_network">This network is not supported. Please select another network.</string>
+
     <string name="wallet_currency_subtitle">%s network</string>
 
     <string name="security_and_privacy_title">Security &amp; Privacy</string>
