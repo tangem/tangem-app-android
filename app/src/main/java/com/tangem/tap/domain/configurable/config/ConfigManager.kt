@@ -1,8 +1,8 @@
 package com.tangem.tap.domain.configurable.config
 
 import com.tangem.blockchain.common.BlockchainSdkConfig
-import com.tangem.common.extensions.VoidCallback
 import com.tangem.tap.common.shop.shopify.ShopifyShop
+import com.tangem.tap.common.zendesk.ZendeskConfig
 import com.tangem.tap.domain.configurable.Loader
 
 /**
@@ -11,15 +11,17 @@ import com.tangem.tap.domain.configurable.Loader
 data class Config(
     val coinMarketCapKey: String = "f6622117-c043-47a0-8975-9d673ce484de",
     val moonPayApiKey: String = "pk_test_kc90oYTANy7UQdBavDKGfL4K9l6VEPE",
-    val onramperApiKey: String = "pk_test_Ix2aCF3ej_5tcDKkBR7MChIvf5Nb0oPORPQ3Oal5G8I0",
     val moonPayApiSecretKey: String = "sk_test_V8w4M19LbDjjYOt170s0tGuvXAgyEb1C",
+    val mercuryoWidgetId: String = "",
+    val mercuryoSecret: String = "",
     val appsFlyerDevKey: String = "",
     val blockchainSdkConfig: BlockchainSdkConfig = BlockchainSdkConfig(),
     val isSendingToPayIdEnabled: Boolean = true,
     val isTopUpEnabled: Boolean = false,
     @Deprecated("Not relevant since version 3.23")
     val isCreatingTwinCardsAllowed: Boolean = false,
-    val shopify: ShopifyShop? = null
+    val shopify: ShopifyShop? = null,
+    val zendesk: ZendeskConfig? = null,
 )
 
 class ConfigManager(
@@ -32,11 +34,11 @@ class ConfigManager(
 
     private var defaultConfig = Config()
 
-    fun load(onComplete: VoidCallback? = null) {
-        localLoader.load { config ->
-            setupFeature(config.features)
-            setupKey(config.configValues)
-            onComplete?.invoke()
+    fun load(onComplete: ((config: Config) -> Unit)? = null) {
+        localLoader.load { configModel ->
+            setupFeature(configModel.features)
+            setupKey(configModel.configValues)
+            onComplete?.invoke(config)
         }
         // Uncomment to enable remote config
 //        remoteLoader.load { config ->
@@ -82,8 +84,9 @@ class ConfigManager(
         config = config.copy(
             coinMarketCapKey = values.coinMarketCapKey,
             moonPayApiKey = values.moonPayApiKey,
-            onramperApiKey = values.onramperApiKey,
             moonPayApiSecretKey = values.moonPayApiSecretKey,
+            mercuryoWidgetId = values.mercuryoWidgetId,
+            mercuryoSecret = values.mercuryoSecret,
             blockchainSdkConfig = BlockchainSdkConfig(
                 blockchairApiKey = values.blockchairApiKey,
                 blockchairAuthorizationToken = values.blockchairAuthorizationToken,
@@ -92,12 +95,14 @@ class ConfigManager(
             ),
             appsFlyerDevKey = values.appsFlyerDevKey,
             shopify = values.shopifyShop,
+            zendesk = values.zendesk,
         )
         defaultConfig = defaultConfig.copy(
             coinMarketCapKey = values.coinMarketCapKey,
             moonPayApiKey = values.moonPayApiKey,
-            onramperApiKey = values.onramperApiKey,
             moonPayApiSecretKey = values.moonPayApiSecretKey,
+            mercuryoWidgetId = values.mercuryoWidgetId,
+            mercuryoSecret = values.mercuryoSecret,
             blockchainSdkConfig = BlockchainSdkConfig(
                 blockchairApiKey = values.blockchairApiKey,
                 blockchairAuthorizationToken = values.blockchairAuthorizationToken,
@@ -106,6 +111,7 @@ class ConfigManager(
             ),
             appsFlyerDevKey = values.appsFlyerDevKey,
             shopify = values.shopifyShop,
+            zendesk = values.zendesk,
         )
     }
 

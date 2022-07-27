@@ -38,7 +38,7 @@ class OnWalletLoadedReducer {
         val walletData = walletState.getWalletData(blockchainNetwork) ?: return walletState
 
         val fiatCurrency = store.state.globalState.appCurrency
-        val exchangeManager = store.state.globalState.currencyExchangeManager
+        val exchangeManager = store.state.globalState.exchangeManager
 
         val coinAmountValue = wallet.amounts[AmountType.Coin]?.value
         val formattedAmount = coinAmountValue?.toFormattedCurrencyString(
@@ -118,7 +118,7 @@ class OnWalletLoadedReducer {
         if (wallet.blockchain != walletState.primaryBlockchain) return walletState
 
         val fiatCurrencyName = store.state.globalState.appCurrency.code
-        val exchangeManager = store.state.globalState.currencyExchangeManager
+        val exchangeManager = store.state.globalState.exchangeManager
 
         val token = wallet.getFirstToken()
         val tokenData = if (token != null) {
