@@ -27,6 +27,7 @@ import java.math.BigDecimal
 import kotlin.properties.ReadOnlyProperty
 
 data class WalletState(
+    val cardId: String = "",
     val state: ProgressState = ProgressState.Done,
     val error: ErrorType? = null,
     val cardImage: Artwork? = null,
@@ -72,9 +73,6 @@ data class WalletState(
 
     val walletManagers: List<WalletManager>
         get() = wallets.mapNotNull { it.walletManager }
-
-    val cardId: String?
-        get() = wallets.firstOrNull()?.walletManager?.wallet?.cardId
 
     fun getWalletManager(currency: Currency?): WalletManager? {
         if (currency?.blockchain == null) return null
