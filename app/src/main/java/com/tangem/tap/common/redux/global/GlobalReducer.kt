@@ -70,12 +70,14 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
         is GlobalAction.HideDialog -> {
             globalState.copy(dialog = null)
         }
-        is GlobalAction.InitCurrencyExchangeManager.Success -> {
-            globalState.copy(currencyExchangeManager = action.exchangeManager)
+        is GlobalAction.ExchangeManager.Init.Success -> {
+            globalState.copy(exchangeManager = action.exchangeManager)
         }
         is GlobalAction.SetIfCardVerifiedOnline ->
             globalState.copy(cardVerifiedOnline = action.verified)
-
+        is GlobalAction.FetchUserCountry.Success -> globalState.copy(
+            userCountryCode = action.countryCode
+        )
         else -> globalState
     }
 }
