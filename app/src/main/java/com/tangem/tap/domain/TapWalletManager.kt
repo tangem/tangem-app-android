@@ -87,7 +87,7 @@ class TapWalletManager {
         updateConfigManager(data)
 
         withMainContext {
-            store.dispatch(WalletAction.ResetState)
+            store.dispatch(WalletAction.ResetState(data.card.cardId))
             store.dispatch(GlobalAction.SaveScanNoteResponse(data))
             store.dispatch(WalletAction.SetIfTestnetCard(data.card.isTestCard))
             store.dispatch(WalletAction.MultiWallet.SetIsMultiwalletAllowed(data.card.isMultiwalletAllowed))
