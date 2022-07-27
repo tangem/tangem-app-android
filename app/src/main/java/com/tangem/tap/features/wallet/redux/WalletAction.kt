@@ -1,7 +1,11 @@
 package com.tangem.tap.features.wallet.redux
 
 import android.content.Context
-import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.Token
+import com.tangem.blockchain.common.Wallet
+import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.card.Card
 import com.tangem.tap.common.entities.FiatCurrency
@@ -13,8 +17,8 @@ import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.wallet.R
-import org.rekotlin.Action
 import java.math.BigDecimal
+import org.rekotlin.Action
 
 sealed class WalletAction : Action {
 
@@ -61,7 +65,9 @@ sealed class WalletAction : Action {
             MultiWallet()
 
         data class AddToken(val token: Token, val blockchain: BlockchainNetwork) : MultiWallet()
-        data class SaveCurrencies(val blockchainNetworks: List<BlockchainNetwork>) : MultiWallet()
+        data class SaveCurrencies(
+            val blockchainNetworks: List<BlockchainNetwork>, val cardId: String? = null
+        ) : MultiWallet()
 //        object FindTokensInUse : MultiWallet()
 //        object FindBlockchainsInUse : MultiWallet()
 
@@ -104,8 +110,6 @@ sealed class WalletAction : Action {
         }
 
         class CheckRemainingSignatures(val remainingSignatures: Int?) : Warnings()
-
-        object RestoreFundsWarningClosed : Warnings()
     }
 
     data class LoadFiatRate(
@@ -152,6 +156,7 @@ sealed class WalletAction : Action {
         object SignedHashesMultiWalletDialog : DialogAction()
         object ChooseTradeActionDialog : DialogAction()
         data class ChooseCurrency(val amounts: List<Amount>?) : DialogAction()
+        object RussianCardholdersWarningDialog : DialogAction()
 
         object Hide : DialogAction()
     }
@@ -162,8 +167,10 @@ sealed class WalletAction : Action {
     object EmptyWallet : WalletAction()
 
     sealed class TradeCryptoAction : WalletAction() {
-        object Buy : TradeCryptoAction()
         object Sell : TradeCryptoAction()
+        data class Buy(
+            val checkUserLocation: Boolean = true,
+        ) : TradeCryptoAction()
         data class FinishSelling(val transactionId: String) : TradeCryptoAction()
         data class SendCrypto(
             val currencyId: String,
