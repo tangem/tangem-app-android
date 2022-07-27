@@ -21,6 +21,4 @@ fun String.appendIfNotNull(value: String?, prefix: String? = null, postfix: Stri
     return StringBuilder(this).apply { appendIfNotNull(value, prefix, postfix) }.toString()
 }
 
-fun StringBuilder.breakLine(count: Int = 1): StringBuilder {
-    return append(List(count) { "\n" }.joinToString(separator = ""))
-}
+fun StringBuilder.breakLine(count: Int = 1): StringBuilder = append("\n".repeat(count))
