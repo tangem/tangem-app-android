@@ -4,7 +4,11 @@ import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.blockchain.blockchains.binance.BinanceTransactionExtras
 import com.tangem.blockchain.blockchains.stellar.StellarTransactionExtras
 import com.tangem.blockchain.blockchains.xrp.XrpTransactionBuilder
-import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.BlockchainSdkError
+import com.tangem.blockchain.common.TransactionError
+import com.tangem.blockchain.common.TransactionSender
+import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.common.card.Card
 import com.tangem.common.core.TangemSdkError
@@ -15,7 +19,11 @@ import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.AnalyticsParam
-import com.tangem.tap.common.extensions.*
+import com.tangem.tap.common.extensions.dispatchDialogShow
+import com.tangem.tap.common.extensions.dispatchErrorNotification
+import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.extensions.safeUpdate
+import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -26,9 +34,15 @@ import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.extensions.minimalAmount
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.demo.DemoTransactionSender
-import com.tangem.tap.features.demo.isDemoWallet
-import com.tangem.tap.features.send.redux.*
+import com.tangem.tap.features.demo.isDemoCard
+import com.tangem.tap.features.send.redux.AddressPayIdActionUi
+import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction
+import com.tangem.tap.features.send.redux.AmountAction
+import com.tangem.tap.features.send.redux.AmountActionUi
 import com.tangem.tap.features.send.redux.FeeAction.RequestFee
+import com.tangem.tap.features.send.redux.PrepareSendScreen
+import com.tangem.tap.features.send.redux.SendAction
+import com.tangem.tap.features.send.redux.SendActionUi
 import com.tangem.tap.features.send.redux.states.ButtonState
 import com.tangem.tap.features.send.redux.states.ExternalTransactionData
 import com.tangem.tap.features.send.redux.states.MainCurrencyType
@@ -38,6 +52,7 @@ import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdk
 import com.tangem.wallet.R
+import java.util.EnumSet
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -45,7 +60,6 @@ import kotlinx.coroutines.withContext
 import org.rekotlin.Action
 import org.rekotlin.Middleware
 import timber.log.Timber
-import java.util.*
 
 /**
 [REDACTED_AUTHOR]
@@ -161,7 +175,11 @@ private fun sendTransaction(
             tangemSdk.config.linkedTerminal = false
         }
 
-        val signer = TangemSigner(tangemSdk, action.messageForSigner) { signResponse ->
+        val signer = TangemSigner(
+            card = card,
+            tangemSdk = tangemSdk,
+            initialMessage = action.messageForSigner
+        ) { signResponse ->
             store.dispatch(
                 GlobalAction.UpdateWalletSignedHashes(
                     walletSignedHashes = signResponse.totalSignedHashes,
@@ -171,7 +189,7 @@ private fun sendTransaction(
             )
         }
         val sendResult = try {
-            if (walletManager.isDemoWallet()) {
+            if (card.isDemoCard()) {
                 DemoTransactionSender(walletManager).send(txData, signer)
             } else {
                 (walletManager as TransactionSender).send(txData, signer)
@@ -341,4 +359,3 @@ private fun updateWarnings(dispatch: (Action) -> Unit) {
     val warnings = warningsManager.getWarnings(WarningMessage.Location.SendScreen, listOf(blockchain))
     dispatch(SendAction.Warnings.Set(warnings))
 }
-
