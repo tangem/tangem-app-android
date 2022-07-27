@@ -17,12 +17,12 @@ import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.wallet.R
-import java.math.BigDecimal
 import org.rekotlin.Action
+import java.math.BigDecimal
 
 sealed class WalletAction : Action {
 
-    object ResetState : WalletAction()
+    data class ResetState(val newCardId: String) : WalletAction()
 
     data class SetIfTestnetCard(val isTestnet: Boolean) : WalletAction()
 
