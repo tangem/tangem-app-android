@@ -77,9 +77,8 @@ class MultiWalletMiddleware {
                 )
             }
             is WalletAction.MultiWallet.SaveCurrencies -> {
-                globalState.scanResponse?.card?.cardId?.let {
-                    currenciesRepository.saveCurrencies(it, action.blockchainNetworks)
-                }
+                val cardId = action.cardId ?: globalState.scanResponse?.card?.cardId ?: return
+                currenciesRepository.saveCurrencies(cardId, action.blockchainNetworks)
             }
             is WalletAction.MultiWallet.TryToRemoveWallet -> {
                 val currency = action.currency
