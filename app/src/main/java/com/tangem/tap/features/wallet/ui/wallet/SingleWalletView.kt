@@ -118,9 +118,8 @@ class SingleWalletView : WalletView {
 
         setupButtonsType(state, binding)
 
-        val btnConfirm = if (state.tradeCryptoState.sellingAllowed ||
-            state.tradeCryptoState.buyingAllowed
-        ) {
+        val tradeState = state.tradeCryptoState
+        val btnConfirm = if (tradeState.isAvailableToSell() || tradeState.isAvailableToBuy()) {
             lButtonsShort.btnConfirm
         } else {
             lButtonsLong.btnConfirmLong
@@ -148,10 +147,10 @@ class SingleWalletView : WalletView {
     }
 
     private fun setupTradeButton(binding: FragmentWalletBinding, tradeCryptoState: TradeCryptoState) {
-        val allowedToBuy = tradeCryptoState.buyingAllowed
-        val allowedToSell = tradeCryptoState.sellingAllowed
+        val allowedToBuy = tradeCryptoState.isAvailableToBuy()
+        val allowedToSell = tradeCryptoState.isAvailableToSell()
         val action = when {
-            allowedToBuy && !allowedToSell -> WalletAction.TradeCryptoAction.Buy
+            allowedToBuy && !allowedToSell -> WalletAction.TradeCryptoAction.Buy()
             !allowedToBuy && allowedToSell -> WalletAction.TradeCryptoAction.Sell
             allowedToBuy && allowedToSell -> WalletAction.DialogAction.ChooseTradeActionDialog
             else -> null
@@ -176,9 +175,7 @@ class SingleWalletView : WalletView {
     }
 
     private fun setupButtonsType(state: WalletData, binding: FragmentWalletBinding) = with(binding) {
-        if (state.tradeCryptoState.sellingAllowed ||
-            state.tradeCryptoState.buyingAllowed
-        ) {
+        if (state.tradeCryptoState.isAvailableToSell() || state.tradeCryptoState.isAvailableToBuy()) {
             lButtonsLong.root.hide()
             lButtonsShort.root.show()
         } else {
