@@ -13,7 +13,10 @@ import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.domain.DomainLayer
 import com.tangem.network.common.MoshiConverter
 import com.tangem.tap.common.analytics.GlobalAnalyticsHandler
+import com.tangem.tap.common.feedback.AdditionalFeedbackInfo
+import com.tangem.tap.common.feedback.FeedbackManager
 import com.tangem.tap.common.images.createCoilImageLoader
+import com.tangem.tap.common.log.TangemLogCollector
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.appReducer
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -25,9 +28,6 @@ import com.tangem.tap.domain.configurable.warningMessage.RemoteWarningLoader
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.domain.tokens.CurrenciesRepository
 import com.tangem.tap.domain.walletconnect.WalletConnectRepository
-import com.tangem.tap.features.feedback.AdditionalEmailInfo
-import com.tangem.tap.features.feedback.FeedbackManager
-import com.tangem.tap.features.feedback.TangemLogCollector
 import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.tap.persistence.PreferencesStorage
 import com.tangem.wallet.BuildConfig
@@ -40,6 +40,8 @@ val store = Store(
     state = AppState()
 )
 val logConfig = LogConfig()
+
+lateinit var foregroundActivityObserver: ForegroundActivityObserver
 
 lateinit var preferencesStorage: PreferencesStorage
 lateinit var currenciesRepository: CurrenciesRepository
@@ -69,6 +71,8 @@ class TapApplication : Application(), ImageLoaderFactory {
         )
         walletConnectRepository = WalletConnectRepository(this)
 
+        foregroundActivityObserver = ForegroundActivityObserver()
+        registerActivityLifecycleCallbacks(foregroundActivityObserver.callbacks)
         initFeedbackManager()
         loadConfigs()
 
@@ -86,16 +90,23 @@ class TapApplication : Application(), ImageLoaderFactory {
         val localLoader = FeaturesLocalLoader(this, moshi)
         val remoteLoader = FeaturesRemoteLoader(moshi)
         val configManager = ConfigManager(localLoader, remoteLoader)
-        configManager.load {
+        configManager.load { config ->
             store.dispatch(GlobalAction.SetConfigManager(configManager))
-            shopService = TangemShopService(this, configManager.config.shopify!!)
+            shopService = TangemShopService(
+                application = this,
+                shopifyShop = config.shopify!!
+            )
+            store.state.globalState.feedbackManager?.initChat(
+                context = this,
+                zendeskConfig = config.zendesk!!
+            )
         }
         val warningsManager = WarningMessagesManager(RemoteWarningLoader(moshi))
         warningsManager.load { store.dispatch(GlobalAction.SetWarningManager(warningsManager)) }
     }
 
     private fun initFeedbackManager() {
-        val infoHolder = AdditionalEmailInfo()
+        val infoHolder = AdditionalFeedbackInfo()
         infoHolder.setAppVersion(this)
 
         val logLevels = listOf(
