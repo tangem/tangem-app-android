@@ -28,8 +28,6 @@ import com.tangem.wallet.R
 @Composable
 fun ExpandedCurrencyItem(
     currency: Currency,
-    nonRemovableTokens: List<ContractAddress>,
-    nonRemovableBlockchains: List<Blockchain>,
     addedTokens: List<TokenWithBlockchain>,
     addedBlockchains: List<Blockchain>,
     allowToAdd: Boolean,
@@ -138,17 +136,12 @@ fun ExpandedCurrencyItem(
                     } else {
                         addedBlockchains.contains(blockchain)
                     }
-                    val canBeRemoved = if (contract.address != null) {
-                        !nonRemovableTokens.contains(contract.address)
-                    } else {
-                        !nonRemovableBlockchains.contains(blockchain)
-                    }
                     NetworkItem(
                         currency = currency,
                         contract = contract,
-                        blockchain = blockchain, allowToAdd = allowToAdd,
+                        blockchain = blockchain,
+                        allowToAdd = allowToAdd,
                         added = added,
-                        canBeRemoved = canBeRemoved,
                         onAddCurrencyToggled = onAddCurrencyToggled,
                         onNetworkItemClicked = onNetworkItemClicked,
                     )

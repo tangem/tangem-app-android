@@ -23,7 +23,9 @@
     <string name="story_awe_title">Revolutionary Hardware Wallet</string>
     <string name="story_awe_description">Store your crypto assets secure while keeping private keys contained in your card</string>
     <string name="story_backup_title">Ultra Secure Backup</string>
-    <string name="story_backup_description">Up to <b>3 physical cards</b> to one wallet</string>
+    <string name="story_backup_description_1">Up to</string>
+    <string name="story_backup_description_2_bold">3 physical cards</string>
+    <string name="story_backup_description_3">to one wallet</string>
     <string name="story_currencies_title">Thousands of Currencies</string>
     <string name="story_currencies_description">A hardware wallet for your Bitcoin, Ethereum and many more currencies simultaneously – all in one card</string>
     <string name="story_web3_title">DeFi Compatible</string>
@@ -45,5 +47,18 @@
     <string name="alert_funds_restoration_message">If you chose the wrong network during your crypto transfer from the exchange, this guide will help you recover your funds</string>
 
     <string name="common_custom">Custom</string>
+    <string name="common_server_unavailable">The server is not available, please try again later</string>
+    <string name="common_notice">Notice</string>
+    <string name="common_attention">Attention</string>
 
+    <string name="token_details_hide_token">Hide token</string>
+    <string name="token_details_hide_alert_title">Hide %s</string>
+    <string name="token_details_hide_alert_hide">Hide</string>
+    <string name="token_details_hide_alert_message">You hide the token from the main screen, but you can add it back at any time.</string>
+    <string name="token_details_unable_hide_alert_title">Unable to hide %s</string>
+    <string name="token_details_unable_hide_alert_message">The %s token is the main currency on the %s network and cannot be hidden as long as you have other tokens on this network in the list.</string>
+
+    <string name="wallet_connect_network_not_found_format">%s network not found. Please, add it first and try again.</string>
+    <string name="wallet_connect_scanner_error_unsupported_network">This network is not supported. Please select another network.</string>
+    <string name="wallet_currency_subtitle">%s network</string>
 </resources>

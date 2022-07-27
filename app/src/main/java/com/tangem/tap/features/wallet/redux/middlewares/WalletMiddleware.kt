@@ -1,8 +1,5 @@
 package com.tangem.tap.features.wallet.redux.middlewares
 
-import android.content.Intent
-import android.net.Uri
-import androidx.core.content.ContextCompat
 import com.tangem.blockchain.blockchains.solana.RentProvider
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
@@ -26,14 +23,20 @@ import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.send.redux.PrepareSendScreen
 import com.tangem.tap.features.wallet.models.PendingTransactionType
+import com.tangem.tap.features.wallet.models.filterByCoin
 import com.tangem.tap.features.wallet.models.getPendingTransactions
 import com.tangem.tap.features.wallet.models.getSendableAmounts
-import com.tangem.tap.features.wallet.redux.*
+import com.tangem.tap.features.wallet.models.Currency
+import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.features.wallet.redux.WalletData
+import com.tangem.tap.features.wallet.redux.WalletState
+import com.tangem.tap.features.wallet.redux.WalletStore
 import com.tangem.tap.network.NetworkStateChanged
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
+import java.math.BigDecimal
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
@@ -41,7 +44,6 @@ import org.rekotlin.Action
 import org.rekotlin.DispatchFunction
 import org.rekotlin.Middleware
 import timber.log.Timber
-import java.math.BigDecimal
 
 class WalletMiddleware {
     private val tradeCryptoMiddleware = TradeCryptoMiddleware()
@@ -198,7 +200,8 @@ class WalletMiddleware {
                     store.dispatchOnMain(WalletAction.Warnings.CheckIfNeeded)
                 }
             }
-            is WalletAction.LoadData -> {
+            is WalletAction.LoadData,
+            is WalletAction.LoadData.Refresh -> {
                 scope.launch {
                     val scanNoteResponse = globalState.scanResponse ?: return@launch
                     if (walletState.walletsData.isNotEmpty()) {
@@ -222,9 +225,7 @@ class WalletMiddleware {
                 action.context.shareText(action.address)
             }
             is WalletAction.ExploreAddress -> {
-                val uri = Uri.parse(action.exploreUrl)
-                val intent = Intent(Intent.ACTION_VIEW, uri)
-                ContextCompat.startActivity(action.context, intent, null)
+                store.dispatchOpenUrl(action.exploreUrl)
             }
             is WalletAction.Send -> {
                 val newAction = prepareSendAction(action.amount, store.state.walletState)
@@ -322,7 +323,10 @@ class WalletMiddleware {
                     }
 
                     val balance = walletManager.wallet.fundsAvailable(AmountType.Coin)
-                    val outgoingTxs = walletManager.wallet.getPendingTransactions(PendingTransactionType.Outgoing)
+                    val outgoingTxs = walletManager.wallet.getPendingTransactions(
+                        PendingTransactionType.Outgoing
+                    ).filterByCoin()
+
                     val rentExempt = result.data
                     val show = if (outgoingTxs.isEmpty()) {
                         isNeedToShowWarning(balance, rentExempt)

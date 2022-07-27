@@ -11,6 +11,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.tap.common.compose.extensions.HideKeyboardOnScroll
 import com.tangem.tap.common.compose.extensions.OnBottomReached
 import com.tangem.tap.domain.tokens.Currency
 import com.tangem.tap.features.tokens.redux.ContractAddress
@@ -21,8 +22,6 @@ import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
 fun ListOfCurrencies(
     header: @Composable () -> Unit,
     currencies: List<Currency>,
-    nonRemovableTokens: List<ContractAddress>,
-    nonRemovableBlockchains: List<Blockchain>,
     addedTokens: List<TokenWithBlockchain>,
     addedBlockchains: List<Blockchain>,
     allowToAdd: Boolean,
@@ -44,6 +43,8 @@ fun ListOfCurrencies(
     }
 
     val listState = rememberLazyListState()
+    listState.HideKeyboardOnScroll()
+    listState.OnBottomReached(loadMoreThreshold = 40) { onLoadMore() }
 
     LazyColumn(
         state = listState,
@@ -55,8 +56,6 @@ fun ListOfCurrencies(
         itemsIndexed(currencies) { index, currency ->
             CurrencyItem(
                 currency = currency,
-                nonRemovableTokens = nonRemovableTokens,
-                nonRemovableBlockchains = nonRemovableBlockchains,
                 addedTokens = addedTokens,
                 addedBlockchains = addedBlockchains,
                 allowToAdd = allowToAdd,
@@ -67,7 +66,6 @@ fun ListOfCurrencies(
             )
         }
     }
-    listState.OnBottomReached(loadMoreThreshold = 40) { onLoadMore() }
 }
 
 val Currency.fullName: String
