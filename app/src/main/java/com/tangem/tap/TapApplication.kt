@@ -27,9 +27,6 @@ import com.tangem.tap.domain.configurable.warningMessage.RemoteWarningLoader
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.domain.tokens.CurrenciesRepository
 import com.tangem.tap.domain.walletconnect.WalletConnectRepository
-import com.tangem.tap.features.feedback.AdditionalEmailInfo
-import com.tangem.tap.features.feedback.FeedbackManager
-import com.tangem.tap.features.feedback.TangemLogCollector
 import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.tap.persistence.PreferencesStorage
 import com.tangem.wallet.BuildConfig
@@ -66,16 +63,12 @@ class TapApplication : Application(), ImageLoaderFactory {
             })
         }
 
-        val application = this
-        NetworkConnectivity.createInstance(store, application)
-        preferencesStorage = PreferencesStorage(application)
-        PicassoHelper.initPicassoWithCaching(application)
         NetworkConnectivity.createInstance(store, this)
         preferencesStorage = PreferencesStorage(this)
         currenciesRepository = CurrenciesRepository(
             this, store.state.domainNetworks.tangemTechService
         )
-        walletConnectRepository = WalletConnectRepository(application)
+        walletConnectRepository = WalletConnectRepository(this)
 
         foregroundActivityObserver = ForegroundActivityObserver()
         registerActivityLifecycleCallbacks(foregroundActivityObserver.callbacks)
@@ -84,8 +77,7 @@ class TapApplication : Application(), ImageLoaderFactory {
 
         BlockchainSdkRetrofitBuilder.enableNetworkLogging = BuildConfig.DEBUG
 
-        val analyticsHandler = GlobalAnalyticsHandler.createDefaultAnalyticHandlers(application)
-        store.dispatch(GlobalAction.SetAnanlyticHandlers(analyticsHandler))
+        initAppsFlyer()
     }
 
     override fun newImageLoader(): ImageLoader {

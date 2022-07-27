@@ -26,7 +26,6 @@ class ConfigValueModel(
         val infuraProjectId: String?,
         val appsFlyerDevKey: String,
         val amplitudeApiKey: String,
-        val shopifyShop: ShopifyShop?
         val shopifyShop: ShopifyShop?,
         val zendesk: ZendeskConfig?,
 )
