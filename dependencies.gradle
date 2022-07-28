@@ -1,8 +1,8 @@
 ext.versions = [
-        kotlin               : '1.6.10',
-        build_gradle         : '7.1.3',
-        tamgem_card_sdk      : 'develop-157',
-        tamgem_blockchain_sdk: 'develop-96',
+    kotlin               : '1.6.10',
+    build_gradle         : '7.1.3',
+    tamgem_card_sdk      : 'develop-157',
+    tamgem_blockchain_sdk: 'develop-99',
 ]
 
 ext.environmentConfig = [
