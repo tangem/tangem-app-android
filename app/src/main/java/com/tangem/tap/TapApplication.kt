@@ -8,6 +8,7 @@ import com.google.firebase.ktx.Firebase
 import com.google.firebase.remoteconfig.ktx.remoteConfig
 import com.google.firebase.remoteconfig.ktx.remoteConfigSettings
 import com.tangem.Log
+import com.tangem.LogFormat
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.domain.DomainLayer
 import com.tangem.network.common.MoshiConverter
@@ -108,7 +109,21 @@ class TapApplication : Application(), ImageLoaderFactory {
         val infoHolder = AdditionalFeedbackInfo()
         infoHolder.setAppVersion(this)
 
-        val logWriter = TangemLogCollector()
+        val logLevels = listOf(
+            Log.Level.ApduCommand,
+            Log.Level.Apdu,
+            Log.Level.Tlv,
+            Log.Level.Nfc,
+            Log.Level.Command,
+            Log.Level.Session,
+            Log.Level.View,
+            Log.Level.Network,
+            Log.Level.Error,
+        )
+        val logWriter = TangemLogCollector(
+            levels = logLevels,
+            messageFormatter = LogFormat.StairsFormatter()
+        )
         Log.addLogger(logWriter)
 
         store.dispatch(GlobalAction.SetFeedbackManager(FeedbackManager(infoHolder, logWriter)))
