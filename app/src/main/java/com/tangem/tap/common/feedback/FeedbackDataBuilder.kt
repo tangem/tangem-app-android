@@ -1,5 +1,7 @@
 package com.tangem.tap.common.feedback
 
+import com.tangem.tap.common.extensions.breakLine
+
 class FeedbackDataBuilder(
     private val infoHolder: AdditionalFeedbackInfo
 ) {
@@ -10,8 +12,8 @@ class FeedbackDataBuilder(
         return this
     }
 
-    fun appendLine(count: Int = 1): FeedbackDataBuilder {
-        builder.appendLine(count)
+    fun breakLine(count: Int = 1): FeedbackDataBuilder {
+        builder.breakLine(count)
         return this
     }
 
@@ -34,7 +36,7 @@ class FeedbackDataBuilder(
 
             infoHolder.tokens[it.blockchain]?.let { tokens ->
                 builder.append("Tokens:")
-                appendLine()
+                breakLine()
                 tokens.forEach { token ->
                     builder.appendKeyValue("Name", token.name)
                     builder.appendKeyValue("ID", token.id ?: "[custom token]")
@@ -75,7 +77,3 @@ private fun StringBuilder.appendKeyValue(key: String, value: String): StringBuil
 }
 
 private fun StringBuilder.appendDelimiter(): StringBuilder = append("----------\n")
-
-private fun StringBuilder.appendLine(count: Int = 1): StringBuilder {
-    return append(List(count) { "\n" }.joinToString(separator = ""))
-}

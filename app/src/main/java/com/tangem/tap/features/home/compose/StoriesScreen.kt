@@ -12,16 +12,17 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -79,10 +80,10 @@ fun StoriesScreen(
 
     val hideContent = remember { mutableStateOf(true) }
 
-    SideEffect {
+    LaunchedEffect(key1 = isDarkBackground) {
         systemUiController.setSystemBarsColor(
             color = Color.Transparent,
-            darkIcons = false,
+            darkIcons = !isDarkBackground,
         )
     }
 
@@ -140,12 +141,12 @@ fun StoriesScreen(
             )
         }
 
-        val insets = WindowInsets.systemBars
+        val statusBarInsets = WindowInsets.statusBars
             .union(WindowInsets(top = 32.dp))
 
         Column(
             modifier = Modifier
-                .windowInsetsPadding(insets)
+                .windowInsetsPadding(statusBarInsets)
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center,
@@ -179,8 +180,9 @@ fun StoriesScreen(
         }
         Column(
             modifier = Modifier
+                .navigationBarsPadding()
                 .align(Alignment.BottomCenter)
-                .fillMaxWidth()
+                .fillMaxWidth(),
         ) {
             if (currentStep.value == 4) Button(
                 onClick = onSearchTokensClick,
@@ -213,7 +215,6 @@ fun StoriesScreen(
                 onShopButtonClick = onShopButtonClick
             )
         }
-
     }
 }
 

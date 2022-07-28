@@ -2,6 +2,7 @@ package com.tangem.tap.common.feedback
 
 import android.content.Context
 import com.tangem.domain.common.TapWorkarounds
+import com.tangem.tap.common.extensions.breakLine
 import com.tangem.wallet.R
 
 interface FeedbackData {
@@ -17,9 +18,9 @@ interface FeedbackData {
     fun joinTogether(context: Context, infoHolder: AdditionalFeedbackInfo): String {
         return StringBuilder().apply {
             append(context.getString(mainMessageResId))
-            appendLine(3)
+            breakLine(3)
             append(context.getString(getDataCollectionMessageResId()))
-            appendLine()
+            breakLine()
             append(createOptionalMessage(infoHolder))
         }.toString()
     }
@@ -31,7 +32,7 @@ class RateCanBeBetterEmail : FeedbackData {
 
     override fun createOptionalMessage(infoHolder: AdditionalFeedbackInfo): String = FeedbackDataBuilder(infoHolder)
         .appendCardInfo()
-        .appendLine()
+        .breakLine()
         .appendPhoneInfo()
         .build()
 }
@@ -43,7 +44,7 @@ class ScanFailsEmail : FeedbackData {
 
     override fun joinTogether(context: Context, infoHolder: AdditionalFeedbackInfo): String = StringBuilder().apply {
         append(context.getString(mainMessageResId))
-        appendLine(4)
+        breakLine(4)
         append(createOptionalMessage(infoHolder))
     }.toString()
 
@@ -53,7 +54,7 @@ class ScanFailsEmail : FeedbackData {
 }
 
 class SendTransactionFailedEmail(
-    val error: String
+    val error: String,
 ) : FeedbackData {
 
     override val subjectResId: Int = R.string.feedback_subject_tx_failed
@@ -63,7 +64,7 @@ class SendTransactionFailedEmail(
         .appendCardInfo()
         .appendDelimiter()
         .appendTxFailedBlockchainInfo(error)
-        .appendLine()
+        .breakLine()
         .appendPhoneInfo()
         .build()
 }
@@ -89,7 +90,7 @@ class FeedbackEmail : FeedbackData {
     override fun createOptionalMessage(infoHolder: AdditionalFeedbackInfo): String = FeedbackDataBuilder(infoHolder)
         .appendCardInfo()
         .appendWalletsInfo()
-        .appendLine()
+        .breakLine()
         .appendPhoneInfo()
         .build()
 }
