@@ -44,3 +44,7 @@ data class CurrenciesResponse(val currencies: List<Currency>) {
         val type: String,
     ) : TangemTechResponse
 }
+
+data class GeoResponse(
+    val code: String
+) : TangemTechResponse
