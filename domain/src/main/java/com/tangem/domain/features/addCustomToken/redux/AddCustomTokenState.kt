@@ -50,7 +50,7 @@ data class AddCustomTokenState(
 
     fun blockchainToName(blockchain: Blockchain, isDerivationPath: Boolean = false): String? {
         return when {
-            isDerivationPath -> blockchain.derivationPath(cardDerivationStyle)?.rawPath
+            isDerivationPath -> blockchain.derivationPath(DerivationStyle.LEGACY)?.rawPath
             else -> {
                 when (blockchain) {
                     Blockchain.Unknown -> null
@@ -150,10 +150,21 @@ data class AddCustomTokenState(
             mainNetwork: Blockchain,
             derivationNetwork: Blockchain,
             derivationStyle: DerivationStyle?
-        ): com.tangem.common.hdWallet.DerivationPath? = when (derivationNetwork) {
-            Blockchain.Unknown -> mainNetwork
-            else -> derivationNetwork
-        }.derivationPath(derivationStyle)
+        ): com.tangem.common.hdWallet.DerivationPath? {
+            // If we allow user to select derivations, we need to provide different derivations
+            // (Legacy style derivations).
+            // But the mainNetwork derivation depends on whether a user has a card
+            // with legacy derivations or new style derivations.
+            val derivationStyleToUse = if (derivationNetwork == Blockchain.Unknown) {
+                derivationStyle
+            } else {
+                DerivationStyle.LEGACY
+            }
+            return when (derivationNetwork) {
+                Blockchain.Unknown -> mainNetwork
+                else -> derivationNetwork
+            }.derivationPath(derivationStyleToUse)
+        }
 
         internal fun createFormFields(card: Card, type: CustomTokenType): List<DataField<*>> {
             return listOf(
