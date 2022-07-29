@@ -2,7 +2,6 @@ package com.tangem.tap.features.onboarding.products.note.redux
 
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.tap.domain.TapError
-import com.tangem.tap.domain.extensions.buyIsAllowed
 import com.tangem.tap.features.onboarding.OnboardingWalletBalance
 import com.tangem.tap.store
 import org.rekotlin.StateType
@@ -26,8 +25,8 @@ data class OnboardingNoteState(
     val progress: Int
         get() = steps.indexOf(currentStep)
 
-    val isBuyAllowed: Boolean by ReadOnlyProperty<Any, Boolean> { thisRef, property ->
-        store.state.globalState.currencyExchangeManager?.buyIsAllowed(walletBalance.currency) ?: false
+    val isBuyAllowed: Boolean by ReadOnlyProperty<Any, Boolean> { _, _ ->
+        store.state.globalState.exchangeManager?.availableForBuy(walletBalance.currency) ?: false
     }
 }
 

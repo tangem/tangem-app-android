@@ -3,7 +3,6 @@ package com.tangem.tap.features.onboarding.products.twins.redux
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.domain.common.TwinCardNumber
 import com.tangem.tap.domain.TapError
-import com.tangem.tap.domain.extensions.buyIsAllowed
 import com.tangem.tap.domain.twins.TwinCardsManager
 import com.tangem.tap.features.onboarding.OnboardingWalletBalance
 import com.tangem.tap.store
@@ -56,8 +55,8 @@ data class TwinCardsState(
     val showAlert: Boolean
         get() = currentStep == TwinCardsStep.CreateSecondWallet || currentStep == TwinCardsStep.CreateThirdWallet
 
-    val isBuyAllowed: Boolean by ReadOnlyProperty<Any, Boolean> { thisRef, property ->
-        store.state.globalState.currencyExchangeManager?.buyIsAllowed(walletBalance.currency) ?: false
+    val isBuyAllowed: Boolean by ReadOnlyProperty<Any, Boolean> { _, _ ->
+        store.state.globalState.exchangeManager?.availableForBuy(walletBalance.currency) ?: false
     }
 }
 
