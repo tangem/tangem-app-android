@@ -47,7 +47,7 @@
         <activity
             android:exported="true"
             android:name="com.tangem.tap.MainActivity"
-            android:launchMode="singleTask"
+            android:launchMode="singleTop"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="adjustResize">
             <intent-filter>
