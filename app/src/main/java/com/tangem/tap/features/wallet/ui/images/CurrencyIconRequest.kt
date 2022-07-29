@@ -1,12 +1,9 @@
 package com.tangem.tap.features.wallet.ui.images
 
-import android.graphics.PorterDuff
-import android.graphics.PorterDuffColorFilter
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.constraintlayout.utils.widget.ImageFilterView
 import coil.imageLoader
-import coil.load
 import coil.request.ImageRequest
 import coil.transform.RoundedCornersTransformation
 import com.tangem.blockchain.common.Blockchain
@@ -29,67 +26,117 @@ fun loadCurrencyIcon(
     token: Token?,
     blockchain: Blockchain,
 ) {
-    when {
-        token == null -> currencyImageView.loadIcon(
-            iconUrl = getIconUrl(blockchain.toNetworkId()),
-            placeholderRes = blockchain.getRoundIconRes(),
+    CurrencyIconLoader(
+        currencyImageView = currencyImageView,
+        currencyTextView = currencyTextView,
+        token = token,
+        blockchain = blockchain
+    )
+        .load()
+}
+
+private class CurrencyIconLoader(
+    private val currencyImageView: ImageFilterView,
+    private val currencyTextView: TextView,
+    private val token: Token?,
+    private val blockchain: Blockchain,
+) {
+    fun load() {
+        when {
+            token == null && blockchain.isTestnet() -> loadTestnetBlockchainIcon()
+            token == null -> loadBlockchainIcon()
+            blockchain.isTestnet() -> loadTestnetTokenIcon()
+            else -> loadTokenIcon()
+        }
+    }
+
+    private fun loadBlockchainIcon() {
+        loadBlockchainIconBase(
             onStart = {
-                if (blockchain.isTestnet()) {
-                    currencyImageView.saturation = 0f
-                } else {
-                    currencyImageView.colorFilter = null
-                }
+                currencyImageView.colorFilter = null
             }
         )
-        token.symbol == QCX -> currencyImageView.load(R.drawable.ic_qcx)
-        token.symbol == VOYR -> currencyImageView.load(R.drawable.ic_voyr)
-        else -> currencyImageView.loadIcon(
-            iconUrl = getTokenIconUrl(token, blockchain),
+    }
+
+    private fun loadTestnetBlockchainIcon() {
+        loadBlockchainIconBase(
+            onStart = {
+                currencyImageView.saturation = 0f
+            }
+        )
+    }
+
+    private fun loadTokenIcon() {
+        loadTokenIconBase(
+            onStart = {
+                currencyImageView.setColorFilter(it.getColor())
+            },
+            onSuccess = {
+                currencyImageView.colorFilter = null
+            }
+        )
+    }
+
+    private fun loadTestnetTokenIcon() {
+        loadTokenIconBase(
+            onStart = {
+                currencyImageView.saturation = 0f
+            }
+        )
+    }
+
+    private inline fun loadBlockchainIconBase(
+        crossinline onStart: (Blockchain) -> Unit = {},
+        crossinline onSuccess: (Blockchain) -> Unit = {},
+        crossinline onError: (Blockchain) -> Unit = {},
+    ) {
+        currencyImageView.loadIcon(
+            data = getIconUrl(blockchain.toNetworkId()),
+            placeholderRes = blockchain.getRoundIconRes(),
+            onStart = { onStart(blockchain) },
+            onSuccess = { onSuccess(blockchain) },
+            onError = { onError(blockchain) },
+        )
+    }
+
+    private inline fun loadTokenIconBase(
+        crossinline onStart: (Token) -> Unit = {},
+        crossinline onSuccess: (Token) -> Unit = {},
+        crossinline onError: (Token) -> Unit = {},
+    ) {
+        if (token == null) return
+
+        currencyImageView.loadIcon(
+            data = getTokenIcon(token, blockchain),
             placeholderRes = R.drawable.shape_circle,
             onStart = {
                 currencyTextView.text = token.symbol.take(1)
                 currencyTextView.setTextColor(token.getTextColor())
-
-                if (blockchain.isTestnet()) {
-                    currencyImageView.saturation = 0f
-                }
-            },
-            onError = {
-                currencyImageView.colorFilter = PorterDuffColorFilter(
-                    /* color = */
-                    token.getColor(),
-                    /* mode = */
-                    PorterDuff.Mode.SRC_ATOP,
-                )
+                onStart(token)
             },
             onSuccess = {
-                if (!blockchain.isTestnet()) {
-                    currencyImageView.colorFilter = null
-                }
-            }
+                currencyTextView.text = null
+                onSuccess(token)
+            },
+            onError = { onError(token) },
         )
     }
 }
 
 private inline fun ImageView.loadIcon(
-    iconUrl: String?,
+    data: Any?,
     placeholderRes: Int,
     crossinline onStart: () -> Unit = {},
     crossinline onSuccess: () -> Unit = {},
     crossinline onError: () -> Unit = {},
 ) {
     ImageRequest.Builder(context)
-        .data(iconUrl)
+        .data(data)
         .placeholder(placeholderRes)
         .error(placeholderRes)
         .fallback(placeholderRes)
         .transformations(
-            RoundedCornersTransformation(
-                topLeft = 32f,
-                topRight = 32f,
-                bottomLeft = 32f,
-                bottomRight = 32f
-            )
+            RoundedCornersTransformation(radius = 8f)
         )
         .listener(
             onStart = { onStart() },
@@ -101,9 +148,15 @@ private inline fun ImageView.loadIcon(
         .also(context.imageLoader::enqueue)
 }
 
-private fun getTokenIconUrl(token: Token, blockchain: Blockchain): String? {
-    return token.id?.let(::getIconUrl)
-        ?: token.getCustomIconUrl()
-        ?: IconsUtil.getTokenIconUri(blockchain, token)
-            ?.toString()
+private fun getTokenIcon(token: Token, blockchain: Blockchain): Any? {
+    return when (token.symbol) {
+        QCX -> R.drawable.ic_qcx
+        VOYR -> R.drawable.ic_voyr
+        else -> {
+            token.id?.let(::getIconUrl)
+                ?: token.getCustomIconUrl()
+                ?: IconsUtil.getTokenIconUri(blockchain, token)
+                    ?.toString()
+        }
+    }
 }
