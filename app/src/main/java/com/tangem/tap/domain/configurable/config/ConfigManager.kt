@@ -91,7 +91,8 @@ class ConfigManager(
                 blockchairApiKey = values.blockchairApiKey,
                 blockchairAuthorizationToken = values.blockchairAuthorizationToken,
                 blockcypherTokens = values.blockcypherTokens,
-                infuraProjectId = values.infuraProjectId
+                infuraProjectId = values.infuraProjectId,
+                tronGridApiKey = values.tronGridApiKey
             ),
             appsFlyerDevKey = values.appsFlyerDevKey,
             shopify = values.shopifyShop,
