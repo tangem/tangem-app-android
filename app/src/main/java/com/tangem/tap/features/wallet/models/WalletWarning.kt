@@ -4,7 +4,6 @@ sealed class WalletWarning(
     val showingPosition: Int,
 ) {
     object TransactionInProgress : WalletWarning(10)
-    object SolanaTokensUnsupported : WalletWarning(20)
     data class BalanceNotEnoughForFee(val blockchainFullName: String) : WalletWarning(30)
     data class Rent(val walletRent: WalletRent) : WalletWarning(40)
 }
