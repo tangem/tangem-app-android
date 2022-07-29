@@ -141,4 +141,5 @@ class TapApplication : Application(), ImageLoaderFactory {
 data class LogConfig(
     val coil: Boolean = BuildConfig.DEBUG,
     val storeAction: Boolean = BuildConfig.DEBUG,
+    val zendesk: Boolean = BuildConfig.DEBUG,
 )
