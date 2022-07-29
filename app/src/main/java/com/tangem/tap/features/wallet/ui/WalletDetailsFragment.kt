@@ -1,11 +1,7 @@
 package com.tangem.tap.features.wallet.ui
 
 import android.os.Bundle
-import android.view.Menu
-import android.view.MenuInflater
-import android.view.MenuItem
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.ColorRes
@@ -18,25 +14,13 @@ import by.kirich1409.viewbindingdelegate.viewBinding
 import com.tangem.tangem_sdk_new.extensions.dpToPx
 import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.TestActions
-import com.tangem.tap.common.extensions.appendIfNotNull
-import com.tangem.tap.common.extensions.beginDelayedTransition
-import com.tangem.tap.common.extensions.fitChipsByGroupWidth
-import com.tangem.tap.common.extensions.getColor
-import com.tangem.tap.common.extensions.getString
-import com.tangem.tap.common.extensions.hide
-import com.tangem.tap.common.extensions.show
-import com.tangem.tap.common.extensions.toQrCode
+import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.recyclerView.SpaceItemDecoration
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.onboarding.getQRReceiveMessage
 import com.tangem.tap.features.wallet.models.PendingTransaction
-import com.tangem.tap.features.wallet.redux.Currency
-import com.tangem.tap.features.wallet.redux.ErrorType
-import com.tangem.tap.features.wallet.redux.ProgressState
-import com.tangem.tap.features.wallet.redux.WalletAction
-import com.tangem.tap.features.wallet.redux.WalletData
-import com.tangem.tap.features.wallet.redux.WalletState
+import com.tangem.tap.features.wallet.redux.*
 import com.tangem.tap.features.wallet.redux.WalletState.Companion.UNKNOWN_AMOUNT_SIGN
 import com.tangem.tap.features.wallet.ui.adapters.PendingTransactionsAdapter
 import com.tangem.tap.features.wallet.ui.adapters.WalletDetailWarningMessagesAdapter
@@ -107,7 +91,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
 
     private fun setupButtons() = with(binding) {
         rowButtons.onBuyClick = {
-            store.dispatch(WalletAction.TradeCryptoAction.Buy)
+            store.dispatch(WalletAction.TradeCryptoAction.Buy())
         }
         rowButtons.onSellClick = {
             store.dispatch(WalletAction.TradeCryptoAction.Sell)
@@ -200,8 +184,8 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
         }
 
         rowButtons.updateButtonsVisibility(
-            buyAllowed = selectedWallet.tradeCryptoState.buyingAllowed,
-            sellAllowed = selectedWallet.tradeCryptoState.sellingAllowed,
+            buyAllowed = selectedWallet.tradeCryptoState.isAvailableToBuy(),
+            sellAllowed = selectedWallet.tradeCryptoState.isAvailableToSell(),
             sendAllowed = selectedWallet.mainButton.enabled,
         )
     }
