@@ -83,7 +83,7 @@ class OnboardingManager(
 
 data class OnboardingWalletBalance(
     val value: BigDecimal = BigDecimal.ZERO,
-    val currency: Currency.Blockchain = Currency.Blockchain(Blockchain.Unknown, null),
+    val currency: Currency = Currency.Blockchain(Blockchain.Unknown, null),
     val hasIncomingTransaction: Boolean = false,
     val state: ProgressState,
     val error: TapError? = null,
