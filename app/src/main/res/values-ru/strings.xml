@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
     <string name="app_name">Tangem</string>
-    <string name="common_no">Нет</string>
     <string name="common_save_changes">Сохранить изменения</string>
     <string name="common_warning">Предупреждение</string>
     <string name="common_retry">Повторить попытку</string>
@@ -262,8 +261,8 @@
     <string name="onboarding_done_body">Ваша криптокарта активирована и готова к использованию</string>
     <string name="onboarding_done_button_continue">Продолжить</string>
     <string name="onboarding_balance_title">Баланс</string>
-    <string name="address_qr_code_message_format">Отправляйте только %s (%s) на этот адрес. Отправка любой другой валюты приведет к ее безвозвратной потере.</string>
-    <string name="address_qr_code_message_token_format">Отправляйте только %s (%s) из сети %s на этот адрес. Отправка любой другой валюты приведет к ее безвозвратной потере.</string>
+    <string name="address_qr_code_message_format">Отправляйте только %s (%s) на этот адрес. Иначе это может привести к утрате средств.</string>
+    <string name="address_qr_code_message_token_format">Отправляйте только %s (%s) из сети %s на этот адрес. Иначе это может привести к утрате средств.</string>
     <string name="onboarding_twins_interrupt_warning">Если процесс повторного создания кошелька каким-либо образом прервется, вам придется начать все сначала.</string>
     <string name="onboarding_twin_exit_warning">Процесс связывания карт частично завершен. Вы не можете выйти из него сейчас.</string>
     <string name="onboarding_error_create_primary_wallet">Внутренняя ошибка: не удается создать менеджер кошельков</string>
@@ -382,4 +381,5 @@
     <string name="feedback_preface_support">Привет, команда поддержки,</string>
     <string name="feedback_preface_tx_push_failed">Пожалуйста, расскажите нам больше о Вашей проблеме. Каждая деталь может быть полезной.</string>
     <string name="feedback_data_collection_message">Информация ниже не является обязательной. Вы можете стереть её, если хотите.</string>
+    <string name="common_no">Нет</string>
 </resources>
