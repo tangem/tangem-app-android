@@ -8,6 +8,8 @@ import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.extensions.isZero
 import com.tangem.domain.common.extensions.canHandleToken
+import com.tangem.domain.common.extensions.toCoinId
+import com.tangem.domain.features.addCustomToken.CustomCurrency
 import com.tangem.tap.common.entities.Button
 import com.tangem.tap.common.extensions.toQrCode
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
@@ -395,18 +397,9 @@ data class WalletData(
     }
 
     fun assembleWarnings(): List<WalletWarning> {
-        val blockchain = currency.blockchain
         val walletWarnings = mutableListOf<WalletWarning>()
         if (currencyData.status == BalanceStatus.SameCurrencyTransactionInProgress) {
             walletWarnings.add(WalletWarning.TransactionInProgress)
-        }
-        if (currency.isBlockchain()) {
-            if (blockchain == Blockchain.Solana || blockchain == Blockchain.SolanaTestnet) {
-                val card = store.state.globalState.scanResponse?.card
-                if (card?.canHandleToken(blockchain) == false) {
-                    walletWarnings.add(WalletWarning.SolanaTokensUnsupported)
-                }
-            }
         }
         if (walletRent != null) {
             walletWarnings.add(WalletWarning.Rent(walletRent))
