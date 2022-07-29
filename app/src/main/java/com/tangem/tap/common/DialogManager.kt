@@ -22,6 +22,7 @@ import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.UnfinishedB
 import com.tangem.tap.features.wallet.redux.WalletDialog
 import com.tangem.tap.features.wallet.ui.dialogs.AmountToSendBottomSheetDialog
 import com.tangem.tap.features.wallet.ui.dialogs.ChooseTradeActionBottomSheetDialog
+import com.tangem.tap.features.wallet.ui.dialogs.RussianCardholdersWarningBottomSheetDialog
 import com.tangem.tap.features.wallet.ui.dialogs.ScanFailsDialog
 import com.tangem.tap.features.wallet.ui.dialogs.SignedHashesWarningDialog
 import com.tangem.tap.features.wallet.ui.dialogs.SimpleOkDialog
@@ -115,6 +116,8 @@ class DialogManager : StoreSubscriber<GlobalState> {
                 AmountToSendBottomSheetDialog(context, state.dialog)
             is WalletDialog.SignedHashesMultiWalletDialog ->
                 SignedHashesWarningDialog.create(context)
+            is WalletDialog.RussianCardholdersWarningDialog ->
+                RussianCardholdersWarningBottomSheetDialog(context)
             else -> null
         }
         dialog?.show()
