@@ -77,4 +77,6 @@
     <string name="common_yes">Да</string>
 
     <string name="details_ask_a_question">Задать вопрос</string>
+
+    <string name="chat_bot_name">Tangem Bot</string>
 </resources>
