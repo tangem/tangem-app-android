@@ -6,14 +6,14 @@
         android:layout_height="wrap_content">
 
     <com.google.android.material.card.MaterialCardView
-            android:id="@+id/card_wallet"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:layout_marginEnd="16dp"
-            android:layout_marginBottom="8dp"
-            android:background="@android:color/white"
-            android:elevation="3dp">
+        android:id="@+id/card_wallet"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="8dp"
+        android:background="@android:color/white"
+        android:elevation="3dp">
 
         <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="match_parent"
@@ -42,16 +42,16 @@
                 android:textSize="25sp"
                 android:textStyle="bold"
                 app:layout_constraintBottom_toBottomOf="@id/iv_currency"
-                    app:layout_constraintEnd_toEndOf="@id/iv_currency"
-                    app:layout_constraintStart_toStartOf="@id/iv_currency"
-                    app:layout_constraintTop_toTopOf="@id/iv_currency"
-                    tools:text="J" />
+                app:layout_constraintEnd_toEndOf="@id/iv_currency"
+                app:layout_constraintStart_toStartOf="@id/iv_currency"
+                app:layout_constraintTop_toTopOf="@id/iv_currency"
+                tools:text="J" />
 
             <ImageView
                 android:id="@+id/iv_blockchain"
-                android:layout_width="16dp"
-                android:layout_height="16dp"
-                android:padding="1dp"
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:padding="2dp"
                 android:translationX="4dp"
                 android:translationY="-4dp"
                 android:background="@drawable/shape_circle"
@@ -60,7 +60,7 @@
                 android:visibility="gone"
                 app:layout_constraintTop_toTopOf="@id/iv_currency"
                 app:layout_constraintEnd_toEndOf="@id/iv_currency"
-                tools:src="@drawable/ic_eth_no_color"
+                tools:src="@drawable/ic_eth"
                 tools:visibility="visible" />
             
             <View
@@ -74,24 +74,24 @@
                 tools:visibility="visible" />
 
             <include
-                    layout="@layout/item_currency_wallet_content"
-                    android:id="@+id/l_content"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_marginStart="8dp"
-                    android:visibility="gone"
-                    app:layout_constraintStart_toEndOf="@id/iv_currency"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    tools:visibility="visible" />
+                layout="@layout/item_currency_wallet_content"
+                android:id="@+id/l_content"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="8dp"
+                android:visibility="gone"
+                app:layout_constraintStart_toEndOf="@id/iv_currency"
+                app:layout_constraintEnd_toEndOf="parent"
+                tools:visibility="visible" />
 
             <include
-                    layout="@layout/item_currency_wallet_shimmer"
-                    android:id="@+id/l_shimmer"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_marginStart="8dp"
-                    app:layout_constraintStart_toEndOf="@id/iv_currency"
-                    app:layout_constraintEnd_toEndOf="parent" />
+                layout="@layout/item_currency_wallet_shimmer"
+                android:id="@+id/l_shimmer"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginStart="8dp"
+                app:layout_constraintStart_toEndOf="@id/iv_currency"
+                app:layout_constraintEnd_toEndOf="parent" />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
     </com.google.android.material.card.MaterialCardView>
