@@ -76,14 +76,36 @@
     <string name="russian_bank_card_warning_subtitle">У вас есть карта банка другой страны или платежной системы UnionPay?</string>
     <string name="common_yes">Да</string>
 
-    <string name="details_ask_a_question">Задать вопрос</string>
+    <string name="details_ask_a_question">Чат</string>
 
-    <string name="security_and_privacy_title">Безопасность и приватность</string>
-    <string name="security_and_privacy_security">Безопасность</string>
-    <string name="security_and_privacy_privacy">Приватность</string>
-    <string name="security_and_privacy_change_password">Изменить код доступа</string>
-    <string name="security_and_privacy_access_method">Изменить защиту доступа</string>
-    <string name="security_and_privacy_access_method_title">Изменить защиту доступа</string>
-    <string name="security_and_privacy_save_card_switch">Сохранять карты</string>
-    <string name="security_and_privacy_save_password_switch">Сохранять пароли</string>
+    <string name="card_settings_title">Настройки карты</string>
+    <string name="card_settings_security_mode">Тип безопасности</string>
+    <string name="card_settings_security_mode_footer">Выбранный способ защиты приложения</string>
+    <string name="card_settings_change_access_code">Смена кода доступа</string>
+    <string name="card_settings_change_access_code_footer">Код доступа будет изменен только на данной карте</string>
+    <string name="scan_card_settings_title">Приготовьте свою карту</string>
+    <string name="scan_card_settings_message">Отсканируйте карту, чтобы изменить ее настройки. Изменения затронут только ту карту, которую вы отсканировали, и не повлияют на другие карты, привязанные к вашему кошельку.</string>
+    <string name="scan_card_settings_button">Сканировать</string>
+    <string name="app_settings_title">Настройки приложения</string>
+    <string name="app_settings_warning_title">Включите биометрическую аутентификацию</string>
+    <string name="app_settings_warning_subtitle">Перейдите в настройки, чтобы включить биометрическую аутентификацию в приложении Tangem</string>
+    <string name="app_settings_saved_wallet">Cохранение кошелька</string>
+    <string name="app_settings_saved_wallet_footer">Если эта опция включена, кошельки всех отсканированных карт будут привязываться к приложению и при открытии приложения будет необходимо пройти биометрическую аутентификацию. Подпись транзакций все так же потребует карту.</string>
+    <string name="app_settings_saved_access_codes">Сохранение кода доступа</string>
+    <string name="app_settings_saved_access_codes_footer">Если эта опция включена, пароли от карты будут хранится на телефоне в зашифрованном виде и при работе с картой вместо пароля будет запрашиваться биометрическая аутентификация</string>
+    <string name="app_settings_off_saved_wallet_alert_message">При отключении функции сохранения кошелька все ранее сохраненные кошельки будут удалены.</string>
+    <string name="app_settings_off_saved_access_code_alert_message">Все сохраненные коды доступа будут удалены. Вам потребуется вводить код доступа при работе с кошельком.</string>
+    <string name="wallet_connect_title">WalletConnect</string>
+    <string name="wallet_connect_subtitle">Подключение к Dapps</string>
+
+    <string name="details_row_title_create_backup">Добавить еще карты</string>
+    <string name="details_row_title_create_backup_footer">Вы можете объеденить до трех карт в одним кошельке. Это можно сделать только один раз.</string>
+
+    <string name="details_row_privacy_policy">Privacy policy</string>
+
+    <string name="reset_factory_warning">Данное действие приведет к полному удалению кошелька с выбранной карты. Восстановить на ней текущий кошелек или использовать карту для восстановления пароля будет невозможно</string>
+    <string name="reset_factory_confirmation">Я понимаю, что после выполнения этого действия у меня больше не будет доступа к текущему кошельку</string>
+    <string name="reset_factory_button">Сбросить карту</string>
+    <string name="card_settings_reset_factory_footer">Сброс к заводским настройкам полностью удалит кошелек с выбранной карты, и вы не сможете восстановить текущий кошелек или использовать карту для восстановления кода доступа.</string>
+
 </resources>
