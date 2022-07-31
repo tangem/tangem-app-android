@@ -14,10 +14,14 @@ import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.toHexString
 import com.tangem.common.extensions.toMapKey
 import com.tangem.common.hdWallet.DerivationPath
-import com.tangem.domain.common.*
+import com.tangem.domain.common.ProductType
+import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.isExcluded
 import com.tangem.domain.common.TapWorkarounds.isNotSupportedInThatRelease
+import com.tangem.domain.common.TapWorkarounds.isTangemNote
 import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
+import com.tangem.domain.common.TwinsHelper
+import com.tangem.domain.common.isTangemTwins
 import com.tangem.operations.PreflightReadMode
 import com.tangem.operations.PreflightReadTask
 import com.tangem.operations.ScanTask
@@ -56,7 +60,7 @@ class ScanProductTask(
         }
 
         val commandProcessor = when {
-            TapWorkarounds.isTangemNote(card) -> ScanNoteProcessor()
+            card.isTangemNote() -> ScanNoteProcessor()
             card.isTangemTwins() -> ScanTwinProcessor()
             else -> ScanWalletProcessor(currenciesRepository, additionalBlockchainsToDerive)
         }
