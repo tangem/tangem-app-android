@@ -6,15 +6,14 @@ import com.tangem.common.card.EllipticCurve
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.extensions.toHexString
 import com.tangem.common.services.Result
-import com.tangem.domain.common.TapWorkarounds
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
+import com.tangem.domain.common.TapWorkarounds.isTangemNote
 import com.tangem.domain.common.TwinCardNumber
 import com.tangem.domain.common.getTwinCardNumber
 import com.tangem.domain.common.isTangemTwin
 import com.tangem.operations.attestation.CardVerifyAndGetInfo
 import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.tap.features.wallet.redux.Artwork
-
 
 val Card.remainingSignatures: Int?
     get() = this.getSingleWallet()?.remainingSignatures
@@ -24,7 +23,7 @@ val Card.isWalletDataSupported: Boolean
 
 val Card.isMultiwalletAllowed: Boolean
     get() {
-        return !isTangemTwin() && !isStart2Coin && !TapWorkarounds.isTangemNote(this)
+        return !isTangemTwin() && !isStart2Coin && !isTangemNote()
             && (firmwareVersion >= FirmwareVersion.MultiWalletAvailable ||
             getSingleWallet()?.curve == EllipticCurve.Secp256k1)
     }
