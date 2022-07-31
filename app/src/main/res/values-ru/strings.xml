@@ -307,7 +307,6 @@
     <string name="details_backup_status_format_active">Активный. Количество резервных карт: %d</string>
     <string name="details_backup_status_format_linked">Связано. Количество резервных карт: %d</string>
     <string name="details_backup_status_no_backup">Нет резервной копии</string>
-    <string name="details_row_title_create_backup">Создать резервную копию</string>
     <string name="welcome_interrupted_backup_alert_message">У Вас есть прерванное резервное копирование. Хотите возобновить?</string>
     <string name="welcome_interrupted_backup_alert_resume">Да, возобновить</string>
     <string name="welcome_interrupted_backup_alert_discard">Отказаться</string>
@@ -323,7 +322,6 @@
     <string name="onboarding_subtitle_scan_backup_card_format">Подготовьте резервную карту с номером %s</string>
     <string name="onboarding_subtitle_scan_primary_card_format">Подготовьте основную карту с номером %s</string>
     <string name="details_row_title_reset_factory_settings">Сброс до заводских настроек</string>
-    <string name="details_row_title_reset_factory_settings_warning">Это действие необратимо. Если после сброса карты кто-то отправит на нее средства, то Вы не сможете их вывести.</string>
     <string name="details_manage_security_access_code_disclaimer">Код доступа доступен только для карт с резервной копией</string>
     <string name="solana_rent_warning">Сеть Solana взымает арендную плату в размере %s каждые 2 дня. Аккаунты, которые не могут позволить себе арендную плату, удаляются из сети. Пополните свой счет более чем на %s, чтобы использовать его бесплатно.</string>
     <string name="token_symbol_address_format">%1s (%2s)</string>
