@@ -1,5 +1,6 @@
 package com.tangem.tap.common.redux.navigation
 
+import android.net.Uri
 import androidx.fragment.app.FragmentActivity
 import org.rekotlin.Action
 import java.lang.ref.WeakReference
@@ -14,6 +15,8 @@ sealed class NavigationAction : Action {
     data class PopBackTo(val screen: AppScreen? = null) : NavigationAction()
 
     data class OpenUrl(val url: String) : NavigationAction()
+
+    data class OpenDocument(val url: Uri) : NavigationAction()
 
     data class Share(val data: String) : NavigationAction()
 
