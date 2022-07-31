@@ -2,6 +2,7 @@ package com.tangem.tap.features.details.redux
 
 import android.net.Uri
 import com.tangem.blockchain.common.Wallet
+import com.tangem.common.card.Card
 import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.entities.Button
 import com.tangem.tap.common.entities.FiatCurrency
@@ -15,11 +16,9 @@ import kotlin.properties.ReadOnlyProperty
 data class DetailsState(
     val scanResponse: ScanResponse? = null,
     val wallets: List<Wallet> = emptyList(),
-    val cardInfo: CardInfo? = null,
-    val eraseWalletState: EraseWalletState? = null,
-    val confirmScreenState: ConfirmScreenState? = null,
-    val securityScreenState: SecurityScreenState? = null,
+    val cardSettingsState: CardSettingsState? = null,
     val cardTermsOfUseUrl: Uri? = null,
+    val privacyPolicyUrl: String? = null,
     val createBackupAllowed: Boolean = false,
     val appCurrency: FiatCurrency = FiatCurrency.Default,
     val saveCards: Boolean = true,
@@ -42,9 +41,15 @@ data class CardInfo(
     val signedHashes: Int,
 )
 
-enum class EraseWalletState { Allowed, NotAllowedByCard, NotEmpty }
-enum class ConfirmScreenState { EraseWallet, LongTap, AccessCode, PassCode }
-data class SecurityScreenState(
+data class CardSettingsState(
+    val cardInfo: CardInfo,
+    val card: Card,
+    val manageSecurityState: ManageSecurityState?,
+    val resetCardAllowed: Boolean,
+    val resetConfirmed: Boolean = false
+)
+
+data class ManageSecurityState(
     val currentOption: SecurityOption = SecurityOption.LongTap,
     val selectedOption: SecurityOption = currentOption,
     val allowedOptions: EnumSet<SecurityOption> = EnumSet.allOf(SecurityOption::class.java),
@@ -57,7 +62,7 @@ enum class SecurityOption { LongTap, PassCode, AccessCode }
 sealed interface DetailsDialog : StateDialog {
     data class ConfirmDisablingSaving(val setting: PrivacySetting) : DetailsDialog {
         val onOk: () -> Unit =
-            { store.dispatch(DetailsAction.ManagePrivacy.ConfirmSwitchingSetting(false, setting)) }
+            { store.dispatch(DetailsAction.AppSettings.ConfirmSwitchingSetting(false, setting)) }
     }
 }
 
