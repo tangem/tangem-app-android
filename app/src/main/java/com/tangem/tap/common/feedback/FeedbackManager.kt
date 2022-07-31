@@ -6,18 +6,19 @@ import com.tangem.tap.common.extensions.sendEmail
 import com.tangem.tap.common.log.TangemLogCollector
 import com.tangem.tap.common.zendesk.ZendeskConfig
 import com.tangem.tap.foregroundActivityObserver
+import com.tangem.tap.logConfig
 import com.tangem.tap.withForegroundActivity
+import com.tangem.wallet.R
+import com.zendesk.logger.Logger
+import timber.log.Timber
+import zendesk.chat.Chat
+import zendesk.chat.ChatConfiguration
+import zendesk.chat.ChatEngine
+import zendesk.configurations.Configuration
+import zendesk.messaging.MessagingActivity
 import java.io.File
 import java.io.FileWriter
 import java.io.StringWriter
-import timber.log.Timber
-import zendesk.configurations.Configuration
-import zendesk.core.AnonymousIdentity
-import zendesk.core.Zendesk
-import zendesk.support.Support
-import zendesk.support.request.RequestConfiguration
-import zendesk.support.requestlist.RequestListActivity
-import zendesk.support.requestlist.RequestListConfiguration
 
 /**
 [REDACTED_AUTHOR]
@@ -30,14 +31,14 @@ class FeedbackManager(
         context: Context,
         zendeskConfig: ZendeskConfig,
     ) {
-        Zendesk.INSTANCE.init(
-            /* context = */ context,
-            /* zendeskUrl = */ zendeskConfig.url,
-            /* applicationId = */ zendeskConfig.appId,
-            /* oauthClientId = */ zendeskConfig.clientId,
+        Chat.INSTANCE.init(
+            context,
+            zendeskConfig.accountKey,
+            zendeskConfig.appId
         )
-        Support.INSTANCE.init(Zendesk.INSTANCE)
-        Zendesk.INSTANCE.setIdentity(AnonymousIdentity())
+
+        // Zendesk logs
+        Logger.setLoggable(logConfig.zendesk)
     }
 
     fun sendEmail(feedbackData: FeedbackData, onFail: ((Exception) -> Unit)? = null) {
@@ -57,11 +58,8 @@ class FeedbackManager(
     fun openChat(feedbackData: FeedbackData) {
         feedbackData.prepare(infoHolder)
         foregroundActivityObserver.withForegroundActivity { activity ->
-            RequestListActivity.builder()
-                .show(
-                    /* context = */ activity,
-                    /* configurations = */ buildConfigs(activity, feedbackData)
-                )
+            setChatVisitorNote(activity, feedbackData)
+            showMessagingActivity(activity)
         }
     }
 
@@ -84,20 +82,30 @@ class FeedbackManager(
         }
     }
 
-    private fun buildConfigs(
+    private fun setChatVisitorNote(
         context: Context,
         feedbackData: FeedbackData,
-    ): List<Configuration> {
-        return listOf(
-            // Request configuration
-            RequestConfiguration.Builder()
-                .withRequestSubject(context.getString(feedbackData.subjectResId))
-                .config(),
-            // Request list configuration
-            RequestListConfiguration.Builder()
-                .withContactUsButtonVisible(true)
-                .config(),
-        )
+    ) {
+        Chat.INSTANCE.providers()
+            ?.profileProvider()
+            ?.setVisitorNote(feedbackData.joinTogether(context, infoHolder))
+    }
+
+    private fun showMessagingActivity(context: Context) {
+        MessagingActivity.builder()
+            .withMultilineResponseOptionsEnabled(false)
+            .withBotLabelStringRes(R.string.chat_bot_name)
+            .withBotAvatarDrawable(R.mipmap.ic_launcher)
+            .withEngines(ChatEngine.engine())
+            .show(context, buildChatConfig())
+    }
+
+    private fun buildChatConfig(): Configuration {
+        return ChatConfiguration.builder()
+            .withOfflineFormEnabled(true)
+            .withAgentAvailabilityEnabled(true)
+            .withPreChatFormEnabled(false)
+            .build()
     }
 
     private fun getSupportEmail(): String {
