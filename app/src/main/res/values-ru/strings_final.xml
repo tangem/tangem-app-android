@@ -77,6 +77,7 @@
     <string name="common_yes">Да</string>
 
     <string name="details_ask_a_question">Чат</string>
+    <string name="chat_bot_name">Tangem Bot</string>
 
     <string name="card_settings_title">Настройки карты</string>
     <string name="card_settings_security_mode">Тип безопасности</string>
