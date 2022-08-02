@@ -27,6 +27,7 @@ class ConfigValueModel(
         val appsFlyerDevKey: String,
         val shopifyShop: ShopifyShop?,
         val zendesk: ZendeskConfig?,
+        val tronGridApiKey: String,
 )
 
 class ConfigModel(val features: FeatureModel?, val configValues: ConfigValueModel?) {
