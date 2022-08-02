@@ -10,8 +10,8 @@ data class PendingTransaction(
     val type: PendingTransactionType,
 ) {
     val address: String? = when (type) {
-        PendingTransactionType.Incoming -> transactionData.destinationAddress
-        PendingTransactionType.Outgoing -> transactionData.sourceAddress
+        PendingTransactionType.Incoming -> transactionData.sourceAddress
+        PendingTransactionType.Outgoing -> transactionData.destinationAddress
         PendingTransactionType.Unknown -> null
     }
 
