@@ -46,7 +46,6 @@ fun ResetCardView(
     state: ResetCardScreenState,
     modifier: Modifier = Modifier,
 ) {
-
     Column(
         modifier = modifier
             .fillMaxSize(),
@@ -111,7 +110,7 @@ fun ResetCardView(
             DetailsMainButton(
                 title = stringResource(id = R.string.reset_factory_button),
                 onClick = state.onResetButtonClick,
-                enabled = state.resetButtonEnabled
+                enabled = state.resetButtonEnabled,
             )
         }
 
