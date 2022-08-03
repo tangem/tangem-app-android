@@ -18,7 +18,8 @@ class CardSettingsViewModel(private val store: Store<AppState>) {
 
         return if (state?.manageSecurityState == null) {
             CardSettingsScreenState(
-                null, onElementClick = {},
+                cardDetails = null,
+                onElementClick = {},
                 onScanCardClick = {
                     store.dispatch(DetailsAction.ScanCard)
                 },
@@ -69,7 +70,7 @@ class CardSettingsViewModel(private val store: Store<AppState>) {
             }
 
             CardSettingsScreenState(
-                cardDetails,
+                cardDetails = cardDetails,
                 onScanCardClick = { },
                 onElementClick = {
                     handleClickingItem(it)
