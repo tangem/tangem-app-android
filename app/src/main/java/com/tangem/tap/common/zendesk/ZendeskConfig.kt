@@ -11,6 +11,8 @@ data class ZendeskConfig(
     val appId: String,
     @Json(name = "zendeskClientId")
     val clientId: String,
+    @Json(name = "zendeskAccountKey")
+    val accountKey: String,
     @Json(name = "zendeskUrl")
     val url: String,
 )

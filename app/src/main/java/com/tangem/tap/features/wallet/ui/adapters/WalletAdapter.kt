@@ -9,7 +9,7 @@ import androidx.recyclerview.widget.RecyclerView
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
-import com.tangem.tap.common.extensions.getGreyedOutIconRes
+import com.tangem.tap.common.extensions.getRoundIconRes
 import com.tangem.tap.common.extensions.getString
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
@@ -118,7 +118,7 @@ class WalletAdapter
 
             badgeCustomBalance.isVisible = isCustomCurrency
             ivBlockchain.isVisible = wallet.currency.isToken()
-            ivBlockchain.setImageResource(wallet.currency.blockchain.getGreyedOutIconRes())
+            ivBlockchain.setImageResource(wallet.currency.blockchain.getRoundIconRes())
 
             cardWallet.setOnClickListener {
                 store.dispatch(WalletAction.MultiWallet.SelectWallet(wallet))

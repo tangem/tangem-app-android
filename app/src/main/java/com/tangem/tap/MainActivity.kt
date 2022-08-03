@@ -86,8 +86,15 @@ class MainActivity : AppCompatActivity(), SnackbarHandler {
 
     private fun systemActions() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        WindowInsetsControllerCompat(window, binding.root)
-            .isAppearanceLightStatusBars = true
+
+        val windowInsetsController = WindowInsetsControllerCompat(window, binding.root)
+        windowInsetsController.isAppearanceLightStatusBars = true
+        windowInsetsController.isAppearanceLightNavigationBars = true
+
+        supportFragmentManager.registerFragmentLifecycleCallbacks(
+            NavBarInsetsFragmentLifecycleCallback(),
+            true
+        )
 
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
     }

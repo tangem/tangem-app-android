@@ -78,4 +78,6 @@
     <string name="common_no">No</string>
 
     <string name="details_ask_a_question">Ask a question</string>
+
+    <string name="chat_bot_name">Tangem Bot</string>
 </resources>

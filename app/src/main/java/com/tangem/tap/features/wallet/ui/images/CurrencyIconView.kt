@@ -24,7 +24,6 @@ class CurrencyIconView @JvmOverloads constructor(
     init {
         elevation = 0f
         cardElevation = 0f
-        radius = dpToPx(8f)
-        background = null
+        radius = dpToPx(6f)
     }
 }

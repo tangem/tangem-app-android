@@ -28,6 +28,7 @@ class ConfigValueModel(
         val amplitudeApiKey: String,
         val shopifyShop: ShopifyShop?,
         val zendesk: ZendeskConfig?,
+        val tronGridApiKey: String,
 )
 
 class ConfigModel(val features: FeatureModel?, val configValues: ConfigValueModel?) {
