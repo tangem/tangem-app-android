@@ -6,7 +6,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -31,31 +30,30 @@ fun CurrencyExpandedContent(
         exit = fadeOut() + shrinkVertically(),
     ) {
         val blockchains = currency.contracts.map { it.blockchain }
-        Row {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth(),
-            ) {
-                blockchains.mapIndexed { index, blockchain ->
-                    val contract = currency.contracts.firstOrNull { it.blockchain == blockchain }
-                        ?: return@mapIndexed
-                    val added = if (contract.address != null) {
-                        addedTokens.map { it.token.contractAddress }.contains(contract.address)
-                    } else {
-                        addedBlockchains.contains(blockchain)
-                    }
-                    NetworkItem(
-                        currency = currency,
-                        contract = contract,
-                        blockchain = blockchain,
-                        allowToAdd = allowToAdd,
-                        added = added,
-                        index = index,
-                        size = blockchains.size,
-                        onAddCurrencyToggled = onAddCurrencyToggled,
-                        onNetworkItemClicked = onNetworkItemClicked,
-                    )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth(),
+        ) {
+            blockchains.mapIndexed { index, blockchain ->
+                val contract = currency.contracts.firstOrNull { it.blockchain == blockchain }
+                    ?: return@mapIndexed
+
+                val added = if (contract.address != null) {
+                    addedTokens.map { it.token.contractAddress }.contains(contract.address)
+                } else {
+                    addedBlockchains.contains(blockchain)
                 }
+                NetworkItem(
+                    currency = currency,
+                    contract = contract,
+                    blockchain = blockchain,
+                    allowToAdd = allowToAdd,
+                    added = added,
+                    index = index,
+                    size = blockchains.size,
+                    onAddCurrencyToggled = onAddCurrencyToggled,
+                    onNetworkItemClicked = onNetworkItemClicked,
+                )
             }
         }
     }
