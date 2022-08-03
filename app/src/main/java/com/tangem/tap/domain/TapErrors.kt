@@ -44,10 +44,6 @@ sealed class TapError(
         val customMessage: String = "Unsupported state:"
     ) : TapError(R.string.common_custom_string, listOf("$customMessage $stateError"))
 
-    sealed class XmlError {
-        object AssetAccountNotCreated : TapError(R.string.send_error_no_account_xlm)
-    }
-
     sealed class WalletManager {
         object CreationError : CustomError("Can't create wallet manager")
         class NoAccountError(amountToCreateAccount: String) : CustomError(amountToCreateAccount)
