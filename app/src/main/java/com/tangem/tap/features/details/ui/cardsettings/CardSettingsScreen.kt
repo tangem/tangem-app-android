@@ -31,7 +31,6 @@ fun CardSettingsScreen(
     onBackPressed: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-
     SettingsScreensScaffold(
         content =
         if (state.cardDetails == null) {
@@ -49,7 +48,6 @@ fun CardSettingsReadCard(
     onScanCardClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-
     Column(
         modifier = modifier
             .fillMaxSize(),
@@ -105,8 +103,7 @@ fun CardSettingsReadCard(
                 title = stringResource(id = R.string.scan_card_settings_button),
                 onClick = onScanCardClick,
                 modifier = modifier,
-
-                )
+            )
         }
     }
 }
@@ -116,12 +113,10 @@ fun CardSettings(
     state: CardSettingsScreenState,
     modifier: Modifier = Modifier,
 ) {
-
     Column(
         modifier = modifier
-            .fillMaxWidth()
+            .fillMaxWidth(),
     ) {
-
         state.cardDetails?.map {
             val paddingBottom = when (it) {
                 is CardInfo.CardId, is CardInfo.Issuer -> 12.dp
@@ -141,15 +136,14 @@ fun CardSettings(
             Column(
                 modifier = modifier
                     .fillMaxWidth()
-
                     .clickable(
                         enabled = it.clickable,
                         onClick = { state.onElementClick(it) },
                     )
                     .padding(start = 20.dp, end = 20.dp, bottom = paddingBottom, top = paddingTop),
             ) {
-                val titleColor = if (it.clickable)  R.color.text_primary_1 else R.color.text_tertiary
-                val subtitleColor = if (it.clickable)  R.color.text_secondary else R.color.text_tertiary
+                val titleColor = if (it.clickable) R.color.text_primary_1 else R.color.text_tertiary
+                val subtitleColor = if (it.clickable) R.color.text_secondary else R.color.text_tertiary
                 Text(
                     text = stringResource(id = it.titleRes),
                     color = colorResource(id = titleColor),
