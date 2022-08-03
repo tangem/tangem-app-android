@@ -23,7 +23,6 @@ class DetailsFragment : Fragment(), StoreSubscriber<DetailsState> {
     private var detailsScreenState: MutableState<DetailsScreenState> =
         mutableStateOf(detailsViewModel.updateState(store.state.detailsState))
 
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -36,7 +35,7 @@ class DetailsFragment : Fragment(), StoreSubscriber<DetailsState> {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?,
-    ): View? {
+    ): View {
         return ComposeView(requireContext()).apply {
             setContent {
                 isTransitionGroup = true
@@ -64,73 +63,8 @@ class DetailsFragment : Fragment(), StoreSubscriber<DetailsState> {
         store.unsubscribe(this)
     }
 
-//    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-//        super.onViewCreated(view, savedInstanceState)
-//
-//        binding.toolbar.setNavigationOnClickListener {
-//            store.dispatch(NavigationAction.PopBackTo())
-//        }
-//    }
-
     override fun newState(state: DetailsState) {
         if (activity == null || view == null) return
         detailsScreenState.value = detailsViewModel.updateState(state)
     }
-
-//    private fun setState(state: DetailsState) = with(binding) {
-//
-//        if (state.cardInfo != null) {
-//            val cardId = if (state.isTangemTwins) {
-//                state.scanResponse?.card?.getTwinCardIdForUser()
-//            } else {
-//                state.cardInfo.cardId
-//            }
-//            tvCardId.text = cardId
-//            tvIssuer.text = state.cardInfo.issuer
-//            tvSignedHashes.text = getString(
-//                R.string.details_row_subtitle_signed_hashes_format,
-//                state.cardInfo.signedHashes.toString()
-//            )
-//        }
-//
-//        tvSignedHashes.show(!state.isTangemTwins)
-//        tvSignedHashesTitle.show(!state.isTangemTwins)
-//
-//        tvDisclaimer.setOnClickListener { store.dispatch(DetailsAction.ShowDisclaimer) }
-//
-//
-//        if (state.isTangemTwins) {
-//            tvResetToFactory.show()
-//            tvResetToFactory.text = getText(R.string.details_row_title_twins_recreate)
-//            tvResetToFactory.setOnClickListener {
-//                store.dispatch(DetailsAction.ReCreateTwinsWallet(state.twinCardsState.cardNumber!!))
-//            }
-//        } else {
-//            tvResetToFactory.show()
-//            tvResetToFactory.text = getText(R.string.details_row_title_reset_factory_settings)
-//            tvResetToFactory.setOnClickListener {
-//                store.dispatch(DetailsAction.ResetToFactory.Check)
-//                store.dispatch(DetailsAction.ResetToFactory.Proceed)
-//            }
-//        }
-//
-//
-//        tvAppCurrency.show(state.scanResponse?.card?.isMultiwalletAllowed != true)
-//        tvAppCurrencyTitle.show(state.scanResponse?.card?.isMultiwalletAllowed != true)
-//        tvAppCurrency.text = state.appCurrency.code
-//
-//        tvAppCurrency.setOnClickListener {
-//            store.dispatch(WalletAction.AppCurrencyAction.ChooseAppCurrency)
-//        }
-//
-//        tvSecurityAndPrivacy.setOnClickListener {
-//            store.dispatch(DetailsAction.ManageSecurity.CheckCurrentSecurityOption(state.scanResponse!!.card))
-//            tvSecurityAndPrivacy.setOnClickListener {
-//                store.dispatch(NavigationAction.NavigateTo(AppScreen.SecurityAndPrivacy))
-//            }
-//
-//        }
-//
-//    }
-
 }
