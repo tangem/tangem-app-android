@@ -148,14 +148,14 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
                 val techService = store.state.domainNetworks.tangemTechService
                 when (val result = techService.userCountry()) {
                     is Result.Success -> {
-                        store.dispatch(
+                        store.dispatchOnMain(
                             GlobalAction.FetchUserCountry.Success(
                                 countryCode = result.data.code.lowercase()
                             )
                         )
                     }
                     is Result.Failure -> {
-                        store.dispatch(
+                        store.dispatchOnMain(
                             GlobalAction.FetchUserCountry.Success(
                                 countryCode = Locale.getDefault().country.lowercase()
                             )
