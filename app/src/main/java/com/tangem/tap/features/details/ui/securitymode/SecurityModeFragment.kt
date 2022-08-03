@@ -35,7 +35,7 @@ class SecurityModeFragment : Fragment(), StoreSubscriber<DetailsState> {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?,
-    ): View? {
+    ): View {
         return ComposeView(requireContext()).apply {
             setContent {
                 isTransitionGroup = true
