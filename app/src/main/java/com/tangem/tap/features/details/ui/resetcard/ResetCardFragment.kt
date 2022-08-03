@@ -21,7 +21,7 @@ class ResetCardFragment : Fragment(), StoreSubscriber<DetailsState> {
     private val viewModel = ResetCardViewModel(store)
 
     private var screenState: MutableState<ResetCardScreenState> =
-        mutableStateOf(viewModel.updateState(store.state.detailsState.cardSettingsState, context))
+        mutableStateOf(viewModel.updateState(store.state.detailsState.cardSettingsState))
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,7 +35,7 @@ class ResetCardFragment : Fragment(), StoreSubscriber<DetailsState> {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?,
-    ): View? {
+    ): View {
         return ComposeView(requireContext()).apply {
             setContent {
                 isTransitionGroup = true
@@ -65,6 +65,6 @@ class ResetCardFragment : Fragment(), StoreSubscriber<DetailsState> {
 
     override fun newState(state: DetailsState) {
         if (activity == null || view == null) return
-        screenState.value = viewModel.updateState(state.cardSettingsState, context)
+        screenState.value = viewModel.updateState(state.cardSettingsState)
     }
 }
