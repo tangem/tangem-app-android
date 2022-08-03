@@ -29,11 +29,10 @@ fun SecurityModeScreen(
     onBackPressed: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-
     SettingsScreensScaffold(
         content = { SecurityModeOptions(state = state, modifier = modifier) },
         titleRes = R.string.card_settings_security_mode,
-        onBackClick = onBackPressed
+        onBackClick = onBackPressed,
     )
 }
 
@@ -49,53 +48,11 @@ fun SecurityModeOptions(
             .padding(bottom = 28.dp),
         verticalArrangement = Arrangement.SpaceBetween,
     ) {
-
-        Column(modifier = modifier.fillMaxWidth()) {
-
-            state.availableOptions.map {
-
-                val selected = it == state.selectedSecurityMode
-
-                val title = it.toTitleRes()
-
-                val subtitle = when (it) {
-                    SecurityOption.LongTap -> R.string.details_manage_security_long_tap_description
-                    SecurityOption.PassCode -> R.string.details_manage_security_passcode_description
-                    SecurityOption.AccessCode -> R.string.details_manage_security_access_code_description
-                }
-
-                Row(
-                    modifier = modifier
-                        .fillMaxWidth()
-                        .selectable(
-                            selected = selected, onClick = { state.onNewModeSelected(it) },
-                        )
-                        .padding(start = 20.dp, end = 20.dp, bottom = 32.dp),
-                ) {
-
-                    RadioButton(
-                        selected = selected, onClick = null,
-                        modifier = modifier.padding(end = 20.dp),
-                    )
-
-                    Column {
-                        Text(
-                            text = stringResource(id = title),
-                            style = TangemTypography.subtitle1,
-                            color = colorResource(id = R.color.text_primary_1),
-                        )
-                        Spacer(modifier = modifier.size(4.dp))
-                        Text(
-                            text = stringResource(id = subtitle),
-                            style = TangemTypography.body2,
-                            color = colorResource(id = R.color.text_secondary),
-                        )
-                    }
-                }
-
-            }
+        state.availableOptions.map {
+            SecurityOption(option = it, state = state, modifier = modifier)
         }
 
+        Spacer(modifier = Modifier.weight(1f))
 
         DetailsMainButton(
             title = stringResource(id = R.string.common_save_changes),
@@ -104,6 +61,51 @@ fun SecurityModeOptions(
             modifier = modifier
                 .padding(start = 20.dp, end = 20.dp),
         )
+    }
+}
+
+@Composable
+fun SecurityOption(
+    option: SecurityOption, state: SecurityModeScreenState,
+    modifier: Modifier,
+) {
+    val selected = option == state.selectedSecurityMode
+
+    val title = option.toTitleRes()
+
+    val subtitle = when (option) {
+        SecurityOption.LongTap -> R.string.details_manage_security_long_tap_description
+        SecurityOption.PassCode -> R.string.details_manage_security_passcode_description
+        SecurityOption.AccessCode -> R.string.details_manage_security_access_code_description
+    }
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .selectable(
+                selected = selected, onClick = { state.onNewModeSelected(option) },
+            )
+            .padding(start = 20.dp, end = 20.dp, bottom = 32.dp),
+    ) {
+
+        RadioButton(
+            selected = selected, onClick = null,
+            modifier = modifier.padding(end = 20.dp),
+        )
+
+        Column {
+            Text(
+                text = stringResource(id = title),
+                style = TangemTypography.subtitle1,
+                color = colorResource(id = R.color.text_primary_1),
+            )
+            Spacer(modifier = modifier.size(4.dp))
+            Text(
+                text = stringResource(id = subtitle),
+                style = TangemTypography.body2,
+                color = colorResource(id = R.color.text_secondary),
+            )
+        }
     }
 }
 
@@ -118,6 +120,6 @@ fun SecurityModeScreenPreview() {
             onNewModeSelected = {},
             onSaveChangesClicked = {},
         ),
-        {}
+        onBackPressed = {},
     )
 }

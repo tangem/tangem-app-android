@@ -5,11 +5,11 @@ import com.tangem.wallet.R
 data class CardSettingsScreenState(
     val cardDetails: List<CardInfo>? = null,
     val onScanCardClick: () -> Unit,
-    val onElementClick: (CardInfo) -> Unit
+    val onElementClick: (CardInfo) -> Unit,
 )
 
 sealed class CardInfo(
-    val titleRes: Int, val subtitle: String, val clickable: Boolean = false
+    val titleRes: Int, val subtitle: String, val clickable: Boolean = false,
 ) {
     class CardId(subtitle: String) : CardInfo(R.string.details_row_title_cid, subtitle)
 

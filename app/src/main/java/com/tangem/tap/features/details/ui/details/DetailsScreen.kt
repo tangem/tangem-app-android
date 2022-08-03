@@ -9,6 +9,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -53,12 +55,12 @@ fun Content(
         state.elements.map {
             if (it == SettingsElement.WalletConnect) {
                 WalletConnectDetailsItem(
-                    onItemsClick = state.onItemsClick, modifier = modifier
+                    onItemsClick = state.onItemsClick, modifier = modifier,
                 )
             } else {
                 DetailsItem(
                     item = it, onItemsClick = state.onItemsClick,
-                    modifier = modifier
+                    modifier = modifier,
                 )
             }
         }
@@ -82,6 +84,7 @@ fun WalletConnectDetailsItem(
     Row(
         modifier = modifier
             .height(84.dp)
+            .fillMaxWidth()
             .clickable { onItemsClick(SettingsElement.WalletConnect) },
         horizontalArrangement = Arrangement.Start,
         verticalAlignment = Alignment.CenterVertically,
@@ -150,22 +153,19 @@ fun TangemSocialAccounts(
     onSocialNetworkClick: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Row(
-        modifier = modifier.padding(start = 8.dp, end = 8.dp)
+    LazyRow(
+        modifier = modifier.padding(start = 8.dp, end = 8.dp),
     ) {
-
-        links.map {
+        items(links) {
             Icon(
                 painter = painterResource(id = it.iconRes),
                 contentDescription = "",
                 modifier = modifier
                     .padding(8.dp)
-                    .clickable { onSocialNetworkClick(it.url) }
-                ,
+                    .clickable { onSocialNetworkClick(it.url) },
                 tint = colorResource(id = R.color.icon_informative),
             )
         }
-
     }
 }
 
@@ -174,11 +174,11 @@ fun TangemSocialAccounts(
 fun Preview() {
     DetailsScreen(
         state = DetailsScreenState(
-            SettingsElement.values().toList(),
-            TangemSocialAccounts.accountsEn,
-            "Tangem 2.14.12 (343)",
-            {}, {}
-            ),
-        {},
+            elements = SettingsElement.values().toList(),
+            tangemLinks = TangemSocialAccounts.accountsEn,
+            tangemVersion = "Tangem 2.14.12 (343)",
+            onItemsClick = {}, onSocialNetworkClick = {},
+        ),
+        onBackPressed = {},
     )
 }
