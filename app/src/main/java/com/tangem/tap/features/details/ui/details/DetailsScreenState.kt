@@ -12,7 +12,6 @@ data class DetailsScreenState(
     val appNameRes: Int = R.string.app_name
 }
 
-
 enum class SettingsElement(
     val iconRes: Int,
     val titleRes: Int,
