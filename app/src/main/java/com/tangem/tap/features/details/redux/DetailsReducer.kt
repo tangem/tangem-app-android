@@ -66,7 +66,7 @@ private fun hanldePrepareCardSettingsScreen(
         cardInfo = card.toCardInfo(),
         manageSecurityState = prepareSecurityOptions(card),
         card = card,
-        resetCardAllowed = isResetToFactoryAllowedByCard(card)
+        resetCardAllowed = isResetToFactoryAllowedByCard(card),
     )
     return state.copy(cardSettingsState = cardSettingsState)
 }
@@ -101,7 +101,7 @@ private fun prepareSecurityOptions(card: Card): ManageSecurityState {
 
 private fun isResetToFactoryAllowedByCard(card: Card): Boolean {
     val notAllowedByAnyWallet = card.wallets.any { it.settings.isPermanent }
-    val notAllowedByCard =  notAllowedByAnyWallet ||
+    val notAllowedByCard = notAllowedByAnyWallet ||
         (card.isWalletDataSupported && (!card.isTangemNote() && !card.settings.isBackupAllowed))
     return !notAllowedByCard
 }
