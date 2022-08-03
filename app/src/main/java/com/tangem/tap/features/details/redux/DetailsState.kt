@@ -46,7 +46,7 @@ data class CardSettingsState(
     val card: Card,
     val manageSecurityState: ManageSecurityState?,
     val resetCardAllowed: Boolean,
-    val resetConfirmed: Boolean = false
+    val resetConfirmed: Boolean = false,
 )
 
 data class ManageSecurityState(
