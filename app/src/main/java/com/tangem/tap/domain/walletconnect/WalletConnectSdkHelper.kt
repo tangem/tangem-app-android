@@ -7,6 +7,7 @@ import com.tangem.blockchain.blockchains.ethereum.EthereumUtils
 import com.tangem.blockchain.blockchains.ethereum.EthereumUtils.Companion.toKeccak
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
+import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.CommonSigner
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.TransactionSender
@@ -24,6 +25,7 @@ import com.tangem.common.extensions.toHexString
 import com.tangem.crypto.CryptoUtils
 import com.tangem.operations.sign.SignHashCommand
 import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.extensions.logSendTransactionError
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.extensions.toFormattedString
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectSession
@@ -38,8 +40,8 @@ import com.tangem.tap.tangemSdk
 import com.tangem.tap.tangemSdkManager
 import com.trustwallet.walletconnect.models.ethereum.WCEthereumSignMessage
 import com.trustwallet.walletconnect.models.ethereum.WCEthereumTransaction
-import java.math.BigDecimal
 import timber.log.Timber
+import java.math.BigDecimal
 
 class WalletConnectSdkHelper {
 
@@ -69,7 +71,7 @@ class WalletConnectSdkHelper {
                 (walletManager as? EthereumGasLoader)?.getGasPrice()) {
                 is Result.Success -> result.data.toBigDecimal()
                 is Result.Failure -> {
-                    Timber.e(result.error)
+                    (result.error as? Throwable)?.let { Timber.e(it) }
                     return null
                 }
                 null -> return null
@@ -143,13 +145,11 @@ class WalletConnectSdkHelper {
                 HEX_PREFIX + data.walletManager.wallet.recentTransactions.last().hash
             }
             is SimpleResult.Failure -> {
-                (result.error as? TangemSdkError)?.let { error ->
-                    store.state.globalState.analyticsHandlers?.logCardSdkError(
-                        error,
-                        Analytics.ActionToLog.WalletConnectTransaction,
-                    )
-                }
-                Timber.e(result.error)
+                store.state.globalState.analyticsHandlers?.logSendTransactionError(
+                    result.error,
+                    Analytics.ActionToLog.WalletConnectTransaction,
+                )
+                Timber.e(result.error as BlockchainSdkError)
                 null
             }
         }
