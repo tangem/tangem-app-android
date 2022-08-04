@@ -36,7 +36,7 @@ fun ResetCardScreen(
         content = { ResetCardView(state = state, modifier = modifier) },
         background =
         { Image(painter = painterResource(id = R.drawable.ic_reset_background), contentDescription = "") },
-        titleRes = R.string.details_row_title_reset_factory_settings,
+        titleRes = R.string.reset_card_to_factory_navigation_title,
         onBackClick = onBackPressed,
     )
 }
@@ -62,7 +62,7 @@ fun ResetCardView(
         Spacer(modifier = modifier.size(24.dp))
 
         Text(
-            text = stringResource(id = R.string.reset_factory_warning),
+            text = stringResource(id = R.string.reset_card_to_factory_message),
             modifier = modifier.padding(start = 20.dp, end = 20.dp),
             style = TangemTypography.body1,
             color = colorResource(id = R.color.text_secondary),
@@ -96,7 +96,7 @@ fun ResetCardView(
                 )
             }
             Text(
-                text = stringResource(id = R.string.reset_factory_confirmation),
+                text = stringResource(id = R.string.reset_card_to_factory_warning_message),
                 style = TangemTypography.body2,
                 color = colorResource(id = R.color.text_secondary),
             )
@@ -108,7 +108,7 @@ fun ResetCardView(
                 .padding(start = 16.dp, end = 16.dp, bottom = 32.dp),
         ) {
             DetailsMainButton(
-                title = stringResource(id = R.string.reset_factory_button),
+                title = stringResource(id = R.string.reset_card_to_factory_button_title),
                 onClick = state.onResetButtonClick,
                 enabled = state.resetButtonEnabled,
             )
