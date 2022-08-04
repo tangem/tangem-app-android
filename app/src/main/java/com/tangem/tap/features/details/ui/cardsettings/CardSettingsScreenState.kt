@@ -68,13 +68,7 @@ sealed interface TextReference {
 @ReadOnlyComposable
 fun TextReference.resolveReference(): String {
     return when (this) {
-        is TextReference.Res -> {
-            // if (source.formatArgs) {
-            //     stringResource(source.id)
-            // } else {
-            stringResource(this.id, *this.formatArgs.toTypedArray())
-            // }
-        }
+        is TextReference.Res -> stringResource(this.id, *this.formatArgs.toTypedArray())
         is TextReference.Str -> this.value
     }
 }
