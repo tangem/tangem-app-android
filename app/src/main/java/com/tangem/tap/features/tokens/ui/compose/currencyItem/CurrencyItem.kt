@@ -1,5 +1,6 @@
-package com.tangem.tap.features.tokens.ui.compose
+package com.tangem.tap.features.tokens.ui.compose.currencyItem
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.tap.domain.tokens.Currency
@@ -12,24 +13,27 @@ fun CurrencyItem(
     addedTokens: List<TokenWithBlockchain>,
     addedBlockchains: List<Blockchain>,
     allowToAdd: Boolean,
-    expanded: Boolean,
+    isExpanded: Boolean,
     onCurrencyClick: (String) -> Unit,
     onAddCurrencyToggled: (Currency, TokenWithBlockchain?) -> Unit,
-    onNetworkItemClicked: (ContractAddress) -> Unit
+    onNetworkItemClicked: (ContractAddress) -> Unit,
 ) {
-    if (expanded) {
-        ExpandedCurrencyItem(
+    Column {
+        CurrencyItemHeader(
+            currency = currency,
+            addedTokens = addedTokens,
+            addedBlockchains = addedBlockchains,
+            isExpanded = isExpanded,
+            onCurrencyClick = onCurrencyClick,
+        )
+        CurrencyExpandedContent(
             currency = currency,
             addedTokens = addedTokens,
             addedBlockchains = addedBlockchains,
             allowToAdd = allowToAdd,
-            onCurrencyClick = onCurrencyClick, onAddCurrencyToggled = onAddCurrencyToggled,
-            onNetworkItemClicked = onNetworkItemClicked
-        )
-    } else {
-        CollapsedCurrencyItem(
-            currency = currency, addedTokens = addedTokens,
-            addedBlockchains = addedBlockchains, onCurrencyClick
+            isExpanded = isExpanded,
+            onAddCurrencyToggled = onAddCurrencyToggled,
+            onNetworkItemClicked = onNetworkItemClicked,
         )
     }
 }
