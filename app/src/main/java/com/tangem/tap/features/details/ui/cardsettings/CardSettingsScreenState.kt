@@ -50,8 +50,8 @@ sealed class CardInfo(
     )
 
     object ResetToFactorySettings : CardInfo(
-        titleRes = TextReference.Res(R.string.details_row_title_reset_factory_settings),
-        subtitle = TextReference.Res(R.string.card_settings_reset_factory_footer),
+        titleRes = TextReference.Res(R.string.card_settings_reset_card_to_factory),
+        subtitle = TextReference.Res(R.string.card_settings_reset_card_to_factory_footer),
         clickable = true,
     )
 }
