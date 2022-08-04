@@ -6,8 +6,14 @@ import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.global.GlobalState
 import com.tangem.tap.common.ui.SimpleAlertDialog
 import com.tangem.tap.common.ui.SimpleCancelableAlertDialog
+import com.tangem.tap.features.details.redux.DetailsDialog
+import com.tangem.tap.features.details.redux.PrivacySetting
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectDialog
-import com.tangem.tap.features.details.ui.walletconnect.dialogs.*
+import com.tangem.tap.features.details.ui.walletconnect.dialogs.ApproveWcSessionDialog
+import com.tangem.tap.features.details.ui.walletconnect.dialogs.BnbTransactionDialog
+import com.tangem.tap.features.details.ui.walletconnect.dialogs.ClipboardOrScanQrDialog
+import com.tangem.tap.features.details.ui.walletconnect.dialogs.PersonalSignDialog
+import com.tangem.tap.features.details.ui.walletconnect.dialogs.TransactionDialog
 import com.tangem.tap.features.onboarding.AddressInfoBottomSheetDialog
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.features.onboarding.products.twins.ui.dialog.CreateWalletInterruptDialog
@@ -17,7 +23,12 @@ import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.BackupInPro
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.ConfirmDiscardingBackupDialog
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.UnfinishedBackupFoundDialog
 import com.tangem.tap.features.wallet.redux.models.WalletDialog
-import com.tangem.tap.features.wallet.ui.dialogs.*
+import com.tangem.tap.features.wallet.ui.dialogs.AmountToSendBottomSheetDialog
+import com.tangem.tap.features.wallet.ui.dialogs.ChooseTradeActionBottomSheetDialog
+import com.tangem.tap.features.wallet.ui.dialogs.RussianCardholdersWarningBottomSheetDialog
+import com.tangem.tap.features.wallet.ui.dialogs.ScanFailsDialog
+import com.tangem.tap.features.wallet.ui.dialogs.SignedHashesWarningDialog
+import com.tangem.tap.features.wallet.ui.dialogs.SimpleOkDialog
 import com.tangem.tap.features.wallet.ui.wallet.CurrencySelectionDialog
 import com.tangem.tap.store
 import com.tangem.wallet.R
@@ -139,6 +150,18 @@ class DialogManager : StoreSubscriber<GlobalState> {
             )
             is WalletDialog.RussianCardholdersWarningDialog ->
                 RussianCardholdersWarningBottomSheetDialog(context)
+            is DetailsDialog.ConfirmDisablingSaving -> {
+                val messageRes = when (state.dialog.setting) {
+                    PrivacySetting.SAVE_CARDS -> R.string.app_settings_off_saved_wallet_alert_message
+                    PrivacySetting.SAVE_ACCESS_CODE -> R.string.app_settings_off_saved_access_code_alert_message
+                }
+                SimpleCancelableAlertDialog.create(
+                    titleRes = R.string.common_warning,
+                    messageRes = messageRes,
+                    context = context,
+                    primaryButtonAction = state.dialog.onOk
+                )
+            }
             else -> null
         }
         dialog?.show()
