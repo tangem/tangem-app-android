@@ -5,7 +5,6 @@ import com.tangem.common.extensions.guard
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.common.extensions.dispatchOnMain
-import com.tangem.tap.common.extensions.getFromClipboard
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
@@ -51,7 +50,7 @@ class WalletConnectMiddleware {
                 }
             }
             is WalletConnectAction.StartWalletConnect -> {
-                val uri = action.activity.getFromClipboard()?.toString()
+                val uri = action.copiedUri
                 if (uri != null && WalletConnectManager.isCorrectWcUri(uri)) {
                     store.dispatchOnMain(WalletConnectAction.ShowClipboardOrScanQrDialog(uri))
                 } else {
