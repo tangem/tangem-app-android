@@ -5,6 +5,7 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.domain.common.isTangemTwins
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.AnalyticsParam
+import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
@@ -105,13 +106,7 @@ class DetailsMiddleware {
                             when (result) {
                                 is CompletionResult.Success -> {
                                     currenciesRepository.removeCurrencies(card.cardId)
-                                    val returnScreen =
-                                        if (card.cardId == store.state.globalState.scanResponse?.card?.cardId) {
-                                            AppScreen.Home
-                                        } else {
-                                            null
-                                        }
-                                    store.dispatch(NavigationAction.PopBackTo(returnScreen))
+                                    store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
                                 }
                                 is CompletionResult.Failure -> {
                                     (result.error as? TangemSdkError)?.let { error ->
