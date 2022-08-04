@@ -74,9 +74,7 @@ fun StoriesScreen(
     }
 
     val isPressed = remember { mutableStateOf(false) }
-    val needsToBePaused =
-        remember(homeState) { mutableStateOf(homeState.value.btnScanState.progressState == ProgressState.Loading) }
-    val isPaused = isPressed.value || needsToBePaused.value
+    val isPaused = isPressed.value || homeState.value.btnScanState.progressState == ProgressState.Loading
 
     val hideContent = remember { mutableStateOf(true) }
 
