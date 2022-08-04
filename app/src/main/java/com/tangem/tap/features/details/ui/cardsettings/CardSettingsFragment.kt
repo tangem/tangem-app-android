@@ -14,7 +14,6 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.store
-import com.tangem.wallet.R
 import org.rekotlin.StoreSubscriber
 
 class CardSettingsFragment : Fragment(), StoreSubscriber<DetailsState> {
@@ -22,21 +21,21 @@ class CardSettingsFragment : Fragment(), StoreSubscriber<DetailsState> {
     private val viewModel = CardSettingsViewModel(store)
 
     private var screenState: MutableState<CardSettingsScreenState> =
-        mutableStateOf(viewModel.updateState(store.state.detailsState.cardSettingsState, context))
+        mutableStateOf(viewModel.updateState(store.state.detailsState.cardSettingsState))
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val inflater = TransitionInflater.from(requireContext())
-        enterTransition = inflater.inflateTransition(R.transition.slide_right)
-        exitTransition = inflater.inflateTransition(R.transition.fade)
+        enterTransition = inflater.inflateTransition(android.R.transition.fade)
+        exitTransition = inflater.inflateTransition(android.R.transition.fade)
     }
 
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?,
-    ): View? {
+    ): View {
         return ComposeView(requireContext()).apply {
             setContent {
                 isTransitionGroup = true
@@ -69,6 +68,6 @@ class CardSettingsFragment : Fragment(), StoreSubscriber<DetailsState> {
 
     override fun newState(state: DetailsState) {
         if (activity == null || view == null) return
-        screenState.value = viewModel.updateState(state.cardSettingsState, context)
+        screenState.value = viewModel.updateState(state.cardSettingsState)
     }
 }
