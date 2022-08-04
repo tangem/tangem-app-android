@@ -1,5 +1,6 @@
 package com.tangem.tap.common.redux.navigation
 
+import android.content.Intent
 import com.tangem.tap.common.CustomTabsManager
 import com.tangem.tap.common.extensions.openFragment
 import com.tangem.tap.common.extensions.popBackTo
@@ -31,6 +32,11 @@ val navigationMiddleware: Middleware<AppState> = { dispatch, state ->
                         navState?.activity?.get()?.let {
                             CustomTabsManager().openUrl(action.url, it)
                         }
+                    }
+                    is NavigationAction.OpenDocument -> {
+                        val intent = Intent(Intent.ACTION_VIEW)
+                        intent.data = action.url
+                        navState?.activity?.get()?.startActivity(intent)
                     }
                     is NavigationAction.Share -> {
                         navState?.activity?.get()?.let {

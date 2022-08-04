@@ -7,9 +7,10 @@ import androidx.fragment.app.FragmentManager
 import com.tangem.common.extensions.VoidCallback
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.FragmentShareTransition
-import com.tangem.tap.features.details.ui.DetailsConfirmFragment
-import com.tangem.tap.features.details.ui.DetailsFragment
-import com.tangem.tap.features.details.ui.DetailsSecurityFragment
+import com.tangem.tap.features.details.ui.cardsettings.CardSettingsFragment
+import com.tangem.tap.features.details.ui.details.DetailsFragment
+import com.tangem.tap.features.details.ui.resetcard.ResetCardFragment
+import com.tangem.tap.features.details.ui.securitymode.SecurityModeFragment
 import com.tangem.tap.features.details.ui.walletconnect.QrScanFragment
 import com.tangem.tap.features.details.ui.walletconnect.WalletConnectSessionsFragment
 import com.tangem.tap.features.disclaimer.ui.DisclaimerFragment
@@ -92,8 +93,10 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
         AppScreen.Wallet -> WalletFragment()
         AppScreen.Send -> SendFragment()
         AppScreen.Details -> DetailsFragment()
-        AppScreen.DetailsConfirm -> DetailsConfirmFragment()
-        AppScreen.DetailsSecurity -> DetailsSecurityFragment()
+        AppScreen.DetailsSecurity -> SecurityModeFragment()
+        AppScreen.CardSettings -> CardSettingsFragment()
+        AppScreen.AppSettings -> CardSettingsFragment()
+        AppScreen.ResetToFactory -> ResetCardFragment()
         AppScreen.Disclaimer -> DisclaimerFragment()
         AppScreen.AddTokens -> AddTokensFragment()
         AppScreen.AddCustomToken -> AddCustomTokenFragment()
