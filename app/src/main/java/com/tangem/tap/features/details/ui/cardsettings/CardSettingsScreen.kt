@@ -145,13 +145,13 @@ fun CardSettings(
                 val titleColor = if (it.clickable) R.color.text_primary_1 else R.color.text_tertiary
                 val subtitleColor = if (it.clickable) R.color.text_secondary else R.color.text_tertiary
                 Text(
-                    text = stringResource(id = it.titleRes),
+                    text = it.titleRes.resolveReference(),
                     color = colorResource(id = titleColor),
                     style = TangemTypography.subtitle1,
                 )
                 Spacer(modifier = modifier.size(4.dp))
                 Text(
-                    text = it.subtitle,
+                    text = it.subtitle.resolveReference(),
                     color = colorResource(id = subtitleColor),
                     style = TangemTypography.body2,
                 )
