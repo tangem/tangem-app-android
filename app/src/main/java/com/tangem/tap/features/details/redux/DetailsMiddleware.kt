@@ -5,7 +5,6 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.domain.common.isTangemTwins
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.AnalyticsParam
-import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
@@ -188,20 +187,8 @@ class DetailsMiddleware {
     class ManagePrivacyMiddleware {
         fun handle(action: DetailsAction.AppSettings) {
             when (action) {
-                is DetailsAction.AppSettings.ConfirmSwitchingSetting -> {
-//                    TODO()
-                }
                 is DetailsAction.AppSettings.SwitchPrivacySetting -> {
-                    if (action.allow) {
-                        store.dispatch(
-                            DetailsAction.AppSettings.ConfirmSwitchingSetting(
-                                action.allow,
-                                action.setting,
-                            ),
-                        )
-                    } else {
-                        store.dispatchDialogShow(DetailsDialog.ConfirmDisablingSaving(action.setting))
-                    }
+//                    TODO()
                 }
             }
         }
