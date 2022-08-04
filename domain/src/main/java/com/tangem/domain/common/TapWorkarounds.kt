@@ -42,8 +42,7 @@ object TapWorkarounds {
         return false
     }
 
-    @Deprecated("Use ScanResponse.isTangemNote")
-    fun isTangemNote(card: Card): Boolean = tangemNoteBatches.contains(card.batchId)
+    fun Card.isTangemNote(): Boolean = tangemNoteBatches.contains(batchId)
 
     fun isTangemWalletBatch(card: Card): Boolean = tangemWalletBatches.contains(card.batchId)
 
