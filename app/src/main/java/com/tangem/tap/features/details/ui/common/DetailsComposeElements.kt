@@ -81,7 +81,6 @@ fun EmptyTopBarWithNavigation(
         },
         backgroundColor = colorResource(id = R.color.background_primary),
         elevation = 0.dp,
-        modifier = modifier,
     )
 }
 

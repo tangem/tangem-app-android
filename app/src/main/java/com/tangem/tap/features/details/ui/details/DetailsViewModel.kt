@@ -60,7 +60,7 @@ class DetailsViewModel(private val store: Store<AppState>) {
                 store.dispatch(NavigationAction.NavigateTo(AppScreen.CardSettings))
             }
             SettingsElement.AppSettings -> {
-                // store.dispatch(NavigationAction.NavigateTo()) TODO: To be available later
+                store.dispatch(NavigationAction.NavigateTo(AppScreen.AppSettings)) //TODO: To be available later
             }
             SettingsElement.LinkMoreCards -> {
                 store.dispatch(DetailsAction.CreateBackup)
