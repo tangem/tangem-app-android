@@ -6,6 +6,7 @@
     <string name="common_done">Erledigt</string>
     <string name="common_cancel">Abbrechen</string>
     <string name="common_accept">Akzeptieren</string>
+    <string name="common_delete">Entfernen</string>
 
     <string name="common_camera_denied_alert_title">Der Kamerazugriff wurde verweigert </string>
     <string name="common_camera_denied_alert_message">Sie haben keinen Zugang zur Kamera erteilt, bitte passen Sie Ihre Datenschutzeinstellungen an</string>
