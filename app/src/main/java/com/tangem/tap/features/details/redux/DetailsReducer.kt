@@ -23,10 +23,10 @@ private fun internalReduce(action: Action, state: AppState): DetailsState {
     val detailsState = state.detailsState
     return when (action) {
         is DetailsAction.PrepareScreen -> {
-            handlePrepareScreen(action, detailsState)
+            handlePrepareScreen(action)
         }
         is DetailsAction.PrepareCardSettingsData -> {
-            hanldePrepareCardSettingsScreen(action.card, detailsState)
+            handlePrepareCardSettingsScreen(action.card, detailsState)
         }
         is DetailsAction.ResetCardSettingsData -> detailsState.copy(cardSettingsState = null)
         is DetailsAction.ResetToFactory -> {
@@ -47,7 +47,6 @@ private fun internalReduce(action: Action, state: AppState): DetailsState {
 
 private fun handlePrepareScreen(
     action: DetailsAction.PrepareScreen,
-    state: DetailsState,
 ): DetailsState {
 
     return DetailsState(
@@ -59,9 +58,7 @@ private fun handlePrepareScreen(
     )
 }
 
-private fun hanldePrepareCardSettingsScreen(
-    card: Card, state: DetailsState,
-): DetailsState {
+private fun handlePrepareCardSettingsScreen(card: Card, state: DetailsState): DetailsState {
     val cardSettingsState = CardSettingsState(
         cardInfo = card.toCardInfo(),
         manageSecurityState = prepareSecurityOptions(card),
