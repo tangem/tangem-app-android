@@ -13,7 +13,6 @@ import com.google.accompanist.appcompattheme.AppCompatTheme
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.store
-import com.tangem.wallet.R
 import org.rekotlin.StoreSubscriber
 
 class DetailsFragment : Fragment(), StoreSubscriber<DetailsState> {
@@ -27,8 +26,8 @@ class DetailsFragment : Fragment(), StoreSubscriber<DetailsState> {
         super.onCreate(savedInstanceState)
 
         val inflater = TransitionInflater.from(requireContext())
-        enterTransition = inflater.inflateTransition(R.transition.slide_right)
-        exitTransition = inflater.inflateTransition(R.transition.fade)
+        enterTransition = inflater.inflateTransition(android.R.transition.fade)
+        exitTransition = inflater.inflateTransition(android.R.transition.fade)
     }
 
     override fun onCreateView(
