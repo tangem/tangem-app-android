@@ -6,6 +6,7 @@
     <string name="common_retry">Riprova</string>
     <string name="common_done">Fatto</string>
     <string name="common_cancel">Annulla</string>
+    <string name="common_delete">Rimuovere</string>
     <string name="common_camera_denied_alert_title">Accesso alla videocamera negato</string>
     <string name="common_camera_denied_alert_message">Non hai fornito l\'accesso alla tua videocamera, modifica le tue impostazioni sulla privacy</string>
     <string name="common_camera_alert_button_settings">Impostazioni</string>
