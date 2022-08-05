@@ -1,6 +1,5 @@
 package com.tangem.tap.features.details.redux.walletconnect
 
-import android.app.Activity
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.redux.NotificationAction
@@ -19,7 +18,7 @@ sealed class WalletConnectAction : Action {
     object RestoreSessions : WalletConnectAction()
 
     data class StartWalletConnect(
-        val activity: Activity,
+        val copiedUri: String?,
     ) : WalletConnectAction()
 
     data class ShowClipboardOrScanQrDialog(val wcUri: String) : WalletConnectAction()
