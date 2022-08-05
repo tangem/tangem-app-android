@@ -73,7 +73,7 @@ abstract class AnalyticsHandler {
                 triggerEvent(
                     event = AnalyticsEvent.FIRST_SCAN,
                     params = mapOf(
-                        AnalyticsParam.FIRST_SCAN_SUCCESS.param to event.firstScan
+                        AnalyticsParam.FIRST_SCAN_SUCCESS.param to event.firstScan.toString()
                     )
                 )
             }
@@ -81,7 +81,7 @@ abstract class AnalyticsHandler {
                 triggerEvent(
                     event = AnalyticsEvent.FIRST_SCREEN_ACCESS_CODE_ENTERED,
                     params = mapOf(
-                        AnalyticsParam.FIRST_SCREEN_TOKEN_NAME.param to event.accessCode
+                        AnalyticsParam.FIRST_SCREEN_TOKEN_NAME.param to event.accessCode.toString()
                     )
                 )
             }
@@ -97,7 +97,7 @@ abstract class AnalyticsHandler {
                 triggerEvent(
                     event = AnalyticsEvent.SECOND_SCAN,
                     params = mapOf(
-                        AnalyticsParam.SECOND_SCAN_SUCCESS.param to event.secondScan
+                        AnalyticsParam.SECOND_SCAN_SUCCESS.param to event.secondScan.toString()
                     )
                 )
             }
@@ -105,7 +105,7 @@ abstract class AnalyticsHandler {
                 triggerEvent(
                     event = AnalyticsEvent.TOKEN_SEARCH,
                     params = mapOf(
-                        AnalyticsParam.TOKEN_SEARCH_TOKEN_NAME.param to event.tokenSearch
+                        AnalyticsParam.TOKEN_SEARCH_TOKEN_NAME.param to event.tokenSearch.toString()
                     )
                 )
             }
