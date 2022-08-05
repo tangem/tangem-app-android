@@ -5,6 +5,7 @@ import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.core.TangemSdkError
 import com.tangem.operations.pins.CheckUserCodesResponse
 import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.AnalyticsParam
 import com.tangem.tap.common.extensions.dispatchNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -54,6 +55,7 @@ class DetailsMiddleware {
                         }
                     }
                     is DetailsAction.CreateBackup -> {
+                        store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.BACKUP_TAPPED)
                         store.state.detailsState.scanResponse?.let {
                             store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingWallet))
                             store.dispatch(GlobalAction.Onboarding.Start(it, fromHomeScreen = false))

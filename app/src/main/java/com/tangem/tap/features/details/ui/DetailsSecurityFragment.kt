@@ -7,6 +7,7 @@ import androidx.fragment.app.Fragment
 import androidx.transition.TransitionInflater
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.tangem.common.card.Card
+import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.details.redux.DetailsAction
@@ -140,6 +141,7 @@ class DetailsSecurityFragment : Fragment(R.layout.fragment_details_security),
         vAccessCode.isClickable = enable
         if (enable) {
             vAccessCode.setOnClickListener {
+                store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.ACCESS_CODE_TAPPED)
                 store.dispatch(DetailsAction.ManageSecurity.SelectOption(SecurityOption.AccessCode))
             }
         }

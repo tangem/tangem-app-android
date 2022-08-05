@@ -94,6 +94,7 @@ private fun handleReadCard() {
                             store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.WelcomeOnly))
                             navigateTo(AppScreen.OnboardingTwins)
                         } else {
+                            store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.FIRST_CARD_SCAN)
                             navigateTo(AppScreen.Wallet, null)
                         }
                     }

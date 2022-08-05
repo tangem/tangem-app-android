@@ -6,6 +6,7 @@ import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.ifNotNull
 import com.tangem.common.services.Result
 import com.tangem.domain.common.extensions.withMainContext
+import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -80,9 +81,11 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
             }
         }
         is GlobalAction.SendEmail -> {
+            store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.COMMENT_SENT)
             store.state.globalState.feedbackManager?.sendEmail(action.feedbackData)
         }
         is GlobalAction.OpenChat -> {
+            store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.CHAT_TAPPED)
             store.state.globalState.feedbackManager?.openChat(action.feedbackData)
         }
         is GlobalAction.UpdateWalletSignedHashes -> {

@@ -6,6 +6,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import androidx.transition.TransitionInflater
 import by.kirich1409.viewbindingdelegate.viewBinding
+import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.extensions.getDrawable
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.details.redux.ConfirmScreenState
@@ -74,13 +75,17 @@ class DetailsConfirmFragment : Fragment(R.layout.fragment_details_confirm),
             }
             ConfirmScreenState.LongTap, ConfirmScreenState.AccessCode,
             ConfirmScreenState.PassCode -> {
+                store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.NEW_CODE_ENTERED)
                 toolbar.title = getString(R.string.details_manage_security_title)
                 tvWarningDescription.text = getString(R.string.details_security_management_warning)
                 btnConfirm.text = getString(R.string.common_save_changes)
                 btnConfirm.setCompoundDrawablesRelativeWithIntrinsicBounds(
                     null, null, getDrawable(R.drawable.ic_save), null
                 )
-                btnConfirm.setOnClickListener { store.dispatch(DetailsAction.ManageSecurity.SaveChanges) }
+                btnConfirm.setOnClickListener {
+                    store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.NEW_CODE_CONFIRMED)
+                    store.dispatch(DetailsAction.ManageSecurity.SaveChanges)
+                }
             }
         }
     }

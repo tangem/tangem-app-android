@@ -8,6 +8,7 @@ import androidx.fragment.app.Fragment
 import androidx.transition.TransitionInflater
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.tangem.domain.common.getTwinCardIdForUser
+import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.feedback.FeedbackEmail
 import com.tangem.tap.common.feedback.SupportInfo
@@ -30,6 +31,7 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.SETTINGS_TAPPED)
         activity?.onBackPressedDispatcher?.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 store.dispatch(NavigationAction.PopBackTo())
@@ -106,6 +108,7 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
             tvResetToFactory.show()
             tvResetToFactory.text = getText(R.string.details_row_title_reset_factory_settings)
             tvResetToFactory.setOnClickListener {
+                store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.FACTORY_RESET_TAPPED)
                 store.dispatch(DetailsAction.ResetToFactory.Check)
                 store.dispatch(DetailsAction.ResetToFactory.Proceed)
             }
@@ -113,6 +116,8 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
 
         tvCreateBackup.show(state.createBackupAllowed)
         tvCreateBackup.setOnClickListener {
+            store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.CREATE_BACKUP_TAPPED)
+            store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.SCAN_CARD_TAPPED)
             store.dispatch(DetailsAction.CreateBackup)
         }
 
@@ -125,15 +130,18 @@ class DetailsFragment : Fragment(R.layout.fragment_details), StoreSubscriber<Det
         }
 
         tvSendFeedback.setOnClickListener {
+            store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.MAKE_COMMENT)
             store.dispatch(GlobalAction.SendEmail(FeedbackEmail()))
         }
 
         tvWalletConnect.show(state.scanResponse?.card?.isMultiwalletAllowed == true)
         tvWalletConnect.setOnClickListener {
+            store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.WC_TAPPED)
             store.dispatch(NavigationAction.NavigateTo(AppScreen.WalletConnectSessions))
         }
 
         tvSupport.setOnClickListener {
+            store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.SUPPORT_TAPPED)
             store.dispatch(GlobalAction.OpenChat(SupportInfo()))
         }
 

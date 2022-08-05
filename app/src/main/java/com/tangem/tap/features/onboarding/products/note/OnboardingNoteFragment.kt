@@ -14,6 +14,7 @@ import coil.load
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.tangem_sdk_new.extensions.fadeIn
 import com.tangem.tangem_sdk_new.extensions.fadeOut
+import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.extensions.getDrawableCompat
 import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.common.redux.navigation.ShareElement
@@ -118,7 +119,10 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
     private fun setupCreateWalletState(state: OnboardingNoteState) =
         with(binding.onboardingActionContainer) {
             btnMainAction.setText(R.string.onboarding_create_wallet_button_create_wallet)
-            btnMainAction.setOnClickListener { store.dispatch(OnboardingNoteAction.CreateWallet) }
+            btnMainAction.setOnClickListener {
+                store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.CREATE_WALLET_TAPPED)
+                store.dispatch(OnboardingNoteAction.CreateWallet)
+            }
             btnAlternativeAction.setText(R.string.onboarding_button_what_does_it_mean)
             btnAlternativeAction.setOnClickListener { }
 

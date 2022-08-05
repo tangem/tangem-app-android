@@ -20,6 +20,7 @@ import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction
 import com.tangem.domain.redux.domainStore
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.tap.*
+import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
@@ -68,6 +69,8 @@ class TokensMiddleware {
 
     private fun handleLoadCurrencies(scanResponse: ScanResponse?, newSearchInput: String? = null) {
         val tokensState = store.state.tokensState
+
+        store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.TOKEN_LIST_TAPPED)
 
         val isTestcard = scanResponse?.card?.isTestCard ?: false
 
@@ -310,6 +313,7 @@ class TokensMiddleware {
     private fun removeCurrenciesIfNeeded(currencies: List<Currency>) {
         if (currencies.isNotEmpty()) {
             currencies.forEach { currency ->
+                store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.REMOVE_TOKEN)
                 store.dispatch(WalletAction.MultiWallet.RemoveWallet(
                     currency = currency,
                     fromScreen = AppScreen.AddTokens
@@ -364,6 +368,7 @@ class TokensMiddleware {
         }
         domainStore.dispatch(AddCustomTokenAction.Init.SetAddedCurrencies(addedCurrencies))
         domainStore.dispatch(AddCustomTokenAction.Init.SetOnAddTokenCallback(onAddCustomToken))
+        store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.CUSTOM_TOKEN_ADD)
         store.dispatch(NavigationAction.NavigateTo(AppScreen.AddCustomToken))
     }
 }

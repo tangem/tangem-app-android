@@ -11,6 +11,7 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.core.view.WindowInsetsControllerCompat
 import androidx.fragment.app.Fragment
 import com.google.accompanist.appcompattheme.AppCompatTheme
+import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.home.compose.StoriesScreen
@@ -80,13 +81,17 @@ class HomeFragment : Fragment(), StoreSubscriber<HomeState> {
     private fun ScreenContent() {
         StoriesScreen(
             homeState,
-            onScanButtonClick = { store.dispatch(HomeAction.ReadCard) },
+            onScanButtonClick = {
+                store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.FIRST_SCREEN_SCAN_CARD_TAPPED)
+                store.dispatch(HomeAction.ReadCard)
+                                },
             onShopButtonClick = {
                 store.dispatch(
                     HomeAction.GoToShop(store.state.globalState.userCountryCode)
                 )
             },
             onSearchTokensClick = {
+                store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.SEARCH_TOKEN)
                 store.dispatch(NavigationAction.NavigateTo(AppScreen.AddTokens))
                 store.dispatch(TokensAction.AllowToAddTokens(false))
                 store.dispatch(TokensAction.LoadCurrencies())

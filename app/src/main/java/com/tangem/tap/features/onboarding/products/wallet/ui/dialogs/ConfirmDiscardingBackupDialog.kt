@@ -2,6 +2,7 @@ package com.tangem.tap.features.onboarding.products.wallet.ui.dialogs
 
 import android.content.Context
 import androidx.appcompat.app.AlertDialog
+import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
 import com.tangem.tap.store
@@ -17,6 +18,7 @@ class ConfirmDiscardingBackupDialog {
                     store.dispatch(BackupAction.ResumeBackup)
                 }
                 setNegativeButton(R.string.welcome_interrupted_backup_discard_discard) { _, _ ->
+                    store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.BACKUP_LATER_TAPPED)
                     store.dispatch(BackupAction.DiscardSavedBackup)
                 }
                 setOnDismissListener {

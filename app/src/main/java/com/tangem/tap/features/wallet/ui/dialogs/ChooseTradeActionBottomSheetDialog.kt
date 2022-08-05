@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.store
 import com.tangem.wallet.databinding.DialogWalletTradeBinding
@@ -28,6 +29,7 @@ class ChooseTradeActionBottomSheetDialog(context: Context) : BottomSheetDialog(c
 
         binding!!.dialogBtnBuy.setOnClickListener {
             dismiss()
+            store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.BUY_BOTTOM_TAPPED)
             store.dispatch(WalletAction.TradeCryptoAction.Buy())
         }
         binding!!.dialogBtnSell.setOnClickListener {

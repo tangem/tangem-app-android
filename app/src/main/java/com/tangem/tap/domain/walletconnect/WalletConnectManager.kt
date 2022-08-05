@@ -3,6 +3,7 @@ package com.tangem.tap.domain.walletconnect
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.guard
 import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.details.redux.walletconnect.*
@@ -99,6 +100,7 @@ class WalletConnectManager {
             val data = sessions[session]
             if (data != null && data.peerMeta == null) {
                 disconnect(session)
+                store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.SESSION_EXPIRED)
                 store.dispatchOnMain(WalletConnectAction.OpeningSessionTimeout(session))
             }
         }

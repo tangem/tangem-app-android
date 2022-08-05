@@ -4,6 +4,7 @@ package com.tangem.tap.features.details.redux
 import com.tangem.common.card.Card
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.isTangemTwin
+import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.extensions.isWalletDataSupported
 import com.tangem.tap.domain.extensions.signedHashesCount
@@ -83,7 +84,10 @@ private fun handleEraseWallet(
         }
         DetailsAction.ResetToFactory.Cancel -> state.copy(eraseWalletState = null)
         DetailsAction.ResetToFactory.Failure -> state.copy(eraseWalletState = null)
-        DetailsAction.ResetToFactory.Success -> state.copy(eraseWalletState = null)
+        DetailsAction.ResetToFactory.Success -> {
+            store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.FACTORY_RESET_SUCCESS)
+            state.copy(eraseWalletState = null)
+        }
         else -> state
     }
 }

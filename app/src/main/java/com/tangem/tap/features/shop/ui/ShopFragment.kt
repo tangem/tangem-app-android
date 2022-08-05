@@ -12,6 +12,7 @@ import androidx.activity.OnBackPressedCallback
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.tangem.tap.common.GlobalLayoutStateHandler
 import com.tangem.tap.common.KeyboardObserver
+import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.common.shop.data.ProductType
@@ -41,6 +42,7 @@ class ShopFragment : BaseStoreFragment(R.layout.fragment_shop), StoreSubscriber<
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.MAIN_PAGE_ENTER)
         activity?.onBackPressedDispatcher?.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 store.dispatch(NavigationAction.PopBackTo())
@@ -51,6 +53,7 @@ class ShopFragment : BaseStoreFragment(R.layout.fragment_shop), StoreSubscriber<
 
     override fun onDestroyView() {
         super.onDestroyView()
+        store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.MAIN_PAGE_SWIPE)
         keyboardObserver.unregisterListener()
     }
 

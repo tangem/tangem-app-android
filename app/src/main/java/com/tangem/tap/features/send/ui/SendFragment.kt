@@ -16,6 +16,7 @@ import com.google.android.material.textfield.TextInputEditText
 import com.tangem.Message
 import com.tangem.tangem_sdk_new.extensions.hideSoftKeyboard
 import com.tangem.tap.common.KeyboardObserver
+import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.getFromClipboard
 import com.tangem.tap.common.extensions.setOnImeActionListener
@@ -78,6 +79,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
 
     private fun initSendButtonStates() = with(binding) {
         btnSend.setOnClickListener {
+            store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.SEND_TOKEN_TAPPED)
             store.dispatch(SendActionUi.SendAmountToRecipient(
                 Message(getString(R.string.initial_message_sign_header))
             ))
@@ -259,6 +261,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
     }
 
     private fun restoreMainCurrency(): MainCurrencyType {
+        store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.CURRENCY_TYPE_TAPPED)
         val sp = requireContext().getSharedPreferences("SendScreen", Context.MODE_PRIVATE)
         val mainCurrency = sp.getString("mainCurrency", FiatCurrency.Default.code)
         return MainCurrencyType.values()

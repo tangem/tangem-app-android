@@ -13,11 +13,13 @@ import androidx.compose.ui.platform.ComposeView
 import com.google.accompanist.appcompattheme.AppCompatTheme
 import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenState
 import com.tangem.domain.redux.domainStore
+import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.compose.ClosePopupTrigger
 import com.tangem.tap.features.BaseStoreFragment
 import com.tangem.tap.features.FragmentOnBackPressedHandler
 import com.tangem.tap.features.addBackPressHandler
 import com.tangem.tap.features.tokens.addCustomToken.compose.AddCustomTokenScreen
+import com.tangem.tap.store
 import com.tangem.wallet.R
 import org.rekotlin.StoreSubscriber
 
@@ -29,6 +31,7 @@ class AddCustomTokenFragment : BaseStoreFragment(R.layout.view_compose_fragment)
     private var state: MutableState<AddCustomTokenState> = mutableStateOf(domainStore.state.addCustomTokensState)
 
     override fun subscribeToStore() {
+        store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.CUSTOM_TOKEN_SAVE)
         domainStore.subscribe(this) { state ->
             state.skipRepeats { oldState, newState ->
                 oldState.addCustomTokensState == newState.addCustomTokensState
