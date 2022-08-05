@@ -31,6 +31,7 @@ import com.tangem.wallet.R
 fun SettingsScreensScaffold(
     content: @Composable () -> Unit,
     background: @Composable (() -> Unit)? = null,
+    fab: @Composable (() -> Unit)? = null,
     titleRes: Int,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -41,6 +42,7 @@ fun SettingsScreensScaffold(
         topBar = { EmptyTopBarWithNavigation(onBackClick = onBackClick) },
         modifier = modifier.systemBarsPadding(),
         backgroundColor = colorResource(id = R.color.background_primary),
+        floatingActionButton = { fab?.invoke() },
     ) {
 
         Box(modifier = modifier.fillMaxSize()) {
