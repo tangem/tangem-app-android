@@ -12,7 +12,7 @@ import com.tangem.tap.features.details.ui.details.DetailsFragment
 import com.tangem.tap.features.details.ui.resetcard.ResetCardFragment
 import com.tangem.tap.features.details.ui.securitymode.SecurityModeFragment
 import com.tangem.tap.features.details.ui.walletconnect.QrScanFragment
-import com.tangem.tap.features.details.ui.walletconnect.WalletConnectSessionsFragment
+import com.tangem.tap.features.details.ui.walletconnect.WalletConnectFragment
 import com.tangem.tap.features.disclaimer.ui.DisclaimerFragment
 import com.tangem.tap.features.home.HomeFragment
 import com.tangem.tap.features.onboarding.products.note.OnboardingNoteFragment
@@ -101,7 +101,7 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
         AppScreen.AddTokens -> AddTokensFragment()
         AppScreen.AddCustomToken -> AddCustomTokenFragment()
         AppScreen.WalletDetails -> WalletDetailsFragment()
-        AppScreen.WalletConnectSessions -> WalletConnectSessionsFragment()
+        AppScreen.WalletConnectSessions -> WalletConnectFragment()
         AppScreen.QrScan -> QrScanFragment()
     }
 }
