@@ -11,8 +11,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material.AlertDialog
 import androidx.compose.material.MaterialTheme
-import androidx.compose.material.Switch
-import androidx.compose.material.SwitchDefaults
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
@@ -31,6 +29,7 @@ import androidx.compose.ui.unit.sp
 import com.tangem.tap.common.compose.TangemTypography
 import com.tangem.tap.features.details.redux.PrivacySetting
 import com.tangem.tap.features.details.ui.common.SettingsScreensScaffold
+import com.tangem.tap.features.details.ui.common.TangemSwitch
 import com.tangem.wallet.R
 
 @Composable
@@ -125,7 +124,7 @@ fun AppSettingsElement(
                 color = colorResource(id = R.color.text_secondary),
             )
         }
-        Switch(
+        TangemSwitch(
             checked = checked,
             onCheckedChange = {
                 onCheckedChange(
@@ -135,14 +134,8 @@ fun AppSettingsElement(
                     onDialogStateChange = onDialogStateChange,
                 )
             },
-            colors = SwitchDefaults.colors(
-                checkedThumbColor = colorResource(id = R.color.control_key),
-                uncheckedThumbColor = colorResource(id = R.color.control_key),
-                checkedTrackColor = colorResource(id = R.color.control_checked),
-                uncheckedTrackColor = colorResource(id = R.color.icon_informative),
-            ),
             modifier = modifier
-                .padding(start = 20.dp, end = 20.dp),
+                .padding(20.dp),
         )
     }
 }
