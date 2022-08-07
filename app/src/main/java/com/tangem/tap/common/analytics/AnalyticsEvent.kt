@@ -160,6 +160,6 @@ object Analytics {
         data class BuyTokenTapped(val buyTokenTapped:String):AnalyticsWithParametersEvent()
         data class TokenSwitchOn(val tokenSwitchOn:String):AnalyticsWithParametersEvent()
         data class TokenSwitchOff(val tokenSwitchOff:String):AnalyticsWithParametersEvent()
-        data class TokenSearch(val tokenSearch:Boolean):AnalyticsWithParametersEvent()
+        data class TokenSearch(val tokenSearch:String):AnalyticsWithParametersEvent()
     }
 }

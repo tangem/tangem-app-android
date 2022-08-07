@@ -1,5 +1,7 @@
 package com.tangem.tap.common.analytics
 
+import android.app.Application
+import android.util.Log
 import com.amplitude.api.Amplitude
 import com.amplitude.api.AmplitudeClient
 import com.shopify.buy3.Storefront
@@ -7,9 +9,11 @@ import com.tangem.common.card.Card
 import com.tangem.common.core.TangemSdkError
 import org.json.JSONObject
 
-class AmplitudeAnalyticsHandler : AnalyticsHandler() {
+class AmplitudeAnalyticsHandler(application: Application, apiKey:String) : AnalyticsHandler() {
 
     private val client: AmplitudeClient = Amplitude.getInstance()
+        .initialize(application.applicationContext, apiKey)
+        .enableForegroundTracking(application)
 
     override fun triggerEvent(
         event: AnalyticsEvent,
@@ -17,6 +21,7 @@ class AmplitudeAnalyticsHandler : AnalyticsHandler() {
         blockchain: String?,
         params: Map<String, String>
     ) {
+        Log.e("TEST ","_"+event.event)
         client.logEvent(event.event, prepareParams(card, blockchain, params).toJson())
     }
 

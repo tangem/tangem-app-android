@@ -2,6 +2,7 @@ package com.tangem.tap.features.wallet.redux.middlewares
 
 import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.common.AmountType
+import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
@@ -52,6 +53,12 @@ class TradeCryptoMiddleware {
         if (addresses.isEmpty()) return
 
         val currency = selectedWalletData.currency
+
+        store.state.globalState.analyticsHandlers?.logEventWithParams(
+            Analytics.AnalyticsWithParametersEvent.BuyTokenTapped(
+                currency.currencyName
+            )
+        )
 
         if (currency is Currency.Token && currency.blockchain.isTestnet()) {
             val walletManager = store.state.walletState.getWalletManager(currency)

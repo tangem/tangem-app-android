@@ -1,6 +1,7 @@
 package com.tangem.tap.features.send.redux.reducers
 
 import com.tangem.common.extensions.isZero
+import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.features.send.redux.AmountAction
 import com.tangem.tap.features.send.redux.AmountActionUi
@@ -10,6 +11,7 @@ import com.tangem.tap.features.send.redux.states.AmountState
 import com.tangem.tap.features.send.redux.states.InputViewValue
 import com.tangem.tap.features.send.redux.states.MainCurrencyType
 import com.tangem.tap.features.send.redux.states.SendState
+import com.tangem.tap.store
 import java.math.BigDecimal
 
 /**
@@ -26,9 +28,15 @@ class AmountReducer : SendInternalReducer {
         val result = when (action) {
             is SetMainCurrency -> {
                 val currencyCanBeSwitched = sendState.mainCurrencyCanBeSwitched()
-
                 when (val currency = if (currencyCanBeSwitched) action.mainCurrency else MainCurrencyType.CRYPTO) {
                     MainCurrencyType.FIAT -> {
+
+                        store.state.globalState.analyticsHandlers?.logEventWithParams(
+                            Analytics.AnalyticsWithParametersEvent.CurrencyChanged(
+                                MainCurrencyType.FIAT.name
+                            )
+                        )
+
                         val fiatToSend = if (state.amountToSendCrypto.isZero()) {
                             BigDecimal.ZERO
                         } else {
@@ -45,6 +53,13 @@ class AmountReducer : SendInternalReducer {
                         )
                     }
                     MainCurrencyType.CRYPTO -> {
+
+                        store.state.globalState.analyticsHandlers?.logEventWithParams(
+                            Analytics.AnalyticsWithParametersEvent.CurrencyChanged(
+                                MainCurrencyType.CRYPTO.name
+                            )
+                        )
+
                         val viewValue = state.restoreDecimalSeparator(state.amountToSendCrypto.stripZeroPlainString())
                         state.copy(
                                 viewAmountValue = InputViewValue(viewValue),

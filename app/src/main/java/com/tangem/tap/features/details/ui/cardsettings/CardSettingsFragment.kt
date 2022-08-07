@@ -10,6 +10,7 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
 import androidx.transition.TransitionInflater
 import com.google.accompanist.appcompattheme.AppCompatTheme
+import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
@@ -43,6 +44,11 @@ class CardSettingsFragment : Fragment(), StoreSubscriber<DetailsState> {
                     CardSettingsScreen(
                         state = screenState.value,
                         onBackPressed = {
+                            store.state.globalState.analyticsHandlers?.logEventWithParams(
+                                Analytics.AnalyticsWithParametersEvent.SecondScan(
+                                   true
+                                )
+                            )
                             store.dispatch(DetailsAction.ResetCardSettingsData)
                             store.dispatch(NavigationAction.PopBackTo())
                         },

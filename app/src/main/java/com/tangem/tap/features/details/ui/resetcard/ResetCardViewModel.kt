@@ -1,5 +1,6 @@
 package com.tangem.tap.features.details.ui.resetcard
 
+import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.details.redux.CardSettingsState
 import com.tangem.tap.features.details.redux.DetailsAction
@@ -11,7 +12,10 @@ class ResetCardViewModel(private val store: Store<AppState>) {
         return ResetCardScreenState(
             accepted = state?.resetConfirmed ?: false,
             onAcceptWarningToggleClick = { store.dispatch(DetailsAction.ResetToFactory.Confirm(it)) },
-            onResetButtonClick = { store.dispatch(DetailsAction.ResetToFactory.Proceed) },
+            onResetButtonClick = {
+                store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.FACTORY_RESET_TAPPED)
+                store.dispatch(DetailsAction.ResetToFactory.Proceed)
+                                 },
         )
     }
 }

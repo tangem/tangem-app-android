@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.store

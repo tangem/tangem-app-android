@@ -47,11 +47,12 @@ class GlobalAnalyticsHandler(val analyticsHandlers: List<AnalyticsHandler>) :
     companion object {
         fun createDefaultAnalyticHandlers(application: Application): GlobalAnalyticsHandler {
             initAnalytics(application)
+            val apiKey = store.state.globalState.configManager?.config?.amplitudeApiKey?:""
             return GlobalAnalyticsHandler(
                 listOf(
                     FirebaseAnalyticsHandler,
                     AppsFlyerAnalyticsHandler(application),
-                    AmplitudeAnalyticsHandler()
+                    AmplitudeAnalyticsHandler(application, apiKey)
                 )
             )
         }

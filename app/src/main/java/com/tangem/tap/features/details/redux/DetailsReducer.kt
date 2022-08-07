@@ -109,34 +109,6 @@ private fun handleEraseWallet(
     state: DetailsState,
 ): DetailsState {
     return when (action) {
-        DetailsAction.ResetToFactory.Check -> {
-            val card = state.scanResponse?.card
-            val notAllowedByAnyWallet = card?.wallets?.any { it.settings.isPermanent } ?: false
-            val notAllowedByCard = notAllowedByAnyWallet ||
-                (card?.isWalletDataSupported == true &&
-                    (!state.scanResponse.isTangemNote() && !state.scanResponse.supportsBackup()))
-
-            val notEmpty = state.wallets.any { it.hasSendableAmountsOrPendingTransactions() }
-            val eraseWalletState = when {
-                notAllowedByCard -> EraseWalletState.NotAllowedByCard
-                notEmpty -> EraseWalletState.NotEmpty
-                else -> EraseWalletState.Allowed
-            }
-            state.copy(eraseWalletState = eraseWalletState)
-        }
-        DetailsAction.ResetToFactory.Proceed -> {
-            if (state.eraseWalletState == EraseWalletState.Allowed) {
-                state.copy(confirmScreenState = ConfirmScreenState.EraseWallet)
-            } else {
-                state
-            }
-        }
-        DetailsAction.ResetToFactory.Cancel -> state.copy(eraseWalletState = null)
-        DetailsAction.ResetToFactory.Failure -> state.copy(eraseWalletState = null)
-        DetailsAction.ResetToFactory.Success -> {
-            store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.FACTORY_RESET_SUCCESS)
-            state.copy(eraseWalletState = null)
-        }
         is DetailsAction.ResetToFactory.Confirm ->
             state.copy(cardSettingsState = state.cardSettingsState?.copy(resetConfirmed = action.confirmed))
         else -> state

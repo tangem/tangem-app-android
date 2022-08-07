@@ -105,7 +105,7 @@ abstract class AnalyticsHandler {
                 triggerEvent(
                     event = AnalyticsEvent.TOKEN_SEARCH,
                     params = mapOf(
-                        AnalyticsParam.TOKEN_SEARCH_TOKEN_NAME.param to event.tokenSearch.toString()
+                        AnalyticsParam.TOKEN_SEARCH_TOKEN_NAME.param to event.tokenSearch
                     )
                 )
             }

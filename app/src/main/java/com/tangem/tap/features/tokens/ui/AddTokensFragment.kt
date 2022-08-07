@@ -15,6 +15,7 @@ import androidx.transition.TransitionInflater
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.google.accompanist.appcompattheme.AppCompatTheme
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.extensions.copyToClipboard
 import com.tangem.tap.common.extensions.dispatchNotification
@@ -145,6 +146,13 @@ class AddTokensFragment : Fragment(R.layout.fragment_add_tokens),
                 dispatchOnMain(TokensAction.SetSearchInput(searchInput.value))
             }
             .launchIn(mainScope)
+
+        store.state.globalState.analyticsHandlers?.logEventWithParams(
+            Analytics.AnalyticsWithParametersEvent.SearchToken(
+                 searchInput.value
+            )
+        )
+
         return super.onCreateOptionsMenu(menu, inflater)
     }
 

@@ -108,6 +108,7 @@ class DetailsMiddleware {
                             when (result) {
                                 is CompletionResult.Success -> {
                                     currenciesRepository.removeCurrencies(card.cardId)
+                                    store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.FACTORY_RESET_SUCCESS)
                                     store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
                                 }
                                 is CompletionResult.Failure -> {

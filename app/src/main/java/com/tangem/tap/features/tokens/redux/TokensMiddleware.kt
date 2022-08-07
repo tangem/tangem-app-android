@@ -20,6 +20,7 @@ import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction
 import com.tangem.domain.redux.domainStore
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.tap.*
+import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -81,6 +82,12 @@ class TokensMiddleware {
         val loadCoinsService = LoadAvailableCoinsService(
             store.state.domainNetworks.tangemTechService,
             currenciesRepository
+        )
+
+        store.state.globalState.analyticsHandlers?.logEventWithParams(
+            Analytics.AnalyticsWithParametersEvent.TokenSearch(
+                tokensState.searchInput.toString()
+            )
         )
 
         scope.launch {

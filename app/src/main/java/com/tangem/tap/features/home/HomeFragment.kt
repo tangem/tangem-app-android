@@ -38,7 +38,6 @@ class HomeFragment : Fragment(), StoreSubscriber<HomeState> {
         savedInstanceState: Bundle?,
     ): View? {
         val context = container?.context ?: return null
-
         store.dispatch(BackupAction.CheckForUnfinishedBackup)
         composeView = ComposeView(context).apply {
             setContent {
@@ -91,7 +90,6 @@ class HomeFragment : Fragment(), StoreSubscriber<HomeState> {
                 )
             },
             onSearchTokensClick = {
-                store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.SEARCH_TOKEN)
                 store.dispatch(NavigationAction.NavigateTo(AppScreen.AddTokens))
                 store.dispatch(TokensAction.AllowToAddTokens(false))
                 store.dispatch(TokensAction.LoadCurrencies())

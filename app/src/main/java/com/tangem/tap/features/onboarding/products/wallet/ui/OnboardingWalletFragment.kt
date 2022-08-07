@@ -18,6 +18,7 @@ import com.tangem.common.CardIdFormatter
 import com.tangem.common.core.CardIdDisplayFormat
 import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.LeapfrogWidget
 import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.PropertyCalculator
+import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
@@ -228,6 +229,11 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
         if (state.backupCardsNumber < state.maxBackupCards) {
             layoutButtonsAddCards.btnAddCard.setOnClickListener {
                 store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.ADD_BACKUP_CARD)
+                store.state.globalState.analyticsHandlers?.logEventWithParams(
+                    Analytics.AnalyticsWithParametersEvent.FirstScreenAccessCodeEntered(
+                        true
+                    )
+                )
                 store.dispatch(BackupAction.AddBackupCard)
             }
         } else {
@@ -271,6 +277,7 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
             dismissWithAnimation = true
             create()
             setOnCancelListener {
+                store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.NEW_CODE_ENTERED)
                 store.dispatch(BackupAction.OnAccessCodeDialogClosed)
             }
             show()
