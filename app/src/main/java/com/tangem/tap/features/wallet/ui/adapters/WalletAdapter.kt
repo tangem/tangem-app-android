@@ -9,15 +9,12 @@ import androidx.recyclerview.widget.RecyclerView
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
-import com.tangem.tap.common.extensions.getRoundIconRes
 import com.tangem.tap.common.extensions.getString
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
-import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletData
 import com.tangem.tap.features.wallet.ui.BalanceStatus
-import com.tangem.tap.features.wallet.ui.images.loadCurrencyIcon
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.ItemCurrencyWalletBinding
@@ -67,12 +64,6 @@ class WalletAdapter
             // Skip changes when on refreshing status
             if (status == BalanceStatus.Refreshing) return@with
 
-            val isCustomCurrency = wallet.currency.isCustomCurrency(
-                derivationStyle = store.state.globalState
-                    .scanResponse
-                    ?.card
-                    ?.derivationStyle
-            )
             val statusMessage = when (status) {
                 BalanceStatus.TransactionInProgress -> {
                     root.getString(R.string.wallet_balance_tx_in_progress)
@@ -87,7 +78,8 @@ class WalletAdapter
                 BalanceStatus.UnknownBlockchain,
                 BalanceStatus.Loading,
                 BalanceStatus.Refreshing,
-                null -> null
+                null,
+                -> null
             }
 
             if (status == null || status == BalanceStatus.Loading) {
@@ -98,11 +90,12 @@ class WalletAdapter
                 lContent.root.show()
             }
 
-            loadCurrencyIcon(
-                currencyImageView = ivCurrency,
-                currencyTextView = tvTokenLetter,
-                token = (wallet.currency as? Currency.Token)?.token,
-                blockchain = wallet.currency.blockchain,
+            ivCurrency.load(
+                currency = wallet.currency,
+                derivationStyle = store.state.globalState
+                    .scanResponse
+                    ?.card
+                    ?.derivationStyle,
             )
 
             lContent.tvCurrency.text = wallet.currencyData.currency
@@ -115,10 +108,6 @@ class WalletAdapter
             lContent.tvExchangeRate.isVisible = statusMessage == null
             lContent.tvExchangeRate.text = wallet.fiatRateString
                 ?: root.getString(id = R.string.token_item_no_rate)
-
-            badgeCustomBalance.isVisible = isCustomCurrency
-            ivBlockchain.isVisible = wallet.currency.isToken()
-            ivBlockchain.setImageResource(wallet.currency.blockchain.getRoundIconRes())
 
             cardWallet.setOnClickListener {
                 store.dispatch(WalletAction.MultiWallet.SelectWallet(wallet))
