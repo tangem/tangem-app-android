@@ -41,25 +41,11 @@
 
     <com.tangem.tap.features.wallet.ui.images.CurrencyIconView
         android:id="@+id/iv_currency"
-        android:layout_width="40dp"
-        android:layout_height="40dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_margin="16dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
-
-    <TextView
-        android:id="@+id/tv_token_letter"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="2dp"
-        android:textColor="@android:color/white"
-        android:textSize="25sp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toBottomOf="@id/iv_currency"
-        app:layout_constraintEnd_toEndOf="@id/iv_currency"
-        app:layout_constraintStart_toStartOf="@id/iv_currency"
-        app:layout_constraintTop_toTopOf="@id/iv_currency"
-        tools:text="J" />
 
     <TextView
         android:id="@+id/tv_status"

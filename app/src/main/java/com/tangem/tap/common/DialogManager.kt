@@ -6,8 +6,6 @@ import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.global.GlobalState
 import com.tangem.tap.common.ui.SimpleAlertDialog
 import com.tangem.tap.common.ui.SimpleCancelableAlertDialog
-import com.tangem.tap.features.details.redux.DetailsDialog
-import com.tangem.tap.features.details.redux.PrivacySetting
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectDialog
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.ApproveWcSessionDialog
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.BnbTransactionDialog
@@ -150,18 +148,6 @@ class DialogManager : StoreSubscriber<GlobalState> {
             )
             is WalletDialog.RussianCardholdersWarningDialog ->
                 RussianCardholdersWarningBottomSheetDialog(context)
-            is DetailsDialog.ConfirmDisablingSaving -> {
-                val messageRes = when (state.dialog.setting) {
-                    PrivacySetting.SAVE_CARDS -> R.string.app_settings_off_saved_wallet_alert_message
-                    PrivacySetting.SAVE_ACCESS_CODE -> R.string.app_settings_off_saved_access_code_alert_message
-                }
-                SimpleCancelableAlertDialog.create(
-                    titleRes = R.string.common_warning,
-                    messageRes = messageRes,
-                    context = context,
-                    primaryButtonAction = state.dialog.onOk
-                )
-            }
             else -> null
         }
         dialog?.show()

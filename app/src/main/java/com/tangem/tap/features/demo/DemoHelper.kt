@@ -1,7 +1,13 @@
 package com.tangem.tap.features.demo
 
 import com.tangem.blockchain.blockchains.bitcoin.BitcoinWalletManager
-import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.common.TransactionSender
+import com.tangem.blockchain.common.TransactionSigner
+import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.common.toBlockchainCustomError
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.common.CompletionResult
@@ -476,7 +482,7 @@ class DemoTransactionSender(
             publicKey = walletManager.wallet.publicKey
         )
         return when (signerResponse) {
-            is CompletionResult.Success -> SimpleResult.Failure(Exception(ID))
+            is CompletionResult.Success -> SimpleResult.Failure(Exception(ID).toBlockchainCustomError())
             is CompletionResult.Failure -> SimpleResult.fromTangemSdkError(signerResponse.error)
         }
     }

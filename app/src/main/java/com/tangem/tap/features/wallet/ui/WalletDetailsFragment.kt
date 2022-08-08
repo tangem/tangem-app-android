@@ -1,7 +1,11 @@
 package com.tangem.tap.features.wallet.ui
 
 import android.os.Bundle
-import android.view.*
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.ColorRes
@@ -11,21 +15,32 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.transition.TransitionInflater
 import by.kirich1409.viewbindingdelegate.viewBinding
+import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.tangem_sdk_new.extensions.dpToPx
 import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.TestActions
-import com.tangem.tap.common.extensions.*
+import com.tangem.tap.common.extensions.appendIfNotNull
+import com.tangem.tap.common.extensions.beginDelayedTransition
+import com.tangem.tap.common.extensions.fitChipsByGroupWidth
+import com.tangem.tap.common.extensions.getColor
+import com.tangem.tap.common.extensions.getString
+import com.tangem.tap.common.extensions.hide
+import com.tangem.tap.common.extensions.show
+import com.tangem.tap.common.extensions.toQrCode
 import com.tangem.tap.common.recyclerView.SpaceItemDecoration
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.onboarding.getQRReceiveMessage
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.PendingTransaction
-import com.tangem.tap.features.wallet.redux.*
+import com.tangem.tap.features.wallet.redux.ErrorType
+import com.tangem.tap.features.wallet.redux.ProgressState
+import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.features.wallet.redux.WalletData
+import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.redux.WalletState.Companion.UNKNOWN_AMOUNT_SIGN
 import com.tangem.tap.features.wallet.ui.adapters.PendingTransactionsAdapter
 import com.tangem.tap.features.wallet.ui.adapters.WalletDetailWarningMessagesAdapter
-import com.tangem.tap.features.wallet.ui.images.loadCurrencyIcon
 import com.tangem.tap.features.wallet.ui.test.TestWalletDetails
 import com.tangem.tap.store
 import com.tangem.wallet.R
@@ -199,11 +214,12 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
     }
 
     private fun handleCurrencyIcon(wallet: WalletData) = with(binding.lWalletDetails.lBalance) {
-        loadCurrencyIcon(
-            currencyImageView = ivCurrency,
-            currencyTextView = tvTokenLetter,
-            blockchain = wallet.currency.blockchain,
-            token = (wallet.currency as? Currency.Token)?.token
+        ivCurrency.load(
+            currency = wallet.currency,
+            derivationStyle = store.state.globalState
+                .scanResponse
+                ?.card
+                ?.derivationStyle,
         )
     }
 

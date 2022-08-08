@@ -7,6 +7,7 @@ import androidx.fragment.app.FragmentManager
 import com.tangem.common.extensions.VoidCallback
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.FragmentShareTransition
+import com.tangem.tap.features.details.ui.appsettings.AppSettingsFragment
 import com.tangem.tap.features.details.ui.cardsettings.CardSettingsFragment
 import com.tangem.tap.features.details.ui.details.DetailsFragment
 import com.tangem.tap.features.details.ui.resetcard.ResetCardFragment
@@ -95,7 +96,7 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
         AppScreen.Details -> DetailsFragment()
         AppScreen.DetailsSecurity -> SecurityModeFragment()
         AppScreen.CardSettings -> CardSettingsFragment()
-        AppScreen.AppSettings -> CardSettingsFragment()
+        AppScreen.AppSettings -> AppSettingsFragment()
         AppScreen.ResetToFactory -> ResetCardFragment()
         AppScreen.Disclaimer -> DisclaimerFragment()
         AppScreen.AddTokens -> AddTokensFragment()
