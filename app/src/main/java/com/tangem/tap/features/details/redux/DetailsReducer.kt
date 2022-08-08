@@ -147,13 +147,12 @@ private fun handlePrivacyAction(
     action: DetailsAction.AppSettings, state: DetailsState,
 ): DetailsState {
     return when (action) {
-        is DetailsAction.AppSettings.ConfirmSwitchingSetting -> {
+        is DetailsAction.AppSettings.SwitchPrivacySetting -> {
             when (action.setting) {
-                PrivacySetting.SAVE_CARDS -> state.copy(saveCards = action.allow)
-                PrivacySetting.SAVE_ACCESS_CODE -> state.copy(savePasswords = action.allow)
+                PrivacySetting.SaveWallets -> state.copy(saveWallets = action.enable)
+                PrivacySetting.SaveAccessCode -> state.copy(saveAccessCodes = action.enable)
             }
         }
-        is DetailsAction.AppSettings.SwitchPrivacySetting -> state
     }
 }
 
