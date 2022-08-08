@@ -11,11 +11,11 @@ import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.features.home.LocaleRegionProvider
 import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
+import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.wallet.BuildConfig
 import org.rekotlin.Store
 
 class DetailsViewModel(private val store: Store<AppState>) {
-
     fun updateState(state: DetailsState): DetailsScreenState {
         val settings = SettingsElement.values().mapNotNull {
             when (it) {
@@ -29,6 +29,7 @@ class DetailsViewModel(private val store: Store<AppState>) {
                     if (state.privacyPolicyUrl != null) it else null
                 }
                 SettingsElement.AppSettings -> null // TODO: until we implement settings from this screen
+                SettingsElement.AppCurrency -> if (state.scanResponse?.card?.isMultiwalletAllowed != true) it else null
                 else -> it
             }
         }
@@ -37,6 +38,7 @@ class DetailsViewModel(private val store: Store<AppState>) {
             settings,
             tangemLinks = getSocialLinks(),
             tangemVersion = getTangemAppVersion(),
+            appCurrency = state.appCurrency.name,
             onItemsClick = { handleClickingSettingsItem(it) },
             onSocialNetworkClick = { handleSocialNetworkClick(it) },
         )
@@ -59,6 +61,9 @@ class DetailsViewModel(private val store: Store<AppState>) {
             }
             SettingsElement.CardSettings -> {
                 store.dispatch(NavigationAction.NavigateTo(AppScreen.CardSettings))
+            }
+            SettingsElement.AppCurrency -> {
+                store.dispatch(WalletAction.AppCurrencyAction.ChooseAppCurrency)
             }
             SettingsElement.AppSettings -> {
                 store.dispatch(NavigationAction.NavigateTo(AppScreen.AppSettings)) //TODO: To be available later
