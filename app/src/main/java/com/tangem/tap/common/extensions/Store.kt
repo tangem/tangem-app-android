@@ -76,6 +76,6 @@ fun Store<*>.dispatchDialogShow(dialog: StateDialog) {
 
 fun Store<*>.dispatchDialogHide() {
     scope.launch(Dispatchers.Main) {
-        store.dispatch(GlobalAction.HideDialog)
+        store.dispatch(GlobalAction.HideDialog())
     }
 }
