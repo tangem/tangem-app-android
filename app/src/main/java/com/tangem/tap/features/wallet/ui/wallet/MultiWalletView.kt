@@ -25,14 +25,8 @@ import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentWalletBinding
 
 
-class MultiWalletView : WalletView {
-
-    private var fragment: WalletFragment? = null
-    private var binding: FragmentWalletBinding? = null
-
+class MultiWalletView : WalletView() {
     private lateinit var walletsAdapter: WalletAdapter
-
-
     override fun changeWalletView(fragment: WalletFragment, binding: FragmentWalletBinding) {
         setFragment(fragment, binding)
         onViewCreated()
@@ -47,6 +41,7 @@ class MultiWalletView : WalletView {
         lAddress.root.hide()
         lButtonsShort.root.hide()
         lButtonsLong.root.hide()
+        lSingleWalletBalance.root.hide()
         rvMultiwallet.show()
         btnAddToken.show()
         setupWalletCardNumber(binding)
@@ -64,15 +59,6 @@ class MultiWalletView : WalletView {
         }
     }
 
-    override fun setFragment(fragment: WalletFragment, binding: FragmentWalletBinding) {
-        this.fragment = fragment
-        this.binding = binding
-    }
-
-    override fun removeFragment() {
-        this.fragment = null
-        this.binding = null
-    }
 
     override fun onViewCreated() {
         setupWalletsRecyclerView()
