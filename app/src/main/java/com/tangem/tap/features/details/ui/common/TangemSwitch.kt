@@ -59,10 +59,9 @@ fun TangemSwitch(
                 onCheckedChange(!checked)
             }
             .indication(
-                interactionSource = MutableInteractionSource(),
+                interactionSource = interactionSource,
                 indication = rememberRipple(
-                    bounded = true,
-                    radius = 100.dp,
+                    bounded = false,
                     color = Color.Transparent,
                 ),
             ),
@@ -71,7 +70,7 @@ fun TangemSwitch(
             modifier = modifier
                 .width(size)
                 .height(size / 2)
-                .indication(MutableInteractionSource(), null)
+                .indication(interactionSource, null)
                 .background(color = color, shape = RoundedCornerShape(100)),
             contentAlignment = Alignment.CenterStart,
         ) {
@@ -91,8 +90,7 @@ fun TangemSwitch(
                     .offset(x = xOffset, y = 0.dp)
                     .padding(3.dp)
                     .background(color = Color.White, shape = RoundedCornerShape(100)),
-            ) {
-            }
+            )
         }
     }
 }
