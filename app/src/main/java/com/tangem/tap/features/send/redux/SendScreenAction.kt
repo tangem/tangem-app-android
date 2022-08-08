@@ -4,6 +4,7 @@ import com.tangem.Message
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.WalletManager
+import com.tangem.common.core.TangemSdkError
 import com.tangem.tap.common.redux.ErrorAction
 import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.redux.ToastNotificationAction
@@ -155,7 +156,10 @@ sealed class SendAction : SendScreenAction {
                 val reduceAmount: BigDecimal,
         ) : Dialog()
 
-        data class SendTransactionFails(val errorMessage: String) : Dialog()
+        sealed class SendTransactionFails : Dialog() {
+            data class CardSdkError(val error: TangemSdkError): Dialog()
+            data class BlockchainSdkError(val error: com.tangem.blockchain.common.BlockchainSdkError): Dialog()
+        }
         object Hide : Dialog()
     }
 
