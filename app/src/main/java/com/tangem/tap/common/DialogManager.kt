@@ -9,6 +9,7 @@ import com.tangem.tap.common.ui.SimpleCancelableAlertDialog
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectDialog
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.ApproveWcSessionDialog
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.BnbTransactionDialog
+import com.tangem.tap.features.details.ui.walletconnect.dialogs.ChooseNetworkDialog
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.ClipboardOrScanQrDialog
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.PersonalSignDialog
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.TransactionDialog
@@ -58,7 +59,7 @@ class DialogManager : StoreSubscriber<GlobalState> {
             return
         }
         val context = context ?: return
-        if (dialog != null) return
+        if (dialog != null && dialog == state.dialog) return
 
         dialog = when (state.dialog) {
             is AppDialog.SimpleOkDialog -> SimpleOkDialog.create(state.dialog, context)
@@ -87,18 +88,20 @@ class DialogManager : StoreSubscriber<GlobalState> {
                 SimpleAlertDialog.create(
                     titleRes = R.string.wallet_connect,
                     messageRes = R.string.wallet_connect_same_wcuri,
-                    context = context
+                    context = context,
                 )
             }
             is WalletConnectDialog.SessionTimeout -> {
                 SimpleAlertDialog.create(
                     titleRes = R.string.wallet_connect,
                     messageRes = R.string.wallet_connect_error_timeout,
-                    context = context
+                    context = context,
                 )
             }
             is WalletConnectDialog.ApproveWcSession ->
-                ApproveWcSessionDialog.create(state.dialog.session, context)
+                ApproveWcSessionDialog.create(state.dialog.session, state.dialog.networks, context)
+            is WalletConnectDialog.ChooseNetwork ->
+                ChooseNetworkDialog.create(state.dialog.networks, context)
             is WalletConnectDialog.ClipboardOrScanQr ->
                 ClipboardOrScanQrDialog.create(state.dialog.clipboardUri, context)
             is WalletConnectDialog.RequestTransaction ->
@@ -112,7 +115,7 @@ class DialogManager : StoreSubscriber<GlobalState> {
                     sessionId = state.dialog.sessionId,
                     cardId = state.dialog.cardId,
                     dAppName = state.dialog.dAppName,
-                    context = context
+                    context = context,
                 )
             is WalletConnectDialog.UnsupportedNetwork ->
                 SimpleAlertDialog.create(
