@@ -27,51 +27,11 @@
 
             <com.tangem.tap.features.wallet.ui.images.CurrencyIconView
                 android:id="@+id/iv_currency"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
-
-            <TextView
-                android:id="@+id/tv_token_letter"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="2dp"
-                android:textColor="@android:color/white"
-                android:textSize="25sp"
-                android:textStyle="bold"
-                app:layout_constraintBottom_toBottomOf="@id/iv_currency"
-                app:layout_constraintEnd_toEndOf="@id/iv_currency"
-                app:layout_constraintStart_toStartOf="@id/iv_currency"
-                app:layout_constraintTop_toTopOf="@id/iv_currency"
-                tools:text="J" />
-
-            <ImageView
-                android:id="@+id/iv_blockchain"
-                android:layout_width="18dp"
-                android:layout_height="18dp"
-                android:padding="2dp"
-                android:translationX="4dp"
-                android:translationY="-4dp"
-                android:background="@drawable/shape_circle"
-                android:backgroundTint="@color/backgroundWhite"
-                android:contentDescription="@null"
-                android:visibility="gone"
-                app:layout_constraintTop_toTopOf="@id/iv_currency"
-                app:layout_constraintEnd_toEndOf="@id/iv_currency"
-                tools:src="@drawable/ic_eth"
-                tools:visibility="visible" />
-            
-            <View
-                android:id="@+id/badge_custom_balance"
-                android:layout_width="10dp"
-                android:layout_height="10dp"
-                android:background="@drawable/shape_badge_custom_currency"
-                android:visibility="gone"
-                app:layout_constraintBottom_toBottomOf="@id/iv_currency"
-                app:layout_constraintEnd_toEndOf="@id/iv_currency"
-                tools:visibility="visible" />
 
             <include
                 layout="@layout/item_currency_wallet_content"
