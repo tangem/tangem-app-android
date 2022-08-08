@@ -14,6 +14,7 @@ import androidx.transition.TransitionInflater
 import by.kirich1409.viewbindingdelegate.viewBinding
 import coil.load
 import coil.size.Scale
+import com.tangem.domain.common.TapWorkarounds.isSaltPay
 import com.tangem.tap.MainActivity
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.recyclerView.SpaceItemDecoration
@@ -32,6 +33,7 @@ import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.ui.adapters.WarningMessagesAdapter
 import com.tangem.tap.features.wallet.ui.wallet.MultiWalletView
+import com.tangem.tap.features.wallet.ui.wallet.SaltPaySingleWalletView
 import com.tangem.tap.features.wallet.ui.wallet.SingleWalletView
 import com.tangem.tap.features.wallet.ui.wallet.WalletView
 import com.tangem.tap.store
@@ -112,17 +114,22 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
 
     override fun newState(state: WalletState) {
         if (activity == null || view == null) return
-
-        if (state.isMultiwalletAllowed &&
-            state.primaryWallet?.currencyData?.status != BalanceStatus.EmptyCard &&
-            walletView is SingleWalletView
-        ) {
-            walletView = MultiWalletView()
-            walletView.changeWalletView(this, binding)
-        } else if (!state.isMultiwalletAllowed && walletView is MultiWalletView) {
-            walletView = SingleWalletView()
-            walletView.changeWalletView(this, binding)
+        val isSaltPay = store.state.globalState.scanResponse?.card?.isSaltPay == true
+        when {
+            isSaltPay -> {
+                walletView = SaltPaySingleWalletView()
+            }
+            state.isMultiwalletAllowed &&
+                state.primaryWallet?.currencyData?.status != BalanceStatus.EmptyCard &&
+                walletView is SingleWalletView -> {
+                walletView = MultiWalletView()
+            }
+            !state.isMultiwalletAllowed && walletView is MultiWalletView -> {
+                walletView = SingleWalletView()
+            }
         }
+
+        walletView.changeWalletView(this, binding)
         walletView.onNewState(state)
 
         if (!state.shouldShowDetails) {
@@ -134,7 +141,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         setupNoInternetHandling(state)
         setupCardImage(state.cardImage)
 
-        showWarningsIfPresent(state.mainWarningsList)
+        if (!isSaltPay) showWarningsIfPresent(state.mainWarningsList)
 
         binding.srlWallet.isRefreshing = state.state == ProgressState.Refreshing
         binding.srlWallet.setOnRefreshListener {
