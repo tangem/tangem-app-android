@@ -51,7 +51,7 @@ class SimpleCancelableAlertDialog {
                     setNegativeButton(context.getText(secondaryButtonRes)) { _, _ -> secondaryButtonAction()}
                 }
                 setOnDismissListener {
-                    store.dispatch(GlobalAction.HideDialog)
+                    store.dispatch(GlobalAction.HideDialog())
                 }
             }.create()
         }
