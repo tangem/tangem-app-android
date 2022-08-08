@@ -58,7 +58,7 @@ class BnbTransactionDialog {
                     store.dispatch(WalletConnectAction.RejectRequest(session, sessionId))
                 }
                 setOnDismissListener {
-                    store.dispatch(GlobalAction.HideDialog)
+                    store.dispatch(GlobalAction.HideDialog())
                 }
             }.create()
         }
