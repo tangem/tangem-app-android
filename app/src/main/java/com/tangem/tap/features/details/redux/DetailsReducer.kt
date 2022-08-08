@@ -1,6 +1,7 @@
 package com.tangem.tap.features.details.redux
 
 import com.tangem.common.card.Card
+import com.tangem.domain.common.TapWorkarounds.isSaltPay
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.TapWorkarounds.isTangemNote
 import com.tangem.domain.common.isTangemTwin
@@ -19,7 +20,6 @@ class DetailsReducer {
 
 private fun internalReduce(action: Action, state: AppState): DetailsState {
     if (action !is DetailsAction) return state.detailsState
-
     val detailsState = state.detailsState
     return when (action) {
         is DetailsAction.PrepareScreen -> {
@@ -40,7 +40,6 @@ private fun internalReduce(action: Action, state: AppState): DetailsState {
         }
         is DetailsAction.ChangeAppCurrency ->
             detailsState.copy(appCurrency = action.fiatCurrency)
-
         else -> detailsState
     }
 }
@@ -48,7 +47,6 @@ private fun internalReduce(action: Action, state: AppState): DetailsState {
 private fun handlePrepareScreen(
     action: DetailsAction.PrepareScreen,
 ): DetailsState {
-
     return DetailsState(
         scanResponse = action.scanResponse,
         wallets = action.wallets,
@@ -99,7 +97,8 @@ private fun prepareSecurityOptions(card: Card): ManageSecurityState {
 private fun isResetToFactoryAllowedByCard(card: Card): Boolean {
     val notAllowedByAnyWallet = card.wallets.any { it.settings.isPermanent }
     val notAllowedByCard = notAllowedByAnyWallet ||
-        (card.isWalletDataSupported && (!card.isTangemNote() && !card.settings.isBackupAllowed))
+        (card.isWalletDataSupported && (!card.isTangemNote() && !card.settings.isBackupAllowed)) ||
+        card.isSaltPay
     return !notAllowedByCard
 }
 
@@ -140,7 +139,6 @@ private fun handleSecurityAction(
                 ),
             )
         }
-
         else -> state
     }
 }
