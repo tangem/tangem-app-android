@@ -11,6 +11,7 @@ import androidx.fragment.app.Fragment
 import androidx.transition.TransitionInflater
 import com.google.accompanist.appcompattheme.AppCompatTheme
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectState
 import com.tangem.tap.store
 import org.rekotlin.StoreSubscriber
@@ -38,7 +39,16 @@ class WalletConnectFragment : Fragment(), StoreSubscriber<WalletConnectState> {
                 AppCompatTheme {
                     WalletConnectScreen(
                         state = screenState.value,
-                        onBackPressed = { store.dispatch(NavigationAction.PopBackTo()) },
+                        onBackPressed = {
+                            if (screenState.value.isLoading) {
+                                store.dispatch(
+                                    WalletConnectAction.FailureEstablishingSession(
+                                        store.state.walletConnectState.newSessionData?.session?.session,
+                                    ),
+                                )
+                            }
+                            store.dispatch(NavigationAction.PopBackTo())
+                        },
                     )
                 }
             }
