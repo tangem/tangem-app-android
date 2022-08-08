@@ -6,7 +6,6 @@ import androidx.compose.animation.core.LinearOutSlowInEasing
 import androidx.compose.animation.core.animateDp
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.indication
@@ -19,7 +18,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.Card
 import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -44,35 +42,26 @@ fun TangemSwitch(
     val transition = updateTransition(checked, label = "SwitchState")
     val color by transition.animateColor(
         transitionSpec = {
-            tween(200, easing = FastOutLinearInEasing)
+            tween(durationMillis = 200, easing = FastOutLinearInEasing)
         },
         label = "",
-    ) {
-        when (it) {
-            true -> enabledColor
-            false -> disabledColor
-        }
+    ) { enabled ->
+        if (enabled) enabledColor else disabledColor
     }
     val interactionSource = remember { MutableInteractionSource() }
-    val clickable = Modifier.clickable(
-        interactionSource = interactionSource,
-        indication = null,
-    ) {
-        if (!checked) {
-            onCheckedChange(true)
-        } else {
-            onCheckedChange(false)
-        }
-    }
 
     Box(
-        modifier = Modifier
-            .then(clickable)
+        modifier = modifier
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+            ) {
+                onCheckedChange(!checked)
+            }
             .indication(
-                interactionSource = MutableInteractionSource(),
+                interactionSource = interactionSource,
                 indication = rememberRipple(
-                    bounded = true,
-                    radius = 100.dp,
+                    bounded = false,
                     color = Color.Transparent,
                 ),
             ),
@@ -81,36 +70,27 @@ fun TangemSwitch(
             modifier = modifier
                 .width(size)
                 .height(size / 2)
-                .indication(MutableInteractionSource(), null)
+                .indication(interactionSource, null)
                 .background(color = color, shape = RoundedCornerShape(100)),
             contentAlignment = Alignment.CenterStart,
         ) {
             val roundCardSize = this.maxWidth / 2
             val xOffset by transition.animateDp(
                 transitionSpec = {
-                    tween(150, easing = LinearOutSlowInEasing)
+                    tween(durationMillis = 150, easing = LinearOutSlowInEasing)
                 },
                 label = "xOffset",
-            ) { state ->
-                when (state) {
-                    false -> 0.dp
-                    true -> this.maxWidth - roundCardSize
-                }
+            ) { enabled ->
+                if (enabled) this.maxWidth - roundCardSize else 0.dp
             }
 
-            Card(
+            Box(
                 modifier = Modifier
                     .size(this.maxWidth / 2)
                     .offset(x = xOffset, y = 0.dp)
-                    .padding(3.dp),
-                shape = RoundedCornerShape(100),
-                backgroundColor = Color.White,
-                border = BorderStroke(
-                    if (!checked) 0.5.dp else 0.dp,
-                    color = Color.LightGray,
-                ),
-            ) {
-            }
+                    .padding(3.dp)
+                    .background(color = Color.White, shape = RoundedCornerShape(100)),
+            )
         }
     }
 }
