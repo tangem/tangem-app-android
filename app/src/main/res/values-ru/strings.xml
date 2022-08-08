@@ -160,7 +160,7 @@
     <string name="alert_failed_to_send_email_title">Не удалось отправить электронное письмо</string>
     <string name="alert_failed_to_send_email_message">Причина: %s</string>
     <string name="alert_failed_to_send_transaction_title">Не могу отправить транзакцию</string>
-    <string name="alert_failed_to_send_transaction_message">Причина: %s. Хотите отправить отзыв?</string>
+    <string name="alert_failed_to_send_transaction_message">Причина: %s</string>
     <string name="alert_troubleshooting_scan_card_title">У Вас возникли трудности со сканированием вашей карты?</string>
     <string name="alert_troubleshooting_scan_card_message">Пожалуйста, попробуйте приложить карту точно так, как показано на анимации, или обратитесь в поддержку</string>
     <string name="alert_troubleshooting_scan_card_ok">Отмена</string>
