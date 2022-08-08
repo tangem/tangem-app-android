@@ -48,7 +48,7 @@ fun AppSettingsScreen(
 }
 
 @Composable
-fun AppSettings(
+private fun AppSettings(
     state: AppSettingsScreenState,
     modifier: Modifier = Modifier,
 ) {
@@ -69,13 +69,15 @@ fun AppSettings(
             .fillMaxSize(),
     ) {
         AppSettingsElement(
-            state = state, setting = PrivacySetting.SaveWallets,
+            state = state,
+            setting = PrivacySetting.SaveWallets,
             onDialogStateChange = onDialogStateChange,
             modifier = modifier,
         )
         Spacer(modifier = Modifier.size(32.dp))
         AppSettingsElement(
-            state = state, setting = PrivacySetting.SaveAccessCode,
+            state = state,
+            setting = PrivacySetting.SaveAccessCode,
             onDialogStateChange = onDialogStateChange,
             modifier = modifier,
         )
@@ -83,7 +85,7 @@ fun AppSettings(
 }
 
 @Composable
-fun AppSettingsElement(
+private fun AppSettingsElement(
     state: AppSettingsScreenState,
     setting: PrivacySetting,
     onDialogStateChange: (PrivacySetting?) -> Unit,
@@ -103,7 +105,6 @@ fun AppSettingsElement(
         modifier = modifier
             .fillMaxWidth()
             .padding(start = 20.dp),
-        // .clickable { state.onSettingToggled(element, !checked) },
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(
@@ -140,7 +141,7 @@ fun AppSettingsElement(
     }
 }
 
-fun onCheckedChange(
+private fun onCheckedChange(
     element: PrivacySetting, enabled: Boolean,
     onSettingToggled: (PrivacySetting, Boolean) -> Unit,
     onDialogStateChange: (PrivacySetting?) -> Unit,
@@ -154,7 +155,7 @@ fun onCheckedChange(
 }
 
 @Composable
-fun SettingsAlertDialog(
+private fun SettingsAlertDialog(
     element: PrivacySetting,
     onDialogStateChange: (PrivacySetting?) -> Unit,
     onSettingToggled: (PrivacySetting, Boolean) -> Unit,
