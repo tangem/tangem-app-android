@@ -28,6 +28,7 @@ class DetailsViewModel(private val store: Store<AppState>) {
                 SettingsElement.PrivacyPolicy -> {
                     if (state.privacyPolicyUrl != null) it else null
                 }
+                SettingsElement.AppSettings -> null // TODO: until we implement settings from this screen
                 else -> it
             }
         }
