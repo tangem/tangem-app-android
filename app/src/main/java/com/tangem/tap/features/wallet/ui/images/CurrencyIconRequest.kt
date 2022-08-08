@@ -19,22 +19,7 @@ import com.tangem.wallet.R
 private const val QCX = "QCX"
 private const val VOYR = "VOYRME"
 
-fun loadCurrencyIcon(
-    currencyImageView: CurrencyIconView,
-    currencyTextView: TextView,
-    token: Token?,
-    blockchain: Blockchain,
-) {
-    CurrencyIconLoader(
-        currencyImageView = currencyImageView.imageView,
-        currencyTextView = currencyTextView,
-        token = token,
-        blockchain = blockchain
-    )
-        .load()
-}
-
-private class CurrencyIconLoader(
+class CurrencyIconRequest(
     private val currencyImageView: ImageFilterView,
     private val currencyTextView: TextView,
     private val token: Token?,
