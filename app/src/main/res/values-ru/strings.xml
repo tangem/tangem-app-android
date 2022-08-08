@@ -7,6 +7,7 @@
     <string name="common_done">Готово</string>
     <string name="common_cancel">Отмена</string>
     <string name="common_accept">Принять</string>
+    <string name="common_delete">Удалить</string>
     <string name="common_custom_string">%s</string>
     <string name="common_camera_denied_alert_title">Доступ к камере запрещен</string>
     <string name="common_camera_denied_alert_message">Вы не предоставили доступ к своей камере, измените настройки конфиденциальности</string>
