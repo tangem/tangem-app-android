@@ -22,6 +22,7 @@ import com.tangem.tap.common.analytics.AnalyticsParam
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.extensions.logSendTransactionError
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.common.redux.AppDialog
@@ -52,14 +53,13 @@ import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdk
 import com.tangem.wallet.R
-import java.util.EnumSet
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.rekotlin.Action
 import org.rekotlin.Middleware
-import timber.log.Timber
+import java.util.*
 
 /**
 [REDACTED_AUTHOR]
@@ -79,13 +79,19 @@ class SendMiddleware {
                     is SendActionUi.CheckIfTransactionDataWasProvided -> {
                         val transactionData = appState()?.sendState?.externalTransactionData
                         if (transactionData != null) {
-                            store.dispatchOnMain(AddressPayIdVerifyAction.AddressVerification.SetWalletAddress(
-                                transactionData.destinationAddress, false
-                            ))
+                            store.dispatchOnMain(
+                                AddressPayIdVerifyAction.AddressVerification.SetWalletAddress(
+                                    transactionData.destinationAddress, false,
+                                ),
+                            )
                             store.dispatchOnMain(AmountActionUi.SetMainCurrency(MainCurrencyType.CRYPTO))
                             store.dispatchOnMain(AmountActionUi.HandleUserInput(transactionData.amount))
-                            store.dispatchOnMain(AmountAction.SetAmount(transactionData.amount.toBigDecimal(),
-                                false))
+                            store.dispatchOnMain(
+                                AmountAction.SetAmount(
+                                    transactionData.amount.toBigDecimal(),
+                                    false,
+                                ),
+                            )
                         }
                     }
                 }
@@ -93,7 +99,6 @@ class SendMiddleware {
             }
         }
     }
-
 }
 
 private fun verifyAndSendTransaction(
@@ -113,23 +118,31 @@ private fun verifyAndSendTransaction(
     when {
         hadTezosError -> {
             val reduceAmount = walletManager.wallet.blockchain.minimalAmount()
-            dispatch(SendAction.Dialog.TezosWarningDialog(reduceCallback = {
-                dispatch(AmountAction.SetAmount(typedAmount.value!!.minus(reduceAmount), false))
-                dispatch(AmountActionUi.CheckAmountToSend)
-            }, sendAllCallback = {
-                sendTransaction(
-                    action, walletManager, amountToSend, feeAmount, destinationAddress,
-                    sendState.transactionExtrasState, card, sendState.externalTransactionData,
-                    dispatch
-                )
-            }, reduceAmount))
+            dispatch(
+                SendAction.Dialog.TezosWarningDialog(
+                    reduceCallback = {
+                        dispatch(AmountAction.SetAmount(typedAmount.value!!.minus(reduceAmount), false))
+                        dispatch(AmountActionUi.CheckAmountToSend)
+                    },
+                    sendAllCallback = {
+                        sendTransaction(
+                            action, walletManager, amountToSend, feeAmount, destinationAddress,
+                            sendState.transactionExtrasState, card, sendState.externalTransactionData,
+                            dispatch,
+                        )
+                    },
+                    reduceAmount,
+                ),
+            )
         }
         transactionErrors.isNotEmpty() -> {
             dispatch(SendAction.SendError(createValidateTransactionError(transactionErrors, walletManager)))
         }
         else -> {
-            sendTransaction(action, walletManager, amountToSend, feeAmount, destinationAddress,
-                sendState.transactionExtrasState, card, sendState.externalTransactionData, dispatch)
+            sendTransaction(
+                action, walletManager, amountToSend, feeAmount, destinationAddress,
+                sendState.transactionExtrasState, card, sendState.externalTransactionData, dispatch,
+            )
         }
     }
 }
@@ -150,7 +163,9 @@ private fun sendTransaction(
 
     transactionExtras.xlmMemo?.memo?.let { txData = txData.copy(extras = StellarTransactionExtras(it)) }
     transactionExtras.binanceMemo?.memo?.let { txData = txData.copy(extras = BinanceTransactionExtras(it.toString())) }
-    transactionExtras.xrpDestinationTag?.tag?.let { txData = txData.copy(extras = XrpTransactionBuilder.XrpTransactionExtras(it)) }
+    transactionExtras.xrpDestinationTag?.tag?.let {
+        txData = txData.copy(extras = XrpTransactionBuilder.XrpTransactionExtras(it))
+    }
 
     scope.launch {
         val updateWalletResult = walletManager.safeUpdate()
@@ -178,14 +193,14 @@ private fun sendTransaction(
         val signer = TangemSigner(
             card = card,
             tangemSdk = tangemSdk,
-            initialMessage = action.messageForSigner
+            initialMessage = action.messageForSigner,
         ) { signResponse ->
             store.dispatch(
                 GlobalAction.UpdateWalletSignedHashes(
                     walletSignedHashes = signResponse.totalSignedHashes,
                     walletPublicKey = walletManager.wallet.publicKey.seedKey,
-                    remainingSignatures = signResponse.remainingSignatures
-                )
+                    remainingSignatures = signResponse.remainingSignatures,
+                ),
             )
         }
         val sendResult = try {
@@ -211,7 +226,7 @@ private fun sendTransaction(
                     store.state.globalState.analyticsHandlers?.triggerEvent(
                         event = AnalyticsEvent.TRANSACTION_IS_SENT,
                         card = card,
-                        blockchain = walletManager.wallet.blockchain.currency
+                        blockchain = walletManager.wallet.blockchain.currency,
                     )
                     dispatch(SendAction.SendSuccess)
 
@@ -231,69 +246,48 @@ private fun sendTransaction(
                     }
                 }
                 is SimpleResult.Failure -> {
-                    when (sendResult.error) {
+                    store.state.globalState.feedbackManager?.infoHolder?.updateOnSendError(
+                        wallet = walletManager.wallet,
+                        host = walletManager.currentHost,
+                        amountToSend = amountToSend,
+                        feeAmount = feeAmount,
+                        destinationAddress = destinationAddress,
+                    )
+                    store.state.globalState.analyticsHandlers?.logSendTransactionError(
+                        error = sendResult.error,
+                        action = Analytics.ActionToLog.SendTransaction,
+                        parameters = mapOf(AnalyticsParam.BLOCKCHAIN to walletManager.wallet.blockchain.currency),
+                        card = card,
+                    )
+
+                    val error = (sendResult.error as? BlockchainSdkError) ?: return@withContext
+
+                    when (error) {
+                        is BlockchainSdkError.WrappedTangemError -> {
+                            val tangemSdkError = (error.tangemError as? TangemSdkError) ?: return@withContext
+                            if (tangemSdkError is TangemSdkError.UserCancelled) return@withContext
+
+                            dispatch(SendAction.Dialog.SendTransactionFails.CardSdkError(tangemSdkError))
+                        }
                         is BlockchainSdkError.CreateAccountUnderfunded -> {
-                            val error = sendResult.error as BlockchainSdkError.CreateAccountUnderfunded
+                            // from XLM, XRP
                             val reserve = error.minReserve.value?.stripZeroPlainString() ?: "0"
                             val symbol = error.minReserve.currencySymbol
                             dispatch(SendAction.SendError(TapError.CreateAccountUnderfunded(listOf(reserve, symbol))))
                         }
-                        is BlockchainSdkError.SendException -> {
-                            sendResult.error?.let { FirebaseCrashlytics.getInstance().recordException(it) }
-                        }
-                        is Throwable -> {
-                            val throwable = sendResult.error as Throwable
-                            val message = throwable.message
-                            val infoHolder = store.state.globalState.feedbackManager?.infoHolder
+                        else -> {
                             when {
-                                message == null -> {
-                                    dispatch(SendAction.SendError(TapError.UnknownError))
-                                    infoHolder?.updateOnSendError(
-                                        wallet = walletManager.wallet,
-                                        host = walletManager.currentHost,
-                                        amountToSend = amountToSend,
-                                        feeAmount = feeAmount,
-                                        destinationAddress = destinationAddress
+                                error.customMessage.contains(DemoTransactionSender.ID) -> {
+                                    store.dispatchDialogShow(
+                                        AppDialog.SimpleOkDialogRes(
+                                            headerId = R.string.common_done,
+                                            messageId = R.string.alert_demo_feature_disabled,
+                                            onOk = { dispatch(NavigationAction.PopBackTo()) },
+                                        ),
                                     )
-                                    dispatch(SendAction.Dialog.SendTransactionFails("unknown error"))
-                                }
-                                message.contains("50002") -> {
-                                    // user was cancelled the operation by closing the Sdk bottom sheet
-                                }
-                                // make it easier latter by handling an appropriate enumError or, like on iOS,
-                                // accept a string identifier of the error message
-                                message.contains("Target account is not created. To create account send 1+ XLM.") -> {
-                                    dispatch(SendAction.SendError(TapError.XmlError.AssetAccountNotCreated))
-                                }
-                                message.contains(DemoTransactionSender.ID) -> {
-                                    delay(DELAY_SDK_DIALOG_CLOSE)
-                                    store.dispatchDialogShow(AppDialog.SimpleOkDialogRes(
-                                        R.string.common_done,
-                                        R.string.alert_demo_feature_disabled
-                                    ) { dispatch(NavigationAction.PopBackTo()) })
                                 }
                                 else -> {
-                                    (sendResult.error as? TangemSdkError)?.let { error ->
-                                        store.state.globalState.analyticsHandlers?.logCardSdkError(
-                                            error,
-                                            Analytics.ActionToLog.SendTransaction,
-                                            mapOf(
-                                                AnalyticsParam.BLOCKCHAIN
-                                                    to walletManager.wallet.blockchain.currency),
-                                            card = card,
-                                        )
-                                    }
-                                    Timber.e(throwable)
-                                    FirebaseCrashlytics.getInstance().recordException(throwable)
-                                    dispatch(SendAction.SendError(TapError.CustomError(message)))
-                                    infoHolder?.updateOnSendError(
-                                        wallet = walletManager.wallet,
-                                        host = walletManager.currentHost,
-                                        amountToSend = amountToSend,
-                                        feeAmount = feeAmount,
-                                        destinationAddress = destinationAddress
-                                    )
-                                    dispatch(SendAction.Dialog.SendTransactionFails(message))
+                                    dispatch(SendAction.Dialog.SendTransactionFails.BlockchainSdkError(error))
                                 }
                             }
                         }
@@ -328,7 +322,10 @@ fun extractErrorsForAmountField(errors: EnumSet<TransactionError>): EnumSet<Tran
     return showIntoAmountField
 }
 
-fun createValidateTransactionError(errorList: EnumSet<TransactionError>, walletManager: WalletManager): TapError.ValidateTransactionErrors {
+fun createValidateTransactionError(
+    errorList: EnumSet<TransactionError>,
+    walletManager: WalletManager,
+): TapError.ValidateTransactionErrors {
     val tapErrors = errorList.map {
         when (it) {
             TransactionError.AmountExceedsBalance -> TapError.AmountExceedsBalance
