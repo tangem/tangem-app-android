@@ -7,9 +7,7 @@ import com.tangem.tap.common.extensions.toFiatString
 import com.tangem.tap.common.extensions.toFormattedCurrencyString
 import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
-import com.tangem.tap.features.wallet.models.filterByToken
-import com.tangem.tap.features.wallet.models.getPendingTransactions
-import com.tangem.tap.features.wallet.models.removeUnknownTransactions
+import com.tangem.tap.features.wallet.models.*
 import com.tangem.tap.features.wallet.redux.*
 import com.tangem.tap.features.wallet.redux.WalletState.Companion.UNKNOWN_AMOUNT_SIGN
 import com.tangem.tap.features.wallet.ui.BalanceStatus
@@ -103,10 +101,10 @@ class MultiWalletReducer {
             }
             is WalletAction.MultiWallet.TokenLoaded -> {
                 val currency = Currency.fromBlockchainNetwork(action.blockchain, action.token)
-                val wallet = state.getWalletManager(currency)?.wallet.guard {
-                    throw NullPointerException("MultiWallet.TokenLoaded: WalletManager must be no NULL")
+                val walletManager = state.getWalletManager(currency).guard {
+                    throw NullPointerException("MultiWallet.TokenLoaded: WalletManager must be not NULL")
                 }
-
+                val wallet = walletManager.wallet
                 val pendingTransactions = wallet.getPendingTransactions()
                 val tokenPendingTransactions = pendingTransactions.filterByToken(action.token)
                 val tokenBalanceStatus = when {
@@ -136,7 +134,8 @@ class MultiWalletReducer {
                         token = action.token,
                         blockchain = action.blockchain.blockchain,
                         derivationPath = action.blockchain.derivationPath
-                    )
+                    ),
+                    walletRent = findWalletRent(state.getWalletStore(walletManager.wallet))
                 )
                 state.updateWalletData(newTokenWalletData)
             }
@@ -145,19 +144,27 @@ class MultiWalletReducer {
 
             is WalletAction.MultiWallet.SelectWallet ->
                 state.copy(selectedCurrency = action.walletData?.currency)
-
+            is WalletAction.MultiWallet.TryToRemoveWallet -> state
             is WalletAction.MultiWallet.RemoveWallet -> {
-                state.removeWallet(action.walletData)
+                state.removeWallet(state.getWalletData(action.currency))
             }
             is WalletAction.MultiWallet.SetPrimaryBlockchain ->
                 state.copy(primaryBlockchain = action.blockchain)
 
             is WalletAction.MultiWallet.SetPrimaryToken ->
                 state.copy(primaryToken = action.token)
-//            is WalletAction.MultiWallet.FindTokensInUse -> state
-//            is WalletAction.MultiWallet.FindBlockchainsInUse -> state
             is WalletAction.MultiWallet.SaveCurrencies -> state
+            is WalletAction.MultiWallet.ShowWalletBackupWarning -> state.copy(
+                showBackupWarning = action.show
+            )
+            is WalletAction.MultiWallet.BackupWallet -> state
         }
+    }
+
+    private fun findWalletRent(walletStore: WalletStore?): WalletRent? {
+        return walletStore?.walletsData?.firstOrNull {
+            it.walletRent != null
+        }?.walletRent
     }
 }
 
