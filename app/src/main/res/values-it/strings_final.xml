@@ -94,4 +94,6 @@
     <string name="reset_card_to_factory_button_title">Reset the card</string>
     <string name="card_settings_reset_card_to_factory">Reset to Factory Settings</string>
     <string name="card_settings_reset_card_to_factory_footer">Factory Reset will completely delete the wallet from the selected card. You will not be able to restore the current wallet or use the card to recover the access code.</string>
+
+    <string name="wallet_connect_select_network">Select network</string>
 </resources>
