@@ -12,6 +12,7 @@ import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.getArtworkUrl
 import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
+import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.WalletRent
 import com.tangem.tap.features.wallet.redux.*
 import com.tangem.tap.features.wallet.ui.BalanceStatus
@@ -41,7 +42,7 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
         is WalletAction.Warnings -> newState = handleCheckSignedHashesActions(action, newState)
         is WalletAction.MultiWallet -> newState = multiWalletReducer.reduce(action, newState)
 
-        is WalletAction.ResetState -> newState = WalletState()
+        is WalletAction.ResetState -> newState = WalletState(cardId = action.newCardId)
         is WalletAction.SetIfTestnetCard -> newState = newState.copy(isTestnet = action.isTestnet)
         is WalletAction.EmptyWallet -> {
             newState = newState.copy(

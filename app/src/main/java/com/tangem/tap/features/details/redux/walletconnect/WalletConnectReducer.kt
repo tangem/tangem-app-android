@@ -13,18 +13,17 @@ class WalletConnectReducer {
                 is WalletConnectAction.ApproveSession.Success -> {
                     state.copy(
                         loading = false,
-                        sessions = state.sessions + action.session
+                        sessions = state.sessions + action.session,
                     )
                 }
-                is  WalletConnectAction.OpenSession -> {
+                is WalletConnectAction.OpenSession -> {
                     state.copy(loading = true)
                 }
-                is WalletConnectAction.AddScanResponse -> {
-                    state.copy(scanResponse = action.scanResponse)
+                is WalletConnectAction.SetNewSessionData -> {
+                    state.copy(newSessionData = action.newSession)
                 }
                 is WalletConnectAction.SetSessionsRestored ->
                     WalletConnectState(sessions = action.sessions)
-
                 is WalletConnectAction.RemoveSession -> {
                     val sessions =
                         state.sessions.filterNot { it.session.toUri() == action.session.toUri() }
@@ -34,6 +33,11 @@ class WalletConnectReducer {
                 is WalletConnectAction.RefuseOpeningSession -> state.copy(loading = false)
                 is WalletConnectAction.OpeningSessionTimeout -> state.copy(loading = false)
                 is WalletConnectAction.FailureEstablishingSession -> state.copy(loading = false)
+                is WalletConnectAction.UpdateBlockchain -> state.copy(
+                    sessions = state.sessions
+                        .filterNot { it.peerId == action.updatedSession.peerId }
+                            + action.updatedSession
+                )
 
                 else -> state
             }

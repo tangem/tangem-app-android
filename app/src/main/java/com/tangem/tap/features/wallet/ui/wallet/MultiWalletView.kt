@@ -25,14 +25,8 @@ import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentWalletBinding
 
 
-class MultiWalletView : WalletView {
-
-    private var fragment: WalletFragment? = null
-    private var binding: FragmentWalletBinding? = null
-
+class MultiWalletView : WalletView() {
     private lateinit var walletsAdapter: WalletAdapter
-
-
     override fun changeWalletView(fragment: WalletFragment, binding: FragmentWalletBinding) {
         setFragment(fragment, binding)
         onViewCreated()
@@ -47,6 +41,7 @@ class MultiWalletView : WalletView {
         lAddress.root.hide()
         lButtonsShort.root.hide()
         lButtonsLong.root.hide()
+        lSingleWalletBalance.root.hide()
         rvMultiwallet.show()
         btnAddToken.show()
         setupWalletCardNumber(binding)
@@ -64,15 +59,6 @@ class MultiWalletView : WalletView {
         }
     }
 
-    override fun setFragment(fragment: WalletFragment, binding: FragmentWalletBinding) {
-        this.fragment = fragment
-        this.binding = binding
-    }
-
-    override fun removeFragment() {
-        this.fragment = null
-        this.binding = null
-    }
 
     override fun onViewCreated() {
         setupWalletsRecyclerView()
@@ -91,6 +77,7 @@ class MultiWalletView : WalletView {
         val binding = binding ?: return
 
         handleTotalBalance(binding, state.totalBalance)
+        handleBackupWarning(binding, state.showBackupWarning)
         walletsAdapter.submitList(state.walletsData, state.primaryBlockchain, state.primaryToken)
 
         binding.btnAddToken.setOnClickListener {
@@ -111,13 +98,19 @@ class MultiWalletView : WalletView {
                     derivationStyle = card.derivationStyle
                 )
             )
-            store.dispatch(
-                TokensAction.SetNonRemovableCurrencies(
-                    state.walletsData.filterNot { state.canBeRemoved(it) })
-            )
             store.dispatch(NavigationAction.NavigateTo(AppScreen.AddTokens))
         }
         handleErrorStates(state = state, binding = binding, fragment = fragment)
+    }
+
+    private fun handleBackupWarning(
+        binding: FragmentWalletBinding,
+        showBackupWarning: Boolean
+    ) = with(binding.lWalletBackupWarning) {
+        root.isVisible = showBackupWarning
+        root.setOnClickListener {
+            store.dispatch(WalletAction.MultiWallet.BackupWallet)
+        }
     }
 
     private fun handleTotalBalance(
