@@ -45,7 +45,7 @@ class TransactionDialog {
                     store.dispatch(WalletConnectAction.RejectRequest(data.session, data.id))
                 }
                 setOnDismissListener {
-                    store.dispatch(GlobalAction.HideDialog)
+                    store.dispatch(GlobalAction.HideDialog())
                 }
             }.create()
         }
