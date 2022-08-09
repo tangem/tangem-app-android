@@ -28,11 +28,15 @@ class WalletConnectNetworkUtils {
                 peer.name.contains("BSC") -> {
                     Blockchain.BSC
                 }
+                peer.url.contains("honeyswap.1hive.eth.limo") -> {
+                    // Check if something's changed after this bug report:
+                    // https://github.com/1Hive/honeyswap-interface/issues/83
+                    Blockchain.Gnosis
+                }
                 else -> {
-                   Blockchain.Ethereum
+                    Blockchain.Ethereum
                 }
             }
         }
-
     }
 }

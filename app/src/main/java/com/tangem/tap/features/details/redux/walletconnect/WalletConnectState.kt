@@ -2,6 +2,7 @@ package com.tangem.tap.features.details.redux.walletconnect
 
 import com.squareup.moshi.JsonClass
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.blockchain.common.TransactionData
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.hdWallet.DerivationPath
@@ -15,7 +16,13 @@ import com.trustwallet.walletconnect.models.session.WCSession
 data class WalletConnectState(
     val loading: Boolean = false,
     val sessions: List<WalletConnectSession> = listOf(),
-    val scanResponse: ScanResponse? = null
+    val newSessionData: NewWcSessionData? = null,
+)
+
+data class NewWcSessionData(
+    val session: WalletConnectSession,
+    val scanResponse: ScanResponse,
+    val blockchain: Blockchain?,
 )
 
 data class WalletConnectSession(
@@ -37,8 +44,9 @@ data class WalletForSession(
     val walletPublicKey: ByteArray? = null,
     val derivedPublicKey: ByteArray? = null,
     val derivationPath: DerivationPath? = null,
+    val derivationStyle: DerivationStyle? = null,
     val isTestNet: Boolean = false,
-    val blockchain: Blockchain? = if (isTestNet) Blockchain.EthereumTestnet else Blockchain.Ethereum
+    val blockchain: Blockchain? = if (isTestNet) Blockchain.EthereumTestnet else Blockchain.Ethereum,
 ) {
 
     fun getBlockchainForSession(): Blockchain {
@@ -82,18 +90,28 @@ data class WalletForSession(
 sealed class WalletConnectDialog : StateDialog {
     data class ClipboardOrScanQr(val clipboardUri: String) : WalletConnectDialog()
     object UnsupportedCard : WalletConnectDialog()
+    object UnsupportedNetwork : WalletConnectDialog()
+    data class AddNetwork(val network: String) : WalletConnectDialog()
     object OpeningSessionRejected : WalletConnectDialog()
     object SessionTimeout : WalletConnectDialog()
-    data class ApproveWcSession(val session: WalletConnectSession) : WalletConnectDialog()
+    data class ApproveWcSession(
+        val session: WalletConnectSession, val networks: List<Blockchain>,
+    ) : WalletConnectDialog()
+
+    data class ChooseNetwork(
+        val networks: List<Blockchain>,
+    ) : WalletConnectDialog()
+
     data class RequestTransaction(val dialogData: TransactionRequestDialogData) :
         WalletConnectDialog()
 
     data class PersonalSign(val data: PersonalSignDialogData) : WalletConnectDialog()
-    data class BnbTransactionDialog(val data: BinanceMessageData,
-                                    val session: WCSession,
-                                    val sessionId: Long,
-                                    val cardId: String,
-                                    val dAppName: String
+    data class BnbTransactionDialog(
+        val data: BinanceMessageData,
+        val session: WCSession,
+        val sessionId: Long,
+        val cardId: String,
+        val dAppName: String,
     ) : WalletConnectDialog()
 }
 
