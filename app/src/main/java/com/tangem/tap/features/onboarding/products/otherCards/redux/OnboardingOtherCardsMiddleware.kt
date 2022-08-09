@@ -1,5 +1,6 @@
 package com.tangem.tap.features.onboarding.products.otherCards.redux
 
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CompletionResult
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
@@ -10,6 +11,8 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.extensions.hasWallets
+import com.tangem.tap.domain.tokens.models.BlockchainNetwork
+import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
@@ -72,6 +75,21 @@ private fun handleOtherCardsAction(action: Action, dispatch: DispatchFunction) {
                             )
                             onboardingManager.scanResponse = updatedResponse
                             onboardingManager.activationStarted(updatedResponse.card.cardId)
+
+                            val primaryBlockchain = updatedResponse.getBlockchain()
+                            val blockchainNetworks = if (primaryBlockchain != Blockchain.Unknown) {
+                                val primaryToken = updatedResponse.getPrimaryToken()
+                                val blockchainNetwork = BlockchainNetwork(primaryBlockchain, updatedResponse.card).updateTokens(
+                                    listOfNotNull(primaryToken))
+                                listOf(blockchainNetwork)
+                            } else {
+                                listOf(
+                                    BlockchainNetwork(Blockchain.Bitcoin, updatedResponse.card),
+                                    BlockchainNetwork(Blockchain.Ethereum, updatedResponse.card)
+                                )
+                            }
+
+                            store.dispatch(WalletAction.MultiWallet.SaveCurrencies(blockchainNetworks))
 
                             delay(DELAY_SDK_DIALOG_CLOSE)
                             store.dispatch(OnboardingOtherCardsAction.SetStepOfScreen(OnboardingOtherCardsStep.Done))

@@ -21,6 +21,8 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.tap.common.compose.Keyboard
+import com.tangem.tap.common.compose.extensions.addAndNotify
+import com.tangem.tap.common.compose.extensions.removeAndNotify
 import com.tangem.tap.common.compose.keyboardAsState
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.pixelsToDp
@@ -30,6 +32,7 @@ import com.tangem.tap.features.tokens.redux.ContractAddress
 import com.tangem.tap.features.tokens.redux.LoadCoinsState
 import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
 import com.tangem.tap.features.tokens.redux.TokensState
+import com.tangem.tap.features.wallet.redux.models.WalletDialog
 import com.tangem.tap.store
 import com.tangem.wallet.R
 
@@ -40,30 +43,30 @@ fun CurrenciesScreen(
     onNetworkItemClicked: (ContractAddress) -> Unit,
     onLoadMore: () -> Unit
 ) {
-    val context = LocalContext.current
+    val tokensAddedOnMainScreen = remember { tokensState.value.addedTokens }
+    val blockchainsAddedOnMainScreen = remember { tokensState.value.addedBlockchains }
+
     val addedTokensState = remember { mutableStateOf(tokensState.value.addedTokens) }
     val addedBlockchainsState = remember { mutableStateOf(tokensState.value.addedBlockchains) }
 
     val isKeyboardOpen by keyboardAsState()
 
     val onAddCurrencyToggleClick = { currency: Currency, token: TokenWithBlockchain? ->
-        if (token != null) {
-            val mutableList = addedTokensState.value.toMutableList()
-            if (mutableList.contains(token)) {
-                mutableList.remove(token)
-            } else {
-                mutableList.add(token)
-            }
-            addedTokensState.value = mutableList
-        } else {
-            val blockchain = Blockchain.fromNetworkId(currency.id)
-            val mutableList = addedBlockchainsState.value.toMutableList()
-            if (mutableList.contains(blockchain)) {
-                mutableList.remove(blockchain)
-            } else {
-                blockchain?.let { mutableList.add(blockchain) }
-            }
-            addedBlockchainsState.value = mutableList
+        val blockchain = Blockchain.fromNetworkId(currency.id)
+        if (blockchain != null && token == null) {
+            toggleBlockchain(
+                blockchain,
+                blockchainsAddedOnMainScreen,
+                addedBlockchainsState,
+                addedTokensState.value,
+            )
+        } else if (token != null) {
+            toggleToken(
+                token,
+                tokensAddedOnMainScreen,
+                addedTokensState,
+                tokensState.value,
+            )
         }
     }
 
@@ -100,23 +103,11 @@ fun CurrenciesScreen(
                 ListOfCurrencies(
                     header = { if (showHeader) CurrenciesWarning() },
                     currencies = tokensState.value.currencies,
-                    nonRemovableTokens = tokensState.value.nonRemovableTokens,
-                    nonRemovableBlockchains = tokensState.value.nonRemovableBlockchains,
                     addedTokens = addedTokensState.value,
                     addedBlockchains = addedBlockchainsState.value,
                     allowToAdd = tokensState.value.allowToAdd,
                     onAddCurrencyToggled = { currency, token ->
                         onAddCurrencyToggleClick(currency, token)
-                        token?.let {
-                            if (!tokensState.value.canHandleToken(it)) {
-                                val dialog = AppDialog.SimpleOkDialog(
-                                    header = context.getString(R.string.common_warning),
-                                    message = context.getString(R.string.alert_manage_tokens_unsupported_message)
-                                ) { onAddCurrencyToggleClick(currency, it) }
-                                store.dispatchDialogShow(dialog)
-                            }
-                        }
-
                     },
                     onNetworkItemClicked = onNetworkItemClicked,
                     onLoadMore = onLoadMore
@@ -124,6 +115,68 @@ fun CurrenciesScreen(
             }
         }
 
+    }
+}
+
+private fun toggleBlockchain(
+    blockchain: Blockchain,
+    blockchainsAddedOnMainScreen: List<Blockchain>,
+    addedBlockchainsState: MutableState<List<Blockchain>>,
+    addedTokens: List<TokenWithBlockchain>
+) {
+    val isTryingToRemove = addedBlockchainsState.value.contains(blockchain)
+    val isAddedOnMainScreen = blockchainsAddedOnMainScreen.contains(blockchain)
+    val isTokenWithSameBlockchainFound = addedTokens.any { it.blockchain == blockchain }
+
+    if (isTryingToRemove) {
+        if (isTokenWithSameBlockchainFound) {
+            store.dispatchDialogShow(WalletDialog.TokensAreLinkedDialog(
+                currencyTitle = blockchain.name,
+                currencySymbol = blockchain.currency
+            ))
+        } else {
+            if (isAddedOnMainScreen) {
+                store.dispatchDialogShow(WalletDialog.RemoveWalletDialog(
+                    currencyTitle = blockchain.name,
+                    onOk = { addedBlockchainsState.removeAndNotify(blockchain) }
+                ))
+            } else {
+                addedBlockchainsState.removeAndNotify(blockchain)
+            }
+        }
+    } else {
+        addedBlockchainsState.addAndNotify(blockchain)
+    }
+}
+
+private fun toggleToken(
+    token: TokenWithBlockchain,
+    tokensAddedOnMainScreen: List<TokenWithBlockchain>,
+    addedTokensState: MutableState<List<TokenWithBlockchain>>,
+    tokensState: TokensState,
+) {
+    val isTryingToRemove = addedTokensState.value.contains(token)
+    val isAddedOnMainScreen = tokensAddedOnMainScreen.contains(token)
+    val isUnsupportedToken = !tokensState.canHandleToken(token)
+
+    if (isTryingToRemove) {
+        if (isAddedOnMainScreen) {
+            store.dispatchDialogShow(WalletDialog.RemoveWalletDialog(
+                currencyTitle = token.token.name,
+                onOk = { addedTokensState.removeAndNotify(token) }
+            ))
+        } else {
+            addedTokensState.removeAndNotify(token)
+        }
+    } else {
+        if (isUnsupportedToken) {
+            store.dispatchDialogShow(AppDialog.SimpleOkDialogRes(
+                headerId = R.string.common_warning,
+                messageId = R.string.alert_manage_tokens_unsupported_message,
+            ))
+        } else {
+            addedTokensState.addAndNotify(token)
+        }
     }
 }
 
