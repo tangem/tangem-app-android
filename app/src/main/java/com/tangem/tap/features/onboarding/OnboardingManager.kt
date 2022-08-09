@@ -12,8 +12,8 @@ import com.tangem.tap.common.extensions.isPositive
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.getOrLoadCardArtworkUrl
+import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.hasPendingTransactions
-import com.tangem.tap.features.wallet.redux.Currency
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.persistence.UsedCardsPrefStorage
 import timber.log.Timber
@@ -83,7 +83,7 @@ class OnboardingManager(
 
 data class OnboardingWalletBalance(
     val value: BigDecimal = BigDecimal.ZERO,
-    val currency: Currency.Blockchain = Currency.Blockchain(Blockchain.Unknown, null),
+    val currency: Currency = Currency.Blockchain(Blockchain.Unknown, null),
     val hasIncomingTransaction: Boolean = false,
     val state: ProgressState,
     val error: TapError? = null,

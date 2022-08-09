@@ -10,8 +10,8 @@ data class PendingTransaction(
     val type: PendingTransactionType,
 ) {
     val address: String? = when (type) {
-        PendingTransactionType.Incoming -> transactionData.destinationAddress
-        PendingTransactionType.Outgoing -> transactionData.sourceAddress
+        PendingTransactionType.Incoming -> transactionData.sourceAddress
+        PendingTransactionType.Outgoing -> transactionData.destinationAddress
         PendingTransactionType.Unknown -> null
     }
 
@@ -48,7 +48,7 @@ fun List<PendingTransaction>.filterByCoin(): List<PendingTransaction> {
 }
 
 fun List<PendingTransaction>.filterByToken(token: Token): List<PendingTransaction> {
-    return this.filter { it.currency == token.symbol }
+    return this.filter { it.transactionData.amount.currencySymbol == token.symbol }
 }
 
 fun TransactionData.toPendingTransactionForToken(token: Token, walletAddress: String): PendingTransaction? {

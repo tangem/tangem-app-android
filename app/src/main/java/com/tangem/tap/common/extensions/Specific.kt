@@ -53,8 +53,7 @@ fun BigDecimal.toFiatString(
     fiatCurrencyName: String,
     formatWithSpaces: Boolean = false
 ): String {
-    var fiatValue = rateValue.multiply(this)
-    fiatValue = fiatValue.setScale(2, RoundingMode.HALF_UP)
+    val fiatValue = rateValue.multiply(this)
     return fiatValue.toFormattedFiatValue(fiatCurrencyName, formatWithSpaces)
 }
 
@@ -67,7 +66,8 @@ fun BigDecimal.toFormattedFiatValue(
     fiatCurrencyName: String,
     formatWithSpaces: Boolean = false
 ): String {
-    val fiatValue = if (formatWithSpaces) this.formatWithSpaces() else this
+    val fiatValue = this.setScale(2, RoundingMode.HALF_UP)
+        .let { if (formatWithSpaces) it.formatWithSpaces() else it }
     return " ${fiatValue}  $fiatCurrencyName"
 }
 

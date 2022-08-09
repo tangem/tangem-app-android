@@ -8,6 +8,7 @@ import com.tangem.wallet.R
 @DrawableRes
 fun Blockchain.getRoundIconRes(): Int {
     return when (this) {
+        Blockchain.Arbitrum, Blockchain.ArbitrumTestnet -> R.drawable.ic_arbitrum_round
         Blockchain.Ducatus -> R.drawable.ic_ducatus
         Blockchain.Bitcoin, Blockchain.BitcoinTestnet,-> R.drawable.ic_bitcoin_round
         Blockchain.BitcoinCash -> R.drawable.ic_bitcoin_cash_round
@@ -26,6 +27,7 @@ fun Blockchain.getRoundIconRes(): Int {
         Blockchain.BSC, Blockchain.BSCTestnet, Blockchain.Binance, Blockchain.BinanceTestnet -> R.drawable.ic_bsc_round
         Blockchain.Dogecoin -> R.drawable.ic_dogecoin_round
         Blockchain.Tron, Blockchain.TronTestnet -> R.drawable.ic_tron_round
+        Blockchain.Gnosis -> R.drawable.ic_gnosis_round
         else -> R.drawable.ic_tangem_logo
     }
 }
@@ -33,6 +35,7 @@ fun Blockchain.getRoundIconRes(): Int {
 @DrawableRes
 fun Blockchain.getGreyedOutIconRes(): Int {
     return when (this) {
+        Blockchain.Arbitrum, Blockchain.ArbitrumTestnet -> R.drawable.ic_arbitrum_no_color
 //        Blockchain.Ducatus -> R.drawable.ic_ducatus
         Blockchain.Bitcoin, Blockchain.BitcoinTestnet,-> R.drawable.ic_bitcoin_no_color
         Blockchain.BitcoinCash -> R.drawable.ic_bitcoin_cash_no_color
@@ -51,6 +54,7 @@ fun Blockchain.getGreyedOutIconRes(): Int {
         Blockchain.BSC, Blockchain.BSCTestnet, Blockchain.Binance, Blockchain.BinanceTestnet -> R.drawable.ic_bsc_no_color
         Blockchain.Dogecoin -> R.drawable.ic_dogecoin_no_color
         Blockchain.Tron, Blockchain.TronTestnet -> R.drawable.ic_tron_no_color
+        Blockchain.Gnosis -> R.drawable.ic_gnosis_no_color
         else -> R.drawable.ic_tangem_logo
     }
 }
@@ -60,6 +64,7 @@ fun Blockchain.getNetworkName(): String {
         Blockchain.Ethereum, Blockchain.EthereumTestnet -> "ERC20"
         Blockchain.BSC, Blockchain.BSCTestnet -> "BEP20"
         Blockchain.Binance, Blockchain.BinanceTestnet -> "BEP2"
+        Blockchain.Tron, Blockchain.TronTestnet -> "TRC20"
         else -> ""
     }
 }

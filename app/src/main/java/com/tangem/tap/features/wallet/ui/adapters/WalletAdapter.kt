@@ -6,15 +6,12 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.squareup.picasso.Picasso
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.tap.common.extensions.getString
 import com.tangem.tap.common.extensions.hide
-import com.tangem.tap.common.extensions.loadCurrenciesIcon
 import com.tangem.tap.common.extensions.show
-import com.tangem.tap.features.wallet.redux.Currency
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletData
 import com.tangem.tap.features.wallet.ui.BalanceStatus
@@ -64,12 +61,9 @@ class WalletAdapter
 
         fun bind(wallet: WalletData) = with(binding) {
             val status = wallet.currencyData.status
-            val isCustomCurrency = wallet.currency.isCustomCurrency(
-                derivationStyle = store.state.globalState
-                    .scanResponse
-                    ?.card
-                    ?.derivationStyle
-            )
+            // Skip changes when on refreshing status
+            if (status == BalanceStatus.Refreshing) return@with
+
             val statusMessage = when (status) {
                 BalanceStatus.TransactionInProgress -> {
                     root.getString(R.string.wallet_balance_tx_in_progress)
@@ -77,15 +71,15 @@ class WalletAdapter
                 BalanceStatus.Unreachable -> {
                     root.getString(R.string.wallet_balance_blockchain_unreachable)
                 }
-                BalanceStatus.NoAccount -> {
-                    root.getString(R.string.wallet_error_no_account)
-                }
+                BalanceStatus.NoAccount,
                 BalanceStatus.VerifiedOnline,
                 BalanceStatus.SameCurrencyTransactionInProgress,
                 BalanceStatus.EmptyCard,
                 BalanceStatus.UnknownBlockchain,
                 BalanceStatus.Loading,
-                null -> null
+                BalanceStatus.Refreshing,
+                null,
+                -> null
             }
 
             if (status == null || status == BalanceStatus.Loading) {
@@ -96,26 +90,24 @@ class WalletAdapter
                 lContent.root.show()
             }
 
-            Picasso.get().loadCurrenciesIcon(
-                imageView = ivCurrency,
-                textView = tvTokenLetter,
-                token = (wallet.currency as? Currency.Token)?.token,
-                blockchain = wallet.currency.blockchain,
+            ivCurrency.load(
+                currency = wallet.currency,
+                derivationStyle = store.state.globalState
+                    .scanResponse
+                    ?.card
+                    ?.derivationStyle,
             )
 
             lContent.tvCurrency.text = wallet.currencyData.currency
-            lContent.tvAmountFiat.text = wallet.currencyData.fiatAmountFormatted ?: "—"
-            lContent.tvAmount.text = wallet.currencyData.amountFormatted ?: "—"
+            lContent.tvAmountFiat.text = wallet.currencyData.fiatAmountFormatted
+            lContent.tvAmount.text = wallet.currencyData.amountFormatted
 
             lContent.tvStatus.isVisible = statusMessage != null
             lContent.tvStatus.text = statusMessage
 
             lContent.tvExchangeRate.isVisible = statusMessage == null
-            lContent.tvExchangeRate.text = if (isCustomCurrency) {
-                root.getString(id = R.string.token_item_no_rate)
-            } else {
-                wallet.fiatRateString
-            }
+            lContent.tvExchangeRate.text = wallet.fiatRateString
+                ?: root.getString(id = R.string.token_item_no_rate)
 
             cardWallet.setOnClickListener {
                 store.dispatch(WalletAction.MultiWallet.SelectWallet(wallet))

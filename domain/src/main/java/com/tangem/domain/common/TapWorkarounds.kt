@@ -9,20 +9,18 @@ import java.util.*
  * Created by Anton Zhilenkov on 07/04/2022.
  */
 object TapWorkarounds {
-
     fun isStart2CoinIssuer(cardIssuer: String?): Boolean {
         return cardIssuer?.lowercase(Locale.US) == START_2_COIN_ISSUER
     }
 
     val Card.isStart2Coin: Boolean
         get() = isStart2CoinIssuer(issuer.name)
-
+    val Card.isSaltPay: Boolean
+        get() = false //TODO fix when we know which cards are SaltPay cards
     val Card.isTestCard: Boolean
         get() = batchId == TEST_CARD_BATCH && cardId.startsWith(TEST_CARD_ID_STARTS_WITH)
-
     val Card.useOldStyleDerivation: Boolean
         get() = batchId == "AC01" || batchId == "AC02" || batchId == "CB95"
-
     val Card.derivationStyle: DerivationStyle?
         get() = if (!settings.isHDWalletAllowed) {
             null
@@ -42,22 +40,19 @@ object TapWorkarounds {
         return false
     }
 
-    @Deprecated("Use ScanResponse.isTangemNote")
-    fun isTangemNote(card: Card): Boolean = tangemNoteBatches.contains(card.batchId)
-
+    fun Card.isTangemNote(): Boolean = tangemNoteBatches.contains(batchId) || isSaltPay
     fun isTangemWalletBatch(card: Card): Boolean = tangemWalletBatches.contains(card.batchId)
-
-    fun Card.getTangemNoteBlockchain(): Blockchain? = tangemNoteBatches[batchId]
+    fun Card.getTangemNoteBlockchain(): Blockchain? =
+        tangemNoteBatches[batchId] ?: if (isSaltPay) Blockchain.Gnosis else null
 
     private const val START_2_COIN_ISSUER = "start2coin"
     private const val TEST_CARD_BATCH = "99FF"
     private const val TEST_CARD_ID_STARTS_WITH = "FF99"
-
     private val excludedBatches = listOf(
         "0027",
         "0030",
         "0031",
-        "0035"
+        "0035",
     )
 
     private val excludedIssuers = listOf(
@@ -75,6 +70,10 @@ object TapWorkarounds {
         "AB06" to Blockchain.XRP,
         "AB07" to Blockchain.Bitcoin,
         "AB08" to Blockchain.Ethereum,
+        "AB09" to Blockchain.Bitcoin,       // new batches for 3.34
+        "AB10" to Blockchain.Ethereum,
+        "AB11" to Blockchain.Bitcoin,
+        "AB12" to Blockchain.Ethereum,
     )
 
     private val tangemWalletBatchesWithStandardDerivationType = listOf(

@@ -19,6 +19,7 @@ import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.hdWallet.DerivationPath
 import com.tangem.domain.common.ScanResponse
 import com.tangem.operations.CommandResponse
+import com.tangem.operations.ScanTask
 import com.tangem.operations.derivation.DerivationTaskResponse
 import com.tangem.operations.derivation.DeriveMultipleWalletPublicKeysTask
 import com.tangem.operations.pins.CheckUserCodesCommand
@@ -141,6 +142,12 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         return runTaskAsyncReturnOnMain(
             CheckUserCodesCommand(),
             cardId,
+            initialMessage = Message(context.getString(R.string.initial_message_tap_header)))
+    }
+
+    suspend fun scanCard(): CompletionResult<Card> {
+        return runTaskAsyncReturnOnMain(
+            ScanTask(),
             initialMessage = Message(context.getString(R.string.initial_message_tap_header)))
     }
 

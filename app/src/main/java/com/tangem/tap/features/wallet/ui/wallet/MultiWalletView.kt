@@ -14,6 +14,7 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.currenciesRepository
 import com.tangem.tap.features.tokens.redux.TokensAction
 import com.tangem.tap.features.wallet.models.TotalBalance
+import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.ui.BalanceStatus
@@ -24,14 +25,8 @@ import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentWalletBinding
 
 
-class MultiWalletView : WalletView {
-
-    private var fragment: WalletFragment? = null
-    private var binding: FragmentWalletBinding? = null
-
+class MultiWalletView : WalletView() {
     private lateinit var walletsAdapter: WalletAdapter
-
-
     override fun changeWalletView(fragment: WalletFragment, binding: FragmentWalletBinding) {
         setFragment(fragment, binding)
         onViewCreated()
@@ -46,6 +41,7 @@ class MultiWalletView : WalletView {
         lAddress.root.hide()
         lButtonsShort.root.hide()
         lButtonsLong.root.hide()
+        lSingleWalletBalance.root.hide()
         rvMultiwallet.show()
         btnAddToken.show()
         setupWalletCardNumber(binding)
@@ -63,15 +59,6 @@ class MultiWalletView : WalletView {
         }
     }
 
-    override fun setFragment(fragment: WalletFragment, binding: FragmentWalletBinding) {
-        this.fragment = fragment
-        this.binding = binding
-    }
-
-    override fun removeFragment() {
-        this.fragment = null
-        this.binding = null
-    }
 
     override fun onViewCreated() {
         setupWalletsRecyclerView()
@@ -90,6 +77,7 @@ class MultiWalletView : WalletView {
         val binding = binding ?: return
 
         handleTotalBalance(binding, state.totalBalance)
+        handleBackupWarning(binding, state.showBackupWarning)
         walletsAdapter.submitList(state.walletsData, state.primaryBlockchain, state.primaryToken)
 
         binding.btnAddToken.setOnClickListener {
@@ -110,13 +98,19 @@ class MultiWalletView : WalletView {
                     derivationStyle = card.derivationStyle
                 )
             )
-            store.dispatch(
-                TokensAction.SetNonRemovableCurrencies(
-                    state.walletsData.filterNot { state.canBeRemoved(it) })
-            )
             store.dispatch(NavigationAction.NavigateTo(AppScreen.AddTokens))
         }
         handleErrorStates(state = state, binding = binding, fragment = fragment)
+    }
+
+    private fun handleBackupWarning(
+        binding: FragmentWalletBinding,
+        showBackupWarning: Boolean
+    ) = with(binding.lWalletBackupWarning) {
+        root.isVisible = showBackupWarning
+        root.setOnClickListener {
+            store.dispatch(WalletAction.MultiWallet.BackupWallet)
+        }
     }
 
     private fun handleTotalBalance(
@@ -125,17 +119,19 @@ class MultiWalletView : WalletView {
     ) = with(binding.lCardTotalBalance) {
         root.isVisible = totalBalance != null
         if (totalBalance != null) {
-            if (totalBalance.state == TotalBalance.State.Loading) {
+            // Skip changes when on refreshing state
+            if (totalBalance.state == ProgressState.Refreshing) return@with
+
+            if (totalBalance.state == ProgressState.Loading) {
                 veilBalance.veil()
             } else {
                 veilBalance.unVeil()
             }
             tvProcessing.animateVisibility(
-                show = totalBalance.state == TotalBalance.State.SomeTokensFailed
+                show = totalBalance.state == ProgressState.Error
             )
 
-            tvBalance.text = if (totalBalance.state == TotalBalance.State.SomeTokensFailed) "—"
-            else totalBalance.fiatAmount.formatAmountAsSpannedString(
+            tvBalance.text = totalBalance.fiatAmount.formatAmountAsSpannedString(
                 currencySymbol = totalBalance.fiatCurrency.symbol
             )
             tvCurrencyName.text = totalBalance.fiatCurrency.code
@@ -189,7 +185,6 @@ class MultiWalletView : WalletView {
     private fun configureButtonsForEmptyWalletState(binding: FragmentWalletBinding) =
         with(binding) {
             lButtonsLong.root.show()
-            lButtonsLong.btnScanLong.setOnClickListener { store.dispatch(WalletAction.Scan) }
             lButtonsLong.btnConfirmLong.setOnClickListener { store.dispatch(WalletAction.CreateWallet) }
             lButtonsLong.btnConfirmLong.text =
                 fragment?.getText(R.string.wallet_button_create_wallet)

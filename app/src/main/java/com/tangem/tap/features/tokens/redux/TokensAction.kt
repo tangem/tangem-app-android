@@ -21,11 +21,12 @@ sealed class TokensAction : Action {
         object Failure : TokensAction()
     }
 
+    data class LoadMore(val scanResponse: ScanResponse? = null
+    ) : TokensAction()
+
     data class SetAddedCurrencies(
         val wallets: List<WalletData>, val derivationStyle: DerivationStyle?
     ) : TokensAction()
-
-    data class SetNonRemovableCurrencies(val wallets: List<WalletData>) : TokensAction()
 
     data class SaveChanges(
         val addedTokens: List<TokenWithBlockchain>,

@@ -8,7 +8,12 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.text.bold
 import com.tangem.common.extensions.remove
-import com.tangem.tap.common.extensions.*
+import com.tangem.tap.common.extensions.beginDelayedTransition
+import com.tangem.tap.common.extensions.enableError
+import com.tangem.tap.common.extensions.getColor
+import com.tangem.tap.common.extensions.getString
+import com.tangem.tap.common.extensions.show
+import com.tangem.tap.common.extensions.update
 import com.tangem.tap.common.redux.getMessageString
 import com.tangem.tap.common.text.DecimalDigitsInputFilter
 import com.tangem.tap.domain.MultiMessageError
@@ -17,12 +22,23 @@ import com.tangem.tap.features.BaseStoreFragment
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.Error
 import com.tangem.tap.features.send.redux.FeeAction
 import com.tangem.tap.features.send.redux.SendAction
-import com.tangem.tap.features.send.redux.reducers.ReceiptReducer
-import com.tangem.tap.features.send.redux.states.*
+import com.tangem.tap.features.send.redux.states.AddressPayIdState
+import com.tangem.tap.features.send.redux.states.AmountState
+import com.tangem.tap.features.send.redux.states.FeeState
+import com.tangem.tap.features.send.redux.states.MainCurrencyType
+import com.tangem.tap.features.send.redux.states.ReceiptLayoutType
+import com.tangem.tap.features.send.redux.states.ReceiptState
+import com.tangem.tap.features.send.redux.states.SendState
+import com.tangem.tap.features.send.redux.states.StateId
+import com.tangem.tap.features.send.redux.states.TransactionExtraError
+import com.tangem.tap.features.send.redux.states.TransactionExtrasState
+import com.tangem.tap.features.send.redux.states.XlmMemoType
 import com.tangem.tap.features.send.ui.FeeUiHelper
 import com.tangem.tap.features.send.ui.SendFragment
 import com.tangem.tap.features.send.ui.dialogs.SendTransactionFailsDialog
 import com.tangem.tap.features.send.ui.dialogs.TezosWarningDialog
+import com.tangem.tap.features.wallet.redux.WalletState.Companion.ROUGH_SIGN
+import com.tangem.tap.features.wallet.redux.WalletState.Companion.UNKNOWN_AMOUNT_SIGN
 import com.tangem.tap.features.wallet.ui.adapters.WarningMessagesAdapter
 import com.tangem.tap.store
 import com.tangem.wallet.R
@@ -116,7 +132,13 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
                     dialog?.show()
                 }
             }
-            is SendAction.Dialog.SendTransactionFails -> {
+            is SendAction.Dialog.SendTransactionFails.CardSdkError -> {
+                if (dialog == null) {
+                    dialog = SendTransactionFailsDialog.create(fg.requireContext(), state.dialog)
+                    dialog?.show()
+                }
+            }
+            is SendAction.Dialog.SendTransactionFails.BlockchainSdkError -> {
                 if (dialog == null) {
                     dialog = SendTransactionFailsDialog.create(fg.requireContext(), state.dialog)
                     dialog?.show()
@@ -257,12 +279,12 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
         val mainLayout = clReceiptContainer as ViewGroup
         val totalLayout = llTotalContainer.llTotal as ViewGroup
         val totalTokenLayout = llTotalContainer.flTotalTokenCrypto as ViewGroup
-        fun getString(id: Int, vararg formatStrings: String): String =
-            mainLayout.context.getString(id, *formatStrings)
 
-        val rough = getString(R.string.sign_rough)
-        fun roughOrEmpty(value: String): String =
-            if (value == ReceiptReducer.EMPTY) value else "$rough $value"
+        fun getString(id: Int, vararg formatStrings: String): String = mainLayout.getString(id, *formatStrings)
+
+        fun roughOrEmpty(value: String): String {
+            return if (value == UNKNOWN_AMOUNT_SIGN) value else "$ROUGH_SIGN $value"
+        }
 
         when (state.visibleTypeOfReceipt) {
             ReceiptLayoutType.FIAT -> {
