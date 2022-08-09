@@ -10,6 +10,7 @@ import com.tangem.tap.common.extensions.fitChipsByGroupWidth
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
+import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.redux.*
 import com.tangem.tap.features.wallet.ui.BalanceWidget
@@ -20,22 +21,8 @@ import com.tangem.tap.store
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentWalletBinding
 
-class SingleWalletView : WalletView {
-
+class SingleWalletView : WalletView() {
     private lateinit var pendingTransactionAdapter: PendingTransactionsAdapter
-    private var fragment: WalletFragment? = null
-    private var binding: FragmentWalletBinding? = null
-
-    override fun setFragment(fragment: WalletFragment, binding: FragmentWalletBinding) {
-        this.fragment = fragment
-        this.binding = binding
-    }
-
-    override fun removeFragment() {
-        fragment = null
-        binding = null
-    }
-
     override fun changeWalletView(fragment: WalletFragment, binding: FragmentWalletBinding) {
         setFragment(fragment, binding)
         onViewCreated()
@@ -48,12 +35,12 @@ class SingleWalletView : WalletView {
         rvPendingTransaction.hide()
         lCardBalance.root.show()
         lAddress.root.show()
+        lSingleWalletBalance.root.hide()
     }
 
     override fun onViewCreated() {
         setupTransactionsRecyclerView()
     }
-
 
     private fun setupTransactionsRecyclerView() {
         val fragment = fragment ?: return
@@ -64,7 +51,6 @@ class SingleWalletView : WalletView {
     }
 
     override fun onNewState(state: WalletState) {
-        val fragment = fragment ?: return
         val binding = binding ?: return
         state.primaryWallet ?: return
 
@@ -80,7 +66,6 @@ class SingleWalletView : WalletView {
         binding?.rvPendingTransaction?.show(pendingTransactions.isNotEmpty())
     }
 
-
     private fun setupBalance(state: WalletState, primaryWallet: WalletData) {
         val fragment = fragment ?: return
         binding?.apply {
@@ -89,13 +74,13 @@ class SingleWalletView : WalletView {
                 binding = this.lCardBalance,
                 fragment = fragment,
                 data = primaryWallet.currencyData,
-                isTwinCard = state.isTangemTwins
+                isTwinCard = state.isTangemTwins,
             ).setup()
         }
     }
 
     private fun setupTwinCards(
-        twinCardsState: TwinCardsState?, binding: FragmentWalletBinding
+        twinCardsState: TwinCardsState?, binding: FragmentWalletBinding,
     ) = with(binding) {
         twinCardsState?.cardNumber?.let { cardNumber ->
             tvTwinCardNumber.show()
@@ -112,11 +97,9 @@ class SingleWalletView : WalletView {
     }
 
     private fun setupButtons(
-        state: WalletData, isTwinsWallet: Boolean, binding: FragmentWalletBinding
+        state: WalletData, isTwinsWallet: Boolean, binding: FragmentWalletBinding,
     ) = with(binding) {
-
         setupButtonsType(state, binding)
-
         val tradeState = state.tradeCryptoState
         val btnConfirm = if (tradeState.isAvailableToSell() || tradeState.isAvailableToBuy()) {
             lButtonsShort.btnConfirm
@@ -136,8 +119,8 @@ class SingleWalletView : WalletView {
                 store.dispatch(
                     WalletAction.DialogAction.QrCode(
                         currency = state.currency,
-                        selectedAddress = selectedAddress
-                    )
+                        selectedAddress = selectedAddress,
+                    ),
                 )
             }
         }
@@ -206,7 +189,6 @@ class SingleWalletView : WalletView {
         }
     }
 
-
     private fun setupAddressCard(state: WalletData, binding: FragmentWalletBinding) = with(binding.lAddress) {
         if (state.walletAddresses != null && state.currency is Currency.Blockchain) {
             binding.lAddress.root.show()
@@ -214,7 +196,6 @@ class SingleWalletView : WalletView {
                 (binding.lAddress.root as? ViewGroup)?.beginDelayedTransition()
                 chipGroupAddressType.show()
                 chipGroupAddressType.fitChipsByGroupWidth()
-
                 val checkedId =
                     MultipleAddressUiHelper.typeToId(state.walletAddresses.selectedAddress.type)
                 if (checkedId != View.NO_ID) chipGroupAddressType.check(checkedId)
@@ -233,8 +214,8 @@ class SingleWalletView : WalletView {
                 store.dispatch(
                     WalletAction.ExploreAddress(
                         state.walletAddresses.selectedAddress.exploreUrl,
-                        fragment!!.requireContext()
-                    )
+                        fragment!!.requireContext(),
+                    ),
                 )
             }
         } else {
