@@ -110,4 +110,6 @@
     <string name="reset_card_to_factory_button_title">Сбросить карту</string>
     <string name="card_settings_reset_card_to_factory">Сброс к заводским настройкам</string>
     <string name="card_settings_reset_card_to_factory_footer">Сброс к заводским настройкам приведет к полному удалению кошелька с выбранной карты. Вы не сможете восстановить текущий кошелек или использовать эту карту для восстановления кода доступа.</string>
+
+    <string name="wallet_connect_select_network">Выберите сеть</string>
 </resources>
