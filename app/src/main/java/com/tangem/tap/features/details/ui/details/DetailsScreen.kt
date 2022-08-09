@@ -5,10 +5,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Icon
@@ -31,7 +33,6 @@ fun DetailsScreen(
     onBackPressed: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-
     SettingsScreensScaffold(
         content = {
             Content(state = state, modifier = modifier)
@@ -48,23 +49,31 @@ fun Content(
 ) {
     Column(
         modifier = modifier
-            .fillMaxWidth()
+            .fillMaxSize()
             .padding(bottom = 40.dp),
     ) {
-
-        state.elements.map {
-            if (it == SettingsElement.WalletConnect) {
-                WalletConnectDetailsItem(
-                    onItemsClick = state.onItemsClick, modifier = modifier,
-                )
-            } else {
-                DetailsItem(
-                    item = it, onItemsClick = state.onItemsClick,
-                    modifier = modifier,
-                )
+        LazyColumn(
+            modifier = modifier
+                .fillMaxWidth()
+                .padding(bottom = 40.dp)
+                .weight(1f),
+        ) {
+            items(state.elements) {
+                if (it == SettingsElement.WalletConnect) {
+                    WalletConnectDetailsItem(
+                        onItemsClick = state.onItemsClick,
+                        modifier = modifier,
+                    )
+                } else {
+                    DetailsItem(
+                        item = it,
+                        appCurrency = state.appCurrency,
+                        onItemsClick = state.onItemsClick,
+                        modifier = modifier,
+                    )
+                }
             }
         }
-        Spacer(modifier = Modifier.weight(1f))
         TangemSocialAccounts(state.tangemLinks, state.onSocialNetworkClick)
         Spacer(modifier = Modifier.size(12.dp))
         Text(
@@ -88,8 +97,7 @@ fun WalletConnectDetailsItem(
             .clickable { onItemsClick(SettingsElement.WalletConnect) },
         horizontalArrangement = Arrangement.Start,
         verticalAlignment = Alignment.CenterVertically,
-
-        ) {
+    ) {
         Icon(
             painter = painterResource(id = R.drawable.ic_walletconnect),
             contentDescription = stringResource(id = R.string.wallet_connect_title),
@@ -114,13 +122,13 @@ fun WalletConnectDetailsItem(
                 color = colorResource(id = R.color.text_secondary),
             )
         }
-
     }
 }
 
 @Composable
 fun DetailsItem(
     item: SettingsElement,
+    appCurrency: String,
     onItemsClick: (SettingsElement) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -138,12 +146,22 @@ fun DetailsItem(
             modifier = modifier.padding(start = 20.dp, end = 20.dp),
             tint = colorResource(id = R.color.icon_secondary),
         )
-        Text(
-            text = stringResource(id = item.titleRes),
-            modifier = modifier.padding(end = 20.dp),
-            style = TangemTypography.subtitle1,
-            color = colorResource(id = R.color.text_primary_1),
-        )
+        Column(modifier = modifier.padding(end = 20.dp)) {
+            Text(
+                text = stringResource(id = item.titleRes),
+                modifier = modifier,
+                style = TangemTypography.subtitle1,
+                color = colorResource(id = R.color.text_primary_1),
+            )
+            if (item == SettingsElement.AppCurrency) {
+                Text(
+                    text = appCurrency,
+                    modifier = modifier,
+                    style = TangemTypography.body2,
+                    color = colorResource(id = R.color.text_secondary),
+                )
+            }
+        }
     }
 }
 
@@ -177,6 +195,7 @@ fun Preview() {
             elements = SettingsElement.values().toList(),
             tangemLinks = TangemSocialAccounts.accountsEn,
             tangemVersion = "Tangem 2.14.12 (343)",
+            appCurrency = "Dollar",
             onItemsClick = {}, onSocialNetworkClick = {},
         ),
         onBackPressed = {},
