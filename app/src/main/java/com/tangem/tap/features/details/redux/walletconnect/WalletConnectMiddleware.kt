@@ -213,14 +213,15 @@ class WalletConnectMiddleware {
 
     private fun scanCard(session: WalletConnectSession, chainId: Int?) {
         val blockchain = WalletConnectNetworkUtils.parseBlockchain(
-            chainId = chainId, peer = session.peerMeta,
+            chainId = chainId,
+            peer = session.peerMeta,
         ) ?: Blockchain.Ethereum
 
         store.dispatch(
             GlobalAction.ScanCard(
                 additionalBlockchainsToDerive = listOf(blockchain),
                 onSuccess = { scanResponse ->
-                    handleScanResponse(scanResponse, session, blockchain)
+                    handleScanResponse(scanResponse = scanResponse, session = session, blockchain = blockchain)
                 },
                 onFailure = {
                     store.dispatchOnMain(WalletConnectAction.FailureEstablishingSession(null))
@@ -290,7 +291,9 @@ class WalletConnectMiddleware {
     }
 
     private fun handleScanResponse(
-        scanResponse: ScanResponse, session: WalletConnectSession, blockchain: Blockchain,
+        scanResponse: ScanResponse,
+        session: WalletConnectSession,
+        blockchain: Blockchain,
     ) {
         val card = scanResponse.card
         if (!card.isMultiwalletAllowed) {
@@ -301,9 +304,7 @@ class WalletConnectMiddleware {
         val updatedSession = session.copy(wallet = session.wallet.copy(blockchain = blockchain))
         store.dispatch(
             WalletConnectAction.SetNewSessionData(
-                DataForNewSession(
-                    updatedSession, scanResponse, blockchain,
-                ),
+                NewWcSessionData(session = updatedSession, scanResponse = scanResponse, blockchain = blockchain),
             ),
         )
 
@@ -313,9 +314,7 @@ class WalletConnectMiddleware {
             withMainContext {
                 store.dispatch(
                     GlobalAction.ShowDialog(
-                        WalletConnectDialog.ApproveWcSession(
-                            updatedSession, blockchains,
-                        ),
+                        WalletConnectDialog.ApproveWcSession(session = updatedSession, networks = blockchains),
                     ),
                 )
             }
