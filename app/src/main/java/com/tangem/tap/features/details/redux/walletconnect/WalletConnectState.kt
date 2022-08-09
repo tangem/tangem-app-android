@@ -16,10 +16,10 @@ import com.trustwallet.walletconnect.models.session.WCSession
 data class WalletConnectState(
     val loading: Boolean = false,
     val sessions: List<WalletConnectSession> = listOf(),
-    val newSessionData: DataForNewSession? = null,
+    val newSessionData: NewWcSessionData? = null,
 )
 
-data class DataForNewSession(
+data class NewWcSessionData(
     val session: WalletConnectSession,
     val scanResponse: ScanResponse,
     val blockchain: Blockchain?,
