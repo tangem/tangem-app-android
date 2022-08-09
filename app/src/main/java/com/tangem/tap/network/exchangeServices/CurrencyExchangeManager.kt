@@ -7,11 +7,12 @@ import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.extensions.Result
+import com.tangem.common.card.Card
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TangemSigner
-import com.tangem.tap.features.wallet.redux.Currency
+import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdk
 import java.math.BigDecimal
@@ -68,7 +69,11 @@ class CurrencyExchangeManager(
     enum class Action { Buy, Sell }
 }
 
-suspend fun CurrencyExchangeManager.buyErc20TestnetTokens(walletManager: EthereumWalletManager, token: Token) {
+suspend fun CurrencyExchangeManager.buyErc20TestnetTokens(
+    card: Card,
+    walletManager: EthereumWalletManager,
+    token: Token,
+) {
     walletManager.safeUpdate()
 
     val amountToSend = Amount(walletManager.wallet.blockchain)
@@ -85,7 +90,9 @@ suspend fun CurrencyExchangeManager.buyErc20TestnetTokens(walletManager: Ethereu
     val transaction = walletManager.createTransaction(amountToSend, fee, destinationAddress)
 
     val signer = TangemSigner(
-        tangemSdk = tangemSdk, Message()
+        card = card,
+        tangemSdk = tangemSdk,
+        initialMessage = Message(),
     ) { signResponse ->
         store.dispatch(
             GlobalAction.UpdateWalletSignedHashes(
