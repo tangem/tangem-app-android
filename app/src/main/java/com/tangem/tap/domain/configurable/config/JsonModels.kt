@@ -1,6 +1,7 @@
 package com.tangem.tap.domain.configurable.config
 
 import com.tangem.tap.common.shop.shopify.ShopifyShop
+import com.tangem.tap.common.zendesk.ZendeskConfig
 
 /**
 [REDACTED_AUTHOR]
@@ -25,6 +26,7 @@ class ConfigValueModel(
         val infuraProjectId: String?,
         val appsFlyerDevKey: String,
         val shopifyShop: ShopifyShop?,
+        val zendesk: ZendeskConfig?,
         val tronGridApiKey: String,
 )
 
