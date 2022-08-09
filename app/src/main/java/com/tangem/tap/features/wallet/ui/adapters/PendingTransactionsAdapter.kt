@@ -61,10 +61,11 @@ class PendingTransactionsAdapter
                 PendingTransactionType.Outgoing -> R.drawable.ic_arrow_right_20
                 PendingTransactionType.Unknown -> return
             }
-            binding.tvPendingTransaction.text = binding.root.getString(transactionDescriptionRes)
+            binding.tvPendingTransaction.text =
+                binding.root.getString(transactionDescriptionRes).let { "$it " }
 
             transaction.amountValueUi?.let { binding.tvPendingTransactionAmount.text = "$it " }
-            binding.tvPendingTransactionCurrency.text = "${transaction.currency}"
+            binding.tvPendingTransactionCurrency.text = transaction.currency
 
             if (transaction.address != null) {
                 binding.tvPendingTransactionAddress.text =
