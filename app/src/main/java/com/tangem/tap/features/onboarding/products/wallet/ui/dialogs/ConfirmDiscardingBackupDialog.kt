@@ -20,7 +20,7 @@ class ConfirmDiscardingBackupDialog {
                     store.dispatch(BackupAction.DiscardSavedBackup)
                 }
                 setOnDismissListener {
-                    store.dispatch(GlobalAction.HideDialog)
+                    store.dispatch(GlobalAction.HideDialog())
                 }
                 setCancelable(false)
             }.create()
