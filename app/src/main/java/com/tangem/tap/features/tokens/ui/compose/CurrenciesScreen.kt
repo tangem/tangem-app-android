@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
 import com.tangem.domain.common.extensions.fromNetworkId
+import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.compose.Keyboard
 import com.tangem.tap.common.compose.extensions.addAndNotify
 import com.tangem.tap.common.compose.extensions.removeAndNotify
@@ -100,6 +101,11 @@ fun CurrenciesScreen(
         ) {
             Column {
                 val showHeader = tokensState.value.scanResponse?.card?.useOldStyleDerivation == true
+                store.state.globalState.analyticsHandlers?.logEventWithParams(
+                    Analytics.AnalyticsWithParametersEvent.P2pInstructionTapped(
+                        showHeader.toString()
+                    )
+                )
                 ListOfCurrencies(
                     header = { if (showHeader) CurrenciesWarning() },
                     currencies = tokensState.value.currencies,
@@ -160,6 +166,11 @@ private fun toggleToken(
     val isUnsupportedToken = !tokensState.canHandleToken(token)
 
     if (isTryingToRemove) {
+        store.state.globalState.analyticsHandlers?.logEventWithParams(
+            Analytics.AnalyticsWithParametersEvent.TokenSwitchOn(
+                token.token.name
+            )
+        )
         if (isAddedOnMainScreen) {
             store.dispatchDialogShow(WalletDialog.RemoveWalletDialog(
                 currencyTitle = token.token.name,
@@ -169,6 +180,11 @@ private fun toggleToken(
             addedTokensState.removeAndNotify(token)
         }
     } else {
+        store.state.globalState.analyticsHandlers?.logEventWithParams(
+            Analytics.AnalyticsWithParametersEvent.TokenSwitchOff(
+                token.token.name
+            )
+        )
         if (isUnsupportedToken) {
             store.dispatchDialogShow(AppDialog.SimpleOkDialogRes(
                 headerId = R.string.common_warning,

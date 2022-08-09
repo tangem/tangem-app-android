@@ -8,6 +8,7 @@ import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.view.isVisible
 import androidx.transition.TransitionManager
 import coil.load
+import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.extensions.getDrawableCompat
 import com.tangem.tap.common.redux.navigation.ShareElement
 import com.tangem.tap.common.transitions.InternalNoteLayoutTransition
@@ -95,6 +96,7 @@ class OnboardingOtherCardsFragment : BaseOnboardingFragment<OnboardingOtherCards
     private fun setupDoneState() = with(binding.onboardingActionContainer) {
         btnMainAction.setText(R.string.onboarding_done_button_continue)
         btnMainAction.setOnClickListener {
+            store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.CARD_CODE_RESET)
             showConfetti(false)
             store.dispatch(OnboardingOtherCardsAction.Done)
         }

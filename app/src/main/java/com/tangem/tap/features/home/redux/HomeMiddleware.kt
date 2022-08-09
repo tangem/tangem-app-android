@@ -2,6 +2,7 @@ package com.tangem.tap.features.home.redux
 
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
+import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.AnalyticsParam
 import com.tangem.tap.common.analytics.GetCardSourceParams
@@ -82,6 +83,12 @@ private fun handleReadCard() {
             store.state.globalState.tapWalletManager.updateConfigManager(scanResponse)
             store.dispatch(TwinCardsAction.IfTwinsPrepareState(scanResponse))
 
+            store.state.globalState.analyticsHandlers?.logEventWithParams(
+                Analytics.AnalyticsWithParametersEvent.FirstScan(
+                    true
+                )
+            )
+
             if (OnboardingHelper.isOnboardingCase(scanResponse)) {
                 val navigateTo = OnboardingHelper.whereToNavigate(scanResponse)
                 store.dispatch(GlobalAction.Onboarding.Start(scanResponse))
@@ -94,6 +101,7 @@ private fun handleReadCard() {
                             store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.WelcomeOnly))
                             navigateTo(AppScreen.OnboardingTwins)
                         } else {
+                            store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.FIRST_CARD_SCAN)
                             navigateTo(AppScreen.Wallet, null)
                         }
                     }

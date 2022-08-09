@@ -6,6 +6,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.features.onboarding.products.wallet.redux.AccessCodeError
@@ -37,6 +38,7 @@ class AccessCodeDialog(context: Context) : BottomSheetDialog(context) {
         layoutBackupAccessCodeInfo.root.show()
         layoutBackupAccessCodeSubmit.root.hide()
         layoutBackupAccessCodeInfo.btnAccessCodeCreate.setOnClickListener {
+            store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.ACCESS_CODE_TAPPED)
             store.dispatch(BackupAction.ShowEnterAccessCodeScreen)
         }
     }
@@ -62,6 +64,7 @@ class AccessCodeDialog(context: Context) : BottomSheetDialog(context) {
             etAccessCode.setText("")
             btnAccessCodeSubmit.text = context.getText(R.string.common_submit)
             btnAccessCodeSubmit.setOnClickListener {
+                store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.NEW_CODE_CONFIRMED)
                 store.dispatch(BackupAction.SaveAccessCodeConfirmation(etAccessCode.text.toString()))
             }
         }

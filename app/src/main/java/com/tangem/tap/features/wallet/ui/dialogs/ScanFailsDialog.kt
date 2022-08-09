@@ -2,6 +2,7 @@ package com.tangem.tap.features.wallet.ui.dialogs
 
 import android.content.Context
 import androidx.appcompat.app.AlertDialog
+import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.extensions.dispatchDialogHide
 import com.tangem.tap.common.feedback.ScanFailsEmail
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -19,6 +20,7 @@ class ScanFailsDialog {
                 setTitle(context.getString(R.string.common_warning))
                 setMessage(R.string.alert_troubleshooting_scan_card_title)
                 setPositiveButton(R.string.alert_button_request_support) { _, _ ->
+                    store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.SUPPORT_TAPPED)
                     store.dispatch(GlobalAction.SendEmail(ScanFailsEmail()))
                 }
                 setNeutralButton(R.string.alert_troubleshooting_scan_card_ok) { _, _ -> }

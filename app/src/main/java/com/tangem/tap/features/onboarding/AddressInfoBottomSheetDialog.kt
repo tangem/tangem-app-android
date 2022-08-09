@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.extensions.copyToClipboard
 import com.tangem.tap.common.extensions.dispatchDialogHide
 import com.tangem.tap.common.extensions.dispatchShare
@@ -51,10 +52,12 @@ class AddressInfoBottomSheetDialog(
         imvQrCode.setImageBitmap(data.qrCode)
         tvAddress.text = data.address
         btnFlCopyAddress.setOnClickListener {
+            store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.COPY_ADDRESS)
             context.copyToClipboard(data.address)
             store.dispatchToastNotification(R.string.copy_toast_msg)
         }
         btnFlShare.setOnClickListener {
+            store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.SHARE_ADDRESS)
             store.dispatchShare(data.shareUrl)
         }
         tvReceiveMessage.text = getQRReceiveMessage(tvReceiveMessage.context, stateDialog.currency)
@@ -62,6 +65,7 @@ class AddressInfoBottomSheetDialog(
 }
 
 fun getQRReceiveMessage(context: Context, currency: Currency): String {
+    store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.CHECK_ADDRESS)
     return when (currency) {
         is Currency.Blockchain -> {
             context.getString(

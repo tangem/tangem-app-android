@@ -40,6 +40,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.features.home.compose.content.FirstStoriesContent
 import com.tangem.tap.features.home.compose.content.StoriesCurrencies
 import com.tangem.tap.features.home.compose.content.StoriesRevolutionaryWallet
@@ -50,6 +51,7 @@ import com.tangem.tap.features.home.compose.views.HomeButtons
 import com.tangem.tap.features.home.compose.views.StoriesProgressBar
 import com.tangem.tap.features.home.redux.HomeState
 import com.tangem.tap.features.wallet.redux.ProgressState
+import com.tangem.tap.store
 import com.tangem.wallet.R
 import kotlin.math.max
 
@@ -168,12 +170,30 @@ fun StoriesScreen(
                 colorFilter = if (isDarkBackground) null else ColorFilter.tint(Color.Black)
             )
             when (currentStep.value) {
-                1 -> FirstStoriesContent(isPaused, currentStep.duration()) { hideContent.value = it }
-                2 -> StoriesRevolutionaryWallet(currentStep.duration())
-                3 -> StoriesUltraSecureBackup(isPaused, currentStep.duration())
-                4 -> StoriesCurrencies(isPaused, currentStep.duration())
-                5 -> StoriesWeb3(isPaused, currentStep.duration())
-                6 -> StoriesWalletForEveryone(currentStep.duration())
+                1 -> {
+                    FirstStoriesContent(isPaused, currentStep.duration()) { hideContent.value = it }
+                    store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.VIEW_STORY_1)
+                }
+                2 -> {
+                    StoriesRevolutionaryWallet(currentStep.duration())
+                    store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.VIEW_STORY_2)
+                }
+                3 -> {
+                    StoriesUltraSecureBackup(isPaused, currentStep.duration())
+                    store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.VIEW_STORY_3)
+                }
+                4 -> {
+                    StoriesCurrencies(isPaused, currentStep.duration())
+                    store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.VIEW_STORY_4)
+                }
+                5 -> {
+                    StoriesWeb3(isPaused, currentStep.duration())
+                    store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.VIEW_STORY_5)
+                }
+                6 -> {
+                    StoriesWalletForEveryone(currentStep.duration())
+                    store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.VIEW_STORY_6)
+                }
             }
         }
         Column(

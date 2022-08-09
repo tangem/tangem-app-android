@@ -4,6 +4,7 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.domain.common.isTangemTwins
 import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.AnalyticsParam
 import com.tangem.tap.common.extensions.dispatchNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -62,6 +63,7 @@ class DetailsMiddleware {
                         }
                     }
                     is DetailsAction.CreateBackup -> {
+                        store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.BACKUP_TAPPED)
                         store.state.detailsState.scanResponse?.let {
                             store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingWallet))
                             store.dispatch(
@@ -105,6 +107,7 @@ class DetailsMiddleware {
                             when (result) {
                                 is CompletionResult.Success -> {
                                     currenciesRepository.removeCurrencies(card.cardId)
+                                    store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.FACTORY_RESET_SUCCESS)
                                     store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
                                 }
                                 is CompletionResult.Failure -> {

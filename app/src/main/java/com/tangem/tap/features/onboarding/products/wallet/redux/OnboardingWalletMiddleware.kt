@@ -7,6 +7,7 @@ import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.operations.backup.BackupService
 import com.tangem.tap.*
+import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -224,6 +225,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             }
         }
         is BackupAction.FinishAddingBackupCards -> {
+            store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.BACKUP_FINISH)
             if (backupService.addedBackupCardsCount == 1) {
                 store.dispatchOnMain(GlobalAction.ShowDialog(BackupDialog.AddMoreBackupCards))
             }
@@ -233,18 +235,22 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
         }
         is BackupAction.CheckAccessCode -> {
             if (action.accessCode.length < 4) {
+                store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.ACCESS_CODE_INCORRECT)
                 store.dispatch(
                     BackupAction.SetAccessCodeError(
                         AccessCodeError.CodeTooShort
                     )
                 )
             } else {
+                store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.CREATE_ACCESS_CODE)
                 store.dispatch(BackupAction.SetAccessCodeError(null))
                 store.dispatch(BackupAction.SaveFirstAccessCode(action.accessCode))
             }
         }
         is BackupAction.SaveAccessCodeConfirmation -> {
+            store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.ACCESS_CODE_ENTERED)
             if (action.accessCodeConfirmation == backupState.accessCode) {
+                store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.ACCESS_CODE_CONFIRM)
                 store.dispatch(BackupAction.SetAccessCodeError(null))
                 backupService.setAccessCode(action.accessCodeConfirmation)
                 store.dispatch(BackupAction.PrepareToWritePrimaryCard)
@@ -257,6 +263,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             }
         }
         is BackupAction.WritePrimaryCard -> {
+            store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.CARD_CODE_SAVE)
             backupService.proceedBackup { result ->
                 when (result) {
                     is CompletionResult.Success -> {
@@ -273,6 +280,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             backupService.proceedBackup { result ->
                 when (result) {
                     is CompletionResult.Success -> {
+                        store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.BACKUP_CARD_SAVE)
                         val blockchainNetworks = listOf(
                             BlockchainNetwork(Blockchain.Bitcoin, result.data),
                             BlockchainNetwork(Blockchain.Ethereum, result.data)
@@ -297,6 +305,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             }
         }
         is BackupAction.FinishBackup -> {
+            store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.ONBOARDING_SUCCESS)
             (listOf(backupState.primaryCardId, card?.cardId) + backupState.backupCardIds)
                 .distinct().filterNotNull()
                 .forEach { cardId ->

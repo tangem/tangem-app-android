@@ -1,5 +1,6 @@
 package com.tangem.tap.features.details.ui.details
 
+import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.feedback.FeedbackEmail
 import com.tangem.tap.common.feedback.SupportInfo
 import com.tangem.tap.common.redux.AppState
@@ -23,6 +24,7 @@ class DetailsViewModel(private val store: Store<AppState>) {
                     if (state.scanResponse?.card?.isMultiwalletAllowed == true) it else null
                 }
                 SettingsElement.LinkMoreCards -> {
+                    store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.SCAN_CARD_TAPPED)
                     if (state.createBackupAllowed) it else null
                 }
                 SettingsElement.PrivacyPolicy -> {
@@ -55,15 +57,18 @@ class DetailsViewModel(private val store: Store<AppState>) {
                 store.dispatch(GlobalAction.OpenChat(SupportInfo()))
             }
             SettingsElement.SendFeedback -> {
+                store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.MAKE_COMMENT)
                 store.dispatch(GlobalAction.SendEmail(FeedbackEmail()))
             }
             SettingsElement.CardSettings -> {
                 store.dispatch(NavigationAction.NavigateTo(AppScreen.CardSettings))
             }
             SettingsElement.AppSettings -> {
+                store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.SETTINGS_TAPPED)
                 store.dispatch(NavigationAction.NavigateTo(AppScreen.AppSettings)) //TODO: To be available later
             }
             SettingsElement.LinkMoreCards -> {
+                store.state.globalState.analyticsHandlers?.triggerEvent(event = AnalyticsEvent.CREATE_BACKUP_TAPPED)
                 store.dispatch(DetailsAction.CreateBackup)
             }
             SettingsElement.TermsOfService -> {

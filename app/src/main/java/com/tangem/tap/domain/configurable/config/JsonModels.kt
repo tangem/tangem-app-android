@@ -25,6 +25,7 @@ class ConfigValueModel(
         val blockcypherTokens: Set<String>?,
         val infuraProjectId: String?,
         val appsFlyerDevKey: String,
+        val amplitudeApiKey: String,
         val shopifyShop: ShopifyShop?,
         val zendesk: ZendeskConfig?,
         val tronGridApiKey: String,
