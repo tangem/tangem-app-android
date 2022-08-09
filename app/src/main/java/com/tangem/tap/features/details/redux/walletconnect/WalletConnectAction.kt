@@ -27,7 +27,7 @@ sealed class WalletConnectAction : Action {
     ) : WalletConnectAction()
 
     data class SetNewSessionData(
-        val newSession: DataForNewSession,
+        val newSession: NewWcSessionData,
     ) : WalletConnectAction()
 
     object RefuseOpeningSession : WalletConnectAction()
