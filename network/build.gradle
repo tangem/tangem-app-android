@@ -12,7 +12,7 @@ dependencies {
     implementation implementation(project(path: ':common'))
 
     // Tangem sdk's
-    implementation 'com.tangem.tangem-sdk-kotlin:core:develop-142'
+    implementation "com.tangem.tangem-sdk-kotlin:core:${versions.tangem_card_sdk}"
 
     // Kotlin coroutines
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2'
