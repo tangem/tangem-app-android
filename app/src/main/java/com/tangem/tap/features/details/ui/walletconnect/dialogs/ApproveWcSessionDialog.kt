@@ -23,11 +23,7 @@ class ApproveWcSessionDialog {
                 setTitle(context.getString(R.string.wallet_connect))
                 setMessage(message)
                 setPositiveButton(context.getText(R.string.common_start)) { _, _ ->
-                    store.dispatch(
-                        WalletConnectAction.ChooseNetwork(
-                            session.wallet.blockchain!!,
-                        ),
-                    )
+                    store.dispatch(WalletConnectAction.ChooseNetwork(session.wallet.blockchain!!))
                 }
                 if (networks.size > 1) {
                     setNeutralButton(context.getText(R.string.wallet_connect_select_network)) { _, _ ->
