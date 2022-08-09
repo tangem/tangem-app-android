@@ -1,7 +1,7 @@
 package com.tangem.tap.network.exchangeServices
 
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.tap.features.wallet.redux.Currency
+import com.tangem.tap.features.wallet.models.Currency
 
 interface ExchangeService {
     suspend fun update()
