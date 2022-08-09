@@ -5,7 +5,7 @@ import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.domain.extensions.makePrimaryWalletManager
 import com.tangem.tap.features.onboarding.products.note.redux.OnboardingNoteAction
-import com.tangem.tap.features.wallet.redux.Currency
+import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.scope
 import com.tangem.tap.store
