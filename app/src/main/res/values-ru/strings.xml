@@ -40,7 +40,7 @@
     <string name="wallet_pending_tx_receiving_address_format">от %s</string>
     <string name="wallet_pending_tx_receiving">Получение</string>
     <string name="wallet_pending_tx_sending">Отправка</string>
-    <string name="wallet_address_button_explore">Посмотреть адрес</string>
+    <string name="wallet_address_button_explore">Проверить адрес</string>
     <string name="wallet_address_button_create_payid">Создать PayString</string>
     <string name="wallet_qr_title_format">%s кошелек</string>
     <string name="wallet_create_payid">Создать PayString</string>
