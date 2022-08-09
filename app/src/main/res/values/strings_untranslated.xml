@@ -55,7 +55,7 @@
     <string name="alert_failed_to_send_email_title" translatable="false">Failed to send email</string>
     <string name="alert_failed_to_send_email_message" translatable="false">Reason: %s</string>
     <string name="alert_failed_to_send_transaction_title" translatable="false">Can\'t send a transaction</string>
-    <string name="alert_failed_to_send_transaction_message" translatable="false">Reason: %s. Do you want to send feedback?</string>
+    <string name="alert_failed_to_send_transaction_message" translatable="false">Reason: %s</string>
     <string name="alert_troubleshooting_scan_card_title" translatable="false">Are you having difficulty scanning your card?</string>
     <string name="alert_troubleshooting_scan_card_message" translatable="false">Please try to tap the card exactly as shown in the animation or request support.</string>
     <string name="alert_troubleshooting_scan_card_ok" translatable="false">I\'m okay</string>
@@ -79,7 +79,6 @@
     <string name="add_token_section_title_custom_tokens" translatable="false">Custom tokens</string>
     <string name="add_token_section_title_popular_tokens" translatable="false">Popular tokens</string>
     <string name="add_token_added" translatable="false">Added</string>
-    <string name="remove_token" translatable="false">Remove token</string>
     <string name="token_icon" translatable="false">Token icon</string>
 
     <string name="add_custom_token_title" translatable="false">Add Token</string>
@@ -132,7 +131,7 @@
     <string name="warning_low_signatures_format" translatable="false">There are only %s signatures available on this card. You must withdraw all of your funds.</string>
 
     //Wallet Connect
-    <string name="wallet_connect" translatable="false">Wallet Connect</string>
+    <string name="wallet_connect" translatable="false">WalletConnect</string>
     <string name="wallet_connect_sessions_title" translatable="false">Wallet Connect Sessions</string>
     <string name="wallet_connect_session_opened" translatable="false">WalletConnect session opened with %s</string>
     <string name="wallet_connect_no_sessions_title" translatable="false">Ooops. No Sessions.</string>
@@ -284,7 +283,6 @@
     <string name="details_backup_status_format_active" translatable="false">Active. Backup cards count: %d</string>
     <string name="details_backup_status_format_linked" translatable="false">Linked. Backup cards count: %d</string>
     <string name="details_backup_status_no_backup" translatable="false">No backup</string>
-    <string name="details_row_title_create_backup" translatable="false">Create backup</string>
     <string name="welcome_interrupted_backup_alert_message" translatable="false">You have an interrupted backup. Do you want to resume?</string>
     <string name="welcome_interrupted_backup_alert_resume" translatable="false">Yes, resume</string>
     <string name="welcome_interrupted_backup_alert_discard" translatable="false">Discard</string>
@@ -300,7 +298,6 @@
     <string name="onboarding_subtitle_scan_backup_card_format" translatable="false">Prepare the backup card with number %s</string>
     <string name="onboarding_subtitle_scan_primary_card_format" translatable="false">Prepare the primary card with number %s</string>
     <string name="details_row_title_reset_factory_settings" translatable="false">Reset to factory settings</string>
-    <string name="details_row_title_reset_factory_settings_warning" translatable="false">This action is irreversible. If, after resetting the card, someone sends funds to it, then you will not be able to withdraw them.</string>
 
     <string name="details_manage_security_access_code_disclaimer" translatable="false">Access code is available only for cards with a backup.</string>
 

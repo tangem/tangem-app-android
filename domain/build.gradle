@@ -59,10 +59,9 @@ dependencies {
     implementation implementation(project(path: ':network'))
     implementation implementation(project(path: ':common'))
 
-    implementation 'com.tangem:blockchain:AND-1939_tron_fix_release-97'
-//    implementation 'com.tangem:blockchain:0.0.1'
-    implementation 'com.tangem.tangem-sdk-kotlin:core:develop-154'
-    implementation 'com.tangem.tangem-sdk-kotlin:android:develop-154'
+    implementation "com.tangem:blockchain:${versions.tangem_blockchain_sdk}"
+    implementation "com.tangem.tangem-sdk-kotlin:core:${versions.tangem_card_sdk}"
+    implementation "com.tangem.tangem-sdk-kotlin:android:${versions.tangem_card_sdk}"
 
     // Kotlin coroutines
     implementation 'org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.2'
