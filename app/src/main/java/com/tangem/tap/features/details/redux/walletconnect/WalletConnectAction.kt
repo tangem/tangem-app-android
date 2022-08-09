@@ -1,7 +1,6 @@
 package com.tangem.tap.features.details.redux.walletconnect
 
-import android.app.Activity
-import com.tangem.domain.common.ScanResponse
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.tap.common.redux.NotificationAction
 import com.tangem.wallet.R
 import com.trustwallet.walletconnect.models.binance.WCBinanceTradeOrder
@@ -18,25 +17,21 @@ sealed class WalletConnectAction : Action {
     object RestoreSessions : WalletConnectAction()
 
     data class StartWalletConnect(
-        val activity: Activity,
+        val copiedUri: String?,
     ) : WalletConnectAction()
 
     data class ShowClipboardOrScanQrDialog(val wcUri: String) : WalletConnectAction()
-
     object UnsupportedCard : WalletConnectAction()
-
     data class OpenSession(
         val wcUri: String,
     ) : WalletConnectAction()
 
-    data class AddScanResponse(
-        val scanResponse: ScanResponse
-    ): WalletConnectAction()
+    data class SetNewSessionData(
+        val newSession: NewWcSessionData,
+    ) : WalletConnectAction()
 
     object RefuseOpeningSession : WalletConnectAction()
-
     data class OpeningSessionTimeout(val session: WCSession) : WalletConnectAction()
-
     data class ScanCard(
         val session: WalletConnectSession, val chainId: Int?,
     ) : WalletConnectAction()
@@ -47,8 +42,18 @@ sealed class WalletConnectAction : Action {
         data class Success(val session: WalletConnectSession) : WalletConnectAction()
     }
 
-    data class FailureEstablishingSession(val session: WCSession?) : WalletConnectAction()
+    data class SwitchBlockchain(
+        val blockchain: Blockchain?,
+        val session: WalletConnectSession,
+    ) : WalletConnectAction()
 
+    data class SelectNetwork(val networks: List<Blockchain>) : WalletConnectAction()
+    data class ChooseNetwork(val blockchain: Blockchain) : WalletConnectAction()
+    data class UpdateBlockchain(
+        val updatedSession: WalletConnectSession,
+    ) : WalletConnectAction()
+
+    data class FailureEstablishingSession(val session: WCSession?) : WalletConnectAction()
     data class SetSessionsRestored(val sessions: List<WalletConnectSession>) :
         WalletConnectAction()
 
