@@ -449,14 +449,6 @@ class WalletConnectManager {
 
             when (request.method) {
                 WCMethodExtended.ETH_SIGN_TYPE_DATA_V4 -> handleTypedDataV4(request, client, id)
-                // WCMethodExtended.SWITCH_CHAIN -> {
-                //     val blockchain = request.blockchainFromChainId()
-                //     Timber.d("WC switch chainID\nNew Blockchain: $blockchain")
-                //     val session = sessions[client.session]?.toWalletConnectSession()
-                //     if (session != null) {
-                //         store.dispatchOnMain(WalletConnectAction.SwitchBlockchain(blockchain, session))
-                //     }
-                // }
                 else -> {
                     Timber.d("WC: unrecognized custom request")
                 }
