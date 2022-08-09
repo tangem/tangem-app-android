@@ -5,7 +5,13 @@ import com.tangem.common.extensions.guard
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.features.details.redux.walletconnect.*
+import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
+import com.tangem.tap.features.details.redux.walletconnect.WalletConnectDialog
+import com.tangem.tap.features.details.redux.walletconnect.WalletConnectSession
+import com.tangem.tap.features.details.redux.walletconnect.WalletForSession
+import com.tangem.tap.features.details.redux.walletconnect.WcPersonalSignData
+import com.tangem.tap.features.details.redux.walletconnect.WcTransactionData
+import com.tangem.tap.features.details.redux.walletconnect.WcTransactionType
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.walletConnectRepository
@@ -427,22 +433,22 @@ class WalletConnectManager {
                 onSessionClosed(session)
             }
         }
+        client.onWalletChangeNetwork = { id: Long, chainId: Int ->
+            Timber.d("On WC Switch Chain")
+            val blockchain = Blockchain.fromChainId(chainId)
+            Timber.d("WC switch chainID\nNew Blockchain: $blockchain")
+            val session = sessions[client.session]?.toWalletConnectSession()
+            if (session != null) {
+                store.dispatchOnMain(WalletConnectAction.SwitchBlockchain(blockchain, session))
+            }
+        }
         client.onCustomRequest = { id: Long, data: String ->
             Timber.d("Custom Request")
             Timber.d(data)
-
             val request = EthSignHelper.parseCustomRequest(data)
 
             when (request.method) {
                 WCMethodExtended.ETH_SIGN_TYPE_DATA_V4 -> handleTypedDataV4(request, client, id)
-                WCMethodExtended.SWITCH_CHAIN -> {
-                    val blockchain = request.blockchainFromChainId()
-                    Timber.d("WC switch chainID\nNew Blockchain: $blockchain")
-                    val session = sessions[client.session]?.toWalletConnectSession()
-                    if (session != null) {
-                        store.dispatchOnMain(WalletConnectAction.SwitchBlockchain(blockchain, session))
-                    }
-                }
                 else -> {
                     Timber.d("WC: unrecognized custom request")
                 }
