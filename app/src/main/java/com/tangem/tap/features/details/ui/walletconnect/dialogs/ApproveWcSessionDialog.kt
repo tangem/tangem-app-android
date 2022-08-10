@@ -27,6 +27,7 @@ class ApproveWcSessionDialog {
                 }
                 if (networks.size > 1) {
                     setNeutralButton(context.getText(R.string.wallet_connect_select_network)) { _, _ ->
+                        store.dispatch(GlobalAction.HideDialog(WalletConnectDialog.ApproveWcSession(session, networks)))
                         store.dispatch(WalletConnectAction.SelectNetwork(session = session, networks = networks))
                     }
                 }
