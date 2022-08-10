@@ -12,7 +12,6 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.currenciesRepository
-import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
 import com.tangem.tap.features.onboarding.products.twins.redux.CreateTwinWalletMode
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.features.wallet.models.hasSendableAmountsOrPendingTransactions
@@ -39,9 +38,6 @@ class DetailsMiddleware {
                         val uri = store.state.detailsState.cardTermsOfUseUrl
                         if (uri != null) {
                             store.dispatch(NavigationAction.OpenDocument(uri))
-                        } else {
-                            store.dispatch(DisclaimerAction.ShowAcceptedDisclaimer)
-                            store.dispatch(NavigationAction.NavigateTo(AppScreen.Disclaimer))
                         }
                     }
                     is DetailsAction.ReCreateTwinsWallet -> {
