@@ -59,7 +59,7 @@ class DialogManager : StoreSubscriber<GlobalState> {
             return
         }
         val context = context ?: return
-        if (dialog != null && dialog == state.dialog) return
+        if (dialog != null) return
 
         dialog = when (state.dialog) {
             is AppDialog.SimpleOkDialog -> SimpleOkDialog.create(state.dialog, context)
