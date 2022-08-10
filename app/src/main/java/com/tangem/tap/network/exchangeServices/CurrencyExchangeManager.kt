@@ -23,6 +23,7 @@ import java.math.BigDecimal
 class CurrencyExchangeManager(
     private val buyService: ExchangeService,
     private val sellService: ExchangeService,
+    private val primaryRules: ExchangeRules,
 ) : ExchangeService, ExchangeUrlBuilder {
 
     override suspend fun update() {
@@ -30,10 +31,16 @@ class CurrencyExchangeManager(
         sellService.update()
     }
 
-    override fun isBuyAllowed(): Boolean = buyService.isBuyAllowed()
-    override fun isSellAllowed(): Boolean = sellService.isSellAllowed()
-    override fun availableForBuy(currency: Currency): Boolean = buyService.availableForBuy(currency)
-    override fun availableForSell(currency: Currency): Boolean = sellService.availableForSell(currency)
+    override fun isBuyAllowed(): Boolean = primaryRules.isBuyAllowed() && buyService.isBuyAllowed()
+    override fun isSellAllowed(): Boolean = primaryRules.isSellAllowed() && sellService.isSellAllowed()
+
+    override fun availableForBuy(currency: Currency): Boolean {
+        return primaryRules.availableForBuy(currency) && buyService.availableForBuy(currency)
+    }
+
+    override fun availableForSell(currency: Currency): Boolean {
+        return primaryRules.availableForSell(currency) && sellService.availableForSell(currency)
+    }
 
     override fun getUrl(
         action: Action,
