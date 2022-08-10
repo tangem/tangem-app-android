@@ -219,8 +219,10 @@ private fun sendTransaction(
             return@launch
         }
 
-        withContext(Dispatchers.Main) {
+        withMainContext {
+            dispatch(SendAction.ChangeSendButtonState(ButtonState.ENABLED))
             tangemSdk.config.linkedTerminal = isLinkedTerminal
+
             when (sendResult) {
                 is SimpleResult.Success -> {
                     store.state.globalState.analyticsHandlers?.triggerEvent(
@@ -260,12 +262,12 @@ private fun sendTransaction(
                         card = card,
                     )
 
-                    val error = (sendResult.error as? BlockchainSdkError) ?: return@withContext
+                    val error = (sendResult.error as? BlockchainSdkError) ?: return@withMainContext
 
                     when (error) {
                         is BlockchainSdkError.WrappedTangemError -> {
-                            val tangemSdkError = (error.tangemError as? TangemSdkError) ?: return@withContext
-                            if (tangemSdkError is TangemSdkError.UserCancelled) return@withContext
+                            val tangemSdkError = (error.tangemError as? TangemSdkError) ?: return@withMainContext
+                            if (tangemSdkError is TangemSdkError.UserCancelled) return@withMainContext
 
                             dispatch(SendAction.Dialog.SendTransactionFails.CardSdkError(tangemSdkError))
                         }
@@ -294,7 +296,6 @@ private fun sendTransaction(
                     }
                 }
             }
-            dispatch(SendAction.ChangeSendButtonState(ButtonState.ENABLED))
         }
     }
 }
