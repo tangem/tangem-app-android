@@ -68,16 +68,15 @@ class ScanProductTask(
             when (processorResult) {
                 is CompletionResult.Success -> ScanTask().run(session) { scanTaskResult ->
                     when (scanTaskResult) {
-                        is CompletionResult.Success -> callback(
-                            CompletionResult.Success(
-                                processorResult.data
+                        is CompletionResult.Success -> {
+                            // it need because processorResult.data.card doesn't contains attestation result
+                            // and CardWallet.derivedKeys
+                            val processorScanResponseWithNewCard = processorResult.data.copy(
+                                card = scanTaskResult.data
                             )
-                        )
-                        is CompletionResult.Failure -> callback(
-                            CompletionResult.Failure(
-                                scanTaskResult.error
-                            )
-                        )
+                            callback(CompletionResult.Success(processorScanResponseWithNewCard))
+                        }
+                        is CompletionResult.Failure -> callback(CompletionResult.Failure(scanTaskResult.error))
                     }
                 }
                 is CompletionResult.Failure -> callback(CompletionResult.Failure(processorResult.error))
@@ -165,7 +164,6 @@ private class ScanWalletProcessor(
             }
         }
     }
-
     private fun startLinkingForBackupIfNeeded(
         card: Card,
         session: CardSession,
