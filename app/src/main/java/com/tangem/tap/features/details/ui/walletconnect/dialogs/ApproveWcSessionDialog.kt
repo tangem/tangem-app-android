@@ -27,7 +27,7 @@ class ApproveWcSessionDialog {
                 }
                 if (networks.size > 1) {
                     setNeutralButton(context.getText(R.string.wallet_connect_select_network)) { _, _ ->
-                        store.dispatch(WalletConnectAction.SelectNetwork(networks))
+                        store.dispatch(WalletConnectAction.SelectNetwork(session = session, networks = networks))
                     }
                 }
                 setNegativeButton(context.getText(R.string.common_reject)) { _, _ ->
