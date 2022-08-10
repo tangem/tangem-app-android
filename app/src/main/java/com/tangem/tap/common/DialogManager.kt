@@ -101,7 +101,7 @@ class DialogManager : StoreSubscriber<GlobalState> {
             is WalletConnectDialog.ApproveWcSession ->
                 ApproveWcSessionDialog.create(state.dialog.session, state.dialog.networks, context)
             is WalletConnectDialog.ChooseNetwork ->
-                ChooseNetworkDialog.create(state.dialog.networks, context)
+                ChooseNetworkDialog.create(state.dialog.session, state.dialog.networks, context)
             is WalletConnectDialog.ClipboardOrScanQr ->
                 ClipboardOrScanQrDialog.create(state.dialog.clipboardUri, context)
             is WalletConnectDialog.RequestTransaction ->
