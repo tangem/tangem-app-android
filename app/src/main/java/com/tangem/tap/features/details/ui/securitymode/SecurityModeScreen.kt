@@ -6,10 +6,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.material.RadioButton
+import androidx.compose.material.RadioButtonDefaults
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -45,7 +47,8 @@ fun SecurityModeOptions(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(bottom = 28.dp),
+            .padding(bottom = 28.dp)
+            .offset(y = (-16).dp),
         verticalArrangement = Arrangement.SpaceBetween,
     ) {
         state.availableOptions.map {
@@ -85,12 +88,16 @@ fun SecurityOption(
             .selectable(
                 selected = selected, onClick = { state.onNewModeSelected(option) },
             )
-            .padding(start = 20.dp, end = 20.dp, bottom = 32.dp),
+            .padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 16.dp),
     ) {
 
         RadioButton(
             selected = selected, onClick = null,
             modifier = modifier.padding(end = 20.dp),
+            colors = RadioButtonDefaults.colors(
+                unselectedColor = colorResource(id = R.color.icon_secondary),
+                selectedColor = colorResource(id = R.color.icon_accent),
+            ),
         )
 
         Column {
