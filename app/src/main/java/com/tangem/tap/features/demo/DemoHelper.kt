@@ -14,6 +14,7 @@ import com.tangem.common.CompletionResult
 import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.extensions.dispatchNotification
 import com.tangem.tap.common.redux.AppState
+import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
 import com.tangem.tap.features.wallet.redux.WalletAction
@@ -42,7 +43,8 @@ object DemoHelper {
         WalletAction.TradeCryptoAction.Buy::class.java,
         WalletAction.TradeCryptoAction.Sell::class.java,
         BackupAction.StartBackup::class.java,
-        WalletAction.ExploreAddress::class.java
+        WalletAction.ExploreAddress::class.java,
+        DetailsAction.ResetToFactory.Start::class.java,
     )
 
     fun isDemoCard(scanResponse: ScanResponse): Boolean = isDemoCardId(scanResponse.card.cardId)
