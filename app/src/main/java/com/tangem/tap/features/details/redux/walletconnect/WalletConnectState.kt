@@ -95,10 +95,12 @@ sealed class WalletConnectDialog : StateDialog {
     object OpeningSessionRejected : WalletConnectDialog()
     object SessionTimeout : WalletConnectDialog()
     data class ApproveWcSession(
-        val session: WalletConnectSession, val networks: List<Blockchain>,
+        val session: WalletConnectSession,
+        val networks: List<Blockchain>,
     ) : WalletConnectDialog()
 
     data class ChooseNetwork(
+        val session: WalletConnectSession,
         val networks: List<Blockchain>,
     ) : WalletConnectDialog()
 
