@@ -3,8 +3,11 @@ package com.tangem.tap.network.exchangeServices
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.tap.features.wallet.models.Currency
 
-interface ExchangeService {
+interface ExchangeService: ExchangeRules {
     suspend fun update()
+}
+
+interface ExchangeRules {
     fun isBuyAllowed(): Boolean
     fun isSellAllowed(): Boolean
     fun availableForBuy(currency: Currency):Boolean
