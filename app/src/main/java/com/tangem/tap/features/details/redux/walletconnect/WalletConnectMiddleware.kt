@@ -62,7 +62,14 @@ class WalletConnectMiddleware {
                 }
             }
             is WalletConnectAction.SelectNetwork -> {
-                store.dispatch(GlobalAction.ShowDialog(WalletConnectDialog.ChooseNetwork(action.networks)))
+                store.dispatch(
+                    GlobalAction.ShowDialog(
+                        WalletConnectDialog.ChooseNetwork(
+                            session = action.session,
+                            networks = action.networks,
+                        ),
+                    ),
+                )
             }
             is WalletConnectAction.ChooseNetwork -> {
                 val data = state()?.walletConnectState?.newSessionData ?: return
