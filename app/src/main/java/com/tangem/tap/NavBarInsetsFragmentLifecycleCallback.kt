@@ -18,16 +18,19 @@ class NavBarInsetsFragmentLifecycleCallback : FragmentLifecycleCallbacks() {
         savedInstanceState: Bundle?,
     ) {
         if (v is ComposeView) return
+
         ViewCompat.setOnApplyWindowInsetsListener(v) { view, windowInsets ->
-            val insets = windowInsets.getInsets(WindowInsetsCompat.Type.statusBars())
+            val statusBarInsets = windowInsets.getInsets(WindowInsetsCompat.Type.statusBars())
+            val navigationBarInsets = windowInsets.getInsets(WindowInsetsCompat.Type.navigationBars())
+
             if (view.fitsSystemWindows) {
                 view.updatePadding(
-                    top = insets.top,
-                    bottom = insets.bottom,
+                    top = statusBarInsets.top,
+                    bottom = navigationBarInsets.bottom,
                 )
             } else {
                 view.updatePadding(
-                    bottom = insets.bottom,
+                    bottom = navigationBarInsets.bottom,
                 )
             }
             windowInsets
