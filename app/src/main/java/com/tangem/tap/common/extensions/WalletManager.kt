@@ -22,9 +22,8 @@ import timber.log.Timber
  */
 suspend fun WalletManager.safeUpdate(): Result<Wallet> = try {
     val scanResponse = store.state.globalState.scanResponse
-        ?: error("Scan response must not be null")
 
-    if (scanResponse.isDemoCard() || TestActions.testAmountInjectionForWalletManagerEnabled) {
+    if (scanResponse?.isDemoCard() == true || TestActions.testAmountInjectionForWalletManagerEnabled) {
         delay(500)
         TestActions.testAmountInjectionForWalletManagerEnabled = false
         Result.Success(wallet)
