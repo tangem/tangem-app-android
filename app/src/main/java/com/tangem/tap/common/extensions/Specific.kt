@@ -116,6 +116,8 @@ fun BigDecimal.formatAmountAsSpannedString(
     val integer = amount.substringBefore('.')
     val reminder = amount.substringAfter('.')
 
+    // test formatter log Log.e("TEST ", BigDecimal("1234567890987654321.1234567890987654321").formatWithSpaces())
+
     return buildSpannedString {
         append(integer)
         append('.')
@@ -136,7 +138,7 @@ fun BigDecimal.formatWithSpaces(): String {
     var index: Int = integerStr.length
     while (0 < index) {
         if (index <= 3) {
-            packets.add(0, integerStr)
+            packets.add(integerStr)
             break
         }
         index -= 3
@@ -145,7 +147,7 @@ fun BigDecimal.formatWithSpaces(): String {
     }
 
     return buildString {
-        packets.forEachIndexed { index, packet ->
+        packets.reversed().forEachIndexed { index, packet ->
             append(packet)
             if (index != packets.lastIndex) append(' ')
         }
