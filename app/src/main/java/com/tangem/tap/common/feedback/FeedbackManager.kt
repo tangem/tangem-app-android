@@ -1,12 +1,14 @@
 package com.tangem.tap.common.feedback
 
 import android.content.Context
+import android.os.Build
 import com.tangem.domain.common.TapWorkarounds
 import com.tangem.tap.common.extensions.sendEmail
 import com.tangem.tap.common.log.TangemLogCollector
 import com.tangem.tap.common.zendesk.ZendeskConfig
 import com.tangem.tap.foregroundActivityObserver
 import com.tangem.tap.logConfig
+import com.tangem.tap.persistence.PreferencesStorage
 import com.tangem.tap.withForegroundActivity
 import com.tangem.wallet.R
 import com.zendesk.logger.Logger
@@ -14,6 +16,8 @@ import timber.log.Timber
 import zendesk.chat.Chat
 import zendesk.chat.ChatConfiguration
 import zendesk.chat.ChatEngine
+import zendesk.chat.ChatProvidersConfiguration
+import zendesk.chat.VisitorInfo
 import zendesk.configurations.Configuration
 import zendesk.messaging.MessagingActivity
 import java.io.File
@@ -26,6 +30,7 @@ import java.io.StringWriter
 class FeedbackManager(
     val infoHolder: AdditionalFeedbackInfo,
     private val logCollector: TangemLogCollector,
+    private val preferencesStorage: PreferencesStorage,
 ) {
     fun initChat(
         context: Context,
@@ -58,6 +63,7 @@ class FeedbackManager(
     fun openChat(feedbackData: FeedbackData) {
         feedbackData.prepare(infoHolder)
         foregroundActivityObserver.withForegroundActivity { activity ->
+            setChatVisitorInfo()
             setChatVisitorNote(activity, feedbackData)
             showMessagingActivity(activity)
         }
@@ -80,6 +86,20 @@ class FeedbackManager(
             Timber.e(ex, "Can't create the logs file")
             null
         }
+    }
+
+    private fun setChatVisitorInfo() {
+        if (preferencesStorage.chatFirstLaunchTime == null) {
+            preferencesStorage.chatFirstLaunchTime = System.currentTimeMillis()
+        }
+        val chatUserId = (preferencesStorage.chatFirstLaunchTime.toString() + Build.MODEL).hashCode()
+        val visitorInfo = VisitorInfo.builder()
+            .withName("User $chatUserId")
+            .build()
+
+        Chat.INSTANCE.chatProvidersConfiguration = ChatProvidersConfiguration.builder()
+            .withVisitorInfo(visitorInfo)
+            .build()
     }
 
     private fun setChatVisitorNote(
