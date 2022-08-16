@@ -100,7 +100,7 @@
     <string name="wallet_connect_subtitle">Подключение к Dapps</string>
 
     <string name="details_row_title_create_backup">Добавить еще карты</string>
-    <string name="details_row_title_create_backup_footer">Вы можете объеденить до трех карт в одним кошельке. Это можно сделать только один раз.</string>
+    <string name="details_row_title_create_backup_footer">Вы можете объединить до трех карт в одном кошельке. Это можно сделать только один раз.</string>
 
     <string name="details_row_privacy_policy">Privacy policy</string>
 
