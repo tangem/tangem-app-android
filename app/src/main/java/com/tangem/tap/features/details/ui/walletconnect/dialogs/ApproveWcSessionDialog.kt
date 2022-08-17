@@ -5,7 +5,6 @@ import androidx.appcompat.app.AlertDialog
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
-import com.tangem.tap.features.details.redux.walletconnect.WalletConnectDialog
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectSession
 import com.tangem.tap.store
 import com.tangem.wallet.R
@@ -23,19 +22,22 @@ class ApproveWcSessionDialog {
                 setTitle(context.getString(R.string.wallet_connect))
                 setMessage(message)
                 setPositiveButton(context.getText(R.string.common_start)) { _, _ ->
+                    store.dispatch(GlobalAction.HideDialog)
                     store.dispatch(WalletConnectAction.ChooseNetwork(session.wallet.blockchain!!))
                 }
                 if (networks.size > 1) {
                     setNeutralButton(context.getText(R.string.wallet_connect_select_network)) { _, _ ->
-                        store.dispatch(GlobalAction.HideDialog(WalletConnectDialog.ApproveWcSession(session, networks)))
+                        store.dispatch(GlobalAction.HideDialog)
                         store.dispatch(WalletConnectAction.SelectNetwork(session = session, networks = networks))
                     }
                 }
                 setNegativeButton(context.getText(R.string.common_reject)) { _, _ ->
+                    store.dispatch(GlobalAction.HideDialog)
                     store.dispatch(WalletConnectAction.FailureEstablishingSession(session.session))
                 }
-                setOnDismissListener {
-                    store.dispatch(GlobalAction.HideDialog(WalletConnectDialog.ApproveWcSession(session, networks)))
+                setOnCancelListener {
+                    store.dispatch(GlobalAction.HideDialog)
+                    store.dispatch(WalletConnectAction.FailureEstablishingSession(session.session))
                 }
             }.create()
         }
