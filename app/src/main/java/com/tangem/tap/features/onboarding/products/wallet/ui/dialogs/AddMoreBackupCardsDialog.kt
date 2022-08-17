@@ -20,7 +20,7 @@ class AddMoreBackupCardsDialog {
 
                     }
                     setOnDismissListener {
-                        store.dispatch(GlobalAction.HideDialog())
+                        store.dispatch(GlobalAction.HideDialog)
                     }
                 }.create()
             }
