@@ -47,7 +47,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:clipToPadding="false"
-                android:paddingBottom="74dp">
+                android:paddingBottom="32dp">
 
                 <ImageView
                     android:id="@+id/iv_card"
@@ -176,31 +176,15 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/rv_pending_transaction" />
 
-                <include
-                    android:id="@+id/l_buttons_long"
-                    layout="@layout/layout_wallet_long_buttons"
+                <com.tangem.tap.features.wallet.ui.view.WalletDetailsButtonsRow
+                    android:id="@+id/row_buttons"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
-                    android:layout_marginTop="30dp"
                     android:layout_marginEnd="16dp"
-                    android:visibility="gone"
                     app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/l_address"
-                    app:layout_constraintVertical_bias="1" />
-
-                <include
-                    android:id="@+id/l_buttons_short"
-                    layout="@layout/layout_wallet_short_buttons"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginTop="30dp"
-                    android:layout_marginEnd="16dp"
-                    android:visibility="gone"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/l_address"
-                    app:layout_constraintVertical_bias="1" />
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_add_token"
@@ -213,6 +197,7 @@
                     android:elevation="4dp"
                     android:text="@string/main_manage_tokens"
                     android:textSize="16sp"
+                    android:visibility="gone"
                     app:cornerRadius="8dp"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/rv_multiwallet"
