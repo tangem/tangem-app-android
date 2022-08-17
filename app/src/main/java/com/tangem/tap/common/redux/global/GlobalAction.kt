@@ -34,7 +34,7 @@ sealed class GlobalAction : Action {
 
     // dialogs
     data class ShowDialog(val stateDialog: StateDialog) : GlobalAction()
-    data class HideDialog(val stateDialog: StateDialog? = null) : GlobalAction()
+    object HideDialog : GlobalAction()
 
     sealed class Onboarding {
         data class Start(val scanResponse: ScanResponse?, val fromHomeScreen: Boolean = true) : GlobalAction()
