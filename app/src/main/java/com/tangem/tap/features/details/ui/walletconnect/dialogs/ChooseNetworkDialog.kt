@@ -21,7 +21,7 @@ object ChooseNetworkDialog {
                 store.dispatch(WalletConnectAction.FailureEstablishingSession(session.session))
             }
             .setOnDismissListener {
-                store.dispatch(GlobalAction.HideDialog())
+                store.dispatch(GlobalAction.HideDialog)
             }
             .setSingleChoiceItems(networks.map { it.fullName }.toTypedArray(), 0) { _, which ->
                 networks.getOrNull(which)?.let { selectedBlockchain ->
@@ -30,7 +30,7 @@ object ChooseNetworkDialog {
                             blockchain = selectedBlockchain,
                         ),
                     )
-                    store.dispatch(GlobalAction.HideDialog())
+                    store.dispatch(GlobalAction.HideDialog)
                 }
             }
             .create()
