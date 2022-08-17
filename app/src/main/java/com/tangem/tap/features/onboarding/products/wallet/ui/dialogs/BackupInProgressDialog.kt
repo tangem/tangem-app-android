@@ -13,10 +13,10 @@ class BackupInProgressDialog {
                 setTitle(R.string.alert_title)
                 setMessage(R.string.onboarding_backup_exit_warning)
                 setPositiveButton(R.string.warning_button_ok) { _, _ ->
-                    store.dispatch(GlobalAction.HideDialog())
+                    store.dispatch(GlobalAction.HideDialog)
                 }
                 setOnDismissListener {
-                    store.dispatch(GlobalAction.HideDialog())
+                    store.dispatch(GlobalAction.HideDialog)
                 }
             }.create()
         }
