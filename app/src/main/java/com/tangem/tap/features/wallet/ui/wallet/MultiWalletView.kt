@@ -1,8 +1,10 @@
 package com.tangem.tap.features.wallet.ui.wallet
 
+import android.util.Log
 import android.widget.Button
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.SimpleItemAnimator
 import com.tangem.common.card.Card
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.TapWorkarounds.isTestCard
@@ -17,6 +19,7 @@ import com.tangem.tap.features.tokens.redux.TokensAction
 import com.tangem.tap.features.wallet.models.TotalBalance
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.features.wallet.redux.WalletData
 import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.WalletFragment
@@ -28,6 +31,7 @@ import com.tangem.wallet.databinding.FragmentWalletBinding
 
 class MultiWalletView : WalletView() {
     private lateinit var walletsAdapter: WalletAdapter
+    private var walletsDataList: List<WalletData> = mutableListOf()
     override fun changeWalletView(fragment: WalletFragment, binding: FragmentWalletBinding) {
         setFragment(fragment, binding)
         onViewCreated()
@@ -68,6 +72,7 @@ class MultiWalletView : WalletView() {
         walletsAdapter.setHasStableIds(true)
         binding?.rvMultiwallet?.layoutManager = LinearLayoutManager(fragment.requireContext())
         binding?.rvMultiwallet?.adapter = walletsAdapter
+        (binding?.rvMultiwallet?.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
     }
 
     override fun onNewState(state: WalletState) {
@@ -76,8 +81,12 @@ class MultiWalletView : WalletView() {
 
         handleTotalBalance(binding, state.totalBalance)
         handleBackupWarning(binding, state.showBackupWarning)
+        // if (walletsDataList != state.walletsData) {
+        //     Log.e("LISTS ", "_"+walletsDataList.size)
+        //     walletsDataList = state.walletsData
+        //     walletsAdapter.submitList(state.walletsData, state.primaryBlockchain, state.primaryToken)
+        // }
         walletsAdapter.submitList(state.walletsData, state.primaryBlockchain, state.primaryToken)
-
         binding.btnAddToken.setOnClickListener {
             val card = store.state.globalState.scanResponse!!.card
             store.dispatch(
