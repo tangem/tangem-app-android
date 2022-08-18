@@ -114,22 +114,26 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
 
     override fun newState(state: WalletState) {
         if (activity == null || view == null) return
+
         val isSaltPay = store.state.globalState.scanResponse?.card?.isSaltPay == true
+
         when {
-            isSaltPay -> {
+            isSaltPay && (walletView !is SaltPaySingleWalletView) -> {
                 walletView = SaltPaySingleWalletView()
+                walletView.changeWalletView(this, binding)
             }
-            state.isMultiwalletAllowed &&
-                state.primaryWallet?.currencyData?.status != BalanceStatus.EmptyCard &&
-                walletView is SingleWalletView -> {
+            state.isMultiwalletAllowed && state.primaryWallet?.currencyData?.status != BalanceStatus.EmptyCard &&
+                walletView !is MultiWalletView -> {
                 walletView = MultiWalletView()
+                walletView.changeWalletView(this, binding)
             }
-            !state.isMultiwalletAllowed && walletView is MultiWalletView -> {
+            !state.isMultiwalletAllowed && walletView !is SingleWalletView -> {
                 walletView = SingleWalletView()
+                walletView.changeWalletView(this, binding)
             }
+            else -> {} // we keep the same view unless we scan a card that requires a different view
         }
 
-        walletView.changeWalletView(this, binding)
         walletView.onNewState(state)
 
         if (!state.shouldShowDetails) {
