@@ -16,7 +16,7 @@ class CardExchangeRules(
         val card = cardProvider() ?: return false
 
         return when {
-            card.isDemoCard() -> false
+            card.isDemoCard() -> true
             card.isStart2Coin -> false
             else -> true
         }
@@ -36,7 +36,7 @@ class CardExchangeRules(
         val card = cardProvider() ?: return false
 
         return when {
-            card.isDemoCard() -> false
+            card.isDemoCard() -> true
             card.isStart2Coin -> false
             else -> true
         }
