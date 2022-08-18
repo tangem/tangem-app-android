@@ -6,7 +6,11 @@ import com.tangem.blockchain.common.Wallet
 import com.tangem.common.extensions.mapNotNullValues
 import com.tangem.domain.common.TwinCardNumber
 import com.tangem.tap.common.entities.FiatCurrency
-import com.tangem.tap.common.extensions.*
+import com.tangem.tap.common.extensions.toFiatRateString
+import com.tangem.tap.common.extensions.toFiatString
+import com.tangem.tap.common.extensions.toFiatValue
+import com.tangem.tap.common.extensions.toFormattedCurrencyString
+import com.tangem.tap.common.extensions.toFormattedFiatValue
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.getArtworkUrl
@@ -14,7 +18,16 @@ import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.WalletRent
-import com.tangem.tap.features.wallet.redux.*
+import com.tangem.tap.features.wallet.redux.AddressData
+import com.tangem.tap.features.wallet.redux.Artwork
+import com.tangem.tap.features.wallet.redux.ErrorType
+import com.tangem.tap.features.wallet.redux.ProgressState
+import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.features.wallet.redux.WalletAddresses
+import com.tangem.tap.features.wallet.redux.WalletData
+import com.tangem.tap.features.wallet.redux.WalletMainButton
+import com.tangem.tap.features.wallet.redux.WalletState
+import com.tangem.tap.features.wallet.redux.WalletStore
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.store
@@ -144,10 +157,6 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                                     currencySymbol = walletData.currencyData.currencySymbol,
                                 ),
                                 mainButton = WalletMainButton.SendButton(false),
-                                tradeCryptoState = TradeCryptoState.from(
-                                    exchangeManager,
-                                    walletData
-                                )
                             )
                         }
                     )
@@ -171,13 +180,9 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                                 currencySymbol = wallet.currencyData.currencySymbol,
                             ),
                             mainButton = WalletMainButton.SendButton(false),
-                            tradeCryptoState = TradeCryptoState.from(exchangeManager, wallet)
                         )
                     }
-                val wallets = newState.updateTradeCryptoState(
-                    exchangeManager,
-                    newState.replaceSomeWallets(newWallets)
-                )
+                val wallets = newState.replaceSomeWallets(newWallets)
                 val walletStore = newState.getWalletStore(action.blockchain)?.updateWallets(wallets)
                 newState = newState.updateWalletStore(walletStore)
             }
@@ -210,13 +215,8 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                     )
                 )
             }
-            var updatedWalletStore = newState.getWalletStore(action.blockchain)
+            val updatedWalletStore = newState.getWalletStore(action.blockchain)
                 ?.updateWallets(listOfNotNull(walletData))
-
-            updatedWalletStore =
-                updatedWalletStore?.updateWallets(
-                    newState.updateTradeCryptoState(exchangeManager, updatedWalletStore.walletsData)
-                )
 
             newState = newState.updateWalletStore(updatedWalletStore)
         }
@@ -248,11 +248,7 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                         )
                     )
                 }
-            val updatedWallets =
-                newState.updateTradeCryptoState(
-                    exchangeManager,
-                    walletStore!!.updateWallets(listOfNotNull(newWalletData) + tokenWallets).walletsData
-                )
+            val updatedWallets = walletStore!!.updateWallets(listOfNotNull(newWalletData) + tokenWallets).walletsData
 
             newState = newState.updateWalletsData(updatedWallets)
 
