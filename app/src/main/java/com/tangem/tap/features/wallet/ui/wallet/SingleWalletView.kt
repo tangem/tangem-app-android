@@ -117,11 +117,9 @@ class SingleWalletView : WalletView() {
     }
 
     private fun setupRowButtons(state: WalletData, rowButtons: WalletDetailsButtonsRow) {
-        val allowedToBuy = state.tradeCryptoState.isAvailableToBuy()
-        val allowedToSell = state.tradeCryptoState.isAvailableToSell()
         rowButtons.updateButtonsVisibility(
-            buyAllowed = allowedToBuy,
-            sellAllowed = allowedToSell,
+            buyAllowed = state.isAvailableToBuy,
+            sellAllowed = state.isAvailableToSell,
             sendAllowed = state.mainButton.enabled,
         )
 
