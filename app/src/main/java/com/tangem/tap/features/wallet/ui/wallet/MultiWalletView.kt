@@ -69,10 +69,9 @@ class MultiWalletView : WalletView() {
     private fun setupWalletsRecyclerView() {
         val fragment = fragment ?: return
         walletsAdapter = WalletAdapter()
-        walletsAdapter.setHasStableIds(true)
+        // walletsAdapter.setHasStableIds(true)
         binding?.rvMultiwallet?.layoutManager = LinearLayoutManager(fragment.requireContext())
         binding?.rvMultiwallet?.adapter = walletsAdapter
-        (binding?.rvMultiwallet?.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
     }
 
     override fun onNewState(state: WalletState) {
@@ -81,11 +80,7 @@ class MultiWalletView : WalletView() {
 
         handleTotalBalance(binding, state.totalBalance)
         handleBackupWarning(binding, state.showBackupWarning)
-        // if (walletsDataList != state.walletsData) {
-        //     Log.e("LISTS ", "_"+walletsDataList.size)
-        //     walletsDataList = state.walletsData
-        //     walletsAdapter.submitList(state.walletsData, state.primaryBlockchain, state.primaryToken)
-        // }
+
         walletsAdapter.submitList(state.walletsData, state.primaryBlockchain, state.primaryToken)
         binding.btnAddToken.setOnClickListener {
             val card = store.state.globalState.scanResponse!!.card
