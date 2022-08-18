@@ -26,6 +26,8 @@ class CurrencyExchangeManager(
     private val primaryRules: ExchangeRules,
 ) : ExchangeService, ExchangeUrlBuilder {
 
+    override fun featureIsSwitchedOn(): Boolean = primaryRules.featureIsSwitchedOn()
+
     override suspend fun update() {
         buyService.update()
         sellService.update()
