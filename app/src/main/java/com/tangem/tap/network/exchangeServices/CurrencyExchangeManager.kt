@@ -74,6 +74,14 @@ class CurrencyExchangeManager(
     }
 
     enum class Action { Buy, Sell }
+
+    companion object {
+        fun dummy(): CurrencyExchangeManager = CurrencyExchangeManager(
+            buyService = ExchangeService.dummy(),
+            sellService = ExchangeService.dummy(),
+            primaryRules = ExchangeRules.dummy(),
+        )
+    }
 }
 
 suspend fun CurrencyExchangeManager.buyErc20TestnetTokens(
