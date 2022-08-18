@@ -132,6 +132,7 @@ class MercuryoService(
     private fun blockchainFromCurrencyName(currencyName: String): Blockchain? = when (currencyName) {
         "BNB" -> Blockchain.BSC
         "ETH" -> Blockchain.Ethereum
+        "ADA" -> Blockchain.CardanoShelley
         else -> Blockchain.values().find { it.currency.lowercase() == currencyName.lowercase() }
     }
 }
