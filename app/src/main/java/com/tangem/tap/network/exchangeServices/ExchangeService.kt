@@ -1,13 +1,22 @@
 package com.tangem.tap.network.exchangeServices
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.tap.common.feature.Feature
 import com.tangem.tap.features.wallet.models.Currency
 
-interface ExchangeService: ExchangeRules {
+interface Exchanger {
+    fun isBuyAllowed(): Boolean
+    fun isSellAllowed(): Boolean
+    fun availableForBuy(currency: Currency):Boolean
+    fun availableForSell(currency: Currency):Boolean
+}
+
+interface ExchangeService: Feature, Exchanger {
     suspend fun update()
 
     companion object {
         fun dummy(): ExchangeService = object : ExchangeService {
+            override fun featureIsSwitchedOn(): Boolean = false
             override suspend fun update() {}
             override fun isBuyAllowed(): Boolean = false
             override fun isSellAllowed(): Boolean = false
@@ -17,14 +26,11 @@ interface ExchangeService: ExchangeRules {
     }
 }
 
-interface ExchangeRules {
-    fun isBuyAllowed(): Boolean
-    fun isSellAllowed(): Boolean
-    fun availableForBuy(currency: Currency):Boolean
-    fun availableForSell(currency: Currency):Boolean
+interface ExchangeRules: Feature, Exchanger {
 
     companion object {
         fun dummy(): ExchangeRules = object : ExchangeRules {
+            override fun featureIsSwitchedOn(): Boolean = false
             override fun isBuyAllowed(): Boolean = false
             override fun isSellAllowed(): Boolean = false
             override fun availableForBuy(currency: Currency): Boolean = false
