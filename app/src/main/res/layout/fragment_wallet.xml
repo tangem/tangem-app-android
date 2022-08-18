@@ -47,7 +47,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:clipToPadding="false"
-                android:paddingBottom="32dp">
+                android:paddingBottom="92dp">
 
                 <ImageView
                     android:id="@+id/iv_card"
@@ -176,16 +176,6 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/rv_pending_transaction" />
 
-                <com.tangem.tap.features.wallet.ui.view.WalletDetailsButtonsRow
-                    android:id="@+id/row_buttons"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginEnd="16dp"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent" />
-
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_add_token"
                     style="@style/BaseTapButton"
@@ -207,4 +197,14 @@
             </androidx.constraintlayout.widget.ConstraintLayout>
         </androidx.core.widget.NestedScrollView>
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
+
+    <com.tangem.tap.features.wallet.ui.view.WalletDetailsButtonsRow
+        android:id="@+id/row_buttons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="32dp" />
+
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
