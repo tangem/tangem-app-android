@@ -51,21 +51,15 @@ data class WalletState(
 
     // if you do not delegate - the application crashes on startup,
     // because twinCardsState has not been created yet
-    val twinCardsState: TwinCardsState by ReadOnlyProperty<Any, TwinCardsState> { thisRef, property ->
+    val twinCardsState: TwinCardsState by ReadOnlyProperty<Any, TwinCardsState> { _, _ ->
         store.state.twinCardsState
     }
 
     val isTangemTwins: Boolean
         get() = store.state.globalState.scanResponse?.isTangemTwins() == true
 
-    val primaryWallet: WalletData? = wallets.firstOrNull()
-        ?.walletsData?.firstOrNull()
-    val primaryWalletManager: WalletManager? =
-        if (wallets.isNotEmpty()) wallets[0].walletManager else null
-
-    val shouldShowDetails: Boolean =
-        primaryWallet?.currencyData?.status != BalanceStatus.EmptyCard &&
-            primaryWallet?.currencyData?.status != BalanceStatus.UnknownBlockchain
+    val isExchangeServiceFeatureOn: Boolean
+        get() = store.state.globalState.exchangeManager.featureIsSwitchedOn()
 
     val blockchains: List<Blockchain>
         get() = wallets.mapNotNull { it.walletManager?.wallet?.blockchain }
@@ -78,6 +72,14 @@ data class WalletState(
 
     val walletManagers: List<WalletManager>
         get() = wallets.mapNotNull { it.walletManager }
+
+    val primaryWallet: WalletData? = wallets.firstOrNull()?.walletsData?.firstOrNull()
+
+    val primaryWalletManager: WalletManager? = if (wallets.isNotEmpty()) wallets[0].walletManager else null
+
+    val shouldShowDetails: Boolean =
+        primaryWallet?.currencyData?.status != BalanceStatus.EmptyCard &&
+            primaryWallet?.currencyData?.status != BalanceStatus.UnknownBlockchain
 
     fun getWalletManager(currency: Currency?): WalletManager? {
         if (currency?.blockchain == null) return null
