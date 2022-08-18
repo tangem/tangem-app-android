@@ -5,6 +5,16 @@ import com.tangem.tap.features.wallet.models.Currency
 
 interface ExchangeService: ExchangeRules {
     suspend fun update()
+
+    companion object {
+        fun dummy(): ExchangeService = object : ExchangeService {
+            override suspend fun update() {}
+            override fun isBuyAllowed(): Boolean = false
+            override fun isSellAllowed(): Boolean = false
+            override fun availableForBuy(currency: Currency): Boolean = false
+            override fun availableForSell(currency: Currency): Boolean = false
+        }
+    }
 }
 
 interface ExchangeRules {
@@ -12,6 +22,15 @@ interface ExchangeRules {
     fun isSellAllowed(): Boolean
     fun availableForBuy(currency: Currency):Boolean
     fun availableForSell(currency: Currency):Boolean
+
+    companion object {
+        fun dummy(): ExchangeRules = object : ExchangeRules {
+            override fun isBuyAllowed(): Boolean = false
+            override fun isSellAllowed(): Boolean = false
+            override fun availableForBuy(currency: Currency): Boolean = false
+            override fun availableForSell(currency: Currency): Boolean = false
+        }
+    }
 }
 
 interface ExchangeUrlBuilder {
