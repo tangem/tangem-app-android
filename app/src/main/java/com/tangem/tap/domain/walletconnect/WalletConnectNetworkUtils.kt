@@ -12,6 +12,9 @@ class WalletConnectNetworkUtils {
             peer: WCPeerMeta,
         ): Blockchain? {
             return when {
+                peer.url.contains("pancakeswap.finance") -> {
+                    Blockchain.BSC
+                }
                 chainId != null -> {
                     Blockchain.fromChainId(chainId)
                 }
