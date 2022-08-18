@@ -30,7 +30,6 @@ import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.redux.WalletStore
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
-import com.tangem.tap.store
 import org.rekotlin.Action
 import java.math.BigDecimal
 
@@ -48,7 +47,6 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
 
     if (action !is WalletAction) return state.walletState
 
-    val exchangeManager = store.state.globalState.exchangeManager
     var newState = state.walletState
 
     when (action) {
