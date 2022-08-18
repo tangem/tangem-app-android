@@ -199,8 +199,8 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
         }
 
         rowButtons.updateButtonsVisibility(
-            buyAllowed = selectedWallet.tradeCryptoState.isAvailableToBuy(),
-            sellAllowed = selectedWallet.tradeCryptoState.isAvailableToSell(),
+            buyAllowed = selectedWallet.isAvailableToBuy,
+            sellAllowed = selectedWallet.isAvailableToSell,
             sendAllowed = selectedWallet.mainButton.enabled,
         )
     }
