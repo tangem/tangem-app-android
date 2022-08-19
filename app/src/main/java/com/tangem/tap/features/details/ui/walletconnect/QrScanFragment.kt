@@ -4,6 +4,7 @@ import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Build
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -15,19 +16,23 @@ import com.otaliastudios.cameraview.CameraView
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.store
-import me.dm7.barcodescanner.zxing.ZXingScannerView
 
-class QrScanFragment : Fragment(0), ZXingScannerView.ResultHandler {
+class QrScanFragment : Fragment(0), ScannerView.ResultHandler {
 
-    private var scannerView: ZXingScannerView? = null
+    // private var scannerView: ZXingScannerView? = null
+
+    private var scannerView: ScannerView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        activity?.onBackPressedDispatcher?.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                store.dispatch(NavigationAction.PopBackTo())
-            }
-        })
+        activity?.onBackPressedDispatcher?.addCallback(
+            this,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    store.dispatch(NavigationAction.PopBackTo())
+                }
+            },
+        )
     }
 
     override fun onCreateView(
@@ -37,28 +42,44 @@ class QrScanFragment : Fragment(0), ZXingScannerView.ResultHandler {
     ): View? {
         if (!permissionIsGranted()) requestPermission()
 
-        scannerView = ZXingScannerView(activity)
+        //TODO FIX ISSUE AND DELETE THIS WRAPPER
+        scannerView = ScannerView(activity)
+
+        // scannerView = ZXingScannerView(activity)
         return scannerView
     }
 
     override fun onPause() {
         super.onPause()
-        scannerView?.stopCamera()
+        try {
+            scannerView?.stopCamera()
+        } catch (ex: Exception) {
+            Log.e("scannerView.stopCamera:", ex.toString())
+        }
     }
 
     override fun onResume() {
         super.onResume()
-        scannerView?.setResultHandler(this)
-        scannerView?.startCamera()
-    }
-
-    override fun handleResult(result: Result) {
-        store.dispatch(NavigationAction.PopBackTo())
-
-        if (!result.text.isNullOrBlank()) {
-            store.dispatch(WalletConnectAction.OpenSession(result.text))
+        try {
+            scannerView?.setResultHandler(this)
+            scannerView?.startCamera()
+        } catch (ex: Exception) {
+            Log.e("scannerView.stopCamera:", ex.toString())
         }
     }
+
+    override fun onDestroy() {
+        try {
+            scannerView?.stopCameraPreview()
+            scannerView?.stopCamera()
+            scannerView?.destroyDrawingCache()
+        } catch (ex: Exception) {
+            Log.e("scannerView.stopCamera:", ex.toString())
+        }
+        super.onDestroy()
+    }
+
+
 
     override fun onRequestPermissionsResult(
         requestCode: Int,
@@ -86,5 +107,17 @@ class QrScanFragment : Fragment(0), ZXingScannerView.ResultHandler {
     private fun requestPermission() {
         requestPermissions(arrayOf(Manifest.permission.CAMERA), CameraView.PERMISSION_REQUEST_CODE)
     }
+    override fun handleResult(var1: Result?) {
+            try {
+                scannerView?.stopCamera()
+            } catch (ex: Exception) {
+                Log.e("scannerView.stopCamera:", ex.toString())
+            }
+            store.dispatch(NavigationAction.PopBackTo())
 
+            if (!var1?.text.isNullOrBlank()) {
+                store.dispatch(WalletConnectAction.OpenSession(var1?.text?:"qr code error"))
+            }
+
+    }
 }
