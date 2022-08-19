@@ -13,7 +13,9 @@ import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.filterByToken
 import com.tangem.tap.features.wallet.models.getPendingTransactions
 import com.tangem.tap.features.wallet.models.removeUnknownTransactions
-import com.tangem.tap.features.wallet.redux.*
+import com.tangem.tap.features.wallet.redux.ProgressState
+import com.tangem.tap.features.wallet.redux.WalletMainButton
+import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.redux.WalletState.Companion.UNKNOWN_AMOUNT_SIGN
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
@@ -38,8 +40,6 @@ class OnWalletLoadedReducer {
         val walletData = walletState.getWalletData(blockchainNetwork) ?: return walletState
 
         val fiatCurrency = store.state.globalState.appCurrency
-        val exchangeManager = store.state.globalState.exchangeManager
-
         val coinAmountValue = wallet.amounts[AmountType.Coin]?.value
         val formattedAmount = coinAmountValue?.toFormattedCurrencyString(
             wallet.blockchain.decimals(),
@@ -71,7 +71,6 @@ class OnWalletLoadedReducer {
             pendingTransactions = pendingTransactions.removeUnknownTransactions(),
             mainButton = WalletMainButton.SendButton(isCoinSendButtonEnabled),
             currency = Currency.fromBlockchainNetwork(blockchainNetwork),
-            tradeCryptoState = TradeCryptoState.from(exchangeManager, walletData),
         )
 
         val tokens = wallet.getTokens().mapNotNull { token ->
@@ -104,7 +103,6 @@ class OnWalletLoadedReducer {
                 ),
                 pendingTransactions = tokenPendingTransactions.removeUnknownTransactions(),
                 mainButton = WalletMainButton.SendButton(isTokenSendButtonEnabled),
-                tradeCryptoState = TradeCryptoState.from(exchangeManager, tokenWalletData),
             )
         }
         val newWallets = tokens + newWalletData
@@ -118,8 +116,6 @@ class OnWalletLoadedReducer {
         if (wallet.blockchain != walletState.primaryBlockchain) return walletState
 
         val fiatCurrencyName = store.state.globalState.appCurrency.code
-        val exchangeManager = store.state.globalState.exchangeManager
-
         val token = wallet.getFirstToken()
         val tokenData = if (token != null) {
             val tokenAmount = wallet.getTokenAmount(token)
@@ -167,7 +163,6 @@ class OnWalletLoadedReducer {
             ),
             pendingTransactions = pendingTransactions.removeUnknownTransactions(),
             mainButton = WalletMainButton.SendButton(sendButtonEnabled),
-            tradeCryptoState = TradeCryptoState.from(exchangeManager, walletState.primaryWallet),
         )
         val wallets = listOfNotNull(walletData)
         val updatedStore = walletState.getWalletStore(walletData?.currency)?.updateWallets(wallets)
