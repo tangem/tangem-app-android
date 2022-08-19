@@ -12,11 +12,17 @@ class CardExchangeRules(
     val cardProvider: () -> Card?,
 ) : ExchangeRules {
 
+    override fun featureIsSwitchedOn(): Boolean {
+        val card = cardProvider() ?: return false
+
+        return !card.isStart2Coin
+    }
+
     override fun isBuyAllowed(): Boolean {
         val card = cardProvider() ?: return false
 
         return when {
-            card.isDemoCard() -> false
+            card.isDemoCard() -> true
             card.isStart2Coin -> false
             else -> true
         }
@@ -36,7 +42,7 @@ class CardExchangeRules(
         val card = cardProvider() ?: return false
 
         return when {
-            card.isDemoCard() -> false
+            card.isDemoCard() -> true
             card.isStart2Coin -> false
             else -> true
         }
