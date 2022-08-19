@@ -7,9 +7,6 @@ import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.common.extensions.isZero
-import com.tangem.domain.common.extensions.canHandleToken
-import com.tangem.domain.common.extensions.toCoinId
-import com.tangem.domain.features.addCustomToken.CustomCurrency
 import com.tangem.tap.common.entities.Button
 import com.tangem.tap.common.extensions.toQrCode
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
@@ -17,12 +14,18 @@ import com.tangem.tap.common.toggleWidget.WidgetState
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
-import com.tangem.tap.features.wallet.models.*
+import com.tangem.tap.features.wallet.models.Currency
+import com.tangem.tap.features.wallet.models.PendingTransaction
+import com.tangem.tap.features.wallet.models.TotalBalance
+import com.tangem.tap.features.wallet.models.WalletRent
+import com.tangem.tap.features.wallet.models.WalletWarning
+import com.tangem.tap.features.wallet.models.hasPendingTransactions
+import com.tangem.tap.features.wallet.models.hasSendableAmounts
+import com.tangem.tap.features.wallet.models.isSendableAmount
 import com.tangem.tap.features.wallet.redux.reducers.calculateTotalFiatAmount
 import com.tangem.tap.features.wallet.redux.reducers.findProgressState
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
-import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import com.tangem.tap.store
 import org.rekotlin.StateType
 import java.math.BigDecimal
@@ -48,21 +51,15 @@ data class WalletState(
 
     // if you do not delegate - the application crashes on startup,
     // because twinCardsState has not been created yet
-    val twinCardsState: TwinCardsState by ReadOnlyProperty<Any, TwinCardsState> { thisRef, property ->
+    val twinCardsState: TwinCardsState by ReadOnlyProperty<Any, TwinCardsState> { _, _ ->
         store.state.twinCardsState
     }
 
     val isTangemTwins: Boolean
         get() = store.state.globalState.scanResponse?.isTangemTwins() == true
 
-    val primaryWallet: WalletData? = wallets.firstOrNull()
-        ?.walletsData?.firstOrNull()
-    val primaryWalletManager: WalletManager? =
-        if (wallets.isNotEmpty()) wallets[0].walletManager else null
-
-    val shouldShowDetails: Boolean =
-        primaryWallet?.currencyData?.status != BalanceStatus.EmptyCard &&
-            primaryWallet?.currencyData?.status != BalanceStatus.UnknownBlockchain
+    val isExchangeServiceFeatureOn: Boolean
+        get() = store.state.globalState.exchangeManager.featureIsSwitchedOn()
 
     val blockchains: List<Blockchain>
         get() = wallets.mapNotNull { it.walletManager?.wallet?.blockchain }
@@ -75,6 +72,14 @@ data class WalletState(
 
     val walletManagers: List<WalletManager>
         get() = wallets.mapNotNull { it.walletManager }
+
+    val primaryWallet: WalletData? = wallets.firstOrNull()?.walletsData?.firstOrNull()
+
+    val primaryWalletManager: WalletManager? = if (wallets.isNotEmpty()) wallets[0].walletManager else null
+
+    val shouldShowDetails: Boolean =
+        primaryWallet?.currencyData?.status != BalanceStatus.EmptyCard &&
+            primaryWallet?.currencyData?.status != BalanceStatus.UnknownBlockchain
 
     fun getWalletManager(currency: Currency?): WalletManager? {
         if (currency?.blockchain == null) return null
@@ -248,32 +253,6 @@ data class WalletState(
         return updatedWallets + remainingWallets
     }
 
-    fun updateTradeCryptoState(
-        exchangeManager: CurrencyExchangeManager?,
-        walletData: WalletData
-    ): WalletData {
-        return walletData.copy(
-            tradeCryptoState = TradeCryptoState.from(
-                exchangeManager,
-                walletData
-            )
-        )
-    }
-
-    fun updateTradeCryptoState(
-        exchangeManager: CurrencyExchangeManager?,
-        walletDataList: List<WalletData>
-    ): List<WalletData> {
-        return walletDataList.map {
-            it.copy(
-                tradeCryptoState = TradeCryptoState.from(
-                    exchangeManager,
-                    it
-                )
-            )
-        }
-    }
-
     private fun updateTotalBalance(): WalletState {
         val walletsData = this.wallets
             .flatMap(WalletStore::walletsData)
@@ -352,39 +331,24 @@ data class Artwork(
     }
 }
 
-data class TradeCryptoState(
-    val isAvailableToSell: () -> Boolean = { false },
-    val isAvailableToBuy: () -> Boolean = { false },
-) {
-    companion object {
-        fun from(
-            exchangeManager: CurrencyExchangeManager?,
-            walletData: WalletData
-        ): TradeCryptoState {
-            val exchanger = exchangeManager ?: return walletData.tradeCryptoState
-            val currency = walletData.currency
-
-            return TradeCryptoState(
-                isAvailableToSell = { exchanger.availableForSell(currency) },
-                isAvailableToBuy = { exchanger.availableForBuy(currency) },
-            )
-        }
-    }
-}
-
 data class WalletData(
     val pendingTransactions: List<PendingTransaction> = emptyList(),
     val hashesCountVerified: Boolean? = null,
     val walletAddresses: WalletAddresses? = null,
     val currencyData: BalanceWidgetData = BalanceWidgetData(),
     val updatingWallet: Boolean = false,
-    val tradeCryptoState: TradeCryptoState = TradeCryptoState(),
     val fiatRateString: String? = null,
     val fiatRate: BigDecimal? = null,
     val mainButton: WalletMainButton = WalletMainButton.SendButton(false),
     val currency: Currency,
     val walletRent: WalletRent? = null,
 ) {
+    val isAvailableToBuy: Boolean
+        get() = store.state.globalState.exchangeManager.availableForBuy(currency)
+
+    val isAvailableToSell: Boolean
+        get() = store.state.globalState.exchangeManager.availableForSell(currency)
+
     fun shouldShowMultipleAddress(): Boolean {
         val listOfAddresses = walletAddresses?.list ?: return false
         return listOfAddresses.size > 1
