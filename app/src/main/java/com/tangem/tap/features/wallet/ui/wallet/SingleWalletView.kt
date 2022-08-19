@@ -58,7 +58,7 @@ class SingleWalletView : WalletView() {
         state.primaryWallet ?: return
 
         setupTwinCards(state.twinCardsState, binding)
-        setupButtons(state.primaryWallet, binding)
+        setupButtons(state.primaryWallet, binding, state.isExchangeServiceFeatureOn)
         setupAddressCard(state.primaryWallet, binding)
         showPendingTransactionsIfPresent(state.primaryWallet.pendingTransactions)
         setupBalance(state, state.primaryWallet)
@@ -97,18 +97,23 @@ class SingleWalletView : WalletView() {
         }
     }
 
-    private fun setupButtons(state: WalletData, binding: FragmentWalletBinding) = with(binding) {
-        setupRowButtons(state, rowButtons)
+    private fun setupButtons(
+        walletData: WalletData,
+        binding: FragmentWalletBinding,
+        isExchangeServiceFeatureEnabled: Boolean,
+    ) = with(binding) {
+        setupRowButtons(walletData, rowButtons, isExchangeServiceFeatureEnabled)
+
         lAddress.btnCopy.setOnClickListener {
-            state.walletAddresses?.selectedAddress?.address?.let { addressString ->
+            walletData.walletAddresses?.selectedAddress?.address?.let { addressString ->
                 store.dispatch(WalletAction.CopyAddress(addressString, fragment!!.requireContext()))
             }
         }
         lAddress.btnShowQr.setOnClickListener {
-            state.walletAddresses?.selectedAddress?.let { selectedAddress ->
+            walletData.walletAddresses?.selectedAddress?.let { selectedAddress ->
                 store.dispatch(
                     WalletAction.DialogAction.QrCode(
-                        currency = state.currency,
+                        currency = walletData.currency,
                         selectedAddress = selectedAddress,
                     ),
                 )
@@ -116,13 +121,16 @@ class SingleWalletView : WalletView() {
         }
     }
 
-    private fun setupRowButtons(state: WalletData, rowButtons: WalletDetailsButtonsRow) {
-        val allowedToBuy = state.tradeCryptoState.isAvailableToBuy()
-        val allowedToSell = state.tradeCryptoState.isAvailableToSell()
+    private fun setupRowButtons(
+        walletData: WalletData,
+        rowButtons: WalletDetailsButtonsRow,
+        isExchangeServiceFeatureEnabled: Boolean,
+    ) {
         rowButtons.updateButtonsVisibility(
-            buyAllowed = allowedToBuy,
-            sellAllowed = allowedToSell,
-            sendAllowed = state.mainButton.enabled,
+            exchangeServiceFeatureOn = isExchangeServiceFeatureEnabled,
+            buyAllowed = walletData.isAvailableToBuy,
+            sellAllowed = walletData.isAvailableToSell,
+            sendAllowed = walletData.mainButton.enabled,
         )
 
         rowButtons.onBuyClick = { store.dispatch(WalletAction.TradeCryptoAction.Buy()) }
@@ -130,7 +138,7 @@ class SingleWalletView : WalletView() {
         rowButtons.onTradeClick = { store.dispatch(WalletAction.DialogAction.ChooseTradeActionDialog) }
 
         rowButtons.onSendClick = {
-            when (state.mainButton) {
+            when (walletData.mainButton) {
                 is WalletMainButton.SendButton -> store.dispatch(WalletAction.Send())
                 is WalletMainButton.CreateWalletButton -> store.dispatch(WalletAction.CreateWallet)
             }
