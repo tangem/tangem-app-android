@@ -25,7 +25,7 @@ data class GlobalState(
     val appCurrency: FiatCurrency = FiatCurrency.Default,
     val scanCardFailsCounter: Int = 0,
     val dialog: StateDialog? = null,
-    val exchangeManager: CurrencyExchangeManager? = null,
+    val exchangeManager: CurrencyExchangeManager = CurrencyExchangeManager.dummy(),
     val resources: AndroidResources = AndroidResources(),
     val analyticsHandlers: AnalyticsHandler? = null,
     val userCountryCode: String? = null,
