@@ -22,7 +22,7 @@
             android:text="@string/wallet_button_trade"
             android:visibility="gone"
             app:icon="@drawable/ic_arrows_up_down"
-            />
+            tools:visibility="visible" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_buy"
@@ -39,7 +39,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/wallet_button_sell"
-            android:visibility="visible"
+            android:visibility="gone"
             app:icon="@drawable/ic_arrow_down" />
 
     </FrameLayout>
