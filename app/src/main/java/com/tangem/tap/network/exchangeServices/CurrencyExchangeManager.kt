@@ -26,6 +26,8 @@ class CurrencyExchangeManager(
     private val primaryRules: ExchangeRules,
 ) : ExchangeService, ExchangeUrlBuilder {
 
+    override fun featureIsSwitchedOn(): Boolean = primaryRules.featureIsSwitchedOn()
+
     override suspend fun update() {
         buyService.update()
         sellService.update()
@@ -74,6 +76,14 @@ class CurrencyExchangeManager(
     }
 
     enum class Action { Buy, Sell }
+
+    companion object {
+        fun dummy(): CurrencyExchangeManager = CurrencyExchangeManager(
+            buyService = ExchangeService.dummy(),
+            sellService = ExchangeService.dummy(),
+            primaryRules = ExchangeRules.dummy(),
+        )
+    }
 }
 
 suspend fun CurrencyExchangeManager.buyErc20TestnetTokens(
