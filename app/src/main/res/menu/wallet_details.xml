@@ -3,6 +3,6 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/menu_remove"
-        android:title="@string/remove_token"
+        android:title="@string/token_details_hide_token"
         app:showAsAction="always" />
 </menu>
