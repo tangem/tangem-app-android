@@ -7,11 +7,13 @@ import androidx.fragment.app.FragmentManager
 import com.tangem.common.extensions.VoidCallback
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.FragmentShareTransition
-import com.tangem.tap.features.details.ui.DetailsConfirmFragment
-import com.tangem.tap.features.details.ui.DetailsFragment
-import com.tangem.tap.features.details.ui.DetailsSecurityFragment
+import com.tangem.tap.features.details.ui.appsettings.AppSettingsFragment
+import com.tangem.tap.features.details.ui.cardsettings.CardSettingsFragment
+import com.tangem.tap.features.details.ui.details.DetailsFragment
+import com.tangem.tap.features.details.ui.resetcard.ResetCardFragment
+import com.tangem.tap.features.details.ui.securitymode.SecurityModeFragment
 import com.tangem.tap.features.details.ui.walletconnect.QrScanFragment
-import com.tangem.tap.features.details.ui.walletconnect.WalletConnectSessionsFragment
+import com.tangem.tap.features.details.ui.walletconnect.WalletConnectFragment
 import com.tangem.tap.features.disclaimer.ui.DisclaimerFragment
 import com.tangem.tap.features.home.HomeFragment
 import com.tangem.tap.features.onboarding.products.note.OnboardingNoteFragment
@@ -61,7 +63,11 @@ fun FragmentActivity.popBackTo(screen: AppScreen?, inclusive: Boolean = false) {
 }
 
 fun FragmentActivity.getPreviousScreen(): AppScreen? {
-    val indexOfLastFragment = this.supportFragmentManager.backStackEntryCount - 1
+    val indexOfLastFragment = if (this.supportFragmentManager.backStackEntryCount > 0) {
+        this.supportFragmentManager.backStackEntryCount - 1
+    } else {
+        0
+    }
     val tag = if (indexOfLastFragment < this.supportFragmentManager.backStackEntryCount)
         this.supportFragmentManager.getBackStackEntryAt(indexOfLastFragment).name
     else null
@@ -88,13 +94,15 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
         AppScreen.Wallet -> WalletFragment()
         AppScreen.Send -> SendFragment()
         AppScreen.Details -> DetailsFragment()
-        AppScreen.DetailsConfirm -> DetailsConfirmFragment()
-        AppScreen.DetailsSecurity -> DetailsSecurityFragment()
+        AppScreen.DetailsSecurity -> SecurityModeFragment()
+        AppScreen.CardSettings -> CardSettingsFragment()
+        AppScreen.AppSettings -> AppSettingsFragment()
+        AppScreen.ResetToFactory -> ResetCardFragment()
         AppScreen.Disclaimer -> DisclaimerFragment()
         AppScreen.AddTokens -> AddTokensFragment()
         AppScreen.AddCustomToken -> AddCustomTokenFragment()
         AppScreen.WalletDetails -> WalletDetailsFragment()
-        AppScreen.WalletConnectSessions -> WalletConnectSessionsFragment()
+        AppScreen.WalletConnectSessions -> WalletConnectFragment()
         AppScreen.QrScan -> QrScanFragment()
     }
 }

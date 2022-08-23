@@ -5,8 +5,18 @@ import com.tangem.blockchain.blockchains.ethereum.EthereumGasLoader
 import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
 import com.tangem.blockchain.blockchains.ethereum.EthereumUtils
 import com.tangem.blockchain.blockchains.ethereum.EthereumUtils.Companion.toKeccak
-import com.tangem.blockchain.common.*
-import com.tangem.blockchain.extensions.*
+import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.AmountType
+import com.tangem.blockchain.common.BlockchainSdkError
+import com.tangem.blockchain.common.CommonSigner
+import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.common.TransactionSender
+import com.tangem.blockchain.common.Wallet
+import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.extensions.Result
+import com.tangem.blockchain.extensions.SimpleResult
+import com.tangem.blockchain.extensions.hexToBigDecimal
+import com.tangem.blockchain.extensions.isAscii
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.hexToBytes
@@ -15,9 +25,14 @@ import com.tangem.common.extensions.toHexString
 import com.tangem.crypto.CryptoUtils
 import com.tangem.operations.sign.SignHashCommand
 import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.extensions.logSendTransactionError
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.extensions.toFormattedString
-import com.tangem.tap.features.details.redux.walletconnect.*
+import com.tangem.tap.features.details.redux.walletconnect.WalletConnectSession
+import com.tangem.tap.features.details.redux.walletconnect.WalletForSession
+import com.tangem.tap.features.details.redux.walletconnect.WcPersonalSignData
+import com.tangem.tap.features.details.redux.walletconnect.WcTransactionData
+import com.tangem.tap.features.details.redux.walletconnect.WcTransactionType
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.PersonalSignDialogData
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.TransactionRequestDialogData
 import com.tangem.tap.store
@@ -56,7 +71,7 @@ class WalletConnectSdkHelper {
                 (walletManager as? EthereumGasLoader)?.getGasPrice()) {
                 is Result.Success -> result.data.toBigDecimal()
                 is Result.Failure -> {
-                    Timber.e(result.error)
+                    (result.error as? Throwable)?.let { Timber.e(it) }
                     return null
                 }
                 null -> return null
@@ -108,9 +123,8 @@ class WalletConnectSdkHelper {
         )
         val blockchain = session.wallet.getBlockchainForSession()
         return factory.makeWalletManager(
-            session.wallet.cardId,
-            blockchain,
-            publicKey
+            blockchain = blockchain,
+            publicKey = publicKey
         )
     }
 
@@ -124,20 +138,18 @@ class WalletConnectSdkHelper {
     private suspend fun sendTransaction(data: WcTransactionData): String? {
         val result = (data.walletManager as TransactionSender).send(
             transactionData = data.transaction,
-            signer = Signer(tangemSdk)
+            signer = CommonSigner(tangemSdk)
         )
         return when (result) {
             SimpleResult.Success -> {
                 HEX_PREFIX + data.walletManager.wallet.recentTransactions.last().hash
             }
             is SimpleResult.Failure -> {
-                (result.error as? TangemSdkError)?.let { error ->
-                    store.state.globalState.analyticsHandlers?.logCardSdkError(
-                        error,
-                        Analytics.ActionToLog.WalletConnectTransaction,
-                    )
-                }
-                Timber.e(result.error)
+                store.state.globalState.analyticsHandlers?.logSendTransactionError(
+                    result.error,
+                    Analytics.ActionToLog.WalletConnectTransaction,
+                )
+                Timber.e(result.error as BlockchainSdkError)
                 null
             }
         }

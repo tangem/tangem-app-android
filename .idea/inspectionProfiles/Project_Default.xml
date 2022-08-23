@@ -1,0 +1,92 @@
+<component name="InspectionProjectProfileManager">
+  <profile version="1.0">
+    <option name="myName" value="Project Default" />
+    <inspection_tool class="CanBeParameter" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="CanBePrimaryConstructorProperty" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="ComplexRedundantLet" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="ConstantConditionIf" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="ExplicitThis" enabled="false" level="ERROR" enabled_by_default="false" />
+    <inspection_tool class="KotlinDoubleNegation" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="KotlinRedundantOverride" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="KotlinUnusedImport" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="MemberVisibilityCanBePrivate" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="NullChecksToSafeCall" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="PreviewAnnotationInFunctionWithParameters" enabled="true" level="ERROR" enabled_by_default="true">
+      <option name="composableFile" value="true" />
+      <option name="previewFile" value="true" />
+    </inspection_tool>
+    <inspection_tool class="PreviewDimensionRespectsLimit" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="composableFile" value="true" />
+      <option name="previewFile" value="true" />
+    </inspection_tool>
+    <inspection_tool class="PreviewFontScaleMustBeGreaterThanZero" enabled="true" level="ERROR" enabled_by_default="true">
+      <option name="composableFile" value="true" />
+      <option name="previewFile" value="true" />
+    </inspection_tool>
+    <inspection_tool class="PreviewMultipleParameterProviders" enabled="true" level="ERROR" enabled_by_default="true">
+      <option name="composableFile" value="true" />
+      <option name="previewFile" value="true" />
+    </inspection_tool>
+    <inspection_tool class="PreviewMustBeTopLevelFunction" enabled="true" level="ERROR" enabled_by_default="true">
+      <option name="composableFile" value="true" />
+      <option name="previewFile" value="true" />
+    </inspection_tool>
+    <inspection_tool class="PreviewNeedsComposableAnnotation" enabled="true" level="ERROR" enabled_by_default="true">
+      <option name="composableFile" value="true" />
+      <option name="previewFile" value="true" />
+    </inspection_tool>
+    <inspection_tool class="PreviewNotSupportedInUnitTestFiles" enabled="true" level="ERROR" enabled_by_default="true">
+      <option name="composableFile" value="true" />
+      <option name="previewFile" value="true" />
+    </inspection_tool>
+    <inspection_tool class="PreviewPickerAnnotation" enabled="true" level="ERROR" enabled_by_default="true">
+      <option name="composableFile" value="true" />
+      <option name="previewFile" value="true" />
+    </inspection_tool>
+    <inspection_tool class="RedundantCompanionReference" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="RedundantElvisReturnNull" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="RedundantEmptyInitializerBlock" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="RedundantEnumConstructorInvocation" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="RedundantExplicitType" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="RedundantGetter" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="RedundantIf" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="RedundantInnerClassModifier" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="RedundantLambdaArrow" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="RedundantLambdaOrAnonymousFunction" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="RedundantModalityModifier" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="RedundantNullableReturnType" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="RedundantRequireNotNullCall" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="RedundantReturnLabel" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="RedundantSamConstructor" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="RedundantSemicolon" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="RedundantSetter" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="RedundantSuspendModifier" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="RedundantUnitExpression" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="RedundantUnitReturnType" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="RedundantVisibilityModifier" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="RedundantWith" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="RemoveCurlyBracesFromTemplate" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="RemoveEmptyClassBody" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="RemoveEmptyParenthesesFromLambdaCall" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="RemoveEmptyPrimaryConstructor" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="RemoveEmptySecondaryConstructorBody" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="RemoveExplicitSuperQualifier" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="RemoveExplicitTypeArguments" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="RemoveForLoopIndices" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="RemoveRedundantBackticks" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="RemoveRedundantCallsOfConversionMethods" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="RemoveRedundantQualifierName" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="RemoveRedundantSpreadOperator" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="RemoveSetterParameterType" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="RemoveSingleExpressionStringTemplate" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="RemoveToStringInStringTemplate" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="ReplaceWithIgnoreCaseEquals" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="SimpleRedundantLet" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="SimplifyWhenWithBooleanConstantCondition" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="UnnecessaryOptInAnnotation" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="UnnecessaryVariable" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="UnusedReceiverParameter" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="UnusedSymbol" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="WhenWithOnlyElse" enabled="true" level="ERROR" enabled_by_default="true" />
+  </profile>
+</component>
