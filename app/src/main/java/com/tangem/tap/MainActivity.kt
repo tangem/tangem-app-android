@@ -5,6 +5,8 @@ import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.google.android.material.snackbar.Snackbar
 import com.tangem.TangemSdk
@@ -57,7 +59,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         systemActions()
-        store.state.globalState.feedbackManager?.updateActivity(this)
         store.dispatch(NavigationAction.ActivityCreated(WeakReference(this)))
 
         tangemSdk = TangemSdk.init(this, TangemSdkManager.config)
@@ -84,8 +85,17 @@ class MainActivity : AppCompatActivity(), SnackbarHandler {
     }
 
     private fun systemActions() {
-        // makes the status bar text dark
-        window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+
+        val windowInsetsController = WindowInsetsControllerCompat(window, binding.root)
+        windowInsetsController.isAppearanceLightStatusBars = true
+        windowInsetsController.isAppearanceLightNavigationBars = true
+
+        supportFragmentManager.registerFragmentLifecycleCallbacks(
+            NavBarInsetsFragmentLifecycleCallback(),
+            true
+        )
+
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
     }
 
