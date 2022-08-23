@@ -5,20 +5,32 @@ import com.tangem.common.extensions.guard
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.features.details.redux.walletconnect.*
+import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
+import com.tangem.tap.features.details.redux.walletconnect.WalletConnectDialog
+import com.tangem.tap.features.details.redux.walletconnect.WalletConnectSession
+import com.tangem.tap.features.details.redux.walletconnect.WalletForSession
+import com.tangem.tap.features.details.redux.walletconnect.WcPersonalSignData
+import com.tangem.tap.features.details.redux.walletconnect.WcTransactionData
+import com.tangem.tap.features.details.redux.walletconnect.WcTransactionType
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.walletConnectRepository
 import com.trustwallet.walletconnect.WCClient
 import com.trustwallet.walletconnect.models.WCPeerMeta
-import com.trustwallet.walletconnect.models.binance.*
+import com.trustwallet.walletconnect.models.binance.WCBinanceCancelOrder
+import com.trustwallet.walletconnect.models.binance.WCBinanceTradeOrder
+import com.trustwallet.walletconnect.models.binance.WCBinanceTransferOrder
+import com.trustwallet.walletconnect.models.binance.WCBinanceTxConfirmParam
 import com.trustwallet.walletconnect.models.ethereum.WCEthereumSignMessage
 import com.trustwallet.walletconnect.models.ethereum.WCEthereumTransaction
 import com.trustwallet.walletconnect.models.session.WCSession
 import com.trustwallet.walletconnect.models.session.WCSessionUpdate
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import okhttp3.*
+import okhttp3.Interceptor
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.Response
 import okhttp3.logging.HttpLoggingInterceptor
 import timber.log.Timber
 import java.util.*
@@ -63,6 +75,22 @@ class WalletConnectManager {
     }
 
     fun updateSession(session: WalletConnectSession) {
+        val updatedSession = sessions[session.session]?.copy(
+            wallet = session.wallet
+        )
+        if (updatedSession != null) {
+            sessions[session.session] = updatedSession
+        }
+    }
+
+    fun updateBlockchain(session: WalletConnectSession) {
+        sessions[session.session]?.client?.updateSession(
+            accounts = listOfNotNull(session.getAddress()),
+            chainId = session.wallet.blockchain?.getChainId(),
+            approved = true
+        )
+
+
         val updatedSession = sessions[session.session]?.copy(
             wallet = session.wallet
         )
@@ -405,27 +433,47 @@ class WalletConnectManager {
                 onSessionClosed(session)
             }
         }
+        client.onWalletChangeNetwork = { id: Long, chainId: Int ->
+            Timber.d("On WC Switch Chain")
+            val blockchain = Blockchain.fromChainId(chainId)
+            Timber.d("WC switch chainID\nNew Blockchain: $blockchain")
+            val session = sessions[client.session]?.toWalletConnectSession()
+            if (session != null) {
+                store.dispatchOnMain(WalletConnectAction.SwitchBlockchain(blockchain, session))
+            }
+        }
         client.onCustomRequest = { id: Long, data: String ->
             Timber.d("Custom Request")
             Timber.d(data)
+            val request = EthSignHelper.parseCustomRequest(data)
 
-            val message = EthSignHelper.tryToParseEthTypedMessage(data)
-            if (message != null) {
-                Timber.d("onEthSign_v4: $message")
-                store.state.globalState.analyticsHandlers?.logWcEvent(
-                    Analytics.WcAnalyticsEvent.Action(
-                        Analytics.WcAction.PersonalSign
+            when (request.method) {
+                WCMethodExtended.ETH_SIGN_TYPE_DATA_V4 -> handleTypedDataV4(request, client, id)
+                else -> {
+                    Timber.d("WC: unrecognized custom request")
+                }
+            }
+        }
+
+    }
+
+    private fun handleTypedDataV4(request: CustomJsonRpcRequest, client: WCClient, id: Long) {
+        val message = EthSignHelper.tryToParseEthTypedMessage(request)
+        if (message != null) {
+            Timber.d("onEthSign_v4: $message")
+            store.state.globalState.analyticsHandlers?.logWcEvent(
+                Analytics.WcAnalyticsEvent.Action(
+                    Analytics.WcAction.PersonalSign
+                )
+            )
+            sessions[client.session]?.toWalletConnectSession()?.let { sessionData ->
+                store.dispatchOnMain(
+                    WalletConnectAction.HandlePersonalSignRequest(
+                        message,
+                        sessionData,
+                        id
                     )
                 )
-                sessions[client.session]?.toWalletConnectSession()?.let { sessionData ->
-                    store.dispatchOnMain(
-                        WalletConnectAction.HandlePersonalSignRequest(
-                            message,
-                            sessionData,
-                            id
-                        )
-                    )
-                }
             }
         }
     }

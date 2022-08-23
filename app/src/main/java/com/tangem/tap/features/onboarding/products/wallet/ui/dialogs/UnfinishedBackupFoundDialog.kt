@@ -20,7 +20,7 @@ class UnfinishedBackupFoundDialog {
                 }
                 setNegativeButton(R.string.welcome_interrupted_backup_alert_discard) { _, _ ->
                     store.dispatch(GlobalAction.HideDialog)
-                        store.dispatch(GlobalAction.ShowDialog(BackupDialog.ConfirmDiscardingBackup))
+                    store.dispatch(GlobalAction.ShowDialog(BackupDialog.ConfirmDiscardingBackup))
                 }
                 setCancelable(false)
             }.create()

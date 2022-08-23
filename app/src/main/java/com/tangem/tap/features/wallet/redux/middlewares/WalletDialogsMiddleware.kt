@@ -4,7 +4,7 @@ import com.tangem.tap.common.extensions.dispatchDialogHide
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.features.wallet.redux.WalletAction
-import com.tangem.tap.features.wallet.redux.WalletDialog
+import com.tangem.tap.features.wallet.redux.models.WalletDialog
 import com.tangem.tap.store
 
 class WalletDialogsMiddleware {
