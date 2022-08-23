@@ -23,7 +23,9 @@
     <string name="story_awe_title">Revolutionary Hardware Wallet</string>
     <string name="story_awe_description">Store your crypto assets secure while keeping private keys contained in your card</string>
     <string name="story_backup_title">Ultra Secure Backup</string>
-    <string name="story_backup_description">Up to <b>3 physical cards</b> to one wallet</string>
+    <string name="story_backup_description_1">Up to</string>
+    <string name="story_backup_description_2_bold">3 physical cards</string>
+    <string name="story_backup_description_3">to one wallet</string>
     <string name="story_currencies_title">Thousands of Currencies</string>
     <string name="story_currencies_description">A hardware wallet for your Bitcoin, Ethereum and many more currencies simultaneously – all in one card</string>
     <string name="story_web3_title">DeFi Compatible</string>
@@ -45,5 +47,52 @@
     <string name="alert_funds_restoration_message">If you chose the wrong network during your crypto transfer from the exchange, this guide will help you recover your funds</string>
 
     <string name="common_custom">Custom</string>
+    <string name="common_server_unavailable">The server is not available, please try again later</string>
+    <string name="common_notice">Notice</string>
+    <string name="common_attention">Attention</string>
 
+    <string name="token_details_hide_token">Hide token</string>
+    <string name="token_details_hide_alert_title">Hide %s</string>
+    <string name="token_details_hide_alert_hide">Hide</string>
+    <string name="token_details_hide_alert_message">You are about to hide this token from the main screen. You can add it back anytime through the manage tokens page.</string>
+    <string name="token_details_unable_hide_alert_title">Unable to hide %s</string>
+    <string name="token_details_unable_hide_alert_message">The %s token is the main currency on the %s network and cannot be hidden as long as you have other tokens on this network in the list.</string>
+
+    <string name="wallet_connect_network_not_found_format">%s network not found. Please, add it first and try again.</string>
+    <string name="wallet_connect_scanner_error_unsupported_network">This network is not supported. Please select another network.</string>
+    <string name="wallet_currency_subtitle">%s network</string>
+
+    <string name="card_settings_title">Card Settings</string>
+    <string name="card_settings_security_mode">Security Mode</string>
+    <string name="card_settings_security_mode_footer">Selected application protection method</string>
+    <string name="card_settings_change_access_code">Change access code</string>
+    <string name="card_settings_change_access_code_footer">Access code will be changed on this card only</string>
+    <string name="scan_card_settings_title">Get your card ready!</string>
+    <string name="scan_card_settings_message">Scan the card to change its settings. The changes will impact only the card you’ve scanned and will not affect other cards tied to your wallet.</string>
+    <string name="scan_card_settings_button">Scan Card</string>
+    <string name="app_settings_title">App settings</string>
+    <string name="app_settings_warning_title">Enable biometric authentication</string>
+    <string name="app_settings_warning_subtitle">Go to settings to enable biometric authentication in the Tangem app</string>
+    <string name="app_settings_saved_wallet">Keep the wallet in the app</string>
+    <string name="app_settings_saved_wallet_footer">Enable to link all the wallets to Tangem app. Biometric authentication will be required for unlocking the app. Transaction signing requires tapping your Tangem card.</string>
+    <string name="app_settings_saved_access_codes">Save Access Code</string>
+    <string name="app_settings_saved_access_codes_footer">Biometric authentication will be requested instead of the access code for interactions with your card.</string>
+    <string name="app_settings_off_saved_wallet_alert_message">Removing the saved card deletes all the saved wallets and their access codes.</string>
+    <string name="app_settings_off_saved_access_code_alert_message">This will delete all the saved wallet access codes. Any further operation with the wallet will require submitting the access code.</string>
+    <string name="wallet_connect_title">WalletConnect</string>
+    <string name="wallet_connect_subtitle">Connect to Dapps</string>
+
+    <string name="details_row_title_create_backup">Link More Cards</string>
+    <string name="details_row_title_create_backup_footer">You can synchronize up to three cards into one wallet. It can only be done once.</string>
+
+    <string name="details_row_privacy_policy">Privacy policy</string>
+
+    <string name="reset_card_to_factory_navigation_title">Reset to factory settings</string>
+    <string name="reset_card_to_factory_message">This action will completely remove the wallet from the selected card. You will not be able to restore the current wallet or use the card to recover the access code.</string>
+    <string name="reset_card_to_factory_warning_message">I understand that after performing this action, I will no longer have access to the current wallet</string>
+    <string name="reset_card_to_factory_button_title">Reset the card</string>
+    <string name="card_settings_reset_card_to_factory">Reset to Factory Settings</string>
+    <string name="card_settings_reset_card_to_factory_footer">Factory Reset will completely delete the wallet from the selected card. You will not be able to restore the current wallet or use the card to recover the access code.</string>
+
+    <string name="wallet_connect_select_network">Select network</string>
 </resources>

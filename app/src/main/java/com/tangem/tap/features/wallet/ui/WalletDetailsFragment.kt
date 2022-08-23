@@ -1,7 +1,11 @@
 package com.tangem.tap.features.wallet.ui
 
 import android.os.Bundle
-import android.view.*
+import android.view.Menu
+import android.view.MenuInflater
+import android.view.MenuItem
+import android.view.View
+import android.view.ViewGroup
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.ColorRes
@@ -11,20 +15,32 @@ import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.transition.TransitionInflater
 import by.kirich1409.viewbindingdelegate.viewBinding
+import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.tangem_sdk_new.extensions.dpToPx
 import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.TestActions
-import com.tangem.tap.common.extensions.*
+import com.tangem.tap.common.extensions.appendIfNotNull
+import com.tangem.tap.common.extensions.beginDelayedTransition
+import com.tangem.tap.common.extensions.fitChipsByGroupWidth
+import com.tangem.tap.common.extensions.getColor
+import com.tangem.tap.common.extensions.getString
+import com.tangem.tap.common.extensions.hide
+import com.tangem.tap.common.extensions.show
+import com.tangem.tap.common.extensions.toQrCode
 import com.tangem.tap.common.recyclerView.SpaceItemDecoration
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.onboarding.getQRReceiveMessage
+import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.PendingTransaction
-import com.tangem.tap.features.wallet.redux.*
+import com.tangem.tap.features.wallet.redux.ErrorType
+import com.tangem.tap.features.wallet.redux.ProgressState
+import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.features.wallet.redux.WalletData
+import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.redux.WalletState.Companion.UNKNOWN_AMOUNT_SIGN
 import com.tangem.tap.features.wallet.ui.adapters.PendingTransactionsAdapter
 import com.tangem.tap.features.wallet.ui.adapters.WalletDetailWarningMessagesAdapter
-import com.tangem.tap.features.wallet.ui.images.loadCurrencyIcon
 import com.tangem.tap.features.wallet.ui.test.TestWalletDetails
 import com.tangem.tap.store
 import com.tangem.wallet.R
@@ -124,7 +140,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
         setupAddressCard(selectedWallet)
         setupNoInternetHandling(state)
         setupBalanceData(selectedWallet.currencyData)
-        setupButtons(selectedWallet)
+        setupButtons(selectedWallet, state.isExchangeServiceFeatureOn)
 
         handleCurrencyIcon(selectedWallet)
         handleWarnings(selectedWallet)
@@ -138,7 +154,8 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
                         selectedWallet.currency.derivationPath,
                         emptyList()
                     )
-                ))
+                )
+                )
             }
         }
 
@@ -163,15 +180,13 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
 
     private fun setupCurrency(currencyData: BalanceWidgetData, currency: Currency) = with(binding) {
         tvCurrencyTitle.text = currencyData.currency
-        if (currency is Currency.Token) {
-            tvCurrencySubtitle.text = currency.blockchain.tokenDisplayName()
-            tvCurrencySubtitle.show()
-        } else {
-            tvCurrencySubtitle.hide()
-        }
+        tvCurrencySubtitle.text = tvCurrencySubtitle.getString(
+            R.string.wallet_currency_subtitle,
+            currency.blockchain.fullName
+        )
     }
 
-    private fun setupButtons(selectedWallet: WalletData) = with(binding) {
+    private fun setupButtons(selectedWallet: WalletData, isExchangeServiceFeatureOn: Boolean) = with(binding) {
         lWalletDetails.btnCopy.setOnClickListener {
             selectedWallet.walletAddresses?.selectedAddress?.address?.let { addressString ->
                 store.dispatch(WalletAction.CopyAddress(addressString, requireContext()))
@@ -184,8 +199,9 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
         }
 
         rowButtons.updateButtonsVisibility(
-            buyAllowed = selectedWallet.tradeCryptoState.isAvailableToBuy(),
-            sellAllowed = selectedWallet.tradeCryptoState.isAvailableToSell(),
+            exchangeServiceFeatureOn = isExchangeServiceFeatureOn,
+            buyAllowed = selectedWallet.isAvailableToBuy,
+            sellAllowed = selectedWallet.isAvailableToSell,
             sendAllowed = selectedWallet.mainButton.enabled,
         )
     }
@@ -199,11 +215,12 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
     }
 
     private fun handleCurrencyIcon(wallet: WalletData) = with(binding.lWalletDetails.lBalance) {
-        loadCurrencyIcon(
-            currencyImageView = ivCurrency,
-            currencyTextView = tvTokenLetter,
-            blockchain = wallet.currency.blockchain,
-            token = (wallet.currency as? Currency.Token)?.token
+        ivCurrency.load(
+            currency = wallet.currency,
+            derivationStyle = store.state.globalState
+                .scanResponse
+                ?.card
+                ?.derivationStyle,
         )
     }
 
@@ -295,7 +312,10 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
                 lBalance.root.show()
                 lBalance.groupBalance.hide()
                 lBalance.tvError.show()
-                lBalance.tvError.setWarningStatus(R.string.wallet_balance_blockchain_unreachable, data.errorMessage)
+                lBalance.tvError.setWarningStatus(
+                    R.string.wallet_balance_blockchain_unreachable,
+                    data.errorMessage
+                )
             }
             BalanceStatus.NoAccount -> {
                 lBalance.root.hide()
@@ -314,9 +334,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
         return when (item.itemId) {
             R.id.menu_remove -> {
                 store.state.walletState.getSelectedWalletData()?.let { walletData ->
-                    store.dispatch(WalletAction.MultiWallet.RemoveWallet(walletData))
-                    store.dispatch(WalletAction.MultiWallet.SelectWallet(null))
-                    store.dispatch(NavigationAction.PopBackTo())
+                    store.dispatch(WalletAction.MultiWallet.TryToRemoveWallet(walletData.currency))
                     true
                 }
                 false
@@ -327,10 +345,6 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.wallet_details, menu)
-        val walletCanBeRemoved = store.state.walletState.canBeRemoved(
-            store.state.walletState.getSelectedWalletData()
-        )
-        menu.getItem(0).isEnabled = walletCanBeRemoved
     }
 
     private fun TextView.setWarningStatus(mainMessage: Int, error: String? = null) {
@@ -346,7 +360,11 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
         setStatus(getString(mainMessage), R.color.darkGray4, null)
     }
 
-    private fun TextView.setStatus(text: String, @ColorRes color: Int, @DrawableRes drawable: Int?) {
+    private fun TextView.setStatus(
+        text: String,
+        @ColorRes color: Int,
+        @DrawableRes drawable: Int?
+    ) {
         this.text = text
         setTextColor(getColor(color))
         setCompoundDrawablesWithIntrinsicBounds(drawable ?: 0, 0, 0, 0)
