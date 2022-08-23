@@ -37,20 +37,18 @@ class TradeCryptoMiddleware {
         action: WalletAction.TradeCryptoAction.Buy,
     ) {
         if (action.checkUserLocation && state()?.globalState?.userCountryCode == RUSSIA_COUNTRY_CODE) {
-            store.dispatchOnMain(
-                WalletAction.DialogAction.RussianCardholdersWarningDialog
-            )
+            store.dispatchOnMain(WalletAction.DialogAction.RussianCardholdersWarningDialog)
             return
         }
 
         val selectedWalletData = store.state.walletState.getSelectedWalletData() ?: return
-        val exchangeManager = store.state.globalState.exchangeManager ?: return
         val card = store.state.globalState.scanResponse?.card ?: return
-        val appCurrency = store.state.globalState.appCurrency
 
         val addresses = selectedWalletData.walletAddresses?.list.orEmpty()
         if (addresses.isEmpty()) return
 
+        val exchangeManager = store.state.globalState.exchangeManager
+        val appCurrency = store.state.globalState.appCurrency
         val currency = selectedWalletData.currency
 
         if (currency is Currency.Token && currency.blockchain.isTestnet()) {
@@ -81,15 +79,13 @@ class TradeCryptoMiddleware {
 
     private fun proceedSellAction() {
         val selectedWalletData = store.state.walletState.getSelectedWalletData() ?: return
-        val exchangeManager = store.state.globalState.exchangeManager ?: return
-        val appCurrency = store.state.globalState.appCurrency
 
+        val appCurrency = store.state.globalState.appCurrency
         val addresses = selectedWalletData.walletAddresses?.list.orEmpty()
         if (addresses.isEmpty()) return
 
         val currency = selectedWalletData.currency
-
-        exchangeManager.getUrl(
+        store.state.globalState.exchangeManager.getUrl(
             action = CurrencyExchangeManager.Action.Sell,
             blockchain = currency.blockchain,
             cryptoCurrencyName = currency.currencySymbol,
@@ -100,8 +96,8 @@ class TradeCryptoMiddleware {
 
     private fun preconfigureAndOpenSendScreen(action: WalletAction.TradeCryptoAction.SendCrypto) {
         val selectedWalletData = store.state.walletState.getSelectedWalletData() ?: return
-        val walletManager =
-            store.state.walletState.getWalletManager(selectedWalletData.currency)
+
+        val walletManager = store.state.walletState.getWalletManager(selectedWalletData.currency)
         store.dispatchOnMain(PrepareSendScreen(
             coinAmount = walletManager?.wallet?.amounts?.get(AmountType.Coin),
             coinRate = selectedWalletData.fiatRate,
@@ -116,11 +112,10 @@ class TradeCryptoMiddleware {
     }
 
     private fun openReceiptUrl(transactionId: String) {
-        val exchangeManager = store.state.globalState.exchangeManager ?: return
-
         store.dispatchOnMain(NavigationAction.PopBackTo())
-        exchangeManager.getSellCryptoReceiptUrl(CurrencyExchangeManager.Action.Sell, transactionId)?.let {
-            store.dispatchOnMain(NavigationAction.OpenUrl(it))
-        }
+        store.state.globalState.exchangeManager.getSellCryptoReceiptUrl(
+            action = CurrencyExchangeManager.Action.Sell,
+            transactionId = transactionId,
+        )?.let { store.dispatchOnMain(NavigationAction.OpenUrl(it)) }
     }
 }
