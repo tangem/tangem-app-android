@@ -4,12 +4,14 @@ import android.app.Dialog
 import android.content.Context
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.global.GlobalState
+import com.tangem.tap.common.ui.SimpleAlertDialog
+import com.tangem.tap.common.ui.SimpleCancelableAlertDialog
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectDialog
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.ApproveWcSessionDialog
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.BnbTransactionDialog
+import com.tangem.tap.features.details.ui.walletconnect.dialogs.ChooseNetworkDialog
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.ClipboardOrScanQrDialog
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.PersonalSignDialog
-import com.tangem.tap.features.details.ui.walletconnect.dialogs.SimpleAlertDialog
 import com.tangem.tap.features.details.ui.walletconnect.dialogs.TransactionDialog
 import com.tangem.tap.features.onboarding.AddressInfoBottomSheetDialog
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
@@ -19,7 +21,7 @@ import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.AddMoreBack
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.BackupInProgressDialog
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.ConfirmDiscardingBackupDialog
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.UnfinishedBackupFoundDialog
-import com.tangem.tap.features.wallet.redux.WalletDialog
+import com.tangem.tap.features.wallet.redux.models.WalletDialog
 import com.tangem.tap.features.wallet.ui.dialogs.AmountToSendBottomSheetDialog
 import com.tangem.tap.features.wallet.ui.dialogs.ChooseTradeActionBottomSheetDialog
 import com.tangem.tap.features.wallet.ui.dialogs.RussianCardholdersWarningBottomSheetDialog
@@ -73,22 +75,33 @@ class DialogManager : StoreSubscriber<GlobalState> {
                     messageRes = R.string.wallet_connect_scanner_error_no_ethereum_wallet,
                     context = context
                 )
+            is WalletConnectDialog.AddNetwork ->
+                SimpleAlertDialog.create(
+                    titleRes = R.string.wallet_connect,
+                    message = context.getString(
+                        R.string.wallet_connect_network_not_found_format,
+                        state.dialog.network
+                    ),
+                    context = context
+                )
             is WalletConnectDialog.OpeningSessionRejected -> {
                 SimpleAlertDialog.create(
                     titleRes = R.string.wallet_connect,
                     messageRes = R.string.wallet_connect_same_wcuri,
-                    context = context
+                    context = context,
                 )
             }
             is WalletConnectDialog.SessionTimeout -> {
                 SimpleAlertDialog.create(
                     titleRes = R.string.wallet_connect,
                     messageRes = R.string.wallet_connect_error_timeout,
-                    context = context
+                    context = context,
                 )
             }
             is WalletConnectDialog.ApproveWcSession ->
-                ApproveWcSessionDialog.create(state.dialog.session, context)
+                ApproveWcSessionDialog.create(state.dialog.session, state.dialog.networks, context)
+            is WalletConnectDialog.ChooseNetwork ->
+                ChooseNetworkDialog.create(state.dialog.session, state.dialog.networks, context)
             is WalletConnectDialog.ClipboardOrScanQr ->
                 ClipboardOrScanQrDialog.create(state.dialog.clipboardUri, context)
             is WalletConnectDialog.RequestTransaction ->
@@ -102,6 +115,12 @@ class DialogManager : StoreSubscriber<GlobalState> {
                     sessionId = state.dialog.sessionId,
                     cardId = state.dialog.cardId,
                     dAppName = state.dialog.dAppName,
+                    context = context,
+                )
+            is WalletConnectDialog.UnsupportedNetwork ->
+                SimpleAlertDialog.create(
+                    titleRes = R.string.wallet_connect,
+                    messageRes = R.string.wallet_connect_scanner_error_unsupported_network,
                     context = context
                 )
             is BackupDialog.AddMoreBackupCards -> AddMoreBackupCardsDialog.create(context)
@@ -116,6 +135,20 @@ class DialogManager : StoreSubscriber<GlobalState> {
                 AmountToSendBottomSheetDialog(context, state.dialog)
             is WalletDialog.SignedHashesMultiWalletDialog ->
                 SignedHashesWarningDialog.create(context)
+            is WalletDialog.TokensAreLinkedDialog -> SimpleAlertDialog.create(
+                title = context.getString(state.dialog.titleRes, state.dialog.currencySymbol),
+                message = context.getString(
+                    state.dialog.messageRes, state.dialog.currencySymbol, state.dialog.currencyTitle
+                ),
+                context = context,
+            )
+            is WalletDialog.RemoveWalletDialog -> SimpleCancelableAlertDialog.create(
+                title = context.getString(state.dialog.titleRes, state.dialog.currencyTitle),
+                messageRes = state.dialog.messageRes,
+                context = context,
+                primaryButtonRes = state.dialog.primaryButtonRes,
+                primaryButtonAction = state.dialog.onOk
+            )
             is WalletDialog.RussianCardholdersWarningDialog ->
                 RussianCardholdersWarningBottomSheetDialog(context)
             else -> null
