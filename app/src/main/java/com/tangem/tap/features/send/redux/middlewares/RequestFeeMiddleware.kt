@@ -7,7 +7,7 @@ import com.tangem.blockchain.extensions.Result
 import com.tangem.common.extensions.isZero
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.demo.DemoTransactionSender
-import com.tangem.tap.features.demo.isDemoWallet
+import com.tangem.tap.features.demo.isDemoCard
 import com.tangem.tap.features.send.redux.AmountActionUi
 import com.tangem.tap.features.send.redux.FeeAction
 import com.tangem.tap.features.send.redux.ReceiptAction
@@ -28,6 +28,7 @@ class RequestFeeMiddleware {
     fun handle(appState: AppState?, dispatch: DispatchFunction) {
         val sendState = appState?.sendState ?: return
         val walletManager = sendState.walletManager ?: return
+        val scanResponse = appState.globalState.scanResponse ?: return
 
         if (!SendState.isReadyToRequestFee()) {
             dispatch(FeeAction.FeeCalculation.SetFeeError(FeeAction.Error.ADDRESS_OR_AMOUNT_IS_EMPTY))
@@ -40,7 +41,7 @@ class RequestFeeMiddleware {
 
         val destinationAddress = sendState.addressPayIdState.destinationWalletAddress!!
         val destinationAmount = Amount(typedAmount, sendState.amountState.amountToSendCrypto)
-        val txSender = if (walletManager.isDemoWallet()) {
+        val txSender = if (scanResponse.isDemoCard()) {
             DemoTransactionSender(walletManager)
         } else {
             walletManager as TransactionSender

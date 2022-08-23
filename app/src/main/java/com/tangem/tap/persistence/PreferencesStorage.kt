@@ -25,6 +25,10 @@ class PreferencesStorage(applicationContext: Application) {
         fiatCurrenciesPrefStorage.migrate()
     }
 
+    var chatFirstLaunchTime: Long?
+        get() = preferences.getLong(CHAT_FIRST_LAUNCH_KEY, 0).takeIf { it != 0L }
+        set(value) = preferences.edit { putLong(CHAT_FIRST_LAUNCH_KEY, value ?: 0) }
+
     fun getCountOfLaunches(): Int = preferences.getInt(APP_LAUNCH_COUNT_KEY, 1)
 
     @Deprecated("Use UsedCardsPrefStorage instead")
@@ -53,20 +57,12 @@ class PreferencesStorage(applicationContext: Application) {
         preferences.edit { putInt(APP_LAUNCH_COUNT_KEY, ++count) }
     }
 
-    fun wasRestoreFundsWarningClosed(): Boolean {
-        return preferences.getBoolean(RESTORE_FUNDS_CLOSED_KEY, false)
-    }
-
-    fun saveRestoreFundsWarningClosed() {
-        preferences.edit { putBoolean(RESTORE_FUNDS_CLOSED_KEY, true) }
-    }
-
     companion object {
         private const val PREFERENCES_NAME = "tapPrefs"
         private const val DISCLAIMER_ACCEPTED_KEY = "disclaimerAccepted"
         private const val TWINS_ONBOARDING_SHOWN_KEY = "twinsOnboardingShown"
         private const val APP_LAUNCH_COUNT_KEY = "launchCount"
-        private const val RESTORE_FUNDS_CLOSED_KEY = "restoreFundsClosed"
+        private const val CHAT_FIRST_LAUNCH_KEY = "chatFirstLaunchKey"
     }
 
 }
