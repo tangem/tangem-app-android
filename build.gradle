@@ -22,6 +22,7 @@ allprojects {
         mavenLocal()
         maven { url "https://nexus.tangem-tech.com/repository/maven-releases/" }
         maven { url 'https://jitpack.io' }
+        maven { url 'https://zendesk.jfrog.io/zendesk/repo' }
     }
 }
 

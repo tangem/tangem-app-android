@@ -8,7 +8,7 @@ import com.tangem.tap.common.TestActions
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.amountToCreateAccount
 import com.tangem.tap.domain.getFirstToken
-import com.tangem.tap.features.demo.isDemoWallet
+import com.tangem.tap.features.demo.isDemoCard
 import com.tangem.tap.features.wallet.redux.AddressData
 import com.tangem.tap.features.wallet.redux.reducers.createAddressesData
 import com.tangem.tap.network.NetworkConnectivity
@@ -21,7 +21,9 @@ import timber.log.Timber
 [REDACTED_AUTHOR]
  */
 suspend fun WalletManager.safeUpdate(): Result<Wallet> = try {
-    if (isDemoWallet() || TestActions.testAmountInjectionForWalletManagerEnabled) {
+    val scanResponse = store.state.globalState.scanResponse
+
+    if (scanResponse?.isDemoCard() == true || TestActions.testAmountInjectionForWalletManagerEnabled) {
         delay(500)
         TestActions.testAmountInjectionForWalletManagerEnabled = false
         Result.Success(wallet)
@@ -49,11 +51,10 @@ suspend fun WalletManager.safeUpdate(): Result<Wallet> = try {
 
 fun WalletManager?.getToUpUrl(): String? {
     val globalState = store.state.globalState
-    val exchangeManager = globalState.exchangeManager ?: return null
     val wallet = this?.wallet ?: return null
 
     val defaultAddress = wallet.address
-    return exchangeManager.getUrl(
+    return globalState.exchangeManager.getUrl(
         action = CurrencyExchangeManager.Action.Buy,
         blockchain = wallet.blockchain,
         cryptoCurrencyName = wallet.blockchain.currency,
