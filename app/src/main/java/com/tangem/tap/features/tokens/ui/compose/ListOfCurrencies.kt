@@ -1,5 +1,6 @@
 package com.tangem.tap.features.tokens.ui.compose
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,20 +17,18 @@ import com.tangem.tap.common.compose.extensions.OnBottomReached
 import com.tangem.tap.domain.tokens.Currency
 import com.tangem.tap.features.tokens.redux.ContractAddress
 import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
-
+import com.tangem.tap.features.tokens.ui.compose.currencyItem.CurrencyItem
 
 @Composable
 fun ListOfCurrencies(
     header: @Composable () -> Unit,
     currencies: List<Currency>,
-    nonRemovableTokens: List<ContractAddress>,
-    nonRemovableBlockchains: List<Blockchain>,
     addedTokens: List<TokenWithBlockchain>,
     addedBlockchains: List<Blockchain>,
     allowToAdd: Boolean,
     onAddCurrencyToggled: (Currency, TokenWithBlockchain?) -> Unit,
     onNetworkItemClicked: (ContractAddress) -> Unit,
-    onLoadMore: () -> Unit
+    onLoadMore: () -> Unit,
 ) {
 
     val expandedCurrencies = remember { mutableStateOf(listOf("")) }
@@ -52,21 +51,20 @@ fun ListOfCurrencies(
         state = listState,
         modifier = Modifier
             .fillMaxSize(),
-        contentPadding = PaddingValues(bottom = 90.dp)
+        contentPadding = PaddingValues(bottom = 90.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         item { header() }
         itemsIndexed(currencies) { index, currency ->
             CurrencyItem(
                 currency = currency,
-                nonRemovableTokens = nonRemovableTokens,
-                nonRemovableBlockchains = nonRemovableBlockchains,
                 addedTokens = addedTokens,
                 addedBlockchains = addedBlockchains,
                 allowToAdd = allowToAdd,
-                expanded = expandedCurrencies.value.contains(currency.id),
+                isExpanded = expandedCurrencies.value.contains(currency.id),
                 onCurrencyClick = onCurrencyClick,
                 onAddCurrencyToggled = onAddCurrencyToggled,
-                onNetworkItemClicked = onNetworkItemClicked
+                onNetworkItemClicked = onNetworkItemClicked,
             )
         }
     }

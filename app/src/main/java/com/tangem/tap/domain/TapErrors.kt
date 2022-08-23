@@ -39,21 +39,22 @@ sealed class TapError(
     object DustChange : TapError(R.string.send_error_dust_change)
     data class CreateAccountUnderfunded(override val args: List<Any>) : TapError(R.string.send_error_no_target_account)
 
-    sealed class XmlError {
-        object AssetAccountNotCreated : TapError(R.string.send_error_no_account_xlm)
-    }
+    data class UnsupportedState(
+        val stateError: String,
+        val customMessage: String = "Unsupported state:"
+    ) : TapError(R.string.common_custom_string, listOf("$customMessage $stateError"))
 
     sealed class WalletManager {
-        object CreationError: CustomError("Can't create wallet manager")
-        class NoAccountError(amountToCreateAccount: String): CustomError(amountToCreateAccount)
-        class InternalError(message: String): CustomError(message)
-        object BlockchainIsUnreachable: TapError(R.string.wallet_balance_blockchain_unreachable)
-        object BlockchainIsUnreachableTryLater: TapError(R.string.wallet_balance_blockchain_unreachable_try_later)
+        object CreationError : CustomError("Can't create wallet manager")
+        class NoAccountError(amountToCreateAccount: String) : CustomError(amountToCreateAccount)
+        class InternalError(message: String) : CustomError(message)
+        object BlockchainIsUnreachable : TapError(R.string.wallet_balance_blockchain_unreachable)
+        object BlockchainIsUnreachableTryLater : TapError(R.string.wallet_balance_blockchain_unreachable_try_later)
     }
 
     data class ValidateTransactionErrors(
-            override val errorList: List<TapError>,
-            override val builder: (List<String>) -> String
+        override val errorList: List<TapError>,
+        override val builder: (List<String>) -> String
     ) : TapError(-1), MultiMessageError
 }
 

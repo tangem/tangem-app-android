@@ -43,13 +43,6 @@ private fun internalReduce(action: Action, state: AppState): TokensState {
                 derivationStyle = action.derivationStyle
             )
         }
-        is TokensAction.SetNonRemovableCurrencies -> {
-            tokensState.copy(
-                nonRemovableBlockchains = action.wallets.toNonCustomBlockchains(tokensState.derivationStyle),
-                nonRemovableTokens = action.wallets.toTokensContractAddresses(),
-            )
-        }
-
         is TokensAction.AllowToAddTokens -> {
             tokensState.copy(allowToAdd = action.allow)
         }
