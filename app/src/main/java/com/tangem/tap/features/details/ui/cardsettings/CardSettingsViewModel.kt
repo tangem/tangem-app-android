@@ -3,8 +3,6 @@ package com.tangem.tap.features.details.ui.cardsettings
 import com.tangem.domain.common.getTwinCardIdForUser
 import com.tangem.domain.common.isTangemTwins
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.common.redux.navigation.AppScreen
-import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.details.redux.CardSettingsState
 import com.tangem.tap.features.details.redux.DetailsAction
 import org.rekotlin.Store
@@ -64,7 +62,7 @@ class CardSettingsViewModel(private val store: Store<AppState>) {
                 store.dispatch(DetailsAction.ManageSecurity.ChangeAccessCode)
             }
             is CardInfo.ResetToFactorySettings -> {
-                store.dispatch(NavigationAction.NavigateTo(AppScreen.ResetToFactory))
+                store.dispatch(DetailsAction.ResetToFactory.Start)
             }
             is CardInfo.SecurityMode -> {
                 store.dispatch(DetailsAction.ManageSecurity.OpenSecurity)
