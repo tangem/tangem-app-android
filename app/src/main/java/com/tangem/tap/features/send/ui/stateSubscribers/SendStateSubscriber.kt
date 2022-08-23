@@ -8,7 +8,12 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.core.text.bold
 import com.tangem.common.extensions.remove
-import com.tangem.tap.common.extensions.*
+import com.tangem.tap.common.extensions.beginDelayedTransition
+import com.tangem.tap.common.extensions.enableError
+import com.tangem.tap.common.extensions.getColor
+import com.tangem.tap.common.extensions.getString
+import com.tangem.tap.common.extensions.show
+import com.tangem.tap.common.extensions.update
 import com.tangem.tap.common.redux.getMessageString
 import com.tangem.tap.common.text.DecimalDigitsInputFilter
 import com.tangem.tap.domain.MultiMessageError
@@ -17,7 +22,17 @@ import com.tangem.tap.features.BaseStoreFragment
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.Error
 import com.tangem.tap.features.send.redux.FeeAction
 import com.tangem.tap.features.send.redux.SendAction
-import com.tangem.tap.features.send.redux.states.*
+import com.tangem.tap.features.send.redux.states.AddressPayIdState
+import com.tangem.tap.features.send.redux.states.AmountState
+import com.tangem.tap.features.send.redux.states.FeeState
+import com.tangem.tap.features.send.redux.states.MainCurrencyType
+import com.tangem.tap.features.send.redux.states.ReceiptLayoutType
+import com.tangem.tap.features.send.redux.states.ReceiptState
+import com.tangem.tap.features.send.redux.states.SendState
+import com.tangem.tap.features.send.redux.states.StateId
+import com.tangem.tap.features.send.redux.states.TransactionExtraError
+import com.tangem.tap.features.send.redux.states.TransactionExtrasState
+import com.tangem.tap.features.send.redux.states.XlmMemoType
 import com.tangem.tap.features.send.ui.FeeUiHelper
 import com.tangem.tap.features.send.ui.SendFragment
 import com.tangem.tap.features.send.ui.dialogs.SendTransactionFailsDialog
@@ -117,7 +132,13 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
                     dialog?.show()
                 }
             }
-            is SendAction.Dialog.SendTransactionFails -> {
+            is SendAction.Dialog.SendTransactionFails.CardSdkError -> {
+                if (dialog == null) {
+                    dialog = SendTransactionFailsDialog.create(fg.requireContext(), state.dialog)
+                    dialog?.show()
+                }
+            }
+            is SendAction.Dialog.SendTransactionFails.BlockchainSdkError -> {
                 if (dialog == null) {
                     dialog = SendTransactionFailsDialog.create(fg.requireContext(), state.dialog)
                     dialog?.show()
