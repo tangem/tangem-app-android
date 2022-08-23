@@ -1,13 +1,20 @@
 package com.tangem.tap.features.demo
 
 import com.tangem.blockchain.blockchains.bitcoin.BitcoinWalletManager
-import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.common.TransactionSender
+import com.tangem.blockchain.common.TransactionSigner
+import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.common.toBlockchainSdkError
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.common.CompletionResult
 import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.extensions.dispatchNotification
 import com.tangem.tap.common.redux.AppState
+import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
 import com.tangem.tap.features.wallet.redux.WalletAction
@@ -36,7 +43,8 @@ object DemoHelper {
         WalletAction.TradeCryptoAction.Buy::class.java,
         WalletAction.TradeCryptoAction.Sell::class.java,
         BackupAction.StartBackup::class.java,
-        WalletAction.ExploreAddress::class.java
+        WalletAction.ExploreAddress::class.java,
+        DetailsAction.ResetToFactory.Start::class.java,
     )
 
     fun isDemoCard(scanResponse: ScanResponse): Boolean = isDemoCardId(scanResponse.card.cardId)
@@ -471,9 +479,12 @@ class DemoTransactionSender(
 
     override suspend fun send(transactionData: TransactionData, signer: TransactionSigner): SimpleResult {
         val dataToSign = randomString(32).toByteArray()
-        val signerResponse = signer.sign(dataToSign, walletManager.wallet.cardId, walletManager.wallet.publicKey)
+        val signerResponse = signer.sign(
+            hash = dataToSign,
+            publicKey = walletManager.wallet.publicKey
+        )
         return when (signerResponse) {
-            is CompletionResult.Success -> SimpleResult.Failure(Exception(ID))
+            is CompletionResult.Success -> SimpleResult.Failure(Exception(ID).toBlockchainSdkError())
             is CompletionResult.Failure -> SimpleResult.fromTangemSdkError(signerResponse.error)
         }
     }
