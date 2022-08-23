@@ -22,9 +22,8 @@ import timber.log.Timber
  */
 suspend fun WalletManager.safeUpdate(): Result<Wallet> = try {
     val scanResponse = store.state.globalState.scanResponse
-        ?: error("Scan response must not be null")
 
-    if (scanResponse.isDemoCard() || TestActions.testAmountInjectionForWalletManagerEnabled) {
+    if (scanResponse?.isDemoCard() == true || TestActions.testAmountInjectionForWalletManagerEnabled) {
         delay(500)
         TestActions.testAmountInjectionForWalletManagerEnabled = false
         Result.Success(wallet)
@@ -52,11 +51,10 @@ suspend fun WalletManager.safeUpdate(): Result<Wallet> = try {
 
 fun WalletManager?.getToUpUrl(): String? {
     val globalState = store.state.globalState
-    val exchangeManager = globalState.exchangeManager ?: return null
     val wallet = this?.wallet ?: return null
 
     val defaultAddress = wallet.address
-    return exchangeManager.getUrl(
+    return globalState.exchangeManager.getUrl(
         action = CurrencyExchangeManager.Action.Buy,
         blockchain = wallet.blockchain,
         cryptoCurrencyName = wallet.blockchain.currency,

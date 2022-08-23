@@ -6,21 +6,14 @@ import retrofit2.http.Path
 
 /**
 * [REDACTED_AUTHOR]
- */
-
-
-/**
+ *
  * Используется для получения списка доступных криптовалют (data/crypto в JSON-е) и сетей,
  * в которых эти криптовалюты представлены (data/config/base в JSON-е).
- * USDT например представлен только на эфире (ETH), BUSD -- на BEP-20
- */
-private val CurrenciesUrl = "https://api.mercuryo.io/v1.6/lib/currencies"
-
-/**
- * Так как у Ethereum/Arbitrum и BSC/Binance одинаковые символы валют, то надо arbitrum/binance
+ * USDT, например, представлен только в ETH; BUSD в BEP-20
+ *
+ * Так как у Ethereum/Arbitrum и BSC/Binance одинаковые символы валют, то нужно arbitrum/binance
  * исключать из сетей, в которых доступны токены
  */
-
 interface MercuryoApi {
 
     @GET("{apiVersion}/lib/currencies")

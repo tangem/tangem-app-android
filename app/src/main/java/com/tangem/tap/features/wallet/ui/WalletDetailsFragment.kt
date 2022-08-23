@@ -140,7 +140,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
         setupAddressCard(selectedWallet)
         setupNoInternetHandling(state)
         setupBalanceData(selectedWallet.currencyData)
-        setupButtons(selectedWallet)
+        setupButtons(selectedWallet, state.isExchangeServiceFeatureOn)
 
         handleCurrencyIcon(selectedWallet)
         handleWarnings(selectedWallet)
@@ -186,7 +186,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
         )
     }
 
-    private fun setupButtons(selectedWallet: WalletData) = with(binding) {
+    private fun setupButtons(selectedWallet: WalletData, isExchangeServiceFeatureOn: Boolean) = with(binding) {
         lWalletDetails.btnCopy.setOnClickListener {
             selectedWallet.walletAddresses?.selectedAddress?.address?.let { addressString ->
                 store.dispatch(WalletAction.CopyAddress(addressString, requireContext()))
@@ -199,8 +199,9 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
         }
 
         rowButtons.updateButtonsVisibility(
-            buyAllowed = selectedWallet.tradeCryptoState.isAvailableToBuy(),
-            sellAllowed = selectedWallet.tradeCryptoState.isAvailableToSell(),
+            exchangeServiceFeatureOn = isExchangeServiceFeatureOn,
+            buyAllowed = selectedWallet.isAvailableToBuy,
+            sellAllowed = selectedWallet.isAvailableToSell,
             sendAllowed = selectedWallet.mainButton.enabled,
         )
     }
