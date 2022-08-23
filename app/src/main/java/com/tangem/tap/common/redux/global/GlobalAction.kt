@@ -7,14 +7,18 @@ import com.tangem.common.core.TangemError
 import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.analytics.GlobalAnalyticsHandler
 import com.tangem.tap.common.entities.FiatCurrency
-import com.tangem.tap.common.redux.*
+import com.tangem.tap.common.feedback.FeedbackData
+import com.tangem.tap.common.feedback.FeedbackManager
+import com.tangem.tap.common.redux.DebugErrorAction
+import com.tangem.tap.common.redux.ErrorAction
+import com.tangem.tap.common.redux.NotificationAction
+import com.tangem.tap.common.redux.StateDialog
+import com.tangem.tap.common.redux.ToastNotificationAction
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.configurable.config.ConfigManager
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.features.details.redux.SecurityOption
-import com.tangem.tap.features.feedback.EmailData
-import com.tangem.tap.features.feedback.FeedbackManager
 import org.rekotlin.Action
 
 sealed class GlobalAction : Action {
@@ -73,7 +77,8 @@ sealed class GlobalAction : Action {
     data class SetFeedbackManager(val feedbackManager: FeedbackManager) : GlobalAction()
     data class SetAnanlyticHandlers(val analyticsHandlers: GlobalAnalyticsHandler) : GlobalAction()
 
-    data class SendFeedback(val emailData: EmailData) : GlobalAction()
+    data class SendEmail(val feedbackData: FeedbackData) : GlobalAction()
+    data class OpenChat(val feedbackData: FeedbackData) : GlobalAction()
     data class UpdateFeedbackInfo(val walletManagers: List<WalletManager>) : GlobalAction()
 
     object ExchangeManager : GlobalAction() {
