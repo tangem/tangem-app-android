@@ -22,7 +22,7 @@ class ClipboardOrScanQrDialog {
                     store.dispatch(NavigationAction.NavigateTo(AppScreen.QrScan))
                 }
                 setOnDismissListener {
-                    store.dispatch(GlobalAction.HideDialog())
+                    store.dispatch(GlobalAction.HideDialog)
                 }
             }.create()
         }
