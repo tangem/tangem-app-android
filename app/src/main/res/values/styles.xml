@@ -5,10 +5,6 @@
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorSecondary">@color/colorSecondary</item>
         <item name="android:textColor">@color/darkGray6</item>
-        <item name="android:windowTranslucentStatus">true</item>
-        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
-        <item name="android:windowActionBarOverlay">true</item>
-        <item name="android:windowContentOverlay">@null</item>
         <item name="actionMenuTextColor">@color/menu_accent_color</item>
 
         <item name="materialCardViewStyle">@style/Widget.AppTheme.CardView</item>
