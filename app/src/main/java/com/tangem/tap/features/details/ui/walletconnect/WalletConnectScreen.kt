@@ -52,11 +52,9 @@ fun WalletConnectScreen(
             }
         },
         fab = {
-            AddSessionFab(
-                onAddSession = {
-                    state.onAddSession(context.getFromClipboard()?.toString())
-                },
-            )
+            if (!state.isLoading) {
+                AddSessionFab(onAddSession = { state.onAddSession(context.getFromClipboard()?.toString()) })
+            }
         },
         titleRes = R.string.wallet_connect_title,
         onBackClick = onBackPressed,
