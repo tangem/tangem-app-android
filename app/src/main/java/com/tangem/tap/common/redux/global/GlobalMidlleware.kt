@@ -15,6 +15,7 @@ import com.tangem.tap.currenciesRepository
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.features.send.redux.SendAction
 import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.network.exchangeServices.CardExchangeRules
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import com.tangem.tap.network.exchangeServices.mercuryo.MercuryoApi
 import com.tangem.tap.network.exchangeServices.mercuryo.MercuryoService
@@ -23,11 +24,11 @@ import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
-import java.util.Locale
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.DispatchFunction
 import org.rekotlin.Middleware
+import java.util.*
 
 class GlobalMiddleware {
     companion object {
@@ -62,9 +63,11 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
             }
         }
         is GlobalAction.RestoreAppCurrency -> {
-            store.dispatch(GlobalAction.RestoreAppCurrency.Success(
-                preferencesStorage.fiatCurrenciesPrefStorage.getAppCurrency()
-            ))
+            store.dispatch(
+                GlobalAction.RestoreAppCurrency.Success(
+                    preferencesStorage.fiatCurrenciesPrefStorage.getAppCurrency(),
+                ),
+            )
         }
         is GlobalAction.HideWarningMessage -> {
             store.state.globalState.warningManager?.let {
@@ -107,7 +110,13 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
                         secret = mercuryoSecret,
                     )
                     val sellService = MoonPayService(moonPayKey, moonPaySecretKey)
-                    val exchangeManager = CurrencyExchangeManager(buyService, sellService)
+                    val cardProvider = { store.state.globalState.scanResponse?.card }
+
+                    val exchangeManager = CurrencyExchangeManager(
+                        buyService = buyService,
+                        sellService = sellService,
+                        primaryRules = CardExchangeRules(cardProvider),
+                    )
                     store.dispatchOnMain(GlobalAction.ExchangeManager.Init.Success(exchangeManager))
                     store.dispatchOnMain(GlobalAction.ExchangeManager.Update)
                 }
@@ -127,7 +136,7 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
                     store.state.globalState.analyticsHandlers,
                     currenciesRepository,
                     action.additionalBlockchainsToDerive,
-                    action.messageResId
+                    action.messageResId,
                 )
                 withMainContext {
                     store.dispatch(GlobalAction.ScanFailsCounter.ChooseBehavior(result))
@@ -150,15 +159,15 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
                     is Result.Success -> {
                         store.dispatchOnMain(
                             GlobalAction.FetchUserCountry.Success(
-                                countryCode = result.data.code.lowercase()
-                            )
+                                countryCode = result.data.code.lowercase(),
+                            ),
                         )
                     }
                     is Result.Failure -> {
                         store.dispatchOnMain(
                             GlobalAction.FetchUserCountry.Success(
-                                countryCode = Locale.getDefault().country.lowercase()
-                            )
+                                countryCode = Locale.getDefault().country.lowercase(),
+                            ),
                         )
                     }
                 }
