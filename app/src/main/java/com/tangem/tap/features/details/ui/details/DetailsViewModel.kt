@@ -1,5 +1,6 @@
 package com.tangem.tap.features.details.ui.details
 
+import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.tap.common.feedback.FeedbackEmail
 import com.tangem.tap.common.feedback.SupportInfo
 import com.tangem.tap.common.redux.AppState
@@ -9,6 +10,7 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.extensions.isMultiwalletAllowed
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
+import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
 import com.tangem.tap.features.home.LocaleRegionProvider
 import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
 import com.tangem.tap.features.wallet.redux.WalletAction
@@ -30,6 +32,7 @@ class DetailsViewModel(private val store: Store<AppState>) {
                 }
                 SettingsElement.AppSettings -> null // TODO: until we implement settings from this screen
                 SettingsElement.AppCurrency -> if (state.scanResponse?.card?.isMultiwalletAllowed != true) it else null
+                SettingsElement.TermsOfUse -> if (state.scanResponse?.card?.isStart2Coin == true) it else null
                 else -> it
             }
         }
@@ -72,6 +75,10 @@ class DetailsViewModel(private val store: Store<AppState>) {
                 store.dispatch(DetailsAction.CreateBackup)
             }
             SettingsElement.TermsOfService -> {
+                store.dispatch(DisclaimerAction.ShowAcceptedDisclaimer)
+                store.dispatch(NavigationAction.NavigateTo(AppScreen.Disclaimer))
+            }
+            SettingsElement.TermsOfUse -> {
                 store.dispatch(DetailsAction.ShowDisclaimer)
             }
             SettingsElement.PrivacyPolicy -> {
