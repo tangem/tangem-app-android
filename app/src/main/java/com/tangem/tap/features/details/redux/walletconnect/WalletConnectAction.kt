@@ -47,7 +47,7 @@ sealed class WalletConnectAction : Action {
         val session: WalletConnectSession,
     ) : WalletConnectAction()
 
-    data class SelectNetwork(val networks: List<Blockchain>) : WalletConnectAction()
+    data class SelectNetwork(val session: WalletConnectSession, val networks: List<Blockchain>) : WalletConnectAction()
     data class ChooseNetwork(val blockchain: Blockchain) : WalletConnectAction()
     data class UpdateBlockchain(
         val updatedSession: WalletConnectSession,
