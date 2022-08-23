@@ -122,11 +122,19 @@ class TapApplication : Application(), ImageLoaderFactory {
         )
         val logWriter = TangemLogCollector(
             levels = logLevels,
-            messageFormatter = LogFormat.StairsFormatter()
+            messageFormatter = LogFormat.StairsFormatter(),
         )
         Log.addLogger(logWriter)
 
-        store.dispatch(GlobalAction.SetFeedbackManager(FeedbackManager(infoHolder, logWriter)))
+        store.dispatch(
+            GlobalAction.SetFeedbackManager(
+                FeedbackManager(
+                    infoHolder = infoHolder,
+                    logCollector = logWriter,
+                    preferencesStorage = preferencesStorage,
+                ),
+            ),
+        )
     }
 
     private fun initAppsFlyer() {

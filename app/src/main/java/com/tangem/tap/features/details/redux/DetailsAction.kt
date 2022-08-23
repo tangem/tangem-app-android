@@ -19,6 +19,7 @@ sealed class DetailsAction : Action {
     object ReCreateTwinsWallet : DetailsAction()
 
     sealed class ResetToFactory : DetailsAction() {
+        object Start : ResetToFactory()
         object Proceed : ResetToFactory()
         data class Confirm(val confirmed: Boolean) : ResetToFactory()
         object Failure : ResetToFactory()

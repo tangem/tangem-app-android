@@ -3,7 +3,18 @@ package com.tangem.tap.features.send.redux.reducers
 import com.tangem.blockchain.common.AmountType
 import com.tangem.tap.common.CurrencyConverter
 import com.tangem.tap.common.entities.IndeterminateProgressButton
-import com.tangem.tap.features.send.redux.*
+import com.tangem.tap.features.send.redux.AddressPayIdActionUi
+import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction
+import com.tangem.tap.features.send.redux.AmountAction
+import com.tangem.tap.features.send.redux.AmountActionUi
+import com.tangem.tap.features.send.redux.FeeAction
+import com.tangem.tap.features.send.redux.FeeActionUi
+import com.tangem.tap.features.send.redux.PrepareSendScreen
+import com.tangem.tap.features.send.redux.ReceiptAction
+import com.tangem.tap.features.send.redux.ReleaseSendState
+import com.tangem.tap.features.send.redux.SendAction
+import com.tangem.tap.features.send.redux.SendScreenAction
+import com.tangem.tap.features.send.redux.TransactionExtrasAction
 import com.tangem.tap.features.send.redux.states.ExternalTransactionData
 import com.tangem.tap.features.send.redux.states.IdStateHolder
 import com.tangem.tap.features.send.redux.states.SendState
@@ -46,7 +57,8 @@ private class SendReducer : SendInternalReducer {
                 sendState.copy(sendButtonState = IndeterminateProgressButton(action.state))
             }
             is SendAction.Dialog.TezosWarningDialog -> sendState.copy(dialog = action)
-            is SendAction.Dialog.SendTransactionFails -> sendState.copy(dialog = action)
+            is SendAction.Dialog.SendTransactionFails.CardSdkError -> sendState.copy(dialog = action)
+            is SendAction.Dialog.SendTransactionFails.BlockchainSdkError -> sendState.copy(dialog = action)
             is SendAction.Dialog.Hide -> sendState.copy(dialog = null)
             is SendAction.Warnings.Set -> sendState.copy(sendWarningsList = action.warningList)
             is SendAction.SendSpecificTransaction ->
