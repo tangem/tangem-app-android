@@ -30,7 +30,7 @@ import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.makeWalletManagerForApp
 import com.tangem.tap.domain.tokens.LoadAvailableCoinsService
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
-import com.tangem.tap.features.wallet.redux.Currency
+import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.WalletAction
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -44,13 +44,13 @@ class TokensMiddleware {
                 when (action) {
                     is TokensAction.LoadCurrencies -> handleLoadCurrencies(action.scanResponse)
                     is TokensAction.SaveChanges -> handleSaveChanges(action)
-                    is TokensAction.PrepareAndNavigateToAddCustomToken -> handleAddingCustomToken(
-                        action
-                    )
+                    is TokensAction.PrepareAndNavigateToAddCustomToken -> {
+                        handleAddingCustomToken(action)
+                    }
                     is TokensAction.SetSearchInput -> {
                         handleLoadCurrencies(
                             scanResponse = store.state.globalState.scanResponse,
-                            action.searchInput
+                            newSearchInput = action.searchInput
                         )
                     }
                     is TokensAction.LoadMore -> {
@@ -138,7 +138,9 @@ class TokensMiddleware {
             )
         )
 
-        if (tokensToAdd.isEmpty() && blockchainsToAdd.isEmpty()) {
+        if (tokensToAdd.isEmpty() && tokensToRemove.isEmpty()
+            && blockchainsToAdd.isEmpty() && blockchainsToRemove.isEmpty()
+        ) {
             store.dispatchDebugErrorNotification("Nothing to save")
             store.dispatch(NavigationAction.PopBackTo())
             return
@@ -308,9 +310,10 @@ class TokensMiddleware {
     private fun removeCurrenciesIfNeeded(currencies: List<Currency>) {
         if (currencies.isNotEmpty()) {
             currencies.forEach { currency ->
-                store.state.walletState.getWalletData(currency)?.let {
-                    store.dispatch(WalletAction.MultiWallet.RemoveWallet(it))
-                }
+                store.dispatch(WalletAction.MultiWallet.RemoveWallet(
+                    currency = currency,
+                    fromScreen = AppScreen.AddTokens
+                ))
             }
         }
     }
