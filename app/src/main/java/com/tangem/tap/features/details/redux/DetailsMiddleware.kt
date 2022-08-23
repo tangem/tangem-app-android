@@ -12,7 +12,7 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.currenciesRepository
-import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
+import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.onboarding.products.twins.redux.CreateTwinWalletMode
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.features.wallet.models.hasSendableAmountsOrPendingTransactions
@@ -22,70 +22,74 @@ import com.tangem.tap.tangemSdkManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import org.rekotlin.Action
 import org.rekotlin.Middleware
 
 class DetailsMiddleware {
     private val eraseWalletMiddleware = EraseWalletMiddleware()
     private val manageSecurityMiddleware = ManageSecurityMiddleware()
     private val managePrivacyMiddleware = ManagePrivacyMiddleware()
-    val detailsMiddleware: Middleware<AppState> = { _, _ ->
+    val detailsMiddleware: Middleware<AppState> = { _, state ->
         { next ->
             { action ->
-                when (action) {
-                    is DetailsAction.ResetToFactory -> eraseWalletMiddleware.handle(action)
-                    is DetailsAction.ManageSecurity -> manageSecurityMiddleware.handle(action)
-                    is DetailsAction.AppSettings -> managePrivacyMiddleware.handle(action)
-                    is DetailsAction.ShowDisclaimer -> {
-                        val uri = store.state.detailsState.cardTermsOfUseUrl
-                        if (uri != null) {
-                            store.dispatch(NavigationAction.OpenDocument(uri))
-                        } else {
-                            store.dispatch(DisclaimerAction.ShowAcceptedDisclaimer)
-                            store.dispatch(NavigationAction.NavigateTo(AppScreen.Disclaimer))
-                        }
+                handleAction(state, action)
+                next(action)
+            }
+        }
+    }
+
+    private fun handleAction(state: () -> AppState?, action: Action) {
+        if (DemoHelper.tryHandle(state, action)) return
+
+        when (action) {
+            is DetailsAction.ResetToFactory -> eraseWalletMiddleware.handle(action)
+            is DetailsAction.ManageSecurity -> manageSecurityMiddleware.handle(action)
+            is DetailsAction.AppSettings -> managePrivacyMiddleware.handle(action)
+            is DetailsAction.ShowDisclaimer -> {
+                val uri = store.state.detailsState.cardTermsOfUseUrl
+                if (uri != null) {
+                    store.dispatch(NavigationAction.OpenDocument(uri))
+                }
+            }
+            is DetailsAction.ReCreateTwinsWallet -> {
+                val wallet =
+                    store.state.walletState.walletManagers.map { it.wallet }.firstOrNull()
+                if (wallet == null) {
+                    store.dispatch(TwinCardsAction.SetMode(CreateTwinWalletMode.RecreateWallet))
+                    store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingTwins))
+                } else {
+                    if (wallet.hasSendableAmountsOrPendingTransactions()) {
+                        val walletIsNotEmpty =
+                            store.state.globalState.resources.strings.walletIsNotEmpty
+                        store.dispatchNotification(walletIsNotEmpty)
+                    } else {
+                        store.dispatch(TwinCardsAction.SetMode(CreateTwinWalletMode.RecreateWallet))
+                        store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingTwins))
                     }
-                    is DetailsAction.ReCreateTwinsWallet -> {
-                        val wallet =
-                            store.state.walletState.walletManagers.map { it.wallet }.firstOrNull()
-                        if (wallet == null) {
-                            store.dispatch(TwinCardsAction.SetMode(CreateTwinWalletMode.RecreateWallet))
-                            store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingTwins))
-                        } else {
-                            if (wallet.hasSendableAmountsOrPendingTransactions()) {
-                                val walletIsNotEmpty =
-                                    store.state.globalState.resources.strings.walletIsNotEmpty
-                                store.dispatchNotification(walletIsNotEmpty)
-                            } else {
-                                store.dispatch(TwinCardsAction.SetMode(CreateTwinWalletMode.RecreateWallet))
-                                store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingTwins))
-                            }
+                }
+            }
+            is DetailsAction.CreateBackup -> {
+                store.state.detailsState.scanResponse?.let {
+                    store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingWallet))
+                    store.dispatch(
+                        GlobalAction.Onboarding.Start(
+                            it,
+                            fromHomeScreen = false,
+                        ),
+                    )
+                }
+            }
+            DetailsAction.ScanCard -> {
+                scope.launch {
+                    when (val result = tangemSdkManager.scanCard()) {
+                        is CompletionResult.Success -> {
+                            val card = result.data
+                            store.dispatchOnMain(DetailsAction.PrepareCardSettingsData(card))
                         }
-                    }
-                    is DetailsAction.CreateBackup -> {
-                        store.state.detailsState.scanResponse?.let {
-                            store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingWallet))
-                            store.dispatch(
-                                GlobalAction.Onboarding.Start(
-                                    it,
-                                    fromHomeScreen = false,
-                                ),
-                            )
-                        }
-                    }
-                    DetailsAction.ScanCard -> {
-                        scope.launch {
-                            when (val result = tangemSdkManager.scanCard()) {
-                                is CompletionResult.Success -> {
-                                    val card = result.data
-                                    store.dispatchOnMain(DetailsAction.PrepareCardSettingsData(card))
-                                }
-                                is CompletionResult.Failure -> {
-                                }
-                            }
+                        is CompletionResult.Failure -> {
                         }
                     }
                 }
-                next(action)
             }
         }
     }
@@ -93,6 +97,9 @@ class DetailsMiddleware {
     class EraseWalletMiddleware {
         fun handle(action: DetailsAction.ResetToFactory) {
             when (action) {
+                is DetailsAction.ResetToFactory.Start -> {
+                    store.dispatch(NavigationAction.NavigateTo(AppScreen.ResetToFactory))
+                }
                 is DetailsAction.ResetToFactory.Proceed -> {
                     val card = store.state.detailsState.cardSettingsState?.card ?: return
                     if (card.isTangemTwins()) {
