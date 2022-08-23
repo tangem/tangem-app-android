@@ -6,7 +6,6 @@ import com.tangem.tap.common.extensions.containsAny
 import com.tangem.tap.common.extensions.removeBy
 import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
-import java.util.*
 
 /**
 [REDACTED_AUTHOR]
@@ -188,31 +187,6 @@ class WarningMessagesManager(
             WarningMessage.Origin.Local
         )
 
-        fun restoreFundsWarning(): WarningMessage = WarningMessage(
-            title = "",
-            message = "",
-            type = WarningMessage.Type.Temporary,
-            priority = WarningMessage.Priority.Warning,
-            listOf(WarningMessage.Location.MainScreen),
-            blockchains = null,
-            titleResId = R.string.alert_title,
-            messageResId = R.string.alert_funds_restoration_message,
-            origin = WarningMessage.Origin.Local,
-            buttonTextId = R.string.warning_button_learn_more
-        )
-
         const val REMAINING_SIGNATURES_WARNING = 10
-        private const val RESTORE_FUNDS_GUIDE_URL_RU =
-            "https://tangem.com/ru/kak-vosstanovit-tokeny-otpravlennye-ne-na-tot-adres-v-tangem-wallet"
-        private const val RESTORE_FUNDS_GUIDE_URL_EN =
-            "https://tangem.com/en/how-to-recover-crypto-sent-to-the-wrong-address-in-tangem-wallet"
-
-        fun getRestoreFundsGuideUrl(locale: String): String {
-            return if (locale == Locale("ru").language) {
-                RESTORE_FUNDS_GUIDE_URL_RU
-            } else {
-                RESTORE_FUNDS_GUIDE_URL_EN
-            }
-        }
     }
 }
