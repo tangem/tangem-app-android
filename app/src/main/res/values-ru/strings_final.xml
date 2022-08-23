@@ -59,7 +59,7 @@
     <string name="token_details_hide_token">Скрыть токен</string>
     <string name="token_details_hide_alert_title">Скрыть %s</string>
     <string name="token_details_hide_alert_hide">Скрыть</string>
-    <string name="token_details_hide_alert_message">Вы скрываете токен с главного экрана, но в любой момент сможете добавить его обратно.</string>
+    <string name="token_details_hide_alert_message">Вы скрываете токен с главного экрана, но в любой момент сможете добавить его обратно через страницу управления токенами.</string>
     <string name="token_details_unable_hide_alert_title">Невозможно скрыть %s</string>
 
     <string name="token_details_unable_hide_alert_message">Токен %s является основной валютой в сети %s и не может быть скрыт до тех пор, пока у вас в списке есть другие токены этой сети.</string>
@@ -100,7 +100,7 @@
     <string name="wallet_connect_subtitle">Подключение к Dapps</string>
 
     <string name="details_row_title_create_backup">Добавить еще карты</string>
-    <string name="details_row_title_create_backup_footer">Вы можете объеденить до трех карт в одним кошельке. Это можно сделать только один раз.</string>
+    <string name="details_row_title_create_backup_footer">Вы можете объединить до трех карт в одном кошельке. Это можно сделать только один раз.</string>
 
     <string name="details_row_privacy_policy">Privacy policy</string>
 
