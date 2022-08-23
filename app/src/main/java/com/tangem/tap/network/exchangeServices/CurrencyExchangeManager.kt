@@ -7,11 +7,12 @@ import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.extensions.Result
+import com.tangem.common.card.Card
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TangemSigner
-import com.tangem.tap.features.wallet.redux.Currency
+import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdk
 import java.math.BigDecimal
@@ -22,17 +23,26 @@ import java.math.BigDecimal
 class CurrencyExchangeManager(
     private val buyService: ExchangeService,
     private val sellService: ExchangeService,
+    private val primaryRules: ExchangeRules,
 ) : ExchangeService, ExchangeUrlBuilder {
+
+    override fun featureIsSwitchedOn(): Boolean = primaryRules.featureIsSwitchedOn()
 
     override suspend fun update() {
         buyService.update()
         sellService.update()
     }
 
-    override fun isBuyAllowed(): Boolean = buyService.isBuyAllowed()
-    override fun isSellAllowed(): Boolean = sellService.isSellAllowed()
-    override fun availableForBuy(currency: Currency): Boolean = buyService.availableForBuy(currency)
-    override fun availableForSell(currency: Currency): Boolean = sellService.availableForSell(currency)
+    override fun isBuyAllowed(): Boolean = primaryRules.isBuyAllowed() && buyService.isBuyAllowed()
+    override fun isSellAllowed(): Boolean = primaryRules.isSellAllowed() && sellService.isSellAllowed()
+
+    override fun availableForBuy(currency: Currency): Boolean {
+        return primaryRules.availableForBuy(currency) && buyService.availableForBuy(currency)
+    }
+
+    override fun availableForSell(currency: Currency): Boolean {
+        return primaryRules.availableForSell(currency) && sellService.availableForSell(currency)
+    }
 
     override fun getUrl(
         action: Action,
@@ -66,9 +76,21 @@ class CurrencyExchangeManager(
     }
 
     enum class Action { Buy, Sell }
+
+    companion object {
+        fun dummy(): CurrencyExchangeManager = CurrencyExchangeManager(
+            buyService = ExchangeService.dummy(),
+            sellService = ExchangeService.dummy(),
+            primaryRules = ExchangeRules.dummy(),
+        )
+    }
 }
 
-suspend fun CurrencyExchangeManager.buyErc20TestnetTokens(walletManager: EthereumWalletManager, token: Token) {
+suspend fun CurrencyExchangeManager.buyErc20TestnetTokens(
+    card: Card,
+    walletManager: EthereumWalletManager,
+    token: Token,
+) {
     walletManager.safeUpdate()
 
     val amountToSend = Amount(walletManager.wallet.blockchain)
@@ -85,7 +107,9 @@ suspend fun CurrencyExchangeManager.buyErc20TestnetTokens(walletManager: Ethereu
     val transaction = walletManager.createTransaction(amountToSend, fee, destinationAddress)
 
     val signer = TangemSigner(
-        tangemSdk = tangemSdk, Message()
+        card = card,
+        tangemSdk = tangemSdk,
+        initialMessage = Message(),
     ) { signResponse ->
         store.dispatch(
             GlobalAction.UpdateWalletSignedHashes(
