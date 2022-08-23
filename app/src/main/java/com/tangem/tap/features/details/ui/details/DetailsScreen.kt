@@ -10,9 +10,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
@@ -24,6 +25,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.tap.common.compose.TangemTypography
+import com.tangem.tap.features.details.ui.common.ScreenTitle
 import com.tangem.tap.features.details.ui.common.SettingsScreensScaffold
 import com.tangem.wallet.R
 
@@ -34,10 +36,7 @@ fun DetailsScreen(
     modifier: Modifier = Modifier,
 ) {
     SettingsScreensScaffold(
-        content = {
-            Content(state = state, modifier = modifier)
-        },
-        titleRes = R.string.details_title,
+        content = { Content(state = state, modifier = modifier) },
         onBackClick = onBackPressed,
     )
 }
@@ -50,37 +49,32 @@ fun Content(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(bottom = 40.dp),
+            .verticalScroll(rememberScrollState()),
     ) {
-        LazyColumn(
-            modifier = modifier
-                .fillMaxWidth()
-                .padding(bottom = 40.dp)
-                .weight(1f),
-        ) {
-            items(state.elements) {
-                if (it == SettingsElement.WalletConnect) {
-                    WalletConnectDetailsItem(
-                        onItemsClick = state.onItemsClick,
-                        modifier = modifier,
-                    )
-                } else {
-                    DetailsItem(
-                        item = it,
-                        appCurrency = state.appCurrency,
-                        onItemsClick = state.onItemsClick,
-                        modifier = modifier,
-                    )
-                }
+        ScreenTitle(titleRes = R.string.details_title, modifier.padding(bottom = 52.dp))
+        state.elements.map {
+            if (it == SettingsElement.WalletConnect) {
+                WalletConnectDetailsItem(
+                    onItemsClick = state.onItemsClick,
+                    modifier = modifier,
+                )
+            } else {
+                DetailsItem(
+                    item = it,
+                    appCurrency = state.appCurrency,
+                    onItemsClick = state.onItemsClick,
+                    modifier = modifier,
+                )
             }
         }
+        Spacer(modifier = modifier.weight(1f))
         TangemSocialAccounts(state.tangemLinks, state.onSocialNetworkClick)
         Spacer(modifier = Modifier.size(12.dp))
         Text(
             text = "${stringResource(id = state.appNameRes)} ${state.tangemVersion}",
             style = TangemTypography.caption,
             color = colorResource(id = R.color.text_tertiary),
-            modifier = modifier.padding(start = 16.dp, end = 16.dp),
+            modifier = modifier.padding(start = 16.dp, end = 16.dp, bottom = 40.dp),
         )
     }
 }

@@ -68,11 +68,7 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
             globalState.copy(dialog = action.stateDialog)
         }
         is GlobalAction.HideDialog -> {
-            if (action.stateDialog == null || action.stateDialog == globalState.dialog) {
-                globalState.copy(dialog = null)
-            } else {
-                globalState
-            }
+            globalState.copy(dialog = null)
         }
         is GlobalAction.ExchangeManager.Init.Success -> {
             globalState.copy(exchangeManager = action.exchangeManager)

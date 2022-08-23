@@ -20,6 +20,7 @@ import androidx.compose.material.Text
 import androidx.compose.material.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -32,42 +33,61 @@ fun SettingsScreensScaffold(
     content: @Composable () -> Unit,
     background: @Composable (() -> Unit)? = null,
     fab: @Composable (() -> Unit)? = null,
-    titleRes: Int,
+    backgroundColor: Color = colorResource(id = R.color.background_primary),
+    titleRes: Int? = null,
     onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     BackHandler(true, onBackClick)
 
     Scaffold(
-        topBar = { EmptyTopBarWithNavigation(onBackClick = onBackClick) },
+        topBar = {
+            EmptyTopBarWithNavigation(
+                onBackClick = onBackClick,
+                backgroundColor = backgroundColor,
+            )
+        },
         modifier = modifier.systemBarsPadding(),
-        backgroundColor = colorResource(id = R.color.background_primary),
+        backgroundColor = backgroundColor,
         floatingActionButton = { fab?.invoke() },
     ) {
+        if (titleRes != null) {
+            Box(modifier = modifier.fillMaxSize()) {
+                background?.invoke()
 
-        Box(modifier = modifier.fillMaxSize()) {
-
-            background?.invoke()
-
-            Column(
-                modifier = modifier.fillMaxWidth(),
-            ) {
-                Text(
-                    text = stringResource(id = titleRes),
-                    modifier = modifier.padding(start = 20.dp, end = 20.dp, bottom = 52.dp),
-                    style = TangemTypography.headline1,
-                    color = colorResource(id = R.color.text_primary_1),
-                )
-                content()
+                Column(modifier = modifier.fillMaxWidth()) {
+                    Text(
+                        text = stringResource(id = titleRes),
+                        modifier = modifier.padding(start = 20.dp, end = 20.dp, bottom = 52.dp),
+                        style = TangemTypography.headline1,
+                        color = colorResource(id = R.color.text_primary_1),
+                    )
+                    content()
+                }
             }
+        } else {
+            content()
         }
-
     }
+}
+
+@Composable
+fun ScreenTitle(
+    titleRes: Int,
+    modifier: Modifier = Modifier,
+) {
+    Text(
+        text = stringResource(id = titleRes),
+        modifier = modifier.padding(start = 20.dp, end = 20.dp),
+        style = TangemTypography.headline1,
+        color = colorResource(id = R.color.text_primary_1),
+    )
 }
 
 @Composable
 fun EmptyTopBarWithNavigation(
     onBackClick: () -> Unit,
+    backgroundColor: Color = colorResource(id = R.color.background_primary),
     modifier: Modifier = Modifier,
 ) {
     TopAppBar(
@@ -81,7 +101,7 @@ fun EmptyTopBarWithNavigation(
                 )
             }
         },
-        backgroundColor = colorResource(id = R.color.background_primary),
+        backgroundColor = backgroundColor,
         elevation = 0.dp,
     )
 }
