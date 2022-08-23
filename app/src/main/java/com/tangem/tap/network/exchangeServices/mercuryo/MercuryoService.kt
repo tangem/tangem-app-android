@@ -8,7 +8,7 @@ import com.tangem.common.services.Result
 import com.tangem.common.services.performRequest
 import com.tangem.network.common.createRetrofitInstance
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
-import com.tangem.tap.features.wallet.redux.Currency
+import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager
 import com.tangem.tap.network.exchangeServices.ExchangeService
 import com.tangem.tap.network.exchangeServices.ExchangeUrlBuilder
@@ -27,6 +27,8 @@ class MercuryoService(
 
     private val blockchainsAvailableToBuy = mutableListOf<Blockchain>()
     private val tokensAvailableToBy = mutableMapOf<String, MutableList<Blockchain>>()
+
+    override fun featureIsSwitchedOn(): Boolean = true
 
     override suspend fun update() {
         when (val result = performRequest { api.currencies(apiVersion) }) {
@@ -130,6 +132,7 @@ class MercuryoService(
     private fun blockchainFromCurrencyName(currencyName: String): Blockchain? = when (currencyName) {
         "BNB" -> Blockchain.BSC
         "ETH" -> Blockchain.Ethereum
+        "ADA" -> Blockchain.CardanoShelley
         else -> Blockchain.values().find { it.currency.lowercase() == currencyName.lowercase() }
     }
 }

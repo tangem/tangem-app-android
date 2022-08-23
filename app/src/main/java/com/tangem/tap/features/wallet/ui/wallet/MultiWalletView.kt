@@ -1,5 +1,6 @@
 package com.tangem.tap.features.wallet.ui.wallet
 
+import android.widget.Button
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.tangem.common.card.Card
@@ -20,33 +21,26 @@ import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.WalletFragment
 import com.tangem.tap.features.wallet.ui.adapters.WalletAdapter
+import com.tangem.tap.features.wallet.ui.view.WalletDetailsButtonsRow
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentWalletBinding
 
-
-class MultiWalletView : WalletView {
-
-    private var fragment: WalletFragment? = null
-    private var binding: FragmentWalletBinding? = null
-
+class MultiWalletView : WalletView() {
     private lateinit var walletsAdapter: WalletAdapter
-
-
     override fun changeWalletView(fragment: WalletFragment, binding: FragmentWalletBinding) {
         setFragment(fragment, binding)
         onViewCreated()
         showMultiWalletView(binding)
     }
 
-
     private fun showMultiWalletView(binding: FragmentWalletBinding) = with(binding) {
         tvTwinCardNumber.hide()
         rvPendingTransaction.hide()
         lCardBalance.root.hide()
         lAddress.root.hide()
-        lButtonsShort.root.hide()
-        lButtonsLong.root.hide()
+        rowButtons.hide()
+        lSingleWalletBalance.root.hide()
         rvMultiwallet.show()
         btnAddToken.show()
         setupWalletCardNumber(binding)
@@ -62,16 +56,6 @@ class MultiWalletView : WalletView {
         } else {
             tvTwinCardNumber.hide()
         }
-    }
-
-    override fun setFragment(fragment: WalletFragment, binding: FragmentWalletBinding) {
-        this.fragment = fragment
-        this.binding = binding
-    }
-
-    override fun removeFragment() {
-        this.fragment = null
-        this.binding = null
     }
 
     override fun onViewCreated() {
@@ -91,6 +75,7 @@ class MultiWalletView : WalletView {
         val binding = binding ?: return
 
         handleTotalBalance(binding, state.totalBalance)
+        handleBackupWarning(binding, state.showBackupWarning)
         walletsAdapter.submitList(state.walletsData, state.primaryBlockchain, state.primaryToken)
 
         binding.btnAddToken.setOnClickListener {
@@ -99,25 +84,31 @@ class MultiWalletView : WalletView {
                 TokensAction.LoadCurrencies(
                     supportedBlockchains = currenciesRepository.getBlockchains(
                         card.firmwareVersion,
-                        card.isTestCard
+                        card.isTestCard,
                     ),
-                    scanResponse = store.state.globalState.scanResponse
-                )
+                    scanResponse = store.state.globalState.scanResponse,
+                ),
             )
             store.dispatch(TokensAction.AllowToAddTokens(true))
             store.dispatch(
                 TokensAction.SetAddedCurrencies(
                     wallets = state.walletsData,
-                    derivationStyle = card.derivationStyle
-                )
-            )
-            store.dispatch(
-                TokensAction.SetNonRemovableCurrencies(
-                    state.walletsData.filterNot { state.canBeRemoved(it) })
+                    derivationStyle = card.derivationStyle,
+                ),
             )
             store.dispatch(NavigationAction.NavigateTo(AppScreen.AddTokens))
         }
         handleErrorStates(state = state, binding = binding, fragment = fragment)
+    }
+
+    private fun handleBackupWarning(
+        binding: FragmentWalletBinding,
+        showBackupWarning: Boolean,
+    ) = with(binding.lWalletBackupWarning) {
+        root.isVisible = showBackupWarning
+        root.setOnClickListener {
+            store.dispatch(WalletAction.MultiWallet.BackupWallet)
+        }
     }
 
     private fun handleTotalBalance(
@@ -135,11 +126,11 @@ class MultiWalletView : WalletView {
                 veilBalance.unVeil()
             }
             tvProcessing.animateVisibility(
-                show = totalBalance.state == ProgressState.Error
+                show = totalBalance.state == ProgressState.Error,
             )
 
             tvBalance.text = totalBalance.fiatAmount.formatAmountAsSpannedString(
-                currencySymbol = totalBalance.fiatCurrency.symbol
+                currencySymbol = totalBalance.fiatCurrency.symbol,
             )
             tvCurrencyName.text = totalBalance.fiatCurrency.code
 
@@ -152,14 +143,14 @@ class MultiWalletView : WalletView {
     private fun handleErrorStates(
         state: WalletState,
         binding: FragmentWalletBinding,
-        fragment: WalletFragment
+        fragment: WalletFragment,
     ) {
         when (state.primaryWallet?.currencyData?.status) {
             BalanceStatus.EmptyCard -> {
                 showErrorState(
                     binding,
                     fragment.getText(R.string.wallet_error_empty_card),
-                    fragment.getString(R.string.wallet_error_empty_card_subtitle)
+                    fragment.getString(R.string.wallet_error_empty_card_subtitle),
                 )
                 configureButtonsForEmptyWalletState(binding)
             }
@@ -167,7 +158,7 @@ class MultiWalletView : WalletView {
                 showErrorState(
                     binding,
                     fragment.getText(R.string.wallet_error_unsupported_blockchain),
-                    fragment.getString(R.string.wallet_error_unsupported_blockchain_subtitle)
+                    fragment.getString(R.string.wallet_error_unsupported_blockchain_subtitle),
                 )
             }
             else -> { /* no-op */
@@ -191,9 +182,21 @@ class MultiWalletView : WalletView {
 
     private fun configureButtonsForEmptyWalletState(binding: FragmentWalletBinding) =
         with(binding) {
-            lButtonsLong.root.show()
-            lButtonsLong.btnConfirmLong.setOnClickListener { store.dispatch(WalletAction.CreateWallet) }
-            lButtonsLong.btnConfirmLong.text =
-                fragment?.getText(R.string.wallet_button_create_wallet)
+            rowButtons.btnBuy.hide()
+            rowButtons.btnSell.hide()
+            rowButtons.btnTrade.hide()
+            rowButtons.show()
+
+            rowButtons.btnSend.text = fragment?.getText(R.string.wallet_button_create_wallet)
+            rowButtons.onSendClick = { store.dispatch(WalletAction.CreateWallet) }
         }
 }
+
+private val WalletDetailsButtonsRow.btnBuy: Button
+    get() = this.findViewById(R.id.btn_buy)
+private val WalletDetailsButtonsRow.btnSell: Button
+    get() = this.findViewById(R.id.btn_sell)
+private val WalletDetailsButtonsRow.btnTrade: Button
+    get() = this.findViewById(R.id.btn_trade)
+private val WalletDetailsButtonsRow.btnSend: Button
+    get() = this.findViewById(R.id.btn_send)
