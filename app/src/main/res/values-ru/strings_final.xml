@@ -23,7 +23,9 @@
     <string name="story_awe_title">Революционный аппаратный кошелек</string>
     <string name="story_awe_description">Держите свои криптосбережения в безопасности. Приватные ключи надежно хранятся на карте.</string>
     <string name="story_backup_title">Все ключи в безопасности</string>
-    <string name="story_backup_description">До <b>трех карт</b> с одним кошельком</string>
+    <string name="story_backup_description_1">До</string>
+    <string name="story_backup_description_2_bold">трех карт</string>
+    <string name="story_backup_description_3">с одним кошельком</string>
     <string name="story_currencies_title">Тысячи криптовалют</string>
     <string name="story_currencies_description">Аппаратный кошелек для ваших биткоинов, эфира и многих других валют одновременно — все в одной карте</string>
     <string name="story_web3_title">Поддержка DeFi</string>
@@ -45,6 +47,9 @@
     <string name="alert_funds_restoration_message">Если вы совершили ошибку с выбором сети при переводе средств с биржи, эта инструкция поможет вам восстановить средства</string>
 
     <string name="common_custom">Пользовательский</string>
+    <string name="common_notice">Уведомление</string>
+    <string name="common_attention">Внимание</string>
+    <string name="common_server_unavailable">Сервер недоступен, повторите попытку позднее</string>
 
     <string name="main_page_balance">Баланс</string>
     <string name="main_processing_full_amount">В сумме учтены не все монеты</string>
@@ -54,11 +59,14 @@
     <string name="token_details_hide_token">Скрыть токен</string>
     <string name="token_details_hide_alert_title">Скрыть %s</string>
     <string name="token_details_hide_alert_hide">Скрыть</string>
-    <string name="token_details_hide_alert_message">Вы скрываете токен с главного экрана, но в любой момент сможете добавить его обратно.</string>
+    <string name="token_details_hide_alert_message">Вы скрываете токен с главного экрана, но в любой момент сможете добавить его обратно через страницу управления токенами.</string>
     <string name="token_details_unable_hide_alert_title">Невозможно скрыть %s</string>
-    <string name="token_details_unable_hide_alert_message">Токен %s является основной валютой в сети %s и не может быть скрыт, до тех пор пока у вас в списке есть другие токены этой сети.</string>
+
+    <string name="token_details_unable_hide_alert_message">Токен %s является основной валютой в сети %s и не может быть скрыт до тех пор, пока у вас в списке есть другие токены этой сети.</string>
 
     <string name="wallet_connect_network_not_found_format">Сеть %s не найдена. Пожалуйста, добавьте её и попробуйте заново.</string>
+    <string name="wallet_connect_scanner_error_unsupported_network">Сеть не поддерживается. Пожалуйста, выберите другую сеть.</string>
+
     <string name="wallet_currency_subtitle">Сеть %s</string>
 
     <string name="main_no_backup_warning_title">Бэкап кошелька не был произведен</string>
@@ -67,4 +75,41 @@
     <string name="russian_bank_card_warning_title">Карты банков РФ в данный момент не принимаются</string>
     <string name="russian_bank_card_warning_subtitle">У вас есть карта банка другой страны или платежной системы UnionPay?</string>
     <string name="common_yes">Да</string>
+
+    <string name="details_ask_a_question">Чат</string>
+    <string name="chat_bot_name">Tangem Bot</string>
+
+    <string name="card_settings_title">Настройки карты</string>
+    <string name="card_settings_security_mode">Тип безопасности</string>
+    <string name="card_settings_security_mode_footer">Выбранный способ защиты приложения</string>
+    <string name="card_settings_change_access_code">Смена кода доступа</string>
+    <string name="card_settings_change_access_code_footer">Код доступа будет изменен только на данной карте</string>
+    <string name="scan_card_settings_title">Приготовьте свою карту</string>
+    <string name="scan_card_settings_message">Отсканируйте карту, чтобы изменить ее настройки. Изменения затронут только ту карту, которую вы отсканировали, и не повлияют на другие карты, привязанные к вашему кошельку.</string>
+    <string name="scan_card_settings_button">Сканировать</string>
+    <string name="app_settings_title">Настройки приложения</string>
+    <string name="app_settings_warning_title">Включите биометрическую аутентификацию</string>
+    <string name="app_settings_warning_subtitle">Перейдите в настройки, чтобы включить биометрическую аутентификацию в приложении Tangem</string>
+    <string name="app_settings_saved_wallet">Cохранение кошелька</string>
+    <string name="app_settings_saved_wallet_footer">Если эта опция включена, кошельки всех отсканированных карт будут привязываться к приложению и при открытии приложения будет необходимо пройти биометрическую аутентификацию. Подпись транзакций все так же потребует карту.</string>
+    <string name="app_settings_saved_access_codes">Сохранение кода доступа</string>
+    <string name="app_settings_saved_access_codes_footer">Если эта опция включена, пароли от карты будут хранится на телефоне в зашифрованном виде и при работе с картой вместо пароля будет запрашиваться биометрическая аутентификация</string>
+    <string name="app_settings_off_saved_wallet_alert_message">При отключении функции сохранения кошелька все ранее сохраненные кошельки будут удалены.</string>
+    <string name="app_settings_off_saved_access_code_alert_message">Все сохраненные коды доступа будут удалены. Вам потребуется вводить код доступа при работе с кошельком.</string>
+    <string name="wallet_connect_title">WalletConnect</string>
+    <string name="wallet_connect_subtitle">Подключение к Dapps</string>
+
+    <string name="details_row_title_create_backup">Добавить еще карты</string>
+    <string name="details_row_title_create_backup_footer">Вы можете объединить до трех карт в одном кошельке. Это можно сделать только один раз.</string>
+
+    <string name="details_row_privacy_policy">Privacy policy</string>
+
+    <string name="reset_card_to_factory_navigation_title">Сброс к заводским настройкам</string>
+    <string name="reset_card_to_factory_message">Это действие приведет к полному удалению кошелька на этой карте. Кошелек невозможно будет восстановить или использовать данную карту для восстановления кода доступа</string>
+    <string name="reset_card_to_factory_warning_message">Я понимаю, что после выполнения этого действия у меня больше не будет доступа к текущему кошельку</string>
+    <string name="reset_card_to_factory_button_title">Сбросить карту</string>
+    <string name="card_settings_reset_card_to_factory">Сброс к заводским настройкам</string>
+    <string name="card_settings_reset_card_to_factory_footer">Сброс к заводским настройкам приведет к полному удалению кошелька с выбранной карты. Вы не сможете восстановить текущий кошелек или использовать эту карту для восстановления кода доступа.</string>
+
+    <string name="wallet_connect_select_network">Выберите сеть</string>
 </resources>
