@@ -1,8 +1,8 @@
 package com.tangem.tap.domain.configurable.config
 
 import com.tangem.blockchain.common.BlockchainSdkConfig
-import com.tangem.common.extensions.VoidCallback
 import com.tangem.tap.common.shop.shopify.ShopifyShop
+import com.tangem.tap.common.zendesk.ZendeskConfig
 import com.tangem.tap.domain.configurable.Loader
 
 /**
@@ -20,7 +20,8 @@ data class Config(
     val isTopUpEnabled: Boolean = false,
     @Deprecated("Not relevant since version 3.23")
     val isCreatingTwinCardsAllowed: Boolean = false,
-    val shopify: ShopifyShop? = null
+    val shopify: ShopifyShop? = null,
+    val zendesk: ZendeskConfig? = null,
 )
 
 class ConfigManager(
@@ -33,11 +34,11 @@ class ConfigManager(
 
     private var defaultConfig = Config()
 
-    fun load(onComplete: VoidCallback? = null) {
-        localLoader.load { config ->
-            setupFeature(config.features)
-            setupKey(config.configValues)
-            onComplete?.invoke()
+    fun load(onComplete: ((config: Config) -> Unit)? = null) {
+        localLoader.load { configModel ->
+            setupFeature(configModel.features)
+            setupKey(configModel.configValues)
+            onComplete?.invoke(config)
         }
         // Uncomment to enable remote config
 //        remoteLoader.load { config ->
@@ -95,6 +96,7 @@ class ConfigManager(
             ),
             appsFlyerDevKey = values.appsFlyerDevKey,
             shopify = values.shopifyShop,
+            zendesk = values.zendesk,
         )
         defaultConfig = defaultConfig.copy(
             coinMarketCapKey = values.coinMarketCapKey,
@@ -110,6 +112,7 @@ class ConfigManager(
             ),
             appsFlyerDevKey = values.appsFlyerDevKey,
             shopify = values.shopifyShop,
+            zendesk = values.zendesk,
         )
     }
 
