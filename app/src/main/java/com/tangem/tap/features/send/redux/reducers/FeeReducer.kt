@@ -106,8 +106,12 @@ class FeeReducer : SendInternalReducer {
 
     private fun getFeePrecision(sendState: SendState): FeePrecision {
         val blockchain = sendState.walletManager?.wallet?.blockchain
-        return if ((blockchain?.fullNameWithoutTestnet == Blockchain.Arbitrum.fullName || blockchain?.fullNameWithoutTestnet == Blockchain.Tron.fullName) &&
-            sendState.amountState.typeOfAmount is AmountType.Token) {
+        return if (
+            (blockchain?.fullNameWithoutTestnet == Blockchain.Arbitrum.fullName ||
+                blockchain?.fullNameWithoutTestnet == Blockchain.Tron.fullName ||
+                blockchain?.fullNameWithoutTestnet == Blockchain.Gnosis.fullName) &&
+            sendState.amountState.typeOfAmount is AmountType.Token
+        ) {
             FeePrecision.CAN_BE_LOWER
         } else {
             FeePrecision.PRECISE
