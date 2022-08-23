@@ -15,11 +15,11 @@ class UnfinishedBackupFoundDialog {
                 setTitle(R.string.alert_title)
                 setMessage(R.string.welcome_interrupted_backup_alert_message)
                 setPositiveButton(R.string.welcome_interrupted_backup_alert_resume) { _, _ ->
-                    store.dispatch(GlobalAction.HideDialog())
+                    store.dispatch(GlobalAction.HideDialog)
                     store.dispatch(BackupAction.ResumeBackup)
                 }
                 setNegativeButton(R.string.welcome_interrupted_backup_alert_discard) { _, _ ->
-                    store.dispatch(GlobalAction.HideDialog())
+                    store.dispatch(GlobalAction.HideDialog)
                     store.dispatch(GlobalAction.ShowDialog(BackupDialog.ConfirmDiscardingBackup))
                 }
                 setCancelable(false)
