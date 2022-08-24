@@ -85,7 +85,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler {
 
     private fun systemActions() {
         // makes the status bar text dark
-        window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR
+        window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN
 
         val windowInsetsController = WindowInsetsControllerCompat(window, binding.root)
         windowInsetsController.isAppearanceLightStatusBars = true
