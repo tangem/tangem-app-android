@@ -4,7 +4,9 @@ import android.content.Intent
 import android.content.pm.ActivityInfo
 import android.os.Bundle
 import android.view.View
+import android.view.Window
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.google.android.material.snackbar.Snackbar
@@ -84,8 +86,8 @@ class MainActivity : AppCompatActivity(), SnackbarHandler {
     }
 
     private fun systemActions() {
-        // makes the status bar text dark
-        window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_FULLSCREEN
+
+        WindowCompat.setDecorFitsSystemWindows(window, false)
 
         val windowInsetsController = WindowInsetsControllerCompat(window, binding.root)
         windowInsetsController.isAppearanceLightStatusBars = true
