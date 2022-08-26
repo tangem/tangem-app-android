@@ -1,16 +1,13 @@
 package com.tangem.tap.features.details.ui.resetcard
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -22,7 +19,6 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.layout
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -40,18 +36,11 @@ fun ResetCardScreen(
     onBackPressed: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Box(modifier = modifier.background(colorResource(id = R.color.background_primary))) {
-        Image(
-            painter = painterResource(id = R.drawable.ic_reset_background),
-            contentDescription = "",
-            modifier = modifier.offset(y = (-16).dp),
-        )
         SettingsScreensScaffold(
             content = { ResetCardView(state = state, modifier = modifier) },
             onBackClick = onBackPressed,
             backgroundColor = Color.Transparent,
         )
-    }
 }
 
 @Composable
@@ -61,33 +50,26 @@ fun ResetCardView(
 ) {
     Column(
         modifier = modifier
-            .fillMaxSize(),
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.SpaceBetween,
     ) {
         Box(
-            modifier = modifier
-                .padding(bottom = 20.dp),
+            modifier = modifier,
         ) {
+            Image(
+                painter = painterResource(id = R.drawable.ic_reset_background),
+                contentDescription = "",
+                modifier = modifier.offset(y = (-82).dp),
+            )
             ScreenTitle(titleRes = R.string.reset_card_to_factory_navigation_title)
         }
-
+        Spacer(
+            modifier = modifier.weight(1f),
+        )
         Column(
             modifier = modifier
-                .layout { measurable, constraints ->
-                    val placeable =
-                        measurable.measure(
-                            constraints.copy(
-                                // left 200.dp for min image height
-                                maxHeight = constraints.maxHeight - 215.dp.roundToPx(),
-                                // occupy all height except full image square in case of smaller text
-                                minHeight = constraints.maxHeight - constraints.maxWidth,
-                            ),
-                        )
-                    layout(placeable.width, placeable.height) {
-                        placeable.place(0, 0)
-                    }
-                }
-                .height(IntrinsicSize.Min),
+                .offset(y = (-32).dp),
             verticalArrangement = Arrangement.Bottom,
         ) {
             Text(
@@ -102,9 +84,7 @@ fun ResetCardView(
             Text(
                 text = stringResource(id = R.string.reset_card_to_factory_message),
                 modifier = modifier
-                    .padding(start = 20.dp, end = 20.dp)
-                    .weight(1f, false)
-                    .verticalScroll(rememberScrollState()),
+                    .padding(start = 20.dp, end = 20.dp),
                 style = TangemTypography.body1,
                 color = colorResource(id = R.color.text_secondary),
             )
@@ -146,7 +126,7 @@ fun ResetCardView(
             Spacer(modifier = modifier.size(32.dp))
             Box(
                 modifier = modifier
-                    .padding(start = 16.dp, end = 16.dp, bottom = 32.dp),
+                    .padding(start = 16.dp, end = 16.dp),
             ) {
                 DetailsMainButton(
                     title = stringResource(id = R.string.reset_card_to_factory_button_title),
