@@ -2,7 +2,6 @@ package com.tangem.tap.features.details.ui.cardsettings
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -10,6 +9,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -51,14 +54,12 @@ fun CardSettingsReadCard(
     Column(
         modifier = modifier
             .fillMaxSize(),
-        verticalArrangement = Arrangement.SpaceBetween,
     ) {
-
         Box(
             modifier = modifier
-                .fillMaxWidth(),
-
-            ) {
+                .fillMaxWidth()
+                .padding(bottom = 40.dp),
+        ) {
             Image(
                 modifier = modifier
                     .fillMaxWidth()
@@ -77,16 +78,13 @@ fun CardSettingsReadCard(
                 contentDescription = "",
                 contentScale = ContentScale.FillWidth,
             )
-
         }
-
-
+        Spacer(modifier = Modifier.weight(1f))
         Column(
             modifier = modifier
                 .fillMaxWidth()
                 .padding(start = 16.dp, end = 16.dp, bottom = 32.dp),
         ) {
-
             Text(
                 text = stringResource(id = R.string.scan_card_settings_title),
                 color = colorResource(id = R.color.text_primary_1),
@@ -97,6 +95,9 @@ fun CardSettingsReadCard(
                 text = stringResource(id = R.string.scan_card_settings_message),
                 color = colorResource(id = R.color.text_secondary),
                 style = TangemTypography.body1,
+                modifier = modifier
+                    .verticalScroll(rememberScrollState())
+                    .weight(weight = 1f, fill = false),
             )
             Spacer(modifier = modifier.size(29.dp))
             DetailsMainButton(
@@ -113,11 +114,13 @@ fun CardSettings(
     state: CardSettingsScreenState,
     modifier: Modifier = Modifier,
 ) {
-    Column(
+    if (state.cardDetails == null) return
+
+    LazyColumn(
         modifier = modifier
             .fillMaxWidth(),
     ) {
-        state.cardDetails?.map {
+        items(state.cardDetails) {
             val paddingBottom = when (it) {
                 is CardInfo.CardId, is CardInfo.Issuer -> 12.dp
                 is CardInfo.SignedHashes -> 14.dp
@@ -156,9 +159,7 @@ fun CardSettings(
                     style = TangemTypography.body2,
                 )
             }
-
         }
-
     }
 }
 
