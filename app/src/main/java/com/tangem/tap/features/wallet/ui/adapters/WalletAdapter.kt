@@ -62,7 +62,7 @@ class WalletAdapter
         fun bind(wallet: WalletData) = with(binding) {
             val status = wallet.currencyData.status
             // Skip changes when on refreshing status
-            if (status == BalanceStatus.Refreshing) return@with
+            if (status == BalanceStatus.Refreshing || wallet.fiatRateString == null) return@with
 
             val statusMessage = when (status) {
                 BalanceStatus.TransactionInProgress -> {
