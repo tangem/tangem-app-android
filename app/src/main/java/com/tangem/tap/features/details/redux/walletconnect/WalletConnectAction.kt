@@ -1,6 +1,7 @@
 package com.tangem.tap.features.details.redux.walletconnect
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.redux.NotificationAction
 import com.tangem.wallet.R
 import com.trustwallet.walletconnect.models.binance.WCBinanceTradeOrder
@@ -11,11 +12,9 @@ import com.trustwallet.walletconnect.models.session.WCSession
 import org.rekotlin.Action
 
 sealed class WalletConnectAction : Action {
-
+    object ResetState : WalletConnectAction()
     data class HandleDeepLink(val wcUri: String?) : WalletConnectAction()
-
-    object RestoreSessions : WalletConnectAction()
-
+    data class RestoreSessions(val scanResponse: ScanResponse) : WalletConnectAction()
     data class StartWalletConnect(
         val copiedUri: String?,
     ) : WalletConnectAction()
