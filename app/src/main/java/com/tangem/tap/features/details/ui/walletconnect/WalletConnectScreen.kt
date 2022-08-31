@@ -169,7 +169,6 @@ fun WalletConnectScreenPreview() {
             sessions = listOf(
                 WcSessionForScreen(
                     description = "session from some dApp",
-                    cardId = "12312312321",
                     sessionId = "",
                 ),
             ),
