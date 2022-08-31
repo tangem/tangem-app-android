@@ -113,7 +113,6 @@ class DialogManager : StoreSubscriber<GlobalState> {
                     data = state.dialog.data,
                     session = state.dialog.session,
                     sessionId = state.dialog.sessionId,
-                    cardId = state.dialog.cardId,
                     dAppName = state.dialog.dAppName,
                     context = context,
                 )
