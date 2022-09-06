@@ -28,6 +28,7 @@ fun Blockchain.getRoundIconRes(): Int {
         Blockchain.Dogecoin -> R.drawable.ic_dogecoin_round
         Blockchain.Tron, Blockchain.TronTestnet -> R.drawable.ic_tron_round
         Blockchain.Gnosis -> R.drawable.ic_gnosis_round
+        Blockchain.Polkadot, Blockchain.PolkadotTestnet -> R.drawable.ic_polkadot_round
         else -> R.drawable.ic_tangem_logo
     }
 }
@@ -55,6 +56,7 @@ fun Blockchain.getGreyedOutIconRes(): Int {
         Blockchain.Dogecoin -> R.drawable.ic_dogecoin_no_color
         Blockchain.Tron, Blockchain.TronTestnet -> R.drawable.ic_tron_no_color
         Blockchain.Gnosis -> R.drawable.ic_gnosis_no_color
+        Blockchain.Polkadot, Blockchain.PolkadotTestnet -> R.drawable.ic_polkadot_no_color
         else -> R.drawable.ic_tangem_logo
     }
 }
