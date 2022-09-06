@@ -4,7 +4,8 @@ sealed class WalletWarning(
     val showingPosition: Int,
 ) {
     data class ExistentialDeposit(
-        val blockchainFullName: String,
+        val currencyName: String,
+        val currencySymbols: String,
         val existentialDepositString: String,
     ) : WalletWarning(1)
 

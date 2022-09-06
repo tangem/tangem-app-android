@@ -376,9 +376,13 @@ data class WalletData(
     private fun assembleBlockchainWarnings(walletWarnings: MutableList<WalletWarning>) {
         if (!currency.isBlockchain()) return
 
-        val blockchainFullName = currency.blockchain.fullName
         if (existentialDepositString != null) {
-            walletWarnings.add(WalletWarning.ExistentialDeposit(blockchainFullName, existentialDepositString))
+            val warning = WalletWarning.ExistentialDeposit(
+                currencyName = currency.currencyName,
+                currencySymbols = currency.currencySymbol,
+                existentialDepositString = existentialDepositString,
+            )
+            walletWarnings.add(warning)
         }
         if (walletRent != null) {
             walletWarnings.add(WalletWarning.Rent(walletRent))
