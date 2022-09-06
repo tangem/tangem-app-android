@@ -15,6 +15,12 @@ class WalletWarningConverter(
 
     override fun convert(message: WalletWarning): WalletWarningDescription {
         val warningMessage = when (message) {
+            is WalletWarning.ExistentialDeposit -> {
+                context.getString(
+                    R.string.warning_existential_deposit_message,
+                    message.blockchainFullName, message.existentialDepositString
+                )
+            }
             is WalletWarning.BalanceNotEnoughForFee -> {
                 context.getString(
                     R.string.token_details_send_blocked_fee_format,
