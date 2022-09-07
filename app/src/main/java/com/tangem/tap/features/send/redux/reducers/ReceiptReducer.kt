@@ -6,7 +6,18 @@ import com.tangem.tap.common.extensions.scaleToFiat
 import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.features.send.redux.ReceiptAction.RefreshReceipt
 import com.tangem.tap.features.send.redux.SendScreenAction
-import com.tangem.tap.features.send.redux.states.*
+import com.tangem.tap.features.send.redux.states.AmountState
+import com.tangem.tap.features.send.redux.states.FeeState
+import com.tangem.tap.features.send.redux.states.MainCurrencyType
+import com.tangem.tap.features.send.redux.states.ReceiptCrypto
+import com.tangem.tap.features.send.redux.states.ReceiptFiat
+import com.tangem.tap.features.send.redux.states.ReceiptLayoutType
+import com.tangem.tap.features.send.redux.states.ReceiptState
+import com.tangem.tap.features.send.redux.states.ReceiptSymbols
+import com.tangem.tap.features.send.redux.states.ReceiptTokenCrypto
+import com.tangem.tap.features.send.redux.states.ReceiptTokenFiat
+import com.tangem.tap.features.send.redux.states.SendState
+import com.tangem.tap.features.wallet.redux.WalletState.Companion.CAN_BE_LOWER_SIGN
 import com.tangem.tap.features.wallet.redux.WalletState.Companion.UNKNOWN_AMOUNT_SIGN
 import com.tangem.tap.store
 import java.math.BigDecimal
@@ -125,8 +136,7 @@ class ReceiptReducer : SendInternalReducer {
             val totalFiat = amountFiat.plus(feeFiat)
             ReceiptTokenFiat(
                 amountFiat = amountFiat.scaleToFiat(true).stripZeroPlainString(),
-                feeFiat = feeFiat.scaleToFiat(true)
-                    .stripZeroPlainString().addPrecisionSign(),
+                feeFiat = feeFiat.scaleToFiat(true).stripZeroPlainString().addPrecisionSign(),
                 totalFiat = totalFiat.scaleToFiat(true).stripZeroPlainString(),
                 willSentToken = tokensToSend.stripZeroPlainString(),
                 willSentFeeCoin = feeCoin.stripZeroPlainString(),
@@ -207,6 +217,8 @@ class ReceiptReducer : SendInternalReducer {
         }
     }
 
-    private fun String.addPrecisionSign(): String =
-        ("${feeState.feePrecision.symbol} $this").trim()
+    private fun String.addPrecisionSign(): String {
+        val result = if (feeState.feeIsApproximate) "$CAN_BE_LOWER_SIGN $this" else ""
+        return result.trim()
+    }
 }
