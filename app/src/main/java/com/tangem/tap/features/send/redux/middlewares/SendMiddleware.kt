@@ -114,9 +114,8 @@ private fun verifyAndSendTransaction(
     val amountToSend = Amount(typedAmount, sendState.getTotalAmountToSend())
 
     val transactionErrors = walletManager.validateTransaction(amountToSend, feeAmount)
-    val hadTezosError = transactionErrors.remove(TransactionError.TezosSendAll)
     when {
-        hadTezosError -> {
+        transactionErrors.contains(TransactionError.TezosSendAll) -> {
             val reduceAmount = walletManager.wallet.blockchain.minimalAmount()
             dispatch(
                 SendAction.Dialog.TezosWarningDialog(
@@ -134,9 +133,6 @@ private fun verifyAndSendTransaction(
                     reduceAmount,
                 ),
             )
-        }
-        transactionErrors.isNotEmpty() -> {
-            dispatch(SendAction.SendError(createValidateTransactionError(transactionErrors, walletManager)))
         }
         else -> {
             sendTransaction(
@@ -272,10 +268,8 @@ private fun sendTransaction(
                             dispatch(SendAction.Dialog.SendTransactionFails.CardSdkError(tangemSdkError))
                         }
                         is BlockchainSdkError.CreateAccountUnderfunded -> {
-                            // from XLM, XRP
-                            val reserve = error.minReserve.value?.stripZeroPlainString() ?: "0"
-                            val symbol = error.minReserve.currencySymbol
-                            dispatch(SendAction.SendError(TapError.CreateAccountUnderfunded(listOf(reserve, symbol))))
+                            // from XLM, XRP, Polkadot
+                            dispatch(SendAction.Dialog.SendTransactionFails.BlockchainSdkError(error))
                         }
                         else -> {
                             when {
@@ -298,29 +292,6 @@ private fun sendTransaction(
             }
         }
     }
-}
-
-fun extractErrorsForAmountField(errors: EnumSet<TransactionError>): EnumSet<TransactionError> {
-    val showIntoAmountField = EnumSet.noneOf(TransactionError::class.java)
-    errors.forEach {
-        when (it) {
-            TransactionError.AmountExceedsBalance -> {
-                showIntoAmountField.remove(TransactionError.TotalExceedsBalance)
-                showIntoAmountField.add(it)
-            }
-            TransactionError.FeeExceedsBalance -> {
-                showIntoAmountField.remove(TransactionError.TotalExceedsBalance)
-                showIntoAmountField.add(it)
-            }
-            TransactionError.TotalExceedsBalance -> {
-                val notAcceptable = listOf(TransactionError.AmountExceedsBalance, TransactionError.FeeExceedsBalance)
-                if (!showIntoAmountField.containsAll(notAcceptable)) showIntoAmountField.add(it)
-            }
-            TransactionError.InvalidAmountValue -> showIntoAmountField.add(it)
-            TransactionError.InvalidFeeValue -> showIntoAmountField.add(it)
-        }
-    }
-    return showIntoAmountField
 }
 
 fun createValidateTransactionError(
