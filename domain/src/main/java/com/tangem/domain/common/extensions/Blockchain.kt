@@ -38,6 +38,8 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "tron/test" -> Blockchain.TronTestnet
         "xrp", "ripple" -> Blockchain.XRP
         "xdai" -> Blockchain.Gnosis
+        "polkadot" -> Blockchain.Polkadot
+        "polkadot/test" -> Blockchain.PolkadotTestnet
         else -> null
     }
 }
@@ -80,6 +82,8 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.Tron -> "tron"
         Blockchain.TronTestnet -> "tron/test"
         Blockchain.Gnosis -> "xdai"
+        Blockchain.Polkadot -> "polkadot"
+        Blockchain.PolkadotTestnet -> "polkadot/test"
     }
 }
 
@@ -105,6 +109,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Dogecoin -> "dogecoin"
         Blockchain.Tron, Blockchain.TronTestnet -> "tron"
         Blockchain.Gnosis -> "xdai"
+        Blockchain.Polkadot, Blockchain.PolkadotTestnet -> "polkadot"
         Blockchain.Unknown -> "unknown"
     }
 }
