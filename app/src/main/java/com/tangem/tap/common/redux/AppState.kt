@@ -80,5 +80,3 @@ data class AppState(
         }
     }
 }
-
-

@@ -1,6 +1,7 @@
 package com.tangem.tap.common.extensions
 
 import androidx.activity.OnBackPressedCallback
+import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
@@ -24,33 +25,36 @@ import com.tangem.tap.features.send.ui.SendFragment
 import com.tangem.tap.features.shop.ui.ShopFragment
 import com.tangem.tap.features.tokens.addCustomToken.AddCustomTokenFragment
 import com.tangem.tap.features.tokens.ui.AddTokensFragment
+import com.tangem.tap.features.userWalletsList.ui.WalletSelectorBottomSheetFragment
 import com.tangem.tap.features.wallet.ui.WalletDetailsFragment
 import com.tangem.tap.features.wallet.ui.WalletFragment
 import com.tangem.wallet.R
 import timber.log.Timber
-
-private class Navigation
 
 fun FragmentActivity.openFragment(
     screen: AppScreen,
     addToBackstack: Boolean,
     fgShareTransition: FragmentShareTransition? = null
 ) {
-    val transaction = this.supportFragmentManager.beginTransaction()
     val fragment = fragmentFactory(screen)
-    fgShareTransition?.apply {
-        fragment.sharedElementEnterTransition = enterTransitionSet
-        fragment.sharedElementReturnTransition = exitTransitionSet
-        transaction.setReorderingAllowed(true)
-        shareElements.forEach { shareElement ->
-            shareElement.wView.get()?.let { view ->
-                transaction.addSharedElement(view, shareElement.elementName)
+    if (screen.isDialogFragment) {
+        (fragment as DialogFragment).show(supportFragmentManager, screen.name)
+    } else {
+        val transaction = this.supportFragmentManager.beginTransaction()
+        fgShareTransition?.apply {
+            fragment.sharedElementEnterTransition = enterTransitionSet
+            fragment.sharedElementReturnTransition = exitTransitionSet
+            transaction.setReorderingAllowed(true)
+            shareElements.forEach { shareElement ->
+                shareElement.wView.get()?.let { view ->
+                    transaction.addSharedElement(view, shareElement.elementName)
+                }
             }
         }
+        transaction.replace(R.id.fragment_container, fragment, screen.name)
+        if (addToBackstack && screen != AppScreen.Home) transaction.addToBackStack(null)
+        transaction.commitAllowingStateLoss()
     }
-    transaction.replace(R.id.fragment_container, fragment, screen.name)
-    if (addToBackstack && screen != AppScreen.Home) transaction.addToBackStack(null)
-    transaction.commitAllowingStateLoss()
 }
 
 fun FragmentActivity.popBackTo(screen: AppScreen?, inclusive: Boolean = false) {
@@ -104,5 +108,6 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
         AppScreen.WalletDetails -> WalletDetailsFragment()
         AppScreen.WalletConnectSessions -> WalletConnectFragment()
         AppScreen.QrScan -> QrScanFragment()
+        AppScreen.WalletSelector -> WalletSelectorBottomSheetFragment()
     }
 }

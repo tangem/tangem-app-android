@@ -9,7 +9,9 @@ data class NavigationState(
     val activity: WeakReference<FragmentActivity>? = null
 ) : StateType
 
-enum class AppScreen {
+enum class AppScreen(
+    val isDialogFragment: Boolean = false,
+) {
     Home,
     Shop,
     Disclaimer,
@@ -19,5 +21,6 @@ enum class AppScreen {
     Details, DetailsSecurity, CardSettings, AppSettings, ResetToFactory,
     AddTokens, AddCustomToken,
     WalletConnectSessions,
-    QrScan
+    QrScan,
+    WalletSelector(isDialogFragment = true),
 }
