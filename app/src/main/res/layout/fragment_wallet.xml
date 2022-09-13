@@ -84,7 +84,7 @@
                     app:layout_constraintBottom_toBottomOf="@id/iv_card"
                     app:layout_constraintStart_toStartOf="@id/iv_card"
                     app:layout_constraintTop_toBottomOf="@id/iv_card"
-                    tools:text="Card 2 of 2" />
+                    tools:text="2 cards" />
 
                 <androidx.constraintlayout.widget.Barrier
                     android:id="@+id/barrier"

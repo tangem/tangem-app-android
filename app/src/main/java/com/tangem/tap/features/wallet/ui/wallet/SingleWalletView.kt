@@ -90,7 +90,7 @@ class SingleWalletView : WalletView() {
                 TwinCardNumber.Second -> 2
             }
             tvTwinCardNumber.text =
-                fragment?.getString(R.string.wallet_twins_chip_format, number, 2)
+                fragment?.getString(R.string.wallet_twins_chip_format, number)
         }
         if (twinCardsState?.cardNumber == null) {
             tvTwinCardNumber.hide()

@@ -52,7 +52,7 @@ class MultiWalletView : WalletView() {
             val cardCount = (card.backupStatus as Card.BackupStatus.Active).cardCount + 1
             tvTwinCardNumber.show()
             tvTwinCardNumber.text =
-                fragment?.getString(R.string.wallet_twins_chip_format, 1, cardCount)
+                fragment?.getString(R.string.wallet_twins_chip_format, cardCount)
         } else {
             tvTwinCardNumber.hide()
         }
