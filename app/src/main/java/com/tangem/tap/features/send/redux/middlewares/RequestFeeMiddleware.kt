@@ -2,6 +2,7 @@ package com.tangem.tap.features.send.redux.middlewares
 
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.TransactionSender
 import com.tangem.blockchain.extensions.Result
 import com.tangem.common.extensions.isZero
@@ -31,8 +32,7 @@ class RequestFeeMiddleware {
         val scanResponse = appState.globalState.scanResponse ?: return
 
         if (!SendState.isReadyToRequestFee()) {
-            dispatch(FeeAction.FeeCalculation.SetFeeError(FeeAction.Error.ADDRESS_OR_AMOUNT_IS_EMPTY))
-//            dispatch(FeeAction.ChangeLayoutVisibility(main = false, chipGroup = true))
+            dispatch(FeeAction.FeeCalculation.ClearResult)
             dispatch(ReceiptAction.RefreshReceipt)
             dispatch(SendAction.ChangeSendButtonState(sendState.getButtonState()))
             return
@@ -66,14 +66,21 @@ class RequestFeeMiddleware {
                         }
                     }
                     is Result.Failure -> {
-                        dispatch(FeeAction.FeeCalculation.SetFeeError(FeeAction.Error.REQUEST_FAILED))
+                        dispatch(FeeAction.FeeCalculation.ClearResult)
                         dispatch(FeeAction.ChangeLayoutVisibility(main = false))
+
+                        val blockchainSdkError = feeResult.error as? BlockchainSdkError ?: return@withContext
+                        dispatch(
+                            SendAction.Dialog.RequestFeeError(
+                                error = blockchainSdkError,
+                                onRetry = { dispatch(FeeAction.RequestFee) },
+                            ),
+                        )
                     }
                 }
                 dispatch(AmountActionUi.CheckAmountToSend)
             }
         }
-
     }
 }
 
@@ -93,13 +100,13 @@ class FeeMock {
         suspend fun feeStandard(blockchain: Blockchain): List<Amount> = listOf(
             Amount(0.001500.toBigDecimal(), blockchain),
             Amount(0.0030.toBigDecimal(), blockchain),
-            Amount(0.0045001.toBigDecimal(), blockchain)
+            Amount(0.0045001.toBigDecimal(), blockchain),
         )
 
         suspend fun feeStandardBig(blockchain: Blockchain): List<Amount> = listOf(
             Amount(1.76.toBigDecimal(), blockchain),
             Amount(2.30.toBigDecimal(), blockchain),
-            Amount(3.45.toBigDecimal(), blockchain)
+            Amount(3.45.toBigDecimal(), blockchain),
         )
 
         suspend fun feeSingle(blockchain: Blockchain): List<Amount> = listOf(Amount(0.0015.toBigDecimal(), blockchain))
