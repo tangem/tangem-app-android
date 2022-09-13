@@ -84,8 +84,6 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.TronTestnet -> "tron/test"
         Blockchain.Gnosis -> "xdai"
         Blockchain.Dash -> "dash"
-        Blockchain.Kusama -> "Kusama"
-        Blockchain.DashTestNet -> "DashTestNet"
         Blockchain.Polkadot -> "polkadot"
         Blockchain.PolkadotTestnet -> "polkadot/test"
     }
@@ -116,7 +114,5 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Dash -> "dash"
         Blockchain.Polkadot, Blockchain.PolkadotTestnet -> "polkadot"
         Blockchain.Unknown -> "unknown"
-        Blockchain.Kusama -> "unknown"
-        Blockchain.DashTestNet -> "unknown"
     }
 }
