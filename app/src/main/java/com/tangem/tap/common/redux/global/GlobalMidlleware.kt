@@ -96,7 +96,9 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
                 ?.setWalletsInfo(action.walletManagers)
         }
         is GlobalAction.ExchangeManager.Init -> {
-            val config = appState()?.globalState?.configManager?.config
+            val appStateSafe = appState() ?: return
+            val config = appStateSafe.globalState.configManager?.config
+            val logConfig = appStateSafe.domainState.globalState.logConfig
             ifNotNull(
                 config?.mercuryoWidgetId,
                 config?.mercuryoSecret,
@@ -108,8 +110,13 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
                         apiVersion = MercuryoApi.API_VERSION,
                         mercuryoWidgetId = mercuryoWidgetId,
                         secret = mercuryoSecret,
+                        logEnabled = logConfig.network.mercuryoService,
                     )
-                    val sellService = MoonPayService(moonPayKey, moonPaySecretKey)
+                    val sellService = MoonPayService(
+                        apiKey = moonPayKey,
+                        secretKey = moonPaySecretKey,
+                        logEnabled = logConfig.network.moonPayService,
+                    )
                     val cardProvider = { store.state.globalState.scanResponse?.card }
 
                     val exchangeManager = CurrencyExchangeManager(
