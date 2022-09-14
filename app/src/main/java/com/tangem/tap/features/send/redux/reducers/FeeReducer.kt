@@ -3,7 +3,6 @@ package com.tangem.tap.features.send.redux.reducers
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.tap.common.extensions.fullNameWithoutTestnet
 import com.tangem.tap.features.send.redux.FeeAction
 import com.tangem.tap.features.send.redux.FeeActionUi
 import com.tangem.tap.features.send.redux.SendScreenAction
@@ -106,12 +105,17 @@ class FeeReducer : SendInternalReducer {
 
     private fun getFeePrecision(sendState: SendState): FeePrecision {
         val blockchain = sendState.walletManager?.wallet?.blockchain
-        return if (
-            (blockchain?.fullNameWithoutTestnet == Blockchain.Arbitrum.fullName ||
-                blockchain?.fullNameWithoutTestnet == Blockchain.Tron.fullName ||
-                blockchain?.fullNameWithoutTestnet == Blockchain.Gnosis.fullName) &&
-            sendState.amountState.typeOfAmount is AmountType.Token
-        ) {
+        val amountType = sendState.amountState.typeOfAmount
+
+        val canBeLower = when (blockchain) {
+            Blockchain.Tron, Blockchain.TronTestnet -> amountType is AmountType.Token
+            Blockchain.Fantom, Blockchain.FantomTestnet -> amountType is AmountType.Token
+            Blockchain.Arbitrum, Blockchain.ArbitrumTestnet -> true
+            Blockchain.Stellar, Blockchain.StellarTestnet -> true
+            else -> false
+        }
+
+        return if (canBeLower) {
             FeePrecision.CAN_BE_LOWER
         } else {
             FeePrecision.PRECISE
