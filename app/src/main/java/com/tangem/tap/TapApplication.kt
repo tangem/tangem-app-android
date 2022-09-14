@@ -39,7 +39,6 @@ val store = Store(
     middleware = AppState.getMiddleware(),
     state = AppState()
 )
-val logConfig = LogConfig()
 
 lateinit var foregroundActivityObserver: ForegroundActivityObserver
 
@@ -76,13 +75,17 @@ class TapApplication : Application(), ImageLoaderFactory {
         initFeedbackManager()
         loadConfigs()
 
-        BlockchainSdkRetrofitBuilder.enableNetworkLogging = BuildConfig.DEBUG
+        BlockchainSdkRetrofitBuilder.enableNetworkLogging =
+            store.state.domainState.globalState.logConfig.network.blockchainSdkNetwork
 
         initAppsFlyer()
     }
 
     override fun newImageLoader(): ImageLoader {
-        return createCoilImageLoader(context = this)
+        return createCoilImageLoader(
+            context = this,
+            logEnabled = store.state.domainState.globalState.logConfig.imageLoader
+        )
     }
 
     private fun loadConfigs() {
@@ -132,6 +135,7 @@ class TapApplication : Application(), ImageLoaderFactory {
                     infoHolder = infoHolder,
                     logCollector = logWriter,
                     preferencesStorage = preferencesStorage,
+                    logEnabled = store.state.domainState.globalState.logConfig.zendesk,
                 ),
             ),
         )
@@ -145,9 +149,3 @@ class TapApplication : Application(), ImageLoaderFactory {
         store.dispatch(GlobalAction.SetAnanlyticHandlers(analyticsHandler))
     }
 }
-
-data class LogConfig(
-    val coil: Boolean = BuildConfig.DEBUG,
-    val storeAction: Boolean = BuildConfig.DEBUG,
-    val zendesk: Boolean = BuildConfig.DEBUG,
-)
