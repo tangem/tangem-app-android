@@ -102,7 +102,7 @@ class ReceiptReducer : SendInternalReducer {
         if (feeState.feeIsIncluded) {
             return ReceiptCrypto(
                 amountCrypto = amountState.amountToSendCrypto.minus(feeCrypto).stripZeroPlainString(),
-                feeCrypto = feeCrypto.stripZeroPlainString(),
+                feeCrypto = feeCrypto.stripZeroPlainString().addPrecisionSign(),
                 totalCrypto = amountState.amountToSendCrypto.stripZeroPlainString(),
                 feeFiat = feeFiat,
                 willSentFiat = convertToFiatPrecision(amountState.amountToSendCrypto),
@@ -112,7 +112,7 @@ class ReceiptReducer : SendInternalReducer {
             val totalCrypto = amountState.amountToSendCrypto.plus(feeCrypto)
             return ReceiptCrypto(
                 amountCrypto = amountState.amountToSendCrypto.stripZeroPlainString(),
-                feeCrypto = feeCrypto.stripZeroPlainString(),
+                feeCrypto = feeCrypto.stripZeroPlainString().addPrecisionSign(),
                 totalCrypto = totalCrypto.stripZeroPlainString(),
                 feeFiat = feeFiat,
                 willSentFiat = convertToFiatPrecision(totalCrypto),
