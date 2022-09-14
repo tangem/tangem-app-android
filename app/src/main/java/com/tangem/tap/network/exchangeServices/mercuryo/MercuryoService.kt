@@ -20,10 +20,13 @@ class MercuryoService(
     private val apiVersion: String,
     private val mercuryoWidgetId: String,
     private val secret: String,
+    private val logEnabled: Boolean,
 ) : ExchangeService, ExchangeUrlBuilder {
 
-    private val api: MercuryoApi = createRetrofitInstance(MercuryoApi.BASE_URL)
-        .create(MercuryoApi::class.java)
+    private val api: MercuryoApi = createRetrofitInstance(
+        baseUrl = MercuryoApi.BASE_URL,
+        logEnabled = logEnabled,
+    ).create(MercuryoApi::class.java)
 
     private val blockchainsAvailableToBuy = mutableListOf<Blockchain>()
     private val tokensAvailableToBy = mutableMapOf<String, MutableList<Blockchain>>()
