@@ -8,10 +8,13 @@ import com.tangem.network.common.createRetrofitInstance
 [REDACTED_AUTHOR]
  */
 class PayIdVerifyService(
-        private val baseUrl: String
+    private val baseUrl: String,
 ) {
 
-    private val api = createRetrofitInstance(baseUrl).create(PayIdVerifyApi::class.java)
+    private val api = createRetrofitInstance(
+        baseUrl = baseUrl,
+        logEnabled = false,
+    ).create(PayIdVerifyApi::class.java)
 
     suspend fun verifyAddress(user: String, network: String): Result<VerifyPayIdResponse> {
         return performRequest { api.verifyAddress(user, createNetworkHeader(network)) }
