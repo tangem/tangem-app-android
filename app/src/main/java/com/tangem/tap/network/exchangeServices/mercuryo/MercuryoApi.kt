@@ -4,15 +4,6 @@ import com.squareup.moshi.Json
 import retrofit2.http.GET
 import retrofit2.http.Path
 
-/**
-[REDACTED_AUTHOR]
- */
-
-
-
-private val CurrenciesUrl = "https://api.mercuryo.io/v1.6/lib/currencies"
-
-
 
 interface MercuryoApi {
 
