@@ -420,6 +420,16 @@
                     "networkId" : "stellar/test"
                 }
             ]
+        },
+        {
+            "id" : "polkadot",
+            "symbol" : "DOT",
+            "name" : "Polkadot",
+            "networks" : [
+                {
+                    "networkId" : "polkadot/test"
+                }
+            ]
         }
     ],
     
