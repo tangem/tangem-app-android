@@ -22,14 +22,16 @@ class CurrencyIconView @JvmOverloads constructor(
         LayoutInflater.from(context),
         this,
     )
-    private val currencyImageView: ImageFilterView
+    val currencyImageView: ImageFilterView
         get() = binding.ivCurrency
-    private val currencyTextView: TextView
+    val currencyTextView: TextView
         get() = binding.tvTokenLetter
-    private var isBlockchainBadgeVisible: Boolean
+    val blockchainBadge: ImageFilterView
+        get() = binding.ivBlockchainBadge
+    var isBlockchainBadgeVisible: Boolean
         get() = binding.ivBlockchainBadge.isVisible
         set(value) = binding.ivBlockchainBadge::isVisible.set(value)
-    private var isCustomCurrencyBadgeVisible: Boolean
+    var isCustomCurrencyBadgeVisible: Boolean
         get() = binding.customBadge.isVisible
         set(value) = binding.customBadge::isVisible.set(value)
 
@@ -37,30 +39,30 @@ class CurrencyIconView @JvmOverloads constructor(
         minWidth = dpToPx(48f).roundToInt()
         minHeight = dpToPx(48f).roundToInt()
     }
+}
 
-    fun load(
-        currency: Currency,
-        derivationStyle: DerivationStyle?,
-    ) {
-        isCustomCurrencyBadgeVisible = currency.isCustomCurrency(derivationStyle)
+fun CurrencyIconView.load(
+    currency: Currency,
+    derivationStyle: DerivationStyle?,
+) {
+    isCustomCurrencyBadgeVisible = currency.isCustomCurrency(derivationStyle)
+
+    CurrencyIconRequest(
+        currencyImageView = currencyImageView,
+        currencyTextView = currencyTextView,
+        token = (currency as? Currency.Token)?.token,
+        blockchain = currency.blockchain,
+    ).load()
+
+    if (currency.isToken()) {
+        // load a blockchain icon into the blockchain badge
+        isBlockchainBadgeVisible = true
 
         CurrencyIconRequest(
-            currencyImageView = currencyImageView,
-            currencyTextView = currencyTextView,
-            token = (currency as? Currency.Token)?.token,
+            currencyImageView = blockchainBadge,
+            currencyTextView = null,
+            token = null,
             blockchain = currency.blockchain,
         ).load()
-
-        if (currency.isToken()) {
-            // load a blockchain icon into the blockchain badge
-            isBlockchainBadgeVisible = true
-
-            CurrencyIconRequest(
-                currencyImageView = binding.ivBlockchainBadge,
-                currencyTextView = null,
-                token = null,
-                blockchain = currency.blockchain,
-            ).load()
-        }
     }
 }
