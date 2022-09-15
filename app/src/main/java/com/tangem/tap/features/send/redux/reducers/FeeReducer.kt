@@ -1,13 +1,9 @@
 package com.tangem.tap.features.send.redux.reducers
 
 import com.tangem.blockchain.common.Amount
-import com.tangem.blockchain.common.AmountType
-import com.tangem.blockchain.common.Blockchain
-import com.tangem.tap.common.extensions.fullNameWithoutTestnet
 import com.tangem.tap.features.send.redux.FeeAction
 import com.tangem.tap.features.send.redux.FeeActionUi
 import com.tangem.tap.features.send.redux.SendScreenAction
-import com.tangem.tap.features.send.redux.states.FeePrecision
 import com.tangem.tap.features.send.redux.states.FeeState
 import com.tangem.tap.features.send.redux.states.FeeType
 import com.tangem.tap.features.send.redux.states.SendState
@@ -28,10 +24,9 @@ class FeeReducer : SendInternalReducer {
             is FeeActionUi.ChangeSelectedFee -> {
                 val currentFee = createValueOfFeeAmount(action.feeType, state.feeList)
                 state.copy(
-                        selectedFeeType = action.feeType,
-                        currentFee = currentFee
+                    selectedFeeType = action.feeType,
+                    currentFee = currentFee,
                 )
-
             }
             is FeeActionUi.ChangeIncludeFee -> state.copy(feeIsIncluded = action.isIncluded)
         }
@@ -41,14 +36,14 @@ class FeeReducer : SendInternalReducer {
     private fun handleAction(action: FeeAction, sendState: SendState, state: FeeState): SendState {
         val result = when (action) {
             is FeeAction.RequestFee -> {
-                state.copy(error = null)
+                state
             }
             is FeeAction.ChangeLayoutVisibility -> {
                 fun getVisibility(current: Boolean, proposed: Boolean?): Boolean = proposed ?: current
                 state.copy(
-                        mainLayoutIsVisible = getVisibility(state.mainLayoutIsVisible, action.main),
-                        controlsLayoutIsVisible = getVisibility(state.controlsLayoutIsVisible, action.controls),
-                        feeChipGroupIsVisible = getVisibility(state.feeChipGroupIsVisible, action.chipGroup)
+                    mainLayoutIsVisible = getVisibility(state.mainLayoutIsVisible, action.main),
+                    controlsLayoutIsVisible = getVisibility(state.controlsLayoutIsVisible, action.controls),
+                    feeChipGroupIsVisible = getVisibility(state.feeChipGroupIsVisible, action.chipGroup),
                 )
             }
             is FeeAction.FeeCalculation.SetFeeResult -> {
@@ -58,30 +53,27 @@ class FeeReducer : SendInternalReducer {
                     val currentFee = createValueOfFeeAmount(feeType, fees)
 
                     state.copy(
-                            selectedFeeType = feeType,
-                            feeList = fees,
-                            currentFee = currentFee,
-                            error = null,
-                            feePrecision = getFeePrecision(sendState)
+                        selectedFeeType = feeType,
+                        feeList = fees,
+                        currentFee = currentFee,
+                        feeIsApproximate = isFeeApproximate(sendState),
                     )
                 } else {
                     val feeType = getCurrentFeeType(state)
                     val currentFee = createValueOfFeeAmount(feeType, fees)
 
                     state.copy(
-                            selectedFeeType = feeType,
-                            feeList = fees,
-                            currentFee = currentFee,
-                            error = null,
-                            feePrecision = getFeePrecision(sendState)
+                        selectedFeeType = feeType,
+                        feeList = fees,
+                        currentFee = currentFee,
+                        feeIsApproximate = isFeeApproximate(sendState),
                     )
                 }
             }
-            is FeeAction.FeeCalculation.SetFeeError -> {
+            FeeAction.FeeCalculation.ClearResult -> {
                 state.copy(
-                        feeList = null,
-                        currentFee = null,
-                        error = action.error
+                    feeList = null,
+                    currentFee = null,
                 )
             }
         }
@@ -104,20 +96,12 @@ class FeeReducer : SendInternalReducer {
         }
     }
 
-    private fun getFeePrecision(sendState: SendState): FeePrecision {
-        val blockchain = sendState.walletManager?.wallet?.blockchain
-        return if (
-            (blockchain?.fullNameWithoutTestnet == Blockchain.Arbitrum.fullName ||
-                blockchain?.fullNameWithoutTestnet == Blockchain.Tron.fullName ||
-                blockchain?.fullNameWithoutTestnet == Blockchain.Gnosis.fullName) &&
-            sendState.amountState.typeOfAmount is AmountType.Token
-        ) {
-            FeePrecision.CAN_BE_LOWER
-        } else {
-            FeePrecision.PRECISE
-        }
-    }
+    private fun isFeeApproximate(sendState: SendState): Boolean {
+        val blockchain = sendState.walletManager?.wallet?.blockchain ?: return false
 
+        val amountType = sendState.amountState.typeOfAmount
+        return blockchain.isFeeApproximate(amountType)
+    }
 
     private fun getCurrentFeeType(state: FeeState): FeeType {
         return if (state.selectedFeeType == FeeType.SINGLE) FeeType.NORMAL else state.selectedFeeType
