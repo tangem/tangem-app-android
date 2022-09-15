@@ -26,7 +26,7 @@ data class OnboardingNoteState(
         get() = steps.indexOf(currentStep)
 
     val isBuyAllowed: Boolean by ReadOnlyProperty<Any, Boolean> { _, _ ->
-        store.state.globalState.exchangeManager?.availableForBuy(walletBalance.currency) ?: false
+        store.state.globalState.exchangeManager.availableForBuy(walletBalance.currency)
     }
 }
 
