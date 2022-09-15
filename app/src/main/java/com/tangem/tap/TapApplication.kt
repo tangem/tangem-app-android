@@ -65,9 +65,7 @@ class TapApplication : Application(), ImageLoaderFactory {
 
         NetworkConnectivity.createInstance(store, this)
         preferencesStorage = PreferencesStorage(this)
-        currenciesRepository = CurrenciesRepository(
-            this, store.state.domainNetworks.tangemTechService
-        )
+        currenciesRepository = CurrenciesRepository(this, store.state.domainNetworks.tangemTechService)
         walletConnectRepository = WalletConnectRepository(this)
 
         foregroundActivityObserver = ForegroundActivityObserver()
