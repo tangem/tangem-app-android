@@ -153,6 +153,7 @@
                     android:layout_height="wrap_content"
                     android:background="@color/backgroundLightGray"
                     android:ellipsize="middle"
+                    android:inputType="text|textNoSuggestions"
                     android:paddingStart="0dp"
                     android:paddingEnd="0dp"
                     android:singleLine="true"
