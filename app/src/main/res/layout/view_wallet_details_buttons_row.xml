@@ -8,6 +8,7 @@
     tools:parentTag="android.widget.LinearLayout">
 
     <FrameLayout
+        android:id="@+id/container_exchange_buttons"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginEnd="6dp"
@@ -48,7 +49,6 @@
         android:id="@+id/btn_send"
         style="@style/TapButtonWithIcon"
         android:layout_width="0dp"
-        android:layout_marginStart="6dp"
         android:layout_weight="1"
         android:text="@string/wallet_button_send"
         app:icon="@drawable/ic_send" />
