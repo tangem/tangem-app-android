@@ -3,8 +3,19 @@ package com.tangem.tap.features.send.redux.reducers
 import com.tangem.blockchain.blockchains.stellar.StellarMemo
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.tap.features.send.redux.SendScreenAction
-import com.tangem.tap.features.send.redux.TransactionExtrasAction.*
-import com.tangem.tap.features.send.redux.states.*
+import com.tangem.tap.features.send.redux.TransactionExtrasAction.BinanceMemo
+import com.tangem.tap.features.send.redux.TransactionExtrasAction.Prepare
+import com.tangem.tap.features.send.redux.TransactionExtrasAction.Release
+import com.tangem.tap.features.send.redux.TransactionExtrasAction.XlmMemo
+import com.tangem.tap.features.send.redux.TransactionExtrasAction.XrpDestinationTag
+import com.tangem.tap.features.send.redux.states.BinanceMemoState
+import com.tangem.tap.features.send.redux.states.InputViewValue
+import com.tangem.tap.features.send.redux.states.SendState
+import com.tangem.tap.features.send.redux.states.TransactionExtraError
+import com.tangem.tap.features.send.redux.states.TransactionExtrasState
+import com.tangem.tap.features.send.redux.states.XlmMemoState
+import com.tangem.tap.features.send.redux.states.XlmMemoType
+import com.tangem.tap.features.send.redux.states.XrpDestinationTagState
 
 /**
 [REDACTED_AUTHOR]
@@ -53,42 +64,33 @@ class TransactionExtrasReducer : SendInternalReducer {
     }
 
     private fun handleXlmMemo(
-            action: XlmMemo,
-            sendState: SendState,
-            infoState: TransactionExtrasState,
+        action: XlmMemo,
+        sendState: SendState,
+        infoState: TransactionExtrasState,
     ): SendState {
         fun clearMemo(memo: XlmMemoState): XlmMemoState = memo.copy(text = null, id = null, error = null)
 
         val result = when (action) {
-//            is XlmMemo.ChangeSelectedMemo -> {
-//                val inputViewValue = InputViewValue("", false)
-//                val memo = infoState.xlmMemo?.copy(
-//                        viewFieldValue = inputViewValue,
-//                        selectedMemoType = action.memoType,
-//                ) ?: XlmMemoState(inputViewValue, action.memoType)
-//
-//                infoState.copy(xlmMemo = clearMemo(memo))
-//            }
             is XlmMemo.HandleUserInput -> {
                 val inputViewValue = InputViewValue(action.data, true)
                 var memo = infoState.xlmMemo?.copy(viewFieldValue = inputViewValue)
-                        ?: XlmMemoState(inputViewValue)
+                    ?: XlmMemoState(inputViewValue)
                 memo = clearMemo(memo)
-                memo = when (infoState.xlmMemo?.selectedMemoType) {
-                    XlmMemoType.TEXT -> memo.copy(text = StellarMemo.Text(action.data))
-                    XlmMemoType.ID -> {
-                        val id = action.data.toBigIntegerOrNull()
-                        if (id != null) {
-                            if (id > XlmMemoState.MAX_NUMBER) {
-                                memo.copy(error = TransactionExtraError.INVALID_XLM_MEMO)
-                            } else {
-                                memo.copy(id = StellarMemo.Id(id))
-                            }
+                memo = when (memo.selectedMemoType) {
+                    XlmMemoType.TEXT -> {
+                        if (XlmMemoState.isAssignableValue(action.data)) {
+                            memo.copy(text = StellarMemo.Text(action.data))
                         } else {
-                            memo
+                            memo.copy(error = TransactionExtraError.INVALID_XLM_MEMO)
                         }
                     }
-                    null -> memo
+                    XlmMemoType.ID -> {
+                        if (XlmMemoState.isAssignableValue(action.data)) {
+                            memo.copy(id = StellarMemo.Id(action.data.toBigInteger()))
+                        } else {
+                            memo.copy(error = TransactionExtraError.INVALID_XLM_MEMO)
+                        }
+                    }
                 }
                 infoState.copy(xlmMemo = memo)
             }
@@ -117,16 +119,16 @@ class TransactionExtrasReducer : SendInternalReducer {
     }
 
     private fun handleXrpTag(
-            action: XrpDestinationTag,
-            sendState: SendState,
-            infoState: TransactionExtrasState,
+        action: XrpDestinationTag,
+        sendState: SendState,
+        infoState: TransactionExtrasState,
     ): SendState {
         val result = when (action) {
             is XrpDestinationTag.HandleUserInput -> {
                 val tag = action.data.toLongOrNull()
                 if (tag != null) {
                     val input = InputViewValue(action.data, true)
-                    val tagState = if (tag <= XrpDestinationTagState.MAX_NUMBER){
+                    val tagState = if (tag <= XrpDestinationTagState.MAX_NUMBER) {
                         XrpDestinationTagState(input, tag)
                     } else {
                         XrpDestinationTagState(input, error = TransactionExtraError.INVALID_DESTINATION_TAG)
