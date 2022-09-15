@@ -5,7 +5,7 @@ import com.tangem.blockchain.common.Blockchain
 fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
     return when (networkId) {
         "arbitrum-one" -> Blockchain.Arbitrum
-        "arbitrum-one/test" -> Blockchain.ArbitrumTestnet
+        "arbitrum/test" -> Blockchain.ArbitrumTestnet
         "avalanche", "avalanche-2" -> Blockchain.Avalanche
         "avalanche/test", "avalanche-2/test" -> Blockchain.AvalancheTestnet
         "binancecoin" -> Blockchain.Binance
@@ -40,6 +40,7 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "xdai" -> Blockchain.Gnosis
         "polkadot" -> Blockchain.Polkadot
         "polkadot/test" -> Blockchain.PolkadotTestnet
+        "kusama" -> Blockchain.Kusama
         else -> null
     }
 }
@@ -84,6 +85,7 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.Gnosis -> "xdai"
         Blockchain.Polkadot -> "polkadot"
         Blockchain.PolkadotTestnet -> "polkadot/test"
+        Blockchain.Kusama -> "kusama"
     }
 }
 
@@ -101,15 +103,16 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Avalanche, Blockchain.AvalancheTestnet -> "avalanche-2"
         Blockchain.Solana, Blockchain.SolanaTestnet -> "solana"
         Blockchain.Fantom, Blockchain.FantomTestnet -> "fantom"
+        Blockchain.Tron, Blockchain.TronTestnet -> "tron"
+        Blockchain.Polkadot, Blockchain.PolkadotTestnet -> "polkadot"
         Blockchain.Ducatus -> "ducatus"
         Blockchain.Litecoin -> "litecoin"
         Blockchain.RSK -> "rootstock"
         Blockchain.Tezos -> "tezos"
         Blockchain.XRP -> "ripple"
         Blockchain.Dogecoin -> "dogecoin"
-        Blockchain.Tron, Blockchain.TronTestnet -> "tron"
         Blockchain.Gnosis -> "xdai"
-        Blockchain.Polkadot, Blockchain.PolkadotTestnet -> "polkadot"
+        Blockchain.Kusama -> "kusama"
         Blockchain.Unknown -> "unknown"
     }
 }
