@@ -66,11 +66,7 @@ class TapApplication : Application(), ImageLoaderFactory {
         walletConnectRepository = WalletConnectRepository(this)
 
         val configLoader = FeaturesLocalLoader(AndroidAssetReader(this), MoshiConverter.defaultMoshi())
-        initConfigManager(configLoader) { config ->
-            shopService = TangemShopService(this, config.shopify!!)
-            initAppsFlyer(this, config)
-            initFeedbackManager(this, preferencesStorage, config)
-        }
+        initConfigManager(configLoader, ::initWithConfigDependency)
         initWarningMessagesManager()
 
         BlockchainSdkRetrofitBuilder.enableNetworkLogging = BuildConfig.DEBUG
@@ -86,6 +82,12 @@ class TapApplication : Application(), ImageLoaderFactory {
             store.dispatch(GlobalAction.SetConfigManager(configManager))
             onComplete(config)
         }
+    }
+
+    private fun initWithConfigDependency(config: Config) {
+        shopService = TangemShopService(this, config.shopify!!)
+        initAppsFlyer(this, config)
+        initFeedbackManager(this, preferencesStorage, config)
     }
 
     private fun initAppsFlyer(context: Context, config: Config) {
