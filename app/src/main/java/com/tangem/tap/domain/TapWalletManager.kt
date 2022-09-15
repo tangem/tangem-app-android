@@ -160,6 +160,7 @@ class TapWalletManager {
         val primaryWalletManager = walletManagerFactory.makePrimaryWalletManager(data)
 
         if (blockchain != Blockchain.Unknown && primaryWalletManager != null) {
+            val blockchainNetwork = BlockchainNetwork.fromWalletManager(primaryWalletManager)
             val primaryToken = data.getPrimaryToken()
 
             dispatchOnMain(WalletAction.MultiWallet.SetPrimaryBlockchain(blockchain))
@@ -169,9 +170,9 @@ class TapWalletManager {
             }
             dispatchOnMain(
                 WalletAction.MultiWallet.AddBlockchains(
-                    listOf(BlockchainNetwork.fromWalletManager(primaryWalletManager)),
-                    listOf(primaryWalletManager)
-                )
+                    listOf(blockchainNetwork),
+                    listOf(primaryWalletManager),
+                ),
             )
         }
     }

@@ -86,6 +86,7 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.Polkadot -> "polkadot"
         Blockchain.PolkadotTestnet -> "polkadot/test"
         Blockchain.Kusama -> "kusama"
+        Blockchain.SaltPay -> "xdai"//TODO
     }
 }
 
@@ -113,6 +114,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Dogecoin -> "dogecoin"
         Blockchain.Gnosis -> "xdai"
         Blockchain.Kusama -> "kusama"
+        Blockchain.SaltPay -> "xdai" //TODO
         Blockchain.Unknown -> "unknown"
     }
 }
