@@ -60,7 +60,6 @@
                     android:adjustViewBounds="true"
                     android:contentDescription="@null"
                     android:elevation="3dp"
-                    android:maxHeight="215dp"
                     android:scaleType="fitCenter"
                     app:layout_constraintTop_toTopOf="parent"
                     tools:src="@drawable/card_placeholder_black" />
