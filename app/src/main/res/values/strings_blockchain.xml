@@ -17,4 +17,5 @@
     <string name="xtz_withdrawal_message_warning">To avoid paying an increased commission the next time you top up your wallet, reduce the amount by %s XTZ</string>
     <string name="xtz_withdrawal_message_reduce">Reduce by %s XTZ</string>
     <string name="xtz_withdrawal_message_ignore">No, send all</string>
+    <string name="send_error_minimum_balance_format">Minimum balance is %s</string>
 </resources>
