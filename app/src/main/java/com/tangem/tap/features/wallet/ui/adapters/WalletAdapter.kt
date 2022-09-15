@@ -15,6 +15,7 @@ import com.tangem.tap.common.extensions.show
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletData
 import com.tangem.tap.features.wallet.ui.BalanceStatus
+import com.tangem.tap.features.wallet.ui.images.load
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.ItemCurrencyWalletBinding
