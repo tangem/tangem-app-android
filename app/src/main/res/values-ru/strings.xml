@@ -147,10 +147,6 @@
     <string name="common_add">Добавить</string>
     <string name="common_remove">Удалить</string>
     <string name="common_search">Поиск</string>
-    <string name="send_extras_hint_memo">Памятка</string>
-    <string name="send_extras_hint_destination_tag">Тег назначения</string>
-    <string name="send_error_invalid_destination_tag">Недопустимый тег назначения. Он не будет добавлен в транзакцию.</string>
-    <string name="send_error_invalid_memo_id">Недопустимый идентификатор памятки. Он не будет добавлен в транзакцию.</string>
     <string name="details_section_title_app">Приложение</string>
     <string name="details_row_title_send_feedback">Отправить отзыв</string>
     <string name="alert_app_feedback_sent_title">Успешно отправлено</string>
