@@ -10,7 +10,7 @@ sealed class OnboardingWalletAction : Action {
     object Done : OnboardingWalletAction()
     object FinishOnboarding : OnboardingWalletAction()
 
-    object ProceedBackup : OnboardingWalletAction()
+    data class ProceedBackup(val isSaltPay: Boolean = false) : OnboardingWalletAction()
 
     object LoadArtwork : OnboardingWalletAction()
     class SetArtworkUrl(val artworkUrl: String?) : OnboardingWalletAction()
@@ -21,7 +21,7 @@ sealed class OnboardingWalletAction : Action {
 sealed class BackupAction : Action {
 
     object DetermineBackupStep : BackupAction()
-    object IntroduceBackup : BackupAction()
+    data class IntroduceBackup(val isSaltPay: Boolean = false) : BackupAction()
     object StartBackup : BackupAction()
     object DismissBackup : BackupAction()
 
