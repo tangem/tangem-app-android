@@ -11,6 +11,7 @@ import com.tangem.Log
 import com.tangem.LogFormat
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.domain.DomainLayer
+import com.tangem.domain.common.LogConfig
 import com.tangem.network.common.MoshiConverter
 import com.tangem.tap.common.analytics.GlobalAnalyticsHandler
 import com.tangem.tap.common.feedback.AdditionalFeedbackInfo
@@ -75,8 +76,7 @@ class TapApplication : Application(), ImageLoaderFactory {
         initFeedbackManager()
         loadConfigs()
 
-        BlockchainSdkRetrofitBuilder.enableNetworkLogging =
-            store.state.domainState.globalState.logConfig.network.blockchainSdkNetwork
+        BlockchainSdkRetrofitBuilder.enableNetworkLogging = LogConfig.network.blockchainSdkNetwork
 
         initAppsFlyer()
     }
@@ -84,7 +84,7 @@ class TapApplication : Application(), ImageLoaderFactory {
     override fun newImageLoader(): ImageLoader {
         return createCoilImageLoader(
             context = this,
-            logEnabled = store.state.domainState.globalState.logConfig.imageLoader
+            logEnabled = LogConfig.imageLoader
         )
     }
 
@@ -135,7 +135,7 @@ class TapApplication : Application(), ImageLoaderFactory {
                     infoHolder = infoHolder,
                     logCollector = logWriter,
                     preferencesStorage = preferencesStorage,
-                    logEnabled = store.state.domainState.globalState.logConfig.zendesk,
+                    logEnabled = LogConfig.zendesk,
                 ),
             ),
         )
