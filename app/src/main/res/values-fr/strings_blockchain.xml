@@ -17,4 +17,5 @@
     <string name="xtz_withdrawal_message_warning">Pour ne pas payer une commission élevée la prochaine fois que vous rechargez votre portefeuille, veuillez réduire le montant de %s XTZ</string>
     <string name="xtz_withdrawal_message_reduce">Réduire de %s XTZ</string>
     <string name="xtz_withdrawal_message_ignore">Non, envoyer toute la somme</string>
+    <string name="send_error_minimum_balance_format">Minimum balance is %s</string>
 </resources>
