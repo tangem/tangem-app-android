@@ -4,9 +4,9 @@ import com.tangem.Message
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.extensions.VoidCallback
 import com.tangem.domain.common.ScanResponse
+import com.tangem.tap.common.AssetReader
 import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.domain.TapError
-import com.tangem.tap.domain.twins.AssetReader
 import com.tangem.tap.domain.twins.TwinCardsManager
 import com.tangem.tap.features.onboarding.OnboardingWalletBalance
 import org.rekotlin.Action
