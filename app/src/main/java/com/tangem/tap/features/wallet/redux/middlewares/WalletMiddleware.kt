@@ -12,7 +12,13 @@ import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.operations.attestation.Attestation
 import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.tap.common.analytics.Analytics
-import com.tangem.tap.common.extensions.*
+import com.tangem.tap.common.extensions.copyToClipboard
+import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
+import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.extensions.dispatchOpenUrl
+import com.tangem.tap.common.extensions.onCardScanned
+import com.tangem.tap.common.extensions.shareText
+import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
@@ -22,11 +28,11 @@ import com.tangem.tap.domain.loadedRates
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.send.redux.PrepareSendScreen
+import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.PendingTransactionType
 import com.tangem.tap.features.wallet.models.filterByCoin
 import com.tangem.tap.features.wallet.models.getPendingTransactions
 import com.tangem.tap.features.wallet.models.getSendableAmounts
-import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletData
 import com.tangem.tap.features.wallet.redux.WalletState
@@ -36,7 +42,6 @@ import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
-import java.math.BigDecimal
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
@@ -44,6 +49,7 @@ import org.rekotlin.Action
 import org.rekotlin.DispatchFunction
 import org.rekotlin.Middleware
 import timber.log.Timber
+import java.math.BigDecimal
 
 class WalletMiddleware {
     private val tradeCryptoMiddleware = TradeCryptoMiddleware()
@@ -276,7 +282,7 @@ class WalletMiddleware {
                 }
             } else {
                 if (amounts?.size ?: 0 > 1) {
-                    WalletAction.Send.ChooseCurrency(amounts)
+                    WalletAction.DialogAction.ChooseCurrency(amounts)
                 } else {
                     val amountToSend = amounts?.first()
                     PrepareSendScreen(
