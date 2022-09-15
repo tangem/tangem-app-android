@@ -131,9 +131,7 @@ sealed class WalletAction : Action {
 
     object Scan : WalletAction()
 
-    data class Send(val amount: Amount? = null) : WalletAction() {
-        data class ChooseCurrency(val amounts: List<Amount>?) : WalletAction()
-    }
+    data class Send(val amount: Amount? = null) : WalletAction()
 
     object EmptyField : WalletAction(), ErrorAction {
         override val error = TapError.PayIdEmptyField
