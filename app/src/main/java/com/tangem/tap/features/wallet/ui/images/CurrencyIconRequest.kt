@@ -21,7 +21,7 @@ private const val VOYR = "VOYRME"
 
 class CurrencyIconRequest(
     private val currencyImageView: ImageFilterView,
-    private val currencyTextView: TextView,
+    private val currencyTextView: TextView?,
     private val token: Token?,
     private val blockchain: Blockchain,
 ) {
@@ -38,7 +38,7 @@ class CurrencyIconRequest(
         loadBlockchainIconBase(
             onStart = {
                 currencyImageView.colorFilter = null
-            }
+            },
         )
     }
 
@@ -46,7 +46,7 @@ class CurrencyIconRequest(
         loadBlockchainIconBase(
             onStart = {
                 currencyImageView.saturation = 0f
-            }
+            },
         )
     }
 
@@ -57,7 +57,11 @@ class CurrencyIconRequest(
             },
             onSuccess = {
                 currencyImageView.colorFilter = null
-            }
+            },
+            onError = {
+                currencyImageView.setColorFilter(it.getColor())
+                currencyTextView?.setTextColor(it.getTextColor())
+            },
         )
     }
 
@@ -65,7 +69,12 @@ class CurrencyIconRequest(
         loadTokenIconBase(
             onStart = {
                 currencyImageView.saturation = 0f
-            }
+            },
+            onError = {
+                currencyImageView.saturation = 0f
+                currencyImageView.setColorFilter(it.getColor(true))
+                currencyTextView?.setTextColor(it.getTextColor(true))
+            },
         )
     }
 
@@ -94,15 +103,19 @@ class CurrencyIconRequest(
             data = getTokenIcon(token, blockchain),
             placeholderRes = R.drawable.shape_circle,
             onStart = {
-                currencyTextView.text = token.symbol.take(1)
-                currencyTextView.setTextColor(token.getTextColor())
+                currencyTextView?.text = token.name.take(1)
+                currencyTextView?.setTextColor(token.getTextColor())
                 onStart(token)
             },
             onSuccess = {
-                currencyTextView.text = null
+                currencyTextView?.text = null
                 onSuccess(token)
             },
-            onError = { onError(token) },
+            onError = {
+                // for some reason the onStart doesn't call if an error occurs
+                currencyTextView?.text = token.name.take(1)
+                onError(token)
+            },
         )
     }
 }
@@ -122,7 +135,7 @@ private inline fun ImageView.loadIcon(
         .listener(
             onStart = { onStart() },
             onSuccess = { _, _ -> onSuccess() },
-            onError = { _, _ -> onError() }
+            onError = { _, _ -> onError() },
         )
         .target(imageView = this)
         .build()
