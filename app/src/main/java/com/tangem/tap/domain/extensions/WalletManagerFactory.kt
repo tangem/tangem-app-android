@@ -1,6 +1,10 @@
 package com.tangem.tap.domain.extensions
 
-import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.DerivationParams
+import com.tangem.blockchain.common.DerivationStyle
+import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.common.card.Card
 import com.tangem.common.card.CardWallet
 import com.tangem.common.card.EllipticCurve
@@ -35,10 +39,10 @@ fun WalletManagerFactory.makeWalletManagerForApp(
                 walletPublicKey = wallet.publicKey,
                 pairPublicKey = scanResponse.secondTwinPublicKey!!.hexToBytes(),
                 blockchain = environmentBlockchain,
-                curve = wallet.curve
+                curve = wallet.curve,
             )
         }
-        seedKey != null && derivationParams != null -> {
+        scanResponse.card.isHdWalletAllowedByApp && (seedKey != null && derivationParams != null) -> {
             val derivedKeys = scanResponse.derivedKeys[wallet.publicKey.toMapKey()]
             val derivationPath = when (derivationParams) {
                 is DerivationParams.Default -> blockchain.derivationPath(derivationParams.style)
@@ -51,7 +55,7 @@ fun WalletManagerFactory.makeWalletManagerForApp(
                 blockchain = environmentBlockchain,
                 seedKey = wallet.publicKey,
                 derivedKey = derivedKey,
-                derivation = derivationParams
+                derivation = derivationParams,
             )
         }
         else -> {
