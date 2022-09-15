@@ -79,7 +79,7 @@ private fun prepareSecurityOptions(card: Card): ManageSecurityState {
         }
     }
     val allowedSecurityOptions = when {
-        card.isStart2Coin || card.isTangemNote() -> {
+        card.isStart2Coin || card.isTangemNote() || card.isSaltPay -> {
             EnumSet.of(SecurityOption.LongTap)
         }
         card.settings.isBackupAllowed -> {
