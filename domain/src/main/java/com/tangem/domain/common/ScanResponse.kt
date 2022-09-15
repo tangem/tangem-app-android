@@ -8,7 +8,10 @@ import com.tangem.common.card.WalletData
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.toMapKey
 import com.tangem.common.hdWallet.DerivationPath
+import com.tangem.domain.common.TapWorkarounds.getSaltPayBlockchain
 import com.tangem.domain.common.TapWorkarounds.getTangemNoteBlockchain
+import com.tangem.domain.common.TapWorkarounds.isSaltPay
+import com.tangem.domain.common.TapWorkarounds.isTangemNote
 import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.operations.CommandResponse
 import com.tangem.operations.backup.PrimaryCard
@@ -23,17 +26,26 @@ data class ScanResponse(
     val walletData: WalletData?,
     val secondTwinPublicKey: String? = null,
     val derivedKeys: Map<KeyWalletPublicKey, ExtendedPublicKeysMap> = mapOf(),
-    val primaryCard: PrimaryCard? = null
+    val primaryCard: PrimaryCard? = null,
 ) : CommandResponse {
-
     fun getBlockchain(): Blockchain {
-        if (productType == ProductType.Note) return card.getTangemNoteBlockchain()
-            ?: return Blockchain.Unknown
-        val blockchainName: String = walletData?.blockchain ?: return Blockchain.Unknown
-        return Blockchain.fromId(blockchainName)
+        return when (productType) {
+            ProductType.SaltPay -> {
+                card.getSaltPayBlockchain()
+            }
+            ProductType.Note -> {
+                card.getTangemNoteBlockchain() ?: Blockchain.Unknown
+            }
+            else -> {
+                val blockchainName: String = walletData?.blockchain ?: return Blockchain.Unknown
+                Blockchain.fromId(blockchainName)
+            }
+        }
     }
 
     fun getPrimaryToken(): Token? {
+        if (card.isSaltPay) return TapWorkarounds.saltPayToken
+
         val cardToken = walletData?.token ?: return null
         return Token(
             cardToken.name,
@@ -46,10 +58,8 @@ data class ScanResponse(
     fun isTangemNote(): Boolean = productType == ProductType.Note
     fun isTangemWallet(): Boolean = productType == ProductType.Wallet
     fun isTangemTwins(): Boolean = productType == ProductType.Twins
-
     fun supportsHdWallet(): Boolean = card.settings.isHDWalletAllowed
     fun supportsBackup(): Boolean = card.settings.isBackupAllowed
-
     fun twinsIsTwinned(): Boolean =
         card.isTangemTwins() && walletData != null && secondTwinPublicKey != null
 
@@ -73,17 +83,23 @@ data class ScanResponse(
     fun hasDerivation(curve: EllipticCurve, derivationPath: DerivationPath): Boolean {
         val foundWallet = card.wallets.firstOrNull { it.curve == curve }
             ?: return false
-
         val extendedPublicKeysMap = derivedKeys[foundWallet.publicKey.toMapKey()] ?: return false
-
         val extendedPublicKey = extendedPublicKeysMap[derivationPath]
         return extendedPublicKey != null
     }
 }
 
 enum class ProductType {
-    Note, Twins, Wallet
+    Note, Twins, Wallet, SaltPay
 }
+
+val Card.productType: ProductType
+    get() = when {
+        isTangemTwins() -> ProductType.Twins
+        isTangemNote() -> ProductType.Note
+        isSaltPay -> ProductType.SaltPay
+        else -> ProductType.Wallet
+    }
 
 typealias KeyWalletPublicKey = ByteArrayKey
 
