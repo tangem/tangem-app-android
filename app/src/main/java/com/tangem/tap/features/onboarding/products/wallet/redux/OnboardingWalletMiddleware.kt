@@ -4,6 +4,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.Card
 import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.common.TapWorkarounds.isSaltPay
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.operations.backup.BackupService
 import com.tangem.tap.*
@@ -51,10 +52,10 @@ private fun handleWalletAction(action: Action) {
         OnboardingWalletAction.Init -> {
             val action = when {
                 card == null -> {
-                    OnboardingWalletAction.ProceedBackup
+                    OnboardingWalletAction.ProceedBackup()
                 }
                 card.hasWallets() && card.backupStatus == Card.BackupStatus.NoBackup ->
-                    OnboardingWalletAction.ProceedBackup
+                    OnboardingWalletAction.ProceedBackup(card.isSaltPay)
                 card.hasWallets() && card.backupStatus?.isActive == true ->
                     BackupAction.FinishBackup
                 else -> OnboardingWalletAction.GetToCreateWalletStep
@@ -98,7 +99,7 @@ private fun handleWalletAction(action: Action) {
                                 )
                             )
                             onboardingManager.activationStarted(updatedResponse.card.cardId)
-                            store.dispatch(OnboardingWalletAction.ProceedBackup)
+                            store.dispatch(OnboardingWalletAction.ProceedBackup())
                         }
                         is CompletionResult.Failure -> {
 //                            do nothing
@@ -120,7 +121,7 @@ private fun handleWalletAction(action: Action) {
                 store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Wallet))
             }
         }
-        OnboardingWalletAction.ProceedBackup -> {
+        is OnboardingWalletAction.ProceedBackup -> {
             val newAction = when (val backupState = backupService.currentState) {
                 BackupService.State.FinalizingPrimaryCard -> BackupAction.PrepareToWritePrimaryCard
                 is BackupService.State.FinalizingBackupCard -> BackupAction.PrepareToWriteBackupCard(backupState.index)
@@ -128,7 +129,7 @@ private fun handleWalletAction(action: Action) {
                     if (walletState.backupState.backupStep == BackupStep.InitBackup ||
                         walletState.backupState.backupStep == BackupStep.Finished
                     ) {
-                        BackupAction.IntroduceBackup
+                        BackupAction.IntroduceBackup(action.isSaltPay)
                     } else {
                         null
                     }
@@ -319,7 +320,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
         }
         is BackupAction.ResumeBackup -> {
             store.dispatch(GlobalAction.Onboarding.Start(null, true))
-            store.dispatch(OnboardingWalletAction.ProceedBackup)
+            store.dispatch(OnboardingWalletAction.ProceedBackup())
             store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingWallet))
         }
         is BackupAction.DismissBackup -> {
