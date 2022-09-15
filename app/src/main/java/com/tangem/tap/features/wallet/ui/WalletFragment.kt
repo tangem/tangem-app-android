@@ -127,7 +127,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
                 walletView = MultiWalletView()
                 walletView.changeWalletView(this, binding)
             }
-            !state.isMultiwalletAllowed && walletView !is SingleWalletView -> {
+            !state.isMultiwalletAllowed && !isSaltPay && walletView !is SingleWalletView -> {
                 walletView = SingleWalletView()
                 walletView.changeWalletView(this, binding)
             }
