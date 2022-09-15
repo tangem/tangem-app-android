@@ -1,6 +1,6 @@
 package com.tangem.tap.common.analytics
 
-import android.app.Application
+import android.content.Context
 import com.appsflyer.AFInAppEventParameterName
 import com.appsflyer.AFInAppEventType
 import com.appsflyer.AppsFlyerLib
@@ -8,7 +8,7 @@ import com.shopify.buy3.Storefront
 import com.tangem.common.card.Card
 import com.tangem.common.core.TangemSdkError
 
-class AppsFlyerAnalyticsHandler(val context: Application): AnalyticsHandler() {
+class AppsFlyerAnalyticsHandler(val context: Context): AnalyticsHandler() {
 
     override fun triggerEvent(
         event: AnalyticsEvent,
@@ -16,8 +16,7 @@ class AppsFlyerAnalyticsHandler(val context: Application): AnalyticsHandler() {
         blockchain: String?,
         params: Map<String, String>
     ) {
-        AppsFlyerLib.getInstance().logEvent(context,
-            event.event, prepareParams(card, blockchain))
+        AppsFlyerLib.getInstance().logEvent(context, event.event, prepareParams(card, blockchain))
     }
 
     override fun logCardSdkError(
