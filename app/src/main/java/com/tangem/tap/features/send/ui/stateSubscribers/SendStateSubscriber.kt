@@ -2,7 +2,6 @@ package com.tangem.tap.features.send.ui.stateSubscribers
 
 import android.app.Dialog
 import android.content.Context
-import android.text.InputType
 import android.text.SpannableStringBuilder
 import android.view.View
 import android.view.ViewGroup
@@ -31,7 +30,6 @@ import com.tangem.tap.features.send.redux.states.SendState
 import com.tangem.tap.features.send.redux.states.StateId
 import com.tangem.tap.features.send.redux.states.TransactionExtraError
 import com.tangem.tap.features.send.redux.states.TransactionExtrasState
-import com.tangem.tap.features.send.redux.states.XlmMemoType
 import com.tangem.tap.features.send.ui.FeeUiHelper
 import com.tangem.tap.features.send.ui.SendFragment
 import com.tangem.tap.features.send.ui.dialogs.RequestFeeErrorDialog
@@ -80,14 +78,10 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
             showView(binanceMemoContainer, infoState.binanceMemo)
 
             infoState.xlmMemo?.let {
-                etXlmMemo.inputType = when (it.selectedMemoType) {
-                    XlmMemoType.TEXT -> InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS
-                    XlmMemoType.ID -> InputType.TYPE_CLASS_NUMBER
-                }
                 if (!it.viewFieldValue.isFromUserInput) etXlmMemo.setText(it.viewFieldValue.value)
                 if (it.error != null) {
                     if (it.error == TransactionExtraError.INVALID_XLM_MEMO) {
-                        tilXlmMemo.error = fg.getText(R.string.send_error_invalid_memo_id)
+                        tilXlmMemo.error = fg.getText(R.string.send_error_invalid_memo)
                     }
                 } else {
                     tilXlmMemo.error = null
@@ -109,7 +103,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
             infoState.binanceMemo?.let {
                 if (infoState.binanceMemo.error != null) {
                     if (infoState.binanceMemo.error == TransactionExtraError.INVALID_BINANCE_MEMO) {
-                        tilBinanceMemo.error = fg.getText(R.string.send_error_invalid_memo_id)
+                        tilBinanceMemo.error = fg.getText(R.string.send_error_invalid_memo)
                     }
                 } else {
                     tilBinanceMemo.error = null
