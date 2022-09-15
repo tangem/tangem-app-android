@@ -112,4 +112,8 @@
     <string name="card_settings_reset_card_to_factory_footer">Сброс к заводским настройкам приведет к полному удалению кошелька с выбранной карты. Вы не сможете восстановить текущий кошелек или использовать эту карту для восстановления кода доступа.</string>
 
     <string name="wallet_connect_select_network">Выберите сеть</string>
+    <string name="send_extras_hint_memo">Memo</string>
+    <string name="send_extras_hint_destination_tag">Tag</string>
+    <string name="send_error_invalid_memo">Недопустимый Memo. Он не будет добавлен в транзакцию.</string>
+    <string name="send_error_invalid_destination_tag">Недопустимый Tag. Он не будет добавлен в транзакцию.</string>
 </resources>
