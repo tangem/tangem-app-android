@@ -28,6 +28,8 @@ class MercuryoService(
     private val blockchainsAvailableToBuy = mutableListOf<Blockchain>()
     private val tokensAvailableToBy = mutableMapOf<String, MutableList<Blockchain>>()
 
+    override fun featureIsSwitchedOn(): Boolean = true
+
     override suspend fun update() {
         when (val result = performRequest { api.currencies(apiVersion) }) {
             is Result.Success -> {
@@ -130,6 +132,7 @@ class MercuryoService(
     private fun blockchainFromCurrencyName(currencyName: String): Blockchain? = when (currencyName) {
         "BNB" -> Blockchain.BSC
         "ETH" -> Blockchain.Ethereum
+        "ADA" -> Blockchain.CardanoShelley
         else -> Blockchain.values().find { it.currency.lowercase() == currencyName.lowercase() }
     }
 }
