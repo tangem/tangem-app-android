@@ -6,10 +6,11 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.RadioButton
 import androidx.compose.material.RadioButtonDefaults
 import androidx.compose.material.Text
@@ -22,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import com.tangem.tap.common.compose.TangemTypography
 import com.tangem.tap.features.details.redux.SecurityOption
 import com.tangem.tap.features.details.ui.common.DetailsMainButton
+import com.tangem.tap.features.details.ui.common.ScreenTitle
 import com.tangem.tap.features.details.ui.common.SettingsScreensScaffold
 import com.tangem.wallet.R
 
@@ -33,7 +35,7 @@ fun SecurityModeScreen(
 ) {
     SettingsScreensScaffold(
         content = { SecurityModeOptions(state = state, modifier = modifier) },
-        titleRes = R.string.card_settings_security_mode,
+        // titleRes = R.string.card_settings_security_mode,
         onBackClick = onBackPressed,
     )
 }
@@ -47,10 +49,13 @@ fun SecurityModeOptions(
     Column(
         modifier = modifier
             .fillMaxSize()
-            .padding(bottom = 28.dp)
-            .offset(y = (-16).dp),
+            .verticalScroll(rememberScrollState())
+            .padding(bottom = 28.dp),
         verticalArrangement = Arrangement.SpaceBetween,
     ) {
+        ScreenTitle(titleRes = R.string.card_settings_security_mode, modifier.padding(bottom = 36.dp))
+
+
         state.availableOptions.map {
             SecurityOption(option = it, state = state, modifier = modifier)
         }
