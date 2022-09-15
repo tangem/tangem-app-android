@@ -2,6 +2,7 @@ package com.tangem.tap.features.send.redux.middlewares
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.blockchain.blockchains.binance.BinanceTransactionExtras
+import com.tangem.blockchain.blockchains.polkadot.ExistentialDepositProvider
 import com.tangem.blockchain.blockchains.stellar.StellarTransactionExtras
 import com.tangem.blockchain.blockchains.xrp.XrpTransactionBuilder
 import com.tangem.blockchain.common.Amount
@@ -301,12 +302,21 @@ fun createValidateTransactionError(
     val tapErrors = errorList.map {
         when (it) {
             TransactionError.AmountExceedsBalance -> TapError.AmountExceedsBalance
+            TransactionError.AmountLowerExistentialDeposit -> {
+                if (walletManager is ExistentialDepositProvider) {
+                    val args = listOf(walletManager.getExistentialDeposit().stripZeroPlainString())
+                    TapError.AmountLowerExistentialDeposit(args)
+                } else {
+                    TapError.UnknownError
+                }
+            }
             TransactionError.FeeExceedsBalance -> TapError.FeeExceedsBalance
             TransactionError.TotalExceedsBalance -> TapError.TotalExceedsBalance
             TransactionError.InvalidAmountValue -> TapError.InvalidAmountValue
             TransactionError.InvalidFeeValue -> TapError.InvalidFeeValue
             TransactionError.DustAmount -> {
-                TapError.DustAmount(listOf(walletManager.dustValue?.stripZeroPlainString() ?: "0"))
+                val args = listOf(walletManager.dustValue?.stripZeroPlainString() ?: "0")
+                TapError.DustAmount(args)
             }
             TransactionError.DustChange -> TapError.DustChange
             else -> TapError.UnknownError
