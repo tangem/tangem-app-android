@@ -1,34 +1,16 @@
 package com.tangem.tap.domain.configurable.warningMessage
 
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.common.extensions.VoidCallback
 import com.tangem.tap.common.extensions.containsAny
 import com.tangem.tap.common.extensions.removeBy
-import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
 
 /**
 * [REDACTED_AUTHOR]
  */
-class WarningMessagesManager(
-    private val warningLoader: RemoteWarningLoader,
-) {
+class WarningMessagesManager {
 
     private val warningsList: MutableList<WarningMessage> = mutableListOf()
-
-    fun load(onComplete: VoidCallback? = null) {
-        // exclude annoying remote debug warnings
-        if (BuildConfig.DEBUG) {
-            onComplete?.invoke()
-            return
-        }
-        warningLoader.load { remoteList ->
-            warningsList.clear()
-            warningsList.addAll(remoteList)
-            sortByPriority()
-            onComplete?.invoke()
-        }
-    }
 
     fun addWarning(warning: WarningMessage) {
         if (findWarning(warning) == null) {
@@ -37,7 +19,10 @@ class WarningMessagesManager(
         }
     }
 
-    fun getWarnings(location: WarningMessage.Location, forBlockchains: List<Blockchain> = emptyList()): List<WarningMessage> {
+    fun getWarnings(
+        location: WarningMessage.Location,
+        forBlockchains: List<Blockchain> = emptyList(),
+    ): List<WarningMessage> {
         return warningsList
             .filter { !it.isHidden && it.location.contains(location) }
             .filter {
@@ -94,7 +79,7 @@ class WarningMessagesManager(
             null,
             R.string.alert_title,
             R.string.alert_developer_card,
-            WarningMessage.Origin.Local
+            WarningMessage.Origin.Local,
         )
 
         fun alreadySignedHashesWarning(): WarningMessage = WarningMessage(
@@ -106,7 +91,7 @@ class WarningMessagesManager(
             null,
             R.string.alert_title,
             R.string.alert_card_signed_transactions,
-            WarningMessage.Origin.Local
+            WarningMessage.Origin.Local,
         )
 
         fun signedHashesMultiWalletWarning(): WarningMessage = WarningMessage(
@@ -131,7 +116,7 @@ class WarningMessagesManager(
             null,
             R.string.warning_rate_app_title,
             R.string.warning_rate_app_message,
-            WarningMessage.Origin.Local
+            WarningMessage.Origin.Local,
         )
 
         fun isAlreadySignedHashesWarning(warning: WarningMessage): Boolean {
@@ -147,7 +132,7 @@ class WarningMessagesManager(
             null,
             R.string.warning_failed_to_verify_card_title,
             R.string.warning_failed_to_verify_card_message,
-            WarningMessage.Origin.Local
+            WarningMessage.Origin.Local,
         )
 
         fun remainingSignaturesNotEnough(remainingSignatures: Int): WarningMessage = WarningMessage(
@@ -160,7 +145,7 @@ class WarningMessagesManager(
             titleResId = R.string.alert_title,
             messageResId = R.string.warning_low_signatures_format,
             origin = WarningMessage.Origin.Local,
-            messageFormatArg = remainingSignatures.toString()
+            messageFormatArg = remainingSignatures.toString(),
         )
 
         fun testCardWarning(): WarningMessage = WarningMessage(
@@ -172,7 +157,7 @@ class WarningMessagesManager(
             null,
             R.string.alert_title,
             R.string.warning_testnet_card_message,
-            WarningMessage.Origin.Local
+            WarningMessage.Origin.Local,
         )
 
         fun demoCardWarning(): WarningMessage = WarningMessage(
@@ -184,7 +169,7 @@ class WarningMessagesManager(
             null,
             R.string.alert_title,
             R.string.alert_demo_message,
-            WarningMessage.Origin.Local
+            WarningMessage.Origin.Local,
         )
 
         const val REMAINING_SIGNATURES_WARNING = 10
