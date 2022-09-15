@@ -36,7 +36,7 @@ class FeeReducer : SendInternalReducer {
     private fun handleAction(action: FeeAction, sendState: SendState, state: FeeState): SendState {
         val result = when (action) {
             is FeeAction.RequestFee -> {
-                state.copy(error = null)
+                state
             }
             is FeeAction.ChangeLayoutVisibility -> {
                 fun getVisibility(current: Boolean, proposed: Boolean?): Boolean = proposed ?: current
@@ -56,7 +56,6 @@ class FeeReducer : SendInternalReducer {
                         selectedFeeType = feeType,
                         feeList = fees,
                         currentFee = currentFee,
-                        error = null,
                         feeIsApproximate = isFeeApproximate(sendState),
                     )
                 } else {
@@ -67,16 +66,14 @@ class FeeReducer : SendInternalReducer {
                         selectedFeeType = feeType,
                         feeList = fees,
                         currentFee = currentFee,
-                        error = null,
                         feeIsApproximate = isFeeApproximate(sendState),
                     )
                 }
             }
-            is FeeAction.FeeCalculation.SetFeeError -> {
+            FeeAction.FeeCalculation.ClearResult -> {
                 state.copy(
                     feeList = null,
                     currentFee = null,
-                    error = action.error,
                 )
             }
         }
