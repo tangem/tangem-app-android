@@ -24,7 +24,6 @@ import com.tangem.tap.common.shop.TangemShopService
 import com.tangem.tap.domain.configurable.config.ConfigManager
 import com.tangem.tap.domain.configurable.config.FeaturesLocalLoader
 import com.tangem.tap.domain.configurable.config.FeaturesRemoteLoader
-import com.tangem.tap.domain.configurable.warningMessage.RemoteWarningLoader
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.domain.tokens.CurrenciesRepository
 import com.tangem.tap.domain.walletconnect.WalletConnectRepository
@@ -101,8 +100,7 @@ class TapApplication : Application(), ImageLoaderFactory {
                 zendeskConfig = config.zendesk!!
             )
         }
-        val warningsManager = WarningMessagesManager(RemoteWarningLoader(moshi))
-        warningsManager.load { store.dispatch(GlobalAction.SetWarningManager(warningsManager)) }
+        store.dispatch(GlobalAction.SetWarningManager(WarningMessagesManager())) }
     }
 
     private fun initFeedbackManager() {
