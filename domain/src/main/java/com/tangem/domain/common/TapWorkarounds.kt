@@ -2,6 +2,7 @@ package com.tangem.domain.common
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.DerivationStyle
+import com.tangem.blockchain.common.Token
 import com.tangem.common.card.Card
 import java.util.*
 
@@ -16,7 +17,8 @@ object TapWorkarounds {
     val Card.isStart2Coin: Boolean
         get() = isStart2CoinIssuer(issuer.name)
     val Card.isSaltPay: Boolean
-        get() = false //TODO fix when we know which cards are SaltPay cards
+        get() = saltPayCardIds.contains(cardId) || saltPayBatches.contains(batchId)
+
     val Card.isTestCard: Boolean
         get() = batchId == TEST_CARD_BATCH && cardId.startsWith(TEST_CARD_ID_STARTS_WITH)
     val Card.useOldStyleDerivation: Boolean
@@ -40,10 +42,12 @@ object TapWorkarounds {
         return false
     }
 
-    fun Card.isTangemNote(): Boolean = tangemNoteBatches.contains(batchId) || isSaltPay
+    fun Card.isTangemNote(): Boolean = tangemNoteBatches.contains(batchId)
     fun isTangemWalletBatch(card: Card): Boolean = tangemWalletBatches.contains(card.batchId)
     fun Card.getTangemNoteBlockchain(): Blockchain? =
-        tangemNoteBatches[batchId] ?: if (isSaltPay) Blockchain.Gnosis else null
+        tangemNoteBatches[batchId] ?: null
+
+    fun Card.getSaltPayBlockchain(): Blockchain = Blockchain.SaltPay
 
     private const val START_2_COIN_ISSUER = "start2coin"
     private const val TEST_CARD_BATCH = "99FF"
@@ -77,6 +81,41 @@ object TapWorkarounds {
     )
 
     private val tangemWalletBatchesWithStandardDerivationType = listOf(
-        "AC01", "AC02", "CB95"
+        "AC01", "AC02", "CB95",
     )
+
+    private val saltPayCardIds = listOf(
+        "AE02000000000194",
+        "AC03000000076195",
+        "AC79000000000012", // TODO: remove my testing CIDs
+        "AC79000000000004",// TODO: remove my testing CIDs
+        "AC03000000076070",
+        "AC03000000076088",
+        "AC03000000076096",
+        "AC03000000076104",
+        "AC03000000076112",
+        "AC03000000076120",
+        "AC03000000076138",
+        "AC03000000076146",
+        "AC03000000076153",
+        "AC03000000076161",
+        "AC03000000076179",
+        "AC03000000076187",
+        "AC03000000076195",
+        "AC03000000076203",
+        "AC03000000076211",
+        "AC03000000076229",
+        // TODO: add cids
+    )
+
+    private val saltPayBatches = listOf("AE02")
+
+    val saltPayToken: Token  // TODO: Add real token
+        get() = Token(
+            name = "Wrapped xDAI",
+            "WxDAI",
+            "0x4346186e7461cB4DF06bCFCB4cD591423022e417",
+            18,
+            id = "xdai",
+        )
 }
