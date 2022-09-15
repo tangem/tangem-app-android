@@ -41,6 +41,7 @@ import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.redux.WalletState.Companion.UNKNOWN_AMOUNT_SIGN
 import com.tangem.tap.features.wallet.ui.adapters.PendingTransactionsAdapter
 import com.tangem.tap.features.wallet.ui.adapters.WalletDetailWarningMessagesAdapter
+import com.tangem.tap.features.wallet.ui.images.load
 import com.tangem.tap.features.wallet.ui.test.TestWalletDetails
 import com.tangem.tap.store
 import com.tangem.wallet.R
