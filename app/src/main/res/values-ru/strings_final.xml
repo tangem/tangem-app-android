@@ -98,4 +98,6 @@
     <string name="card_settings_reset_card_to_factory_footer">Сброс к заводским настройкам приведет к полному удалению кошелька с выбранной карты. Вы не сможете восстановить текущий кошелек или использовать эту карту для восстановления кода доступа.</string>
     <string name="wallet_connect_select_network">Выберите сеть</string>
     <string name="warning_existential_deposit_message">Сеть %s использует концепцию экзистенциального депозита. Если баланс вашего счета опустится ниже %s %s, он будет деактивирован, а все оставшиеся средства будут уничтожены.</string>
+
+    <string name="saltpay_backup_warning" translatable="false">Для начала работы с картой сначала отсканируйте первую карту и сделайте бэкап</string>
 </resources>
