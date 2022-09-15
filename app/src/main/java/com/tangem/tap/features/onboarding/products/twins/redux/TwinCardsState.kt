@@ -56,7 +56,7 @@ data class TwinCardsState(
         get() = currentStep == TwinCardsStep.CreateSecondWallet || currentStep == TwinCardsStep.CreateThirdWallet
 
     val isBuyAllowed: Boolean by ReadOnlyProperty<Any, Boolean> { _, _ ->
-        store.state.globalState.exchangeManager?.availableForBuy(walletBalance.currency) ?: false
+        store.state.globalState.exchangeManager.availableForBuy(walletBalance.currency)
     }
 }
 
