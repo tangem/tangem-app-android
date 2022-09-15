@@ -6,18 +6,15 @@ import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.extensions.toNetworkId
 import org.junit.Test
 
-class BlockchainNetworkIdTests {
+class BlockchainTests {
     @Test
-    fun checkAppropriateImplementationForNetworkIds() {
+    fun allNetworkIdsAreImplemented() {
         val unimplementedIds = Blockchain.values()
             .toMutableList()
             .apply { remove(Blockchain.Unknown) }
             .map { it to Blockchain.fromNetworkId(it.toNetworkId()) }
-            .filter { it.second == null }
+            .mapNotNull { if(it.second == null) it.first else null }
 
-        if (unimplementedIds.isEmpty()) return
-
-        val message = unimplementedIds.joinToString("\n") { it.first.fullName }
-        Truth.assert_().withMessage(message).fail()
+        Truth.assertThat(unimplementedIds).isEmpty()
     }
 }
