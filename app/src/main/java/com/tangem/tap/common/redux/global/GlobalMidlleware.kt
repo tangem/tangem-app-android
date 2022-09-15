@@ -5,6 +5,7 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.ifNotNull
 import com.tangem.common.services.Result
+import com.tangem.domain.common.LogConfig
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchDialogShow
@@ -98,7 +99,6 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
         is GlobalAction.ExchangeManager.Init -> {
             val appStateSafe = appState() ?: return
             val config = appStateSafe.globalState.configManager?.config
-            val logConfig = appStateSafe.domainState.globalState.logConfig
             ifNotNull(
                 config?.mercuryoWidgetId,
                 config?.mercuryoSecret,
@@ -110,12 +110,12 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
                         apiVersion = MercuryoApi.API_VERSION,
                         mercuryoWidgetId = mercuryoWidgetId,
                         secret = mercuryoSecret,
-                        logEnabled = logConfig.network.mercuryoService,
+                        logEnabled = LogConfig.network.mercuryoService,
                     )
                     val sellService = MoonPayService(
                         apiKey = moonPayKey,
                         secretKey = moonPaySecretKey,
-                        logEnabled = logConfig.network.moonPayService,
+                        logEnabled = LogConfig.network.moonPayService,
                     )
                     val cardProvider = { store.state.globalState.scanResponse?.card }
 
