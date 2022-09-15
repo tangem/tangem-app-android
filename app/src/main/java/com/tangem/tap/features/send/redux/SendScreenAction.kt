@@ -113,15 +113,11 @@ sealed class FeeActionUi : SendScreenActionUi {
 }
 
 sealed class FeeAction : SendScreenAction {
-    enum class Error {
-        ADDRESS_OR_AMOUNT_IS_EMPTY,
-        REQUEST_FAILED
-    }
 
     object RequestFee : FeeAction()
     sealed class FeeCalculation : FeeAction() {
         data class SetFeeResult(val fee: List<Amount>) : FeeCalculation()
-        data class SetFeeError(val error: Error) : FeeCalculation()
+        object ClearResult : FeeCalculation()
     }
 
     data class ChangeLayoutVisibility(
@@ -160,6 +156,12 @@ sealed class SendAction : SendScreenAction {
             data class CardSdkError(val error: TangemSdkError): Dialog()
             data class BlockchainSdkError(val error: com.tangem.blockchain.common.BlockchainSdkError): Dialog()
         }
+
+        data class RequestFeeError(
+            val error: com.tangem.blockchain.common.BlockchainSdkError,
+            val onRetry: () -> Unit,
+        ) : Dialog()
+
         object Hide : Dialog()
     }
 
