@@ -181,6 +181,8 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
             btnAlternativeAction.show(state.canSkipBackup)
             btnMainAction.setOnClickListener { store.dispatch(BackupAction.StartBackup) }
             btnAlternativeAction.setOnClickListener { store.dispatch(BackupAction.DismissBackup) }
+
+            btnAlternativeAction.show(!state.isSaltPay)
         }
 
         startPostponedEnterTransition()
@@ -232,9 +234,9 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
 
         when (state.backupCardsNumber) {
             0 -> {
-                cardsWidget.toFan() {
-                    cardsWidget.getFirstBackupCardView().animate().alpha(0.6f).setDuration(200)
-                    cardsWidget.getSecondBackupCardView().animate().alpha(0.2f).setDuration(200)
+                cardsWidget.toFan {
+                    cardsWidget.getFirstBackupCardView().animate().alpha(0.6f).duration = 200
+                    cardsWidget.getSecondBackupCardView().animate().alpha(0.2f).duration = 200
                 }
                 tvHeader.text = getText(R.string.onboarding_title_no_backup_cards)
                 tvBody.text = getText(R.string.onboarding_subtitle_no_backup_cards)
@@ -244,7 +246,7 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
                 tvBody.text = getText(R.string.onboarding_subtitle_one_backup_card)
 
                 cardsWidget.toFan(false)
-                cardsWidget.getFirstBackupCardView().animate().alpha(1f).setDuration(400)
+                cardsWidget.getFirstBackupCardView().animate().alpha(1f).duration = 400
                 cardsWidget.getSecondBackupCardView().alpha = 0.2f
             }
             2 -> {
@@ -253,7 +255,7 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
 
                 cardsWidget.toFan(false)
                 cardsWidget.getFirstBackupCardView().alpha = 1f
-                cardsWidget.getSecondBackupCardView().animate().alpha(1f).setDuration(400)
+                cardsWidget.getSecondBackupCardView().animate().alpha(1f).duration = 400
             }
         }
 
@@ -296,7 +298,7 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
         prepareViewForFinalizeStep()
         cardsWidget.getSecondBackupCardView().show(state.backupCardsNumber == 2)
 
-        cardsWidget.toLeapfrog() {
+        cardsWidget.toLeapfrog {
             cardsWidget.getFirstBackupCardView().alpha = 0.6f
             cardsWidget.getSecondBackupCardView().alpha = 0.2f
         }
@@ -335,12 +337,12 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
 
         val cardNumber = (state.backupStep as? BackupStep.WriteBackupCard)?.cardNumber ?: 1
         when (cardNumber) {
-            1 -> cardsWidget.leapfrogWidget.leap() {
+            1 -> cardsWidget.leapfrogWidget.leap {
                 cardsWidget.getOriginCardView().alpha = 0.4f
                 cardsWidget.getFirstBackupCardView().alpha = 0.2f
                 cardsWidget.getSecondBackupCardView().alpha = 1f
             }
-            2 -> cardsWidget.leapfrogWidget.leap() {
+            2 -> cardsWidget.leapfrogWidget.leap {
                 cardsWidget.getOriginCardView().alpha = 0.4f
                 cardsWidget.getFirstBackupCardView().alpha = 0.2f
                 cardsWidget.getSecondBackupCardView().alpha = 1f
@@ -389,8 +391,7 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
             imvSuccess.show()
 
             imvSuccess.animate()
-                ?.alpha(1f)
-                ?.setDuration(400)
+                ?.alpha(1f)?.duration = 400
         }
     }
 
