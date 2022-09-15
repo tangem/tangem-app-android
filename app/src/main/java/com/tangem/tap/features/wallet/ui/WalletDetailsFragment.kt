@@ -41,6 +41,7 @@ import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.redux.WalletState.Companion.UNKNOWN_AMOUNT_SIGN
 import com.tangem.tap.features.wallet.ui.adapters.PendingTransactionsAdapter
 import com.tangem.tap.features.wallet.ui.adapters.WalletDetailWarningMessagesAdapter
+import com.tangem.tap.features.wallet.ui.images.load
 import com.tangem.tap.features.wallet.ui.test.TestWalletDetails
 import com.tangem.tap.store
 import com.tangem.wallet.R
@@ -140,7 +141,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
         setupAddressCard(selectedWallet)
         setupNoInternetHandling(state)
         setupBalanceData(selectedWallet.currencyData)
-        setupButtons(selectedWallet)
+        setupButtons(selectedWallet, state.isExchangeServiceFeatureOn)
 
         handleCurrencyIcon(selectedWallet)
         handleWarnings(selectedWallet)
@@ -186,7 +187,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
         )
     }
 
-    private fun setupButtons(selectedWallet: WalletData) = with(binding) {
+    private fun setupButtons(selectedWallet: WalletData, isExchangeServiceFeatureOn: Boolean) = with(binding) {
         lWalletDetails.btnCopy.setOnClickListener {
             selectedWallet.walletAddresses?.selectedAddress?.address?.let { addressString ->
                 store.dispatch(WalletAction.CopyAddress(addressString, requireContext()))
@@ -199,8 +200,9 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
         }
 
         rowButtons.updateButtonsVisibility(
-            buyAllowed = selectedWallet.tradeCryptoState.isAvailableToBuy(),
-            sellAllowed = selectedWallet.tradeCryptoState.isAvailableToSell(),
+            exchangeServiceFeatureOn = isExchangeServiceFeatureOn,
+            buyAllowed = selectedWallet.isAvailableToBuy,
+            sellAllowed = selectedWallet.isAvailableToSell,
             sendAllowed = selectedWallet.mainButton.enabled,
         )
     }
