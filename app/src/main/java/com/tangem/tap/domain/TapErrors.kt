@@ -31,13 +31,13 @@ sealed class TapError(
     object InsufficientBalance : TapError(R.string.send_error_insufficient_balance)
     object BlockchainInternalError : TapError(R.string.send_error_blockchain_internal)
     object AmountExceedsBalance : TapError(R.string.send_validation_amount_exceeds_balance)
+    data class AmountLowerExistentialDeposit(override val args: List<Any>) : TapError(R.string.send_error_minimum_balance_format)
     object FeeExceedsBalance : TapError(R.string.send_validation_invalid_fee)
     object TotalExceedsBalance : TapError(R.string.send_validation_invalid_total)
     object InvalidAmountValue : TapError(R.string.send_validation_invalid_amount)
     object InvalidFeeValue : TapError(R.string.send_error_invalid_fee_value)
     data class DustAmount(override val args: List<Any>) : TapError(R.string.send_error_dust_amount_format)
     object DustChange : TapError(R.string.send_error_dust_change)
-    data class CreateAccountUnderfunded(override val args: List<Any>) : TapError(R.string.send_error_no_target_account)
 
     data class UnsupportedState(
         val stateError: String,
