@@ -38,7 +38,6 @@ sealed class TapError(
     object InvalidFeeValue : TapError(R.string.send_error_invalid_fee_value)
     data class DustAmount(override val args: List<Any>) : TapError(R.string.send_error_dust_amount_format)
     object DustChange : TapError(R.string.send_error_dust_change)
-    data class CreateAccountUnderfunded(override val args: List<Any>) : TapError(R.string.send_error_no_target_account)
 
     data class UnsupportedState(
         val stateError: String,
