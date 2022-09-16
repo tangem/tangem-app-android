@@ -120,6 +120,7 @@ private fun filterErrorsForAmountField(errors: EnumSet<TransactionError>): EnumS
             TransactionError.TotalExceedsBalance -> {
                 val notAcceptable = listOf(TransactionError.AmountExceedsBalance, TransactionError.FeeExceedsBalance)
                 if (!showIntoAmountField.containsAll(notAcceptable)) showIntoAmountField.add(it)
+                showIntoAmountField.remove(TransactionError.AmountLowerExistentialDeposit)
             }
             else -> showIntoAmountField.add(it)
         }
