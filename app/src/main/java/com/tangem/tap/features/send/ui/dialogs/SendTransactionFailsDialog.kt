@@ -2,6 +2,7 @@ package com.tangem.tap.features.send.ui.dialogs
 
 import android.content.Context
 import androidx.appcompat.app.AlertDialog
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.common.module.ModuleMessageConverter
 import com.tangem.tangem_sdk_new.extensions.localizedDescription
@@ -47,9 +48,13 @@ private class BlockchainSdkErrorConverter(
     override fun convert(message: BlockchainSdkError): String {
         return when (message) {
             is BlockchainSdkError.CreateAccountUnderfunded -> {
-                val reserve = message.minReserve.value?.stripZeroPlainString() ?: "0"
-                val symbol = message.minReserve.currencySymbol
-                context.getString(R.string.send_error_no_target_account, reserve, symbol)
+                val resStringId = when (message.blockchain) {
+                    Blockchain.Polkadot, Blockchain.PolkadotTestnet -> R.string.no_account_polkadot
+                    else -> R.string.send_error_no_target_account
+                }
+                val reserveValueString = message.minReserve.value?.stripZeroPlainString() ?: "0"
+                val argument = "$reserveValueString ${message.minReserve.currencySymbol}"
+                context.getString(resStringId, argument)
             }
             else -> message.customMessage
         }
