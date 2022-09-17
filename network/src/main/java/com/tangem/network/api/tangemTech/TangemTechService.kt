@@ -13,18 +13,16 @@ import kotlinx.coroutines.withContext
  */
 class TangemTechService {
     private val headerInterceptors = mutableListOf<AddHeaderInterceptor>(
-        CacheControlHttpInterceptor(cacheMaxAge)
+        CacheControlHttpInterceptor(cacheMaxAge),
     )
-
     private var api: TangemTechApi = createApi()
-
     suspend fun coins(
         contractAddress: String? = null,
         networkIds: String? = null,
         active: Boolean? = null,
         searchText: String? = null,
         offset: Int? = null,
-        limit: Int? = null
+        limit: Int? = null,
     ): Result<CoinsResponse> = withContext(Dispatchers.IO) {
         performRequest {
             api.coins(
@@ -33,14 +31,14 @@ class TangemTechService {
                 active = active,
                 searchText = searchText,
                 offset = offset,
-                limit = limit
+                limit = limit,
             )
         }
     }
 
     suspend fun rates(
         currency: String,
-        ids: List<String>
+        ids: List<String>,
     ): Result<RatesResponse> = withContext(Dispatchers.IO) {
         performRequest {
             api.rates(currency.lowercase(), ids.joinToString(","))
@@ -55,6 +53,15 @@ class TangemTechService {
         performRequest { api.currencies() }
     }
 
+    suspend fun getUserTokens(userId: String): Result<UserTokensResponse> = withContext(Dispatchers.IO) {
+        performRequest { api.getUserTokens(userId) }
+    }
+
+    suspend fun putUserTokens(userId: String, userTokens: UserTokensResponse): Result<Unit> =
+        withContext(Dispatchers.IO) {
+            performRequest { api.putUserTokens(userId, userTokens) }
+        }
+
     fun addHeaderInterceptors(interceptors: List<AddHeaderInterceptor>) {
         headerInterceptors.removeAll(interceptors)
         headerInterceptors.addAll(interceptors)
@@ -65,7 +72,7 @@ class TangemTechService {
         val retrofit = createRetrofitInstance(
             baseUrl = baseUrl,
             interceptors = headerInterceptors.toList(),
-//            logEnabled = true,
+            logEnabled = true,
         )
         return retrofit.create(TangemTechApi::class.java)
     }
