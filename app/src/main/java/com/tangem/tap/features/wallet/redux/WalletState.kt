@@ -19,9 +19,6 @@ import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.models.TotalBalance
 import com.tangem.tap.features.wallet.models.WalletRent
 import com.tangem.tap.features.wallet.models.WalletWarning
-import com.tangem.tap.features.wallet.models.hasPendingTransactions
-import com.tangem.tap.features.wallet.models.hasSendableAmounts
-import com.tangem.tap.features.wallet.models.isSendableAmount
 import com.tangem.tap.features.wallet.redux.reducers.calculateTotalFiatAmount
 import com.tangem.tap.features.wallet.redux.reducers.findProgressState
 import com.tangem.tap.features.wallet.ui.BalanceStatus
@@ -47,6 +44,7 @@ data class WalletState(
     val isTestnet: Boolean = false,
     val totalBalance: TotalBalance? = null,
     val showBackupWarning: Boolean = false,
+    val missingDerivations: List<BlockchainNetwork> = emptyList(),
 ) : StateType {
 
     // if you do not delegate - the application crashes on startup,
@@ -129,32 +127,6 @@ data class WalletState(
 
     fun getSelectedWalletData(): WalletData? {
         return walletsData.find { it.currency == selectedCurrency }
-    }
-
-    fun canBeRemoved(walletData: WalletData?): Boolean {
-        if (walletData == null) return false
-
-        if (!isPrimaryCurrency(walletData)) {
-            val walletManager = getWalletManager(walletData.currency)
-                ?: return true
-
-            if (walletData.currency is Currency.Blockchain &&
-                walletManager.cardTokens.isNotEmpty()
-            ) {
-                return false
-            }
-
-            val wallet = walletManager.wallet
-
-            return when (walletData.currency) {
-                is Currency.Blockchain -> !wallet.hasPendingTransactions() && !wallet.hasSendableAmounts()
-                is Currency.Token -> {
-                    val token = walletData.currency.token
-                    !wallet.hasPendingTransactions(token) && !wallet.isSendableAmount(token)
-                }
-            }
-        }
-        return false
     }
 
     private fun isPrimaryCurrency(walletData: WalletData): Boolean {
