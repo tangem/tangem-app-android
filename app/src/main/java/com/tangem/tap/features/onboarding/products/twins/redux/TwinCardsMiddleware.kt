@@ -18,7 +18,6 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
-import com.tangem.tap.currenciesRepository
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.makePrimaryWalletManager
 import com.tangem.tap.domain.twins.TwinCardsManager
@@ -271,7 +270,6 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
                             store.dispatch(NavigationAction.NavigateTo(AppScreen.Wallet))
                         }
                         CreateTwinWalletMode.RecreateWallet -> {
-                            currenciesRepository.removeCurrencies(scanResponse.card.cardId)
                             store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
                         }
                     }
