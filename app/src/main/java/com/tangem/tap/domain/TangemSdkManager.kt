@@ -32,7 +32,7 @@ import com.tangem.tap.common.analytics.AnalyticsParam
 import com.tangem.tap.domain.tasks.CreateWalletAndRescanTask
 import com.tangem.tap.domain.tasks.product.ResetToFactorySettingsTask
 import com.tangem.tap.domain.tasks.product.ScanProductTask
-import com.tangem.tap.domain.tokens.CurrenciesRepository
+import com.tangem.tap.domain.tokens.UserTokensRepository
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
@@ -45,7 +45,7 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
 
     suspend fun scanProduct(
         analyticsHandler: AnalyticsHandler?,
-        currenciesRepository: CurrenciesRepository,
+        userTokensRepository: UserTokensRepository,
         additionalBlockchainsToDerive: Collection<Blockchain>? = null,
         messageRes: Int? = null,
     ): CompletionResult<ScanResponse> {
@@ -53,8 +53,8 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
 
         val message = Message(context.getString(messageRes ?: R.string.initial_message_scan_header))
         return runTaskAsyncReturnOnMain(
-            runnable = ScanProductTask(null, currenciesRepository, additionalBlockchainsToDerive),
-            cardId = null, initialMessage = message
+            runnable = ScanProductTask(null, userTokensRepository, additionalBlockchainsToDerive),
+            cardId = null, initialMessage = message,
         ).also { sendScanResultsToAnalytics(analyticsHandler, it) }
     }
 
