@@ -12,6 +12,7 @@ import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.domain.DomainLayer
 import com.tangem.network.common.MoshiConverter
 import com.tangem.tap.common.AndroidAssetReader
+import com.tangem.tap.common.AssetReader
 import com.tangem.tap.common.analytics.GlobalAnalyticsHandler
 import com.tangem.tap.common.feedback.AdditionalFeedbackInfo
 import com.tangem.tap.common.feedback.FeedbackManager
@@ -25,7 +26,7 @@ import com.tangem.tap.domain.configurable.config.Config
 import com.tangem.tap.domain.configurable.config.ConfigManager
 import com.tangem.tap.domain.configurable.config.FeaturesLocalLoader
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
-import com.tangem.tap.domain.tokens.CurrenciesRepository
+import com.tangem.tap.domain.tokens.UserTokensRepository
 import com.tangem.tap.domain.walletconnect.WalletConnectRepository
 import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.tap.persistence.PreferencesStorage
@@ -39,16 +40,14 @@ val store = Store(
     state = AppState(),
 )
 val logConfig = LogConfig()
-
 lateinit var foregroundActivityObserver: ForegroundActivityObserver
-
 lateinit var preferencesStorage: PreferencesStorage
-lateinit var currenciesRepository: CurrenciesRepository
 lateinit var walletConnectRepository: WalletConnectRepository
 lateinit var shopService: TangemShopService
+lateinit var assetReader: AssetReader
+lateinit var userTokensRepository: UserTokensRepository
 
 class TapApplication : Application(), ImageLoaderFactory {
-
     override fun onCreate() {
         super.onCreate()
 
@@ -62,14 +61,19 @@ class TapApplication : Application(), ImageLoaderFactory {
         DomainLayer.init()
         NetworkConnectivity.createInstance(store, this)
         preferencesStorage = PreferencesStorage(this)
-        currenciesRepository = CurrenciesRepository(this, store.state.domainNetworks.tangemTechService)
         walletConnectRepository = WalletConnectRepository(this)
 
-        val configLoader = FeaturesLocalLoader(AndroidAssetReader(this), MoshiConverter.defaultMoshi())
+        assetReader = AndroidAssetReader(this)
+        val configLoader = FeaturesLocalLoader(assetReader, MoshiConverter.defaultMoshi())
         initConfigManager(configLoader, ::initWithConfigDependency)
         initWarningMessagesManager()
 
         BlockchainSdkRetrofitBuilder.enableNetworkLogging = BuildConfig.DEBUG
+
+        userTokensRepository = UserTokensRepository.init(
+            context = this,
+            tangemTechService = store.state.domainNetworks.tangemTechService,
+        )
     }
 
     override fun newImageLoader(): ImageLoader {
