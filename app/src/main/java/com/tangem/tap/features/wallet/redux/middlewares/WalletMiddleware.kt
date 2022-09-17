@@ -108,10 +108,13 @@ class WalletMiddleware {
                 val coinAmount = action.wallet.amounts[AmountType.Coin]?.value
                 if (coinAmount != null && !coinAmount.isZero()) {
                     if (walletState.getWalletData(action.blockchain) == null) {
-                        store.dispatch(WalletAction.MultiWallet.AddBlockchain(
-                            action.blockchain,
-                            null
-                        ))
+                        store.dispatch(
+                            WalletAction.MultiWallet.AddBlockchain(
+                                action.blockchain,
+                                null,
+                                true,
+                            ),
+                        )
                         store.dispatch(WalletAction.LoadWallet.Success(
                             action.wallet,
                             action.blockchain
