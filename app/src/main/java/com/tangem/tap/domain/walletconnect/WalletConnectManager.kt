@@ -1,7 +1,9 @@
 package com.tangem.tap.domain.walletconnect
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.common.card.EllipticCurve
 import com.tangem.common.extensions.guard
+import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -69,7 +71,7 @@ class WalletConnectManager {
             remotePeerId = null,
             session = session,
             client = client,
-            wallet = WalletForSession(cardId = "")
+            wallet = WalletForSession(),
         )
         setupConnectionTimeoutCheck(session)
     }
@@ -110,8 +112,12 @@ class WalletConnectManager {
         }
     }
 
-    fun restoreSessions() {
+    fun restoreSessions(scanResponse: ScanResponse) {
+        val walletPublicKey = scanResponse.card.wallets.firstOrNull { it.curve == EllipticCurve.Secp256k1 }?.publicKey
+            ?: return
         val sessions = walletConnectRepository.loadSavedSessions()
+            // filter sessions for this particular card
+            .filter { it.wallet.walletPublicKey.contentEquals(walletPublicKey) }
         this.sessions = sessions
             .map { session ->
                 WalletConnectActiveData(
@@ -126,8 +132,8 @@ class WalletConnectManager {
                         setListeners(it.client)
                         it.client.connect(it.session, tangemPeerMeta, it.peerId, it.remotePeerId)
                     }
-            }
-            .map { it.session to it }.toMap().toMutableMap()
+            }.associateBy { it.session }.toMutableMap()
+
         store.dispatchOnMain(WalletConnectAction.SetSessionsRestored(sessions))
     }
 
