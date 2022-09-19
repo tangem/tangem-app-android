@@ -81,7 +81,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
                 if (!it.viewFieldValue.isFromUserInput) etXlmMemo.setText(it.viewFieldValue.value)
                 if (it.error != null) {
                     if (it.error == TransactionExtraError.INVALID_XLM_MEMO) {
-                        tilXlmMemo.error = fg.getText(R.string.send_error_invalid_memo)
+                        tilXlmMemo.error = fg.getText(R.string.send_extras_error_invalid_memo)
                     }
                 } else {
                     tilXlmMemo.error = null
@@ -91,7 +91,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
                 if (infoState.xrpDestinationTag.error != null) {
                     if (infoState.xrpDestinationTag.error == TransactionExtraError.INVALID_DESTINATION_TAG) {
                         tilDestinationTag.error =
-                            fg.getText(R.string.send_error_invalid_destination_tag)
+                            fg.getText(R.string.send_extras_error_invalid_destination_tag)
                     }
                 } else {
                     tilDestinationTag.error = null
@@ -103,7 +103,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
             infoState.binanceMemo?.let {
                 if (infoState.binanceMemo.error != null) {
                     if (infoState.binanceMemo.error == TransactionExtraError.INVALID_BINANCE_MEMO) {
-                        tilBinanceMemo.error = fg.getText(R.string.send_error_invalid_memo)
+                        tilBinanceMemo.error = fg.getText(R.string.send_extras_error_invalid_memo)
                     }
                 } else {
                     tilBinanceMemo.error = null

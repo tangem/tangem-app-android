@@ -218,7 +218,7 @@ class ReceiptReducer : SendInternalReducer {
     }
 
     private fun String.addPrecisionSign(): String {
-        val result = if (feeState.feeIsApproximate) "$CAN_BE_LOWER_SIGN $this" else ""
+        val result = if (feeState.feeIsApproximate) "$CAN_BE_LOWER_SIGN $this" else this
         return result.trim()
     }
 }

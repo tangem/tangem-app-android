@@ -24,26 +24,19 @@ data class Config(
     val zendesk: ZendeskConfig? = null,
 )
 
-class ConfigManager(
-    private val localLoader: Loader<ConfigModel>,
-    private val remoteLoader: Loader<ConfigModel>
-) {
+class ConfigManager {
 
     var config: Config = Config()
         private set
 
     private var defaultConfig = Config()
 
-    fun load(onComplete: ((config: Config) -> Unit)? = null) {
-        localLoader.load { configModel ->
+    fun load(configLoader: Loader<ConfigModel>, onComplete: ((config: Config) -> Unit)? = null) {
+        configLoader.load { configModel ->
             setupFeature(configModel.features)
             setupKey(configModel.configValues)
             onComplete?.invoke(config)
         }
-        // Uncomment to enable remote config
-//        remoteLoader.load { config ->
-//            setupFeature(config.features)
-//        }
     }
 
     fun turnOff(name: String) {
