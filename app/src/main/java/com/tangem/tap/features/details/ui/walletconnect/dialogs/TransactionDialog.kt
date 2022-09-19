@@ -17,7 +17,6 @@ class TransactionDialog {
         ): AlertDialog {
             val message = context.getString(
                 R.string.wallet_connect_create_tx_message,
-                data.cardId,
                 data.dAppName,
                 data.dAppUrl,
                 data.amount,
@@ -53,7 +52,6 @@ class TransactionDialog {
 }
 
 data class TransactionRequestDialogData(
-    val cardId: String,
     val dAppName: String,
     val dAppUrl: String,
     val amount: String,
