@@ -98,14 +98,16 @@ class DetailsMiddleware {
         fun handle(action: DetailsAction.ResetToFactory) {
             when (action) {
                 is DetailsAction.ResetToFactory.Start -> {
-                    store.dispatch(NavigationAction.NavigateTo(AppScreen.ResetToFactory))
-                }
-                is DetailsAction.ResetToFactory.Proceed -> {
                     val card = store.state.detailsState.cardSettingsState?.card ?: return
                     if (card.isTangemTwins()) {
                         store.dispatch(DetailsAction.ReCreateTwinsWallet)
                         return
+                    } else {
+                        store.dispatch(NavigationAction.NavigateTo(AppScreen.ResetToFactory))
                     }
+                }
+                is DetailsAction.ResetToFactory.Proceed -> {
+                    val card = store.state.detailsState.cardSettingsState?.card ?: return
                     scope.launch {
                         val result = tangemSdkManager.resetToFactorySettings(card)
                         withContext(Dispatchers.Main) {
