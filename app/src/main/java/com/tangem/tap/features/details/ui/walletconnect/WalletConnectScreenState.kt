@@ -11,14 +11,12 @@ data class WalletConnectScreenState(
 
 data class WcSessionForScreen(
     val description: String,
-    val cardId: String,
     val sessionId: String,
 ) {
     companion object {
         fun fromSession(session: WalletConnectSession): WcSessionForScreen {
             return WcSessionForScreen(
                 description = session.peerMeta.name,
-                cardId = session.wallet.cardId,
                 sessionId = session.session.toUri(),
             )
         }
