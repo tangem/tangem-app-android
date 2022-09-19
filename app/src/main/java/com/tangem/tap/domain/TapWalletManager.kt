@@ -23,6 +23,7 @@ import com.tangem.tap.domain.extensions.makePrimaryWalletManager
 import com.tangem.tap.domain.extensions.makeWalletManagersForApp
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.demo.isDemoCard
+import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.tap.store
@@ -88,14 +89,16 @@ class TapWalletManager {
 
         withMainContext {
             store.dispatch(WalletAction.ResetState(data.card.cardId))
+            store.dispatch(WalletConnectAction.ResetState)
             store.dispatch(GlobalAction.SaveScanNoteResponse(data))
             store.dispatch(WalletAction.SetIfTestnetCard(data.card.isTestCard))
             store.dispatch(WalletAction.MultiWallet.SetIsMultiwalletAllowed(data.card.isMultiwalletAllowed))
+            store.dispatch(WalletConnectAction.RestoreSessions(data))
             store.dispatch(
                 WalletAction.MultiWallet.ShowWalletBackupWarning(
                     show = data.card.settings.isBackupAllowed
-                        && data.card.backupStatus == Card.BackupStatus.NoBackup
-                )
+                        && data.card.backupStatus == Card.BackupStatus.NoBackup,
+                ),
             )
             loadData(data)
         }

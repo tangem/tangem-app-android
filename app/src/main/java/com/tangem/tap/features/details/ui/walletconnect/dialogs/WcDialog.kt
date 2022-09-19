@@ -45,7 +45,6 @@ data class ButtonData(
 interface DialogMessageData
 
 data class WcTransactionDialogMessageData(
-    val cardId: String,
     val dAppName: String,
     val dAppUrl: String,
     val amount: String,
