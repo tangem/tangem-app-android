@@ -1,15 +1,17 @@
 package com.tangem.domain.common
 
+import com.tangem.domain.features.BuildConfig
+
 object LogConfig {
-    const val imageLoader: Boolean = false
-    const val storeAction: Boolean = true
-    const val zendesk: Boolean = false
+    val imageLoader: Boolean = false
+    val storeAction: Boolean = BuildConfig.DEBUG
+    val zendesk: Boolean = false
     val network: NetworkLogConfig = NetworkLogConfig
 }
 
 object NetworkLogConfig {
-    const val mercuryoService: Boolean = false
-    const val moonPayService: Boolean = false
-    const val tangemTechService: Boolean = true
-    const val blockchainSdkNetwork: Boolean = true
+    val mercuryoService: Boolean = false
+    val moonPayService: Boolean = false
+    val tangemTechService: Boolean = BuildConfig.DEBUG
+    val blockchainSdkNetwork: Boolean = BuildConfig.DEBUG
 }
