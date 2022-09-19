@@ -220,7 +220,10 @@ class WalletConnectMiddleware {
         val blockchain = WalletConnectNetworkUtils.parseBlockchain(
             chainId = chainId,
             peer = session.peerMeta,
-        ) ?: Blockchain.Ethereum
+        ).guard {
+            store.dispatchOnMain(GlobalAction.ShowDialog(WalletConnectDialog.UnsupportedNetwork))
+            return
+        }
 
         handleScanResponse(scanResponse = scanResponse, session = session, blockchain = blockchain)
     }
