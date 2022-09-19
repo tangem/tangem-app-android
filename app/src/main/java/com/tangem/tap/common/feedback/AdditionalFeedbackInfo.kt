@@ -1,7 +1,5 @@
 package com.tangem.tap.common.feedback
 
-import android.content.Context
-import android.content.pm.PackageManager
 import android.os.Build
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
@@ -44,15 +42,6 @@ class AdditionalFeedbackInfo {
     var amount: String = ""
     var fee: String = ""
     var token: String = ""
-
-    fun setAppVersion(context: Context) {
-        try {
-            val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-            appVersion = pInfo.versionName
-        } catch (e: PackageManager.NameNotFoundException) {
-            e.printStackTrace()
-        }
-    }
 
     fun setCardInfo(data: ScanResponse) {
         cardId = data.card.cardId
