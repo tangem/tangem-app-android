@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -50,7 +51,7 @@ fun CurrencyItemHeader(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(62.dp)
+            .heightIn(min = 62.dp)
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
@@ -172,8 +173,7 @@ private fun BlockchainNetworkItem(
     addedBlockchains: List<Blockchain>,
 ) {
     val added = addedBlockchains.contains(blockchain)
-    val icon =
-        if (added) blockchain?.getRoundIconRes() else blockchain?.getGreyedOutIconRes()
+    val icon = if (added) blockchain?.getRoundIconRes() else blockchain?.getGreyedOutIconRes()
     if (icon != null) {
         Box(
             Modifier
