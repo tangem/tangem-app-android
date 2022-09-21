@@ -1,7 +1,12 @@
 package com.tangem.tap.common.extensions
 
 import android.app.Activity
-import android.content.*
+import android.content.ActivityNotFoundException
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
+import android.content.ContextWrapper
+import android.content.Intent
 import android.content.res.Resources
 import android.graphics.drawable.Drawable
 import android.os.Build
@@ -20,7 +25,6 @@ import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import com.google.android.material.card.MaterialCardView
 import com.tangem.common.extensions.VoidCallback
-
 
 fun Fragment.getDrawable(@DrawableRes drawableResId: Int): Drawable? {
     return ContextCompat.getDrawable(requireContext(), drawableResId)
@@ -51,6 +55,10 @@ fun View.getString(@StringRes id: Int): String {
 
 fun View.getString(@StringRes id: Int, vararg formatArgs: String): String {
     return context.getString(id, *formatArgs)
+}
+
+fun View.getQuantityString(@StringRes id: Int, quantity: Int): String {
+    return context.resources.getQuantityString(id, quantity, quantity)
 }
 
 fun View.getResourceName(): String {
@@ -89,14 +97,12 @@ fun View.invisible(invisible: Boolean = true, invokeBeforeStateChanged: (() -> U
     } else {
         this.show(invokeBeforeStateChanged)
     }
-
 }
 
 fun Context.dpToPixels(dp: Int): Int =
     TypedValue.applyDimension(
-        TypedValue.COMPLEX_UNIT_DIP, dp.toFloat(), this.resources.displayMetrics
+        TypedValue.COMPLEX_UNIT_DIP, dp.toFloat(), this.resources.displayMetrics,
     ).toInt()
-
 
 fun Context.pixelsToDp(pixels: Int): Int {
     return (pixels.toFloat() /
@@ -106,7 +112,6 @@ fun Context.pixelsToDp(pixels: Int): Int {
 
 fun Context.dpToPixels(dp: Float): Float =
     TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, this.resources.displayMetrics)
-
 
 fun Context.pixelsToDp(pixels: Float): Float =
     (pixels / (resources.displayMetrics.densityDpi.toFloat() / DisplayMetrics.DENSITY_DEFAULT))
@@ -118,14 +123,14 @@ fun MaterialCardView.setMargins(
     marginLeftDp: Int = 16,
     marginTopDp: Int = 8,
     marginRightDp: Int = 16,
-    marginBottomDp: Int = 8
+    marginBottomDp: Int = 8,
 ) {
     val params = this.layoutParams
     (params as ViewGroup.MarginLayoutParams).setMargins(
         context.dpToPixels(marginLeftDp),
         context.dpToPixels(marginTopDp),
         context.dpToPixels(marginRightDp),
-        context.dpToPixels(marginBottomDp)
+        context.dpToPixels(marginBottomDp),
     )
     this.layoutParams = params
 }
@@ -144,7 +149,8 @@ fun Activity.setSystemBarTextColor(setTextDark: Boolean) {
 }
 
 fun View.hideKeyboard() {
-    val inputMethodManager = context.getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as? InputMethodManager
+    val inputMethodManager =
+        context.getSystemService(android.content.Context.INPUT_METHOD_SERVICE) as? InputMethodManager
     inputMethodManager?.hideSoftInputFromWindow(this.windowToken, 0)
 }
 
@@ -182,7 +188,7 @@ fun Context.safeStartActivity(
     intent: Intent,
     options: Bundle? = null,
     fallback: ((ActivityNotFoundException) -> Unit)? = null,
-    finally: VoidCallback? = null
+    finally: VoidCallback? = null,
 ) {
     try {
         this.startActivity(intent, options)
@@ -200,7 +206,7 @@ fun View.getString(resId: Int, vararg formatArgs: Any?): String {
 fun View.animateVisibility(
     show: Boolean,
     durationMillis: Long = SHORT_ANIMATION_DURATION,
-    hiddenVisibility: Int = View.GONE
+    hiddenVisibility: Int = View.GONE,
 ) {
     if (show) {
         this.animate()
