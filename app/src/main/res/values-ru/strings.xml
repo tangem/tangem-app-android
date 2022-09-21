@@ -314,7 +314,6 @@
     <string name="onboarding_title_prepare_origin">Основная карта</string>
     <string name="onboarding_button_backup_origin">Сканировать основную карту</string>
     <string name="onboarding_button_continue_wallet">Перейти к моему кошельку</string>
-    <string name="card_label_number_format">Карта %1s из %2s</string>
     <string name="send_title_currency_format">Отправка %s</string>
     <string name="onboarding_subtitle_scan_backup_card_format">Подготовьте резервную карту с номером %s</string>
     <string name="onboarding_subtitle_scan_primary_card_format">Подготовьте основную карту с номером %s</string>
