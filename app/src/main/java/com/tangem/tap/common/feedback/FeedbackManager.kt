@@ -7,7 +7,6 @@ import com.tangem.tap.common.extensions.sendEmail
 import com.tangem.tap.common.log.TangemLogCollector
 import com.tangem.tap.common.zendesk.ZendeskConfig
 import com.tangem.tap.foregroundActivityObserver
-import com.tangem.tap.logConfig
 import com.tangem.tap.persistence.PreferencesStorage
 import com.tangem.tap.withForegroundActivity
 import com.tangem.wallet.R
@@ -31,6 +30,7 @@ class FeedbackManager(
     val infoHolder: AdditionalFeedbackInfo,
     private val logCollector: TangemLogCollector,
     private val preferencesStorage: PreferencesStorage,
+    private val logEnabled: Boolean = false,
 ) {
     fun initChat(
         context: Context,
@@ -43,7 +43,7 @@ class FeedbackManager(
         )
 
         // Zendesk logs
-        Logger.setLoggable(logConfig.zendesk)
+        Logger.setLoggable(logEnabled)
     }
 
     fun sendEmail(feedbackData: FeedbackData, onFail: ((Exception) -> Unit)? = null) {
