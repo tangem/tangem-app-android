@@ -10,6 +10,7 @@ import com.tangem.Log
 import com.tangem.LogFormat
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.domain.DomainLayer
+import com.tangem.domain.common.LogConfig
 import com.tangem.network.common.MoshiConverter
 import com.tangem.tap.common.AndroidAssetReader
 import com.tangem.tap.common.analytics.GlobalAnalyticsHandler
@@ -38,7 +39,6 @@ val store = Store(
     middleware = AppState.getMiddleware(),
     state = AppState(),
 )
-val logConfig = LogConfig()
 
 lateinit var foregroundActivityObserver: ForegroundActivityObserver
 
@@ -69,11 +69,14 @@ class TapApplication : Application(), ImageLoaderFactory {
         initConfigManager(configLoader, ::initWithConfigDependency)
         initWarningMessagesManager()
 
-        BlockchainSdkRetrofitBuilder.enableNetworkLogging = BuildConfig.DEBUG
+        BlockchainSdkRetrofitBuilder.enableNetworkLogging = LogConfig.network.blockchainSdkNetwork
     }
 
     override fun newImageLoader(): ImageLoader {
-        return createCoilImageLoader(context = this)
+        return createCoilImageLoader(
+            context = this,
+            logEnabled = LogConfig.imageLoader
+        )
     }
 
     private fun initConfigManager(loader: FeaturesLocalLoader, onComplete: (Config) -> Unit) {
@@ -131,6 +134,7 @@ class TapApplication : Application(), ImageLoaderFactory {
             infoHolder = additionalFeedbackInfo,
             logCollector = tangemLogCollector,
             preferencesStorage = preferencesStorage,
+            logEnabled = LogConfig.zendesk,
         )
         feedbackManager.initChat(
             context = context,
@@ -143,9 +147,3 @@ class TapApplication : Application(), ImageLoaderFactory {
         store.dispatch(GlobalAction.SetWarningManager(WarningMessagesManager()))
     }
 }
-
-data class LogConfig(
-    val coil: Boolean = false,
-    val storeAction: Boolean = BuildConfig.DEBUG,
-    val zendesk: Boolean = BuildConfig.DEBUG,
-)
