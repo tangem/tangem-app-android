@@ -1,77 +1,103 @@
 package com.tangem.tap.common.analytics
 
-import android.content.Context
-import com.amplitude.api.Amplitude
-import com.appsflyer.AppsFlyerLib
 import com.shopify.buy3.Storefront
+import com.tangem.blockchain.common.BlockchainError
 import com.tangem.common.card.Card
 import com.tangem.common.core.TangemSdkError
-import com.tangem.tap.store
+import com.tangem.tap.common.extensions.filterNotNull
 
-class GlobalAnalyticsHandler(val analyticsHandlers: List<AnalyticsHandler>) :
-    AnalyticsHandler() {
-    override fun triggerEvent(
+interface GlobalAnalyticsEventHandler : AnalyticsEventHandler,
+    ShopifyOrderEventHandler,
+    ErrorEventHandler,
+    SdkErrorEventHandler
+
+class GlobalAnalyticsHandler(
+    private val analyticsHandlers: List<AnalyticsEventHandler>,
+) : GlobalAnalyticsEventHandler {
+
+    override fun handleEvent(event: String, params: Map<String, String>) {
+        analyticsHandlers.forEach { it.handleEvent(event, params) }
+    }
+
+    override fun handleAnalyticsEvent(
         event: AnalyticsEvent,
+        params: Map<String, String>,
         card: Card?,
         blockchain: String?,
-        params: Map<String, String>
     ) {
-        analyticsHandlers.forEach { it.triggerEvent(event, card, blockchain, params) }
+        analyticsHandlers.forEach { it.handleAnalyticsEvent(event, params, card, blockchain) }
     }
 
-    override fun triggerEvent(event: String, params: Map<String, String>) {
-        analyticsHandlers.forEach { it.triggerEvent(event, params) }
+    override fun handleShopifyOrderEvent(order: Storefront.Order) {
+        analyticsHandlers.filterIsInstance<ShopifyOrderEventHandler>().forEach {
+            it.handleShopifyOrderEvent(order)
+        }
     }
 
-    override fun logCardSdkError(
+    override fun handleErrorEvent(error: Throwable, params: Map<String, String>) {
+        analyticsHandlers.filterIsInstance<ErrorEventHandler>().forEach {
+            it.handleErrorEvent(error, params)
+        }
+    }
+
+    override fun handleCardSdkErrorEvent(
         error: TangemSdkError,
-        actionToLog: Analytics.ActionToLog,
-        parameters: Map<AnalyticsParam, String>?,
-        card: Card?
+        action: Analytics.ActionToLog,
+        params: Map<AnalyticsParam, String>,
+        card: Card?,
     ) {
-        analyticsHandlers.forEach { it.logCardSdkError(error, actionToLog, parameters, card) }
+        analyticsHandlers.filterIsInstance<CardSdkErrorEventHandler>().forEach {
+            it.handleCardSdkErrorEvent(error, action, params, card)
+        }
     }
 
-    override fun logError(error: Throwable, params: Map<String, String>) {
-        analyticsHandlers.forEach { it.logError(error, params) }
+    override fun handleBlockchainSdkErrorEvent(
+        error: BlockchainError,
+        action: Analytics.ActionToLog,
+        params: Map<AnalyticsParam, String>,
+        card: Card?,
+    ) {
+        analyticsHandlers.filterIsInstance<BlockchainSdkErrorEventHandler>().forEach {
+            it.handleBlockchainSdkErrorEvent(error, action, params, card)
+        }
     }
-
-    override fun getOrderEvent(): String {
-        return ""
-    }
-
-    override fun getOrderParams(order: Storefront.Order): Map<String, String> {
-       return emptyMap()
-    }
-
-    companion object {
-        fun createDefaultAnalyticHandlers(context: Context): GlobalAnalyticsHandler {
-            return GlobalAnalyticsHandler(
-                listOf(
-                    FirebaseAnalyticsHandler,
-                    AppsFlyerAnalyticsHandler(context),
-                    AmplitudeAnalyticsHandler()
-                )
+}
+// [REDACTED_TODO_COMMENT]
+fun GlobalAnalyticsEventHandler.logWcEvent(event: Analytics.WcAnalyticsEvent) {
+    when (event) {
+        is Analytics.WcAnalyticsEvent.Action -> {
+            handleAnalyticsEvent(
+                event = AnalyticsEvent.WC_SUCCESS_RESPONSE,
+                params = mapOf(
+                    AnalyticsParam.WALLET_CONNECT_ACTION.param to event.action.name,
+                ),
             )
         }
-
-        private fun initAnalytics(context: Context) {
-            initAppsFlyer(context)
-            initAmplitude(context)
+        is Analytics.WcAnalyticsEvent.Error -> {
+            val params = mapOf(
+                AnalyticsParam.WALLET_CONNECT_ACTION.param to event.action?.name,
+                AnalyticsParam.ERROR_DESCRIPTION.param to event.error.message,
+            ).filterNotNull()
+            handleErrorEvent(event.error, params)
         }
-
-        private fun initAppsFlyer(context: Context) {
-            val devKey = store.state.globalState.configManager?.config?.appsFlyerDevKey ?: return
-            AppsFlyerLib.getInstance().init(devKey, null, context)
-            AppsFlyerLib.getInstance().start(context)
-
-        }
-
-        private fun initAmplitude(context: Context) {
-            val apiKey = store.state.globalState.configManager?.config?.amplitudeApiKey ?: return
-            Amplitude.getInstance()
-                .initialize(context.applicationContext, apiKey)
-                .enableForegroundTracking(context)
+        is Analytics.WcAnalyticsEvent.InvalidRequest ->
+            handleAnalyticsEvent(
+                event = AnalyticsEvent.WC_INVALID_REQUEST,
+                params = mapOf(
+                    AnalyticsParam.WALLET_CONNECT_REQUEST.param to event.json,
+                ).filterNotNull(),
+            )
+        is Analytics.WcAnalyticsEvent.Session -> {
+            val analyticsEvent = when (event.event) {
+                Analytics.WcSessionEvent.Disconnect -> AnalyticsEvent.WC_SESSION_DISCONNECTED
+                Analytics.WcSessionEvent.Connect -> AnalyticsEvent.WC_NEW_SESSION
+            }
+            handleAnalyticsEvent(
+                event = analyticsEvent,
+                params = mapOf(
+                    AnalyticsParam.WALLET_CONNECT_DAPP_URL.param to event.url,
+                ).filterNotNull(),
+            )
         }
     }
 }
