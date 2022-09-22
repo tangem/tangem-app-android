@@ -17,8 +17,7 @@ class OnboardingHelper {
             val cardInfoStorage = preferencesStorage.usedCardsPrefStorage
             return when {
                 response.card.isSaltPay -> {
-                    // response.card.backupStatus?.isActive != true //TODO: restore after presentation
-                    false
+                    response.card.backupStatus?.isActive != true
                 }
                 response.productType == ProductType.Twins -> {
                     if (!response.twinsIsTwinned()) {
