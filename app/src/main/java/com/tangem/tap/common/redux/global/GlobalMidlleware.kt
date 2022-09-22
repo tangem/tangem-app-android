@@ -12,7 +12,6 @@ import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.currenciesRepository
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.features.send.redux.SendAction
 import com.tangem.tap.features.wallet.redux.WalletAction
@@ -25,6 +24,7 @@ import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
+import com.tangem.tap.userTokensRepository
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.DispatchFunction
@@ -141,7 +141,7 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
             scope.launch {
                 val result = tangemSdkManager.scanProduct(
                     store.state.globalState.analyticsHandlers,
-                    currenciesRepository,
+                    userTokensRepository,
                     action.additionalBlockchainsToDerive,
                     action.messageResId,
                 )
