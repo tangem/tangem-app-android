@@ -5,6 +5,7 @@ import com.tangem.common.card.EllipticCurve
 import com.tangem.common.extensions.guard
 import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.logWcEvent
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
