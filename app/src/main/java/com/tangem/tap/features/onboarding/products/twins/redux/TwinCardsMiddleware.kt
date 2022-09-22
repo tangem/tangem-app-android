@@ -139,7 +139,7 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
             val manager = TwinCardsManager(
                 card = getScanResponse().card,
                 assetReader = action.reader,
-                analyticsHandler = store.state.globalState.analyticsHandlers
+                analyticsHandler = store.state.globalState.analyticsHandler
             )
             store.dispatch(TwinCardsAction.CardsManager.Set(manager))
 
