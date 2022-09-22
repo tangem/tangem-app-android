@@ -13,7 +13,7 @@ fun createRetrofitInstance(
     okHttpBuilder: OkHttpClient.Builder = OkHttpClient.Builder(),
     interceptors: List<Interceptor> = emptyList(),
     converterFactory: Converter.Factory = MoshiConverter.createFactory(),
-    logEnabled: Boolean = false
+    logEnabled: Boolean,
 ): Retrofit {
     okHttpBuilder.apply {
         callTimeout(10, TimeUnit.SECONDS)
