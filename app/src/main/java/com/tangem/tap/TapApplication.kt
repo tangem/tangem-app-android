@@ -81,7 +81,7 @@ class TapApplication : Application(), ImageLoaderFactory {
     override fun newImageLoader(): ImageLoader {
         return createCoilImageLoader(
             context = this,
-            logEnabled = LogConfig.imageLoader
+            logEnabled = LogConfig.imageLoader,
         )
     }
 
@@ -103,7 +103,7 @@ class TapApplication : Application(), ImageLoaderFactory {
         AppsFlyerLib.getInstance().init(config.appsFlyerDevKey, null, context)
         AppsFlyerLib.getInstance().start(context)
         val analyticsHandler = GlobalAnalyticsHandler.createDefaultAnalyticHandlers(context)
-        store.dispatch(GlobalAction.SetAnanlyticHandlers(analyticsHandler))
+        store.dispatch(GlobalAction.SetGlobalAnalyticsHandler(analyticsHandler))
     }
 
     private fun initFeedbackManager(context: Context, preferencesStorage: PreferencesStorage, config: Config) {
