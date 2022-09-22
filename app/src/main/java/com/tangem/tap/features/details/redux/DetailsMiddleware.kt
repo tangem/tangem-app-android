@@ -11,7 +11,6 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
-import com.tangem.tap.currenciesRepository
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.onboarding.products.twins.redux.CreateTwinWalletMode
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
@@ -110,11 +109,9 @@ class DetailsMiddleware {
                     val card = store.state.detailsState.cardSettingsState?.card ?: return
                     scope.launch {
                         val result = tangemSdkManager.resetToFactorySettings(card)
-                        withContext(Dispatchers.Main) {
                             when (result) {
                                 is CompletionResult.Success -> {
-                                    currenciesRepository.removeCurrencies(card.cardId)
-                                    store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
+                                    store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Home))
                                 }
                                 is CompletionResult.Failure -> {
                                     (result.error as? TangemSdkError)?.let { error ->
@@ -125,7 +122,6 @@ class DetailsMiddleware {
                                         )
                                     }
                                 }
-                            }
                         }
                     }
                 }
