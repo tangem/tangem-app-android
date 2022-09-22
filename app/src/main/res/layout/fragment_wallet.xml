@@ -93,17 +93,6 @@
                     app:barrierDirection="bottom"
                     app:constraint_referenced_ids="iv_card,tv_twin_card_number" />
 
-                <include
-                    android:id="@+id/l_wallet_backup_warning"
-                    layout="@layout/layout_wallet_backup_warning"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginTop="16dp"
-                    android:layout_marginEnd="16dp"
-                    android:visibility="gone"
-                    app:layout_constraintTop_toBottomOf="@id/rv_warning_messages" />
-
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/rv_warning_messages"
                     android:layout_width="match_parent"
@@ -116,16 +105,47 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/barrier" />
 
+                <LinearLayout
+                    android:id="@+id/ll_warnings"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical"
+                    android:paddingTop="8dp"
+                    app:layout_constraintTop_toBottomOf="@id/rv_warning_messages">
+
+                    <include
+                        android:id="@+id/l_wallet_rescan_warning"
+                        layout="@layout/layout_wallet_rescan_warning"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginTop="8dp"
+                        android:layout_marginEnd="16dp"
+                        android:layout_marginBottom="8dp"
+                        android:visibility="gone" />
+
+                    <include
+                        android:id="@+id/l_wallet_backup_warning"
+                        layout="@layout/layout_wallet_backup_warning"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="16dp"
+                        android:layout_marginEnd="16dp"
+                        android:layout_marginBottom="8dp"
+                        android:visibility="gone" />
+
+
+                </LinearLayout>
+
                 <include
                     android:id="@+id/l_card_total_balance"
                     layout="@layout/layout_card_total_balance"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginStart="16dp"
-                    android:layout_marginTop="8dp"
                     android:layout_marginEnd="16dp"
                     android:visibility="gone"
-                    app:layout_constraintTop_toBottomOf="@id/l_wallet_backup_warning"
+                    app:layout_constraintTop_toBottomOf="@id/ll_warnings"
                     app:layout_goneMarginTop="16dp" />
 
                 <androidx.recyclerview.widget.RecyclerView
