@@ -86,6 +86,5 @@
     <string name="card_settings_reset_card_to_factory">Reset to Factory Settings</string>
     <string name="card_settings_reset_card_to_factory_footer">Factory Reset will completely delete the wallet from the selected card. You will not be able to restore the current wallet or use the card to recover the access code.</string>
     <string name="wallet_connect_select_network">Select network</string>
-    <string name="warning_existential_deposit_message">%s network has a concept of Existential Deposit. If your account drops below %s %s it will be deactivated and any remaining funds will be destroyed.</string>
     <string name="saltpay_backup_warning" translatable="false">To start working with the card scan the first card and make a backup</string>
 </resources>

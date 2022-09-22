@@ -46,7 +46,7 @@ class SaltPaySingleWalletView : WalletView() {
                 state = state.state,
                 currencySymbol = tokenData.tokenSymbol,
                 currency = tokenData.amountFormatted,
-                fiatAmount = tokenData.amount, // TODO: show fiatAmount
+                fiatAmount = tokenData.fiatAmount, // TODO: show fiatAmount
                 fiatCurrency = store.state.globalState.appCurrency,
             ),
         ).setup()
