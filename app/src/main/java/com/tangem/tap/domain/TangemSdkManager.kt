@@ -27,8 +27,8 @@ import com.tangem.operations.pins.CheckUserCodesResponse
 import com.tangem.operations.pins.SetUserCodeCommand
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.AnalyticsEvent
-import com.tangem.tap.common.analytics.AnalyticsHandler
 import com.tangem.tap.common.analytics.AnalyticsParam
+import com.tangem.tap.common.analytics.GlobalAnalyticsHandler
 import com.tangem.tap.domain.tasks.CreateWalletAndRescanTask
 import com.tangem.tap.domain.tasks.product.ResetToFactorySettingsTask
 import com.tangem.tap.domain.tasks.product.ScanProductTask
@@ -44,7 +44,7 @@ import kotlin.coroutines.suspendCoroutine
 class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Context) {
 
     suspend fun scanProduct(
-        analyticsHandler: AnalyticsHandler?,
+        analyticsHandler: GlobalAnalyticsHandler?,
         userTokensRepository: UserTokensRepository,
         additionalBlockchainsToDerive: Collection<Blockchain>? = null,
         messageRes: Int? = null,
@@ -69,7 +69,7 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
     }
 
     private fun sendScanResultsToAnalytics(
-        analyticsHandler: AnalyticsHandler?,
+        analyticsHandler: GlobalAnalyticsHandler?,
         result: CompletionResult<ScanResponse>
     ) {
         when (result) {
