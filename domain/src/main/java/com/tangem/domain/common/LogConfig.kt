@@ -7,6 +7,7 @@ object LogConfig {
     val storeAction: Boolean = BuildConfig.DEBUG
     val zendesk: Boolean = false
     val network: NetworkLogConfig = NetworkLogConfig
+    val analyticsHandlers: AnalyticsHandlersLogConfig = AnalyticsHandlersLogConfig
 }
 
 object NetworkLogConfig {
@@ -14,4 +15,10 @@ object NetworkLogConfig {
     val moonPayService: Boolean = false
     val tangemTechService: Boolean = BuildConfig.DEBUG
     val blockchainSdkNetwork: Boolean = BuildConfig.DEBUG
+}
+
+object AnalyticsHandlersLogConfig {
+    val firebase: Boolean = false
+    val appsFlyer: Boolean = false
+    val amplitude: Boolean = false
 }
