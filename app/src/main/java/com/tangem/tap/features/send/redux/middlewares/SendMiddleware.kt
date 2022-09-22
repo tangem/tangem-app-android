@@ -222,7 +222,7 @@ private fun sendTransaction(
 
             when (sendResult) {
                 is SimpleResult.Success -> {
-                    store.state.globalState.analyticsHandlers?.triggerEvent(
+                    store.state.globalState.analyticsHandler?.triggerEvent(
                         event = AnalyticsEvent.TRANSACTION_IS_SENT,
                         card = card,
                         blockchain = walletManager.wallet.blockchain.currency,
@@ -252,7 +252,7 @@ private fun sendTransaction(
                         feeAmount = feeAmount,
                         destinationAddress = destinationAddress,
                     )
-                    store.state.globalState.analyticsHandlers?.logSendTransactionError(
+                    store.state.globalState.analyticsHandler?.logSendTransactionError(
                         error = sendResult.error,
                         action = Analytics.ActionToLog.SendTransaction,
                         parameters = mapOf(AnalyticsParam.BLOCKCHAIN to walletManager.wallet.blockchain.currency),
