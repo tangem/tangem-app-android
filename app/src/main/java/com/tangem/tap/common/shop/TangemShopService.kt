@@ -5,7 +5,7 @@ import android.content.Intent
 import com.google.android.gms.wallet.PaymentData
 import com.shopify.buy3.Storefront
 import com.tangem.common.extensions.ifNotNull
-import com.tangem.tap.common.analytics.GlobalAnalyticsHandler
+import com.tangem.tap.common.analytics.GlobalAnalyticsEventHandler
 import com.tangem.tap.common.extensions.filterNotNull
 import com.tangem.tap.common.shop.data.ProductType
 import com.tangem.tap.common.shop.data.TangemProduct
@@ -196,10 +196,10 @@ class TangemShopService(application: Application, shopifyShop: ShopifyShop) {
         return checkouts[productType]!!.webUrl
     }
 
-    suspend fun waitForCheckout(productType: ProductType, analyticsHandler: GlobalAnalyticsHandler?) {
+    suspend fun waitForCheckout(productType: ProductType, analyticsHandler: GlobalAnalyticsEventHandler?) {
         val result = shopifyService.checkout(true, checkouts[productType]!!.id)
         result.onSuccess {
-            ifNotNull(analyticsHandler, it.order) { handler, order -> handler.logShopifyOrder(order) }
+            ifNotNull(analyticsHandler, it.order) { handler, order -> handler.handleShopifyOrderEvent(order) }
         }
     }
 
