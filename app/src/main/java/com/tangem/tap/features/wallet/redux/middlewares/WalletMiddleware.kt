@@ -174,7 +174,7 @@ class WalletMiddleware {
                         }
                         is CompletionResult.Failure -> {
                             (result.error as? TangemSdkError)?.let { error ->
-                                store.state.globalState.analyticsHandler?.logCardSdkError(
+                                store.state.globalState.analyticsHandler?.handleCardSdkErrorEvent(
                                     error,
                                     Analytics.ActionToLog.CreateWallet,
                                     card = store.state.detailsState.scanResponse?.card

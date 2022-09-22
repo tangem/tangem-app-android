@@ -81,7 +81,7 @@ class WarningsMiddleware {
             preferencesStorage.appRatingLaunchObserver.foundWalletWithFunds()
         }
         if (preferencesStorage.appRatingLaunchObserver.isReadyToShow()) {
-            store.state.globalState.analyticsHandler?.triggerEvent(AnalyticsEvent.APP_RATING_DISPLAYED)
+            store.state.globalState.analyticsHandler?.handleAnalyticsEvent(AnalyticsEvent.APP_RATING_DISPLAYED)
             addWarningMessage(WarningMessagesManager.appRatingWarning(), true)
         }
     }
