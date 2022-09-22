@@ -1,30 +1,20 @@
 package com.tangem.tap.common.analytics.handlers.appsFlyer
 
-import android.content.Context
 import com.appsflyer.AFInAppEventParameterName
 import com.appsflyer.AFInAppEventType
-import com.appsflyer.AppsFlyerLib
 import com.shopify.buy3.Storefront
 import com.tangem.common.Converter
 import com.tangem.common.card.Card
 import com.tangem.tap.common.analytics.AnalyticsEvent
-import com.tangem.tap.common.analytics.AnalyticsEventHandler
-import com.tangem.tap.common.analytics.ShopifyOrderEventHandler
+import com.tangem.tap.common.analytics.api.AnalyticsEventHandler
+import com.tangem.tap.common.analytics.api.ShopifyOrderEventHandler
 
 class AppsFlyerAnalyticsHandler(
-    private val context: Context,
-    key: String,
+    private val client: AppsFlyerAnalyticsClient,
 ) : AnalyticsEventHandler, ShopifyOrderEventHandler {
 
-    private val appsFlyerLib: AppsFlyerLib = AppsFlyerLib.getInstance()
-
-    init {
-        appsFlyerLib.init(key, null, context)
-        appsFlyerLib.start(context)
-    }
-
     override fun handleEvent(event: String, params: Map<String, String>) {
-        appsFlyerLib.logEvent(context, event, params)
+        client.logEvent(event, params)
     }
 
     override fun handleAnalyticsEvent(
@@ -43,25 +33,26 @@ class AppsFlyerAnalyticsHandler(
     companion object {
         const val ORDER_EVENT = AFInAppEventType.PURCHASE
     }
+}
 
-    class OrderToParamsConverter : Converter<Storefront.Order, Map<String, String>> {
-        override fun convert(value: Storefront.Order): Map<String, String> {
-            val sku = value.lineItems.edges.firstOrNull()?.node?.variant?.sku ?: "unknown"
+private class OrderToParamsConverter : Converter<Storefront.Order, Map<String, String>> {
 
-            val discountCode =
-                (value.discountApplications.edges.firstOrNull()?.node as? Storefront.DiscountCodeApplication)?.code
+    override fun convert(value: Storefront.Order): Map<String, String> {
+        val sku = value.lineItems.edges.firstOrNull()?.node?.variant?.sku ?: "unknown"
 
-            val discountParams = if (discountCode != null) {
-                mapOf(AFInAppEventParameterName.COUPON_CODE to discountCode)
-            } else {
-                mapOf()
-            }
+        val discountCode =
+            (value.discountApplications.edges.firstOrNull()?.node as? Storefront.DiscountCodeApplication)?.code
 
-            return mapOf(
-                AFInAppEventParameterName.CONTENT_ID to sku,
-                AFInAppEventParameterName.REVENUE to value.totalPriceV2.amount,
-                AFInAppEventParameterName.CURRENCY to value.currencyCode.name,
-            ) + discountParams
+        val discountParams = if (discountCode != null) {
+            mapOf(AFInAppEventParameterName.COUPON_CODE to discountCode)
+        } else {
+            mapOf()
         }
+
+        return mapOf(
+            AFInAppEventParameterName.CONTENT_ID to sku,
+            AFInAppEventParameterName.REVENUE to value.totalPriceV2.amount,
+            AFInAppEventParameterName.CURRENCY to value.currencyCode.name,
+        ) + discountParams
     }
 }
