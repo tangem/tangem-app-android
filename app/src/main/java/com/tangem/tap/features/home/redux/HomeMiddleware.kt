@@ -62,7 +62,7 @@ private val homeMiddleware: Middleware<AppState> = { _, _ ->
                             store.dispatchOpenUrl(BUY_WALLET_URL)
                         else -> store.dispatch(NavigationAction.NavigateTo(AppScreen.Shop))
                     }
-                    store.state.globalState.analyticsHandlers?.triggerEvent(
+                    store.state.globalState.analyticsHandler?.triggerEvent(
                         event = AnalyticsEvent.GET_CARD,
                         params = mapOf(AnalyticsParam.SOURCE.param to GetCardSourceParams.WELCOME.param)
                     )
