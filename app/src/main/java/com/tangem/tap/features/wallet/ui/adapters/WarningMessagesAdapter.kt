@@ -109,12 +109,12 @@ class WarningMessageVH(val binding: LayoutWarningCardActionBinding) : RecyclerVi
             binding.btnClose.show()
             val analyticsHandler = store.state.globalState.analyticsHandler
             binding.btnClose.setOnClickListener {
-                analyticsHandler?.triggerEvent(AnalyticsEvent.APP_RATING_DISMISS)
+                analyticsHandler?.handleAnalyticsEvent(AnalyticsEvent.APP_RATING_DISMISS)
                 store.dispatch(GlobalAction.HideWarningMessage(warning))
                 store.dispatch(WalletAction.Warnings.AppRating.RemindLater)
             }
             binding.btnCanBeBetter.setOnClickListener {
-                analyticsHandler?.triggerEvent(AnalyticsEvent.APP_RATING_NEGATIVE)
+                analyticsHandler?.handleAnalyticsEvent(AnalyticsEvent.APP_RATING_NEGATIVE)
                 store.dispatch(WalletAction.Warnings.AppRating.SetNeverToShow)
                 store.dispatch(GlobalAction.HideWarningMessage(warning))
                 store.dispatch(GlobalAction.SendEmail(RateCanBeBetterEmail()))
@@ -122,7 +122,7 @@ class WarningMessageVH(val binding: LayoutWarningCardActionBinding) : RecyclerVi
             binding.btnReallyCool.setOnClickListener {
                 val activity = binding.root.context.getActivity() ?: return@setOnClickListener
 
-                analyticsHandler?.triggerEvent(AnalyticsEvent.APP_RATING_POSITIVE)
+                analyticsHandler?.handleAnalyticsEvent(AnalyticsEvent.APP_RATING_POSITIVE)
                 store.dispatch(WalletAction.Warnings.AppRating.SetNeverToShow)
                 val reviewManager = ReviewManagerFactory.create(activity)
                 val task = reviewManager.requestReviewFlow()
