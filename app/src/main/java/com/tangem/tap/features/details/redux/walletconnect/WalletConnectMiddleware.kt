@@ -8,6 +8,7 @@ import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
@@ -90,6 +91,16 @@ class WalletConnectMiddleware {
                 store.dispatchOnMain(GlobalAction.ShowDialog(WalletConnectDialog.SessionTimeout))
             }
             is WalletConnectAction.FailureEstablishingSession -> {
+                if (action.error != null) {
+                    store.dispatch(
+                        GlobalAction.ShowDialog(
+                            AppDialog.SimpleOkDialogRes(
+                                headerId = R.string.common_warning,
+                                messageId = action.error.messageResource,
+                            ),
+                        ),
+                    )
+                }
                 if (action.session != null) {
                     walletConnectManager.disconnect(action.session)
                 }
@@ -273,21 +284,21 @@ class WalletConnectMiddleware {
             )
             return
         }
-            val wallet = walletManager.wallet
-            val derivedKey =
-                if (wallet.publicKey.blockchainKey.contentEquals(wallet.publicKey.seedKey)) {
-                    null
-                } else {
-                    walletManager.wallet.publicKey.blockchainKey
-                }
-            val walletForSession = WalletForSession(
-                cardId = scanResponse.card.cardId,
-                walletPublicKey = wallet.publicKey.seedKey,
-                derivedPublicKey = derivedKey,
-                derivationPath = wallet.publicKey.derivationPath,
-                derivationStyle = scanResponse.card.derivationStyle,
-                blockchain = wallet.blockchain,
-            )
+        val wallet = walletManager.wallet
+        val derivedKey =
+            if (wallet.publicKey.blockchainKey.contentEquals(wallet.publicKey.seedKey)) {
+                null
+            } else {
+                walletManager.wallet.publicKey.blockchainKey
+            }
+        val walletForSession = WalletForSession(
+            cardId = scanResponse.card.cardId,
+            walletPublicKey = wallet.publicKey.seedKey,
+            derivedPublicKey = derivedKey,
+            derivationPath = wallet.publicKey.derivationPath,
+            derivationStyle = scanResponse.card.derivationStyle,
+            blockchain = wallet.blockchain,
+        )
 
         withMainContext {
             val updatedSession = session.copy(wallet = walletForSession)
