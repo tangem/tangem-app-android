@@ -2,6 +2,7 @@ package com.tangem.tap.domain
 
 import androidx.annotation.StringRes
 import com.tangem.common.core.TangemError
+import com.tangem.network.api.tangemTech.TangemTechError
 import com.tangem.wallet.R
 
 interface TapErrors
@@ -66,7 +67,6 @@ sealed class TapSdkError(override val messageResId: Int?) : Throwable(), TangemE
     object CardNotSupportedByRelease : TapSdkError(R.string.error_update_app)
 }
 
-
 fun TapErrors.assembleErrors(): MutableList<Pair<Int, List<Any>?>> {
     val idList = mutableListOf<Pair<Int, List<Any>?>>()
     when (this) {
@@ -75,3 +75,12 @@ fun TapErrors.assembleErrors(): MutableList<Pair<Int, List<Any>?>> {
     }
     return idList
 }
+
+fun TangemTechError.toTapError(): TapError {
+    return when (this.code) {
+        404 -> NoDataError(this.description)
+        else -> TapError.CustomError(customMessage = this.description)
+    }
+}
+
+class NoDataError(message: String) : TapError.CustomError(customMessage = message)
