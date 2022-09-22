@@ -145,18 +145,19 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
                 BalanceStatus.Loading
             }
             if (action.blockchain == null) {
-                val wallets = newState.wallets.map {
-                    it.copy(
-                        walletsData = it.walletsData.map { walletData ->
+                val wallets = newState.wallets.map { walletStore ->
+                    walletStore.copy(
+                        walletsData = walletStore.walletsData.map { walletData ->
                             walletData.copy(
                                 currencyData = walletData.currencyData.copy(
-                                    status = balanceStatus,
+                                    status =
+                                    if (walletStore.walletManager != null) balanceStatus else BalanceStatus.Unreachable,
                                     currency = walletData.currencyData.currency,
                                     currencySymbol = walletData.currencyData.currencySymbol,
                                 ),
                                 mainButton = WalletMainButton.SendButton(false),
                             )
-                        }
+                        },
                     )
                 }
                 newState = newState.copy(
