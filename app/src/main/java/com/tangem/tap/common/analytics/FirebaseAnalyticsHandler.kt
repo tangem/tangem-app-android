@@ -17,7 +17,7 @@ object FirebaseAnalyticsHandler : AnalyticsHandler() {
         blockchain: String?,
         params: Map<String, String>
     ) {
-        val fullParams = prepareParams(card, blockchain) + params
+        val fullParams = prepareParams(card, blockchain, params)
         Firebase.analytics.logEvent(event.event, fullParams.toBundle())
     }
 
@@ -42,7 +42,7 @@ object FirebaseAnalyticsHandler : AnalyticsHandler() {
         if (error is TangemSdkError.UserCancelled) return
 
         val params = parameters?.toMutableMap() ?: mutableMapOf()
-        if (card != null) params + prepareParams(card)
+        if (card != null)  params + prepareParams(card)
         params[AnalyticsParam.ACTION] = actionToLog.key
         params[AnalyticsParam.ERROR_CODE] = error.code.toString()
         params[AnalyticsParam.ERROR_DESCRIPTION] = error.javaClass.simpleName
