@@ -100,4 +100,6 @@
     <string name="send_extras_hint_destination_tag">Tag</string>
     <string name="send_error_invalid_memo">Invalid Memo. It won\'t be added to the transaction</string>
     <string name="send_error_invalid_destination_tag">Invalid Tag. It won\'t be added to the transaction</string>
+
+    <string name="wallet_connect_error_unsupported_dapp">Connection with this Dapp cannot be established due to its technical implementation.</string>
 </resources>
