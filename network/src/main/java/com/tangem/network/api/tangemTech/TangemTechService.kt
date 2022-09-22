@@ -11,11 +11,16 @@ import kotlinx.coroutines.withContext
 /**
 [REDACTED_AUTHOR]
  */
-class TangemTechService {
+class TangemTechService(
+    private val logIsEnabled: Boolean = false,
+) {
+
     private val headerInterceptors = mutableListOf<AddHeaderInterceptor>(
         CacheControlHttpInterceptor(cacheMaxAge),
     )
+
     private var api: TangemTechApi = createApi()
+
     suspend fun coins(
         contractAddress: String? = null,
         networkIds: String? = null,
@@ -72,7 +77,7 @@ class TangemTechService {
         val retrofit = createRetrofitInstance(
             baseUrl = baseUrl,
             interceptors = headerInterceptors.toList(),
-            logEnabled = true,
+            logEnabled = logIsEnabled,
         )
         return retrofit.create(TangemTechApi::class.java)
     }
