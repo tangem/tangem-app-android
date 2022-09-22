@@ -93,6 +93,7 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.OptimismTestnet -> "optimistic-ethereum/test"
         Blockchain.Dash -> "dash"
         Blockchain.SaltPay -> "xdai"//TODO
+        else -> "unknown" // TODO
     }
 }
 
@@ -124,5 +125,6 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Dash -> "dash"
         Blockchain.SaltPay -> "xdai" //TODO
         Blockchain.Unknown -> "unknown"
+        else -> "unknown" // TODO
     }
 }
