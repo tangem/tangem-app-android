@@ -107,7 +107,7 @@ class WarningMessageVH(val binding: LayoutWarningCardActionBinding) : RecyclerVi
             binding.groupControlsTemporary.hide()
             binding.groupControlsRating.show()
             binding.btnClose.show()
-            val analyticsHandler = store.state.globalState.analyticsHandlers
+            val analyticsHandler = store.state.globalState.analyticsHandler
             binding.btnClose.setOnClickListener {
                 analyticsHandler?.triggerEvent(AnalyticsEvent.APP_RATING_DISMISS)
                 store.dispatch(GlobalAction.HideWarningMessage(warning))
