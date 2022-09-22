@@ -4,12 +4,19 @@ import com.shopify.buy3.Storefront
 import com.tangem.blockchain.common.BlockchainError
 import com.tangem.common.card.Card
 import com.tangem.common.core.TangemSdkError
+import com.tangem.tap.common.analytics.api.AnalyticsEventHandler
+import com.tangem.tap.common.analytics.api.BlockchainSdkErrorEventHandler
+import com.tangem.tap.common.analytics.api.CardSdkErrorEventHandler
+import com.tangem.tap.common.analytics.api.ErrorEventHandler
+import com.tangem.tap.common.analytics.api.ErrorEventLogger
+import com.tangem.tap.common.analytics.api.SdkErrorEventHandler
+import com.tangem.tap.common.analytics.api.ShopifyOrderEventHandler
 import com.tangem.tap.common.extensions.filterNotNull
 
 interface GlobalAnalyticsEventHandler : AnalyticsEventHandler,
-    ShopifyOrderEventHandler,
     ErrorEventHandler,
-    SdkErrorEventHandler
+    SdkErrorEventHandler,
+    ShopifyOrderEventHandler
 
 class GlobalAnalyticsHandler(
     private val analyticsHandlers: List<AnalyticsEventHandler>,
@@ -28,15 +35,9 @@ class GlobalAnalyticsHandler(
         analyticsHandlers.forEach { it.handleAnalyticsEvent(event, params, card, blockchain) }
     }
 
-    override fun handleShopifyOrderEvent(order: Storefront.Order) {
-        analyticsHandlers.filterIsInstance<ShopifyOrderEventHandler>().forEach {
-            it.handleShopifyOrderEvent(order)
-        }
-    }
-
     override fun handleErrorEvent(error: Throwable, params: Map<String, String>) {
-        analyticsHandlers.filterIsInstance<ErrorEventHandler>().forEach {
-            it.handleErrorEvent(error, params)
+        analyticsHandlers.filterIsInstance<ErrorEventLogger>().forEach {
+            it.logErrorEvent(error, params)
         }
     }
 
@@ -59,6 +60,12 @@ class GlobalAnalyticsHandler(
     ) {
         analyticsHandlers.filterIsInstance<BlockchainSdkErrorEventHandler>().forEach {
             it.handleBlockchainSdkErrorEvent(error, action, params, card)
+        }
+    }
+
+    override fun handleShopifyOrderEvent(order: Storefront.Order) {
+        analyticsHandlers.filterIsInstance<ShopifyOrderEventHandler>().forEach {
+            it.handleShopifyOrderEvent(order)
         }
     }
 }
