@@ -15,13 +15,13 @@ import com.tangem.network.common.MoshiConverter
 import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.tap.common.AssetReader
 import com.tangem.tap.common.analytics.Analytics
-import com.tangem.tap.common.analytics.AnalyticsHandler
+import com.tangem.tap.common.analytics.GlobalAnalyticsHandler
 import com.tangem.tap.tangemSdkManager
 
 class TwinCardsManager(
     private val card: Card,
     assetReader: AssetReader,
-    val analyticsHandler: AnalyticsHandler?
+    val analyticsHandler: GlobalAnalyticsHandler?
 ) {
 
     private val currentCardId: String = card.cardId
