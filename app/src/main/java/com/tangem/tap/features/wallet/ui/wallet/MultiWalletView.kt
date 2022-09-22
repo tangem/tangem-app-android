@@ -8,6 +8,7 @@ import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.tap.common.extensions.animateVisibility
 import com.tangem.tap.common.extensions.formatAmountAsSpannedString
+import com.tangem.tap.common.extensions.getQuantityString
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.redux.navigation.AppScreen
@@ -27,7 +28,9 @@ import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentWalletBinding
 
 class MultiWalletView : WalletView() {
+
     private lateinit var walletsAdapter: WalletAdapter
+
     override fun changeWalletView(fragment: WalletFragment, binding: FragmentWalletBinding) {
         setFragment(fragment, binding)
         onViewCreated()
@@ -51,8 +54,7 @@ class MultiWalletView : WalletView() {
         if (card?.backupStatus is Card.BackupStatus.Active) {
             val cardCount = (card.backupStatus as Card.BackupStatus.Active).cardCount + 1
             tvTwinCardNumber.show()
-            tvTwinCardNumber.text =
-                fragment?.getString(R.string.wallet_twins_chip_format, 1, cardCount)
+            tvTwinCardNumber.text = tvTwinCardNumber.getQuantityString(R.plurals.card_label_card_count, cardCount)
         } else {
             tvTwinCardNumber.hide()
         }
