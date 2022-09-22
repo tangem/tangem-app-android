@@ -84,7 +84,7 @@ object TapWorkarounds {
         "AC01", "AC02", "CB95",
     )
 
-    private val saltPayCardIds = listOf(
+    val saltPayCardIds = listOf(
         "AE02000000000194",
         "AC03000000076195",
         "AC79000000000012", // TODO: remove my testing CIDs
@@ -108,9 +108,9 @@ object TapWorkarounds {
         // TODO: add cids
     )
 
-    private val saltPayBatches = listOf("AE02")
+    val saltPayBatches = listOf("AE02")
 
-    val saltPayToken: Token  // TODO: Add real token
+    val saltPayToken: Token
         get() = Token(
             name = "Wrapped xDAI",
             "WxDAI",
