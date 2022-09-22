@@ -200,7 +200,7 @@ class WalletConnectManager {
     }
 
     private fun onSessionClosed(session: WCSession) {
-        store.state.globalState.analyticsHandlers?.logWcEvent(
+        store.state.globalState.analyticsHandler?.logWcEvent(
             Analytics.WcAnalyticsEvent.Session(
                 Analytics.WcSessionEvent.Disconnect, sessions[session]?.peerMeta?.url
             )
@@ -341,7 +341,7 @@ class WalletConnectManager {
                         )
                     )
                 }
-                store.state.globalState.analyticsHandlers?.logWcEvent(
+                store.state.globalState.analyticsHandler?.logWcEvent(
                     Analytics.WcAnalyticsEvent.Session(
                         Analytics.WcSessionEvent.Connect, peer.url
                     )
@@ -355,7 +355,7 @@ class WalletConnectManager {
         }
         client.onEthSendTransaction = { id: Long, transaction: WCEthereumTransaction ->
             Timber.d("onEthSendTransaction: $transaction")
-            store.state.globalState.analyticsHandlers?.logWcEvent(
+            store.state.globalState.analyticsHandler?.logWcEvent(
                 Analytics.WcAnalyticsEvent.Action(
                     Analytics.WcAction.SendTransaction
                 )
@@ -373,7 +373,7 @@ class WalletConnectManager {
         }
         client.onEthSignTransaction = { id: Long, transaction: WCEthereumTransaction ->
             Timber.d("onEthSignTransaction: $transaction")
-            store.state.globalState.analyticsHandlers?.logWcEvent(
+            store.state.globalState.analyticsHandler?.logWcEvent(
                 Analytics.WcAnalyticsEvent.Action(
                     Analytics.WcAction.SignTransaction
                 )
@@ -391,7 +391,7 @@ class WalletConnectManager {
         }
         client.onEthSign = { id: Long, message: WCEthereumSignMessage ->
             Timber.d("onEthSign: $message")
-            store.state.globalState.analyticsHandlers?.logWcEvent(
+            store.state.globalState.analyticsHandler?.logWcEvent(
                 Analytics.WcAnalyticsEvent.Action(
                     Analytics.WcAction.PersonalSign
                 )
@@ -467,7 +467,7 @@ class WalletConnectManager {
         val message = EthSignHelper.tryToParseEthTypedMessage(request)
         if (message != null) {
             Timber.d("onEthSign_v4: $message")
-            store.state.globalState.analyticsHandlers?.logWcEvent(
+            store.state.globalState.analyticsHandler?.logWcEvent(
                 Analytics.WcAnalyticsEvent.Action(
                     Analytics.WcAction.PersonalSign
                 )
