@@ -14,7 +14,7 @@ import com.tangem.domain.common.LogConfig
 import com.tangem.network.common.MoshiConverter
 import com.tangem.tap.common.AndroidAssetReader
 import com.tangem.tap.common.AssetReader
-import com.tangem.tap.common.analytics.AnalyticsEventHandlerBuilder
+import com.tangem.tap.common.analytics.GlobalAnalyticsEventHandlerBuilder
 import com.tangem.tap.common.feedback.AdditionalFeedbackInfo
 import com.tangem.tap.common.feedback.FeedbackManager
 import com.tangem.tap.common.images.createCoilImageLoader
@@ -100,7 +100,7 @@ class TapApplication : Application(), ImageLoaderFactory {
     }
 
     private fun initAnalytics(application: Application, config: Config) {
-        val globalAnalyticsHandler = AnalyticsEventHandlerBuilder(
+        val globalAnalyticsHandler = GlobalAnalyticsEventHandlerBuilder(
             application = application,
             config = config,
             isDebug = BuildConfig.DEBUG,
