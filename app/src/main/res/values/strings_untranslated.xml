@@ -286,7 +286,6 @@
     <string name="onboarding_title_prepare_origin" translatable="false">Primary card</string>
     <string name="onboarding_button_backup_origin" translatable="false">Scan the primary card</string>
     <string name="onboarding_button_continue_wallet" translatable="false">Continue to my wallet</string>
-    <string name="card_label_number_format" translatable="false">Card %1s of %2s</string>
     <string name="send_title_currency_format" translatable="false">Sending %s</string>
     <string name="onboarding_subtitle_scan_backup_card_format" translatable="false">Prepare the backup card with number %s</string>
     <string name="onboarding_subtitle_scan_primary_card_format" translatable="false">Prepare the primary card with number %s</string>
