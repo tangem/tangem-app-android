@@ -52,9 +52,6 @@ class CurrencyIconRequest(
 
     private fun loadTokenIcon() {
         loadTokenIconBase(
-            onStart = {
-                currencyImageView.setColorFilter(it.getColor())
-            },
             onSuccess = {
                 currencyImageView.colorFilter = null
             }
@@ -94,16 +91,24 @@ class CurrencyIconRequest(
             data = getTokenIcon(token, blockchain),
             placeholderRes = R.drawable.shape_circle,
             onStart = {
-                currencyTextView.text = token.symbol.take(1)
-                currencyTextView.setTextColor(token.getTextColor())
+                showPlaceholder(token)
                 onStart(token)
             },
             onSuccess = {
                 currencyTextView.text = null
                 onSuccess(token)
             },
-            onError = { onError(token) },
+            onError = {
+                showPlaceholder(token)
+                onError(token)
+            },
         )
+    }
+
+    private fun showPlaceholder(token: Token) {
+        currencyTextView.text = token.symbol.take(1)
+        currencyTextView.setTextColor(token.getTextColor())
+        currencyImageView.setColorFilter(token.getColor())
     }
 }
 
