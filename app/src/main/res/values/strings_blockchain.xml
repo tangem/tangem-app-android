@@ -18,6 +18,6 @@
     <string name="xtz_withdrawal_message_reduce">Reduce by %s XTZ</string>
     <string name="xtz_withdrawal_message_ignore">No, send all</string>
     <string name="send_error_minimum_balance_format">Minimum balance is %s</string>
-    <string name="warning_existential_deposit_message">%s network has a concept of Existential Deposit. If your account drops below %s %s it will be deactivated and any remaining funds will be destroyed.</string>
+    <string name="warning_existential_deposit_message">%s network has a concept of Existential Deposit. If your account drops below %s it will be deactivated and any remaining funds will be destroyed.</string>
     <string name="no_account_polkadot">Destination account is not active. Send %s or more to activate the account.</string>
 </resources>
