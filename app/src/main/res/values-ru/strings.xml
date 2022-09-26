@@ -359,4 +359,5 @@
     <string name="feedback_preface_tx_push_failed">Пожалуйста, расскажите нам больше о Вашей проблеме. Каждая деталь может быть полезной.</string>
     <string name="feedback_data_collection_message">Информация ниже не является обязательной. Вы можете стереть её, если хотите.</string>
     <string name="common_no">Нет</string>
+    <string name="warning_existential_deposit_message">Сеть %s использует концепцию экзистенциального депозита. Если баланс вашего счета опустится ниже %s %s, он будет деактивирован, а все оставшиеся средства будут уничтожены.</string>
 </resources>
