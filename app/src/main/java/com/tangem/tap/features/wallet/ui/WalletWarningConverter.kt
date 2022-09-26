@@ -18,7 +18,7 @@ class WalletWarningConverter(
             is WalletWarning.ExistentialDeposit -> {
                 context.getString(
                     R.string.warning_existential_deposit_message,
-                    message.currencyName, message.currencySymbols, message.existentialDepositString,
+                    message.currencyName, message.edStringValueWithSymbol,
                 )
             }
             is WalletWarning.BalanceNotEnoughForFee -> {
