@@ -76,7 +76,12 @@ class MercuryoService(
         if (!isBuyAllowed()) return false
 
         // blockchains which cant be defined by mercuryo service
-        val unsupportedBlockchains = listOf(Blockchain.Unknown, Blockchain.Binance, Blockchain.Arbitrum)
+        val unsupportedBlockchains = listOf(
+            Blockchain.Unknown,
+            Blockchain.Binance,
+            Blockchain.Arbitrum,
+            Blockchain.Optimism,
+        )
         val blockchain = currency.blockchain
 
         return when (currency) {
