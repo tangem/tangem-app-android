@@ -4,8 +4,8 @@ import com.tangem.blockchain.common.BlockchainError
 import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.common.Converter
 import com.tangem.common.core.TangemSdkError
-import com.tangem.tap.common.analytics.Analytics
-import com.tangem.tap.common.analytics.AnalyticsParam
+import com.tangem.tap.common.analytics.AnalyticsAnOld
+import com.tangem.tap.common.analytics.AnalyticsParamAnOld
 import com.tangem.tap.common.analytics.TangemSdk
 import com.tangem.tap.features.demo.DemoTransactionSender
 
@@ -25,18 +25,18 @@ internal class CardSdkErrorConverter : Converter<CardSdkErrorConverter.Model, Er
         val mutableParams = value.params.convertToParamValue().toMutableMap().apply {
             putAll(value.cardParams)
         }
-        mutableParams[AnalyticsParam.ACTION.param] = value.action.key
-        mutableParams[AnalyticsParam.ERROR_CODE.param] = value.error.code.toString()
-        mutableParams[AnalyticsParam.ERROR_DESCRIPTION.param] = value.error.javaClass.simpleName
-        mutableParams[AnalyticsParam.ERROR_KEY.param] = "TangemSdkError"
+        mutableParams[AnalyticsParamAnOld.ACTION.param] = value.action.key
+        mutableParams[AnalyticsParamAnOld.ERROR_CODE.param] = value.error.code.toString()
+        mutableParams[AnalyticsParamAnOld.ERROR_DESCRIPTION.param] = value.error.javaClass.simpleName
+        mutableParams[AnalyticsParamAnOld.ERROR_KEY.param] = "TangemSdkError"
 
         return ErrorEvent(TangemSdk.map(value.error), mutableParams)
     }
 
     internal data class Model(
         val error: TangemSdkError,
-        val action: Analytics.ActionToLog,
-        val params: Map<AnalyticsParam, String>,
+        val action: AnalyticsAnOld.ActionToLog,
+        val params: Map<AnalyticsParamAnOld, String>,
         val cardParams: Map<String, String>,
     )
 }
@@ -63,23 +63,23 @@ internal class BlockchainSdkErrorConverter(
         if (error.customMessage.contains(DemoTransactionSender.ID)) return null
 
         val mutableParams = value.params.convertToParamValue().toMutableMap()
-        mutableParams[AnalyticsParam.ACTION.param] = value.action.key
-        mutableParams[AnalyticsParam.ERROR_CODE.param] = error.code.toString()
-        mutableParams[AnalyticsParam.ERROR_DESCRIPTION.param] = "${error.javaClass.simpleName}: ${error.customMessage}"
-        mutableParams[AnalyticsParam.ERROR_KEY.param] = "BlockchainSdkError"
+        mutableParams[AnalyticsParamAnOld.ACTION.param] = value.action.key
+        mutableParams[AnalyticsParamAnOld.ERROR_CODE.param] = error.code.toString()
+        mutableParams[AnalyticsParamAnOld.ERROR_DESCRIPTION.param] = "${error.javaClass.simpleName}: ${error.customMessage}"
+        mutableParams[AnalyticsParamAnOld.ERROR_KEY.param] = "BlockchainSdkError"
 
         return ErrorEvent(value.error, mutableParams)
     }
 
     data class Model(
         val error: BlockchainError,
-        val action: Analytics.ActionToLog,
-        val params: Map<AnalyticsParam, String>,
+        val action: AnalyticsAnOld.ActionToLog,
+        val params: Map<AnalyticsParamAnOld, String>,
         val cardParams: Map<String, String>,
     )
 }
 
-internal fun Map<AnalyticsParam, String>.convertToParamValue(): Map<String, String> {
+internal fun Map<AnalyticsParamAnOld, String>.convertToParamValue(): Map<String, String> {
     return mutableMapOf<String, String>().also { newMap ->
         this.forEach {
             newMap[it.key.param] = it.value
