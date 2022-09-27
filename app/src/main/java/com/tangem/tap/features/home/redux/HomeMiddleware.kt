@@ -2,9 +2,9 @@ package com.tangem.tap.features.home.redux
 
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
-import com.tangem.tap.common.analytics.AnalyticsEvent
-import com.tangem.tap.common.analytics.AnalyticsParam
-import com.tangem.tap.common.analytics.GetCardSourceParams
+import com.tangem.tap.common.analytics.AnalyticsEventAnOld
+import com.tangem.tap.common.analytics.AnalyticsParamAnOld
+import com.tangem.tap.common.analytics.GetCardSourceParamsAnOld
 import com.tangem.tap.common.entities.IndeterminateProgressButton
 import com.tangem.tap.common.extensions.dispatchOpenUrl
 import com.tangem.tap.common.extensions.onCardScanned
@@ -63,8 +63,8 @@ private val homeMiddleware: Middleware<AppState> = { _, _ ->
                         else -> store.dispatch(NavigationAction.NavigateTo(AppScreen.Shop))
                     }
                     store.state.globalState.analyticsHandler?.handleAnalyticsEvent(
-                        event = AnalyticsEvent.GET_CARD,
-                        params = mapOf(AnalyticsParam.SOURCE.param to GetCardSourceParams.WELCOME.param)
+                        event = AnalyticsEventAnOld.GET_CARD,
+                        params = mapOf(AnalyticsParamAnOld.SOURCE.param to GetCardSourceParamsAnOld.WELCOME.param)
                     )
                 }
             }
