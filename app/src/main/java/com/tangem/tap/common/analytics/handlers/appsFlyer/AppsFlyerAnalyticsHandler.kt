@@ -5,7 +5,7 @@ import com.appsflyer.AFInAppEventType
 import com.shopify.buy3.Storefront
 import com.tangem.common.Converter
 import com.tangem.common.card.Card
-import com.tangem.tap.common.analytics.AnalyticsEvent
+import com.tangem.tap.common.analytics.AnalyticsEventAnOld
 import com.tangem.tap.common.analytics.api.AnalyticsEventHandler
 import com.tangem.tap.common.analytics.api.ShopifyOrderEventHandler
 
@@ -18,7 +18,7 @@ class AppsFlyerAnalyticsHandler(
     }
 
     override fun handleAnalyticsEvent(
-        event: AnalyticsEvent,
+        event: AnalyticsEventAnOld,
         params: Map<String, String>,
         card: Card?,
         blockchain: String?,
