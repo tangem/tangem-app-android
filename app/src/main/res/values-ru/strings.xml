@@ -129,7 +129,6 @@
     <string name="twins_onboarding_title">Tangem Twin</string>
     <string name="twins_onboarding_subtitle">Один кошелек. Две карты.</string>
     <string name="twins_onboarding_description_format">Одна, которую Вы держите в руках, и вторая карта с номером #%s</string>
-    <string name="wallet_twins_chip_format">Карта %1d из %2d</string>
     <string name="details_row_title_twins_recreate">Пересоздать Twin кошелек</string>
     <string name="details_row_title_card_tou">Условия использования карты</string>
     <string name="twins_recreate_toolbar">Tangem Twin</string>
