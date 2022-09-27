@@ -26,7 +26,7 @@ class AddCustomTokenService(
                 result.data.coins.forEach { coin ->
                     val networksWithTheSameAddress = coin.networks
                         .filter { it.contractAddress != null || it.decimalCount != null }
-                        .filter { it.contractAddress == contractAddress }
+                        .filter { it.contractAddress?.equals(contractAddress, ignoreCase = true) == true }
                         .filter { supportedTokenNetworkIds.contains(it.networkId) }
                     if (networksWithTheSameAddress.isNotEmpty()) {
                         val newToken = coin.copy(networks = networksWithTheSameAddress)
@@ -45,6 +45,5 @@ class AddCustomTokenService(
 
     private fun selectNetworksForSearch(networkId: String?): String {
         return networkId ?: supportedTokenNetworkIds.joinToString(",")
-
     }
 }
