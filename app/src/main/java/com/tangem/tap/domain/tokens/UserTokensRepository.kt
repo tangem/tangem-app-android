@@ -103,7 +103,7 @@ class UserTokensRepository(
     }
 
     companion object {
-        const val MESSAGE = "AccountID"
+        const val MESSAGE = "UserWalletID"
         fun init(context: Context, tangemTechService: TangemTechService): UserTokensRepository {
             val fileReader = AndroidFileReader(context)
             val oldUserTokensRepository = OldUserTokensRepository(
