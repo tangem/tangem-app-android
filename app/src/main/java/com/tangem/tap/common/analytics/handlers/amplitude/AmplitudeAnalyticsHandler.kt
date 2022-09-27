@@ -1,7 +1,7 @@
 package com.tangem.tap.common.analytics.handlers.amplitude
 
 import com.tangem.common.card.Card
-import com.tangem.tap.common.analytics.AnalyticsEvent
+import com.tangem.tap.common.analytics.AnalyticsEventAnOld
 import com.tangem.tap.common.analytics.api.AnalyticsEventHandler
 
 class AmplitudeAnalyticsHandler(
@@ -13,7 +13,7 @@ class AmplitudeAnalyticsHandler(
     }
 
     override fun handleAnalyticsEvent(
-        event: AnalyticsEvent,
+        event: AnalyticsEventAnOld,
         params: Map<String, String>,
         card: Card?,
         blockchain: String?,
