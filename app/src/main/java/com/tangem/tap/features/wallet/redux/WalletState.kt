@@ -352,8 +352,7 @@ data class WalletData(
         if (existentialDepositString != null) {
             val warning = WalletWarning.ExistentialDeposit(
                 currencyName = currency.currencyName,
-                currencySymbols = currency.currencySymbol,
-                existentialDepositString = existentialDepositString,
+                edStringValueWithSymbol = "$existentialDepositString ${currency.currencySymbol}",
             )
             walletWarnings.add(warning)
         }
