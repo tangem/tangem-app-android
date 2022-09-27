@@ -1,6 +1,6 @@
 package com.tangem.tap.common.analytics
 
-enum class AnalyticsEvent(val event: String) {
+enum class AnalyticsEventAnOld(val event: String) {
     CARD_IS_SCANNED("card_is_scanned"),
     TRANSACTION_IS_SENT("transaction_is_sent"),
     READY_TO_SCAN("ready_to_scan"),
@@ -19,7 +19,7 @@ enum class AnalyticsEvent(val event: String) {
     GET_CARD("get_card"),
 }
 
-enum class AnalyticsParam(val param: String) {
+enum class AnalyticsParamAnOld(val param: String) {
     BLOCKCHAIN("blockchain"),
     CARD_ID("cardId"),
     BATCH_ID("batch_id"),
@@ -37,13 +37,13 @@ enum class AnalyticsParam(val param: String) {
     SOURCE("source"),
 }
 
-enum class GetCardSourceParams(val param: String) {
+enum class GetCardSourceParamsAnOld(val param: String) {
     WELCOME("welcome"),
     ONBOARDING_BUY_MORE("wallet_onboaring_buy_more_cards"),
     ONBOARDING("wallet_onboarding")
 }
 
-object Analytics {
+object AnalyticsAnOld {
     enum class ActionToLog(val key: String) {
         Scan("tap_scan_task"),
         SendTransaction("send_transaction"),

@@ -4,9 +4,9 @@ import com.shopify.buy3.Storefront
 import com.tangem.blockchain.common.BlockchainError
 import com.tangem.common.card.Card
 import com.tangem.common.core.TangemSdkError
-import com.tangem.tap.common.analytics.Analytics
-import com.tangem.tap.common.analytics.AnalyticsEvent
-import com.tangem.tap.common.analytics.AnalyticsParam
+import com.tangem.tap.common.analytics.AnalyticsAnOld
+import com.tangem.tap.common.analytics.AnalyticsEventAnOld
+import com.tangem.tap.common.analytics.AnalyticsParamAnOld
 import com.tangem.tap.common.extensions.filterNotNull
 
 /**
@@ -19,7 +19,7 @@ interface AnalyticsEventHandler {
     )
 
     fun handleAnalyticsEvent(
-        event: AnalyticsEvent,
+        event: AnalyticsEventAnOld,
         params: Map<String, String> = emptyMap(),
         card: Card? = null,
         blockchain: String? = null,
@@ -30,9 +30,9 @@ interface AnalyticsEventHandler {
         blockchain: String? = null,
         params: Map<String, String> = emptyMap(),
     ): Map<String, String> = mapOf(
-        AnalyticsParam.FIRMWARE.param to card?.firmwareVersion?.stringValue,
-        AnalyticsParam.BATCH_ID.param to card?.batchId,
-        AnalyticsParam.BLOCKCHAIN.param to blockchain,
+        AnalyticsParamAnOld.FIRMWARE.param to card?.firmwareVersion?.stringValue,
+        AnalyticsParamAnOld.BATCH_ID.param to card?.batchId,
+        AnalyticsParamAnOld.BLOCKCHAIN.param to blockchain,
     ).filterNotNull() + params
 }
 
@@ -48,8 +48,8 @@ interface SdkErrorEventHandler : CardSdkErrorEventHandler, BlockchainSdkErrorEve
 interface CardSdkErrorEventHandler {
     fun handleCardSdkErrorEvent(
         error: TangemSdkError,
-        action: Analytics.ActionToLog,
-        params: Map<AnalyticsParam, String> = emptyMap(),
+        action: AnalyticsAnOld.ActionToLog,
+        params: Map<AnalyticsParamAnOld, String> = emptyMap(),
         card: Card? = null,
     )
 }
@@ -57,8 +57,8 @@ interface CardSdkErrorEventHandler {
 interface BlockchainSdkErrorEventHandler {
     fun handleBlockchainSdkErrorEvent(
         error: BlockchainError,
-        action: Analytics.ActionToLog,
-        params: Map<AnalyticsParam, String> = mapOf(),
+        action: AnalyticsAnOld.ActionToLog,
+        params: Map<AnalyticsParamAnOld, String> = mapOf(),
         card: Card? = null,
     )
 }
