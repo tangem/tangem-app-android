@@ -36,6 +36,7 @@ class SingleWalletView : WalletView() {
         rvMultiwallet.hide()
         btnAddToken.hide()
         rvPendingTransaction.hide()
+        pbLoadingUserTokens.hide()
         lCardBalance.root.show()
         lAddress.root.show()
         lSingleWalletBalance.root.hide()
