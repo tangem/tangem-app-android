@@ -9,6 +9,7 @@ import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
@@ -22,6 +23,7 @@ import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.scope
 import com.tangem.tap.store
+import com.tangem.wallet.R
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.Middleware
@@ -98,6 +100,16 @@ class WalletConnectMiddleware {
             is WalletConnectAction.FailureEstablishingSession -> {
                 if (action.session != null) {
                     walletConnectManager.disconnect(action.session)
+                }
+                if (action.showWarning) {
+                    store.dispatchOnMain(
+                        GlobalAction.ShowDialog(
+                            AppDialog.SimpleOkDialogRes(
+                                headerId = R.string.common_warning,
+                                messageId = R.string.wallet_connect_error_failed_to_connect,
+                            ),
+                        ),
+                    )
                 }
             }
             is WalletConnectAction.UnsupportedCard -> {
