@@ -110,8 +110,12 @@ class WalletAdapter
             lContent.tvExchangeRate.text = wallet.fiatRateString
                 ?: root.getString(id = R.string.token_item_no_rate)
 
-            cardWallet.setOnClickListener {
-                store.dispatch(WalletAction.MultiWallet.SelectWallet(wallet))
+            if (wallet.walletAddresses != null) {
+                cardWallet.setOnClickListener {
+                    store.dispatch(WalletAction.MultiWallet.SelectWallet(wallet))
+                }
+            } else {
+                cardWallet.setOnClickListener(null)
             }
         }
     }
