@@ -191,10 +191,30 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="16dp"
+                    android:layout_marginBottom="16dp"
                     android:nestedScrollingEnabled="false"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@id/rv_pending_transaction" />
+
+                <ProgressBar
+                    android:id="@+id/pb_loading_user_tokens"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:indeterminate="true"
+                    android:indeterminateTint="@color/icon_accent"
+                    android:indeterminateTintMode="src_atop"
+                    android:nestedScrollingEnabled="false"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@id/rv_pending_transaction" />
+
+                <androidx.constraintlayout.widget.Barrier
+                    android:id="@+id/barrier_wallets"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    app:barrierDirection="bottom"
+                    app:constraint_referenced_ids="rv_multiwallet,pb_loading_user_tokens" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/btn_add_token"
@@ -210,7 +230,7 @@
                     android:visibility="gone"
                     app:cornerRadius="8dp"
                     app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/rv_multiwallet"
+                    app:layout_constraintTop_toBottomOf="@id/barrier_wallets"
                     app:layout_constraintVertical_bias="0.0"
                     tools:layout_editor_absoluteX="16dp" />
 
