@@ -57,7 +57,10 @@ class WalletConnectManager {
     private var sessions: MutableMap<WCSession, WalletConnectActiveData> = mutableMapOf()
 
     fun connect(wcUri: String) {
-        val session = WCSession.from(wcUri) ?: return
+        val session = WCSession.from(wcUri).guard {
+            store.dispatchOnMain(WalletConnectAction.FailureEstablishingSession(null, true))
+            return
+        }
         if (sessions[session] != null) {
             store.dispatchOnMain(WalletConnectAction.RefuseOpeningSession)
             return
@@ -65,7 +68,14 @@ class WalletConnectManager {
         val client = WCClient(httpClient = okHttpClient)
         setListeners(client)
         val peerId = UUID.randomUUID().toString()
-        client.connect(session, tangemPeerMeta, peerId)
+
+        try {
+            client.connect(session, tangemPeerMeta, peerId)
+        } catch (exception: IllegalArgumentException) {
+            store.dispatchOnMain(WalletConnectAction.FailureEstablishingSession(null, true))
+            return
+        }
+
         sessions[session] = WalletConnectActiveData(
             peerId = peerId,
             remotePeerId = null,
