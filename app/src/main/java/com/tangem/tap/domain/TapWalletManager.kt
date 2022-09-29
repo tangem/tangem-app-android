@@ -179,35 +179,29 @@ class TapWalletManager {
     }
 
     private suspend fun loadUserCurrencies(scanResponse: ScanResponse, walletManagerFactory: WalletManagerFactory) {
-        when (val tokensResult = userTokensRepository.getUserTokens(scanResponse.card)) {
-            is Result.Success -> {
-                withMainContext {
-                    val blockchainNetworks = tokensResult.data.toBlockchainNetworks()
-                    val walletManagers = walletManagerFactory.makeWalletManagersForApp(scanResponse, tokensResult.data)
+        val userTokens = userTokensRepository.getUserTokens(scanResponse.card)
+        withMainContext {
+            val blockchainNetworks = userTokens.toBlockchainNetworks()
+            val walletManagers = walletManagerFactory.makeWalletManagersForApp(scanResponse, userTokens)
+            store.dispatch(
+                WalletAction.MultiWallet.AddBlockchains(
+                    blockchains = blockchainNetworks,
+                    walletManagers = walletManagers,
+                    save = false,
+                ),
+            )
+
+            blockchainNetworks.filter { it.tokens.isNotEmpty() }
+                .map {
                     store.dispatch(
-                        WalletAction.MultiWallet.AddBlockchains(
-                            blockchains = blockchainNetworks,
-                            walletManagers = walletManagers,
+                        WalletAction.MultiWallet.AddTokens(
+                            tokens = it.tokens,
+                            blockchain = it,
                             save = false,
                         ),
                     )
-
-                    blockchainNetworks.filter { it.tokens.isNotEmpty() }
-                        .map {
-                            store.dispatch(
-                                WalletAction.MultiWallet.AddTokens(
-                                    tokens = it.tokens,
-                                    blockchain = it,
-                                    save = false,
-                                ),
-                            )
-                        }
-                    checkIfDerivationsAreMissing(blockchainNetworks, scanResponse)
                 }
-            }
-            is Result.Failure -> {
-                return
-            }
+            checkIfDerivationsAreMissing(blockchainNetworks, scanResponse)
         }
     }
 
