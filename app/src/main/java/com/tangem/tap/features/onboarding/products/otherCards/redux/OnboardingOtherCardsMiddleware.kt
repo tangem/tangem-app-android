@@ -79,17 +79,21 @@ private fun handleOtherCardsAction(action: Action, dispatch: DispatchFunction) {
                             val primaryBlockchain = updatedResponse.getBlockchain()
                             val blockchainNetworks = if (primaryBlockchain != Blockchain.Unknown) {
                                 val primaryToken = updatedResponse.getPrimaryToken()
-                                val blockchainNetwork = BlockchainNetwork(primaryBlockchain, updatedResponse.card).updateTokens(
-                                    listOfNotNull(primaryToken))
+                                val blockchainNetwork =
+                                    BlockchainNetwork(primaryBlockchain, updatedResponse.card).updateTokens(
+                                        listOfNotNull(primaryToken),
+                                    )
                                 listOf(blockchainNetwork)
                             } else {
                                 listOf(
                                     BlockchainNetwork(Blockchain.Bitcoin, updatedResponse.card),
-                                    BlockchainNetwork(Blockchain.Ethereum, updatedResponse.card)
+                                    BlockchainNetwork(Blockchain.Ethereum, updatedResponse.card),
                                 )
                             }
 
-                            store.dispatch(WalletAction.MultiWallet.SaveCurrencies(blockchainNetworks))
+                            store.dispatch(
+                                WalletAction.MultiWallet.SaveCurrencies(blockchainNetworks, updatedResponse.card),
+                            )
 
                             delay(DELAY_SDK_DIALOG_CLOSE)
                             store.dispatch(OnboardingOtherCardsAction.SetStepOfScreen(OnboardingOtherCardsStep.Done))
