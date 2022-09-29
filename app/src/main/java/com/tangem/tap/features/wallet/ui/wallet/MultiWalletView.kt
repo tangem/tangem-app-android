@@ -81,6 +81,8 @@ class MultiWalletView : WalletView() {
         handleRescanWarning(binding, state.missingDerivations.isNotEmpty())
         walletsAdapter.submitList(state.walletsData, state.primaryBlockchain, state.primaryToken)
 
+        binding.pbLoadingUserTokens.show(state.loadingUserTokens)
+
         binding.btnAddToken.setOnClickListener {
             val card = store.state.globalState.scanResponse!!.card
             store.dispatch(
