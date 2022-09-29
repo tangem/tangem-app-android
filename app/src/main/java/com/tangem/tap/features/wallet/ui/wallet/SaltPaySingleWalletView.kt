@@ -20,6 +20,7 @@ class SaltPaySingleWalletView : WalletView() {
         btnAddToken.hide()
         rvPendingTransaction.hide()
         tvTwinCardNumber.hide()
+        pbLoadingUserTokens.hide()
         lCardBalance.root.hide()
         lAddress.root.hide()
         lSingleWalletBalance.root.show()
