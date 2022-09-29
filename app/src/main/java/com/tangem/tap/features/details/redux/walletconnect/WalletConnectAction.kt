@@ -52,7 +52,11 @@ sealed class WalletConnectAction : Action {
         val updatedSession: WalletConnectSession,
     ) : WalletConnectAction()
 
-    data class FailureEstablishingSession(val session: WCSession?) : WalletConnectAction()
+    data class FailureEstablishingSession(
+        val session: WCSession?,
+        val showWarning: Boolean = false,
+    ) : WalletConnectAction()
+
     data class SetSessionsRestored(val sessions: List<WalletConnectSession>) :
         WalletConnectAction()
 
@@ -103,6 +107,6 @@ sealed class WalletConnectAction : Action {
 
         data class Sign(
             val id: Long, val data: ByteArray, val sessionData: WCSession,
-            ) : WalletConnectAction()
+        ) : WalletConnectAction()
     }
 }
