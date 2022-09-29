@@ -45,6 +45,7 @@ data class WalletState(
     val totalBalance: TotalBalance? = null,
     val showBackupWarning: Boolean = false,
     val missingDerivations: List<BlockchainNetwork> = emptyList(),
+    val loadingUserTokens: Boolean = false,
 ) : StateType {
 
     // if you do not delegate - the application crashes on startup,

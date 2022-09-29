@@ -314,6 +314,8 @@ private fun internalReduce(action: Action, state: AppState): WalletState {
         is WalletAction.AppCurrencyAction -> {
             newState = appCurrencyReducer.reduce(action, newState)
         }
+        is WalletAction.UserTokens.Loading -> newState = newState.copy(loadingUserTokens = true)
+        is WalletAction.UserTokens.Loaded -> newState = newState.copy(loadingUserTokens = false)
         else -> { /* no-op */
         }
     }
