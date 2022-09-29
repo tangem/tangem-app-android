@@ -104,4 +104,5 @@
     <string name="warning_existential_deposit_message">Сеть %s использует концепцию экзистенциального депозита. Если баланс вашего счета опустится ниже %s %s, он будет деактивирован, а все оставшиеся средства будут уничтожены.</string>
     <string name="main_scan_card_warning_view_title">Отсканируйте карту</string>
     <string name="main_scan_card_warning_view_subtitle">Чтобы получить доступ ко всем сетям, вам необходимо отсканировать карту</string>
+    <string name="wallet_connect_error_failed_to_connect">Не удалось установить сессию WalletConnect</string>
 </resources>
