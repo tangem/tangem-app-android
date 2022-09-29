@@ -24,20 +24,20 @@ class UserTokensRepository(
     private val storageService: UserTokensStorageService,
     private val networkService: UserTokensNetworkService,
 ) {
-    suspend fun getUserTokens(card: Card): Result<List<Currency>> {
+    suspend fun getUserTokens(card: Card): List<Currency> {
         if (DemoHelper.isDemoCardId(card.cardId)) {
-            return Result.Success(loadDemoCurrencies())
+            return loadDemoCurrencies()
         }
         val userId = card.getUserId()
         if (!NetworkConnectivity.getInstance().isOnlineOrConnecting()) {
-            return Result.Success(loadTokensOffline(card, userId))
+            return loadTokensOffline(card, userId)
         }
 
         return when (val networkResult = networkService.getUserTokens(userId)) {
             is Result.Success -> {
                 val tokens = networkResult.data.tokens.map { Currency.fromTokenResponse(it) }
                 storageService.saveUserTokens(card.getUserId(), tokens)
-                Result.Success(tokens)
+                tokens
             }
             is Result.Failure -> {
                 handleGetUserTokensFailure(card = card, userId = userId, error = networkResult.error)
@@ -73,16 +73,16 @@ class UserTokensRepository(
         card: Card,
         userId: String,
         error: Throwable,
-    ): Result<List<Currency>> {
+    ): List<Currency> {
         return when (error) {
             is NoDataError -> {
                 val tokens = storageService.getUserTokens(card)
                 coroutineScope { launch { networkService.saveUserTokens(userId = userId, tokens = tokens) } }
-                Result.Success(tokens)
+                tokens
             }
             else -> {
                 val tokens = storageService.getUserTokens(userId) ?: storageService.getUserTokens(card)
-                Result.Success(tokens)
+                tokens
             }
         }
     }
@@ -103,7 +103,7 @@ class UserTokensRepository(
     }
 
     companion object {
-        const val MESSAGE = "AccountID"
+        const val MESSAGE = "UserWalletID"
         fun init(context: Context, tangemTechService: TangemTechService): UserTokensRepository {
             val fileReader = AndroidFileReader(context)
             val oldUserTokensRepository = OldUserTokensRepository(
