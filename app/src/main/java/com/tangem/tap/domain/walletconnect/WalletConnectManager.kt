@@ -60,7 +60,12 @@ class WalletConnectManager {
 
     fun connect(wcUri: String) {
         val session = WCSession.from(wcUri).guard {
-            store.dispatchOnMain(WalletConnectAction.FailureEstablishingSession(null, true))
+            store.dispatchOnMain(
+                WalletConnectAction.FailureEstablishingSession(
+                    session = null,
+                    error = TapError.WalletConnect.UnsupportedLink,
+                ),
+            )
             return
         }
         if (sessions[session] != null) {
@@ -74,7 +79,12 @@ class WalletConnectManager {
         try {
             client.connect(session, tangemPeerMeta, peerId)
         } catch (exception: IllegalArgumentException) {
-            store.dispatchOnMain(WalletConnectAction.FailureEstablishingSession(null, true))
+            store.dispatchOnMain(
+                WalletConnectAction.FailureEstablishingSession(
+                    session = null,
+                    error = TapError.WalletConnect.UnsupportedLink,
+                ),
+            )
             return
         }
 
