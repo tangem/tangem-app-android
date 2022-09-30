@@ -98,18 +98,18 @@ class WalletConnectMiddleware {
                 store.dispatchOnMain(GlobalAction.ShowDialog(WalletConnectDialog.SessionTimeout))
             }
             is WalletConnectAction.FailureEstablishingSession -> {
-                if (action.session != null) {
-                    walletConnectManager.disconnect(action.session)
-                }
-                if (action.showWarning) {
-                    store.dispatchOnMain(
+                if (action.error != null) {
+                    store.dispatch(
                         GlobalAction.ShowDialog(
                             AppDialog.SimpleOkDialogRes(
                                 headerId = R.string.common_warning,
-                                messageId = R.string.wallet_connect_error_failed_to_connect,
+                                messageId = action.error.messageResource,
                             ),
                         ),
                     )
+                }
+                if (action.session != null) {
+                    walletConnectManager.disconnect(action.session)
                 }
             }
             is WalletConnectAction.UnsupportedCard -> {
