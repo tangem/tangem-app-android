@@ -5,7 +5,7 @@ import com.tangem.blockchain.common.Blockchain
 fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
     return when (networkId) {
         "arbitrum-one" -> Blockchain.Arbitrum
-        "arbitrum/test" -> Blockchain.ArbitrumTestnet
+        "arbitrum-one/test" -> Blockchain.ArbitrumTestnet
         "avalanche", "avalanche-2" -> Blockchain.Avalanche
         "avalanche/test", "avalanche-2/test" -> Blockchain.AvalancheTestnet
         "binancecoin" -> Blockchain.Binance
@@ -38,6 +38,9 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "tron/test" -> Blockchain.TronTestnet
         "xrp", "ripple" -> Blockchain.XRP
         "xdai" -> Blockchain.Gnosis
+        "ethereum-pow-iou" -> Blockchain.EthereumPow
+        "ethereum-pow-iou/test" -> Blockchain.EthereumPowTestnet
+        "ethereumfair" -> Blockchain.EthereumFair
         "polkadot" -> Blockchain.Polkadot
         "polkadot/test" -> Blockchain.PolkadotTestnet
         "kusama" -> Blockchain.Kusama
@@ -86,6 +89,9 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.Tron -> "tron"
         Blockchain.TronTestnet -> "tron/test"
         Blockchain.Gnosis -> "xdai"
+        Blockchain.EthereumPow -> "ethereum-pow-iou"
+        Blockchain.EthereumPowTestnet -> "ethereum-pow-iou/test"
+        Blockchain.EthereumFair -> "ethereumfair"
         Blockchain.Polkadot -> "polkadot"
         Blockchain.PolkadotTestnet -> "polkadot/test"
         Blockchain.Kusama -> "kusama"
@@ -118,6 +124,8 @@ fun Blockchain.toCoinId(): String {
         Blockchain.XRP -> "ripple"
         Blockchain.Dogecoin -> "dogecoin"
         Blockchain.Gnosis -> "xdai"
+        Blockchain.EthereumPow, Blockchain.EthereumPowTestnet -> "ethereum-pow-iou"
+        Blockchain.EthereumFair -> "ethereumfair"
         Blockchain.Kusama -> "kusama"
         Blockchain.Optimism, Blockchain.OptimismTestnet -> "ethereum"
         Blockchain.Dash -> "dash"
