@@ -246,8 +246,7 @@ private fun sendTransaction(
                 }
                 is SimpleResult.Failure -> {
                     store.state.globalState.feedbackManager?.infoHolder?.updateOnSendError(
-                        wallet = walletManager.wallet,
-                        host = walletManager.currentHost,
+                        walletManager = walletManager,
                         amountToSend = amountToSend,
                         feeAmount = feeAmount,
                         destinationAddress = destinationAddress,
