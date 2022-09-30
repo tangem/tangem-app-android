@@ -103,4 +103,6 @@
     <string name="send_extras_hint_destination_tag">Tag</string>
     <string name="send_extras_error_invalid_memo">Недопустимый Memo. Он не будет добавлен в транзакцию.</string>
     <string name="send_extras_error_invalid_destination_tag">Недопустимый Tag. Он не будет добавлен в транзакцию.</string>
+    <string name="warning_existential_deposit_message">Сеть %s использует концепцию экзистенциального депозита. Если баланс вашего счета опустится ниже %s %s, он будет деактивирован, а все оставшиеся средства будут уничтожены.</string>
+    <string name="wallet_connect_error_failed_to_connect">Не удалось установить сессию WalletConnect</string>
 </resources>
