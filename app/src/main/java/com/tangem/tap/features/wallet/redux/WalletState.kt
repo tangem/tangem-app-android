@@ -193,21 +193,28 @@ data class WalletState(
 
     fun removeWallet(walletData: WalletData?): WalletState {
         if (walletData == null) return this
-        return if (walletData.currency is Currency.Blockchain) {
-            val walletStores = wallets.filterNot {
-                it.blockchainNetwork.blockchain == walletData.currency.blockchain
-                    && it.blockchainNetwork.derivationPath == walletData.currency.derivationPath
+        return when (val currency = walletData.currency) {
+            is Currency.Blockchain -> {
+                val walletStores = wallets.filterNot {
+                    it.blockchainNetwork.blockchain == currency.blockchain
+                        && it.blockchainNetwork.derivationPath == currency.derivationPath
+                }
+                copy(wallets = walletStores)
+                    .updateTotalBalance()
+                    .updateProgressState()
             }
-            copy(wallets = walletStores)
-                .updateTotalBalance()
-                .updateProgressState()
-        } else {
-            val walletStore = getWalletStore(walletData.currency)
-            val walletDataList = walletStore?.walletsData
-                ?.filterNot { it.currency == walletData.currency }
-                ?: emptyList()
-            val updatedWalletStore = walletStore?.copy(walletsData = walletDataList)
-            updateWalletStore(updatedWalletStore)
+            is Currency.Token -> {
+                val walletStore = getWalletStore(walletData.currency)
+                val walletDataList = walletStore?.walletsData
+                    ?.filterNot { it.currency == walletData.currency }
+                    ?: emptyList()
+                val updatedWalletManager = walletStore?.walletManager?.also { it.removeToken(currency.token) }
+                val updatedWalletStore = walletStore?.copy(
+                    walletsData = walletDataList,
+                    walletManager = updatedWalletManager,
+                )
+                updateWalletStore(updatedWalletStore)
+            }
         }
     }
 
