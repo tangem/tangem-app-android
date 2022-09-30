@@ -7,6 +7,8 @@ import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.global.GlobalAction
+import com.tangem.tap.domain.TapError
+import com.tangem.tap.domain.walletconnect.extensions.isDappSupported
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectDialog
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectSession
@@ -341,21 +343,30 @@ class WalletConnectManager {
             val session = client.session
             val data = sessions[session]?.copy(peerMeta = peer, remotePeerId = client.remotePeerId)
             if (data != null && session != null) {
-                sessions[session] = data
-                val sessionData = data.toWalletConnectSession()
-                sessionData?.let {
+                if (!peer.isDappSupported()) {
                     store.dispatchOnMain(
-                        WalletConnectAction.ScanCard(
-                            session = sessionData,
-                            chainId = client.chainId?.toIntOrNull()
+                        WalletConnectAction.FailureEstablishingSession(
+                            session = session,
+                            error = TapError.WalletConnect.UnsupportedDapp,
+                        ),
+                    )
+                } else {
+                    sessions[session] = data
+                    val sessionData = data.toWalletConnectSession()
+                    sessionData?.let {
+                        store.dispatchOnMain(
+                            WalletConnectAction.ScanCard(
+                                session = sessionData,
+                                chainId = client.chainId?.toIntOrNull(),
+                            ),
                         )
+                    }
+                    store.state.globalState.analyticsHandlers?.logWcEvent(
+                        Analytics.WcAnalyticsEvent.Session(
+                            Analytics.WcSessionEvent.Connect, peer.url,
+                        ),
                     )
                 }
-                store.state.globalState.analyticsHandlers?.logWcEvent(
-                    Analytics.WcAnalyticsEvent.Session(
-                        Analytics.WcSessionEvent.Connect, peer.url
-                    )
-                )
             }
         }
         client.onSessionUpdate = { id: Long, update: WCSessionUpdate ->
