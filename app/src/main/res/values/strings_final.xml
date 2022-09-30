@@ -101,8 +101,10 @@
     <string name="wallet_connect_select_network">Select network</string>
     <string name="main_scan_card_warning_view_title">Scan your card</string>
     <string name="main_scan_card_warning_view_subtitle">To access all the networks you need to scan the card</string>
+    <string name="wallet_connect_error_failed_to_connect">Failed to establish WalletConnect session</string>
     <string name="send_extras_hint_memo">Memo</string>
     <string name="send_extras_hint_destination_tag">Tag</string>
     <string name="send_extras_error_invalid_memo">Invalid Memo. It won\'t be added to the transaction.</string>
     <string name="send_extras_error_invalid_destination_tag">Invalid Tag. It won\'t be added to the transaction.</string>
+    <string name="wallet_connect_error_unsupported_dapp">Connection with this Dapp cannot be established due to its technical implementation.</string>
 </resources>
