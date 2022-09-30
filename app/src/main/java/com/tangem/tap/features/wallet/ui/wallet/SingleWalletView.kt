@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.tangem.domain.common.TwinCardNumber
 import com.tangem.tap.common.extensions.beginDelayedTransition
 import com.tangem.tap.common.extensions.fitChipsByGroupWidth
+import com.tangem.tap.common.extensions.getQuantityString
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
@@ -86,11 +87,7 @@ class SingleWalletView : WalletView() {
     private fun setupTwinCards(twinCardsState: TwinCardsState?, binding: FragmentWalletBinding) = with(binding) {
         twinCardsState?.cardNumber?.let { cardNumber ->
             tvTwinCardNumber.show()
-            val number = when (cardNumber) {
-                TwinCardNumber.First -> 1
-                TwinCardNumber.Second -> 2
-            }
-            tvTwinCardNumber.text = fragment?.getString(R.string.wallet_twins_chip_format, number, 2)
+            tvTwinCardNumber.text = tvTwinCardNumber.getQuantityString(R.plurals.card_label_card_count, 2)
         }
         if (twinCardsState?.cardNumber == null) {
             tvTwinCardNumber.hide()
