@@ -42,7 +42,7 @@ sealed class TapError(
 
     data class UnsupportedState(
         val stateError: String,
-        val customMessage: String = "Unsupported state:"
+        val customMessage: String = "Unsupported state:",
     ) : TapError(R.string.common_custom_string, listOf("$customMessage $stateError"))
 
     sealed class WalletManager {
@@ -53,9 +53,13 @@ sealed class TapError(
         object BlockchainIsUnreachableTryLater : TapError(R.string.wallet_balance_blockchain_unreachable_try_later)
     }
 
+    sealed class WalletConnect {
+        object UnsupportedDapp : TapError(R.string.wallet_connect_error_unsupported_dapp)
+    }
+
     data class ValidateTransactionErrors(
         override val errorList: List<TapError>,
-        override val builder: (List<String>) -> String
+        override val builder: (List<String>) -> String,
     ) : TapError(-1), MultiMessageError
 }
 
