@@ -55,6 +55,7 @@ sealed class TapError(
 
     sealed class WalletConnect {
         object UnsupportedDapp : TapError(R.string.wallet_connect_error_unsupported_dapp)
+        object UnsupportedLink : TapError(R.string.wallet_connect_error_failed_to_connect)
     }
 
     data class ValidateTransactionErrors(
