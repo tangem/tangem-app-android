@@ -9,7 +9,7 @@ import com.tangem.domain.common.TapWorkarounds
 import com.tangem.domain.common.TapWorkarounds.isSaltPay
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.operations.backup.BackupService
-import com.tangem.tap.*
+import com.tangem.tap.backupService
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -21,6 +21,11 @@ import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.wallet.redux.Artwork
 import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.preferencesStorage
+import com.tangem.tap.scope
+import com.tangem.tap.store
+import com.tangem.tap.tangemSdk
+import com.tangem.tap.tangemSdkManager
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.Middleware
@@ -217,7 +222,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
         is BackupAction.AddBackupCard -> {
             backupService.skipCompatibilityChecks = true
             tangemSdk.config.filter.cardIdFilter =
-                CardFilter.Companion.ItemFilter.Allow(TapWorkarounds.saltPayCardIds.toSet())
+                CardFilter.Companion.ItemFilter.Allow(TapWorkarounds.saltPayTangemCardIds.toSet())
 
             backupService.addBackupCard { result ->
                 backupService.skipCompatibilityChecks = false

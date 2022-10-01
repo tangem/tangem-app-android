@@ -44,6 +44,7 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "optimistic-ethereum" -> Blockchain.Optimism
         "optimistic-ethereum/test" -> Blockchain.OptimismTestnet
         "dash" -> Blockchain.Dash
+        "wxdai" -> Blockchain.SaltPay
         else -> null
     }
 }
@@ -92,7 +93,7 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.Optimism -> "optimistic-ethereum"
         Blockchain.OptimismTestnet -> "optimistic-ethereum/test"
         Blockchain.Dash -> "dash"
-        Blockchain.SaltPay -> "xdai"//TODO
+        Blockchain.SaltPay -> "wxdai"
         else -> "unknown" // TODO
     }
 }
@@ -119,11 +120,10 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Tezos -> "tezos"
         Blockchain.XRP -> "ripple"
         Blockchain.Dogecoin -> "dogecoin"
-        Blockchain.Gnosis -> "xdai"
+        Blockchain.Gnosis, Blockchain.SaltPay -> "xdai"
         Blockchain.Kusama -> "kusama"
         Blockchain.Optimism, Blockchain.OptimismTestnet -> "ethereum"
         Blockchain.Dash -> "dash"
-        Blockchain.SaltPay -> "xdai" //TODO
         Blockchain.Unknown -> "unknown"
         else -> "unknown" // TODO
     }
