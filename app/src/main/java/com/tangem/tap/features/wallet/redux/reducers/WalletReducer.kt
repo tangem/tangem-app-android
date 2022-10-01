@@ -438,8 +438,7 @@ private fun setSingleWalletFiatRates(
     appCurrency: FiatCurrency,
     rateFormatter: (BigDecimal) -> String,
     state: WalletState,
-):
-    WalletState {
+): WalletState {
     val blockchainFiatRate = fiatRates.entries.firstOrNull { it.key.isBlockchain() }
     val tokenFiatRate = fiatRates.entries.firstOrNull { it.key.isToken() }
     Timber.e("Token Fiat Rate is ${tokenFiatRate ?: "NULL"}")
