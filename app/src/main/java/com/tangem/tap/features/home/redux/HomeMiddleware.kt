@@ -1,5 +1,6 @@
 package com.tangem.tap.features.home.redux
 
+import com.tangem.domain.common.TapWorkarounds.isSaltPayVisa
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.common.analytics.AnalyticsEvent
@@ -64,7 +65,7 @@ private val homeMiddleware: Middleware<AppState> = { _, _ ->
                     }
                     store.state.globalState.analyticsHandlers?.triggerEvent(
                         event = AnalyticsEvent.GET_CARD,
-                        params = mapOf(AnalyticsParam.SOURCE.param to GetCardSourceParams.WELCOME.param)
+                        params = mapOf(AnalyticsParam.SOURCE.param to GetCardSourceParams.WELCOME.param),
                     )
                 }
             }
@@ -81,6 +82,17 @@ private fun handleReadCard() {
         store.dispatch(GlobalAction.ScanCard(onSuccess = { scanResponse ->
             store.state.globalState.tapWalletManager.updateConfigManager(scanResponse)
             store.dispatch(TwinCardsAction.IfTwinsPrepareState(scanResponse))
+
+            // TODO: SaltPay: temporary excluding backup process for Visa cards
+            if (scanResponse.card.isSaltPayVisa) {
+                scope.launch {
+                    store.onCardScanned(scanResponse)
+                    withMainContext {
+                        navigateTo(AppScreen.Wallet, null)
+                    }
+                }
+                return@ScanCard
+            }
 
             if (OnboardingHelper.isOnboardingCase(scanResponse)) {
                 val navigateTo = OnboardingHelper.whereToNavigate(scanResponse)
