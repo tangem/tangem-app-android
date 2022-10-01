@@ -1,5 +1,6 @@
 package com.tangem.tap.features.details.ui.details
 
+import com.tangem.domain.common.TapWorkarounds.isSaltPay
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.tap.common.feedback.FeedbackEmail
 import com.tangem.tap.common.feedback.SupportInfo
@@ -25,7 +26,9 @@ class DetailsViewModel(private val store: Store<AppState>) {
                     if (state.scanResponse?.card?.isMultiwalletAllowed == true) it else null
                 }
                 SettingsElement.LinkMoreCards -> {
-                    if (state.createBackupAllowed) it else null
+                    // if (state.createBackupAllowed) it else null
+                    // TODO: SaltPay: temporary excluding backup process for Visa cards
+                    if (state.createBackupAllowed && state.scanResponse?.card?.isSaltPay != true) it else null
                 }
                 SettingsElement.PrivacyPolicy -> {
                     if (state.privacyPolicyUrl != null) it else null
