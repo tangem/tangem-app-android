@@ -92,7 +92,6 @@ class WalletConnectSdkHelper {
             )
         )
         val dialogData = TransactionRequestDialogData(
-            cardId = session.wallet.cardId,
             dAppName = session.peerMeta.name,
             dAppUrl = session.peerMeta.url,
             amount = value.toFormattedString(decimals),
@@ -235,7 +234,6 @@ class WalletConnectSdkHelper {
 
 
         val dialogData = PersonalSignDialogData(
-            cardId = session.wallet.cardId,
             dAppName = session.peerMeta.name,
             message = messageString,
             session = session.session,
@@ -272,11 +270,11 @@ class WalletConnectSdkHelper {
     suspend fun signPersonalMessage(hashToSign: ByteArray, wallet: WalletForSession): String? {
         val key = wallet.derivedPublicKey ?: wallet.walletPublicKey
         val command = SignHashCommand(hashToSign, wallet.walletPublicKey!!, wallet.derivationPath)
-        return when (val result = tangemSdkManager.runTaskAsync(command, wallet.cardId)) {
+        return when (val result = tangemSdkManager.runTaskAsync(command)) {
             is CompletionResult.Success -> {
                 val hash = result.data.signature
                 return EthereumUtils.prepareSignedMessageData(
-                    hash, hashToSign, CryptoUtils.decompressPublicKey(key!!)
+                    hash, hashToSign, CryptoUtils.decompressPublicKey(key!!),
                 )
             }
             is CompletionResult.Failure -> {
