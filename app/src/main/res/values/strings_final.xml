@@ -38,49 +38,38 @@
     <string name="alert_demo_message">You are currently running in Demo mode. All funds are not real.</string>
     <string name="alert_demo_feature_disabled">This feature is disabled in Demo mode</string>
     <string name="token_details_send_blocked_fee_format">Not enough funds for fee on your %s wallet to send a transaction. Top up your %s wallet first.</string>
-
     <string name="currency_subtitle_expanded">Available networks</string>
     <string name="alert_manage_tokens_addresses_message">Note that tokens on different networks have different addresses. Double check that your address matches the network when you transfer funds.</string>
     <string name="alert_manage_tokens_unsupported_message">Tokens in Solana network are not supported by this card due to firmware limitation.</string>
     <string name="warning_token_send_unsupported_message">Do not transfer your funds to tokens in this blockchain, otherwise it may lead to their irretrievable loss.</string>
     <string name="contract_address_copied_message">Contract address copied!</string>
     <string name="alert_funds_restoration_message">If you chose the wrong network during your crypto transfer from the exchange, this guide will help you recover your funds</string>
-
     <string name="common_custom">Custom</string>
     <string name="common_notice">Notice</string>
     <string name="common_attention">Attention</string>
     <string name="common_server_unavailable">The server is not available, please try again later</string>
-
     <string name="main_page_balance">Total balance</string>
     <string name="main_processing_full_amount">The amount does not include some of your funds</string>
     <string name="main_manage_tokens">Manage tokens</string>
     <string name="token_item_no_rate">No rate</string>
-
     <string name="token_details_hide_token">Hide token</string>
     <string name="token_details_hide_alert_title">Hide %s</string>
     <string name="token_details_hide_alert_hide">Hide</string>
     <string name="token_details_hide_alert_message">You are about to hide this token from the main screen. You can add it back anytime through the manage tokens page.</string>
     <string name="token_details_unable_hide_alert_title">Unable to hide %s</string>
     <string name="token_details_unable_hide_alert_message">The %s token is the main currency on the %s network and cannot be hidden as long as you have other tokens on this network in the list.</string>
-
     <string name="wallet_connect_network_not_found_format">%s network not found. Please, add it first and try again.</string>
     <string name="wallet_connect_scanner_error_unsupported_network">This network is not supported. Please select another network.</string>
-
     <string name="wallet_currency_subtitle">%s network</string>
-
     <string name="main_no_backup_warning_title">Your wallet has not been backed up</string>
     <string name="main_no_backup_warning_subtitle">To protect your assets, we advise you to carry out this procedure</string>
     <string name="wallet_hide_token" translatable="false">Remove token</string>
-
     <string name="russian_bank_card_warning_title">Russian bank cards are not accepted at the moment</string>
     <string name="russian_bank_card_warning_subtitle">Do you have a bank card of another country or a UnionPay card?</string>
     <string name="common_yes">Yes</string>
     <string name="common_no">No</string>
-
     <string name="details_ask_a_question">Chat</string>
     <string name="chat_bot_name">Tangem Bot</string>
-
-
     <string name="card_settings_title">Card Settings</string>
     <string name="card_settings_security_mode">Security Mode</string>
     <string name="card_settings_security_mode_footer">Selected application protection method</string>
@@ -100,24 +89,22 @@
     <string name="app_settings_off_saved_access_code_alert_message">This will delete all the saved wallet access codes. Any further operation with the wallet will require submitting the access code.</string>
     <string name="wallet_connect_title">WalletConnect</string>
     <string name="wallet_connect_subtitle">Connect to Dapps</string>
-
     <string name="details_row_title_create_backup">Link More Cards</string>
     <string name="details_row_title_create_backup_footer">You can synchronize up to three cards into one wallet. It can only be done once.</string>
-
     <string name="details_row_privacy_policy">Privacy policy</string>
-
     <string name="reset_card_to_factory_navigation_title">Reset to factory settings</string>
     <string name="reset_card_to_factory_message">This action will completely remove the wallet from the selected card. You will not be able to restore the current wallet or use the card to recover the access code.</string>
     <string name="reset_card_to_factory_warning_message">I understand that after performing this action, I will no longer have access to the current wallet</string>
     <string name="reset_card_to_factory_button_title">Reset the card</string>
     <string name="card_settings_reset_card_to_factory">Reset to Factory Settings</string>
     <string name="card_settings_reset_card_to_factory_footer">Factory Reset will completely delete the wallet from the selected card. You will not be able to restore the current wallet or use the card to recover the access code.</string>
-
     <string name="wallet_connect_select_network">Select network</string>
+    <string name="main_scan_card_warning_view_title">Scan your card</string>
+    <string name="main_scan_card_warning_view_subtitle">To access all the networks you need to scan the card</string>
+    <string name="wallet_connect_error_failed_to_connect">Failed to establish WalletConnect session</string>
     <string name="send_extras_hint_memo">Memo</string>
     <string name="send_extras_hint_destination_tag">Tag</string>
-    <string name="send_error_invalid_memo">Invalid Memo. It won\'t be added to the transaction</string>
-    <string name="send_error_invalid_destination_tag">Invalid Tag. It won\'t be added to the transaction</string>
-
+    <string name="send_extras_error_invalid_memo">Invalid Memo. It won\'t be added to the transaction.</string>
+    <string name="send_extras_error_invalid_destination_tag">Invalid Tag. It won\'t be added to the transaction.</string>
     <string name="wallet_connect_error_unsupported_dapp">Connection with this Dapp cannot be established due to its technical implementation.</string>
 </resources>
