@@ -1,6 +1,11 @@
 package com.tangem.tap.features.wallet.models
 
-import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.AmountType
+import com.tangem.blockchain.common.Token
+import com.tangem.blockchain.common.TransactionData
+import com.tangem.blockchain.common.TransactionStatus
+import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.extensions.isAboveZero
 import com.tangem.tap.common.extensions.toFormattedString
 import java.math.BigDecimal
@@ -10,8 +15,8 @@ data class PendingTransaction(
     val type: PendingTransactionType,
 ) {
     val address: String? = when (type) {
-        PendingTransactionType.Incoming -> transactionData.sourceAddress
-        PendingTransactionType.Outgoing -> transactionData.destinationAddress
+        PendingTransactionType.Incoming -> nullIfUnknown(transactionData.sourceAddress)
+        PendingTransactionType.Outgoing -> nullIfUnknown(transactionData.destinationAddress)
         PendingTransactionType.Unknown -> null
     }
 
@@ -20,6 +25,8 @@ data class PendingTransaction(
     val amountValueUi: String? = amountValue?.toFormattedString(transactionData.amount.decimals)
 
     val currency: String = transactionData.amount.currencySymbol
+
+    fun nullIfUnknown(address: String):String? = if (address == "unknown") null else address
 }
 
 enum class PendingTransactionType { Incoming, Outgoing, Unknown }
