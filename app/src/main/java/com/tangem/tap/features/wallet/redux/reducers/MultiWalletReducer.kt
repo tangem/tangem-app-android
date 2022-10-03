@@ -65,7 +65,7 @@ class MultiWalletReducer {
                 }
 
                 val selectedCurrency = if (!state.isMultiwalletAllowed) {
-                    wallets[0].walletsData[0].currency
+                    wallets.firstOrNull()?.walletsData?.firstOrNull()?.currency
                 } else {
                     state.selectedCurrency
                 }
