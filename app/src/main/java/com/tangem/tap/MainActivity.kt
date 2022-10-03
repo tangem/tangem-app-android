@@ -25,7 +25,6 @@ import com.tangem.tap.common.shop.GooglePayService
 import com.tangem.tap.common.shop.GooglePayService.Companion.LOAD_PAYMENT_DATA_REQUEST_CODE
 import com.tangem.tap.common.shop.googlepay.GooglePayUtil.createPaymentsClient
 import com.tangem.tap.domain.TangemSdkManager
-import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.shop.redux.ShopAction
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.ActivityMainBinding
@@ -66,7 +65,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler {
         backupService = BackupService.init(tangemSdk, this)
 
         store.dispatch(GlobalAction.SetResources(getAndroidResources()))
-        store.dispatch(WalletConnectAction.RestoreSessions)
         store.dispatch(
             ShopAction.CheckIfGooglePayAvailable(
                 GooglePayService(createPaymentsClient(this), this)
@@ -85,6 +83,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler {
     }
 
     private fun systemActions() {
+
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
         val windowInsetsController = WindowInsetsControllerCompat(window, binding.root)
