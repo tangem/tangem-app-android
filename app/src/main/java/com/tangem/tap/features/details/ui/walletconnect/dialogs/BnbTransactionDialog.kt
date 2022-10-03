@@ -15,7 +15,6 @@ class BnbTransactionDialog {
             data: BinanceMessageData,
             session: WCSession,
             sessionId: Long,
-            cardId: String,
             dAppName: String,
             context: Context,
         ): AlertDialog {
@@ -40,7 +39,7 @@ class BnbTransactionDialog {
 
             val fullMessage = context.getString(
                 R.string.wallet_connect_bnb_sign_message,
-                dAppName, cardId, message
+                dAppName, message,
             )
             val positiveButtonTitle = context.getText(R.string.common_sign)
 
