@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -86,7 +87,7 @@ fun WalletConnectDetailsItem(
 ) {
     Row(
         modifier = modifier
-            .height(84.dp)
+            .defaultMinSize(minHeight = 84.dp)
             .fillMaxWidth()
             .clickable { onItemsClick(SettingsElement.WalletConnect) },
         horizontalArrangement = Arrangement.Start,
@@ -99,7 +100,7 @@ fun WalletConnectDetailsItem(
             tint = colorResource(id = R.color.all_colors_azure),
         )
         Column(
-            modifier = modifier.height(56.dp),
+            modifier = modifier.defaultMinSize(minHeight = 56.dp),
             horizontalAlignment = Alignment.Start,
             verticalArrangement = Arrangement.Center,
         ) {

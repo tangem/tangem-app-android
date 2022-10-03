@@ -20,11 +20,14 @@ import javax.crypto.spec.SecretKeySpec
 class MoonPayService(
     private val apiKey: String,
     private val secretKey: String,
+    private val logEnabled: Boolean,
 ) : ExchangeService, ExchangeUrlBuilder {
 
     private val api: MoonPayApi by lazy {
-        createRetrofitInstance(MoonPayApi.MOOONPAY_BASE_URL)
-            .create(MoonPayApi::class.java)
+        createRetrofitInstance(
+            baseUrl = MoonPayApi.MOOONPAY_BASE_URL,
+            logEnabled = logEnabled,
+        ).create(MoonPayApi::class.java)
     }
 
     private var status: MoonPayStatus? = null
