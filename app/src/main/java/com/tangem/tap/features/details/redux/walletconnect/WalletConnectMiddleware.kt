@@ -318,9 +318,11 @@ class WalletConnectMiddleware {
         } else {
             blockchain
         }
+        val derivation = blockchainToMake.derivationPath(store.state.globalState.scanResponse?.card?.derivationStyle)
+            ?.rawPath
         val blockchainNetwork = BlockchainNetwork(
             blockchain = blockchainToMake,
-            derivationPath = wallet.derivationPath?.rawPath,
+            derivationPath = derivation,
             tokens = emptyList(),
         )
         return walletState.getWalletManager(blockchainNetwork)
