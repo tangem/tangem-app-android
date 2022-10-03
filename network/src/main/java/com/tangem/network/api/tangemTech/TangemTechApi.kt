@@ -1,6 +1,9 @@
 package com.tangem.network.api.tangemTech
 
+import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.PUT
+import retrofit2.http.Path
 import retrofit2.http.Query
 
 /**
@@ -29,4 +32,10 @@ interface TangemTechApi {
 
     @GET("geo")
     suspend fun geo(): GeoResponse
+
+    @GET("user-tokens/{user-id}")
+    suspend fun getUserTokens(@Path(value = "user-id") userId: String): UserTokensResponse
+
+    @PUT("user-tokens/{user-id}")
+    suspend fun putUserTokens(@Path(value = "user-id") userId: String, @Body userTokens: UserTokensResponse)
 }
