@@ -1,6 +1,6 @@
 package com.tangem.tap.common.analytics
 
-import android.app.Application
+import android.content.Context
 import com.shopify.buy3.Storefront
 import com.tangem.common.card.Card
 import com.tangem.common.core.TangemSdkError
@@ -42,7 +42,7 @@ class GlobalAnalyticsHandler(val analyticsHandlers: List<AnalyticsHandler>) :
     }
 
     companion object {
-        fun createDefaultAnalyticHandlers(context: Application): GlobalAnalyticsHandler {
+        fun createDefaultAnalyticHandlers(context: Context): GlobalAnalyticsHandler {
             return GlobalAnalyticsHandler(
                 listOf(
                     FirebaseAnalyticsHandler,
