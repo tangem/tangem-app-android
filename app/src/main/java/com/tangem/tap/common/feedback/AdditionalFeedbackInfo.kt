@@ -1,7 +1,5 @@
 package com.tangem.tap.common.feedback
 
-import android.content.Context
-import android.content.pm.PackageManager
 import android.os.Build
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
@@ -9,16 +7,19 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.common.address.Address
+import com.tangem.common.card.CardWallet
 import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.extensions.stripZeroPlainString
 
 class AdditionalFeedbackInfo {
     class EmailWalletInfo(
         var blockchain: Blockchain = Blockchain.Unknown,
-        var address: String = "",
-        var explorerLink: String = "",
-        var host: String = "",
         var derivationPath: String = "",
+        var outputsCount: String? = null,
+        var host: String = "",
+        var addresses: String = "",
+        var explorerLink: String = "",
     )
 
     var appVersion: String = ""
@@ -45,37 +46,19 @@ class AdditionalFeedbackInfo {
     var fee: String = ""
     var token: String = ""
 
-    fun setAppVersion(context: Context) {
-        try {
-            val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-            appVersion = pInfo.versionName
-        } catch (e: PackageManager.NameNotFoundException) {
-            e.printStackTrace()
-        }
-    }
-
     fun setCardInfo(data: ScanResponse) {
         cardId = data.card.cardId
         cardBlockchain = data.walletData?.blockchain ?: ""
         cardFirmwareVersion = data.card.firmwareVersion.stringValue
         cardIssuer = data.card.issuer.name
-        signedHashesCount = data.card.wallets
-            .joinToString("; ") { "${it.curve.curve} - ${it.totalSignedHashes}" }
+        signedHashesCount = formatSignedHashes(data.card.wallets)
     }
 
     fun setWalletsInfo(walletManagers: List<WalletManager>) {
         walletsInfo.clear()
         tokens.clear()
         walletManagers.forEach { manager ->
-            walletsInfo.add(
-                EmailWalletInfo(
-                    blockchain = manager.wallet.blockchain,
-                    address = getAddress(manager.wallet),
-                    explorerLink = getExploreUri(manager.wallet),
-                    host = manager.currentHost,
-                    derivationPath = manager.wallet.publicKey.derivationPath?.rawPath ?: ""
-                )
-            )
+            walletsInfo.add(createEmailWalletInfo(manager))
             if (manager.cardTokens.isNotEmpty()) {
                 tokens[manager.wallet.blockchain] = manager.cardTokens
             }
@@ -83,45 +66,55 @@ class AdditionalFeedbackInfo {
     }
 
     fun updateOnSendError(
-        wallet: Wallet,
-        host: String,
+        walletManager: WalletManager,
         amountToSend: Amount,
         feeAmount: Amount,
         destinationAddress: String,
     ) {
-        onSendErrorWalletInfo = EmailWalletInfo(
-            blockchain = wallet.blockchain,
-            address = getAddress(wallet),
-            explorerLink = getExploreUri(wallet),
-            host = host,
-            derivationPath = wallet.publicKey.derivationPath?.rawPath ?: ""
-        )
-
+        onSendErrorWalletInfo = createEmailWalletInfo(walletManager)
         this.destinationAddress = destinationAddress
         amount = amountToSend.value?.stripZeroPlainString() ?: "0"
         fee = feeAmount.value?.stripZeroPlainString() ?: "0"
         token = if (amountToSend.type is AmountType.Token) amountToSend.currencySymbol else ""
     }
 
-    private fun getAddress(wallet: Wallet): String {
-        return if (wallet.addresses.size == 1) {
-            wallet.address
-        } else {
-            val addresses = wallet.addresses.joinToString(", ") {
-                "${it.type.javaClass.simpleName} - ${it.value}"
-            }
-            "Multiple address: $addresses"
+    private fun createEmailWalletInfo(walletManager: WalletManager): EmailWalletInfo {
+        return EmailWalletInfo(
+            blockchain = walletManager.wallet.blockchain,
+            derivationPath = walletManager.wallet.publicKey.derivationPath?.rawPath ?: "",
+            outputsCount = walletManager.outputsCount?.toString(),
+            host = walletManager.currentHost,
+            addresses = formatAddresses(walletManager.wallet),
+            explorerLink = formatExploreUrls(walletManager.wallet),
+        )
+    }
+
+    private fun formatSignedHashes(wallets: List<CardWallet>): String {
+        return wallets.joinToString("\n") { "Signed hashes: ${it.curve.curve} - ${it.totalSignedHashes}" }
+    }
+
+    private fun formatAddresses(wallet: Wallet): String {
+        return wallet.formatAddressWith("Multiple address:") {
+            "${it.name} - ${it.value}"
         }
     }
 
-    private fun getExploreUri(wallet: Wallet): String {
-        return if (wallet.addresses.size == 1) {
-            wallet.getExploreUrl(wallet.address)
-        } else {
-            val links = wallet.addresses.joinToString(", ") {
-                "${it.type.javaClass.simpleName} - ${wallet.getExploreUrl(it.value)}"
-            }
-            "Multiple explorers links: $links"
+    private fun formatExploreUrls(wallet: Wallet): String {
+        return wallet.formatAddressWith("Multiple explorers links:") {
+            "${it.name} - ${wallet.getExploreUrl(it.value)}"
         }
     }
+
+    private fun Wallet.formatAddressWith(with: String, mapAddress: (Address) -> String): String {
+        return if (addresses.size == 1) {
+            getExploreUrl(address)
+        } else {
+            addresses.map { mapAddress(it) }.toMutableList()
+                .apply { add(0, with) }
+                .joinToString("\n")
+        }
+    }
+
+    private val Address.name: String
+        get() = type.javaClass.simpleName
 }

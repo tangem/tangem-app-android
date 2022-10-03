@@ -40,7 +40,6 @@ data class WalletConnectSession(
 
 @JsonClass(generateAdapter = true)
 data class WalletForSession(
-    val cardId: String,
     val walletPublicKey: ByteArray? = null,
     val derivedPublicKey: ByteArray? = null,
     val derivationPath: DerivationPath? = null,
@@ -59,7 +58,6 @@ data class WalletForSession(
 
         other as WalletForSession
 
-        if (cardId != other.cardId) return false
         if (walletPublicKey != null) {
             if (other.walletPublicKey == null) return false
             if (!walletPublicKey.contentEquals(other.walletPublicKey)) return false
@@ -76,8 +74,7 @@ data class WalletForSession(
     }
 
     override fun hashCode(): Int {
-        var result = cardId.hashCode()
-        result = 31 * result + (walletPublicKey?.contentHashCode() ?: 0)
+        var result = (walletPublicKey?.contentHashCode() ?: 0)
         result = 31 * result + (derivedPublicKey?.contentHashCode() ?: 0)
         result = 31 * result + (derivationPath?.hashCode() ?: 0)
         result = 31 * result + isTestNet.hashCode()
@@ -112,7 +109,6 @@ sealed class WalletConnectDialog : StateDialog {
         val data: BinanceMessageData,
         val session: WCSession,
         val sessionId: Long,
-        val cardId: String,
         val dAppName: String,
     ) : WalletConnectDialog()
 }

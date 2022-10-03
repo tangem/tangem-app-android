@@ -78,30 +78,35 @@ private fun handleReadCard() {
         store.dispatch(NavigationAction.NavigateTo(AppScreen.Disclaimer))
     } else {
         changeButtonState(ButtonState.PROGRESS)
-        store.dispatch(GlobalAction.ScanCard(onSuccess = { scanResponse ->
-            store.state.globalState.tapWalletManager.updateConfigManager(scanResponse)
-            store.dispatch(TwinCardsAction.IfTwinsPrepareState(scanResponse))
+        store.dispatch(
+            GlobalAction.ScanCard(
+                onSuccess = { scanResponse ->
+                    store.state.globalState.tapWalletManager.updateConfigManager(scanResponse)
+                    store.dispatch(TwinCardsAction.IfTwinsPrepareState(scanResponse))
 
-            if (OnboardingHelper.isOnboardingCase(scanResponse)) {
-                val navigateTo = OnboardingHelper.whereToNavigate(scanResponse)
-                store.dispatch(GlobalAction.Onboarding.Start(scanResponse))
-                navigateTo(navigateTo)
-            } else {
-                scope.launch {
-                    store.onCardScanned(scanResponse)
-                    withMainContext {
-                        if (scanResponse.twinsIsTwinned() && !preferencesStorage.wasTwinsOnboardingShown()) {
-                            store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.WelcomeOnly))
-                            navigateTo(AppScreen.OnboardingTwins)
-                        } else {
-                            navigateTo(AppScreen.Wallet, null)
+                    if (OnboardingHelper.isOnboardingCase(scanResponse)) {
+                        val navigateTo = OnboardingHelper.whereToNavigate(scanResponse)
+                        store.dispatch(GlobalAction.Onboarding.Start(scanResponse))
+                        navigateTo(navigateTo)
+                    } else {
+                        scope.launch {
+                            withMainContext {
+                                if (scanResponse.twinsIsTwinned() && !preferencesStorage.wasTwinsOnboardingShown()) {
+                                    store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.WelcomeOnly))
+                                    navigateTo(AppScreen.OnboardingTwins)
+                                } else {
+                                    navigateTo(AppScreen.Wallet, null)
+                                }
+                            }
+                            store.onCardScanned(scanResponse)
                         }
                     }
-                }
-            }
-        }, onFailure = {
-            changeButtonState(ButtonState.ENABLED)
-        }))
+                },
+                onFailure = {
+                    changeButtonState(ButtonState.ENABLED)
+                },
+            ),
+        )
     }
 }
 
