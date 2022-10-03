@@ -16,8 +16,6 @@
     <string name="twins_onboarding_subtitle" translatable="false">One wallet. Two cards.</string>
     <string name="twins_onboarding_description_format" translatable="false">This one that you are holding in your hands and the other one with number #%s.</string>
 
-    <string name="wallet_twins_chip_format" translatable="false">Card %1d of %2d</string>
-
     <string name="details_row_title_twins_recreate" translatable="false">Re-create twin wallet</string>
     <string name="details_row_title_card_tou" translatable="false">Card terms of use</string>
 
@@ -134,24 +132,23 @@
     <string name="wallet_connect_card_number" translatable="false">Card: %s</string>
     <string name="wallet_connect_scan_card_message" translatable="false">Tap card to bind to wallet connect</string>
 
-    <string name="wallet_connect_create_tx_message" translatable="false">Card: %1s\n
-    Request to create transaction for %2s
-    \n%3s
+    <string name="wallet_connect_create_tx_message" translatable="false">
+    Request to create transaction for %1s
+    \n%2s
 
-    \n\nAmount: %4s
-    \nFee: %5s
-    \nTotal: %6s
-    \nBalance: %7s</string>
+    \n\nAmount: %3s
+    \nFee: %4s
+    \nTotal: %5s
+    \nBalance: %6s</string>
 
     <string name="wallet_connect_create_tx_not_enough_funds" translatable="false">Can\'t send transaction. Not enough funds.</string>
 
-    <string name="wallet_connect_request_session_start" translatable="false">Request to start a session for card with ID %1s\n
-    for %2s\n\n
+    <string name="wallet_connect_request_session_start" translatable="false">Request to start a session for %1s\n\n
 
-    URL: %3s</string>
+    URL: %2s</string>
 
 
-    <string name="wallet_connect_alert_sign_message" translatable="false">Requesting to sign a message\nwith card %s\n\n</string>
+    <string name="wallet_connect_alert_sign_message" translatable="false">Requesting to sign a message\n</string>
     <string name="wallet_connect_personal_sign_message" translatable="false">Message for %s:\n%s</string>
 
 
@@ -287,7 +284,6 @@
     <string name="onboarding_title_prepare_origin" translatable="false">Primary card</string>
     <string name="onboarding_button_backup_origin" translatable="false">Scan the primary card</string>
     <string name="onboarding_button_continue_wallet" translatable="false">Continue to my wallet</string>
-    <string name="card_label_number_format" translatable="false">Card %1s of %2s</string>
     <string name="send_title_currency_format" translatable="false">Sending %s</string>
     <string name="onboarding_subtitle_scan_backup_card_format" translatable="false">Prepare the backup card with number %s</string>
     <string name="onboarding_subtitle_scan_primary_card_format" translatable="false">Prepare the primary card with number %s</string>
@@ -299,8 +295,7 @@
 
     <string name="wallet_connect_bnb_transaction_signed" translatable="false">The BNB transaction has been successfully signed and sent to the Dapp</string>
     <string name="wallet_connect_bnb_sign_message" translatable="false">Dapp %s, requesting to\n
-sign BNB transaction with\n
-Card: %s\n
+sign BNB transaction
 \n
 %s</string>
     <string name="wallet_connect_bnb_transaction_message" translatable="false">Transaction details:\n
