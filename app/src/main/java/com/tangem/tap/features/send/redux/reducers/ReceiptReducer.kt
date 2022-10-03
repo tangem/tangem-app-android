@@ -17,6 +17,7 @@ import com.tangem.tap.features.send.redux.states.ReceiptSymbols
 import com.tangem.tap.features.send.redux.states.ReceiptTokenCrypto
 import com.tangem.tap.features.send.redux.states.ReceiptTokenFiat
 import com.tangem.tap.features.send.redux.states.SendState
+import com.tangem.tap.features.wallet.redux.WalletState.Companion.CAN_BE_LOWER_SIGN
 import com.tangem.tap.features.wallet.redux.WalletState.Companion.UNKNOWN_AMOUNT_SIGN
 import com.tangem.tap.store
 import java.math.BigDecimal
@@ -216,6 +217,8 @@ class ReceiptReducer : SendInternalReducer {
         }
     }
 
-    private fun String.addPrecisionSign(): String =
-        ("${feeState.feePrecision.symbol} $this").trim()
+    private fun String.addPrecisionSign(): String {
+        val result = if (feeState.feeIsApproximate) "$CAN_BE_LOWER_SIGN $this" else this
+        return result.trim()
+    }
 }
