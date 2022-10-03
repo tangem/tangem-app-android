@@ -19,7 +19,8 @@ import com.tangem.domain.features.addCustomToken.CustomCurrency
 import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction
 import com.tangem.domain.redux.domainStore
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
-import com.tangem.tap.*
+import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
+import com.tangem.tap.assetReader
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
@@ -32,6 +33,9 @@ import com.tangem.tap.domain.tokens.LoadAvailableCoinsService
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.scope
+import com.tangem.tap.store
+import com.tangem.tap.tangemSdkManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
@@ -77,7 +81,7 @@ class TokensMiddleware {
 
         val loadCoinsService = LoadAvailableCoinsService(
             store.state.domainNetworks.tangemTechService,
-            currenciesRepository
+            assetReader,
         )
 
         scope.launch {
@@ -285,22 +289,28 @@ class TokensMiddleware {
                             else -> DerivationParams.Custom(derivationPath)
                         }
                     }
-
                     val walletManager = factory.makeWalletManagerForApp(
                         scanResponse = scanResponse,
                         blockchain = currency.blockchain,
-                        derivationParams = derivationParams
+                        derivationParams = derivationParams,
                     ) ?: return@mapNotNull null
                     val blockchainNetwork = BlockchainNetwork.fromWalletManager(walletManager)
-                    WalletAction.MultiWallet.AddBlockchain(blockchainNetwork, walletManager)
+                    WalletAction.MultiWallet.AddBlockchain(
+                        blockchain = blockchainNetwork,
+                        walletManager = walletManager,
+                        save = true,
+                    )
                 }
                 is Currency.Token -> {
                     val rawDerivationPath = currency.derivationPath
                         ?: currency.blockchain.derivationPath(derivationStyle)?.rawPath
-
                     val blockchainNetwork =
-                        BlockchainNetwork(currency.blockchain, rawDerivationPath, emptyList())
-                    WalletAction.MultiWallet.AddToken(currency.token, blockchainNetwork)
+                        BlockchainNetwork(currency.blockchain, rawDerivationPath, listOf(currency.token))
+                    WalletAction.MultiWallet.AddToken(
+                        token = currency.token,
+                        blockchain = blockchainNetwork,
+                        save = true,
+                    )
                 }
             }
         }
