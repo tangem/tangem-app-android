@@ -2,7 +2,7 @@ ext.versions = [
     kotlin               : '1.6.10',
     build_gradle         : '7.1.3',
     tangem_card_sdk      : 'develop-159',
-    tangem_blockchain_sdk: 'AND-2102-develop-105-hotfix_xlm-109',
+    tangem_blockchain_sdk: 'AND-2145_develop_105_hotfix_eth_classic-118',
     // tangem_blockchain_sdk: '0.0.1',
 ]
 
