@@ -1,6 +1,10 @@
 package com.tangem.tap.domain.extensions
 
-import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.DerivationParams
+import com.tangem.blockchain.common.DerivationStyle
+import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.common.card.Card
 import com.tangem.common.card.CardWallet
 import com.tangem.common.card.EllipticCurve
@@ -99,9 +103,11 @@ fun WalletManagerFactory.makeWalletManagerForApp(
 }
 
 fun WalletManagerFactory.makeWalletManagersForApp(
-    scanResponse: ScanResponse, blockchains: List<BlockchainNetwork>,
+    scanResponse: ScanResponse, blockchains: List<Currency>,
 ): List<WalletManager> {
-    return blockchains.mapNotNull { this.makeWalletManagerForApp(scanResponse, it) }
+    return blockchains
+        .filter { it.isBlockchain() }
+        .mapNotNull { this.makeWalletManagerForApp(scanResponse, it) }
 }
 
 fun WalletManagerFactory.makePrimaryWalletManager(

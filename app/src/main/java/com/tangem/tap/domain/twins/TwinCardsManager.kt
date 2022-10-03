@@ -13,6 +13,7 @@ import com.tangem.common.extensions.toHexString
 import com.tangem.domain.common.ScanResponse
 import com.tangem.network.common.MoshiConverter
 import com.tangem.operations.wallet.CreateWalletResponse
+import com.tangem.tap.common.AssetReader
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.AnalyticsHandler
 import com.tangem.tap.tangemSdkManager
@@ -117,10 +118,6 @@ class TwinCardsManager(
             return getAdapter().fromJson(file)!!
         }
     }
-}
-
-interface AssetReader {
-    fun readAssetAsString(name: String): String
 }
 
 private class Issuer(

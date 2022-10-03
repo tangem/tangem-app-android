@@ -15,10 +15,12 @@ class PersonalSignDialog {
             context: Context,
         ): AlertDialog {
             val message =
-                context.getString(R.string.wallet_connect_alert_sign_message, data.cardId) +
-                        context.getString(R.string.wallet_connect_personal_sign_message,
-                            data.dAppName,
-                            data.message)
+                context.getString(R.string.wallet_connect_alert_sign_message) +
+                    context.getString(
+                        R.string.wallet_connect_personal_sign_message,
+                        data.dAppName,
+                        data.message,
+                    )
             return AlertDialog.Builder(context).apply {
                 setTitle(context.getString(R.string.wallet_connect))
                 setMessage(message)
@@ -37,7 +39,6 @@ class PersonalSignDialog {
 }
 
 data class PersonalSignDialogData(
-    val cardId: String,
     val dAppName: String,
     val message: String,
     val session: WCSession,
