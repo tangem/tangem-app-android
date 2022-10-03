@@ -5,7 +5,7 @@
     <string name="send_error_invalid_fee_value">Commission non valide</string>
     <string name="send_error_dust_amount_format">Le montant minimal est de %s</string>
     <string name="send_error_dust_change">Le reste est trop petit</string>
-    <string name="send_error_no_target_account">Le compte cible n\'a pas été créé. Le montant à envoyer doit être de %s %s + commissions ou plus</string>
+    <string name="send_error_no_target_account">Le compte cible n\'a pas été créé. Le montant à envoyer doit être de %s + commissions ou plus</string>
     <string name="send_error_no_account_xlm">Pour créer un compte, envoyez 1+ XLM à cette adresse</string>
     <string name="send_error_fee_request_failed">Échec de réception des commissions</string>
     <string name="send_error_unknown">Erreur inconnue</string>
@@ -17,4 +17,7 @@
     <string name="xtz_withdrawal_message_warning">Pour ne pas payer une commission élevée la prochaine fois que vous rechargez votre portefeuille, veuillez réduire le montant de %s XTZ</string>
     <string name="xtz_withdrawal_message_reduce">Réduire de %s XTZ</string>
     <string name="xtz_withdrawal_message_ignore">Non, envoyer toute la somme</string>
+    <string name="send_error_minimum_balance_format">Minimum balance is %s</string>
+    <string name="warning_existential_deposit_message">%s network has a concept of Existential Deposit. If your account drops below %s it will be deactivated and any remaining funds will be destroyed.</string>
+    <string name="no_account_polkadot">Destination account is not active. Send %s or more to activate the account.</string>
 </resources>

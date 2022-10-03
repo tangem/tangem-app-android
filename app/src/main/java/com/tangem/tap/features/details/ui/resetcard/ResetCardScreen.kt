@@ -1,6 +1,8 @@
 package com.tangem.tap.features.details.ui.resetcard
 
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -89,11 +91,14 @@ fun ResetCardView(
                 color = colorResource(id = R.color.text_secondary),
             )
 
-            Spacer(modifier = modifier.size(44.dp))
+            Spacer(modifier = modifier.size(28.dp))
             Row(
                 modifier = modifier
                     .fillMaxWidth()
-                    .padding(end = 20.dp),
+                    .clickable(
+                    onClick = { state.onAcceptWarningToggleClick(!state.accepted) },
+                )
+                    .padding(top = 16.dp, bottom = 16.dp),
             ) {
                 IconToggleButton(
                     checked = state.accepted,
@@ -120,13 +125,15 @@ fun ResetCardView(
                     text = stringResource(id = R.string.reset_card_to_factory_warning_message),
                     style = TangemTypography.body2,
                     color = colorResource(id = R.color.text_secondary),
+                    modifier = modifier
+                        .padding(end = 20.dp),
                 )
             }
 
-            Spacer(modifier = modifier.size(32.dp))
+            Spacer(modifier = modifier.size(16.dp))
             Box(
                 modifier = modifier
-                    .padding(start = 16.dp, end = 16.dp),
+                    .padding(start = 16.dp, end = 16.dp, bottom = 32.dp),
             ) {
                 DetailsMainButton(
                     title = stringResource(id = R.string.reset_card_to_factory_button_title),
