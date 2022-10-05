@@ -16,8 +16,6 @@
     <string name="twins_onboarding_subtitle" translatable="false">One wallet. Two cards.</string>
     <string name="twins_onboarding_description_format" translatable="false">This one that you are holding in your hands and the other one with number #%s.</string>
 
-    <string name="wallet_twins_chip_format" translatable="false">Card %1d of %2d</string>
-
     <string name="details_row_title_twins_recreate" translatable="false">Re-create twin wallet</string>
     <string name="details_row_title_card_tou" translatable="false">Card terms of use</string>
 
