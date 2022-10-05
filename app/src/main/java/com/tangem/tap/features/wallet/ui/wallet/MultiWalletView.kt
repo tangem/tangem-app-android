@@ -13,7 +13,7 @@ import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
-import com.tangem.tap.currenciesRepository
+import com.tangem.tap.domain.tokens.CurrenciesRepository
 import com.tangem.tap.features.tokens.redux.TokensAction
 import com.tangem.tap.features.wallet.models.TotalBalance
 import com.tangem.tap.features.wallet.redux.ProgressState
@@ -78,13 +78,16 @@ class MultiWalletView : WalletView() {
 
         handleTotalBalance(binding, state.totalBalance)
         handleBackupWarning(binding, state.showBackupWarning)
+        handleRescanWarning(binding, state.missingDerivations.isNotEmpty())
         walletsAdapter.submitList(state.walletsData, state.primaryBlockchain, state.primaryToken)
+
+        binding.pbLoadingUserTokens.show(state.loadingUserTokens)
 
         binding.btnAddToken.setOnClickListener {
             val card = store.state.globalState.scanResponse!!.card
             store.dispatch(
                 TokensAction.LoadCurrencies(
-                    supportedBlockchains = currenciesRepository.getBlockchains(
+                    supportedBlockchains = CurrenciesRepository.getBlockchains(
                         card.firmwareVersion,
                         card.isTestCard,
                     ),
@@ -110,6 +113,16 @@ class MultiWalletView : WalletView() {
         root.isVisible = showBackupWarning
         root.setOnClickListener {
             store.dispatch(WalletAction.MultiWallet.BackupWallet)
+        }
+    }
+
+    private fun handleRescanWarning(
+        binding: FragmentWalletBinding,
+        showRescanWarning: Boolean,
+    ) = with(binding.lWalletRescanWarning) {
+        root.isVisible = showRescanWarning
+        root.setOnClickListener {
+            store.dispatch(WalletAction.MultiWallet.ScanToGetDerivations)
         }
     }
 
