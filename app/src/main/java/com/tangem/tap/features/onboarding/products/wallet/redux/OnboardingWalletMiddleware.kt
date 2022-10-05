@@ -102,8 +102,8 @@ private fun handleWalletAction(action: Action) {
                             store.dispatchOnMain(
                                 WalletAction.MultiWallet.SaveCurrencies(
                                     blockchainNetworks = blockchainNetworks,
-                                    cardId = result.data.card.cardId
-                                )
+                                    card = result.data.card,
+                                ),
                             )
                             onboardingManager.activationStarted(updatedResponse.card.cardId)
                             store.dispatch(OnboardingWalletAction.ProceedBackup())
@@ -286,15 +286,6 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             backupService.proceedBackup { result ->
                 when (result) {
                     is CompletionResult.Success -> {
-                        val blockchainNetworks = listOf(
-                            BlockchainNetwork(Blockchain.Bitcoin, result.data),
-                            BlockchainNetwork(Blockchain.Ethereum, result.data)
-                        )
-                        store.dispatchOnMain(
-                            WalletAction.MultiWallet.SaveCurrencies(
-                                blockchainNetworks = blockchainNetworks, cardId = result.data.cardId
-                            )
-                        )
                         if (backupService.currentState == BackupService.State.Finished) {
                             store.dispatchOnMain(BackupAction.FinishBackup)
                         } else {
