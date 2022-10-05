@@ -34,11 +34,10 @@ class MultiWalletReducer {
                     val walletManager = action.walletManagers.firstOrNull {
                         it.wallet.blockchain == blockchain.blockchain &&
                             (it.wallet.publicKey.derivationPath?.rawPath == blockchain.derivationPath)
-                    } ?: return@mapNotNull null
-
-                    val wallet = walletManager.wallet
+                    }
+                    val wallet = walletManager?.wallet
                     val cardToken = if (!state.isMultiwalletAllowed) {
-                        wallet.getFirstToken()?.symbol?.let { TokenData("", tokenSymbol = it) }
+                        wallet?.getFirstToken()?.symbol?.let { TokenData("", tokenSymbol = it) }
                     } else {
                         null
                     }
@@ -66,7 +65,7 @@ class MultiWalletReducer {
                 }
 
                 val selectedCurrency = if (!state.isMultiwalletAllowed) {
-                    wallets[0].walletsData[0].currency
+                    wallets.firstOrNull()?.walletsData?.firstOrNull()?.currency
                 } else {
                     state.selectedCurrency
                 }
@@ -168,9 +167,11 @@ class MultiWalletReducer {
                 state.copy(primaryToken = action.token)
             is WalletAction.MultiWallet.SaveCurrencies -> state
             is WalletAction.MultiWallet.ShowWalletBackupWarning -> state.copy(
-                showBackupWarning = action.show
+                showBackupWarning = action.show,
             )
+            is WalletAction.MultiWallet.AddMissingDerivations -> state.copy(missingDerivations = action.blockchains)
             is WalletAction.MultiWallet.BackupWallet -> state
+            is WalletAction.MultiWallet.ScanToGetDerivations -> state
         }
     }
 
