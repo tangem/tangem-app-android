@@ -58,6 +58,15 @@ class TangemTechService(
         performRequest { api.currencies() }
     }
 
+    suspend fun getUserTokens(userId: String): Result<UserTokensResponse> = withContext(Dispatchers.IO) {
+        performRequest { api.getUserTokens(userId) }
+    }
+
+    suspend fun putUserTokens(userId: String, userTokens: UserTokensResponse): Result<Unit> =
+        withContext(Dispatchers.IO) {
+            performRequest { api.putUserTokens(userId, userTokens) }
+        }
+
     fun addHeaderInterceptors(interceptors: List<AddHeaderInterceptor>) {
         headerInterceptors.removeAll(interceptors)
         headerInterceptors.addAll(interceptors)

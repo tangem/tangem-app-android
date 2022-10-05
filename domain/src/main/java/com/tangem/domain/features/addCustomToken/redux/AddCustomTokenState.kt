@@ -9,9 +9,31 @@ import com.tangem.domain.DomainWrapped
 import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.domain.common.extensions.supportedBlockchains
 import com.tangem.domain.common.extensions.supportedTokens
-import com.tangem.domain.common.form.*
-import com.tangem.domain.features.addCustomToken.*
-import com.tangem.domain.features.addCustomToken.CustomTokenFieldId.*
+import com.tangem.domain.common.form.CustomTokenValidator
+import com.tangem.domain.common.form.DataField
+import com.tangem.domain.common.form.FieldDataConverter
+import com.tangem.domain.common.form.FieldId
+import com.tangem.domain.common.form.FieldToJsonConverter
+import com.tangem.domain.common.form.Form
+import com.tangem.domain.common.form.StringIsEmptyValidator
+import com.tangem.domain.common.form.StringIsNotEmptyValidator
+import com.tangem.domain.common.form.TokenContractAddressValidator
+import com.tangem.domain.common.form.TokenDecimalsValidator
+import com.tangem.domain.common.form.TokenNameValidator
+import com.tangem.domain.common.form.TokenNetworkValidator
+import com.tangem.domain.common.form.TokenSymbolValidator
+import com.tangem.domain.features.addCustomToken.AddCustomTokenService
+import com.tangem.domain.features.addCustomToken.CustomCurrency
+import com.tangem.domain.features.addCustomToken.CustomTokenFieldId
+import com.tangem.domain.features.addCustomToken.CustomTokenFieldId.ContractAddress
+import com.tangem.domain.features.addCustomToken.CustomTokenFieldId.Decimals
+import com.tangem.domain.features.addCustomToken.CustomTokenFieldId.DerivationPath
+import com.tangem.domain.features.addCustomToken.CustomTokenFieldId.Name
+import com.tangem.domain.features.addCustomToken.CustomTokenFieldId.Network
+import com.tangem.domain.features.addCustomToken.CustomTokenFieldId.Symbol
+import com.tangem.domain.features.addCustomToken.TokenBlockchainField
+import com.tangem.domain.features.addCustomToken.TokenDerivationPathField
+import com.tangem.domain.features.addCustomToken.TokenField
 import com.tangem.domain.redux.DomainState
 import com.tangem.domain.redux.state.StringActionStateConverter
 import com.tangem.network.api.tangemTech.CoinsResponse
@@ -119,7 +141,7 @@ data class AddCustomTokenState(
             formErrors = emptyMap(),
             foundToken = null,
             warnings = emptySet(),
-            screenState = createInitialScreenState(),
+            screenState = createInitialScreenState(card.settings.isHDWalletAllowed),
             tangemTechServiceManager = null,
         )
     }
@@ -223,15 +245,15 @@ data class AddCustomTokenState(
             return (listOf(Blockchain.Unknown) + evmBlockchains).sortByName()
         }
 
-        private fun createInitialScreenState(): ScreenState {
+        internal fun createInitialScreenState(showDerivationPathField: Boolean = false): ScreenState {
             return ScreenState(
                 contractAddressField = ViewStates.TokenField(),
                 network = ViewStates.TokenField(),
                 name = ViewStates.TokenField(isEnabled = false),
                 symbol = ViewStates.TokenField(isEnabled = false),
                 decimals = ViewStates.TokenField(isEnabled = false),
-                derivationPath = ViewStates.TokenField(),
-                addButton = ViewStates.AddButton(isEnabled = false)
+                derivationPath = ViewStates.TokenField(isVisible = showDerivationPathField),
+                addButton = ViewStates.AddButton(isEnabled = false),
             )
         }
     }
