@@ -16,7 +16,6 @@ import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.currenciesRepository
 import com.tangem.tap.domain.configurable.config.ConfigManager
 import com.tangem.tap.domain.extensions.isMultiwalletAllowed
 import com.tangem.tap.domain.extensions.makePrimaryWalletManager
@@ -24,17 +23,17 @@ import com.tangem.tap.domain.extensions.makeWalletManagersForApp
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.demo.isDemoCard
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
+import com.tangem.tap.features.wallet.models.toBlockchainNetworks
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.tap.store
+import com.tangem.tap.userTokensRepository
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-
 class TapWalletManager {
     val walletManagerFactory: WalletManagerFactory
-            by lazy { WalletManagerFactory(blockchainSdkConfig) }
-
+        by lazy { WalletManagerFactory(blockchainSdkConfig) }
     val rates: RatesRepository = RatesRepository()
 
     private val blockchainSdkConfig by lazy {
@@ -65,16 +64,16 @@ class TapWalletManager {
                             WalletAction.LoadWallet.NoAccount(
                                 walletManager.wallet,
                                 blockchainNetwork,
-                                (result.error as TapError.WalletManager.NoAccountError).customMessage
-                            )
+                                (result.error as TapError.WalletManager.NoAccountError).customMessage,
+                            ),
                         )
                     }
                     else -> {
                         dispatchOnMain(
                             WalletAction.LoadWallet.Failure(
                                 walletManager.wallet,
-                                result.error.localizedMessage
-                            )
+                                result.error.localizedMessage,
+                            ),
                         )
                     }
                 }
@@ -138,23 +137,22 @@ class TapWalletManager {
         dispatchOnMain(WalletAction.LoadFiatRate())
     }
 
-    private suspend fun loadMultiWalletData(
-        scanResponse: ScanResponse
-    ) {
-        val savedCurrencies = currenciesRepository.loadSavedCurrencies(
-            scanResponse.card.cardId, scanResponse.card.settings.isHDWalletAllowed
-        )
-        if (savedCurrencies.isEmpty()) return
+    private suspend fun loadMultiWalletData(scanResponse: ScanResponse) {
+        loadUserCurrencies(scanResponse, walletManagerFactory)
+    }
 
-        val walletManagers =
-            walletManagerFactory.makeWalletManagersForApp(scanResponse, savedCurrencies)
-        dispatchOnMain(
-            WalletAction.MultiWallet.AddBlockchains(savedCurrencies, walletManagers),
-        )
-        savedCurrencies.map {
+    private fun checkIfDerivationsAreMissing(blockchainNetworks: List<BlockchainNetwork>, scanResponse: ScanResponse) {
+        blockchainNetworks.map {
             if (it.tokens.isNotEmpty()) {
-                dispatchOnMain(WalletAction.MultiWallet.AddTokens(it.tokens, it))
+                WalletAction.MultiWallet.AddTokens(it.tokens, it, false)
             }
+        }
+        val missingDerivations = blockchainNetworks
+            .filter {
+                it.derivationPath != null && !scanResponse.hasDerivation(it.blockchain, it.derivationPath)
+            }
+        if (missingDerivations.isNotEmpty()) {
+            store.dispatch(WalletAction.MultiWallet.AddMissingDerivations(missingDerivations))
         }
     }
 
@@ -163,7 +161,6 @@ class TapWalletManager {
         val primaryWalletManager = walletManagerFactory.makePrimaryWalletManager(data)
 
         if (blockchain != Blockchain.Unknown && primaryWalletManager != null) {
-            val blockchainNetwork = BlockchainNetwork.fromWalletManager(primaryWalletManager)
             val primaryToken = data.getPrimaryToken()
 
             dispatchOnMain(WalletAction.MultiWallet.SetPrimaryBlockchain(blockchain))
@@ -173,14 +170,43 @@ class TapWalletManager {
             }
             dispatchOnMain(
                 WalletAction.MultiWallet.AddBlockchains(
-                    listOf(blockchainNetwork),
-                    listOf(primaryWalletManager),
+                    blockchains = listOf(BlockchainNetwork.fromWalletManager(primaryWalletManager)),
+                    walletManagers = listOf(primaryWalletManager),
+                    save = false,
                 ),
             )
         }
     }
 
+    private suspend fun loadUserCurrencies(scanResponse: ScanResponse, walletManagerFactory: WalletManagerFactory) {
+        val userTokens = userTokensRepository.getUserTokens(scanResponse.card)
+        withMainContext {
+            val blockchainNetworks = userTokens.toBlockchainNetworks()
+            val walletManagers = walletManagerFactory.makeWalletManagersForApp(scanResponse, userTokens)
+            store.dispatch(
+                WalletAction.MultiWallet.AddBlockchains(
+                    blockchains = blockchainNetworks,
+                    walletManagers = walletManagers,
+                    save = false,
+                ),
+            )
+
+            blockchainNetworks.filter { it.tokens.isNotEmpty() }
+                .map {
+                    store.dispatch(
+                        WalletAction.MultiWallet.AddTokens(
+                            tokens = it.tokens,
+                            blockchain = it,
+                            save = false,
+                        ),
+                    )
+                }
+            checkIfDerivationsAreMissing(blockchainNetworks, scanResponse)
+        }
+    }
+
     suspend fun reloadData(data: ScanResponse) {
+        loadUserCurrencies(data, walletManagerFactory)
         withContext(Dispatchers.Main) {
             getActionIfUnknownBlockchainOrEmptyWallet(data)?.let {
                 store.dispatch(it)

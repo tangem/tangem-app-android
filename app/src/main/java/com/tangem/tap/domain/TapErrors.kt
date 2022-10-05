@@ -2,6 +2,7 @@ package com.tangem.tap.domain
 
 import androidx.annotation.StringRes
 import com.tangem.common.core.TangemError
+import com.tangem.network.api.tangemTech.TangemTechError
 import com.tangem.wallet.R
 
 interface TapErrors
@@ -41,7 +42,7 @@ sealed class TapError(
 
     data class UnsupportedState(
         val stateError: String,
-        val customMessage: String = "Unsupported state:"
+        val customMessage: String = "Unsupported state:",
     ) : TapError(R.string.common_custom_string, listOf("$customMessage $stateError"))
 
     sealed class WalletManager {
@@ -52,9 +53,14 @@ sealed class TapError(
         object BlockchainIsUnreachableTryLater : TapError(R.string.wallet_balance_blockchain_unreachable_try_later)
     }
 
+    sealed class WalletConnect {
+        object UnsupportedDapp : TapError(R.string.wallet_connect_error_unsupported_dapp)
+        object UnsupportedLink : TapError(R.string.wallet_connect_error_failed_to_connect)
+    }
+
     data class ValidateTransactionErrors(
         override val errorList: List<TapError>,
-        override val builder: (List<String>) -> String
+        override val builder: (List<String>) -> String,
     ) : TapError(-1), MultiMessageError
 }
 
@@ -67,7 +73,6 @@ sealed class TapSdkError(override val messageResId: Int?) : Throwable(), TangemE
     object ScanPrimaryCard : TapSdkError(R.string.saltpay_backup_warning)
 }
 
-
 fun TapErrors.assembleErrors(): MutableList<Pair<Int, List<Any>?>> {
     val idList = mutableListOf<Pair<Int, List<Any>?>>()
     when (this) {
@@ -76,3 +81,13 @@ fun TapErrors.assembleErrors(): MutableList<Pair<Int, List<Any>?>> {
     }
     return idList
 }
+
+fun TangemTechError.toTapError(): TapError {
+    return when (this.code) {
+        404 -> NoDataError(this.description)
+        else -> TapError.CustomError(customMessage = this.description)
+    }
+}
+
+class NoDataError(message: String) : TapError.CustomError(customMessage = message)
+

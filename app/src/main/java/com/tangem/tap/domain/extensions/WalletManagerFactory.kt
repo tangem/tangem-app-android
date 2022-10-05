@@ -103,9 +103,11 @@ fun WalletManagerFactory.makeWalletManagerForApp(
 }
 
 fun WalletManagerFactory.makeWalletManagersForApp(
-    scanResponse: ScanResponse, blockchains: List<BlockchainNetwork>,
+    scanResponse: ScanResponse, blockchains: List<Currency>,
 ): List<WalletManager> {
-    return blockchains.mapNotNull { this.makeWalletManagerForApp(scanResponse, it) }
+    return blockchains
+        .filter { it.isBlockchain() }
+        .mapNotNull { this.makeWalletManagerForApp(scanResponse, it) }
 }
 
 fun WalletManagerFactory.makePrimaryWalletManager(
