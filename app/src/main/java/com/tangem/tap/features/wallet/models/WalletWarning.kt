@@ -5,8 +5,7 @@ sealed class WalletWarning(
 ) {
     data class ExistentialDeposit(
         val currencyName: String,
-        val currencySymbols: String,
-        val existentialDepositString: String,
+        val edStringValueWithSymbol: String,
     ) : WalletWarning(1)
 
     object TransactionInProgress : WalletWarning(10)
