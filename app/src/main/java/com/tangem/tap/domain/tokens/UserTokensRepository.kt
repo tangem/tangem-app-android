@@ -8,6 +8,7 @@ import com.tangem.common.extensions.toHexString
 import com.tangem.common.services.Result
 import com.tangem.domain.common.extensions.calculateHmacSha256
 import com.tangem.network.api.tangemTech.TangemTechService
+import com.tangem.network.api.tangemTech.UserTokensResponse
 import com.tangem.tap.common.AndroidFileReader
 import com.tangem.tap.domain.NoDataError
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
@@ -36,7 +37,7 @@ class UserTokensRepository(
         return when (val networkResult = networkService.getUserTokens(userId)) {
             is Result.Success -> {
                 val tokens = networkResult.data.tokens.map { Currency.fromTokenResponse(it) }
-                storageService.saveUserTokens(card.getUserId(), tokens)
+                storageService.saveUserTokens(card.getUserId(), tokens.toUserTokensResponse())
                 tokens
             }
             is Result.Failure -> {
@@ -46,13 +47,24 @@ class UserTokensRepository(
     }
 
     suspend fun saveUserTokens(card: Card, tokens: List<Currency>) {
-        networkService.saveUserTokens(card.getUserId(), tokens)
-        storageService.saveUserTokens(card.getUserId(), tokens)
+        val userTokens = tokens.toUserTokensResponse()
+        networkService.saveUserTokens(card.getUserId(), userTokens)
+        storageService.saveUserTokens(card.getUserId(), userTokens)
     }
 
     suspend fun removeUserTokens(card: Card) {
-        networkService.saveUserTokens(card.getUserId(), emptyList())
-        storageService.saveUserTokens(card.getUserId(), emptyList())
+        val userTokens = emptyList<Currency>().toUserTokensResponse()
+        networkService.saveUserTokens(card.getUserId(), userTokens)
+        storageService.saveUserTokens(card.getUserId(), userTokens)
+    }
+
+    private fun List<Currency>.toUserTokensResponse(): UserTokensResponse {
+        val tokensResponse = this.map { it.toTokenResponse() }
+        return UserTokensResponse(
+            tokens = tokensResponse,
+            group = GROUP_DEFAULT_VALUE,
+            sort = SORT_DEFAULT_VALUE,
+        )
     }
 
     fun loadBlockchainsToDerive(card: Card): List<BlockchainNetwork> {
@@ -77,7 +89,8 @@ class UserTokensRepository(
         return when (error) {
             is NoDataError -> {
                 val tokens = storageService.getUserTokens(card)
-                coroutineScope { launch { networkService.saveUserTokens(userId = userId, tokens = tokens) } }
+                val userTokens = tokens.toUserTokensResponse()
+                coroutineScope { launch { networkService.saveUserTokens(userId = userId, tokens = userTokens) } }
                 tokens
             }
             else -> {
@@ -104,6 +117,8 @@ class UserTokensRepository(
 
     companion object {
         const val MESSAGE = "UserWalletID"
+        const val SORT_DEFAULT_VALUE = "manual"
+        const val GROUP_DEFAULT_VALUE = "none"
         fun init(context: Context, tangemTechService: TangemTechService): UserTokensRepository {
             val fileReader = AndroidFileReader(context)
             val oldUserTokensRepository = OldUserTokensRepository(
