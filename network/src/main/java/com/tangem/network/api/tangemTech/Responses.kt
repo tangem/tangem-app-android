@@ -57,7 +57,7 @@ data class UserTokensResponse(
 ) : TangemTechResponse
 
 data class TokenResponse(
-    val id: String,
+    val id: String? = null,
     val networkId: String,
     val derivationPath: String,
     val name: String,
