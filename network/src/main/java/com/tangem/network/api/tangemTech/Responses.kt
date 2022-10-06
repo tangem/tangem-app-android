@@ -51,8 +51,8 @@ data class GeoResponse(
 
 data class UserTokensResponse(
     val version: Int = 0,
-    val group: String = "",
-    val sort: String = "",
+    val group: String? = null,
+    val sort: String? = null,
     val tokens: List<TokenResponse> = emptyList(),
 ) : TangemTechResponse
 
