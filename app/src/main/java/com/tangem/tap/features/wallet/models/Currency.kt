@@ -59,7 +59,7 @@ sealed interface Currency {
     fun isToken(): Boolean = this is Token
     fun toTokenResponse(): TokenResponse {
         return TokenResponse(
-            id = coinId ?: "",
+            id = coinId,
             networkId = blockchain.toNetworkId(),
             derivationPath = derivationPath ?: DERIVATION_PATH_RAW_VALUE,
             name = currencyName,
