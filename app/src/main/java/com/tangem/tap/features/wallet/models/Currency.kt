@@ -70,7 +70,7 @@ sealed interface Currency {
     }
 
     companion object {
-        private const val DERIVATION_PATH_RAW_VALUE = "m/44/0'/0/0"
+        private const val DERIVATION_PATH_RAW_VALUE = "m/44'/60'/0'/0/0"
         fun fromBlockchainNetwork(
             blockchainNetwork: BlockchainNetwork,
             token: com.tangem.blockchain.common.Token? = null,
