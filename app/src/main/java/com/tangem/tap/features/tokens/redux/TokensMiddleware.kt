@@ -278,7 +278,7 @@ class TokensMiddleware {
         val factory = store.state.globalState.tapWalletManager.walletManagerFactory
         val derivationStyle = scanResponse.card.derivationStyle
 
-        val addActions = currencyList.mapNotNull { currency ->
+        val addActions = currencyList.mapIndexedNotNull { index, currency ->
             when (currency) {
                 is Currency.Blockchain -> {
                     val derivationPath = currency.derivationPath?.let { DerivationPath(it) }
@@ -293,12 +293,12 @@ class TokensMiddleware {
                         scanResponse = scanResponse,
                         blockchain = currency.blockchain,
                         derivationParams = derivationParams,
-                    ) ?: return@mapNotNull null
+                    ) ?: return@mapIndexedNotNull null
                     val blockchainNetwork = BlockchainNetwork.fromWalletManager(walletManager)
                     WalletAction.MultiWallet.AddBlockchain(
                         blockchain = blockchainNetwork,
                         walletManager = walletManager,
-                        save = true,
+                        save = index == currencyList.lastIndex,
                     )
                 }
                 is Currency.Token -> {
@@ -309,7 +309,7 @@ class TokensMiddleware {
                     WalletAction.MultiWallet.AddToken(
                         token = currency.token,
                         blockchain = blockchainNetwork,
-                        save = true,
+                        save = index == currencyList.lastIndex,
                     )
                 }
             }
