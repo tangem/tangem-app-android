@@ -98,6 +98,7 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.Optimism -> "optimistic-ethereum"
         Blockchain.OptimismTestnet -> "optimistic-ethereum/test"
         Blockchain.Dash -> "dash"
+        Blockchain.SaltPay -> "wxdai"
     }
 }
 
@@ -129,6 +130,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Kusama -> "kusama"
         Blockchain.Optimism, Blockchain.OptimismTestnet -> "ethereum"
         Blockchain.Dash -> "dash"
+        Blockchain.SaltPay -> "wxdai"
         Blockchain.Unknown -> "unknown"
     }
 }
