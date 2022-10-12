@@ -132,7 +132,6 @@ class TapWalletManager {
         }
 
         dispatchOnMain(WalletAction.LoadWallet())
-        dispatchOnMain(WalletAction.LoadFiatRate())
     }
 
     private suspend fun loadMultiWalletData(
@@ -202,6 +201,7 @@ class TapWalletManager {
                     )
                 }
             checkIfDerivationsAreMissing(blockchainNetworks, scanResponse)
+            store.dispatch(WalletAction.LoadFiatRate(coinsList = userTokens))
         }
     }
 
@@ -218,7 +218,6 @@ class TapWalletManager {
             }
 
             store.dispatch(WalletAction.LoadWallet())
-            store.dispatch(WalletAction.LoadFiatRate())
         }
     }
 
