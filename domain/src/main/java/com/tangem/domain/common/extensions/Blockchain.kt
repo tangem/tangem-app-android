@@ -47,6 +47,7 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "optimistic-ethereum" -> Blockchain.Optimism
         "optimistic-ethereum/test" -> Blockchain.OptimismTestnet
         "dash" -> Blockchain.Dash
+        "wxdai" -> Blockchain.SaltPay
         else -> null
     }
 }
@@ -55,7 +56,7 @@ fun Blockchain.toNetworkId(): String {
     return when (this) {
         Blockchain.Unknown -> "unknown"
         Blockchain.Arbitrum -> "arbitrum-one"
-        Blockchain.ArbitrumTestnet -> "arbitrum/test"
+        Blockchain.ArbitrumTestnet -> "arbitrum-one/test"
         Blockchain.Avalanche -> "avalanche"
         Blockchain.AvalancheTestnet -> "avalanche/test"
         Blockchain.Binance -> "binancecoin"
