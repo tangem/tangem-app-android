@@ -59,7 +59,7 @@ data class UserTokensResponse(
 data class TokenResponse(
     val id: String? = null,
     val networkId: String,
-    val derivationPath: String,
+    val derivationPath: String? = null,
     val name: String,
     val symbol: String,
     val decimals: Int,
