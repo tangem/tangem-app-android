@@ -31,7 +31,6 @@ import com.tangem.operations.issuerAndUserData.ReadIssuerDataCommand
 import com.tangem.tap.domain.TapSdkError
 import com.tangem.tap.domain.extensions.getPrimaryCurve
 import com.tangem.tap.domain.extensions.getSingleWallet
-import com.tangem.tap.domain.extensions.hasNoWallets
 import com.tangem.tap.domain.extensions.isMultiwalletAllowed
 import com.tangem.tap.domain.tokens.UserTokensRepository
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
@@ -85,7 +84,6 @@ class ScanProductTask(
     private fun getErrorIfExcludedCard(card: Card): TangemError? {
         if (card.isExcluded) return TapSdkError.CardForDifferentApp
         if (card.isNotSupportedInThatRelease) return TapSdkError.CardNotSupportedByRelease
-        if (card.isSaltPay && card.hasNoWallets()) return TapSdkError.ScanPrimaryCard
         return null
     }
 }
