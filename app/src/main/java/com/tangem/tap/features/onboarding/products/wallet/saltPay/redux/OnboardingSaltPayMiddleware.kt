@@ -79,7 +79,7 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
                 }
 
                 if (!attestationResponse.success) {
-                    onError(SaltPayRegistrationError.CardNotFound)
+                    onError(SaltPayRegistrationError.CardNotFound(attestationResponse.error))
                     return@launch
                 }
 
@@ -256,8 +256,8 @@ private suspend fun checkRegistration(
 @Throws(SaltPayRegistrationError::class)
 fun RegistrationResponse.Item.toSaltPayStep(): SaltPayRegistrationStep {
     return when {
-        passed != true -> throw SaltPayRegistrationError.CardNotPassed
-        disabledByAdmin == true -> throw SaltPayRegistrationError.CardDisabled
+        passed != true -> throw SaltPayRegistrationError.CardNotPassed(this.error)
+        disabledByAdmin == true -> throw SaltPayRegistrationError.CardDisabled(this.error)
 
         // go to success screen
         active == true -> SaltPayRegistrationStep.Finished
