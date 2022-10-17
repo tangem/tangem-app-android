@@ -153,7 +153,7 @@ private val tangemPinConfig = PinViewConfig(
         .width(42.dp)
         .height(56.dp)
         .clip(RoundedCornerShape(8.dp))
-        .background(Color(0xFFF5F5F5)),
+        .background(Color(0xFFF0F0F0)),
     pinBoxPadding = 6.dp,
     pinTextModifier = Modifier,
     pinsCount = 4,
