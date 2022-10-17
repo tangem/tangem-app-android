@@ -171,10 +171,10 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
     }
 
     fun changeDisplayedCardIdNumbersCount(scanResponse: ScanResponse) {
-        tangemSdk.config.cardIdDisplayFormat = if (scanResponse.isTangemTwins()) {
-            CardIdDisplayFormat.LastLuhn(4)
-        } else {
-            CardIdDisplayFormat.Full
+        tangemSdk.config.cardIdDisplayFormat = when {
+            scanResponse.isTangemTwins() -> CardIdDisplayFormat.LastLuhn(4)
+            scanResponse.isSaltPay() -> CardIdDisplayFormat.None
+            else -> CardIdDisplayFormat.Full
         }
     }
 
