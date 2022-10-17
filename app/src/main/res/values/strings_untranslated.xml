@@ -265,7 +265,7 @@
     <string name="onboarding_wallet_info_subtitle_third" translatable="false">You will be able to set an access code to protect your wallets.</string>
     <string name="onboarding_wallet_info_subtitle_fourth" translatable="false">Access code can be restored with one of backup cards.</string>
 
-    <string name="onboarding_subtitle_success_tangem_wallet_onboarding" translatable="false">Your Tangem Wallet card is configured and ready for use.</string>
+    <string name="onboarding_subtitle_success_tangem_wallet_onboarding" translatable="false">Your wallet card is configured and ready for use.</string>
     <string name="onboarding_subtitle_success_backup_one_card" translatable="false">You have created 1 backup card, and now this card are ready for use.</string>
     <string name="common_origin_card" translatable="false">Primary Card</string>
     <string name="onboarding_alert_i_understand" translatable="false">I understand</string>
