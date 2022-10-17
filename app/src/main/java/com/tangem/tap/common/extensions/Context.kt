@@ -1,6 +1,8 @@
 package com.tangem.tap.common.extensions
 
 import android.content.Context
+import android.content.pm.PackageManager
+import androidx.core.content.ContextCompat
 
 fun Context.readFile(fileName: String): String =
     this.openFileInput(fileName).bufferedReader().readText()
@@ -13,4 +15,8 @@ fun Context.rewriteFile(content: String, fileName: String) {
 
 fun Context.readAssetAsString(fileName: String): String {
     return this.assets.open("$fileName.json").bufferedReader().readText()
+}
+
+fun Context.isPermissionGranted(permission: String): Boolean {
+    return ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
 }
