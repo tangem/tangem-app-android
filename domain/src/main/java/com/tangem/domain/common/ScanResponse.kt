@@ -10,6 +10,8 @@ import com.tangem.common.extensions.toMapKey
 import com.tangem.common.hdWallet.DerivationPath
 import com.tangem.domain.common.TapWorkarounds.getTangemNoteBlockchain
 import com.tangem.domain.common.TapWorkarounds.isSaltPay
+import com.tangem.domain.common.TapWorkarounds.isSaltPayVisa
+import com.tangem.domain.common.TapWorkarounds.isSaltPayWallet
 import com.tangem.domain.common.TapWorkarounds.isTangemNote
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.common.TapWorkarounds.isTestCard
@@ -54,6 +56,8 @@ data class ScanResponse(
     fun isTangemNote(): Boolean = productType == ProductType.Note
     fun isTangemWallet(): Boolean = productType == ProductType.Wallet
     fun isSaltPay(): Boolean = productType == ProductType.SaltPay
+    fun isSaltPayVisa(): Boolean = card.isSaltPayVisa
+    fun isSaltPayWallet(): Boolean = card.isSaltPayWallet
     fun isTangemTwins(): Boolean = productType == ProductType.Twins
     fun twinsIsTwinned(): Boolean = card.isTangemTwins && walletData != null && secondTwinPublicKey != null
     fun supportsHdWallet(): Boolean = card.settings.isHDWalletAllowed
