@@ -22,7 +22,7 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             app:menu="@menu/wallet"
-            app:navigationIcon="@drawable/ic_wallet_24"
+            app:navigationIcon="@drawable/ic_scan_card"
             app:navigationIconTint="@color/darkGray6"
             app:title="@string/wallet_title"
             app:titleCentered="true" />
