@@ -65,13 +65,13 @@ object TapWorkarounds {
 
 
     val Card.isSaltPay: Boolean
-        get() = isSaltPayVisa || isSaltPayTangem
+        get() = isSaltPayVisa || isSaltPayWallet
 
     val Card.isSaltPayVisa: Boolean
         get() = SaltPayWorkaround.isVisaBatchId(batchId)
 
-    val Card.isSaltPayTangem: Boolean
-        get() = SaltPayWorkaround.isTangemWalletCardId(cardId)
+    val Card.isSaltPayWallet: Boolean
+        get() = SaltPayWorkaround.isWalletCardId(cardId)
 
 
     val Card.isExcluded: Boolean
