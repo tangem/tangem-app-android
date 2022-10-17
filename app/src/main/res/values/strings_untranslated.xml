@@ -199,7 +199,7 @@
     <string name="address_qr_code_message_format" translatable="false">Send only %s (%s) to this address. Using other tokens and networks may result in loss of funds.</string>
     <string name="address_qr_code_message_token_format" translatable="false">Send only %s (%s) from %s network to this address. Using other tokens and networks may result in loss of funds.</string>
 
-    <string name="onboarding_twins_interrupt_warning" translatable="false">If the process of re-creating the wallet gets interrupted in any way, you\'ll have to start over.</string>
+    <string name="onboarding_twins_interrupt_warning" translatable="false">If the process of creating the wallet gets interrupted in any way, you\'ll have to start over.</string>
     <string name="onboarding_twin_exit_warning" translatable="false">The twinning process is partly complete. You can\'t exit it now.</string>
 
     <string name="onboarding_error_create_primary_wallet" translatable="false">Internal error: can\'t create wallet manager</string>
