@@ -107,7 +107,7 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
 
                 withMainContext {
                     handleIsBusy = false
-                    store.dispatch(OnboardingSaltPayAction.SetStep(SaltPayRegistrationStep.Kyc))
+                    store.dispatch(OnboardingSaltPayAction.SetStep(SaltPayRegistrationStep.KycIntro))
                 }
             }
         }
@@ -268,7 +268,7 @@ fun RegistrationResponse.Item.toSaltPayStep(): SaltPayRegistrationStep {
         // kycDate is set, go to kyc waiting screen
         kycDate != null -> SaltPayRegistrationStep.KycWaiting
 
-        else -> SaltPayRegistrationStep.KycStart
+        else -> SaltPayRegistrationStep.KycIntro
     }
 }
 
