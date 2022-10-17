@@ -49,7 +49,7 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
         startPostponedEnterTransition()
 
         binding.toolbar.setTitle(R.string.onboarding_title)
-        btnRefreshBalanceWidget = RefreshBalanceWidget(binding.onboardingTopContainer.onboardingMainContainer)
+        btnRefreshBalanceWidget = RefreshBalanceWidget(binding.onboardingTopContainer.onboardingWalletContainer)
 
         store.dispatch(OnboardingNoteAction.LoadCardArtwork)
         store.dispatch(OnboardingNoteAction.DetermineStepOfScreen)
@@ -207,10 +207,10 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
         with(binding.onboardingTopContainer) {
             val constraintSet = ConstraintSet()
             constraintSet.clone(requireContext(), layoutId)
-            constraintSet.applyTo(onboardingMainContainer)
+            constraintSet.applyTo(onboardingWalletContainer)
             val transition = InternalNoteLayoutTransition()
             transition.interpolator = OvershootInterpolator()
-            TransitionManager.beginDelayedTransition(onboardingMainContainer, transition)
+            TransitionManager.beginDelayedTransition(onboardingWalletContainer, transition)
         }
     }
 }
