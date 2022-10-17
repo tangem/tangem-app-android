@@ -26,7 +26,7 @@ sealed class SaltPayRegistrationError(
     override val data: Any? = null,
 ) : SaltPayModuleError(
     subCode = ERROR_CODE_REGISTRATION + subCode,
-    message = message ?: this::class.java.simpleName,
+    message = message ?: EMPTY_MESSAGE,
 ) {
     object Unknown : SaltPayRegistrationError(4)
     object Empty : SaltPayRegistrationError(4)
@@ -44,4 +44,8 @@ sealed class SaltPayRegistrationError(
     object EmptyDynamicAttestResponse : SaltPayRegistrationError(11)
     object EmptyBackupCardScanned : SaltPayRegistrationError(12) //
     object WeakPin : SaltPayRegistrationError(13) //
+
+    companion object {
+        const val EMPTY_MESSAGE = ""
+    }
 }
