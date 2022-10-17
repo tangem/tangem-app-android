@@ -8,10 +8,10 @@ import com.tangem.common.card.WalletData
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.toMapKey
 import com.tangem.common.hdWallet.DerivationPath
-import com.tangem.domain.common.TapWorkarounds.getSaltPayBlockchain
 import com.tangem.domain.common.TapWorkarounds.getTangemNoteBlockchain
 import com.tangem.domain.common.TapWorkarounds.isSaltPay
 import com.tangem.domain.common.TapWorkarounds.isTangemNote
+import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.operations.CommandResponse
 import com.tangem.operations.backup.PrimaryCard
@@ -30,12 +30,8 @@ data class ScanResponse(
 ) : CommandResponse {
     fun getBlockchain(): Blockchain {
         return when (productType) {
-            ProductType.SaltPay -> {
-                card.getSaltPayBlockchain()
-            }
-            ProductType.Note -> {
-                card.getTangemNoteBlockchain() ?: Blockchain.Unknown
-            }
+            ProductType.SaltPay -> if (card.isTestCard) Blockchain.SaltPayTestnet else Blockchain.SaltPay
+            ProductType.Note -> card.getTangemNoteBlockchain() ?: Blockchain.Unknown
             else -> {
                 val blockchainName: String = walletData?.blockchain ?: return Blockchain.Unknown
                 Blockchain.fromId(blockchainName)
@@ -44,7 +40,7 @@ data class ScanResponse(
     }
 
     fun getPrimaryToken(): Token? {
-        if (card.isSaltPay) return TapWorkarounds.saltPayToken
+        if (card.isSaltPay) return SaltPayWorkaround.tokenFrom(getBlockchain())
 
         val cardToken = walletData?.token ?: return null
         return Token(
@@ -57,11 +53,11 @@ data class ScanResponse(
 
     fun isTangemNote(): Boolean = productType == ProductType.Note
     fun isTangemWallet(): Boolean = productType == ProductType.Wallet
+    fun isSaltPay(): Boolean = productType == ProductType.SaltPay
     fun isTangemTwins(): Boolean = productType == ProductType.Twins
+    fun twinsIsTwinned(): Boolean = card.isTangemTwins && walletData != null && secondTwinPublicKey != null
     fun supportsHdWallet(): Boolean = card.settings.isHDWalletAllowed
     fun supportsBackup(): Boolean = card.settings.isBackupAllowed
-    fun twinsIsTwinned(): Boolean =
-        card.isTangemTwins() && walletData != null && secondTwinPublicKey != null
 
     fun hasDerivation(blockchain: Blockchain, rawDerivationPath: String): Boolean {
         return hasDerivation(blockchain, DerivationPath(rawDerivationPath))
@@ -95,12 +91,10 @@ enum class ProductType {
 
 val Card.productType: ProductType
     get() = when {
-        isTangemTwins() -> ProductType.Twins
-        isTangemNote() -> ProductType.Note
+        isTangemTwins -> ProductType.Twins
+        isTangemNote -> ProductType.Note
         isSaltPay -> ProductType.SaltPay
         else -> ProductType.Wallet
     }
 
 typealias KeyWalletPublicKey = ByteArrayKey
-
-fun Card.isTangemTwins(): Boolean = TwinsHelper.getTwinCardNumber(cardId) != null
