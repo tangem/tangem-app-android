@@ -2,7 +2,6 @@ package com.tangem.tap.features.onboarding
 
 import com.tangem.domain.common.ProductType
 import com.tangem.domain.common.ScanResponse
-import com.tangem.domain.common.TapWorkarounds.isSaltPay
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.domain.extensions.hasWallets
 import com.tangem.tap.preferencesStorage
@@ -16,19 +15,14 @@ class OnboardingHelper {
         fun isOnboardingCase(response: ScanResponse): Boolean {
             val cardInfoStorage = preferencesStorage.usedCardsPrefStorage
             return when {
-                response.card.isSaltPay -> {
-                    response.card.backupStatus?.isActive != true
-                }
-                response.productType == ProductType.Twins -> {
+                response.isTangemTwins() -> {
                     if (!response.twinsIsTwinned()) {
                         true
                     } else {
                         cardInfoStorage.activationIsStarted(response.card.cardId)
                     }
                 }
-                response.card.hasWallets() -> {
-                    cardInfoStorage.activationIsStarted(response.card.cardId)
-                }
+                response.card.hasWallets() -> cardInfoStorage.activationIsStarted(response.card.cardId)
                 else -> true
             }
         }
