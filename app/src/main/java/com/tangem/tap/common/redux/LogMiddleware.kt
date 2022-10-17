@@ -12,6 +12,7 @@ val logMiddleware: Middleware<AppState> = { dispatch, appState ->
         { action ->
             if (LogConfig.storeAction) {
                 Timber.d("Dispatch action: $action")
+                // printOnboardingWalletState()
             }
             nextDispatch(action)
         }
