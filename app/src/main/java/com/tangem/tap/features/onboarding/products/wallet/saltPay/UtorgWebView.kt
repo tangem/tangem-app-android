@@ -50,7 +50,6 @@ class UtorgWebChromeClient(
 
     private val permissionList = listOf(
         "android.permission.CAMERA",
-        "android.permission.WRITE_EXTERNAL_STORAGE",
     )
 
     private var filePathCallback: ValueCallback<Array<Uri>>? = null
