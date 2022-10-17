@@ -116,10 +116,10 @@ class OnboardingOtherCardsFragment : BaseOnboardingFragment<OnboardingOtherCards
         with(binding.onboardingTopContainer) {
             val constraintSet = ConstraintSet()
             constraintSet.clone(requireContext(), layoutId)
-            constraintSet.applyTo(onboardingMainContainer)
+            constraintSet.applyTo(onboardingWalletContainer)
             val transition = InternalNoteLayoutTransition()
             transition.interpolator = OvershootInterpolator()
-            TransitionManager.beginDelayedTransition(onboardingMainContainer, transition)
+            TransitionManager.beginDelayedTransition(onboardingWalletContainer, transition)
         }
     }
 }
