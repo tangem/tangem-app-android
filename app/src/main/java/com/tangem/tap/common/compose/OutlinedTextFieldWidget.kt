@@ -1,6 +1,11 @@
 package com.tangem.tap.common.compose
 
-import androidx.compose.animation.*
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -26,7 +31,7 @@ import com.tangem.common.module.ModuleError
 import com.tangem.domain.common.form.Field
 import com.tangem.tap.common.CompositionLogger
 import com.tangem.tap.common.compose.extensions.stringResourceDefault
-import com.tangem.tap.common.moduleMessage.ModuleMessageConverter
+import com.tangem.tap.domain.moduleMessage.ModuleMessageConverter
 
 /**
 [REDACTED_AUTHOR]
@@ -67,7 +72,7 @@ fun OutlinedTextFieldWidget(
             debounce = debounceTextChanges,
             visualTransformation = visualTransformation,
             keyboardOptions = keyboardOptions,
-            onTextChanged = onTextChanged
+            onTextChanged = onTextChanged,
         )
         errorConverter?.let { AnimatedErrorView(error, it) }
     }
@@ -105,7 +110,8 @@ private fun OutlinedProgressTextField(
         onValueChanged = {
             logger.log("DEBOUNCER: onValueChanged:  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  dispatch.toStore([$it])")
             onTextChanged(it)
-        })
+        },
+    )
 
     logger.log("RECOMPOSE ---------------------------------------------------------------START [${logger.count}]")
     logger.log("RECOMPOSE --data: fieldData.value: [${fieldData}]")
@@ -188,7 +194,10 @@ private fun AnimatedErrorView(
         exit = slideOutVertically() + fadeOut(),
     ) {
         error?.let {
-            ErrorView(errorConverter.convert(it), style = TextStyle(fontSize = 14.sp))
+            ErrorView(
+                text = errorConverter.convert(it).message,
+                style = TextStyle(fontSize = 14.sp),
+            )
         }
     }
 }
@@ -203,15 +212,13 @@ fun OutlinedTextFieldWithErrorTest() {
         override val code: Int = 1,
         override val message: String = "Error message",
         override val data: Any? = null,
-    ) : ModuleError
+    ) : ModuleError()
 
     val modifier = Modifier
         .fillMaxWidth()
         .padding(16.dp)
-    Scaffold(
-    ) {
-        Column(
-        ) {
+    Scaffold {
+        Column {
             OutlinedTextFieldWidget(
                 modifier = modifier,
                 fieldData = Field.Data("", false),
