@@ -3,6 +3,7 @@ package com.tangem.tap.domain
 import CreateProductWalletTask
 import CreateProductWalletTaskResponse
 import android.content.Context
+import androidx.annotation.StringRes
 import com.tangem.Message
 import com.tangem.TangemSdk
 import com.tangem.blockchain.common.Blockchain
@@ -175,6 +176,10 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         } else {
             CardIdDisplayFormat.Full
         }
+    }
+
+    fun getString(@StringRes stringResId: Int, vararg formatArgs: Any?): String {
+        return context.getString(stringResId, formatArgs)
     }
 
     companion object {
