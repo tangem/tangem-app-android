@@ -42,7 +42,6 @@ import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentWalletBinding
 import org.rekotlin.StoreSubscriber
 
-
 class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<WalletState> {
 
     private lateinit var warningsAdapter: WarningMessagesAdapter
@@ -89,7 +88,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         }
         setupWarningsRecyclerView()
         walletView.changeWalletView(this, binding)
-//        addCustomActionOnCard()
+        addCustomActionOnCard()
     }
 
     private fun addCustomActionOnCard() {
