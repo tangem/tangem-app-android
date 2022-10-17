@@ -2,9 +2,12 @@ package com.tangem.tap.features.onboarding.products.wallet.saltPay.redux
 
 import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.common.extensions.guard
+import com.tangem.common.extensions.toHexString
+import com.tangem.common.json.MoshiJsonConverter
 import com.tangem.domain.common.ScanResponse
 import com.tangem.network.api.paymentology.PaymentologyApiService
 import com.tangem.tap.common.toggleWidget.WidgetState
+import com.tangem.tap.copyToClipboard
 import com.tangem.tap.domain.extensions.makeSaltPayWalletManager
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.GnosisRegistrator
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.KYCProvider
@@ -52,7 +55,20 @@ data class OnboardingSaltPayState(
                 registrationStorage = preferencesStorage.saltPayRegistrationStorage,
                 kycProvider = saltPayConfig.kycProvider,
             )
+            test(scanResponse, gnosisRegistrator)
             return registrationManager to saltPayConfig
+        }
+
+        //TODO: delete
+        private fun test(scanResponse: ScanResponse, gnosisRegistrator: GnosisRegistrator) {
+            val map = mapOf(
+                "CID" to scanResponse.card.cardId,
+                "cardPublicKey" to scanResponse.card.cardPublicKey.toHexString(),
+                "walletPublicKey" to gnosisRegistrator.walletManager.wallet.publicKey.blockchainKey.toHexString(),
+                "walletAddress" to gnosisRegistrator.walletManager.wallet.address,
+            )
+            val json = MoshiJsonConverter.INSTANCE.prettyPrint(map)
+            copyToClipboard(json)
         }
 
         fun makeSaltPayRegistrationManager(
@@ -95,7 +111,7 @@ enum class SaltPayRegistrationStep {
     NoGas,
     NeedPin,
     CardRegistration,
-    Kyc,
+    KycIntro,
     KycStart,
     KycWaiting,
     Finished;
