@@ -24,7 +24,7 @@ val Card.isWalletDataSupported: Boolean
 
 val Card.isMultiwalletAllowed: Boolean
     get() {
-        return !isTangemTwin() && !isStart2Coin && !isTangemNote() && !isSaltPay
+        return !isTangemTwin() && !isStart2Coin && !isTangemNote && !isSaltPay
             && (firmwareVersion >= FirmwareVersion.MultiWalletAvailable ||
             getSingleWallet()?.curve == EllipticCurve.Secp256k1)
     }

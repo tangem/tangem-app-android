@@ -18,13 +18,10 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_alternative_action"
-        style="@style/Widget.AppCompat.Button.Borderless"
+        style="@style/OnboardingButton.Borderless"
         android:layout_width="204dp"
         android:layout_height="wrap_content"
         android:layout_marginBottom="@dimen/home_bottom_btn_alternative_action_margin_bottom"
-        android:textAllCaps="false"
-        android:textColor="@color/tapButtonColorBlack"
-        android:textSize="16sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
