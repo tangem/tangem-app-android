@@ -1,6 +1,7 @@
 package com.tangem.network.api.paymentology
 
 import retrofit2.http.Body
+import retrofit2.http.Headers
 import retrofit2.http.POST
 
 /**
@@ -8,19 +9,28 @@ import retrofit2.http.POST
  */
 interface PaymentologyApi {
 
+    @Headers("Content-Type: application/json")
     @POST("card/verify")
-    fun checkRegistration(
+    suspend fun checkRegistration(
         @Body request: CheckRegistrationRequests,
-    ): RegistrationResponse.Item
+    ): RegistrationResponse
 
+    @Headers("Content-Type: application/json")
     @POST("card/get_challenge")
-    fun requestAttestationChallenge(
+    suspend fun requestAttestationChallenge(
         @Body request: CheckRegistrationRequests.Item,
     ): AttestationResponse
 
+    @Headers("Content-Type: application/json")
     @POST("card/set_pin")
-    fun registerWallet(
+    suspend fun registerWallet(
         @Body request: RegisterWalletRequest,
+    ): RegisterWalletResponse
+
+    @Headers("Content-Type: application/json")
+    @POST("card/kyc")
+    suspend fun registerKYC(
+        @Body request: RegisterKYCRequest,
     ): RegisterWalletResponse
 
     companion object {
