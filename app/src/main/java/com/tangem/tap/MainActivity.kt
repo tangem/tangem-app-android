@@ -18,6 +18,7 @@ import com.tangem.tap.common.DialogManager
 import com.tangem.tap.common.IntentHandler
 import com.tangem.tap.common.OnActivityResultCallback
 import com.tangem.tap.common.SnackbarHandler
+import com.tangem.tap.common.extensions.copyToClipboard
 import com.tangem.tap.common.redux.NotificationsHandler
 import com.tangem.tap.common.redux.global.AndroidResources
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -60,6 +61,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        internalActivity = this
         setContentView(R.layout.activity_main)
         systemActions()
         store.dispatch(NavigationAction.ActivityCreated(WeakReference(this)))
@@ -174,4 +176,10 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     override fun removeOnActivityResultCallback(callback: OnActivityResultCallback) {
         onActivityResultCallbacks.remove(callback)
     }
+}
+
+lateinit var internalActivity: AppCompatActivity
+// [REDACTED_TODO_COMMENT]
+fun copyToClipboard(text: String) {
+    internalActivity.copyToClipboard(text)
 }
