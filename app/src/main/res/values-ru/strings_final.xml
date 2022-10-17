@@ -133,7 +133,7 @@
     <string name="error_saltpay_wrong_backup_card">Данная карта не подходит для бэкапа SaltPay</string>
     <string name="registration_task_alert_message">Пожалуйста, удерживайте карту до завершения операции</string>
     <string name="onboarding_saltpay_subtitle_no_backup_cards">Для начала процесса бэкапа вам необходимо добавить Tangem карту</string>
-    <string name="onboarding_saltpay_title_no_backup_card">Бэкап карт не добавлена</string>
+    <string name="onboarding_saltpay_title_no_backup_card">Бэкап карта не добавлена</string>
     <string name="onboarding_saltpay_title_one_backup_card">Бэкап карта создана</string>
     <string name="onboarding_saltpay_subtitle_one_backup_card">Завершите процесс бэкапа создав код доступа</string>
     <string name="onboarding_saltpay_title_prepare_origin">Приготовьте SaltPay карту</string>
