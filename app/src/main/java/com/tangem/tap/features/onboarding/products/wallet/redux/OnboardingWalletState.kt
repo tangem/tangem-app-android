@@ -44,7 +44,7 @@ data class OnboardingWalletState(
                     SaltPayRegistrationStep.NoGas -> 1
                     SaltPayRegistrationStep.NeedPin -> 7
                     SaltPayRegistrationStep.CardRegistration -> 8
-                    SaltPayRegistrationStep.Kyc -> 9
+                    SaltPayRegistrationStep.KycIntro -> 9
                     SaltPayRegistrationStep.KycStart -> 10
                     SaltPayRegistrationStep.KycWaiting -> 11
                     SaltPayRegistrationStep.Finished -> getMaxProgress()
