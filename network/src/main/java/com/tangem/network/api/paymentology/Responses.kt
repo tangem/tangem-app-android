@@ -6,16 +6,12 @@ import com.tangem.common.extensions.calculateHashCode
 /**
 [REDACTED_AUTHOR]
  */
-interface ErrorContainer {
-    val error: String?
-}
-
 data class RegistrationResponse(
-    val results: List<Item>,
+    val results: List<Item> = listOf(),
     val success: Boolean,
-    override val error: String?,
-    val errorCode: String?,
-) : ErrorContainer {
+    val error: String?,
+    val errorCode: Int?,
+) {
 
     data class Item(
         @Json(name = "CID")
@@ -28,20 +24,22 @@ data class RegistrationResponse(
         val blockchainInit: Boolean?,
         @Json(name = "kyc_passed")
         val kycPassed: Boolean?,
-        @Json(name = "kyc_waiting")
-        val kycWaiting: Boolean?,
+        @Json(name = "kyc_provider")
+        val kycProvider: String?,
+        @Json(name = "kyc_date")
+        val kycDate: String?,
         @Json(name = "disabled_by_admin")
         val disabledByAdmin: Boolean?,
-        override val error: String?,
-    ) : ErrorContainer
+        val error: String?,
+    )
 }
 
 data class AttestationResponse(
-    val challenge: ByteArray,
+    val challenge: ByteArray?,
     val success: Boolean,
-    override val error: String?,
-    val errorCode: String?,
-) : ErrorContainer {
+    val error: String?,
+    val errorCode: Int?,
+) {
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -49,7 +47,7 @@ data class AttestationResponse(
 
         other as AttestationResponse
 
-        if (challenge.contentEquals(other.challenge)) return false
+        if (!challenge.contentEquals(other.challenge)) return false
         if (success != other.success) return false
         if (error != other.error) return false
         if (errorCode != other.errorCode) return false
@@ -67,6 +65,6 @@ data class AttestationResponse(
 
 data class RegisterWalletResponse(
     val success: Boolean,
-    override val error: String?,
-    val errorCode: String?,
-) : ErrorContainer
+    val error: String?,
+    val errorCode: Int?,
+)
