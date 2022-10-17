@@ -388,17 +388,18 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
         if (isSaltPay) {
             tvHeader.text = getString(R.string.onboarding_saltpay_title_backup_card)
             tvBody.text = getString(R.string.onboarding_twins_interrupt_warning)
+            layoutButtonsCommon.btnMainAction.text = getString(R.string.onboarding_saltpay_title_backup_card)
         } else {
             tvHeader.text = getString(R.string.onboarding_title_backup_card_format, cardNumber)
             tvBody.text = getString(
                 R.string.onboarding_subtitle_scan_backup_card_format,
                 cardIdFormatter.getFormattedCardId(state.backupCardIds[cardNumber - 1]),
             )
+            layoutButtonsCommon.btnMainAction.text = getString(
+                R.string.onboarding_button_backup_card_format,
+                cardNumber,
+            )
         }
-        layoutButtonsCommon.btnMainAction.text = getString(
-            R.string.onboarding_button_backup_card_format,
-            cardNumber,
-        )
         layoutButtonsCommon.btnMainAction.setOnClickListener {
             store.dispatch(BackupAction.WriteBackupCard(cardNumber))
         }
