@@ -5,12 +5,14 @@ import org.rekotlin.Action
 
 sealed class OnboardingWalletAction : Action {
     object Init : OnboardingWalletAction()
+    object StartSaltPayCardActivation: OnboardingWalletAction()
     object GetToCreateWalletStep : OnboardingWalletAction()
+    object GetToSaltPayStep : OnboardingWalletAction()
     object CreateWallet : OnboardingWalletAction()
     object Done : OnboardingWalletAction()
     object FinishOnboarding : OnboardingWalletAction()
 
-    data class ProceedBackup(val isSaltPay: Boolean = false) : OnboardingWalletAction()
+    object ResumeBackup : OnboardingWalletAction()
 
     object LoadArtwork : OnboardingWalletAction()
     class SetArtworkUrl(val artworkUrl: String?) : OnboardingWalletAction()
@@ -21,7 +23,7 @@ sealed class OnboardingWalletAction : Action {
 sealed class BackupAction : Action {
 
     object DetermineBackupStep : BackupAction()
-    data class IntroduceBackup(val isSaltPay: Boolean = false) : BackupAction()
+    object IntroduceBackup : BackupAction()
     object StartBackup : BackupAction()
     object DismissBackup : BackupAction()
 
@@ -53,15 +55,13 @@ sealed class BackupAction : Action {
     data class SaveAccessCodeConfirmation(val accessCodeConfirmation: String) : BackupAction()
     object OnAccessCodeDialogClosed : BackupAction()
 
-    data class PrepareToWriteBackupCard(val cardNumber: Int) : BackupAction()
-    data class WriteBackupCard(val cardNumber: Int) : BackupAction()
-
     object PrepareToWritePrimaryCard : BackupAction()
     object WritePrimaryCard : BackupAction()
+    data class PrepareToWriteBackupCard(val cardNumber: Int) : BackupAction()
+    data class WriteBackupCard(val cardNumber: Int) : BackupAction()
 
     object FinishBackup : BackupAction()
     object DiscardBackup : BackupAction()
     object DiscardSavedBackup : BackupAction()
-    object ResumeBackup : BackupAction()
-
+    object ResumeFoundUnfinishedBackup : BackupAction()
 }
