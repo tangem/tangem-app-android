@@ -30,16 +30,18 @@ sealed class SaltPayRegistrationError(
 ) {
     object Unknown : SaltPayRegistrationError(4)
     object Empty : SaltPayRegistrationError(4)
+
+    // gnosis
     object FailedToMakeTxData : SaltPayRegistrationError(1)
     object FailedToSendTx : SaltPayRegistrationError(2)
+
     object NeedPin : SaltPayRegistrationError(3)
-    object NoGas : SaltPayRegistrationError(5)
-    object EmptyResponse : SaltPayRegistrationError(6)
-    object Card : SaltPayRegistrationError(7)
-    object CardNotFound : SaltPayRegistrationError(8)
-    object CardDisabled : SaltPayRegistrationError(9)
-    object CardNotPassed : SaltPayRegistrationError(10)
+    object NoGas : SaltPayRegistrationError(5) //
+    class EmptyResponse(message: String?) : SaltPayRegistrationError(6, message)
+    class CardNotFound(message: String?) : SaltPayRegistrationError(8, message)
+    class CardDisabled(message: String?) : SaltPayRegistrationError(9, message)
+    class CardNotPassed(message: String?) : SaltPayRegistrationError(10, message)
     object EmptyDynamicAttestResponse : SaltPayRegistrationError(11)
-    object EmptyBackupCardScanned : SaltPayRegistrationError(12)
-    object WeakPin : SaltPayRegistrationError(13)
+    object EmptyBackupCardScanned : SaltPayRegistrationError(12) //
+    object WeakPin : SaltPayRegistrationError(13) //
 }
