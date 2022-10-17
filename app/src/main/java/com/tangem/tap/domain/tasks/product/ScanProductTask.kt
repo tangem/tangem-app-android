@@ -18,9 +18,9 @@ import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.isExcluded
 import com.tangem.domain.common.TapWorkarounds.isNotSupportedInThatRelease
 import com.tangem.domain.common.TapWorkarounds.isSaltPay
+import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
 import com.tangem.domain.common.TwinsHelper
-import com.tangem.domain.common.isTangemTwins
 import com.tangem.operations.PreflightReadMode
 import com.tangem.operations.PreflightReadTask
 import com.tangem.operations.ScanTask
@@ -31,10 +31,9 @@ import com.tangem.operations.issuerAndUserData.ReadIssuerDataCommand
 import com.tangem.tap.domain.TapSdkError
 import com.tangem.tap.domain.extensions.getPrimaryCurve
 import com.tangem.tap.domain.extensions.getSingleWallet
-import com.tangem.tap.domain.tokens.UserTokensRepository
 import com.tangem.tap.domain.extensions.hasNoWallets
-import com.tangem.tap.domain.extensions.isHdWalletAllowedByApp
 import com.tangem.tap.domain.extensions.isMultiwalletAllowed
+import com.tangem.tap.domain.tokens.UserTokensRepository
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.preferencesStorage
 
@@ -60,7 +59,7 @@ class ScanProductTask(
         }
 
         val commandProcessor = when {
-            card.isTangemTwins() -> ScanTwinProcessor()
+            card.isTangemTwins -> ScanTwinProcessor()
             else -> ScanWalletProcessor(userTokensRepository, additionalBlockchainsToDerive)
         }
         commandProcessor.proceed(card, session) { processorResult ->
@@ -84,8 +83,8 @@ class ScanProductTask(
     }
 
     private fun getErrorIfExcludedCard(card: Card): TangemError? {
-        if (card.isExcluded()) return TapSdkError.CardForDifferentApp
-        if (card.isNotSupportedInThatRelease()) return TapSdkError.CardNotSupportedByRelease
+        if (card.isExcluded) return TapSdkError.CardForDifferentApp
+        if (card.isNotSupportedInThatRelease) return TapSdkError.CardNotSupportedByRelease
         if (card.isSaltPay && card.hasNoWallets()) return TapSdkError.ScanPrimaryCard
         return null
     }
@@ -111,6 +110,7 @@ private class ScanWalletProcessor(
         callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
         if (card.wallets.isEmpty() || !card.isMultiwalletAllowed) {
+            // match for the saltPay card to
             startLinkingForBackupIfNeeded(card, session, callback)
             return
         }
@@ -166,13 +166,17 @@ private class ScanWalletProcessor(
         session: CardSession,
         callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
+        val productType = when(card.isSaltPay){
+            true -> ProductType.SaltPay
+            else -> ProductType.Wallet
+        }
         val derivations = collectDerivations(card)
         if (derivations.isEmpty() || !card.settings.isHDWalletAllowed) {
             callback(
                 CompletionResult.Success(
                     ScanResponse(
                         card = card,
-                        productType = ProductType.Wallet,
+                        productType = productType,
                         walletData = session.environment.walletData,
                         primaryCard = primaryCard,
                     ),
@@ -186,7 +190,7 @@ private class ScanWalletProcessor(
                 is CompletionResult.Success -> {
                     val response = ScanResponse(
                         card = card,
-                        productType = ProductType.Wallet,
+                        productType = productType,
                         walletData = session.environment.walletData,
                         derivedKeys = result.data.entries,
                         primaryCard = primaryCard,
