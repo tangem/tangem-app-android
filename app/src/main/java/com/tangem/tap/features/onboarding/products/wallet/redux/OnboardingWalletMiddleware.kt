@@ -245,8 +245,8 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
         is BackupAction.AddBackupCard -> {
             backupService.skipCompatibilityChecks = true
             tangemSdk.config.filter.cardIdFilter = CardFilter.Companion.CardIdFilter.Allow(
-                items = SaltPayWorkaround.tangemWalletCardIds.toSet(),
-                ranges = SaltPayWorkaround.tangemWalletCardIdRanges,
+                items = SaltPayWorkaround.walletCardIds.toSet(),
+                ranges = SaltPayWorkaround.walletCardIdRanges,
             )
 
             backupService.addBackupCard { result ->
