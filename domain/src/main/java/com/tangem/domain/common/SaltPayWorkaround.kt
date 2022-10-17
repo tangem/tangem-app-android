@@ -32,7 +32,7 @@ object SaltPayWorkaround {
         "AE03",
     ) + attachDebugVisaBatches()
 
-    val tangemWalletCardIds = listOf(
+    val walletCardIds = listOf(
         "AC01000000033503",
         "AC01000000033594",
         "AC01000000033586",
@@ -61,16 +61,16 @@ object SaltPayWorkaround {
         "AC03000000076203",
         "AC03000000076211",
         "AC03000000076229",
-    ) + attachDebugTangemCardIds()
+    ) + attachDebugWalletCardIds()
 
-    val tangemWalletCardIdRanges = listOf(
+    val walletCardIdRanges = listOf(
         CardIdRange("AC05000000000003", "AC05000000023997")!!,
-    ) + attachDebugTangemCardIdRanges()
+    ) + attachDebugWalletCardIdRanges()
 
     fun isVisaBatchId(batchId: String): Boolean = visaBatches.contains(batchId)
 
-    fun isTangemWalletCardId(cardId: String): Boolean {
-        return if (tangemWalletCardIds.contains(cardId)) true else tangemWalletCardIdRanges.contains(cardId)
+    fun isWalletCardId(cardId: String): Boolean {
+        return if (walletCardIds.contains(cardId)) true else walletCardIdRanges.contains(cardId)
     }
 
     private fun attachDebugVisaBatches(): List<String> {
@@ -79,13 +79,13 @@ object SaltPayWorkaround {
         ) else listOf()
     }
 
-    private fun attachDebugTangemCardIds(): List<String> {
+    private fun attachDebugWalletCardIds(): List<String> {
         return if (BuildConfig.DEBUG) listOf(
             "FF04000000000232",
         ) else listOf()
     }
 
-    private fun attachDebugTangemCardIdRanges(): List<CardIdRange> {
+    private fun attachDebugWalletCardIdRanges(): List<CardIdRange> {
         return if (BuildConfig.DEBUG) listOf(
             CardIdRange("FF04000000000000", "FF04999999999999")!!,
         ) else listOf()
