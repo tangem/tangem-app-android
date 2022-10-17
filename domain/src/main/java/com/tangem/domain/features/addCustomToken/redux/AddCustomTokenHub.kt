@@ -8,7 +8,6 @@ import com.tangem.domain.AddCustomTokenError
 import com.tangem.domain.AddCustomTokenError.Warning.PotentialScamToken
 import com.tangem.domain.AddCustomTokenError.Warning.TokenAlreadyAdded
 import com.tangem.domain.AddCustomTokenError.Warning.UnsupportedSolanaToken
-import com.tangem.domain.AddCustomTokenException
 import com.tangem.domain.DomainDialog
 import com.tangem.domain.DomainWrapped
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
@@ -200,7 +199,7 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
                     networkIdConverter = { networkId ->
                         val blockchain = Blockchain.fromNetworkId(networkId)
                         if (blockchain == null || blockchain == Blockchain.Unknown) {
-                            throw AddCustomTokenException.SelectTokeNetworkException(networkId)
+                            throw AddCustomTokenError.SelectTokeNetworkError(networkId)
                         }
                         hubState.blockchainToName(blockchain) ?: ""
                     },
@@ -488,7 +487,7 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
 
     @Throws
     private fun throwUnAppropriateInitialization(objName: String) {
-        throw AddCustomTokenException.UnAppropriateInitializationException(
+        throw AddCustomTokenError.UnAppropriateInitialization(
             "AddCustomTokenHub", "$objName must be not NULL"
         )
     }
