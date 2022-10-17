@@ -37,7 +37,7 @@ internal class SaltPayRegistrationErrorConverter(
             }
             else -> ConvertedDialogMessage(
                 title = context.getString(R.string.common_error),
-                message = saltPayError::class.java.simpleName,
+                message = saltPayError.message,
             )
         }
 
