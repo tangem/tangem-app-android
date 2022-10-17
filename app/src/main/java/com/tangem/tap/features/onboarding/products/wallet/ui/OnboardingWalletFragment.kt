@@ -180,8 +180,8 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
             BackupStep.SetAccessCode -> showSetAccessCode()
             BackupStep.EnterAccessCode -> showEnterAccessCode(state)
             BackupStep.ReenterAccessCode -> showReenterAccessCode(state)
-            is BackupStep.WritePrimaryCard -> showWritePrimaryCard(state)
-            is BackupStep.WriteBackupCard -> showWriteBackupCard(state)
+            is BackupStep.WritePrimaryCard -> showWritePrimaryCard(state, isSaltPay)
+            is BackupStep.WriteBackupCard -> showWriteBackupCard(state, isSaltPay)
             BackupStep.Finished -> showSuccess()
         }
     }
@@ -318,7 +318,7 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
         accessCodeDialog?.showError(state.accessCodeError)
     }
 
-    private fun showWritePrimaryCard(state: BackupState) = with(binding) {
+    private fun showWritePrimaryCard(state: BackupState, isSaltPay: Boolean) = with(binding) {
         accessCodeDialog?.dismiss()
 
         prepareViewForFinalizeStep()
@@ -330,12 +330,19 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
         }
 
         val cardIdFormatter = CardIdFormatter(CardIdDisplayFormat.LastMasked(4))
-        tvHeader.text = getText(R.string.onboarding_title_prepare_origin)
-        tvBody.text = getString(
-            R.string.onboarding_subtitle_scan_primary_card_format,
-            state.primaryCardId?.let { cardIdFormatter.getFormattedCardId(it) },
-        )
-        layoutButtonsCommon.btnMainAction.text = getText(R.string.onboarding_button_backup_origin)
+        if (isSaltPay) {
+            tvHeader.text = getText(R.string.onboarding_saltpay_title_prepare_origin)
+            tvBody.text = getString(R.string.onboarding_twins_interrupt_warning)
+            layoutButtonsCommon.btnMainAction.text = getText(R.string.onboarding_saltpay_button_backup_origin)
+        } else {
+            tvHeader.text = getText(R.string.onboarding_title_prepare_origin)
+            tvBody.text = getString(
+                R.string.onboarding_subtitle_scan_primary_card_format,
+                state.primaryCardId?.let { cardIdFormatter.getFormattedCardId(it) },
+            )
+            layoutButtonsCommon.btnMainAction.text = getText(R.string.onboarding_button_backup_origin)
+        }
+
         layoutButtonsCommon.btnMainAction.setOnClickListener { store.dispatch(BackupAction.WritePrimaryCard) }
 
     }
@@ -356,7 +363,7 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
         layoutButtonsCommon.btnAlternativeAction.hide()
     }
 
-    private fun showWriteBackupCard(state: BackupState) = with(binding) {
+    private fun showWriteBackupCard(state: BackupState, isSaltPay: Boolean) = with(binding) {
         prepareViewForFinalizeStep()
 
         cardsWidget.getSecondBackupCardView().show(state.backupCardsNumber == 2)
@@ -376,11 +383,16 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
         }
 
         val cardIdFormatter = CardIdFormatter(CardIdDisplayFormat.LastMasked(4))
-        tvHeader.text = getString(R.string.onboarding_title_backup_card_format, cardNumber)
-        tvBody.text = getString(
-            R.string.onboarding_subtitle_scan_backup_card_format,
-            cardIdFormatter.getFormattedCardId(state.backupCardIds[cardNumber - 1]),
-        )
+        if (isSaltPay) {
+            tvHeader.text = getString(R.string.onboarding_saltpay_title_backup_card)
+            tvBody.text = getString(R.string.onboarding_twins_interrupt_warning)
+        } else {
+            tvHeader.text = getString(R.string.onboarding_title_backup_card_format, cardNumber)
+            tvBody.text = getString(
+                R.string.onboarding_subtitle_scan_backup_card_format,
+                cardIdFormatter.getFormattedCardId(state.backupCardIds[cardNumber - 1]),
+            )
+        }
         layoutButtonsCommon.btnMainAction.text = getString(
             R.string.onboarding_button_backup_card_format,
             cardNumber,
@@ -472,12 +484,12 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
                     walletFragment.cardsWidget.toFan {
                         walletFragment.cardsWidget.getFirstBackupCardView().animate().alpha(0.6f).duration = 200
                     }
-                    tvHeader.text = walletFragment.getText(R.string.onboarding_title_no_backup_cards)
-                    tvBody.text = walletFragment.getText(R.string.onboarding_subtitle_no_backup_cards)
+                    tvHeader.text = walletFragment.getText(R.string.onboarding_saltpay_title_no_backup_card)
+                    tvBody.text = walletFragment.getText(R.string.onboarding_saltpay_subtitle_no_backup_cards)
                 }
                 1 -> {
-                    tvHeader.text = walletFragment.getText(R.string.onboarding_title_one_backup_card)
-                    tvBody.text = walletFragment.getText(R.string.onboarding_subtitle_one_backup_card)
+                    tvHeader.text = walletFragment.getText(R.string.onboarding_saltpay_title_one_backup_card)
+                    tvBody.text = walletFragment.getText(R.string.onboarding_saltpay_subtitle_one_backup_card)
                     walletFragment.cardsWidget.toFan(false)
                     walletFragment.cardsWidget.getFirstBackupCardView().animate().alpha(1f).duration = 400
                 }
