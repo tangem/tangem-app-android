@@ -15,6 +15,7 @@ import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOpenUrl
 import com.tangem.tap.common.extensions.onCardScanned
 import com.tangem.tap.common.postUiDelayBg
+import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
@@ -35,6 +36,7 @@ import com.tangem.tap.features.send.redux.states.ButtonState
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
+import com.tangem.wallet.R
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
@@ -107,41 +109,58 @@ private fun onScanSuccess(scanResponse: ScanResponse) {
     store.dispatch(TwinCardsAction.IfTwinsPrepareState(scanResponse))
 
     if (scanResponse.isSaltPay()) {
-        scope.launch {
-            val result = OnboardingSaltPayHelper.isOnboardingCase(scanResponse)
-            delay(500)
-            withMainContext {
-                when (result) {
-                    is Result.Success -> {
-                        val isOnboardingCase = result.data
-                        if (isOnboardingCase) {
-                            store.dispatch(GlobalAction.Onboarding.Start(scanResponse, canSkipBackup = false))
-                            val (manager, config) = OnboardingSaltPayState.initDependency(scanResponse)
-                            store.dispatch(OnboardingSaltPayAction.Init.SetDependencies(manager, config))
-                            store.dispatch(OnboardingSaltPayAction.Update)
-                            // store.dispatch(OnboardingSaltPayAction.Init.DiscardBackupSteps)
-                            navigateTo(AppScreen.OnboardingWallet)
-                        } else {
-                            navigateTo(AppScreen.Wallet)
-                            withIOContext { store.onCardScanned(scanResponse) }
-                        }
-                    }
-                    is Result.Failure -> {
-                        changeButtonState(ButtonState.ENABLED)
-                        when (val error = result.error) {
-                            is SaltPayRegistrationError -> {
-                                val dialog = when (error) {
-                                    is SaltPayRegistrationError.NoGas -> SaltPayDialog.NoFundsForActivation
-                                    else -> SaltPayDialog.RegistrationError(error)
-                                }
-                                store.dispatchDialogShow(dialog)
+        if (scanResponse.isSaltPayVisa()) {
+            scope.launch {
+                val result = OnboardingSaltPayHelper.isOnboardingCase(scanResponse)
+                delay(500)
+                withMainContext {
+                    when (result) {
+                        is Result.Success -> {
+                            val isOnboardingCase = result.data
+                            if (isOnboardingCase) {
+                                store.dispatch(GlobalAction.Onboarding.Start(scanResponse, canSkipBackup = false))
+                                val (manager, config) = OnboardingSaltPayState.initDependency(scanResponse)
+                                store.dispatch(OnboardingSaltPayAction.Init.SetDependencies(manager, config))
+                                store.dispatch(OnboardingSaltPayAction.Update)
+                                // store.dispatch(OnboardingSaltPayAction.Init.DiscardBackupSteps)
+                                navigateTo(AppScreen.OnboardingWallet)
+                            } else {
+                                navigateTo(AppScreen.Wallet)
+                                withIOContext { store.onCardScanned(scanResponse) }
                             }
-                            else -> {
-                                store.dispatchDebugErrorNotification(error.localizedMessage ?: "SaltPay: Unknown error")
+                        }
+                        is Result.Failure -> {
+                            changeButtonState(ButtonState.ENABLED)
+                            when (val error = result.error) {
+                                is SaltPayRegistrationError -> {
+                                    val dialog = when (error) {
+                                        is SaltPayRegistrationError.NoGas -> SaltPayDialog.NoFundsForActivation
+                                        else -> SaltPayDialog.RegistrationError(error)
+                                    }
+                                    store.dispatchDialogShow(dialog)
+                                }
+                                else -> {
+                                    store.dispatchDebugErrorNotification(
+                                        error.localizedMessage ?: "SaltPay: Unknown error",
+                                    )
+                                }
                             }
                         }
                     }
                 }
+            }
+        } else {
+            if (scanResponse.card.backupStatus?.isActive == false) {
+                changeButtonState(ButtonState.ENABLED)
+                store.dispatchDialogShow(
+                    AppDialog.SimpleOkDialogRes(
+                        headerId = R.string.saltpay_error_empty_backup_title,
+                        messageId = R.string.saltpay_error_empty_backup_message,
+                    ),
+                )
+            } else {
+                navigateTo(AppScreen.Wallet, null)
+                scope.launch { store.onCardScanned(scanResponse) }
             }
         }
     } else {
