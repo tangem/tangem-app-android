@@ -34,10 +34,8 @@ class UserTokensStorageService(
         return blockchainNetworks.flatMap { it.toCurrencies() }
     }
 
-    fun saveUserTokens(userId: String, tokens: List<Currency>) {
-        val tokensResponse = tokens.map { it.toTokenResponse() }
-        val data = UserTokensResponse(tokens = tokensResponse)
-        val json = userTokensAdapter.toJson(data)
+    fun saveUserTokens(userId: String, tokens: UserTokensResponse) {
+        val json = userTokensAdapter.toJson(tokens)
         fileReader.rewriteFile(json, getFileNameForUserTokens(userId))
     }
 
