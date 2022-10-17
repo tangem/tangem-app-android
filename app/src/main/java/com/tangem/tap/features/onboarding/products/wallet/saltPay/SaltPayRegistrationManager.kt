@@ -60,7 +60,7 @@ class SaltPayRegistrationManager(
 
         return try {
             if (!registrationResponse.success || registrationResponse.results.isEmpty()) {
-                throw SaltPayRegistrationError.EmptyResponse
+                throw SaltPayRegistrationError.EmptyResponse(registrationResponse.error)
             }
             Result.Success(registrationResponse.results[0])
         } catch (ex: SaltPayRegistrationError) {
