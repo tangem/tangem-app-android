@@ -35,10 +35,17 @@ internal class SaltPayRegistrationErrorConverter(
                     message = context.getString(R.string.saltpay_error_pin_weak_message),
                 )
             }
-            else -> ConvertedDialogMessage(
-                title = context.getString(R.string.common_error),
-                message = saltPayError.message,
-            )
+            else -> {
+                val errorMessage = if (saltPayError.message == SaltPayRegistrationError.EMPTY_MESSAGE) {
+                    saltPayError::class.java.simpleName
+                } else {
+                    saltPayError.message
+                }
+                ConvertedDialogMessage(
+                    title = context.getString(R.string.common_error),
+                    message = errorMessage,
+                )
+            }
         }
 
         return dialogMessage
