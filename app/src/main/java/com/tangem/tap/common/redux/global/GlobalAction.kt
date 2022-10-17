@@ -36,9 +36,10 @@ sealed class GlobalAction : Action {
     data class ShowDialog(val stateDialog: StateDialog) : GlobalAction()
     object HideDialog : GlobalAction()
 
-    sealed class Onboarding {
-        data class Start(val scanResponse: ScanResponse?, val fromHomeScreen: Boolean = true) : GlobalAction()
-        object Stop : GlobalAction()
+    sealed class Onboarding : GlobalAction() {
+        data class Start(val scanResponse: ScanResponse, val canSkipBackup: Boolean = true) : Onboarding()
+        data class StartForUnfinishedBackup(val isSaltPayBackup: Boolean) : Onboarding()
+        object Stop : Onboarding()
     }
 
     data class ScanCard(
