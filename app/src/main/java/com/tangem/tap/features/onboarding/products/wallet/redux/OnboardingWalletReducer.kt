@@ -3,12 +3,13 @@ package com.tangem.tap.features.onboarding.products.wallet.redux
 import com.tangem.tap.backupService
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
+import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayAction
+import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayReducer
 import org.rekotlin.Action
 
 class OnboardingWalletReducer {
     companion object {
-        fun reduce(action: Action, state: AppState): OnboardingWalletState =
-            internalReduce(action, state)
+        fun reduce(action: Action, state: AppState): OnboardingWalletState = internalReduce(action, state)
     }
 }
 
@@ -16,13 +17,17 @@ private fun internalReduce(action: Action, appState: AppState): OnboardingWallet
     val state = appState.onboardingWalletState
 
     return when (action) {
-        is BackupAction -> state.copy(backupState = BackupReducer.reduce(action, state.backupState))
-        is GlobalAction.Onboarding.Start -> OnboardingWalletState(
-            backupState = state.backupState.copy(canSkipBackup = action.fromHomeScreen)
+        is GlobalAction.Onboarding -> ReducerForGlobalAction.reduce(action, state)
+        is OnboardingSaltPayAction -> OnboardingSaltPayReducer.reduce(action, state)
+        is BackupAction -> state.copy(backupState = BackupReducer.reduce(action, state.backupState, state.isSaltPay))
+
+        is OnboardingWalletAction.GetToCreateWalletStep -> OnboardingWalletState(
+            step = OnboardingWalletStep.CreateWallet,
         )
-        is OnboardingWalletAction.GetToCreateWalletStep ->
-            OnboardingWalletState(step = OnboardingWalletStep.CreateWallet)
-        is OnboardingWalletAction.ProceedBackup -> state.copy(step = OnboardingWalletStep.Backup)
+        is OnboardingWalletAction.GetToSaltPayStep -> state.copy(
+            step = OnboardingWalletStep.SaltPay,
+        )
+        is OnboardingWalletAction.ResumeBackup -> state.copy(step = OnboardingWalletStep.Backup)
         is OnboardingWalletAction.SetArtworkUrl -> {
             state.copy(cardArtworkUrl = action.artworkUrl)
         }
@@ -31,18 +36,45 @@ private fun internalReduce(action: Action, appState: AppState): OnboardingWallet
     }
 }
 
+private class ReducerForGlobalAction {
+    companion object {
+        fun reduce(action: GlobalAction.Onboarding, state: OnboardingWalletState): OnboardingWalletState = when (action) {
+            is GlobalAction.Onboarding.Start -> {
+                OnboardingWalletState(
+                    backupState = state.backupState.copy(
+                        maxBackupCards = if (action.scanResponse.isSaltPay()) 1 else 2,
+                        canSkipBackup = if (action.scanResponse.isSaltPay()) false else action.canSkipBackup,
+                    ),
+                    isSaltPay = action.scanResponse.isSaltPay()
+                )
+            }
+            is GlobalAction.Onboarding.StartForUnfinishedBackup -> {
+                OnboardingWalletState(
+                    backupState = state.backupState.copy(
+                        maxBackupCards = if (action.isSaltPayBackup) 1 else 2,
+                        canSkipBackup = false,
+                    ),
+                    isSaltPay = action.isSaltPayBackup,
+                )
+            }
+            else -> state
+        }
+    }
+}
 
-class BackupReducer {
+private class BackupReducer {
     companion object {
         fun reduce(
-            action: BackupAction, state: BackupState,
+            action: BackupAction,
+            state: BackupState,
+            isSaltPay: Boolean,
         ): BackupState {
 
             return when (action) {
                 is BackupAction.IntroduceBackup -> BackupState(
                     backupStep = BackupStep.InitBackup,
-                    canSkipBackup = state.canSkipBackup,
-                    isSaltPay = action.isSaltPay,
+                    maxBackupCards = if (isSaltPay) 1 else 2,
+                    canSkipBackup = !isSaltPay,
                 )
                 BackupAction.StartAddingPrimaryCard -> state.copy(backupStep = BackupStep.ScanOriginCard)
                 BackupAction.StartAddingBackupCards -> {
@@ -50,9 +82,6 @@ class BackupReducer {
                 }
                 BackupAction.AddBackupCard.Success -> {
                     state.copy(backupCardsNumber = state.backupCardsNumber + 1)
-                }
-                BackupAction.FinishAddingBackupCards -> {
-                    state
                 }
                 BackupAction.ShowAccessCodeInfoScreen -> {
                     state.copy(backupStep = BackupStep.SetAccessCode)
@@ -63,13 +92,11 @@ class BackupReducer {
                 is BackupAction.SaveFirstAccessCode -> {
                     state.copy(
                         backupStep = BackupStep.ReenterAccessCode,
-                        accessCode = action.accessCode
+                        accessCode = action.accessCode,
                     )
                 }
                 is BackupAction.SetAccessCodeError -> {
-                    state.copy(
-                        accessCodeError = action.error
-                    )
+                    state.copy(accessCodeError = action.error)
                 }
                 is BackupAction.PrepareToWritePrimaryCard -> {
                     if (state.primaryCardId == null) {
@@ -77,12 +104,10 @@ class BackupReducer {
                             primaryCardId = backupService.primaryCardId,
                             backupCardIds = backupService.backupCardIds,
                             backupCardsNumber = backupService.backupCardIds.size,
-                            backupStep = BackupStep.WritePrimaryCard
+                            backupStep = BackupStep.WritePrimaryCard,
                         )
                     } else {
-                        state.copy(
-                            backupStep = BackupStep.WritePrimaryCard
-                        )
+                        state.copy(backupStep = BackupStep.WritePrimaryCard)
                     }
                 }
                 is BackupAction.PrepareToWriteBackupCard -> {
@@ -91,43 +116,21 @@ class BackupReducer {
                             primaryCardId = backupService.primaryCardId,
                             backupCardIds = backupService.backupCardIds,
                             backupCardsNumber = backupService.backupCardIds.size,
-                            backupStep = BackupStep.WriteBackupCard(action.cardNumber)
+                            backupStep = BackupStep.WriteBackupCard(action.cardNumber),
                         )
                     } else {
-                        state.copy(
-                            backupStep = BackupStep.WriteBackupCard(action.cardNumber)
-                        )
+                        state.copy(backupStep = BackupStep.WriteBackupCard(action.cardNumber))
                     }
                 }
-
                 is BackupAction.FinishBackup -> {
-                    state.copy(
-                        backupStep = BackupStep.Finished
-                    )
+                    state.copy(backupStep = BackupStep.Finished)
                 }
-
                 BackupAction.OnAccessCodeDialogClosed -> {
                     state.copy(backupStep = BackupStep.AddBackupCards)
                 }
                 BackupAction.DiscardBackup -> BackupState()
-
-                BackupAction.WritePrimaryCard -> state
-                is BackupAction.WriteBackupCard -> state
-                is BackupAction.SaveAccessCodeConfirmation -> state
-                BackupAction.ScanPrimaryCard -> state
-                BackupAction.ShowEnterAccessCodeScreen -> state
-                BackupAction.ShowReenterAccessCodeScreen -> state
-                BackupAction.AddBackupCard -> state
-                BackupAction.DismissBackup -> state
-                is BackupAction.LoadBackupCardArtwork -> state
-                is BackupAction.CheckAccessCode -> state
-                BackupAction.DetermineBackupStep -> state
-                BackupAction.CheckForUnfinishedBackup -> state
-                BackupAction.ResumeBackup -> state
-                BackupAction.DiscardSavedBackup -> state
-                BackupAction.StartBackup -> state
+                else -> state
             }
-
         }
     }
 }
