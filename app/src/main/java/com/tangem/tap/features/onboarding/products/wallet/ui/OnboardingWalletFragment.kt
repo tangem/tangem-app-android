@@ -34,6 +34,8 @@ import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.extensions.stop
 import com.tangem.tap.common.feedback.SupportInfo
 import com.tangem.tap.common.redux.global.GlobalAction
+import com.tangem.tap.common.redux.navigation.AppScreen
+import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.common.toggleWidget.IndeterminateProgressButtonWidget
 import com.tangem.tap.features.FragmentOnBackPressedHandler
 import com.tangem.tap.features.addBackPressHandler
@@ -508,7 +510,7 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
                 SaltPayRegistrationStep.NoGas -> handleNoGas()
                 SaltPayRegistrationStep.NeedPin -> handleNeedPin()
                 SaltPayRegistrationStep.CardRegistration -> handleCardRegistration()
-                SaltPayRegistrationStep.Kyc -> handleKyc()
+                SaltPayRegistrationStep.KycIntro -> handleKycIntro()
                 SaltPayRegistrationStep.KycStart -> handleKycStart(state)
                 SaltPayRegistrationStep.KycWaiting -> handleKycWaiting()
                 SaltPayRegistrationStep.Finished -> handleFinished()
@@ -517,6 +519,8 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
         }
 
         private fun handleNoGas() {
+            // normally this shouldn't happen
+            store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
             store.dispatchDialogShow(SaltPayDialog.NoFundsForActivation)
         }
 
@@ -549,7 +553,7 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
             }
         }
 
-        private fun handleKyc() = with(walletFragment.bindingSaltPay) {
+        private fun handleKycIntro() = with(walletFragment.bindingSaltPay) {
             toolbar.title = walletFragment.getString(R.string.onboarding_navbar_kyc_start)
             showOnlyView(verifyIdentity.root) {
                 progressButton = SaltPayProgressButton(verifyIdentity.root)
