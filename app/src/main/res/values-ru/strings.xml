@@ -242,7 +242,7 @@
     <string name="onboarding_balance_title">Баланс</string>
     <string name="address_qr_code_message_format">Отправляйте только %s (%s) на этот адрес. Иначе это может привести к утрате средств.</string>
     <string name="address_qr_code_message_token_format">Отправляйте только %s (%s) из сети %s на этот адрес. Иначе это может привести к утрате средств.</string>
-    <string name="onboarding_twins_interrupt_warning">Если процесс повторного создания кошелька каким-либо образом прервется, вам придется начать все сначала.</string>
+    <string name="onboarding_twins_interrupt_warning">Если процесс создания кошелька каким-либо образом прервется, вам придется начать все сначала.</string>
     <string name="onboarding_twin_exit_warning">Процесс связывания карт частично завершен. Вы не можете выйти из него сейчас.</string>
     <string name="onboarding_error_create_primary_wallet">Внутренняя ошибка: не удается создать менеджер кошельков</string>
     <string name="wallet_balance_blockchain_unreachable_try_later">Блокчейн недоступен. Попробуй позже.</string>
