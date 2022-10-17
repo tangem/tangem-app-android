@@ -51,15 +51,15 @@ data class GeoResponse(
 
 data class UserTokensResponse(
     val version: Int = 0,
-    val group: String = "",
-    val sort: String = "",
+    val group: String? = null,
+    val sort: String? = null,
     val tokens: List<TokenResponse> = emptyList(),
 ) : TangemTechResponse
 
 data class TokenResponse(
-    val id: String,
+    val id: String? = null,
     val networkId: String,
-    val derivationPath: String,
+    val derivationPath: String? = null,
     val name: String,
     val symbol: String,
     val decimals: Int,
