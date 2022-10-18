@@ -90,6 +90,7 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
                         header = null,
                         body = tangemSdkManager.getString(R.string.registration_task_alert_message),
                     ),
+                    accessCode = state.accessCode,
                 ).successOr {
                     onException(it.error as Exception)
                     return@launch
