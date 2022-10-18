@@ -14,6 +14,7 @@ import com.tangem.tap.common.redux.ErrorAction
 import com.tangem.tap.common.redux.NotificationAction
 import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.redux.ToastNotificationAction
+import com.tangem.tap.common.zendesk.ZendeskConfig
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.configurable.config.ConfigManager
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
@@ -79,7 +80,8 @@ sealed class GlobalAction : Action {
     data class SetAnanlyticHandlers(val analyticsHandlers: GlobalAnalyticsHandler) : GlobalAction()
 
     data class SendEmail(val feedbackData: FeedbackData) : GlobalAction()
-    data class OpenChat(val feedbackData: FeedbackData) : GlobalAction()
+    data class OpenChat(val feedbackData: FeedbackData, val zendeskConfig: ZendeskConfig? = null) : GlobalAction()
+    data class OpenSaltPayChat(val feedbackData: FeedbackData) : GlobalAction()
     data class UpdateFeedbackInfo(val walletManagers: List<WalletManager>) : GlobalAction()
 
     object ExchangeManager : GlobalAction() {
