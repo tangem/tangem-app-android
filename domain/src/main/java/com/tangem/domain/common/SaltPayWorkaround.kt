@@ -13,14 +13,14 @@ object SaltPayWorkaround {
                 symbol = "WXDAI",
                 contractAddress = "0x4346186e7461cB4DF06bCFCB4cD591423022e417",
                 decimals = 18,
-                id = "xdai",
+                id = "wrapped-xdai",
             )
             Blockchain.SaltPayTestnet -> Token(
                 name = "WXDAI Test",
                 symbol = "MyERC20",
                 contractAddress = "0x69cca8D8295de046C7c14019D9029Ccc77987A48",
                 decimals = 0,
-                id = "xdai",
+                id = "wrapped-xdai",
             )
             else -> throw IllegalArgumentException()
         }
