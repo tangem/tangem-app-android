@@ -19,7 +19,7 @@ sealed class OnboardingSaltPayAction : Action {
     }
 
     data class SetIsBusy(val isBusy: Boolean) : OnboardingSaltPayAction()
-    data class SetAccessCode(val accessCode: ByteArray?) : OnboardingSaltPayAction()
+    data class SetAccessCode(val accessCode: String?) : OnboardingSaltPayAction()
 
     object Update : OnboardingSaltPayAction()
     object RegisterCard : OnboardingSaltPayAction()
@@ -29,6 +29,5 @@ sealed class OnboardingSaltPayAction : Action {
     data class TrySetPin(val pin: String) : OnboardingSaltPayAction()
     data class SetPin(val pin: String) : OnboardingSaltPayAction()
 
-    // data class TryUpdateStep(val newStep: SaltPayRegistrationStep? = null) : OnboardingSaltPayAction()
     data class SetStep(val newStep: SaltPayRegistrationStep? = null) : OnboardingSaltPayAction()
 }
