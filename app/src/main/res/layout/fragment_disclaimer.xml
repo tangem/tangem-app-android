@@ -27,30 +27,21 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/cl_details_confirm"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="match_parent"
+        android:background="@color/white"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
-        <androidx.core.widget.NestedScrollView
-            android:id="@+id/sv_wallet"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:fillViewport="true"
-            android:overScrollMode="never"
-            app:layout_constraintBottom_toBottomOf="parent">
-
-            <TextView
-                android:id="@+id/tv_warning_description"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="22dp"
-                android:paddingStart="16dp"
-                android:paddingEnd="24dp"
-                android:paddingBottom="120dp"
-                android:text="@string/disclaimer_text"
-                android:textAlignment="textStart"
-                android:textSize="16sp" />
-
-        </androidx.core.widget.NestedScrollView>
+        <WebView
+            android:id="@+id/web_view"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="24dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
 
         <androidx.constraintlayout.widget.Guideline
             android:id="@+id/guideline"
@@ -66,8 +57,8 @@
             android:layout_height="100dp"
             android:background="@drawable/bg_half_transparent_overlay"
             app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent" />
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_accept"
@@ -75,12 +66,12 @@
             android:layout_width="0dp"
             android:layout_marginStart="7dp"
             android:layout_marginEnd="16dp"
+            android:layout_marginBottom="24dp"
             android:text="@string/common_accept"
             app:icon="@drawable/ic_send"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@+id/guideline"
-            android:layout_marginBottom="24dp" />
+            app:layout_constraintStart_toEndOf="@+id/guideline" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
