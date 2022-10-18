@@ -10,7 +10,7 @@ import com.tangem.domain.redux.state.ActionStateLoggerImpl
 object DomainLayer {
     internal val actionStateLogger = ActionStateLoggerImpl()
 
-    var onInitComplete: ((DomainException?) -> Unit)? = null
+    var onInitComplete: ((DomainModuleError?) -> Unit)? = null
 
     fun init(data: Map<String, Any?>? = null) {
         initActionStateLogger()
