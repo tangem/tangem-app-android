@@ -106,17 +106,10 @@ class UserTokensRepository(
 
     private fun Card.getUserId(): String {
         val walletPublicKey = this.wallets.firstOrNull()?.publicKey ?: return ""
-        return calculateUserId(walletPublicKey)
-    }
-
-    private fun calculateUserId(walletPublicKey: ByteArray): String {
-        val message = MESSAGE.toByteArray()
-        val keyHash = walletPublicKey.calculateSha256()
-        return message.calculateHmacSha256(keyHash).toHexString()
+        return UserWalletId(walletPublicKey).stringValue
     }
 
     companion object {
-        const val MESSAGE = "UserWalletID"
         const val SORT_DEFAULT_VALUE = "manual"
         const val GROUP_DEFAULT_VALUE = "none"
         fun init(context: Context, tangemTechService: TangemTechService): UserTokensRepository {
@@ -128,5 +121,17 @@ class UserTokensRepository(
             val networkService = UserTokensNetworkService(tangemTechService)
             return UserTokensRepository(storageService, networkService)
         }
+    }
+}
+
+data class UserWalletId(
+    val walletPublicKey: ByteArray,
+) {
+    val stringValue: String = calculateUserId(walletPublicKey)
+
+    private fun calculateUserId(walletPublicKey: ByteArray): String {
+        val message = "UserWalletID".toByteArray()
+        val keyHash = walletPublicKey.calculateSha256()
+        return message.calculateHmacSha256(keyHash).toHexString()
     }
 }
