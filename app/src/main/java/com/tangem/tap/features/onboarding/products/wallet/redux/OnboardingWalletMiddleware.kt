@@ -161,7 +161,11 @@ private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch:
                     if (onboardingWalletState.backupState.backupStep == BackupStep.InitBackup ||
                         onboardingWalletState.backupState.backupStep == BackupStep.Finished
                     ) {
-                        BackupAction.IntroduceBackup
+                        if (onboardingWalletState.isSaltPay) {
+                            BackupAction.StartBackup
+                        } else {
+                            BackupAction.IntroduceBackup
+                        }
                     } else {
                         null
                     }
