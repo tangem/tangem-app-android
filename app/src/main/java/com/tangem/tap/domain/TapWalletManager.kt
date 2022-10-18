@@ -173,6 +173,7 @@ class TapWalletManager {
                     walletManagers = listOf(primaryWalletManager),
                     save = false,
                 ),
+                WalletAction.LoadFiatRate(),
             )
         }
     }
