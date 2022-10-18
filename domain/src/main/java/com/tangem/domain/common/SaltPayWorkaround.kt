@@ -4,7 +4,6 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.common.CardIdRange
 import com.tangem.common.contains
-import com.tangem.domain.features.BuildConfig
 
 object SaltPayWorkaround {
     fun tokenFrom(blockchain: Blockchain): Token {
@@ -27,10 +26,22 @@ object SaltPayWorkaround {
         }
     }
 
+    fun isVisaBatchId(batchId: String): Boolean = visaBatches.contains(batchId)
+
+    fun isWalletCardId(cardId: String): Boolean {
+        return if (walletCardIds.contains(cardId)) true else walletCardIdRanges.contains(cardId)
+    }
+
     val visaBatches = listOf(
         "AE02",
         "AE03",
-    ) + attachDebugVisaBatches()
+    ) + attachTestVisaBatches()
+
+    private fun attachTestVisaBatches(): List<String> {
+        return listOf(
+            "FF03",
+        )
+    }
 
     val walletCardIds = listOf(
         "AC01000000033503",
@@ -61,33 +72,21 @@ object SaltPayWorkaround {
         "AC03000000076203",
         "AC03000000076211",
         "AC03000000076229",
-    ) + attachDebugWalletCardIds()
+    ) + attachTestWalletCardIds()
+
+    private fun attachTestWalletCardIds(): List<String> {
+        return listOf(
+            "FF04000000000232",
+        )
+    }
 
     val walletCardIdRanges = listOf(
         CardIdRange("AC05000000000003", "AC05000000023997")!!,
-    ) + attachDebugWalletCardIdRanges()
+    ) + attachTestWalletCardIdRanges()
 
-    fun isVisaBatchId(batchId: String): Boolean = visaBatches.contains(batchId)
-
-    fun isWalletCardId(cardId: String): Boolean {
-        return if (walletCardIds.contains(cardId)) true else walletCardIdRanges.contains(cardId)
-    }
-
-    private fun attachDebugVisaBatches(): List<String> {
-        return if (BuildConfig.DEBUG) listOf(
-            "FF03",
-        ) else listOf()
-    }
-
-    private fun attachDebugWalletCardIds(): List<String> {
-        return if (BuildConfig.DEBUG) listOf(
-            "FF04000000000232",
-        ) else listOf()
-    }
-
-    private fun attachDebugWalletCardIdRanges(): List<CardIdRange> {
-        return if (BuildConfig.DEBUG) listOf(
+    private fun attachTestWalletCardIdRanges(): List<CardIdRange> {
+        return listOf(
             CardIdRange("FF04000000000000", "FF04999999999999")!!,
-        ) else listOf()
+        )
     }
 }
