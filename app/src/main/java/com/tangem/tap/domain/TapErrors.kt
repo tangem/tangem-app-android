@@ -70,6 +70,7 @@ sealed class TapSdkError(override val messageResId: Int?) : Throwable(), TangemE
 
     object CardForDifferentApp : TapSdkError(R.string.alert_unsupported_card)
     object CardNotSupportedByRelease : TapSdkError(R.string.error_update_app)
+    object ScanPrimaryCard : TapSdkError(R.string.saltpay_backup_warning)
 }
 
 fun TapErrors.assembleErrors(): MutableList<Pair<Int, List<Any>?>> {
