@@ -5,12 +5,14 @@ import org.rekotlin.Action
 
 sealed class OnboardingWalletAction : Action {
     object Init : OnboardingWalletAction()
+    object StartSaltPayCardActivation: OnboardingWalletAction()
     object GetToCreateWalletStep : OnboardingWalletAction()
+    object GetToSaltPayStep : OnboardingWalletAction()
     object CreateWallet : OnboardingWalletAction()
     object Done : OnboardingWalletAction()
     object FinishOnboarding : OnboardingWalletAction()
 
-    object ProceedBackup : OnboardingWalletAction()
+    object ResumeBackup : OnboardingWalletAction()
 
     object LoadArtwork : OnboardingWalletAction()
     class SetArtworkUrl(val artworkUrl: String?) : OnboardingWalletAction()
@@ -53,15 +55,13 @@ sealed class BackupAction : Action {
     data class SaveAccessCodeConfirmation(val accessCodeConfirmation: String) : BackupAction()
     object OnAccessCodeDialogClosed : BackupAction()
 
-    data class PrepareToWriteBackupCard(val cardNumber: Int) : BackupAction()
-    data class WriteBackupCard(val cardNumber: Int) : BackupAction()
-
     object PrepareToWritePrimaryCard : BackupAction()
     object WritePrimaryCard : BackupAction()
+    data class PrepareToWriteBackupCard(val cardNumber: Int) : BackupAction()
+    data class WriteBackupCard(val cardNumber: Int) : BackupAction()
 
     object FinishBackup : BackupAction()
     object DiscardBackup : BackupAction()
     object DiscardSavedBackup : BackupAction()
-    object ResumeBackup : BackupAction()
-
+    object ResumeFoundUnfinishedBackup : BackupAction()
 }
