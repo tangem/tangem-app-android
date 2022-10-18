@@ -3,6 +3,8 @@ package com.tangem.tap.features.onboarding.products.wallet.saltPay.dialog
 import android.app.Dialog
 import android.content.Context
 import androidx.appcompat.app.AlertDialog
+import com.tangem.common.extensions.guard
+import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.feedback.SupportInfo
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.store
@@ -19,7 +21,11 @@ class NoFundsForActivationDialog {
                 setMessage(R.string.saltpay_error_no_gas_message)
 // [REDACTED_TODO_COMMENT]
                 setPositiveButton(R.string.onboarding_supplement_button_kyc_waiting) { _, _ ->
-                    store.dispatch(GlobalAction.OpenChat(SupportInfo()))
+                    val config = store.state.globalState.configManager?.config?.saltPayConfig?.zendesk.guard {
+                        store.dispatchDebugErrorNotification("SaltPayConfig not initialized")
+                        return@setPositiveButton
+                    }
+                    store.dispatch(GlobalAction.OpenChat(SupportInfo(), config))
                 }
                 setNegativeButton(R.string.common_cancel) { _, _ ->
                 }
