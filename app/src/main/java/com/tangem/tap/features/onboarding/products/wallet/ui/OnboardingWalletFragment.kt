@@ -1,6 +1,5 @@
 package com.tangem.tap.features.onboarding.products.wallet.ui
 
-import android.graphics.BitmapFactory
 import android.os.Bundle
 import android.util.TypedValue
 import android.view.View
@@ -15,6 +14,7 @@ import androidx.transition.TransitionInflater
 import androidx.transition.TransitionManager
 import by.kirich1409.viewbindingdelegate.viewBinding
 import coil.load
+import coil.size.Scale
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.button.MaterialButton
@@ -466,14 +466,25 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
         }
 
         private fun handleCardArtworks(state: OnboardingWalletState) = with(walletFragment.binding) {
+            //TODO: SaltPay: remove hardCode
             if (state.onboardingSaltPayState?.saltPayCardArtworkUrl == null) {
-                // if saltPay url not loaded -> load from resource
-                val bitmap = BitmapFactory.decodeResource(walletFragment.resources, R.drawable.img_salt_pay_visa)
-                imvFrontCard.setImageBitmap(bitmap)
+                imvFrontCard.load(R.drawable.img_salt_pay_visa) {
+                    scale(Scale.FILL)
+                    crossfade(enable = true)
+                }
             } else {
                 walletFragment.loadImageIntoImageView(state.onboardingSaltPayState.saltPayCardArtworkUrl, imvFrontCard)
             }
-            walletFragment.loadImageIntoImageView(state.cardArtworkUrl, imvFirstBackupCard)
+            imvFirstBackupCard.load(R.drawable.card_placeholder_wallet)
+
+            // if (state.onboardingSaltPayState?.saltPayCardArtworkUrl == null) {
+            //     //if saltPay url not loaded -> load from resource
+            //     val bitmap = BitmapFactory.decodeResource(walletFragment.resources, R.drawable.img_salt_pay_visa)
+            //     imvFrontCard.setImageBitmap(bitmap)
+            // } else {
+            //     walletFragment.loadImageIntoImageView(state.onboardingSaltPayState.saltPayCardArtworkUrl, imvFrontCard)
+            // }
+            // walletFragment.loadImageIntoImageView(state.cardArtworkUrl, imvFirstBackupCard)
 
             //TODO: at now we can hide the image only by changing alpha channel to 0, because
             // the OnboardingWalletFragment and WalletCardsWidget manipulate it visibility through changing
