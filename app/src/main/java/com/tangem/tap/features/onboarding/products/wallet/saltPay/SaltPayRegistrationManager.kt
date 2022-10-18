@@ -30,7 +30,7 @@ class SaltPayRegistrationManager(
 ) {
     val kycUrlProvider = KYCUrlProvider(walletPublicKey, kycProvider)
 
-    private val approvalValue: BigDecimal = BigDecimal.valueOf(Math.pow(2.toDouble(), 255.toDouble()))
+    private val approvalValue: BigDecimal = BigDecimal.valueOf(Math.pow(2.toDouble(), 256.toDouble()) - 1)
     private val spendLimitValue: BigDecimal = BigDecimal("100")
 
     fun transactionIsSent(): Boolean {
