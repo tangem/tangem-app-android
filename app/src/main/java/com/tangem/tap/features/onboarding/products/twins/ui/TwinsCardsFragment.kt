@@ -79,7 +79,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
             285f * deviceScaleFactorForWelcomeState
         }
         btnRefreshBalanceWidget =
-            RefreshBalanceWidget(binding.onboardingTopContainer.onboardingMainContainer)
+            RefreshBalanceWidget(binding.onboardingTopContainer.onboardingWalletContainer)
 
         binding.toolbar.title = getText(R.string.twins_recreate_toolbar)
 
@@ -212,7 +212,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
             chbUnderstand.hide()
             pbBinding.pbState.show()
 
-            binding.onboardingTopContainer.onboardingMainContainer.beginDelayedTransition()
+            binding.onboardingTopContainer.onboardingWalletContainer.beginDelayedTransition()
 
             when (previousStep) {
                 TwinCardsStep.None -> {
@@ -383,10 +383,10 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
         with(binding.onboardingTopContainer) {
             val constraintSet = ConstraintSet()
             constraintSet.clone(requireContext(), layoutId)
-            constraintSet.applyTo(onboardingMainContainer)
+            constraintSet.applyTo(onboardingWalletContainer)
             val transition = InternalNoteLayoutTransition()
             transition.interpolator = OvershootInterpolator()
-            TransitionManager.beginDelayedTransition(onboardingMainContainer, transition)
+            TransitionManager.beginDelayedTransition(onboardingWalletContainer, transition)
         }
     }
 
