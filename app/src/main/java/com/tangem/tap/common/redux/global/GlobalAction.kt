@@ -81,7 +81,6 @@ sealed class GlobalAction : Action {
 
     data class SendEmail(val feedbackData: FeedbackData) : GlobalAction()
     data class OpenChat(val feedbackData: FeedbackData, val zendeskConfig: ZendeskConfig? = null) : GlobalAction()
-    data class OpenSaltPayChat(val feedbackData: FeedbackData) : GlobalAction()
     data class UpdateFeedbackInfo(val walletManagers: List<WalletManager>) : GlobalAction()
 
     object ExchangeManager : GlobalAction() {
