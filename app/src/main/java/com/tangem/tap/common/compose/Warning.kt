@@ -13,7 +13,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tangem.common.module.ModuleMessage
-import com.tangem.tap.common.moduleMessage.ModuleMessageConverter
+import com.tangem.tap.domain.moduleMessage.ModuleMessageConverter
 import com.tangem.wallet.R
 
 /**
@@ -42,7 +42,7 @@ fun AddCustomTokenWarning(
             )
             SpacerH8()
             Text(
-                text = converter.convert(warning),
+                text = converter.convert(warning).message,
                 color = colorResource(id = R.color.white),
                 fontSize = 13.sp,
                 lineHeight = 18.sp
