@@ -26,7 +26,7 @@ data class OnboardingSaltPayState(
     val saltPayManager: SaltPayRegistrationManager = SaltPayRegistrationManager.stub(),
     val saltPayConfig: SaltPayConfig = SaltPayConfig.stub(),
     val pinCode: String? = null,
-    val accessCode: ByteArray? = null,
+    val accessCode: String? = null,
     val step: SaltPayRegistrationStep = SaltPayRegistrationStep.NeedPin,
     val saltPayCardArtworkUrl: String? = null,
     val isBusy: Boolean = false,
