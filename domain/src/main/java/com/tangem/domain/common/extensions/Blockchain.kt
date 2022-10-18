@@ -134,7 +134,7 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Kusama -> "kusama"
         Blockchain.Optimism, Blockchain.OptimismTestnet -> "ethereum"
         Blockchain.Dash -> "dash"
-        Blockchain.SaltPay, Blockchain.SaltPayTestnet -> "wrapped-xdai"
+        Blockchain.SaltPay, Blockchain.SaltPayTestnet -> "xdai"
         Blockchain.Unknown -> "unknown"
     }
 }
