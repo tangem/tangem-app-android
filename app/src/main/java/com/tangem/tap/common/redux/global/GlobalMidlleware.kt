@@ -87,7 +87,31 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
             store.state.globalState.feedbackManager?.sendEmail(action.feedbackData)
         }
         is GlobalAction.OpenChat -> {
-            store.state.globalState.feedbackManager?.openChat(action.feedbackData)
+            val globalState = store.state.globalState
+            val feedbackManager = globalState.feedbackManager.guard {
+                store.dispatchDebugErrorNotification("FeedbackManager not initialized")
+                return
+            }
+            val config = globalState.configManager?.config.guard {
+                store.dispatchDebugErrorNotification("Config not initialized")
+                return
+            }
+
+            val scanResponse = globalState.onboardingState.onboardingManager?.scanResponse
+                ?: globalState.scanResponse
+
+            // if config not set -> try to get it based on a scanResponse.productType
+            val unsafeZendeskConfig = action.zendeskConfig ?: when {
+                scanResponse?.isSaltPay() == true -> config.saltPayConfig?.zendesk
+                else -> config.zendesk
+            }
+
+            val zendeskConfig = unsafeZendeskConfig.guard {
+                store.dispatchDebugErrorNotification("ZendeskConfig not initialized")
+                return
+            }
+            feedbackManager.initChat(zendeskConfig)
+            feedbackManager.openChat(action.feedbackData)
         }
         is GlobalAction.UpdateWalletSignedHashes -> {
             store.dispatch(WalletAction.Warnings.CheckRemainingSignatures(action.remainingSignatures))
