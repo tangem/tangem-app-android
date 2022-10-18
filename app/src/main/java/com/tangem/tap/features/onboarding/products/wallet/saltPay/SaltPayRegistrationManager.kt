@@ -30,7 +30,9 @@ class SaltPayRegistrationManager(
 ) {
     val kycUrlProvider = KYCUrlProvider(walletPublicKey, kycProvider)
 
-    private val approvalValue: BigDecimal = BigDecimal.valueOf(Math.pow(2.toDouble(), 256.toDouble()) - 1)
+    private val approvalValue: BigDecimal = BigDecimal(2).pow(256).minus(BigDecimal.ONE)
+        .movePointLeft(gnosisRegistrator.walletManager.wallet.blockchain.decimals())
+
     private val spendLimitValue: BigDecimal = BigDecimal("100")
 
     fun transactionIsSent(): Boolean {
