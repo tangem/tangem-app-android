@@ -35,9 +35,11 @@ class TapWalletManager {
     val walletManagerFactory: WalletManagerFactory
         by lazy { WalletManagerFactory(blockchainSdkConfig) }
     val rates: RatesRepository = RatesRepository()
+
     private val blockchainSdkConfig by lazy {
         store.state.globalState.configManager?.config?.blockchainSdkConfig ?: BlockchainSdkConfig()
     }
+
     private val walletManagersThrottler =
         ThrottlerWithValues<BlockchainNetwork, Result<Wallet>>(10000)
 
@@ -134,9 +136,7 @@ class TapWalletManager {
         dispatchOnMain(WalletAction.LoadWallet())
     }
 
-    private suspend fun loadMultiWalletData(
-        scanResponse: ScanResponse,
-    ) {
+    private suspend fun loadMultiWalletData(scanResponse: ScanResponse) {
         loadUserCurrencies(scanResponse, walletManagerFactory)
     }
 
