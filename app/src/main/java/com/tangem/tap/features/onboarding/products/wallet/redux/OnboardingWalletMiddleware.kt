@@ -284,6 +284,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             if (action.accessCodeConfirmation == backupState.accessCode) {
                 store.dispatch(BackupAction.SetAccessCodeError(null))
                 backupService.setAccessCode(action.accessCodeConfirmation)
+                store.dispatch(OnboardingSaltPayAction.SetAccessCode(action.accessCodeConfirmation))
                 store.dispatch(BackupAction.PrepareToWritePrimaryCard)
             } else {
                 store.dispatch(BackupAction.SetAccessCodeError(AccessCodeError.CodesDoNotMatch))
