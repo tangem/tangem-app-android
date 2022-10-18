@@ -406,6 +406,7 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
     }
 
     private fun showSuccess() = with(binding) {
+        toolbar.title = getString(R.string.onboarding_done_header)
         tvHeader.text = getText(R.string.onboarding_done_header)
 
         tvHeader.show()
@@ -483,11 +484,10 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
             walletFragment.cardsWidget.getSecondBackupCardView().alpha = 0f
             when (state.backupCardsNumber) {
                 0 -> {
-                    walletFragment.cardsWidget.toFan {
-                        walletFragment.cardsWidget.getFirstBackupCardView().animate().alpha(0.6f).duration = 200
-                    }
                     tvHeader.text = walletFragment.getText(R.string.onboarding_saltpay_title_no_backup_card)
                     tvBody.text = walletFragment.getText(R.string.onboarding_saltpay_subtitle_no_backup_cards)
+                    walletFragment.cardsWidget.getFirstBackupCardView().alpha = 0.6f
+                    walletFragment.cardsWidget.toFan()
                 }
                 1 -> {
                     tvHeader.text = walletFragment.getText(R.string.onboarding_saltpay_title_one_backup_card)
