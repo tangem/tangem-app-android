@@ -30,5 +30,16 @@ class OnboardingSaltPayHelper {
                 Result.Failure(error)
             }
         }
+
+        suspend fun testProceedToOnboarding(scanResponse: ScanResponse): Result<Boolean> {
+            return try {
+                val isBackupOnboardingCase = scanResponse.card.backupStatus?.isActive == false
+                Result.Success(isBackupOnboardingCase)
+            } catch (ex: Exception) {
+                Result.Failure(ex)
+            } catch (error: SaltPayRegistrationError){
+                Result.Failure(error)
+            }
+        }
     }
 }
