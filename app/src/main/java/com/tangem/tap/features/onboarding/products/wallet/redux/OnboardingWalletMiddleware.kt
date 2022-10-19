@@ -1,11 +1,9 @@
 package com.tangem.tap.features.onboarding.products.wallet.redux
 
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.common.CardFilter
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.Card
 import com.tangem.common.extensions.ifNotNull
-import com.tangem.domain.common.SaltPayWorkaround
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.operations.backup.BackupService
@@ -247,11 +245,10 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             }
         }
         is BackupAction.AddBackupCard -> {
-            backupService.skipCompatibilityChecks = true
-            tangemSdk.config.filter.cardIdFilter = CardFilter.Companion.CardIdFilter.Allow(
-                items = SaltPayWorkaround.walletCardIds.toSet(),
-                ranges = SaltPayWorkaround.walletCardIdRanges,
-            )
+            onboardingWalletState.backupCardIdFilter?.let {
+                backupService.skipCompatibilityChecks = true
+                tangemSdk.config.filter.cardIdFilter = it
+            }
 
             backupService.addBackupCard { result ->
                 backupService.skipCompatibilityChecks = false
