@@ -5,6 +5,7 @@ import android.util.TypedValue
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
+import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.ProgressBar
 import androidx.appcompat.app.AppCompatActivity
@@ -30,6 +31,7 @@ import com.tangem.tap.common.extensions.configureSettings
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.hide
+import com.tangem.tap.common.extensions.inflate
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.extensions.stop
 import com.tangem.tap.common.feedback.SupportInfo
@@ -63,7 +65,7 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
     StoreSubscriber<OnboardingWalletState>, FragmentOnBackPressedHandler {
 
     private val pbBinding: ViewOnboardingProgressBinding by viewBinding(ViewOnboardingProgressBinding::bind)
-    private val binding: FragmentOnboardingWalletBinding by viewBinding(FragmentOnboardingWalletBinding::bind)
+    val binding: FragmentOnboardingWalletBinding by viewBinding(FragmentOnboardingWalletBinding::bind)
     private val bindingSaltPay: LayoutOnboardingSaltpayBinding by lazy { binding.onboardingSaltpayContainer }
 
     private val saltPayView: SaltPayView = SaltPayView(this)
@@ -71,9 +73,10 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
     private lateinit var cardsWidget: WalletCardsWidget
     private var accessCodeDialog: AccessCodeDialog? = null
 
+    private lateinit var animator: BackupAnimator
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        postponeEnterTransition()
         setHasOptionsMenu(true)
 
         val inflater = TransitionInflater.from(requireContext())
@@ -84,16 +87,8 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val typedValue = TypedValue()
-        resources.getValue(R.dimen.device_scale_factor_for_twins_welcome, typedValue, true)
-        val deviceScaleFactor = typedValue.float
-
-        val leapfrogCalculator = PropertyCalculator(
-            yTranslationFactor = 25f * deviceScaleFactor,
-        )
-        val leapfrog = LeapfrogWidget(binding.flCardsContainer, leapfrogCalculator)
-        cardsWidget = WalletCardsWidget(leapfrog, deviceScaleFactor) { 200f * deviceScaleFactor }
-        startPostponedEnterTransition()
+        val scaleFactor = getDeviceScaleFactor()
+        initCardsWidget(createLeapfrogWidget(binding.flCardsContainer, scaleFactor), scaleFactor)
 
         binding.viewPagerBackupInfo.adapter = BackupInfoAdapter()
         TabLayoutMediator(
@@ -113,6 +108,37 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
         store.dispatch(OnboardingWalletAction.LoadArtwork)
     }
 
+    private fun reInitCardsWidget(backupCardsCounts: Int) = with(binding) {
+        val viewBackupCount = flCardsContainer.childCount - 1
+        if (viewBackupCount <= 0) return@with
+        if (viewBackupCount == backupCardsCounts) return@with
+
+        cardsWidget.toFolded(false)
+
+        if (viewBackupCount > backupCardsCounts) {
+            flCardsContainer.removeViewAt(viewBackupCount - 1)
+        } else {
+            flCardsContainer.inflate(R.layout.view_onboarding_card, true)
+        }
+
+        val scaleFactor = getDeviceScaleFactor()
+        initCardsWidget(createLeapfrogWidget(flCardsContainer, scaleFactor), scaleFactor)
+    }
+
+    private fun createLeapfrogWidget(container: FrameLayout, deviceScaleFactor: Float): LeapfrogWidget {
+        val leapfrogCalculator = PropertyCalculator(yTranslationFactor = 25f * deviceScaleFactor)
+        return LeapfrogWidget(container, leapfrogCalculator)
+    }
+
+    private fun initCardsWidget(leapfrogWidget: LeapfrogWidget, deviceScaleFactor: Float, isTest: Boolean = false) {
+        cardsWidget = WalletCardsWidget(leapfrogWidget, deviceScaleFactor) { 200f * deviceScaleFactor }
+        animator = if (isTest) {
+            TestBackupAnimation(WalletBackupAnimator(cardsWidget), binding)
+        } else {
+            WalletBackupAnimator(cardsWidget)
+        }
+    }
+
     override fun onStart() {
         super.onStart()
         store.subscribe(this) { state ->
@@ -129,7 +155,9 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
 
     override fun newState(state: OnboardingWalletState) {
         if (activity == null || view == null) return
+        if (state.isSaltPay) reInitCardsWidget(1)
 
+        animator.updateBackupState(state.backupState)
         requireActivity().invalidateOptionsMenu()
 
         pbBinding.pbState.max = state.getMaxProgress()
@@ -171,7 +199,7 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
         tvHeader.setText(R.string.onboarding_create_wallet_header)
         tvBody.setText(R.string.onboarding_create_wallet_body)
 
-        cardsWidget.toFolded(false) { startPostponedEnterTransition() }
+        animator.setupCreateWalletState()
     }
 
     private fun setBackupState(state: BackupState, isSaltPay: Boolean) {
@@ -192,8 +220,6 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
         imvFirstBackupCard.show()
         imvSecondBackupCard.show()
 
-        cardsWidget.toWelcome()
-
         tvHeader.hide()
         tvBody.hide()
         viewPagerBackupInfo.show()
@@ -207,15 +233,11 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
             btnAlternativeAction.setOnClickListener { store.dispatch(BackupAction.DismissBackup) }
             btnAlternativeAction.show(state.canSkipBackup && !isSaltPay)
         }
-
-        startPostponedEnterTransition()
+        animator.showBackupIntro(state)
     }
 
     private fun showScanOriginCard() = with(binding) {
         prepareBackupView()
-
-        cardsWidget.toFolded()
-
         tvHeader.text = getText(R.string.onboarding_title_scan_origin_card)
         tvBody.text = getString(
             R.string.onboarding_subtitle_scan_origin_card,
@@ -226,18 +248,8 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
             btnAlternativeAction.hide()
             btnMainAction.setOnClickListener { store.dispatch(BackupAction.ScanPrimaryCard) }
         }
-    }
 
-    private fun prepareBackupView() = with(binding) {
-        toolbar.title = getText(R.string.onboarding_navbar_title_creating_backup)
-
-        tvHeader.show()
-        tvBody.show()
-        viewPagerBackupInfo.hide()
-        tabLayoutBackupInfo.hide()
-
-        imvFirstBackupCard.show()
-        imvSecondBackupCard.show()
+        animator.showScanOriginCard()
     }
 
     private fun showAddBackupCards(state: BackupState, isSaltPay: Boolean) = with(binding) {
@@ -261,35 +273,37 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
 
         if (isSaltPay) {
             saltPayView.showAddBackupCards(state)
-            return@with
-        }
-
-        when (state.backupCardsNumber) {
-            0 -> {
-                cardsWidget.toFan {
-                    cardsWidget.getFirstBackupCardView().animate().alpha(0.6f).duration = 200
-                    cardsWidget.getSecondBackupCardView().animate().alpha(0.2f).duration = 200
+        } else {
+            when (state.backupCardsNumber) {
+                0 -> {
+                    tvHeader.text = getText(R.string.onboarding_title_no_backup_cards)
+                    tvBody.text = getText(R.string.onboarding_subtitle_no_backup_cards)
                 }
-                tvHeader.text = getText(R.string.onboarding_title_no_backup_cards)
-                tvBody.text = getText(R.string.onboarding_subtitle_no_backup_cards)
-            }
-            1 -> {
-                tvHeader.text = getText(R.string.onboarding_title_one_backup_card)
-                tvBody.text = getText(R.string.onboarding_subtitle_one_backup_card)
-
-                cardsWidget.toFan(false)
-                cardsWidget.getFirstBackupCardView().animate().alpha(1f).duration = 400
-                cardsWidget.getSecondBackupCardView().alpha = 0.2f
-            }
-            2 -> {
-                tvHeader.text = getText(R.string.onboarding_title_two_backup_cards)
-                tvBody.text = getText(R.string.onboarding_subtitle_two_backup_cards)
-
-                cardsWidget.toFan(false)
-                cardsWidget.getFirstBackupCardView().alpha = 1f
-                cardsWidget.getSecondBackupCardView().animate().alpha(1f).duration = 400
+                1 -> {
+                    tvHeader.text = getText(R.string.onboarding_title_one_backup_card)
+                    tvBody.text = getText(R.string.onboarding_subtitle_one_backup_card)
+                }
+                2 -> {
+                    tvHeader.text = getText(R.string.onboarding_title_two_backup_cards)
+                    tvBody.text = getText(R.string.onboarding_subtitle_two_backup_cards)
+                }
+                else -> {}
             }
         }
+
+        animator.showAddBackupCards(state, state.backupCardsNumber)
+    }
+
+    private fun prepareBackupView() = with(binding) {
+        toolbar.title = getText(R.string.onboarding_navbar_title_creating_backup)
+
+        tvHeader.show()
+        tvBody.show()
+        viewPagerBackupInfo.hide()
+        tabLayoutBackupInfo.hide()
+
+        imvFirstBackupCard.show()
+        imvSecondBackupCard.show()
     }
 
     private fun showSetAccessCode() {
@@ -323,13 +337,8 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
     private fun showWritePrimaryCard(state: BackupState, isSaltPay: Boolean) = with(binding) {
         accessCodeDialog?.dismiss()
 
+        reInitCardsWidget(state.backupCardsNumber)
         prepareViewForFinalizeStep()
-        cardsWidget.getSecondBackupCardView().show(state.backupCardsNumber == 2)
-
-        cardsWidget.toLeapfrog {
-            cardsWidget.getFirstBackupCardView().alpha = 0.6f
-            cardsWidget.getSecondBackupCardView().alpha = 0.2f
-        }
 
         val cardIdFormatter = CardIdFormatter(CardIdDisplayFormat.LastMasked(4))
         if (isSaltPay) {
@@ -344,52 +353,33 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
             )
             layoutButtonsCommon.btnMainAction.text = getText(R.string.onboarding_button_backup_origin)
         }
-
         layoutButtonsCommon.btnMainAction.setOnClickListener { store.dispatch(BackupAction.WritePrimaryCard) }
 
+        animator.showWritePrimaryCard(state)
     }
 
     private fun prepareViewForFinalizeStep() = with(binding) {
-        layoutButtonsAddCards.root.hide()
-        layoutButtonsCommon.root.show()
-
-        imvFirstBackupCard.show()
-        imvSecondBackupCard.show()
-
         toolbar.title = getText(R.string.onboarding_button_finalize_backup)
 
-        imvCardBackground.hide()
-
-        cardsWidget.toLeapfrog()
-
+        layoutButtonsAddCards.root.hide()
+        layoutButtonsCommon.root.show()
         layoutButtonsCommon.btnAlternativeAction.hide()
+
+        imvCardBackground.hide()
+        imvFirstBackupCard.show()
+        imvSecondBackupCard.show()
     }
 
     private fun showWriteBackupCard(state: BackupState, isSaltPay: Boolean) = with(binding) {
         prepareViewForFinalizeStep()
 
-        cardsWidget.getSecondBackupCardView().show(state.backupCardsNumber == 2)
-
         val cardNumber = (state.backupStep as? BackupStep.WriteBackupCard)?.cardNumber ?: 1
-        when (cardNumber) {
-            1 -> cardsWidget.leapfrogWidget.leap {
-                cardsWidget.getOriginCardView().alpha = 0.4f
-                cardsWidget.getFirstBackupCardView().alpha = 0.2f
-                cardsWidget.getSecondBackupCardView().alpha = 1f
-            }
-            2 -> cardsWidget.leapfrogWidget.leap {
-                cardsWidget.getOriginCardView().alpha = 0.4f
-                cardsWidget.getFirstBackupCardView().alpha = 0.2f
-                cardsWidget.getSecondBackupCardView().alpha = 1f
-            }
-        }
-
-        val cardIdFormatter = CardIdFormatter(CardIdDisplayFormat.LastMasked(4))
         if (isSaltPay) {
             tvHeader.text = getString(R.string.onboarding_saltpay_title_backup_card)
             tvBody.text = getString(R.string.onboarding_twins_interrupt_warning)
             layoutButtonsCommon.btnMainAction.text = getString(R.string.onboarding_saltpay_title_backup_card)
         } else {
+            val cardIdFormatter = CardIdFormatter(CardIdDisplayFormat.LastMasked(4))
             tvHeader.text = getString(R.string.onboarding_title_backup_card_format, cardNumber)
             tvBody.text = getString(
                 R.string.onboarding_subtitle_scan_backup_card_format,
@@ -403,6 +393,8 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
         layoutButtonsCommon.btnMainAction.setOnClickListener {
             store.dispatch(BackupAction.WriteBackupCard(cardNumber))
         }
+
+        animator.showWriteBackupCard(state, cardNumber)
     }
 
     private fun showSuccess() = with(binding) {
@@ -423,16 +415,14 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
             store.dispatch(OnboardingWalletAction.FinishOnboarding)
         }
 
-        cardsWidget.leapfrogWidget.fold {
+        animator.showSuccess {
             flCardsContainer.hide()
             imvCardBackground.hide()
             vConfetti.lavConfetti.show()
             vConfetti.lavConfetti.playAnimation()
             imvSuccess.alpha = 0f
             imvSuccess.show()
-
-            imvSuccess.animate()
-                ?.alpha(1f)?.duration = 400
+            imvSuccess.animate()?.alpha(1f)?.duration = 400
         }
     }
 
@@ -450,6 +440,7 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
 
         fun newState(state: OnboardingWalletState) {
             handleCardArtworks(state)
+
             when (state.step) {
                 OnboardingWalletStep.SaltPay -> setSaltPayStep(state.onboardingSaltPayState)
                 OnboardingWalletStep.Backup -> {
@@ -489,24 +480,20 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
             //TODO: at now we can hide the image only by changing alpha channel to 0, because
             // the OnboardingWalletFragment and WalletCardsWidget manipulate it visibility through changing
             // View.VISIBILITY states.
-            imvSecondBackupCard.alpha = 0f
+            // imvSecondBackupCard.alpha = 0f
         }
 
         fun showAddBackupCards(state: BackupState) = with(walletFragment.binding) {
-            walletFragment.cardsWidget.getSecondBackupCardView().alpha = 0f
             when (state.backupCardsNumber) {
                 0 -> {
                     tvHeader.text = walletFragment.getText(R.string.onboarding_saltpay_title_no_backup_card)
                     tvBody.text = walletFragment.getText(R.string.onboarding_saltpay_subtitle_no_backup_cards)
-                    walletFragment.cardsWidget.getFirstBackupCardView().alpha = 0.6f
-                    walletFragment.cardsWidget.toFan()
                 }
                 1 -> {
                     tvHeader.text = walletFragment.getText(R.string.onboarding_saltpay_title_one_backup_card)
                     tvBody.text = walletFragment.getText(R.string.onboarding_saltpay_subtitle_one_backup_card)
-                    walletFragment.cardsWidget.toFan(false)
-                    walletFragment.cardsWidget.getFirstBackupCardView().animate().alpha(1f).duration = 400
                 }
+                else -> {}
             }
         }
 
@@ -614,7 +601,6 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
         }
 
         private fun showOnlyView(view: View, onShowListener: (() -> Unit)? = null) {
-            // onboardingSaltpayContainer.beginDelayedTransition()
             walletFragment.bindingSaltPay.onboardingSaltpayContainer.children
                 .filter { it.id != view.id }
                 .forEach { it.hide() }
@@ -638,5 +624,11 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
                 }
             }
         }
+    }
+
+    private fun getDeviceScaleFactor(): Float {
+        val typedValue = TypedValue()
+        resources.getValue(R.dimen.device_scale_factor_for_twins_welcome, typedValue, true)
+        return typedValue.float
     }
 }
