@@ -1,6 +1,8 @@
 package com.tangem.tap.features.onboarding.products.wallet.redux
 
 import android.graphics.Bitmap
+import com.tangem.common.CardFilter
+import com.tangem.domain.common.SaltPayWorkaround
 import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayState
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.SaltPayRegistrationStep
@@ -17,6 +19,15 @@ data class OnboardingWalletState(
     val cardArtworkUrl: String? = null,
     val showConfetti: Boolean = false,
 ) : StateType {
+
+    val backupCardIdFilter: CardFilter.Companion.CardIdFilter?
+        get() = when {
+            isSaltPay -> CardFilter.Companion.CardIdFilter.Allow(
+                items = SaltPayWorkaround.walletCardIds.toSet(),
+                ranges = SaltPayWorkaround.walletCardIdRanges,
+            )
+            else -> null
+        }
 
     fun getMaxProgress(): Int = when {
         isSaltPay -> 12
