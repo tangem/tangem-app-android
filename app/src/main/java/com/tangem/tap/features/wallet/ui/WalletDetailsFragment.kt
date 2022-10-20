@@ -345,7 +345,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        inflater.inflate(R.menu.wallet_details, menu)
+        inflater.inflate(R.menu.menu_wallet_details, menu)
     }
 
     private fun TextView.setWarningStatus(mainMessage: Int, error: String? = null) {
