@@ -4,6 +4,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.Card
 import com.tangem.common.extensions.ifNotNull
+import com.tangem.domain.common.SaltPayWorkaround
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.operations.backup.BackupService
@@ -336,9 +337,11 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             }
         }
         is BackupAction.ResumeFoundUnfinishedBackup -> {
-            // val isSaltPay = backupService.primaryBatchId?.let { SaltPayWorkaround.isVisaBatchId(it) } ?: false
-            // store.dispatch(GlobalAction.Onboarding.StartForUnfinishedBackup(isSaltPay))
-            // store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingWallet))
+            val isSaltPay = backupService.primaryCardId?.slice(0..3)?.let {
+                SaltPayWorkaround.isVisaBatchId(it)
+            } ?: false
+            store.dispatch(GlobalAction.Onboarding.StartForUnfinishedBackup(isSaltPay))
+            store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingWallet))
         }
         is BackupAction.DismissBackup -> {
             if (onboardingWalletState.isSaltPay) throw UnsupportedOperationException()
