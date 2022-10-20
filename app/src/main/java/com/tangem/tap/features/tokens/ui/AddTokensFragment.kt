@@ -30,9 +30,13 @@ import com.tangem.tap.store
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentAddTokensBinding
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import org.rekotlin.StoreSubscriber
-
 
 class AddTokensFragment : Fragment(R.layout.fragment_add_tokens),
     StoreSubscriber<TokensState> {
@@ -123,7 +127,7 @@ class AddTokensFragment : Fragment(R.layout.fragment_add_tokens),
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        inflater.inflate(R.menu.popular_tokens, menu)
+        inflater.inflate(R.menu.menu_popular_tokens, menu)
 
         val addCustomTokenAllowed = store.state.tokensState.allowToAdd
         menu.findItem(R.id.menu_navigate_add_custom_token).isVisible = addCustomTokenAllowed
