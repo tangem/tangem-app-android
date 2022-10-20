@@ -18,6 +18,7 @@ import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.isExcluded
 import com.tangem.domain.common.TapWorkarounds.isNotSupportedInThatRelease
 import com.tangem.domain.common.TapWorkarounds.isSaltPay
+import com.tangem.domain.common.TapWorkarounds.isTangemNote
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
 import com.tangem.domain.common.TwinsHelper
@@ -58,6 +59,7 @@ class ScanProductTask(
         }
 
         val commandProcessor = when {
+            card.isTangemNote -> ScanNoteProcessor()
             card.isTangemTwins -> ScanTwinProcessor()
             else -> ScanWalletProcessor(userTokensRepository, additionalBlockchainsToDerive)
         }
@@ -88,6 +90,24 @@ class ScanProductTask(
     }
 }
 
+private class ScanNoteProcessor : ProductCommandProcessor<ScanResponse> {
+    override fun proceed(
+        card: Card,
+        session: CardSession,
+        callback: (result: CompletionResult<ScanResponse>) -> Unit
+    ) {
+        callback(
+            CompletionResult.Success(
+                ScanResponse(
+                    card = card,
+                    productType = ProductType.Note,
+                    walletData = session.environment.walletData,
+                ),
+            ),
+        )
+    }
+}
+
 private class ScanWalletProcessor(
     private val userTokensRepository: UserTokensRepository?,
     private val additionalBlockchainsToDerive: Collection<Blockchain>? = null,
@@ -108,7 +128,6 @@ private class ScanWalletProcessor(
         callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
         if (card.wallets.isEmpty() || !card.isMultiwalletAllowed) {
-            // match for the saltPay card to
             startLinkingForBackupIfNeeded(card, session, callback)
             return
         }
