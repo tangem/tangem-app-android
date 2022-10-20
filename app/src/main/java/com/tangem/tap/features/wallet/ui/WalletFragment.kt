@@ -139,7 +139,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         if (!state.shouldShowDetails) {
             binding.toolbar.menu.removeItem(R.id.details_menu)
         } else if (binding.toolbar.menu.findItem(R.id.details_menu) == null) {
-            binding.toolbar.inflateMenu(R.menu.wallet)
+            binding.toolbar.inflateMenu(R.menu.menu_wallet)
         }
 
         setupNoInternetHandling(state)
@@ -219,6 +219,6 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        if (store.state.walletState.shouldShowDetails) inflater.inflate(R.menu.wallet, menu)
+        if (store.state.walletState.shouldShowDetails) inflater.inflate(R.menu.menu_wallet, menu)
     }
 }
