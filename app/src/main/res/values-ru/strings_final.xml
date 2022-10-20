@@ -139,4 +139,5 @@
     <string name="onboarding_saltpay_title_prepare_origin">Приготовьте SaltPay карту</string>
     <string name="onboarding_saltpay_button_backup_origin">Приложите SaltPay карту</string>
     <string name="onboarding_saltpay_title_backup_card">Приложите Tangem карту</string>
+    <string name="onboarding_chat_button_title">Чат</string>
 </resources>
