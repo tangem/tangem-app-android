@@ -67,8 +67,10 @@ class UserTokensRepository(
         )
     }
 
-    fun loadBlockchainsToDerive(card: Card): List<BlockchainNetwork> {
-        return storageService.getUserTokens(card.getUserId())?.toBlockchainNetworks() ?: emptyList()
+    suspend fun loadBlockchainsToDerive(card: Card): List<BlockchainNetwork> {
+        return storageService.getUserTokens(card.getUserId())?.toBlockchainNetworks() ?: storageService.getUserTokens(
+            card,
+        ).toBlockchainNetworks()
     }
 
     private fun loadDemoCurrencies(): List<Currency> {
