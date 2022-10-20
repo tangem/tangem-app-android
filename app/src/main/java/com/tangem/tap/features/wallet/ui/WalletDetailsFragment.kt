@@ -42,7 +42,7 @@ import com.tangem.tap.features.wallet.redux.WalletState.Companion.UNKNOWN_AMOUNT
 import com.tangem.tap.features.wallet.ui.adapters.PendingTransactionsAdapter
 import com.tangem.tap.features.wallet.ui.adapters.WalletDetailWarningMessagesAdapter
 import com.tangem.tap.features.wallet.ui.images.load
-import com.tangem.tap.features.wallet.ui.test.TestWalletDetails
+import com.tangem.tap.features.wallet.ui.test.TestWallet
 import com.tangem.tap.store
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentWalletDetailsBinding
@@ -125,7 +125,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
         view?.findViewById<View>(R.id.l_balance)?.let { view ->
             TestActions.initFor(
                 view = view,
-                actions = TestWalletDetails.solanaRentExemptWarning()
+                actions = TestWallet.solanaRentExemptWarning()
             )
         }
     }
