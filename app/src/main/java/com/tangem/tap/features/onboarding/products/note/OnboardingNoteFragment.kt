@@ -1,19 +1,14 @@
 package com.tangem.tap.features.onboarding.products.note
 
-import android.graphics.Bitmap
-import android.graphics.drawable.BitmapDrawable
 import android.os.Bundle
 import android.view.View
 import android.view.animation.OvershootInterpolator
-import android.widget.ImageView
 import androidx.annotation.LayoutRes
 import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.view.isVisible
 import androidx.transition.TransitionManager
 import coil.load
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.tangem_sdk_new.extensions.fadeIn
-import com.tangem.tangem_sdk_new.extensions.fadeOut
 import com.tangem.tap.common.extensions.getDrawableCompat
 import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.common.redux.navigation.ShareElement
@@ -33,23 +28,18 @@ import com.tangem.wallet.R
 class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
 
     private var previousStep: OnboardingNoteStep = OnboardingNoteStep.None
+    private val mainBinding by lazy { binding.vMain }
 
     private lateinit var btnRefreshBalanceWidget: RefreshBalanceWidget
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        postponeEnterTransition()
-    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         addBackPressHandler(this)
 
-        binding.onboardingTopContainer.imvFrontCard.transitionName = ShareElement.imvFrontCard
-        startPostponedEnterTransition()
+        mainBinding.onboardingTopContainer.imvFrontCard.transitionName = ShareElement.imvFrontCard
 
         binding.toolbar.setTitle(R.string.onboarding_title)
-        btnRefreshBalanceWidget = RefreshBalanceWidget(binding.onboardingTopContainer.onboardingWalletContainer)
+        btnRefreshBalanceWidget = RefreshBalanceWidget(mainBinding.onboardingTopContainer.onboardingWalletContainer)
 
         store.dispatch(OnboardingNoteAction.LoadCardArtwork)
         store.dispatch(OnboardingNoteAction.DetermineStepOfScreen)
@@ -67,7 +57,7 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
     override fun newState(state: OnboardingNoteState) {
         if (activity == null || view == null) return
 
-        binding.onboardingTopContainer.imvFrontCard.load(state.cardArtworkUrl) {
+        mainBinding.onboardingTopContainer.imvFrontCard.load(state.cardArtworkUrl) {
             placeholder(R.drawable.card_placeholder_black)
             error(R.drawable.card_placeholder_black)
             fallback(R.drawable.card_placeholder_black)
@@ -90,7 +80,7 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
     private fun setBalance(state: OnboardingNoteState) {
         if (state.walletBalance.currency.blockchain == Blockchain.Unknown) return
 
-        with (binding.onboardingTopContainer.onboardingTvBalance) {
+        with(mainBinding.onboardingTopContainer.onboardingTvBalance) {
             if (state.balanceCriticalError == null) {
                 val balanceValue = state.walletBalance.value.stripZeroPlainString()
                 tvBalanceValue.text = balanceValue
@@ -102,7 +92,7 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
         }
     }
 
-    private fun setupNoneState() = with(binding.onboardingActionContainer) {
+    private fun setupNoneState() = with(mainBinding.onboardingActionContainer) {
         btnMainAction.isVisible = false
         btnAlternativeAction.isVisible = false
         btnRefreshBalanceWidget.show(false)
@@ -116,7 +106,7 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
     }
 
     private fun setupCreateWalletState(state: OnboardingNoteState) =
-        with(binding.onboardingActionContainer) {
+        with(mainBinding.onboardingActionContainer) {
             btnMainAction.setText(R.string.onboarding_create_wallet_button_create_wallet)
             btnMainAction.setOnClickListener { store.dispatch(OnboardingNoteAction.CreateWallet) }
             btnAlternativeAction.setText(R.string.onboarding_button_what_does_it_mean)
@@ -127,15 +117,15 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
             tvHeader.setText(R.string.onboarding_create_wallet_header)
             tvBody.setText(R.string.onboarding_create_wallet_body)
 
-            binding.onboardingTopContainer.imvCardBackground.setBackgroundDrawable(
-                requireContext().getDrawableCompat(R.drawable.shape_circle)
+            mainBinding.onboardingTopContainer.imvCardBackground.setBackgroundDrawable(
+                requireContext().getDrawableCompat(R.drawable.shape_circle),
             )
             updateConstraints(state.currentStep, R.layout.lp_onboarding_create_wallet)
 
             btnAlternativeAction.isVisible = false // temporary
         }
 
-    private fun setupTopUpWalletState(state: OnboardingNoteState) = with(binding.onboardingActionContainer) {
+    private fun setupTopUpWalletState(state: OnboardingNoteState) = with(mainBinding.onboardingActionContainer) {
         if (state.isBuyAllowed) {
             btnMainAction.setText(R.string.onboarding_top_up_button_but_crypto)
             btnMainAction.setOnClickListener {
@@ -163,7 +153,7 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
             state.walletBalance.amountToCreateAccount?.let { amount ->
                 val tvBodyMessage = getString(
                     R.string.onboarding_top_up_body_no_account_error,
-                    amount, state.walletBalance.currency.currencySymbol
+                    amount, state.walletBalance.currency.currencySymbol,
                 )
                 tvBody.text = tvBodyMessage
             }
@@ -175,12 +165,13 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
                 store.dispatch(OnboardingNoteAction.Balance.Update)
             }
         }
-        binding.onboardingTopContainer.imvCardBackground
-            .setBackgroundDrawable(requireContext().getDrawableCompat(R.drawable.shape_rectangle_rounded_8))
+
+        val drawable = requireContext().getDrawableCompat(R.drawable.shape_rectangle_rounded_8)
+        mainBinding.onboardingTopContainer.imvCardBackground.setBackgroundDrawable(drawable)
         updateConstraints(state.currentStep, R.layout.lp_onboarding_topup_wallet)
     }
 
-    private fun setupDoneState(state: OnboardingNoteState) = with(binding.onboardingActionContainer) {
+    private fun setupDoneState(state: OnboardingNoteState) = with(mainBinding.onboardingActionContainer) {
         btnMainAction.setText(R.string.onboarding_done_button_continue)
         btnMainAction.setOnClickListener {
             showConfetti(false)
@@ -188,15 +179,15 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
         }
 
         btnAlternativeAction.isVisible = false
-        btnAlternativeAction.setText("")
+        btnAlternativeAction.text = ""
         btnAlternativeAction.setOnClickListener { }
         btnRefreshBalanceWidget.mainView.setOnClickListener(null)
 
         tvHeader.setText(R.string.onboarding_done_header)
         tvBody.setText(R.string.onboarding_done_body)
 
-        binding.onboardingTopContainer.imvCardBackground.setBackgroundDrawable(
-            requireContext().getDrawableCompat(R.drawable.shape_rectangle_rounded_8)
+        mainBinding.onboardingTopContainer.imvCardBackground.setBackgroundDrawable(
+            requireContext().getDrawableCompat(R.drawable.shape_rectangle_rounded_8),
         )
         updateConstraints(state.currentStep, R.layout.lp_onboarding_done_activation)
     }
@@ -204,7 +195,7 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
     private fun updateConstraints(currentStep: OnboardingNoteStep, @LayoutRes layoutId: Int) {
         if (this.previousStep == currentStep) return
 
-        with(binding.onboardingTopContainer) {
+        with(mainBinding.onboardingTopContainer) {
             val constraintSet = ConstraintSet()
             constraintSet.clone(requireContext(), layoutId)
             constraintSet.applyTo(onboardingWalletContainer)
@@ -212,14 +203,5 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
             transition.interpolator = OvershootInterpolator()
             TransitionManager.beginDelayedTransition(onboardingWalletContainer, transition)
         }
-    }
-}
-
-fun ImageView.swapToBitmapDrawable(bitmap: Bitmap?, duration: Long = 200) {
-    if (drawable is BitmapDrawable && (drawable as BitmapDrawable).bitmap == bitmap) return
-
-    fadeOut(duration) {
-        setImageBitmap(bitmap)
-        fadeIn(duration)
     }
 }
