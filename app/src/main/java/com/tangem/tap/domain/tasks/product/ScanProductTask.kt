@@ -36,6 +36,8 @@ import com.tangem.tap.domain.extensions.isMultiwalletAllowed
 import com.tangem.tap.domain.tokens.UserTokensRepository
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.preferencesStorage
+import com.tangem.tap.scope
+import kotlinx.coroutines.launch
 
 class ScanProductTask(
     val card: Card? = null,
@@ -183,43 +185,45 @@ private class ScanWalletProcessor(
         session: CardSession,
         callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
-        val productType = when(card.isSaltPay){
+        val productType = when (card.isSaltPay) {
             true -> ProductType.SaltPay
             else -> ProductType.Wallet
         }
-        val derivations = collectDerivations(card)
-        if (derivations.isEmpty() || !card.settings.isHDWalletAllowed) {
-            callback(
-                CompletionResult.Success(
-                    ScanResponse(
-                        card = card,
-                        productType = productType,
-                        walletData = session.environment.walletData,
-                        primaryCard = primaryCard,
+        scope.launch {
+            val derivations = collectDerivations(card)
+            if (derivations.isEmpty() || !card.settings.isHDWalletAllowed) {
+                callback(
+                    CompletionResult.Success(
+                        ScanResponse(
+                            card = card,
+                            productType = productType,
+                            walletData = session.environment.walletData,
+                            primaryCard = primaryCard,
+                        ),
                     ),
-                ),
-            )
-            return
-        }
+                )
+                return@launch
+            }
 
-        DeriveMultipleWalletPublicKeysTask(derivations).run(session) { result ->
-            when (result) {
-                is CompletionResult.Success -> {
-                    val response = ScanResponse(
-                        card = card,
-                        productType = productType,
-                        walletData = session.environment.walletData,
-                        derivedKeys = result.data.entries,
-                        primaryCard = primaryCard,
-                    )
-                    callback(CompletionResult.Success(response))
+            DeriveMultipleWalletPublicKeysTask(derivations).run(session) { result ->
+                when (result) {
+                    is CompletionResult.Success -> {
+                        val response = ScanResponse(
+                            card = card,
+                            productType = productType,
+                            walletData = session.environment.walletData,
+                            derivedKeys = result.data.entries,
+                            primaryCard = primaryCard,
+                        )
+                        callback(CompletionResult.Success(response))
+                    }
+                    is CompletionResult.Failure -> callback(CompletionResult.Failure(result.error))
                 }
-                is CompletionResult.Failure -> callback(CompletionResult.Failure(result.error))
             }
         }
     }
 
-    private fun getBlockchainsToDerive(card: Card): List<BlockchainNetwork> {
+    private suspend fun getBlockchainsToDerive(card: Card): List<BlockchainNetwork> {
         val userTokensRepository = userTokensRepository ?: return emptyList()
         val blockchainsToDerive = userTokensRepository.loadBlockchainsToDerive(card).toMutableList().ifEmpty {
             mutableListOf(
@@ -253,7 +257,7 @@ private class ScanWalletProcessor(
         return blockchainsToDerive.distinct()
     }
 
-    private fun collectDerivations(card: Card): Map<ByteArrayKey, List<DerivationPath>> {
+    private suspend fun collectDerivations(card: Card): Map<ByteArrayKey, List<DerivationPath>> {
         val blockchains = getBlockchainsToDerive(card)
         val derivations = mutableMapOf<ByteArrayKey, List<DerivationPath>>()
 
