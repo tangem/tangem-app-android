@@ -24,17 +24,13 @@ import com.tangem.wallet.R
  */
 class OnboardingOtherCardsFragment : BaseOnboardingFragment<OnboardingOtherCardsState>() {
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        postponeEnterTransition()
-    }
+    private val mainBinding by lazy { binding.vMain }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         addBackPressHandler(this)
 
-        binding.onboardingTopContainer.imvFrontCard.transitionName = ShareElement.imvFrontCard
-        startPostponedEnterTransition()
+        mainBinding.onboardingTopContainer.imvFrontCard.transitionName = ShareElement.imvFrontCard
 
         binding.toolbar.setTitle(R.string.onboarding_title)
         store.dispatch(OnboardingOtherCardsAction.LoadCardArtwork)
@@ -54,7 +50,7 @@ class OnboardingOtherCardsFragment : BaseOnboardingFragment<OnboardingOtherCards
         if (activity == null || view == null) return
         if (state.currentStep == OnboardingOtherCardsStep.None) return
 
-        binding.onboardingTopContainer.imvFrontCard.load(state.cardArtworkUrl) {
+        mainBinding.onboardingTopContainer.imvFrontCard.load(state.cardArtworkUrl) {
             placeholder(R.drawable.card_placeholder_black)
             error(R.drawable.card_placeholder_black)
             fallback(R.drawable.card_placeholder_black)
@@ -70,29 +66,25 @@ class OnboardingOtherCardsFragment : BaseOnboardingFragment<OnboardingOtherCards
         showConfetti(state.showConfetti)
     }
 
-    private fun setupCreateWalletState() = with(binding) {
+    private fun setupCreateWalletState() = with(mainBinding.onboardingActionContainer) {
+        btnMainAction.setText(R.string.onboarding_create_wallet_button_create_wallet)
+        btnMainAction.setOnClickListener { store.dispatch(OnboardingOtherCardsAction.CreateWallet) }
+        btnAlternativeAction.setText(R.string.onboarding_button_what_does_it_mean)
+        btnAlternativeAction.setOnClickListener { }
 
-        with(onboardingActionContainer) {
-            btnMainAction.setText(R.string.onboarding_create_wallet_button_create_wallet)
-            btnMainAction.setOnClickListener { store.dispatch(OnboardingOtherCardsAction.CreateWallet) }
-            btnAlternativeAction.setText(R.string.onboarding_button_what_does_it_mean)
-            btnAlternativeAction.setOnClickListener { }
+        tvHeader.setText(R.string.onboarding_create_wallet_header)
+        tvBody.setText(R.string.onboarding_create_wallet_body)
 
-            tvHeader.setText(R.string.onboarding_create_wallet_header)
-            tvBody.setText(R.string.onboarding_create_wallet_body)
+        btnAlternativeAction.isVisible = false // temporary
 
-            btnAlternativeAction.isVisible = false // temporary
-        }
-
-
-        binding.onboardingTopContainer.imvCardBackground.setBackgroundDrawable(
-            requireContext().getDrawableCompat(R.drawable.shape_circle)
+        mainBinding.onboardingTopContainer.imvCardBackground.setBackgroundDrawable(
+            requireContext().getDrawableCompat(R.drawable.shape_circle),
         )
         updateConstraints(R.layout.lp_onboarding_create_wallet)
 
     }
 
-    private fun setupDoneState() = with(binding.onboardingActionContainer) {
+    private fun setupDoneState() = with(mainBinding.onboardingActionContainer) {
         btnMainAction.setText(R.string.onboarding_done_button_continue)
         btnMainAction.setOnClickListener {
             showConfetti(false)
@@ -106,20 +98,18 @@ class OnboardingOtherCardsFragment : BaseOnboardingFragment<OnboardingOtherCards
         tvHeader.setText(R.string.onboarding_done_header)
         tvBody.setText(R.string.onboarding_done_body)
 
-        binding.onboardingTopContainer.imvCardBackground?.setBackgroundDrawable(
-            requireContext().getDrawableCompat(R.drawable.shape_rectangle_rounded_8)
+        mainBinding.onboardingTopContainer.imvCardBackground?.setBackgroundDrawable(
+            requireContext().getDrawableCompat(R.drawable.shape_rectangle_rounded_8),
         )
         updateConstraints(R.layout.lp_onboarding_done)
     }
 
-    private fun updateConstraints(@LayoutRes layoutId: Int) {
-        with(binding.onboardingTopContainer) {
-            val constraintSet = ConstraintSet()
-            constraintSet.clone(requireContext(), layoutId)
-            constraintSet.applyTo(onboardingWalletContainer)
-            val transition = InternalNoteLayoutTransition()
-            transition.interpolator = OvershootInterpolator()
-            TransitionManager.beginDelayedTransition(onboardingWalletContainer, transition)
-        }
+    private fun updateConstraints(@LayoutRes layoutId: Int) = with(mainBinding.onboardingTopContainer) {
+        val constraintSet = ConstraintSet()
+        constraintSet.clone(requireContext(), layoutId)
+        constraintSet.applyTo(onboardingWalletContainer)
+        val transition = InternalNoteLayoutTransition()
+        transition.interpolator = OvershootInterpolator()
+        TransitionManager.beginDelayedTransition(onboardingWalletContainer, transition)
     }
 }
