@@ -27,29 +27,9 @@
 
     </com.google.android.material.appbar.AppBarLayout>
 
-    <androidx.appcompat.widget.LinearLayoutCompat
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:clipChildren="false"
-        android:orientation="vertical"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
-
-        <include
-            android:id="@+id/onboarding_top_container"
-            layout="@layout/layout_onboarding_container_top"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="@dimen/home_top_weight"
-            android:clipChildren="false" />
-
-        <include
-            android:id="@+id/onboarding_action_container"
-            layout="@layout/layout_onboarding_container_bottom"
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="@dimen/home_bottom_weight" />
-
-    </androidx.appcompat.widget.LinearLayoutCompat>
+    <include
+        android:id="@+id/v_main"
+        layout="@layout/layout_onboarding_main" />
 
     <include
         android:id="@+id/v_confetti"
