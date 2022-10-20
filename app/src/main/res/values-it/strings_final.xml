@@ -141,4 +141,5 @@
     <string name="onboarding_saltpay_title_prepare_origin">Prepare the SaltPay card</string>
     <string name="onboarding_saltpay_button_backup_origin">Tap the SaltPay card</string>
     <string name="onboarding_saltpay_title_backup_card">Tap the Tangem card</string>
+    <string name="onboarding_chat_button_title">Support</string>
 </resources>
