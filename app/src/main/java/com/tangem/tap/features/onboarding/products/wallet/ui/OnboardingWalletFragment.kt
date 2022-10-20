@@ -9,8 +9,8 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.ProgressBar
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.MenuProvider
 import androidx.core.view.children
-import androidx.fragment.app.Fragment
 import androidx.transition.TransitionInflater
 import androidx.transition.TransitionManager
 import by.kirich1409.viewbindingdelegate.viewBinding
@@ -39,8 +39,10 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.common.toggleWidget.IndeterminateProgressButtonWidget
+import com.tangem.tap.features.BaseFragment
 import com.tangem.tap.features.FragmentOnBackPressedHandler
 import com.tangem.tap.features.addBackPressHandler
+import com.tangem.tap.features.onboarding.OnboardingMenuProvider
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupState
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupStep
@@ -61,7 +63,7 @@ import com.tangem.wallet.databinding.LayoutOnboardingSaltpayBinding
 import com.tangem.wallet.databinding.ViewOnboardingProgressBinding
 import org.rekotlin.StoreSubscriber
 
-class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
+class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_wallet),
     StoreSubscriber<OnboardingWalletState>, FragmentOnBackPressedHandler {
 
     private val pbBinding: ViewOnboardingProgressBinding by viewBinding(ViewOnboardingProgressBinding::bind)
@@ -75,10 +77,7 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
 
     private lateinit var animator: BackupAnimator
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        setHasOptionsMenu(true)
-
+    override fun configureTransitions() {
         val inflater = TransitionInflater.from(requireContext())
         enterTransition = inflater.inflateTransition(R.transition.fade)
         exitTransition = inflater.inflateTransition(R.transition.fade)
@@ -107,6 +106,8 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
         store.dispatch(OnboardingWalletAction.StartSaltPayCardActivation)
         store.dispatch(OnboardingWalletAction.LoadArtwork)
     }
+
+    override fun loadToolbarMenu(): MenuProvider? = OnboardingMenuProvider()
 
     private fun reInitCardsWidget(backupCardsCounts: Int) = with(binding) {
         val viewBackupCount = flCardsContainer.childCount - 1
@@ -138,6 +139,7 @@ class OnboardingWalletFragment : Fragment(R.layout.fragment_onboarding_wallet),
             WalletBackupAnimator(cardsWidget)
         }
     }
+
 
     override fun onStart() {
         super.onStart()
