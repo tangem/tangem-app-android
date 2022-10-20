@@ -97,8 +97,7 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
                 return
             }
 
-            val scanResponse = globalState.onboardingState.onboardingManager?.scanResponse
-                ?: globalState.scanResponse
+            val scanResponse = globalState.scanResponse ?: globalState.onboardingState.onboardingManager?.scanResponse
 
             // if config not set -> try to get it based on a scanResponse.productType
             val unsafeZendeskConfig = action.zendeskConfig ?: when {
