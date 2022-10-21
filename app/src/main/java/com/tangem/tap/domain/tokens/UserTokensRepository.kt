@@ -36,7 +36,7 @@ class UserTokensRepository(
 
         return when (val networkResult = networkService.getUserTokens(userId)) {
             is Result.Success -> {
-                val tokens = networkResult.data.tokens.map { Currency.fromTokenResponse(it) }
+                val tokens = networkResult.data.tokens.mapNotNull { Currency.fromTokenResponse(it) }
                 storageService.saveUserTokens(card.getUserId(), tokens.toUserTokensResponse())
                 tokens
             }
