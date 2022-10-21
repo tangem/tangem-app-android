@@ -20,7 +20,7 @@ class UserTokensStorageService(
     fun getUserTokens(userId: String): List<Currency>? {
         return try {
             val json = fileReader.readFile(getFileNameForUserTokens(userId))
-            userTokensAdapter.fromJson(json)?.tokens?.map { Currency.fromTokenResponse(it) }
+            userTokensAdapter.fromJson(json)?.tokens?.mapNotNull { Currency.fromTokenResponse(it) }
         } catch (exception: Exception) {
             Log.error { exception.stackTraceToString() }
             null
