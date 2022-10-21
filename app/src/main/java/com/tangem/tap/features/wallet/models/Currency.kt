@@ -110,7 +110,9 @@ sealed interface Currency {
             )
         }
 
-        fun fromTokenResponse(tokenResponse: TokenResponse): Currency {
+        fun fromTokenResponse(tokenResponse: TokenResponse): Currency? {
+            val blockchain = com.tangem.blockchain.common.Blockchain.fromNetworkId(tokenResponse.networkId)
+                ?: return null
             return when {
                 tokenResponse.contractAddress != null -> Token(
                     com.tangem.blockchain.common.Token(
@@ -120,11 +122,11 @@ sealed interface Currency {
                         decimals = tokenResponse.decimals,
                         id = tokenResponse.id,
                     ),
-                    blockchain = com.tangem.blockchain.common.Blockchain.fromNetworkId(tokenResponse.networkId)!!,
+                    blockchain = blockchain,
                     derivationPath = tokenResponse.derivationPath,
                 )
                 else -> Blockchain(
-                    blockchain = com.tangem.blockchain.common.Blockchain.fromNetworkId(tokenResponse.networkId)!!,
+                    blockchain = blockchain,
                     derivationPath = tokenResponse.derivationPath,
                 )
             }
