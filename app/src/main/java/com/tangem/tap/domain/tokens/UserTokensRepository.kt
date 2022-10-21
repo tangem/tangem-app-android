@@ -38,7 +38,7 @@ class UserTokensRepository(
             is Result.Success -> {
                 val tokens = networkResult.data.tokens.mapNotNull { Currency.fromTokenResponse(it) }
                 storageService.saveUserTokens(card.getUserId(), tokens.toUserTokensResponse())
-                tokens
+                tokens.distinct()
             }
             is Result.Failure -> {
                 handleGetUserTokensFailure(card = card, userId = userId, error = networkResult.error)
@@ -97,7 +97,7 @@ class UserTokensRepository(
             }
             else -> {
                 val tokens = storageService.getUserTokens(userId) ?: storageService.getUserTokens(card)
-                tokens
+                tokens.distinct()
             }
         }
     }
