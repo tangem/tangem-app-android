@@ -30,7 +30,7 @@ data class OnboardingWalletState(
         }
 
     fun getMaxProgress(): Int = when {
-        isSaltPay -> 12
+        isSaltPay -> 14
         else -> 6
     }
 
@@ -41,7 +41,6 @@ data class OnboardingWalletState(
                 when (backupState.backupStep) {
                     BackupStep.InitBackup -> 2
                     BackupStep.ScanOriginCard -> 3
-
                     BackupStep.AddBackupCards -> 4
                     BackupStep.EnterAccessCode -> 4
                     BackupStep.ReenterAccessCode -> 4
@@ -52,13 +51,15 @@ data class OnboardingWalletState(
             }
             step == OnboardingWalletStep.SaltPay && isSaltPay -> {
                 when (onboardingSaltPayState!!.step) {
-                    SaltPayRegistrationStep.NoGas -> 1
+                    SaltPayRegistrationStep.None, SaltPayRegistrationStep.NoGas -> 0
                     SaltPayRegistrationStep.NeedPin -> 7
                     SaltPayRegistrationStep.CardRegistration -> 8
                     SaltPayRegistrationStep.KycIntro -> 9
                     SaltPayRegistrationStep.KycStart -> 10
                     SaltPayRegistrationStep.KycWaiting -> 11
-                    SaltPayRegistrationStep.Finished -> getMaxProgress()
+                    SaltPayRegistrationStep.Claim -> 12
+                    SaltPayRegistrationStep.ClaimInProgress -> 13
+                    SaltPayRegistrationStep.ClaimSuccess -> getMaxProgress()
                 }
             }
             step == OnboardingWalletStep.Done -> getMaxProgress()
