@@ -16,7 +16,7 @@
 
     <include
         android:id="@+id/verify_identity"
-        layout="@layout/layout_onboarding_saltpay_verify_identity"
+        layout="@layout/layout_onboarding_saltpay_kyc_start"
         android:visibility="gone" />
 
     <WebView
@@ -28,13 +28,13 @@
         android:visibility="gone" />
 
     <include
-        android:id="@+id/verify_identity_in_progress"
-        layout="@layout/layout_onboarding_saltpay_verify_identity_in_progress"
+        android:id="@+id/kyc_in_progress"
+        layout="@layout/layout_onboarding_saltpay_kyc_in_progress"
         android:visibility="gone" />
 
     <include
         android:id="@+id/claim"
         layout="@layout/layout_onboarding_main"
-        android:visibility="gone"/>
+        android:visibility="gone" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
