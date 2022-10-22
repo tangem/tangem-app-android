@@ -54,7 +54,6 @@ class DialogManager : StoreSubscriber<GlobalState> {
         store.unsubscribe(this)
     }
 
-
     override fun newState(state: GlobalState) {
         if (state.dialog == null) {
             dialog?.dismiss()
@@ -67,6 +66,8 @@ class DialogManager : StoreSubscriber<GlobalState> {
         dialog = when (state.dialog) {
             is AppDialog.SimpleOkDialog -> SimpleOkDialog.create(state.dialog, context)
             is AppDialog.SimpleOkDialogRes -> SimpleOkDialog.create(state.dialog, context)
+            is AppDialog.SimpleOkErrorDialog -> SimpleOkDialog.create(state.dialog, context)
+            is AppDialog.SimpleOkWarningDialog -> SimpleOkDialog.create(state.dialog, context)
             is AppDialog.ScanFailsDialog -> ScanFailsDialog.create(context)
             is AppDialog.AddressInfoDialog -> AddressInfoBottomSheetDialog(state.dialog, context)
             is AppDialog.TestActionsDialog -> TestActionsBottomSheetDialog(state.dialog, context)
@@ -76,16 +77,16 @@ class DialogManager : StoreSubscriber<GlobalState> {
                 SimpleAlertDialog.create(
                     titleRes = R.string.wallet_connect,
                     messageRes = R.string.wallet_connect_scanner_error_no_ethereum_wallet,
-                    context = context
+                    context = context,
                 )
             is WalletConnectDialog.AddNetwork ->
                 SimpleAlertDialog.create(
                     titleRes = R.string.wallet_connect,
                     message = context.getString(
                         R.string.wallet_connect_network_not_found_format,
-                        state.dialog.network
+                        state.dialog.network,
                     ),
-                    context = context
+                    context = context,
                 )
             is WalletConnectDialog.OpeningSessionRejected -> {
                 SimpleAlertDialog.create(
@@ -123,7 +124,7 @@ class DialogManager : StoreSubscriber<GlobalState> {
                 SimpleAlertDialog.create(
                     titleRes = R.string.wallet_connect,
                     messageRes = R.string.wallet_connect_scanner_error_unsupported_network,
-                    context = context
+                    context = context,
                 )
             is BackupDialog.AddMoreBackupCards -> AddMoreBackupCardsDialog.create(context)
             is BackupDialog.BackupInProgress -> BackupInProgressDialog.create(context)
@@ -142,7 +143,7 @@ class DialogManager : StoreSubscriber<GlobalState> {
             is WalletDialog.TokensAreLinkedDialog -> SimpleAlertDialog.create(
                 title = context.getString(state.dialog.titleRes, state.dialog.currencySymbol),
                 message = context.getString(
-                    state.dialog.messageRes, state.dialog.currencySymbol, state.dialog.currencyTitle
+                    state.dialog.messageRes, state.dialog.currencySymbol, state.dialog.currencyTitle,
                 ),
                 context = context,
             )
@@ -151,7 +152,7 @@ class DialogManager : StoreSubscriber<GlobalState> {
                 messageRes = state.dialog.messageRes,
                 context = context,
                 primaryButtonRes = state.dialog.primaryButtonRes,
-                primaryButtonAction = state.dialog.onOk
+                primaryButtonAction = state.dialog.onOk,
             )
             is WalletDialog.RussianCardholdersWarningDialog ->
                 RussianCardholdersWarningBottomSheetDialog(context)
