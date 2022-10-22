@@ -20,6 +20,7 @@ import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.getDrawableCompat
 import com.tangem.tap.common.extensions.hide
+import com.tangem.tap.common.extensions.setDrawable
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.extensions.stop
 import com.tangem.tap.common.extensions.toFormattedCurrencyString
@@ -58,12 +59,15 @@ internal class OnboardingSaltPayView(
 
     private val toolbar: MaterialToolbar by lazy { walletFragment.binding.toolbar }
     private val claimBinding: LayoutOnboardingMainBinding by lazy { walletFragment.bindingSaltPay.claim }
+    private val topContainer: LayoutOnboardingContainerTopBinding by lazy { claimBinding.onboardingTopContainer }
+    private val actionContainer: LayoutOnboardingContainerBottomBinding by lazy { claimBinding.onboardingActionContainer }
 
     private val btnRefreshBalanceWidget by lazy {
         RefreshBalanceWidget(claimBinding.onboardingTopContainer.onboardingWalletContainer)
     }
 
     private var progressButton: SaltPayProgressButton? = null
+    private var previousStep: SaltPayRegistrationStep = SaltPayRegistrationStep.None
 
     fun newState(state: OnboardingWalletState) {
         handleCardArtworks(state)
@@ -135,9 +139,10 @@ internal class OnboardingSaltPayView(
             SaltPayRegistrationStep.KycIntro -> handleKycIntro()
             SaltPayRegistrationStep.KycStart -> handleKycStart(state)
             SaltPayRegistrationStep.KycWaiting -> handleKycWaiting()
+            SaltPayRegistrationStep.KycReject -> handleKycReject()
             SaltPayRegistrationStep.Claim -> handleClaim(state)
             SaltPayRegistrationStep.ClaimInProgress -> handleClaim(state)
-            SaltPayRegistrationStep.ClaimSuccess -> handleClaim(state)
+            SaltPayRegistrationStep.Finished -> handleClaim(state)
         }
         progressButton?.changeState(state.mainButtonState)
     }
@@ -204,22 +209,41 @@ internal class OnboardingSaltPayView(
         }
     }
 
-    private fun handleKycWaiting() = with(walletFragment.bindingSaltPay) {
-        toolbar.title = getString(R.string.onboarding_navbar_kyc_waiting)
-        showOnlyView(verifyIdentityInProgress.root) {
-            progressButton = SaltPayProgressButton(verifyIdentityInProgress.root)
-            verifyIdentityInProgress.btnOpenSupportChat.setOnClickListener {
-                store.dispatch(GlobalAction.OpenChat(SupportInfo()))
-            }
-            verifyIdentityInProgress.btnRefresh.setOnClickListener {
-                store.dispatch(OnboardingSaltPayAction.Update)
-            }
+    private fun handleKycWaiting() = with(walletFragment.bindingSaltPay.kycInProgress) {
+        toolbar.title = getString(R.string.onboarding_navbar_kyc_progress)
+        showOnlyView(root)
+
+        imvInProgress.setDrawable(R.drawable.ic_in_progress)
+        tvHeader.text = getString(R.string.onboarding_title_kyc_waiting)
+        tvBody.text = getString(R.string.onboarding_subtitle_kyc_waiting)
+
+        btnOpenSupportChat.hide()
+        btnOpenSupportChat.setOnClickListener {
+            store.dispatch(GlobalAction.OpenChat(SupportInfo()))
         }
+
+        btnKycAction.text = getString(R.string.onboarding_button_kyc_waiting)
+        btnKycAction.setOnClickListener {
+            store.dispatch(OnboardingSaltPayAction.Update)
+        }
+        progressButton = SaltPayProgressButton(root)
     }
 
-    private val topContainer: LayoutOnboardingContainerTopBinding by lazy { claimBinding.onboardingTopContainer }
-    private val actionContainer: LayoutOnboardingContainerBottomBinding by lazy { claimBinding.onboardingActionContainer }
-    private var previousStep: SaltPayRegistrationStep = SaltPayRegistrationStep.None
+    private fun handleKycReject() = with(walletFragment.bindingSaltPay.kycInProgress) {
+        toolbar.title = getString(R.string.onboarding_navbar_kyc_progress)
+        showOnlyView(root)
+
+        imvInProgress.setDrawable(R.drawable.ic_reject)
+        tvHeader.text = getString(R.string.onboarding_title_kyc_retry)
+        tvBody.text = getString(R.string.onboarding_subtitle_kyc_retry)
+
+        btnOpenSupportChat.hide()
+        btnKycAction.text = getString(R.string.onboarding_button_kyc_start)
+        btnKycAction.setOnClickListener {
+            store.dispatch(OnboardingSaltPayAction.Update)
+        }
+        progressButton = SaltPayProgressButton(root)
+    }
 
     private fun handleClaim(state: OnboardingSaltPayState) = with(walletFragment.bindingSaltPay) {
         toolbar.title = getString(R.string.onboarding_navbar_claim)
@@ -270,7 +294,7 @@ internal class OnboardingSaltPayView(
                 tvBody.text = getString(R.string.onboarding_subtitle_claim_progress)
                 btnMain.text = getString(R.string.onboarding_button_claim)
             }
-            SaltPayRegistrationStep.ClaimSuccess -> {
+            SaltPayRegistrationStep.Finished -> {
                 tvHeader.setText(R.string.common_success)
                 tvBody.setText(R.string.onboarding_subtitle_success_claim)
 
