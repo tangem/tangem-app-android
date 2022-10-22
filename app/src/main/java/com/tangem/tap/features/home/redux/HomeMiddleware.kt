@@ -111,7 +111,8 @@ private fun onScanSuccess(scanResponse: ScanResponse) {
     if (scanResponse.isSaltPay()) {
         if (scanResponse.isSaltPayVisa()) {
             scope.launch {
-                val result = OnboardingSaltPayHelper.isOnboardingCase(scanResponse)
+                val (manager, config) = OnboardingSaltPayState.initDependency(scanResponse)
+                val result = OnboardingSaltPayHelper.isOnboardingCase(scanResponse, manager)
                 delay(500)
                 withMainContext {
                     when (result) {
@@ -119,10 +120,8 @@ private fun onScanSuccess(scanResponse: ScanResponse) {
                             val isOnboardingCase = result.data
                             if (isOnboardingCase) {
                                 store.dispatch(GlobalAction.Onboarding.Start(scanResponse, canSkipBackup = false))
-                                val (manager, config) = OnboardingSaltPayState.initDependency(scanResponse)
                                 store.dispatch(OnboardingSaltPayAction.Init.SetDependencies(manager, config))
                                 store.dispatch(OnboardingSaltPayAction.Update)
-                                // store.dispatch(OnboardingSaltPayAction.Init.DiscardBackupSteps)
                                 navigateTo(AppScreen.OnboardingWallet)
                             } else {
                                 navigateTo(AppScreen.Wallet)
