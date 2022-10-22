@@ -142,4 +142,11 @@
     <string name="onboarding_saltpay_button_backup_origin">Tap the SaltPay card</string>
     <string name="onboarding_saltpay_title_backup_card">Tap the Tangem card</string>
     <string name="onboarding_chat_button_title">Support</string>
+    <string name="onboarding_navbar_claim">Getting started</string>
+    <string name="onboarding_title_claim">Claim %s</string>
+    <string name="onboarding_subtitle_claim">To get started, simply claim wxDAI to your wallet</string>
+    <string name="onboarding_button_claim">Claim</string>
+    <string name="onboarding_subtitle_success_claim">Congratulations! Your first payment crypto card has been activated</string>
+    <string name="onboarding_title_claim_progress">Claiming</string>
+    <string name="onboarding_subtitle_claim_progress">It will take a few seconds</string>
 </resources>
