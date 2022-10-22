@@ -36,9 +36,9 @@ class UserTokensRepository(
 
         return when (val networkResult = networkService.getUserTokens(userId)) {
             is Result.Success -> {
-                val tokens = networkResult.data.tokens.map { Currency.fromTokenResponse(it) }
+                val tokens = networkResult.data.tokens.mapNotNull { Currency.fromTokenResponse(it) }
                 storageService.saveUserTokens(card.getUserId(), tokens.toUserTokensResponse())
-                tokens
+                tokens.distinct()
             }
             is Result.Failure -> {
                 handleGetUserTokensFailure(card = card, userId = userId, error = networkResult.error)
@@ -67,8 +67,10 @@ class UserTokensRepository(
         )
     }
 
-    fun loadBlockchainsToDerive(card: Card): List<BlockchainNetwork> {
-        return storageService.getUserTokens(card.getUserId())?.toBlockchainNetworks() ?: emptyList()
+    suspend fun loadBlockchainsToDerive(card: Card): List<BlockchainNetwork> {
+        return storageService.getUserTokens(card.getUserId())?.toBlockchainNetworks() ?: storageService.getUserTokens(
+            card,
+        ).toBlockchainNetworks()
     }
 
     private fun loadDemoCurrencies(): List<Currency> {
@@ -95,7 +97,7 @@ class UserTokensRepository(
             }
             else -> {
                 val tokens = storageService.getUserTokens(userId) ?: storageService.getUserTokens(card)
-                tokens
+                tokens.distinct()
             }
         }
     }
