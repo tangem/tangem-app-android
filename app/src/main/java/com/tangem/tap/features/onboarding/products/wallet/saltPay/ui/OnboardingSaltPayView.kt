@@ -2,26 +2,34 @@ package com.tangem.tap.features.onboarding.products.wallet.saltPay.ui
 
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.OvershootInterpolator
 import android.widget.ProgressBar
+import androidx.annotation.LayoutRes
+import androidx.annotation.StringRes
+import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.view.children
+import androidx.transition.TransitionManager
 import coil.load
 import coil.size.Scale
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButton
 import com.tangem.common.extensions.guard
 import com.tangem.tap.common.compose.PinCodeWidget
-import com.tangem.tap.common.extensions.beginDelayedTransition
 import com.tangem.tap.common.extensions.configureSettings
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchDialogShow
+import com.tangem.tap.common.extensions.getDrawableCompat
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.extensions.stop
+import com.tangem.tap.common.extensions.toFormattedCurrencyString
 import com.tangem.tap.common.feedback.SupportInfo
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.common.toggleWidget.IndeterminateProgressButtonWidget
+import com.tangem.tap.common.toggleWidget.RefreshBalanceWidget
+import com.tangem.tap.common.transitions.InternalNoteLayoutTransition
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupState
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupStep
 import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletAction
@@ -34,8 +42,12 @@ import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.Onboardi
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayState
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.SaltPayRegistrationStep
 import com.tangem.tap.features.onboarding.products.wallet.ui.OnboardingWalletFragment
+import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.store
 import com.tangem.wallet.R
+import com.tangem.wallet.databinding.LayoutOnboardingContainerBottomBinding
+import com.tangem.wallet.databinding.LayoutOnboardingContainerTopBinding
+import com.tangem.wallet.databinding.LayoutOnboardingMainBinding
 
 /**
 [REDACTED_AUTHOR]
@@ -45,6 +57,11 @@ internal class OnboardingSaltPayView(
 ) {
 
     private val toolbar: MaterialToolbar by lazy { walletFragment.binding.toolbar }
+    private val claimBinding: LayoutOnboardingMainBinding by lazy { walletFragment.bindingSaltPay.claim }
+
+    private val btnRefreshBalanceWidget by lazy {
+        RefreshBalanceWidget(claimBinding.onboardingTopContainer.onboardingWalletContainer)
+    }
 
     private var progressButton: SaltPayProgressButton? = null
 
@@ -86,11 +103,6 @@ internal class OnboardingSaltPayView(
         //     walletFragment.loadImageIntoImageView(state.onboardingSaltPayState.saltPayCardArtworkUrl, imvFrontCard)
         // }
         // walletFragment.loadImageIntoImageView(state.cardArtworkUrl, imvFirstBackupCard)
-
-        //TODO: at now we can hide the image only by changing alpha channel to 0, because
-        // the OnboardingWalletFragment and WalletCardsWidget manipulate it visibility through changing
-        // View.VISIBILITY states.
-        // imvSecondBackupCard.alpha = 0f
     }
 
     fun showAddBackupCards(state: BackupState) = with(walletFragment.binding) {
@@ -123,10 +135,9 @@ internal class OnboardingSaltPayView(
             SaltPayRegistrationStep.KycIntro -> handleKycIntro()
             SaltPayRegistrationStep.KycStart -> handleKycStart(state)
             SaltPayRegistrationStep.KycWaiting -> handleKycWaiting()
-            // SaltPayRegistrationStep.Claim -> handleKycWaiting()
-            // SaltPayRegistrationStep.ClaimInProgress -> handleKycWaiting()
-            // SaltPayRegistrationStep.ClaimSuccess -> handleKycWaiting()
-            SaltPayRegistrationStep.Finished -> handleFinished()
+            SaltPayRegistrationStep.Claim -> handleClaim(state)
+            SaltPayRegistrationStep.ClaimInProgress -> handleClaim(state)
+            SaltPayRegistrationStep.ClaimSuccess -> handleClaim(state)
         }
         progressButton?.changeState(state.mainButtonState)
     }
@@ -138,7 +149,7 @@ internal class OnboardingSaltPayView(
     }
 
     private fun handleNeedPin() = with(walletFragment.bindingSaltPay) {
-        toolbar.title = walletFragment.getString(R.string.onboarding_navbar_pin)
+        toolbar.title = getString(R.string.onboarding_navbar_pin)
         showOnlyView(pinCode.root) {
             progressButton = SaltPayProgressButton(pinCode.root)
             progressButton?.mainView?.isEnabled = false
@@ -157,7 +168,7 @@ internal class OnboardingSaltPayView(
     }
 
     private fun handleCardRegistration() = with(walletFragment.bindingSaltPay) {
-        toolbar.title = walletFragment.getString(R.string.onboarding_navbar_register_wallet)
+        toolbar.title = getString(R.string.onboarding_navbar_register_wallet)
         showOnlyView(connectCard.root) {
             progressButton = SaltPayProgressButton(connectCard.root)
             connectCard.btnConnect.setOnClickListener {
@@ -167,17 +178,17 @@ internal class OnboardingSaltPayView(
     }
 
     private fun handleKycIntro() = with(walletFragment.bindingSaltPay) {
-        toolbar.title = walletFragment.getString(R.string.onboarding_navbar_kyc_start)
+        toolbar.title = getString(R.string.onboarding_navbar_kyc_start)
         showOnlyView(verifyIdentity.root) {
             progressButton = SaltPayProgressButton(verifyIdentity.root)
             verifyIdentity.btnVerify.setOnClickListener {
-                store.dispatch(OnboardingSaltPayAction.KYCStart)
+                store.dispatch(OnboardingSaltPayAction.OpenUtorgKYC)
             }
         }
     }
 
     private fun handleKycStart(state: OnboardingSaltPayState) = with(walletFragment.bindingSaltPay) {
-        toolbar.title = walletFragment.getString(R.string.onboarding_navbar_kyc_start)
+        toolbar.title = getString(R.string.onboarding_navbar_kyc_start)
         showOnlyView(webvVerifyIdentity) {
             progressButton = null
             webvVerifyIdentity.configureSettings()
@@ -185,7 +196,7 @@ internal class OnboardingSaltPayView(
                 successUrl = state.saltPayManager.kycUrlProvider.doneUrl,
                 onSuccess = {
                     webvVerifyIdentity.stop()
-                    store.dispatch(OnboardingSaltPayAction.OnFinishKYC)
+                    store.dispatch(OnboardingSaltPayAction.UtorgKYCRedirectSuccess)
                 },
             )
             webvVerifyIdentity.webChromeClient = UtorgWebChromeClient(walletFragment.requireActivity())
@@ -194,7 +205,7 @@ internal class OnboardingSaltPayView(
     }
 
     private fun handleKycWaiting() = with(walletFragment.bindingSaltPay) {
-        toolbar.title = walletFragment.getString(R.string.onboarding_navbar_kyc_waiting)
+        toolbar.title = getString(R.string.onboarding_navbar_kyc_waiting)
         showOnlyView(verifyIdentityInProgress.root) {
             progressButton = SaltPayProgressButton(verifyIdentityInProgress.root)
             verifyIdentityInProgress.btnOpenSupportChat.setOnClickListener {
@@ -206,56 +217,105 @@ internal class OnboardingSaltPayView(
         }
     }
 
-    // private fun setupTopUpWalletState(state: OnboardingNoteState) = with(binding.onboardingActionContainer) {
-    //     if (state.isBuyAllowed) {
-    //         btnMainAction.setText(com.tangem.wallet.R.string.onboarding_top_up_button_but_crypto)
-    //         btnMainAction.setOnClickListener {
-    //             com.tangem.tap.store.dispatch(com.tangem.tap.features.onboarding.products.note.redux.OnboardingNoteAction.TopUp)
-    //         }
-    //
-    //         btnAlternativeAction.isVisible = true
-    //         btnAlternativeAction.setText(com.tangem.wallet.R.string.onboarding_top_up_button_show_wallet_address)
-    //         btnAlternativeAction.setOnClickListener {
-    //             com.tangem.tap.store.dispatch(com.tangem.tap.features.onboarding.products.note.redux.OnboardingNoteAction.ShowAddressInfoDialog)
-    //         }
-    //     } else {
-    //         btnMainAction.setText(com.tangem.wallet.R.string.onboarding_button_receive_crypto)
-    //         btnMainAction.setOnClickListener {
-    //             com.tangem.tap.store.dispatch(com.tangem.tap.features.onboarding.products.note.redux.OnboardingNoteAction.ShowAddressInfoDialog)
-    //         }
-    //
-    //         btnAlternativeAction.isVisible = false
-    //     }
-    //
-    //     tvHeader.setText(com.tangem.wallet.R.string.onboarding_top_up_header)
-    //     if (state.balanceNonCriticalError == null) {
-    //         tvBody.setText(com.tangem.wallet.R.string.onboarding_top_up_body)
-    //     } else {
-    //         state.walletBalance.amountToCreateAccount?.let { amount ->
-    //             val tvBodyMessage = getString(
-    //                 com.tangem.wallet.R.string.onboarding_top_up_body_no_account_error,
-    //                 amount, state.walletBalance.currency.currencySymbol,
-    //             )
-    //             tvBody.text = tvBodyMessage
-    //         }
-    //     }
-    //
-    //     btnRefreshBalanceWidget.changeState(state.walletBalance.state)
-    //     if (btnRefreshBalanceWidget.isShowing != true) {
-    //         btnRefreshBalanceWidget.mainView.setOnClickListener {
-    //             com.tangem.tap.store.dispatch(com.tangem.tap.features.onboarding.products.note.redux.OnboardingNoteAction.Balance.Update)
-    //         }
-    //     }
-    //     binding.onboardingTopContainer.imvCardBackground
-    //         .setBackgroundDrawable(requireContext().getDrawableCompat(com.tangem.wallet.R.drawable.shape_rectangle_rounded_8))
-    //     updateConstraints(state.currentStep, com.tangem.wallet.R.layout.lp_onboarding_topup_wallet)
-    // }
+    private val topContainer: LayoutOnboardingContainerTopBinding by lazy { claimBinding.onboardingTopContainer }
+    private val actionContainer: LayoutOnboardingContainerBottomBinding by lazy { claimBinding.onboardingActionContainer }
+    private var previousStep: SaltPayRegistrationStep = SaltPayRegistrationStep.None
 
-    private fun handleFinished() {
-        walletFragment.binding.onboardingRoot.beginDelayedTransition()
-        walletFragment.bindingSaltPay.onboardingSaltpayContainer.hide()
-        walletFragment.binding.onboardingWalletContainer.show()
-        walletFragment.showSuccess()
+    private fun handleClaim(state: OnboardingSaltPayState) = with(walletFragment.bindingSaltPay) {
+        toolbar.title = getString(R.string.onboarding_navbar_claim)
+        val btnMain = actionContainer.btnContainer.findViewById<MaterialButton>(R.id.btn_main_action)
+        val tvHeader = actionContainer.tvHeader
+        val tvBody = actionContainer.tvBody
+
+        showOnlyView(claimBinding.root) {
+            // topContainer.progress.pbState.hide()
+            progressButton = SaltPayProgressButton(actionContainer.root)
+            topContainer.imvCardBackground.apply {
+                setBackgroundDrawable(context.getDrawableCompat(R.drawable.shape_rectangle_rounded_8))
+            }
+            topContainer.imvFrontCard.load(R.drawable.img_salt_pay_visa) {
+                scale(Scale.FILL)
+                crossfade(enable = true)
+            }
+            actionContainer.btnAlternativeAction.hide()
+            updateConstraints(state.step, R.layout.lp_onboarding_topup_wallet)
+        }
+
+        btnRefreshBalanceWidget.changeState(if (state.claimInProgress) ProgressState.Loading else ProgressState.Done)
+        if (btnRefreshBalanceWidget.isShowing != true) {
+            btnRefreshBalanceWidget.mainView.setOnClickListener {
+                store.dispatch(OnboardingSaltPayAction.RefreshClaim)
+            }
+        }
+        val tokenAmountString = tokenAmountString(state)
+        topContainer.onboardingTvBalance.tvBalanceValue.text = tokenAmountString ?: ""
+        topContainer.onboardingTvBalance.tvBalanceCurrency.text = ""
+
+        when (state.step) {
+            SaltPayRegistrationStep.Claim -> {
+                btnRefreshBalanceWidget.mainView.hide()
+                claimValueString(state)?.let {
+                    tvHeader.text = getString(R.string.onboarding_title_claim, it)
+                }
+                tvBody.text = getString(R.string.onboarding_subtitle_claim)
+
+                btnMain.text = getString(R.string.onboarding_button_claim)
+                btnMain.setOnClickListener {
+                    store.dispatch(OnboardingSaltPayAction.Claim)
+                }
+            }
+            SaltPayRegistrationStep.ClaimInProgress -> {
+                btnRefreshBalanceWidget.mainView.show()
+                tvHeader.text = getString(R.string.onboarding_title_claim_progress)
+                tvBody.text = getString(R.string.onboarding_subtitle_claim_progress)
+                btnMain.text = getString(R.string.onboarding_button_claim)
+            }
+            SaltPayRegistrationStep.ClaimSuccess -> {
+                tvHeader.setText(R.string.common_success)
+                tvBody.setText(R.string.onboarding_subtitle_success_claim)
+
+                btnMain.setText(R.string.onboarding_button_continue_wallet)
+                btnMain.setOnClickListener {
+                    walletFragment.showConfetti(false)
+                    store.dispatch(OnboardingWalletAction.FinishOnboarding)
+                }
+
+                btnRefreshBalanceWidget.mainView.setOnClickListener(null)
+                updateConstraints(state.step, R.layout.lp_onboarding_done_activation)
+                walletFragment.showConfetti(true)
+            }
+            else -> {}
+        }
+
+        // need to recreate after any step
+        progressButton = SaltPayProgressButton(actionContainer.root)
+    }
+
+    private fun tokenAmountString(state: OnboardingSaltPayState): String? {
+        return state.tokenAmount.value?.toFormattedCurrencyString(
+            decimals = state.tokenAmount.decimals,
+            currency = state.tokenAmount.currencySymbol,
+        )
+    }
+
+    private fun claimValueString(state: OnboardingSaltPayState): String? {
+        return state.amountToClaim?.value?.toFormattedCurrencyString(
+            decimals = state.amountToClaim.decimals,
+            currency = state.amountToClaim.currencySymbol,
+        )
+    }
+
+    private fun updateConstraints(currentStep: SaltPayRegistrationStep, @LayoutRes layoutId: Int) {
+        if (this.previousStep == currentStep) return
+
+        with(claimBinding.onboardingTopContainer) {
+            val constraintSet = ConstraintSet()
+            constraintSet.clone(root.context, layoutId)
+            constraintSet.applyTo(onboardingWalletContainer)
+            val transition = InternalNoteLayoutTransition()
+            transition.interpolator = OvershootInterpolator()
+            TransitionManager.beginDelayedTransition(onboardingWalletContainer, transition)
+        }
     }
 
     private fun showOnlyView(view: View, onShowListener: (() -> Unit)? = null) {
@@ -263,6 +323,14 @@ internal class OnboardingSaltPayView(
             .filter { it.id != view.id }
             .forEach { it.hide() }
         view.show { onShowListener?.invoke() }
+    }
+
+    private fun getString(@StringRes resId: Int): String {
+        return walletFragment.getString(resId)
+    }
+
+    private fun getString(@StringRes resId: Int, vararg formatArgs: Any?): String {
+        return walletFragment.getString(resId, *formatArgs)
     }
 
     private class SaltPayProgressButton(
