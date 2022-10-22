@@ -1,9 +1,12 @@
 package com.tangem.tap.features.onboarding.products.wallet.saltPay.redux
 
+import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.toHexString
 import com.tangem.common.json.MoshiJsonConverter
+import com.tangem.domain.common.SaltPayWorkaround
 import com.tangem.domain.common.ScanResponse
 import com.tangem.network.api.paymentology.PaymentologyApiService
 import com.tangem.tap.common.toggleWidget.WidgetState
@@ -17,6 +20,7 @@ import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.persistence.SaltPayRegistrationStorage
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.store
+import java.math.BigDecimal
 
 /**
 [REDACTED_AUTHOR]
@@ -27,14 +31,18 @@ data class OnboardingSaltPayState(
     val saltPayConfig: SaltPayConfig = SaltPayConfig.stub(),
     val pinCode: String? = null,
     val accessCode: String? = null,
-    val step: SaltPayRegistrationStep = SaltPayRegistrationStep.NeedPin,
+    val amountToClaim: Amount? = null,
+    val tokenAmount: Amount = Amount(SaltPayWorkaround.tokenFrom(Blockchain.SaltPay), BigDecimal.ZERO),
+    val step: SaltPayRegistrationStep = SaltPayRegistrationStep.None,
     val saltPayCardArtworkUrl: String? = null,
-    val isBusy: Boolean = false,
-    val isTest: Boolean = false,
+    val inProgress: Boolean = false,
+    val claimInProgress: Boolean = false,
 ) {
 
     val mainButtonState: WidgetState
-        get() = if (isBusy) ProgressState.Loading else ProgressState.Done
+        get() = if (inProgress) ProgressState.Loading else ProgressState.Done
+
+    fun readyToClaim(): Boolean = amountToClaim != null
 
     val pinLength: Int = 4
 
@@ -108,11 +116,14 @@ data class OnboardingSaltPayState(
 }
 
 enum class SaltPayRegistrationStep {
+    None,
     NoGas,
     NeedPin,
     CardRegistration,
     KycIntro,
     KycStart,
     KycWaiting,
-    Finished;
+    Claim,
+    ClaimInProgress,
+    ClaimSuccess;
 }

@@ -7,6 +7,7 @@ import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.BlockchainSdkError
+import com.tangem.blockchain.common.TransactionSigner
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
@@ -41,6 +42,8 @@ class GnosisRegistrator(
         Blockchain.SaltPayTestnet -> "0x710BF23486b549836509a08c184cE0188830f197"
         else -> throw IllegalArgumentException("GnosisRegistrator supports only the SaltPay blockchain")
     }
+
+    private val addressTreasureSafe = "0x8e9260a049d3Aa9ac60D0d4F27017320E0e2396B"
 
     private val atomicNonce = AtomicLong()
 
@@ -140,6 +143,21 @@ class GnosisRegistrator(
         ) ?: return Result.Failure(BlockchainSdkError.CustomError("Can't create the 'approval' transaction"))
 
         return Result.Success(compiledEthereumTransaction)
+    }
+
+    suspend fun getAllowance(): Result<Amount> {
+        return walletManager.getAllowance(addressTreasureSafe, token)
+    }
+
+    suspend fun transferFrom(amountToClaim: BigDecimal, signer: TransactionSigner): Result<Unit> {
+        val amount = Amount(token, amountToClaim)
+        val feeAmount = walletManager.getFeeToTransferFrom(amount, addressTreasureSafe)
+            .extractFeeAmount().successOr { return it }
+
+        val transactionData = walletManager.createTransferFromTransaction(amount, feeAmount, addressTreasureSafe)
+        walletManager.transferFrom(transactionData, signer).successOr { return Result.Failure(it.error) }
+
+        return Result.Success(Unit)
     }
 
     private fun Result<List<Amount>>.extractFeeAmount(): Result<Amount> {
