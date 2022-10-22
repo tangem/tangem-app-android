@@ -16,7 +16,7 @@ class OnboardingSaltPayHelper {
 
         suspend fun isOnboardingCase(
             scanResponse: ScanResponse,
-            manager: SaltPayRegistrationManager
+            manager: SaltPayRegistrationManager,
         ): Result<Boolean> {
             return try {
                 val status = manager.updateSaltPayStatus(
@@ -24,7 +24,7 @@ class OnboardingSaltPayHelper {
                     step = SaltPayRegistrationStep.None,
                 ).successOr { return it }
 
-                val isRegistrationCase = status.step != SaltPayRegistrationStep.ClaimSuccess
+                val isRegistrationCase = status.step != SaltPayRegistrationStep.Finished
                 val isBackupCase = scanResponse.card.backupStatus?.isActive == false
                 Result.Success(isRegistrationCase || isBackupCase)
             } catch (ex: Exception) {
