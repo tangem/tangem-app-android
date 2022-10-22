@@ -13,7 +13,7 @@
         android:layout_marginBottom="@dimen/home_bottom_llCompat_margin_bottom"
         android:gravity="center"
         android:orientation="vertical"
-        app:layout_constraintBottom_toTopOf="@+id/fl_scan_card_container"
+        app:layout_constraintBottom_toTopOf="@+id/btn_container"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -39,7 +39,7 @@
             android:layout_marginTop="@dimen/home_bottom_tv_body_margin_top"
             android:layout_marginEnd="@dimen/home_bottom_tv_body_margin_end"
             android:minLines="3"
-            app:layout_constraintBottom_toTopOf="@+id/fl_scan_card_container"
+            app:layout_constraintBottom_toTopOf="@+id/btn_container"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toBottomOf="@+id/tv_header"
@@ -55,14 +55,14 @@
         android:textStyle="bold"
         android:visibility="gone"
         app:buttonTint="@color/accent"
-        app:layout_constraintBottom_toTopOf="@+id/fl_scan_card_container"
+        app:layout_constraintBottom_toTopOf="@+id/btn_container"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/linearLayoutCompat"
         tools:visibility="visible" />
 
     <FrameLayout
-        android:id="@+id/fl_scan_card_container"
+        android:id="@+id/btn_container"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="@dimen/home_bottom_fl_scan_card_container_margin_bottom"
@@ -75,7 +75,7 @@
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_main_action"
             style="@style/OnboardingButton"
-            android:text="@string/home_button_scan" />
+            tools:text="@string/home_button_scan" />
 
         <ProgressBar
             android:id="@+id/progress"
