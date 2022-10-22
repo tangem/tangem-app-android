@@ -149,4 +149,8 @@
     <string name="onboarding_subtitle_success_claim">Congratulations! Your first payment crypto card has been activated</string>
     <string name="onboarding_title_claim_progress">Claiming</string>
     <string name="onboarding_subtitle_claim_progress">It will take a few seconds</string>
+    <string name="onboarding_title_kyc_retry">Something went wrong</string>
+    <string name="onboarding_subtitle_kyc_retry">Please check you email for further instructions</string>
+    <string name="onboarding_exit_alert_title">Do you want to exit the activation process?</string>
+    <string name="onboarding_exit_alert_message">In this case, you will need to start from the beginning.</string>
 </resources>
