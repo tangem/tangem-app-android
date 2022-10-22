@@ -140,4 +140,11 @@
     <string name="onboarding_saltpay_button_backup_origin">Приложите SaltPay карту</string>
     <string name="onboarding_saltpay_title_backup_card">Приложите Tangem карту</string>
     <string name="onboarding_chat_button_title">Чат</string>
+    <string name="onboarding_navbar_claim">Начало работы</string>
+    <string name="onboarding_title_claim">Запросить %s</string>
+    <string name="onboarding_subtitle_claim">Для начала работы просто запросите начисление xDai на свой кошелек</string>
+    <string name="onboarding_button_claim">Запросить</string>
+    <string name="onboarding_subtitle_success_claim">Поздравляем! Ваша платежная крипто карта теперь активирована!</string>
+    <string name="onboarding_title_claim_progress">Запрашивается</string>
+    <string name="onboarding_subtitle_claim_progress">Это займет несколько секунд</string>
 </resources>
