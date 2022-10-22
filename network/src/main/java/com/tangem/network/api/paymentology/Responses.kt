@@ -28,10 +28,21 @@ data class RegistrationResponse(
         val kycProvider: String?,
         @Json(name = "kyc_date")
         val kycDate: String?,
+        @Json(name = "kyc_status")
+        val kycStatus: KYCStatus?,
         @Json(name = "disabled_by_admin")
         val disabledByAdmin: Boolean?,
         val error: String?,
     )
+}
+
+enum class KYCStatus {
+    NOT_STARTED,
+    STARTED,
+    WAITING_FOR_APPROVAL,
+    CORRECTION_REQUESTED,
+    REJECTED,
+    APPROVED,
 }
 
 data class AttestationResponse(
