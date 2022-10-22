@@ -42,8 +42,13 @@ sealed class SaltPayRegistrationError(
     class CardDisabled(message: String?) : SaltPayRegistrationError(9, message)
     class CardNotPassed(message: String?) : SaltPayRegistrationError(10, message)
     object EmptyDynamicAttestResponse : SaltPayRegistrationError(11)
-    object EmptyBackupCardScanned : SaltPayRegistrationError(12) //
-    object WeakPin : SaltPayRegistrationError(13) //
+    object EmptyBackupCardScanned : SaltPayRegistrationError(12)
+    object WeakPin : SaltPayRegistrationError(13)
+
+    object FailedToGetFundsToClaim : SaltPayRegistrationError(14)
+    object NoFundsToClaim : SaltPayRegistrationError(15)
+    object ClaimTransactionFailed : SaltPayRegistrationError(16)
+    object NotClaimed : SaltPayRegistrationError(17)
 
     companion object {
         const val EMPTY_MESSAGE = ""

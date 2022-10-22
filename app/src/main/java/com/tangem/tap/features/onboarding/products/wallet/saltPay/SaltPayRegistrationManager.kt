@@ -2,6 +2,12 @@ package com.tangem.tap.features.onboarding.products.wallet.saltPay
 
 import android.net.Uri
 import com.tangem.blockchain.blockchains.ethereum.SignedEthereumTransaction
+import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.AmountType
+import com.tangem.blockchain.common.TransactionSigner
+import com.tangem.blockchain.extensions.successOr
+import com.tangem.common.extensions.guard
+import com.tangem.common.extensions.isZero
 import com.tangem.common.services.Result
 import com.tangem.domain.common.extensions.successOr
 import com.tangem.network.api.paymentology.AttestationResponse
@@ -11,6 +17,8 @@ import com.tangem.network.api.paymentology.RegisterWalletRequest
 import com.tangem.network.api.paymentology.RegisterWalletResponse
 import com.tangem.network.api.paymentology.RegistrationResponse
 import com.tangem.operations.attestation.AttestWalletKeyResponse
+import com.tangem.tap.common.extensions.safeUpdate
+import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.domain.tokens.UserWalletId
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.message.SaltPayRegistrationError
 import com.tangem.tap.persistence.SaltPayRegistrationStorage
@@ -102,6 +110,38 @@ class SaltPayRegistrationManager(
         )
 
         return result
+    }
+
+    suspend fun getAmountToClaim(): Result<Amount> {
+        val amount = gnosisRegistrator.getAllowance().successOr {
+            return Result.Failure(SaltPayRegistrationError.FailedToGetFundsToClaim)
+        }
+
+        return if (amount.value == null || amount.value?.isZero() == true) {
+            Result.Failure(SaltPayRegistrationError.NoFundsToClaim)
+        } else {
+            Result.Success(amount)
+        }
+    }
+
+    suspend fun claim(amountToClaim: BigDecimal, signer: TransactionSigner): Result<Unit> {
+        val result = gnosisRegistrator.transferFrom(amountToClaim, signer).successOr {
+            return Result.Failure(SaltPayRegistrationError.ClaimTransactionFailed)
+        }
+        return Result.Success(Unit)
+    }
+
+    suspend fun getTokenAmount(): Result<BigDecimal> {
+        val wallet = gnosisRegistrator.walletManager.safeUpdate().successOr { return it }
+        val token = wallet.getFirstToken().guard {
+            throw UnsupportedOperationException()
+        }
+
+        val amountValue = wallet.amounts[AmountType.Token(token)]?.value.guard {
+            throw UnsupportedOperationException()
+        }
+
+        return Result.Success(amountValue)
     }
 
     fun makeRegistrationTask(challenge: ByteArray): SaltPayRegistrationTask {
