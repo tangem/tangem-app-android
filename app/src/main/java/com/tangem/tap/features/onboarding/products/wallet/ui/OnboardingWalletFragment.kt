@@ -169,9 +169,9 @@ class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_walle
     }
 
     private fun setupCreateWalletState() = with(binding) {
-        layoutButtonsCommon.btnMainAction.setText(R.string.onboarding_create_wallet_button_create_wallet)
-        layoutButtonsCommon.btnMainAction.setOnClickListener { store.dispatch(OnboardingWalletAction.CreateWallet) }
-        layoutButtonsCommon.btnAlternativeAction.hide()
+        layoutButtonsCommon.btnWalletMainAction.setText(R.string.onboarding_create_wallet_button_create_wallet)
+        layoutButtonsCommon.btnWalletMainAction.setOnClickListener { store.dispatch(OnboardingWalletAction.CreateWallet) }
+        layoutButtonsCommon.btnWalletAlternativeAction.hide()
 
         toolbar.title = getText(R.string.onboarding_getting_started)
 
@@ -205,12 +205,12 @@ class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_walle
         tabLayoutBackupInfo.show()
 
         with(layoutButtonsCommon) {
-            btnMainAction.text = getText(R.string.onboarding_button_backup_now)
-            btnMainAction.setOnClickListener { store.dispatch(BackupAction.StartBackup) }
+            btnWalletMainAction.text = getText(R.string.onboarding_button_backup_now)
+            btnWalletMainAction.setOnClickListener { store.dispatch(BackupAction.StartBackup) }
 
-            btnAlternativeAction.text = getText(R.string.onboarding_button_skip_backup)
-            btnAlternativeAction.setOnClickListener { store.dispatch(BackupAction.DismissBackup) }
-            btnAlternativeAction.show(state.canSkipBackup && !isSaltPay)
+            btnWalletAlternativeAction.text = getText(R.string.onboarding_button_skip_backup)
+            btnWalletAlternativeAction.setOnClickListener { store.dispatch(BackupAction.DismissBackup) }
+            btnWalletAlternativeAction.show(state.canSkipBackup && !isSaltPay)
         }
         animator.showBackupIntro(state)
     }
@@ -223,9 +223,9 @@ class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_walle
         )
 
         with(layoutButtonsCommon) {
-            btnMainAction.text = getString(R.string.onboarding_button_scan_origin_card)
-            btnAlternativeAction.hide()
-            btnMainAction.setOnClickListener { store.dispatch(BackupAction.ScanPrimaryCard) }
+            btnWalletMainAction.text = getString(R.string.onboarding_button_scan_origin_card)
+            btnWalletAlternativeAction.hide()
+            btnWalletMainAction.setOnClickListener { store.dispatch(BackupAction.ScanPrimaryCard) }
         }
 
         animator.showScanOriginCard()
@@ -323,16 +323,16 @@ class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_walle
         if (isSaltPay) {
             tvHeader.text = getText(R.string.onboarding_saltpay_title_prepare_origin)
             tvBody.text = getString(R.string.onboarding_twins_interrupt_warning)
-            layoutButtonsCommon.btnMainAction.text = getText(R.string.onboarding_saltpay_button_backup_origin)
+            layoutButtonsCommon.btnWalletMainAction.text = getText(R.string.onboarding_saltpay_button_backup_origin)
         } else {
             tvHeader.text = getText(R.string.onboarding_title_prepare_origin)
             tvBody.text = getString(
                 R.string.onboarding_subtitle_scan_primary_card_format,
                 state.primaryCardId?.let { cardIdFormatter.getFormattedCardId(it) },
             )
-            layoutButtonsCommon.btnMainAction.text = getText(R.string.onboarding_button_backup_origin)
+            layoutButtonsCommon.btnWalletMainAction.text = getText(R.string.onboarding_button_backup_origin)
         }
-        layoutButtonsCommon.btnMainAction.setOnClickListener { store.dispatch(BackupAction.WritePrimaryCard) }
+        layoutButtonsCommon.btnWalletMainAction.setOnClickListener { store.dispatch(BackupAction.WritePrimaryCard) }
 
         animator.showWritePrimaryCard(state)
     }
@@ -342,7 +342,7 @@ class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_walle
 
         layoutButtonsAddCards.root.hide()
         layoutButtonsCommon.root.show()
-        layoutButtonsCommon.btnAlternativeAction.hide()
+        layoutButtonsCommon.btnWalletAlternativeAction.hide()
 
         imvCardBackground.hide()
         imvFirstBackupCard.show()
@@ -356,7 +356,7 @@ class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_walle
         if (isSaltPay) {
             tvHeader.text = getString(R.string.onboarding_saltpay_title_backup_card)
             tvBody.text = getString(R.string.onboarding_twins_interrupt_warning)
-            layoutButtonsCommon.btnMainAction.text = getString(R.string.onboarding_saltpay_title_backup_card)
+            layoutButtonsCommon.btnWalletMainAction.text = getString(R.string.onboarding_saltpay_title_backup_card)
         } else {
             val cardIdFormatter = CardIdFormatter(CardIdDisplayFormat.LastMasked(4))
             tvHeader.text = getString(R.string.onboarding_title_backup_card_format, cardNumber)
@@ -364,12 +364,12 @@ class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_walle
                 R.string.onboarding_subtitle_scan_backup_card_format,
                 cardIdFormatter.getFormattedCardId(state.backupCardIds[cardNumber - 1]),
             )
-            layoutButtonsCommon.btnMainAction.text = getString(
+            layoutButtonsCommon.btnWalletMainAction.text = getString(
                 R.string.onboarding_button_backup_card_format,
                 cardNumber,
             )
         }
-        layoutButtonsCommon.btnMainAction.setOnClickListener {
+        layoutButtonsCommon.btnWalletMainAction.setOnClickListener {
             store.dispatch(BackupAction.WriteBackupCard(cardNumber))
         }
 
@@ -386,22 +386,30 @@ class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_walle
         tabLayoutBackupInfo.hide()
 
         tvBody.text = getText(R.string.onboarding_subtitle_success_tangem_wallet_onboarding)
-        layoutButtonsCommon.btnMainAction.text = getText(R.string.onboarding_button_continue_wallet)
-        layoutButtonsCommon.btnAlternativeAction.hide()
-        layoutButtonsCommon.btnMainAction.setOnClickListener {
-            vConfetti.lavConfetti.cancelAnimation()
-            vConfetti.lavConfetti.hide()
+        layoutButtonsCommon.btnWalletMainAction.text = getText(R.string.onboarding_button_continue_wallet)
+        layoutButtonsCommon.btnWalletAlternativeAction.hide()
+        layoutButtonsCommon.btnWalletMainAction.setOnClickListener {
+            showConfetti(false)
             store.dispatch(OnboardingWalletAction.FinishOnboarding)
         }
 
         animator.showSuccess {
             flCardsContainer.hide()
             imvCardBackground.hide()
-            vConfetti.lavConfetti.show()
-            vConfetti.lavConfetti.playAnimation()
+            showConfetti(true)
             imvSuccess.alpha = 0f
             imvSuccess.show()
             imvSuccess.animate()?.alpha(1f)?.duration = 400
+        }
+    }
+
+    internal fun showConfetti(show: Boolean) = with(binding.vConfetti) {
+        lavConfetti.show(show)
+
+        if (show) {
+            lavConfetti.playAnimation()
+        } else {
+            lavConfetti.cancelAnimation()
         }
     }
 
