@@ -4,24 +4,21 @@ import com.tangem.Message
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.extensions.successOr
 import com.tangem.common.Filter
-import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.guard
 import com.tangem.common.services.Result
 import com.tangem.domain.common.extensions.successOr
 import com.tangem.domain.common.extensions.withMainContext
+import com.tangem.network.api.paymentology.KYCStatus
 import com.tangem.network.api.paymentology.RegistrationResponse
-import com.tangem.tap.common.extensions.dispatchDialogShow
-import com.tangem.tap.common.extensions.dispatchErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TangemSigner
-import com.tangem.tap.domain.TapError
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletState
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.AllSymbolsTheSameFilter
+import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayExceptionHandler
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayRegistrationManager
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.dialog.SaltPayDialog
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.message.SaltPayRegistrationError
 import com.tangem.tap.scope
 import com.tangem.tap.store
@@ -76,37 +73,9 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
 
                 handleInProgress = false
                 withMainContext {
-                    // store.dispatch(OnboardingSaltPayAction.SetStep(updateResult.step))
-                    store.dispatch(OnboardingSaltPayAction.SetStep(SaltPayRegistrationStep.KycWaiting))
+                    store.dispatch(OnboardingSaltPayAction.SetStep(updateResult.step))
                 }
             }
-
-            // handleIsBusy = true
-            // scope.launch {
-            //     checkGasIfNeeded(state.saltPayManager, state.step).successOr {
-            //         onException(it.error)
-            //         return@launch
-            //     }
-            //
-            //     registerKYCIfNeeded(state).successOr {
-            //         onException(it.error)
-            //         return@launch
-            //     }
-            //
-            //     val amount = getAmountToClaimIfNeeded(state)?.let {
-            //         dispatchOnMain(OnboardingSaltPayAction.SetAmountToClaim(it))
-            //     }
-            //
-            //     val newStep = checkRegistration(state, amount != null).successOr {
-            //         onException(it.error)
-            //         return@launch
-            //     }
-            //
-            //     withMainContext {
-            //         handleIsBusy = false
-            //         store.dispatch(OnboardingSaltPayAction.SetStep(newStep))
-            //     }
-            // }
         }
         is OnboardingSaltPayAction.RegisterCard -> {
             handleInProgress = true
@@ -191,7 +160,7 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
                 store.dispatch(OnboardingSaltPayAction.SetPin(action.pin))
                 store.dispatch(OnboardingSaltPayAction.SetStep(SaltPayRegistrationStep.CardRegistration))
             } catch (error: SaltPayRegistrationError) {
-                handleError = error
+                SaltPayExceptionHandler.handle(error)
             }
         }
         is OnboardingSaltPayAction.Claim -> {
@@ -225,7 +194,7 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
                     onException(it.error)
                     return@launch
                 }
-
+// [REDACTED_TODO_COMMENT]
                 dispatchOnMain(OnboardingSaltPayAction.SetStep(SaltPayRegistrationStep.ClaimInProgress))
                 dispatchOnMain(OnboardingSaltPayAction.RefreshClaim)
             }
@@ -237,7 +206,7 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
             val state = getState()
             scope.launch {
                 val balance = state.saltPayManager.getTokenAmount().successOr {
-                    handleException = it.error
+                    SaltPayExceptionHandler.handle(it.error)
                     handleClaimRefreshInProgress = false
                     return@launch
                 }
@@ -245,7 +214,7 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
                 handleInProgress = false
                 handleClaimRefreshInProgress = false
                 dispatchOnMain(OnboardingSaltPayAction.SetTokenBalance(balance))
-                dispatchOnMain(OnboardingSaltPayAction.SetStep(SaltPayRegistrationStep.ClaimSuccess))
+                dispatchOnMain(OnboardingSaltPayAction.SetStep(SaltPayRegistrationStep.Finished))
             }
         }
         else -> {
@@ -283,7 +252,7 @@ suspend fun SaltPayRegistrationManager.updateSaltPayStatus(
     updateResult = when {
         saltPayStep == SaltPayRegistrationStep.Claim && fetchedAmountToClaim == null -> {
             updateResult.copy(
-                step = SaltPayRegistrationStep.ClaimSuccess,
+                step = SaltPayRegistrationStep.KycReject,
                 amountToClaim = fetchedAmountToClaim,
             )
         }
@@ -334,50 +303,16 @@ private var handleInProgress: Boolean = false
 private suspend fun onError(error: SaltPayRegistrationError) {
     withMainContext {
         handleInProgress = false
-        handleError = error
+        SaltPayExceptionHandler.handle(error)
     }
 }
 
 private suspend fun onException(error: Throwable) {
     withMainContext {
         handleInProgress = false
-        handleException = error
+        SaltPayExceptionHandler.handle(error)
     }
 }
-
-private var handleException: Throwable = Throwable("Init")
-    set(value) {
-        field = value
-        when (value) {
-            is SaltPayRegistrationError -> handleError = value
-            else -> {
-                Timber.e(value)
-                when (value) {
-                    is TangemSdkError -> {
-                        // store.dispatchErrorNotification(TapError.CustomError(value.customMessage))
-                    }
-                    else -> {
-                        store.dispatchErrorNotification(
-                            TapError.CustomError(value.message ?: "Unknown SaltPay exception"),
-                        )
-                    }
-                }
-            }
-        }
-    }
-
-private var handleError: SaltPayRegistrationError = SaltPayRegistrationError.Unknown
-    set(value) {
-        field = value
-        when (value) {
-            SaltPayRegistrationError.NoGas -> {
-                store.dispatch(OnboardingSaltPayAction.SetStep(SaltPayRegistrationStep.NoGas))
-            }
-            else -> {
-                store.dispatchDialogShow(SaltPayDialog.RegistrationError(value))
-            }
-        }
-    }
 
 private suspend fun checkGasIfNeeded(
     saltPayManager: SaltPayRegistrationManager,
@@ -386,7 +321,7 @@ private suspend fun checkGasIfNeeded(
     Timber.d("checkGasIfNeeded: for step: %s", step)
     if (step == SaltPayRegistrationStep.KycStart ||
         step == SaltPayRegistrationStep.KycWaiting ||
-        step == SaltPayRegistrationStep.ClaimSuccess
+        step == SaltPayRegistrationStep.Finished
     ) {
         Timber.d("checkGasIfNeeded: no need to check for step: %s", step)
         return Result.Success(Unit)
@@ -451,6 +386,15 @@ fun RegistrationResponse.Item.toSaltPayStep(): SaltPayRegistrationStep {
         // pinSet is false, go toPin screen
         pinSet == false -> SaltPayRegistrationStep.NeedPin
 
+        kycStatus != null -> {
+            when (kycStatus) {
+                KYCStatus.NOT_STARTED, KYCStatus.STARTED -> SaltPayRegistrationStep.KycStart
+                KYCStatus.WAITING_FOR_APPROVAL -> SaltPayRegistrationStep.KycWaiting
+                KYCStatus.CORRECTION_REQUESTED, KYCStatus.REJECTED -> SaltPayRegistrationStep.KycReject
+                KYCStatus.APPROVED -> SaltPayRegistrationStep.Claim
+                null -> throw UnsupportedOperationException()
+            }
+        }
         // kycDate is set, go to kyc waiting screen
         kycDate != null -> SaltPayRegistrationStep.KycWaiting
 
