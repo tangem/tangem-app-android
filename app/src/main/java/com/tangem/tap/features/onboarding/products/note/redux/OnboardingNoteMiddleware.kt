@@ -20,7 +20,6 @@ import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.hasWallets
 import com.tangem.tap.domain.extensions.makePrimaryWalletManager
 import com.tangem.tap.features.demo.DemoHelper
-import com.tangem.tap.features.onboarding.WalletBalanceFetcher
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.scope
@@ -130,7 +129,7 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
             store.dispatch(OnboardingNoteAction.Balance.Set(balanceIsLoading))
 
             scope.launch {
-                val loadedBalance = WalletBalanceFetcher().updateBalance(walletManager)
+                val loadedBalance = onboardingManager.updateBalance(walletManager)
                 delay(if (isLoadedBefore) 0 else 300)
                 loadedBalance.criticalError?.let { store.dispatchErrorNotification(it) }
                 withMainContext {
