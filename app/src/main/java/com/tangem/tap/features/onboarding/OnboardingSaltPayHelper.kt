@@ -3,10 +3,10 @@ package com.tangem.tap.features.onboarding
 import com.tangem.common.services.Result
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.extensions.successOr
+import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayRegistrationManager
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.message.SaltPayRegistrationError
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayState
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.SaltPayRegistrationStep
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.toSaltPayStep
+import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.updateSaltPayStatus
 
 /**
 * [REDACTED_AUTHOR]
@@ -14,19 +14,22 @@ import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.toSaltPa
 class OnboardingSaltPayHelper {
     companion object {
 
-        suspend fun isOnboardingCase(scanResponse: ScanResponse): Result<Boolean> {
+        suspend fun isOnboardingCase(
+            scanResponse: ScanResponse,
+            manager: SaltPayRegistrationManager
+        ): Result<Boolean> {
             return try {
-                val (manager, config) = OnboardingSaltPayState.initDependency(scanResponse)
-                val registrationResponseItem = manager.checkRegistration().successOr { return it }
-                val registrationStep = registrationResponseItem.toSaltPayStep()
-                manager.checkHasGas().successOr { return it }
+                val status = manager.updateSaltPayStatus(
+                    amountToClaim = null,
+                    step = SaltPayRegistrationStep.None,
+                ).successOr { return it }
 
-                val isRegistrationOnboardingCase = registrationStep != SaltPayRegistrationStep.Finished
-                val isBackupOnboardingCase = scanResponse.card.backupStatus?.isActive == false
-                Result.Success(isRegistrationOnboardingCase || isBackupOnboardingCase)
+                val isRegistrationCase = status.step != SaltPayRegistrationStep.ClaimSuccess
+                val isBackupCase = scanResponse.card.backupStatus?.isActive == false
+                Result.Success(isRegistrationCase || isBackupCase)
             } catch (ex: Exception) {
                 Result.Failure(ex)
-            } catch (error: SaltPayRegistrationError){
+            } catch (error: SaltPayRegistrationError) {
                 Result.Failure(error)
             }
         }
@@ -37,7 +40,7 @@ class OnboardingSaltPayHelper {
                 Result.Success(isBackupOnboardingCase)
             } catch (ex: Exception) {
                 Result.Failure(ex)
-            } catch (error: SaltPayRegistrationError){
+            } catch (error: SaltPayRegistrationError) {
                 Result.Failure(error)
             }
         }
@@ -47,7 +50,7 @@ class OnboardingSaltPayHelper {
                 Result.Success(false)
             } catch (ex: Exception) {
                 Result.Failure(ex)
-            } catch (error: SaltPayRegistrationError){
+            } catch (error: SaltPayRegistrationError) {
                 Result.Failure(error)
             }
         }

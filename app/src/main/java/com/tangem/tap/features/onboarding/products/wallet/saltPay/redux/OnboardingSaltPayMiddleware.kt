@@ -1,6 +1,7 @@
 package com.tangem.tap.features.onboarding.products.wallet.saltPay.redux
 
 import com.tangem.Message
+import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.extensions.successOr
 import com.tangem.common.Filter
 import com.tangem.common.core.TangemSdkError
@@ -13,6 +14,8 @@ import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
+import com.tangem.tap.common.redux.global.GlobalAction
+import com.tangem.tap.domain.TangemSigner
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletState
@@ -22,6 +25,7 @@ import com.tangem.tap.features.onboarding.products.wallet.saltPay.dialog.SaltPay
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.message.SaltPayRegistrationError
 import com.tangem.tap.scope
 import com.tangem.tap.store
+import com.tangem.tap.tangemSdk
 import com.tangem.tap.tangemSdkManager
 import com.tangem.wallet.R
 import kotlinx.coroutines.launch
@@ -57,8 +61,55 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
     fun getState(): OnboardingSaltPayState = getOnboardingWalletState().onboardingSaltPayState!!
 
     when (action) {
+        is OnboardingSaltPayAction.Update -> {
+            handleInProgress = true
+
+            val state = getState()
+            scope.launch {
+                val updateResult = state.saltPayManager.updateSaltPayStatus(
+                    amountToClaim = state.amountToClaim,
+                    step = state.step,
+                ).successOr {
+                    onException(it.error)
+                    return@launch
+                }
+
+                handleInProgress = false
+                withMainContext {
+                    // store.dispatch(OnboardingSaltPayAction.SetStep(updateResult.step))
+                    store.dispatch(OnboardingSaltPayAction.SetStep(SaltPayRegistrationStep.KycWaiting))
+                }
+            }
+
+            // handleIsBusy = true
+            // scope.launch {
+            //     checkGasIfNeeded(state.saltPayManager, state.step).successOr {
+            //         onException(it.error)
+            //         return@launch
+            //     }
+            //
+            //     registerKYCIfNeeded(state).successOr {
+            //         onException(it.error)
+            //         return@launch
+            //     }
+            //
+            //     val amount = getAmountToClaimIfNeeded(state)?.let {
+            //         dispatchOnMain(OnboardingSaltPayAction.SetAmountToClaim(it))
+            //     }
+            //
+            //     val newStep = checkRegistration(state, amount != null).successOr {
+            //         onException(it.error)
+            //         return@launch
+            //     }
+            //
+            //     withMainContext {
+            //         handleIsBusy = false
+            //         store.dispatch(OnboardingSaltPayAction.SetStep(newStep))
+            //     }
+            // }
+        }
         is OnboardingSaltPayAction.RegisterCard -> {
-            handleIsBusy = true
+            handleInProgress = true
             val state = getState()
 
             scope.launch {
@@ -107,18 +158,30 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
                 }
 
                 withMainContext {
-                    handleIsBusy = false
+                    handleInProgress = false
                     store.dispatch(OnboardingSaltPayAction.SetStep(SaltPayRegistrationStep.KycIntro))
                 }
             }
         }
-        is OnboardingSaltPayAction.KYCStart -> {
+        is OnboardingSaltPayAction.OpenUtorgKYC -> {
             store.dispatch(OnboardingSaltPayAction.SetStep(SaltPayRegistrationStep.KycStart))
         }
-        is OnboardingSaltPayAction.OnFinishKYC -> {
+        is OnboardingSaltPayAction.UtorgKYCRedirectSuccess -> {
+            store.dispatch(OnboardingSaltPayAction.RegisterKYC)
+        }
+        is OnboardingSaltPayAction.RegisterKYC -> {
+            val state = getState()
+            handleInProgress = true
             scope.launch {
-                registerKYCIfNeeded(getState()).successOr {
+                registerKYCIfNeeded(state.saltPayManager, state.step).successOr {
                     onException(it.error)
+                    return@launch
+                }
+                handleInProgress = false
+                if (state.readyToClaim()) {
+                    withMainContext { store.dispatch(OnboardingSaltPayAction.SetStep(SaltPayRegistrationStep.Claim)) }
+                } else {
+                    onError(SaltPayRegistrationError.NoFundsToClaim)
                 }
             }
         }
@@ -131,30 +194,58 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
                 handleError = error
             }
         }
-        is OnboardingSaltPayAction.Update -> {
-            handleIsBusy = true
+        is OnboardingSaltPayAction.Claim -> {
+            val state = getState()
+            handleInProgress = true
+
+            scope.launch {
+                val amountToClaim = getAmountToClaimIfNeeded(state.saltPayManager, state.amountToClaim).guard {
+                    onException(SaltPayRegistrationError.NoFundsToClaim)
+                    return@launch
+                }
+
+                val scanResponse = store.state.globalState.scanResponse
+                    ?: store.state.globalState.onboardingState.onboardingManager?.scanResponse
+                val signer = TangemSigner(
+                    card = scanResponse!!.card,
+                    tangemSdk = tangemSdk,
+                    initialMessage = Message(),
+                    accessCode = state.accessCode,
+                ) { signResponse ->
+                    store.dispatch(
+                        GlobalAction.UpdateWalletSignedHashes(
+                            walletSignedHashes = signResponse.totalSignedHashes,
+                            walletPublicKey = state.saltPayManager.walletPublicKey,
+                            remainingSignatures = signResponse.remainingSignatures,
+                        ),
+                    )
+                }
+                state.saltPayManager.claim(amountToClaim.value!!, signer).successOr {
+                    dispatchOnMain(OnboardingSaltPayAction.SetStep(SaltPayRegistrationStep.Claim))
+                    onException(it.error)
+                    return@launch
+                }
+
+                dispatchOnMain(OnboardingSaltPayAction.SetStep(SaltPayRegistrationStep.ClaimInProgress))
+                dispatchOnMain(OnboardingSaltPayAction.RefreshClaim)
+            }
+        }
+        is OnboardingSaltPayAction.RefreshClaim -> {
+            handleInProgress = true
+            handleClaimRefreshInProgress = true
 
             val state = getState()
             scope.launch {
-                checkGasIfNeeded(state.saltPayManager, state.step).successOr {
-                    onException(it.error)
+                val balance = state.saltPayManager.getTokenAmount().successOr {
+                    handleException = it.error
+                    handleClaimRefreshInProgress = false
                     return@launch
                 }
 
-                registerKYCIfNeeded(state).successOr {
-                    onException(it.error)
-                    return@launch
-                }
-
-                val newStep = checkRegistration(state).successOr {
-                    onException(it.error)
-                    return@launch
-                }
-
-                withMainContext {
-                    handleIsBusy = false
-                    store.dispatch(OnboardingSaltPayAction.SetStep(newStep))
-                }
+                handleInProgress = false
+                handleClaimRefreshInProgress = false
+                dispatchOnMain(OnboardingSaltPayAction.SetTokenBalance(balance))
+                dispatchOnMain(OnboardingSaltPayAction.SetStep(SaltPayRegistrationStep.ClaimSuccess))
             }
         }
         else -> {
@@ -163,22 +254,93 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
     }
 }
 
-private var handleIsBusy: Boolean = false
+data class UpdateResult(
+    val step: SaltPayRegistrationStep = SaltPayRegistrationStep.None,
+    val amountToClaim: Amount? = null,
+)
+
+suspend fun SaltPayRegistrationManager.updateSaltPayStatus(
+    amountToClaim: Amount?,
+    step: SaltPayRegistrationStep,
+): Result<UpdateResult> {
+    Timber.d("updateSaltPayStatus")
+    var updateResult = UpdateResult()
+
+    checkGasIfNeeded(this, step).successOr {
+        return Result.Failure(it.error)
+
+    }
+    registerKYCIfNeeded(this, step).successOr {
+        return Result.Failure(it.error)
+
+    }
+    val saltPayStep = checkRegistration(this).successOr {
+        return Result.Failure(it.error)
+
+    }
+
+    val fetchedAmountToClaim = getAmountToClaimIfNeeded(this, amountToClaim)
+    updateResult = when {
+        saltPayStep == SaltPayRegistrationStep.Claim && fetchedAmountToClaim == null -> {
+            updateResult.copy(
+                step = SaltPayRegistrationStep.ClaimSuccess,
+                amountToClaim = fetchedAmountToClaim,
+            )
+        }
+        else -> updateResult.copy(
+            step = saltPayStep,
+            amountToClaim = fetchedAmountToClaim,
+        )
+    }
+
+    Timber.d("updateSaltPayStatus: success: %s", updateResult)
+    return Result.Success(updateResult)
+}
+
+private suspend fun getAmountToClaimIfNeeded(
+    saltPayManager: SaltPayRegistrationManager,
+    amountToClaim: Amount?,
+): Amount? {
+    Timber.d("getAmountToClaimIfNeeded: for amount: %s", amountToClaim)
+    if (amountToClaim != null) {
+        Timber.d("getAmountToClaimIfNeeded: checks no need, amount already persist")
+        return amountToClaim
+    }
+
+    return when (val result = saltPayManager.getAmountToClaim()) {
+        is Result.Success -> {
+            Timber.d("getAmountToClaimIfNeeded: success: %s", result.data)
+            return result.data
+        }
+        is Result.Failure -> {
+            Timber.e(result.error, "getAmountToClaimIfNeeded: failure")
+            null
+        }
+    }
+}
+
+private var handleClaimRefreshInProgress: Boolean = false
     set(value) {
         field = value
-        store.dispatchOnMain(OnboardingSaltPayAction.SetIsBusy(value))
+        store.dispatchOnMain(OnboardingSaltPayAction.SetClaimRefreshInProgress(value))
+    }
+
+private var handleInProgress: Boolean = false
+    set(value) {
+        field = value
+        store.dispatchOnMain(OnboardingSaltPayAction.SetInProgress(value))
     }
 
 private suspend fun onError(error: SaltPayRegistrationError) {
     withMainContext {
-        handleIsBusy = false
+        handleInProgress = false
         handleError = error
     }
 }
 
 private suspend fun onException(error: Throwable) {
     withMainContext {
-        handleIsBusy = false
+        handleInProgress = false
         handleException = error
     }
 }
@@ -216,40 +378,63 @@ private var handleError: SaltPayRegistrationError = SaltPayRegistrationError.Unk
             }
         }
     }
-// [REDACTED_TODO_COMMENT]
+
 private suspend fun checkGasIfNeeded(
     saltPayManager: SaltPayRegistrationManager,
     step: SaltPayRegistrationStep,
 ): Result<Unit> {
+    Timber.d("checkGasIfNeeded: for step: %s", step)
     if (step == SaltPayRegistrationStep.KycStart ||
         step == SaltPayRegistrationStep.KycWaiting ||
-        step == SaltPayRegistrationStep.Finished
+        step == SaltPayRegistrationStep.ClaimSuccess
     ) {
+        Timber.d("checkGasIfNeeded: no need to check for step: %s", step)
         return Result.Success(Unit)
     }
 
-    return saltPayManager.checkHasGas()
+    val result = saltPayManager.checkHasGas()
+    when (result) {
+        is Result.Success -> Timber.d("checkGasIfNeeded: has GAS")
+        is Result.Failure -> Timber.d("checkGasIfNeeded: has NO GAS")
+    }
+    return result
 }
 
-private suspend fun registerKYCIfNeeded(state: OnboardingSaltPayState): Result<Unit> {
-    if (state.step != SaltPayRegistrationStep.KycStart) {
+private suspend fun registerKYCIfNeeded(
+    saltPayManager: SaltPayRegistrationManager,
+    step: SaltPayRegistrationStep,
+): Result<Unit> {
+    Timber.d("registerKYCIfNeeded: step: %s", step)
+    if (step != SaltPayRegistrationStep.KycStart) {
+        Timber.d("registerKYCIfNeeded: return Success, because step != KycStart")
         return Result.Success(Unit)
     }
 
     withMainContext {
+        Timber.d("registerKYCIfNeeded: set new step: KycWaiting")
         store.dispatch(OnboardingSaltPayAction.SetStep(SaltPayRegistrationStep.KycWaiting))
     }
-    return state.saltPayManager.registerKYC()
+
+    Timber.d("saltPayManager.registerKYC()")
+    return saltPayManager.registerKYC()
 }
 
 private suspend fun checkRegistration(
-    state: OnboardingSaltPayState,
+    saltPayManager: SaltPayRegistrationManager,
 ): Result<SaltPayRegistrationStep> {
+    Timber.d("checkRegistration")
     return try {
-        val registrationResponseItem = state.saltPayManager.checkRegistration().successOr { return it }
+        val registrationResponseItem = saltPayManager.checkRegistration().successOr {
+            Timber.e(it.error, "checkRegistration: failure")
+            return it
+        }
+
+        Timber.d("checkRegistration: success: try convert to SaltPayStep")
         val step = registrationResponseItem.toSaltPayStep()
+        Timber.d("checkRegistration: step: %s", step)
         Result.Success(step)
     } catch (ex: SaltPayRegistrationError) {
+        Timber.e(ex, "checkRegistration: step")
         Result.Failure(ex)
     }
 }
@@ -260,8 +445,8 @@ fun RegistrationResponse.Item.toSaltPayStep(): SaltPayRegistrationStep {
         passed != true -> throw SaltPayRegistrationError.CardNotPassed(this.error)
         disabledByAdmin == true -> throw SaltPayRegistrationError.CardDisabled(this.error)
 
-        // go to success screen
-        active == true -> SaltPayRegistrationStep.Finished
+        // go to claim screen
+        active == true -> SaltPayRegistrationStep.Claim
 
         // pinSet is false, go toPin screen
         pinSet == false -> SaltPayRegistrationStep.NeedPin

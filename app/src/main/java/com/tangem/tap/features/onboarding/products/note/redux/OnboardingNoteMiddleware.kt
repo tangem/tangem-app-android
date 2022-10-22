@@ -4,7 +4,12 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.guard
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
-import com.tangem.tap.common.extensions.*
+import com.tangem.tap.common.extensions.dispatchDialogShow
+import com.tangem.tap.common.extensions.dispatchErrorNotification
+import com.tangem.tap.common.extensions.dispatchOpenUrl
+import com.tangem.tap.common.extensions.getAddressData
+import com.tangem.tap.common.extensions.getToUpUrl
+import com.tangem.tap.common.extensions.onCardScanned
 import com.tangem.tap.common.postUi
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
@@ -15,6 +20,7 @@ import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.hasWallets
 import com.tangem.tap.domain.extensions.makePrimaryWalletManager
 import com.tangem.tap.features.demo.DemoHelper
+import com.tangem.tap.features.onboarding.WalletBalanceFetcher
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.scope
@@ -115,16 +121,16 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
             val balanceIsLoading = noteState.walletBalance.copy(
                 currency = Currency.Blockchain(
                     walletManager.wallet.blockchain,
-                    walletManager.wallet.publicKey.derivationPath?.rawPath
+                    walletManager.wallet.publicKey.derivationPath?.rawPath,
                 ),
                 state = ProgressState.Loading,
                 error = null,
-                criticalError = null
+                criticalError = null,
             )
             store.dispatch(OnboardingNoteAction.Balance.Set(balanceIsLoading))
 
             scope.launch {
-                val loadedBalance = onboardingManager.updateBalance(walletManager)
+                val loadedBalance = WalletBalanceFetcher().updateBalance(walletManager)
                 delay(if (isLoadedBefore) 0 else 300)
                 loadedBalance.criticalError?.let { store.dispatchErrorNotification(it) }
                 withMainContext {
