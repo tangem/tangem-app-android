@@ -123,7 +123,8 @@ enum class SaltPayRegistrationStep {
     KycIntro,
     KycStart,
     KycWaiting,
+    KycReject,
     Claim,
     ClaimInProgress,
-    ClaimSuccess;
+    Finished;
 }
