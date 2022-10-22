@@ -9,11 +9,18 @@
         android:id="@+id/imv_in_progress"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="113dp"
+        android:layout_marginTop="100dp"
         android:src="@drawable/ic_in_progress"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_percent="@dimen/onboarding_wallet_top_guide_line_weight" />
 
     <TextView
         android:id="@+id/tv_header"
@@ -24,8 +31,7 @@
         app:layout_constraintBottom_toTopOf="@+id/tv_body"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/imv_in_progress"
-        app:layout_constraintVertical_chainStyle="packed" />
+        app:layout_constraintTop_toBottomOf="@+id/guideline1" />
 
     <TextView
         android:id="@+id/tv_body"
@@ -36,7 +42,6 @@
         android:layout_marginTop="14dp"
         android:layout_marginEnd="55dp"
         android:text="@string/onboarding_subtitle_kyc_waiting"
-        app:layout_constraintBottom_toTopOf="@+id/btn_open_support_chat"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/tv_header" />
@@ -62,7 +67,7 @@
         app:layout_constraintStart_toStartOf="parent">
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/btn_refresh"
+            android:id="@+id/btn_kyc_action"
             style="@style/OnboardingButton"
             android:layout_height="wrap_content"
             android:text="@string/onboarding_button_kyc_waiting" />
