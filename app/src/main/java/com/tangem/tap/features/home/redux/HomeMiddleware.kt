@@ -10,7 +10,6 @@ import com.tangem.tap.common.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.AnalyticsParam
 import com.tangem.tap.common.analytics.GetCardSourceParams
 import com.tangem.tap.common.entities.IndeterminateProgressButton
-import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOpenUrl
 import com.tangem.tap.common.extensions.onCardScanned
@@ -28,8 +27,7 @@ import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.features.onboarding.OnboardingSaltPayHelper
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsStep
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.dialog.SaltPayDialog
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.message.SaltPayRegistrationError
+import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayExceptionHandler
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayAction
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayState
 import com.tangem.tap.features.send.redux.states.ButtonState
@@ -130,20 +128,7 @@ private fun onScanSuccess(scanResponse: ScanResponse) {
                         }
                         is Result.Failure -> {
                             changeButtonState(ButtonState.ENABLED)
-                            when (val error = result.error) {
-                                is SaltPayRegistrationError -> {
-                                    val dialog = when (error) {
-                                        is SaltPayRegistrationError.NoGas -> SaltPayDialog.NoFundsForActivation
-                                        else -> SaltPayDialog.RegistrationError(error)
-                                    }
-                                    store.dispatchDialogShow(dialog)
-                                }
-                                else -> {
-                                    store.dispatchDebugErrorNotification(
-                                        error.localizedMessage ?: "SaltPay: Unknown error",
-                                    )
-                                }
-                            }
+                            SaltPayExceptionHandler.handle(result.error)
                         }
                     }
                 }
