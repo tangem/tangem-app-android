@@ -1,8 +1,6 @@
 package com.tangem.tap.features.onboarding.products.wallet.saltPay.redux
 
-import com.tangem.tap.features.onboarding.products.wallet.redux.BackupStep
 import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletState
-import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletStep
 import org.rekotlin.Action
 
 /**
@@ -31,20 +29,6 @@ private fun internalReduce(anyAction: Action, onboardingWalletState: OnboardingW
     val oldState = onboardingWalletState.onboardingSaltPayState ?: return onboardingWalletState
 
     val newState = when (action) {
-        OnboardingSaltPayAction.Init.DiscardBackupSteps -> {
-            return onboardingWalletState.copy(
-                step = OnboardingWalletStep.SaltPay,
-                backupState = onboardingWalletState.backupState.copy(
-                    backupStep = BackupStep.Finished,
-                    maxBackupCards = 1,
-                    canSkipBackup = false,
-                ),
-                onboardingSaltPayState = oldState.copy(
-                    isTest = true,
-                    step = SaltPayRegistrationStep.NeedPin,
-                ),
-            )
-        }
         is OnboardingSaltPayAction.SetAccessCode -> {
             oldState.copy(
                 accessCode = action.accessCode,
@@ -62,19 +46,27 @@ private fun internalReduce(anyAction: Action, onboardingWalletState: OnboardingW
                 )
             }
         }
-        is OnboardingSaltPayAction.SetIsBusy -> {
+        is OnboardingSaltPayAction.SetAmountToClaim -> {
             oldState.copy(
-                isBusy = action.isBusy,
+                amountToClaim = action.amount,
+            )
+        }
+        is OnboardingSaltPayAction.SetTokenBalance -> {
+            oldState.copy(
+                tokenAmount = oldState.tokenAmount.copy(value = action.balanceValue),
+            )
+        }
+        is OnboardingSaltPayAction.SetInProgress -> {
+            oldState.copy(
+                inProgress = action.isInProgress,
+            )
+        }
+        is OnboardingSaltPayAction.SetClaimRefreshInProgress -> {
+            oldState.copy(
+                claimInProgress = action.isInProgress,
             )
         }
         else -> oldState
-        // is OnboardingSaltPayAction.Init.PrepareAndSetDependencies -> oldState
-        // OnboardingSaltPayAction.OnCreate -> oldState
-        // is OnboardingSaltPayAction.OnFinishKYC -> oldState
-        // is OnboardingSaltPayAction.Register -> oldState
-        // is OnboardingSaltPayAction.TrySetPin -> oldState
-        // is OnboardingSaltPayAction.Update -> oldState
-        // is OnboardingSaltPayAction.TryUpdateStep -> oldState
     }
 
     return when (newState) {
