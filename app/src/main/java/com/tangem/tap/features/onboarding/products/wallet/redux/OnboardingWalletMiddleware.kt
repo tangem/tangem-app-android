@@ -9,6 +9,7 @@ import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.operations.backup.BackupService
 import com.tangem.tap.backupService
+import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -18,6 +19,7 @@ import com.tangem.tap.domain.extensions.hasWallets
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.redux.HomeAction
+import com.tangem.tap.features.onboarding.products.wallet.saltPay.dialog.SaltPayDialog
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayAction
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayState
 import com.tangem.tap.features.wallet.redux.Artwork
@@ -173,16 +175,9 @@ private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch:
             newAction?.let { store.dispatch(it) }
         }
         OnboardingWalletAction.OnBackPressed -> {
-            when (onboardingWalletState.backupState.backupStep) {
-                BackupStep.InitBackup, BackupStep.Finished -> store.dispatch(NavigationAction.PopBackTo())
-                BackupStep.ScanOriginCard, BackupStep.AddBackupCards, BackupStep.EnterAccessCode,
-                BackupStep.ReenterAccessCode, BackupStep.SetAccessCode, BackupStep.WritePrimaryCard,
-                -> {
-                    store.dispatch(BackupAction.DiscardBackup)
-                    store.dispatch(NavigationAction.PopBackTo())
-                }
-                is BackupStep.WriteBackupCard ->
-                    store.dispatch(GlobalAction.ShowDialog(BackupDialog.BackupInProgress))
+            when {
+                onboardingWalletState.isSaltPay -> handleOnBackPressedSaltPay(onboardingWalletState)
+                else -> handleOnBackPressed(onboardingWalletState)
             }
         }
     }
@@ -364,5 +359,33 @@ private fun initSaltPayOnBackupFinishedIfNeeded(
         val (manager, config) = OnboardingSaltPayState.initDependency(scanResponse)
         store.dispatchOnMain(OnboardingSaltPayAction.Init.SetDependencies(manager, config))
         store.dispatchOnMain(OnboardingSaltPayAction.Update)
+    }
+}
+
+private fun handleOnBackPressedSaltPay(state: OnboardingWalletState) {
+    when (state.backupState.backupStep) {
+        BackupStep.Finished -> {
+            store.dispatchDialogShow(
+                SaltPayDialog.Activation.TryToInterrupt(
+                    onOk = { store.dispatch(NavigationAction.PopBackTo()) },
+                    onCancel = { /* do nothing */ },
+                ),
+            )
+        }
+        else -> handleOnBackPressed(state)
+    }
+}
+
+private fun handleOnBackPressed(state: OnboardingWalletState) {
+    when (state.backupState.backupStep) {
+        BackupStep.InitBackup, BackupStep.Finished -> store.dispatch(NavigationAction.PopBackTo())
+        BackupStep.ScanOriginCard, BackupStep.AddBackupCards, BackupStep.EnterAccessCode,
+        BackupStep.ReenterAccessCode, BackupStep.SetAccessCode, BackupStep.WritePrimaryCard,
+        -> {
+            store.dispatch(BackupAction.DiscardBackup)
+            store.dispatch(NavigationAction.PopBackTo())
+        }
+        is BackupStep.WriteBackupCard ->
+            store.dispatch(GlobalAction.ShowDialog(BackupDialog.BackupInProgress))
     }
 }
