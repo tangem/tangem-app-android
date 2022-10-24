@@ -247,9 +247,10 @@ suspend fun SaltPayActivationManager.updateActivationStatus(
 
     val fetchedAmountToClaim = getAmountToClaimIfNeeded(this, amountToClaim)
     updateResult = when {
+        // if fetchedAmountToClaim = null -> then it already claimed
         saltPayStep == SaltPayRegistrationStep.Claim && fetchedAmountToClaim == null -> {
             updateResult.copy(
-                step = SaltPayRegistrationStep.KycReject,
+                step = SaltPayRegistrationStep.Finished,
                 amountToClaim = fetchedAmountToClaim,
             )
         }
