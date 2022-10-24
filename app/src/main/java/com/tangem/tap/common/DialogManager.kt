@@ -20,6 +20,7 @@ import com.tangem.tap.features.onboarding.products.wallet.redux.BackupDialog
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.dialog.NoFundsForActivationDialog
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.dialog.RegistrationErrorDialog
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.dialog.SaltPayDialog
+import com.tangem.tap.features.onboarding.products.wallet.saltPay.dialog.TryToInterruptRegistrationDialog
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.AddMoreBackupCardsDialog
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.BackupInProgressDialog
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.ConfirmDiscardingBackupDialog
@@ -130,16 +131,13 @@ class DialogManager : StoreSubscriber<GlobalState> {
             is BackupDialog.BackupInProgress -> BackupInProgressDialog.create(context)
             is BackupDialog.UnfinishedBackupFound -> UnfinishedBackupFoundDialog.create(context)
             is BackupDialog.ConfirmDiscardingBackup -> ConfirmDiscardingBackupDialog.create(context)
-            is SaltPayDialog.NoFundsForActivation -> NoFundsForActivationDialog.create(context)
-            is SaltPayDialog.RegistrationError -> RegistrationErrorDialog.create(context, state.dialog)
-            is WalletDialog.CurrencySelectionDialog ->
-                CurrencySelectionDialog.create(state.dialog, context)
-            is WalletDialog.ChooseTradeActionDialog ->
-                ChooseTradeActionBottomSheetDialog(context)
-            is WalletDialog.SelectAmountToSendDialog ->
-                AmountToSendBottomSheetDialog(context, state.dialog)
-            is WalletDialog.SignedHashesMultiWalletDialog ->
-                SignedHashesWarningDialog.create(context)
+            is SaltPayDialog.Activation.NoFunds -> NoFundsForActivationDialog.create(context)
+            is SaltPayDialog.Activation.TryToInterrupt -> TryToInterruptRegistrationDialog.create(context, state.dialog)
+            is SaltPayDialog.Activation.OnError -> RegistrationErrorDialog.create(context, state.dialog)
+            is WalletDialog.CurrencySelectionDialog -> CurrencySelectionDialog.create(state.dialog, context)
+            is WalletDialog.ChooseTradeActionDialog -> ChooseTradeActionBottomSheetDialog(context)
+            is WalletDialog.SelectAmountToSendDialog -> AmountToSendBottomSheetDialog(context, state.dialog)
+            is WalletDialog.SignedHashesMultiWalletDialog -> SignedHashesWarningDialog.create(context)
             is WalletDialog.TokensAreLinkedDialog -> SimpleAlertDialog.create(
                 title = context.getString(state.dialog.titleRes, state.dialog.currencySymbol),
                 message = context.getString(
