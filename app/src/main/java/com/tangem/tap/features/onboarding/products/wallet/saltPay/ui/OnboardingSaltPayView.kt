@@ -150,7 +150,7 @@ internal class OnboardingSaltPayView(
     private fun handleNoGas() {
         // normally this shouldn't happen
         store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
-        store.dispatchDialogShow(SaltPayDialog.Activation.NoFunds)
+        store.dispatchDialogShow(SaltPayDialog.Activation.NoGas)
     }
 
     private fun handleNeedPin() = with(walletFragment.bindingSaltPay) {
