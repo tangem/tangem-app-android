@@ -147,11 +147,11 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
                     return@launch
                 }
                 handleInProgress = false
-                if (state.readyToClaim()) {
-                    withMainContext { store.dispatch(OnboardingSaltPayAction.SetStep(SaltPayRegistrationStep.Claim)) }
-                } else {
-                    onError(SaltPayRegistrationError.NoFundsToClaim)
+                val step = when (state.readyToClaim()) {
+                    true -> SaltPayRegistrationStep.Claim
+                    else -> SaltPayRegistrationStep.Finished
                 }
+                withMainContext { store.dispatch(OnboardingSaltPayAction.SetStep(step)) }
             }
         }
         is OnboardingSaltPayAction.TrySetPin -> {
