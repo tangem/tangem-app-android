@@ -34,25 +34,14 @@ class OnboardingSaltPayHelper {
             }
         }
 
-        suspend fun testProceedToOnboarding(scanResponse: ScanResponse): Result<Boolean> {
-            return try {
-                val isBackupOnboardingCase = scanResponse.card.backupStatus?.isActive == false
-                Result.Success(isBackupOnboardingCase)
-            } catch (ex: Exception) {
-                Result.Failure(ex)
-            } catch (error: SaltPayRegistrationError) {
-                Result.Failure(error)
-            }
-        }
+        suspend fun testProceedToOnboarding(
+            scanResponse: ScanResponse,
+            manager: SaltPayRegistrationManager,
+        ): Result<Boolean> = Result.Success(true)
 
-        suspend fun testProceedToMainScreen(scanResponse: ScanResponse): Result<Boolean> {
-            return try {
-                Result.Success(false)
-            } catch (ex: Exception) {
-                Result.Failure(ex)
-            } catch (error: SaltPayRegistrationError) {
-                Result.Failure(error)
-            }
-        }
+        suspend fun testProceedToMainScreen(
+            scanResponse: ScanResponse,
+            manager: SaltPayRegistrationManager,
+        ): Result<Boolean> = Result.Success(false)
     }
 }
