@@ -121,7 +121,7 @@
     <string name="onboarding_navbar_kyc_waiting">In progress</string>
     <string name="onboarding_button_pin">Set PIN code</string>
     <string name="onboarding_button_register_wallet">Register</string>
-    <string name="onboarding_button_kyc_start">Verify</string>
+    <string name="onboarding_button_kyc_start">Verify via Utorg</string>
     <string name="onboarding_button_kyc_waiting">Refresh</string>
     <string name="onboarding_title_register_wallet">Connect your card</string>
     <string name="onboarding_title_kyc_start">Verify your identity</string>
