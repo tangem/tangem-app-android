@@ -21,6 +21,7 @@ sealed class AppDialog : StateDialog {
     ) : AppDialog()
 
     object ScanFailsDialog : AppDialog()
+
     data class AddressInfoDialog(
         val currency: Currency,
         val addressData: AddressData,
