@@ -119,7 +119,7 @@
     <string name="onboarding_navbar_kyc_waiting">В обработке</string>
     <string name="onboarding_button_pin">Установить Код доступа</string>
     <string name="onboarding_button_register_wallet">Зарегистрироваться</string>
-    <string name="onboarding_button_kyc_start">Подтвердить</string>
+    <string name="onboarding_button_kyc_start">Верифицировать (Utorg)</string>
     <string name="onboarding_button_kyc_waiting">Обновить</string>
     <string name="onboarding_title_register_wallet">Подключите свою карту</string>
     <string name="onboarding_title_kyc_start">Подтвердите свою личность</string>
