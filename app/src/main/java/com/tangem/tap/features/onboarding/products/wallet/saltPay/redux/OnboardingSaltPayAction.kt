@@ -1,8 +1,8 @@
 package com.tangem.tap.features.onboarding.products.wallet.saltPay.redux
 
 import com.tangem.blockchain.common.Amount
+import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayActivationManager
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayConfig
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayRegistrationManager
 import org.rekotlin.Action
 import java.math.BigDecimal
 
@@ -12,7 +12,7 @@ import java.math.BigDecimal
 sealed class OnboardingSaltPayAction : Action {
     sealed class Init : OnboardingSaltPayAction() {
         data class SetDependencies(
-            val registrationManager: SaltPayRegistrationManager,
+            val registrationManager: SaltPayActivationManager,
             val saltPayConfig: SaltPayConfig,
         ) : Init()
     }
