@@ -2,6 +2,7 @@ package com.tangem.tap.features.onboarding.products.wallet.ui
 
 import com.google.android.material.button.MaterialButton
 import com.tangem.tap.common.extensions.show
+import com.tangem.tap.common.postUiDelayBg
 import com.tangem.tap.features.onboarding.products.wallet.redux.BackupState
 import com.tangem.tap.features.onboarding.products.wallet.ui.BackupCardType.FIRST_BACKUP
 import com.tangem.tap.features.onboarding.products.wallet.ui.BackupCardType.ORIGIN
@@ -32,7 +33,7 @@ class WalletBackupAnimator(
         else -> throw UnsupportedOperationException()
     }
 
-    private var currentStep = 0
+    private var currentStep = -1
 
     override fun updateBackupState(backupState: BackupState) {
     }
@@ -112,13 +113,17 @@ class WalletBackupAnimator(
     }
 
     override fun showWriteBackupCard(state: BackupState, backupCard: Int) {
-        currentStep = STEP_WRITE_BACKUP_CARD
 
         when (viewState) {
             State.TwoCards -> {
-                FIRST_BACKUP.alpha(1f)
-                cardsWidget.leapfrogWidget.leap {
-                    ORIGIN.alpha(0.4f)
+                if (currentStep == STEP_WRITE_BACKUP_CARD) return
+
+                val delay = if (currentStep == UNDEFINED) 700L else 0
+                postUiDelayBg(delay) {
+                    FIRST_BACKUP.alpha(1f)
+                    cardsWidget.leapfrogWidget.leap {
+                        ORIGIN.alpha(0.4f)
+                    }
                 }
             }
             State.TreeCards -> {
@@ -140,6 +145,7 @@ class WalletBackupAnimator(
                 }
             }
         }
+        currentStep = STEP_WRITE_BACKUP_CARD
     }
 
     override fun showSuccess(onEnd: () -> Unit) {
@@ -206,6 +212,7 @@ class WalletBackupAnimator(
     }
 
     companion object {
+        private const val UNDEFINED = -1
         private const val STEP_CREATE_WALLET = 0
         private const val STEP_BACKUP_INTRO = 1
         private const val STEP_SCAN_ORIGIN_CARD = 2
