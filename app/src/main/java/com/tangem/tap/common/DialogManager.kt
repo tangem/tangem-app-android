@@ -131,7 +131,7 @@ class DialogManager : StoreSubscriber<GlobalState> {
             is BackupDialog.BackupInProgress -> BackupInProgressDialog.create(context)
             is BackupDialog.UnfinishedBackupFound -> UnfinishedBackupFoundDialog.create(context)
             is BackupDialog.ConfirmDiscardingBackup -> ConfirmDiscardingBackupDialog.create(context)
-            is SaltPayDialog.Activation.NoFunds -> NoFundsForActivationDialog.create(context)
+            is SaltPayDialog.Activation.NoGas -> NoFundsForActivationDialog.create(context)
             is SaltPayDialog.Activation.TryToInterrupt -> TryToInterruptRegistrationDialog.create(context, state.dialog)
             is SaltPayDialog.Activation.OnError -> RegistrationErrorDialog.create(context, state.dialog)
             is WalletDialog.CurrencySelectionDialog -> CurrencySelectionDialog.create(state.dialog, context)
