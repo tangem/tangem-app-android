@@ -26,10 +26,11 @@ class UserTokensRepository(
     private val networkService: UserTokensNetworkService,
 ) {
     suspend fun getUserTokens(card: Card): List<Currency> {
-        if (DemoHelper.isDemoCardId(card.cardId)) {
-            return loadDemoCurrencies()
-        }
         val userId = card.getUserId()
+        if (DemoHelper.isDemoCardId(card.cardId)) {
+            return loadTokensOffline(card, userId).ifEmpty { loadDemoCurrencies() }
+        }
+
         if (!NetworkConnectivity.getInstance().isOnlineOrConnecting()) {
             return loadTokensOffline(card, userId)
         }
@@ -68,11 +69,15 @@ class UserTokensRepository(
     }
 
     suspend fun loadBlockchainsToDerive(card: Card): List<BlockchainNetwork> {
+        val userId = card.getUserId()
+        val blockchainNetworks = loadTokensOffline(card, userId).toBlockchainNetworks()
+
         if (DemoHelper.isDemoCardId(card.cardId)) {
-            return loadDemoCurrencies().toBlockchainNetworks()
+            return blockchainNetworks
+                .ifEmpty { loadDemoCurrencies().toBlockchainNetworks() }
         }
-        return storageService.getUserTokens(card.getUserId())?.toBlockchainNetworks()
-            ?: storageService.getUserTokens(card).toBlockchainNetworks()
+
+        return blockchainNetworks
     }
 
     private fun loadDemoCurrencies(): List<Currency> {
