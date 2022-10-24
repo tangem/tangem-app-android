@@ -62,24 +62,26 @@ private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch:
 
     when (action) {
         OnboardingWalletAction.Init -> {
-            // if (walletState.onboardingSaltPayState?.isTest == true) {
-            // store.dispatch(BackupAction.FinishBackup)
-            // return
-            // }
-
             when {
                 card == null -> {
-                    // StartForUnfinishedBackup -> navigateTo(OnboardingWallet) -> OnboardingWalletAction.Init
+                    // it's possible when found unfinished backup for standard Wallet cards
                     store.dispatch(OnboardingWalletAction.ResumeBackup)
                 }
                 card.hasWallets() && card.backupStatus == Card.BackupStatus.NoBackup -> {
                     store.dispatch(OnboardingWalletAction.ResumeBackup)
                 }
                 card.hasWallets() && card.backupStatus?.isActive == true -> {
-                    if (scanResponse.isSaltPay()) {
-                        store.dispatch(OnboardingWalletAction.GetToSaltPayStep)
+                    when {
+                        // check for unfinished backup for saltPay cards. See more
+                        scanResponse.isSaltPay() && backupService.hasIncompletedBackup -> {
+                            store.dispatch(OnboardingWalletAction.ResumeBackup)
+                        }
+                        scanResponse.isSaltPay() -> {
+                            store.dispatch(OnboardingWalletAction.GetToSaltPayStep)
+                            store.dispatch(BackupAction.FinishBackup)
+                        }
+                        else -> store.dispatch(BackupAction.FinishBackup)
                     }
-                    store.dispatch(BackupAction.FinishBackup)
                 }
                 else -> {
                     store.dispatch(OnboardingWalletAction.GetToCreateWalletStep)
@@ -327,15 +329,12 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             backupService.discardSavedBackup()
         }
         is BackupAction.CheckForUnfinishedBackup -> {
-            if (backupService.hasIncompletedBackup) {
+            if (backupService.hasIncompletedBackup && !backupService.primaryCardIsSaltPay()) {
                 store.dispatch(GlobalAction.ShowDialog(BackupDialog.UnfinishedBackupFound))
             }
         }
         is BackupAction.ResumeFoundUnfinishedBackup -> {
-            val isSaltPay = backupService.primaryCardId?.slice(0..3)?.let {
-                SaltPayWorkaround.isVisaBatchId(it)
-            } ?: false
-            store.dispatch(GlobalAction.Onboarding.StartForUnfinishedBackup(isSaltPay))
+            store.dispatch(GlobalAction.Onboarding.StartForUnfinishedBackup)
             store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingWallet))
         }
         is BackupAction.DismissBackup -> {
@@ -343,6 +342,12 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             store.dispatch(BackupAction.FinishBackup)
         }
     }
+}
+
+private fun BackupService.primaryCardIsSaltPay(): Boolean {
+    return primaryCardId?.slice(0..3)?.let {
+        SaltPayWorkaround.isVisaBatchId(it)
+    } ?: false
 }
 
 /**
