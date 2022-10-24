@@ -138,3 +138,12 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Unknown -> "unknown"
     }
 }
+
+fun Blockchain.isSupportedInApp(): Boolean {
+    return !excludedBlockchains.contains(this)
+}
+
+private val excludedBlockchains = listOf(
+    Blockchain.Optimism, // TODO: remove when fee calculation is fixed
+    Blockchain.SaltPay,
+)
