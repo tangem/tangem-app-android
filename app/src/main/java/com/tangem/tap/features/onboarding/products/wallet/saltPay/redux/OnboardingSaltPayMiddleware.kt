@@ -17,8 +17,8 @@ import com.tangem.tap.domain.TangemSigner
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletState
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.AllSymbolsTheSameFilter
+import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayActivationManager
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayExceptionHandler
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayRegistrationManager
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.message.SaltPayRegistrationError
 import com.tangem.tap.scope
 import com.tangem.tap.store
@@ -63,7 +63,7 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
 
             val state = getState()
             scope.launch {
-                val updateResult = state.saltPayManager.updateSaltPayStatus(
+                val updateResult = state.saltPayManager.updateActivationStatus(
                     amountToClaim = state.amountToClaim,
                     step = state.step,
                 ).successOr {
@@ -146,12 +146,9 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
                     onException(it.error)
                     return@launch
                 }
+
                 handleInProgress = false
-                val step = when (state.readyToClaim()) {
-                    true -> SaltPayRegistrationStep.Claim
-                    else -> SaltPayRegistrationStep.Finished
-                }
-                withMainContext { store.dispatch(OnboardingSaltPayAction.SetStep(step)) }
+                withMainContext { store.dispatch(OnboardingSaltPayAction.Update) }
             }
         }
         is OnboardingSaltPayAction.TrySetPin -> {
@@ -228,7 +225,7 @@ data class UpdateResult(
     val amountToClaim: Amount? = null,
 )
 
-suspend fun SaltPayRegistrationManager.updateSaltPayStatus(
+suspend fun SaltPayActivationManager.updateActivationStatus(
     amountToClaim: Amount?,
     step: SaltPayRegistrationStep,
 ): Result<UpdateResult> {
@@ -267,7 +264,7 @@ suspend fun SaltPayRegistrationManager.updateSaltPayStatus(
 }
 
 private suspend fun getAmountToClaimIfNeeded(
-    saltPayManager: SaltPayRegistrationManager,
+    saltPayManager: SaltPayActivationManager,
     amountToClaim: Amount?,
 ): Amount? {
     Timber.d("getAmountToClaimIfNeeded: for amount: %s", amountToClaim)
@@ -315,7 +312,7 @@ private suspend fun onException(error: Throwable) {
 }
 
 private suspend fun checkGasIfNeeded(
-    saltPayManager: SaltPayRegistrationManager,
+    saltPayManager: SaltPayActivationManager,
     step: SaltPayRegistrationStep,
 ): Result<Unit> {
     Timber.d("checkGasIfNeeded: for step: %s", step)
@@ -336,7 +333,7 @@ private suspend fun checkGasIfNeeded(
 }
 
 private suspend fun registerKYCIfNeeded(
-    saltPayManager: SaltPayRegistrationManager,
+    saltPayManager: SaltPayActivationManager,
     step: SaltPayRegistrationStep,
 ): Result<Unit> {
     Timber.d("registerKYCIfNeeded: step: %s", step)
@@ -355,7 +352,7 @@ private suspend fun registerKYCIfNeeded(
 }
 
 private suspend fun checkRegistration(
-    saltPayManager: SaltPayRegistrationManager,
+    saltPayManager: SaltPayActivationManager,
 ): Result<SaltPayRegistrationStep> {
     Timber.d("checkRegistration")
     return try {
