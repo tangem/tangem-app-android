@@ -38,26 +38,28 @@ private fun internalReduce(action: Action, appState: AppState): OnboardingWallet
 
 private class ReducerForGlobalAction {
     companion object {
-        fun reduce(action: GlobalAction.Onboarding, state: OnboardingWalletState): OnboardingWalletState = when (action) {
-            is GlobalAction.Onboarding.Start -> {
-                OnboardingWalletState(
-                    backupState = state.backupState.copy(
-                        maxBackupCards = if (action.scanResponse.isSaltPay()) 1 else 2,
-                        canSkipBackup = if (action.scanResponse.isSaltPay()) false else action.canSkipBackup,
-                    ),
-                    isSaltPay = action.scanResponse.isSaltPay()
-                )
+        fun reduce(action: GlobalAction.Onboarding, state: OnboardingWalletState): OnboardingWalletState {
+            return when (action) {
+                is GlobalAction.Onboarding.Start -> {
+                    OnboardingWalletState(
+                        backupState = state.backupState.copy(
+                            maxBackupCards = if (action.scanResponse.isSaltPay()) 1 else 2,
+                            canSkipBackup = if (action.scanResponse.isSaltPay()) false else action.canSkipBackup,
+                        ),
+                        isSaltPay = action.scanResponse.isSaltPay(),
+                    )
+                }
+                is GlobalAction.Onboarding.StartForUnfinishedBackup -> {
+                    OnboardingWalletState(
+                        backupState = state.backupState.copy(
+                            maxBackupCards = 2,
+                            canSkipBackup = false,
+                        ),
+                        isSaltPay = false,
+                    )
+                }
+                else -> state
             }
-            is GlobalAction.Onboarding.StartForUnfinishedBackup -> {
-                OnboardingWalletState(
-                    backupState = state.backupState.copy(
-                        maxBackupCards = if (action.isSaltPayBackup) 1 else 2,
-                        canSkipBackup = false,
-                    ),
-                    isSaltPay = action.isSaltPayBackup,
-                )
-            }
-            else -> state
         }
     }
 }
