@@ -16,8 +16,8 @@ class SaltPayExceptionHandler {
             when (throwable) {
                 is SaltPayRegistrationError -> {
                     val dialog = when (throwable) {
-                        is SaltPayRegistrationError.NoGas -> SaltPayDialog.NoFundsForActivation
-                        else -> SaltPayDialog.RegistrationError(throwable)
+                        is SaltPayRegistrationError.NoGas -> SaltPayDialog.Activation.NoFunds
+                        else -> SaltPayDialog.Activation.OnError(throwable)
                     }
                     store.dispatchDialogShow(dialog)
                 }
