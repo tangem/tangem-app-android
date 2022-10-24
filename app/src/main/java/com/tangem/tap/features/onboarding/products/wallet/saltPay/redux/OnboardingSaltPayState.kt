@@ -14,8 +14,8 @@ import com.tangem.tap.copyToClipboard
 import com.tangem.tap.domain.extensions.makeSaltPayWalletManager
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.GnosisRegistrator
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.KYCProvider
+import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayActivationManager
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayConfig
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayRegistrationManager
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.persistence.SaltPayRegistrationStorage
 import com.tangem.tap.preferencesStorage
@@ -27,7 +27,7 @@ import java.math.BigDecimal
  */
 data class OnboardingSaltPayState(
     @Transient
-    val saltPayManager: SaltPayRegistrationManager = SaltPayRegistrationManager.stub(),
+    val saltPayManager: SaltPayActivationManager = SaltPayActivationManager.stub(),
     val saltPayConfig: SaltPayConfig = SaltPayConfig.stub(),
     val pinCode: String? = null,
     val accessCode: String? = null,
@@ -47,7 +47,7 @@ data class OnboardingSaltPayState(
     val pinLength: Int = 4
 
     companion object {
-        fun initDependency(scanResponse: ScanResponse): Pair<SaltPayRegistrationManager, SaltPayConfig> {
+        fun initDependency(scanResponse: ScanResponse): Pair<SaltPayActivationManager, SaltPayConfig> {
             val globalState = store.state.globalState
             val saltPayConfig = globalState.configManager?.config?.saltPayConfig.guard {
                 throw NullPointerException("SaltPayConfig is not initialized")
@@ -85,7 +85,7 @@ data class OnboardingSaltPayState(
             paymentologyService: PaymentologyApiService,
             registrationStorage: SaltPayRegistrationStorage,
             kycProvider: KYCProvider,
-        ): SaltPayRegistrationManager {
+        ): SaltPayActivationManager {
             if (!scanResponse.isSaltPay()) {
                 throw IllegalArgumentException("Can't initialize the OnboardingSaltPayMiddleware if card is not SalPay")
             }
@@ -93,7 +93,7 @@ data class OnboardingSaltPayState(
                 throw NullPointerException("SaltPay card must have one wallet at least")
             }
 
-            return SaltPayRegistrationManager(
+            return SaltPayActivationManager(
                 cardId = scanResponse.card.cardId,
                 cardPublicKey = scanResponse.card.cardPublicKey,
                 walletPublicKey = saltPaySingleWallet.publicKey,
