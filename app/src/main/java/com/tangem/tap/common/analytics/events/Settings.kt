@@ -26,7 +26,7 @@ sealed class Settings(
     sealed class CardSettings(
         event: String,
         params: Map<String, String> = mapOf(),
-    ) : Onboarding("Settings / Card Settings", event, params) {
+    ) : Settings("Settings / Card Settings", event, params) {
 
         class ButtonFactoryReset : CardSettings("Button - Factory Reset")
         class FactoryResetFinished : CardSettings("Factory Reset Finished")
@@ -47,7 +47,7 @@ sealed class Settings(
     sealed class AppSettings(
         event: String,
         params: Map<String, String> = mapOf(),
-    ) : Onboarding("Settings / App Settings", event, params) {
+    ) : Settings("Settings / App Settings", event, params) {
 
         sealed class FaceIDSwitcherChanged(state: AnalyticsParam.OnOffState) : CardSettings(
             event = "Face ID Switcher Changed",
