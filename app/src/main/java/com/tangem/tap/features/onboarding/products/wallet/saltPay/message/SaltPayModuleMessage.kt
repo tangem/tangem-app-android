@@ -20,7 +20,7 @@ sealed class SaltPayModuleError(
     }
 }
 
-sealed class SaltPayRegistrationError(
+sealed class SaltPayActivationError(
     subCode: Int,
     message: String? = null,
     override val data: Any? = null,
@@ -28,27 +28,27 @@ sealed class SaltPayRegistrationError(
     subCode = ERROR_CODE_REGISTRATION + subCode,
     message = message ?: EMPTY_MESSAGE,
 ) {
-    object Unknown : SaltPayRegistrationError(4)
-    object Empty : SaltPayRegistrationError(4)
+    object Unknown : SaltPayActivationError(4)
+    object Empty : SaltPayActivationError(4)
 
     // gnosis
-    object FailedToMakeTxData : SaltPayRegistrationError(1)
-    object FailedToSendTx : SaltPayRegistrationError(2)
+    object FailedToMakeTxData : SaltPayActivationError(1)
+    object FailedToSendTx : SaltPayActivationError(2)
 
-    object NeedPin : SaltPayRegistrationError(3)
-    object NoGas : SaltPayRegistrationError(5) //
-    class EmptyResponse(message: String?) : SaltPayRegistrationError(6, message)
-    class CardNotFound(message: String?) : SaltPayRegistrationError(8, message)
-    class CardDisabled(message: String?) : SaltPayRegistrationError(9, message)
-    class CardNotPassed(message: String?) : SaltPayRegistrationError(10, message)
-    object EmptyDynamicAttestResponse : SaltPayRegistrationError(11)
-    object EmptyBackupCardScanned : SaltPayRegistrationError(12)
-    object WeakPin : SaltPayRegistrationError(13)
+    object NeedPin : SaltPayActivationError(3)
+    object NoGas : SaltPayActivationError(5) //
+    class EmptyResponse(message: String?) : SaltPayActivationError(6, message)
+    class CardNotFound(message: String?) : SaltPayActivationError(8, message)
+    class CardDisabled(message: String?) : SaltPayActivationError(9, message)
+    class CardNotPassed(message: String?) : SaltPayActivationError(10, message)
+    object EmptyDynamicAttestResponse : SaltPayActivationError(11)
+    object EmptyBackupCardScanned : SaltPayActivationError(12)
+    object WeakPin : SaltPayActivationError(13)
 
-    object FailedToGetFundsToClaim : SaltPayRegistrationError(14)
-    object NoFundsToClaim : SaltPayRegistrationError(15)
-    object ClaimTransactionFailed : SaltPayRegistrationError(16)
-    object NotClaimed : SaltPayRegistrationError(17)
+    object FailedToGetFundsToClaim : SaltPayActivationError(14)
+    object NoFundsToClaim : SaltPayActivationError(15)
+    object ClaimTransactionFailed : SaltPayActivationError(16)
+    object NotClaimed : SaltPayActivationError(17)
 
     companion object {
         const val EMPTY_MESSAGE = ""
