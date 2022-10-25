@@ -4,6 +4,7 @@ import android.net.Uri
 import com.tangem.blockchain.blockchains.ethereum.SignedEthereumTransaction
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
+import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.TransactionSigner
 import com.tangem.blockchain.extensions.successOr
 import com.tangem.common.extensions.guard
@@ -48,7 +49,7 @@ class SaltPayActivationManager(
             } else {
                 Result.Failure(SaltPayActivationError.NoGas)
             }
-            is com.tangem.blockchain.extensions.Result.Failure -> Result.Failure(SaltPayActivationError.NoGas)
+            is com.tangem.blockchain.extensions.Result.Failure -> Result.Failure(hasGasResult.error as BlockchainSdkError)
         }
     }
 
