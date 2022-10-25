@@ -39,7 +39,7 @@ sealed class WalletAction : Action {
         data class NoAccount(
             val wallet: Wallet,
             val blockchain: BlockchainNetwork,
-            val amountToCreateAccount: String
+            val amountToCreateAccount: String,
         ) : WalletAction()
 
         data class Failure(val wallet: Wallet, val errorMessage: String? = null) : WalletAction()
@@ -47,6 +47,10 @@ sealed class WalletAction : Action {
 
     data class SetArtworkId(val artworkId: String?) : WalletAction()
 
+    sealed class UserTokens : WalletAction() {
+        object Loading : UserTokens()
+        object Loaded : UserTokens()
+    }
 
     sealed class MultiWallet : WalletAction() {
         data class SetIsMultiwalletAllowed(val isMultiwalletAllowed: Boolean) : MultiWallet()
