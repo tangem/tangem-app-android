@@ -9,6 +9,7 @@ import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
@@ -22,6 +23,7 @@ import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.scope
 import com.tangem.tap.store
+import com.tangem.wallet.R
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.Middleware
@@ -96,6 +98,16 @@ class WalletConnectMiddleware {
                 store.dispatchOnMain(GlobalAction.ShowDialog(WalletConnectDialog.SessionTimeout))
             }
             is WalletConnectAction.FailureEstablishingSession -> {
+                if (action.error != null) {
+                    store.dispatch(
+                        GlobalAction.ShowDialog(
+                            AppDialog.SimpleOkDialogRes(
+                                headerId = R.string.common_warning,
+                                messageId = action.error.messageResource,
+                            ),
+                        ),
+                    )
+                }
                 if (action.session != null) {
                     walletConnectManager.disconnect(action.session)
                 }
@@ -306,9 +318,11 @@ class WalletConnectMiddleware {
         } else {
             blockchain
         }
+        val derivation = blockchainToMake.derivationPath(store.state.globalState.scanResponse?.card?.derivationStyle)
+            ?.rawPath
         val blockchainNetwork = BlockchainNetwork(
             blockchain = blockchainToMake,
-            derivationPath = wallet.derivationPath?.rawPath,
+            derivationPath = derivation,
             tokens = emptyList(),
         )
         return walletState.getWalletManager(blockchainNetwork)
