@@ -16,8 +16,6 @@
     <string name="twins_onboarding_subtitle" translatable="false">One wallet. Two cards.</string>
     <string name="twins_onboarding_description_format" translatable="false">This one that you are holding in your hands and the other one with number #%s.</string>
 
-    <string name="wallet_twins_chip_format" translatable="false">Card %1d of %2d</string>
-
     <string name="details_row_title_twins_recreate" translatable="false">Re-create twin wallet</string>
     <string name="details_row_title_card_tou" translatable="false">Card terms of use</string>
 
@@ -201,7 +199,7 @@
     <string name="address_qr_code_message_format" translatable="false">Send only %s (%s) to this address. Using other tokens and networks may result in loss of funds.</string>
     <string name="address_qr_code_message_token_format" translatable="false">Send only %s (%s) from %s network to this address. Using other tokens and networks may result in loss of funds.</string>
 
-    <string name="onboarding_twins_interrupt_warning" translatable="false">If the process of re-creating the wallet gets interrupted in any way, you\'ll have to start over.</string>
+    <string name="onboarding_twins_interrupt_warning" translatable="false">If the process of creating the wallet gets interrupted in any way, you\'ll have to start over.</string>
     <string name="onboarding_twin_exit_warning" translatable="false">The twinning process is partly complete. You can\'t exit it now.</string>
 
     <string name="onboarding_error_create_primary_wallet" translatable="false">Internal error: can\'t create wallet manager</string>
@@ -267,7 +265,7 @@
     <string name="onboarding_wallet_info_subtitle_third" translatable="false">You will be able to set an access code to protect your wallets.</string>
     <string name="onboarding_wallet_info_subtitle_fourth" translatable="false">Access code can be restored with one of backup cards.</string>
 
-    <string name="onboarding_subtitle_success_tangem_wallet_onboarding" translatable="false">Your Tangem Wallet card is configured and ready for use.</string>
+    <string name="onboarding_subtitle_success_tangem_wallet_onboarding" translatable="false">Your wallet card is configured and ready for use.</string>
     <string name="onboarding_subtitle_success_backup_one_card" translatable="false">You have created 1 backup card, and now this card are ready for use.</string>
     <string name="common_origin_card" translatable="false">Primary Card</string>
     <string name="onboarding_alert_i_understand" translatable="false">I understand</string>
