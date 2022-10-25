@@ -10,6 +10,8 @@ import com.tangem.domain.common.extensions.successOr
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.network.api.paymentology.KYCStatus
 import com.tangem.network.api.paymentology.RegistrationResponse
+import com.tangem.tap.common.analytics.GlobalAnalyticsEventHandler
+import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -56,6 +58,7 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
     fun getAppState(): AppState = appState()!!
     fun getOnboardingWalletState(): OnboardingWalletState = getAppState().onboardingWalletState
     fun getState(): OnboardingSaltPayState = getOnboardingWalletState().onboardingSaltPayState!!
+    val analyticsHandler = getAppState().globalState.analyticsHandler
 
     when (action) {
         is OnboardingSaltPayAction.Update -> {
@@ -78,6 +81,8 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
             }
         }
         is OnboardingSaltPayAction.RegisterCard -> {
+            analyticsHandler.handleAnalyticsEvent(Onboarding.ButtonConnect())
+
             handleInProgress = true
             val state = getState()
 
@@ -154,6 +159,7 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
         is OnboardingSaltPayAction.TrySetPin -> {
             try {
                 assertPinValid(action.pin, getState().pinLength)
+                analyticsHandler.handleAnalyticsEvent(Onboarding.PinCodeSet())
                 store.dispatch(OnboardingSaltPayAction.SetPin(action.pin))
                 store.dispatch(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.CardRegistration))
             } catch (error: SaltPayActivationError) {
@@ -161,6 +167,7 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
             }
         }
         is OnboardingSaltPayAction.Claim -> {
+            analyticsHandler.handleAnalyticsEvent(Onboarding.ButtonClaim())
             val state = getState()
             handleInProgress = true
 
@@ -191,7 +198,7 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
                     onException(it.error)
                     return@launch
                 }
-// [REDACTED_TODO_COMMENT]
+
                 dispatchOnMain(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.ClaimInProgress))
                 dispatchOnMain(OnboardingSaltPayAction.RefreshClaim)
             }
@@ -210,13 +217,33 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
 
                 handleInProgress = false
                 handleClaimRefreshInProgress = false
+
+                analyticsHandler.handleAnalyticsEvent(Onboarding.ClaimWasSuccessfully())
                 dispatchOnMain(OnboardingSaltPayAction.SetTokenBalance(balance))
                 dispatchOnMain(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.Finished))
             }
         }
+        is OnboardingSaltPayAction.SetStep -> handleAnalytics(analyticsHandler, action.newStep)
         else -> {
             /* do nothing, only reduce */
         }
+    }
+}
+
+fun handleAnalytics(analyticsHandler: GlobalAnalyticsEventHandler, step: SaltPayActivationStep?) {
+    when(step){
+        SaltPayActivationStep.None -> {}
+        SaltPayActivationStep.NoGas -> {}
+        SaltPayActivationStep.NeedPin -> {}
+        SaltPayActivationStep.CardRegistration -> {}
+        SaltPayActivationStep.KycIntro -> {}
+        SaltPayActivationStep.KycStart -> analyticsHandler.handleAnalyticsEvent(Onboarding.KYCStarted())
+        SaltPayActivationStep.KycWaiting -> analyticsHandler.handleAnalyticsEvent(Onboarding.KYCInProgress())
+        SaltPayActivationStep.KycReject -> analyticsHandler.handleAnalyticsEvent(Onboarding.KYCRejected())
+        SaltPayActivationStep.Claim -> analyticsHandler.handleAnalyticsEvent(Onboarding.ClaimScreenOpened())
+        SaltPayActivationStep.ClaimInProgress -> {}
+        SaltPayActivationStep.Finished -> {}
+        null -> {}
     }
 }
 
