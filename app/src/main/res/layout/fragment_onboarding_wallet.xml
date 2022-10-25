@@ -15,7 +15,7 @@
         style="@style/ThemeOverlay.MyTheme.Toolbar.AccentColorMenu"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/backgroundLightGray"
+        android:background="@android:color/transparent"
         android:fitsSystemWindows="true"
         app:liftOnScroll="true">
 
@@ -28,16 +28,17 @@
 
     </com.google.android.material.appbar.AppBarLayout>
 
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/onboarding_main_container"
+    <androidx.appcompat.widget.LinearLayoutCompat
+        android:id="@+id/onboarding_root"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:clipChildren="false"
+        android:orientation="vertical"
         app:layout_behavior="@string/appbar_scrolling_view_behavior">
 
         <include
             layout="@layout/view_onboarding_progress"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="32dp"
             android:layout_marginTop="16dp"
@@ -46,175 +47,188 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <androidx.appcompat.widget.AppCompatImageView
-            android:id="@+id/imv_card_background"
-            android:layout_width="236dp"
-            android:layout_height="236dp"
-            android:adjustViewBounds="true"
-            android:background="@drawable/shape_circle"
-            android:backgroundTint="@color/lightGray0"
-            android:elevation="0dp"
-            android:scaleType="fitCenter"
-            app:layout_constraintBottom_toBottomOf="@id/fl_cards_container"
-            app:layout_constraintEnd_toEndOf="@id/fl_cards_container"
-            app:layout_constraintStart_toStartOf="@id/fl_cards_container"
-            app:layout_constraintTop_toTopOf="@id/fl_cards_container" />
-
-
-        <FrameLayout
-            android:id="@+id/fl_cards_container"
-            android:layout_width="0dp"
-            android:layout_height="0dp"
-            android:layout_marginTop="0dp"
-            android:clipChildren="false"
-            app:layout_constraintBottom_toTopOf="@id/guideline2"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/pb_state">
-
-            <androidx.appcompat.widget.AppCompatImageView
-                android:id="@+id/imv_second_backup_card"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_gravity="center"
-                android:layout_marginStart="32dp"
-                android:layout_marginEnd="32dp"
-                android:scaleType="fitCenter"
-                android:src="@drawable/card_placeholder_black"
-                android:visibility="gone" />
-
-            <androidx.appcompat.widget.AppCompatImageView
-                android:id="@+id/imv_first_backup_card"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_gravity="center"
-                android:layout_marginStart="32dp"
-                android:layout_marginEnd="32dp"
-                android:scaleType="fitCenter"
-                android:src="@drawable/card_placeholder_black"
-                android:visibility="gone" />
-
-            <androidx.appcompat.widget.AppCompatImageView
-                android:id="@+id/imv_front_card"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_gravity="center"
-                android:layout_marginStart="32dp"
-                android:layout_marginEnd="32dp"
-                android:scaleType="fitCenter"
-                android:src="@drawable/card_placeholder_black"
-                android:transitionName="imv_front_card" />
-
-        </FrameLayout>
-
-        <androidx.appcompat.widget.AppCompatImageView
-            android:id="@+id/imv_success"
-            android:layout_width="142dp"
-            android:layout_height="142dp"
-            android:src="@drawable/ic_activation_success"
-            android:visibility="gone"
-            app:layout_constraintBottom_toTopOf="@id/guideline2"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.495"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/pb_state" />
-
-        <androidx.appcompat.widget.LinearLayoutCompat
-            android:id="@+id/ll_header_body_container"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="32dp"
-            android:layout_marginTop="72dp"
-            android:layout_marginEnd="32dp"
-            android:orientation="horizontal"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/guideline2">
-
-        </androidx.appcompat.widget.LinearLayoutCompat>
-
-        <TextView
-            android:id="@+id/tv_header"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:fontFamily="sans-serif-medium"
-            android:textAlignment="center"
-            android:textColor="#060606"
-            android:textSize="24sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintHorizontal_bias="0.504"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="@+id/guideline2"
-            tools:text="Добавлена одна резервная карта" />
-
-        <TextView
-            android:id="@+id/tv_body"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/home_bottom_tv_body_margin_start"
-            android:layout_marginTop="@dimen/home_bottom_tv_body_margin_top"
-            android:layout_marginEnd="@dimen/home_bottom_tv_body_margin_end"
-            android:textAlignment="center"
-            android:textColor="#686868"
-            android:textSize="16sp"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/tv_header"
-            tools:text="Body" />
-
-        <androidx.viewpager2.widget.ViewPager2
-            android:id="@+id/view_pager_backup_info"
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/onboarding_wallet_container"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:visibility="gone"
-            app:flow_verticalBias="0"
-            app:layout_constraintTop_toTopOf="@+id/guideline2" />
+            android:layout_height="match_parent"
+            android:clipChildren="false">
 
-        <com.google.android.material.tabs.TabLayout
-            android:id="@+id/tab_layout_backup_info"
-            android:layout_width="match_parent"
-            android:layout_height="10dp"
-            android:layout_marginBottom="16dp"
-            android:background="@color/backgroundLightGray"
-            android:visibility="gone"
-            app:layout_constraintBottom_toTopOf="@id/layout_buttons_common"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/view_pager_backup_info"
-            app:tabBackground="@drawable/selector_tabs_dots"
-            app:tabGravity="center"
-            app:tabIndicator="@null"
-            app:tabPaddingEnd="8dp"
-            app:tabPaddingStart="8dp" />
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/imv_card_background"
+                android:layout_width="236dp"
+                android:layout_height="236dp"
+                android:adjustViewBounds="true"
+                android:background="@drawable/shape_circle"
+                android:backgroundTint="@color/lightGray0"
+                android:elevation="0dp"
+                android:scaleType="fitCenter"
+                app:layout_constraintBottom_toBottomOf="@id/fl_cards_container"
+                app:layout_constraintEnd_toEndOf="@id/fl_cards_container"
+                app:layout_constraintStart_toStartOf="@id/fl_cards_container"
+                app:layout_constraintTop_toTopOf="@id/fl_cards_container" />
+
+            <FrameLayout
+                android:id="@+id/fl_cards_container"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_marginTop="0dp"
+                android:clipChildren="false"
+                app:layout_constraintBottom_toTopOf="@id/guideline2"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <androidx.appcompat.widget.AppCompatImageView
+                    android:id="@+id/imv_second_backup_card"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:layout_marginStart="32dp"
+                    android:layout_marginEnd="32dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/card_placeholder_black"
+                    android:visibility="gone" />
+
+                <androidx.appcompat.widget.AppCompatImageView
+                    android:id="@+id/imv_first_backup_card"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:layout_marginStart="32dp"
+                    android:layout_marginEnd="32dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/card_placeholder_black"
+                    android:visibility="gone" />
+
+                <androidx.appcompat.widget.AppCompatImageView
+                    android:id="@+id/imv_front_card"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center"
+                    android:layout_marginStart="32dp"
+                    android:layout_marginEnd="32dp"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/card_placeholder_black"
+                    android:transitionName="imv_front_card" />
+
+            </FrameLayout>
+
+            <androidx.appcompat.widget.AppCompatImageView
+                android:id="@+id/imv_success"
+                android:layout_width="142dp"
+                android:layout_height="142dp"
+                android:src="@drawable/ic_activation_success"
+                android:visibility="gone"
+                app:layout_constraintBottom_toTopOf="@id/guideline2"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.495"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+
+            <androidx.appcompat.widget.LinearLayoutCompat
+                android:id="@+id/ll_header_body_container"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="32dp"
+                android:layout_marginTop="72dp"
+                android:layout_marginEnd="32dp"
+                android:orientation="horizontal"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/guideline2">
+
+            </androidx.appcompat.widget.LinearLayoutCompat>
+
+            <TextView
+                android:id="@+id/tv_header"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:fontFamily="sans-serif-medium"
+                android:textAlignment="center"
+                android:textColor="#060606"
+                android:textSize="24sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.504"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="@+id/guideline2"
+                tools:text="Добавлена одна резервная карта" />
+
+            <TextView
+                android:id="@+id/tv_body"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/home_bottom_tv_body_margin_start"
+                android:layout_marginTop="@dimen/home_bottom_tv_body_margin_top"
+                android:layout_marginEnd="@dimen/home_bottom_tv_body_margin_end"
+                android:textAlignment="center"
+                android:textColor="#686868"
+                android:textSize="16sp"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/tv_header"
+                tools:text="Body" />
+
+            <androidx.viewpager2.widget.ViewPager2
+                android:id="@+id/view_pager_backup_info"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="8dp"
+                android:visibility="gone"
+                app:flow_verticalBias="0"
+                app:layout_constraintTop_toTopOf="@+id/guideline2" />
+
+            <com.google.android.material.tabs.TabLayout
+                android:id="@+id/tab_layout_backup_info"
+                android:layout_width="match_parent"
+                android:layout_height="10dp"
+                android:layout_marginBottom="16dp"
+                android:background="@color/backgroundLightGray"
+                android:visibility="gone"
+                app:layout_constraintBottom_toTopOf="@id/layout_buttons_common"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/view_pager_backup_info"
+                app:tabBackground="@drawable/selector_tabs_dots"
+                app:tabGravity="center"
+                app:tabIndicator="@null"
+                app:tabPaddingEnd="8dp"
+                app:tabPaddingStart="8dp" />
+
+            <include
+                android:id="@+id/layout_buttons_common"
+                layout="@layout/layout_onboarding_buttons_common"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:layout_constraintBottom_toBottomOf="parent" />
+
+            <include
+                android:id="@+id/layout_buttons_add_cards"
+                layout="@layout/layout_onboarding_buttons_add_cards"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="parent" />
+
+            <androidx.constraintlayout.widget.Guideline
+                android:id="@+id/guideline2"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintGuide_percent="@dimen/onboarding_wallet_top_guide_line_weight"
+                app:layout_constraintTop_toTopOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
         <include
-            android:id="@+id/layout_buttons_common"
-            layout="@layout/layout_onboarding_buttons_common"
+            android:id="@+id/onboarding_saltpay_container"
+            layout="@layout/layout_onboarding_saltpay"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:layout_constraintBottom_toBottomOf="parent" />
+            android:layout_height="match_parent"
+            android:visibility="gone" />
 
-        <include
-            android:id="@+id/layout_buttons_add_cards"
-            layout="@layout/layout_onboarding_buttons_add_cards"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="parent" />
-
-        <androidx.constraintlayout.widget.Guideline
-            android:id="@+id/guideline2"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintGuide_percent="@dimen/onboarding_wallet_top_guide_line_weight"
-            app:layout_constraintTop_toTopOf="parent" />
-
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.appcompat.widget.LinearLayoutCompat>
 
     <include
         android:id="@+id/v_confetti"
