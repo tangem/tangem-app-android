@@ -16,6 +16,7 @@ data class Config(
     val mercuryoWidgetId: String = "",
     val mercuryoSecret: String = "",
     val appsFlyerDevKey: String = "",
+    val amplitudeApiKey: String = "",
     val blockchainSdkConfig: BlockchainSdkConfig = BlockchainSdkConfig(),
     val isSendingToPayIdEnabled: Boolean = true,
     val isTopUpEnabled: Boolean = false,
@@ -90,6 +91,7 @@ class ConfigManager {
                 tronGridApiKey = values.tronGridApiKey
             ),
             appsFlyerDevKey = values.appsFlyerDevKey,
+            amplitudeApiKey = values.amplitudeApiKey,
             shopify = values.shopifyShop,
             zendesk = values.zendesk,
             saltPayConfig = values.saltPay,
@@ -107,6 +109,7 @@ class ConfigManager {
                 infuraProjectId = values.infuraProjectId
             ),
             appsFlyerDevKey = values.appsFlyerDevKey,
+            amplitudeApiKey = values.amplitudeApiKey,
             shopify = values.shopifyShop,
             zendesk = values.zendesk,
             saltPayConfig = values.saltPay,
