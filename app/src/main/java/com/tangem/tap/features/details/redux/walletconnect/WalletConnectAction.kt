@@ -3,6 +3,7 @@ package com.tangem.tap.features.details.redux.walletconnect
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.redux.NotificationAction
+import com.tangem.tap.domain.TapError
 import com.tangem.wallet.R
 import com.trustwallet.walletconnect.models.binance.WCBinanceTradeOrder
 import com.trustwallet.walletconnect.models.binance.WCBinanceTransferOrder
@@ -52,7 +53,7 @@ sealed class WalletConnectAction : Action {
         val updatedSession: WalletConnectSession,
     ) : WalletConnectAction()
 
-    data class FailureEstablishingSession(val session: WCSession?) : WalletConnectAction()
+    data class FailureEstablishingSession(val session: WCSession?, val error: TapError? = null) : WalletConnectAction()
     data class SetSessionsRestored(val sessions: List<WalletConnectSession>) :
         WalletConnectAction()
 
@@ -103,6 +104,6 @@ sealed class WalletConnectAction : Action {
 
         data class Sign(
             val id: Long, val data: ByteArray, val sessionData: WCSession,
-            ) : WalletConnectAction()
+        ) : WalletConnectAction()
     }
 }
