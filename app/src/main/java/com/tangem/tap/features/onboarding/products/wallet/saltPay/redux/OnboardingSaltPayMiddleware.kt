@@ -67,10 +67,7 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
 
             val state = getState()
             scope.launch {
-                val updateResult = state.saltPayManager.updateActivationStatus(
-                    amountToClaim = state.amountToClaim,
-                    step = state.step,
-                ).successOr {
+                val updateResult = state.saltPayManager.updateActivationStatus(state.amountToClaim).successOr {
                     onException(it.error)
                     return@launch
                 }
@@ -146,15 +143,18 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
         }
         is OnboardingSaltPayAction.RegisterKYC -> {
             val state = getState()
+            store.dispatch(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.KycWaiting))
             handleInProgress = true
+
             scope.launch {
-                registerKYCIfNeeded(state.saltPayManager, state.step).successOr {
+                Timber.d("saltPayManager.registerKYC()")
+                state.saltPayManager.registerKYC().successOr {
                     onException(it.error)
                     return@launch
                 }
 
                 handleInProgress = false
-                withMainContext { store.dispatch(OnboardingSaltPayAction.Update) }
+                dispatchOnMain(OnboardingSaltPayAction.Update)
             }
         }
         is OnboardingSaltPayAction.TrySetPin -> {
