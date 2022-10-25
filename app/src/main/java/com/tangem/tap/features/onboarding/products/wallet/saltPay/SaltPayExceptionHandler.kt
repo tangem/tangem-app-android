@@ -4,7 +4,7 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.dialog.SaltPayDialog
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.message.SaltPayRegistrationError
+import com.tangem.tap.features.onboarding.products.wallet.saltPay.message.SaltPayActivationError
 import com.tangem.tap.store
 
 /**
@@ -14,9 +14,9 @@ class SaltPayExceptionHandler {
     companion object {
         fun handle(throwable: Throwable) {
             when (throwable) {
-                is SaltPayRegistrationError -> {
+                is SaltPayActivationError -> {
                     val dialog = when (throwable) {
-                        is SaltPayRegistrationError.NoGas -> SaltPayDialog.Activation.NoGas
+                        is SaltPayActivationError.NoGas -> SaltPayDialog.Activation.NoGas
                         else -> SaltPayDialog.Activation.OnError(throwable)
                     }
                     store.dispatchDialogShow(dialog)
