@@ -14,7 +14,7 @@ import com.tangem.domain.common.ScanResponse
 import com.tangem.network.common.MoshiConverter
 import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.tap.common.AssetReader
-import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.AnalyticsAnOld
 import com.tangem.tap.common.analytics.GlobalAnalyticsEventHandler
 import com.tangem.tap.tangemSdkManager
 
@@ -39,7 +39,7 @@ class TwinCardsManager(
                 (response.error as? TangemSdkError)?.let { error ->
                    analyticsHandler?.handleCardSdkErrorEvent(
                         error,
-                        Analytics.ActionToLog.CreateWallet,
+                        AnalyticsAnOld.ActionToLog.CreateWallet,
                         card = card
                     )
                 }
@@ -69,7 +69,7 @@ class TwinCardsManager(
                 (response.error as? TangemSdkError)?.let { error ->
                     analyticsHandler?.handleCardSdkErrorEvent(
                         error,
-                        Analytics.ActionToLog.CreateWallet,
+                        AnalyticsAnOld.ActionToLog.CreateWallet,
                         card = card
                     )
                 }
@@ -89,7 +89,7 @@ class TwinCardsManager(
                 (response.error as? TangemSdkError)?.let { error ->
                     analyticsHandler?.handleCardSdkErrorEvent(
                         error,
-                        Analytics.ActionToLog.WriteIssuerData,
+                        AnalyticsAnOld.ActionToLog.WriteIssuerData,
                         card = card
                     )
                 }
