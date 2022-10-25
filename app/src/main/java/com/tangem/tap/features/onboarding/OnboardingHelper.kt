@@ -15,16 +15,14 @@ class OnboardingHelper {
         fun isOnboardingCase(response: ScanResponse): Boolean {
             val cardInfoStorage = preferencesStorage.usedCardsPrefStorage
             return when {
-                response.productType == ProductType.Twins -> {
+                response.isTangemTwins() -> {
                     if (!response.twinsIsTwinned()) {
                         true
                     } else {
                         cardInfoStorage.activationIsStarted(response.card.cardId)
                     }
                 }
-                response.card.hasWallets() -> {
-                    cardInfoStorage.activationIsStarted(response.card.cardId)
-                }
+                response.card.hasWallets() -> cardInfoStorage.activationIsStarted(response.card.cardId)
                 else -> true
             }
         }
@@ -38,6 +36,7 @@ class OnboardingHelper {
                     AppScreen.OnboardingOther
                 }
                 ProductType.Twins -> AppScreen.OnboardingTwins
+                ProductType.SaltPay -> AppScreen.OnboardingWallet
             }
         }
     }
