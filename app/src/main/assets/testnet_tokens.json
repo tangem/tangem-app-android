@@ -412,12 +412,22 @@
           ]
         },
         {
-            "id" : "stellar",
-            "symbol" : "XLM",
-            "name" : "Stellar",
-            "networks" : [
+            "id": "stellar",
+            "symbol": "XLM",
+            "name": "Stellar",
+            "networks": [
                 {
-                    "networkId" : "stellar/test"
+                    "networkId": "stellar/test"
+                }
+            ]
+        },
+        {
+            "id": "ethereum-pow-iou",
+            "symbol": "ETHW",
+            "name": "Ethereum PoW",
+            "networks": [
+                {
+                    "networkId": "ethereum-pow-iou/test"
                 }
             ]
         },
