@@ -13,7 +13,6 @@ sealed class HomeAction : Action {
     data class ShouldScanCardOnResume(val shouldScanCard: Boolean) : HomeAction()
     object Init : HomeAction()
 
-    data class SetTermsOfUseState(val isDisclaimerAccepted: Boolean) : HomeAction()
     data class ChangeScanCardButtonState(val state: IndeterminateProgressButton) : HomeAction()
 }
 

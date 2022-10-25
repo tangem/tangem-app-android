@@ -17,7 +17,7 @@ import com.tangem.tap.features.onboarding.products.wallet.saltPay.KYCProvider
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayActivationManager
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayConfig
 import com.tangem.tap.features.wallet.redux.ProgressState
-import com.tangem.tap.persistence.SaltPayRegistrationStorage
+import com.tangem.tap.persistence.SaltPayActivationStorage
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.store
 import java.math.BigDecimal
@@ -33,7 +33,7 @@ data class OnboardingSaltPayState(
     val accessCode: String? = null,
     val amountToClaim: Amount? = null,
     val tokenAmount: Amount = Amount(SaltPayWorkaround.tokenFrom(Blockchain.SaltPay), BigDecimal.ZERO),
-    val step: SaltPayRegistrationStep = SaltPayRegistrationStep.None,
+    val step: SaltPayActivationStep = SaltPayActivationStep.None,
     val saltPayCardArtworkUrl: String? = null,
     val inProgress: Boolean = false,
     val claimInProgress: Boolean = false,
@@ -60,7 +60,7 @@ data class OnboardingSaltPayState(
                 scanResponse = scanResponse,
                 gnosisRegistrator = gnosisRegistrator,
                 paymentologyService = store.state.domainNetworks.paymentologyService,
-                registrationStorage = preferencesStorage.saltPayRegistrationStorage,
+                registrationStorage = preferencesStorage.saltPayActivationStorage,
                 kycProvider = saltPayConfig.kycProvider,
             )
             test(scanResponse, gnosisRegistrator)
@@ -82,7 +82,7 @@ data class OnboardingSaltPayState(
             scanResponse: ScanResponse,
             gnosisRegistrator: GnosisRegistrator,
             paymentologyService: PaymentologyApiService,
-            registrationStorage: SaltPayRegistrationStorage,
+            registrationStorage: SaltPayActivationStorage,
             kycProvider: KYCProvider,
         ): SaltPayActivationManager {
             if (!scanResponse.isSaltPay()) {
@@ -114,7 +114,7 @@ data class OnboardingSaltPayState(
     }
 }
 
-enum class SaltPayRegistrationStep {
+enum class SaltPayActivationStep {
     None,
     NoGas,
     NeedPin,
