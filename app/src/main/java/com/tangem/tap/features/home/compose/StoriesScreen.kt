@@ -49,7 +49,6 @@ import com.tangem.tap.features.home.compose.content.StoriesWeb3
 import com.tangem.tap.features.home.compose.views.HomeButtons
 import com.tangem.tap.features.home.compose.views.StoriesProgressBar
 import com.tangem.tap.features.home.redux.HomeState
-import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.wallet.R
 import kotlin.math.max
 
@@ -74,7 +73,7 @@ fun StoriesScreen(
     }
 
     val isPressed = remember { mutableStateOf(false) }
-    val isPaused = isPressed.value || homeState.value.btnScanState.progressState == ProgressState.Loading
+    val isPaused = isPressed.value || homeState.value.scanInProgress
 
     val hideContent = remember { mutableStateOf(true) }
 
@@ -88,10 +87,10 @@ fun StoriesScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(Color(0xFF090E13))
+            .background(Color(0xFF090E13)),
     ) {
         Row(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
         ) {
             Box(
                 Modifier
@@ -109,7 +108,7 @@ fun StoriesScreen(
                                 isPressed.value = false
                             },
                         )
-                    }
+                    },
             )
             Box(
                 Modifier
@@ -127,7 +126,7 @@ fun StoriesScreen(
                                 isPressed.value = false
                             },
                         )
-                    }
+                    },
             )
         }
         if (!isDarkBackground) {
@@ -135,7 +134,7 @@ fun StoriesScreen(
                 modifier = Modifier.fillMaxSize(),
                 painter = painterResource(id = R.drawable.ic_overlay),
                 contentDescription = null,
-                contentScale = ContentScale.FillBounds
+                contentScale = ContentScale.FillBounds,
             )
         }
 
@@ -165,7 +164,7 @@ fun StoriesScreen(
                     .height(17.dp)
                     .alpha(if (hideContent.value) 0f else 1f)
                     .align(Alignment.Start),
-                colorFilter = if (isDarkBackground) null else ColorFilter.tint(Color.Black)
+                colorFilter = if (isDarkBackground) null else ColorFilter.tint(Color.Black),
             )
             when (currentStep.value) {
                 1 -> FirstStoriesContent(isPaused, currentStep.duration()) { hideContent.value = it }
@@ -190,27 +189,28 @@ fun StoriesScreen(
                     .height(48.dp),
                 colors = ButtonDefaults.textButtonColors(
                     backgroundColor = Color.White,
-                    contentColor = Color(0xFF080C10)
-                )
+                    contentColor = Color(0xFF080C10),
+                ),
             ) {
                 Image(
                     painter = painterResource(id = R.drawable.ic_search),
-                    contentDescription = null
+                    contentDescription = null,
                 )
                 Text(
                     text = stringResource(id = R.string.search_tokens_title),
                     fontWeight = FontWeight.Medium,
                     fontSize = 16.sp,
-                    textAlign = TextAlign.Center
+                    textAlign = TextAlign.Center,
                 )
             }
             HomeButtons(
-                isDarkBackground = isDarkBackground,
                 modifier = Modifier
                     .padding(start = 16.dp, top = 0.dp, end = 16.dp, bottom = 37.dp)
                     .fillMaxWidth(),
+                isDarkBackground = isDarkBackground,
+                btnScanStateInProgress = homeState.value.btnScanStateInProgress,
                 onScanButtonClick = onScanButtonClick,
-                onShopButtonClick = onShopButtonClick
+                onShopButtonClick = onShopButtonClick,
             )
         }
     }
