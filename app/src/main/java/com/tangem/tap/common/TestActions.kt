@@ -27,8 +27,8 @@ object TestActions {
      * @param isTestView - true must be used if you want to show or hide your view depends on BuildConfig
      */
     fun initFor(view: View, actions: List<TestAction>, isTestView: Boolean = false) {
-        if (isTestView) view.show(BuildConfig.TEST_ACTION_ENABLED)
         if (!BuildConfig.TEST_ACTION_ENABLED) return
+        if (isTestView) view.show(BuildConfig.TEST_ACTION_ENABLED)
 
         view.setOnClickListener {
             store.dispatchDialogShow(AppDialog.TestActionsDialog(actions))
