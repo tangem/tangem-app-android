@@ -129,7 +129,6 @@
     <string name="twins_onboarding_title">Tangem Twin</string>
     <string name="twins_onboarding_subtitle">Один кошелек. Две карты.</string>
     <string name="twins_onboarding_description_format">Одна, которую Вы держите в руках, и вторая карта с номером #%s</string>
-    <string name="wallet_twins_chip_format">Карта %1d из %2d</string>
     <string name="details_row_title_twins_recreate">Пересоздать Twin кошелек</string>
     <string name="details_row_title_card_tou">Условия использования карты</string>
     <string name="twins_recreate_toolbar">Tangem Twin</string>
@@ -243,7 +242,7 @@
     <string name="onboarding_balance_title">Баланс</string>
     <string name="address_qr_code_message_format">Отправляйте только %s (%s) на этот адрес. Иначе это может привести к утрате средств.</string>
     <string name="address_qr_code_message_token_format">Отправляйте только %s (%s) из сети %s на этот адрес. Иначе это может привести к утрате средств.</string>
-    <string name="onboarding_twins_interrupt_warning">Если процесс повторного создания кошелька каким-либо образом прервется, вам придется начать все сначала.</string>
+    <string name="onboarding_twins_interrupt_warning">Если процесс создания кошелька каким-либо образом прервется, вам придется начать все сначала.</string>
     <string name="onboarding_twin_exit_warning">Процесс связывания карт частично завершен. Вы не можете выйти из него сейчас.</string>
     <string name="onboarding_error_create_primary_wallet">Внутренняя ошибка: не удается создать менеджер кошельков</string>
     <string name="wallet_balance_blockchain_unreachable_try_later">Блокчейн недоступен. Попробуй позже.</string>
@@ -296,7 +295,7 @@
     <string name="onboarding_wallet_info_subtitle_second">Все резервные карты могут использоваться как полнофункциональные с одинаковыми ключами</string>
     <string name="onboarding_wallet_info_subtitle_third">Вы сможете установить код доступа для защиты своих кошельков</string>
     <string name="onboarding_wallet_info_subtitle_fourth">Код доступа можно восстановить с помощью одной из резервных карт</string>
-    <string name="onboarding_subtitle_success_tangem_wallet_onboarding">Ваша карта Tangem Wallet настроена и готова к использованию</string>
+    <string name="onboarding_subtitle_success_tangem_wallet_onboarding">Ваша карта настроена и готова к использованию.</string>
     <string name="onboarding_subtitle_success_backup_one_card">Вы создали 1 резервную карту, и теперь эта карта готова к использованию</string>
     <string name="common_origin_card">Основная карта</string>
     <string name="onboarding_alert_i_understand">Я понимаю</string>
