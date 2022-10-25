@@ -6,9 +6,9 @@ import com.tangem.blockchain.common.BlockchainError
 import com.tangem.common.Converter
 import com.tangem.common.card.Card
 import com.tangem.common.core.TangemSdkError
-import com.tangem.tap.common.analytics.Analytics
-import com.tangem.tap.common.analytics.AnalyticsEvent
-import com.tangem.tap.common.analytics.AnalyticsParam
+import com.tangem.tap.common.analytics.AnalyticsAnOld
+import com.tangem.tap.common.analytics.AnalyticsEventAnOld
+import com.tangem.tap.common.analytics.AnalyticsParamAnOld
 import com.tangem.tap.common.analytics.api.AnalyticsEventHandler
 import com.tangem.tap.common.analytics.api.ErrorEventHandler
 import com.tangem.tap.common.analytics.api.SdkErrorEventHandler
@@ -25,7 +25,7 @@ class FirebaseAnalyticsHandler(
     }
 
     override fun handleAnalyticsEvent(
-        event: AnalyticsEvent,
+        event: AnalyticsEventAnOld,
         params: Map<String, String>,
         card: Card?,
         blockchain: String?,
@@ -39,8 +39,8 @@ class FirebaseAnalyticsHandler(
 
     override fun handleCardSdkErrorEvent(
         error: TangemSdkError,
-        action: Analytics.ActionToLog,
-        params: Map<AnalyticsParam, String>,
+        action: AnalyticsAnOld.ActionToLog,
+        params: Map<AnalyticsParamAnOld, String>,
         card: Card?,
     ) {
         val model = CardSdkErrorConverter.Model(error, action, params, prepareParams(card))
@@ -52,8 +52,8 @@ class FirebaseAnalyticsHandler(
 
     override fun handleBlockchainSdkErrorEvent(
         error: BlockchainError,
-        action: Analytics.ActionToLog,
-        params: Map<AnalyticsParam, String>,
+        action: AnalyticsAnOld.ActionToLog,
+        params: Map<AnalyticsParamAnOld, String>,
         card: Card?,
     ) {
 
