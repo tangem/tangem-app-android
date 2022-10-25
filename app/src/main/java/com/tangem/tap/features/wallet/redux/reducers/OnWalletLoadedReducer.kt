@@ -21,6 +21,7 @@ import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.features.wallet.ui.TokenData
 import com.tangem.tap.store
+import java.math.BigDecimal
 
 class OnWalletLoadedReducer {
 
@@ -115,6 +116,8 @@ class OnWalletLoadedReducer {
     private fun onSingleWalletLoaded(wallet: Wallet, walletState: WalletState): WalletState {
         if (wallet.blockchain != walletState.primaryBlockchain) return walletState
 
+        // val ratesRespository = store.state.globalState.tapWalletManager.ratesRepository
+        // val tokenCurrency =
         val fiatCurrencyName = store.state.globalState.appCurrency.code
         val token = wallet.getFirstToken()
         val tokenData = if (token != null) {
@@ -124,10 +127,12 @@ class OnWalletLoadedReducer {
                 val tokenFiatAmount =
                     tokenFiatRate?.let { tokenAmount.value?.toFiatString(it, fiatCurrencyName) }
                 TokenData(
-                    tokenAmount.value?.toFormattedCurrencyString(
-                        token.decimals, token.symbol
+                    amount = tokenAmount.value ?: BigDecimal.ZERO,
+                    tokenSymbol = tokenAmount.currencySymbol, fiatAmountFormatted = tokenFiatAmount,
+                    fiatAmount = tokenFiatRate?.let { tokenAmount.value?.toFiatValue(tokenFiatRate) },
+                    amountFormatted = tokenAmount.value?.toFormattedCurrencyString(
+                        token.decimals, token.symbol,
                     ) ?: "",
-                    tokenAmount.currencySymbol, tokenFiatAmount
                 )
             } else {
                 null
