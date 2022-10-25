@@ -51,6 +51,8 @@ sealed class AnalyticsParam {
     }
 
     companion object Key {
+        const val Blockchain = "blockchain"
         const val BatchId = "batch_id"
+        const val Firmware = "firmware"
     }
 }
