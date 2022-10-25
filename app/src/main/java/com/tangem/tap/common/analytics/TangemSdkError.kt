@@ -65,7 +65,7 @@ object TangemSdk {
             is TangemSdkError.Busy -> TangemSdkError.Busy()
             is TangemSdkError.MissingPreflightRead -> TangemSdkError.MissingPreflightRead()
             is TangemSdkError.WrongCardNumber -> TangemSdkError.WrongCardNumber()
-            is TangemSdkError.WrongCardType -> TangemSdkError.WrongCardType()
+            is TangemSdkError.WrongCardType -> TangemSdkError.WrongCardType(null)
             is TangemSdkError.CardError -> TangemSdkError.CardError()
             is TangemSdkError.NotSupportedFirmwareVersion -> TangemSdkError.NotSupportedFirmwareVersion()
             is TangemSdkError.WalletError -> TangemSdkError.WalletError()
