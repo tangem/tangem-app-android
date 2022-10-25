@@ -140,13 +140,12 @@ private fun WalletConnectSessions(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Column(modifier = modifier) {
-                    Text(
-                        text = session.description,
-                        style = TangemTypography.subtitle1,
-                        color = colorResource(id = R.color.text_primary_1),
-                    )
-                }
+                Text(
+                    text = session.description,
+                    style = TangemTypography.subtitle1,
+                    color = colorResource(id = R.color.text_primary_1),
+                    modifier = modifier.weight(1f),
+                )
                 IconButton(
                     onClick = { state.onRemoveSession(session.sessionId) },
                 ) {
