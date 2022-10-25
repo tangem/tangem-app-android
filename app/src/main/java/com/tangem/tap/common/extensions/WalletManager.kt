@@ -44,8 +44,13 @@ suspend fun WalletManager.safeUpdate(): Result<Wallet> = try {
         if (exception is BlockchainSdkError.AccountNotFound && amountToCreateAccount != null) {
             Result.Failure(TapError.WalletManager.NoAccountError(amountToCreateAccount.toString()))
         } else {
-            val message = exception.localizedMessage ?: "An error has occurred. Try later"
-            Result.Failure(TapError.WalletManager.InternalError(message))
+            when (exception) {
+                is BlockchainSdkError -> Result.Failure(exception)
+                else -> {
+                    val message = exception.cause?.localizedMessage ?: "Unknown error"
+                    Result.Failure(TapError.WalletManager.InternalError(message))
+                }
+            }
         }
     }
 }
@@ -72,7 +77,7 @@ fun WalletManager?.getAddressData(): AddressData? {
     else addressDataList[0]
 }
 
-fun<T> WalletManager.Companion.stub(): T {
+fun <T> WalletManager.Companion.stub(): T {
     val wallet = Wallet(Blockchain.Unknown, setOf(), Wallet.PublicKey(byteArrayOf(), null, null), setOf())
     return object : WalletManager(wallet) {
         override val currentHost: String = ""
