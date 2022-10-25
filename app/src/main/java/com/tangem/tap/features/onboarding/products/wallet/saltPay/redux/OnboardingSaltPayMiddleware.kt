@@ -317,10 +317,7 @@ private suspend fun checkGasIfNeeded(
     step: SaltPayActivationStep,
 ): Result<Unit> {
     Timber.d("checkGasIfNeeded: for step: %s", step)
-    if (step == SaltPayActivationStep.KycStart ||
-        step == SaltPayActivationStep.KycWaiting ||
-        step == SaltPayActivationStep.Finished
-    ) {
+    if (step.ordinal >= SaltPayActivationStep.KycIntro.ordinal) {
         Timber.d("checkGasIfNeeded: no need to check for step: %s", step)
         return Result.Success(Unit)
     }
