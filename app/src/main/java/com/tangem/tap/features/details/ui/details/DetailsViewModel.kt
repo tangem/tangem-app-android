@@ -78,8 +78,7 @@ class DetailsViewModel(private val store: Store<AppState>) {
                 store.dispatch(DetailsAction.CreateBackup)
             }
             SettingsElement.TermsOfService -> {
-                store.dispatch(DisclaimerAction.ShowAcceptedDisclaimer)
-                store.dispatch(NavigationAction.NavigateTo(AppScreen.Disclaimer))
+                store.dispatch(DisclaimerAction.Show())
             }
             SettingsElement.TermsOfUse -> {
                 store.dispatch(DetailsAction.ShowDisclaimer)
