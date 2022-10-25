@@ -13,6 +13,7 @@ import com.tangem.network.api.paymentology.RegistrationResponse
 import com.tangem.tap.common.analytics.GlobalAnalyticsEventHandler
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.extensions.isPositive
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TangemSigner
@@ -198,7 +199,7 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
                     onException(it.error)
                     return@launch
                 }
-
+                analyticsHandler.handleAnalyticsEvent(Onboarding.ClaimWasSuccessfully())
                 dispatchOnMain(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.ClaimInProgress))
                 dispatchOnMain(OnboardingSaltPayAction.RefreshClaim)
             }
@@ -209,18 +210,20 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
 
             val state = getState()
             scope.launch {
-                val balance = state.saltPayManager.getTokenAmount().successOr {
+                val tokenAmountValue = state.saltPayManager.getTokenAmount().successOr {
                     SaltPayExceptionHandler.handle(it.error)
                     handleClaimRefreshInProgress = false
                     return@launch
                 }
 
-                handleInProgress = false
-                handleClaimRefreshInProgress = false
-
-                analyticsHandler.handleAnalyticsEvent(Onboarding.ClaimWasSuccessfully())
-                dispatchOnMain(OnboardingSaltPayAction.SetTokenBalance(balance))
-                dispatchOnMain(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.Finished))
+                if (tokenAmountValue.isPositive()) {
+                    handleInProgress = false
+                    handleClaimRefreshInProgress = false
+                    dispatchOnMain(OnboardingSaltPayAction.SetTokenBalance(tokenAmountValue))
+                    dispatchOnMain(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.Finished))
+                } else {
+                    handleClaimRefreshInProgress = false
+                }
             }
         }
         is OnboardingSaltPayAction.SetStep -> handleAnalytics(analyticsHandler, action.newStep)
@@ -231,7 +234,7 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
 }
 
 fun handleAnalytics(analyticsHandler: GlobalAnalyticsEventHandler, step: SaltPayActivationStep?) {
-    when(step){
+    when (step) {
         SaltPayActivationStep.None -> {}
         SaltPayActivationStep.NoGas -> {}
         SaltPayActivationStep.NeedPin -> {}
@@ -252,24 +255,16 @@ data class UpdateResult(
     val amountToClaim: Amount? = null,
 )
 
-suspend fun SaltPayActivationManager.updateActivationStatus(
-    amountToClaim: Amount?,
-    step: SaltPayActivationStep,
-): Result<UpdateResult> {
+suspend fun SaltPayActivationManager.updateActivationStatus(amountToClaim: Amount?): Result<UpdateResult> {
     Timber.d("updateSaltPayStatus")
     var updateResult = UpdateResult()
 
-    checkGasIfNeeded(this, step).successOr {
-        return Result.Failure(it.error)
-
-    }
-    registerKYCIfNeeded(this, step).successOr {
-        return Result.Failure(it.error)
-
-    }
     val saltPayStep = checkRegistration(this).successOr {
         return Result.Failure(it.error)
+    }
 
+    checkGasIfNeeded(this, saltPayStep).successOr {
+        return Result.Failure(it.error)
     }
 
     val fetchedAmountToClaim = getAmountToClaimIfNeeded(this, amountToClaim)
@@ -355,25 +350,6 @@ private suspend fun checkGasIfNeeded(
         is Result.Failure -> Timber.d("checkGasIfNeeded: has NO GAS")
     }
     return result
-}
-
-private suspend fun registerKYCIfNeeded(
-    saltPayManager: SaltPayActivationManager,
-    step: SaltPayActivationStep,
-): Result<Unit> {
-    Timber.d("registerKYCIfNeeded: step: %s", step)
-    if (step != SaltPayActivationStep.KycStart) {
-        Timber.d("registerKYCIfNeeded: return Success, because step != KycStart")
-        return Result.Success(Unit)
-    }
-
-    withMainContext {
-        Timber.d("registerKYCIfNeeded: set new step: KycWaiting")
-        store.dispatch(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.KycWaiting))
-    }
-
-    Timber.d("saltPayManager.registerKYC()")
-    return saltPayManager.registerKYC()
 }
 
 private suspend fun checkRegistration(
