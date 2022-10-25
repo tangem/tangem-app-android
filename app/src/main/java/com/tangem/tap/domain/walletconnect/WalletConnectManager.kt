@@ -4,7 +4,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.extensions.guard
 import com.tangem.domain.common.ScanResponse
-import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.AnalyticsAnOld
 import com.tangem.tap.common.analytics.logWcEvent
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -224,8 +224,8 @@ class WalletConnectManager {
 
     private fun onSessionClosed(session: WCSession) {
         store.state.globalState.analyticsHandler?.logWcEvent(
-            Analytics.WcAnalyticsEvent.Session(
-                Analytics.WcSessionEvent.Disconnect, sessions[session]?.peerMeta?.url
+            AnalyticsAnOld.WcAnalyticsEvent.Session(
+                AnalyticsAnOld.WcSessionEvent.Disconnect, sessions[session]?.peerMeta?.url
             )
         )
         sessions.remove(session)
@@ -373,8 +373,8 @@ class WalletConnectManager {
                         )
                     }
                     store.state.globalState.analyticsHandler?.logWcEvent(
-                        Analytics.WcAnalyticsEvent.Session(
-                            Analytics.WcSessionEvent.Connect, peer.url,
+                        AnalyticsAnOld.WcAnalyticsEvent.Session(
+                            AnalyticsAnOld.WcSessionEvent.Connect, peer.url,
                         ),
                     )
                 }
@@ -388,8 +388,8 @@ class WalletConnectManager {
         client.onEthSendTransaction = { id: Long, transaction: WCEthereumTransaction ->
             Timber.d("onEthSendTransaction: $transaction")
             store.state.globalState.analyticsHandler?.logWcEvent(
-                Analytics.WcAnalyticsEvent.Action(
-                    Analytics.WcAction.SendTransaction
+                AnalyticsAnOld.WcAnalyticsEvent.Action(
+                    AnalyticsAnOld.WcAction.SendTransaction
                 )
             )
             sessions[client.session]?.toWalletConnectSession()?.let { sessionData ->
@@ -406,8 +406,8 @@ class WalletConnectManager {
         client.onEthSignTransaction = { id: Long, transaction: WCEthereumTransaction ->
             Timber.d("onEthSignTransaction: $transaction")
             store.state.globalState.analyticsHandler?.logWcEvent(
-                Analytics.WcAnalyticsEvent.Action(
-                    Analytics.WcAction.SignTransaction
+                AnalyticsAnOld.WcAnalyticsEvent.Action(
+                    AnalyticsAnOld.WcAction.SignTransaction
                 )
             )
             sessions[client.session]?.toWalletConnectSession()?.let { sessionData ->
@@ -424,8 +424,8 @@ class WalletConnectManager {
         client.onEthSign = { id: Long, message: WCEthereumSignMessage ->
             Timber.d("onEthSign: $message")
             store.state.globalState.analyticsHandler?.logWcEvent(
-                Analytics.WcAnalyticsEvent.Action(
-                    Analytics.WcAction.PersonalSign
+                AnalyticsAnOld.WcAnalyticsEvent.Action(
+                    AnalyticsAnOld.WcAction.PersonalSign
                 )
             )
             sessions[client.session]?.toWalletConnectSession()?.let { sessionData ->
@@ -500,8 +500,8 @@ class WalletConnectManager {
         if (message != null) {
             Timber.d("onEthSign_v4: $message")
             store.state.globalState.analyticsHandler?.logWcEvent(
-                Analytics.WcAnalyticsEvent.Action(
-                    Analytics.WcAction.PersonalSign
+                AnalyticsAnOld.WcAnalyticsEvent.Action(
+                    AnalyticsAnOld.WcAction.PersonalSign
                 )
             )
             sessions[client.session]?.toWalletConnectSession()?.let { sessionData ->
