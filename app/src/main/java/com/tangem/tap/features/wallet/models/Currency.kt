@@ -59,9 +59,9 @@ sealed interface Currency {
     fun isToken(): Boolean = this is Token
     fun toTokenResponse(): TokenResponse {
         return TokenResponse(
-            id = coinId ?: "",
+            id = coinId,
             networkId = blockchain.toNetworkId(),
-            derivationPath = derivationPath ?: DERIVATION_PATH_RAW_VALUE,
+            derivationPath = derivationPath,
             name = currencyName,
             symbol = currencySymbol,
             decimals = decimals,
@@ -70,7 +70,6 @@ sealed interface Currency {
     }
 
     companion object {
-        private const val DERIVATION_PATH_RAW_VALUE = "m/44/0'/0/0"
         fun fromBlockchainNetwork(
             blockchainNetwork: BlockchainNetwork,
             token: com.tangem.blockchain.common.Token? = null,
@@ -111,12 +110,9 @@ sealed interface Currency {
             )
         }
 
-        fun fromTokenResponse(tokenResponse: TokenResponse): Currency {
-            val derivationPath = if (tokenResponse.derivationPath == DERIVATION_PATH_RAW_VALUE) {
-                null
-            } else {
-                tokenResponse.derivationPath
-            }
+        fun fromTokenResponse(tokenResponse: TokenResponse): Currency? {
+            val blockchain = com.tangem.blockchain.common.Blockchain.fromNetworkId(tokenResponse.networkId)
+                ?: return null
             return when {
                 tokenResponse.contractAddress != null -> Token(
                     com.tangem.blockchain.common.Token(
@@ -126,12 +122,12 @@ sealed interface Currency {
                         decimals = tokenResponse.decimals,
                         id = tokenResponse.id,
                     ),
-                    blockchain = com.tangem.blockchain.common.Blockchain.fromNetworkId(tokenResponse.networkId)!!,
-                    derivationPath = derivationPath,
+                    blockchain = blockchain,
+                    derivationPath = tokenResponse.derivationPath,
                 )
                 else -> Blockchain(
-                    blockchain = com.tangem.blockchain.common.Blockchain.fromNetworkId(tokenResponse.networkId)!!,
-                    derivationPath = derivationPath,
+                    blockchain = blockchain,
+                    derivationPath = tokenResponse.derivationPath,
                 )
             }
         }
