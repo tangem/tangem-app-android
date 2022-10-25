@@ -8,6 +8,8 @@ import com.tangem.tap.common.analytics.AnalyticsAnOld
 import com.tangem.tap.common.analytics.logWcEvent
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.global.GlobalAction
+import com.tangem.tap.domain.TapError
+import com.tangem.tap.domain.walletconnect.extensions.isDappSupported
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectDialog
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectSession
@@ -58,7 +60,15 @@ class WalletConnectManager {
     private var sessions: MutableMap<WCSession, WalletConnectActiveData> = mutableMapOf()
 
     fun connect(wcUri: String) {
-        val session = WCSession.from(wcUri) ?: return
+        val session = WCSession.from(wcUri).guard {
+            store.dispatchOnMain(
+                WalletConnectAction.FailureEstablishingSession(
+                    session = null,
+                    error = TapError.WalletConnect.UnsupportedLink,
+                ),
+            )
+            return
+        }
         if (sessions[session] != null) {
             store.dispatchOnMain(WalletConnectAction.RefuseOpeningSession)
             return
@@ -66,7 +76,19 @@ class WalletConnectManager {
         val client = WCClient(httpClient = okHttpClient)
         setListeners(client)
         val peerId = UUID.randomUUID().toString()
-        client.connect(session, tangemPeerMeta, peerId)
+
+        try {
+            client.connect(session, tangemPeerMeta, peerId)
+        } catch (exception: IllegalArgumentException) {
+            store.dispatchOnMain(
+                WalletConnectAction.FailureEstablishingSession(
+                    session = null,
+                    error = TapError.WalletConnect.UnsupportedLink,
+                ),
+            )
+            return
+        }
+
         sessions[session] = WalletConnectActiveData(
             peerId = peerId,
             remotePeerId = null,
@@ -332,21 +354,30 @@ class WalletConnectManager {
             val session = client.session
             val data = sessions[session]?.copy(peerMeta = peer, remotePeerId = client.remotePeerId)
             if (data != null && session != null) {
-                sessions[session] = data
-                val sessionData = data.toWalletConnectSession()
-                sessionData?.let {
+                if (!peer.isDappSupported()) {
                     store.dispatchOnMain(
-                        WalletConnectAction.ScanCard(
-                            session = sessionData,
-                            chainId = client.chainId?.toIntOrNull()
+                        WalletConnectAction.FailureEstablishingSession(
+                            session = session,
+                            error = TapError.WalletConnect.UnsupportedDapp,
+                        ),
+                    )
+                } else {
+                    sessions[session] = data
+                    val sessionData = data.toWalletConnectSession()
+                    sessionData?.let {
+                        store.dispatchOnMain(
+                            WalletConnectAction.ScanCard(
+                                session = sessionData,
+                                chainId = client.chainId?.toIntOrNull(),
+                            ),
                         )
+                    }
+                    store.state.globalState.analyticsHandler?.logWcEvent(
+                        AnalyticsAnOld.WcAnalyticsEvent.Session(
+                            AnalyticsAnOld.WcSessionEvent.Connect, peer.url,
+                        ),
                     )
                 }
-                store.state.globalState.analyticsHandler?.logWcEvent(
-                    AnalyticsAnOld.WcAnalyticsEvent.Session(
-                        AnalyticsAnOld.WcSessionEvent.Connect, peer.url
-                    )
-                )
             }
         }
         client.onSessionUpdate = { id: Long, update: WCSessionUpdate ->
