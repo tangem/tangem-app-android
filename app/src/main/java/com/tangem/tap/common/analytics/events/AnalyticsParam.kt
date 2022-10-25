@@ -49,4 +49,8 @@ sealed class AnalyticsParam {
         object LinkedIn : SocialNetwork("LinkedIn")
         object GitHub : SocialNetwork("GitHub")
     }
+
+    companion object Key {
+        const val BatchId = "batch_id"
+    }
 }
