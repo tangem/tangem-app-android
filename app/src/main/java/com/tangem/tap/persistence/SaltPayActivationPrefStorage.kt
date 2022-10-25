@@ -10,27 +10,27 @@ import com.tangem.tangem_sdk_new.storage.createEncryptedSharedPreferences
 /**
 [REDACTED_AUTHOR]
  */
-interface SaltPayRegistrationStorage {
-    var data: SaltPayRegistratorData
+interface SaltPayActivationStorage {
+    var data: SaltPayActivationData
 
     fun reset()
 
     companion object {
-        fun stub(): SaltPayRegistrationStorage = object : SaltPayRegistrationStorage {
-            override var data: SaltPayRegistratorData = SaltPayRegistratorData()
+        fun stub(): SaltPayActivationStorage = object : SaltPayActivationStorage {
+            override var data: SaltPayActivationData = SaltPayActivationData()
             override fun reset() {}
         }
     }
 }
 
-data class SaltPayRegistratorData(
+data class SaltPayActivationData(
     val transactionsSent: Boolean = false,
 )
 
-class SaltPayRegistrationPrefStorage(
+class SaltPayActivationPrefStorage(
     context: Context,
     private val converter: MoshiJsonConverter,
-) : SaltPayRegistrationStorage {
+) : SaltPayActivationStorage {
 
     private val storage: ArmadilloSharedPreferences = SecureStorage.createEncryptedSharedPreferences(
         context = context,
@@ -43,7 +43,7 @@ class SaltPayRegistrationPrefStorage(
         fetch()
     }
 
-    override var data: SaltPayRegistratorData = SaltPayRegistratorData()
+    override var data: SaltPayActivationData = SaltPayActivationData()
         set(value) {
             field = value
             if (!isFetching) save()
@@ -52,7 +52,7 @@ class SaltPayRegistrationPrefStorage(
     override fun reset() {
         storage.edit(true) {
             this.remove(REGISTRATION_DATA_KEY)
-            data = SaltPayRegistratorData()
+            data = SaltPayActivationData()
         }
     }
 
@@ -62,14 +62,14 @@ class SaltPayRegistrationPrefStorage(
         }
     }
 
-    private fun fetch(): SaltPayRegistratorData {
+    private fun fetch(): SaltPayActivationData {
         isFetching = true
 
         val jsonData = storage.getString(REGISTRATION_DATA_KEY, null)
         data = if (jsonData == null) {
-            SaltPayRegistratorData()
+            SaltPayActivationData()
         } else {
-            converter.fromJson<SaltPayRegistratorData>(jsonData) ?: SaltPayRegistratorData()
+            converter.fromJson<SaltPayActivationData>(jsonData) ?: SaltPayActivationData()
         }
         isFetching = false
 
