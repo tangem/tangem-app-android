@@ -4,8 +4,8 @@ import com.tangem.common.services.Result
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.extensions.successOr
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayActivationManager
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.message.SaltPayRegistrationError
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.SaltPayRegistrationStep
+import com.tangem.tap.features.onboarding.products.wallet.saltPay.message.SaltPayActivationError
+import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.SaltPayActivationStep
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.updateActivationStatus
 
 /**
@@ -21,15 +21,15 @@ class OnboardingSaltPayHelper {
             return try {
                 val status = manager.updateActivationStatus(
                     amountToClaim = null,
-                    step = SaltPayRegistrationStep.None,
+                    step = SaltPayActivationStep.None,
                 ).successOr { return it }
 
-                val isRegistrationCase = status.step != SaltPayRegistrationStep.Finished
+                val isRegistrationCase = status.step != SaltPayActivationStep.Finished
                 val isBackupCase = scanResponse.card.backupStatus?.isActive == false
                 Result.Success(isRegistrationCase || isBackupCase)
             } catch (ex: Exception) {
                 Result.Failure(ex)
-            } catch (error: SaltPayRegistrationError) {
+            } catch (error: SaltPayActivationError) {
                 Result.Failure(error)
             }
         }
