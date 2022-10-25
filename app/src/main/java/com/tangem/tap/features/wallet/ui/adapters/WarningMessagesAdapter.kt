@@ -7,7 +7,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.play.core.review.ReviewManagerFactory
-import com.tangem.tap.common.analytics.AnalyticsEvent
+import com.tangem.tap.common.analytics.AnalyticsEventAnOld
 import com.tangem.tap.common.extensions.getActivity
 import com.tangem.tap.common.extensions.getColor
 import com.tangem.tap.common.extensions.getString
@@ -109,12 +109,12 @@ class WarningMessageVH(val binding: LayoutWarningCardActionBinding) : RecyclerVi
             binding.btnClose.show()
             val analyticsHandler = store.state.globalState.analyticsHandler
             binding.btnClose.setOnClickListener {
-                analyticsHandler?.handleAnalyticsEvent(AnalyticsEvent.APP_RATING_DISMISS)
+                analyticsHandler?.handleAnalyticsEvent(AnalyticsEventAnOld.APP_RATING_DISMISS)
                 store.dispatch(GlobalAction.HideWarningMessage(warning))
                 store.dispatch(WalletAction.Warnings.AppRating.RemindLater)
             }
             binding.btnCanBeBetter.setOnClickListener {
-                analyticsHandler?.handleAnalyticsEvent(AnalyticsEvent.APP_RATING_NEGATIVE)
+                analyticsHandler?.handleAnalyticsEvent(AnalyticsEventAnOld.APP_RATING_NEGATIVE)
                 store.dispatch(WalletAction.Warnings.AppRating.SetNeverToShow)
                 store.dispatch(GlobalAction.HideWarningMessage(warning))
                 store.dispatch(GlobalAction.SendEmail(RateCanBeBetterEmail()))
@@ -122,7 +122,7 @@ class WarningMessageVH(val binding: LayoutWarningCardActionBinding) : RecyclerVi
             binding.btnReallyCool.setOnClickListener {
                 val activity = binding.root.context.getActivity() ?: return@setOnClickListener
 
-                analyticsHandler?.handleAnalyticsEvent(AnalyticsEvent.APP_RATING_POSITIVE)
+                analyticsHandler?.handleAnalyticsEvent(AnalyticsEventAnOld.APP_RATING_POSITIVE)
                 store.dispatch(WalletAction.Warnings.AppRating.SetNeverToShow)
                 val reviewManager = ReviewManagerFactory.create(activity)
                 val task = reviewManager.requestReviewFlow()
