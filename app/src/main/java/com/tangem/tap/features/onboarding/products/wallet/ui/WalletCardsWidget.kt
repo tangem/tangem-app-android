@@ -16,82 +16,100 @@ class WalletCardsWidget(
     val getTopOfAnchorViewForActivateState: () -> Float,
 ) {
 
-    var currentState: WidgetState? = null
+    private val animDuration: Long = 400
 
-    fun toWelcome(animate: Boolean = true, onEnd: () -> Unit = {}) {
+    var currentState: WidgetState? = null
+        private set
+
+    fun toWelcome(
+        animate: Boolean = true,
+        onEnd: () -> Unit = {},
+    ) {
         if (currentState == WidgetState.WELCOME) return
 
         currentState = WidgetState.WELCOME
 
-        val animator = createAnimator(animate, onEnd)
-        animator.playTogether(
-            createAnimator(BackupCardType.ORIGIN, createWelcomeProperties(BackupCardType.ORIGIN)),
-            createAnimator(BackupCardType.FIRST_BACKUP, createWelcomeProperties(BackupCardType.FIRST_BACKUP)),
-            createAnimator(BackupCardType.SECOND_BACKUP, createWelcomeProperties(BackupCardType.SECOND_BACKUP))
-        )
+        val animator = createAnimator(animate, onEnd = onEnd)
+        animator.playTogether(createAnimators(::createWelcomeProperties))
         leapfrogWidget.fold { animator.start() }
     }
 
-    fun toFolded(animate: Boolean = true, onEnd: () -> Unit = {}) {
+    fun toFolded(
+        animate: Boolean = true,
+        duration: Long = animDuration,
+        onEnd: () -> Unit = {},
+    ) {
         if (currentState == WidgetState.FOLDED) return
 
         currentState = WidgetState.FOLDED
 
-        val animator = createAnimator(animate, onEnd)
-        animator.playTogether(
-            createAnimator(BackupCardType.ORIGIN, createLeapfrogProperties(BackupCardType.ORIGIN)),
-            createAnimator(BackupCardType.FIRST_BACKUP, createLeapfrogProperties(BackupCardType.FIRST_BACKUP)),
-            createAnimator(BackupCardType.SECOND_BACKUP, createLeapfrogProperties(BackupCardType.SECOND_BACKUP))
-        )
-        leapfrogWidget.fold(animate) { animator.start() }
+        val animator = createAnimator(animate, duration) {
+            leapfrogWidget.fold(animate, onEnd)
+        }
+        animator.playTogether(createAnimators(::createLeapfrogProperties))
+        animator.start()
     }
 
-    fun toFan(animate: Boolean = true, onEnd: () -> Unit = {}) {
+    fun toFan(
+        animate: Boolean = true,
+        onEnd: () -> Unit = {},
+    ) {
         if (currentState == WidgetState.FAN) return
 
         currentState = WidgetState.FAN
 
-        val animator = createAnimator(animate, onEnd)
-        animator.playTogether(
-            createAnimator(BackupCardType.ORIGIN, createFanProperties(BackupCardType.ORIGIN)),
-            createAnimator(BackupCardType.FIRST_BACKUP, createFanProperties(BackupCardType.FIRST_BACKUP)),
-            createAnimator(BackupCardType.SECOND_BACKUP, createFanProperties(BackupCardType.SECOND_BACKUP))
-        )
+        val animator = createAnimator(animate, onEnd = onEnd)
+        animator.playTogether(createAnimators(::createFanProperties))
         leapfrogWidget.fold { animator.start() }
     }
 
-    fun toLeapfrog(animate: Boolean = true, onEnd: () -> Unit = {}) {
+    fun toLeapfrog(
+        animate: Boolean = true,
+        onEndFold: () -> Unit = {},
+        onEnd: () -> Unit = {},
+    ) {
+        if (currentState == WidgetState.LEAPFROG) return
+
         currentState = WidgetState.LEAPFROG
 
-        val animator = createAnimator(animate, onEnd)
-        animator.playTogether(
-            createAnimator(BackupCardType.ORIGIN, createLeapfrogProperties(BackupCardType.ORIGIN)),
-            createAnimator(BackupCardType.FIRST_BACKUP, createLeapfrogProperties(BackupCardType.FIRST_BACKUP)),
-            createAnimator(BackupCardType.SECOND_BACKUP, createLeapfrogProperties(BackupCardType.SECOND_BACKUP))
-        )
-        leapfrogWidget.fold {
-            animator.doOnEnd {
+        val onAnimatorEnd = {
+            leapfrogWidget.fold(animate) {
                 leapfrogWidget.initViews()
-                leapfrogWidget.unfold()
+                onEndFold()
+                leapfrogWidget.unfold(animate, onEnd)
             }
-            animator.start()
         }
+        val animator = createAnimator(animate, onEnd = onAnimatorEnd)
+        animator.playTogether(createAnimators(::createLeapfrogProperties))
+        animator.start()
     }
 
-    private fun createAnimator(animate: Boolean, onEnd: () -> Unit): AnimatorSet {
+    private fun createAnimators(propertyFactory: (BackupCardType) -> CardProperties): List<ObjectAnimator> {
+        return getCardTypesTypes().map { createCardAnimator(it, propertyFactory(it)) }
+    }
+
+    private fun getCardTypesTypes(): List<BackupCardType> = when (leapfrogWidget.getViewsCount()) {
+        2 -> listOf(BackupCardType.ORIGIN, BackupCardType.FIRST_BACKUP)
+        3 -> listOf(BackupCardType.ORIGIN, BackupCardType.FIRST_BACKUP, BackupCardType.SECOND_BACKUP)
+        else -> throw UnsupportedOperationException()
+    }
+
+    private fun createAnimator(animate: Boolean, duration: Long = animDuration, onEnd: () -> Unit): AnimatorSet {
         return AnimatorSet().apply {
-            duration = if (animate) 400 else 0
+            this.duration = if (animate) duration else 0
             doOnEnd { onEnd() }
         }
     }
 
-    private fun createAnimator(
+    private fun createCardAnimator(
         cardType: BackupCardType,
         properties: CardProperties,
     ): ObjectAnimator {
-        val view = getLeapViewByCardNumber(cardType).view
-        val animator = ObjectAnimator.ofPropertyValuesHolder(view,
-            *properties.createValuesHolders().toTypedArray())
+        val view = getLeapViewByCard(cardType).view
+        val animator = ObjectAnimator.ofPropertyValuesHolder(
+            view,
+            *properties.createValuesHolders().toTypedArray(),
+        )
         view.elevation = properties.elevation
         return animator
     }
@@ -176,7 +194,7 @@ class WalletCardsWidget(
 
     private fun createActivateProperties(cardType: BackupCardType): CardProperties {
         val topOfAnchorView = getTopOfAnchorViewForActivateState()
-        val twinProperties = CardProperties.from(getLeapViewByCardNumber(cardType).state)
+        val twinProperties = CardProperties.from(getLeapViewByCard(cardType).state)
         return twinProperties.copy(
             xTranslation = twinProperties.xTranslation,
             yTranslation = twinProperties.yTranslation - topOfAnchorView,
@@ -185,32 +203,46 @@ class WalletCardsWidget(
         )
     }
 
-    private fun getLeapViewByCardNumber(cardType: BackupCardType): LeapView {
-        return when (cardType) {
-            BackupCardType.ORIGIN -> leapfrogWidget.getViewByPosition(0)
-            BackupCardType.FIRST_BACKUP -> leapfrogWidget.getViewByPosition(1)
-            BackupCardType.SECOND_BACKUP -> leapfrogWidget.getViewByPosition(2)
-        }
-    }
-
+    @Throws(UnsupportedOperationException::class)
     fun getOriginCardView(): ImageView {
-        return getLeapViewByCardNumber(BackupCardType.ORIGIN).view as ImageView
+        return getLeapViewByCard(BackupCardType.ORIGIN).view as ImageView
     }
 
+    @Throws(UnsupportedOperationException::class)
     fun getFirstBackupCardView(): ImageView {
-        return getLeapViewByCardNumber(BackupCardType.FIRST_BACKUP).view as ImageView
+        return getLeapViewByCard(BackupCardType.FIRST_BACKUP).view as ImageView
     }
 
+    @Throws(UnsupportedOperationException::class)
     fun getSecondBackupCardView(): ImageView {
-        return getLeapViewByCardNumber(BackupCardType.SECOND_BACKUP).view as ImageView
+        return getLeapViewByCard(BackupCardType.SECOND_BACKUP).view as ImageView
+    }
+
+    @Throws(UnsupportedOperationException::class)
+    private fun getLeapViewByCard(cardType: BackupCardType): LeapView {
+        fun getByIndex(index: Int): LeapView {
+            return leapfrogWidget.getViewByPosition(leapfrogWidget.getViewPositionByIndex(index))
+        }
+
+        return when (leapfrogWidget.getViewsCount()) {
+            2 -> when (cardType) {
+                BackupCardType.ORIGIN -> getByIndex(1)
+                BackupCardType.FIRST_BACKUP -> getByIndex(0)
+                BackupCardType.SECOND_BACKUP -> throw UnsupportedOperationException()
+            }
+            3 -> when (cardType) {
+                BackupCardType.ORIGIN -> getByIndex(2)
+                BackupCardType.FIRST_BACKUP -> getByIndex(1)
+                BackupCardType.SECOND_BACKUP -> getByIndex(0)
+            }
+            else -> throw UnsupportedOperationException()
+        }
     }
 
     enum class WidgetState { WELCOME, FOLDED, FAN, LEAPFROG }
 }
 
-
 enum class BackupCardType { ORIGIN, FIRST_BACKUP, SECOND_BACKUP }
-
 
 private data class CardProperties(
     val xTranslation: Float = 0f,
