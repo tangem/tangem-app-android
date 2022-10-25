@@ -20,6 +20,9 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.FragmentShareTransition
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
+import com.tangem.tap.features.disclaimer.redux.DisclaimerType
+import com.tangem.tap.features.disclaimer.redux.isAccepted
 import com.tangem.tap.features.home.BELARUS_COUNTRY_CODE
 import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
 import com.tangem.tap.features.home.redux.HomeMiddleware.Companion.BUY_WALLET_URL
@@ -63,7 +66,6 @@ private fun handleHomeAction(appState: () -> AppState?, action: Action, dispatch
         is HomeAction.Init -> {
             store.dispatch(GlobalAction.RestoreAppCurrency)
             store.dispatch(GlobalAction.ExchangeManager.Init)
-            store.dispatch(HomeAction.SetTermsOfUseState(preferencesStorage.wasDisclaimerAccepted()))
             store.dispatch(GlobalAction.FetchUserCountry)
         }
         is HomeAction.ShouldScanCardOnResume -> {
@@ -73,17 +75,16 @@ private fun handleHomeAction(appState: () -> AppState?, action: Action, dispatch
             }
         }
         is HomeAction.ReadCard -> {
-            if (!preferencesStorage.wasDisclaimerAccepted()) {
-                store.dispatch(NavigationAction.NavigateTo(AppScreen.Disclaimer))
-            } else {
-                changeButtonState(ButtonState.PROGRESS)
-                val scanCardAction = GlobalAction.ScanCard(
-                    onSuccess = ::onScanSuccess,
-                    onFailure = ::onScanFailure,
-                )
-                store.dispatch(HomeAction.ScanInProgress(true))
-                postUiDelayBg(300) { store.dispatch(scanCardAction) }
-            }
+            changeButtonState(ButtonState.PROGRESS)
+            val scanCardAction = GlobalAction.ScanCard(
+                onSuccess = {
+                    store.dispatch(HomeAction.ScanInProgress(false))
+                    checkForDisclaimer(it, ::onScanSuccess)
+                },
+                onFailure = ::onScanFailure,
+            )
+            store.dispatch(HomeAction.ScanInProgress(true))
+            postUiDelayBg(300) { store.dispatch(scanCardAction) }
         }
         is HomeAction.GoToShop -> {
             when (action.userCountryCode) {
@@ -98,12 +99,28 @@ private fun handleHomeAction(appState: () -> AppState?, action: Action, dispatch
     }
 }
 
+private fun checkForDisclaimer(scanResponse: ScanResponse, onDisclaimerAccepted: (ScanResponse) -> Unit) {
+    val disclaimerType = DisclaimerType.get(scanResponse)
+    store.dispatch(DisclaimerAction.SetDisclaimerType(disclaimerType))
+
+    if (disclaimerType.isAccepted()) {
+        onDisclaimerAccepted((scanResponse))
+    } else {
+        changeButtonState(ButtonState.ENABLED)
+        store.dispatch(
+            DisclaimerAction.Show {
+                changeButtonState(ButtonState.PROGRESS)
+                onDisclaimerAccepted(scanResponse)
+            },
+        )
+    }
+}
+
 private fun onScanSuccess(scanResponse: ScanResponse) {
     val globalState = store.state.globalState
     val tapWalletManager = globalState.tapWalletManager
     tapWalletManager.updateConfigManager(scanResponse)
 
-    store.dispatch(HomeAction.ScanInProgress(false))
     store.dispatch(TwinCardsAction.IfTwinsPrepareState(scanResponse))
 
     if (scanResponse.isSaltPay()) {
