@@ -1,7 +1,7 @@
 package com.tangem.tap.features.details.ui.cardsettings
 
+import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.common.getTwinCardIdForUser
-import com.tangem.domain.common.isTangemTwins
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.details.redux.CardSettingsState
 import com.tangem.tap.features.details.redux.DetailsAction
@@ -20,7 +20,7 @@ class CardSettingsViewModel(private val store: Store<AppState>) {
                 },
             )
         } else {
-            val cardId = if (state.card.isTangemTwins()) {
+            val cardId = if (state.card.isTangemTwins) {
                 state.card.getTwinCardIdForUser()
             } else {
                 state.cardInfo.cardId
@@ -30,7 +30,7 @@ class CardSettingsViewModel(private val store: Store<AppState>) {
                 CardInfo.Issuer(state.cardInfo.issuer),
             )
 
-            if (!state.card.isTangemTwins()) {
+            if (!state.card.isTangemTwins) {
                 cardDetails.add(CardInfo.SignedHashes(state.cardInfo.signedHashes.toString()))
             }
             cardDetails.add(
