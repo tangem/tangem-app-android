@@ -19,13 +19,14 @@ interface GlobalAnalyticsEventHandler : AnalyticsEventHandler,
     SdkErrorEventHandler,
     ShopifyOrderEventHandler {
 
+    fun attachToAllEvents(key: String, value: String)
+
     companion object {
         fun stub(): GlobalAnalyticsEventHandler {
             return object : GlobalAnalyticsEventHandler {
+                override fun attachToAllEvents(key: String, value: String) {}
                 override fun handleEvent(event: String, params: Map<String, String>) {}
-
                 override fun handleErrorEvent(error: Throwable, params: Map<String, String>) {}
-
                 override fun handleCardSdkErrorEvent(
                     error: TangemSdkError,
                     action: AnalyticsAnOld.ActionToLog,
@@ -51,6 +52,12 @@ interface GlobalAnalyticsEventHandler : AnalyticsEventHandler,
 class GlobalAnalyticsHandler(
     private val analyticsHandlers: List<AnalyticsEventHandler>,
 ) : GlobalAnalyticsEventHandler {
+
+    private val attachToAllEventsParams: MutableMap<String, String> = mutableMapOf()
+
+    override fun attachToAllEvents(key: String, value: String) {
+        attachToAllEventsParams[key] = value
+    }
 
     override fun handleEvent(event: String, params: Map<String, String>) {
         analyticsHandlers.forEach { it.handleEvent(event, params) }
@@ -104,6 +111,12 @@ class GlobalAnalyticsHandler(
     override fun handleShopifyOrderEvent(order: Storefront.Order) {
         analyticsHandlers.filterIsInstance<ShopifyOrderEventHandler>().forEach {
             it.handleShopifyOrderEvent(order)
+        }
+    }
+
+    override fun prepareParams(card: Card?, blockchain: String?, params: Map<String, String>): Map<String, String> {
+        return super.prepareParams(card, blockchain, params).toMutableMap().apply {
+            putAll(attachToAllEventsParams)
         }
     }
 }
