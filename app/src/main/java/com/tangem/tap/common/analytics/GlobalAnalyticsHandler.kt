@@ -11,12 +11,42 @@ import com.tangem.tap.common.analytics.api.ErrorEventHandler
 import com.tangem.tap.common.analytics.api.ErrorEventLogger
 import com.tangem.tap.common.analytics.api.SdkErrorEventHandler
 import com.tangem.tap.common.analytics.api.ShopifyOrderEventHandler
+import com.tangem.tap.common.analytics.events.AnalyticsEvent
 import com.tangem.tap.common.extensions.filterNotNull
 
 interface GlobalAnalyticsEventHandler : AnalyticsEventHandler,
     ErrorEventHandler,
     SdkErrorEventHandler,
-    ShopifyOrderEventHandler
+    ShopifyOrderEventHandler {
+
+    companion object {
+        fun stub(): GlobalAnalyticsEventHandler {
+            return object : GlobalAnalyticsEventHandler {
+                override fun handleEvent(event: String, params: Map<String, String>) {}
+
+                override fun handleErrorEvent(error: Throwable, params: Map<String, String>) {}
+
+                override fun handleCardSdkErrorEvent(
+                    error: TangemSdkError,
+                    action: AnalyticsAnOld.ActionToLog,
+                    params: Map<AnalyticsParamAnOld, String>,
+                    card: Card?,
+                ) {
+                }
+
+                override fun handleBlockchainSdkErrorEvent(
+                    error: BlockchainError,
+                    action: AnalyticsAnOld.ActionToLog,
+                    params: Map<AnalyticsParamAnOld, String>,
+                    card: Card?,
+                ) {
+                }
+
+                override fun handleShopifyOrderEvent(order: Storefront.Order) {}
+            }
+        }
+    }
+}
 
 class GlobalAnalyticsHandler(
     private val analyticsHandlers: List<AnalyticsEventHandler>,
@@ -24,6 +54,14 @@ class GlobalAnalyticsHandler(
 
     override fun handleEvent(event: String, params: Map<String, String>) {
         analyticsHandlers.forEach { it.handleEvent(event, params) }
+    }
+
+    override fun handleAnalyticsEvent(
+        event: AnalyticsEvent,
+        card: Card?,
+        blockchain: String?,
+    ) {
+        analyticsHandlers.forEach { it.handleAnalyticsEvent(event, card, blockchain) }
     }
 
     override fun handleAnalyticsEvent(
