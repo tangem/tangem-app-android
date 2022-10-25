@@ -8,7 +8,7 @@ import com.tangem.common.card.Card
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.isTestCard
-import com.tangem.tap.common.analytics.AnalyticsEvent
+import com.tangem.tap.common.analytics.AnalyticsEventAnOld
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.isGreaterThan
 import com.tangem.tap.common.redux.global.GlobalState
@@ -81,7 +81,7 @@ class WarningsMiddleware {
             preferencesStorage.appRatingLaunchObserver.foundWalletWithFunds()
         }
         if (preferencesStorage.appRatingLaunchObserver.isReadyToShow()) {
-            store.state.globalState.analyticsHandler?.handleAnalyticsEvent(AnalyticsEvent.APP_RATING_DISPLAYED)
+            store.state.globalState.analyticsHandler?.handleAnalyticsEvent(AnalyticsEventAnOld.APP_RATING_DISPLAYED)
             addWarningMessage(WarningMessagesManager.appRatingWarning(), true)
         }
     }

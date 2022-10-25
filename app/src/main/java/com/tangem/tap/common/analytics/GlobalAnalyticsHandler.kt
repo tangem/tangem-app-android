@@ -27,7 +27,7 @@ class GlobalAnalyticsHandler(
     }
 
     override fun handleAnalyticsEvent(
-        event: AnalyticsEvent,
+        event: AnalyticsEventAnOld,
         params: Map<String, String>,
         card: Card?,
         blockchain: String?,
@@ -43,8 +43,8 @@ class GlobalAnalyticsHandler(
 
     override fun handleCardSdkErrorEvent(
         error: TangemSdkError,
-        action: Analytics.ActionToLog,
-        params: Map<AnalyticsParam, String>,
+        action: AnalyticsAnOld.ActionToLog,
+        params: Map<AnalyticsParamAnOld, String>,
         card: Card?,
     ) {
         analyticsHandlers.filterIsInstance<CardSdkErrorEventHandler>().forEach {
@@ -54,8 +54,8 @@ class GlobalAnalyticsHandler(
 
     override fun handleBlockchainSdkErrorEvent(
         error: BlockchainError,
-        action: Analytics.ActionToLog,
-        params: Map<AnalyticsParam, String>,
+        action: AnalyticsAnOld.ActionToLog,
+        params: Map<AnalyticsParamAnOld, String>,
         card: Card?,
     ) {
         analyticsHandlers.filterIsInstance<BlockchainSdkErrorEventHandler>().forEach {
@@ -70,39 +70,39 @@ class GlobalAnalyticsHandler(
     }
 }
 // [REDACTED_TODO_COMMENT]
-fun GlobalAnalyticsEventHandler.logWcEvent(event: Analytics.WcAnalyticsEvent) {
+fun GlobalAnalyticsEventHandler.logWcEvent(event: AnalyticsAnOld.WcAnalyticsEvent) {
     when (event) {
-        is Analytics.WcAnalyticsEvent.Action -> {
+        is AnalyticsAnOld.WcAnalyticsEvent.Action -> {
             handleAnalyticsEvent(
-                event = AnalyticsEvent.WC_SUCCESS_RESPONSE,
+                event = AnalyticsEventAnOld.WC_SUCCESS_RESPONSE,
                 params = mapOf(
-                    AnalyticsParam.WALLET_CONNECT_ACTION.param to event.action.name,
+                    AnalyticsParamAnOld.WALLET_CONNECT_ACTION.param to event.action.name,
                 ),
             )
         }
-        is Analytics.WcAnalyticsEvent.Error -> {
+        is AnalyticsAnOld.WcAnalyticsEvent.Error -> {
             val params = mapOf(
-                AnalyticsParam.WALLET_CONNECT_ACTION.param to event.action?.name,
-                AnalyticsParam.ERROR_DESCRIPTION.param to event.error.message,
+                AnalyticsParamAnOld.WALLET_CONNECT_ACTION.param to event.action?.name,
+                AnalyticsParamAnOld.ERROR_DESCRIPTION.param to event.error.message,
             ).filterNotNull()
             handleErrorEvent(event.error, params)
         }
-        is Analytics.WcAnalyticsEvent.InvalidRequest ->
+        is AnalyticsAnOld.WcAnalyticsEvent.InvalidRequest ->
             handleAnalyticsEvent(
-                event = AnalyticsEvent.WC_INVALID_REQUEST,
+                event = AnalyticsEventAnOld.WC_INVALID_REQUEST,
                 params = mapOf(
-                    AnalyticsParam.WALLET_CONNECT_REQUEST.param to event.json,
+                    AnalyticsParamAnOld.WALLET_CONNECT_REQUEST.param to event.json,
                 ).filterNotNull(),
             )
-        is Analytics.WcAnalyticsEvent.Session -> {
+        is AnalyticsAnOld.WcAnalyticsEvent.Session -> {
             val analyticsEvent = when (event.event) {
-                Analytics.WcSessionEvent.Disconnect -> AnalyticsEvent.WC_SESSION_DISCONNECTED
-                Analytics.WcSessionEvent.Connect -> AnalyticsEvent.WC_NEW_SESSION
+                AnalyticsAnOld.WcSessionEvent.Disconnect -> AnalyticsEventAnOld.WC_SESSION_DISCONNECTED
+                AnalyticsAnOld.WcSessionEvent.Connect -> AnalyticsEventAnOld.WC_NEW_SESSION
             }
             handleAnalyticsEvent(
                 event = analyticsEvent,
                 params = mapOf(
-                    AnalyticsParam.WALLET_CONNECT_DAPP_URL.param to event.url,
+                    AnalyticsParamAnOld.WALLET_CONNECT_DAPP_URL.param to event.url,
                 ).filterNotNull(),
             )
         }
