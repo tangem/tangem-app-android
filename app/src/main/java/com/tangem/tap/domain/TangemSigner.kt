@@ -14,6 +14,7 @@ class TangemSigner(
     private val card: Card,
     private val tangemSdk: TangemSdk,
     private val initialMessage: Message,
+    private val accessCode: String? = null,
     private val signerCallback: (TangemSignerResponse) -> Unit,
 ) : TransactionSigner {
 
@@ -29,6 +30,7 @@ class TangemSigner(
                 runnable = task,
                 cardId = cardId,
                 initialMessage = initialMessage,
+                accessCode = accessCode,
             ) { result ->
                 when (result) {
                     is CompletionResult.Success -> {
