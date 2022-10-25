@@ -2,6 +2,7 @@ package com.tangem.tap.domain.configurable.config
 
 import com.tangem.tap.common.shop.shopify.ShopifyShop
 import com.tangem.tap.common.zendesk.ZendeskConfig
+import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayConfig
 
 /**
 [REDACTED_AUTHOR]
@@ -27,6 +28,7 @@ class ConfigValueModel(
     val appsFlyerDevKey: String,
     val shopifyShop: ShopifyShop?,
     val zendesk: ZendeskConfig?,
+    val saltPay: SaltPayConfig,
     val tronGridApiKey: String,
     val amplitudeApiKey: String,
 )

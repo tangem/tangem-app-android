@@ -3,6 +3,7 @@ package com.tangem.tap.domain
 import CreateProductWalletTask
 import CreateProductWalletTaskResponse
 import android.content.Context
+import androidx.annotation.StringRes
 import com.tangem.Message
 import com.tangem.TangemSdk
 import com.tangem.blockchain.common.Blockchain
@@ -59,32 +60,32 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
     }
 
     suspend fun createProductWallet(
-        scanResponse: ScanResponse
+        scanResponse: ScanResponse,
     ): CompletionResult<CreateProductWalletTaskResponse> {
         return runTaskAsync(
             CreateProductWalletTask(scanResponse.productType),
             scanResponse.card.cardId,
-            Message(context.getString(R.string.initial_message_create_wallet_body))
+            Message(context.getString(R.string.initial_message_create_wallet_body)),
         )
     }
 
     private fun sendScanResultsToAnalytics(
         analyticsHandler: GlobalAnalyticsEventHandler?,
-        result: CompletionResult<ScanResponse>
+        result: CompletionResult<ScanResponse>,
     ) {
         when (result) {
             is CompletionResult.Success -> {
                 analyticsHandler?.handleAnalyticsEvent(
                     event = AnalyticsEventAnOld.CARD_IS_SCANNED,
                     card = result.data.card,
-                    blockchain = result.data.walletData?.blockchain
+                    blockchain = result.data.walletData?.blockchain,
                 )
                 if (DemoHelper.isDemoCard(result.data)) {
                     analyticsHandler?.handleAnalyticsEvent(
                         event = AnalyticsEventAnOld.DEMO_MODE_ACTIVATED,
                         params = mapOf(AnalyticsParamAnOld.CARD_ID.param to result.data.card.cardId),
                         card = result.data.card,
-                        blockchain = result.data.walletData?.blockchain
+                        blockchain = result.data.walletData?.blockchain,
                     )
                 }
             }
@@ -92,20 +93,23 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
                 (result.error as? TangemSdkError)?.let { error ->
                     analyticsHandler?.handleCardSdkErrorEvent(
                         error = error,
-                        action = AnalyticsAnOld.ActionToLog.Scan
+                        action = AnalyticsAnOld.ActionToLog.Scan,
                     )
                 }
         }
     }
 
     suspend fun createWallet(cardId: String?): CompletionResult<Card> {
-        return runTaskAsyncReturnOnMain(CreateWalletAndRescanTask(), cardId,
-            initialMessage = Message(context.getString(R.string.initial_message_create_wallet_body)))
+        return runTaskAsyncReturnOnMain(
+            CreateWalletAndRescanTask(),
+            cardId,
+            initialMessage = Message(context.getString(R.string.initial_message_create_wallet_body)),
+        )
     }
 
     suspend fun derivePublicKeys(
         cardId: String,
-        derivations: Map<ByteArrayKey, List<DerivationPath>>
+        derivations: Map<ByteArrayKey, List<DerivationPath>>,
     ): CompletionResult<DerivationTaskResponse> {
         return runTaskAsyncReturnOnMain(DeriveMultipleWalletPublicKeysTask(derivations), cardId)
     }
@@ -114,49 +118,58 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         return runTaskAsyncReturnOnMain(
             ResetToFactorySettingsTask(),
             card.cardId,
-            initialMessage = Message(context.getString(R.string.details_row_title_reset_factory_settings)))
+            initialMessage = Message(context.getString(R.string.details_row_title_reset_factory_settings)),
+        )
     }
 
     suspend fun setPasscode(cardId: String?): CompletionResult<SuccessResponse> {
         return runTaskAsyncReturnOnMain(
             SetUserCodeCommand.changePasscode(null),
             cardId,
-            initialMessage = Message(context.getString(R.string.initial_message_change_passcode_body)))
+            initialMessage = Message(context.getString(R.string.initial_message_change_passcode_body)),
+        )
     }
 
     suspend fun setAccessCode(cardId: String?): CompletionResult<SuccessResponse> {
         return runTaskAsyncReturnOnMain(
             SetUserCodeCommand.changeAccessCode(null),
             cardId,
-            initialMessage = Message(context.getString(R.string.initial_message_change_access_code_body)))
+            initialMessage = Message(context.getString(R.string.initial_message_change_access_code_body)),
+        )
     }
 
     suspend fun setLongTap(cardId: String?): CompletionResult<SuccessResponse> {
         return runTaskAsyncReturnOnMain(
             SetUserCodeCommand.resetUserCodes(),
             cardId,
-            initialMessage = Message(context.getString(R.string.initial_message_tap_header)))
+            initialMessage = Message(context.getString(R.string.initial_message_tap_header)),
+        )
     }
 
     suspend fun checkUserCodes(cardId: String?): CompletionResult<CheckUserCodesResponse> {
         return runTaskAsyncReturnOnMain(
             CheckUserCodesCommand(),
             cardId,
-            initialMessage = Message(context.getString(R.string.initial_message_tap_header)))
+            initialMessage = Message(context.getString(R.string.initial_message_tap_header)),
+        )
     }
 
     suspend fun scanCard(): CompletionResult<Card> {
         return runTaskAsyncReturnOnMain(
             ScanTask(),
-            initialMessage = Message(context.getString(R.string.initial_message_tap_header)))
+            initialMessage = Message(context.getString(R.string.initial_message_tap_header)),
+        )
     }
 
     suspend fun <T : CommandResponse> runTaskAsync(
-        runnable: CardSessionRunnable<T>, cardId: String? = null, initialMessage: Message? = null,
+        runnable: CardSessionRunnable<T>,
+        cardId: String? = null,
+        initialMessage: Message? = null,
+        accessCode: String? = null,
     ): CompletionResult<T> =
         withContext(Dispatchers.Main) {
             suspendCoroutine { continuation ->
-                tangemSdk.startSessionWithRunnable(runnable, cardId, initialMessage) { result ->
+                tangemSdk.startSessionWithRunnable(runnable, cardId, initialMessage, accessCode) { result ->
                     if (continuation.context.isActive) continuation.resume(result)
                 }
             }
@@ -170,11 +183,15 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
     }
 
     fun changeDisplayedCardIdNumbersCount(scanResponse: ScanResponse) {
-        tangemSdk.config.cardIdDisplayFormat = if (scanResponse.isTangemTwins()) {
-            CardIdDisplayFormat.LastLuhn(4)
-        } else {
-            CardIdDisplayFormat.Full
+        tangemSdk.config.cardIdDisplayFormat = when {
+            scanResponse.isTangemTwins() -> CardIdDisplayFormat.LastLuhn(4)
+            scanResponse.isSaltPay() -> CardIdDisplayFormat.None
+            else -> CardIdDisplayFormat.Full
         }
+    }
+
+    fun getString(@StringRes stringResId: Int, vararg formatArgs: Any?): String {
+        return context.getString(stringResId, formatArgs)
     }
 
     companion object {
@@ -182,8 +199,8 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
             linkedTerminal = true,
             allowUntrustedCards = true,
             filter = CardFilter(
-                allowedCardTypes = FirmwareVersion.FirmwareType.values().toList()
-            )
+                allowedCardTypes = FirmwareVersion.FirmwareType.values().toList(),
+            ),
         )
     }
 }
