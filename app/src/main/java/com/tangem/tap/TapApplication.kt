@@ -32,8 +32,10 @@ import com.tangem.tap.domain.walletconnect.WalletConnectRepository
 import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.tap.persistence.PreferencesStorage
 import com.tangem.wallet.BuildConfig
+import com.zendesk.logger.Logger
 import org.rekotlin.Store
 import timber.log.Timber
+import zendesk.chat.Chat
 
 val store = Store(
     reducer = ::appReducer,
@@ -144,12 +146,11 @@ class TapApplication : Application(), ImageLoaderFactory {
             infoHolder = additionalFeedbackInfo,
             logCollector = tangemLogCollector,
             preferencesStorage = preferencesStorage,
-            logEnabled = LogConfig.zendesk,
         )
-        feedbackManager.initChat(
-            context = context,
-            zendeskConfig = config.zendesk!!,
-        )
+        feedbackManager.chatInitializer = { zendeskConfig ->
+            Chat.INSTANCE.init(context, zendeskConfig.accountKey, zendeskConfig.appId)
+            Logger.setLoggable(LogConfig.zendesk)
+        }
         store.dispatch(GlobalAction.SetFeedbackManager(feedbackManager))
     }
 
