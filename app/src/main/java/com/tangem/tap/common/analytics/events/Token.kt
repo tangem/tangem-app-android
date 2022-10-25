@@ -20,7 +20,7 @@ sealed class Token(
     sealed class Recieve(
         event: String,
         params: Map<String, String> = mapOf(),
-    ) : Onboarding("Token / Recieve", event, params) {
+    ) : Token("Token / Recieve", event, params) {
 
         class ScreenOpened : Recieve("Recieve Screen Opened")
         class ButtonCopyAddress : Recieve("Button - Copy Address")
@@ -30,7 +30,7 @@ sealed class Token(
     sealed class Send(
         event: String,
         params: Map<String, String> = mapOf(),
-    ) : Onboarding("Token / Send", event, params) {
+    ) : Token("Token / Send", event, params) {
 
         class ScreenOpened : Send("Send Screen Opened")
         class ButtonPaste : Send("Button - Paste")
@@ -46,7 +46,7 @@ sealed class Token(
     sealed class Topup(
         event: String,
         params: Map<String, String> = mapOf(),
-    ) : Onboarding("Token / Topup", event, params) {
+    ) : Token("Token / Topup", event, params) {
 
         class ScreenOpened : Topup("Top Up Screen Opened")
         class P2PScreenOpened : Topup("P2P Screen Opened")
@@ -55,7 +55,7 @@ sealed class Token(
     sealed class Withdraw(
         event: String,
         params: Map<String, String> = mapOf(),
-    ) : Onboarding("Token / Withdraw", event, params) {
+    ) : Token("Token / Withdraw", event, params) {
 
         class ScreenOpened : Withdraw("Withdraw Screen Opened")
     }
