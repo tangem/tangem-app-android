@@ -3,8 +3,8 @@ package com.tangem.tap.features.details.redux
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
-import com.tangem.tap.common.analytics.Analytics
-import com.tangem.tap.common.analytics.AnalyticsParam
+import com.tangem.tap.common.analytics.AnalyticsAnOld
+import com.tangem.tap.common.analytics.AnalyticsParamAnOld
 import com.tangem.tap.common.extensions.dispatchNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
@@ -112,7 +112,7 @@ class DetailsMiddleware {
                                     (result.error as? TangemSdkError)?.let { error ->
                                         store.state.globalState.analyticsHandler?.handleCardSdkErrorEvent(
                                             error,
-                                            Analytics.ActionToLog.PurgeWallet,
+                                            AnalyticsAnOld.ActionToLog.PurgeWallet,
                                             card = store.state.detailsState.scanResponse?.card,
                                         )
                                     }
@@ -156,9 +156,9 @@ class DetailsMiddleware {
                                     (result.error as? TangemSdkError)?.let { error ->
                                         store.state.globalState.analyticsHandler?.handleCardSdkErrorEvent(
                                             error = error,
-                                            action = Analytics.ActionToLog.ChangeSecOptions,
+                                            action = AnalyticsAnOld.ActionToLog.ChangeSecOptions,
                                             params = mapOf(
-                                                AnalyticsParam.NEW_SECURITY_OPTION to
+                                                AnalyticsParamAnOld.NEW_SECURITY_OPTION to
                                                     (selectedOption?.name ?: ""),
                                             ),
                                             card = store.state.detailsState.scanResponse?.card,
