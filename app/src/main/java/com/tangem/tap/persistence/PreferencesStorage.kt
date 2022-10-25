@@ -7,15 +7,16 @@ import androidx.core.content.edit
 import com.tangem.common.json.MoshiJsonConverter
 import java.util.*
 
-
 class PreferencesStorage(applicationContext: Application) {
 
-    private val preferences: SharedPreferences = applicationContext.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
+    private val preferences: SharedPreferences =
+        applicationContext.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
 
     val appRatingLaunchObserver: AppRatingLaunchObserver
     val usedCardsPrefStorage: UsedCardsPrefStorage
     val fiatCurrenciesPrefStorage: FiatCurrenciesPrefStorage
     val saltPayActivationStorage: SaltPayActivationStorage
+    val disclaimerPrefStorage: DisclaimerPrefStorage
 
     init {
         incrementLaunchCounter()
@@ -25,6 +26,7 @@ class PreferencesStorage(applicationContext: Application) {
         fiatCurrenciesPrefStorage = FiatCurrenciesPrefStorage(preferences, MoshiJsonConverter.INSTANCE)
         fiatCurrenciesPrefStorage.migrate()
         saltPayActivationStorage = SaltPayActivationPrefStorage(applicationContext, MoshiJsonConverter.INSTANCE)
+        disclaimerPrefStorage = DisclaimerPrefStorage(preferences)
     }
 
     var chatFirstLaunchTime: Long?
@@ -36,14 +38,6 @@ class PreferencesStorage(applicationContext: Application) {
     @Deprecated("Use UsedCardsPrefStorage instead")
     fun wasCardScannedBefore(cardId: String): Boolean {
         return usedCardsPrefStorage.wasScanned(cardId)
-    }
-
-    fun saveDisclaimerAccepted() {
-        preferences.edit { putBoolean(DISCLAIMER_ACCEPTED_KEY, true) }
-    }
-
-    fun wasDisclaimerAccepted(): Boolean {
-        return preferences.getBoolean(DISCLAIMER_ACCEPTED_KEY, false)
     }
 
     fun saveTwinsOnboardingShown() {
@@ -61,12 +55,10 @@ class PreferencesStorage(applicationContext: Application) {
 
     companion object {
         private const val PREFERENCES_NAME = "tapPrefs"
-        private const val DISCLAIMER_ACCEPTED_KEY = "disclaimerAccepted"
         private const val TWINS_ONBOARDING_SHOWN_KEY = "twinsOnboardingShown"
         private const val APP_LAUNCH_COUNT_KEY = "launchCount"
         private const val CHAT_FIRST_LAUNCH_KEY = "chatFirstLaunchKey"
     }
-
 }
 
 class AppRatingLaunchObserver(
