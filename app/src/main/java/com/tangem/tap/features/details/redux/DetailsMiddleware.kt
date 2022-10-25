@@ -110,7 +110,7 @@ class DetailsMiddleware {
                                 }
                                 is CompletionResult.Failure -> {
                                     (result.error as? TangemSdkError)?.let { error ->
-                                        store.state.globalState.analyticsHandlers?.logCardSdkError(
+                                        store.state.globalState.analyticsHandler?.handleCardSdkErrorEvent(
                                             error,
                                             Analytics.ActionToLog.PurgeWallet,
                                             card = store.state.detailsState.scanResponse?.card,
@@ -154,10 +154,10 @@ class DetailsMiddleware {
                                 }
                                 is CompletionResult.Failure -> {
                                     (result.error as? TangemSdkError)?.let { error ->
-                                        store.state.globalState.analyticsHandlers?.logCardSdkError(
+                                        store.state.globalState.analyticsHandler?.handleCardSdkErrorEvent(
                                             error = error,
-                                            actionToLog = Analytics.ActionToLog.ChangeSecOptions,
-                                            parameters = mapOf(
+                                            action = Analytics.ActionToLog.ChangeSecOptions,
+                                            params = mapOf(
                                                 AnalyticsParam.NEW_SECURITY_OPTION to
                                                     (selectedOption?.name ?: ""),
                                             ),

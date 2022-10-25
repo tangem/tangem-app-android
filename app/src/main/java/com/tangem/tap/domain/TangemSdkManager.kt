@@ -28,8 +28,8 @@ import com.tangem.operations.pins.CheckUserCodesResponse
 import com.tangem.operations.pins.SetUserCodeCommand
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.AnalyticsEvent
-import com.tangem.tap.common.analytics.AnalyticsHandler
 import com.tangem.tap.common.analytics.AnalyticsParam
+import com.tangem.tap.common.analytics.GlobalAnalyticsEventHandler
 import com.tangem.tap.domain.tasks.CreateWalletAndRescanTask
 import com.tangem.tap.domain.tasks.product.ResetToFactorySettingsTask
 import com.tangem.tap.domain.tasks.product.ScanProductTask
@@ -45,12 +45,12 @@ import kotlin.coroutines.suspendCoroutine
 class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Context) {
 
     suspend fun scanProduct(
-        analyticsHandler: AnalyticsHandler?,
+        analyticsHandler: GlobalAnalyticsEventHandler?,
         userTokensRepository: UserTokensRepository,
         additionalBlockchainsToDerive: Collection<Blockchain>? = null,
         messageRes: Int? = null,
     ): CompletionResult<ScanResponse> {
-        analyticsHandler?.triggerEvent(AnalyticsEvent.READY_TO_SCAN, null)
+        analyticsHandler?.handleAnalyticsEvent(AnalyticsEvent.READY_TO_SCAN, card = null)
 
         val message = Message(context.getString(messageRes ?: R.string.initial_message_scan_header))
         return runTaskAsyncReturnOnMain(
@@ -70,30 +70,30 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
     }
 
     private fun sendScanResultsToAnalytics(
-        analyticsHandler: AnalyticsHandler?,
+        analyticsHandler: GlobalAnalyticsEventHandler?,
         result: CompletionResult<ScanResponse>,
     ) {
         when (result) {
             is CompletionResult.Success -> {
-                analyticsHandler?.triggerEvent(
+                analyticsHandler?.handleAnalyticsEvent(
                     event = AnalyticsEvent.CARD_IS_SCANNED,
                     card = result.data.card,
                     blockchain = result.data.walletData?.blockchain,
                 )
                 if (DemoHelper.isDemoCard(result.data)) {
-                    analyticsHandler?.triggerEvent(
+                    analyticsHandler?.handleAnalyticsEvent(
                         event = AnalyticsEvent.DEMO_MODE_ACTIVATED,
+                        params = mapOf(AnalyticsParam.CARD_ID.param to result.data.card.cardId),
                         card = result.data.card,
                         blockchain = result.data.walletData?.blockchain,
-                        params = mapOf(AnalyticsParam.CARD_ID.param to result.data.card.cardId),
                     )
                 }
             }
             is CompletionResult.Failure ->
                 (result.error as? TangemSdkError)?.let { error ->
-                    analyticsHandler?.logCardSdkError(
+                    analyticsHandler?.handleCardSdkErrorEvent(
                         error = error,
-                        actionToLog = Analytics.ActionToLog.Scan,
+                        action = Analytics.ActionToLog.Scan,
                     )
                 }
         }
@@ -101,7 +101,8 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
 
     suspend fun createWallet(cardId: String?): CompletionResult<Card> {
         return runTaskAsyncReturnOnMain(
-            CreateWalletAndRescanTask(), cardId,
+            CreateWalletAndRescanTask(),
+            cardId,
             initialMessage = Message(context.getString(R.string.initial_message_create_wallet_body)),
         )
     }
