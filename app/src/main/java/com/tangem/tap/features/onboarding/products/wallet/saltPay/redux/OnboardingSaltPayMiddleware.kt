@@ -73,9 +73,7 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
                 }
 
                 handleInProgress = false
-                withMainContext {
-                    store.dispatch(OnboardingSaltPayAction.SetStep(updateResult.step))
-                }
+                dispatchOnMain(OnboardingSaltPayAction.SetStep(updateResult.step))
             }
         }
         is OnboardingSaltPayAction.RegisterCard -> {
@@ -129,10 +127,8 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
                     return@launch
                 }
 
-                withMainContext {
-                    handleInProgress = false
-                    store.dispatch(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.KycIntro))
-                }
+                handleInProgress = false
+                dispatchOnMain(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.KycIntro))
             }
         }
         is OnboardingSaltPayAction.OpenUtorgKYC -> {
