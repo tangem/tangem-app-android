@@ -383,7 +383,7 @@ fun RegistrationResponse.Item.toSaltPayStep(): SaltPayActivationStep {
 
         kycStatus != null -> {
             when (kycStatus) {
-                KYCStatus.NOT_STARTED, KYCStatus.STARTED -> SaltPayActivationStep.KycStart
+                KYCStatus.NOT_STARTED, KYCStatus.STARTED -> SaltPayActivationStep.KycIntro
                 KYCStatus.WAITING_FOR_APPROVAL -> SaltPayActivationStep.KycWaiting
                 KYCStatus.CORRECTION_REQUESTED, KYCStatus.REJECTED -> SaltPayActivationStep.KycReject
                 KYCStatus.APPROVED -> SaltPayActivationStep.Claim
