@@ -17,8 +17,6 @@ import com.tangem.tap.features.onboarding.products.wallet.saltPay.KYCProvider
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayActivationManager
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayConfig
 import com.tangem.tap.features.wallet.redux.ProgressState
-import com.tangem.tap.persistence.SaltPayActivationStorage
-import com.tangem.tap.preferencesStorage
 import com.tangem.tap.store
 import java.math.BigDecimal
 
@@ -60,7 +58,6 @@ data class OnboardingSaltPayState(
                 scanResponse = scanResponse,
                 gnosisRegistrator = gnosisRegistrator,
                 paymentologyService = store.state.domainNetworks.paymentologyService,
-                registrationStorage = preferencesStorage.saltPayActivationStorage,
                 kycProvider = saltPayConfig.kycProvider,
             )
             test(scanResponse, gnosisRegistrator)
@@ -83,7 +80,6 @@ data class OnboardingSaltPayState(
             scanResponse: ScanResponse,
             gnosisRegistrator: GnosisRegistrator,
             paymentologyService: PaymentologyApiService,
-            registrationStorage: SaltPayActivationStorage,
             kycProvider: KYCProvider,
         ): SaltPayActivationManager {
             if (!scanResponse.isSaltPay()) {
@@ -100,7 +96,6 @@ data class OnboardingSaltPayState(
                 kycProvider = kycProvider,
                 paymentologyService = paymentologyService,
                 gnosisRegistrator = gnosisRegistrator,
-                registrationStorage = registrationStorage,
             )
         }
 
