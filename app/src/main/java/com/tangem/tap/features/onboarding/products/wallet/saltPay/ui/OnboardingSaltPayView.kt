@@ -41,7 +41,7 @@ import com.tangem.tap.features.onboarding.products.wallet.saltPay.UtorgWebViewCl
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.dialog.SaltPayDialog
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayAction
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayState
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.SaltPayRegistrationStep
+import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.SaltPayActivationStep
 import com.tangem.tap.features.onboarding.products.wallet.ui.OnboardingWalletFragment
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.store
@@ -67,7 +67,7 @@ internal class OnboardingSaltPayView(
     }
 
     private var progressButton: SaltPayProgressButton? = null
-    private var previousStep: SaltPayRegistrationStep = SaltPayRegistrationStep.None
+    private var previousStep: SaltPayActivationStep = SaltPayActivationStep.None
 
     fun newState(state: OnboardingWalletState) {
         handleCardArtworks(state)
@@ -133,16 +133,16 @@ internal class OnboardingSaltPayView(
         walletFragment.bindingSaltPay.onboardingSaltpayContainer.show()
 
         when (state.step) {
-            SaltPayRegistrationStep.NoGas -> handleNoGas()
-            SaltPayRegistrationStep.NeedPin -> handleNeedPin()
-            SaltPayRegistrationStep.CardRegistration -> handleCardRegistration()
-            SaltPayRegistrationStep.KycIntro -> handleKycIntro()
-            SaltPayRegistrationStep.KycStart -> handleKycStart(state)
-            SaltPayRegistrationStep.KycWaiting -> handleKycWaiting()
-            SaltPayRegistrationStep.KycReject -> handleKycReject()
-            SaltPayRegistrationStep.Claim -> handleClaim(state)
-            SaltPayRegistrationStep.ClaimInProgress -> handleClaim(state)
-            SaltPayRegistrationStep.Finished -> handleClaim(state)
+            SaltPayActivationStep.NoGas -> handleNoGas()
+            SaltPayActivationStep.NeedPin -> handleNeedPin()
+            SaltPayActivationStep.CardRegistration -> handleCardRegistration()
+            SaltPayActivationStep.KycIntro -> handleKycIntro()
+            SaltPayActivationStep.KycStart -> handleKycStart(state)
+            SaltPayActivationStep.KycWaiting -> handleKycWaiting()
+            SaltPayActivationStep.KycReject -> handleKycReject()
+            SaltPayActivationStep.Claim -> handleClaim(state)
+            SaltPayActivationStep.ClaimInProgress -> handleClaim(state)
+            SaltPayActivationStep.Finished -> handleClaim(state)
         }
         progressButton?.changeState(state.mainButtonState)
     }
@@ -276,7 +276,7 @@ internal class OnboardingSaltPayView(
         topContainer.onboardingTvBalance.tvBalanceCurrency.text = ""
 
         when (state.step) {
-            SaltPayRegistrationStep.Claim -> {
+            SaltPayActivationStep.Claim -> {
                 btnRefreshBalanceWidget.mainView.hide()
                 claimValueString(state)?.let {
                     tvHeader.text = getString(R.string.onboarding_title_claim, it)
@@ -288,13 +288,13 @@ internal class OnboardingSaltPayView(
                     store.dispatch(OnboardingSaltPayAction.Claim)
                 }
             }
-            SaltPayRegistrationStep.ClaimInProgress -> {
+            SaltPayActivationStep.ClaimInProgress -> {
                 btnRefreshBalanceWidget.mainView.show()
                 tvHeader.text = getString(R.string.onboarding_title_claim_progress)
                 tvBody.text = getString(R.string.onboarding_subtitle_claim_progress)
                 btnMain.text = getString(R.string.onboarding_button_claim)
             }
-            SaltPayRegistrationStep.Finished -> {
+            SaltPayActivationStep.Finished -> {
                 tvHeader.setText(R.string.common_success)
                 tvBody.setText(R.string.onboarding_subtitle_success_claim)
 
@@ -329,7 +329,7 @@ internal class OnboardingSaltPayView(
         )
     }
 
-    private fun updateConstraints(currentStep: SaltPayRegistrationStep, @LayoutRes layoutId: Int) {
+    private fun updateConstraints(currentStep: SaltPayActivationStep, @LayoutRes layoutId: Int) {
         if (this.previousStep == currentStep) return
 
         with(claimBinding.onboardingTopContainer) {
