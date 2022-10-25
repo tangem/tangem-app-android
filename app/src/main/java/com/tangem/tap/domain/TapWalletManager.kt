@@ -35,9 +35,11 @@ class TapWalletManager {
     val walletManagerFactory: WalletManagerFactory
         by lazy { WalletManagerFactory(blockchainSdkConfig) }
     val rates: RatesRepository = RatesRepository()
+
     private val blockchainSdkConfig by lazy {
         store.state.globalState.configManager?.config?.blockchainSdkConfig ?: BlockchainSdkConfig()
     }
+
     private val walletManagersThrottler =
         ThrottlerWithValues<BlockchainNetwork, Result<Wallet>>(10000)
 
@@ -132,42 +134,10 @@ class TapWalletManager {
         }
 
         dispatchOnMain(WalletAction.LoadWallet())
-        dispatchOnMain(WalletAction.LoadFiatRate())
     }
 
-    private suspend fun loadMultiWalletData(
-        scanResponse: ScanResponse,
-    ) {
-        when (val tokensResult = userTokensRepository.getUserTokens(scanResponse.card)) {
-            is Result.Success -> {
-                withMainContext {
-                    val blockchainNetworks = tokensResult.data.toBlockchainNetworks()
-                    val walletManagers = walletManagerFactory.makeWalletManagersForApp(scanResponse, tokensResult.data)
-                    store.dispatch(
-                        WalletAction.MultiWallet.AddBlockchains(
-                            blockchains = blockchainNetworks,
-                            walletManagers = walletManagers,
-                            save = false,
-                        ),
-                    )
-
-                    blockchainNetworks.filter { it.tokens.isNotEmpty() }
-                        .map {
-                            store.dispatch(
-                                WalletAction.MultiWallet.AddTokens(
-                                    tokens = it.tokens,
-                                    blockchain = it,
-                                    save = false,
-                                ),
-                            )
-                        }
-                    checkIfDerivationsAreMissing(blockchainNetworks, scanResponse)
-                }
-            }
-            is Result.Failure -> {
-                return
-            }
-        }
+    private suspend fun loadMultiWalletData(scanResponse: ScanResponse) {
+        loadUserCurrencies(scanResponse, walletManagerFactory)
     }
 
     private fun checkIfDerivationsAreMissing(blockchainNetworks: List<BlockchainNetwork>, scanResponse: ScanResponse) {
@@ -203,11 +173,41 @@ class TapWalletManager {
                     walletManagers = listOf(primaryWalletManager),
                     save = false,
                 ),
+                WalletAction.LoadFiatRate(),
             )
         }
     }
 
+    private suspend fun loadUserCurrencies(scanResponse: ScanResponse, walletManagerFactory: WalletManagerFactory) {
+        val userTokens = userTokensRepository.getUserTokens(scanResponse.card)
+        withMainContext {
+            val blockchainNetworks = userTokens.toBlockchainNetworks()
+            val walletManagers = walletManagerFactory.makeWalletManagersForApp(scanResponse, userTokens)
+            store.dispatch(
+                WalletAction.MultiWallet.AddBlockchains(
+                    blockchains = blockchainNetworks,
+                    walletManagers = walletManagers,
+                    save = false,
+                ),
+            )
+
+            blockchainNetworks.filter { it.tokens.isNotEmpty() }
+                .map {
+                    store.dispatch(
+                        WalletAction.MultiWallet.AddTokens(
+                            tokens = it.tokens,
+                            blockchain = it,
+                            save = false,
+                        ),
+                    )
+                }
+            checkIfDerivationsAreMissing(blockchainNetworks, scanResponse)
+            store.dispatch(WalletAction.LoadFiatRate(coinsList = userTokens))
+        }
+    }
+
     suspend fun reloadData(data: ScanResponse) {
+        loadUserCurrencies(data, walletManagerFactory)
         withContext(Dispatchers.Main) {
             getActionIfUnknownBlockchainOrEmptyWallet(data)?.let {
                 store.dispatch(it)
@@ -219,7 +219,6 @@ class TapWalletManager {
             }
 
             store.dispatch(WalletAction.LoadWallet())
-            store.dispatch(WalletAction.LoadFiatRate())
         }
     }
 
