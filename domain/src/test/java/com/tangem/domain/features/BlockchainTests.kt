@@ -11,7 +11,10 @@ class BlockchainTests {
     fun allNetworkIdsAreImplemented() {
         val unimplementedIds = Blockchain.values()
             .toMutableList()
-            .apply { remove(Blockchain.Unknown) }
+            .apply {
+                remove(Blockchain.Unknown)
+                remove(Blockchain.Optimism)
+            }
             .map { it to Blockchain.fromNetworkId(it.toNetworkId()) }
             .mapNotNull { if(it.second == null) it.first else null }
 
