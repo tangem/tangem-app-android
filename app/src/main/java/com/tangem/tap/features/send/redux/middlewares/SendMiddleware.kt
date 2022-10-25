@@ -23,7 +23,6 @@ import com.tangem.tap.common.analytics.AnalyticsParam
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
-import com.tangem.tap.common.extensions.logSendTransactionError
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.common.redux.AppDialog
@@ -222,7 +221,7 @@ private fun sendTransaction(
 
             when (sendResult) {
                 is SimpleResult.Success -> {
-                    store.state.globalState.analyticsHandlers?.triggerEvent(
+                    store.state.globalState.analyticsHandler?.handleAnalyticsEvent(
                         event = AnalyticsEvent.TRANSACTION_IS_SENT,
                         card = card,
                         blockchain = walletManager.wallet.blockchain.currency,
@@ -251,10 +250,10 @@ private fun sendTransaction(
                         feeAmount = feeAmount,
                         destinationAddress = destinationAddress,
                     )
-                    store.state.globalState.analyticsHandlers?.logSendTransactionError(
+                    store.state.globalState.analyticsHandler?.handleBlockchainSdkErrorEvent(
                         error = sendResult.error,
                         action = Analytics.ActionToLog.SendTransaction,
-                        parameters = mapOf(AnalyticsParam.BLOCKCHAIN to walletManager.wallet.blockchain.currency),
+                        params = mapOf(AnalyticsParam.BLOCKCHAIN to walletManager.wallet.blockchain.currency),
                         card = card,
                     )
 
