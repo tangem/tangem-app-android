@@ -7,7 +7,6 @@
         android:name="android.hardware.nfc"
         android:required="true" />
 
-    <uses-permission android:name="android.permission.USE_BIOMETRICT" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <uses-permission android:name="android.permission.NFC" />
     <uses-permission android:name="android.permission.INTERNET" />
@@ -130,18 +129,6 @@
         <activity android:name="com.tangem.tap.common.qrCodeScan.ScanQrCodeActivity" />
 
         <activity android:name="zendesk.messaging.MessagingActivity"
-            android:theme="@style/ZendeskTheme" />
-
-        <activity android:name="zendesk.support.guide.HelpCenterActivity"
-            android:theme="@style/ZendeskTheme" />
-
-        <activity android:name="zendesk.support.guide.ViewArticleActivity"
-            android:theme="@style/ZendeskTheme" />
-
-        <activity android:name="zendesk.support.request.RequestActivity"
-            android:theme="@style/ZendeskTheme" />
-
-        <activity android:name="zendesk.support.requestlist.RequestListActivity"
             android:theme="@style/ZendeskTheme" />
 
         <provider
