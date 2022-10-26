@@ -1,7 +1,9 @@
 package com.tangem.tap.domain.walletconnect
 
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.common.card.EllipticCurve
 import com.tangem.common.extensions.guard
+import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -57,7 +59,15 @@ class WalletConnectManager {
     private var sessions: MutableMap<WCSession, WalletConnectActiveData> = mutableMapOf()
 
     fun connect(wcUri: String) {
-        val session = WCSession.from(wcUri) ?: return
+        val session = WCSession.from(wcUri).guard {
+            store.dispatchOnMain(
+                WalletConnectAction.FailureEstablishingSession(
+                    session = null,
+                    error = TapError.WalletConnect.UnsupportedLink,
+                ),
+            )
+            return
+        }
         if (sessions[session] != null) {
             store.dispatchOnMain(WalletConnectAction.RefuseOpeningSession)
             return
@@ -65,13 +75,25 @@ class WalletConnectManager {
         val client = WCClient(httpClient = okHttpClient)
         setListeners(client)
         val peerId = UUID.randomUUID().toString()
-        client.connect(session, tangemPeerMeta, peerId)
+
+        try {
+            client.connect(session, tangemPeerMeta, peerId)
+        } catch (exception: IllegalArgumentException) {
+            store.dispatchOnMain(
+                WalletConnectAction.FailureEstablishingSession(
+                    session = null,
+                    error = TapError.WalletConnect.UnsupportedLink,
+                ),
+            )
+            return
+        }
+
         sessions[session] = WalletConnectActiveData(
             peerId = peerId,
             remotePeerId = null,
             session = session,
             client = client,
-            wallet = WalletForSession(cardId = "")
+            wallet = WalletForSession(),
         )
         setupConnectionTimeoutCheck(session)
     }
@@ -112,8 +134,12 @@ class WalletConnectManager {
         }
     }
 
-    fun restoreSessions() {
+    fun restoreSessions(scanResponse: ScanResponse) {
+        val walletPublicKey = scanResponse.card.wallets.firstOrNull { it.curve == EllipticCurve.Secp256k1 }?.publicKey
+            ?: return
         val sessions = walletConnectRepository.loadSavedSessions()
+            // filter sessions for this particular card
+            .filter { it.wallet.walletPublicKey.contentEquals(walletPublicKey) }
         this.sessions = sessions
             .map { session ->
                 WalletConnectActiveData(
@@ -128,8 +154,8 @@ class WalletConnectManager {
                         setListeners(it.client)
                         it.client.connect(it.session, tangemPeerMeta, it.peerId, it.remotePeerId)
                     }
-            }
-            .map { it.session to it }.toMap().toMutableMap()
+            }.associateBy { it.session }.toMutableMap()
+
         store.dispatchOnMain(WalletConnectAction.SetSessionsRestored(sessions))
     }
 

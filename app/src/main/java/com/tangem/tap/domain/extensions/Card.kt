@@ -6,6 +6,7 @@ import com.tangem.common.card.EllipticCurve
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.extensions.toHexString
 import com.tangem.common.services.Result
+import com.tangem.domain.common.TapWorkarounds.isSaltPay
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.TapWorkarounds.isTangemNote
 import com.tangem.domain.common.TwinCardNumber
@@ -23,10 +24,13 @@ val Card.isWalletDataSupported: Boolean
 
 val Card.isMultiwalletAllowed: Boolean
     get() {
-        return !isTangemTwin() && !isStart2Coin && !isTangemNote()
+        return !isTangemTwin() && !isStart2Coin && !isTangemNote && !isSaltPay
             && (firmwareVersion >= FirmwareVersion.MultiWalletAvailable ||
             getSingleWallet()?.curve == EllipticCurve.Secp256k1)
     }
+
+val Card.isHdWalletAllowedByApp: Boolean
+    get() = settings.isHDWalletAllowed && !isSaltPay
 
 fun Card.getSingleWallet(): CardWallet? {
     return wallets.firstOrNull()
