@@ -8,7 +8,7 @@ import com.tangem.network.api.tangemTech.CoinsResponse
  */
 sealed interface DomainDialog {
 
-    data class DialogError(val error: DomainError) : DomainDialog
+    data class DialogError(val error: DomainModuleError) : DomainDialog
 
     data class SelectTokenDialog(
         val items: List<CoinsResponse.Coin.Network>,
