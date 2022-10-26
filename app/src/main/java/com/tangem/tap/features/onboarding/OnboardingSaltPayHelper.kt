@@ -6,7 +6,7 @@ import com.tangem.domain.common.extensions.successOr
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayActivationManager
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.message.SaltPayActivationError
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.SaltPayActivationStep
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.updateActivationStatus
+import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.update
 
 /**
 * [REDACTED_AUTHOR]
@@ -19,8 +19,8 @@ class OnboardingSaltPayHelper {
             manager: SaltPayActivationManager,
         ): Result<Boolean> {
             return try {
-                val status = manager.updateActivationStatus(null).successOr { return it }
-                val isRegistrationCase = status.step != SaltPayActivationStep.Finished
+                val updatedStep = manager.update(null, null).successOr { return it }
+                val isRegistrationCase = updatedStep != SaltPayActivationStep.Finished
                 val isBackupCase = scanResponse.card.backupStatus?.isActive == false
                 Result.Success(isRegistrationCase || isBackupCase)
             } catch (ex: Exception) {
@@ -30,12 +30,12 @@ class OnboardingSaltPayHelper {
             }
         }
 
-        suspend fun testProceedToOnboarding(
+        fun testProceedToOnboarding(
             scanResponse: ScanResponse,
             manager: SaltPayActivationManager,
         ): Result<Boolean> = Result.Success(true)
 
-        suspend fun testProceedToMainScreen(
+        fun testProceedToMainScreen(
             scanResponse: ScanResponse,
             manager: SaltPayActivationManager,
         ): Result<Boolean> = Result.Success(false)
