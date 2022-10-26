@@ -4,6 +4,7 @@ import com.tangem.blockchain.common.BlockchainSdkConfig
 import com.tangem.tap.common.shop.shopify.ShopifyShop
 import com.tangem.tap.common.zendesk.ZendeskConfig
 import com.tangem.tap.domain.configurable.Loader
+import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayConfig
 
 /**
 [REDACTED_AUTHOR]
@@ -22,28 +23,22 @@ data class Config(
     val isCreatingTwinCardsAllowed: Boolean = false,
     val shopify: ShopifyShop? = null,
     val zendesk: ZendeskConfig? = null,
+    val saltPayConfig: SaltPayConfig? = null,
 )
 
-class ConfigManager(
-    private val localLoader: Loader<ConfigModel>,
-    private val remoteLoader: Loader<ConfigModel>
-) {
+class ConfigManager {
 
     var config: Config = Config()
         private set
 
     private var defaultConfig = Config()
 
-    fun load(onComplete: ((config: Config) -> Unit)? = null) {
-        localLoader.load { configModel ->
+    fun load(configLoader: Loader<ConfigModel>, onComplete: ((config: Config) -> Unit)? = null) {
+        configLoader.load { configModel ->
             setupFeature(configModel.features)
             setupKey(configModel.configValues)
             onComplete?.invoke(config)
         }
-        // Uncomment to enable remote config
-//        remoteLoader.load { config ->
-//            setupFeature(config.features)
-//        }
     }
 
     fun turnOff(name: String) {
@@ -97,6 +92,7 @@ class ConfigManager(
             appsFlyerDevKey = values.appsFlyerDevKey,
             shopify = values.shopifyShop,
             zendesk = values.zendesk,
+            saltPayConfig = values.saltPay,
         )
         defaultConfig = defaultConfig.copy(
             coinMarketCapKey = values.coinMarketCapKey,
@@ -113,6 +109,7 @@ class ConfigManager(
             appsFlyerDevKey = values.appsFlyerDevKey,
             shopify = values.shopifyShop,
             zendesk = values.zendesk,
+            saltPayConfig = values.saltPay,
         )
     }
 
