@@ -247,33 +247,82 @@ fun handleAnalytics(analyticsHandler: GlobalAnalyticsEventHandler, step: SaltPay
 }
 
 suspend fun SaltPayActivationManager.update(
-    currentStep: SaltPayActivationStep?,
+    currentStep: SaltPayActivationStep,
     currentAmountToClaim: Amount?,
 ): Result<SaltPayActivationStep> {
     Timber.d("updateSaltPayStatus")
 
-    val step = checkRegistration(this).successOr {
-        return Result.Failure(it.error)
-    }
-
-    checkGasIfNeeded(this, step).successOr {
-        return Result.Failure(it.error)
-    }
-
+    val registrationResponse = checkRegistration().successOr { return it }
     val amountToClaim = getAmountToClaimIfNeeded(this, currentAmountToClaim)
 
-    val processedStep = when {
-        step == SaltPayActivationStep.Claim && amountToClaim == null -> {
-            SaltPayActivationStep.Finished
-        }
-        step == SaltPayActivationStep.KycReject && currentStep == SaltPayActivationStep.KycReject -> {
-            SaltPayActivationStep.KycStart
-        }
-        else -> step
+    val newStep = try {
+        determineStep(currentStep, amountToClaim, registrationResponse)
+    } catch (ex: Exception) {
+        return Result.Failure(ex)
     }
 
-    Timber.d("update: success: %s", processedStep)
-    return Result.Success(processedStep)
+    checkGasIfNeeded(this, newStep).successOr { return it }
+
+    Timber.d("update: success: %s", newStep)
+    return Result.Success(newStep)
+}
+
+private fun determineStep(
+    currentStep: SaltPayActivationStep,
+    amountToClaim: Amount?,
+    response: RegistrationResponse.Item,
+): SaltPayActivationStep {
+    return when {
+        response.passed != true -> throw SaltPayActivationError.CardNotPassed(response.error)
+        response.disabledByAdmin == true -> throw SaltPayActivationError.CardDisabled(response.error)
+
+        // go to claim screen
+        response.active == true -> SaltPayActivationStep.Claim
+
+        // pinSet is false, go toPin screen
+        response.pinSet == false -> SaltPayActivationStep.NeedPin
+
+        response.kycStatus != null -> {
+            when (currentStep) {
+                SaltPayActivationStep.KycWaiting -> when (response.kycStatus) {
+                    KYCStatus.NOT_STARTED, KYCStatus.STARTED -> SaltPayActivationStep.KycIntro
+                    KYCStatus.WAITING_FOR_APPROVAL -> SaltPayActivationStep.KycWaiting
+                    KYCStatus.CORRECTION_REQUESTED, KYCStatus.REJECTED -> SaltPayActivationStep.KycReject
+                    KYCStatus.APPROVED -> when (amountToClaim) {
+                        null -> SaltPayActivationStep.Success
+                        else -> SaltPayActivationStep.Claim
+                    }
+                    else -> SaltPayActivationStep.KycIntro
+                }
+                SaltPayActivationStep.KycReject -> when (response.kycStatus) {
+                    KYCStatus.NOT_STARTED, KYCStatus.STARTED -> SaltPayActivationStep.KycStart
+                    KYCStatus.WAITING_FOR_APPROVAL -> SaltPayActivationStep.KycWaiting
+                    KYCStatus.CORRECTION_REQUESTED -> SaltPayActivationStep.KycStart
+                    KYCStatus.REJECTED -> SaltPayActivationStep.KycStart
+                    KYCStatus.APPROVED -> when (amountToClaim) {
+                        null -> SaltPayActivationStep.Success
+                        else -> SaltPayActivationStep.Claim
+                    }
+                    else -> SaltPayActivationStep.KycIntro
+                }
+                else -> when (response.kycStatus) {
+                    KYCStatus.NOT_STARTED, KYCStatus.STARTED -> SaltPayActivationStep.KycIntro
+                    KYCStatus.WAITING_FOR_APPROVAL -> SaltPayActivationStep.KycWaiting
+                    KYCStatus.CORRECTION_REQUESTED, KYCStatus.REJECTED -> SaltPayActivationStep.KycReject
+                    KYCStatus.APPROVED -> when (amountToClaim) {
+                        null -> SaltPayActivationStep.Finished
+                        else -> SaltPayActivationStep.Claim
+                    }
+                    else -> SaltPayActivationStep.KycIntro
+                }
+            }
+        }
+
+        // kycDate is set, go to kyc waiting screen
+        response.kycDate != null -> SaltPayActivationStep.KycWaiting
+
+        else -> SaltPayActivationStep.KycIntro
+    }
 }
 
 private suspend fun getAmountToClaimIfNeeded(
@@ -342,28 +391,8 @@ private suspend fun checkGasIfNeeded(
     return result
 }
 
-private suspend fun checkRegistration(
-    saltPayManager: SaltPayActivationManager,
-): Result<SaltPayActivationStep> {
-    Timber.d("checkRegistration")
-    return try {
-        val registrationResponseItem = saltPayManager.checkRegistration().successOr {
-            Timber.e(it.error, "checkRegistration: failure")
-            return it
-        }
-
-        Timber.d("checkRegistration: success: try convert to SaltPayStep")
-        val step = registrationResponseItem.toSaltPayStep()
-        Timber.d("checkRegistration: step: %s", step)
-        Result.Success(step)
-    } catch (ex: SaltPayActivationError) {
-        Timber.e(ex, "checkRegistration: step")
-        Result.Failure(ex)
-    }
-}
-
 @Throws(SaltPayActivationError::class)
-fun RegistrationResponse.Item.toSaltPayStep(): SaltPayActivationStep {
+fun RegistrationResponse.Item.toSaltPayStep(currentStep: SaltPayActivationStep): SaltPayActivationStep {
     return when {
         passed != true -> throw SaltPayActivationError.CardNotPassed(this.error)
         disabledByAdmin == true -> throw SaltPayActivationError.CardDisabled(this.error)
