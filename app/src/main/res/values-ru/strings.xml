@@ -129,7 +129,6 @@
     <string name="twins_onboarding_title">Tangem Twin</string>
     <string name="twins_onboarding_subtitle">Один кошелек. Две карты.</string>
     <string name="twins_onboarding_description_format">Одна, которую Вы держите в руках, и вторая карта с номером #%s</string>
-    <string name="wallet_twins_chip_format">Карта %1d из %2d</string>
     <string name="details_row_title_twins_recreate">Пересоздать Twin кошелек</string>
     <string name="details_row_title_card_tou">Условия использования карты</string>
     <string name="twins_recreate_toolbar">Tangem Twin</string>
@@ -243,7 +242,7 @@
     <string name="onboarding_balance_title">Баланс</string>
     <string name="address_qr_code_message_format">Отправляйте только %s (%s) на этот адрес. Иначе это может привести к утрате средств.</string>
     <string name="address_qr_code_message_token_format">Отправляйте только %s (%s) из сети %s на этот адрес. Иначе это может привести к утрате средств.</string>
-    <string name="onboarding_twins_interrupt_warning">Если процесс повторного создания кошелька каким-либо образом прервется, вам придется начать все сначала.</string>
+    <string name="onboarding_twins_interrupt_warning">Если процесс создания кошелька каким-либо образом прервется, вам придется начать все сначала.</string>
     <string name="onboarding_twin_exit_warning">Процесс связывания карт частично завершен. Вы не можете выйти из него сейчас.</string>
     <string name="onboarding_error_create_primary_wallet">Внутренняя ошибка: не удается создать менеджер кошельков</string>
     <string name="wallet_balance_blockchain_unreachable_try_later">Блокчейн недоступен. Попробуй позже.</string>
@@ -296,7 +295,7 @@
     <string name="onboarding_wallet_info_subtitle_second">Все резервные карты могут использоваться как полнофункциональные с одинаковыми ключами</string>
     <string name="onboarding_wallet_info_subtitle_third">Вы сможете установить код доступа для защиты своих кошельков</string>
     <string name="onboarding_wallet_info_subtitle_fourth">Код доступа можно восстановить с помощью одной из резервных карт</string>
-    <string name="onboarding_subtitle_success_tangem_wallet_onboarding">Ваша карта Tangem Wallet настроена и готова к использованию</string>
+    <string name="onboarding_subtitle_success_tangem_wallet_onboarding">Ваша карта настроена и готова к использованию.</string>
     <string name="onboarding_subtitle_success_backup_one_card">Вы создали 1 резервную карту, и теперь эта карта готова к использованию</string>
     <string name="common_origin_card">Основная карта</string>
     <string name="onboarding_alert_i_understand">Я понимаю</string>
@@ -314,7 +313,6 @@
     <string name="onboarding_title_prepare_origin">Основная карта</string>
     <string name="onboarding_button_backup_origin">Сканировать основную карту</string>
     <string name="onboarding_button_continue_wallet">Перейти к моему кошельку</string>
-    <string name="card_label_number_format">Карта %1s из %2s</string>
     <string name="send_title_currency_format">Отправка %s</string>
     <string name="onboarding_subtitle_scan_backup_card_format">Подготовьте резервную карту с номером %s</string>
     <string name="onboarding_subtitle_scan_primary_card_format">Подготовьте основную карту с номером %s</string>
@@ -324,8 +322,8 @@
     <string name="token_symbol_address_format">%1s (%2s)</string>
     <string name="alert_signed_hashes_message">Эта карта не является векселем на предъявителя. В настоящее время мы не можем сопоставить количество подписей на карте с информацией в блокчейне. Это нормально, но в редких случаях может означать, что предыдущий владелец скрывает автономную подпись, что является проблемой безопасности.\n\nНе принимайте эту карту в качестве физического платежа от кого-то, кому Вы не доверяете.\n\nВо всех остальных отношениях - это совершенно безопасно.\n\nTangem — единственный аппаратный кошелек, предлагающий защиту от подсчета подписей.</string>
     <string name="wallet_connect">WalletConnect</string>
-    <string name="wallet_connect_create_tx_message">Карта %1s\nЗапрос на создание транзакции для %2s\n%3s\n\nСумма: %4s\nКомиссия: %5s\nВсего: %6s\nБаланс: %7s</string>
-    <string name="wallet_connect_request_session_start">Запрос на запуск сеанса для карты с идентификатором %1s\nдля %2s\n\nURL: %3s</string>
+    <string name="wallet_connect_create_tx_message">Запрос на создание транзакции для %1s\n%2s\n\nСумма: %3s\nКомиссия: %4s\nВсего: %5s\nБаланс: %6s</string>
+    <string name="wallet_connect_request_session_start">Запрос на запуск сеанса для %1s\n\nURL: %2s</string>
     <string name="wallet_connect_sessions_title">Сессии WalletConnect</string>
     <string name="wallet_connect_session_opened">Сеанс WalletConnect открыт с %s</string>
     <string name="wallet_connect_no_sessions_title">Упс. Нет сессий.</string>
@@ -334,7 +332,7 @@
     <string name="wallet_connect_card_number">Карта: %s</string>
     <string name="wallet_connect_scan_card_message">Коснитесь карты, чтобы привязать ее WalletConnect</string>
     <string name="wallet_connect_create_tx_not_enough_funds">Не удается отправить транзакцию. Недостаточно средств.</string>
-    <string name="wallet_connect_alert_sign_message">Просьба подписать сообщение\nкартой %s\n\n</string>
+    <string name="wallet_connect_alert_sign_message">Просьба подписать сообщение\n</string>
     <string name="wallet_connect_personal_sign_message">Сообщение для %s:\n%s</string>
     <string name="wallet_connect_clipboard_alert">Буфер обмена содержит код WalletConnect. Использовать скопированное значение или отсканировать QR-код</string>
     <string name="wallet_connect_paste_from_clipboard">Вставить из буфера обмена</string>
@@ -344,7 +342,7 @@
     <string name="wallet_connect_same_wcuri">Операция не может быть завершена. \n\nВы уже установили сеанс WalletConnect с этими параметрами.</string>
     <string name="wallet_connect_error_timeout">Не удалось установить сеанс WalletConnect: ошибка времени выполнения. Пожалуйста, повторите попытку позже.</string>
     <string name="wallet_connect_bnb_transaction_signed">Транзакция BNB успешно подписана и отправлена в DApp</string>
-    <string name="wallet_connect_bnb_sign_message">DApp %s, запрашивает\nподпись транзакции BNB с\nкартой: %s\n\n%s</string>
+    <string name="wallet_connect_bnb_sign_message">DApp %s, запрашивает\nподпись транзакции BNB с\n%s</string>
     <string name="wallet_connect_bnb_transaction_message">Сведения о транзакции:\nОт: %s\nКому: %s\nСумма: %s</string>
     <string name="wallet_connect_bnb_trade_order_message">Торговый ордер на %s\nЦена: %s\nСумма к получению: %s\nСумма к оплате: %s</string>
     <string name="feedback_subject_rate_negative">Мои предложения</string>
