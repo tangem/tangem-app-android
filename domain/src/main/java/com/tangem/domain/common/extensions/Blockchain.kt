@@ -44,9 +44,12 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "polkadot" -> Blockchain.Polkadot
         "polkadot/test" -> Blockchain.PolkadotTestnet
         "kusama" -> Blockchain.Kusama
-        "optimistic-ethereum" -> Blockchain.Optimism
+        // "optimistic-ethereum" -> Blockchain.Optimism
+        "optimistic-ethereum" -> null //TODO: Optimism is disabled until next release
         "optimistic-ethereum/test" -> Blockchain.OptimismTestnet
         "dash" -> Blockchain.Dash
+        "sxdai" -> Blockchain.SaltPay
+        "sxdai/test" -> Blockchain.SaltPayTestnet
         else -> null
     }
 }
@@ -55,7 +58,7 @@ fun Blockchain.toNetworkId(): String {
     return when (this) {
         Blockchain.Unknown -> "unknown"
         Blockchain.Arbitrum -> "arbitrum-one"
-        Blockchain.ArbitrumTestnet -> "arbitrum/test"
+        Blockchain.ArbitrumTestnet -> "arbitrum-one/test"
         Blockchain.Avalanche -> "avalanche"
         Blockchain.AvalancheTestnet -> "avalanche/test"
         Blockchain.Binance -> "binancecoin"
@@ -98,6 +101,8 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.Optimism -> "optimistic-ethereum"
         Blockchain.OptimismTestnet -> "optimistic-ethereum/test"
         Blockchain.Dash -> "dash"
+        Blockchain.SaltPay -> "sxdai"
+        Blockchain.SaltPayTestnet -> "sxdai/test"
     }
 }
 
@@ -129,6 +134,16 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Kusama -> "kusama"
         Blockchain.Optimism, Blockchain.OptimismTestnet -> "ethereum"
         Blockchain.Dash -> "dash"
+        Blockchain.SaltPay, Blockchain.SaltPayTestnet -> "xdai"
         Blockchain.Unknown -> "unknown"
     }
 }
+
+fun Blockchain.isSupportedInApp(): Boolean {
+    return !excludedBlockchains.contains(this)
+}
+
+private val excludedBlockchains = listOf(
+    Blockchain.Optimism, // TODO: remove when fee calculation is fixed
+    Blockchain.SaltPay,
+)
