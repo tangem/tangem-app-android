@@ -3,7 +3,7 @@ package com.tangem.tap.common.feedback
 import com.tangem.tap.common.extensions.breakLine
 
 class FeedbackDataBuilder(
-    private val infoHolder: AdditionalFeedbackInfo
+    private val infoHolder: AdditionalFeedbackInfo,
 ) {
     val builder = StringBuilder()
 
@@ -21,7 +21,7 @@ class FeedbackDataBuilder(
         builder.appendKeyValue("Card ID", infoHolder.cardId)
         builder.appendKeyValue("Firmware version", infoHolder.cardFirmwareVersion)
         builder.appendKeyValue("Card Blockchain", infoHolder.cardBlockchain)
-        builder.appendKeyValue("Signed hashes", infoHolder.signedHashesCount)
+        builder.appendKeyValue("", infoHolder.signedHashesCount)
         return this
     }
 
@@ -29,20 +29,22 @@ class FeedbackDataBuilder(
         infoHolder.walletsInfo.forEach {
             builder.appendDelimiter()
             builder.appendKeyValue("Blockchain", it.blockchain.fullName)
-            builder.appendKeyValue("Host", it.host)
-            builder.appendKeyValue("Wallet address", it.address)
             builder.appendKeyValue("Derivation path", it.derivationPath)
-            builder.appendKeyValue("Explorer link", it.explorerLink)
+            builder.appendKeyValue("Outputs count", it.outputsCount)
 
             infoHolder.tokens[it.blockchain]?.let { tokens ->
                 builder.append("Tokens:")
                 breakLine()
                 tokens.forEach { token ->
-                    builder.appendKeyValue("Name", token.name)
                     builder.appendKeyValue("ID", token.id ?: "[custom token]")
+                    builder.appendKeyValue("Name", token.name)
                     builder.appendKeyValue("Contract address", token.contractAddress)
                 }
             }
+
+            builder.appendKeyValue("Host", it.host)
+            builder.appendKeyValue("Wallet address", it.addresses)
+            builder.appendKeyValue("Explorer link", it.explorerLink)
         }
         return this
     }
@@ -55,7 +57,7 @@ class FeedbackDataBuilder(
         builder.appendKeyValue("Token", infoHolder.token)
         builder.appendKeyValue("Error", error)
         builder.appendDelimiter()
-        builder.appendKeyValue("Source address", walletInfo.address)
+        builder.appendKeyValue("Source address", walletInfo.addresses)
         builder.appendKeyValue("Destination address", infoHolder.destinationAddress)
         builder.appendKeyValue("Amount", infoHolder.amount)
         builder.appendKeyValue("Fee", infoHolder.fee)
@@ -72,8 +74,10 @@ class FeedbackDataBuilder(
     fun build(): String = builder.toString()
 }
 
-private fun StringBuilder.appendKeyValue(key: String, value: String): StringBuilder {
-    return if (value.isNotBlank()) this.append("$key: $value\n") else this
+private fun StringBuilder.appendKeyValue(key: String, value: String?): StringBuilder = when {
+    value.isNullOrBlank() -> this
+    key.isBlank() -> this.append("$value\n")
+    else -> this.append("$key: $value\n")
 }
 
 private fun StringBuilder.appendDelimiter(): StringBuilder = append("----------\n")
