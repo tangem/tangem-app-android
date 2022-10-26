@@ -143,8 +143,8 @@ class MultiWalletMiddleware {
             is WalletAction.MultiWallet.ShowWalletBackupWarning -> Unit
             is WalletAction.MultiWallet.BackupWallet -> {
                 store.state.globalState.scanResponse?.let {
+                    store.dispatch(GlobalAction.Onboarding.Start(it, canSkipBackup = false))
                     store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingWallet))
-                    store.dispatch(GlobalAction.Onboarding.Start(it, fromHomeScreen = false))
                 }
             }
             is WalletAction.MultiWallet.ScanToGetDerivations -> {
