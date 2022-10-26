@@ -31,7 +31,6 @@ sealed class WalletAction : Action {
         data class Failure(val error: TapError) : WalletAction()
     }
 
-
     data class LoadWallet(
         val blockchain: BlockchainNetwork? = null,
         val walletManager: WalletManager? = null
@@ -40,7 +39,7 @@ sealed class WalletAction : Action {
         data class NoAccount(
             val wallet: Wallet,
             val blockchain: BlockchainNetwork,
-            val amountToCreateAccount: String
+            val amountToCreateAccount: String,
         ) : WalletAction()
 
         data class Failure(val wallet: Wallet, val errorMessage: String? = null) : WalletAction()
@@ -48,28 +47,31 @@ sealed class WalletAction : Action {
 
     data class SetArtworkId(val artworkId: String?) : WalletAction()
 
+    sealed class UserTokens : WalletAction() {
+        object Loading : UserTokens()
+        object Loaded : UserTokens()
+    }
 
     sealed class MultiWallet : WalletAction() {
         data class SetIsMultiwalletAllowed(val isMultiwalletAllowed: Boolean) : MultiWallet()
 
         data class AddBlockchain(
             val blockchain: BlockchainNetwork,
-            val walletManager: WalletManager?
+            val walletManager: WalletManager?,
+            val save: Boolean,
         ) : MultiWallet()
 
         data class AddBlockchains(
-            val blockchains: List<BlockchainNetwork>, val walletManagers: List<WalletManager>
+            val blockchains: List<BlockchainNetwork>, val walletManagers: List<WalletManager>, val save: Boolean,
         ) : MultiWallet()
 
-        data class AddTokens(val tokens: List<Token>, val blockchain: BlockchainNetwork) :
+        data class AddTokens(val tokens: List<Token>, val blockchain: BlockchainNetwork, val save: Boolean) :
             MultiWallet()
 
-        data class AddToken(val token: Token, val blockchain: BlockchainNetwork) : MultiWallet()
+        data class AddToken(val token: Token, val blockchain: BlockchainNetwork, val save: Boolean) : MultiWallet()
         data class SaveCurrencies(
-            val blockchainNetworks: List<BlockchainNetwork>, val cardId: String? = null
+            val blockchainNetworks: List<BlockchainNetwork>, val card: Card? = null,
         ) : MultiWallet()
-//        object FindTokensInUse : MultiWallet()
-//        object FindBlockchainsInUse : MultiWallet()
 
         data class TokenLoaded(
             val amount: Amount,
@@ -82,14 +84,15 @@ sealed class WalletAction : Action {
         data class TryToRemoveWallet(val currency: Currency) : MultiWallet()
         data class RemoveWallet(
             val currency: Currency,
-            val fromScreen: AppScreen
+            val fromScreen: AppScreen,
         ) : MultiWallet()
 
         data class SetPrimaryBlockchain(val blockchain: Blockchain) : MultiWallet()
         data class SetPrimaryToken(val token: Token) : MultiWallet()
-
         data class ShowWalletBackupWarning(val show: Boolean) : MultiWallet()
         object BackupWallet : MultiWallet()
+        data class AddMissingDerivations(val blockchains: List<BlockchainNetwork>) : MultiWallet()
+        object ScanToGetDerivations : MultiWallet()
     }
 
     sealed class Warnings : WalletAction() {
