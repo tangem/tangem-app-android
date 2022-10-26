@@ -46,5 +46,27 @@ data class CurrenciesResponse(val currencies: List<Currency>) {
 }
 
 data class GeoResponse(
-    val code: String
+    val code: String,
 ) : TangemTechResponse
+
+data class UserTokensResponse(
+    val version: Int = 0,
+    val group: String? = null,
+    val sort: String? = null,
+    val tokens: List<TokenResponse> = emptyList(),
+) : TangemTechResponse
+
+data class TokenResponse(
+    val id: String? = null,
+    val networkId: String,
+    val derivationPath: String? = null,
+    val name: String,
+    val symbol: String,
+    val decimals: Int,
+    val contractAddress: String?,
+) : TangemTechResponse
+
+data class TangemTechError(
+    val code: Int,
+    val description: String,
+)
