@@ -2,7 +2,7 @@ package com.tangem.tap.features.details.redux
 
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
-import com.tangem.domain.common.isTangemTwins
+import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.AnalyticsParam
 import com.tangem.tap.common.extensions.dispatchNotification
@@ -69,13 +69,8 @@ class DetailsMiddleware {
             }
             is DetailsAction.CreateBackup -> {
                 store.state.detailsState.scanResponse?.let {
+                    store.dispatch(GlobalAction.Onboarding.Start(it, canSkipBackup = false))
                     store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingWallet))
-                    store.dispatch(
-                        GlobalAction.Onboarding.Start(
-                            it,
-                            fromHomeScreen = false,
-                        ),
-                    )
                 }
             }
             DetailsAction.ScanCard -> {
@@ -98,7 +93,7 @@ class DetailsMiddleware {
             when (action) {
                 is DetailsAction.ResetToFactory.Start -> {
                     val card = store.state.detailsState.cardSettingsState?.card ?: return
-                    if (card.isTangemTwins()) {
+                    if (card.isTangemTwins) {
                         store.dispatch(DetailsAction.ReCreateTwinsWallet)
                         return
                     } else {

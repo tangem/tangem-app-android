@@ -26,7 +26,6 @@ import com.tangem.tap.domain.statePrinter.printScanResponseState
 import com.tangem.tap.domain.statePrinter.printWalletState
 import com.tangem.tap.domain.termsOfUse.CardTou
 import com.tangem.tap.features.details.redux.DetailsAction
-import com.tangem.tap.features.wallet.redux.Artwork
 import com.tangem.tap.features.wallet.redux.ErrorType
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.features.wallet.redux.WalletAction
@@ -42,7 +41,6 @@ import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentWalletBinding
 import org.rekotlin.StoreSubscriber
 
-
 class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<WalletState> {
 
     private lateinit var warningsAdapter: WarningMessagesAdapter
@@ -54,11 +52,14 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
-        activity?.onBackPressedDispatcher?.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
-            }
-        })
+        activity?.onBackPressedDispatcher?.addCallback(
+            this,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
+                }
+            },
+        )
         val inflater = TransitionInflater.from(requireContext())
         enterTransition = inflater.inflateTransition(R.transition.slide_right)
         exitTransition = inflater.inflateTransition(R.transition.fade)
@@ -89,7 +90,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         }
         setupWarningsRecyclerView()
         walletView.changeWalletView(this, binding)
-//        addCustomActionOnCard()
+        addCustomActionOnCard()
     }
 
     private fun addCustomActionOnCard() {
@@ -111,7 +112,6 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         }
     }
 
-
     override fun newState(state: WalletState) {
         if (activity == null || view == null) return
 
@@ -127,7 +127,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
                 walletView = MultiWalletView()
                 walletView.changeWalletView(this, binding)
             }
-            !state.isMultiwalletAllowed && walletView !is SingleWalletView -> {
+            !state.isMultiwalletAllowed && !isSaltPay && walletView !is SingleWalletView -> {
                 walletView = SingleWalletView()
                 walletView.changeWalletView(this, binding)
             }
@@ -143,7 +143,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         }
 
         setupNoInternetHandling(state)
-        setupCardImage(state.cardImage)
+        setupCardImage(state)
 
         if (!isSaltPay) showWarningsIfPresent(state.mainWarningsList)
 
@@ -168,7 +168,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
                 binding.srlWallet.isRefreshing = false
                 (activity as? MainActivity)?.showSnackbar(
                     text = R.string.wallet_notification_no_internet,
-                    buttonTitle = R.string.common_retry
+                    buttonTitle = R.string.common_retry,
                 ) { store.dispatch(WalletAction.LoadData) }
             }
         } else {
@@ -176,13 +176,24 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         }
     }
 
-    private fun setupCardImage(cardImage: Artwork?) {
-        binding.ivCard.load(cardImage?.artworkId) {
-            scale(Scale.FIT)
-            crossfade(enable = true)
-            placeholder(R.drawable.card_placeholder_black)
-            error(R.drawable.card_placeholder_black)
-            fallback(R.drawable.card_placeholder_black)
+    private fun setupCardImage(state: WalletState) {
+// [REDACTED_TODO_COMMENT]
+        if (store.state.globalState.scanResponse?.isSaltPay() == true) {
+            binding.ivCard.load(R.drawable.img_salt_pay_visa) {
+                scale(Scale.FIT)
+                crossfade(enable = true)
+                placeholder(R.drawable.card_placeholder_black)
+                error(R.drawable.card_placeholder_black)
+                fallback(R.drawable.card_placeholder_black)
+            }
+        } else {
+            binding.ivCard.load(state.cardImage?.artworkId) {
+                scale(Scale.FIT)
+                crossfade(enable = true)
+                placeholder(R.drawable.card_placeholder_black)
+                error(R.drawable.card_placeholder_black)
+                fallback(R.drawable.card_placeholder_black)
+            }
         }
     }
 
@@ -191,11 +202,13 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
             R.id.details_menu -> {
                 store.dispatch(GlobalAction.UpdateFeedbackInfo(store.state.walletState.walletManagers))
                 store.state.globalState.scanResponse?.let { scanNoteResponse ->
-                    store.dispatch(DetailsAction.PrepareScreen(
-                        scanNoteResponse,
-                        store.state.walletState.walletManagers.map { it.wallet },
-                        CardTou(),
-                    ))
+                    store.dispatch(
+                        DetailsAction.PrepareScreen(
+                            scanNoteResponse,
+                            store.state.walletState.walletManagers.map { it.wallet },
+                            CardTou(),
+                        ),
+                    )
                     store.dispatch(NavigationAction.NavigateTo(AppScreen.Details))
                     true
                 }
@@ -208,5 +221,4 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         if (store.state.walletState.shouldShowDetails) inflater.inflate(R.menu.wallet, menu)
     }
-
 }

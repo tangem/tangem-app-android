@@ -4,6 +4,7 @@ import com.tangem.blockchain.common.BlockchainSdkConfig
 import com.tangem.tap.common.shop.shopify.ShopifyShop
 import com.tangem.tap.common.zendesk.ZendeskConfig
 import com.tangem.tap.domain.configurable.Loader
+import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayConfig
 
 /**
 * [REDACTED_AUTHOR]
@@ -22,6 +23,7 @@ data class Config(
     val isCreatingTwinCardsAllowed: Boolean = false,
     val shopify: ShopifyShop? = null,
     val zendesk: ZendeskConfig? = null,
+    val saltPayConfig: SaltPayConfig? = null,
 )
 
 class ConfigManager {
@@ -90,6 +92,7 @@ class ConfigManager {
             appsFlyerDevKey = values.appsFlyerDevKey,
             shopify = values.shopifyShop,
             zendesk = values.zendesk,
+            saltPayConfig = values.saltPay,
         )
         defaultConfig = defaultConfig.copy(
             coinMarketCapKey = values.coinMarketCapKey,
@@ -106,6 +109,7 @@ class ConfigManager {
             appsFlyerDevKey = values.appsFlyerDevKey,
             shopify = values.shopifyShop,
             zendesk = values.zendesk,
+            saltPayConfig = values.saltPay,
         )
     }
 

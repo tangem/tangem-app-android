@@ -1,28 +1,21 @@
-package com.tangem.tap.common.moduleMessage.domain
+package com.tangem.tap.domain.moduleMessage.domain.converter
 
 import android.content.Context
 import com.tangem.common.module.ModuleMessageConverter
 import com.tangem.domain.AddCustomTokenError
-import com.tangem.domain.DomainError
+import com.tangem.domain.DomainModuleError
+import com.tangem.tap.domain.moduleMessage.ConvertedMessage
+import com.tangem.tap.domain.moduleMessage.ConvertedStringMessage
 import com.tangem.wallet.R
 
 /**
 * [REDACTED_AUTHOR]
  */
-class DomainErrorConverter(
-    private val context: Context
-) : ModuleMessageConverter<DomainError, String?> {
-    override fun convert(message: DomainError): String? = when (message) {
-        is AddCustomTokenError -> AddCustomTokenConverter(context).convert(message)
-        else -> null
-    }
-}
+internal class AddCustomTokenErrorConverter(
+    private val context: Context,
+) : ModuleMessageConverter<DomainModuleError, ConvertedMessage?> {
 
-private class AddCustomTokenConverter(
-    private val context: Context
-) : ModuleMessageConverter<DomainError, String?> {
-
-    override fun convert(message: DomainError): String? {
+    override fun convert(message: DomainModuleError): ConvertedMessage? {
         val customTokenError = (message as? AddCustomTokenError) ?: throw UnsupportedOperationException()
 
         val rawMessage = when (customTokenError) {
@@ -40,8 +33,8 @@ private class AddCustomTokenConverter(
         }
 
         return when (rawMessage) {
-            is Int -> context.getString(rawMessage)
-            is String -> rawMessage
+            is Int -> ConvertedStringMessage(context.getString(rawMessage))
+            is String -> ConvertedStringMessage(rawMessage)
             else -> null
         }
     }
