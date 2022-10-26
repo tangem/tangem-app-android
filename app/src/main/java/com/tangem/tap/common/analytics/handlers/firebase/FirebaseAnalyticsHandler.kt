@@ -7,7 +7,6 @@ import com.tangem.common.Converter
 import com.tangem.common.card.Card
 import com.tangem.common.core.TangemSdkError
 import com.tangem.tap.common.analytics.AnalyticsAnOld
-import com.tangem.tap.common.analytics.AnalyticsEventAnOld
 import com.tangem.tap.common.analytics.AnalyticsParamAnOld
 import com.tangem.tap.common.analytics.api.AnalyticsEventHandler
 import com.tangem.tap.common.analytics.api.ErrorEventHandler
@@ -22,15 +21,6 @@ class FirebaseAnalyticsHandler(
 
     override fun handleEvent(event: String, params: Map<String, String>) {
         client.logEvent(event, params)
-    }
-
-    override fun handleAnalyticsEvent(
-        event: AnalyticsEventAnOld,
-        params: Map<String, String>,
-        card: Card?,
-        blockchain: String?,
-    ) {
-        handleEvent(event.name, prepareParams(card, blockchain, params))
     }
 
     override fun handleErrorEvent(error: Throwable, params: Map<String, String>) {
