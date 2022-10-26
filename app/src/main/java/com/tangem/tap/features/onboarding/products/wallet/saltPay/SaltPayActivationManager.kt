@@ -4,6 +4,7 @@ import android.net.Uri
 import com.tangem.blockchain.blockchains.ethereum.SignedEthereumTransaction
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
+import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.TransactionSigner
 import com.tangem.blockchain.extensions.successOr
 import com.tangem.common.extensions.guard
@@ -21,7 +22,6 @@ import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.domain.tokens.UserWalletId
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.message.SaltPayActivationError
-import com.tangem.tap.persistence.SaltPayActivationStorage
 import java.math.BigDecimal
 
 /**
@@ -34,7 +34,6 @@ class SaltPayActivationManager(
     private val kycProvider: KYCProvider,
     private val paymentologyService: PaymentologyApiService,
     private val gnosisRegistrator: GnosisRegistrator,
-    private val registrationStorage: SaltPayActivationStorage,
 ) {
     val kycUrlProvider = KYCUrlProvider(walletPublicKey, kycProvider)
 
@@ -43,10 +42,6 @@ class SaltPayActivationManager(
 
     private val spendLimitValue: BigDecimal = BigDecimal("100")
 
-    fun transactionIsSent(): Boolean {
-        return registrationStorage.data.transactionsSent
-    }
-
     suspend fun checkHasGas(): Result<Unit> {
         return when (val hasGasResult = gnosisRegistrator.checkHasGas()) {
             is com.tangem.blockchain.extensions.Result.Success -> if (hasGasResult.data) {
@@ -54,7 +49,7 @@ class SaltPayActivationManager(
             } else {
                 Result.Failure(SaltPayActivationError.NoGas)
             }
-            is com.tangem.blockchain.extensions.Result.Failure -> Result.Failure(SaltPayActivationError.NoGas)
+            is com.tangem.blockchain.extensions.Result.Failure -> Result.Failure(hasGasResult.error as BlockchainSdkError)
         }
     }
 
@@ -103,13 +98,7 @@ class SaltPayActivationManager(
             pin = pinCode,
         )
 
-        val result = paymentologyService.registerWallet(request)
-
-        registrationStorage.data = registrationStorage.data.copy(
-            transactionsSent = result is Result.Success,
-        )
-
-        return result
+        return paymentologyService.registerWallet(request)
     }
 
     suspend fun getAmountToClaim(): Result<Amount> {
@@ -166,7 +155,6 @@ class SaltPayActivationManager(
             kycProvider = SaltPayConfig.stub().kycProvider,
             paymentologyService = PaymentologyApiService.stub(),
             gnosisRegistrator = GnosisRegistrator.stub(),
-            registrationStorage = SaltPayActivationStorage.stub(),
             cardId = "",
             cardPublicKey = byteArrayOf(),
             walletPublicKey = byteArrayOf(),
