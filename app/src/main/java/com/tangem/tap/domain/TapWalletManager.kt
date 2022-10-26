@@ -35,9 +35,11 @@ class TapWalletManager {
     val walletManagerFactory: WalletManagerFactory
         by lazy { WalletManagerFactory(blockchainSdkConfig) }
     val rates: RatesRepository = RatesRepository()
+
     private val blockchainSdkConfig by lazy {
         store.state.globalState.configManager?.config?.blockchainSdkConfig ?: BlockchainSdkConfig()
     }
+
     private val walletManagersThrottler =
         ThrottlerWithValues<BlockchainNetwork, Result<Wallet>>(10000)
 
@@ -132,12 +134,9 @@ class TapWalletManager {
         }
 
         dispatchOnMain(WalletAction.LoadWallet())
-        dispatchOnMain(WalletAction.LoadFiatRate())
     }
 
-    private suspend fun loadMultiWalletData(
-        scanResponse: ScanResponse,
-    ) {
+    private suspend fun loadMultiWalletData(scanResponse: ScanResponse) {
         loadUserCurrencies(scanResponse, walletManagerFactory)
     }
 
@@ -174,6 +173,7 @@ class TapWalletManager {
                     walletManagers = listOf(primaryWalletManager),
                     save = false,
                 ),
+                WalletAction.LoadFiatRate(),
             )
         }
     }
@@ -202,6 +202,7 @@ class TapWalletManager {
                     )
                 }
             checkIfDerivationsAreMissing(blockchainNetworks, scanResponse)
+            store.dispatch(WalletAction.LoadFiatRate(coinsList = userTokens))
         }
     }
 
@@ -218,7 +219,6 @@ class TapWalletManager {
             }
 
             store.dispatch(WalletAction.LoadWallet())
-            store.dispatch(WalletAction.LoadFiatRate())
         }
     }
 
