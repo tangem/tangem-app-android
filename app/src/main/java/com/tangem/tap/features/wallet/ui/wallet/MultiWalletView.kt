@@ -8,11 +8,12 @@ import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.tap.common.extensions.animateVisibility
 import com.tangem.tap.common.extensions.formatAmountAsSpannedString
+import com.tangem.tap.common.extensions.getQuantityString
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
-import com.tangem.tap.currenciesRepository
+import com.tangem.tap.domain.tokens.CurrenciesRepository
 import com.tangem.tap.features.tokens.redux.TokensAction
 import com.tangem.tap.features.wallet.models.TotalBalance
 import com.tangem.tap.features.wallet.redux.ProgressState
@@ -27,7 +28,9 @@ import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentWalletBinding
 
 class MultiWalletView : WalletView() {
+
     private lateinit var walletsAdapter: WalletAdapter
+
     override fun changeWalletView(fragment: WalletFragment, binding: FragmentWalletBinding) {
         setFragment(fragment, binding)
         onViewCreated()
@@ -51,8 +54,7 @@ class MultiWalletView : WalletView() {
         if (card?.backupStatus is Card.BackupStatus.Active) {
             val cardCount = (card.backupStatus as Card.BackupStatus.Active).cardCount + 1
             tvTwinCardNumber.show()
-            tvTwinCardNumber.text =
-                fragment?.getString(R.string.wallet_twins_chip_format, 1, cardCount)
+            tvTwinCardNumber.text = tvTwinCardNumber.getQuantityString(R.plurals.card_label_card_count, cardCount)
         } else {
             tvTwinCardNumber.hide()
         }
@@ -76,13 +78,16 @@ class MultiWalletView : WalletView() {
 
         handleTotalBalance(binding, state.totalBalance)
         handleBackupWarning(binding, state.showBackupWarning)
+        handleRescanWarning(binding, state.missingDerivations.isNotEmpty())
         walletsAdapter.submitList(state.walletsData, state.primaryBlockchain, state.primaryToken)
+
+        binding.pbLoadingUserTokens.show(state.loadingUserTokens)
 
         binding.btnAddToken.setOnClickListener {
             val card = store.state.globalState.scanResponse!!.card
             store.dispatch(
                 TokensAction.LoadCurrencies(
-                    supportedBlockchains = currenciesRepository.getBlockchains(
+                    supportedBlockchains = CurrenciesRepository.getBlockchains(
                         card.firmwareVersion,
                         card.isTestCard,
                     ),
@@ -108,6 +113,16 @@ class MultiWalletView : WalletView() {
         root.isVisible = showBackupWarning
         root.setOnClickListener {
             store.dispatch(WalletAction.MultiWallet.BackupWallet)
+        }
+    }
+
+    private fun handleRescanWarning(
+        binding: FragmentWalletBinding,
+        showRescanWarning: Boolean,
+    ) = with(binding.lWalletRescanWarning) {
+        root.isVisible = showRescanWarning
+        root.setOnClickListener {
+            store.dispatch(WalletAction.MultiWallet.ScanToGetDerivations)
         }
     }
 
