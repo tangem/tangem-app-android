@@ -195,30 +195,45 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
                     onException(it.error)
                     return@launch
                 }
+
+                handleInProgress = false
                 analyticsHandler.handleAnalyticsEvent(Onboarding.ClaimWasSuccessfully())
                 dispatchOnMain(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.ClaimInProgress))
                 dispatchOnMain(OnboardingSaltPayAction.RefreshClaim)
             }
         }
         is OnboardingSaltPayAction.RefreshClaim -> {
-            handleInProgress = true
             handleClaimRefreshInProgress = true
 
             val state = getState()
             scope.launch {
-                val tokenAmountValue = state.saltPayManager.getTokenAmount().successOr {
-                    SaltPayExceptionHandler.handle(it.error)
-                    handleClaimRefreshInProgress = false
-                    return@launch
-                }
+                when (val amountToClaimResult = state.saltPayManager.getAmountToClaim()) {
+                    is Result.Success -> {
+                        // need to re claim
+                        handleClaimRefreshInProgress = false
+                        dispatchOnMain(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.Claim))
+                    }
+                    is Result.Failure -> {
+                        when (amountToClaimResult.error) {
+                            is SaltPayActivationError.NoFundsToClaim -> {
+                                val tokenAmountValue = state.saltPayManager.getTokenAmount().successOr {
+                                    SaltPayExceptionHandler.handle(it.error)
+                                    handleClaimRefreshInProgress = false
+                                    return@launch
+                                }
 
-                if (tokenAmountValue.isPositive()) {
-                    handleInProgress = false
-                    handleClaimRefreshInProgress = false
-                    dispatchOnMain(OnboardingSaltPayAction.SetTokenBalance(tokenAmountValue))
-                    dispatchOnMain(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.Finished))
-                } else {
-                    handleClaimRefreshInProgress = false
+                                handleClaimRefreshInProgress = false
+                                if (tokenAmountValue.isPositive()) {
+                                    dispatchOnMain(OnboardingSaltPayAction.SetTokenBalance(tokenAmountValue))
+                                    dispatchOnMain(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.ClaimSuccess))
+                                }
+                            }
+                            else -> {
+                                handleClaimRefreshInProgress = false
+                                SaltPayExceptionHandler.handle(amountToClaimResult.error)
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -229,20 +244,13 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
     }
 }
 
-fun handleAnalytics(analyticsHandler: GlobalAnalyticsEventHandler, step: SaltPayActivationStep?) {
+private fun handleAnalytics(analyticsHandler: GlobalAnalyticsEventHandler, step: SaltPayActivationStep) {
     when (step) {
-        SaltPayActivationStep.None -> {}
-        SaltPayActivationStep.NoGas -> {}
-        SaltPayActivationStep.NeedPin -> {}
-        SaltPayActivationStep.CardRegistration -> {}
-        SaltPayActivationStep.KycIntro -> {}
         SaltPayActivationStep.KycStart -> analyticsHandler.handleAnalyticsEvent(Onboarding.KYCStarted())
         SaltPayActivationStep.KycWaiting -> analyticsHandler.handleAnalyticsEvent(Onboarding.KYCInProgress())
         SaltPayActivationStep.KycReject -> analyticsHandler.handleAnalyticsEvent(Onboarding.KYCRejected())
         SaltPayActivationStep.Claim -> analyticsHandler.handleAnalyticsEvent(Onboarding.ClaimScreenOpened())
-        SaltPayActivationStep.ClaimInProgress -> {}
-        SaltPayActivationStep.Finished -> {}
-        null -> {}
+        else -> {}
     }
 }
 

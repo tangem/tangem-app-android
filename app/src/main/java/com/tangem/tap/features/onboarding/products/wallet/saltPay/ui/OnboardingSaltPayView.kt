@@ -142,7 +142,8 @@ internal class OnboardingSaltPayView(
             SaltPayActivationStep.KycReject -> handleKycReject()
             SaltPayActivationStep.Claim -> handleClaim(state)
             SaltPayActivationStep.ClaimInProgress -> handleClaim(state)
-            SaltPayActivationStep.Finished -> handleClaim(state)
+            SaltPayActivationStep.ClaimSuccess -> handleClaim(state)
+            SaltPayActivationStep.Success -> handleSuccess(state)
         }
         progressButton?.changeState(state.mainButtonState)
     }
@@ -154,7 +155,7 @@ internal class OnboardingSaltPayView(
     }
 
     private fun handleNeedPin() = with(walletFragment.bindingSaltPay) {
-        toolbar.title = getString(R.string.onboarding_navbar_pin)
+        toolbar.title = getText(R.string.onboarding_navbar_pin)
         showOnlyView(pinCode.root) {
             progressButton = SaltPayProgressButton(pinCode.root)
             progressButton?.mainView?.isEnabled = false
@@ -173,7 +174,7 @@ internal class OnboardingSaltPayView(
     }
 
     private fun handleCardRegistration() = with(walletFragment.bindingSaltPay) {
-        toolbar.title = getString(R.string.onboarding_navbar_register_wallet)
+        toolbar.title = getText(R.string.onboarding_navbar_register_wallet)
         showOnlyView(connectCard.root) {
             progressButton = SaltPayProgressButton(connectCard.root)
             connectCard.btnConnect.setOnClickListener {
@@ -183,7 +184,7 @@ internal class OnboardingSaltPayView(
     }
 
     private fun handleKycIntro() = with(walletFragment.bindingSaltPay) {
-        toolbar.title = getString(R.string.onboarding_navbar_kyc_start)
+        toolbar.title = getText(R.string.onboarding_navbar_kyc_start)
         showOnlyView(verifyIdentity.root) {
             progressButton = SaltPayProgressButton(verifyIdentity.root)
             verifyIdentity.btnVerify.setOnClickListener {
@@ -193,7 +194,7 @@ internal class OnboardingSaltPayView(
     }
 
     private fun handleKycStart(state: OnboardingSaltPayState) = with(walletFragment.bindingSaltPay) {
-        toolbar.title = getString(R.string.onboarding_navbar_kyc_start)
+        toolbar.title = getText(R.string.onboarding_navbar_kyc_start)
         showOnlyView(webvVerifyIdentity) {
             progressButton = null
             webvVerifyIdentity.configureSettings()
@@ -210,19 +211,19 @@ internal class OnboardingSaltPayView(
     }
 
     private fun handleKycWaiting() = with(walletFragment.bindingSaltPay.kycInProgress) {
-        toolbar.title = getString(R.string.onboarding_navbar_kyc_progress)
+        toolbar.title = getText(R.string.onboarding_navbar_kyc_progress)
         showOnlyView(root)
 
         imvInProgress.setDrawable(R.drawable.ic_in_progress)
-        tvHeader.text = getString(R.string.onboarding_title_kyc_waiting)
-        tvBody.text = getString(R.string.onboarding_subtitle_kyc_waiting)
+        tvHeader.text = getText(R.string.onboarding_title_kyc_waiting)
+        tvBody.text = getText(R.string.onboarding_subtitle_kyc_waiting)
 
         btnOpenSupportChat.hide()
         btnOpenSupportChat.setOnClickListener {
             store.dispatch(GlobalAction.OpenChat(SupportInfo()))
         }
 
-        btnKycAction.text = getString(R.string.onboarding_button_kyc_waiting)
+        btnKycAction.text = getText(R.string.onboarding_button_kyc_waiting)
         btnKycAction.setOnClickListener {
             store.dispatch(OnboardingSaltPayAction.Update)
         }
@@ -230,15 +231,15 @@ internal class OnboardingSaltPayView(
     }
 
     private fun handleKycReject() = with(walletFragment.bindingSaltPay.kycInProgress) {
-        toolbar.title = getString(R.string.onboarding_navbar_kyc_progress)
+        toolbar.title = getText(R.string.onboarding_navbar_kyc_progress)
         showOnlyView(root)
 
         imvInProgress.setDrawable(R.drawable.ic_reject)
-        tvHeader.text = getString(R.string.onboarding_title_kyc_retry)
-        tvBody.text = getString(R.string.onboarding_subtitle_kyc_retry)
+        tvHeader.text = getText(R.string.onboarding_title_kyc_retry)
+        tvBody.text = getText(R.string.onboarding_subtitle_kyc_retry)
 
         btnOpenSupportChat.hide()
-        btnKycAction.text = getString(R.string.onboarding_button_kyc_start)
+        btnKycAction.text = getText(R.string.onboarding_button_kyc_start)
         btnKycAction.setOnClickListener {
             store.dispatch(OnboardingSaltPayAction.Update)
         }
@@ -246,7 +247,7 @@ internal class OnboardingSaltPayView(
     }
 
     private fun handleClaim(state: OnboardingSaltPayState) = with(walletFragment.bindingSaltPay) {
-        toolbar.title = getString(R.string.onboarding_navbar_claim)
+        toolbar.title = getText(R.string.onboarding_navbar_claim)
         val btnMain = actionContainer.btnContainer.findViewById<MaterialButton>(R.id.btn_main_action)
         val tvHeader = actionContainer.tvHeader
         val tvBody = actionContainer.tvBody
@@ -279,22 +280,27 @@ internal class OnboardingSaltPayView(
             SaltPayActivationStep.Claim -> {
                 btnRefreshBalanceWidget.mainView.hide()
                 claimValueString(state)?.let {
-                    tvHeader.text = getString(R.string.onboarding_title_claim, it)
+                    tvHeader.text = getText(R.string.onboarding_title_claim, it)
                 }
-                tvBody.text = getString(R.string.onboarding_subtitle_claim)
+                tvBody.text = getText(R.string.onboarding_subtitle_claim)
 
-                btnMain.text = getString(R.string.onboarding_button_claim)
+                btnMain.text = getText(R.string.onboarding_button_claim)
+                btnMain.isEnabled
                 btnMain.setOnClickListener {
                     store.dispatch(OnboardingSaltPayAction.Claim)
                 }
+                progressButton = SaltPayProgressButton(actionContainer.root)
+                progressButton?.isEnabled = true
             }
             SaltPayActivationStep.ClaimInProgress -> {
                 btnRefreshBalanceWidget.mainView.show()
-                tvHeader.text = getString(R.string.onboarding_title_claim_progress)
-                tvBody.text = getString(R.string.onboarding_subtitle_claim_progress)
-                btnMain.text = getString(R.string.onboarding_button_claim)
+                tvHeader.text = getText(R.string.onboarding_title_claim_progress)
+                tvBody.text = getText(R.string.onboarding_subtitle_claim_progress)
+                btnMain.text = getText(R.string.onboarding_button_claim)
+                progressButton = SaltPayProgressButton(actionContainer.root)
+                progressButton?.isEnabled = false
             }
-            SaltPayActivationStep.Finished -> {
+            SaltPayActivationStep.ClaimSuccess -> {
                 tvHeader.setText(R.string.common_success)
                 tvBody.setText(R.string.onboarding_subtitle_success_claim)
 
@@ -307,12 +313,19 @@ internal class OnboardingSaltPayView(
                 btnRefreshBalanceWidget.mainView.setOnClickListener(null)
                 updateConstraints(state.step, R.layout.lp_onboarding_done_activation)
                 walletFragment.showConfetti(true)
+                progressButton = SaltPayProgressButton(actionContainer.root)
+                progressButton?.isEnabled = true
             }
             else -> {}
         }
+    }
 
-        // need to recreate after any step
-        progressButton = SaltPayProgressButton(actionContainer.root)
+    private fun handleSuccess(state: OnboardingSaltPayState) = with(walletFragment.binding) {
+        walletFragment.bindingSaltPay.onboardingSaltpayContainer.hide()
+        onboardingWalletContainer.show()
+        walletFragment.showSuccess()
+        tvBody.text = getText(R.string.onboarding_subtitle_success_tangem_wallet_onboarding)
+        layoutButtonsCommon.btnWalletMainAction.text = getText(R.string.onboarding_button_continue_wallet)
     }
 
     private fun tokenAmountString(state: OnboardingSaltPayState): String? {
@@ -349,11 +362,11 @@ internal class OnboardingSaltPayView(
         view.show { onShowListener?.invoke() }
     }
 
-    private fun getString(@StringRes resId: Int): String {
+    private fun getText(@StringRes resId: Int): String {
         return walletFragment.getString(resId)
     }
 
-    private fun getString(@StringRes resId: Int, vararg formatArgs: Any?): String {
+    private fun getText(@StringRes resId: Int, vararg formatArgs: Any?): String {
         return walletFragment.getString(resId, *formatArgs)
     }
 

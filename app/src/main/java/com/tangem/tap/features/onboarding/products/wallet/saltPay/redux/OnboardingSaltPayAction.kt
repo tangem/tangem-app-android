@@ -33,7 +33,7 @@ sealed class OnboardingSaltPayAction : Action {
     data class TrySetPin(val pin: String) : OnboardingSaltPayAction()
     data class SetPin(val pin: String) : OnboardingSaltPayAction()
 
-    data class SetStep(val newStep: SaltPayActivationStep? = null) : OnboardingSaltPayAction()
+    data class SetStep(val newStep: SaltPayActivationStep) : OnboardingSaltPayAction()
     data class SetAmountToClaim(val amount: Amount?) : OnboardingSaltPayAction()
     data class SetTokenBalance(val balanceValue: BigDecimal) : OnboardingSaltPayAction()
 }
