@@ -6,6 +6,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.Fragment
 import androidx.transition.TransitionInflater
 import by.kirich1409.viewbindingdelegate.viewBinding
+import com.tangem.tap.common.extensions.configureSettings
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
@@ -16,17 +17,20 @@ import com.tangem.wallet.databinding.FragmentDisclaimerBinding
 import org.rekotlin.StoreSubscriber
 
 class DisclaimerFragment : Fragment(R.layout.fragment_disclaimer),
-        StoreSubscriber<DisclaimerState> {
+    StoreSubscriber<DisclaimerState> {
 
     private val binding: FragmentDisclaimerBinding by viewBinding(FragmentDisclaimerBinding::bind)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        activity?.onBackPressedDispatcher?.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                store.dispatch(NavigationAction.PopBackTo())
-            }
-        })
+        activity?.onBackPressedDispatcher?.addCallback(
+            this,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    store.dispatch(NavigationAction.PopBackTo())
+                }
+            },
+        )
         val inflater = TransitionInflater.from(requireContext())
         enterTransition = inflater.inflateTransition(android.R.transition.slide_bottom)
         exitTransition = inflater.inflateTransition(android.R.transition.slide_top)
@@ -51,7 +55,13 @@ class DisclaimerFragment : Fragment(R.layout.fragment_disclaimer),
         binding.toolbar.setNavigationOnClickListener {
             store.dispatch(NavigationAction.PopBackTo())
         }
+        initAndLoadTOS()
         setOnClickListeners()
+    }
+
+    private fun initAndLoadTOS() {
+        binding.webView.configureSettings()
+        binding.webView.loadUrl("file:///android_asset/tos.html")
     }
 
     private fun setOnClickListeners() {

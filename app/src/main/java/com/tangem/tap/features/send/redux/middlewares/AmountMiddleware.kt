@@ -4,11 +4,17 @@ import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.TransactionError
 import com.tangem.common.extensions.isZero
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.features.send.redux.*
+import com.tangem.tap.features.send.redux.AmountAction
+import com.tangem.tap.features.send.redux.AmountActionUi
+import com.tangem.tap.features.send.redux.FeeAction
+import com.tangem.tap.features.send.redux.FeeActionUi
+import com.tangem.tap.features.send.redux.ReceiptAction
+import com.tangem.tap.features.send.redux.SendAction
 import com.tangem.tap.features.send.redux.states.MainCurrencyType
 import com.tangem.tap.features.send.redux.states.SendState
 import org.rekotlin.Action
 import java.math.BigDecimal
+import java.util.*
 
 /**
 * [REDACTED_AUTHOR]
@@ -62,18 +68,11 @@ class AmountMiddleware {
 
         val amountToSend = Amount(typedAmount, sendState.getTotalAmountToSend(inputCrypto))
         val transactionErrors = walletManager.validateTransaction(amountToSend, sendState.feeState.currentFee)
-        transactionErrors.remove(TransactionError.TezosSendAll)
-        if (transactionErrors.isEmpty()) {
+        val amountFieldErrors = filterErrorsForAmountField(transactionErrors)
+        if (amountFieldErrors.isEmpty()) {
             dispatch(AmountAction.SetAmountError(null))
         } else {
-            val amountErrors = extractErrorsForAmountField(transactionErrors)
-            if (amountErrors.isNotEmpty()) {
-                transactionErrors.removeAll(amountErrors)
-                dispatch(AmountAction.SetAmountError(createValidateTransactionError(amountErrors, walletManager)))
-            }
-            if (transactionErrors.isNotEmpty()) {
-                dispatch(SendAction.SendError(createValidateTransactionError(transactionErrors, walletManager)))
-            }
+            dispatch(AmountAction.SetAmountError(createValidateTransactionError(amountFieldErrors, walletManager)))
         }
         dispatch(ReceiptAction.RefreshReceipt)
         dispatch(SendAction.ChangeSendButtonState(sendState.getButtonState()))
@@ -104,4 +103,29 @@ class AmountMiddleware {
 
         dispatch(AmountActionUi.SetMainCurrency(type))
     }
+}
+
+private fun filterErrorsForAmountField(errors: EnumSet<TransactionError>): EnumSet<TransactionError> {
+    val showIntoAmountField = EnumSet.noneOf(TransactionError::class.java)
+    errors.forEach {
+        when (it) {
+            TransactionError.AmountExceedsBalance -> {
+                showIntoAmountField.remove(TransactionError.TotalExceedsBalance)
+                showIntoAmountField.add(it)
+            }
+            TransactionError.FeeExceedsBalance -> {
+                showIntoAmountField.remove(TransactionError.TotalExceedsBalance)
+                showIntoAmountField.add(it)
+            }
+            TransactionError.TotalExceedsBalance -> {
+                val notAcceptable = listOf(TransactionError.AmountExceedsBalance, TransactionError.FeeExceedsBalance)
+                if (!showIntoAmountField.containsAll(notAcceptable)) showIntoAmountField.add(it)
+                showIntoAmountField.remove(TransactionError.AmountLowerExistentialDeposit)
+            }
+            else -> showIntoAmountField.add(it)
+        }
+    }
+    showIntoAmountField.remove(TransactionError.TezosSendAll)
+
+    return showIntoAmountField
 }

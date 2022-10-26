@@ -11,17 +11,17 @@ import com.tangem.tap.features.wallet.redux.ProgressState
 * [REDACTED_AUTHOR]
  */
 open class IndeterminateProgressButtonWidget(
-        private val button: MaterialButton,
-        private val progress: View,
-        initialState: ProgressState = ProgressState.Done
+    private val button: MaterialButton,
+    private val progress: View,
+    initialState: ProgressState = ProgressState.Done,
 ) : ViewStateWidget {
 
-    private var initialButtonText: CharSequence = button.text
-    private var icon: Drawable? = null
+    private var text: CharSequence = button.text
+    private var icon: Drawable? = button.icon
+    private var iconGravity: Int? = button.iconGravity
 
     init {
-        icon = button.icon
-        changeState(initialState)
+        if (initialState != ProgressState.Done) changeState(initialState)
     }
 
     override val mainView: View = button
@@ -37,15 +37,18 @@ open class IndeterminateProgressButtonWidget(
 
     protected open fun switchToNone() {
         button.isClickable = true
+        button.text = text
         button.icon = icon
-        button.text = initialButtonText
+        iconGravity?.let { button.iconGravity = it }
+
         progress.hide()
     }
 
     protected open fun switchToProgress() {
         button.isClickable = false
-        button.icon = null
         button.text = ""
+        button.icon = null
+
         progress.show()
     }
 }

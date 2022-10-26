@@ -7,11 +7,9 @@ import com.tangem.tap.common.extensions.sendEmail
 import com.tangem.tap.common.log.TangemLogCollector
 import com.tangem.tap.common.zendesk.ZendeskConfig
 import com.tangem.tap.foregroundActivityObserver
-import com.tangem.tap.logConfig
 import com.tangem.tap.persistence.PreferencesStorage
 import com.tangem.tap.withForegroundActivity
 import com.tangem.wallet.R
-import com.zendesk.logger.Logger
 import timber.log.Timber
 import zendesk.chat.Chat
 import zendesk.chat.ChatConfiguration
@@ -32,18 +30,16 @@ class FeedbackManager(
     private val logCollector: TangemLogCollector,
     private val preferencesStorage: PreferencesStorage,
 ) {
-    fun initChat(
-        context: Context,
-        zendeskConfig: ZendeskConfig,
-    ) {
-        Chat.INSTANCE.init(
-            context,
-            zendeskConfig.accountKey,
-            zendeskConfig.appId
-        )
+    private var lastUsedConfigForInitialization: ZendeskConfig? = null
 
-        // Zendesk logs
-        Logger.setLoggable(logConfig.zendesk)
+    var chatInitializer: ((ZendeskConfig) -> Unit)? = null
+
+    fun initChat(zendeskConfig: ZendeskConfig) {
+        // prevent double initialization with the same config
+        if (lastUsedConfigForInitialization == zendeskConfig) return
+
+        lastUsedConfigForInitialization = zendeskConfig
+        chatInitializer?.invoke(zendeskConfig)
     }
 
     fun sendEmail(feedbackData: FeedbackData, onFail: ((Exception) -> Unit)? = null) {
@@ -55,7 +51,7 @@ class FeedbackManager(
                 subject = activity.getString(feedbackData.subjectResId),
                 message = feedbackData.joinTogether(activity, infoHolder),
                 file = fileLog,
-                onFail = onFail
+                onFail = onFail,
             )
         }
     }
