@@ -2,6 +2,7 @@ package com.tangem.tap.features.send.redux.middlewares
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.blockchain.blockchains.binance.BinanceTransactionExtras
+import com.tangem.blockchain.blockchains.polkadot.ExistentialDepositProvider
 import com.tangem.blockchain.blockchains.stellar.StellarTransactionExtras
 import com.tangem.blockchain.blockchains.xrp.XrpTransactionBuilder
 import com.tangem.blockchain.common.Amount
@@ -114,9 +115,8 @@ private fun verifyAndSendTransaction(
     val amountToSend = Amount(typedAmount, sendState.getTotalAmountToSend())
 
     val transactionErrors = walletManager.validateTransaction(amountToSend, feeAmount)
-    val hadTezosError = transactionErrors.remove(TransactionError.TezosSendAll)
     when {
-        hadTezosError -> {
+        transactionErrors.contains(TransactionError.TezosSendAll) -> {
             val reduceAmount = walletManager.wallet.blockchain.minimalAmount()
             dispatch(
                 SendAction.Dialog.TezosWarningDialog(
@@ -134,9 +134,6 @@ private fun verifyAndSendTransaction(
                     reduceAmount,
                 ),
             )
-        }
-        transactionErrors.isNotEmpty() -> {
-            dispatch(SendAction.SendError(createValidateTransactionError(transactionErrors, walletManager)))
         }
         else -> {
             sendTransaction(
@@ -249,8 +246,7 @@ private fun sendTransaction(
                 }
                 is SimpleResult.Failure -> {
                     store.state.globalState.feedbackManager?.infoHolder?.updateOnSendError(
-                        wallet = walletManager.wallet,
-                        host = walletManager.currentHost,
+                        walletManager = walletManager,
                         amountToSend = amountToSend,
                         feeAmount = feeAmount,
                         destinationAddress = destinationAddress,
@@ -272,10 +268,8 @@ private fun sendTransaction(
                             dispatch(SendAction.Dialog.SendTransactionFails.CardSdkError(tangemSdkError))
                         }
                         is BlockchainSdkError.CreateAccountUnderfunded -> {
-                            // from XLM, XRP
-                            val reserve = error.minReserve.value?.stripZeroPlainString() ?: "0"
-                            val symbol = error.minReserve.currencySymbol
-                            dispatch(SendAction.SendError(TapError.CreateAccountUnderfunded(listOf(reserve, symbol))))
+                            // from XLM, XRP, Polkadot
+                            dispatch(SendAction.Dialog.SendTransactionFails.BlockchainSdkError(error))
                         }
                         else -> {
                             when {
@@ -300,29 +294,6 @@ private fun sendTransaction(
     }
 }
 
-fun extractErrorsForAmountField(errors: EnumSet<TransactionError>): EnumSet<TransactionError> {
-    val showIntoAmountField = EnumSet.noneOf(TransactionError::class.java)
-    errors.forEach {
-        when (it) {
-            TransactionError.AmountExceedsBalance -> {
-                showIntoAmountField.remove(TransactionError.TotalExceedsBalance)
-                showIntoAmountField.add(it)
-            }
-            TransactionError.FeeExceedsBalance -> {
-                showIntoAmountField.remove(TransactionError.TotalExceedsBalance)
-                showIntoAmountField.add(it)
-            }
-            TransactionError.TotalExceedsBalance -> {
-                val notAcceptable = listOf(TransactionError.AmountExceedsBalance, TransactionError.FeeExceedsBalance)
-                if (!showIntoAmountField.containsAll(notAcceptable)) showIntoAmountField.add(it)
-            }
-            TransactionError.InvalidAmountValue -> showIntoAmountField.add(it)
-            TransactionError.InvalidFeeValue -> showIntoAmountField.add(it)
-        }
-    }
-    return showIntoAmountField
-}
-
 fun createValidateTransactionError(
     errorList: EnumSet<TransactionError>,
     walletManager: WalletManager,
@@ -330,12 +301,21 @@ fun createValidateTransactionError(
     val tapErrors = errorList.map {
         when (it) {
             TransactionError.AmountExceedsBalance -> TapError.AmountExceedsBalance
+            TransactionError.AmountLowerExistentialDeposit -> {
+                if (walletManager is ExistentialDepositProvider) {
+                    val args = listOf(walletManager.getExistentialDeposit().stripZeroPlainString())
+                    TapError.AmountLowerExistentialDeposit(args)
+                } else {
+                    TapError.UnknownError
+                }
+            }
             TransactionError.FeeExceedsBalance -> TapError.FeeExceedsBalance
             TransactionError.TotalExceedsBalance -> TapError.TotalExceedsBalance
             TransactionError.InvalidAmountValue -> TapError.InvalidAmountValue
             TransactionError.InvalidFeeValue -> TapError.InvalidFeeValue
             TransactionError.DustAmount -> {
-                TapError.DustAmount(listOf(walletManager.dustValue?.stripZeroPlainString() ?: "0"))
+                val args = listOf(walletManager.dustValue?.stripZeroPlainString() ?: "0")
+                TapError.DustAmount(args)
             }
             TransactionError.DustChange -> TapError.DustChange
             else -> TapError.UnknownError
