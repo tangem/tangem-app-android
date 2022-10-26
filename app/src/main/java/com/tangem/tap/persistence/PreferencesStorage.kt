@@ -15,7 +15,6 @@ class PreferencesStorage(applicationContext: Application) {
     val appRatingLaunchObserver: AppRatingLaunchObserver
     val usedCardsPrefStorage: UsedCardsPrefStorage
     val fiatCurrenciesPrefStorage: FiatCurrenciesPrefStorage
-    val saltPayActivationStorage: SaltPayActivationStorage
     val disclaimerPrefStorage: DisclaimerPrefStorage
 
     init {
@@ -25,7 +24,6 @@ class PreferencesStorage(applicationContext: Application) {
         usedCardsPrefStorage.migrate()
         fiatCurrenciesPrefStorage = FiatCurrenciesPrefStorage(preferences, MoshiJsonConverter.INSTANCE)
         fiatCurrenciesPrefStorage.migrate()
-        saltPayActivationStorage = SaltPayActivationPrefStorage(applicationContext, MoshiJsonConverter.INSTANCE)
         disclaimerPrefStorage = DisclaimerPrefStorage(preferences)
     }
 

@@ -7,6 +7,8 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.tap.common.analytics.AnalyticsAnOld
 import com.tangem.tap.common.analytics.AnalyticsEventAnOld
 import com.tangem.tap.common.analytics.AnalyticsParamAnOld
+import com.tangem.tap.common.analytics.events.AnalyticsEvent
+import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.extensions.filterNotNull
 
 /**
@@ -19,21 +21,39 @@ interface AnalyticsEventHandler {
     )
 
     fun handleAnalyticsEvent(
+        event: AnalyticsEvent,
+        card: Card? = null,
+        blockchain: String? = null,
+    ) {
+        handleEvent(
+            event = prepareEventString(event.category, event.event),
+            params = prepareParams(card, blockchain, event.params),
+        )
+    }
+
+    @Deprecated("Migrate to AnalyticsEvent")
+    fun handleAnalyticsEvent(
         event: AnalyticsEventAnOld,
         params: Map<String, String> = emptyMap(),
         card: Card? = null,
         blockchain: String? = null,
-    )
+    ) {
+        handleEvent(event.event, prepareParams(card, blockchain, params))
+    }
 
     fun prepareParams(
-        card: Card?,
+        card: Card? = null,
         blockchain: String? = null,
         params: Map<String, String> = emptyMap(),
     ): Map<String, String> = mapOf(
-        AnalyticsParamAnOld.FIRMWARE.param to card?.firmwareVersion?.stringValue,
-        AnalyticsParamAnOld.BATCH_ID.param to card?.batchId,
-        AnalyticsParamAnOld.BLOCKCHAIN.param to blockchain,
+        AnalyticsParam.Firmware to card?.firmwareVersion?.stringValue,
+        AnalyticsParam.BatchId to card?.batchId,
+        AnalyticsParam.Blockchain to blockchain,
     ).filterNotNull() + params
+
+    fun prepareEventString(category: String, event: String): String {
+        return "[$category] $event"
+    }
 }
 
 interface ErrorEventHandler {
