@@ -9,6 +9,7 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
 import androidx.core.content.ContextCompat
+import androidx.core.view.WindowCompat
 import androidx.fragment.app.Fragment
 import com.google.zxing.Result
 import com.otaliastudios.cameraview.CameraView
@@ -23,6 +24,7 @@ class QrScanFragment : Fragment(0), ZXingScannerView.ResultHandler {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        activity?.window?.let { WindowCompat.setDecorFitsSystemWindows(it, true) }
         activity?.onBackPressedDispatcher?.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 store.dispatch(NavigationAction.PopBackTo())
@@ -54,7 +56,7 @@ class QrScanFragment : Fragment(0), ZXingScannerView.ResultHandler {
 
     override fun handleResult(result: Result) {
         store.dispatch(NavigationAction.PopBackTo())
-
+        activity?.window?.let { WindowCompat.setDecorFitsSystemWindows(it, false) }
         if (!result.text.isNullOrBlank()) {
             store.dispatch(WalletConnectAction.OpenSession(result.text))
         }
