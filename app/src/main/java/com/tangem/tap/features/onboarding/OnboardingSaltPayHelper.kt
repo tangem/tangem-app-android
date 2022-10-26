@@ -19,7 +19,7 @@ class OnboardingSaltPayHelper {
             manager: SaltPayActivationManager,
         ): Result<Boolean> {
             return try {
-                val updatedStep = manager.update(null, null).successOr { return it }
+                val updatedStep = manager.update(SaltPayActivationStep.None, null).successOr { return it }
                 val isRegistrationCase = updatedStep != SaltPayActivationStep.Finished
                 val isBackupCase = scanResponse.card.backupStatus?.isActive == false
                 Result.Success(isRegistrationCase || isBackupCase)
