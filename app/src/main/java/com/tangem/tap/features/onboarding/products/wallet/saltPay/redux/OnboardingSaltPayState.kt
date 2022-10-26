@@ -121,5 +121,6 @@ enum class SaltPayActivationStep {
     KycReject,
     Claim,
     ClaimInProgress,
+    Success,
     Finished;
 }
