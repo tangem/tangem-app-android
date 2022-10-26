@@ -15,10 +15,10 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.VoidCallback
 import com.tangem.domain.common.TwinCardNumber
 import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.LeapfrogWidget
+import com.tangem.tap.common.AndroidAssetReader
 import com.tangem.tap.common.extensions.beginDelayedTransition
 import com.tangem.tap.common.extensions.getDrawableCompat
 import com.tangem.tap.common.extensions.hide
-import com.tangem.tap.common.extensions.readAssetAsString
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.common.redux.navigation.AppScreen
@@ -26,7 +26,6 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.common.redux.navigation.ShareElement
 import com.tangem.tap.common.toggleWidget.RefreshBalanceWidget
 import com.tangem.tap.common.transitions.InternalNoteLayoutTransition
-import com.tangem.tap.domain.twins.AssetReader
 import com.tangem.tap.domain.twins.TwinsCardWidget
 import com.tangem.tap.features.addBackPressHandler
 import com.tangem.tap.features.onboarding.products.BaseOnboardingFragment
@@ -45,13 +44,6 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
 
     private lateinit var twinsWidget: TwinsCardWidget
     private lateinit var btnRefreshBalanceWidget: RefreshBalanceWidget
-
-    private val assetReader: AssetReader by lazy {
-        object : AssetReader {
-            override fun readAssetAsString(name: String): String =
-                requireContext().readAssetAsString(name)
-        }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -87,7 +79,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
             285f * deviceScaleFactorForWelcomeState
         }
         btnRefreshBalanceWidget =
-            RefreshBalanceWidget(binding.onboardingTopContainer.onboardingMainContainer)
+            RefreshBalanceWidget(binding.onboardingTopContainer.onboardingWalletContainer)
 
         binding.toolbar.title = getText(R.string.twins_recreate_toolbar)
 
@@ -220,7 +212,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
             chbUnderstand.hide()
             pbBinding.pbState.show()
 
-            binding.onboardingTopContainer.onboardingMainContainer.beginDelayedTransition()
+            binding.onboardingTopContainer.onboardingWalletContainer.beginDelayedTransition()
 
             when (previousStep) {
                 TwinCardsStep.None -> {
@@ -250,7 +242,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
                 store.dispatch(
                     TwinCardsAction.Wallet.LaunchFirstStep(
                         Message(getString(R.string.twins_recreate_title_format, twinIndexNumber)),
-                        assetReader
+                        AndroidAssetReader(requireContext()),
                     )
                 )
             }
@@ -391,10 +383,10 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
         with(binding.onboardingTopContainer) {
             val constraintSet = ConstraintSet()
             constraintSet.clone(requireContext(), layoutId)
-            constraintSet.applyTo(onboardingMainContainer)
+            constraintSet.applyTo(onboardingWalletContainer)
             val transition = InternalNoteLayoutTransition()
             transition.interpolator = OvershootInterpolator()
-            TransitionManager.beginDelayedTransition(onboardingMainContainer, transition)
+            TransitionManager.beginDelayedTransition(onboardingWalletContainer, transition)
         }
     }
 

@@ -2,6 +2,7 @@ package com.tangem.tap.domain
 
 import androidx.annotation.StringRes
 import com.tangem.common.core.TangemError
+import com.tangem.network.api.tangemTech.TangemTechError
 import com.tangem.wallet.R
 
 interface TapErrors
@@ -31,13 +32,13 @@ sealed class TapError(
     object InsufficientBalance : TapError(R.string.send_error_insufficient_balance)
     object BlockchainInternalError : TapError(R.string.send_error_blockchain_internal)
     object AmountExceedsBalance : TapError(R.string.send_validation_amount_exceeds_balance)
+    data class AmountLowerExistentialDeposit(override val args: List<Any>) : TapError(R.string.send_error_minimum_balance_format)
     object FeeExceedsBalance : TapError(R.string.send_validation_invalid_fee)
     object TotalExceedsBalance : TapError(R.string.send_validation_invalid_total)
     object InvalidAmountValue : TapError(R.string.send_validation_invalid_amount)
     object InvalidFeeValue : TapError(R.string.send_error_invalid_fee_value)
     data class DustAmount(override val args: List<Any>) : TapError(R.string.send_error_dust_amount_format)
     object DustChange : TapError(R.string.send_error_dust_change)
-    data class CreateAccountUnderfunded(override val args: List<Any>) : TapError(R.string.send_error_no_target_account)
 
     data class UnsupportedState(
         val stateError: String,
@@ -54,6 +55,7 @@ sealed class TapError(
 
     sealed class WalletConnect {
         object UnsupportedDapp : TapError(R.string.wallet_connect_error_unsupported_dapp)
+        object UnsupportedLink : TapError(R.string.wallet_connect_error_failed_to_connect)
     }
 
     data class ValidateTransactionErrors(
@@ -70,7 +72,6 @@ sealed class TapSdkError(override val messageResId: Int?) : Throwable(), TangemE
     object CardNotSupportedByRelease : TapSdkError(R.string.error_update_app)
 }
 
-
 fun TapErrors.assembleErrors(): MutableList<Pair<Int, List<Any>?>> {
     val idList = mutableListOf<Pair<Int, List<Any>?>>()
     when (this) {
@@ -79,3 +80,12 @@ fun TapErrors.assembleErrors(): MutableList<Pair<Int, List<Any>?>> {
     }
     return idList
 }
+
+fun TangemTechError.toTapError(): TapError {
+    return when (this.code) {
+        404 -> NoDataError(this.description)
+        else -> TapError.CustomError(customMessage = this.description)
+    }
+}
+
+class NoDataError(message: String) : TapError.CustomError(customMessage = message)
