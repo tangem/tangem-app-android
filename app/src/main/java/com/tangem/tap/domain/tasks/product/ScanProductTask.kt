@@ -4,7 +4,6 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.Card
 import com.tangem.common.card.EllipticCurve
-import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.TangemError
@@ -18,10 +17,11 @@ import com.tangem.domain.common.ProductType
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.isExcluded
 import com.tangem.domain.common.TapWorkarounds.isNotSupportedInThatRelease
+import com.tangem.domain.common.TapWorkarounds.isSaltPay
 import com.tangem.domain.common.TapWorkarounds.isTangemNote
+import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
 import com.tangem.domain.common.TwinsHelper
-import com.tangem.domain.common.isTangemTwins
 import com.tangem.operations.PreflightReadMode
 import com.tangem.operations.PreflightReadTask
 import com.tangem.operations.ScanTask
@@ -32,7 +32,8 @@ import com.tangem.operations.issuerAndUserData.ReadIssuerDataCommand
 import com.tangem.tap.domain.TapSdkError
 import com.tangem.tap.domain.extensions.getPrimaryCurve
 import com.tangem.tap.domain.extensions.getSingleWallet
-import com.tangem.tap.domain.tokens.CurrenciesRepository
+import com.tangem.tap.domain.extensions.isMultiwalletAllowed
+import com.tangem.tap.domain.tokens.UserTokensRepository
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
@@ -40,8 +41,8 @@ import kotlinx.coroutines.launch
 
 class ScanProductTask(
     val card: Card? = null,
-    private val currenciesRepository: CurrenciesRepository?,
-    private val additionalBlockchainsToDerive: Collection<Blockchain>? = null
+    private val userTokensRepository: UserTokensRepository?,
+    private val additionalBlockchainsToDerive: Collection<Blockchain>? = null,
 ) : CardSessionRunnable<ScanResponse> {
 
     override fun run(
@@ -60,9 +61,9 @@ class ScanProductTask(
         }
 
         val commandProcessor = when {
-            card.isTangemNote() -> ScanNoteProcessor()
-            card.isTangemTwins() -> ScanTwinProcessor()
-            else -> ScanWalletProcessor(currenciesRepository, additionalBlockchainsToDerive)
+            card.isTangemNote -> ScanNoteProcessor()
+            card.isTangemTwins -> ScanTwinProcessor()
+            else -> ScanWalletProcessor(userTokensRepository, additionalBlockchainsToDerive)
         }
         commandProcessor.proceed(card, session) { processorResult ->
             when (processorResult) {
@@ -85,9 +86,8 @@ class ScanProductTask(
     }
 
     private fun getErrorIfExcludedCard(card: Card): TangemError? {
-        if (card.isExcluded()) return TapSdkError.CardForDifferentApp
-        if (card.isNotSupportedInThatRelease()) return TapSdkError.CardNotSupportedByRelease
-
+        if (card.isExcluded) return TapSdkError.CardForDifferentApp
+        if (card.isNotSupportedInThatRelease) return TapSdkError.CardNotSupportedByRelease
         return null
     }
 }
@@ -111,8 +111,8 @@ private class ScanNoteProcessor : ProductCommandProcessor<ScanResponse> {
 }
 
 private class ScanWalletProcessor(
-    private val currenciesRepository: CurrenciesRepository?,
-    private val additionalBlockchainsToDerive: Collection<Blockchain>? = null
+    private val userTokensRepository: UserTokensRepository?,
+    private val additionalBlockchainsToDerive: Collection<Blockchain>? = null,
 ) : ProductCommandProcessor<ScanResponse> {
 
     var primaryCard: PrimaryCard? = null
@@ -123,12 +123,13 @@ private class ScanWalletProcessor(
     ) {
         createMissingWalletsIfNeeded(card, session, callback)
     }
+
     private fun createMissingWalletsIfNeeded(
         card: Card,
         session: CardSession,
         callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
-        if (card.wallets.isEmpty() || card.firmwareVersion < FirmwareVersion.MultiWalletAvailable) {
+        if (card.wallets.isEmpty() || !card.isMultiwalletAllowed) {
             startLinkingForBackupIfNeeded(card, session, callback)
             return
         }
@@ -184,6 +185,10 @@ private class ScanWalletProcessor(
         session: CardSession,
         callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
+        val productType = when (card.isSaltPay) {
+            true -> ProductType.SaltPay
+            else -> ProductType.Wallet
+        }
         scope.launch {
             val derivations = collectDerivations(card)
             if (derivations.isEmpty() || !card.settings.isHDWalletAllowed) {
@@ -191,11 +196,11 @@ private class ScanWalletProcessor(
                     CompletionResult.Success(
                         ScanResponse(
                             card = card,
-                            productType = ProductType.Wallet,
+                            productType = productType,
                             walletData = session.environment.walletData,
-                            primaryCard = primaryCard
-                        )
-                    )
+                            primaryCard = primaryCard,
+                        ),
+                    ),
                 )
                 return@launch
             }
@@ -205,10 +210,10 @@ private class ScanWalletProcessor(
                     is CompletionResult.Success -> {
                         val response = ScanResponse(
                             card = card,
-                            productType = ProductType.Wallet,
+                            productType = productType,
                             walletData = session.environment.walletData,
                             derivedKeys = result.data.entries,
-                            primaryCard = primaryCard
+                            primaryCard = primaryCard,
                         )
                         callback(CompletionResult.Success(response))
                     }
@@ -219,12 +224,8 @@ private class ScanWalletProcessor(
     }
 
     private suspend fun getBlockchainsToDerive(card: Card): List<BlockchainNetwork> {
-        val currenciesRepository = currenciesRepository ?: return emptyList()
-
-        val cardCurrencies = currenciesRepository
-            .loadSavedCurrencies(card.cardId, card.settings.isHDWalletAllowed).toMutableList()
-
-        val blockchainsToDerive = cardCurrencies.ifEmpty {
+        val userTokensRepository = userTokensRepository ?: return emptyList()
+        val blockchainsToDerive = userTokensRepository.loadBlockchainsToDerive(card).toMutableList().ifEmpty {
             mutableListOf(
                 BlockchainNetwork(Blockchain.Bitcoin, card),
                 BlockchainNetwork(Blockchain.Ethereum, card),
@@ -236,7 +237,7 @@ private class ScanWalletProcessor(
                 listOf(
                     BlockchainNetwork(Blockchain.Ethereum, card),
                     BlockchainNetwork(Blockchain.EthereumTestnet, card),
-                )
+                ),
             )
         }
         if (additionalBlockchainsToDerive != null) {
@@ -262,7 +263,6 @@ private class ScanWalletProcessor(
 
         blockchains.forEach { blockchain ->
             val curve = blockchain.blockchain.getPrimaryCurve()
-
             val wallet = card.wallets.firstOrNull { it.curve == curve } ?: return@forEach
             if (wallet.chainCode == null) return@forEach
 
