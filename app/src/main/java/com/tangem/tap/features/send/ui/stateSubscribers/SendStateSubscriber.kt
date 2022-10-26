@@ -19,7 +19,6 @@ import com.tangem.tap.domain.MultiMessageError
 import com.tangem.tap.domain.assembleErrors
 import com.tangem.tap.features.BaseStoreFragment
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.Error
-import com.tangem.tap.features.send.redux.FeeAction
 import com.tangem.tap.features.send.redux.SendAction
 import com.tangem.tap.features.send.redux.states.AddressPayIdState
 import com.tangem.tap.features.send.redux.states.AmountState
@@ -33,12 +32,12 @@ import com.tangem.tap.features.send.redux.states.TransactionExtraError
 import com.tangem.tap.features.send.redux.states.TransactionExtrasState
 import com.tangem.tap.features.send.ui.FeeUiHelper
 import com.tangem.tap.features.send.ui.SendFragment
+import com.tangem.tap.features.send.ui.dialogs.RequestFeeErrorDialog
 import com.tangem.tap.features.send.ui.dialogs.SendTransactionFailsDialog
 import com.tangem.tap.features.send.ui.dialogs.TezosWarningDialog
 import com.tangem.tap.features.wallet.redux.WalletState.Companion.ROUGH_SIGN
 import com.tangem.tap.features.wallet.redux.WalletState.Companion.UNKNOWN_AMOUNT_SIGN
 import com.tangem.tap.features.wallet.ui.adapters.WarningMessagesAdapter
-import com.tangem.tap.store
 import com.tangem.wallet.R
 
 /**
@@ -60,10 +59,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
             when (it) {
                 StateId.SEND_SCREEN -> handleSendScreen(fg, state)
                 StateId.ADDRESS_PAY_ID -> handleAddressPayIdState(fg, state.addressPayIdState)
-                StateId.TRANSACTION_EXTRAS -> handleTransactionExtrasState(
-                    fg,
-                    state.transactionExtrasState
-                )
+                StateId.TRANSACTION_EXTRAS -> handleTransactionExtrasState(fg, state.transactionExtrasState)
                 StateId.AMOUNT -> handleAmountState(fg, state.amountState)
                 StateId.FEE -> handleFeeState(fg, state.feeState)
                 StateId.RECEIPT -> handleReceiptState(fg, state.receiptState)
@@ -85,7 +81,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
                 if (!it.viewFieldValue.isFromUserInput) etXlmMemo.setText(it.viewFieldValue.value)
                 if (it.error != null) {
                     if (it.error == TransactionExtraError.INVALID_XLM_MEMO) {
-                        tilXlmMemo.error = fg.getText(R.string.send_error_invalid_memo)
+                        tilXlmMemo.error = fg.getText(R.string.send_extras_error_invalid_memo)
                     }
                 } else {
                     tilXlmMemo.error = null
@@ -95,7 +91,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
                 if (infoState.xrpDestinationTag.error != null) {
                     if (infoState.xrpDestinationTag.error == TransactionExtraError.INVALID_DESTINATION_TAG) {
                         tilDestinationTag.error =
-                            fg.getText(R.string.send_error_invalid_destination_tag)
+                            fg.getText(R.string.send_extras_error_invalid_destination_tag)
                     }
                 } else {
                     tilDestinationTag.error = null
@@ -107,7 +103,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
             infoState.binanceMemo?.let {
                 if (infoState.binanceMemo.error != null) {
                     if (infoState.binanceMemo.error == TransactionExtraError.INVALID_BINANCE_MEMO) {
-                        tilBinanceMemo.error = fg.getText(R.string.send_error_invalid_memo)
+                        tilBinanceMemo.error = fg.getText(R.string.send_extras_error_invalid_memo)
                     }
                 } else {
                     tilBinanceMemo.error = null
@@ -138,6 +134,12 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
                     dialog?.show()
                 }
             }
+            is SendAction.Dialog.RequestFeeError -> {
+                if (dialog == null) {
+                    dialog = RequestFeeErrorDialog.create(fg.requireContext(), state.dialog)
+                    dialog?.show()
+                }
+            }
             else -> {
                 dialog?.dismiss()
                 dialog = null
@@ -155,7 +157,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
 
         toolbar.title = fg.getString(
             R.string.send_title_currency_format,
-            state.amountState.mainCurrency.currencySymbol
+            state.amountState.mainCurrency.currencySymbol,
         )
     }
 
@@ -227,11 +229,11 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
         val balanceText = when (state.mainCurrency.type) {
             MainCurrencyType.FIAT -> fg.getString(
                 R.string.send_balance_subtitle_format,
-                state.viewBalanceValue, state.mainCurrency.currencySymbol
+                state.viewBalanceValue, state.mainCurrency.currencySymbol,
             ).remove(":")
             MainCurrencyType.CRYPTO -> fg.getString(
                 R.string.send_balance_subtitle_format,
-                state.mainCurrency.currencySymbol, state.viewBalanceValue
+                state.mainCurrency.currencySymbol, state.viewBalanceValue,
             )
         }
 
@@ -255,14 +257,6 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
         swIncludeFee.isEnabled = state.includeFeeSwitcherIsEnabled
         if (swIncludeFee.isChecked != state.feeIsIncluded) {
             swIncludeFee.isChecked = state.feeIsIncluded
-        }
-
-        if (state.error == FeeAction.Error.REQUEST_FAILED) {
-            fg.showRetrySnackbar(
-                fg.requireContext().getString(R.string.send_error_fee_request_failed)
-            ) {
-                store.dispatch(FeeAction.RequestFee)
-            }
         }
 
         val chipId = FeeUiHelper.toId(state.selectedFeeType)
@@ -293,7 +287,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
 
                 val willSent = getString(
                     R.string.send_total_subtitle_format,
-                    receipt.willSentCrypto, receipt.symbols.crypto
+                    receipt.willSentCrypto, receipt.symbols.crypto,
                 )
                 llTotalContainer.tvWillBeSentValue.update(willSent)
 
@@ -328,7 +322,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
                 val willSent = getString(
                     R.string.send_total_subtitle_asset_format,
                     receipt.symbols.token ?: "", receipt.willSentToken,
-                    receipt.symbols.crypto, receipt.willSentFeeCoin
+                    receipt.symbols.crypto, receipt.willSentFeeCoin,
                 )
                 llTotalContainer.tvWillBeSentValue.update(willSent)
             }
