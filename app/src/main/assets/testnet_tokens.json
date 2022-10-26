@@ -430,6 +430,27 @@
                     "networkId": "ethereum-pow-iou/test"
                 }
             ]
+        },
+        {
+            "id" : "polkadot",
+            "symbol" : "DOT",
+            "name" : "Polkadot",
+            "networks" : [
+                {
+                    "networkId" : "polkadot/test"
+                }
+            ]
+        },
+        {
+            "id": "optimistic-ethereum",
+            "name": "Optimistic Ethereum",
+            "symbol": "ETH",
+            "active": true,
+            "networks": [
+                {
+                    "networkId": "optimistic-ethereum/test"
+                }
+            ]
         }
     ],
     
