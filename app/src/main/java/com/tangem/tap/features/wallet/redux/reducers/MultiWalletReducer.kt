@@ -1,15 +1,25 @@
 package com.tangem.tap.features.wallet.redux.reducers
 
+import com.tangem.blockchain.blockchains.polkadot.ExistentialDepositProvider
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Token
+import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.extensions.guard
 import com.tangem.tap.common.extensions.toFiatString
 import com.tangem.tap.common.extensions.toFormattedCurrencyString
 import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
-import com.tangem.tap.features.wallet.models.*
-import com.tangem.tap.features.wallet.redux.*
+import com.tangem.tap.features.wallet.models.Currency
+import com.tangem.tap.features.wallet.models.WalletRent
+import com.tangem.tap.features.wallet.models.filterByToken
+import com.tangem.tap.features.wallet.models.getPendingTransactions
+import com.tangem.tap.features.wallet.models.removeUnknownTransactions
+import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.features.wallet.redux.WalletData
+import com.tangem.tap.features.wallet.redux.WalletMainButton
+import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.redux.WalletState.Companion.UNKNOWN_AMOUNT_SIGN
+import com.tangem.tap.features.wallet.redux.WalletStore
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.features.wallet.ui.TokenData
@@ -24,10 +34,10 @@ class MultiWalletReducer {
                     val walletManager = action.walletManagers.firstOrNull {
                         it.wallet.blockchain == blockchain.blockchain &&
                             (it.wallet.publicKey.derivationPath?.rawPath == blockchain.derivationPath)
-                    } ?: return@mapNotNull null
-                    val wallet = walletManager.wallet
+                    }
+                    val wallet = walletManager?.wallet
                     val cardToken = if (!state.isMultiwalletAllowed) {
-                        wallet.getFirstToken()?.symbol?.let { TokenData("", tokenSymbol = it) }
+                        wallet?.getFirstToken()?.symbol?.let { TokenData("", tokenSymbol = it) }
                     } else {
                         null
                     }
@@ -44,6 +54,7 @@ class MultiWalletReducer {
                             blockchain.blockchain,
                             blockchain.derivationPath
                         ),
+                        existentialDepositString = getExistentialDeposit(walletManager),
                     )
 
                     WalletStore(
@@ -54,7 +65,7 @@ class MultiWalletReducer {
                 }
 
                 val selectedCurrency = if (!state.isMultiwalletAllowed) {
-                    wallets[0].walletsData[0].currency
+                    wallets.firstOrNull()?.walletsData?.firstOrNull()?.currency
                 } else {
                     state.selectedCurrency
                 }
@@ -79,6 +90,7 @@ class MultiWalletReducer {
                         action.blockchain.blockchain,
                         action.blockchain.derivationPath
                     ),
+                    existentialDepositString = getExistentialDeposit(walletManager),
                 )
                 val walletStore = WalletStore(
                     walletManager = walletManager,
@@ -155,9 +167,11 @@ class MultiWalletReducer {
                 state.copy(primaryToken = action.token)
             is WalletAction.MultiWallet.SaveCurrencies -> state
             is WalletAction.MultiWallet.ShowWalletBackupWarning -> state.copy(
-                showBackupWarning = action.show
+                showBackupWarning = action.show,
             )
+            is WalletAction.MultiWallet.AddMissingDerivations -> state.copy(missingDerivations = action.blockchains)
             is WalletAction.MultiWallet.BackupWallet -> state
+            is WalletAction.MultiWallet.ScanToGetDerivations -> state
         }
     }
 
@@ -165,6 +179,10 @@ class MultiWalletReducer {
         return walletStore?.walletsData?.firstOrNull {
             it.walletRent != null
         }?.walletRent
+    }
+
+    private fun getExistentialDeposit(walletManager: WalletManager?): String? {
+        return (walletManager as? ExistentialDepositProvider)?.getExistentialDeposit()?.toPlainString()
     }
 }
 

@@ -10,6 +10,7 @@ class WalletConnectReducer {
             if (action !is WalletConnectAction) return state
 
             return when (action) {
+                is WalletConnectAction.ResetState -> return WalletConnectState()
                 is WalletConnectAction.ApproveSession.Success -> {
                     state.copy(
                         loading = false,
