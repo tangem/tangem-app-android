@@ -4,13 +4,13 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.Card
 import com.tangem.common.extensions.ifNotNull
-import com.tangem.domain.common.SaltPayWorkaround
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.operations.backup.BackupService
 import com.tangem.tap.backupService
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.extensions.primaryCardIsSaltPay
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
@@ -344,12 +344,6 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
     }
 }
 
-private fun BackupService.primaryCardIsSaltPay(): Boolean {
-    return primaryCardId?.slice(0..3)?.let {
-        SaltPayWorkaround.isVisaBatchId(it)
-    } ?: false
-}
-
 /**
  * SaltPay state maybe not initialized if backup resumed from ResumeFoundUnfinishedBackup action
  */
@@ -358,7 +352,6 @@ private fun initSaltPayOnBackupFinishedIfNeeded(
     onboardingWalletState: OnboardingWalletState,
 ) {
     if (onboardingWalletState.isSaltPay && onboardingWalletState.onboardingSaltPayState == null) {
-        //TODO: SaltPay: scanResponse
         if (scanResponse == null) throw IllegalArgumentException()
 
         val (manager, config) = OnboardingSaltPayState.initDependency(scanResponse)
