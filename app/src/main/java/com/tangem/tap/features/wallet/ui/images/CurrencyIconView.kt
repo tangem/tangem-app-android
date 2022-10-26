@@ -22,15 +22,20 @@ class CurrencyIconView @JvmOverloads constructor(
         LayoutInflater.from(context),
         this,
     )
+
     val currencyImageView: ImageFilterView
         get() = binding.ivCurrency
+
     val currencyTextView: TextView
         get() = binding.tvTokenLetter
+
     val blockchainBadge: ImageFilterView
         get() = binding.ivBlockchainBadge
+
     var isBlockchainBadgeVisible: Boolean
         get() = binding.ivBlockchainBadge.isVisible
         set(value) = binding.ivBlockchainBadge::isVisible.set(value)
+
     var isCustomCurrencyBadgeVisible: Boolean
         get() = binding.customBadge.isVisible
         set(value) = binding.customBadge::isVisible.set(value)
