@@ -2,7 +2,7 @@ package com.tangem.tap.features.details.redux
 
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
-import com.tangem.domain.common.isTangemTwins
+import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.AnalyticsParam
 import com.tangem.tap.common.extensions.dispatchNotification
@@ -11,7 +11,6 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
-import com.tangem.tap.currenciesRepository
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.onboarding.products.twins.redux.CreateTwinWalletMode
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
@@ -70,13 +69,8 @@ class DetailsMiddleware {
             }
             is DetailsAction.CreateBackup -> {
                 store.state.detailsState.scanResponse?.let {
+                    store.dispatch(GlobalAction.Onboarding.Start(it, canSkipBackup = false))
                     store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingWallet))
-                    store.dispatch(
-                        GlobalAction.Onboarding.Start(
-                            it,
-                            fromHomeScreen = false,
-                        ),
-                    )
                 }
             }
             DetailsAction.ScanCard -> {
@@ -98,21 +92,21 @@ class DetailsMiddleware {
         fun handle(action: DetailsAction.ResetToFactory) {
             when (action) {
                 is DetailsAction.ResetToFactory.Start -> {
-                    store.dispatch(NavigationAction.NavigateTo(AppScreen.ResetToFactory))
+                    val card = store.state.detailsState.cardSettingsState?.card ?: return
+                    if (card.isTangemTwins) {
+                        store.dispatch(DetailsAction.ReCreateTwinsWallet)
+                        return
+                    } else {
+                        store.dispatch(NavigationAction.NavigateTo(AppScreen.ResetToFactory))
+                    }
                 }
                 is DetailsAction.ResetToFactory.Proceed -> {
                     val card = store.state.detailsState.cardSettingsState?.card ?: return
-                    if (card.isTangemTwins()) {
-                        store.dispatch(DetailsAction.ReCreateTwinsWallet)
-                        return
-                    }
                     scope.launch {
                         val result = tangemSdkManager.resetToFactorySettings(card)
-                        withContext(Dispatchers.Main) {
                             when (result) {
                                 is CompletionResult.Success -> {
-                                    currenciesRepository.removeCurrencies(card.cardId)
-                                    store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
+                                    store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Home))
                                 }
                                 is CompletionResult.Failure -> {
                                     (result.error as? TangemSdkError)?.let { error ->
@@ -123,7 +117,6 @@ class DetailsMiddleware {
                                         )
                                     }
                                 }
-                            }
                         }
                     }
                 }

@@ -23,7 +23,10 @@ class PayIdService {
         return performRequest { payIdApi.setPayId(cardId, publicKey, payId, address, network) }
     }
 
-    private fun provideRetrofit(): Retrofit = createRetrofitInstance("https://tangem.com/")
+    private fun provideRetrofit(): Retrofit = createRetrofitInstance(
+        baseUrl = "https://tangem.com/",
+        logEnabled = false,
+    )
 
 }
 
