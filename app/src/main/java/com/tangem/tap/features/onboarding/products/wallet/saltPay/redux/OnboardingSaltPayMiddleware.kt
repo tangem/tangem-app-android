@@ -67,13 +67,13 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
 
             val state = getState()
             scope.launch {
-                val updateResult = state.saltPayManager.updateActivationStatus(state.amountToClaim).successOr {
+                val updateStep = state.saltPayManager.update(state.step, state.amountToClaim).successOr {
                     onException(it.error)
                     return@launch
                 }
 
                 handleInProgress = false
-                dispatchOnMain(OnboardingSaltPayAction.SetStep(updateResult.step))
+                dispatchOnMain(OnboardingSaltPayAction.SetStep(updateStep))
             }
         }
         is OnboardingSaltPayAction.RegisterCard -> {
@@ -246,40 +246,34 @@ fun handleAnalytics(analyticsHandler: GlobalAnalyticsEventHandler, step: SaltPay
     }
 }
 
-data class UpdateResult(
-    val step: SaltPayActivationStep = SaltPayActivationStep.None,
-    val amountToClaim: Amount? = null,
-)
-
-suspend fun SaltPayActivationManager.updateActivationStatus(amountToClaim: Amount?): Result<UpdateResult> {
+suspend fun SaltPayActivationManager.update(
+    currentStep: SaltPayActivationStep?,
+    currentAmountToClaim: Amount?,
+): Result<SaltPayActivationStep> {
     Timber.d("updateSaltPayStatus")
-    var updateResult = UpdateResult()
 
-    val saltPayStep = checkRegistration(this).successOr {
+    val step = checkRegistration(this).successOr {
         return Result.Failure(it.error)
     }
 
-    checkGasIfNeeded(this, saltPayStep).successOr {
+    checkGasIfNeeded(this, step).successOr {
         return Result.Failure(it.error)
     }
 
-    val fetchedAmountToClaim = getAmountToClaimIfNeeded(this, amountToClaim)
-    updateResult = when {
-        // if fetchedAmountToClaim = null -> then it already claimed
-        saltPayStep == SaltPayActivationStep.Claim && fetchedAmountToClaim == null -> {
-            updateResult.copy(
-                step = SaltPayActivationStep.Finished,
-                amountToClaim = fetchedAmountToClaim,
-            )
+    val amountToClaim = getAmountToClaimIfNeeded(this, currentAmountToClaim)
+
+    val processedStep = when {
+        step == SaltPayActivationStep.Claim && amountToClaim == null -> {
+            SaltPayActivationStep.Finished
         }
-        else -> updateResult.copy(
-            step = saltPayStep,
-            amountToClaim = fetchedAmountToClaim,
-        )
+        step == SaltPayActivationStep.KycReject && currentStep == SaltPayActivationStep.KycReject -> {
+            SaltPayActivationStep.KycStart
+        }
+        else -> step
     }
 
-    Timber.d("updateSaltPayStatus: success: %s", updateResult)
-    return Result.Success(updateResult)
+    Timber.d("update: success: %s", processedStep)
+    return Result.Success(processedStep)
 }
 
 private suspend fun getAmountToClaimIfNeeded(
