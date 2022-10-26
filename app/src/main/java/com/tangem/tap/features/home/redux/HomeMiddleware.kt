@@ -31,6 +31,7 @@ import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.features.onboarding.OnboardingSaltPayHelper
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsStep
+import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayExceptionHandler
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayAction
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayState
@@ -68,6 +69,7 @@ private fun handleHomeAction(appState: () -> AppState?, action: Action, dispatch
             store.dispatch(GlobalAction.RestoreAppCurrency)
             store.dispatch(GlobalAction.ExchangeManager.Init)
             store.dispatch(GlobalAction.FetchUserCountry)
+            store.dispatch(BackupAction.CheckForUnfinishedBackup)
         }
         is HomeAction.ShouldScanCardOnResume -> {
             if (action.shouldScanCard) {
@@ -78,9 +80,17 @@ private fun handleHomeAction(appState: () -> AppState?, action: Action, dispatch
         is HomeAction.ReadCard -> {
             changeButtonState(ButtonState.PROGRESS)
             val scanCardAction = GlobalAction.ScanCard(
-                onSuccess = {
+                onSuccess = { scanResponse ->
                     store.dispatch(HomeAction.ScanInProgress(false))
-                    checkForDisclaimer(it, ::onScanSuccess)
+                    checkForUnfinishedBackupForSaltPay(
+                        scanResponse = scanResponse,
+                        nextHandler = {
+                            showDisclaimerIfNeed(
+                                scanResponse = scanResponse,
+                                nextHandler = ::onScanSuccess,
+                            )
+                        },
+                    )
                 },
                 onFailure = ::onScanFailure,
             )
@@ -100,18 +110,35 @@ private fun handleHomeAction(appState: () -> AppState?, action: Action, dispatch
     }
 }
 
-private fun checkForDisclaimer(scanResponse: ScanResponse, onDisclaimerAccepted: (ScanResponse) -> Unit) {
+/**
+ * It checks only the SaltPay cards. To check for unfinished backups for the standard Wallet cards
+ * see BackupAction.CheckForUnfinishedBackup
+ * If user touches card other than Visa SaltPay - show dialog and block next processing
+ */
+private fun checkForUnfinishedBackupForSaltPay(scanResponse: ScanResponse, nextHandler: (ScanResponse) -> Unit) {
+    if (BackupAction.hasSaltPayUnfinishedBackup()) {
+        if (scanResponse.isSaltPayVisa()) {
+            nextHandler(scanResponse)
+        } else {
+            showSaltPayTapVisaLogoCardDialog()
+        }
+    } else {
+        nextHandler(scanResponse)
+    }
+}
+
+private fun showDisclaimerIfNeed(scanResponse: ScanResponse, nextHandler: (ScanResponse) -> Unit) {
     val disclaimerType = DisclaimerType.get(scanResponse)
     store.dispatch(DisclaimerAction.SetDisclaimerType(disclaimerType))
 
     if (disclaimerType.isAccepted()) {
-        onDisclaimerAccepted((scanResponse))
+        nextHandler((scanResponse))
     } else {
         changeButtonState(ButtonState.ENABLED)
         store.dispatch(
             DisclaimerAction.Show {
                 changeButtonState(ButtonState.PROGRESS)
-                onDisclaimerAccepted(scanResponse)
+                nextHandler(scanResponse)
             },
         )
     }
@@ -156,12 +183,7 @@ private fun onScanSuccess(scanResponse: ScanResponse) {
         } else {
             if (scanResponse.card.backupStatus?.isActive == false) {
                 changeButtonState(ButtonState.ENABLED)
-                store.dispatchDialogShow(
-                    AppDialog.SimpleOkDialogRes(
-                        headerId = R.string.saltpay_error_empty_backup_title,
-                        messageId = R.string.saltpay_error_empty_backup_message,
-                    ),
-                )
+                showSaltPayTapVisaLogoCardDialog()
             } else {
                 navigateTo(AppScreen.Wallet, null)
                 scope.launch { store.onCardScanned(scanResponse) }
@@ -182,6 +204,15 @@ private fun onScanSuccess(scanResponse: ScanResponse) {
             scope.launch { store.onCardScanned(scanResponse) }
         }
     }
+}
+
+private fun showSaltPayTapVisaLogoCardDialog() {
+    store.dispatchDialogShow(
+        AppDialog.SimpleOkDialogRes(
+            headerId = R.string.saltpay_error_empty_backup_title,
+            messageId = R.string.saltpay_error_empty_backup_message,
+        ),
+    )
 }
 
 private fun onScanFailure(error: TangemError) {
