@@ -3,7 +3,6 @@ package com.tangem.tap.features.onboarding.products.wallet.redux
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CompletionResult
 import com.tangem.common.card.Card
-import com.tangem.common.extensions.ifNotNull
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.operations.backup.BackupService
@@ -91,10 +90,8 @@ private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch:
         is OnboardingWalletAction.StartSaltPayCardActivation -> {
             // we need to do this because the standard activation happens in the OnboardingWalletAction.CreateWallet
             // step which is omitted for SaltPay cards
-            if (onboardingWalletState.isSaltPay) {
-                ifNotNull(onboardingManager, scanResponse?.card?.cardId) { manager, cardId ->
-                    manager.activationStarted(cardId)
-                }
+            if (onboardingWalletState.isSaltPay && scanResponse != null) {
+                startCardActivation(scanResponse)
             }
         }
         is OnboardingWalletAction.LoadArtwork -> {
@@ -132,7 +129,7 @@ private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch:
                                     card = result.data.card,
                                 ),
                             )
-                            onboardingManager.activationStarted(updatedResponse.card.cardId)
+                            startCardActivation(updatedResponse)
                             store.dispatch(OnboardingWalletAction.ResumeBackup)
                         }
                         is CompletionResult.Failure -> {
@@ -144,13 +141,16 @@ private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch:
         }
         OnboardingWalletAction.FinishOnboarding -> {
             store.dispatch(GlobalAction.Onboarding.Stop)
-// [REDACTED_TODO_COMMENT]
+
             if (scanResponse == null) {
                 store.dispatch(NavigationAction.PopBackTo())
                 store.dispatch(HomeAction.ReadCard)
             } else {
                 val backupState = store.state.onboardingWalletState.backupState
                 val updatedScanResponse = updateScanResponseAfterBackup(scanResponse, backupState)
+                if (onboardingWalletState.isSaltPay) {
+                    finishCardActivation(backupState, scanResponse.card)
+                }
                 scope.launch { globalState.tapWalletManager.onCardScanned(updatedScanResponse) }
                 store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Wallet))
             }
@@ -312,19 +312,15 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             }
         }
         is BackupAction.FinishBackup -> {
-            (listOf(backupState.primaryCardId, card?.cardId) + backupState.backupCardIds)
-                .distinct().filterNotNull()
-                .forEach { cardId ->
-                    preferencesStorage.usedCardsPrefStorage.activationFinished(cardId)
-                }
+            if (!onboardingWalletState.isSaltPay) {
+                finishCardActivation(backupState, card)
+            }
         }
         is BackupAction.DiscardBackup -> {
             backupService.discardSavedBackup()
         }
         is BackupAction.DiscardSavedBackup -> {
-            backupService.primaryCardId?.let {
-                preferencesStorage.usedCardsPrefStorage.activationFinished(it)
-            }
+            backupService.primaryCardId?.let { finishCardsActivationForDiscardedUnfinishedBackup(it) }
             backupService.discardSavedBackup()
         }
         is BackupAction.CheckForUnfinishedBackup -> {
@@ -341,6 +337,33 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             store.dispatch(BackupAction.FinishBackup)
         }
     }
+}
+
+/**
+ * Standard Wallet cards start activation at OnboardingWalletAction.CreateWallet
+ * SaltPay cards start activation at OnboardingWalletAction.StartSaltPayCardActivation
+ */
+private fun startCardActivation(scanResponse: ScanResponse) {
+    preferencesStorage.usedCardsPrefStorage.activationStarted(scanResponse.card.cardId)
+}
+
+/**
+ * Standard Wallet cards finish activation at BackupAction.FinishBackup
+ * SaltPay cards finish activation at OnboardingWalletAction.FinishOnboarding
+ */
+private fun finishCardActivation(backupState: BackupState, card: Card?) {
+    (listOf(backupState.primaryCardId, card?.cardId) + backupState.backupCardIds)
+        .distinct().filterNotNull()
+        .forEach { cardId ->
+            preferencesStorage.usedCardsPrefStorage.activationFinished(cardId)
+        }
+}
+
+/**
+ * Not used for SaltPay cards, because discarding unfinished backup is not possible
+ */
+private fun finishCardsActivationForDiscardedUnfinishedBackup(cardId: String) {
+    preferencesStorage.usedCardsPrefStorage.activationFinished(cardId)
 }
 
 /**
