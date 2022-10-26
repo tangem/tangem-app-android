@@ -278,7 +278,6 @@ internal class OnboardingSaltPayView(
 
         when (state.step) {
             SaltPayActivationStep.Claim -> {
-                btnRefreshBalanceWidget.mainView.hide()
                 claimValueString(state)?.let {
                     tvHeader.text = getText(R.string.onboarding_title_claim, it)
                 }
@@ -293,7 +292,6 @@ internal class OnboardingSaltPayView(
                 progressButton?.isEnabled = true
             }
             SaltPayActivationStep.ClaimInProgress -> {
-                btnRefreshBalanceWidget.mainView.show()
                 tvHeader.text = getText(R.string.onboarding_title_claim_progress)
                 tvBody.text = getText(R.string.onboarding_subtitle_claim_progress)
                 btnMain.text = getText(R.string.onboarding_button_claim)
@@ -324,7 +322,7 @@ internal class OnboardingSaltPayView(
         walletFragment.bindingSaltPay.onboardingSaltpayContainer.hide()
         onboardingWalletContainer.show()
         walletFragment.showSuccess()
-        tvBody.text = getText(R.string.onboarding_subtitle_success_tangem_wallet_onboarding)
+        tvBody.text = getText(R.string.onboarding_subtitle_success_claim)
         layoutButtonsCommon.btnWalletMainAction.text = getText(R.string.onboarding_button_continue_wallet)
     }
 
