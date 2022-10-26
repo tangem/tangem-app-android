@@ -211,6 +211,7 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
                     is Result.Success -> {
                         // need to re claim
                         handleClaimRefreshInProgress = false
+                        dispatchOnMain(OnboardingSaltPayAction.SetAmountToClaim(amountToClaimResult.data))
                         dispatchOnMain(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.Claim))
                     }
                     is Result.Failure -> {
