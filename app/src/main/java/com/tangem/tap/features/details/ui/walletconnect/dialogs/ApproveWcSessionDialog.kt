@@ -14,7 +14,6 @@ class ApproveWcSessionDialog {
         fun create(session: WalletConnectSession, networks: List<Blockchain>, context: Context): AlertDialog {
             val message = context.getString(
                 R.string.wallet_connect_request_session_start,
-                session.wallet.cardId,
                 session.peerMeta.name,
                 session.peerMeta.url,
             )
