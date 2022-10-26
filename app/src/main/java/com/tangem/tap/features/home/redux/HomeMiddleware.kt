@@ -9,6 +9,7 @@ import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.common.analytics.AnalyticsEventAnOld
 import com.tangem.tap.common.analytics.AnalyticsParamAnOld
 import com.tangem.tap.common.analytics.GetCardSourceParamsAnOld
+import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.entities.IndeterminateProgressButton
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOpenUrl
@@ -120,6 +121,8 @@ private fun onScanSuccess(scanResponse: ScanResponse) {
     val globalState = store.state.globalState
     val tapWalletManager = globalState.tapWalletManager
     tapWalletManager.updateConfigManager(scanResponse)
+
+    globalState.analyticsHandler.attachToAllEvents(AnalyticsParam.BatchId, scanResponse.card.batchId)
 
     store.dispatch(TwinCardsAction.IfTwinsPrepareState(scanResponse))
 
