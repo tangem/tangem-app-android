@@ -22,7 +22,7 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             app:menu="@menu/wallet"
-            app:navigationIcon="@drawable/ic_wallet_24"
+            app:navigationIcon="@drawable/ic_scan_card"
             app:navigationIconTint="@color/darkGray6"
             app:title="@string/wallet_title"
             app:titleCentered="true" />
@@ -60,7 +60,6 @@
                     android:adjustViewBounds="true"
                     android:contentDescription="@null"
                     android:elevation="3dp"
-                    android:maxHeight="215dp"
                     android:scaleType="fitCenter"
                     app:layout_constraintTop_toTopOf="parent"
                     tools:src="@drawable/card_placeholder_black" />
