@@ -108,10 +108,13 @@ class WalletMiddleware {
                 val coinAmount = action.wallet.amounts[AmountType.Coin]?.value
                 if (coinAmount != null && !coinAmount.isZero()) {
                     if (walletState.getWalletData(action.blockchain) == null) {
-                        store.dispatch(WalletAction.MultiWallet.AddBlockchain(
-                            action.blockchain,
-                            null
-                        ))
+                        store.dispatch(
+                            WalletAction.MultiWallet.AddBlockchain(
+                                action.blockchain,
+                                null,
+                                true,
+                            ),
+                        )
                         store.dispatch(WalletAction.LoadWallet.Success(
                             action.wallet,
                             action.blockchain
@@ -132,7 +135,19 @@ class WalletMiddleware {
                                 .plus(Currency.Blockchain(wallet.blockchain, wallet.publicKey.derivationPath?.rawPath))
                         }
                         action.coinsList != null -> action.coinsList
-                        else -> walletState.walletsData.map { it.currency }
+                        else -> {
+                            if (walletState.isMultiwalletAllowed) {
+                                walletState.walletsData.map { it.currency }
+                            } else {
+                                val derivationPath = walletState.primaryWallet?.currency?.derivationPath
+                                val primaryBlockchain = walletState.primaryBlockchain
+                                val primaryToken = walletState.primaryToken
+                                listOfNotNull(
+                                    primaryBlockchain?.let { Currency.Blockchain(it, derivationPath) },
+                                    primaryToken?.let { Currency.Token(it, primaryBlockchain!!, derivationPath) },
+                                )
+                            }
+                        }
                     }
                     val ratesResult = globalState.tapWalletManager.rates.loadFiatRate(
                         currencyId = appCurrencyId,
