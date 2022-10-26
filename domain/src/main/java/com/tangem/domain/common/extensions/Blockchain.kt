@@ -41,6 +41,15 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "ethereum-pow-iou" -> Blockchain.EthereumPow
         "ethereum-pow-iou/test" -> Blockchain.EthereumPowTestnet
         "ethereumfair" -> Blockchain.EthereumFair
+        "polkadot" -> Blockchain.Polkadot
+        "polkadot/test" -> Blockchain.PolkadotTestnet
+        "kusama" -> Blockchain.Kusama
+        // "optimistic-ethereum" -> Blockchain.Optimism
+        "optimistic-ethereum" -> null //TODO: Optimism is disabled until next release
+        "optimistic-ethereum/test" -> Blockchain.OptimismTestnet
+        "dash" -> Blockchain.Dash
+        "sxdai" -> Blockchain.SaltPay
+        "sxdai/test" -> Blockchain.SaltPayTestnet
         else -> null
     }
 }
@@ -49,7 +58,7 @@ fun Blockchain.toNetworkId(): String {
     return when (this) {
         Blockchain.Unknown -> "unknown"
         Blockchain.Arbitrum -> "arbitrum-one"
-        Blockchain.ArbitrumTestnet -> "arbitrum/test"
+        Blockchain.ArbitrumTestnet -> "arbitrum-one/test"
         Blockchain.Avalanche -> "avalanche"
         Blockchain.AvalancheTestnet -> "avalanche/test"
         Blockchain.Binance -> "binancecoin"
@@ -86,6 +95,14 @@ fun Blockchain.toNetworkId(): String {
         Blockchain.EthereumPow -> "ethereum-pow-iou"
         Blockchain.EthereumPowTestnet -> "ethereum-pow-iou/test"
         Blockchain.EthereumFair -> "ethereumfair"
+        Blockchain.Polkadot -> "polkadot"
+        Blockchain.PolkadotTestnet -> "polkadot/test"
+        Blockchain.Kusama -> "kusama"
+        Blockchain.Optimism -> "optimistic-ethereum"
+        Blockchain.OptimismTestnet -> "optimistic-ethereum/test"
+        Blockchain.Dash -> "dash"
+        Blockchain.SaltPay -> "sxdai"
+        Blockchain.SaltPayTestnet -> "sxdai/test"
     }
 }
 
@@ -103,16 +120,30 @@ fun Blockchain.toCoinId(): String {
         Blockchain.Avalanche, Blockchain.AvalancheTestnet -> "avalanche-2"
         Blockchain.Solana, Blockchain.SolanaTestnet -> "solana"
         Blockchain.Fantom, Blockchain.FantomTestnet -> "fantom"
+        Blockchain.Tron, Blockchain.TronTestnet -> "tron"
+        Blockchain.Polkadot, Blockchain.PolkadotTestnet -> "polkadot"
         Blockchain.Ducatus -> "ducatus"
         Blockchain.Litecoin -> "litecoin"
         Blockchain.RSK -> "rootstock"
         Blockchain.Tezos -> "tezos"
         Blockchain.XRP -> "ripple"
         Blockchain.Dogecoin -> "dogecoin"
-        Blockchain.Tron, Blockchain.TronTestnet -> "tron"
         Blockchain.Gnosis -> "xdai"
         Blockchain.EthereumPow, Blockchain.EthereumPowTestnet -> "ethereum-pow-iou"
         Blockchain.EthereumFair -> "ethereumfair"
+        Blockchain.Kusama -> "kusama"
+        Blockchain.Optimism, Blockchain.OptimismTestnet -> "ethereum"
+        Blockchain.Dash -> "dash"
+        Blockchain.SaltPay, Blockchain.SaltPayTestnet -> "xdai"
         Blockchain.Unknown -> "unknown"
     }
 }
+
+fun Blockchain.isSupportedInApp(): Boolean {
+    return !excludedBlockchains.contains(this)
+}
+
+private val excludedBlockchains = listOf(
+    Blockchain.Optimism, // TODO: remove when fee calculation is fixed
+    Blockchain.SaltPay,
+)
