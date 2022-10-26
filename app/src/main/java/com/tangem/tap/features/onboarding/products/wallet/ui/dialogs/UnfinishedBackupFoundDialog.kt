@@ -16,7 +16,7 @@ class UnfinishedBackupFoundDialog {
                 setMessage(R.string.welcome_interrupted_backup_alert_message)
                 setPositiveButton(R.string.welcome_interrupted_backup_alert_resume) { _, _ ->
                     store.dispatch(GlobalAction.HideDialog)
-                    store.dispatch(BackupAction.ResumeBackup)
+                    store.dispatch(BackupAction.ResumeFoundUnfinishedBackup)
                 }
                 setNegativeButton(R.string.welcome_interrupted_backup_alert_discard) { _, _ ->
                     store.dispatch(GlobalAction.HideDialog)
