@@ -7,7 +7,7 @@
     <string name="send_error_dust_change">Change is too small</string>
     <string name="send_error_no_account_xlm">To create account send 1+ XLM to this address</string>
     <string name="send_error_fee_request_failed">Failed to get fee</string>
-    <string name="send_error_no_target_account">Target account is not created. Amount to send should be %s %s + fee or more to create</string>
+    <string name="send_error_no_target_account">Target account is not created. Amount to send should be %s + fee or more to create</string>
     <string name="send_error_unknown">Unknown error</string>
     <string name="send_validation_invalid_address">Invalid address</string>
     <string name="send_validation_invalid_amount">Invalid amount</string>
@@ -17,4 +17,7 @@
     <string name="xtz_withdrawal_message_warning">To avoid paying an increased commission the next time you top up your wallet, reduce the amount by %s XTZ</string>
     <string name="xtz_withdrawal_message_reduce">Reduce by %s XTZ</string>
     <string name="xtz_withdrawal_message_ignore">No, send all</string>
+    <string name="send_error_minimum_balance_format">Minimum balance is %s</string>
+    <string name="warning_existential_deposit_message">%s network has a concept of Existential Deposit. If your account drops below %s it will be deactivated and any remaining funds will be destroyed.</string>
+    <string name="no_account_polkadot">Destination account is not active. Send %s or more to activate the account.</string>
 </resources>
