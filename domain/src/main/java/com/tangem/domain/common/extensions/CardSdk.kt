@@ -18,12 +18,12 @@ fun Card.supportedBlockchains(): List<Blockchain> {
             Blockchain.fromCurve(EllipticCurve.Secp256k1)
         }
         else -> {
-            Blockchain.fromCurve(EllipticCurve.Secp256k1) +
-                Blockchain.fromCurve(EllipticCurve.Ed25519)
+            (Blockchain.fromCurve(EllipticCurve.Secp256k1) + Blockchain.fromCurve(EllipticCurve.Ed25519)).distinct()
         }
     }
-    val filtered = supportedBlockchains.filter { isTestCard == it.isTestnet() }
-    return filtered
+    return supportedBlockchains
+        .filter { isTestCard == it.isTestnet() }
+        .filter { it.isSupportedInApp() }
 }
 
 fun Card.supportedTokens(): List<Blockchain> {
