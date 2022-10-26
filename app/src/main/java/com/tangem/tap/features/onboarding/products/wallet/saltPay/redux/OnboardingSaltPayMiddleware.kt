@@ -10,7 +10,10 @@ import com.tangem.domain.common.extensions.successOr
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.network.api.paymentology.KYCStatus
 import com.tangem.network.api.paymentology.RegistrationResponse
+import com.tangem.tap.common.analytics.GlobalAnalyticsEventHandler
+import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.extensions.isPositive
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TangemSigner
@@ -56,6 +59,7 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
     fun getAppState(): AppState = appState()!!
     fun getOnboardingWalletState(): OnboardingWalletState = getAppState().onboardingWalletState
     fun getState(): OnboardingSaltPayState = getOnboardingWalletState().onboardingSaltPayState!!
+    val analyticsHandler = getAppState().globalState.analyticsHandler
 
     when (action) {
         is OnboardingSaltPayAction.Update -> {
@@ -63,21 +67,18 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
 
             val state = getState()
             scope.launch {
-                val updateResult = state.saltPayManager.updateActivationStatus(
-                    amountToClaim = state.amountToClaim,
-                    step = state.step,
-                ).successOr {
+                val updateResult = state.saltPayManager.updateActivationStatus(state.amountToClaim).successOr {
                     onException(it.error)
                     return@launch
                 }
 
                 handleInProgress = false
-                withMainContext {
-                    store.dispatch(OnboardingSaltPayAction.SetStep(updateResult.step))
-                }
+                dispatchOnMain(OnboardingSaltPayAction.SetStep(updateResult.step))
             }
         }
         is OnboardingSaltPayAction.RegisterCard -> {
+            analyticsHandler.handleAnalyticsEvent(Onboarding.ButtonConnect())
+
             handleInProgress = true
             val state = getState()
 
@@ -126,10 +127,8 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
                     return@launch
                 }
 
-                withMainContext {
-                    handleInProgress = false
-                    store.dispatch(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.KycIntro))
-                }
+                handleInProgress = false
+                dispatchOnMain(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.KycIntro))
             }
         }
         is OnboardingSaltPayAction.OpenUtorgKYC -> {
@@ -140,20 +139,24 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
         }
         is OnboardingSaltPayAction.RegisterKYC -> {
             val state = getState()
+            store.dispatch(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.KycWaiting))
             handleInProgress = true
+
             scope.launch {
-                registerKYCIfNeeded(state.saltPayManager, state.step).successOr {
+                Timber.d("saltPayManager.registerKYC()")
+                state.saltPayManager.registerKYC().successOr {
                     onException(it.error)
                     return@launch
                 }
 
                 handleInProgress = false
-                withMainContext { store.dispatch(OnboardingSaltPayAction.Update) }
+                dispatchOnMain(OnboardingSaltPayAction.Update)
             }
         }
         is OnboardingSaltPayAction.TrySetPin -> {
             try {
                 assertPinValid(action.pin, getState().pinLength)
+                analyticsHandler.handleAnalyticsEvent(Onboarding.PinCodeSet())
                 store.dispatch(OnboardingSaltPayAction.SetPin(action.pin))
                 store.dispatch(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.CardRegistration))
             } catch (error: SaltPayActivationError) {
@@ -161,6 +164,7 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
             }
         }
         is OnboardingSaltPayAction.Claim -> {
+            analyticsHandler.handleAnalyticsEvent(Onboarding.ButtonClaim())
             val state = getState()
             handleInProgress = true
 
@@ -191,7 +195,7 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
                     onException(it.error)
                     return@launch
                 }
-// [REDACTED_TODO_COMMENT]
+                analyticsHandler.handleAnalyticsEvent(Onboarding.ClaimWasSuccessfully())
                 dispatchOnMain(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.ClaimInProgress))
                 dispatchOnMain(OnboardingSaltPayAction.RefreshClaim)
             }
@@ -202,21 +206,43 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
 
             val state = getState()
             scope.launch {
-                val balance = state.saltPayManager.getTokenAmount().successOr {
+                val tokenAmountValue = state.saltPayManager.getTokenAmount().successOr {
                     SaltPayExceptionHandler.handle(it.error)
                     handleClaimRefreshInProgress = false
                     return@launch
                 }
 
-                handleInProgress = false
-                handleClaimRefreshInProgress = false
-                dispatchOnMain(OnboardingSaltPayAction.SetTokenBalance(balance))
-                dispatchOnMain(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.Finished))
+                if (tokenAmountValue.isPositive()) {
+                    handleInProgress = false
+                    handleClaimRefreshInProgress = false
+                    dispatchOnMain(OnboardingSaltPayAction.SetTokenBalance(tokenAmountValue))
+                    dispatchOnMain(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.Finished))
+                } else {
+                    handleClaimRefreshInProgress = false
+                }
             }
         }
+        is OnboardingSaltPayAction.SetStep -> handleAnalytics(analyticsHandler, action.newStep)
         else -> {
             /* do nothing, only reduce */
         }
+    }
+}
+
+fun handleAnalytics(analyticsHandler: GlobalAnalyticsEventHandler, step: SaltPayActivationStep?) {
+    when (step) {
+        SaltPayActivationStep.None -> {}
+        SaltPayActivationStep.NoGas -> {}
+        SaltPayActivationStep.NeedPin -> {}
+        SaltPayActivationStep.CardRegistration -> {}
+        SaltPayActivationStep.KycIntro -> {}
+        SaltPayActivationStep.KycStart -> analyticsHandler.handleAnalyticsEvent(Onboarding.KYCStarted())
+        SaltPayActivationStep.KycWaiting -> analyticsHandler.handleAnalyticsEvent(Onboarding.KYCInProgress())
+        SaltPayActivationStep.KycReject -> analyticsHandler.handleAnalyticsEvent(Onboarding.KYCRejected())
+        SaltPayActivationStep.Claim -> analyticsHandler.handleAnalyticsEvent(Onboarding.ClaimScreenOpened())
+        SaltPayActivationStep.ClaimInProgress -> {}
+        SaltPayActivationStep.Finished -> {}
+        null -> {}
     }
 }
 
@@ -225,24 +251,16 @@ data class UpdateResult(
     val amountToClaim: Amount? = null,
 )
 
-suspend fun SaltPayActivationManager.updateActivationStatus(
-    amountToClaim: Amount?,
-    step: SaltPayActivationStep,
-): Result<UpdateResult> {
+suspend fun SaltPayActivationManager.updateActivationStatus(amountToClaim: Amount?): Result<UpdateResult> {
     Timber.d("updateSaltPayStatus")
     var updateResult = UpdateResult()
 
-    checkGasIfNeeded(this, step).successOr {
-        return Result.Failure(it.error)
-
-    }
-    registerKYCIfNeeded(this, step).successOr {
-        return Result.Failure(it.error)
-
-    }
     val saltPayStep = checkRegistration(this).successOr {
         return Result.Failure(it.error)
+    }
 
+    checkGasIfNeeded(this, saltPayStep).successOr {
+        return Result.Failure(it.error)
     }
 
     val fetchedAmountToClaim = getAmountToClaimIfNeeded(this, amountToClaim)
@@ -317,10 +335,7 @@ private suspend fun checkGasIfNeeded(
     step: SaltPayActivationStep,
 ): Result<Unit> {
     Timber.d("checkGasIfNeeded: for step: %s", step)
-    if (step == SaltPayActivationStep.KycStart ||
-        step == SaltPayActivationStep.KycWaiting ||
-        step == SaltPayActivationStep.Finished
-    ) {
+    if (step.ordinal >= SaltPayActivationStep.KycIntro.ordinal) {
         Timber.d("checkGasIfNeeded: no need to check for step: %s", step)
         return Result.Success(Unit)
     }
@@ -331,25 +346,6 @@ private suspend fun checkGasIfNeeded(
         is Result.Failure -> Timber.d("checkGasIfNeeded: has NO GAS")
     }
     return result
-}
-
-private suspend fun registerKYCIfNeeded(
-    saltPayManager: SaltPayActivationManager,
-    step: SaltPayActivationStep,
-): Result<Unit> {
-    Timber.d("registerKYCIfNeeded: step: %s", step)
-    if (step != SaltPayActivationStep.KycStart) {
-        Timber.d("registerKYCIfNeeded: return Success, because step != KycStart")
-        return Result.Success(Unit)
-    }
-
-    withMainContext {
-        Timber.d("registerKYCIfNeeded: set new step: KycWaiting")
-        store.dispatch(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.KycWaiting))
-    }
-
-    Timber.d("saltPayManager.registerKYC()")
-    return saltPayManager.registerKYC()
 }
 
 private suspend fun checkRegistration(
@@ -386,7 +382,7 @@ fun RegistrationResponse.Item.toSaltPayStep(): SaltPayActivationStep {
 
         kycStatus != null -> {
             when (kycStatus) {
-                KYCStatus.NOT_STARTED, KYCStatus.STARTED -> SaltPayActivationStep.KycStart
+                KYCStatus.NOT_STARTED, KYCStatus.STARTED -> SaltPayActivationStep.KycIntro
                 KYCStatus.WAITING_FOR_APPROVAL -> SaltPayActivationStep.KycWaiting
                 KYCStatus.CORRECTION_REQUESTED, KYCStatus.REJECTED -> SaltPayActivationStep.KycReject
                 KYCStatus.APPROVED -> SaltPayActivationStep.Claim
