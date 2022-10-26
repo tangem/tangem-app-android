@@ -240,7 +240,7 @@ internal class OnboardingSaltPayView(
         btnOpenSupportChat.hide()
         btnKycAction.text = getString(R.string.onboarding_button_kyc_start)
         btnKycAction.setOnClickListener {
-            store.dispatch(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.KycStart))
+            store.dispatch(OnboardingSaltPayAction.Update)
         }
         progressButton = SaltPayProgressButton(root)
     }
