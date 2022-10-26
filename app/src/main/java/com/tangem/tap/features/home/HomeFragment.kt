@@ -81,16 +81,12 @@ class HomeFragment : Fragment(), StoreSubscriber<HomeState> {
         StoriesScreen(
             homeState,
             onScanButtonClick = { store.dispatch(HomeAction.ReadCard) },
-            onShopButtonClick = {
-                store.dispatch(
-                    HomeAction.GoToShop(store.state.globalState.userCountryCode)
-                )
-            },
+            onShopButtonClick = { store.dispatch(HomeAction.GoToShop(store.state.globalState.userCountryCode)) },
             onSearchTokensClick = {
                 store.dispatch(NavigationAction.NavigateTo(AppScreen.AddTokens))
                 store.dispatch(TokensAction.AllowToAddTokens(false))
                 store.dispatch(TokensAction.LoadCurrencies())
-            }
+            },
         )
     }
 
