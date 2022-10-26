@@ -14,7 +14,7 @@ class ConfirmDiscardingBackupDialog {
                 setTitle(R.string.welcome_interrupted_backup_discard_title)
                 setMessage(R.string.welcome_interrupted_backup_discard_message)
                 setPositiveButton(R.string.welcome_interrupted_backup_discard_resume) { _, _ ->
-                    store.dispatch(BackupAction.ResumeBackup)
+                    store.dispatch(BackupAction.ResumeFoundUnfinishedBackup)
                 }
                 setNegativeButton(R.string.welcome_interrupted_backup_discard_discard) { _, _ ->
                     store.dispatch(BackupAction.DiscardSavedBackup)

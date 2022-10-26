@@ -20,7 +20,7 @@ class UserTokensStorageService(
     fun getUserTokens(userId: String): List<Currency>? {
         return try {
             val json = fileReader.readFile(getFileNameForUserTokens(userId))
-            userTokensAdapter.fromJson(json)?.tokens?.map { Currency.fromTokenResponse(it) }
+            userTokensAdapter.fromJson(json)?.tokens?.mapNotNull { Currency.fromTokenResponse(it) }
         } catch (exception: Exception) {
             Log.error { exception.stackTraceToString() }
             null
@@ -34,10 +34,8 @@ class UserTokensStorageService(
         return blockchainNetworks.flatMap { it.toCurrencies() }
     }
 
-    fun saveUserTokens(userId: String, tokens: List<Currency>) {
-        val tokensResponse = tokens.map { it.toTokenResponse() }
-        val data = UserTokensResponse(tokens = tokensResponse)
-        val json = userTokensAdapter.toJson(data)
+    fun saveUserTokens(userId: String, tokens: UserTokensResponse) {
+        val json = userTokensAdapter.toJson(tokens)
         fileReader.rewriteFile(json, getFileNameForUserTokens(userId))
     }
 
