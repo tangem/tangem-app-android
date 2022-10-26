@@ -13,9 +13,12 @@ import com.tangem.TangemSdk
 import com.tangem.domain.common.FeatureCoroutineExceptionHandler
 import com.tangem.operations.backup.BackupService
 import com.tangem.tangem_sdk_new.extensions.init
+import com.tangem.tap.common.ActivityResultCallbackHolder
 import com.tangem.tap.common.DialogManager
 import com.tangem.tap.common.IntentHandler
+import com.tangem.tap.common.OnActivityResultCallback
 import com.tangem.tap.common.SnackbarHandler
+import com.tangem.tap.common.extensions.copyToClipboard
 import com.tangem.tap.common.redux.NotificationsHandler
 import com.tangem.tap.common.redux.global.AndroidResources
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -25,7 +28,6 @@ import com.tangem.tap.common.shop.GooglePayService
 import com.tangem.tap.common.shop.GooglePayService.Companion.LOAD_PAYMENT_DATA_REQUEST_CODE
 import com.tangem.tap.common.shop.googlepay.GooglePayUtil.createPaymentsClient
 import com.tangem.tap.domain.TangemSdkManager
-import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.shop.redux.ShopAction
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.ActivityMainBinding
@@ -48,15 +50,18 @@ private val mainCoroutineContext: CoroutineContext
     get() = Job() + Dispatchers.Main + FeatureCoroutineExceptionHandler.create("mainScope")
 val mainScope = CoroutineScope(mainCoroutineContext)
 
-class MainActivity : AppCompatActivity(), SnackbarHandler {
+class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbackHolder {
 
     private var snackbar: Snackbar? = null
     private val dialogManager = DialogManager()
     private val intentHandler = IntentHandler()
     private val binding: ActivityMainBinding by viewBinding(ActivityMainBinding::bind)
 
+    private val onActivityResultCallbacks = mutableListOf<OnActivityResultCallback>()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        internalActivity = this
         setContentView(R.layout.activity_main)
         systemActions()
         store.dispatch(NavigationAction.ActivityCreated(WeakReference(this)))
@@ -66,25 +71,24 @@ class MainActivity : AppCompatActivity(), SnackbarHandler {
         backupService = BackupService.init(tangemSdk, this)
 
         store.dispatch(GlobalAction.SetResources(getAndroidResources()))
-        store.dispatch(WalletConnectAction.RestoreSessions)
         store.dispatch(
             ShopAction.CheckIfGooglePayAvailable(
-                GooglePayService(createPaymentsClient(this), this)
-            )
+                GooglePayService(createPaymentsClient(this), this),
+            ),
         )
     }
-
 
     private fun getAndroidResources(): AndroidResources {
         return AndroidResources(
             AndroidResources.RString(
                 R.string.copy_toast_msg,
-                R.string.details_notification_erase_wallet_not_possible
-            )
+                R.string.details_notification_erase_wallet_not_possible,
+            ),
         )
     }
 
     private fun systemActions() {
+
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
         val windowInsetsController = WindowInsetsControllerCompat(window, binding.root)
@@ -93,7 +97,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler {
 
         supportFragmentManager.registerFragmentLifecycleCallbacks(
             NavBarInsetsFragmentLifecycleCallback(),
-            true
+            true,
         )
 
         requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
@@ -138,7 +142,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler {
         if (snackbar != null) return
 
         snackbar = Snackbar.make(
-            binding.fragmentContainer, getString(text), Snackbar.LENGTH_INDEFINITE
+            binding.fragmentContainer, getString(text), Snackbar.LENGTH_INDEFINITE,
         )
         if (buttonTitle != null && action != null) {
             snackbar?.setAction(getString(buttonTitle), action)
@@ -153,12 +157,29 @@ class MainActivity : AppCompatActivity(), SnackbarHandler {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
+
+        onActivityResultCallbacks.forEach { it(requestCode, resultCode, data) }
         when (requestCode) {
             LOAD_PAYMENT_DATA_REQUEST_CODE -> {
                 store.dispatch(
-                    ShopAction.BuyWithGooglePay.HandleGooglePayResponse(resultCode, data)
+                    ShopAction.BuyWithGooglePay.HandleGooglePayResponse(resultCode, data),
                 )
             }
         }
     }
+
+    override fun addOnActivityResultCallback(callback: OnActivityResultCallback) {
+        onActivityResultCallbacks.remove(callback)
+        onActivityResultCallbacks.add(callback)
+    }
+
+    override fun removeOnActivityResultCallback(callback: OnActivityResultCallback) {
+        onActivityResultCallbacks.remove(callback)
+    }
+}
+
+lateinit var internalActivity: AppCompatActivity
+//TODO: delete
+fun copyToClipboard(text: String) {
+    internalActivity.copyToClipboard(text)
 }
