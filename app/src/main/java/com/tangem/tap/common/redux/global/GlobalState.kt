@@ -27,7 +27,7 @@ data class GlobalState(
     val dialog: StateDialog? = null,
     val exchangeManager: CurrencyExchangeManager = CurrencyExchangeManager.dummy(),
     val resources: AndroidResources = AndroidResources(),
-    val analyticsHandler: GlobalAnalyticsEventHandler? = null,
+    val analyticsHandler: GlobalAnalyticsEventHandler = GlobalAnalyticsEventHandler.stub(),
     val userCountryCode: String? = null,
 ) : StateType
 
