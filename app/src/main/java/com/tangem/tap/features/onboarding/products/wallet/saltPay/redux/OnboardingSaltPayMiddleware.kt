@@ -99,11 +99,6 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
                     return@launch
                 }
 
-                if (!attestationResponse.success) {
-                    onError(SaltPayActivationError.CardNotFound(attestationResponse.error))
-                    return@launch
-                }
-
                 val registrationResponse = tangemSdkManager.runTaskAsync(
                     runnable = saltPayManager.makeRegistrationTask(attestationResponse.challenge!!),
                     cardId = saltPayManager.cardId,
