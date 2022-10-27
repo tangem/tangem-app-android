@@ -14,7 +14,12 @@ import com.tangem.domain.common.LogConfig
 import com.tangem.network.common.MoshiConverter
 import com.tangem.tap.common.AndroidAssetReader
 import com.tangem.tap.common.AssetReader
-import com.tangem.tap.common.analytics.GlobalAnalyticsEventHandlerBuilder
+import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.AnalyticsHandlersFactory
+import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
+import com.tangem.tap.common.analytics.handlers.amplitude.AmplitudeAnalyticsHandler
+import com.tangem.tap.common.analytics.handlers.appsFlyer.AppsFlyerAnalyticsHandler
+import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandler
 import com.tangem.tap.common.feedback.AdditionalFeedbackInfo
 import com.tangem.tap.common.feedback.FeedbackManager
 import com.tangem.tap.common.images.createCoilImageLoader
@@ -102,14 +107,21 @@ class TapApplication : Application(), ImageLoaderFactory {
     }
 
     private fun initAnalytics(application: Application, config: Config) {
-        val globalAnalyticsHandler = GlobalAnalyticsEventHandlerBuilder(
+        val factory = AnalyticsHandlersFactory()
+        factory.addBuilder(AmplitudeAnalyticsHandler.Builder())
+        factory.addBuilder(AppsFlyerAnalyticsHandler.Builder())
+        factory.addBuilder(FirebaseAnalyticsHandler.Builder())
+
+        val buildData = AnalyticsHandlerBuilder.Data(
             application = application,
             config = config,
             isDebug = BuildConfig.DEBUG,
             logConfig = LogConfig.analyticsHandlers,
             jsonConverter = MoshiJsonConverter.INSTANCE,
-        ).default()
-        store.dispatch(GlobalAction.SetGlobalAnalyticsHandler(globalAnalyticsHandler))
+        )
+        factory.build(buildData).forEach {
+            Analytics.addHandler(it.id(), it)
+        }
     }
 
     private fun initFeedbackManager(context: Context, preferencesStorage: PreferencesStorage, config: Config) {
