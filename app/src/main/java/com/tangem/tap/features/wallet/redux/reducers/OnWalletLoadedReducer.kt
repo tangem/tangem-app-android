@@ -116,6 +116,8 @@ class OnWalletLoadedReducer {
     private fun onSingleWalletLoaded(wallet: Wallet, walletState: WalletState): WalletState {
         if (wallet.blockchain != walletState.primaryBlockchain) return walletState
 
+        // val ratesRespository = store.state.globalState.tapWalletManager.ratesRepository
+        // val tokenCurrency =
         val fiatCurrencyName = store.state.globalState.appCurrency.code
         val token = wallet.getFirstToken()
         val tokenData = if (token != null) {
