@@ -1,31 +1,30 @@
 package com.tangem.tap.common.analytics.api
 
+import android.app.Application
 import com.shopify.buy3.Storefront
 import com.tangem.blockchain.common.BlockchainError
 import com.tangem.common.card.Card
 import com.tangem.common.core.TangemSdkError
+import com.tangem.common.json.MoshiJsonConverter
+import com.tangem.domain.common.AnalyticsHandlersLogConfig
 import com.tangem.tap.common.analytics.AnalyticsAnOld
 import com.tangem.tap.common.analytics.AnalyticsEventAnOld
 import com.tangem.tap.common.analytics.AnalyticsParamAnOld
 import com.tangem.tap.common.analytics.events.AnalyticsEvent
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.extensions.filterNotNull
+import com.tangem.tap.domain.configurable.config.Config
 
 /**
 [REDACTED_AUTHOR]
  */
 interface AnalyticsEventHandler {
-    fun handleEvent(
-        event: String,
-        params: Map<String, String> = emptyMap(),
-    )
+    fun id(): String
 
-    fun handleAnalyticsEvent(
-        event: AnalyticsEvent,
-        card: Card? = null,
-        blockchain: String? = null,
-    ) {
-        handleEvent(
+    fun send(event: String, params: Map<String, String> = emptyMap())
+
+    fun send(event: AnalyticsEvent, card: Card? = null, blockchain: String? = null) {
+        send(
             event = prepareEventString(event.category, event.event),
             params = prepareParams(card, blockchain, event.params),
         )
@@ -38,7 +37,7 @@ interface AnalyticsEventHandler {
         card: Card? = null,
         blockchain: String? = null,
     ) {
-        handleEvent(event.event, prepareParams(card, blockchain, params))
+        send(event.event, prepareParams(card, blockchain, params))
     }
 
     fun prepareParams(
@@ -57,7 +56,7 @@ interface AnalyticsEventHandler {
 }
 
 interface ErrorEventHandler {
-    fun handleErrorEvent(
+    fun send(
         error: Throwable,
         params: Map<String, String> = emptyMap(),
     )
@@ -66,7 +65,7 @@ interface ErrorEventHandler {
 interface SdkErrorEventHandler : CardSdkErrorEventHandler, BlockchainSdkErrorEventHandler
 
 interface CardSdkErrorEventHandler {
-    fun handleCardSdkErrorEvent(
+    fun send(
         error: TangemSdkError,
         action: AnalyticsAnOld.ActionToLog,
         params: Map<AnalyticsParamAnOld, String> = emptyMap(),
@@ -75,7 +74,7 @@ interface CardSdkErrorEventHandler {
 }
 
 interface BlockchainSdkErrorEventHandler {
-    fun handleBlockchainSdkErrorEvent(
+    fun send(
         error: BlockchainError,
         action: AnalyticsAnOld.ActionToLog,
         params: Map<AnalyticsParamAnOld, String> = mapOf(),
@@ -84,5 +83,17 @@ interface BlockchainSdkErrorEventHandler {
 }
 
 interface ShopifyOrderEventHandler {
-    fun handleShopifyOrderEvent(order: Storefront.Order)
+    fun send(order: Storefront.Order)
+}
+
+interface AnalyticsHandlerBuilder {
+    fun build(data: Data): AnalyticsEventHandler?
+
+    data class Data(
+        val application: Application,
+        val config: Config,
+        val isDebug: Boolean,
+        val logConfig: AnalyticsHandlersLogConfig,
+        val jsonConverter: MoshiJsonConverter,
+    )
 }
