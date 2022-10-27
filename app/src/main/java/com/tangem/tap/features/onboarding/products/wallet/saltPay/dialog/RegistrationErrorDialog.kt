@@ -14,7 +14,7 @@ import com.tangem.wallet.R
  */
 class RegistrationErrorDialog {
     companion object {
-        fun create(context: Context, dialog: SaltPayDialog.RegistrationError): Dialog {
+        fun create(context: Context, dialog: SaltPayDialog.Activation.OnError): Dialog {
             val convertedMessage = SaltPayErrorConverter(context).convert(dialog.error) as ConvertedDialogMessage
 
             return AlertDialog.Builder(context).apply {
