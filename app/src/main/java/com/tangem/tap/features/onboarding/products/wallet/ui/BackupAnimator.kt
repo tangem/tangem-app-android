@@ -38,16 +38,6 @@ class WalletBackupAnimator(
     override fun updateBackupState(backupState: BackupState) {
     }
 
-    override fun setupCreateWalletState() {
-        currentStep = STEP_CREATE_WALLET
-
-        cardsWidget.toFolded(false)
-
-        ORIGIN.alpha(1f)
-        FIRST_BACKUP.alpha(1f)
-        SECOND_BACKUP.alpha(1f)
-    }
-
     override fun showBackupIntro(state: BackupState) {
         currentStep = STEP_BACKUP_INTRO
 
@@ -56,6 +46,16 @@ class WalletBackupAnimator(
         SECOND_BACKUP.show()
 
         cardsWidget.toWelcome()
+    }
+
+    override fun setupCreateWalletState() {
+        currentStep = STEP_CREATE_WALLET
+
+        cardsWidget.toFolded(false)
+
+        ORIGIN.alpha(1f)
+        FIRST_BACKUP.alpha(1f)
+        SECOND_BACKUP.alpha(1f)
     }
 
     override fun showScanOriginCard() {
@@ -75,7 +75,7 @@ class WalletBackupAnimator(
                         SECOND_BACKUP.animateAlpha(0.2f, 400)
                     }
                     STEP_BACKUP_INTRO -> {
-                        cardsWidget.toFolded(duration = 200) { cardsWidget.toFan() }
+                        cardsWidget.toFolded(duration = 300) { cardsWidget.toFan() }
                         FIRST_BACKUP.animateAlpha(0.6f, 400, 250)
                         SECOND_BACKUP.animateAlpha(0.2f, 400, 250)
                     }
@@ -112,11 +112,14 @@ class WalletBackupAnimator(
         )
     }
 
-    override fun showWriteBackupCard(state: BackupState, backupCard: Int) {
+    private var firstBackupCardAnimated = false
+    private var secondBackupCardAnimated = false
 
+    override fun showWriteBackupCard(state: BackupState, backupCard: Int) {
         when (viewState) {
             State.TwoCards -> {
-                if (currentStep == STEP_WRITE_BACKUP_CARD) return
+                if (firstBackupCardAnimated) return
+                firstBackupCardAnimated = true
 
                 val delay = if (currentStep == UNDEFINED) 700L else 0
                 postUiDelayBg(delay) {
@@ -129,6 +132,8 @@ class WalletBackupAnimator(
             State.TreeCards -> {
                 when (backupCard) {
                     1 -> {
+                        if (firstBackupCardAnimated) return
+                        firstBackupCardAnimated = true
                         FIRST_BACKUP.alpha(1f)
                         cardsWidget.leapfrogWidget.leap {
                             SECOND_BACKUP.alpha(0.4f)
@@ -136,6 +141,8 @@ class WalletBackupAnimator(
                         }
                     }
                     2 -> {
+                        if (secondBackupCardAnimated) return
+                        secondBackupCardAnimated = true
                         SECOND_BACKUP.alpha(1f)
                         cardsWidget.leapfrogWidget.leap {
                             ORIGIN.alpha(0.4f)
