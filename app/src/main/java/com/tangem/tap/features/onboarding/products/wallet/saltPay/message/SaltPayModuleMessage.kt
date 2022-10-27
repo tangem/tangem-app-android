@@ -37,8 +37,8 @@ sealed class SaltPayActivationError(
 
     object NeedPin : SaltPayActivationError(3)
     object NoGas : SaltPayActivationError(5) //
-    class EmptyResponse(message: String?) : SaltPayActivationError(6, message)
-    class CardNotFound(message: String?) : SaltPayActivationError(8, message)
+    object EmptyResponse : SaltPayActivationError(6)
+    object CardNotFound : SaltPayActivationError(8)
     class CardDisabled(message: String?) : SaltPayActivationError(9, message)
     class CardNotPassed(message: String?) : SaltPayActivationError(10, message)
     object EmptyDynamicAttestResponse : SaltPayActivationError(11)
