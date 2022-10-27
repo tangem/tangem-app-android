@@ -55,25 +55,25 @@ class DisclaimerFragment : Fragment(R.layout.fragment_disclaimer),
         binding.toolbar.setNavigationOnClickListener {
             store.dispatch(NavigationAction.PopBackTo())
         }
-        initAndLoadTOS()
-        setOnClickListeners()
+        initViews()
     }
 
-    private fun initAndLoadTOS() {
+    private fun initViews() {
         binding.webView.configureSettings()
-        binding.webView.loadUrl("file:///android_asset/tos.html")
     }
 
-    private fun setOnClickListeners() {
-        binding.btnAccept.setOnClickListener { store.dispatch(DisclaimerAction.AcceptDisclaimer) }
-    }
-
-    override fun newState(state: DisclaimerState) {
+    override fun newState(state: DisclaimerState) = with(binding) {
         if (activity == null || view == null) return
 
         if (state.accepted) {
-            binding.halfTransparentOverlay.hide()
-            binding.btnAccept.hide()
+            halfTransparentOverlay.hide()
+            btnAccept.hide()
         }
+
+        btnAccept.setOnClickListener {
+            store.dispatch(DisclaimerAction.AcceptDisclaimer(state.type))
+        }
+
+        webView.loadUrl(state.type.uri.toString())
     }
 }
