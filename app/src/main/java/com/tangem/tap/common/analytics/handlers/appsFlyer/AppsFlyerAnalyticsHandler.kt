@@ -5,22 +5,34 @@ import com.appsflyer.AFInAppEventType
 import com.shopify.buy3.Storefront
 import com.tangem.common.Converter
 import com.tangem.tap.common.analytics.api.AnalyticsEventHandler
+import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 import com.tangem.tap.common.analytics.api.ShopifyOrderEventHandler
 
 class AppsFlyerAnalyticsHandler(
     private val client: AppsFlyerAnalyticsClient,
 ) : AnalyticsEventHandler, ShopifyOrderEventHandler {
 
-    override fun handleEvent(event: String, params: Map<String, String>) {
+    override fun id(): String = ID
+
+    override fun send(event: String, params: Map<String, String>) {
         client.logEvent(event, params)
     }
 
-    override fun handleShopifyOrderEvent(order: Storefront.Order) {
-        handleEvent(ORDER_EVENT, OrderToParamsConverter().convert(order))
+    override fun send(order: Storefront.Order) {
+        send(ORDER_EVENT, OrderToParamsConverter().convert(order))
     }
 
     companion object {
         const val ORDER_EVENT = AFInAppEventType.PURCHASE
+        const val ID = "AppsFlyer"
+    }
+
+    class Builder : AnalyticsHandlerBuilder {
+        override fun build(data: AnalyticsHandlerBuilder.Data): AnalyticsEventHandler? = when {
+            !data.isDebug -> AppsFlyerClient(data.application, data.config.appsFlyerDevKey)
+            data.isDebug && data.logConfig.appsFlyer -> AppsFlyerLogClient(data.jsonConverter)
+            else -> null
+        }?.let { AppsFlyerAnalyticsHandler(it) }
     }
 }
 
