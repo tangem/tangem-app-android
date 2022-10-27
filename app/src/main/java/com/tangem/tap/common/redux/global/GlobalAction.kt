@@ -5,7 +5,7 @@ import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemError
 import com.tangem.domain.common.ScanResponse
-import com.tangem.tap.common.analytics.GlobalAnalyticsHandler
+import com.tangem.tap.common.analytics.GlobalAnalyticsEventHandler
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.feedback.FeedbackData
 import com.tangem.tap.common.feedback.FeedbackManager
@@ -38,8 +38,20 @@ sealed class GlobalAction : Action {
     object HideDialog : GlobalAction()
 
     sealed class Onboarding : GlobalAction() {
+        /**
+         * Initiate an onboarding process.
+         * For SaltPay cards it's additionally checks for unfinished backup.
+         * For resuming unfinished backup for standard Wallet cards see CheckForUnfinishedBackup and
+         * StartForUnfinishedBackup
+         */
         data class Start(val scanResponse: ScanResponse, val canSkipBackup: Boolean = true) : Onboarding()
-        data class StartForUnfinishedBackup(val isSaltPayBackup: Boolean) : Onboarding()
+
+        /**
+         * Initiate resuming of unfinished backup only for standard Wallet cards.
+         * For SaltPay cards unfinished backup resumed after scanning the card on HomeScreen through Onboarding.Start.
+         * See more Onboarding.Start, CheckForUnfinishedBackup
+         */
+        object StartForUnfinishedBackup : Onboarding()
         object Stop : Onboarding()
     }
 
@@ -77,7 +89,7 @@ sealed class GlobalAction : Action {
     data class SetConfigManager(val configManager: ConfigManager) : GlobalAction()
     data class SetWarningManager(val warningManager: WarningMessagesManager) : GlobalAction()
     data class SetFeedbackManager(val feedbackManager: FeedbackManager) : GlobalAction()
-    data class SetAnanlyticHandlers(val analyticsHandlers: GlobalAnalyticsHandler) : GlobalAction()
+    data class SetGlobalAnalyticsHandler(val analyticsHandler: GlobalAnalyticsEventHandler) : GlobalAction()
 
     data class SendEmail(val feedbackData: FeedbackData) : GlobalAction()
     data class OpenChat(val feedbackData: FeedbackData, val zendeskConfig: ZendeskConfig? = null) : GlobalAction()
