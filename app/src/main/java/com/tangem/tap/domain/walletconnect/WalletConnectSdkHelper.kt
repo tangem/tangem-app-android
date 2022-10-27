@@ -143,7 +143,7 @@ class WalletConnectSdkHelper {
                 HEX_PREFIX + data.walletManager.wallet.recentTransactions.last().hash
             }
             is SimpleResult.Failure -> {
-                store.state.globalState.analyticsHandler?.handleBlockchainSdkErrorEvent(
+                store.state.globalState.analyticsHandler?.send(
                     result.error,
                     AnalyticsAnOld.ActionToLog.WalletConnectTransaction,
                 )
@@ -173,7 +173,7 @@ class WalletConnectSdkHelper {
             }
             is CompletionResult.Failure -> {
                 (result.error as? TangemSdkError)?.let { error ->
-                    store.state.globalState.analyticsHandler?.handleCardSdkErrorEvent(
+                    store.state.globalState.analyticsHandler?.send(
                         error,
                         AnalyticsAnOld.ActionToLog.WalletConnectSign,
                     )
@@ -202,7 +202,7 @@ class WalletConnectSdkHelper {
             }
             is CompletionResult.Failure -> {
                 (result.error as? TangemSdkError)?.let { error ->
-                    store.state.globalState.analyticsHandler?.handleCardSdkErrorEvent(
+                    store.state.globalState.analyticsHandler?.send(
                         error,
                         AnalyticsAnOld.ActionToLog.WalletConnectTransaction,
                     )
@@ -278,7 +278,7 @@ class WalletConnectSdkHelper {
             }
             is CompletionResult.Failure -> {
                 (result.error as? TangemSdkError)?.let { error ->
-                    store.state.globalState.analyticsHandler?.handleCardSdkErrorEvent(
+                    store.state.globalState.analyticsHandler?.send(
                         error,
                         AnalyticsAnOld.ActionToLog.WalletConnectSign,
                     )
