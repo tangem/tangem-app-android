@@ -25,7 +25,7 @@ class DetailsViewModel(private val store: Store<AppState>) {
                 SettingsElement.WalletConnect -> {
                     if (state.scanResponse?.card?.isMultiwalletAllowed == true) it else null
                 }
-                SettingsElement.Chat -> if (state.scanResponse?.card?.isSaltPay != true) it else null
+                SettingsElement.SendFeedback -> if (state.scanResponse?.card?.isSaltPay != true) it else null
                 SettingsElement.LinkMoreCards -> {
                     // if (state.createBackupAllowed) it else null
                     // TODO: SaltPay: temporary excluding backup process for Visa cards
