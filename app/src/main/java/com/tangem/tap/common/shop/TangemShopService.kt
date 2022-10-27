@@ -199,7 +199,7 @@ class TangemShopService(application: Application, shopifyShop: ShopifyShop) {
     suspend fun waitForCheckout(productType: ProductType, analyticsHandler: GlobalAnalyticsEventHandler?) {
         val result = shopifyService.checkout(true, checkouts[productType]!!.id)
         result.onSuccess {
-            ifNotNull(analyticsHandler, it.order) { handler, order -> handler.handleShopifyOrderEvent(order) }
+            ifNotNull(analyticsHandler, it.order) { handler, order -> handler.send(order) }
         }
     }
 
