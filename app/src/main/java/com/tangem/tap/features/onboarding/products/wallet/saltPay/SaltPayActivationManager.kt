@@ -17,6 +17,7 @@ import com.tangem.network.api.paymentology.RegisterKYCRequest
 import com.tangem.network.api.paymentology.RegisterWalletRequest
 import com.tangem.network.api.paymentology.RegisterWalletResponse
 import com.tangem.network.api.paymentology.RegistrationResponse
+import com.tangem.network.api.paymentology.tryExtractError
 import com.tangem.operations.attestation.AttestWalletKeyResponse
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.domain.getFirstToken
@@ -61,13 +62,15 @@ class SaltPayActivationManager(
     }
 
     suspend fun checkRegistration(): Result<RegistrationResponse.Item> {
-        val registrationResponse = paymentologyService.checkRegistration(cardId, cardPublicKey).successOr { return it }
+        val response: RegistrationResponse = paymentologyService.checkRegistration(cardId, cardPublicKey)
+            .successOr { return it }
+            .tryExtractError<RegistrationResponse>()
+            .successOr { return it }
 
         return try {
-            if (!registrationResponse.success || registrationResponse.results.isEmpty()) {
-                throw SaltPayActivationError.EmptyResponse(registrationResponse.error)
-            }
-            Result.Success(registrationResponse.results[0])
+            if (response.results.isEmpty()) throw SaltPayActivationError.EmptyResponse
+
+            Result.Success(response.results[0])
         } catch (ex: SaltPayActivationError) {
             Result.Failure(ex)
         }
@@ -75,6 +78,8 @@ class SaltPayActivationManager(
 
     suspend fun requestAttestationChallenge(): Result<AttestationResponse> {
         return paymentologyService.requestAttestationChallenge(cardId, cardPublicKey)
+            .successOr { return it }
+            .tryExtractError()
     }
 
     suspend fun sendTransactions(
@@ -97,8 +102,9 @@ class SaltPayActivationManager(
             cardSignature = attestResponse.cardSignature ?: byteArrayOf(),
             pin = pinCode,
         )
-
         return paymentologyService.registerWallet(request)
+            .successOr { return it }
+            .tryExtractError()
     }
 
     suspend fun getAmountToClaim(): Result<Amount> {

@@ -2,16 +2,32 @@ package com.tangem.network.api.paymentology
 
 import com.squareup.moshi.Json
 import com.tangem.common.extensions.calculateHashCode
+import com.tangem.common.services.Result
 
 /**
 * [REDACTED_AUTHOR]
  */
+interface ResponseError {
+    val success: Boolean
+    val error: String?
+    val errorCode: Int?
+
+    fun makeErrorMessage(): String {
+        return error ?: "unknown error"
+    }
+}
+
+inline fun <reified T> ResponseError.tryExtractError(): Result<T> = when (success) {
+    true -> Result.Success(this as T)
+    else -> Result.Failure(Throwable(makeErrorMessage()))
+}
+
 data class RegistrationResponse(
     val results: List<Item> = listOf(),
-    val success: Boolean,
-    val error: String?,
-    val errorCode: Int?,
-) {
+    override val success: Boolean,
+    override val error: String?,
+    override val errorCode: Int?,
+) : ResponseError {
 
     data class Item(
         @Json(name = "CID")
@@ -47,10 +63,10 @@ enum class KYCStatus {
 
 data class AttestationResponse(
     val challenge: ByteArray?,
-    val success: Boolean,
-    val error: String?,
-    val errorCode: Int?,
-) {
+    override val success: Boolean,
+    override val error: String?,
+    override val errorCode: Int?,
+) : ResponseError {
 
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
@@ -75,7 +91,7 @@ data class AttestationResponse(
 }
 
 data class RegisterWalletResponse(
-    val success: Boolean,
-    val error: String?,
-    val errorCode: Int?,
-)
+    override val success: Boolean,
+    override val error: String?,
+    override val errorCode: Int?,
+) : ResponseError
