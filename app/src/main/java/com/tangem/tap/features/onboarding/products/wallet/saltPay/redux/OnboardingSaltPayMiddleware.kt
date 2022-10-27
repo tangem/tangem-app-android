@@ -77,7 +77,7 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
             }
         }
         is OnboardingSaltPayAction.RegisterCard -> {
-            analyticsHandler.handleAnalyticsEvent(Onboarding.ButtonConnect())
+            analyticsHandler.send(Onboarding.ButtonConnect())
 
             handleInProgress = true
             val state = getState()
@@ -151,7 +151,7 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
         is OnboardingSaltPayAction.TrySetPin -> {
             try {
                 assertPinValid(action.pin, getState().pinLength)
-                analyticsHandler.handleAnalyticsEvent(Onboarding.PinCodeSet())
+                analyticsHandler.send(Onboarding.PinCodeSet())
                 store.dispatch(OnboardingSaltPayAction.SetPin(action.pin))
                 store.dispatch(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.CardRegistration))
             } catch (error: SaltPayActivationError) {
@@ -159,7 +159,7 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
             }
         }
         is OnboardingSaltPayAction.Claim -> {
-            analyticsHandler.handleAnalyticsEvent(Onboarding.ButtonClaim())
+            analyticsHandler.send(Onboarding.ButtonClaim())
             val state = getState()
             handleInProgress = true
 
@@ -192,7 +192,7 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
                 }
 
                 handleInProgress = false
-                analyticsHandler.handleAnalyticsEvent(Onboarding.ClaimWasSuccessfully())
+                analyticsHandler.send(Onboarding.ClaimWasSuccessfully())
                 dispatchOnMain(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.ClaimInProgress))
                 dispatchOnMain(OnboardingSaltPayAction.RefreshClaim)
             }
@@ -242,10 +242,10 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
 
 private fun handleAnalytics(analyticsHandler: GlobalAnalyticsEventHandler, step: SaltPayActivationStep) {
     when (step) {
-        SaltPayActivationStep.KycStart -> analyticsHandler.handleAnalyticsEvent(Onboarding.KYCStarted())
-        SaltPayActivationStep.KycWaiting -> analyticsHandler.handleAnalyticsEvent(Onboarding.KYCInProgress())
-        SaltPayActivationStep.KycReject -> analyticsHandler.handleAnalyticsEvent(Onboarding.KYCRejected())
-        SaltPayActivationStep.Claim -> analyticsHandler.handleAnalyticsEvent(Onboarding.ClaimScreenOpened())
+        SaltPayActivationStep.KycStart -> analyticsHandler.send(Onboarding.KYCStarted())
+        SaltPayActivationStep.KycWaiting -> analyticsHandler.send(Onboarding.KYCInProgress())
+        SaltPayActivationStep.KycReject -> analyticsHandler.send(Onboarding.KYCRejected())
+        SaltPayActivationStep.Claim -> analyticsHandler.send(Onboarding.ClaimScreenOpened())
         else -> {}
     }
 }
