@@ -21,7 +21,7 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            app:menu="@menu/wallet"
+            app:menu="@menu/menu_wallet"
             app:navigationIcon="@drawable/ic_scan_card"
             app:navigationIconTint="@color/darkGray6"
             app:title="@string/wallet_title"
