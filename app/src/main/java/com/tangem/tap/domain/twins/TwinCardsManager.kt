@@ -37,7 +37,7 @@ class TwinCardsManager(
             is CompletionResult.Success -> currentCardPublicKey = response.data.wallet.publicKey.toHexString()
             is CompletionResult.Failure -> {
                 (response.error as? TangemSdkError)?.let { error ->
-                   analyticsHandler?.handleCardSdkErrorEvent(
+                   analyticsHandler?.send(
                         error,
                         AnalyticsAnOld.ActionToLog.CreateWallet,
                         card = card
@@ -67,7 +67,7 @@ class TwinCardsManager(
             }
             is CompletionResult.Failure -> {
                 (response.error as? TangemSdkError)?.let { error ->
-                    analyticsHandler?.handleCardSdkErrorEvent(
+                    analyticsHandler?.send(
                         error,
                         AnalyticsAnOld.ActionToLog.CreateWallet,
                         card = card
@@ -87,7 +87,7 @@ class TwinCardsManager(
             is CompletionResult.Success -> Result.Success(response.data)
             is CompletionResult.Failure -> {
                 (response.error as? TangemSdkError)?.let { error ->
-                    analyticsHandler?.handleCardSdkErrorEvent(
+                    analyticsHandler?.send(
                         error,
                         AnalyticsAnOld.ActionToLog.WriteIssuerData,
                         card = card

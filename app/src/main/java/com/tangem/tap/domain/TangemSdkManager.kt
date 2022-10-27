@@ -91,7 +91,7 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
             }
             is CompletionResult.Failure ->
                 (result.error as? TangemSdkError)?.let { error ->
-                    analyticsHandler?.handleCardSdkErrorEvent(
+                    analyticsHandler?.send(
                         error = error,
                         action = AnalyticsAnOld.ActionToLog.Scan,
                     )
