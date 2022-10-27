@@ -5,16 +5,16 @@ import android.content.Context
 import android.content.pm.PackageManager
 import coil.ImageLoader
 import coil.ImageLoaderFactory
-import com.appsflyer.AppsFlyerLib
 import com.tangem.Log
 import com.tangem.LogFormat
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
+import com.tangem.common.json.MoshiJsonConverter
 import com.tangem.domain.DomainLayer
 import com.tangem.domain.common.LogConfig
 import com.tangem.network.common.MoshiConverter
 import com.tangem.tap.common.AndroidAssetReader
 import com.tangem.tap.common.AssetReader
-import com.tangem.tap.common.analytics.GlobalAnalyticsHandler
+import com.tangem.tap.common.analytics.GlobalAnalyticsEventHandlerBuilder
 import com.tangem.tap.common.feedback.AdditionalFeedbackInfo
 import com.tangem.tap.common.feedback.FeedbackManager
 import com.tangem.tap.common.images.createCoilImageLoader
@@ -97,15 +97,19 @@ class TapApplication : Application(), ImageLoaderFactory {
 
     private fun initWithConfigDependency(config: Config) {
         shopService = TangemShopService(this, config.shopify!!)
-        initAppsFlyer(this, config)
+        initAnalytics(this, config)
         initFeedbackManager(this, preferencesStorage, config)
     }
 
-    private fun initAppsFlyer(context: Context, config: Config) {
-        AppsFlyerLib.getInstance().init(config.appsFlyerDevKey, null, context)
-        AppsFlyerLib.getInstance().start(context)
-        val analyticsHandler = GlobalAnalyticsHandler.createDefaultAnalyticHandlers(context)
-        store.dispatch(GlobalAction.SetAnanlyticHandlers(analyticsHandler))
+    private fun initAnalytics(application: Application, config: Config) {
+        val globalAnalyticsHandler = GlobalAnalyticsEventHandlerBuilder(
+            application = application,
+            config = config,
+            isDebug = BuildConfig.DEBUG,
+            logConfig = LogConfig.analyticsHandlers,
+            jsonConverter = MoshiJsonConverter.INSTANCE,
+        ).default()
+        store.dispatch(GlobalAction.SetGlobalAnalyticsHandler(globalAnalyticsHandler))
     }
 
     private fun initFeedbackManager(context: Context, preferencesStorage: PreferencesStorage, config: Config) {

@@ -8,7 +8,7 @@ import com.tangem.common.card.Card
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.isTestCard
-import com.tangem.tap.common.analytics.AnalyticsEvent
+import com.tangem.tap.common.analytics.AnalyticsEventAnOld
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.isGreaterThan
 import com.tangem.tap.common.redux.global.GlobalState
@@ -25,10 +25,10 @@ import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.wallet.R
-import java.math.BigDecimal
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import java.math.BigDecimal
 
 class WarningsMiddleware {
     fun handle(action: WalletAction.Warnings, globalState: GlobalState?) {
@@ -81,7 +81,7 @@ class WarningsMiddleware {
             preferencesStorage.appRatingLaunchObserver.foundWalletWithFunds()
         }
         if (preferencesStorage.appRatingLaunchObserver.isReadyToShow()) {
-            store.state.globalState.analyticsHandlers?.triggerEvent(AnalyticsEvent.APP_RATING_DISPLAYED)
+            store.state.globalState.analyticsHandler?.handleAnalyticsEvent(AnalyticsEventAnOld.APP_RATING_DISPLAYED)
             addWarningMessage(WarningMessagesManager.appRatingWarning(), true)
         }
     }

@@ -25,6 +25,7 @@ class DetailsViewModel(private val store: Store<AppState>) {
                 SettingsElement.WalletConnect -> {
                     if (state.scanResponse?.card?.isMultiwalletAllowed == true) it else null
                 }
+                SettingsElement.Chat -> if (state.scanResponse?.card?.isSaltPay != true) it else null
                 SettingsElement.LinkMoreCards -> {
                     // if (state.createBackupAllowed) it else null
 // [REDACTED_TODO_COMMENT]
@@ -78,8 +79,7 @@ class DetailsViewModel(private val store: Store<AppState>) {
                 store.dispatch(DetailsAction.CreateBackup)
             }
             SettingsElement.TermsOfService -> {
-                store.dispatch(DisclaimerAction.ShowAcceptedDisclaimer)
-                store.dispatch(NavigationAction.NavigateTo(AppScreen.Disclaimer))
+                store.dispatch(DisclaimerAction.Show())
             }
             SettingsElement.TermsOfUse -> {
                 store.dispatch(DetailsAction.ShowDisclaimer)

@@ -3,8 +3,8 @@ package com.tangem.tap.features.details.redux
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
-import com.tangem.tap.common.analytics.Analytics
-import com.tangem.tap.common.analytics.AnalyticsParam
+import com.tangem.tap.common.analytics.AnalyticsAnOld
+import com.tangem.tap.common.analytics.AnalyticsParamAnOld
 import com.tangem.tap.common.extensions.dispatchNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
@@ -110,9 +110,9 @@ class DetailsMiddleware {
                                 }
                                 is CompletionResult.Failure -> {
                                     (result.error as? TangemSdkError)?.let { error ->
-                                        store.state.globalState.analyticsHandlers?.logCardSdkError(
+                                        store.state.globalState.analyticsHandler?.handleCardSdkErrorEvent(
                                             error,
-                                            Analytics.ActionToLog.PurgeWallet,
+                                            AnalyticsAnOld.ActionToLog.PurgeWallet,
                                             card = store.state.detailsState.scanResponse?.card,
                                         )
                                     }
@@ -154,11 +154,11 @@ class DetailsMiddleware {
                                 }
                                 is CompletionResult.Failure -> {
                                     (result.error as? TangemSdkError)?.let { error ->
-                                        store.state.globalState.analyticsHandlers?.logCardSdkError(
+                                        store.state.globalState.analyticsHandler?.handleCardSdkErrorEvent(
                                             error = error,
-                                            actionToLog = Analytics.ActionToLog.ChangeSecOptions,
-                                            parameters = mapOf(
-                                                AnalyticsParam.NEW_SECURITY_OPTION to
+                                            action = AnalyticsAnOld.ActionToLog.ChangeSecOptions,
+                                            params = mapOf(
+                                                AnalyticsParamAnOld.NEW_SECURITY_OPTION to
                                                     (selectedOption?.name ?: ""),
                                             ),
                                             card = store.state.detailsState.scanResponse?.card,

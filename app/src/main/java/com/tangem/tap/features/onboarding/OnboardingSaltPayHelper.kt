@@ -3,10 +3,10 @@ package com.tangem.tap.features.onboarding
 import com.tangem.common.services.Result
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.extensions.successOr
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.message.SaltPayRegistrationError
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayState
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.SaltPayRegistrationStep
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.toSaltPayStep
+import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayActivationManager
+import com.tangem.tap.features.onboarding.products.wallet.saltPay.message.SaltPayActivationError
+import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.SaltPayActivationStep
+import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.update
 
 /**
 * [REDACTED_AUTHOR]
@@ -14,21 +14,30 @@ import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.toSaltPa
 class OnboardingSaltPayHelper {
     companion object {
 
-        suspend fun isOnboardingCase(scanResponse: ScanResponse): Result<Boolean> {
+        suspend fun isOnboardingCase(
+            scanResponse: ScanResponse,
+            manager: SaltPayActivationManager,
+        ): Result<Boolean> {
             return try {
-                val (manager, config) = OnboardingSaltPayState.initDependency(scanResponse)
-                val registrationResponseItem = manager.checkRegistration().successOr { return it }
-                val registrationStep = registrationResponseItem.toSaltPayStep()
-                manager.checkHasGas().successOr { return it }
-
-                val isRegistrationOnboardingCase = registrationStep != SaltPayRegistrationStep.Finished
-                val isBackupOnboardingCase = scanResponse.card.backupStatus?.isActive == false
-                Result.Success(isRegistrationOnboardingCase || isBackupOnboardingCase)
+                val updatedStep = manager.update(SaltPayActivationStep.None, null).successOr { return it }
+                val isRegistrationCase = updatedStep != SaltPayActivationStep.Finished
+                val isBackupCase = scanResponse.card.backupStatus?.isActive == false
+                Result.Success(isRegistrationCase || isBackupCase)
             } catch (ex: Exception) {
                 Result.Failure(ex)
-            } catch (error: SaltPayRegistrationError){
+            } catch (error: SaltPayActivationError) {
                 Result.Failure(error)
             }
         }
+
+        fun testProceedToOnboarding(
+            scanResponse: ScanResponse,
+            manager: SaltPayActivationManager,
+        ): Result<Boolean> = Result.Success(true)
+
+        fun testProceedToMainScreen(
+            scanResponse: ScanResponse,
+            manager: SaltPayActivationManager,
+        ): Result<Boolean> = Result.Success(false)
     }
 }
