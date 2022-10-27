@@ -70,8 +70,11 @@ class SaltPayActivationManager(
         return try {
             if (response.results.isEmpty()) throw SaltPayActivationError.EmptyResponse
 
-            Result.Success(response.results[0])
-        } catch (ex: SaltPayActivationError) {
+            val item = response.results[0]
+            if (item.error != null) throw Exception(response.makeErrorMessage())
+
+            Result.Success(item)
+        } catch (ex: Exception) {
             Result.Failure(ex)
         }
     }
