@@ -250,7 +250,7 @@ private fun sendTransaction(
                         feeAmount = feeAmount,
                         destinationAddress = destinationAddress,
                     )
-                    store.state.globalState.analyticsHandler?.handleBlockchainSdkErrorEvent(
+                    store.state.globalState.analyticsHandler?.send(
                         error = sendResult.error,
                         action = AnalyticsAnOld.ActionToLog.SendTransaction,
                         params = mapOf(AnalyticsParamAnOld.BLOCKCHAIN to walletManager.wallet.blockchain.currency),
