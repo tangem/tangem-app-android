@@ -7,68 +7,43 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.tap.common.analytics.api.AnalyticsEventHandler
 import com.tangem.tap.common.analytics.api.BlockchainSdkErrorEventHandler
 import com.tangem.tap.common.analytics.api.CardSdkErrorEventHandler
-import com.tangem.tap.common.analytics.api.ErrorEventHandler
 import com.tangem.tap.common.analytics.api.ErrorEventLogger
-import com.tangem.tap.common.analytics.api.SdkErrorEventHandler
 import com.tangem.tap.common.analytics.api.ShopifyOrderEventHandler
 import com.tangem.tap.common.analytics.events.AnalyticsEvent
 import com.tangem.tap.common.extensions.filterNotNull
 
-interface GlobalAnalyticsEventHandler : AnalyticsEventHandler,
-    ErrorEventHandler,
-    SdkErrorEventHandler,
-    ShopifyOrderEventHandler {
+/**
+[REDACTED_AUTHOR]
+ */
+object Analytics : GlobalAnalyticsEventHandler {
 
-    fun attachToAllEvents(key: String, value: String)
+    private val handlers = mutableMapOf<String, AnalyticsEventHandler>()
 
-    companion object {
-        fun stub(): GlobalAnalyticsEventHandler {
-            return object : GlobalAnalyticsEventHandler {
-                override fun attachToAllEvents(key: String, value: String) {}
-                override fun handleEvent(event: String, params: Map<String, String>) {}
-                override fun handleErrorEvent(error: Throwable, params: Map<String, String>) {}
-                override fun handleCardSdkErrorEvent(
-                    error: TangemSdkError,
-                    action: AnalyticsAnOld.ActionToLog,
-                    params: Map<AnalyticsParamAnOld, String>,
-                    card: Card?,
-                ) {
-                }
-
-                override fun handleBlockchainSdkErrorEvent(
-                    error: BlockchainError,
-                    action: AnalyticsAnOld.ActionToLog,
-                    params: Map<AnalyticsParamAnOld, String>,
-                    card: Card?,
-                ) {
-                }
-
-                override fun handleShopifyOrderEvent(order: Storefront.Order) {}
-            }
-        }
-    }
-}
-
-class GlobalAnalyticsHandler(
-    private val analyticsHandlers: List<AnalyticsEventHandler>,
-) : GlobalAnalyticsEventHandler {
+    private val analyticsHandlers: List<AnalyticsEventHandler>
+        get() = handlers.values.toList()
 
     private val attachToAllEventsParams: MutableMap<String, String> = mutableMapOf()
+
+    override fun id(): String = analyticsHandlers.joinToString(", ") { it.id() }
+
+    override fun addHandler(name: String, handler: AnalyticsEventHandler) {
+        handlers[name] = handler
+    }
+
+    override fun removeHandler(name: String): AnalyticsEventHandler? {
+        return handlers.remove(name)
+    }
 
     override fun attachToAllEvents(key: String, value: String) {
         attachToAllEventsParams[key] = value
     }
 
-    override fun handleEvent(event: String, params: Map<String, String>) {
-        analyticsHandlers.forEach { it.handleEvent(event, params) }
+    override fun send(event: String, params: Map<String, String>) {
+        analyticsHandlers.forEach { it.send(event, params) }
     }
 
-    override fun handleAnalyticsEvent(
-        event: AnalyticsEvent,
-        card: Card?,
-        blockchain: String?,
-    ) {
-        analyticsHandlers.forEach { it.handleAnalyticsEvent(event, card, blockchain) }
+    override fun send(event: AnalyticsEvent, card: Card?, blockchain: String?) {
+        analyticsHandlers.forEach { it.send(event, card, blockchain) }
     }
 
     override fun handleAnalyticsEvent(
@@ -77,40 +52,42 @@ class GlobalAnalyticsHandler(
         card: Card?,
         blockchain: String?,
     ) {
-        analyticsHandlers.forEach { it.handleAnalyticsEvent(event, params, card, blockchain) }
+        analyticsHandlers.forEach {
+            it.handleAnalyticsEvent(event, params, card, blockchain)
+        }
     }
 
-    override fun handleErrorEvent(error: Throwable, params: Map<String, String>) {
+    override fun send(error: Throwable, params: Map<String, String>) {
         analyticsHandlers.filterIsInstance<ErrorEventLogger>().forEach {
             it.logErrorEvent(error, params)
         }
     }
 
-    override fun handleCardSdkErrorEvent(
+    override fun send(
         error: TangemSdkError,
         action: AnalyticsAnOld.ActionToLog,
         params: Map<AnalyticsParamAnOld, String>,
         card: Card?,
     ) {
         analyticsHandlers.filterIsInstance<CardSdkErrorEventHandler>().forEach {
-            it.handleCardSdkErrorEvent(error, action, params, card)
+            it.send(error, action, params, card)
         }
     }
 
-    override fun handleBlockchainSdkErrorEvent(
+    override fun send(
         error: BlockchainError,
         action: AnalyticsAnOld.ActionToLog,
         params: Map<AnalyticsParamAnOld, String>,
         card: Card?,
     ) {
         analyticsHandlers.filterIsInstance<BlockchainSdkErrorEventHandler>().forEach {
-            it.handleBlockchainSdkErrorEvent(error, action, params, card)
+            it.send(error, action, params, card)
         }
     }
 
-    override fun handleShopifyOrderEvent(order: Storefront.Order) {
+    override fun send(order: Storefront.Order) {
         analyticsHandlers.filterIsInstance<ShopifyOrderEventHandler>().forEach {
-            it.handleShopifyOrderEvent(order)
+            it.send(order)
         }
     }
 
@@ -136,7 +113,7 @@ fun GlobalAnalyticsEventHandler.logWcEvent(event: AnalyticsAnOld.WcAnalyticsEven
                 AnalyticsParamAnOld.WALLET_CONNECT_ACTION.param to event.action?.name,
                 AnalyticsParamAnOld.ERROR_DESCRIPTION.param to event.error.message,
             ).filterNotNull()
-            handleErrorEvent(event.error, params)
+            send(event.error, params)
         }
         is AnalyticsAnOld.WcAnalyticsEvent.InvalidRequest ->
             handleAnalyticsEvent(
