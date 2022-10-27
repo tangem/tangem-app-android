@@ -1,11 +1,13 @@
 package com.tangem.tap.features.onboarding.products.wallet.redux
 
 import android.graphics.Bitmap
+import com.tangem.tap.backupService
+import com.tangem.tap.common.extensions.primaryCardIsSaltPay
 import org.rekotlin.Action
 
 sealed class OnboardingWalletAction : Action {
     object Init : OnboardingWalletAction()
-    object StartSaltPayCardActivation: OnboardingWalletAction()
+    object StartSaltPayCardActivation : OnboardingWalletAction()
     object GetToCreateWalletStep : OnboardingWalletAction()
     object GetToSaltPayStep : OnboardingWalletAction()
     object CreateWallet : OnboardingWalletAction()
@@ -30,6 +32,11 @@ sealed class BackupAction : Action {
     object StartAddingPrimaryCard : BackupAction()
     object ScanPrimaryCard : BackupAction()
 
+    /**
+     * Check for unfinished backup of standard Wallet cards.
+     * For SaltPay cards unfinished backup resumed after scanning the card on HomeScreen through Onboarding.Start.
+     * See more Onboarding.Start, CheckForUnfinishedBackup, StartForUnfinishedBackup
+     */
     object CheckForUnfinishedBackup : BackupAction()
 
     object StartAddingBackupCards : BackupAction()
@@ -64,4 +71,10 @@ sealed class BackupAction : Action {
     object DiscardBackup : BackupAction()
     object DiscardSavedBackup : BackupAction()
     object ResumeFoundUnfinishedBackup : BackupAction()
+
+    companion object {
+        fun hasSaltPayUnfinishedBackup(): Boolean {
+            return backupService.hasIncompletedBackup && backupService.primaryCardIsSaltPay()
+        }
+    }
 }

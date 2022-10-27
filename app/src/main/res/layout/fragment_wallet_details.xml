@@ -22,7 +22,7 @@
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
             android:theme="@style/ThemeOverlay.MyTheme.Toolbar"
-            app:menu="@menu/wallet_details"
+            app:menu="@menu/menu_wallet_details"
             app:navigationIcon="@drawable/ic_baseline_arrow_back_24"
             app:title=" " />
 
