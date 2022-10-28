@@ -119,7 +119,7 @@
     <string name="onboarding_navbar_kyc_waiting">В обработке</string>
     <string name="onboarding_button_pin">Установить Код доступа</string>
     <string name="onboarding_button_register_wallet">Зарегистрироваться</string>
-    <string name="onboarding_button_kyc_start">Подтвердить</string>
+    <string name="onboarding_button_kyc_start">Верифицировать (Utorg)</string>
     <string name="onboarding_button_kyc_waiting">Обновить</string>
     <string name="onboarding_title_register_wallet">Подключите свою карту</string>
     <string name="onboarding_title_kyc_start">Подтвердите свою личность</string>
@@ -139,4 +139,16 @@
     <string name="onboarding_saltpay_title_prepare_origin">Приготовьте SaltPay карту</string>
     <string name="onboarding_saltpay_button_backup_origin">Приложите SaltPay карту</string>
     <string name="onboarding_saltpay_title_backup_card">Приложите Tangem карту</string>
+    <string name="onboarding_chat_button_title">Чат</string>
+    <string name="onboarding_navbar_claim">Начало работы</string>
+    <string name="onboarding_title_claim">Запросить %s</string>
+    <string name="onboarding_subtitle_claim">Для начала работы просто запросите начисление wxDai на свой кошелек</string>
+    <string name="onboarding_button_claim">Запросить</string>
+    <string name="onboarding_subtitle_success_claim">Поздравляем! Ваша платежная крипто карта теперь активирована!</string>
+    <string name="onboarding_title_claim_progress">Запрашивается</string>
+    <string name="onboarding_subtitle_claim_progress">Это займет несколько секунд</string>
+    <string name="onboarding_title_kyc_retry">Что-то пошло не так</string>
+    <string name="onboarding_subtitle_kyc_retry">Более подробная информация отправлена на ваш адрес электронной почты.</string>
+    <string name="onboarding_exit_alert_title">Вы хотите выйти из процесса активации?</string>
+    <string name="onboarding_exit_alert_message">В этом случае вам будет необходимо начать процесс заново.</string>
 </resources>
