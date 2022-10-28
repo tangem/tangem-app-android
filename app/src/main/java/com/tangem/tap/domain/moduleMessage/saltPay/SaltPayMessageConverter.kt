@@ -3,10 +3,10 @@ package com.tangem.tap.domain.moduleMessage.saltPay
 import android.content.Context
 import com.tangem.common.module.ModuleMessageConverter
 import com.tangem.tap.domain.moduleMessage.ConvertedMessage
-import com.tangem.tap.domain.moduleMessage.saltPay.converter.SaltPayRegistrationErrorConverter
+import com.tangem.tap.domain.moduleMessage.saltPay.converter.SaltPayActivationErrorConverter
+import com.tangem.tap.features.onboarding.products.wallet.saltPay.message.SaltPayActivationError
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.message.SaltPayModuleError
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.message.SaltPayModuleMessage
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.message.SaltPayRegistrationError
 
 /**
 * [REDACTED_AUTHOR]
@@ -28,7 +28,7 @@ class SaltPayErrorConverter(
 ) : ModuleMessageConverter<SaltPayModuleError, ConvertedMessage?> {
 
     override fun convert(message: SaltPayModuleError): ConvertedMessage? = when (message) {
-        is SaltPayRegistrationError -> SaltPayRegistrationErrorConverter(context).convert(message)
+        is SaltPayActivationError -> SaltPayActivationErrorConverter(context).convert(message)
         else -> null
     }
 }
