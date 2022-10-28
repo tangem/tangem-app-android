@@ -17,6 +17,7 @@ import com.tangem.common.services.Result
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
+import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.AnalyticsAnOld
 import com.tangem.tap.common.analytics.AnalyticsEventAnOld
 import com.tangem.tap.common.analytics.AnalyticsParamAnOld
@@ -221,7 +222,7 @@ private fun sendTransaction(
 
             when (sendResult) {
                 is SimpleResult.Success -> {
-                    store.state.globalState.analyticsHandler?.handleAnalyticsEvent(
+                    Analytics.handleAnalyticsEvent(
                         event = AnalyticsEventAnOld.TRANSACTION_IS_SENT,
                         card = card,
                         blockchain = walletManager.wallet.blockchain.currency,
@@ -250,7 +251,7 @@ private fun sendTransaction(
                         feeAmount = feeAmount,
                         destinationAddress = destinationAddress,
                     )
-                    store.state.globalState.analyticsHandler?.send(
+                    Analytics.send(
                         error = sendResult.error,
                         action = AnalyticsAnOld.ActionToLog.SendTransaction,
                         params = mapOf(AnalyticsParamAnOld.BLOCKCHAIN to walletManager.wallet.blockchain.currency),
