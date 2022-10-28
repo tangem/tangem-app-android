@@ -81,6 +81,9 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
         }
         is OnboardingNoteAction.SetStepOfScreen -> {
             when (action.step) {
+                OnboardingNoteStep.CreateWallet -> {
+                    Analytics.send(Onboarding.CreateWallet.ScreenOpened())
+                }
                 OnboardingNoteStep.TopUpWallet -> {
                     store.dispatch(OnboardingNoteAction.Balance.Update)
                 }
@@ -92,11 +95,13 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
             }
         }
         is OnboardingNoteAction.CreateWallet -> {
+            Analytics.send(Onboarding.CreateWallet.ButtonCreateWallet())
             scope.launch {
                 val result = tangemSdkManager.createProductWallet(scanResponse)
                 withMainContext {
                     when (result) {
                         is CompletionResult.Success -> {
+                            Analytics.send(Onboarding.CreateWallet.WalletCreatedSuccessfully())
                             val updatedResponse = scanResponse.copy(card = result.data.card)
                             onboardingManager.scanResponse = updatedResponse
                             onboardingManager.activationStarted(updatedResponse.card.cardId)
