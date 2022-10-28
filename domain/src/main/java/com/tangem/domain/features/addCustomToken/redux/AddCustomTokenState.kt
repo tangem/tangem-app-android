@@ -7,6 +7,7 @@ import com.tangem.common.json.MoshiJsonConverter
 import com.tangem.domain.AddCustomTokenError
 import com.tangem.domain.DomainWrapped
 import com.tangem.domain.common.TapWorkarounds.isTestCard
+import com.tangem.domain.common.extensions.isSupportedInApp
 import com.tangem.domain.common.extensions.supportedBlockchains
 import com.tangem.domain.common.extensions.supportedTokens
 import com.tangem.domain.common.form.CustomTokenValidator
@@ -50,7 +51,7 @@ data class AddCustomTokenState(
     val foundToken: CoinsResponse.Coin? = null,
     val warnings: Set<AddCustomTokenError.Warning> = emptySet(),
     val screenState: ScreenState = createInitialScreenState(),
-    val tangemTechServiceManager: AddCustomTokenService? = null
+    val tangemTechServiceManager: AddCustomTokenService? = null,
 ) : StateType {
 
     inline fun <reified T> getField(id: FieldId): T = form.getField(id) as T
@@ -171,7 +172,7 @@ data class AddCustomTokenState(
         internal fun getDerivationPath(
             mainNetwork: Blockchain,
             derivationNetwork: Blockchain,
-            derivationStyle: DerivationStyle?
+            derivationStyle: DerivationStyle?,
         ): com.tangem.common.hdWallet.DerivationPath? {
             // If we allow user to select derivations, we need to provide different derivations
             // (Legacy style derivations).
@@ -239,9 +240,10 @@ data class AddCustomTokenState(
         }
 
         private fun getSupportedDerivations(card: Card): List<Blockchain> {
-            val evmBlockchains = Blockchain.values().filter {
-                card.isTestCard == it.isTestnet() && it.isEvm()
-            }
+            val evmBlockchains = Blockchain.values()
+                .filter { card.isTestCard == it.isTestnet() && it.isEvm() }
+                .filter { it.isSupportedInApp() }
+
             return (listOf(Blockchain.Unknown) + evmBlockchains).sortByName()
         }
 
@@ -266,14 +268,18 @@ data class AddCustomTokenState(
             val action = (action as? AddCustomTokenAction) ?: return null
 
             val state = stateHolder.addCustomTokensState
-            val fieldConverter = FieldToJsonConverter(listOf(
-                ContractAddress,
-                Network,
-                Name,
-                Symbol,
-                Decimals,
-                DerivationPath,
-            ), jsonConverter)
+            val fieldConverter =
+                FieldToJsonConverter(
+                    listOf(
+                        ContractAddress,
+                        Network,
+                        Name,
+                        Symbol,
+                        Decimals,
+                        DerivationPath,
+                    ),
+                    jsonConverter,
+                )
             state.visitDataConverter(fieldConverter)
             val errors = state.formErrors.map {
                 "${it.key}: ${it.value::class.java.simpleName}"
