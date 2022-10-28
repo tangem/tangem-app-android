@@ -66,18 +66,25 @@ private fun handleOtherCardsAction(action: Action, dispatch: DispatchFunction) {
             store.dispatch((OnboardingOtherCardsAction.SetStepOfScreen(step)))
         }
         is OnboardingOtherCardsAction.SetStepOfScreen -> {
-            if (action.step == OnboardingOtherCardsStep.Done) {
-                Analytics.send(Onboarding.Finished())
-                onboardingManager.activationFinished(card.cardId)
-                postUi(200) { store.dispatch(OnboardingOtherCardsAction.Confetti.Show) }
+            when (action.step) {
+                OnboardingOtherCardsStep.CreateWallet -> {
+                    Analytics.send(Onboarding.CreateWallet.ScreenOpened())
+                }
+                OnboardingOtherCardsStep.Done -> {
+                    Analytics.send(Onboarding.Finished())
+                    onboardingManager.activationFinished(card.cardId)
+                    postUi(200) { store.dispatch(OnboardingOtherCardsAction.Confetti.Show) }
+                }
             }
         }
         is OnboardingOtherCardsAction.CreateWallet -> {
+            Analytics.send(Onboarding.CreateWallet.ButtonCreateWallet())
             scope.launch {
                 val result = tangemSdkManager.createProductWallet(onboardingManager.scanResponse)
                 withMainContext {
                     when (result) {
                         is CompletionResult.Success -> {
+                            Analytics.send(Onboarding.CreateWallet.WalletCreatedSuccessfully())
                             val updatedResponse = onboardingManager.scanResponse.copy(
                                 card = result.data.card,
                             )
