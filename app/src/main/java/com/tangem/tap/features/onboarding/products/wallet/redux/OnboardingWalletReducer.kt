@@ -76,7 +76,7 @@ private class BackupReducer {
                 is BackupAction.IntroduceBackup -> BackupState(
                     backupStep = BackupStep.InitBackup,
                     maxBackupCards = if (isSaltPay) 1 else 2,
-                    canSkipBackup = !isSaltPay,
+                    canSkipBackup = state.canSkipBackup,
                 )
                 BackupAction.StartAddingPrimaryCard -> state.copy(backupStep = BackupStep.ScanOriginCard)
                 BackupAction.StartAddingBackupCards -> {
