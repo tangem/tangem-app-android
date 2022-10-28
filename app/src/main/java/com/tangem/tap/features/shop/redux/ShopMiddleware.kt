@@ -121,7 +121,7 @@ private fun handle(action: Action) {
             scope.launch {
                 shopService.waitForCheckout(
                     productType = shopState.selectedProduct,
-                    analyticsHandler = store.state.globalState.analyticsHandlers
+                    analyticsHandler = store.state.globalState.analyticsHandler
                 )
             }
         }
