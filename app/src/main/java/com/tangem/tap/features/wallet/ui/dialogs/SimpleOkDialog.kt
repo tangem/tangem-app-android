@@ -36,6 +36,23 @@ class SimpleOkDialog {
                 }
             }.create()
         }
-    }
 
+        fun create(dialog: AppDialog.SimpleOkErrorDialog, context: Context): AlertDialog = create(
+            dialog = AppDialog.SimpleOkDialog(
+                header = context.getString(R.string.common_error),
+                message = dialog.message,
+                onOk = dialog.onOk,
+            ),
+            context = context,
+        )
+
+        fun create(dialog: AppDialog.SimpleOkWarningDialog, context: Context): AlertDialog = create(
+            dialog = AppDialog.SimpleOkDialog(
+                header = context.getString(R.string.common_warning),
+                message = dialog.message,
+                onOk = dialog.onOk,
+            ),
+            context = context,
+        )
+    }
 }
