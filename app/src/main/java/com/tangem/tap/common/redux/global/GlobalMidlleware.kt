@@ -140,7 +140,10 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
                         secretKey = moonPaySecretKey,
                         logEnabled = LogConfig.network.moonPayService,
                     )
-                    val cardProvider = { store.state.globalState.scanResponse?.card }
+                    val cardProvider = {
+                        store.state.globalState.scanResponse?.card
+                            ?: store.state.globalState.onboardingState.onboardingManager?.scanResponse?.card
+                    }
 
                     val exchangeManager = CurrencyExchangeManager(
                         buyService = buyService,
@@ -163,7 +166,7 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
         is GlobalAction.ScanCard -> {
             scope.launch {
                 val result = tangemSdkManager.scanProduct(
-                    store.state.globalState.analyticsHandlers,
+                    store.state.globalState.analyticsHandler,
                     userTokensRepository,
                     action.additionalBlockchainsToDerive,
                     action.messageResId,
