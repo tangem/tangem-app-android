@@ -1,8 +1,6 @@
 package com.tangem.tap.common.redux.global
 
 import com.tangem.domain.common.ScanResponse
-import com.tangem.tap.common.analytics.Analytics
-import com.tangem.tap.common.analytics.GlobalAnalyticsEventHandler
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.feedback.FeedbackManager
 import com.tangem.tap.common.redux.StateDialog
@@ -28,7 +26,6 @@ data class GlobalState(
     val dialog: StateDialog? = null,
     val exchangeManager: CurrencyExchangeManager = CurrencyExchangeManager.dummy(),
     val resources: AndroidResources = AndroidResources(),
-    val analyticsHandler: GlobalAnalyticsEventHandler = Analytics,
     val userCountryCode: String? = null,
 ) : StateType
 
