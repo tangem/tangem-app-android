@@ -10,7 +10,7 @@ import com.tangem.domain.common.extensions.successOr
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.network.api.paymentology.KYCStatus
 import com.tangem.network.api.paymentology.RegistrationResponse
-import com.tangem.tap.common.analytics.GlobalAnalyticsEventHandler
+import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.isPositive
@@ -59,7 +59,6 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
     fun getAppState(): AppState = appState()!!
     fun getOnboardingWalletState(): OnboardingWalletState = getAppState().onboardingWalletState
     fun getState(): OnboardingSaltPayState = getOnboardingWalletState().onboardingSaltPayState!!
-    val analyticsHandler = getAppState().globalState.analyticsHandler
 
     when (action) {
         is OnboardingSaltPayAction.Update -> {
@@ -77,7 +76,7 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
             }
         }
         is OnboardingSaltPayAction.RegisterCard -> {
-            analyticsHandler.send(Onboarding.ButtonConnect())
+            Analytics.send(Onboarding.ButtonConnect())
 
             handleInProgress = true
             val state = getState()
@@ -151,7 +150,7 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
         is OnboardingSaltPayAction.TrySetPin -> {
             try {
                 assertPinValid(action.pin, getState().pinLength)
-                analyticsHandler.send(Onboarding.PinCodeSet())
+                Analytics.send(Onboarding.PinCodeSet())
                 store.dispatch(OnboardingSaltPayAction.SetPin(action.pin))
                 store.dispatch(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.CardRegistration))
             } catch (error: SaltPayActivationError) {
@@ -159,7 +158,7 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
             }
         }
         is OnboardingSaltPayAction.Claim -> {
-            analyticsHandler.send(Onboarding.ButtonClaim())
+            Analytics.send(Onboarding.ButtonClaim())
             val state = getState()
             handleInProgress = true
 
@@ -192,7 +191,7 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
                 }
 
                 handleInProgress = false
-                analyticsHandler.send(Onboarding.ClaimWasSuccessfully())
+                Analytics.send(Onboarding.ClaimWasSuccessfully())
                 dispatchOnMain(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.ClaimInProgress))
                 dispatchOnMain(OnboardingSaltPayAction.RefreshClaim)
             }
@@ -233,19 +232,19 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
                 }
             }
         }
-        is OnboardingSaltPayAction.SetStep -> handleAnalytics(analyticsHandler, action.newStep)
+        is OnboardingSaltPayAction.SetStep -> handleAnalytics(action.newStep)
         else -> {
             /* do nothing, only reduce */
         }
     }
 }
 
-private fun handleAnalytics(analyticsHandler: GlobalAnalyticsEventHandler, step: SaltPayActivationStep) {
+private fun handleAnalytics(step: SaltPayActivationStep) {
     when (step) {
-        SaltPayActivationStep.KycStart -> analyticsHandler.send(Onboarding.KYCStarted())
-        SaltPayActivationStep.KycWaiting -> analyticsHandler.send(Onboarding.KYCInProgress())
-        SaltPayActivationStep.KycReject -> analyticsHandler.send(Onboarding.KYCRejected())
-        SaltPayActivationStep.Claim -> analyticsHandler.send(Onboarding.ClaimScreenOpened())
+        SaltPayActivationStep.KycStart -> Analytics.send(Onboarding.KYCStarted())
+        SaltPayActivationStep.KycWaiting -> Analytics.send(Onboarding.KYCInProgress())
+        SaltPayActivationStep.KycReject -> Analytics.send(Onboarding.KYCRejected())
+        SaltPayActivationStep.Claim -> Analytics.send(Onboarding.ClaimScreenOpened())
         else -> {}
     }
 }
