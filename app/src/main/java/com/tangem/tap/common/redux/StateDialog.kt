@@ -12,19 +12,22 @@ interface StateDialog
 
 sealed class AppDialog : StateDialog {
     data class SimpleOkDialog(val header: String, val message: String, val onOk: VoidCallback? = null) : AppDialog()
+    data class SimpleOkErrorDialog(val message: String, val onOk: VoidCallback? = null) : AppDialog()
+    data class SimpleOkWarningDialog(val message: String, val onOk: VoidCallback? = null) : AppDialog()
     data class SimpleOkDialogRes(
         val headerId: Int,
         val messageId: Int,
-        val onOk: VoidCallback? = null
+        val onOk: VoidCallback? = null,
     ) : AppDialog()
 
     object ScanFailsDialog : AppDialog()
+
     data class AddressInfoDialog(
         val currency: Currency,
         val addressData: AddressData,
     ) : AppDialog()
 
     data class TestActionsDialog(
-        val actionsList: List<TestAction>
+        val actionsList: List<TestAction>,
     ) : AppDialog()
 }

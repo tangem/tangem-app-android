@@ -14,14 +14,14 @@ import com.tangem.domain.common.ScanResponse
 import com.tangem.network.common.MoshiConverter
 import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.tap.common.AssetReader
-import com.tangem.tap.common.analytics.Analytics
-import com.tangem.tap.common.analytics.AnalyticsHandler
+import com.tangem.tap.common.analytics.AnalyticsAnOld
+import com.tangem.tap.common.analytics.GlobalAnalyticsEventHandler
 import com.tangem.tap.tangemSdkManager
 
 class TwinCardsManager(
     private val card: Card,
     assetReader: AssetReader,
-    val analyticsHandler: AnalyticsHandler?
+    val analyticsHandler: GlobalAnalyticsEventHandler?
 ) {
 
     private val currentCardId: String = card.cardId
@@ -37,9 +37,9 @@ class TwinCardsManager(
             is CompletionResult.Success -> currentCardPublicKey = response.data.wallet.publicKey.toHexString()
             is CompletionResult.Failure -> {
                 (response.error as? TangemSdkError)?.let { error ->
-                   analyticsHandler?.logCardSdkError(
+                   analyticsHandler?.handleCardSdkErrorEvent(
                         error,
-                        Analytics.ActionToLog.CreateWallet,
+                        AnalyticsAnOld.ActionToLog.CreateWallet,
                         card = card
                     )
                 }
@@ -67,9 +67,9 @@ class TwinCardsManager(
             }
             is CompletionResult.Failure -> {
                 (response.error as? TangemSdkError)?.let { error ->
-                    analyticsHandler?.logCardSdkError(
+                    analyticsHandler?.handleCardSdkErrorEvent(
                         error,
-                        Analytics.ActionToLog.CreateWallet,
+                        AnalyticsAnOld.ActionToLog.CreateWallet,
                         card = card
                     )
                 }
@@ -87,9 +87,9 @@ class TwinCardsManager(
             is CompletionResult.Success -> Result.Success(response.data)
             is CompletionResult.Failure -> {
                 (response.error as? TangemSdkError)?.let { error ->
-                    analyticsHandler?.logCardSdkError(
+                    analyticsHandler?.handleCardSdkErrorEvent(
                         error,
-                        Analytics.ActionToLog.WriteIssuerData,
+                        AnalyticsAnOld.ActionToLog.WriteIssuerData,
                         card = card
                     )
                 }
