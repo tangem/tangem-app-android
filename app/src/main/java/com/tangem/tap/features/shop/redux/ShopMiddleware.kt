@@ -119,13 +119,8 @@ private fun handle(action: Action) {
 
         is ShopAction.FinishSuccessfulOrder -> {
             scope.launch {
-                shopService.waitForCheckout(
-                    productType = shopState.selectedProduct,
-                    analyticsHandler = store.state.globalState.analyticsHandler
-                )
+                shopService.waitForCheckout(shopState.selectedProduct)
             }
         }
-
     }
-
 }
