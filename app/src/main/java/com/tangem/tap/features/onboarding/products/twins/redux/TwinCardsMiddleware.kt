@@ -6,6 +6,8 @@ import com.tangem.common.extensions.guard
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
+import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchErrorNotification
 import com.tangem.tap.common.extensions.dispatchOpenUrl
@@ -76,6 +78,7 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
 
     fun finishCardActivation() {
         if (twinCardsState.mode == CreateTwinWalletMode.CreateWallet) {
+            Analytics.send(Onboarding.Finished())
             onboardingManager?.activationFinished(getScanResponse().card.cardId)
             twinCardsState.pairCardId?.let { onboardingManager?.activationFinished(it) }
         }
@@ -85,11 +88,18 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
         is TwinCardsAction.Init -> {
             if (twinCardsState.currentStep == TwinCardsStep.WelcomeOnly) return
 
+            val scanResponse = getScanResponse()
+            onboardingManager?.apply {
+                if (!isActivationStarted(scanResponse.card.cardId)) {
+                    Analytics.send(Onboarding.Started())
+                }
+            }
+
             when (twinCardsState.mode) {
                 CreateTwinWalletMode.CreateWallet -> {
                     if (preferencesStorage.wasTwinsOnboardingShown()) {
                         val step = when {
-                            !getScanResponse().twinsIsTwinned() -> TwinCardsStep.CreateFirstWallet
+                            !scanResponse.twinsIsTwinned() -> TwinCardsStep.CreateFirstWallet
                             twinCardsState.walletBalance.balanceIsToppedUp() -> TwinCardsStep.Done
                             else -> TwinCardsStep.TopUpWallet
                         }
@@ -105,8 +115,8 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
         }
         is TwinCardsAction.Wallet.HandleOnBackPressed -> {
             val shouldReturnCardBack = twinCardsState.mode == CreateTwinWalletMode.CreateWallet
-                    && twinCardsState.currentStep != TwinCardsStep.TopUpWallet
-                    && twinCardsState.currentStep != TwinCardsStep.Done
+                && twinCardsState.currentStep != TwinCardsStep.TopUpWallet
+                && twinCardsState.currentStep != TwinCardsStep.Done
 
             if (twinCardsState.showAlert) {
                 val onInterruptPrompt = {
@@ -163,7 +173,7 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
                 val result = manager.createSecondWallet(
                     action.initialMessage,
                     action.preparingMessage,
-                    action.creatingWalletMessage
+                    action.creatingWalletMessage,
                 )
                 when (result) {
                     is CompletionResult.Success -> {
@@ -221,11 +231,11 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
             val balanceIsLoading = twinCardsState.walletBalance.copy(
                 currency = Currency.Blockchain(
                     walletManager.wallet.blockchain,
-                    walletManager.wallet.publicKey.derivationPath?.rawPath
+                    walletManager.wallet.publicKey.derivationPath?.rawPath,
                 ),
                 state = ProgressState.Loading,
                 error = null,
-                criticalError = null
+                criticalError = null,
             )
             store.dispatch(TwinCardsAction.Balance.Set(balanceIsLoading))
 
@@ -239,7 +249,6 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
                     store.dispatch(TwinCardsAction.Balance.SetNonCriticalError(loadedBalance.error))
                 }
             }
-
         }
         is TwinCardsAction.Balance.Set -> {
             if (action.balance.balanceIsToppedUp()) {
