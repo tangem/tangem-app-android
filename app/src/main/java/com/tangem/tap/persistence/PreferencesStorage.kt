@@ -7,15 +7,15 @@ import androidx.core.content.edit
 import com.tangem.common.json.MoshiJsonConverter
 import java.util.*
 
-
 class PreferencesStorage(applicationContext: Application) {
 
-    private val preferences: SharedPreferences = applicationContext.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
+    private val preferences: SharedPreferences =
+        applicationContext.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
 
     val appRatingLaunchObserver: AppRatingLaunchObserver
     val usedCardsPrefStorage: UsedCardsPrefStorage
     val fiatCurrenciesPrefStorage: FiatCurrenciesPrefStorage
-    val saltPayRegistrationStorage: SaltPayRegistrationStorage
+    val disclaimerPrefStorage: DisclaimerPrefStorage
 
     init {
         incrementLaunchCounter()
@@ -24,7 +24,7 @@ class PreferencesStorage(applicationContext: Application) {
         usedCardsPrefStorage.migrate()
         fiatCurrenciesPrefStorage = FiatCurrenciesPrefStorage(preferences, MoshiJsonConverter.INSTANCE)
         fiatCurrenciesPrefStorage.migrate()
-        saltPayRegistrationStorage = SaltPayRegistrationPrefStorage(applicationContext, MoshiJsonConverter.INSTANCE)
+        disclaimerPrefStorage = DisclaimerPrefStorage(preferences)
     }
 
     var chatFirstLaunchTime: Long?
@@ -56,12 +56,10 @@ class PreferencesStorage(applicationContext: Application) {
 
     companion object {
         private const val PREFERENCES_NAME = "tapPrefs"
-        private const val DISCLAIMER_ACCEPTED_KEY = "disclaimerAccepted"
         private const val TWINS_ONBOARDING_SHOWN_KEY = "twinsOnboardingShown"
         private const val APP_LAUNCH_COUNT_KEY = "launchCount"
         private const val CHAT_FIRST_LAUNCH_KEY = "chatFirstLaunchKey"
     }
-
 }
 
 class AppRatingLaunchObserver(
