@@ -24,6 +24,7 @@ import com.tangem.common.extensions.toDecompressedPublicKey
 import com.tangem.common.extensions.toHexString
 import com.tangem.crypto.CryptoUtils
 import com.tangem.operations.sign.SignHashCommand
+import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.AnalyticsAnOld
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.extensions.toFormattedString
@@ -143,10 +144,7 @@ class WalletConnectSdkHelper {
                 HEX_PREFIX + data.walletManager.wallet.recentTransactions.last().hash
             }
             is SimpleResult.Failure -> {
-                store.state.globalState.analyticsHandler?.send(
-                    result.error,
-                    AnalyticsAnOld.ActionToLog.WalletConnectTransaction,
-                )
+                Analytics.send(result.error, AnalyticsAnOld.ActionToLog.WalletConnectTransaction)
                 Timber.e(result.error as BlockchainSdkError)
                 null
             }
@@ -173,10 +171,7 @@ class WalletConnectSdkHelper {
             }
             is CompletionResult.Failure -> {
                 (result.error as? TangemSdkError)?.let { error ->
-                    store.state.globalState.analyticsHandler?.send(
-                        error,
-                        AnalyticsAnOld.ActionToLog.WalletConnectSign,
-                    )
+                    Analytics.send(error, AnalyticsAnOld.ActionToLog.WalletConnectSign)
                 }
                 Timber.e(result.error.customMessage)
                 null
@@ -202,10 +197,7 @@ class WalletConnectSdkHelper {
             }
             is CompletionResult.Failure -> {
                 (result.error as? TangemSdkError)?.let { error ->
-                    store.state.globalState.analyticsHandler?.send(
-                        error,
-                        AnalyticsAnOld.ActionToLog.WalletConnectTransaction,
-                    )
+                    Analytics.send(error, AnalyticsAnOld.ActionToLog.WalletConnectTransaction)
                 }
                 Timber.e(result.error.customMessage)
                 null
@@ -278,10 +270,7 @@ class WalletConnectSdkHelper {
             }
             is CompletionResult.Failure -> {
                 (result.error as? TangemSdkError)?.let { error ->
-                    store.state.globalState.analyticsHandler?.send(
-                        error,
-                        AnalyticsAnOld.ActionToLog.WalletConnectSign,
-                    )
+                    Analytics.send(error, AnalyticsAnOld.ActionToLog.WalletConnectSign)
                 }
                 Timber.e(result.error.customMessage)
                 null
