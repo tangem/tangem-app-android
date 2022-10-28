@@ -41,6 +41,7 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
         binding.toolbar.setTitle(R.string.onboarding_title)
         btnRefreshBalanceWidget = RefreshBalanceWidget(mainBinding.onboardingTopContainer.onboardingWalletContainer)
 
+        store.dispatch(OnboardingNoteAction.Init)
         store.dispatch(OnboardingNoteAction.LoadCardArtwork)
         store.dispatch(OnboardingNoteAction.DetermineStepOfScreen)
     }
