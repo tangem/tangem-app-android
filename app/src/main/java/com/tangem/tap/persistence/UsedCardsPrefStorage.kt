@@ -11,16 +11,16 @@ import timber.log.Timber
  */
 class UsedCardsPrefStorage(
     private val preferences: SharedPreferences,
-    private val jsonConverter: MoshiJsonConverter
+    private val jsonConverter: MoshiJsonConverter,
 ) {
 
-    internal fun migrate() {
-        val scannedIds = preferences.getString(SCANNED_CARDS_IDS_KEY, null) ?: return
+    private val migrationList = mutableListOf(
+        UserCardInfoToV2(this),
+    )
 
-        val usedCardsInfo = scannedIds.split(",").map { UsedCardInfo(it.trim(), true) }
-        if (save(usedCardsInfo.toMutableList())) {
-            preferences.edit { this.remove(SCANNED_CARDS_IDS_KEY) }
-        }
+    internal fun migrate() {
+        migrationList.forEach { it.migrate() }
+        migrationList.clear()
     }
 
     fun scanned(cardId: String) {
@@ -43,20 +43,28 @@ class UsedCardsPrefStorage(
         save(foundItem, restoredList)
     }
 
-    fun isActivationFinished(cardId: String): Boolean {
-        return !(findCardInfo(cardId)?.isActivationStarted ?: true)
+    fun activationFinished(cardId: String) {
+        val restoredList = restore()
+        var foundItem = findCardInfo(cardId, restoredList) ?: UsedCardInfo(cardId)
+        foundItem = foundItem.copy(
+            isActivationStarted = true,
+            isActivationFinished = true,
+        )
+
+        save(foundItem, restoredList)
     }
 
-    fun activationIsStarted(cardId: String): Boolean {
+    fun isActivationStarted(cardId: String): Boolean {
         return findCardInfo(cardId)?.isActivationStarted ?: false
     }
 
-    fun activationFinished(cardId: String) {
-        val restoredList = restore()
-        val foundItem = findCardInfo(cardId, restoredList)?.copy(isActivationStarted = false)
-            ?: UsedCardInfo(cardId, isActivationStarted = false)
+    fun isActivationFinished(cardId: String): Boolean {
+        return findCardInfo(cardId)?.isActivationFinished ?: false
+    }
 
-        save(foundItem, restoredList)
+    fun isActivationInProgress(cardId: String): Boolean {
+        val cardInfo = findCardInfo(cardId) ?: return false
+        return cardInfo.isActivationStarted && !cardInfo.isActivationFinished
     }
 
     private fun findCardInfo(cardId: String, list: MutableList<UsedCardInfo>? = null): UsedCardInfo? {
@@ -74,7 +82,7 @@ class UsedCardsPrefStorage(
     private fun save(list: MutableList<UsedCardInfo>): Boolean {
         return try {
             val json = jsonConverter.toJson(list)
-            preferences.edit { putString(USED_CARDS_INFO, json) }
+            preferences.edit { putString(USED_CARDS_INFO_V2, json) }
             true
         } catch (ex: Exception) {
             Timber.e(ex)
@@ -83,23 +91,64 @@ class UsedCardsPrefStorage(
     }
 
     private fun restore(): MutableList<UsedCardInfo> {
-        val json = preferences.getString(USED_CARDS_INFO, null) ?: return mutableListOf()
+        val json = preferences.getString(USED_CARDS_INFO_V2, null) ?: return mutableListOf()
         return try {
             jsonConverter.fromJson(json, jsonConverter.typedList(UsedCardInfo::class.java))!!
         } catch (ex: Exception) {
-            preferences.edit(true) { remove(USED_CARDS_INFO) }
+            preferences.edit(true) { remove(USED_CARDS_INFO_V2) }
             mutableListOf()
         }
     }
 
     companion object {
+        private const val USED_CARDS_INFO_V2 = "usedCardsInfo_v2"
         private const val USED_CARDS_INFO = "usedCardsInfo"
-        private const val SCANNED_CARDS_IDS_KEY = "scannedCardIds"
     }
+
+    private class UserCardInfoToV2(
+        private val storage: UsedCardsPrefStorage,
+    ) : Migration {
+        override fun migrate() {
+            val restoredCardsInfo = restore()
+            if (restoredCardsInfo.isEmpty()) return
+
+            val newCardsInfo = restoredCardsInfo.map { cardInfo ->
+                UsedCardInfo(
+                    cardId = cardInfo.cardId,
+                    isScanned = cardInfo.isScanned,
+                    isActivationStarted = true,
+                    isActivationFinished = !cardInfo.isActivationStarted,
+                )
+            }.toMutableList()
+            storage.save(newCardsInfo)
+        }
+
+        private fun restore(): MutableList<UsedCardInfoOld> {
+            val json = storage.preferences.getString(USED_CARDS_INFO, null) ?: return mutableListOf()
+            return try {
+                storage.jsonConverter.fromJson(json, storage.jsonConverter.typedList(UsedCardInfoOld::class.java))!!
+            } catch (ex: Exception) {
+                mutableListOf()
+            } finally {
+                storage.preferences.edit(true) { remove(USED_CARDS_INFO) }
+            }
+        }
+    }
+
+    private data class UsedCardInfo(
+        val cardId: String,
+        val isScanned: Boolean = false,
+        val isActivationStarted: Boolean = false,
+        val isActivationFinished: Boolean = false,
+    )
+
+    private data class UsedCardInfoOld(
+        val cardId: String,
+        val isScanned: Boolean = false,
+        val isActivationStarted: Boolean = false,
+    )
 }
 
-private data class UsedCardInfo(
-    val cardId: String,
-    val isScanned: Boolean = false,
-    val isActivationStarted: Boolean = false,
-)
+private interface Migration {
+    fun migrate()
+}
