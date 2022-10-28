@@ -3,6 +3,7 @@ package com.tangem.tap.features.details.redux
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
+import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.AnalyticsAnOld
 import com.tangem.tap.common.analytics.AnalyticsParamAnOld
 import com.tangem.tap.common.extensions.dispatchNotification
@@ -110,7 +111,7 @@ class DetailsMiddleware {
                                 }
                                 is CompletionResult.Failure -> {
                                     (result.error as? TangemSdkError)?.let { error ->
-                                        store.state.globalState.analyticsHandler?.send(
+                                        Analytics.send(
                                             error,
                                             AnalyticsAnOld.ActionToLog.PurgeWallet,
                                             card = store.state.detailsState.scanResponse?.card,
@@ -154,7 +155,7 @@ class DetailsMiddleware {
                                 }
                                 is CompletionResult.Failure -> {
                                     (result.error as? TangemSdkError)?.let { error ->
-                                        store.state.globalState.analyticsHandler?.send(
+                                        Analytics.send(
                                             error = error,
                                             action = AnalyticsAnOld.ActionToLog.ChangeSecOptions,
                                             params = mapOf(
