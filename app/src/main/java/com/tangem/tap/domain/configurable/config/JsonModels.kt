@@ -30,9 +30,13 @@ class ConfigValueModel(
     val zendesk: ZendeskConfig?,
     val saltPay: SaltPayConfig,
     val tronGridApiKey: String,
+    val amplitudeApiKey: String,
 )
 
-class ConfigModel(val features: FeatureModel?, val configValues: ConfigValueModel?) {
+class ConfigModel(
+    val features: FeatureModel?,
+    val configValues: ConfigValueModel?,
+) {
     companion object {
         fun empty(): ConfigModel = ConfigModel(null, null)
     }
