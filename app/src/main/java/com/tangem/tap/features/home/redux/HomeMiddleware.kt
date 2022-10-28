@@ -120,6 +120,7 @@ private fun checkForUnfinishedBackupForSaltPay(scanResponse: ScanResponse, nextH
         if (scanResponse.isSaltPayVisa()) {
             nextHandler(scanResponse)
         } else {
+            changeButtonState(ButtonState.ENABLED)
             showSaltPayTapVisaLogoCardDialog()
         }
     } else {
