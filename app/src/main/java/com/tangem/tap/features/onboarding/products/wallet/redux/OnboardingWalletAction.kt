@@ -5,7 +5,7 @@ import org.rekotlin.Action
 
 sealed class OnboardingWalletAction : Action {
     object Init : OnboardingWalletAction()
-    object StartSaltPayCardActivation: OnboardingWalletAction()
+    object StartSaltPayCardActivation : OnboardingWalletAction()
     object GetToCreateWalletStep : OnboardingWalletAction()
     object GetToSaltPayStep : OnboardingWalletAction()
     object CreateWallet : OnboardingWalletAction()
@@ -30,6 +30,11 @@ sealed class BackupAction : Action {
     object StartAddingPrimaryCard : BackupAction()
     object ScanPrimaryCard : BackupAction()
 
+    /**
+     * Check for unfinished backup of standard Wallet cards.
+     * For SaltPay cards unfinished backup resumed after scanning the card on HomeScreen through Onboarding.Start.
+     * See more Onboarding.Start, CheckForUnfinishedBackup, StartForUnfinishedBackup
+     */
     object CheckForUnfinishedBackup : BackupAction()
 
     object StartAddingBackupCards : BackupAction()

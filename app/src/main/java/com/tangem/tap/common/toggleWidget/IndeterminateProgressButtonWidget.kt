@@ -24,6 +24,12 @@ open class IndeterminateProgressButtonWidget(
         if (initialState != ProgressState.Done) changeState(initialState)
     }
 
+    var isEnabled: Boolean
+        get() = button.isEnabled
+        set(value) {
+            button.isEnabled = value
+        }
+
     override val mainView: View = button
 
     override fun changeState(state: WidgetState) {
