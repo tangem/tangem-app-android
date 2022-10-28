@@ -32,6 +32,7 @@ import com.tangem.tap.features.onboarding.products.wallet.redux.BackupStep
 import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletAction
 import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletState
 import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletStep
+import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayAction
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.ui.OnboardingSaltPayView
 import com.tangem.tap.features.onboarding.products.wallet.ui.dialogs.AccessCodeDialog
 import com.tangem.tap.store
@@ -81,7 +82,7 @@ class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_walle
         addBackPressHandler(this)
 
         store.dispatch(OnboardingWalletAction.Init)
-        store.dispatch(OnboardingWalletAction.StartSaltPayCardActivation)
+        store.dispatch(OnboardingSaltPayAction.Init)
         store.dispatch(OnboardingWalletAction.LoadArtwork)
     }
 
