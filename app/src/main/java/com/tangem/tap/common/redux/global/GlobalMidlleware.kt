@@ -140,7 +140,10 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
                         secretKey = moonPaySecretKey,
                         logEnabled = LogConfig.network.moonPayService,
                     )
-                    val cardProvider = { store.state.globalState.scanResponse?.card }
+                    val cardProvider = {
+                        store.state.globalState.scanResponse?.card
+                            ?: store.state.globalState.onboardingState.onboardingManager?.scanResponse?.card
+                    }
 
                     val exchangeManager = CurrencyExchangeManager(
                         buyService = buyService,
