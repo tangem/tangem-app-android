@@ -4,6 +4,8 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.guard
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
+import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchErrorNotification
 import com.tangem.tap.common.extensions.dispatchOpenUrl
@@ -58,6 +60,11 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
     val noteState = store.state.onboardingNoteState
 
     when (action) {
+        is OnboardingNoteAction.Init -> {
+            if (!onboardingManager.isActivationStarted(card.cardId)) {
+                Analytics.send(Onboarding.Started())
+            }
+        }
         is OnboardingNoteAction.LoadCardArtwork -> {
             scope.launch {
                 val artworkUrl = onboardingManager.loadArtworkUrl()
@@ -78,6 +85,7 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
                     store.dispatch(OnboardingNoteAction.Balance.Update)
                 }
                 OnboardingNoteStep.Done -> {
+                    Analytics.send(Onboarding.Finished())
                     onboardingManager.activationFinished(card.cardId)
                     postUi(DELAY_SDK_DIALOG_CLOSE) { store.dispatch(OnboardingNoteAction.Confetti.Show) }
                 }
