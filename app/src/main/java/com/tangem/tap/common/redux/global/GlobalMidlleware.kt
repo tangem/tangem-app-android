@@ -163,7 +163,6 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
         is GlobalAction.ScanCard -> {
             scope.launch {
                 val result = tangemSdkManager.scanProduct(
-                    store.state.globalState.analyticsHandler,
                     userTokensRepository,
                     action.additionalBlockchainsToDerive,
                     action.messageResId,
