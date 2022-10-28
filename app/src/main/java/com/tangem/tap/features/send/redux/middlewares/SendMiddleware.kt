@@ -17,13 +17,12 @@ import com.tangem.common.services.Result
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
-import com.tangem.tap.common.analytics.Analytics
-import com.tangem.tap.common.analytics.AnalyticsEvent
-import com.tangem.tap.common.analytics.AnalyticsParam
+import com.tangem.tap.common.analytics.AnalyticsAnOld
+import com.tangem.tap.common.analytics.AnalyticsEventAnOld
+import com.tangem.tap.common.analytics.AnalyticsParamAnOld
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
-import com.tangem.tap.common.extensions.logSendTransactionError
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.common.redux.AppDialog
@@ -222,8 +221,8 @@ private fun sendTransaction(
 
             when (sendResult) {
                 is SimpleResult.Success -> {
-                    store.state.globalState.analyticsHandlers?.triggerEvent(
-                        event = AnalyticsEvent.TRANSACTION_IS_SENT,
+                    store.state.globalState.analyticsHandler?.handleAnalyticsEvent(
+                        event = AnalyticsEventAnOld.TRANSACTION_IS_SENT,
                         card = card,
                         blockchain = walletManager.wallet.blockchain.currency,
                     )
@@ -251,10 +250,10 @@ private fun sendTransaction(
                         feeAmount = feeAmount,
                         destinationAddress = destinationAddress,
                     )
-                    store.state.globalState.analyticsHandlers?.logSendTransactionError(
+                    store.state.globalState.analyticsHandler?.handleBlockchainSdkErrorEvent(
                         error = sendResult.error,
-                        action = Analytics.ActionToLog.SendTransaction,
-                        parameters = mapOf(AnalyticsParam.BLOCKCHAIN to walletManager.wallet.blockchain.currency),
+                        action = AnalyticsAnOld.ActionToLog.SendTransaction,
+                        params = mapOf(AnalyticsParamAnOld.BLOCKCHAIN to walletManager.wallet.blockchain.currency),
                         card = card,
                     )
 
