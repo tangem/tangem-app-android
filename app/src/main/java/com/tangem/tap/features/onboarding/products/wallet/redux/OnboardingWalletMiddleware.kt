@@ -169,6 +169,7 @@ private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch:
                         if (onboardingWalletState.isSaltPay) {
                             BackupAction.StartBackup
                         } else {
+                            Analytics.send(Onboarding.Backup.ScreenOpened())
                             BackupAction.IntroduceBackup
                         }
                     } else {
@@ -224,6 +225,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
 
     when (action) {
         is BackupAction.StartBackup -> {
+            Analytics.send(Onboarding.Backup.Started())
             backupService.discardSavedBackup()
             val primaryCard = scanResponse?.primaryCard
             if (primaryCard != null) {
@@ -269,7 +271,11 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
                 store.dispatchOnMain(GlobalAction.ShowDialog(BackupDialog.AddMoreBackupCards))
             }
         }
+        is BackupAction.ShowEnterAccessCodeScreen -> {
+            Analytics.send(Onboarding.Backup.SettingAccessCodeStarted())
+        }
         is BackupAction.CheckAccessCode -> {
+            Analytics.send(Onboarding.Backup.AccessCodeEntered())
             if (action.accessCode.length < 4) {
                 store.dispatch(BackupAction.SetAccessCodeError(AccessCodeError.CodeTooShort))
             } else {
@@ -278,6 +284,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             }
         }
         is BackupAction.SaveAccessCodeConfirmation -> {
+            Analytics.send(Onboarding.Backup.AccessCodeReEntered())
             if (action.accessCodeConfirmation == backupState.accessCode) {
                 store.dispatch(BackupAction.SetAccessCodeError(null))
                 backupService.setAccessCode(action.accessCodeConfirmation)
@@ -315,6 +322,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             }
         }
         is BackupAction.FinishBackup -> {
+            Analytics.send(Onboarding.Backup.Finished(backupState.backupCardsNumber))
             if (!onboardingWalletState.isSaltPay) {
                 Analytics.send(Onboarding.Finished())
                 finishCardActivation(backupState, card)
@@ -340,6 +348,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingWallet))
         }
         is BackupAction.DismissBackup -> {
+            Analytics.send(Onboarding.Backup.Skipped())
             if (onboardingWalletState.isSaltPay) throw UnsupportedOperationException()
             store.dispatch(BackupAction.FinishBackup)
         }
