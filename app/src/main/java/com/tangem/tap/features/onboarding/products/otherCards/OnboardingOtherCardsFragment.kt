@@ -33,6 +33,7 @@ class OnboardingOtherCardsFragment : BaseOnboardingFragment<OnboardingOtherCards
         mainBinding.onboardingTopContainer.imvFrontCard.transitionName = ShareElement.imvFrontCard
 
         binding.toolbar.setTitle(R.string.onboarding_title)
+        store.dispatch(OnboardingOtherCardsAction.Init)
         store.dispatch(OnboardingOtherCardsAction.LoadCardArtwork)
         store.dispatch(OnboardingOtherCardsAction.DetermineStepOfScreen)
     }
