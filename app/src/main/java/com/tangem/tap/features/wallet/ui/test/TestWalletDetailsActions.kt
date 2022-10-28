@@ -1,9 +1,13 @@
 package com.tangem.tap.features.wallet.ui.test
 
 import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.AmountType
+import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.WalletManager
+import com.tangem.common.extensions.guard
 import com.tangem.tap.common.TestAction
 import com.tangem.tap.common.TestActions
+import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.store
@@ -13,7 +17,7 @@ import kotlin.random.Random
 /**
 * [REDACTED_AUTHOR]
  */
-class TestWalletDetails {
+class TestWallet {
     companion object {
         fun solanaRentExemptWarning(): List<TestAction> {
             val checker = SolanaRentWarningActionEmitter()
@@ -25,6 +29,80 @@ class TestWalletDetails {
                 "BALANCE = 0.00089088 (rent exempt)" to { checker.setForRentExemptBarrier() },
                 "BALANCE = 0.00089089" to { checker.setMoreThanRentExemptByOne() },
             )
+        }
+
+        fun getBlockchainBalanceActions(blockchainNetwork: BlockchainNetwork): List<TestAction> {
+            return getBlockchainBalanceActions(
+                getWalletManager(blockchainNetwork),
+                blockchainNetwork.blockchain.decimals(),
+            )
+        }
+
+        fun getTokenBalanceAction(blockchainNetwork: BlockchainNetwork, token: Token): List<TestAction> {
+            return getTokenBalanceAction(getWalletManager(blockchainNetwork), token)
+        }
+
+        fun getBlockchainBalanceActions(walletManager: WalletManager?, decimals: Int): List<TestAction> {
+            val minValue = BigDecimal.ONE.movePointLeft(decimals)
+            val averageValue = BigDecimal.ONE.movePointRight(decimals)
+                .divide(BigDecimal(2)).movePointLeft(decimals)
+            val maxValue = BigDecimal(2).pow(32)
+
+            return listOf(
+                "0.0" to { setBalance(walletManager, BigDecimal.ZERO) },
+                "Min value" to { setBalance(walletManager, minValue) },
+                "Average value" to { setBalance(walletManager, averageValue) },
+                "Max value" to { setBalance(walletManager, maxValue) },
+                "1234567890123.01234567890123" to { setBalance(walletManager, BigDecimal.ZERO) },
+            )
+        }
+
+        fun getTokenBalanceAction(walletManager: WalletManager?, token: Token): List<TestAction> {
+            val minValue = BigDecimal.ONE.movePointLeft(token.decimals)
+            val averageValue = BigDecimal.ONE.movePointRight(token.decimals)
+                .divide(BigDecimal(2)).movePointLeft(token.decimals)
+            val maxValue = BigDecimal(2).pow(32)
+
+            return listOf(
+                "0.0" to { setTokenBalance(walletManager, BigDecimal.ZERO, token) },
+                "Min value" to { setTokenBalance(walletManager, minValue, token) },
+                "Average value" to { setTokenBalance(walletManager, averageValue, token) },
+                "Max value" to { setTokenBalance(walletManager, maxValue, token) },
+                "1234567890123.01234567890123" to { setTokenBalance(walletManager, BigDecimal.ZERO, token) },
+            )
+        }
+
+        fun setBalance(walletManager: WalletManager?, value: BigDecimal) {
+            val manager = walletManager.guard {
+                store.dispatchDebugErrorNotification("WalletManager not found")
+                return
+            }
+            val amount = manager.wallet.amounts[AmountType.Coin] ?: Amount(manager.wallet.blockchain)
+            setBalance(manager, amount, value)
+        }
+
+        private fun setTokenBalance(walletManager: WalletManager?, value: BigDecimal, token: Token? = null) {
+            val manager = walletManager.guard {
+                store.dispatchDebugErrorNotification("WalletManager not found")
+                return
+            }
+            val token = token.guard {
+                store.dispatchDebugErrorNotification("Token not found")
+                return
+            }
+
+            val amount = manager.wallet.amounts[AmountType.Token(token)] ?: Amount(token)
+            setBalance(manager, amount, value)
+        }
+
+        private fun setBalance(walletManager: WalletManager, amount: Amount, value: BigDecimal) {
+            TestActions.testAmountInjectionForWalletManagerEnabled = true
+            walletManager.wallet.setAmount(amount.copy(value = value))
+            store.dispatch(WalletAction.LoadData)
+        }
+
+        private fun getWalletManager(blockchainNetwork: BlockchainNetwork): WalletManager? {
+            return store.state.walletState.getWalletManager(blockchainNetwork)
         }
     }
 }
