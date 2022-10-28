@@ -5,7 +5,7 @@ import com.tangem.common.CardFilter
 import com.tangem.domain.common.SaltPayWorkaround
 import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayState
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.SaltPayRegistrationStep
+import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.SaltPayActivationStep
 import org.rekotlin.StateType
 
 /**
@@ -41,7 +41,6 @@ data class OnboardingWalletState(
                 when (backupState.backupStep) {
                     BackupStep.InitBackup -> 2
                     BackupStep.ScanOriginCard -> 3
-
                     BackupStep.AddBackupCards -> 4
                     BackupStep.EnterAccessCode -> 4
                     BackupStep.ReenterAccessCode -> 4
@@ -52,13 +51,16 @@ data class OnboardingWalletState(
             }
             step == OnboardingWalletStep.SaltPay && isSaltPay -> {
                 when (onboardingSaltPayState!!.step) {
-                    SaltPayRegistrationStep.NoGas -> 1
-                    SaltPayRegistrationStep.NeedPin -> 7
-                    SaltPayRegistrationStep.CardRegistration -> 8
-                    SaltPayRegistrationStep.KycIntro -> 9
-                    SaltPayRegistrationStep.KycStart -> 10
-                    SaltPayRegistrationStep.KycWaiting -> 11
-                    SaltPayRegistrationStep.Finished -> getMaxProgress()
+                    SaltPayActivationStep.None, SaltPayActivationStep.NoGas -> 0
+                    SaltPayActivationStep.NeedPin -> 7
+                    SaltPayActivationStep.CardRegistration -> 8
+                    SaltPayActivationStep.KycIntro, SaltPayActivationStep.KycStart,
+                    SaltPayActivationStep.KycWaiting, SaltPayActivationStep.KycReject,
+                    -> 9
+                    SaltPayActivationStep.Claim -> 10
+                    SaltPayActivationStep.ClaimInProgress -> 11
+                    SaltPayActivationStep.ClaimSuccess, SaltPayActivationStep.Success, SaltPayActivationStep.Finished,
+                    -> getMaxProgress()
                 }
             }
             step == OnboardingWalletStep.Done -> getMaxProgress()
