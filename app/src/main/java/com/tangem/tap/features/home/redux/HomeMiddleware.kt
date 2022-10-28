@@ -166,7 +166,7 @@ private fun onScanSuccess(scanResponse: ScanResponse) {
                             val isOnboardingCase = result.data
                             if (isOnboardingCase) {
                                 store.dispatch(GlobalAction.Onboarding.Start(scanResponse, canSkipBackup = false))
-                                store.dispatch(OnboardingSaltPayAction.Init.SetDependencies(manager, config))
+                                store.dispatch(OnboardingSaltPayAction.SetDependencies(manager, config))
                                 store.dispatch(OnboardingSaltPayAction.Update)
                                 navigateTo(AppScreen.OnboardingWallet)
                             } else {
