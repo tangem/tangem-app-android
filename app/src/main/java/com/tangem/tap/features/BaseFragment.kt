@@ -7,7 +7,10 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.widget.Toolbar
+import androidx.core.view.MenuHost
+import androidx.core.view.MenuProvider
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import androidx.transition.TransitionInflater
 import com.google.android.material.snackbar.Snackbar
 import com.tangem.common.extensions.VoidCallback
@@ -41,6 +44,17 @@ abstract class BaseFragment(layoutId: Int) : Fragment(layoutId), FragmentOnBackP
     override fun handleOnBackPressed() {
         store.dispatch(NavigationAction.PopBackTo())
     }
+
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        loadToolbarMenu()?.let {
+            val menuHost = requireActivity() as? MenuHost ?: return
+            menuHost.addMenuProvider(it, viewLifecycleOwner, Lifecycle.State.RESUMED)
+        }
+    }
+
+    protected open fun loadToolbarMenu():MenuProvider? = null
 
     fun showRetrySnackbar(message: String, action: VoidCallback) {
         val snackbar = Snackbar.make(mainView, message, Snackbar.LENGTH_INDEFINITE)
