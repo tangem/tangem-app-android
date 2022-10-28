@@ -2,6 +2,13 @@ package com.tangem.tap.features.onboarding.products.wallet.saltPay
 
 import android.net.Uri
 import com.tangem.blockchain.blockchains.ethereum.SignedEthereumTransaction
+import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.AmountType
+import com.tangem.blockchain.common.BlockchainSdkError
+import com.tangem.blockchain.common.TransactionSigner
+import com.tangem.blockchain.extensions.successOr
+import com.tangem.common.extensions.guard
+import com.tangem.common.extensions.isZero
 import com.tangem.common.services.Result
 import com.tangem.domain.common.extensions.successOr
 import com.tangem.network.api.paymentology.AttestationResponse
@@ -10,23 +17,24 @@ import com.tangem.network.api.paymentology.RegisterKYCRequest
 import com.tangem.network.api.paymentology.RegisterWalletRequest
 import com.tangem.network.api.paymentology.RegisterWalletResponse
 import com.tangem.network.api.paymentology.RegistrationResponse
+import com.tangem.network.api.paymentology.tryExtractError
 import com.tangem.operations.attestation.AttestWalletKeyResponse
+import com.tangem.tap.common.extensions.safeUpdate
+import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.domain.tokens.UserWalletId
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.message.SaltPayRegistrationError
-import com.tangem.tap.persistence.SaltPayRegistrationStorage
+import com.tangem.tap.features.onboarding.products.wallet.saltPay.message.SaltPayActivationError
 import java.math.BigDecimal
 
 /**
 * [REDACTED_AUTHOR]
  */
-class SaltPayRegistrationManager(
+class SaltPayActivationManager(
     val cardId: String,
     val cardPublicKey: ByteArray,
     val walletPublicKey: ByteArray,
     private val kycProvider: KYCProvider,
     private val paymentologyService: PaymentologyApiService,
     private val gnosisRegistrator: GnosisRegistrator,
-    private val registrationStorage: SaltPayRegistrationStorage,
 ) {
     val kycUrlProvider = KYCUrlProvider(walletPublicKey, kycProvider)
 
@@ -35,18 +43,14 @@ class SaltPayRegistrationManager(
 
     private val spendLimitValue: BigDecimal = BigDecimal("100")
 
-    fun transactionIsSent(): Boolean {
-        return registrationStorage.data.transactionsSent
-    }
-
     suspend fun checkHasGas(): Result<Unit> {
         return when (val hasGasResult = gnosisRegistrator.checkHasGas()) {
             is com.tangem.blockchain.extensions.Result.Success -> if (hasGasResult.data) {
                 Result.Success(Unit)
             } else {
-                Result.Failure(SaltPayRegistrationError.NoGas)
+                Result.Failure(SaltPayActivationError.NoGas)
             }
-            is com.tangem.blockchain.extensions.Result.Failure -> Result.Failure(SaltPayRegistrationError.NoGas)
+            is com.tangem.blockchain.extensions.Result.Failure -> Result.Failure(hasGasResult.error as BlockchainSdkError)
         }
     }
 
@@ -58,20 +62,27 @@ class SaltPayRegistrationManager(
     }
 
     suspend fun checkRegistration(): Result<RegistrationResponse.Item> {
-        val registrationResponse = paymentologyService.checkRegistration(cardId, cardPublicKey).successOr { return it }
+        val response: RegistrationResponse = paymentologyService.checkRegistration(cardId, cardPublicKey)
+            .successOr { return it }
+            .tryExtractError<RegistrationResponse>()
+            .successOr { return it }
 
         return try {
-            if (!registrationResponse.success || registrationResponse.results.isEmpty()) {
-                throw SaltPayRegistrationError.EmptyResponse(registrationResponse.error)
-            }
-            Result.Success(registrationResponse.results[0])
-        } catch (ex: SaltPayRegistrationError) {
+            if (response.results.isEmpty()) throw SaltPayActivationError.EmptyResponse
+
+            val item = response.results[0]
+            if (item.error != null) throw Exception(response.makeErrorMessage())
+
+            Result.Success(item)
+        } catch (ex: Exception) {
             Result.Failure(ex)
         }
     }
 
     suspend fun requestAttestationChallenge(): Result<AttestationResponse> {
         return paymentologyService.requestAttestationChallenge(cardId, cardPublicKey)
+            .successOr { return it }
+            .tryExtractError()
     }
 
     suspend fun sendTransactions(
@@ -94,14 +105,41 @@ class SaltPayRegistrationManager(
             cardSignature = attestResponse.cardSignature ?: byteArrayOf(),
             pin = pinCode,
         )
+        return paymentologyService.registerWallet(request)
+            .successOr { return it }
+            .tryExtractError()
+    }
 
-        val result = paymentologyService.registerWallet(request)
+    suspend fun getAmountToClaim(): Result<Amount> {
+        val amount = gnosisRegistrator.getAllowance().successOr {
+            return Result.Failure(SaltPayActivationError.FailedToGetFundsToClaim)
+        }
 
-        registrationStorage.data = registrationStorage.data.copy(
-            transactionsSent = result is Result.Success,
-        )
+        return if (amount.value == null || amount.value?.isZero() == true) {
+            Result.Failure(SaltPayActivationError.NoFundsToClaim)
+        } else {
+            Result.Success(amount)
+        }
+    }
 
-        return result
+    suspend fun claim(amountToClaim: BigDecimal, signer: TransactionSigner): Result<Unit> {
+        val result = gnosisRegistrator.transferFrom(amountToClaim, signer).successOr {
+            return Result.Failure(SaltPayActivationError.ClaimTransactionFailed)
+        }
+        return Result.Success(Unit)
+    }
+
+    suspend fun getTokenAmount(): Result<BigDecimal> {
+        val wallet = gnosisRegistrator.walletManager.safeUpdate().successOr { return it }
+        val token = wallet.getFirstToken().guard {
+            throw UnsupportedOperationException()
+        }
+
+        val amountValue = wallet.amounts[AmountType.Token(token)]?.value.guard {
+            throw UnsupportedOperationException()
+        }
+
+        return Result.Success(amountValue)
     }
 
     fun makeRegistrationTask(challenge: ByteArray): SaltPayRegistrationTask {
@@ -122,11 +160,10 @@ class SaltPayRegistrationManager(
     )
 
     companion object {
-        fun stub(): SaltPayRegistrationManager = SaltPayRegistrationManager(
+        fun stub(): SaltPayActivationManager = SaltPayActivationManager(
             kycProvider = SaltPayConfig.stub().kycProvider,
             paymentologyService = PaymentologyApiService.stub(),
             gnosisRegistrator = GnosisRegistrator.stub(),
-            registrationStorage = SaltPayRegistrationStorage.stub(),
             cardId = "",
             cardPublicKey = byteArrayOf(),
             walletPublicKey = byteArrayOf(),

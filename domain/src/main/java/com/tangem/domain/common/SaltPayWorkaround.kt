@@ -10,7 +10,7 @@ object SaltPayWorkaround {
         return when (blockchain) {
             Blockchain.SaltPay -> Token(
                 name = "WXDAI",
-                symbol = "WXDAI",
+                symbol = "wxDAI",
                 contractAddress = "0x4346186e7461cB4DF06bCFCB4cD591423022e417",
                 decimals = 18,
                 id = "wrapped-xdai",
