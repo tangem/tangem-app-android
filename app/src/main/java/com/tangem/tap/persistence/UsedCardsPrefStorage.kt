@@ -11,7 +11,7 @@ import timber.log.Timber
  */
 class UsedCardsPrefStorage(
     private val preferences: SharedPreferences,
-    private val jsonConverter: MoshiJsonConverter
+    private val jsonConverter: MoshiJsonConverter,
 ) {
 
     internal fun migrate() {
@@ -43,20 +43,20 @@ class UsedCardsPrefStorage(
         save(foundItem, restoredList)
     }
 
-    fun isActivationFinished(cardId: String): Boolean {
-        return !(findCardInfo(cardId)?.isActivationStarted ?: true)
-    }
-
-    fun activationIsStarted(cardId: String): Boolean {
-        return findCardInfo(cardId)?.isActivationStarted ?: false
-    }
-
     fun activationFinished(cardId: String) {
         val restoredList = restore()
         val foundItem = findCardInfo(cardId, restoredList)?.copy(isActivationStarted = false)
             ?: UsedCardInfo(cardId, isActivationStarted = false)
 
         save(foundItem, restoredList)
+    }
+
+    fun isActivationFinished(cardId: String): Boolean {
+        return !(findCardInfo(cardId)?.isActivationStarted ?: true)
+    }
+
+    fun isActivationStarted(cardId: String): Boolean {
+        return findCardInfo(cardId)?.isActivationStarted ?: false
     }
 
     private fun findCardInfo(cardId: String, list: MutableList<UsedCardInfo>? = null): UsedCardInfo? {
