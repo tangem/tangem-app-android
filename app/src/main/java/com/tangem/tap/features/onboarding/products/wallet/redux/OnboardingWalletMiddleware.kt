@@ -13,7 +13,7 @@ import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOnMain
-import com.tangem.tap.common.extensions.primaryCardIsSaltPay
+import com.tangem.tap.common.extensions.primaryCardIsSaltPayVisa
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
@@ -328,7 +328,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             backupService.discardSavedBackup()
         }
         is BackupAction.CheckForUnfinishedBackup -> {
-            if (backupService.hasIncompletedBackup && !backupService.primaryCardIsSaltPay()) {
+            if (backupService.hasIncompletedBackup && !backupService.primaryCardIsSaltPayVisa()) {
                 store.dispatch(GlobalAction.ShowDialog(BackupDialog.UnfinishedBackupFound))
             }
         }
