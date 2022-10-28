@@ -33,14 +33,6 @@ class PreferencesStorage(applicationContext: Application) {
 
     fun getCountOfLaunches(): Int = preferences.getInt(APP_LAUNCH_COUNT_KEY, 1)
 
-    fun saveDisclaimerAccepted() {
-        preferences.edit { putBoolean(DISCLAIMER_ACCEPTED_KEY, true) }
-    }
-
-    fun wasDisclaimerAccepted(): Boolean {
-        return preferences.getBoolean(DISCLAIMER_ACCEPTED_KEY, false)
-    }
-
     fun saveTwinsOnboardingShown() {
         preferences.edit { putBoolean(TWINS_ONBOARDING_SHOWN_KEY, true) }
     }
