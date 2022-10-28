@@ -6,7 +6,7 @@
     android:layout_height="wrap_content">
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_main_action"
+        android:id="@+id/btn_wallet_main_action"
         style="@style/OnboardingButton"
         android:layout_width="204dp"
         android:layout_height="wrap_content"
@@ -17,7 +17,7 @@
         tools:text="Main Action" />
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/btn_alternative_action"
+        android:id="@+id/btn_wallet_alternative_action"
         style="@style/OnboardingButton.Borderless"
         android:layout_width="204dp"
         android:layout_height="wrap_content"
