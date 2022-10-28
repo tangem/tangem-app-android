@@ -11,6 +11,7 @@ import com.tangem.common.services.Result
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.operations.attestation.Attestation
 import com.tangem.operations.attestation.OnlineCardVerifier
+import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.AnalyticsAnOld
 import com.tangem.tap.common.extensions.copyToClipboard
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
@@ -186,7 +187,7 @@ class WalletMiddleware {
                         }
                         is CompletionResult.Failure -> {
                             (result.error as? TangemSdkError)?.let { error ->
-                                store.state.globalState.analyticsHandler?.send(
+                                Analytics.send(
                                     error,
                                     AnalyticsAnOld.ActionToLog.CreateWallet,
                                     card = store.state.detailsState.scanResponse?.card

@@ -6,6 +6,7 @@ import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.extensions.withIOContext
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
+import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.AnalyticsEventAnOld
 import com.tangem.tap.common.analytics.AnalyticsParamAnOld
 import com.tangem.tap.common.analytics.GetCardSourceParamsAnOld
@@ -102,7 +103,7 @@ private fun handleHomeAction(appState: () -> AppState?, action: Action, dispatch
                 RUSSIA_COUNTRY_CODE, BELARUS_COUNTRY_CODE -> store.dispatchOpenUrl(BUY_WALLET_URL)
                 else -> store.dispatch(NavigationAction.NavigateTo(AppScreen.Shop))
             }
-            store.state.globalState.analyticsHandler?.handleAnalyticsEvent(
+            Analytics.handleAnalyticsEvent(
                 event = AnalyticsEventAnOld.GET_CARD,
                 params = mapOf(AnalyticsParamAnOld.SOURCE.param to GetCardSourceParamsAnOld.WELCOME.param),
             )
@@ -149,7 +150,7 @@ private fun onScanSuccess(scanResponse: ScanResponse) {
     val tapWalletManager = globalState.tapWalletManager
     tapWalletManager.updateConfigManager(scanResponse)
 
-    globalState.analyticsHandler.attachToAllEvents(AnalyticsParam.BatchId, scanResponse.card.batchId)
+    Analytics.attachToAllEvents(AnalyticsParam.BatchId, scanResponse.card.batchId)
 
     store.dispatch(TwinCardsAction.IfTwinsPrepareState(scanResponse))
 
