@@ -94,6 +94,7 @@ private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch:
                 }
                 else -> {
                     store.dispatch(OnboardingWalletAction.GetToCreateWalletStep)
+                    Analytics.send(Onboarding.CreateWallet.ScreenOpened())
                 }
             }
         }
@@ -109,12 +110,14 @@ private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch:
             }
         }
         is OnboardingWalletAction.CreateWallet -> {
+            Analytics.send(Onboarding.CreateWallet.ButtonCreateWallet())
             scope.launch {
                 scanResponse ?: return@launch
                 val result = tangemSdkManager.createProductWallet(scanResponse)
                 withMainContext {
                     when (result) {
                         is CompletionResult.Success -> {
+                            Analytics.send(Onboarding.CreateWallet.WalletCreatedSuccessfully())
                             //here we must use updated scanResponse after createWallet & derivation
                             val updatedResponse = globalState.onboardingState.onboardingManager.scanResponse.copy(
                                 card = result.data.card,
