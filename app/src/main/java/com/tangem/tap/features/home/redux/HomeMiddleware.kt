@@ -1,11 +1,14 @@
 package com.tangem.tap.features.home.redux
 
+import com.tangem.common.card.Card
 import com.tangem.common.core.TangemError
 import com.tangem.common.services.Result
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.extensions.withIOContext
 import com.tangem.domain.common.extensions.withMainContext
+import com.tangem.operations.backup.BackupService
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
+import com.tangem.tap.backupService
 import com.tangem.tap.common.analytics.AnalyticsEventAnOld
 import com.tangem.tap.common.analytics.AnalyticsParamAnOld
 import com.tangem.tap.common.analytics.GetCardSourceParamsAnOld
@@ -14,6 +17,7 @@ import com.tangem.tap.common.entities.IndeterminateProgressButton
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOpenUrl
 import com.tangem.tap.common.extensions.onCardScanned
+import com.tangem.tap.common.extensions.primaryCardIsSaltPayVisa
 import com.tangem.tap.common.postUiDelayBg
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
@@ -83,6 +87,7 @@ private fun handleHomeAction(appState: () -> AppState?, action: Action, dispatch
                 onSuccess = { scanResponse ->
                     store.dispatch(HomeAction.ScanInProgress(false))
                     checkForUnfinishedBackupForSaltPay(
+                        backupService = backupService,
                         scanResponse = scanResponse,
                         nextHandler = {
                             showDisclaimerIfNeed(
@@ -115,13 +120,22 @@ private fun handleHomeAction(appState: () -> AppState?, action: Action, dispatch
  * see BackupAction.CheckForUnfinishedBackup
  * If user touches card other than Visa SaltPay - show dialog and block next processing
  */
-private fun checkForUnfinishedBackupForSaltPay(scanResponse: ScanResponse, nextHandler: (ScanResponse) -> Unit) {
-    if (BackupAction.hasSaltPayUnfinishedBackup()) {
-        if (scanResponse.isSaltPayVisa()) {
-            nextHandler(scanResponse)
-        } else {
-            showSaltPayTapVisaLogoCardDialog()
-        }
+private fun checkForUnfinishedBackupForSaltPay(
+    backupService: BackupService,
+    scanResponse: ScanResponse,
+    nextHandler: (ScanResponse) -> Unit,
+) {
+    if (!backupService.hasIncompletedBackup || !backupService.primaryCardIsSaltPayVisa()) {
+        nextHandler(scanResponse)
+        return
+    }
+
+    fun isTheSamePrimaryCard(card: Card): Boolean {
+        return backupService.primaryCardId?.let { it == card.cardId } ?: false
+    }
+
+    if (scanResponse.isSaltPayWallet() || !isTheSamePrimaryCard(scanResponse.card)) {
+        showSaltPayTapVisaLogoCardDialog()
     } else {
         nextHandler(scanResponse)
     }
