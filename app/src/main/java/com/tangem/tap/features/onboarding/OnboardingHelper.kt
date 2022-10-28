@@ -19,10 +19,10 @@ class OnboardingHelper {
                     if (!response.twinsIsTwinned()) {
                         true
                     } else {
-                        cardInfoStorage.activationIsStarted(response.card.cardId)
+                        cardInfoStorage.isActivationStarted(response.card.cardId)
                     }
                 }
-                response.card.hasWallets() -> cardInfoStorage.activationIsStarted(response.card.cardId)
+                response.card.hasWallets() -> cardInfoStorage.isActivationStarted(response.card.cardId)
                 else -> true
             }
         }
