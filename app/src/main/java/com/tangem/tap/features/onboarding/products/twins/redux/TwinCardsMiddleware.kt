@@ -99,7 +99,10 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
                 CreateTwinWalletMode.CreateWallet -> {
                     if (preferencesStorage.wasTwinsOnboardingShown()) {
                         val step = when {
-                            !scanResponse.twinsIsTwinned() -> TwinCardsStep.CreateFirstWallet
+                            !scanResponse.twinsIsTwinned() -> {
+                                Analytics.send(Onboarding.CreateWallet.ScreenOpened())
+                                TwinCardsStep.CreateFirstWallet
+                            }
                             twinCardsState.walletBalance.balanceIsToppedUp() -> TwinCardsStep.Done
                             else -> TwinCardsStep.TopUpWallet
                         }
@@ -146,6 +149,7 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
             }
         }
         is TwinCardsAction.Wallet.LaunchFirstStep -> {
+            Analytics.send(Onboarding.CreateWallet.ButtonCreateWallet())
             val manager = TwinCardsManager(
                 card = getScanResponse().card,
                 assetReader = action.reader,
@@ -155,6 +159,7 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
             scope.launch {
                 when (val result = manager.createFirstWallet(action.initialMessage)) {
                     is CompletionResult.Success -> {
+                        Analytics.send(Onboarding.CreateWallet.WalletCreatedSuccessfully())
                         startCardActivation(result.data.cardId)
                         delay(DELAY_SDK_DIALOG_CLOSE)
                         withMainContext {
