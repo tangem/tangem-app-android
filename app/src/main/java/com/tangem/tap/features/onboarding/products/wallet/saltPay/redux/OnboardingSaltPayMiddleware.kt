@@ -300,12 +300,17 @@ private fun determineStep(
     amountToClaim: Amount?,
     response: RegistrationResponse.Item,
 ): SaltPayActivationStep {
+    fun getStepBaseOnAmountToClaim(amount: Amount?): SaltPayActivationStep = when (amount) {
+        null -> SaltPayActivationStep.Success
+        else -> SaltPayActivationStep.Claim
+    }
+
     return when {
         response.passed != true -> throw SaltPayActivationError.CardNotPassed(response.error)
         response.disabledByAdmin == true -> throw SaltPayActivationError.CardDisabled(response.error)
 
         // go to claim screen
-        response.active == true -> SaltPayActivationStep.Claim
+        response.active == true -> getStepBaseOnAmountToClaim(amountToClaim)
 
         // pinSet is false, go toPin screen
         response.pinSet == false -> SaltPayActivationStep.NeedPin
@@ -316,10 +321,7 @@ private fun determineStep(
                     KYCStatus.NOT_STARTED, KYCStatus.STARTED -> SaltPayActivationStep.KycIntro
                     KYCStatus.WAITING_FOR_APPROVAL -> SaltPayActivationStep.KycWaiting
                     KYCStatus.CORRECTION_REQUESTED, KYCStatus.REJECTED -> SaltPayActivationStep.KycReject
-                    KYCStatus.APPROVED -> when (amountToClaim) {
-                        null -> SaltPayActivationStep.Success
-                        else -> SaltPayActivationStep.Claim
-                    }
+                    KYCStatus.APPROVED -> getStepBaseOnAmountToClaim(amountToClaim)
                     else -> SaltPayActivationStep.KycIntro
                 }
                 SaltPayActivationStep.KycReject -> when (response.kycStatus) {
@@ -327,20 +329,14 @@ private fun determineStep(
                     KYCStatus.WAITING_FOR_APPROVAL -> SaltPayActivationStep.KycWaiting
                     KYCStatus.CORRECTION_REQUESTED -> SaltPayActivationStep.KycStart
                     KYCStatus.REJECTED -> SaltPayActivationStep.KycStart
-                    KYCStatus.APPROVED -> when (amountToClaim) {
-                        null -> SaltPayActivationStep.Success
-                        else -> SaltPayActivationStep.Claim
-                    }
+                    KYCStatus.APPROVED -> getStepBaseOnAmountToClaim(amountToClaim)
                     else -> SaltPayActivationStep.KycIntro
                 }
                 else -> when (response.kycStatus) {
                     KYCStatus.NOT_STARTED, KYCStatus.STARTED -> SaltPayActivationStep.KycIntro
                     KYCStatus.WAITING_FOR_APPROVAL -> SaltPayActivationStep.KycWaiting
                     KYCStatus.CORRECTION_REQUESTED, KYCStatus.REJECTED -> SaltPayActivationStep.KycReject
-                    KYCStatus.APPROVED -> when (amountToClaim) {
-                        null -> SaltPayActivationStep.Finished
-                        else -> SaltPayActivationStep.Claim
-                    }
+                    KYCStatus.APPROVED -> getStepBaseOnAmountToClaim(amountToClaim)
                     else -> SaltPayActivationStep.KycIntro
                 }
             }
