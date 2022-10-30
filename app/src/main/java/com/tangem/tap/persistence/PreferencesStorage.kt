@@ -33,11 +33,6 @@ class PreferencesStorage(applicationContext: Application) {
 
     fun getCountOfLaunches(): Int = preferences.getInt(APP_LAUNCH_COUNT_KEY, 1)
 
-    @Deprecated("Use UsedCardsPrefStorage instead")
-    fun wasCardScannedBefore(cardId: String): Boolean {
-        return usedCardsPrefStorage.wasScanned(cardId)
-    }
-
     fun saveTwinsOnboardingShown() {
         preferences.edit { putBoolean(TWINS_ONBOARDING_SHOWN_KEY, true) }
     }
