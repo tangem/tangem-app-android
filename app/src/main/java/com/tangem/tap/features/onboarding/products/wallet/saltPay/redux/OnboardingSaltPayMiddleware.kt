@@ -66,7 +66,7 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
 
     when (action) {
         is OnboardingSaltPayAction.Init -> {
-            if (getOnboardingWalletState().isSaltPay) return
+            if (!getOnboardingWalletState().isSaltPay) return
             val onboardingManager = getOnboardingManager().guard {
                 // onboardingManager may be null if it's started from standard Wallet unfinished backup
                 return
@@ -289,7 +289,7 @@ suspend fun SaltPayActivationManager.update(
         return Result.Failure(ex)
     }
 
-    checkGasIfNeeded(this, newStep).successOr { return it }
+    // checkGasIfNeeded(this, newStep).successOr { return it }
 
     Timber.d("update: success: %s", newStep)
     return Result.Success(newStep)
