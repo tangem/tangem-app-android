@@ -14,15 +14,16 @@ class OnboardingHelper {
 
         fun isOnboardingCase(response: ScanResponse): Boolean {
             val cardInfoStorage = preferencesStorage.usedCardsPrefStorage
+            val cardId = response.card.cardId
             return when {
                 response.isTangemTwins() -> {
                     if (!response.twinsIsTwinned()) {
                         true
                     } else {
-                        cardInfoStorage.isActivationStarted(response.card.cardId)
+                        cardInfoStorage.isActivationInProgress(cardId)
                     }
                 }
-                response.card.hasWallets() -> cardInfoStorage.isActivationStarted(response.card.cardId)
+                response.card.hasWallets() -> cardInfoStorage.isActivationInProgress(cardId)
                 else -> true
             }
         }
