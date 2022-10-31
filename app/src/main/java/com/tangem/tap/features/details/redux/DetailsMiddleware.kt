@@ -6,6 +6,8 @@ import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.AnalyticsAnOld
 import com.tangem.tap.common.analytics.AnalyticsParamAnOld
+import com.tangem.tap.common.analytics.events.AnalyticsParam
+import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.extensions.dispatchNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
@@ -107,6 +109,7 @@ class DetailsMiddleware {
                         val result = tangemSdkManager.resetToFactorySettings(card)
                             when (result) {
                                 is CompletionResult.Success -> {
+                                    Analytics.send(Settings.CardSettings.FactoryResetFinished())
                                     store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Home))
                                 }
                                 is CompletionResult.Failure -> {
@@ -132,6 +135,10 @@ class DetailsMiddleware {
             when (action) {
                 is DetailsAction.ManageSecurity.OpenSecurity -> {
                     store.dispatch(NavigationAction.NavigateTo(AppScreen.DetailsSecurity))
+                }
+                is DetailsAction.ManageSecurity.SelectOption -> {
+                    val modeParam = AnalyticsParam.SecurityMode.from(action.option)
+                    Analytics.send(Settings.CardSettings.SecurityModeChanged(modeParam))
                 }
                 is DetailsAction.ManageSecurity.SaveChanges -> {
                     val cardId = store.state.detailsState.scanResponse?.card?.cardId
@@ -176,7 +183,10 @@ class DetailsMiddleware {
                 is DetailsAction.ManageSecurity.ChangeAccessCode -> {
                     val card = store.state.detailsState.cardSettingsState?.card ?: return
                     scope.launch {
-                        tangemSdkManager.setAccessCode(card.cardId)
+                        when(tangemSdkManager.setAccessCode(card.cardId)){
+                            is CompletionResult.Success -> Analytics.send(Settings.CardSettings.UserCodeChanged())
+                            is CompletionResult.Failure -> {}
+                        }
                     }
                 }
                 else -> { /* no-op */
