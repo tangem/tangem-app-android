@@ -1,5 +1,7 @@
 package com.tangem.tap.common.analytics.events
 
+import com.tangem.tap.features.details.redux.SecurityOption
+
 sealed class AnalyticsParam {
 
     sealed class CurrencyType(val value: String) {
@@ -39,6 +41,14 @@ sealed class AnalyticsParam {
         object AccessCode : SecurityMode("Access Code")
         object Passcode : SecurityMode("Passcode")
         object LongTap : SecurityMode("Long Tap")
+
+        companion object {
+            fun from(option: SecurityOption): SecurityMode = when(option){
+                SecurityOption.AccessCode -> AccessCode
+                SecurityOption.PassCode -> Passcode
+                SecurityOption.LongTap -> LongTap
+            }
+        }
     }
 
     companion object Key {
