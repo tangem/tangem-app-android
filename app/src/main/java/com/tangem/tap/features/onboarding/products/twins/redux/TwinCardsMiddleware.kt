@@ -139,8 +139,10 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
         }
         is TwinCardsAction.SetStepOfScreen -> {
             when (action.step) {
-                TwinCardsStep.WelcomeOnly -> preferencesStorage.saveTwinsOnboardingShown()
-                TwinCardsStep.Welcome -> preferencesStorage.saveTwinsOnboardingShown()
+                TwinCardsStep.WelcomeOnly, TwinCardsStep.Welcome -> {
+                    Analytics.send(Onboarding.Twins.ScreenOpened())
+                    preferencesStorage.saveTwinsOnboardingShown()
+                }
                 TwinCardsStep.TopUpWallet -> store.dispatch(TwinCardsAction.Balance.Update)
                 TwinCardsStep.Done -> {
                     finishCardActivation()
@@ -149,6 +151,7 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
             }
         }
         is TwinCardsAction.Wallet.LaunchFirstStep -> {
+            Analytics.send(Onboarding.Twins.SetupStarted())
             val manager = TwinCardsManager(
                 card = getScanResponse().card,
                 assetReader = action.reader,
@@ -199,6 +202,7 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
             scope.launch {
                 when (val result = manager.complete(action.message)) {
                     is Result.Success -> {
+                        Analytics.send(Onboarding.Twins.SetupFinished())
                         updateScanResponse(result.data)
                         delay(DELAY_SDK_DIALOG_CLOSE)
                         withMainContext {
