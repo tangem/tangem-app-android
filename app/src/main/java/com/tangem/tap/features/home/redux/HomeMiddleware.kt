@@ -14,6 +14,7 @@ import com.tangem.tap.common.analytics.AnalyticsEventAnOld
 import com.tangem.tap.common.analytics.AnalyticsParamAnOld
 import com.tangem.tap.common.analytics.GetCardSourceParamsAnOld
 import com.tangem.tap.common.analytics.events.AnalyticsParam
+import com.tangem.tap.common.analytics.events.IntroductionProcess
 import com.tangem.tap.common.entities.IndeterminateProgressButton
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOpenUrl
@@ -161,6 +162,7 @@ private fun showDisclaimerIfNeed(scanResponse: ScanResponse, nextHandler: (ScanR
 }
 
 private fun onScanSuccess(scanResponse: ScanResponse) {
+    Analytics.send(IntroductionProcess.CardWasScanned())
     val globalState = store.state.globalState
     val tapWalletManager = globalState.tapWalletManager
     tapWalletManager.updateConfigManager(scanResponse)
