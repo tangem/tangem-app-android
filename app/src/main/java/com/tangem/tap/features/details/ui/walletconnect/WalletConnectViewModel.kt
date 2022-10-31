@@ -1,5 +1,7 @@
 package com.tangem.tap.features.details.ui.walletconnect
 
+import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectSession
@@ -12,7 +14,10 @@ class WalletConnectViewModel(private val store: Store<AppState>) {
             state.sessions.map { wcSession -> WcSessionForScreen.fromSession(wcSession) },
             isLoading = state.loading,
             onRemoveSession = { sessionUri -> onRemoveSession(sessionUri, state.sessions) },
-            onAddSession = { copiedUri -> store.dispatch(WalletConnectAction.StartWalletConnect(copiedUri)) },
+            onAddSession = { copiedUri ->
+                Analytics.send(Settings.ButtonStartWalletConnectSession())
+                store.dispatch(WalletConnectAction.StartWalletConnect(copiedUri))
+            },
         )
     }
 
@@ -20,6 +25,7 @@ class WalletConnectViewModel(private val store: Store<AppState>) {
         sessions
             .firstOrNull { it.session.toUri() == sessionUri }
             ?.let { baseSession ->
+                Analytics.send(Settings.ButtonStopWalletConnectSession())
                 store.dispatch(WalletConnectAction.DisconnectSession(baseSession.session))
             }
     }
