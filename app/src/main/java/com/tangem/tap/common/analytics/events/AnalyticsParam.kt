@@ -41,15 +41,6 @@ sealed class AnalyticsParam {
         object LongTap : SecurityMode("Long Tap")
     }
 
-    sealed class SocialNetwork(val value: String) {
-        object Facebook : SocialNetwork("Facebook")
-        object Instagram : SocialNetwork("Instagram")
-        object Youtube : SocialNetwork("Youtube")
-        object Twitter : SocialNetwork("Twitter")
-        object LinkedIn : SocialNetwork("LinkedIn")
-        object GitHub : SocialNetwork("GitHub")
-    }
-
     companion object Key {
         const val Blockchain = "blockchain"
         const val BatchId = "batch_id"
