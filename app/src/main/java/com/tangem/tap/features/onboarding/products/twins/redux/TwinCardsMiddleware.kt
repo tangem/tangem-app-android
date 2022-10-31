@@ -12,7 +12,7 @@ import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchErrorNotification
 import com.tangem.tap.common.extensions.dispatchOpenUrl
 import com.tangem.tap.common.extensions.getAddressData
-import com.tangem.tap.common.extensions.getToUpUrl
+import com.tangem.tap.common.extensions.getTopUpUrl
 import com.tangem.tap.common.extensions.onCardScanned
 import com.tangem.tap.common.postUi
 import com.tangem.tap.common.redux.AppDialog
@@ -268,7 +268,7 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
             store.dispatchDialogShow(appDialog)
         }
         is TwinCardsAction.TopUp -> {
-            val topUpUrl = twinCardsState.walletManager?.getToUpUrl() ?: return
+            val topUpUrl = twinCardsState.walletManager?.getTopUpUrl() ?: return
             store.dispatchOpenUrl(topUpUrl)
         }
         TwinCardsAction.Done -> {
