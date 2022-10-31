@@ -1,5 +1,7 @@
 package com.tangem.tap.common.analytics.events
 
+import com.tangem.tap.features.details.ui.details.SocialNetwork
+
 /**
 [REDACTED_AUTHOR]
  */
@@ -18,9 +20,9 @@ sealed class Settings(
     class ButtonAppSettings : Settings(event = "Button - App Settings")
     class ButtonCreateBackup : Settings(event = "Button - Create Backup")
 
-    sealed class ButtonSocialNetwork(network: AnalyticsParam.SocialNetwork) : Settings(
+    class ButtonSocialNetwork(network: SocialNetwork) : Settings(
         event = "Button - Social Network",
-        params = mapOf("Network" to network.value),
+        params = mapOf("Network" to network.id),
     )
 
     sealed class CardSettings(
