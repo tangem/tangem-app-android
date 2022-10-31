@@ -93,8 +93,6 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
             }
         }
         is OnboardingSaltPayAction.RegisterCard -> {
-            Analytics.send(Onboarding.ButtonConnect())
-
             handleInProgress = true
             val state = getState()
 
@@ -175,7 +173,6 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
             }
         }
         is OnboardingSaltPayAction.Claim -> {
-            Analytics.send(Onboarding.ButtonClaim())
             val state = getState()
             handleInProgress = true
 
