@@ -78,7 +78,6 @@ private fun handleOtherCardsAction(action: Action, dispatch: DispatchFunction) {
             }
         }
         is OnboardingOtherCardsAction.CreateWallet -> {
-            Analytics.send(Onboarding.CreateWallet.ButtonCreateWallet())
             scope.launch {
                 val result = tangemSdkManager.createProductWallet(onboardingManager.scanResponse)
                 withMainContext {

@@ -19,6 +19,8 @@ import com.tangem.common.CardIdFormatter
 import com.tangem.common.core.CardIdDisplayFormat
 import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.LeapfrogWidget
 import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.PropertyCalculator
+import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.inflate
 import com.tangem.tap.common.extensions.show
@@ -171,7 +173,10 @@ class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_walle
 
     private fun setupCreateWalletState() = with(binding) {
         layoutButtonsCommon.btnWalletMainAction.setText(R.string.onboarding_create_wallet_button_create_wallet)
-        layoutButtonsCommon.btnWalletMainAction.setOnClickListener { store.dispatch(OnboardingWalletAction.CreateWallet) }
+        layoutButtonsCommon.btnWalletMainAction.setOnClickListener {
+            Analytics.send(Onboarding.CreateWallet.ButtonCreateWallet())
+            store.dispatch(OnboardingWalletAction.CreateWallet)
+        }
         layoutButtonsCommon.btnWalletAlternativeAction.hide()
 
         toolbar.title = getText(R.string.onboarding_getting_started)
