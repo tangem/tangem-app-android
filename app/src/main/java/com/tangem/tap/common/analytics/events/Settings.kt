@@ -35,12 +35,12 @@ sealed class Settings(
         class UserCodeChanged : CardSettings("User Code Changed")
         class ButtonChangeSecurityMode : CardSettings("Button - Change Security Mode")
 
-        sealed class ButtonChangeUserCode(type: AnalyticsParam.UserCode) : CardSettings(
+        class ButtonChangeUserCode(type: AnalyticsParam.UserCode) : CardSettings(
             event = "Button - Change User Code",
             params = mapOf("Type" to type.value),
         )
 
-        sealed class SecurityModeChanged(mode: AnalyticsParam.SecurityMode) : CardSettings(
+        class SecurityModeChanged(mode: AnalyticsParam.SecurityMode) : CardSettings(
             event = "Security Mode Changed",
             params = mapOf("Mode" to mode.value),
         )
