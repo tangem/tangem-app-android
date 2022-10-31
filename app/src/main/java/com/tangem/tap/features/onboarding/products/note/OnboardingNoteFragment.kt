@@ -9,6 +9,8 @@ import androidx.core.view.isVisible
 import androidx.transition.TransitionManager
 import coil.load
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.getDrawableCompat
 import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.common.redux.navigation.ShareElement
@@ -109,7 +111,10 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
     private fun setupCreateWalletState(state: OnboardingNoteState) =
         with(mainBinding.onboardingActionContainer) {
             btnMainAction.setText(R.string.onboarding_create_wallet_button_create_wallet)
-            btnMainAction.setOnClickListener { store.dispatch(OnboardingNoteAction.CreateWallet) }
+            btnMainAction.setOnClickListener {
+                Analytics.send(Onboarding.CreateWallet.ButtonCreateWallet())
+                store.dispatch(OnboardingNoteAction.CreateWallet)
+            }
             btnAlternativeAction.setText(R.string.onboarding_button_what_does_it_mean)
             btnAlternativeAction.setOnClickListener { }
 
