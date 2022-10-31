@@ -149,7 +149,6 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
             }
         }
         is TwinCardsAction.Wallet.LaunchFirstStep -> {
-            Analytics.send(Onboarding.CreateWallet.ButtonCreateWallet())
             val manager = TwinCardsManager(
                 card = getScanResponse().card,
                 assetReader = action.reader,
