@@ -5,12 +5,14 @@ import com.tangem.common.extensions.guard
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Onboarding
+import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchErrorNotification
 import com.tangem.tap.common.extensions.dispatchOpenUrl
 import com.tangem.tap.common.extensions.getAddressData
-import com.tangem.tap.common.extensions.getToUpUrl
+import com.tangem.tap.common.extensions.getTopUpUrl
 import com.tangem.tap.common.extensions.onCardScanned
 import com.tangem.tap.common.postUi
 import com.tangem.tap.common.redux.AppDialog
@@ -85,6 +87,7 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
                     Analytics.send(Onboarding.CreateWallet.ScreenOpened())
                 }
                 OnboardingNoteStep.TopUpWallet -> {
+                    Analytics.send(Onboarding.Topup.ScreenOpened())
                     store.dispatch(OnboardingNoteAction.Balance.Update)
                 }
                 OnboardingNoteStep.Done -> {
@@ -159,11 +162,21 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
         is OnboardingNoteAction.ShowAddressInfoDialog -> {
             val addressData = noteState.walletManager?.getAddressData() ?: return
 
+            Analytics.send(Onboarding.Topup.ButtonShowWalletAddress())
             val appDialog = AppDialog.AddressInfoDialog(noteState.walletBalance.currency, addressData)
             store.dispatchDialogShow(appDialog)
         }
         is OnboardingNoteAction.TopUp -> {
-            val topUpUrl = noteState.walletManager?.getToUpUrl() ?: return
+            val walletManager = noteState.walletManager.guard {
+                store.dispatchDebugErrorNotification("NPE: WalletManager")
+                return
+            }
+
+            val blockchain = walletManager.wallet.blockchain
+            val currencyType = AnalyticsParam.CurrencyType.Blockchain(blockchain)
+            Analytics.send(Onboarding.Topup.ButtonBuyCrypto(currencyType))
+
+            val topUpUrl = walletManager.getTopUpUrl() ?: return
             store.dispatchOpenUrl(topUpUrl)
         }
         OnboardingNoteAction.Done -> {
