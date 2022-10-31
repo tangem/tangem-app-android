@@ -95,7 +95,6 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
             }
         }
         is OnboardingNoteAction.CreateWallet -> {
-            Analytics.send(Onboarding.CreateWallet.ButtonCreateWallet())
             scope.launch {
                 val result = tangemSdkManager.createProductWallet(scanResponse)
                 withMainContext {
