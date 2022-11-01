@@ -136,10 +136,6 @@ class DetailsMiddleware {
                 is DetailsAction.ManageSecurity.OpenSecurity -> {
                     store.dispatch(NavigationAction.NavigateTo(AppScreen.DetailsSecurity))
                 }
-                is DetailsAction.ManageSecurity.SelectOption -> {
-                    val modeParam = AnalyticsParam.SecurityMode.from(action.option)
-                    Analytics.send(Settings.CardSettings.SecurityModeChanged(modeParam))
-                }
                 is DetailsAction.ManageSecurity.SaveChanges -> {
                     val cardId = store.state.detailsState.scanResponse?.card?.cardId
                     val selectedOption =
@@ -155,6 +151,8 @@ class DetailsMiddleware {
                             when (result) {
                                 is CompletionResult.Success -> {
                                     selectedOption?.let {
+                                        val paramValue = AnalyticsParam.SecurityMode.from(it)
+                                        Analytics.send(Settings.CardSettings.SecurityModeChanged(paramValue))
                                         store.dispatch(GlobalAction.UpdateSecurityOptions(it))
                                     }
                                     store.dispatch(NavigationAction.PopBackTo())
