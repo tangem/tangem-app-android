@@ -59,9 +59,9 @@ sealed class Token(
         class ButtonQRCode : Send("Button - QR Code")
         class ButtonSwapCurrency : Send("Button - Swap Currency")
 
-        class TransactionSent(token: CurrencyType) : Send(
+        class TransactionSent(type: CurrencyType) : Send(
             event = "Transaction Sent",
-            params = mapOf("Token" to token.value),
+            params = mapOf("Token" to type.value),
         )
     }
 

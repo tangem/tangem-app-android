@@ -16,6 +16,8 @@ import com.google.android.material.textfield.TextInputEditText
 import com.tangem.Message
 import com.tangem.tangem_sdk_new.extensions.hideSoftKeyboard
 import com.tangem.tap.common.KeyboardObserver
+import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.getFromClipboard
 import com.tangem.tap.common.extensions.setOnImeActionListener
@@ -28,10 +30,25 @@ import com.tangem.tap.common.toggleWidget.IndeterminateProgressButtonWidget
 import com.tangem.tap.common.toggleWidget.ViewStateWidget
 import com.tangem.tap.features.BaseStoreFragment
 import com.tangem.tap.features.addBackPressHandler
-import com.tangem.tap.features.send.redux.*
-import com.tangem.tap.features.send.redux.AddressPayIdActionUi.*
-import com.tangem.tap.features.send.redux.AmountActionUi.*
-import com.tangem.tap.features.send.redux.FeeActionUi.*
+import com.tangem.tap.features.send.redux.AddressPayIdActionUi
+import com.tangem.tap.features.send.redux.AddressPayIdActionUi.CheckClipboard
+import com.tangem.tap.features.send.redux.AddressPayIdActionUi.PasteAddressPayId
+import com.tangem.tap.features.send.redux.AddressPayIdActionUi.SetTruncateHandler
+import com.tangem.tap.features.send.redux.AddressPayIdActionUi.TruncateOrRestore
+import com.tangem.tap.features.send.redux.AmountAction
+import com.tangem.tap.features.send.redux.AmountActionUi
+import com.tangem.tap.features.send.redux.AmountActionUi.CheckAmountToSend
+import com.tangem.tap.features.send.redux.AmountActionUi.SetMainCurrency
+import com.tangem.tap.features.send.redux.AmountActionUi.SetMaxAmount
+import com.tangem.tap.features.send.redux.AmountActionUi.ToggleMainCurrency
+import com.tangem.tap.features.send.redux.FeeActionUi.ChangeIncludeFee
+import com.tangem.tap.features.send.redux.FeeActionUi.ChangeSelectedFee
+import com.tangem.tap.features.send.redux.FeeActionUi.ToggleControlsVisibility
+import com.tangem.tap.features.send.redux.ReceiptAction
+import com.tangem.tap.features.send.redux.ReleaseSendState
+import com.tangem.tap.features.send.redux.SendAction
+import com.tangem.tap.features.send.redux.SendActionUi
+import com.tangem.tap.features.send.redux.TransactionExtrasAction
 import com.tangem.tap.features.send.redux.states.FeeType
 import com.tangem.tap.features.send.redux.states.MainCurrencyType
 import com.tangem.tap.features.send.ui.stateSubscribers.SendStateSubscriber
@@ -43,7 +60,12 @@ import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentSendBinding
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.awaitClose
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.filter
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import java.text.DecimalFormatSymbols
 
 /**
@@ -60,6 +82,11 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
     private lateinit var keyboardObserver: KeyboardObserver
 
     val binding: FragmentSendBinding by viewBinding(FragmentSendBinding::bind)
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        Analytics.send(Token.Send.ScreenOpened())
+    }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
@@ -101,10 +128,12 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
                 .launchIn(mainScope)
 
         imvPaste.setOnClickListener {
+            Analytics.send(Token.Send.ButtonPaste())
             store.dispatch(PasteAddressPayId(requireContext().getFromClipboard()?.toString() ?: ""))
             store.dispatch(TruncateOrRestore(!etAddressOrPayId.isFocused))
         }
         imvQrCode.setOnClickListener {
+            Analytics.send(Token.Send.ButtonQRCode())
             startActivityForResult(
                 Intent(requireContext(), ScanQrCodeActivity::class.java),
                 ScanQrCodeActivity.SCAN_QR_REQUEST_CODE
@@ -165,6 +194,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         store.dispatch(AmountAction.SetDecimalSeparator(decimalSeparator))
 
         binding.lSendAmount.tvAmountCurrency.setOnClickListener {
+            Analytics.send(Token.Send.ButtonSwapCurrency())
             store.dispatch(ToggleMainCurrency)
             store.dispatch(ReceiptAction.RefreshReceipt)
             store.dispatch(SendAction.ChangeSendButtonState(store.state.sendState.getButtonState()))
