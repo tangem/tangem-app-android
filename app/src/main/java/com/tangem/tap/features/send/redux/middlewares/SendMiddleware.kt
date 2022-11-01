@@ -21,6 +21,8 @@ import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.AnalyticsAnOld
 import com.tangem.tap.common.analytics.AnalyticsEventAnOld
 import com.tangem.tap.common.analytics.AnalyticsParamAnOld
+import com.tangem.tap.common.analytics.events.AnalyticsParam
+import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -222,6 +224,7 @@ private fun sendTransaction(
 
             when (sendResult) {
                 is SimpleResult.Success -> {
+                    Analytics.send(Token.Send.TransactionSent(AnalyticsParam.CurrencyType.Amount(amountToSend)))
                     Analytics.handleAnalyticsEvent(
                         event = AnalyticsEventAnOld.TRANSACTION_IS_SENT,
                         card = card,
