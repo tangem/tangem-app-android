@@ -100,7 +100,10 @@ class TradeCryptoMiddleware {
             cryptoCurrencyName = currency.currencySymbol,
             fiatCurrencyName = appCurrency.code,
             walletAddress = addresses[0].address,
-        )?.let { store.dispatchOpenUrl(it) }
+        )?.let {
+            store.dispatchOpenUrl(it)
+            Analytics.send(Token.Withdraw.ScreenOpened())
+        }
     }
 
     private fun preconfigureAndOpenSendScreen(action: WalletAction.TradeCryptoAction.SendCrypto) {
