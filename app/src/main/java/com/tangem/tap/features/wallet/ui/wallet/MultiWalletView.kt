@@ -7,6 +7,7 @@ import com.tangem.common.card.Card
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.analytics.events.Portfolio
 import com.tangem.tap.common.extensions.animateVisibility
 import com.tangem.tap.common.extensions.formatAmountAsSpannedString
@@ -115,6 +116,7 @@ class MultiWalletView : WalletView() {
     ) = with(binding.lWalletBackupWarning) {
         root.isVisible = showBackupWarning
         root.setOnClickListener {
+            Analytics.send(MainScreen.NoticeBackupYourWalletTapped())
             store.dispatch(WalletAction.MultiWallet.BackupWallet)
         }
     }
@@ -125,6 +127,7 @@ class MultiWalletView : WalletView() {
     ) = with(binding.lWalletRescanWarning) {
         root.isVisible = showRescanWarning
         root.setOnClickListener {
+            Analytics.send(MainScreen.NoticeScanYourCardTapped())
             store.dispatch(WalletAction.MultiWallet.ScanToGetDerivations)
         }
     }
