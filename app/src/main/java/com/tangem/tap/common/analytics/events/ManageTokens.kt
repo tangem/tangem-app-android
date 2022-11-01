@@ -44,15 +44,13 @@ sealed class ManageTokens(
                 private fun convertToParam(customCurrency: CustomCurrency): Map<String, String> = with(customCurrency) {
                     return when (this) {
                         is CustomCurrency.CustomBlockchain -> mapOf(
-                            "Network" to network.toNetworkId(),
-                            "Symbol" to network.currency,
+                            "Token" to network.currency,
                             "DerivationPath" to derivationPath?.rawPath,
                         ).filterNotNull()
                         is CustomCurrency.CustomToken -> mapOf(
-                            "Network" to network.toNetworkId(),
-                            "Symbol" to token.symbol,
+                            "Token" to token.symbol,
                             "DerivationPath" to derivationPath?.rawPath,
-                            "Token" to token.id,
+                            "NetworkId" to network.toNetworkId(),
                             "Address" to token.contractAddress,
                         ).filterNotNull()
                     }
