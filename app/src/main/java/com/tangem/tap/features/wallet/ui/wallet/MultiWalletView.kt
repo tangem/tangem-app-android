@@ -6,6 +6,8 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.tangem.common.card.Card
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.TapWorkarounds.isTestCard
+import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.Portfolio
 import com.tangem.tap.common.extensions.animateVisibility
 import com.tangem.tap.common.extensions.formatAmountAsSpannedString
 import com.tangem.tap.common.extensions.getQuantityString
@@ -85,6 +87,7 @@ class MultiWalletView : WalletView() {
 
         binding.btnAddToken.setOnClickListener {
             val card = store.state.globalState.scanResponse!!.card
+            Analytics.send(Portfolio.ButtonManageTokens())
             store.dispatch(
                 TokensAction.LoadCurrencies(
                     supportedBlockchains = CurrenciesRepository.getBlockchains(
