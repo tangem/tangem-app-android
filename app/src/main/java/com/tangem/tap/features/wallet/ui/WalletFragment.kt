@@ -16,6 +16,8 @@ import coil.load
 import coil.size.Scale
 import com.tangem.domain.common.TapWorkarounds.isSaltPay
 import com.tangem.tap.MainActivity
+import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.Portfolio
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.recyclerView.SpaceItemDecoration
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -152,6 +154,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
             if (state.state != ProgressState.Loading ||
                 state.state != ProgressState.Refreshing
             ) {
+                Analytics.send(Portfolio.Refreshed())
                 store.dispatch(WalletAction.LoadData.Refresh)
             }
         }
