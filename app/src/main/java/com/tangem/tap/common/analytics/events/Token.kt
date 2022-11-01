@@ -1,5 +1,7 @@
 package com.tangem.tap.common.analytics.events
 
+import com.tangem.tap.common.analytics.events.AnalyticsParam.CurrencyType
+
 /**
 [REDACTED_AUTHOR]
  */
@@ -12,10 +14,30 @@ sealed class Token(
     class Refreshed : Token("Token", "Refreshed")
     class ButtonRemoveToken : Token("Token", "Button - Remove Token")
     class ButtonExplore : Token("Token", "Button - Explore")
-    class ButtonBuy(token: String) : Token("Token", "Button - Buy", mapOf("Token" to token))
-    class ButtonSell(token: String) : Token("Token", "Button - Sell", mapOf("Token" to token))
-    class ButtonExchange(token: String) : Token("Token", "Button - Exchange", mapOf("Token" to token))
-    class ButtonSend(token: String) : Token("Token", "Button - Send", mapOf("Token" to token))
+
+    class ButtonBuy(type: CurrencyType) : Token(
+        category = "Token",
+        event = "Button - Buy",
+        params = mapOf("Token" to type.value),
+    )
+
+    class ButtonSell(type: CurrencyType) : Token(
+        category = "Token",
+        event = "Button - Sell",
+        params = mapOf("Token" to type.value),
+    )
+
+    class ButtonExchange(type: CurrencyType) : Token(
+        category = "Token",
+        event = "Button - Exchange",
+        params = mapOf("Token" to type.value),
+    )
+
+    class ButtonSend(type: CurrencyType) : Token(
+        category = "Token",
+        event = "Button - Send",
+        params = mapOf("Token" to type.value),
+    )
 
     sealed class Recieve(
         event: String,
@@ -37,7 +59,7 @@ sealed class Token(
         class ButtonQRCode : Send("Button - QR Code")
         class ButtonSwapCurrency : Send("Button - Swap Currency")
 
-        class TransactionSent(token: AnalyticsParam.CurrencyType) : Send(
+        class TransactionSent(token: CurrencyType) : Send(
             event = "Transaction Sent",
             params = mapOf("Token" to token.value),
         )
