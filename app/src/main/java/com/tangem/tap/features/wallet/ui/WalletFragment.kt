@@ -17,6 +17,7 @@ import coil.size.Scale
 import com.tangem.domain.common.TapWorkarounds.isSaltPay
 import com.tangem.tap.MainActivity
 import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.analytics.events.Portfolio
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.recyclerView.SpaceItemDecoration
@@ -54,6 +55,8 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
+
+        Analytics.send(MainScreen.ScreenOpened())
         activity?.onBackPressedDispatcher?.addCallback(
             this,
             object : OnBackPressedCallback(true) {
@@ -73,8 +76,6 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
             state.select { it.walletState }
         }
         walletView.setFragment(this, binding)
-//        store.dispatch(WalletAction.UpdateWallet(force = false))
-//        store.dispatch(WalletAction.LoadWallet())
     }
 
     override fun onStop() {
@@ -88,6 +89,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         (activity as? AppCompatActivity)?.setSupportActionBar(binding.toolbar)
 
         binding.toolbar.setNavigationOnClickListener {
+            Analytics.send(MainScreen.ButtonScanCard())
             store.dispatch(WalletAction.Scan)
         }
         setupWarningsRecyclerView()
