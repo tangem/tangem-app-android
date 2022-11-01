@@ -45,13 +45,13 @@ sealed class ManageTokens(
                     return when (this) {
                         is CustomCurrency.CustomBlockchain -> mapOf(
                             "Token" to network.currency,
-                            "DerivationPath" to derivationPath?.rawPath,
+                            "Derivation Path" to derivationPath?.rawPath,
                         ).filterNotNull()
                         is CustomCurrency.CustomToken -> mapOf(
                             "Token" to token.symbol,
-                            "DerivationPath" to derivationPath?.rawPath,
-                            "NetworkId" to network.toNetworkId(),
-                            "Address" to token.contractAddress,
+                            "Derivation Path" to derivationPath?.rawPath,
+                            "Network Id" to network.toNetworkId(),
+                            "Contract Address" to token.contractAddress,
                         ).filterNotNull()
                     }
                 }
