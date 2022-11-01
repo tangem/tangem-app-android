@@ -10,7 +10,7 @@ sealed class AnalyticsParam {
         class Token(token: com.tangem.blockchain.common.Token) : CurrencyType(token.symbol)
     }
 
-    // Multicurrency or CurrencyType
+    // MultiCurrency or CurrencyType
     sealed class CardCurrency(val value: String) {
         object MultiCurrency : CardCurrency("Multicurrency")
         class SingleCurrency(type: CurrencyType) : CardCurrency(type.value)
@@ -43,7 +43,7 @@ sealed class AnalyticsParam {
         object LongTap : SecurityMode("Long Tap")
 
         companion object {
-            fun from(option: SecurityOption): SecurityMode = when(option){
+            fun from(option: SecurityOption): SecurityMode = when (option) {
                 SecurityOption.AccessCode -> AccessCode
                 SecurityOption.PassCode -> Passcode
                 SecurityOption.LongTap -> LongTap
