@@ -7,6 +7,7 @@ import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.extensions.dispatchOpenUrl
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
@@ -77,7 +78,10 @@ class TradeCryptoMiddleware {
             cryptoCurrencyName = currency.currencySymbol,
             fiatCurrencyName = appCurrency.code,
             walletAddress = addresses[0].address,
-        )?.let { store.dispatchOnMain(NavigationAction.OpenUrl(it)) }
+        )?.let {
+            store.dispatchOpenUrl(it)
+            Analytics.send(Token.Topup.ScreenOpened())
+        }
     }
 
     private fun proceedSellAction() {
@@ -96,7 +100,7 @@ class TradeCryptoMiddleware {
             cryptoCurrencyName = currency.currencySymbol,
             fiatCurrencyName = appCurrency.code,
             walletAddress = addresses[0].address,
-        )?.let { store.dispatchOnMain(NavigationAction.OpenUrl(it)) }
+        )?.let { store.dispatchOpenUrl(it) }
     }
 
     private fun preconfigureAndOpenSendScreen(action: WalletAction.TradeCryptoAction.SendCrypto) {
@@ -127,6 +131,6 @@ class TradeCryptoMiddleware {
         store.state.globalState.exchangeManager.getSellCryptoReceiptUrl(
             action = CurrencyExchangeManager.Action.Sell,
             transactionId = transactionId,
-        )?.let { store.dispatchOnMain(NavigationAction.OpenUrl(it)) }
+        )?.let { store.dispatchOpenUrl(it) }
     }
 }
