@@ -9,6 +9,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.google.android.play.core.review.ReviewManagerFactory
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.AnalyticsEventAnOld
+import com.tangem.tap.common.analytics.events.AnalyticsParam
+import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.extensions.getActivity
 import com.tangem.tap.common.extensions.getColor
 import com.tangem.tap.common.extensions.getString
@@ -109,11 +111,13 @@ class WarningMessageVH(val binding: LayoutWarningCardActionBinding) : RecyclerVi
             binding.groupControlsRating.show()
             binding.btnClose.show()
             binding.btnClose.setOnClickListener {
+                Analytics.send(MainScreen.NoticeRateAppButton(AnalyticsParam.RateApp.Closed))
                 Analytics.handleAnalyticsEvent(AnalyticsEventAnOld.APP_RATING_DISMISS)
                 store.dispatch(GlobalAction.HideWarningMessage(warning))
                 store.dispatch(WalletAction.Warnings.AppRating.RemindLater)
             }
             binding.btnCanBeBetter.setOnClickListener {
+                Analytics.send(MainScreen.NoticeRateAppButton(AnalyticsParam.RateApp.Disliked))
                 Analytics.handleAnalyticsEvent(AnalyticsEventAnOld.APP_RATING_NEGATIVE)
                 store.dispatch(WalletAction.Warnings.AppRating.SetNeverToShow)
                 store.dispatch(GlobalAction.HideWarningMessage(warning))
@@ -122,6 +126,7 @@ class WarningMessageVH(val binding: LayoutWarningCardActionBinding) : RecyclerVi
             binding.btnReallyCool.setOnClickListener {
                 val activity = binding.root.context.getActivity() ?: return@setOnClickListener
 
+                Analytics.send(MainScreen.NoticeRateAppButton(AnalyticsParam.RateApp.Liked))
                 Analytics.handleAnalyticsEvent(AnalyticsEventAnOld.APP_RATING_POSITIVE)
                 store.dispatch(WalletAction.Warnings.AppRating.SetNeverToShow)
                 val reviewManager = ReviewManagerFactory.create(activity)
