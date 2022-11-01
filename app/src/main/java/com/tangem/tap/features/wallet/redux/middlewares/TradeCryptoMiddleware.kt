@@ -2,6 +2,9 @@ package com.tangem.tap.features.wallet.redux.middlewares
 
 import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.common.AmountType
+import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.AnalyticsParam
+import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
@@ -18,7 +21,6 @@ import com.tangem.tap.network.exchangeServices.buyErc20TestnetTokens
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import kotlinx.coroutines.launch
-
 
 class TradeCryptoMiddleware {
     fun handle(state: () -> AppState?, action: WalletAction.TradeCryptoAction) {
@@ -50,6 +52,7 @@ class TradeCryptoMiddleware {
         val exchangeManager = store.state.globalState.exchangeManager
         val appCurrency = store.state.globalState.appCurrency
         val currency = selectedWalletData.currency
+        Analytics.send(Token.ButtonBuy(AnalyticsParam.CurrencyType.Currency(currency)))
 
         if (currency is Currency.Token && currency.blockchain.isTestnet()) {
             val walletManager = store.state.walletState.getWalletManager(currency)
@@ -62,7 +65,7 @@ class TradeCryptoMiddleware {
                 exchangeManager.buyErc20TestnetTokens(
                     card = card,
                     walletManager = walletManager,
-                    token = currency.token
+                    token = currency.token,
                 )
             }
             return
@@ -73,7 +76,7 @@ class TradeCryptoMiddleware {
             blockchain = currency.blockchain,
             cryptoCurrencyName = currency.currencySymbol,
             fiatCurrencyName = appCurrency.code,
-            walletAddress = addresses[0].address
+            walletAddress = addresses[0].address,
         )?.let { store.dispatchOnMain(NavigationAction.OpenUrl(it)) }
     }
 
@@ -85,29 +88,37 @@ class TradeCryptoMiddleware {
         if (addresses.isEmpty()) return
 
         val currency = selectedWalletData.currency
+        Analytics.send(Token.ButtonSell(AnalyticsParam.CurrencyType.Currency(currency)))
+
         store.state.globalState.exchangeManager.getUrl(
             action = CurrencyExchangeManager.Action.Sell,
             blockchain = currency.blockchain,
             cryptoCurrencyName = currency.currencySymbol,
             fiatCurrencyName = appCurrency.code,
-            walletAddress = addresses[0].address
+            walletAddress = addresses[0].address,
         )?.let { store.dispatchOnMain(NavigationAction.OpenUrl(it)) }
     }
 
     private fun preconfigureAndOpenSendScreen(action: WalletAction.TradeCryptoAction.SendCrypto) {
         val selectedWalletData = store.state.walletState.getSelectedWalletData() ?: return
 
+        Analytics.send(Token.ButtonSend(AnalyticsParam.CurrencyType.Currency(selectedWalletData.currency)))
+
         val walletManager = store.state.walletState.getWalletManager(selectedWalletData.currency)
-        store.dispatchOnMain(PrepareSendScreen(
-            coinAmount = walletManager?.wallet?.amounts?.get(AmountType.Coin),
-            coinRate = selectedWalletData.fiatRate,
-            walletManager = walletManager
-        ))
-        store.dispatchOnMain(SendAction.SendSpecificTransaction(
-            sendAmount = action.amount,
-            destinationAddress = action.destinationAddress,
-            transactionId = action.transactionId
-        ))
+        store.dispatchOnMain(
+            PrepareSendScreen(
+                coinAmount = walletManager?.wallet?.amounts?.get(AmountType.Coin),
+                coinRate = selectedWalletData.fiatRate,
+                walletManager = walletManager,
+            ),
+        )
+        store.dispatchOnMain(
+            SendAction.SendSpecificTransaction(
+                sendAmount = action.amount,
+                destinationAddress = action.destinationAddress,
+                transactionId = action.transactionId,
+            ),
+        )
         store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Send))
     }
 
