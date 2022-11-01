@@ -4,6 +4,8 @@ import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.extensions.dispatchDialogHide
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.wallet.redux.WalletAction
@@ -16,6 +18,7 @@ class RussianCardholdersWarningBottomSheetDialog(context: Context) : BottomSheet
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Analytics.send(Token.Topup.P2PScreenOpened())
         binding = DialogRussiansCardholdersWarningBinding
             .inflate(LayoutInflater.from(context))
             .also { setContentView(it.root) }
