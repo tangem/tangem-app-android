@@ -13,6 +13,7 @@ import com.tangem.operations.attestation.Attestation
 import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.AnalyticsAnOld
+import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.extensions.copyToClipboard
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -247,6 +248,7 @@ class WalletMiddleware {
                 action.context.shareText(action.address)
             }
             is WalletAction.ExploreAddress -> {
+                Analytics.send(Token.ButtonExplore())
                 store.dispatchOpenUrl(action.exploreUrl)
             }
             is WalletAction.Send -> {
