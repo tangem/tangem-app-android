@@ -17,6 +17,7 @@ import com.tangem.tap.common.AssetReader
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.AnalyticsHandlersFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
+import com.tangem.tap.common.analytics.filters.BasicSignInFilter
 import com.tangem.tap.common.analytics.filters.ShopPurchasedEventFilter
 import com.tangem.tap.common.analytics.handlers.amplitude.AmplitudeAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.appsFlyer.AppsFlyerAnalyticsHandler
@@ -125,6 +126,7 @@ class TapApplication : Application(), ImageLoaderFactory {
         }
         listOf(
             ShopPurchasedEventFilter(),
+            BasicSignInFilter(),
         ).forEach { Analytics.addFilter(it) }
     }
 
