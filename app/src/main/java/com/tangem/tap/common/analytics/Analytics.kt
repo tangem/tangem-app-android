@@ -1,23 +1,22 @@
 package com.tangem.tap.common.analytics
 
-import com.shopify.buy3.Storefront
 import com.tangem.blockchain.common.BlockchainError
 import com.tangem.common.card.Card
 import com.tangem.common.core.TangemSdkError
+import com.tangem.tap.common.analytics.api.AnalyticsEventFilter
 import com.tangem.tap.common.analytics.api.AnalyticsEventHandler
 import com.tangem.tap.common.analytics.api.BlockchainSdkErrorEventHandler
 import com.tangem.tap.common.analytics.api.CardSdkErrorEventHandler
 import com.tangem.tap.common.analytics.api.ErrorEventLogger
-import com.tangem.tap.common.analytics.api.ShopifyOrderEventHandler
 import com.tangem.tap.common.analytics.events.AnalyticsEvent
 import com.tangem.tap.common.extensions.filterNotNull
-import com.tangem.tap.common.shop.data.ProductType
 
 /**
 [REDACTED_AUTHOR]
  */
 object Analytics : GlobalAnalyticsEventHandler {
 
+    private val eventFilters = mutableListOf<AnalyticsEventFilter>()
     private val handlers = mutableMapOf<String, AnalyticsEventHandler>()
 
     private val analyticsHandlers: List<AnalyticsEventHandler>
@@ -35,6 +34,14 @@ object Analytics : GlobalAnalyticsEventHandler {
         return handlers.remove(name)
     }
 
+    override fun addFilter(filter: AnalyticsEventFilter) {
+        eventFilters.add(filter)
+    }
+
+    override fun removeFilter(filter: AnalyticsEventFilter) {
+        eventFilters.remove(filter)
+    }
+
     override fun attachToAllEvents(key: String, value: String) {
         attachToAllEventsParams[key] = value
     }
@@ -44,7 +51,16 @@ object Analytics : GlobalAnalyticsEventHandler {
     }
 
     override fun send(event: AnalyticsEvent, card: Card?, blockchain: String?) {
-        analyticsHandlers.forEach { it.send(event, card, blockchain) }
+        val eventFilter = eventFilters.firstOrNull { it.canBeAppliedTo(event) }
+
+        when {
+            eventFilter == null -> analyticsHandlers.forEach { it.send(event, card, blockchain) }
+            eventFilter.canBeSent(event) -> {
+                analyticsHandlers
+                    .filter { eventFilter.canBeConsumedBy(it, event) }
+                    .forEach { it.send(event) }
+            }
+        }
     }
 
     override fun handleAnalyticsEvent(
@@ -83,12 +99,6 @@ object Analytics : GlobalAnalyticsEventHandler {
     ) {
         analyticsHandlers.filterIsInstance<BlockchainSdkErrorEventHandler>().forEach {
             it.send(error, action, params, card)
-        }
-    }
-
-    override fun send(order: Storefront.Order, productType: ProductType) {
-        analyticsHandlers.filterIsInstance<ShopifyOrderEventHandler>().forEach {
-            it.send(order, productType)
         }
     }
 
