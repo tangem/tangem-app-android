@@ -7,6 +7,7 @@ import com.tangem.common.extensions.guard
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchErrorNotification
+import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.global.GlobalState
@@ -109,12 +110,7 @@ class MultiWalletMiddleware {
                         WalletDialog.RemoveWalletDialog(
                             currencyTitle = currency.currencyName,
                             onOk = {
-                                store.dispatch(
-                                    WalletAction.MultiWallet.RemoveWallet(
-                                        currency = currency,
-                                        fromScreen = AppScreen.WalletDetails,
-                                    ),
-                                )
+                                store.dispatch(WalletAction.MultiWallet.RemoveWallet(currency))
                                 store.dispatch(NavigationAction.PopBackTo())
                             },
                         ),
@@ -135,10 +131,17 @@ class MultiWalletMiddleware {
                         .filter { it.blockchain == currency.blockchain && it.derivationPath == currency.derivationPath }
                 }
                 scope.launch { userTokensRepository.saveUserTokens(card, currencies) }
-
-                if (action.fromScreen == AppScreen.AddTokens) {
-                    store.dispatch(WalletAction.MultiWallet.SelectWallet(null))
+            }
+            is WalletAction.MultiWallet.RemoveWallets -> {
+                val card = globalState.scanResponse?.card.guard {
+                    store.dispatchErrorNotification(TapError.UnsupportedState("card is NULL"))
+                    store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
+                    return
                 }
+                var currencies = walletState?.currencies ?: emptyList()
+                currencies = currencies.filterNot { action.currencies.contains(it) }
+                scope.launch { userTokensRepository.saveUserTokens(card, currencies) }
+                store.dispatchOnMain(WalletAction.MultiWallet.SelectWallet(null))
             }
             is WalletAction.MultiWallet.ShowWalletBackupWarning -> Unit
             is WalletAction.MultiWallet.BackupWallet -> {
