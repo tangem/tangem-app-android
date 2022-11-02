@@ -11,6 +11,7 @@ import com.tangem.tap.common.analytics.api.ErrorEventLogger
 import com.tangem.tap.common.analytics.api.ShopifyOrderEventHandler
 import com.tangem.tap.common.analytics.events.AnalyticsEvent
 import com.tangem.tap.common.extensions.filterNotNull
+import com.tangem.tap.common.shop.data.ProductType
 
 /**
 [REDACTED_AUTHOR]
@@ -85,9 +86,9 @@ object Analytics : GlobalAnalyticsEventHandler {
         }
     }
 
-    override fun send(order: Storefront.Order) {
+    override fun send(order: Storefront.Order, productType: ProductType) {
         analyticsHandlers.filterIsInstance<ShopifyOrderEventHandler>().forEach {
-            it.send(order)
+            it.send(order, productType)
         }
     }
 
