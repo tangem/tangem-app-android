@@ -20,8 +20,8 @@ import com.tangem.network.api.paymentology.RegistrationResponse
 import com.tangem.network.api.paymentology.tryExtractError
 import com.tangem.operations.attestation.AttestWalletKeyResponse
 import com.tangem.tap.common.extensions.safeUpdate
+import com.tangem.tap.domain.extensions.UserWalletId
 import com.tangem.tap.domain.getFirstToken
-import com.tangem.tap.domain.tokens.UserWalletId
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.message.SaltPayActivationError
 import java.math.BigDecimal
 
