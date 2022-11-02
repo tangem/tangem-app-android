@@ -1,5 +1,6 @@
 package com.tangem.tap.features.onboarding.products.twins.redux
 
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.extensions.Result
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.guard
@@ -7,6 +8,7 @@ import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchErrorNotification
@@ -273,6 +275,10 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
         }
         is TwinCardsAction.TopUp -> {
             val topUpUrl = twinCardsState.walletManager?.getTopUpUrl() ?: return
+
+            val currencyType = AnalyticsParam.CurrencyType.Blockchain(Blockchain.Bitcoin)
+            Analytics.send(Onboarding.Topup.ButtonBuyCrypto(currencyType))
+
             store.dispatchOpenUrl(topUpUrl)
         }
         TwinCardsAction.Done -> {
