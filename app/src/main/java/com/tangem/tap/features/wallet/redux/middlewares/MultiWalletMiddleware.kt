@@ -6,6 +6,8 @@ import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.extensions.guard
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.AnalyticsParam
+import com.tangem.tap.common.analytics.events.Token.ButtonRemoveToken
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchErrorNotification
 import com.tangem.tap.common.extensions.safeUpdate
@@ -110,7 +112,7 @@ class MultiWalletMiddleware {
                         WalletDialog.RemoveWalletDialog(
                             currencyTitle = currency.currencyName,
                             onOk = {
-                                Analytics.send(com.tangem.tap.common.analytics.events.Token.ButtonRemoveToken())
+                                Analytics.send(ButtonRemoveToken(AnalyticsParam.CurrencyType.Currency(currency)))
                                 store.dispatch(
                                     WalletAction.MultiWallet.RemoveWallet(
                                         currency = currency,
