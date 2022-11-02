@@ -5,6 +5,7 @@ import android.content.Intent
 import com.google.android.gms.wallet.PaymentData
 import com.shopify.buy3.Storefront
 import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.converters.ShopOrderToEventConverter
 import com.tangem.tap.common.extensions.filterNotNull
 import com.tangem.tap.common.shop.data.ProductType
 import com.tangem.tap.common.shop.data.TangemProduct
@@ -198,7 +199,12 @@ class TangemShopService(application: Application, shopifyShop: ShopifyShop) {
 
     suspend fun waitForCheckout(productType: ProductType) {
         val result = shopifyService.checkout(true, checkouts[productType]!!.id)
-        result.onSuccess { checkout -> checkout.order?.let { Analytics.send(it, productType) } }
+        result.onSuccess { checkout ->
+            checkout.order?.let {
+                val event = ShopOrderToEventConverter().convert(it to productType)
+                Analytics.send(event)
+            }
+        }
     }
 
     companion object {
