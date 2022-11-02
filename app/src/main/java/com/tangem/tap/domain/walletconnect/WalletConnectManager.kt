@@ -6,6 +6,7 @@ import com.tangem.common.extensions.guard
 import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.AnalyticsAnOld
+import com.tangem.tap.common.analytics.events.WalletConnect
 import com.tangem.tap.common.analytics.logWcEvent
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -224,6 +225,7 @@ class WalletConnectManager {
     }
 
     private fun onSessionClosed(session: WCSession) {
+        Analytics.send(WalletConnect.SessionDisconnected())
         Analytics.logWcEvent(
             AnalyticsAnOld.WcAnalyticsEvent.Session(
                 AnalyticsAnOld.WcSessionEvent.Disconnect, sessions[session]?.peerMeta?.url
@@ -373,6 +375,7 @@ class WalletConnectManager {
                             ),
                         )
                     }
+                    Analytics.send(WalletConnect.NewSessionEstablished())
                     Analytics.logWcEvent(
                         AnalyticsAnOld.WcAnalyticsEvent.Session(
                             AnalyticsAnOld.WcSessionEvent.Connect, peer.url,
