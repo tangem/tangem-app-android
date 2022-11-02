@@ -13,8 +13,7 @@ import com.tangem.tap.common.analytics.api.SdkErrorEventHandler
 import com.tangem.tap.common.analytics.api.ShopifyOrderEventHandler
 import com.tangem.tap.common.analytics.converters.BlockchainSdkErrorConverter
 import com.tangem.tap.common.analytics.converters.CardSdkErrorConverter
-import com.tangem.tap.common.analytics.events.OrderToParamsConverter
-import com.tangem.tap.common.analytics.events.Shop
+import com.tangem.tap.common.analytics.converters.ShopOrderToEventConverter
 import com.tangem.tap.common.shop.data.ProductType
 
 class FirebaseAnalyticsHandler(
@@ -59,8 +58,9 @@ class FirebaseAnalyticsHandler(
     }
 
     override fun send(order: Storefront.Order, productType: ProductType) {
-        val eventParams = OrderToParamsConverter().convert(order to productType)
-        send(Shop.Purchased(eventParams))
+        //TODO: make sending this event through filters
+        val event = ShopOrderToEventConverter().convert(order to productType)
+        send(event)
     }
 
     companion object {
