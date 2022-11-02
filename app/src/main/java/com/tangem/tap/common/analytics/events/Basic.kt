@@ -8,7 +8,7 @@ sealed class Basic(
     params: Map<String, String> = mapOf(),
 ) : AnalyticsEvent("Basic", event, params) {
 
-    sealed class SignedIn(
+    class SignedIn(
         state: AnalyticsParam.CardState,
         currency: AnalyticsParam.CardCurrency,
         batch: String,
