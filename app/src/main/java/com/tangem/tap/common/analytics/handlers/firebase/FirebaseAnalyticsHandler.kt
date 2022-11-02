@@ -1,9 +1,7 @@
 package com.tangem.tap.common.analytics.handlers.firebase
 
-import com.google.firebase.analytics.FirebaseAnalytics
 import com.shopify.buy3.Storefront
 import com.tangem.blockchain.common.BlockchainError
-import com.tangem.common.Converter
 import com.tangem.common.card.Card
 import com.tangem.common.core.TangemSdkError
 import com.tangem.tap.common.analytics.AnalyticsAnOld
@@ -15,6 +13,9 @@ import com.tangem.tap.common.analytics.api.SdkErrorEventHandler
 import com.tangem.tap.common.analytics.api.ShopifyOrderEventHandler
 import com.tangem.tap.common.analytics.converters.BlockchainSdkErrorConverter
 import com.tangem.tap.common.analytics.converters.CardSdkErrorConverter
+import com.tangem.tap.common.analytics.events.OrderToParamsConverter
+import com.tangem.tap.common.analytics.events.Shop
+import com.tangem.tap.common.shop.data.ProductType
 
 class FirebaseAnalyticsHandler(
     private val client: FirebaseAnalyticsClient,
@@ -57,8 +58,9 @@ class FirebaseAnalyticsHandler(
         }
     }
 
-    override fun send(order: Storefront.Order) {
-        send(FirebaseClient.ORDER_EVENT, OrderToParamsConverter().convert(order))
+    override fun send(order: Storefront.Order, productType: ProductType) {
+        val eventParams = OrderToParamsConverter().convert(order to productType)
+        send(Shop.Purchased(eventParams))
     }
 
     companion object {
@@ -71,26 +73,5 @@ class FirebaseAnalyticsHandler(
             data.isDebug && data.logConfig.firebase -> FirebaseLogClient(data.jsonConverter)
             else -> null
         }?.let { FirebaseAnalyticsHandler(it) }
-    }
-}
-
-private class OrderToParamsConverter : Converter<Storefront.Order, Map<String, String>> {
-    override fun convert(value: Storefront.Order): Map<String, String> {
-        val sku = value.lineItems.edges.firstOrNull()?.node?.variant?.sku ?: "unknown"
-
-        val discountCode =
-            (value.discountApplications.edges.firstOrNull()?.node as? Storefront.DiscountCodeApplication)?.code
-
-        val discountParams = if (discountCode != null) {
-            mapOf(FirebaseAnalytics.Param.DISCOUNT to discountCode)
-        } else {
-            mapOf()
-        }
-
-        return mapOf(
-            FirebaseAnalytics.Param.ITEM_ID to sku,
-            FirebaseAnalytics.Param.VALUE to value.totalPriceV2.amount,
-            FirebaseAnalytics.Param.CURRENCY to value.currencyCode.name,
-        ) + discountParams
     }
 }

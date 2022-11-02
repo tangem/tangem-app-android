@@ -13,6 +13,7 @@ import com.tangem.tap.common.analytics.AnalyticsParamAnOld
 import com.tangem.tap.common.analytics.events.AnalyticsEvent
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.extensions.filterNotNull
+import com.tangem.tap.common.shop.data.ProductType
 import com.tangem.tap.domain.configurable.config.Config
 
 /**
@@ -83,7 +84,7 @@ interface BlockchainSdkErrorEventHandler {
 }
 
 interface ShopifyOrderEventHandler {
-    fun send(order: Storefront.Order)
+    fun send(order: Storefront.Order, productType: ProductType)
 }
 
 interface AnalyticsHandlerBuilder {
