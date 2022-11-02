@@ -7,4 +7,5 @@ sealed class AnalyticsEvent(
     val category: String,
     val event: String,
     val params: Map<String, String> = mapOf(),
+    var filterData: Any? = null,
 )
