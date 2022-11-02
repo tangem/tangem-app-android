@@ -17,6 +17,7 @@ import com.tangem.tap.common.AssetReader
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.AnalyticsHandlersFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
+import com.tangem.tap.common.analytics.filters.ShopPurchasedEventFilter
 import com.tangem.tap.common.analytics.handlers.amplitude.AmplitudeAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.appsFlyer.AppsFlyerAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandler
@@ -122,6 +123,9 @@ class TapApplication : Application(), ImageLoaderFactory {
         factory.build(buildData).forEach {
             Analytics.addHandler(it.id(), it)
         }
+        listOf(
+            ShopPurchasedEventFilter(),
+        ).forEach { Analytics.addFilter(it) }
     }
 
     private fun initFeedbackManager(context: Context, preferencesStorage: PreferencesStorage, config: Config) {
