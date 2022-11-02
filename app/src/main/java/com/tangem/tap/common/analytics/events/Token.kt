@@ -12,8 +12,13 @@ sealed class Token(
 ) : AnalyticsEvent(category, event, params) {
 
     class Refreshed : Token("Token", "Refreshed")
-    class ButtonRemoveToken : Token("Token", "Button - Remove Token")
     class ButtonExplore : Token("Token", "Button - Explore")
+
+    class ButtonRemoveToken(type: CurrencyType) : Token(
+        "Token",
+        "Button - Remove Token",
+        params = mapOf("Token" to type.value),
+    )
 
     class ButtonBuy(type: CurrencyType) : Token(
         category = "Token",
