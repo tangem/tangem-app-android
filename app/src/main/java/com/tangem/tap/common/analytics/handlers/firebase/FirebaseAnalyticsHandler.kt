@@ -1,6 +1,5 @@
 package com.tangem.tap.common.analytics.handlers.firebase
 
-import com.shopify.buy3.Storefront
 import com.tangem.blockchain.common.BlockchainError
 import com.tangem.common.card.Card
 import com.tangem.common.core.TangemSdkError
@@ -10,15 +9,12 @@ import com.tangem.tap.common.analytics.api.AnalyticsEventHandler
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 import com.tangem.tap.common.analytics.api.ErrorEventHandler
 import com.tangem.tap.common.analytics.api.SdkErrorEventHandler
-import com.tangem.tap.common.analytics.api.ShopifyOrderEventHandler
 import com.tangem.tap.common.analytics.converters.BlockchainSdkErrorConverter
 import com.tangem.tap.common.analytics.converters.CardSdkErrorConverter
-import com.tangem.tap.common.analytics.converters.ShopOrderToEventConverter
-import com.tangem.tap.common.shop.data.ProductType
 
 class FirebaseAnalyticsHandler(
     private val client: FirebaseAnalyticsClient,
-) : AnalyticsEventHandler, ErrorEventHandler, SdkErrorEventHandler, ShopifyOrderEventHandler {
+) : AnalyticsEventHandler, ErrorEventHandler, SdkErrorEventHandler {
 
     override fun id(): String = ID
 
@@ -55,12 +51,6 @@ class FirebaseAnalyticsHandler(
         converter.convert(model)?.let {
             send(it.throwable, it.params)
         }
-    }
-
-    override fun send(order: Storefront.Order, productType: ProductType) {
-        //TODO: make sending this event through filters
-        val event = ShopOrderToEventConverter().convert(order to productType)
-        send(event)
     }
 
     companion object {
