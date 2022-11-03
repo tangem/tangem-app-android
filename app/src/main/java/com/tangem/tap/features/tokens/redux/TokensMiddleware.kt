@@ -318,14 +318,7 @@ class TokensMiddleware {
     }
 
     private fun removeCurrenciesIfNeeded(currencies: List<Currency>) {
-        if (currencies.isNotEmpty()) {
-            currencies.forEach { currency ->
-                store.dispatch(WalletAction.MultiWallet.RemoveWallet(
-                    currency = currency,
-                    fromScreen = AppScreen.AddTokens
-                ))
-            }
-        }
+        if (currencies.isNotEmpty()) store.dispatch(WalletAction.MultiWallet.RemoveWallets(currencies))
     }
 
     private fun isNeedToDerive(scanResponse: ScanResponse, currency: Currency): Boolean {
