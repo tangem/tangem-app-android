@@ -9,7 +9,7 @@ sealed class Basic(
 ) : AnalyticsEvent("Basic", event, params) {
 
     class SignedIn(
-        state: AnalyticsParam.CardState,
+        state: AnalyticsParam.CardBalanceState,
         currency: AnalyticsParam.CardCurrency,
         batch: String,
     ) : Basic(
