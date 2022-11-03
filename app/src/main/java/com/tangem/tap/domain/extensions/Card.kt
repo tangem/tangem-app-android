@@ -4,12 +4,14 @@ import com.tangem.common.card.Card
 import com.tangem.common.card.CardWallet
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.card.FirmwareVersion
+import com.tangem.common.extensions.calculateSha256
 import com.tangem.common.extensions.toHexString
 import com.tangem.common.services.Result
 import com.tangem.domain.common.TapWorkarounds.isSaltPay
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.TapWorkarounds.isTangemNote
 import com.tangem.domain.common.TwinCardNumber
+import com.tangem.domain.common.extensions.calculateHmacSha256
 import com.tangem.domain.common.getTwinCardNumber
 import com.tangem.domain.common.isTangemTwin
 import com.tangem.operations.attestation.CardVerifyAndGetInfo
@@ -87,5 +89,20 @@ fun Card.getArtworkUrl(artworkId: String?): String? {
         cardId.startsWith(Artwork.SERGIO_CARD_ID) -> Artwork.SERGIO_CARD_URL
         cardId.startsWith(Artwork.MARTA_CARD_ID) -> Artwork.MARTA_CARD_URL
         else -> null
+    }
+}
+
+fun Card.getUserWalletId(): String {
+    val walletPublicKey = this.wallets.firstOrNull()?.publicKey ?: return ""
+    return UserWalletId(walletPublicKey).stringValue
+}
+
+class UserWalletId(val walletPublicKey: ByteArray) {
+    val stringValue: String = calculateUserId(walletPublicKey)
+
+    private fun calculateUserId(walletPublicKey: ByteArray): String {
+        val message = "UserWalletID".toByteArray()
+        val keyHash = walletPublicKey.calculateSha256()
+        return message.calculateHmacSha256(keyHash).toHexString()
     }
 }

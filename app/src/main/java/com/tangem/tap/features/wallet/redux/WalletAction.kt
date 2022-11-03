@@ -11,7 +11,6 @@ import com.tangem.common.card.Card
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.redux.ErrorAction
 import com.tangem.tap.common.redux.NotificationAction
-import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
@@ -76,16 +75,14 @@ sealed class WalletAction : Action {
         data class TokenLoaded(
             val amount: Amount,
             val token: Token,
-            val blockchain: BlockchainNetwork
+            val blockchain: BlockchainNetwork,
         ) : MultiWallet()
 
         data class SelectWallet(val walletData: WalletData?) : MultiWallet()
 
         data class TryToRemoveWallet(val currency: Currency) : MultiWallet()
-        data class RemoveWallet(
-            val currency: Currency,
-            val fromScreen: AppScreen,
-        ) : MultiWallet()
+        data class RemoveWallet(val currency: Currency) : MultiWallet()
+        data class RemoveWallets(val currencies: List<Currency>) : MultiWallet()
 
         data class SetPrimaryBlockchain(val blockchain: Blockchain) : MultiWallet()
         data class SetPrimaryToken(val token: Token) : MultiWallet()
