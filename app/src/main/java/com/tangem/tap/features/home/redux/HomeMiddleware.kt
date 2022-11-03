@@ -37,7 +37,6 @@ import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.features.onboarding.OnboardingSaltPayHelper
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsStep
-import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayExceptionHandler
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayAction
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayState
@@ -75,7 +74,6 @@ private fun handleHomeAction(appState: () -> AppState?, action: Action, dispatch
             store.dispatch(GlobalAction.RestoreAppCurrency)
             store.dispatch(GlobalAction.ExchangeManager.Init)
             store.dispatch(GlobalAction.FetchUserCountry)
-            store.dispatch(BackupAction.CheckForUnfinishedBackup)
         }
         is HomeAction.ShouldScanCardOnResume -> {
             if (action.shouldScanCard) {
