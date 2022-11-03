@@ -8,12 +8,15 @@ import com.tangem.tap.common.analytics.AnalyticsAnOld
 import com.tangem.tap.common.analytics.AnalyticsParamAnOld
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
+import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.domain.extensions.getUserWalletId
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.onboarding.products.twins.redux.CreateTwinWalletMode
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
@@ -21,6 +24,7 @@ import com.tangem.tap.features.wallet.models.hasSendableAmountsOrPendingTransact
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
+import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -81,7 +85,18 @@ class DetailsMiddleware {
                     when (val result = tangemSdkManager.scanCard()) {
                         is CompletionResult.Success -> {
                             val card = result.data
-                            store.dispatchOnMain(DetailsAction.PrepareCardSettingsData(card))
+                            if (card.getUserWalletId() ==
+                                store.state.globalState.scanResponse?.card?.getUserWalletId()
+                            ) {
+                                store.dispatchOnMain(DetailsAction.PrepareCardSettingsData(card))
+                            } else {
+                                store.dispatchDialogShow(
+                                    AppDialog.SimpleOkDialogRes(
+                                        headerId = R.string.common_warning,
+                                        messageId = R.string.error_wrong_wallet_tapped,
+                                    ),
+                                )
+                            }
                         }
                         is CompletionResult.Failure -> {
                         }
@@ -107,20 +122,20 @@ class DetailsMiddleware {
                     val card = store.state.detailsState.cardSettingsState?.card ?: return
                     scope.launch {
                         val result = tangemSdkManager.resetToFactorySettings(card)
-                            when (result) {
-                                is CompletionResult.Success -> {
-                                    Analytics.send(Settings.CardSettings.FactoryResetFinished())
-                                    store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Home))
+                        when (result) {
+                            is CompletionResult.Success -> {
+                                Analytics.send(Settings.CardSettings.FactoryResetFinished())
+                                store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Home))
+                            }
+                            is CompletionResult.Failure -> {
+                                (result.error as? TangemSdkError)?.let { error ->
+                                    Analytics.send(
+                                        error,
+                                        AnalyticsAnOld.ActionToLog.PurgeWallet,
+                                        card = store.state.detailsState.scanResponse?.card,
+                                    )
                                 }
-                                is CompletionResult.Failure -> {
-                                    (result.error as? TangemSdkError)?.let { error ->
-                                        Analytics.send(
-                                            error,
-                                            AnalyticsAnOld.ActionToLog.PurgeWallet,
-                                            card = store.state.detailsState.scanResponse?.card,
-                                        )
-                                    }
-                                }
+                            }
                         }
                     }
                 }
@@ -181,7 +196,7 @@ class DetailsMiddleware {
                 is DetailsAction.ManageSecurity.ChangeAccessCode -> {
                     val card = store.state.detailsState.cardSettingsState?.card ?: return
                     scope.launch {
-                        when(tangemSdkManager.setAccessCode(card.cardId)){
+                        when (tangemSdkManager.setAccessCode(card.cardId)) {
                             is CompletionResult.Success -> Analytics.send(Settings.CardSettings.UserCodeChanged())
                             is CompletionResult.Failure -> {}
                         }
