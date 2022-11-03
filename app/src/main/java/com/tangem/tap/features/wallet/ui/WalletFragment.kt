@@ -18,6 +18,7 @@ import com.tangem.domain.common.TapWorkarounds.isSaltPay
 import com.tangem.tap.MainActivity
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.converters.BasicSignInEventConverter
+import com.tangem.tap.common.analytics.converters.BasicTopUpEventConverter
 import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.analytics.events.Portfolio
 import com.tangem.tap.common.extensions.show
@@ -34,7 +35,6 @@ import com.tangem.tap.features.wallet.redux.ErrorType
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletState
-import com.tangem.tap.features.wallet.redux.reducers.calculateTotalCryptoAmount
 import com.tangem.tap.features.wallet.ui.adapters.WarningMessagesAdapter
 import com.tangem.tap.features.wallet.ui.wallet.MultiWalletView
 import com.tangem.tap.features.wallet.ui.wallet.SaltPaySingleWalletView
@@ -231,13 +231,9 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     }
 
     private fun handleBasicAnalyticsEvent(state: WalletState) {
-        if (state.walletsData.isEmpty()) return
         val scanResponse = store.state.globalState.scanResponse ?: return
-        val totalBalanceState = state.totalBalance?.state ?: return
 
-        val totalCryptoAmount = state.walletsData.calculateTotalCryptoAmount()
-        BasicSignInEventConverter(scanResponse, totalBalanceState, totalCryptoAmount).convert(null)?.let {
-            Analytics.send(it)
-        }
+        BasicSignInEventConverter(scanResponse).convert(state)?.let { Analytics.send(it) }
+        BasicTopUpEventConverter(scanResponse).convert(state)?.let { Analytics.send(it) }
     }
 }
