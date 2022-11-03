@@ -7,7 +7,6 @@ import com.tangem.common.extensions.guard
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchErrorNotification
-import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.global.GlobalState
@@ -141,7 +140,7 @@ class MultiWalletMiddleware {
                 var currencies = walletState?.currencies ?: emptyList()
                 currencies = currencies.filterNot { action.currencies.contains(it) }
                 scope.launch { userTokensRepository.saveUserTokens(card, currencies) }
-                store.dispatchOnMain(WalletAction.MultiWallet.SelectWallet(null))
+                store.dispatch(WalletAction.MultiWallet.SelectWallet(null))
             }
             is WalletAction.MultiWallet.ShowWalletBackupWarning -> Unit
             is WalletAction.MultiWallet.BackupWallet -> {
