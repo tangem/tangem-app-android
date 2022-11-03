@@ -16,6 +16,7 @@ class PreferencesStorage(applicationContext: Application) {
     val usedCardsPrefStorage: UsedCardsPrefStorage
     val fiatCurrenciesPrefStorage: FiatCurrenciesPrefStorage
     val disclaimerPrefStorage: DisclaimerPrefStorage
+    val toppedUpWalletStorage: ToppedUpWalletStorage
 
     init {
         incrementLaunchCounter()
@@ -25,6 +26,7 @@ class PreferencesStorage(applicationContext: Application) {
         fiatCurrenciesPrefStorage = FiatCurrenciesPrefStorage(preferences, MoshiJsonConverter.INSTANCE)
         fiatCurrenciesPrefStorage.migrate()
         disclaimerPrefStorage = DisclaimerPrefStorage(preferences)
+        toppedUpWalletStorage = ToppedUpWalletStorage(preferences, MoshiJsonConverter.INSTANCE)
     }
 
     var chatFirstLaunchTime: Long?
