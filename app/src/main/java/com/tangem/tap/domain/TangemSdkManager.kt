@@ -180,8 +180,9 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         return withContext(Dispatchers.Main) { result }
     }
 
-    fun changeDisplayedCardIdNumbersCount(scanResponse: ScanResponse) {
+    fun changeDisplayedCardIdNumbersCount(scanResponse: ScanResponse?) {
         tangemSdk.config.cardIdDisplayFormat = when {
+            scanResponse == null -> CardIdDisplayFormat.Full
             scanResponse.isTangemTwins() -> CardIdDisplayFormat.LastLuhn(4)
             scanResponse.isSaltPay() -> CardIdDisplayFormat.None
             else -> CardIdDisplayFormat.Full
