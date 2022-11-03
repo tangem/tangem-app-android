@@ -18,6 +18,7 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.home.compose.StoriesScreen
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.home.redux.HomeState
+import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
 import com.tangem.tap.features.tokens.redux.TokensAction
 import com.tangem.tap.store
 import org.rekotlin.StoreSubscriber
@@ -39,6 +40,8 @@ class HomeFragment : Fragment(), StoreSubscriber<HomeState> {
         savedInstanceState: Bundle?,
     ): View? {
         val context = container?.context ?: return null
+
+        store.dispatch(BackupAction.CheckForUnfinishedBackup)
 
         composeView = ComposeView(context).apply {
             setContent {
