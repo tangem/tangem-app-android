@@ -5,7 +5,7 @@ import com.tangem.common.extensions.isZero
 import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Basic
-import com.tangem.tap.domain.tokens.UserWalletId
+import com.tangem.tap.domain.extensions.getUserWalletId
 import com.tangem.tap.features.wallet.redux.ProgressState
 import java.math.BigDecimal
 
@@ -32,7 +32,7 @@ class BasicSignInEventConverter(
             currency = cardCurrency,
             batch = scanResponse.card.batchId,
         ).apply {
-            filterData = UserWalletId(scanResponse.card.wallets.first().publicKey).stringValue
+            filterData = scanResponse.card.getUserWalletId()
         }
     }
 }
