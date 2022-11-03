@@ -165,6 +165,7 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
         }
         is GlobalAction.ScanCard -> {
             scope.launch {
+                tangemSdkManager.changeDisplayedCardIdNumbersCount(null)
                 val result = tangemSdkManager.scanProduct(
                     userTokensRepository,
                     action.additionalBlockchainsToDerive,
