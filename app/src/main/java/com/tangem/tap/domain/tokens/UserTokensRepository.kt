@@ -3,14 +3,12 @@ package com.tangem.tap.domain.tokens
 import android.content.Context
 import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.common.card.Card
-import com.tangem.common.extensions.calculateSha256
-import com.tangem.common.extensions.toHexString
 import com.tangem.common.services.Result
-import com.tangem.domain.common.extensions.calculateHmacSha256
 import com.tangem.network.api.tangemTech.TangemTechService
 import com.tangem.network.api.tangemTech.UserTokensResponse
 import com.tangem.tap.common.AndroidFileReader
 import com.tangem.tap.domain.NoDataError
+import com.tangem.tap.domain.extensions.getUserWalletId
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.wallet.models.Currency
@@ -26,7 +24,7 @@ class UserTokensRepository(
     private val networkService: UserTokensNetworkService,
 ) {
     suspend fun getUserTokens(card: Card): List<Currency> {
-        val userId = card.getUserId()
+        val userId = card.getUserWalletId()
         if (DemoHelper.isDemoCardId(card.cardId)) {
             return loadTokensOffline(card, userId).ifEmpty { loadDemoCurrencies() }
         }
@@ -38,7 +36,7 @@ class UserTokensRepository(
         return when (val networkResult = networkService.getUserTokens(userId)) {
             is Result.Success -> {
                 val tokens = networkResult.data.tokens.mapNotNull { Currency.fromTokenResponse(it) }
-                storageService.saveUserTokens(card.getUserId(), tokens.toUserTokensResponse())
+                storageService.saveUserTokens(card.getUserWalletId(), tokens.toUserTokensResponse())
                 tokens.distinct()
             }
             is Result.Failure -> {
@@ -49,14 +47,14 @@ class UserTokensRepository(
 
     suspend fun saveUserTokens(card: Card, tokens: List<Currency>) {
         val userTokens = tokens.toUserTokensResponse()
-        networkService.saveUserTokens(card.getUserId(), userTokens)
-        storageService.saveUserTokens(card.getUserId(), userTokens)
+        networkService.saveUserTokens(card.getUserWalletId(), userTokens)
+        storageService.saveUserTokens(card.getUserWalletId(), userTokens)
     }
 
     suspend fun removeUserTokens(card: Card) {
         val userTokens = emptyList<Currency>().toUserTokensResponse()
-        networkService.saveUserTokens(card.getUserId(), userTokens)
-        storageService.saveUserTokens(card.getUserId(), userTokens)
+        networkService.saveUserTokens(card.getUserWalletId(), userTokens)
+        storageService.saveUserTokens(card.getUserWalletId(), userTokens)
     }
 
     private fun List<Currency>.toUserTokensResponse(): UserTokensResponse {
@@ -69,7 +67,7 @@ class UserTokensRepository(
     }
 
     suspend fun loadBlockchainsToDerive(card: Card): List<BlockchainNetwork> {
-        val userId = card.getUserId()
+        val userId = card.getUserWalletId()
         val blockchainNetworks = loadTokensOffline(card, userId).toBlockchainNetworks()
 
         if (DemoHelper.isDemoCardId(card.cardId)) {
@@ -113,11 +111,6 @@ class UserTokensRepository(
         return storageService.getUserTokens(userId) ?: storageService.getUserTokens(card)
     }
 
-    private fun Card.getUserId(): String {
-        val walletPublicKey = this.wallets.firstOrNull()?.publicKey ?: return ""
-        return UserWalletId(walletPublicKey).stringValue
-    }
-
     companion object {
         const val SORT_DEFAULT_VALUE = "manual"
         const val GROUP_DEFAULT_VALUE = "none"
@@ -130,17 +123,5 @@ class UserTokensRepository(
             val networkService = UserTokensNetworkService(tangemTechService)
             return UserTokensRepository(storageService, networkService)
         }
-    }
-}
-
-data class UserWalletId(
-    val walletPublicKey: ByteArray,
-) {
-    val stringValue: String = calculateUserId(walletPublicKey)
-
-    private fun calculateUserId(walletPublicKey: ByteArray): String {
-        val message = "UserWalletID".toByteArray()
-        val keyHash = walletPublicKey.calculateSha256()
-        return message.calculateHmacSha256(keyHash).toHexString()
     }
 }
