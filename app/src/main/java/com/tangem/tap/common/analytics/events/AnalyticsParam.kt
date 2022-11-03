@@ -18,9 +18,10 @@ sealed class AnalyticsParam {
         class SingleCurrency(type: CurrencyType) : CardCurrency(type.value)
     }
 
-    sealed class CardState(val value: String) {
-        object Empty : CardState("Empty")
-        object Full : CardState("Full")
+    sealed class CardBalanceState(val value: String) {
+        object Empty : CardBalanceState("Empty")
+        object Full : CardBalanceState("Full")
+        companion object
     }
 
     sealed class RateApp(val value: String) {
