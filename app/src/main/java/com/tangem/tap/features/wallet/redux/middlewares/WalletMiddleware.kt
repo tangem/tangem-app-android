@@ -16,6 +16,7 @@ import com.tangem.tap.common.analytics.AnalyticsAnOld
 import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.extensions.copyToClipboard
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
+import com.tangem.tap.common.extensions.dispatchErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchOpenUrl
 import com.tangem.tap.common.extensions.onCardScanned
@@ -25,6 +26,7 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.failedRates
 import com.tangem.tap.domain.loadedRates
 import com.tangem.tap.features.demo.DemoHelper
@@ -39,6 +41,7 @@ import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletData
 import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.redux.WalletStore
+import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.tap.network.NetworkStateChanged
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
@@ -191,7 +194,7 @@ class WalletMiddleware {
                                 Analytics.send(
                                     error,
                                     AnalyticsAnOld.ActionToLog.CreateWallet,
-                                    card = store.state.detailsState.scanResponse?.card
+                                    card = store.state.detailsState.scanResponse?.card,
                                 )
                             }
                         }
@@ -252,6 +255,10 @@ class WalletMiddleware {
                 store.dispatchOpenUrl(action.exploreUrl)
             }
             is WalletAction.Send -> {
+                if (!NetworkConnectivity.getInstance().isOnlineOrConnecting()) {
+                    store.dispatchErrorNotification(TapError.NoInternetConnection)
+                    return
+                }
                 val newAction = prepareSendAction(action.amount, store.state.walletState)
                 store.dispatch(newAction)
                 if (newAction is PrepareSendScreen) {
