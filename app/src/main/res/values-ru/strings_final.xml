@@ -151,4 +151,5 @@
     <string name="onboarding_subtitle_kyc_retry">Более подробная информация отправлена на ваш адрес электронной почты.</string>
     <string name="onboarding_exit_alert_title">Вы хотите выйти из процесса активации?</string>
     <string name="onboarding_exit_alert_message">В этом случае вам будет необходимо начать процесс заново.</string>
+    <string name="error_wrong_wallet_tapped">Вы использовали карту от другого кошелька. Приложите карту, связанную с этим кошельком.</string>
 </resources>
