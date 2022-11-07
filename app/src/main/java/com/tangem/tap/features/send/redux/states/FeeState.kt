@@ -1,6 +1,7 @@
 package com.tangem.tap.features.send.redux.states
 
 import com.tangem.blockchain.common.Amount
+import com.tangem.tap.features.wallet.redux.ProgressState
 import java.math.BigDecimal
 
 /**
@@ -20,6 +21,7 @@ data class FeeState(
     val controlsLayoutIsVisible: Boolean = false,
     val feeChipGroupIsVisible: Boolean = true,
     val includeFeeSwitcherIsEnabled: Boolean = true,
+    val progressState: ProgressState = ProgressState.Done
 ) : SendScreenState {
 
     override val stateId: StateId = StateId.FEE
