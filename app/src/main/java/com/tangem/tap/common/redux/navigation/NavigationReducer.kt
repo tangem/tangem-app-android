@@ -25,7 +25,14 @@ private fun internalReduce(action: Action, state: AppState): NavigationState {
             state.navigationState.copy(backStack = navState.backStack.subList(0, index))
         }
         is NavigationAction.ActivityCreated -> navState.copy(activity = navigationAction.activity)
-        is NavigationAction.ActivityDestroyed -> navState.copy(activity = null)
+        is NavigationAction.ActivityDestroyed -> {
+            when {
+                // Destroy the activity if it invoked for the same activity. Prevents overwriting to null if there is a
+                // new scan from the background AND-2366
+                navState.activity?.get() == navigationAction.activity.get() -> navState.copy(activity = null)
+                else -> navState
+            }
+        }
         else -> navState
     }
 }
