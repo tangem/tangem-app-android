@@ -7,6 +7,7 @@ import com.tangem.tap.features.send.redux.SendScreenAction
 import com.tangem.tap.features.send.redux.states.FeeState
 import com.tangem.tap.features.send.redux.states.FeeType
 import com.tangem.tap.features.send.redux.states.SendState
+import com.tangem.tap.features.wallet.redux.ProgressState
 
 /**
 [REDACTED_AUTHOR]
@@ -36,7 +37,7 @@ class FeeReducer : SendInternalReducer {
     private fun handleAction(action: FeeAction, sendState: SendState, state: FeeState): SendState {
         val result = when (action) {
             is FeeAction.RequestFee -> {
-                state
+                state.copy(progressState = ProgressState.Loading)
             }
             is FeeAction.ChangeLayoutVisibility -> {
                 fun getVisibility(current: Boolean, proposed: Boolean?): Boolean = proposed ?: current
@@ -68,12 +69,15 @@ class FeeReducer : SendInternalReducer {
                         currentFee = currentFee,
                         feeIsApproximate = isFeeApproximate(sendState),
                     )
-                }
+                }.copy(
+                    progressState = ProgressState.Done,
+                )
             }
             FeeAction.FeeCalculation.ClearResult -> {
                 state.copy(
                     feeList = null,
                     currentFee = null,
+                    progressState = ProgressState.Done,
                 )
             }
         }
