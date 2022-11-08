@@ -87,11 +87,11 @@ object Analytics : GlobalAnalyticsEventHandler {
 
             val eventFilter = analyticsFilters.firstOrNull { it.canBeAppliedTo(event) }
             when {
-                eventFilter == null -> analyticsHandlers.forEach { it.send(eventString, eventParams) }
+                eventFilter == null -> analyticsHandlers.forEach { handler -> handler.send(eventString, eventParams) }
                 eventFilter.canBeSent(event) -> {
                     analyticsHandlers
                         .filter { handler -> eventFilter.canBeConsumedByHandler(handler, event) }
-                        .forEach { it.send(eventString, eventParams) }
+                        .forEach { handler -> handler.send(eventString, eventParams) }
                 }
             }
         }
