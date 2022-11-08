@@ -3,6 +3,7 @@ package com.tangem.tap.common.analytics
 import com.tangem.blockchain.common.BlockchainError
 import com.tangem.common.card.Card
 import com.tangem.common.core.TangemSdkError
+import com.tangem.domain.common.FeatureCoroutineExceptionHandler
 import com.tangem.tap.common.analytics.api.AnalyticsEventFilter
 import com.tangem.tap.common.analytics.api.AnalyticsEventHandler
 import com.tangem.tap.common.analytics.api.BlockchainSdkErrorEventHandler
@@ -10,11 +11,19 @@ import com.tangem.tap.common.analytics.api.CardSdkErrorEventHandler
 import com.tangem.tap.common.analytics.api.ErrorEventLogger
 import com.tangem.tap.common.analytics.events.AnalyticsEvent
 import com.tangem.tap.common.extensions.filterNotNull
+import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.launch
+import java.util.concurrent.Executors
 
 /**
 [REDACTED_AUTHOR]
  */
 object Analytics : GlobalAnalyticsEventHandler {
+
+    internal val analyticsScope: CoroutineScope by lazy { createScope() }
 
     private val eventFilters = mutableListOf<AnalyticsEventFilter>()
     private val handlers = mutableMapOf<String, AnalyticsEventHandler>()
@@ -47,18 +56,22 @@ object Analytics : GlobalAnalyticsEventHandler {
     }
 
     override fun send(event: String, params: Map<String, String>) {
-        analyticsHandlers.forEach { it.send(event, params) }
+        analyticsScope.launch {
+            analyticsHandlers.forEach { it.send(event, params) }
+        }
     }
 
     override fun send(event: AnalyticsEvent, card: Card?, blockchain: String?) {
-        val eventFilter = eventFilters.firstOrNull { it.canBeAppliedTo(event) }
+        analyticsScope.launch {
+            val eventFilter = eventFilters.firstOrNull { it.canBeAppliedTo(event) }
 
-        when {
-            eventFilter == null -> analyticsHandlers.forEach { it.send(event, card, blockchain) }
-            eventFilter.canBeSent(event) -> {
-                analyticsHandlers
-                    .filter { eventFilter.canBeConsumedBy(it, event) }
-                    .forEach { it.send(event) }
+            when {
+                eventFilter == null -> analyticsHandlers.forEach { it.send(event, card, blockchain) }
+                eventFilter.canBeSent(event) -> {
+                    analyticsHandlers
+                        .filter { eventFilter.canBeConsumedBy(it, event) }
+                        .forEach { it.send(event) }
+                }
             }
         }
     }
@@ -69,14 +82,18 @@ object Analytics : GlobalAnalyticsEventHandler {
         card: Card?,
         blockchain: String?,
     ) {
-        analyticsHandlers.forEach {
-            it.handleAnalyticsEvent(event, params, card, blockchain)
+        analyticsScope.launch {
+            analyticsHandlers.forEach {
+                it.handleAnalyticsEvent(event, params, card, blockchain)
+            }
         }
     }
 
     override fun send(error: Throwable, params: Map<String, String>) {
-        analyticsHandlers.filterIsInstance<ErrorEventLogger>().forEach {
-            it.logErrorEvent(error, params)
+        analyticsScope.launch {
+            analyticsHandlers.filterIsInstance<ErrorEventLogger>().forEach {
+                it.logErrorEvent(error, params)
+            }
         }
     }
 
@@ -86,8 +103,10 @@ object Analytics : GlobalAnalyticsEventHandler {
         params: Map<AnalyticsParamAnOld, String>,
         card: Card?,
     ) {
-        analyticsHandlers.filterIsInstance<CardSdkErrorEventHandler>().forEach {
-            it.send(error, action, params, card)
+        analyticsScope.launch {
+            analyticsHandlers.filterIsInstance<CardSdkErrorEventHandler>().forEach {
+                it.send(error, action, params, card)
+            }
         }
     }
 
@@ -97,8 +116,10 @@ object Analytics : GlobalAnalyticsEventHandler {
         params: Map<AnalyticsParamAnOld, String>,
         card: Card?,
     ) {
-        analyticsHandlers.filterIsInstance<BlockchainSdkErrorEventHandler>().forEach {
-            it.send(error, action, params, card)
+        analyticsScope.launch {
+            analyticsHandlers.filterIsInstance<BlockchainSdkErrorEventHandler>().forEach {
+                it.send(error, action, params, card)
+            }
         }
     }
 
@@ -106,6 +127,13 @@ object Analytics : GlobalAnalyticsEventHandler {
         return super.prepareParams(card, blockchain, params).toMutableMap().apply {
             putAll(attachToAllEventsParams)
         }
+    }
+
+    private fun createScope(): CoroutineScope {
+        val name = "Analytics"
+        val dispatcher = Executors.newFixedThreadPool(1).asCoroutineDispatcher()
+        val exceptionHandler = FeatureCoroutineExceptionHandler.create(name)
+        return CoroutineScope(Job() + dispatcher + CoroutineName(name) + exceptionHandler)
     }
 }
 
