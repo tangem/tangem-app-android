@@ -39,7 +39,7 @@ class BasicTopUpFilter(
         }
     }
 
-    override fun canBeConsumedBy(handler: AnalyticsEventHandler, event: AnalyticsEvent): Boolean = true
+    override fun canBeConsumedByHandler(handler: AnalyticsEventHandler, event: AnalyticsEvent): Boolean = true
 
     data class Data(
         val walletId: String,

@@ -1,15 +1,10 @@
 package com.tangem.tap.common.analytics.api
 
 import android.app.Application
-import com.tangem.blockchain.common.BlockchainError
 import com.tangem.common.card.Card
-import com.tangem.common.core.TangemSdkError
 import com.tangem.common.json.MoshiJsonConverter
 import com.tangem.domain.common.AnalyticsHandlersLogConfig
-import com.tangem.tap.common.analytics.AnalyticsAnOld
 import com.tangem.tap.common.analytics.AnalyticsEventAnOld
-import com.tangem.tap.common.analytics.AnalyticsParamAnOld
-import com.tangem.tap.common.analytics.events.AnalyticsEvent
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.extensions.filterNotNull
 import com.tangem.tap.domain.configurable.config.Config
@@ -21,13 +16,6 @@ interface AnalyticsEventHandler {
     fun id(): String
 
     fun send(event: String, params: Map<String, String> = emptyMap())
-
-    fun send(event: AnalyticsEvent, card: Card? = null, blockchain: String? = null) {
-        send(
-            event = prepareEventString(event.category, event.event),
-            params = prepareParams(card, blockchain, event.params),
-        )
-    }
 
     @Deprecated("Migrate to AnalyticsEvent")
     fun handleAnalyticsEvent(
@@ -45,7 +33,6 @@ interface AnalyticsEventHandler {
         params: Map<String, String> = emptyMap(),
     ): Map<String, String> = mapOf(
         AnalyticsParam.Firmware to card?.firmwareVersion?.stringValue,
-        AnalyticsParam.BatchId to card?.batchId,
         AnalyticsParam.Blockchain to blockchain,
     ).filterNotNull() + params
 
@@ -54,31 +41,9 @@ interface AnalyticsEventHandler {
     }
 }
 
-interface ErrorEventHandler {
-    fun send(
-        error: Throwable,
-        params: Map<String, String> = emptyMap(),
-    )
-}
-
-interface SdkErrorEventHandler : CardSdkErrorEventHandler, BlockchainSdkErrorEventHandler
-
-interface CardSdkErrorEventHandler {
-    fun send(
-        error: TangemSdkError,
-        action: AnalyticsAnOld.ActionToLog,
-        params: Map<AnalyticsParamAnOld, String> = emptyMap(),
-        card: Card? = null,
-    )
-}
-
-interface BlockchainSdkErrorEventHandler {
-    fun send(
-        error: BlockchainError,
-        action: AnalyticsAnOld.ActionToLog,
-        params: Map<AnalyticsParamAnOld, String> = mapOf(),
-        card: Card? = null,
-    )
+interface AnalyticsHandlerHolder {
+    fun addHandler(name: String, handler: AnalyticsEventHandler)
+    fun removeHandler(name: String): AnalyticsEventHandler?
 }
 
 interface AnalyticsHandlerBuilder {
