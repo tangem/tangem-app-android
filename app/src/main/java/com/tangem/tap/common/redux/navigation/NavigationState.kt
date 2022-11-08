@@ -1,12 +1,12 @@
 package com.tangem.tap.common.redux.navigation
 
-import androidx.fragment.app.FragmentActivity
+import androidx.appcompat.app.AppCompatActivity
 import org.rekotlin.StateType
 import java.lang.ref.WeakReference
 
 data class NavigationState(
     val backStack: List<AppScreen> = listOf(AppScreen.Home),
-    val activity: WeakReference<FragmentActivity>? = null
+    val activity: WeakReference<AppCompatActivity>? = null,
 ) : StateType
 
 enum class AppScreen {
