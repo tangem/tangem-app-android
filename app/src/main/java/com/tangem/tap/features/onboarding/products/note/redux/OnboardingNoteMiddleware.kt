@@ -6,6 +6,7 @@ import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchErrorNotification
+import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchOpenUrl
 import com.tangem.tap.common.extensions.getAddressData
 import com.tangem.tap.common.extensions.getToUpUrl
@@ -20,8 +21,10 @@ import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.hasWallets
 import com.tangem.tap.domain.extensions.makePrimaryWalletManager
 import com.tangem.tap.features.demo.DemoHelper
+import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.ProgressState
+import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
@@ -152,6 +155,10 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
         }
         is OnboardingNoteAction.TopUp -> {
             val topUpUrl = noteState.walletManager?.getToUpUrl() ?: return
+            if (globalState.userCountryCode == RUSSIA_COUNTRY_CODE) {
+                store.dispatchOnMain(WalletAction.DialogAction.RussianCardholdersWarningDialog(topUpUrl))
+                return
+            }
             store.dispatchOpenUrl(topUpUrl)
         }
         OnboardingNoteAction.Done -> {
