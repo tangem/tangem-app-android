@@ -17,7 +17,7 @@ sealed class Basic(
         params = mapOf(
             "State" to state.value,
             "Currency" to currency.value,
-            "Batch" to batch,
+            AnalyticsParam.BatchId to batch,
         ),
     )
 
