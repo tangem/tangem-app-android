@@ -1,7 +1,7 @@
 package com.tangem.tap.common.redux.navigation
 
 import android.net.Uri
-import androidx.fragment.app.FragmentActivity
+import androidx.appcompat.app.AppCompatActivity
 import org.rekotlin.Action
 import java.lang.ref.WeakReference
 
@@ -9,7 +9,7 @@ sealed class NavigationAction : Action {
     data class NavigateTo(
         val screen: AppScreen,
         val fragmentShareTransition: FragmentShareTransition? = null,
-        val addToBackstack: Boolean = true
+        val addToBackstack: Boolean = true,
     ) : NavigationAction()
 
     data class PopBackTo(val screen: AppScreen? = null) : NavigationAction()
@@ -20,6 +20,6 @@ sealed class NavigationAction : Action {
 
     data class Share(val data: String) : NavigationAction()
 
-    data class ActivityCreated(val activity: WeakReference<FragmentActivity>) : NavigationAction()
-    object ActivityDestroyed : NavigationAction()
+    data class ActivityCreated(val activity: WeakReference<AppCompatActivity>) : NavigationAction()
+    data class ActivityDestroyed(val activity: WeakReference<AppCompatActivity>) : NavigationAction()
 }
