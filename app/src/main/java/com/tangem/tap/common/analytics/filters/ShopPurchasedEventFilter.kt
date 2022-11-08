@@ -16,7 +16,7 @@ class ShopPurchasedEventFilter : AnalyticsEventFilter {
 
     override fun canBeSent(event: AnalyticsEvent): Boolean = true
 
-    override fun canBeConsumedBy(handler: AnalyticsEventHandler, event: AnalyticsEvent): Boolean {
+    override fun canBeConsumedByHandler(handler: AnalyticsEventHandler, event: AnalyticsEvent): Boolean {
         return when (handler) {
             is AppsFlyerAnalyticsHandler, is FirebaseAnalyticsHandler -> true
             else -> false
