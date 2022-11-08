@@ -8,5 +8,10 @@ import com.tangem.tap.common.analytics.events.AnalyticsEvent
 interface AnalyticsEventFilter {
     fun canBeAppliedTo(event: AnalyticsEvent): Boolean
     fun canBeSent(event: AnalyticsEvent): Boolean
-    fun canBeConsumedBy(handler: AnalyticsEventHandler, event: AnalyticsEvent): Boolean
+    fun canBeConsumedByHandler(handler: AnalyticsEventHandler, event: AnalyticsEvent): Boolean
+}
+
+interface AnalyticsFilterHolder {
+    fun addFilter(filter: AnalyticsEventFilter)
+    fun removeFilter(filter: AnalyticsEventFilter): Boolean
 }
