@@ -13,8 +13,8 @@ import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.AnalyticsEventAnOld
 import com.tangem.tap.common.analytics.AnalyticsParamAnOld
 import com.tangem.tap.common.analytics.GetCardSourceParamsAnOld
-import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.IntroductionProcess
+import com.tangem.tap.common.analytics.paramsInterceptor.BatchIdParamsInterceptor
 import com.tangem.tap.common.entities.IndeterminateProgressButton
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOpenUrl
@@ -165,7 +165,7 @@ private fun onScanSuccess(scanResponse: ScanResponse) {
     val tapWalletManager = globalState.tapWalletManager
     tapWalletManager.updateConfigManager(scanResponse)
 
-    Analytics.attachToAllEvents(AnalyticsParam.BatchId, scanResponse.card.batchId)
+    Analytics.addParamsInterceptor(BatchIdParamsInterceptor(scanResponse.card.batchId))
 
     store.dispatch(TwinCardsAction.IfTwinsPrepareState(scanResponse))
 
