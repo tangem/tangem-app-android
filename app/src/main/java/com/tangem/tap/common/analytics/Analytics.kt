@@ -6,9 +6,15 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.domain.common.FeatureCoroutineExceptionHandler
 import com.tangem.tap.common.analytics.api.AnalyticsEventFilter
 import com.tangem.tap.common.analytics.api.AnalyticsEventHandler
+import com.tangem.tap.common.analytics.api.AnalyticsFilterHolder
+import com.tangem.tap.common.analytics.api.AnalyticsHandlerHolder
 import com.tangem.tap.common.analytics.api.BlockchainSdkErrorEventHandler
 import com.tangem.tap.common.analytics.api.CardSdkErrorEventHandler
+import com.tangem.tap.common.analytics.api.ErrorEventHandler
 import com.tangem.tap.common.analytics.api.ErrorEventLogger
+import com.tangem.tap.common.analytics.api.ParamsInterceptor
+import com.tangem.tap.common.analytics.api.ParamsInterceptorHolder
+import com.tangem.tap.common.analytics.api.SdkErrorEventHandler
 import com.tangem.tap.common.analytics.events.AnalyticsEvent
 import com.tangem.tap.common.extensions.filterNotNull
 import kotlinx.coroutines.CoroutineName
@@ -21,17 +27,26 @@ import java.util.concurrent.Executors
 /**
 [REDACTED_AUTHOR]
  */
+interface GlobalAnalyticsEventHandler : AnalyticsEventHandler,
+    ErrorEventHandler,
+    SdkErrorEventHandler,
+    AnalyticsHandlerHolder,
+    AnalyticsFilterHolder,
+    ParamsInterceptorHolder {
+
+    fun send(event: AnalyticsEvent, card: Card? = null, blockchain: String? = null)
+}
+
 object Analytics : GlobalAnalyticsEventHandler {
 
-    internal val analyticsScope: CoroutineScope by lazy { createScope() }
+    private val analyticsScope: CoroutineScope by lazy { createScope() }
 
-    private val eventFilters = mutableListOf<AnalyticsEventFilter>()
     private val handlers = mutableMapOf<String, AnalyticsEventHandler>()
+    private val analyticsFilters = mutableSetOf<AnalyticsEventFilter>()
+    private val paramsInterceptors = mutableMapOf<String, ParamsInterceptor>()
 
     private val analyticsHandlers: List<AnalyticsEventHandler>
         get() = handlers.values.toList()
-
-    private val attachToAllEventsParams: MutableMap<String, String> = mutableMapOf()
 
     override fun id(): String = analyticsHandlers.joinToString(", ") { it.id() }
 
@@ -44,33 +59,39 @@ object Analytics : GlobalAnalyticsEventHandler {
     }
 
     override fun addFilter(filter: AnalyticsEventFilter) {
-        eventFilters.add(filter)
+        analyticsFilters.add(filter)
     }
 
-    override fun removeFilter(filter: AnalyticsEventFilter) {
-        eventFilters.remove(filter)
+    override fun removeFilter(filter: AnalyticsEventFilter): Boolean {
+        return analyticsFilters.remove(filter)
     }
 
-    override fun attachToAllEvents(key: String, value: String) {
-        attachToAllEventsParams[key] = value
+    override fun addParamsInterceptor(interceptor: ParamsInterceptor) {
+        paramsInterceptors[interceptor.id()] = interceptor
+    }
+
+    override fun removeParamsInterceptor(interceptor: ParamsInterceptor): ParamsInterceptor? {
+        return paramsInterceptors.remove(interceptor.id())
     }
 
     override fun send(event: String, params: Map<String, String>) {
         analyticsScope.launch {
-            analyticsHandlers.forEach { it.send(event, params) }
+            analyticsHandlers.forEach { it.send(event, params.interceptParams()) }
         }
     }
 
     override fun send(event: AnalyticsEvent, card: Card?, blockchain: String?) {
         analyticsScope.launch {
-            val eventFilter = eventFilters.firstOrNull { it.canBeAppliedTo(event) }
+            val eventString = prepareEventString(event.category, event.event)
+            val eventParams = prepareParams(card, blockchain, event.interceptParams())
 
+            val eventFilter = analyticsFilters.firstOrNull { it.canBeAppliedTo(event) }
             when {
-                eventFilter == null -> analyticsHandlers.forEach { it.send(event, card, blockchain) }
+                eventFilter == null -> analyticsHandlers.forEach { it.send(eventString, eventParams) }
                 eventFilter.canBeSent(event) -> {
                     analyticsHandlers
-                        .filter { eventFilter.canBeConsumedBy(it, event) }
-                        .forEach { it.send(event) }
+                        .filter { handler -> eventFilter.canBeConsumedByHandler(handler, event) }
+                        .forEach { it.send(eventString, eventParams) }
                 }
             }
         }
@@ -84,7 +105,7 @@ object Analytics : GlobalAnalyticsEventHandler {
     ) {
         analyticsScope.launch {
             analyticsHandlers.forEach {
-                it.handleAnalyticsEvent(event, params, card, blockchain)
+                it.handleAnalyticsEvent(event, params.interceptParams(), card, blockchain)
             }
         }
     }
@@ -123,17 +144,21 @@ object Analytics : GlobalAnalyticsEventHandler {
         }
     }
 
-    override fun prepareParams(card: Card?, blockchain: String?, params: Map<String, String>): Map<String, String> {
-        return super.prepareParams(card, blockchain, params).toMutableMap().apply {
-            putAll(attachToAllEventsParams)
-        }
+    private fun AnalyticsEvent.interceptParams(): Map<String, String> = params.interceptParams()
+
+    private fun Map<String, String>.interceptParams(): Map<String, String> {
+        return this.toMutableMap().apply { interceptParams() }
+    }
+
+    private fun MutableMap<String, String>.interceptParams() {
+        paramsInterceptors.values.forEach { it.intercept(this) }
     }
 
     private fun createScope(): CoroutineScope {
         val name = "Analytics"
         val dispatcher = Executors.newFixedThreadPool(1).asCoroutineDispatcher()
-        val exceptionHandler = FeatureCoroutineExceptionHandler.create(name)
-        return CoroutineScope(Job() + dispatcher + CoroutineName(name) + exceptionHandler)
+        val exHandler = FeatureCoroutineExceptionHandler.create(name)
+        return CoroutineScope(Job() + dispatcher + CoroutineName(name) + exHandler)
     }
 }
 
