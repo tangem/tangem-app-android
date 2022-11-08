@@ -126,24 +126,24 @@ class WalletConnectSdkHelper {
         )
     }
 
-    suspend fun completeTransaction(data: WcTransactionData): String? {
+    suspend fun completeTransaction(data: WcTransactionData, cardId: String?): String? {
         return when (data.type) {
-            WcTransactionType.EthSendTransaction -> sendTransaction(data)
-            WcTransactionType.EthSignTransaction -> signTransaction(data)
+            WcTransactionType.EthSendTransaction -> sendTransaction(data, cardId)
+            WcTransactionType.EthSignTransaction -> signTransaction(data, cardId)
         }
     }
 
-    private suspend fun sendTransaction(data: WcTransactionData): String? {
+    private suspend fun sendTransaction(data: WcTransactionData, cardId: String?): String? {
         val result = (data.walletManager as TransactionSender).send(
             transactionData = data.transaction,
-            signer = CommonSigner(tangemSdk)
+            signer = CommonSigner(tangemSdk, cardId),
         )
         return when (result) {
             SimpleResult.Success -> {
                 HEX_PREFIX + data.walletManager.wallet.recentTransactions.last().hash
             }
             is SimpleResult.Failure -> {
-                store.state.globalState.analyticsHandler?.handleBlockchainSdkErrorEvent(
+                store.state.globalState.analyticsHandler.handleBlockchainSdkErrorEvent(
                     result.error,
                     AnalyticsAnOld.ActionToLog.WalletConnectTransaction,
                 )
@@ -153,27 +153,27 @@ class WalletConnectSdkHelper {
         }
     }
 
-    private suspend fun signTransaction(data: WcTransactionData): String? {
+    private suspend fun signTransaction(data: WcTransactionData, cardId: String?): String? {
         val dataToSign = EthereumUtils.buildTransactionToSign(
             transactionData = data.transaction,
             nonce = null,
             blockchain = data.walletManager.wallet.blockchain,
-            gasLimit = null
+            gasLimit = null,
         ) ?: return null
 
         val command = SignHashCommand(
             hash = dataToSign.hash,
             walletPublicKey = data.walletManager.wallet.publicKey.seedKey,
-            derivationPath = data.walletManager.wallet.publicKey.derivationPath
+            derivationPath = data.walletManager.wallet.publicKey.derivationPath,
         )
-        val result = tangemSdkManager.runTaskAsync(command, initialMessage = Message())
+        val result = tangemSdkManager.runTaskAsync(command, initialMessage = Message(), cardId = cardId)
         return when (result) {
             is CompletionResult.Success -> {
                 HEX_PREFIX + result.data
             }
             is CompletionResult.Failure -> {
                 (result.error as? TangemSdkError)?.let { error ->
-                    store.state.globalState.analyticsHandler?.handleCardSdkErrorEvent(
+                    store.state.globalState.analyticsHandler.handleCardSdkErrorEvent(
                         error,
                         AnalyticsAnOld.ActionToLog.WalletConnectSign,
                     )
@@ -184,13 +184,13 @@ class WalletConnectSdkHelper {
         }
     }
 
-    suspend fun signBnbTransaction(data: ByteArray, session: WalletConnectActiveData): String? {
+    suspend fun signBnbTransaction(data: ByteArray, session: WalletConnectActiveData, cardId: String?): String? {
         val command = SignHashCommand(
             hash = data,
             walletPublicKey = session.wallet.walletPublicKey ?: return null,
-            derivationPath = session.wallet.derivationPath
+            derivationPath = session.wallet.derivationPath,
         )
-        val result = tangemSdkManager.runTaskAsync(command, initialMessage = Message())
+        val result = tangemSdkManager.runTaskAsync(command, initialMessage = Message(), cardId = cardId)
         return when (result) {
             is CompletionResult.Success -> {
                 val key = session.wallet.derivedPublicKey?.toDecompressedPublicKey()
@@ -202,7 +202,7 @@ class WalletConnectSdkHelper {
             }
             is CompletionResult.Failure -> {
                 (result.error as? TangemSdkError)?.let { error ->
-                    store.state.globalState.analyticsHandler?.handleCardSdkErrorEvent(
+                    store.state.globalState.analyticsHandler.handleCardSdkErrorEvent(
                         error,
                         AnalyticsAnOld.ActionToLog.WalletConnectTransaction,
                     )
@@ -266,10 +266,10 @@ class WalletConnectSdkHelper {
         }.joinToString("")
     }
 
-    suspend fun signPersonalMessage(hashToSign: ByteArray, wallet: WalletForSession): String? {
+    suspend fun signPersonalMessage(hashToSign: ByteArray, wallet: WalletForSession, cardId: String?): String? {
         val key = wallet.derivedPublicKey ?: wallet.walletPublicKey
         val command = SignHashCommand(hashToSign, wallet.walletPublicKey!!, wallet.derivationPath)
-        return when (val result = tangemSdkManager.runTaskAsync(command)) {
+        return when (val result = tangemSdkManager.runTaskAsync(command, cardId)) {
             is CompletionResult.Success -> {
                 val hash = result.data.signature
                 return EthereumUtils.prepareSignedMessageData(
@@ -278,7 +278,7 @@ class WalletConnectSdkHelper {
             }
             is CompletionResult.Failure -> {
                 (result.error as? TangemSdkError)?.let { error ->
-                    store.state.globalState.analyticsHandler?.handleCardSdkErrorEvent(
+                    store.state.globalState.analyticsHandler.handleCardSdkErrorEvent(
                         error,
                         AnalyticsAnOld.ActionToLog.WalletConnectSign,
                     )
