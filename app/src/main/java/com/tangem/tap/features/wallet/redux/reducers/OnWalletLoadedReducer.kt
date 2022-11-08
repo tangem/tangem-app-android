@@ -88,7 +88,7 @@ class OnWalletLoadedReducer {
             val tokenFiatAmountFormatted = tokenFiatAmount?.toFormattedFiatValue(fiatCurrency.symbol)
                 ?: UNKNOWN_AMOUNT_SIGN
 
-            val isTokenSendButtonEnabled = newWalletData.shouldEnableTokenSendButton()
+            val isTokenSendButtonEnabled = tokenWalletData?.shouldEnableTokenSendButton() == true
                 && pendingTransactions.isEmpty()
             tokenWalletData?.copy(
                 currencyData = tokenWalletData.currencyData.copy(
