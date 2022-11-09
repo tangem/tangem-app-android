@@ -154,7 +154,7 @@ sealed class WalletAction : Action {
         object SignedHashesMultiWalletDialog : DialogAction()
         object ChooseTradeActionDialog : DialogAction()
         data class ChooseCurrency(val amounts: List<Amount>?) : DialogAction()
-        object RussianCardholdersWarningDialog : DialogAction()
+        data class RussianCardholdersWarningDialog(val topUpUrl: String? = null) : DialogAction()
 
         object Hide : DialogAction()
     }
