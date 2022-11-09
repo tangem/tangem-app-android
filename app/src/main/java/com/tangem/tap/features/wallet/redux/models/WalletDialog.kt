@@ -31,5 +31,5 @@ sealed interface WalletDialog : StateDialog {
         val titleRes: Int = R.string.token_details_unable_hide_alert_title
     }
 
-    object RussianCardholdersWarningDialog : WalletDialog
+    data class RussianCardholdersWarningDialog(val topUpUrl: String?) : WalletDialog
 }
