@@ -1,7 +1,7 @@
 package com.tangem.tap.common.analytics.filters
 
 import com.tangem.tap.common.analytics.api.AnalyticsEventFilter
-import com.tangem.tap.common.analytics.api.AnalyticsEventHandler
+import com.tangem.tap.common.analytics.api.AnalyticsHandler
 import com.tangem.tap.common.analytics.events.AnalyticsEvent
 import com.tangem.tap.common.analytics.events.Basic
 
@@ -23,5 +23,5 @@ class BasicSignInFilter : AnalyticsEventFilter {
         return canBeSent
     }
 
-    override fun canBeConsumedByHandler(handler: AnalyticsEventHandler, event: AnalyticsEvent): Boolean = true
+    override fun canBeConsumedByHandler(handler: AnalyticsHandler, event: AnalyticsEvent): Boolean = true
 }

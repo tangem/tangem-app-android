@@ -1,11 +1,11 @@
 package com.tangem.tap.common.analytics.handlers.amplitude
 
-import com.tangem.tap.common.analytics.api.AnalyticsEventHandler
+import com.tangem.tap.common.analytics.api.AnalyticsHandler
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 
 class AmplitudeAnalyticsHandler(
     private val client: AmplitudeAnalyticsClient,
-) : AnalyticsEventHandler {
+) : AnalyticsHandler {
 
     override fun id(): String = ID
 
@@ -18,7 +18,7 @@ class AmplitudeAnalyticsHandler(
     }
 
     class Builder : AnalyticsHandlerBuilder {
-        override fun build(data: AnalyticsHandlerBuilder.Data): AnalyticsEventHandler? = when {
+        override fun build(data: AnalyticsHandlerBuilder.Data): AnalyticsHandler? = when {
             !data.isDebug -> AmplitudeClient(data.application, data.config.amplitudeApiKey)
             data.isDebug && data.logConfig.amplitude -> AmplitudeLogClient(data.jsonConverter)
             else -> null

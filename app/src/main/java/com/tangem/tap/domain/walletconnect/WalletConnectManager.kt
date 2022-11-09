@@ -5,9 +5,7 @@ import com.tangem.common.card.EllipticCurve
 import com.tangem.common.extensions.guard
 import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.analytics.Analytics
-import com.tangem.tap.common.analytics.AnalyticsAnOld
 import com.tangem.tap.common.analytics.events.WalletConnect
-import com.tangem.tap.common.analytics.logWcEvent
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TapError
@@ -226,11 +224,6 @@ class WalletConnectManager {
 
     private fun onSessionClosed(session: WCSession) {
         Analytics.send(WalletConnect.SessionDisconnected())
-        Analytics.logWcEvent(
-            AnalyticsAnOld.WcAnalyticsEvent.Session(
-                AnalyticsAnOld.WcSessionEvent.Disconnect, sessions[session]?.peerMeta?.url
-            )
-        )
         sessions.remove(session)
         walletConnectRepository.removeSession(session)
         store.dispatchOnMain(WalletConnectAction.RemoveSession(session))
@@ -376,11 +369,6 @@ class WalletConnectManager {
                         )
                     }
                     Analytics.send(WalletConnect.NewSessionEstablished())
-                    Analytics.logWcEvent(
-                        AnalyticsAnOld.WcAnalyticsEvent.Session(
-                            AnalyticsAnOld.WcSessionEvent.Connect, peer.url,
-                        ),
-                    )
                 }
             }
         }
@@ -391,11 +379,11 @@ class WalletConnectManager {
         }
         client.onEthSendTransaction = { id: Long, transaction: WCEthereumTransaction ->
             Timber.d("onEthSendTransaction: $transaction")
-            Analytics.logWcEvent(
-                AnalyticsAnOld.WcAnalyticsEvent.Action(
-                    AnalyticsAnOld.WcAction.SendTransaction
-                )
-            )
+            // Analytics.logWcEvent(
+            //     AnalyticsAnOld.WcAnalyticsEvent.Action(
+            //         AnalyticsAnOld.WcAction.SendTransaction
+            //     )
+            // )
             sessions[client.session]?.toWalletConnectSession()?.let { sessionData ->
                 store.dispatchOnMain(
                     WalletConnectAction.HandleTransactionRequest(
@@ -409,11 +397,11 @@ class WalletConnectManager {
         }
         client.onEthSignTransaction = { id: Long, transaction: WCEthereumTransaction ->
             Timber.d("onEthSignTransaction: $transaction")
-            Analytics.logWcEvent(
-                AnalyticsAnOld.WcAnalyticsEvent.Action(
-                    AnalyticsAnOld.WcAction.SignTransaction
-                )
-            )
+            // Analytics.logWcEvent(
+            //     AnalyticsAnOld.WcAnalyticsEvent.Action(
+            //         AnalyticsAnOld.WcAction.SignTransaction
+            //     )
+            // )
             sessions[client.session]?.toWalletConnectSession()?.let { sessionData ->
                 store.dispatchOnMain(
                     WalletConnectAction.HandleTransactionRequest(
@@ -427,11 +415,11 @@ class WalletConnectManager {
         }
         client.onEthSign = { id: Long, message: WCEthereumSignMessage ->
             Timber.d("onEthSign: $message")
-            Analytics.logWcEvent(
-                AnalyticsAnOld.WcAnalyticsEvent.Action(
-                    AnalyticsAnOld.WcAction.PersonalSign
-                )
-            )
+            // Analytics.logWcEvent(
+            //     AnalyticsAnOld.WcAnalyticsEvent.Action(
+            //         AnalyticsAnOld.WcAction.PersonalSign
+            //     )
+            // )
             sessions[client.session]?.toWalletConnectSession()?.let { sessionData ->
                 store.dispatchOnMain(
                     WalletConnectAction.HandlePersonalSignRequest(
@@ -503,11 +491,11 @@ class WalletConnectManager {
         val message = EthSignHelper.tryToParseEthTypedMessage(request)
         if (message != null) {
             Timber.d("onEthSign_v4: $message")
-            Analytics.logWcEvent(
-                AnalyticsAnOld.WcAnalyticsEvent.Action(
-                    AnalyticsAnOld.WcAction.PersonalSign
-                )
-            )
+            // Analytics.logWcEvent(
+            //     AnalyticsAnOld.WcAnalyticsEvent.Action(
+            //         AnalyticsAnOld.WcAction.PersonalSign
+            //     )
+            // )
             sessions[client.session]?.toWalletConnectSession()?.let { sessionData ->
                 store.dispatchOnMain(
                     WalletConnectAction.HandlePersonalSignRequest(

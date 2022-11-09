@@ -5,14 +5,12 @@ import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.CompletionResult
-import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.isZero
 import com.tangem.common.services.Result
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.operations.attestation.Attestation
 import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.tap.common.analytics.Analytics
-import com.tangem.tap.common.analytics.AnalyticsAnOld
 import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.extensions.copyToClipboard
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
@@ -189,15 +187,7 @@ class WalletMiddleware {
                                 globalState.scanResponse?.copy(card = result.data)
                             scanNoteResponse?.let { store.onCardScanned(scanNoteResponse) }
                         }
-                        is CompletionResult.Failure -> {
-                            (result.error as? TangemSdkError)?.let { error ->
-                                Analytics.send(
-                                    error,
-                                    AnalyticsAnOld.ActionToLog.CreateWallet,
-                                    card = store.state.detailsState.scanResponse?.card,
-                                )
-                            }
-                        }
+                        is CompletionResult.Failure -> {}
                     }
                 }
             }

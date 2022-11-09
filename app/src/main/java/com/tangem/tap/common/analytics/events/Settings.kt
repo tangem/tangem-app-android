@@ -9,7 +9,8 @@ sealed class Settings(
     category: String = "Settings",
     event: String,
     params: Map<String, String> = mapOf(),
-) : AnalyticsEvent(category, event, params) {
+    error: Throwable? = null,
+) : AnalyticsEvent(category, event, params, error) {
 
     class ScreenOpened : Settings(event = "Settings Screen Opened")
     class ButtonChat : Settings(event = "Button - Chat")
@@ -28,10 +29,15 @@ sealed class Settings(
     sealed class CardSettings(
         event: String,
         params: Map<String, String> = mapOf(),
-    ) : Settings("Settings / Card Settings", event, params) {
+        error: Throwable? = null,
+    ) : Settings("Settings / Card Settings", event, params, error) {
 
         class ButtonFactoryReset : CardSettings("Button - Factory Reset")
-        class FactoryResetFinished : CardSettings("Factory Reset Finished")
+        class FactoryResetFinished(error: Throwable? = null) : CardSettings(
+            event = "Factory Reset Finished",
+            error = error,
+        )
+
         class UserCodeChanged : CardSettings("User Code Changed")
         class ButtonChangeSecurityMode : CardSettings("Button - Change Security Mode")
 
@@ -40,9 +46,10 @@ sealed class Settings(
             params = mapOf("Type" to type.value),
         )
 
-        class SecurityModeChanged(mode: AnalyticsParam.SecurityMode) : CardSettings(
+        class SecurityModeChanged(mode: AnalyticsParam.SecurityMode, error: Throwable? = null) : CardSettings(
             event = "Security Mode Changed",
             params = mapOf("Mode" to mode.value),
+            error = error,
         )
     }
 
