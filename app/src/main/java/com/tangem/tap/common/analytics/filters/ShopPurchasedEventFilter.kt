@@ -1,7 +1,7 @@
 package com.tangem.tap.common.analytics.filters
 
 import com.tangem.tap.common.analytics.api.AnalyticsEventFilter
-import com.tangem.tap.common.analytics.api.AnalyticsEventHandler
+import com.tangem.tap.common.analytics.api.AnalyticsHandler
 import com.tangem.tap.common.analytics.events.AnalyticsEvent
 import com.tangem.tap.common.analytics.events.Shop
 import com.tangem.tap.common.analytics.handlers.appsFlyer.AppsFlyerAnalyticsHandler
@@ -16,7 +16,7 @@ class ShopPurchasedEventFilter : AnalyticsEventFilter {
 
     override fun canBeSent(event: AnalyticsEvent): Boolean = true
 
-    override fun canBeConsumedByHandler(handler: AnalyticsEventHandler, event: AnalyticsEvent): Boolean {
+    override fun canBeConsumedByHandler(handler: AnalyticsHandler, event: AnalyticsEvent): Boolean {
         return when (handler) {
             is AppsFlyerAnalyticsHandler, is FirebaseAnalyticsHandler -> true
             else -> false
