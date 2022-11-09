@@ -11,6 +11,7 @@ import com.tangem.tap.common.extensions.beginDelayedTransition
 import com.tangem.tap.common.extensions.enableError
 import com.tangem.tap.common.extensions.getColor
 import com.tangem.tap.common.extensions.getString
+import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.extensions.update
 import com.tangem.tap.common.redux.getMessageString
@@ -35,6 +36,7 @@ import com.tangem.tap.features.send.ui.SendFragment
 import com.tangem.tap.features.send.ui.dialogs.RequestFeeErrorDialog
 import com.tangem.tap.features.send.ui.dialogs.SendTransactionFailsDialog
 import com.tangem.tap.features.send.ui.dialogs.TezosWarningDialog
+import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.features.wallet.redux.WalletState.Companion.ROUGH_SIGN
 import com.tangem.tap.features.wallet.redux.WalletState.Companion.UNKNOWN_AMOUNT_SIGN
 import com.tangem.tap.features.wallet.ui.adapters.WarningMessagesAdapter
@@ -62,7 +64,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
                 StateId.TRANSACTION_EXTRAS -> handleTransactionExtrasState(fg, state.transactionExtrasState)
                 StateId.AMOUNT -> handleAmountState(fg, state.amountState)
                 StateId.FEE -> handleFeeState(fg, state.feeState)
-                StateId.RECEIPT -> handleReceiptState(fg, state.receiptState)
+                StateId.RECEIPT -> handleReceiptState(fg, state.receiptState, state.feeState.progressState)
             }
         }
     }
@@ -263,7 +265,11 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
         if (chipGroup.checkedChipId != chipId && chipId != View.NO_ID) chipGroup.check(chipId)
     }
 
-    private fun handleReceiptState(fg: SendFragment, state: ReceiptState) = with(fg.binding.clReceiptContainer) {
+    private fun handleReceiptState(
+        fg: SendFragment,
+        state: ReceiptState,
+        feeProgressState: ProgressState,
+    ) = with(fg.binding.clReceiptContainer) {
         val mainLayout = clReceiptContainer as ViewGroup
         val totalLayout = llTotalContainer.llTotal as ViewGroup
         val totalTokenLayout = llTotalContainer.flTotalTokenCrypto as ViewGroup
@@ -274,11 +280,22 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
             return if (value == UNKNOWN_AMOUNT_SIGN) value else "$ROUGH_SIGN $value"
         }
 
+        when (feeProgressState) {
+            ProgressState.Loading -> {
+                tvReceiptFeeValue.hide()
+                pbReceiptFee.show()
+            }
+            ProgressState.Done -> {
+                pbReceiptFee.hide()
+                tvReceiptFeeValue.show()
+            }
+        }
+
+
         when (state.visibleTypeOfReceipt) {
             ReceiptLayoutType.FIAT -> {
                 val receipt = state.fiat ?: return
 
-                llTotalContainer.tvTotalValue
                 totalLayout.show(true)
                 totalTokenLayout.show(false)
                 tvReceiptAmountValue.update("${receipt.amountFiat} ${receipt.symbols.fiat}")
@@ -290,7 +307,6 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
                     receipt.willSentCrypto, receipt.symbols.crypto,
                 )
                 llTotalContainer.tvWillBeSentValue.update(willSent)
-
             }
             ReceiptLayoutType.CRYPTO -> {
                 val receipt = state.crypto ?: return
