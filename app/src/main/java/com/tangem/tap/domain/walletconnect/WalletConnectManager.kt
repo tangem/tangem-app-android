@@ -44,6 +44,8 @@ import kotlin.collections.set
 
 class WalletConnectManager {
 
+    private var cardId: String? = null
+
     private val okHttpClient: OkHttpClient by lazy {
         OkHttpClient.Builder()
             .connectTimeout(20, TimeUnit.SECONDS)
@@ -138,6 +140,7 @@ class WalletConnectManager {
     fun restoreSessions(scanResponse: ScanResponse) {
         val walletPublicKey = scanResponse.card.wallets.firstOrNull { it.curve == EllipticCurve.Secp256k1 }?.publicKey
             ?: return
+        if (scanResponse.card.backupStatus?.isActive != true) cardId = scanResponse.card.cardId
         val sessions = walletConnectRepository.loadSavedSessions()
             // filter sessions for this particular card
             .filter { it.wallet.walletPublicKey.contentEquals(walletPublicKey) }
@@ -223,10 +226,10 @@ class WalletConnectManager {
     }
 
     private fun onSessionClosed(session: WCSession) {
-        store.state.globalState.analyticsHandler?.logWcEvent(
+        store.state.globalState.analyticsHandler.logWcEvent(
             AnalyticsAnOld.WcAnalyticsEvent.Session(
-                AnalyticsAnOld.WcSessionEvent.Disconnect, sessions[session]?.peerMeta?.url
-            )
+                AnalyticsAnOld.WcSessionEvent.Disconnect, sessions[session]?.peerMeta?.url,
+            ),
         )
         sessions.remove(session)
         walletConnectRepository.removeSession(session)
@@ -272,13 +275,13 @@ class WalletConnectManager {
         val activeData = sessions[session]
         val data = activeData?.transactionData ?: return
         scope.launch {
-            val hash = WalletConnectSdkHelper().completeTransaction(data).guard {
+            val hash = WalletConnectSdkHelper().completeTransaction(data, cardId).guard {
                 sessions[data.session.session] = activeData.copy(transactionData = null)
                 store.dispatchOnMain(
                     WalletConnectAction.RejectRequest(
                         data.session.session,
-                        data.id
-                    )
+                        data.id,
+                    ),
                 )
                 return@launch
             }
@@ -292,12 +295,12 @@ class WalletConnectManager {
     ) {
         val activeData = sessions[sessionData] ?: return
         scope.launch {
-            val hash = WalletConnectSdkHelper().signBnbTransaction(data, activeData).guard {
+            val hash = WalletConnectSdkHelper().signBnbTransaction(data, activeData, cardId).guard {
                 store.dispatchOnMain(
                     WalletConnectAction.RejectRequest(
                         sessionData,
-                        id
-                    )
+                        id,
+                    ),
                 )
                 return@launch
             }
@@ -330,14 +333,14 @@ class WalletConnectManager {
         val activeData = sessions[session]
         val data = activeData?.personalSignData ?: return
         scope.launch {
-            val hash = WalletConnectSdkHelper().signPersonalMessage(data.hash, activeData.wallet)
+            val hash = WalletConnectSdkHelper().signPersonalMessage(data.hash, activeData.wallet, cardId)
                 .guard {
                     sessions[data.session.session] = activeData.copy(transactionData = null)
                     store.dispatchOnMain(
                         WalletConnectAction.RejectRequest(
                             data.session.session,
-                            data.id
-                        )
+                            data.id,
+                        ),
                     )
                     return@launch
                 }
@@ -372,7 +375,7 @@ class WalletConnectManager {
                             ),
                         )
                     }
-                    store.state.globalState.analyticsHandler?.logWcEvent(
+                    store.state.globalState.analyticsHandler.logWcEvent(
                         AnalyticsAnOld.WcAnalyticsEvent.Session(
                             AnalyticsAnOld.WcSessionEvent.Connect, peer.url,
                         ),
@@ -387,10 +390,10 @@ class WalletConnectManager {
         }
         client.onEthSendTransaction = { id: Long, transaction: WCEthereumTransaction ->
             Timber.d("onEthSendTransaction: $transaction")
-            store.state.globalState.analyticsHandler?.logWcEvent(
+            store.state.globalState.analyticsHandler.logWcEvent(
                 AnalyticsAnOld.WcAnalyticsEvent.Action(
-                    AnalyticsAnOld.WcAction.SendTransaction
-                )
+                    AnalyticsAnOld.WcAction.SendTransaction,
+                ),
             )
             sessions[client.session]?.toWalletConnectSession()?.let { sessionData ->
                 store.dispatchOnMain(
@@ -405,10 +408,10 @@ class WalletConnectManager {
         }
         client.onEthSignTransaction = { id: Long, transaction: WCEthereumTransaction ->
             Timber.d("onEthSignTransaction: $transaction")
-            store.state.globalState.analyticsHandler?.logWcEvent(
+            store.state.globalState.analyticsHandler.logWcEvent(
                 AnalyticsAnOld.WcAnalyticsEvent.Action(
-                    AnalyticsAnOld.WcAction.SignTransaction
-                )
+                    AnalyticsAnOld.WcAction.SignTransaction,
+                ),
             )
             sessions[client.session]?.toWalletConnectSession()?.let { sessionData ->
                 store.dispatchOnMain(
@@ -423,10 +426,10 @@ class WalletConnectManager {
         }
         client.onEthSign = { id: Long, message: WCEthereumSignMessage ->
             Timber.d("onEthSign: $message")
-            store.state.globalState.analyticsHandler?.logWcEvent(
+            store.state.globalState.analyticsHandler.logWcEvent(
                 AnalyticsAnOld.WcAnalyticsEvent.Action(
-                    AnalyticsAnOld.WcAction.PersonalSign
-                )
+                    AnalyticsAnOld.WcAction.PersonalSign,
+                ),
             )
             sessions[client.session]?.toWalletConnectSession()?.let { sessionData ->
                 store.dispatchOnMain(
@@ -499,10 +502,10 @@ class WalletConnectManager {
         val message = EthSignHelper.tryToParseEthTypedMessage(request)
         if (message != null) {
             Timber.d("onEthSign_v4: $message")
-            store.state.globalState.analyticsHandler?.logWcEvent(
+            store.state.globalState.analyticsHandler.logWcEvent(
                 AnalyticsAnOld.WcAnalyticsEvent.Action(
-                    AnalyticsAnOld.WcAction.PersonalSign
-                )
+                    AnalyticsAnOld.WcAction.PersonalSign,
+                ),
             )
             sessions[client.session]?.toWalletConnectSession()?.let { sessionData ->
                 store.dispatchOnMain(
