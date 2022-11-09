@@ -6,7 +6,8 @@ package com.tangem.tap.common.analytics.events
 sealed class Basic(
     event: String,
     params: Map<String, String> = mapOf(),
-) : AnalyticsEvent("Basic", event, params) {
+    error: Throwable? = null,
+) : AnalyticsEvent("Basic", event, params, error) {
 
     class SignedIn(
         state: AnalyticsParam.CardBalanceState,
@@ -24,5 +25,10 @@ sealed class Basic(
     class ToppedUp(currency: AnalyticsParam.CardCurrency) : Basic(
         event = "Topped up",
         params = mapOf("Currency" to currency.value),
+    )
+
+    class ScanError(error: Throwable) : Basic(
+        event = "Scan",
+        error = error,
     )
 }
