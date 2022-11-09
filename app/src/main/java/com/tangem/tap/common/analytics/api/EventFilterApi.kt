@@ -21,7 +21,7 @@ interface AnalyticsEventFilter {
     /**
      * Performs a check to see if the event can be dispatched by a specific handler
      */
-    fun canBeConsumedByHandler(handler: AnalyticsEventHandler, event: AnalyticsEvent): Boolean
+    fun canBeConsumedByHandler(handler: AnalyticsHandler, event: AnalyticsEvent): Boolean
 }
 
 interface AnalyticsFilterHolder {
