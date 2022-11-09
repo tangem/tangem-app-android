@@ -9,7 +9,8 @@ sealed class Token(
     category: String,
     event: String,
     params: Map<String, String> = mapOf(),
-) : AnalyticsEvent(category, event, params) {
+    error: Throwable? = null,
+) : AnalyticsEvent(category, event, params, error) {
 
     class Refreshed : Token("Token", "Refreshed")
     class ButtonExplore : Token("Token", "Button - Explore")
@@ -57,16 +58,18 @@ sealed class Token(
     sealed class Send(
         event: String,
         params: Map<String, String> = mapOf(),
-    ) : Token("Token / Send", event, params) {
+        error: Throwable? = null,
+    ) : Token("Token / Send", event, params, error) {
 
         class ScreenOpened : Send("Send Screen Opened")
         class ButtonPaste : Send("Button - Paste")
         class ButtonQRCode : Send("Button - QR Code")
         class ButtonSwapCurrency : Send("Button - Swap Currency")
 
-        class TransactionSent(type: CurrencyType) : Send(
+        class TransactionSent(type: CurrencyType, error: Throwable? = null) : Send(
             event = "Transaction Sent",
             params = mapOf("Token" to type.value),
+            error = error,
         )
     }
 
