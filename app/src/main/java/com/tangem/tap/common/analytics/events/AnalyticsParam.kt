@@ -54,11 +54,16 @@ sealed class AnalyticsParam {
         }
     }
 
+    sealed class Error(val value: String) {
+        object App : Error("App Error")
+        object CardSdk : Error("Card Sdk Error")
+        object BlockchainSdk : Error("Blockchain Sdk Error")
+    }
+
     companion object Key {
         const val BatchId = "Batch"
-
-        // old keys
-        const val Blockchain = "blockchain"
-        const val Firmware = "firmware"
+        const val ErrorDescription = "Error Description"
+        const val ErrorCode = "Error Code"
+        const val ErrorKey = "Error Key"
     }
 }
