@@ -27,14 +27,11 @@ import com.tangem.operations.pins.CheckUserCodesCommand
 import com.tangem.operations.pins.CheckUserCodesResponse
 import com.tangem.operations.pins.SetUserCodeCommand
 import com.tangem.tap.common.analytics.Analytics
-import com.tangem.tap.common.analytics.AnalyticsAnOld
-import com.tangem.tap.common.analytics.AnalyticsEventAnOld
-import com.tangem.tap.common.analytics.AnalyticsParamAnOld
+import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.domain.tasks.CreateWalletAndRescanTask
 import com.tangem.tap.domain.tasks.product.ResetToFactorySettingsTask
 import com.tangem.tap.domain.tasks.product.ScanProductTask
 import com.tangem.tap.domain.tokens.UserTokensRepository
-import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.isActive
@@ -49,8 +46,6 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         additionalBlockchainsToDerive: Collection<Blockchain>? = null,
         messageRes: Int? = null,
     ): CompletionResult<ScanResponse> {
-        Analytics.handleAnalyticsEvent(AnalyticsEventAnOld.READY_TO_SCAN, card = null)
-
         val message = Message(context.getString(messageRes ?: R.string.initial_message_scan_header))
         return runTaskAsyncReturnOnMain(
             runnable = ScanProductTask(null, userTokensRepository, additionalBlockchainsToDerive),
@@ -71,29 +66,10 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
     private fun sendScanResultsToAnalytics(
         result: CompletionResult<ScanResponse>,
     ) {
-        when (result) {
-            is CompletionResult.Success -> {
-                Analytics.handleAnalyticsEvent(
-                    event = AnalyticsEventAnOld.CARD_IS_SCANNED,
-                    card = result.data.card,
-                    blockchain = result.data.walletData?.blockchain,
-                )
-                if (DemoHelper.isDemoCard(result.data)) {
-                    Analytics.handleAnalyticsEvent(
-                        event = AnalyticsEventAnOld.DEMO_MODE_ACTIVATED,
-                        params = mapOf(AnalyticsParamAnOld.CARD_ID.param to result.data.card.cardId),
-                        card = result.data.card,
-                        blockchain = result.data.walletData?.blockchain,
-                    )
-                }
+        if (result is CompletionResult.Failure) {
+            (result.error as? TangemSdkError)?.let { error ->
+                Analytics.send(Basic.ScanError(error))
             }
-            is CompletionResult.Failure ->
-                (result.error as? TangemSdkError)?.let { error ->
-                    Analytics.send(
-                        error = error,
-                        action = AnalyticsAnOld.ActionToLog.Scan,
-                    )
-                }
         }
     }
 
