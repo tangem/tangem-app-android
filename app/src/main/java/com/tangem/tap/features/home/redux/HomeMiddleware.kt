@@ -10,9 +10,6 @@ import com.tangem.operations.backup.BackupService
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.backupService
 import com.tangem.tap.common.analytics.Analytics
-import com.tangem.tap.common.analytics.AnalyticsEventAnOld
-import com.tangem.tap.common.analytics.AnalyticsParamAnOld
-import com.tangem.tap.common.analytics.GetCardSourceParamsAnOld
 import com.tangem.tap.common.analytics.events.IntroductionProcess
 import com.tangem.tap.common.analytics.paramsInterceptor.BatchIdParamsInterceptor
 import com.tangem.tap.common.entities.IndeterminateProgressButton
@@ -107,10 +104,6 @@ private fun handleHomeAction(appState: () -> AppState?, action: Action, dispatch
                 RUSSIA_COUNTRY_CODE, BELARUS_COUNTRY_CODE -> store.dispatchOpenUrl(BUY_WALLET_URL)
                 else -> store.dispatch(NavigationAction.NavigateTo(AppScreen.Shop))
             }
-            Analytics.handleAnalyticsEvent(
-                event = AnalyticsEventAnOld.GET_CARD,
-                params = mapOf(AnalyticsParamAnOld.SOURCE.param to GetCardSourceParamsAnOld.WELCOME.param),
-            )
         }
     }
 }
