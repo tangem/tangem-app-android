@@ -15,7 +15,7 @@ import com.tangem.network.common.MoshiConverter
 import com.tangem.tap.common.AndroidAssetReader
 import com.tangem.tap.common.AssetReader
 import com.tangem.tap.common.analytics.Analytics
-import com.tangem.tap.common.analytics.AnalyticsHandlersFactory
+import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 import com.tangem.tap.common.analytics.filters.BasicSignInFilter
 import com.tangem.tap.common.analytics.filters.BasicTopUpFilter
@@ -110,10 +110,14 @@ class TapApplication : Application(), ImageLoaderFactory {
     }
 
     private fun initAnalytics(application: Application, config: Config) {
-        val factory = AnalyticsHandlersFactory()
-        factory.addBuilder(AmplitudeAnalyticsHandler.Builder())
-        factory.addBuilder(AppsFlyerAnalyticsHandler.Builder())
-        factory.addBuilder(FirebaseAnalyticsHandler.Builder())
+        val factory = AnalyticsFactory()
+        factory.addHandlerBuilder(AmplitudeAnalyticsHandler.Builder())
+        factory.addHandlerBuilder(AppsFlyerAnalyticsHandler.Builder())
+        factory.addHandlerBuilder(FirebaseAnalyticsHandler.Builder())
+
+        factory.addFilter(ShopPurchasedEventFilter())
+        factory.addFilter(BasicSignInFilter())
+        factory.addFilter(BasicTopUpFilter(preferencesStorage.toppedUpWalletStorage))
 
         val buildData = AnalyticsHandlerBuilder.Data(
             application = application,
@@ -122,14 +126,7 @@ class TapApplication : Application(), ImageLoaderFactory {
             logConfig = LogConfig.analyticsHandlers,
             jsonConverter = MoshiJsonConverter.INSTANCE,
         )
-        factory.build(buildData).forEach {
-            Analytics.addHandler(it.id(), it)
-        }
-        listOf(
-            ShopPurchasedEventFilter(),
-            BasicSignInFilter(),
-            BasicTopUpFilter(preferencesStorage.toppedUpWalletStorage),
-        ).forEach { Analytics.addFilter(it) }
+        factory.build(Analytics, buildData)
     }
 
     private fun initFeedbackManager(context: Context, preferencesStorage: PreferencesStorage, config: Config) {
