@@ -8,7 +8,6 @@ import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.play.core.review.ReviewManagerFactory
 import com.tangem.tap.common.analytics.Analytics
-import com.tangem.tap.common.analytics.AnalyticsEventAnOld
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.extensions.getActivity
@@ -29,7 +28,7 @@ class WarningMessagesAdapter : ListAdapter<WarningMessage, WarningMessageVH>(Dif
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): WarningMessageVH {
         val binding = LayoutWarningCardActionBinding.inflate(
-            LayoutInflater.from(parent.context), parent, false
+            LayoutInflater.from(parent.context), parent, false,
         )
         return WarningMessageVH(binding)
     }
@@ -63,7 +62,7 @@ class WarningMessageVH(val binding: LayoutWarningCardActionBinding) : RecyclerVi
         tvMessage.text = getString(
             resId = warning.messageResId,
             default = warning.message,
-            formatArgs = warning.messageFormatArg
+            formatArgs = warning.messageFormatArg,
         )
     }
 
@@ -101,7 +100,7 @@ class WarningMessageVH(val binding: LayoutWarningCardActionBinding) : RecyclerVi
                     }
                 }
             val buttonTitle = binding.root.getString(
-                warning.buttonTextId ?: R.string.how_to_got_it_button
+                warning.buttonTextId ?: R.string.how_to_got_it_button,
             )
             binding.btnGotIt.setOnClickListener(buttonAction)
             binding.btnGotIt.text = buttonTitle
@@ -112,13 +111,11 @@ class WarningMessageVH(val binding: LayoutWarningCardActionBinding) : RecyclerVi
             binding.btnClose.show()
             binding.btnClose.setOnClickListener {
                 Analytics.send(MainScreen.NoticeRateAppButton(AnalyticsParam.RateApp.Closed))
-                Analytics.handleAnalyticsEvent(AnalyticsEventAnOld.APP_RATING_DISMISS)
                 store.dispatch(GlobalAction.HideWarningMessage(warning))
                 store.dispatch(WalletAction.Warnings.AppRating.RemindLater)
             }
             binding.btnCanBeBetter.setOnClickListener {
                 Analytics.send(MainScreen.NoticeRateAppButton(AnalyticsParam.RateApp.Disliked))
-                Analytics.handleAnalyticsEvent(AnalyticsEventAnOld.APP_RATING_NEGATIVE)
                 store.dispatch(WalletAction.Warnings.AppRating.SetNeverToShow)
                 store.dispatch(GlobalAction.HideWarningMessage(warning))
                 store.dispatch(GlobalAction.SendEmail(RateCanBeBetterEmail()))
@@ -127,7 +124,6 @@ class WarningMessageVH(val binding: LayoutWarningCardActionBinding) : RecyclerVi
                 val activity = binding.root.context.getActivity() ?: return@setOnClickListener
 
                 Analytics.send(MainScreen.NoticeRateAppButton(AnalyticsParam.RateApp.Liked))
-                Analytics.handleAnalyticsEvent(AnalyticsEventAnOld.APP_RATING_POSITIVE)
                 store.dispatch(WalletAction.Warnings.AppRating.SetNeverToShow)
                 val reviewManager = ReviewManagerFactory.create(activity)
                 val task = reviewManager.requestReviewFlow()
