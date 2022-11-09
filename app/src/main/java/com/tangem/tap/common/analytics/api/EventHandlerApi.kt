@@ -1,53 +1,44 @@
 package com.tangem.tap.common.analytics.api
 
 import android.app.Application
-import com.tangem.common.card.Card
 import com.tangem.common.json.MoshiJsonConverter
 import com.tangem.domain.common.AnalyticsHandlersLogConfig
-import com.tangem.tap.common.analytics.AnalyticsEventAnOld
-import com.tangem.tap.common.analytics.events.AnalyticsParam
-import com.tangem.tap.common.extensions.filterNotNull
+import com.tangem.tap.common.analytics.events.AnalyticsEvent
 import com.tangem.tap.domain.configurable.config.Config
 
 /**
 [REDACTED_AUTHOR]
  */
 interface AnalyticsEventHandler {
+    fun send(event: AnalyticsEvent)
+}
+
+interface AnalyticsHandler : AnalyticsEventHandler {
     fun id(): String
 
     fun send(event: String, params: Map<String, String> = emptyMap())
 
-    @Deprecated("Migrate to AnalyticsEvent")
-    fun handleAnalyticsEvent(
-        event: AnalyticsEventAnOld,
-        params: Map<String, String> = emptyMap(),
-        card: Card? = null,
-        blockchain: String? = null,
-    ) {
-        send(event.event, prepareParams(card, blockchain, params))
+    override fun send(event: AnalyticsEvent) {
+        send(prepareEventString(event), event.params)
     }
 
-    fun prepareParams(
-        card: Card? = null,
-        blockchain: String? = null,
-        params: Map<String, String> = emptyMap(),
-    ): Map<String, String> = mapOf(
-        AnalyticsParam.Firmware to card?.firmwareVersion?.stringValue,
-        AnalyticsParam.Blockchain to blockchain,
-    ).filterNotNull() + params
+    fun prepareEventString(event: AnalyticsEvent): String = "[${event.category}] ${event.event}"
+}
 
-    fun prepareEventString(category: String, event: String): String {
-        return "[$category] $event"
-    }
+interface ErrorEventHandler {
+    fun send(
+        error: Throwable,
+        params: Map<String, String> = emptyMap(),
+    )
 }
 
 interface AnalyticsHandlerHolder {
-    fun addHandler(name: String, handler: AnalyticsEventHandler)
-    fun removeHandler(name: String): AnalyticsEventHandler?
+    fun addHandler(name: String, handler: AnalyticsHandler)
+    fun removeHandler(name: String): AnalyticsHandler?
 }
 
 interface AnalyticsHandlerBuilder {
-    fun build(data: Data): AnalyticsEventHandler?
+    fun build(data: Data): AnalyticsHandler?
 
     data class Data(
         val application: Application,
