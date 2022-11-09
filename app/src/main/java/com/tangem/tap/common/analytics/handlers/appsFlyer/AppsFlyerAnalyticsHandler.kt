@@ -1,11 +1,11 @@
 package com.tangem.tap.common.analytics.handlers.appsFlyer
 
-import com.tangem.tap.common.analytics.api.AnalyticsEventHandler
+import com.tangem.tap.common.analytics.api.AnalyticsHandler
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 
 class AppsFlyerAnalyticsHandler(
     private val client: AppsFlyerAnalyticsClient,
-) : AnalyticsEventHandler {
+) : AnalyticsHandler {
 
     override fun id(): String = ID
 
@@ -18,7 +18,7 @@ class AppsFlyerAnalyticsHandler(
     }
 
     class Builder : AnalyticsHandlerBuilder {
-        override fun build(data: AnalyticsHandlerBuilder.Data): AnalyticsEventHandler? = when {
+        override fun build(data: AnalyticsHandlerBuilder.Data): AnalyticsHandler? = when {
             !data.isDebug -> AppsFlyerClient(data.application, data.config.appsFlyerDevKey)
             data.isDebug && data.logConfig.appsFlyer -> AppsFlyerLogClient(data.jsonConverter)
             else -> null
