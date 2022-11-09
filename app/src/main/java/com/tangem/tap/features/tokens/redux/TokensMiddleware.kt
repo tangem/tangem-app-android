@@ -10,7 +10,6 @@ import com.tangem.common.extensions.toMapKey
 import com.tangem.common.hdWallet.DerivationPath
 import com.tangem.common.services.Result
 import com.tangem.domain.DomainWrapped
-import com.tangem.domain.common.KeyWalletPublicKey
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.TapWorkarounds.isTestCard
@@ -205,19 +204,17 @@ class TokensMiddleware {
             when (result) {
                 is CompletionResult.Success -> {
                     val newDerivedKeys = result.data.entries
-                    val updatedDerivedKeys =
-                        mutableMapOf<KeyWalletPublicKey, ExtendedPublicKeysMap>()
+                    val oldDerivedKeys = scanResponse.derivedKeys
 
-                    newDerivedKeys.forEach { entry ->
-                        val derivationData = derivationDataList.find {
-                            it.mapKeyOfWalletPublicKey == entry.key
-                        } ?: return@forEach
-                        updatedDerivedKeys[entry.key] =
-                            ExtendedPublicKeysMap(derivationData.alreadyDerivedKeys + entry.value)
+                    val walletKeys = (newDerivedKeys.keys + oldDerivedKeys.keys).toSet()
+
+                    val updatedDerivedKeys = walletKeys.associateWith { walletKey ->
+                        val oldDerivations = ExtendedPublicKeysMap(oldDerivedKeys[walletKey] ?: emptyMap())
+                        val newDerivations = newDerivedKeys[walletKey] ?: ExtendedPublicKeysMap(emptyMap())
+                        ExtendedPublicKeysMap(oldDerivations + newDerivations)
                     }
-
                     val updatedScanResponse = scanResponse.copy(
-                        derivedKeys = updatedDerivedKeys
+                        derivedKeys = updatedDerivedKeys,
                     )
                     store.dispatchOnMain(GlobalAction.SaveScanNoteResponse(updatedScanResponse))
                     delay(DELAY_SDK_DIALOG_CLOSE)
@@ -318,14 +315,7 @@ class TokensMiddleware {
     }
 
     private fun removeCurrenciesIfNeeded(currencies: List<Currency>) {
-        if (currencies.isNotEmpty()) {
-            currencies.forEach { currency ->
-                store.dispatch(WalletAction.MultiWallet.RemoveWallet(
-                    currency = currency,
-                    fromScreen = AppScreen.AddTokens
-                ))
-            }
-        }
+        if (currencies.isNotEmpty()) store.dispatch(WalletAction.MultiWallet.RemoveWallets(currencies))
     }
 
     private fun isNeedToDerive(scanResponse: ScanResponse, currency: Currency): Boolean {
