@@ -25,4 +25,5 @@ enum class AppScreen(
     ReferralProgram,
     Welcome,
     SaveWallet(isDialogFragment = true),
+    WalletSelector(isDialogFragment = true),
 }
