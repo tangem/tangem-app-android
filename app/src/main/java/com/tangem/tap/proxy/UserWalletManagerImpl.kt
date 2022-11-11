@@ -4,15 +4,15 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.DerivationParams
 import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.blockchain.common.WalletManagerFactory
-import com.tangem.common.card.Card
+import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.extensions.toNetworkId
+import com.tangem.domain.common.util.userWalletId
 import com.tangem.lib.crypto.UserWalletManager
 import com.tangem.lib.crypto.models.Currency
 import com.tangem.lib.crypto.models.NativeToken
 import com.tangem.lib.crypto.models.NonNativeToken
-import com.tangem.tap.domain.extensions.getUserWalletId
 import com.tangem.tap.domain.extensions.makeWalletManagerForApp
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.wallet.redux.WalletAction
@@ -54,7 +54,7 @@ class UserWalletManagerImpl(
     }
 
     override fun getWalletId(): String {
-        return appStateHolder.getActualCard()?.getUserWalletId() ?: ""
+        return appStateHolder.getActualCard()?.userWalletId?.stringValue ?: ""
     }
 
     override suspend fun isTokenAdded(currency: Currency): Boolean {
@@ -100,7 +100,7 @@ class UserWalletManagerImpl(
         }
     }
 
-    private fun addNativeTokenToWalletAction(token: NativeToken, card: Card): Action {
+    private fun addNativeTokenToWalletAction(token: NativeToken, card: CardDTO): Action {
         val blockchain = Blockchain.fromNetworkId(token.networkId)
         val scanResponse = appStateHolder.scanResponse
         if (blockchain != null && scanResponse != null) {

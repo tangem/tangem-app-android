@@ -15,4 +15,3 @@ sealed class HomeAction : Action {
 
     data class ChangeScanCardButtonState(val state: IndeterminateProgressButton) : HomeAction()
 }
-
