@@ -28,6 +28,7 @@ import com.tangem.tap.features.tokens.addCustomToken.AddCustomTokenFragment
 import com.tangem.tap.features.tokens.ui.AddTokensFragment
 import com.tangem.tap.features.wallet.ui.WalletDetailsFragment
 import com.tangem.tap.features.wallet.ui.WalletFragment
+import com.tangem.tap.features.walletSelector.ui.WalletSelectorBottomSheetFragment
 import com.tangem.tap.features.welcome.ui.WelcomeFragment
 import com.tangem.wallet.R
 import timber.log.Timber
@@ -51,10 +52,14 @@ fun FragmentActivity.openFragment(
     }
     if (screen.isDialogFragment) {
         (fragment as DialogFragment).show(transaction, screen.name)
-        if (addToBackstack && screen != AppScreen.Home) transaction.addToBackStack(null)
+        if (addToBackstack) {
+            transaction.addToBackStack(null)
+        }
     } else {
         transaction.replace(R.id.fragment_container, fragment, screen.name)
-        if (addToBackstack && screen != AppScreen.Home) transaction.addToBackStack(null)
+        if (addToBackstack && (screen != AppScreen.Home && screen != AppScreen.Welcome)) {
+            transaction.addToBackStack(null)
+        }
         transaction.commitAllowingStateLoss()
     }
 }
@@ -112,5 +117,6 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
         AppScreen.QrScan -> QrScanFragment()
         AppScreen.Welcome -> WelcomeFragment()
         AppScreen.SaveWallet -> SaveWalletBottomSheetFragment()
+        AppScreen.WalletSelector -> WalletSelectorBottomSheetFragment()
     }
 }
