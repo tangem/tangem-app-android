@@ -2,7 +2,7 @@ package com.tangem.tap.domain.tokens
 
 import com.squareup.moshi.JsonAdapter
 import com.tangem.Log
-import com.tangem.common.card.Card
+import com.tangem.domain.common.CardDTO
 import com.tangem.network.api.tangemTech.UserTokensResponse
 import com.tangem.network.common.MoshiConverter
 import com.tangem.tap.common.FileReader
@@ -28,7 +28,7 @@ class UserTokensStorageService(
     }
 
     @Deprecated("")
-    suspend fun getUserTokens(card: Card): List<Currency> {
+    suspend fun getUserTokens(card: CardDTO): List<Currency> {
         val blockchainNetworks =
             oldUserTokensRepository.loadSavedCurrencies(card.cardId, card.settings.isHDWalletAllowed)
         return blockchainNetworks.flatMap { it.toCurrencies() }
