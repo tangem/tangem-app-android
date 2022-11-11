@@ -6,9 +6,9 @@ import com.tangem.Message
 import com.tangem.blockchain.extensions.Result
 import com.tangem.common.CompletionResult
 import com.tangem.common.KeyPair
-import com.tangem.common.card.Card
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
+import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.ScanResponse
 import com.tangem.network.common.MoshiConverter
 import com.tangem.operations.wallet.CreateWalletResponse
@@ -16,7 +16,7 @@ import com.tangem.tap.common.AssetReader
 import com.tangem.tap.tangemSdkManager
 
 class TwinCardsManager(
-    card: Card,
+    card: CardDTO,
     assetReader: AssetReader,
 ) {
 
@@ -91,7 +91,6 @@ class TwinCardsManager(
 }
 
 private class Issuer(
-    val id: String,
     val privateKey: String,
     val publicKey: String,
 )
