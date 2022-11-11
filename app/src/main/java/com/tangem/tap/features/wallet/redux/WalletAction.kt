@@ -7,9 +7,8 @@ import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.address.AddressType
-import com.tangem.common.card.Card
+import com.tangem.domain.common.CardDTO
 import com.tangem.tap.common.entities.FiatCurrency
-import com.tangem.tap.common.redux.ErrorAction
 import com.tangem.tap.common.redux.NotificationAction
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
@@ -70,7 +69,7 @@ sealed class WalletAction : Action {
 
         data class AddToken(val token: Token, val blockchain: BlockchainNetwork, val save: Boolean) : MultiWallet()
         data class SaveCurrencies(
-            val blockchainNetworks: List<BlockchainNetwork>, val card: Card? = null,
+            val blockchainNetworks: List<BlockchainNetwork>, val card: CardDTO? = null,
         ) : MultiWallet()
 
         data class TokenLoaded(
@@ -123,9 +122,9 @@ sealed class WalletAction : Action {
         object Failure : WalletAction()
     }
 
-    class LoadCardInfo(val card: Card) : WalletAction()
+    class LoadCardInfo(val card: CardDTO) : WalletAction()
 
-    data class LoadArtwork(val card: Card, val artworkId: String?) : WalletAction() {
+    data class LoadArtwork(val card: CardDTO, val artworkId: String?) : WalletAction() {
         data class Success(val artwork: Artwork) : WalletAction()
         object Failure : WalletAction()
     }
@@ -133,10 +132,6 @@ sealed class WalletAction : Action {
     object Scan : WalletAction()
 
     data class Send(val amount: Amount? = null) : WalletAction()
-
-    object EmptyField : WalletAction(), ErrorAction {
-        override val error = TapError.PayIdEmptyField
-    }
 
     data class CopyAddress(val address: String, val context: Context) : WalletAction() {
         object Success : WalletAction(), NotificationAction {
@@ -186,7 +181,7 @@ sealed class WalletAction : Action {
     data class SetWalletRent(
         val wallet: Wallet,
         val minRent: String,
-        val rentExempt: String
+        val rentExempt: String,
     ) : WalletAction()
 
     data class RemoveWalletRent(val wallet: Wallet) : WalletAction()
