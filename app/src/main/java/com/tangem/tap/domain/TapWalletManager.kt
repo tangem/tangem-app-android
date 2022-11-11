@@ -6,8 +6,8 @@ import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.WalletManagerFactory
-import com.tangem.common.card.Card
 import com.tangem.common.services.Result
+import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.TapWorkarounds.isTestCard
@@ -96,7 +96,7 @@ class TapWalletManager {
             store.dispatch(
                 WalletAction.MultiWallet.ShowWalletBackupWarning(
                     show = data.card.settings.isBackupAllowed
-                        && data.card.backupStatus == Card.BackupStatus.NoBackup,
+                        && data.card.backupStatus == CardDTO.BackupStatus.NoBackup,
                 ),
             )
             loadData(data)
