@@ -152,4 +152,12 @@
     <string name="save_user_wallet_agreement_enroll_biometrics_description">Похоже, что у вас отключена биометрическая авторизация, она необходима для сохранения кошельков</string>
     <string name="common_enable">Включить</string>
     <string name="common_cancel">Отмена</string>
+    <string name="user_wallet_list_multi_header">Мультивалютные</string>
+    <string name="user_wallet_list_single_header">Одновалютные</string>
+    <string name="user_wallet_list_rename_popup_title">Переименование кошелька</string>
+    <string name="user_wallet_list_rename_popup_placeholder">Имя кошелька</string>
+    <string name="user_wallet_list_unlock_all_face_id">Разблокировать все с биометрией</string>
+    <string name="user_wallet_list_add_button">Добавить новый кошелек</string>
+    <string name="user_wallet_list_editing_count">%d выбрано</string>
+    <string name="user_wallet_list_title">Мои кошельки</string>
 </resources>
