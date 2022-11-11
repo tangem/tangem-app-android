@@ -30,6 +30,8 @@ android {
 }
 
 dependencies {
+    /** AndroidX libraries */
+    implementation(AndroidX.fragmentKtx)
 
     /** Compose */
     implementation(Compose.foundation)
@@ -38,4 +40,5 @@ dependencies {
 
     /** Other libraries */
     implementation(Library.accompanistSystemUiController)
+    implementation(Library.materialComponent)
 }
