@@ -8,7 +8,7 @@ import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.address.Address
-import com.tangem.common.card.CardWallet
+import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.domain.extensions.getUserWalletId
@@ -92,7 +92,7 @@ class AdditionalFeedbackInfo {
         )
     }
 
-    private fun formatSignedHashes(wallets: List<CardWallet>): String {
+    private fun formatSignedHashes(wallets: List<CardDTO.Wallet>): String {
         return wallets.joinToString("\n") { "Signed hashes: ${it.curve.curve} - ${it.totalSignedHashes}" }
     }
 
