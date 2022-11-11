@@ -1,6 +1,6 @@
 package com.tangem.tap.proxy
 
-import com.tangem.common.card.Card
+import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.tokens.UserTokensRepository
@@ -20,7 +20,7 @@ class AppStateHolder {
     val mainStore: Store<AppState>? = null
     val tokesMiddleware: TokensMiddleware? = null
 
-    fun getActualCard(): Card? {
+    fun getActualCard(): CardDTO? {
         return scanResponse?.card
     }
 }

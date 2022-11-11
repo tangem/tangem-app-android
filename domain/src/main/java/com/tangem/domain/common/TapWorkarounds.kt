@@ -17,18 +17,32 @@ object TapWorkarounds {
         return cardIssuer?.lowercase(Locale.US) == START_2_COIN_ISSUER
     }
 
-    val Card.isStart2Coin: Boolean
+    val CardDTO.isTangemTwins: Boolean
+        get() = TwinsHelper.getTwinCardNumber(cardId) != null
+
+    //TODO: replace by reading files from a card
+    val CardDTO.isTangemNote: Boolean
+        get() = tangemNoteBatches.contains(batchId)
+
+    val CardDTO.isStart2Coin: Boolean
         get() = isStart2CoinIssuer(issuer.name)
 
-    val Card.isTestCard: Boolean
+    val CardDTO.isSaltPay: Boolean
+        get() = isSaltPayVisa || isSaltPayWallet
+
+    val CardDTO.isSaltPayVisa: Boolean
+        get() = SaltPayWorkaround.isVisaBatchId(batchId)
+
+    val CardDTO.isSaltPayWallet: Boolean
+        get() = SaltPayWorkaround.isWalletCardId(cardId)
+
+    val CardDTO.isTestCard: Boolean
         get() = batchId == TEST_CARD_BATCH && cardId.startsWith(TEST_CARD_ID_STARTS_WITH)
 
-    val Card.useOldStyleDerivation: Boolean
+    val CardDTO.useOldStyleDerivation: Boolean
         get() = batchId == "AC01" || batchId == "AC02" || batchId == "CB95"
-
-    val Card.derivationStyle: DerivationStyle?
+    val CardDTO.derivationStyle: DerivationStyle?
         get() = if (!settings.isHDWalletAllowed) {
-            Int.MAX_VALUE
             null
         } else if (useOldStyleDerivation) {
             DerivationStyle.LEGACY
@@ -36,15 +50,18 @@ object TapWorkarounds {
             DerivationStyle.NEW
         }
 
-    val Card.isNotSupportedInThatRelease: Boolean
+    val CardDTO.isExcluded: Boolean
+        get() {
+            val excludedBatch = excludedBatches.contains(batchId)
+            val excludedIssuerName = excludedIssuers.contains(issuer.name.uppercase(Locale.ROOT))
+            return excludedBatch || excludedIssuerName
+        }
+
+    val CardDTO.isNotSupportedInThatRelease: Boolean
         get() = false
 
-    val Card.isTangemTwins: Boolean
-        get() = TwinsHelper.getTwinCardNumber(cardId) != null
-
-    //TODO: replace by reading files from a card
-    val Card.isTangemNote: Boolean
-        get() = tangemNoteBatches.contains(batchId)
+    fun CardDTO.getTangemNoteBlockchain(): Blockchain? =
+        tangemNoteBatches[batchId] ?: if (isSaltPay) Blockchain.Gnosis else null
 
     private val tangemNoteBatches = mapOf(
         "AB01" to Blockchain.Bitcoin,
@@ -62,24 +79,6 @@ object TapWorkarounds {
     )
 
     fun Card.getTangemNoteBlockchain(): Blockchain? = tangemNoteBatches[batchId] ?: null
-
-
-    val Card.isSaltPay: Boolean
-        get() = isSaltPayVisa || isSaltPayWallet
-
-    val Card.isSaltPayVisa: Boolean
-        get() = SaltPayWorkaround.isVisaBatchId(batchId)
-
-    val Card.isSaltPayWallet: Boolean
-        get() = SaltPayWorkaround.isWalletCardId(cardId)
-
-
-    val Card.isExcluded: Boolean
-        get() {
-            val excludedBatch = excludedBatches.contains(batchId)
-            val excludedIssuerName = excludedIssuers.contains(issuer.name.uppercase(Locale.ROOT))
-            return excludedBatch || excludedIssuerName
-        }
 
     private val excludedBatches = listOf(
         "0027",

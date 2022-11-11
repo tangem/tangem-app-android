@@ -12,7 +12,6 @@ import com.tangem.domain.common.TwinsHelper
 import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.operations.wallet.CreateWalletTask
 import com.tangem.operations.wallet.PurgeWalletCommand
-import com.tangem.tap.domain.extensions.getSingleWallet
 import com.tangem.wallet.R
 
 class CreateSecondTwinWalletTask(
@@ -24,7 +23,7 @@ class CreateSecondTwinWalletTask(
 ) : CardSessionRunnable<CreateWalletResponse> {
     override fun run(session: CardSession, callback: (result: CompletionResult<CreateWalletResponse>) -> Unit) {
         val card = session.environment.card
-        val publicKey = card?.getSingleWallet()?.publicKey
+        val publicKey = card?.wallets?.firstOrNull()?.publicKey
         if (publicKey != null) {
             if (!card.cardId.startsWith(TwinsHelper.getPairCardSeries(firstCardId) ?: "")) {
                 callback(CompletionResult.Failure(WrongTwinCard()))
@@ -68,10 +67,8 @@ class CreateSecondTwinWalletTask(
         }
     }
 
-    private class WrongTwinCard : TangemError {
-        override val code: Int = 50005
+    private class WrongTwinCard : TangemError(code = 50005) {
         override var customMessage: String = code.toString()
         override val messageResId = R.string.twins_wrong_card_error
     }
 }
-
