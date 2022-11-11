@@ -29,21 +29,4 @@ dependencies {
     /** DI */
     implementation(Library.hilt)
     kapt(Library.hiltKapt)
-
-    /** Coroutines */
-    implementation(Library.coroutine)
-
-    /** Logging */
-    implementation(Library.timber)
-
-    /** Network */
-    implementation(Library.retrofit)
-    implementation(Library.retrofitMoshiConverter)
-    implementation(Library.moshi)
-    implementation(Library.moshiKotlin)
-    implementation(Library.okHttp)
-    implementation(Library.okHttpLogging)
-
-    /** Time */
-    implementation(Library.jodatime)
 }
