@@ -25,6 +25,7 @@ import com.tangem.tap.features.onboarding.products.wallet.redux.BackupMiddleware
 import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletMiddleware
 import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletState
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayMiddleware
+import com.tangem.tap.features.saveWallet.redux.SaveWalletState
 import com.tangem.tap.features.send.redux.middlewares.SendMiddleware
 import com.tangem.tap.features.send.redux.states.SendState
 import com.tangem.tap.features.shop.redux.ShopMiddleware
@@ -53,6 +54,7 @@ data class AppState(
     val walletConnectState: WalletConnectState = WalletConnectState(),
     val shopState: ShopState = ShopState(),
     val welcomeState: WelcomeState = WelcomeState(),
+    val saveWalletState: SaveWalletState = SaveWalletState(),
 ) : StateType {
 
     val domainState: DomainState
