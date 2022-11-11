@@ -11,9 +11,9 @@ import com.tangem.blockchain.common.TransactionError
 import com.tangem.blockchain.common.TransactionSender
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.extensions.SimpleResult
-import com.tangem.common.card.Card
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.services.Result
+import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
@@ -150,7 +150,7 @@ private fun sendTransaction(
     feeAmount: Amount,
     destinationAddress: String,
     transactionExtras: TransactionExtrasState,
-    card: Card,
+    card: CardDTO,
     externalTransactionData: ExternalTransactionData?,
     dispatch: (Action) -> Unit,
 ) {
