@@ -3,7 +3,6 @@ package com.tangem.tap.features.onboarding
 import com.tangem.domain.common.ProductType
 import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.redux.navigation.AppScreen
-import com.tangem.tap.domain.extensions.hasWallets
 import com.tangem.tap.preferencesStorage
 
 /**
@@ -23,7 +22,7 @@ class OnboardingHelper {
                         cardInfoStorage.isActivationInProgress(cardId)
                     }
                 }
-                response.card.hasWallets() -> cardInfoStorage.isActivationInProgress(cardId)
+                response.card.wallets.isNotEmpty() -> cardInfoStorage.isActivationInProgress(cardId)
                 else -> true
             }
         }
