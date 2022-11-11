@@ -3,8 +3,8 @@ package com.tangem.tap.features.details.redux.walletconnect
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.blockchain.common.WalletManager
-import com.tangem.common.card.Card
 import com.tangem.common.extensions.guard
+import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.extensions.withMainContext
@@ -240,7 +240,7 @@ class WalletConnectMiddleware {
         handleScanResponse(scanResponse = scanResponse, session = session, blockchain = blockchain)
     }
 
-    private fun getAvailableBlockchains(card: Card, walletState: WalletState): List<Blockchain> {
+    private fun getAvailableBlockchains(card: CardDTO, walletState: WalletState): List<Blockchain> {
         return walletState.currencies.filter {
             it.isBlockchain() && !it.isCustomCurrency(card.derivationStyle) && it.blockchain.isEvm()
         }.map { it.blockchain }
