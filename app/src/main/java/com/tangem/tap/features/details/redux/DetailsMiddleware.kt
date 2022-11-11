@@ -3,6 +3,7 @@ package com.tangem.tap.features.details.redux
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
+import com.tangem.domain.common.util.userWalletId
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
@@ -13,7 +14,6 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
-import com.tangem.tap.domain.extensions.getUserWalletId
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.onboarding.products.twins.redux.CreateTwinWalletMode
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
@@ -67,11 +67,12 @@ class DetailsMiddleware {
                 scope.launch {
                     when (val result = tangemSdkManager.scanCard()) {
                         is CompletionResult.Success -> {
-                            val card = result.data
-                            if (card.getUserWalletId() ==
-                                store.state.globalState.scanResponse?.card?.getUserWalletId()
-                            ) {
-                                store.dispatchOnMain(DetailsAction.PrepareCardSettingsData(card))
+                            val scannedCard = result.data
+                            val currentCardId = store.state.globalState.scanResponse?.card
+                                ?.userWalletId
+                                ?.stringValue
+                            if (scannedCard.userWalletId.stringValue == currentCardId) {
+                                store.dispatchOnMain(DetailsAction.PrepareCardSettingsData(scannedCard))
                             } else {
                                 store.dispatchDialogShow(
                                     AppDialog.SimpleOkDialogRes(
@@ -81,8 +82,7 @@ class DetailsMiddleware {
                                 )
                             }
                         }
-                        is CompletionResult.Failure -> {
-                        }
+                        is CompletionResult.Failure -> Unit
                     }
                 }
             }
@@ -104,22 +104,20 @@ class DetailsMiddleware {
                 is DetailsAction.ResetToFactory.Proceed -> {
                     val card = store.state.detailsState.cardSettingsState?.card ?: return
                     scope.launch {
-                        val result = tangemSdkManager.resetToFactorySettings(card)
-                        when (result) {
+                        when (val result = tangemSdkManager.resetToFactorySettings(card.cardId)) {
                             is CompletionResult.Success -> {
                                 Analytics.send(Settings.CardSettings.FactoryResetFinished())
                                 store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Home))
                             }
+
                             is CompletionResult.Failure -> {
                                 (result.error as? TangemSdkError)?.let { error ->
-                                    Analytics.send(Settings.CardSettings.FactoryResetFinished(error))
-                                }
+                                    Analytics.send(Settings.CardSettings.FactoryResetFinished(error))                                }
                             }
                         }
                     }
                 }
-                else -> { /* no-op */
-                }
+                else -> Unit
             }
         }
     }
@@ -156,8 +154,7 @@ class DetailsMiddleware {
                                     }
                                     store.dispatch(DetailsAction.ManageSecurity.SaveChanges.Failure)
                                 }
-                                else -> { /* no-op */
-                                }
+                                else -> Unit
                             }
                         }
                     }
@@ -171,8 +168,7 @@ class DetailsMiddleware {
                         }
                     }
                 }
-                else -> { /* no-op */
-                }
+                else -> Unit
             }
         }
     }

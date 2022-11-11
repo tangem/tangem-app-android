@@ -4,8 +4,8 @@ import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.SignatureCountValidator
 import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.extensions.SimpleResult
-import com.tangem.common.card.Card
 import com.tangem.common.card.FirmwareVersion
+import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -13,10 +13,8 @@ import com.tangem.tap.common.extensions.isGreaterThan
 import com.tangem.tap.common.redux.global.GlobalState
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
-import com.tangem.tap.domain.extensions.getSingleWallet
 import com.tangem.tap.domain.extensions.hasSignedHashes
 import com.tangem.tap.domain.extensions.isMultiwalletAllowed
-import com.tangem.tap.domain.extensions.remainingSignatures
 import com.tangem.tap.features.demo.isDemoCard
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.network.NetworkConnectivity
@@ -108,8 +106,8 @@ class WarningsMiddleware {
         }
     }
 
-    private fun showWarningLowRemainingSignaturesIfNeeded(card: Card) {
-        val remainingSignatures = card.remainingSignatures
+    private fun showWarningLowRemainingSignaturesIfNeeded(card: CardDTO) {
+        val remainingSignatures = card.wallets.firstOrNull()?.remainingSignatures
         if (remainingSignatures != null &&
             remainingSignatures <= WarningMessagesManager.REMAINING_SIGNATURES_WARNING
         ) {
@@ -159,7 +157,7 @@ class WarningsMiddleware {
         val validator = store.state.walletState.walletManagers.firstOrNull()
             as? SignatureCountValidator
         scope.launch {
-            val signedHashes = card.getSingleWallet()?.totalSignedHashes ?: 0
+            val signedHashes = card.wallets.firstOrNull()?.totalSignedHashes ?: 0
             val result = validator?.validateSignatureCount(signedHashes)
             withContext(Dispatchers.Main) {
                 when (result) {
