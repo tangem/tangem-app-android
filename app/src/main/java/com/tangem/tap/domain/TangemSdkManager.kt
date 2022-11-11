@@ -1,7 +1,5 @@
 package com.tangem.tap.domain
 
-import CreateProductWalletTask
-import CreateProductWalletTaskResponse
 import android.content.Context
 import androidx.annotation.StringRes
 import com.tangem.Message
@@ -10,7 +8,6 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CardFilter
 import com.tangem.common.CompletionResult
 import com.tangem.common.SuccessResponse
-import com.tangem.common.card.Card
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.core.CardIdDisplayFormat
 import com.tangem.common.core.CardSessionRunnable
@@ -18,6 +15,8 @@ import com.tangem.common.core.Config
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.hdWallet.DerivationPath
+import com.tangem.common.map
+import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.ScanResponse
 import com.tangem.operations.CommandResponse
 import com.tangem.operations.ScanTask
@@ -29,6 +28,8 @@ import com.tangem.operations.pins.SetUserCodeCommand
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.domain.tasks.CreateWalletAndRescanTask
+import com.tangem.tap.domain.tasks.product.CreateProductWalletTask
+import com.tangem.tap.domain.tasks.product.CreateProductWalletTaskResponse
 import com.tangem.tap.domain.tasks.product.ResetToFactorySettingsTask
 import com.tangem.tap.domain.tasks.product.ScanProductTask
 import com.tangem.tap.domain.tokens.UserTokensRepository
@@ -73,12 +74,13 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         }
     }
 
-    suspend fun createWallet(cardId: String?): CompletionResult<Card> {
+    suspend fun createWallet(cardId: String?): CompletionResult<CardDTO> {
         return runTaskAsyncReturnOnMain(
             CreateWalletAndRescanTask(),
             cardId,
             initialMessage = Message(context.getString(R.string.initial_message_create_wallet_body)),
         )
+            .map { CardDTO(it) }
     }
 
     suspend fun derivePublicKeys(
@@ -88,12 +90,13 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         return runTaskAsyncReturnOnMain(DeriveMultipleWalletPublicKeysTask(derivations), cardId)
     }
 
-    suspend fun resetToFactorySettings(card: Card): CompletionResult<Card> {
+    suspend fun resetToFactorySettings(cardId: String): CompletionResult<CardDTO> {
         return runTaskAsyncReturnOnMain(
-            ResetToFactorySettingsTask(),
-            card.cardId,
+            runnable = ResetToFactorySettingsTask(),
+            cardId = cardId,
             initialMessage = Message(context.getString(R.string.card_settings_reset_card_to_factory)),
         )
+            .map { CardDTO(it) }
     }
 
     suspend fun setPasscode(cardId: String?): CompletionResult<SuccessResponse> {
@@ -128,11 +131,12 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         )
     }
 
-    suspend fun scanCard(): CompletionResult<Card> {
+    suspend fun scanCard(): CompletionResult<CardDTO> {
         return runTaskAsyncReturnOnMain(
-            ScanTask(),
+            runnable = ScanTask(),
             initialMessage = Message(context.getString(R.string.initial_message_tap_header)),
         )
+            .map { CardDTO(it) }
     }
 
     suspend fun <T : CommandResponse> runTaskAsync(
@@ -150,7 +154,9 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         }
 
     private suspend fun <T : CommandResponse> runTaskAsyncReturnOnMain(
-        runnable: CardSessionRunnable<T>, cardId: String? = null, initialMessage: Message? = null,
+        runnable: CardSessionRunnable<T>,
+        cardId: String? = null,
+        initialMessage: Message? = null,
     ): CompletionResult<T> {
         val result = runTaskAsync(runnable, cardId, initialMessage)
         return withContext(Dispatchers.Main) { result }

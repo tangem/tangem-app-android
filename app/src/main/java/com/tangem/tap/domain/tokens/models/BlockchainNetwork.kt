@@ -4,8 +4,8 @@ import com.squareup.moshi.JsonClass
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.WalletManager
-import com.tangem.common.card.Card
 import com.tangem.common.extensions.calculateHashCode
+import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 
 @JsonClass(generateAdapter = true)
@@ -15,16 +15,18 @@ data class BlockchainNetwork(
     val tokens: List<Token>
 ) {
 
-    constructor(blockchain: Blockchain, card: Card) : this(
+    constructor(
+        blockchain: Blockchain,
+        card: CardDTO,
+    ) : this(
         blockchain = blockchain,
         derivationPath = if (card.settings.isHDWalletAllowed) blockchain.derivationPath(card.derivationStyle)?.rawPath else null,
-        tokens = emptyList()
+        tokens = emptyList(),
     )
-
 
     fun updateTokens(tokens: List<Token>): BlockchainNetwork {
         return copy(
-            tokens = (this.tokens + tokens).distinct()
+            tokens = (this.tokens + tokens).distinct(),
         )
     }
 
