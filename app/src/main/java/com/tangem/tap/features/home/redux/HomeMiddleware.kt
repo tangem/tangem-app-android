@@ -1,8 +1,8 @@
 package com.tangem.tap.features.home.redux
 
-import com.tangem.common.card.Card
 import com.tangem.common.core.TangemError
 import com.tangem.common.services.Result
+import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.extensions.withIOContext
 import com.tangem.domain.common.extensions.withMainContext
@@ -45,7 +45,6 @@ import com.tangem.wallet.R
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
-import org.rekotlin.DispatchFunction
 import org.rekotlin.Middleware
 
 class HomeMiddleware {
@@ -56,22 +55,23 @@ class HomeMiddleware {
     }
 }
 
-private val homeMiddleware: Middleware<AppState> = { dispatch, state ->
+private val homeMiddleware: Middleware<AppState> = { _, _ ->
     { next ->
         { action ->
-            handleHomeAction(state, action, dispatch)
+            handleHomeAction(action)
             next(action)
         }
     }
 }
 
-private fun handleHomeAction(appState: () -> AppState?, action: Action, dispatch: DispatchFunction) {
+private fun handleHomeAction(action: Action) {
     when (action) {
         is HomeAction.Init -> {
             store.dispatch(GlobalAction.RestoreAppCurrency)
             store.dispatch(GlobalAction.ExchangeManager.Init)
             store.dispatch(GlobalAction.FetchUserCountry)
         }
+
         is HomeAction.ShouldScanCardOnResume -> {
             if (action.shouldScanCard) {
                 store.dispatch(HomeAction.ShouldScanCardOnResume(false))
@@ -123,7 +123,7 @@ private fun checkForUnfinishedBackupForSaltPay(
         return
     }
 
-    fun isTheSamePrimaryCard(card: Card): Boolean {
+    fun isTheSamePrimaryCard(card: CardDTO): Boolean {
         return backupService.primaryCardId?.let { it == card.cardId } ?: false
     }
 

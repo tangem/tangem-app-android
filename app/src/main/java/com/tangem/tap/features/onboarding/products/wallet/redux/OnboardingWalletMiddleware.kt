@@ -2,8 +2,8 @@ package com.tangem.tap.features.onboarding.products.wallet.redux
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CompletionResult
-import com.tangem.common.card.Card
 import com.tangem.common.extensions.ifNotNull
+import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.isSaltPay
 import com.tangem.domain.common.extensions.withMainContext
@@ -18,7 +18,6 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
-import com.tangem.tap.domain.extensions.hasWallets
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.redux.HomeAction
@@ -76,19 +75,23 @@ private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch:
                     // it's possible when found unfinished backup for standard Wallet cards
                     store.dispatch(OnboardingWalletAction.ResumeBackup)
                 }
-                card.hasWallets() && card.backupStatus == Card.BackupStatus.NoBackup -> {
+
+                card.wallets.isNotEmpty() && card.backupStatus == CardDTO.BackupStatus.NoBackup -> {
                     store.dispatch(OnboardingWalletAction.ResumeBackup)
                 }
-                card.hasWallets() && card.backupStatus?.isActive == true -> {
+
+                card.wallets.isNotEmpty() && card.backupStatus?.isActive == true -> {
                     when {
                         // check for unfinished backup for saltPay cards. See more
                         scanResponse.isSaltPay() && backupService.hasIncompletedBackup -> {
                             store.dispatch(OnboardingWalletAction.ResumeBackup)
                         }
+
                         scanResponse.isSaltPay() -> {
                             store.dispatch(OnboardingWalletAction.GetToSaltPayStep)
                             store.dispatch(BackupAction.FinishBackup)
                         }
+
                         else -> store.dispatch(BackupAction.FinishBackup)
                     }
                 }
@@ -125,8 +128,14 @@ private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch:
                             )
                             onboardingManager.scanResponse = updatedResponse
                             val blockchainNetworks = listOf(
-                                BlockchainNetwork(Blockchain.Bitcoin, result.data.card),
-                                BlockchainNetwork(Blockchain.Ethereum, result.data.card),
+                                BlockchainNetwork(
+                                    blockchain = Blockchain.Bitcoin,
+                                    card = result.data.card,
+                                ),
+                                BlockchainNetwork(
+                                    blockchain = Blockchain.Ethereum,
+                                    card = result.data.card,
+                                ),
                             )
                             store.dispatch(
                                 WalletAction.MultiWallet.SaveCurrencies(
@@ -193,7 +202,7 @@ private fun updateScanResponseAfterBackup(
     val card = if (backupState.backupCardsNumber > 0) {
         val cardsCount = backupState.backupCardsNumber
         scanResponse.card.copy(
-            backupStatus = Card.BackupStatus.Active(cardCount = cardsCount),
+            backupStatus = CardDTO.BackupStatus.Active(cardCount = cardsCount),
             isAccessCodeSet = true,
         )
     } else {
@@ -366,9 +375,10 @@ private fun startCardActivation(scanResponse: ScanResponse) {
  * Standard Wallet cards finish activation at BackupAction.FinishBackup
  * SaltPay cards finish activation at OnboardingWalletAction.FinishOnboarding
  */
-internal fun finishCardActivation(backupState: BackupState, card: Card?) {
+internal fun finishCardActivation(backupState: BackupState, card: CardDTO?) {
     (listOf(backupState.primaryCardId, card?.cardId) + backupState.backupCardIds)
-        .distinct().filterNotNull()
+        .distinct()
+        .filterNotNull()
         .forEach { cardId ->
             preferencesStorage.usedCardsPrefStorage.activationFinished(cardId)
         }
