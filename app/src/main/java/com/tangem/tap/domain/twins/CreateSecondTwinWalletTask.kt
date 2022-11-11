@@ -23,7 +23,7 @@ class CreateSecondTwinWalletTask(
 
     override fun run(session: CardSession, callback: (result: CompletionResult<CreateWalletResponse>) -> Unit) {
         val card = session.environment.card
-        val publicKey = card?.getSingleWallet()?.publicKey
+        val publicKey = card?.wallets?.firstOrNull()?.publicKey
         if (publicKey != null) {
             if (TwinsHelper.getTwinCardNumber(card.cardId) == TwinCardNumber.First) {
                 callback(CompletionResult.Failure(WrongTwinCard(TwinCardNumber.Second)))
