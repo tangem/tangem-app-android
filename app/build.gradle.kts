@@ -4,6 +4,7 @@ plugins {
     kotlin("kapt")
     id("com.google.gms.google-services")
     id("com.google.firebase.crashlytics")
+    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -95,6 +96,7 @@ android {
         resources.excludes += "lib/x86_64/darwin/libscrypt.dylib"
         resources.excludes += "lib/x86_64/freebsd/libscrypt.so"
         resources.excludes += "lib/x86_64/linux/libscrypt.so"
+        resources.excludes += "META-INF/gradle/incremental.annotation.processors"
     }
 }
 
@@ -137,6 +139,10 @@ dependencies {
     implementation(Tangem.blockchain)
     implementation(Tangem.cardCore)
     implementation(Tangem.cardAndroid)
+
+    /** DI */
+    implementation(Library.hilt)
+    implementation(Library.hiltKapt)
 
     /** Other libraries */
     implementation(Library.materialComponent)
