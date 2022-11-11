@@ -22,7 +22,6 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.TapError
-import com.tangem.tap.domain.extensions.hasWallets
 import com.tangem.tap.domain.extensions.makePrimaryWalletManager
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
@@ -79,7 +78,7 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
         }
         is OnboardingNoteAction.DetermineStepOfScreen -> {
             val step = when {
-                !card.hasWallets() -> OnboardingNoteStep.CreateWallet
+                card.wallets.isEmpty() -> OnboardingNoteStep.CreateWallet
                 noteState.walletBalance.balanceIsToppedUp() -> OnboardingNoteStep.Done
                 else -> OnboardingNoteStep.TopUpWallet
             }
