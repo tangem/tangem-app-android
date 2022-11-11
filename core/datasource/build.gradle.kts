@@ -28,7 +28,7 @@ dependencies {
 
     /** DI */
     implementation(Library.hilt)
-    implementation(Library.hiltKapt)
+    kapt(Library.hiltKapt)
 
     /** Coroutines */
     implementation(Library.coroutine)
