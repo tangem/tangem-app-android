@@ -150,6 +150,13 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
                     finishCardActivation()
                     postUi(500) { store.dispatch(TwinCardsAction.Confetti.Show) }
                 }
+
+                TwinCardsStep.None,
+                TwinCardsStep.Warning,
+                TwinCardsStep.CreateFirstWallet,
+                TwinCardsStep.CreateSecondWallet,
+                TwinCardsStep.CreateThirdWallet,
+                -> Unit
             }
         }
         is TwinCardsAction.Wallet.LaunchFirstStep -> {
