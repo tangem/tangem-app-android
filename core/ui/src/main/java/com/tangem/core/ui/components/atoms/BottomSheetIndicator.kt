@@ -23,6 +23,7 @@ import com.tangem.core.ui.res.iconColor
  * @see <a href="https://www.figma.com/file/17JyRbuUEZ42DluaFEuGQk/Atoms?node-id=135%3A25&t=3dvxYMZBox4jxJc1-4">
  * Figma Component</a>
  */
+@Deprecated(message = "Use Hand component instead")
 @Composable
 fun BottomSheetIndicator() {
     Box(
