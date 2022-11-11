@@ -33,6 +33,7 @@ import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.tap.persistence.PreferencesStorage
 import com.tangem.wallet.BuildConfig
 import com.zendesk.logger.Logger
+import dagger.hilt.android.HiltAndroidApp
 import org.rekotlin.Store
 import timber.log.Timber
 import zendesk.chat.Chat
@@ -50,6 +51,7 @@ lateinit var shopService: TangemShopService
 lateinit var assetReader: AssetReader
 lateinit var userTokensRepository: UserTokensRepository
 
+@HiltAndroidApp
 class TapApplication : Application(), ImageLoaderFactory {
 
     override fun onCreate() {
