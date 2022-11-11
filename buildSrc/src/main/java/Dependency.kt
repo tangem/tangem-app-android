@@ -40,6 +40,8 @@ object Library {
     const val googlePlayCoreKtx = "com.google.android.play:core-ktx:" + Versions.googlePlayCoreKtx
     const val googlePlayServicesWallet =
         "com.google.android.gms:play-services-wallet:" + Versions.googlePlayServicesWallet
+    const val hilt = "com.google.dagger:hilt-android:" + Versions.hilt
+    const val hiltKapt = "com.google.dagger:hilt-compiler:" + Versions.hilt
     const val kotsonGsonExt = "com.github.salomonbrys.kotson:kotson:" + Versions.kotsonGsonExt
     const val lottie = "com.airbnb.android:lottie:" + Versions.lottie
     const val materialComponent = "com.google.android.material:material:" + Versions.googleMaterialComponent
