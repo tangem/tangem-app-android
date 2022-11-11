@@ -23,4 +23,5 @@ enum class AppScreen(
     WalletConnectSessions,
     QrScan,
     Welcome,
+    SaveWallet(isDialogFragment = true),
 }
