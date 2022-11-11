@@ -10,8 +10,8 @@ class UserWalletId(
 ) {
     val value = stringValue.hexToBytes()
 
-    constructor(walletPublicKey: ByteArray) : this(
-        stringValue = calculateUserWalletId(walletPublicKey).toHexString(),
+    constructor(walletPublicKey: ByteArray?) : this(
+        stringValue = walletPublicKey?.let { calculateUserWalletId(it).toHexString() } ?: "",
     )
 
     override fun equals(other: Any?): Boolean {
