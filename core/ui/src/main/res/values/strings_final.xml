@@ -154,4 +154,12 @@
     <string name="save_user_wallet_agreement_enroll_biometrics_description">It looks like you have biometric authorization disabled, it is necessary to save wallets</string>
     <string name="common_enable">Enable</string>
     <string name="common_cancel">Cancel</string>
+    <string name="user_wallet_list_multi_header">Multi-currency</string>
+    <string name="user_wallet_list_single_header">Single-currency</string>
+    <string name="user_wallet_list_rename_popup_title">Rename Wallet</string>
+    <string name="user_wallet_list_rename_popup_placeholder">Wallet name</string>
+    <string name="user_wallet_list_unlock_all_face_id">Unlock all with biometrics</string>
+    <string name="user_wallet_list_add_button">Add new wallet</string>
+    <string name="user_wallet_list_editing_count">%d selected</string>
+    <string name="user_wallet_list_title">My Wallets</string>
 </resources>
