@@ -13,7 +13,6 @@ import com.tangem.operations.issuerAndUserData.ReadIssuerDataCommand
 import com.tangem.operations.issuerAndUserData.ReadIssuerDataResponse
 import com.tangem.operations.issuerAndUserData.WriteIssuerDataCommand
 import com.tangem.operations.sign.SignHashCommand
-import com.tangem.tap.domain.extensions.getSingleWallet
 
 class WriteProtectedIssuerDataTask(
     private val twinPublicKey: ByteArray, private val issuerKeys: KeyPair,
@@ -25,7 +24,7 @@ class WriteProtectedIssuerDataTask(
     ) {
         SignHashCommand(
             twinPublicKey.calculateSha256(),
-            session.environment.card!!.getSingleWallet()!!.publicKey
+            session.environment.card!!.wallets.first().publicKey,
         )
             .run(session) { signResult ->
                 when (signResult) {

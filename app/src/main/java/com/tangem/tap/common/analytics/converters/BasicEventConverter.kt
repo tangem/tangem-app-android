@@ -3,10 +3,10 @@ package com.tangem.tap.common.analytics.converters
 import com.tangem.common.Converter
 import com.tangem.common.extensions.isZero
 import com.tangem.domain.common.ScanResponse
+import com.tangem.domain.common.util.userWalletId
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.analytics.filters.BasicTopUpFilter
-import com.tangem.tap.domain.extensions.getUserWalletId
 import com.tangem.tap.domain.extensions.isMultiwalletAllowed
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.features.wallet.redux.WalletData
@@ -29,7 +29,7 @@ class BasicSignInEventConverter(
             currency = cardCurrency,
             batch = scanResponse.card.batchId,
         ).apply {
-            filterData = scanResponse.card.getUserWalletId()
+            filterData = scanResponse.card.userWalletId.stringValue
         }
     }
 }
@@ -43,7 +43,7 @@ class BasicTopUpEventConverter(
         val cardCurrency = ParamCardCurrencyConverter().convert(scanResponse) ?: return null
 
         val data = BasicTopUpFilter.Data(
-            walletId = scanResponse.card.getUserWalletId(),
+            walletId = scanResponse.card.userWalletId.stringValue,
             cardBalanceState = AnalyticsParam.CardBalanceState.from(value.walletsData),
         )
 
