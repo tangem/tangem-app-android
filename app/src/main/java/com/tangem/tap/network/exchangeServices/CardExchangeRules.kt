@@ -1,6 +1,6 @@
 package com.tangem.tap.network.exchangeServices
 
-import com.tangem.common.card.Card
+import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.tap.features.demo.isDemoCard
 import com.tangem.tap.features.wallet.models.Currency
@@ -9,7 +9,7 @@ import com.tangem.tap.features.wallet.models.Currency
  * Created by Anton Zhilenkov on 10/08/2022.
  */
 class CardExchangeRules(
-    val cardProvider: () -> Card?,
+    val cardProvider: () -> CardDTO?,
 ) : ExchangeRules {
 
     override fun featureIsSwitchedOn(): Boolean {

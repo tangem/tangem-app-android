@@ -3,8 +3,8 @@ package com.tangem.tap.domain.termsOfUse
 import android.content.res.Resources
 import android.net.Uri
 import androidx.core.os.ConfigurationCompat
-import com.tangem.common.card.Card
-import java.util.Locale
+import com.tangem.domain.common.CardDTO
+import java.util.*
 
 /**
  * Created by Anton Zhilenkov on 19/02/2021.
@@ -13,7 +13,7 @@ class CardTou {
     private val locale: Locale =
         ConfigurationCompat.getLocales(Resources.getSystem().configuration).get(0)!!
 
-    fun getUrl(card: Card): Uri? {
+    fun getUrl(card: CardDTO): Uri? {
         val issuerName = card.issuer.name
         if (issuerName.lowercase(Locale.getDefault()) != "start2coin") return null
 
