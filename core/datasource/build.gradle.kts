@@ -43,4 +43,7 @@ dependencies {
     implementation(Library.moshiKotlin)
     implementation(Library.okHttp)
     implementation(Library.okHttpLogging)
+
+    /** Time */
+    implementation(Library.jodatime)
 }
