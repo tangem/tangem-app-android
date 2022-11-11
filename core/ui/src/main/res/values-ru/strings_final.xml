@@ -143,4 +143,13 @@
     <string name="welcome_unlock_description">Используйте биометрическую аутентификацию или код доступа для входа в приложение</string>
     <string name="welcome_unlock_face_id">Войти с биометрией</string>
     <string name="welcome_unlock_card">Сканировать карту</string>
+    <string name="save_user_wallet_agreement_new_feature">Новый функционал</string>
+    <string name="save_user_wallet_agreement_header">Сохраните свой кошелек</string>
+    <string name="save_user_wallet_agreement_description">Функция сохранения кошелька позволяет вам использовать свой кошелек с биометрической авторизацией, не прикладывая карту к телефону для получения доступа.</string>
+    <string name="save_user_wallet_agreement_allow">Разрешить привязку кошелька</string>
+    <string name="save_user_wallet_agreement_notice">Обратите внимание, что для совершения транзакции с вашими средствами по-прежнему потребуется ваша карта</string>
+    <string name="save_user_wallet_agreement_enroll_biometrics_title">Включите биометрическую авторизацию</string>
+    <string name="save_user_wallet_agreement_enroll_biometrics_description">Похоже, что у вас отключена биометрическая авторизация, она необходима для сохранения кошельков</string>
+    <string name="common_enable">Включить</string>
+    <string name="common_cancel">Отмена</string>
 </resources>
