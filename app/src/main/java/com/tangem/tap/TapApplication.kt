@@ -27,6 +27,7 @@ import com.tangem.tap.common.feedback.AdditionalFeedbackInfo
 import com.tangem.tap.common.feedback.FeedbackManager
 import com.tangem.tap.common.images.createCoilImageLoader
 import com.tangem.tap.common.log.TangemLogCollector
+import com.tangem.tap.common.moshi.BigDecimalAdapter
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.appReducer
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -38,6 +39,7 @@ import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.domain.tokens.UserTokensRepository
 import com.tangem.tap.domain.walletconnect.WalletConnectRepository
 import com.tangem.tap.network.NetworkConnectivity
+import com.tangem.tap.persistence.CardBalanceStateAdapter
 import com.tangem.tap.persistence.PreferencesStorage
 import com.tangem.wallet.BuildConfig
 import com.zendesk.logger.Logger
@@ -70,13 +72,14 @@ class TapApplication : Application(), ImageLoaderFactory {
         foregroundActivityObserver = ForegroundActivityObserver()
         registerActivityLifecycleCallbacks(foregroundActivityObserver.callbacks)
 
+        initMoshiConverter()
         DomainLayer.init()
         NetworkConnectivity.createInstance(store, this)
         preferencesStorage = PreferencesStorage(this)
         walletConnectRepository = WalletConnectRepository(this)
 
         assetReader = AndroidAssetReader(this)
-        val configLoader = FeaturesLocalLoader(assetReader, MoshiConverter.defaultMoshi())
+        val configLoader = FeaturesLocalLoader(assetReader, MoshiConverter.INSTANCE.moshi)
         initConfigManager(configLoader, ::initWithConfigDependency)
         initWarningMessagesManager()
 
@@ -85,6 +88,17 @@ class TapApplication : Application(), ImageLoaderFactory {
         userTokensRepository = UserTokensRepository.init(
             context = this,
             tangemTechService = store.state.domainNetworks.tangemTechService,
+        )
+    }
+
+    private fun initMoshiConverter() {
+        fun appAdapters(): List<Any> = listOf(
+            BigDecimalAdapter(),
+            CardBalanceStateAdapter(),
+        )
+        MoshiConverter.reInitInstance(
+            adapters = appAdapters() + MoshiJsonConverter.getTangemSdkAdapters(),
+            typedAdapters = MoshiJsonConverter.getTangemSdkTypedAdapters(),
         )
     }
 
@@ -124,7 +138,7 @@ class TapApplication : Application(), ImageLoaderFactory {
             config = config,
             isDebug = BuildConfig.DEBUG,
             logConfig = LogConfig.analyticsHandlers,
-            jsonConverter = MoshiJsonConverter.INSTANCE,
+            jsonConverter = MoshiConverter.INSTANCE,
         )
         factory.build(Analytics, buildData)
     }
