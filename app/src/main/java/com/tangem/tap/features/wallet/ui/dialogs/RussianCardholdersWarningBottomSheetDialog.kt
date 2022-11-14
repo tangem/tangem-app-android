@@ -7,12 +7,16 @@ import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.extensions.dispatchDialogHide
+import com.tangem.tap.common.extensions.dispatchOpenUrl
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.store
 import com.tangem.wallet.databinding.DialogRussiansCardholdersWarningBinding
 
-class RussianCardholdersWarningBottomSheetDialog(context: Context) : BottomSheetDialog(context) {
+class RussianCardholdersWarningBottomSheetDialog(
+    context: Context, private val topUpUrl: String?,
+) : BottomSheetDialog
+    (context) {
 
     private var binding: DialogRussiansCardholdersWarningBinding? = null
 
@@ -32,7 +36,11 @@ class RussianCardholdersWarningBottomSheetDialog(context: Context) : BottomSheet
         }
 
         binding?.btnYes?.setOnClickListener {
-            store.dispatch(WalletAction.TradeCryptoAction.Buy(checkUserLocation = false))
+            if (topUpUrl != null) {
+                store.dispatchOpenUrl(topUpUrl)
+            } else {
+                store.dispatch(WalletAction.TradeCryptoAction.Buy(checkUserLocation = false))
+            }
             dismiss()
         }
         binding?.btnNo?.setOnClickListener {
