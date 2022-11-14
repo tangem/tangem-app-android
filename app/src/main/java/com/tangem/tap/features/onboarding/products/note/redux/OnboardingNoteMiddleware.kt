@@ -10,9 +10,9 @@ import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchErrorNotification
+import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchOpenUrl
 import com.tangem.tap.common.extensions.getAddressData
-import com.tangem.tap.common.extensions.getTopUpUrl
 import com.tangem.tap.common.extensions.onCardScanned
 import com.tangem.tap.common.postUi
 import com.tangem.tap.common.redux.AppDialog
@@ -24,8 +24,10 @@ import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.hasWallets
 import com.tangem.tap.domain.extensions.makePrimaryWalletManager
 import com.tangem.tap.features.demo.DemoHelper
+import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.ProgressState
+import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
@@ -172,11 +174,16 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
                 return
             }
 
+            val topUpUrl = noteState.walletManager.getToUpUrl() ?: return
+            if (globalState.userCountryCode == RUSSIA_COUNTRY_CODE) {
+                store.dispatchOnMain(WalletAction.DialogAction.RussianCardholdersWarningDialog(topUpUrl))
+                return
+            }
+
             val blockchain = walletManager.wallet.blockchain
             val currencyType = AnalyticsParam.CurrencyType.Blockchain(blockchain)
             Analytics.send(Onboarding.Topup.ButtonBuyCrypto(currencyType))
 
-            val topUpUrl = walletManager.getTopUpUrl() ?: return
             store.dispatchOpenUrl(topUpUrl)
         }
         OnboardingNoteAction.Done -> {
