@@ -4,7 +4,7 @@ import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
-import com.tangem.common.json.MoshiJsonConverter
+import com.tangem.network.common.MoshiConverter
 import java.util.*
 
 class PreferencesStorage(applicationContext: Application) {
@@ -21,12 +21,12 @@ class PreferencesStorage(applicationContext: Application) {
     init {
         incrementLaunchCounter()
         appRatingLaunchObserver = AppRatingLaunchObserver(preferences, getCountOfLaunches())
-        usedCardsPrefStorage = UsedCardsPrefStorage(preferences, MoshiJsonConverter.INSTANCE)
+        usedCardsPrefStorage = UsedCardsPrefStorage(preferences, MoshiConverter.INSTANCE)
         usedCardsPrefStorage.migrate()
-        fiatCurrenciesPrefStorage = FiatCurrenciesPrefStorage(preferences, MoshiJsonConverter.INSTANCE)
+        fiatCurrenciesPrefStorage = FiatCurrenciesPrefStorage(preferences, MoshiConverter.INSTANCE)
         fiatCurrenciesPrefStorage.migrate()
         disclaimerPrefStorage = DisclaimerPrefStorage(preferences)
-        toppedUpWalletStorage = ToppedUpWalletStorage(preferences, MoshiJsonConverter.INSTANCE)
+        toppedUpWalletStorage = ToppedUpWalletStorage(preferences, MoshiConverter.INSTANCE)
     }
 
     var chatFirstLaunchTime: Long?
