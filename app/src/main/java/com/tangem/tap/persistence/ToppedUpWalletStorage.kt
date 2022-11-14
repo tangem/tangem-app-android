@@ -2,7 +2,10 @@ package com.tangem.tap.persistence
 
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import com.squareup.moshi.FromJson
+import com.squareup.moshi.ToJson
 import com.tangem.common.json.MoshiJsonConverter
+import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.filters.BasicTopUpFilter
 import timber.log.Timber
 
@@ -44,7 +47,9 @@ class ToppedUpWalletStorage(
     private fun restore(): MutableSet<BasicTopUpFilter.Data> {
         val json = preferences.getString(KEY, null) ?: return mutableSetOf()
         return try {
-            jsonConverter.fromJson(json, jsonConverter.typedList(BasicTopUpFilter.Data::class.java))!!
+            val typedList = jsonConverter.typedList(BasicTopUpFilter.Data::class.java)
+            val listData = jsonConverter.fromJson<List<BasicTopUpFilter.Data>>(json, typedList)!!
+            listData.toMutableSet()
         } catch (ex: Exception) {
             preferences.edit(true) { remove(KEY) }
             mutableSetOf()
@@ -53,5 +58,19 @@ class ToppedUpWalletStorage(
 
     companion object {
         private const val KEY = "userWalletsInfo"
+    }
+}
+
+class CardBalanceStateAdapter {
+    @ToJson
+    fun toJson(src: AnalyticsParam.CardBalanceState): String = src.value
+
+    @FromJson
+    fun fromJson(json: String): AnalyticsParam.CardBalanceState {
+        return when (json) {
+            AnalyticsParam.CardBalanceState.Empty.value -> AnalyticsParam.CardBalanceState.Empty
+            AnalyticsParam.CardBalanceState.Full.value -> AnalyticsParam.CardBalanceState.Full
+            else -> throw IllegalArgumentException()
+        }
     }
 }
