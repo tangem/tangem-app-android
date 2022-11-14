@@ -38,7 +38,7 @@ class WalletDialogsMiddleware {
                 )
             }
             is WalletAction.DialogAction.RussianCardholdersWarningDialog -> {
-                store.dispatchDialogShow(WalletDialog.RussianCardholdersWarningDialog)
+                store.dispatchDialogShow(WalletDialog.RussianCardholdersWarningDialog(action.dialogData))
             }
             is WalletAction.DialogAction.Hide -> {
                 store.dispatchDialogHide()
