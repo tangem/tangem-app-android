@@ -11,7 +11,7 @@ import com.tangem.tap.common.analytics.api.ParamsInterceptorHolder
 import com.tangem.tap.common.analytics.events.AnalyticsEvent
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.launch
 import java.util.concurrent.Executors
@@ -88,6 +88,6 @@ object Analytics : GlobalAnalyticsEventHandler {
         val name = "Analytics"
         val dispatcher = Executors.newFixedThreadPool(1).asCoroutineDispatcher()
         val exHandler = FeatureCoroutineExceptionHandler.create(name)
-        return CoroutineScope(Job() + dispatcher + CoroutineName(name) + exHandler)
+        return CoroutineScope(SupervisorJob() + dispatcher + CoroutineName(name) + exHandler)
     }
 }
