@@ -40,7 +40,7 @@ class TradeCryptoMiddleware {
         action: WalletAction.TradeCryptoAction.Buy,
     ) {
         if (action.checkUserLocation && state()?.globalState?.userCountryCode == RUSSIA_COUNTRY_CODE) {
-            store.dispatchOnMain(WalletAction.DialogAction.RussianCardholdersWarningDialog)
+            store.dispatchOnMain(WalletAction.DialogAction.RussianCardholdersWarningDialog())
             return
         }
 
