@@ -90,7 +90,7 @@ class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_walle
 
     override fun loadToolbarMenu(): MenuProvider? = OnboardingMenuProvider()
 
-    private fun reInitCardsWidget(backupCardsCounts: Int) = with(binding) {
+    private fun reInitCardsWidgetIfNeeded(backupCardsCounts: Int) = with(binding) {
         val viewBackupCount = flCardsContainer.childCount - 1
         if (viewBackupCount <= 0) return@with
         if (viewBackupCount == backupCardsCounts) return@with
@@ -137,7 +137,7 @@ class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_walle
 
     override fun newState(state: OnboardingWalletState) {
         if (activity == null || view == null) return
-        if (state.isSaltPay) reInitCardsWidget(1)
+        if (state.isSaltPay) reInitCardsWidgetIfNeeded(1)
 
         animator.updateBackupState(state.backupState)
         requireActivity().invalidateOptionsMenu()
@@ -322,7 +322,7 @@ class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_walle
     private fun showWritePrimaryCard(state: BackupState, isSaltPay: Boolean) = with(binding) {
         accessCodeDialog?.dismiss()
 
-        reInitCardsWidget(state.backupCardsNumber)
+        reInitCardsWidgetIfNeeded(state.backupCardsNumber)
         prepareViewForFinalizeStep()
 
         val cardIdFormatter = CardIdFormatter(CardIdDisplayFormat.LastMasked(4))
@@ -358,6 +358,7 @@ class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_walle
     private fun showWriteBackupCard(state: BackupState, isSaltPay: Boolean) = with(binding) {
         prepareViewForFinalizeStep()
 
+        reInitCardsWidgetIfNeeded(state.backupCardsNumber)
         val cardNumber = (state.backupStep as? BackupStep.WriteBackupCard)?.cardNumber ?: 1
         if (isSaltPay) {
             tvHeader.text = getString(R.string.onboarding_saltpay_title_backup_card)

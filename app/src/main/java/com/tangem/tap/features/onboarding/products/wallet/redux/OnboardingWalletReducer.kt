@@ -52,7 +52,7 @@ private class ReducerForGlobalAction {
                 is GlobalAction.Onboarding.StartForUnfinishedBackup -> {
                     OnboardingWalletState(
                         backupState = state.backupState.copy(
-                            maxBackupCards = 2,
+                            maxBackupCards = action.addedBackupCardsCount,
                             canSkipBackup = false,
                         ),
                         isSaltPay = false,

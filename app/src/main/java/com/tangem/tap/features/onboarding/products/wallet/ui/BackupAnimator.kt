@@ -134,6 +134,7 @@ class WalletBackupAnimator(
                     1 -> {
                         if (firstBackupCardAnimated) return
                         firstBackupCardAnimated = true
+
                         FIRST_BACKUP.alpha(1f)
                         cardsWidget.leapfrogWidget.leap {
                             SECOND_BACKUP.alpha(0.4f)
@@ -143,6 +144,7 @@ class WalletBackupAnimator(
                     2 -> {
                         if (secondBackupCardAnimated) return
                         secondBackupCardAnimated = true
+
                         SECOND_BACKUP.alpha(1f)
                         cardsWidget.leapfrogWidget.leap {
                             ORIGIN.alpha(0.4f)
