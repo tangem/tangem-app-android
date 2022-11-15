@@ -9,15 +9,15 @@ import org.joda.time.DateTime
  */
 data class ReferralResponse(
     @Json(name = "conditions") val conditions: Conditions,
+    @Json(name = "referral") val referral: Referral?,
 )
 
 data class Conditions(
-    @Json(name = "conditions") val award: Int,
+    @Json(name = "award") val award: Int,
     @Json(name = "discount") val discount: Int,
     @Json(name = "discountType") val discountType: DiscountType,
     @Json(name = "tosLink") val tosLink: String,
     @Json(name = "tokens") val tokens: List<Token>,
-    @Json(name = "referral") val referral: Referral,
 )
 
 data class Token(
