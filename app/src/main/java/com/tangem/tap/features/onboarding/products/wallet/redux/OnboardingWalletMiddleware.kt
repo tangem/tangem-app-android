@@ -347,7 +347,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             }
         }
         is BackupAction.ResumeFoundUnfinishedBackup -> {
-            store.dispatch(GlobalAction.Onboarding.StartForUnfinishedBackup)
+            store.dispatch(GlobalAction.Onboarding.StartForUnfinishedBackup(backupService.addedBackupCardsCount))
             store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingWallet))
         }
         is BackupAction.DismissBackup -> {
