@@ -26,6 +26,9 @@ android {
 
 dependencies {
 
+    /** Time */
+    implementation(Library.jodatime)
+
     /** DI */
     implementation(Library.hilt)
     kapt(Library.hiltKapt)
