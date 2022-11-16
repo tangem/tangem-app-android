@@ -1,8 +1,6 @@
 plugins {
     id("com.android.library")
     kotlin("android")
-    kotlin("kapt")
-    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -26,14 +24,6 @@ android {
 
 dependencies {
 
-    /** Libs */
-    implementation(project(":core:utils"))
-    implementation(project(":libs:crypto"))
-
-    /** Time */
-    implementation(Library.jodatime)
-
-    /** DI */
-    implementation(Library.hilt)
-    kapt(Library.hiltKapt)
+    /** Coroutines */
+    implementation(Library.coroutine)
 }
