@@ -110,6 +110,7 @@ dependencies {
     implementation(project(":network"))
     implementation(project(":common"))
     implementation(project(":core:ui"))
+    implementation(project(":libs:crypto"))
 
     /** AndroidX libraries */
     implementation(AndroidX.coreKtx)
