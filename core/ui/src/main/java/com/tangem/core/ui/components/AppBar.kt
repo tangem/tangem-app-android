@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.Icon
@@ -48,7 +49,8 @@ fun AppBarWithBackButton(text: String? = null, onBackClick: () -> Unit) {
     Row(
         modifier = Modifier
             .background(MaterialTheme.colors.primaryVariant)
-            .padding(all = dimensionResource(R.dimen.spacing16)),
+            .padding(all = dimensionResource(R.dimen.spacing16))
+            .fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing16)),
         verticalAlignment = Alignment.CenterVertically,
     ) {

@@ -34,6 +34,7 @@ object Library {
     const val appsflyer = "com.appsflyer:af-android-sdk:" + Versions.appsflyer
     const val armadillo = "at.favre.lib:armadillo:" + Versions.armadillo
     const val coil = "io.coil-kt:coil:" + Versions.coil
+    const val composeShimmer = "com.valentinilk.shimmer:compose-shimmer:" + Versions.composeShimmer
     const val coroutine = "org.jetbrains.kotlinx:kotlinx-coroutines-core:" + Versions.coroutine
     const val desugarJdkLibs = "com.android.tools:desugar_jdk_libs:" + Versions.desugarJdkLibs
     const val googlePlayCore = "com.google.android.play:core:" + Versions.googlePlayCore
@@ -52,7 +53,6 @@ object Library {
     const val okHttpLogging = "com.squareup.okhttp3:logging-interceptor:" + Versions.okhttp
     const val otaliastudiosCameraView = "com.otaliastudios:cameraview:" + Versions.otaliastudiosCameraView
     const val shopifyBuySdk = "com.shopify.mobilebuysdk:buy3:" + Versions.shopifyBuySdk
-    const val skydovesVeil = "com.github.skydoves:androidveil:" + Versions.skydovesAndroidVeil
     const val spongecastleCryptoCore = "com.madgag.spongycastle:core:" + Versions.spongycastleCryptoCore
     const val reKotlin = "org.rekotlin:rekotlin:" + Versions.rekotlin
     const val retrofit = "com.squareup.retrofit2:retrofit:" + Versions.retrofit
@@ -60,6 +60,7 @@ object Library {
     const val timber = "com.jakewharton.timber:timber:" + Versions.timber
     const val viewBindingDelegate =
         "com.github.kirich1409:viewbindingpropertydelegate-noreflection:" + Versions.viewBindingDelegate
+    const val xmlShimmer = "com.github.skydoves:androidveil:" + Versions.xmlShimmer
     const val zendeskChat = "com.zendesk:chat:" + Versions.zendeskChat
     const val zendeskMessaging = "com.zendesk:messaging:" + Versions.zendeskMessaging
     const val zxingQrBarcodeScanner = "me.dm7.barcodescanner:zxing:" + Versions.zxingQrBarcodeScanner
