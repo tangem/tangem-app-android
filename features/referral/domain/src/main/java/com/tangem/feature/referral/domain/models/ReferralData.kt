@@ -36,7 +36,7 @@ data class TokenData(
     val symbol: String,
     val networkId: String?,
     val contractAddress: String?,
-    val decimalCount: Int,
+    val decimalCount: Int?,
 )
 
 data class ReferralInfo(
