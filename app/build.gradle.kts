@@ -176,7 +176,7 @@ dependencies {
     }
     implementation(Library.accompanistAppCompatTheme)
     implementation(Library.accompanistSystemUiController)
-    implementation(Library.skydovesVeil)
+    implementation(Library.xmlShimmer)
     implementation(Library.viewBindingDelegate)
     implementation(Library.armadillo)
     implementation(Library.googlePlayServicesWallet)
