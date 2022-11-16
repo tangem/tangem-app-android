@@ -26,6 +26,10 @@ android {
 
 dependencies {
 
+    /** Libs */
+    implementation(project(":core:utils"))
+    implementation(project(":libs:crypto"))
+
     /** Time */
     implementation(Library.jodatime)
 
