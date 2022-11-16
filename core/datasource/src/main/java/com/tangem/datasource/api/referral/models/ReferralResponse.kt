@@ -26,7 +26,7 @@ data class Token(
     @Json(name = "symbol") val symbol: String,
     @Json(name = "networkId") val networkId: String?,
     @Json(name = "contractAddress") val contractAddress: String?,
-    @Json(name = "decimalCount") val decimalCount: Int,
+    @Json(name = "decimalCount") val decimalCount: Int?,
 )
 
 data class Referral(
