@@ -1,8 +1,8 @@
-package com.tangem.crypto
+package com.tangem.lib.crypto
 
 interface DerivationManager {
 
-    fun deriveMissingBlockchains(networkId: String?)
+    suspend fun deriveMissingBlockchains(networkId: String)
 
-    fun hasDerivation(): Boolean
+    fun hasDerivation(networkId: String): Boolean
 }
