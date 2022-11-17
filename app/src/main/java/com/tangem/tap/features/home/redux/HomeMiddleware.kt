@@ -9,10 +9,9 @@ import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.operations.backup.BackupService
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.backupService
-import com.tangem.tap.common.analytics.AnalyticsEventAnOld
-import com.tangem.tap.common.analytics.AnalyticsParamAnOld
-import com.tangem.tap.common.analytics.GetCardSourceParamsAnOld
-import com.tangem.tap.common.analytics.events.AnalyticsParam
+import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.IntroductionProcess
+import com.tangem.tap.common.analytics.paramsInterceptor.BatchIdParamsInterceptor
 import com.tangem.tap.common.entities.IndeterminateProgressButton
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOpenUrl
@@ -105,10 +104,6 @@ private fun handleHomeAction(appState: () -> AppState?, action: Action, dispatch
                 RUSSIA_COUNTRY_CODE, BELARUS_COUNTRY_CODE -> store.dispatchOpenUrl(BUY_WALLET_URL)
                 else -> store.dispatch(NavigationAction.NavigateTo(AppScreen.Shop))
             }
-            store.state.globalState.analyticsHandler.handleAnalyticsEvent(
-                event = AnalyticsEventAnOld.GET_CARD,
-                params = mapOf(AnalyticsParamAnOld.SOURCE.param to GetCardSourceParamsAnOld.WELCOME.param),
-            )
         }
     }
 }
@@ -158,11 +153,12 @@ private fun showDisclaimerIfNeed(scanResponse: ScanResponse, nextHandler: (ScanR
 }
 
 private fun onScanSuccess(scanResponse: ScanResponse) {
+    Analytics.send(IntroductionProcess.CardWasScanned())
     val globalState = store.state.globalState
     val tapWalletManager = globalState.tapWalletManager
     tapWalletManager.updateConfigManager(scanResponse)
 
-    globalState.analyticsHandler.attachToAllEvents(AnalyticsParam.BatchId, scanResponse.card.batchId)
+    Analytics.addParamsInterceptor(BatchIdParamsInterceptor(scanResponse.card.batchId))
 
     store.dispatch(TwinCardsAction.IfTwinsPrepareState(scanResponse))
 
@@ -178,7 +174,7 @@ private fun onScanSuccess(scanResponse: ScanResponse) {
                             val isOnboardingCase = result.data
                             if (isOnboardingCase) {
                                 store.dispatch(GlobalAction.Onboarding.Start(scanResponse, canSkipBackup = false))
-                                store.dispatch(OnboardingSaltPayAction.Init.SetDependencies(manager, config))
+                                store.dispatch(OnboardingSaltPayAction.SetDependencies(manager, config))
                                 store.dispatch(OnboardingSaltPayAction.Update)
                                 navigateTo(AppScreen.OnboardingWallet)
                             } else {

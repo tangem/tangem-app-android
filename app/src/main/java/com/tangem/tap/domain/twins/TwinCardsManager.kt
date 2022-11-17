@@ -7,21 +7,17 @@ import com.tangem.blockchain.extensions.Result
 import com.tangem.common.CompletionResult
 import com.tangem.common.KeyPair
 import com.tangem.common.card.Card
-import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
 import com.tangem.domain.common.ScanResponse
 import com.tangem.network.common.MoshiConverter
 import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.tap.common.AssetReader
-import com.tangem.tap.common.analytics.AnalyticsAnOld
-import com.tangem.tap.common.analytics.GlobalAnalyticsEventHandler
 import com.tangem.tap.tangemSdkManager
 
 class TwinCardsManager(
-    private val card: Card,
+    card: Card,
     assetReader: AssetReader,
-    val analyticsHandler: GlobalAnalyticsEventHandler?
 ) {
 
     private val currentCardId: String = card.cardId
@@ -35,15 +31,7 @@ class TwinCardsManager(
         val response = tangemSdkManager.runTaskAsync(CreateFirstTwinWalletTask(), currentCardId, message)
         when (response) {
             is CompletionResult.Success -> currentCardPublicKey = response.data.wallet.publicKey.toHexString()
-            is CompletionResult.Failure -> {
-                (response.error as? TangemSdkError)?.let { error ->
-                   analyticsHandler?.handleCardSdkErrorEvent(
-                        error,
-                        AnalyticsAnOld.ActionToLog.CreateWallet,
-                        card = card
-                    )
-                }
-            }
+            is CompletionResult.Failure -> {}
         }
         return response
     }
@@ -58,22 +46,14 @@ class TwinCardsManager(
             firstCardId = currentCardId,
             issuerKeys = issuerKeyPair,
             preparingMessage = preparingMessage,
-            creatingWalletMessage = creatingWalletMessage
+            creatingWalletMessage = creatingWalletMessage,
         )
         val response = tangemSdkManager.runTaskAsync(task, null, initialMessage)
         when (response) {
             is CompletionResult.Success -> {
                 secondCardPublicKey = response.data.wallet.publicKey.toHexString()
             }
-            is CompletionResult.Failure -> {
-                (response.error as? TangemSdkError)?.let { error ->
-                    analyticsHandler?.handleCardSdkErrorEvent(
-                        error,
-                        AnalyticsAnOld.ActionToLog.CreateWallet,
-                        card = card
-                    )
-                }
-            }
+            is CompletionResult.Failure -> {}
         }
         return response
     }
@@ -81,20 +61,11 @@ class TwinCardsManager(
     suspend fun complete(message: Message): Result<ScanResponse> {
         val response = tangemSdkManager.runTaskAsync(
             FinalizeTwinTask(secondCardPublicKey!!.hexToBytes(), issuerKeyPair),
-            currentCardId, message
+            currentCardId, message,
         )
         return when (response) {
             is CompletionResult.Success -> Result.Success(response.data)
-            is CompletionResult.Failure -> {
-                (response.error as? TangemSdkError)?.let { error ->
-                    analyticsHandler?.handleCardSdkErrorEvent(
-                        error,
-                        AnalyticsAnOld.ActionToLog.WriteIssuerData,
-                        card = card
-                    )
-                }
-                Result.fromTangemSdkError(response.error)
-            }
+            is CompletionResult.Failure -> Result.fromTangemSdkError(response.error)
         }
     }
 
@@ -103,13 +74,13 @@ class TwinCardsManager(
             val issuer = getIssuers(reader).first { it.publicKey == publicKey }
             return KeyPair(
                 publicKey = issuer.publicKey.hexToBytes(),
-                privateKey = issuer.privateKey.hexToBytes()
+                privateKey = issuer.privateKey.hexToBytes(),
             )
         }
 
         private fun getAdapter(): JsonAdapter<List<Issuer>> {
             return MoshiConverter.defaultMoshi().adapter(
-                Types.newParameterizedType(List::class.java, Issuer::class.java)
+                Types.newParameterizedType(List::class.java, Issuer::class.java),
             )
         }
 
