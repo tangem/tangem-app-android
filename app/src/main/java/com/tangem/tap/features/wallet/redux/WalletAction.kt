@@ -15,6 +15,7 @@ import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.wallet.models.Currency
+import com.tangem.tap.features.wallet.redux.models.WalletDialog
 import com.tangem.wallet.R
 import org.rekotlin.Action
 import java.math.BigDecimal
@@ -154,7 +155,9 @@ sealed class WalletAction : Action {
         object SignedHashesMultiWalletDialog : DialogAction()
         object ChooseTradeActionDialog : DialogAction()
         data class ChooseCurrency(val amounts: List<Amount>?) : DialogAction()
-        data class RussianCardholdersWarningDialog(val topUpUrl: String? = null) : DialogAction()
+        data class RussianCardholdersWarningDialog(
+            val dialogData: WalletDialog.RussianCardholdersWarningDialog.Data? = null
+        ) : DialogAction()
 
         object Hide : DialogAction()
     }
