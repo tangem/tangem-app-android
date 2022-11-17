@@ -1,5 +1,6 @@
 package com.tangem.tap.features.wallet.redux.middlewares
 
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.blockchain.blockchains.solana.RentProvider
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
@@ -17,6 +18,7 @@ import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchOpenUrl
+import com.tangem.tap.common.extensions.dispatchToastNotification
 import com.tangem.tap.common.extensions.onCardScanned
 import com.tangem.tap.common.extensions.shareText
 import com.tangem.tap.common.extensions.stripZeroPlainString
@@ -45,6 +47,7 @@ import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
+import com.tangem.wallet.R
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
@@ -118,10 +121,9 @@ class WalletMiddleware {
                                 true,
                             ),
                         )
-                        store.dispatch(WalletAction.LoadWallet.Success(
-                            action.wallet,
-                            action.blockchain
-                        ))
+                        store.dispatch(
+                            action = WalletAction.LoadWallet.Success(action.wallet, action.blockchain)
+                        )
                     }
                 }
                 store.dispatch(WalletAction.Warnings.CheckHashesCount.CheckHashesCountOnline)
@@ -257,9 +259,17 @@ class WalletMiddleware {
                     return
                 }
                 val newAction = prepareSendAction(action.amount, store.state.walletState)
-                store.dispatch(newAction)
-                if (newAction is PrepareSendScreen) {
-                    store.dispatch(NavigationAction.NavigateTo(AppScreen.Send))
+                if (newAction is PrepareSendScreen && newAction.walletManager == null) {
+                    store.dispatch(NavigationAction.PopBackTo(screen = AppScreen.Home))
+                    FirebaseCrashlytics.getInstance().recordException(
+                        IllegalStateException("PrepareSendScreen: walletManager is null")
+                    )
+                    store.dispatchToastNotification(R.string.internal_error_wallet_manager_not_found)
+                } else {
+                    store.dispatch(newAction)
+                    if (newAction is PrepareSendScreen) {
+                        store.dispatch(NavigationAction.NavigateTo(AppScreen.Send))
+                    }
                 }
             }
         }
@@ -366,11 +376,13 @@ class WalletMiddleware {
 
                     val currency = walletManager.wallet.blockchain.currency
                     if (show) {
-                        dispatchOnMain(WalletAction.SetWalletRent(
-                            wallet = walletManager.wallet,
-                            minRent = ("${rentProvider.rentAmount().stripZeroPlainString()} $currency"),
-                            rentExempt = ("${rentExempt.stripZeroPlainString()} $currency")
-                        ))
+                        dispatchOnMain(
+                            WalletAction.SetWalletRent(
+                                wallet = walletManager.wallet,
+                                minRent = ("${rentProvider.rentAmount().stripZeroPlainString()} $currency"),
+                                rentExempt = ("${rentExempt.stripZeroPlainString()} $currency")
+                            )
+                        )
                     } else {
                         dispatchOnMain(WalletAction.RemoveWalletRent(walletManager.wallet))
                     }
