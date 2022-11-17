@@ -1,6 +1,6 @@
 package com.tangem.feature.referral.domain.converter
 
-import com.tangem.crypto.models.Token
+import com.tangem.lib.crypto.models.Token
 import com.tangem.feature.referral.domain.models.TokenData
 import com.tangem.utils.converter.Converter
 
