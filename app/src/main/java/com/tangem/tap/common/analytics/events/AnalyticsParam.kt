@@ -1,22 +1,27 @@
 package com.tangem.tap.common.analytics.events
 
+import com.tangem.tap.features.details.redux.SecurityOption
+
 sealed class AnalyticsParam {
 
     sealed class CurrencyType(val value: String) {
         class Currency(currency: com.tangem.tap.features.wallet.models.Currency) : CurrencyType(currency.currencySymbol)
         class Blockchain(blockchain: com.tangem.blockchain.common.Blockchain) : CurrencyType(blockchain.currency)
         class Token(token: com.tangem.blockchain.common.Token) : CurrencyType(token.symbol)
+        class FiatCurrency(fiatCurrency: com.tangem.tap.common.entities.FiatCurrency) : CurrencyType(fiatCurrency.symbol)
+        class Amount(amount: com.tangem.blockchain.common.Amount) : CurrencyType(amount.currencySymbol)
     }
 
-    // Multicurrency or CurrencyType
+    // MultiCurrency or CurrencyType
     sealed class CardCurrency(val value: String) {
         object MultiCurrency : CardCurrency("Multicurrency")
         class SingleCurrency(type: CurrencyType) : CardCurrency(type.value)
     }
 
-    sealed class CardState(val value: String) {
-        object Empty : CardState("Empty")
-        object Full : CardState("Full")
+    sealed class CardBalanceState(val value: String) {
+        object Empty : CardBalanceState("Empty")
+        object Full : CardBalanceState("Full")
+        companion object
     }
 
     sealed class RateApp(val value: String) {
@@ -39,20 +44,26 @@ sealed class AnalyticsParam {
         object AccessCode : SecurityMode("Access Code")
         object Passcode : SecurityMode("Passcode")
         object LongTap : SecurityMode("Long Tap")
+
+        companion object {
+            fun from(option: SecurityOption): SecurityMode = when (option) {
+                SecurityOption.AccessCode -> AccessCode
+                SecurityOption.PassCode -> Passcode
+                SecurityOption.LongTap -> LongTap
+            }
+        }
     }
 
-    sealed class SocialNetwork(val value: String) {
-        object Facebook : SocialNetwork("Facebook")
-        object Instagram : SocialNetwork("Instagram")
-        object Youtube : SocialNetwork("Youtube")
-        object Twitter : SocialNetwork("Twitter")
-        object LinkedIn : SocialNetwork("LinkedIn")
-        object GitHub : SocialNetwork("GitHub")
+    sealed class Error(val value: String) {
+        object App : Error("App Error")
+        object CardSdk : Error("Card Sdk Error")
+        object BlockchainSdk : Error("Blockchain Sdk Error")
     }
 
     companion object Key {
-        const val Blockchain = "blockchain"
-        const val BatchId = "batch_id"
-        const val Firmware = "firmware"
+        const val BatchId = "Batch"
+        const val ErrorDescription = "Error Description"
+        const val ErrorCode = "Error Code"
+        const val ErrorKey = "Error Key"
     }
 }

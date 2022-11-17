@@ -48,7 +48,6 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
             globalState.copy(configManager = action.configManager)
         }
         is GlobalAction.SetWarningManager -> globalState.copy(warningManager = action.warningManager)
-        is GlobalAction.SetGlobalAnalyticsHandler -> globalState.copy(analyticsHandler = action.analyticsHandler)
         is GlobalAction.UpdateWalletSignedHashes -> {
             val card = globalState.scanResponse?.card ?: return globalState
             val wallet = card.wallet(action.walletPublicKey) ?: return globalState

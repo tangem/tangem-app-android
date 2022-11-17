@@ -6,5 +6,7 @@ package com.tangem.tap.common.analytics.events
 sealed class AnalyticsEvent(
     val category: String,
     val event: String,
-    val params: Map<String, String> = mapOf(),
+    var params: Map<String, String> = mapOf(),
+    val error: Throwable? = null,
+    var filterData: Any? = null,
 )

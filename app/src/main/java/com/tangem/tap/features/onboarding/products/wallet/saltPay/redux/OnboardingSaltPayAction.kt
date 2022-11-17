@@ -10,12 +10,12 @@ import java.math.BigDecimal
  * Created by Anton Zhilenkov on 08.10.2022.
  */
 sealed class OnboardingSaltPayAction : Action {
-    sealed class Init : OnboardingSaltPayAction() {
-        data class SetDependencies(
-            val registrationManager: SaltPayActivationManager,
-            val saltPayConfig: SaltPayConfig,
-        ) : Init()
-    }
+    object Init : OnboardingSaltPayAction()
+
+    data class SetDependencies(
+        val registrationManager: SaltPayActivationManager,
+        val saltPayConfig: SaltPayConfig,
+    ) : OnboardingSaltPayAction()
 
     data class SetInProgress(val isInProgress: Boolean) : OnboardingSaltPayAction()
     data class SetClaimRefreshInProgress(val isInProgress: Boolean) : OnboardingSaltPayAction()

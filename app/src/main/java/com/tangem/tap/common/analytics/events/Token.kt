@@ -1,5 +1,7 @@
 package com.tangem.tap.common.analytics.events
 
+import com.tangem.tap.common.analytics.events.AnalyticsParam.CurrencyType
+
 /**
  * Created by Anton Zhilenkov on 28.09.2022.
  */
@@ -7,15 +9,41 @@ sealed class Token(
     category: String,
     event: String,
     params: Map<String, String> = mapOf(),
-) : AnalyticsEvent(category, event, params) {
+    error: Throwable? = null,
+) : AnalyticsEvent(category, event, params, error) {
 
     class Refreshed : Token("Token", "Refreshed")
-    class ButtonRemoveToken : Token("Token", "Button - Remove Token")
     class ButtonExplore : Token("Token", "Button - Explore")
-    class ButtonBuy(token: String) : Token("Token", "Button - Buy", mapOf("Token" to token))
-    class ButtonSell(token: String) : Token("Token", "Button - Sell", mapOf("Token" to token))
-    class ButtonExchange(token: String) : Token("Token", "Button - Exchange", mapOf("Token" to token))
-    class ButtonSend(token: String) : Token("Token", "Button - Send", mapOf("Token" to token))
+
+    class ButtonRemoveToken(type: CurrencyType) : Token(
+        "Token",
+        "Button - Remove Token",
+        params = mapOf("Token" to type.value),
+    )
+
+    class ButtonBuy(type: CurrencyType) : Token(
+        category = "Token",
+        event = "Button - Buy",
+        params = mapOf("Token" to type.value),
+    )
+
+    class ButtonSell(type: CurrencyType) : Token(
+        category = "Token",
+        event = "Button - Sell",
+        params = mapOf("Token" to type.value),
+    )
+
+    class ButtonExchange(type: CurrencyType) : Token(
+        category = "Token",
+        event = "Button - Exchange",
+        params = mapOf("Token" to type.value),
+    )
+
+    class ButtonSend(type: CurrencyType) : Token(
+        category = "Token",
+        event = "Button - Send",
+        params = mapOf("Token" to type.value),
+    )
 
     sealed class Recieve(
         event: String,
@@ -30,16 +58,18 @@ sealed class Token(
     sealed class Send(
         event: String,
         params: Map<String, String> = mapOf(),
-    ) : Token("Token / Send", event, params) {
+        error: Throwable? = null,
+    ) : Token("Token / Send", event, params, error) {
 
         class ScreenOpened : Send("Send Screen Opened")
         class ButtonPaste : Send("Button - Paste")
         class ButtonQRCode : Send("Button - QR Code")
         class ButtonSwapCurrency : Send("Button - Swap Currency")
 
-        class TransactionSent(token: AnalyticsParam.CurrencyType) : Send(
+        class TransactionSent(type: CurrencyType, error: Throwable? = null) : Send(
             event = "Transaction Sent",
-            params = mapOf("Token" to token.value),
+            params = mapOf("Token" to type.value),
+            error = error,
         )
     }
 

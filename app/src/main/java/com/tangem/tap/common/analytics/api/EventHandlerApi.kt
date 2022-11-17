@@ -1,89 +1,50 @@
 package com.tangem.tap.common.analytics.api
 
-import com.shopify.buy3.Storefront
-import com.tangem.blockchain.common.BlockchainError
-import com.tangem.common.card.Card
-import com.tangem.common.core.TangemSdkError
-import com.tangem.tap.common.analytics.AnalyticsAnOld
-import com.tangem.tap.common.analytics.AnalyticsEventAnOld
-import com.tangem.tap.common.analytics.AnalyticsParamAnOld
+import android.app.Application
+import com.tangem.common.json.MoshiJsonConverter
+import com.tangem.domain.common.AnalyticsHandlersLogConfig
 import com.tangem.tap.common.analytics.events.AnalyticsEvent
-import com.tangem.tap.common.analytics.events.AnalyticsParam
-import com.tangem.tap.common.extensions.filterNotNull
+import com.tangem.tap.domain.configurable.config.Config
 
 /**
  * Created by Anton Zhilenkov on 23/09/2022.
  */
 interface AnalyticsEventHandler {
-    fun handleEvent(
-        event: String,
-        params: Map<String, String> = emptyMap(),
-    )
+    fun send(event: AnalyticsEvent)
+}
 
-    fun handleAnalyticsEvent(
-        event: AnalyticsEvent,
-        card: Card? = null,
-        blockchain: String? = null,
-    ) {
-        handleEvent(
-            event = prepareEventString(event.category, event.event),
-            params = prepareParams(card, blockchain, event.params),
-        )
+interface AnalyticsHandler : AnalyticsEventHandler {
+    fun id(): String
+
+    fun send(event: String, params: Map<String, String> = emptyMap())
+
+    override fun send(event: AnalyticsEvent) {
+        send(prepareEventString(event), event.params)
     }
 
-    @Deprecated("Migrate to AnalyticsEvent")
-    fun handleAnalyticsEvent(
-        event: AnalyticsEventAnOld,
-        params: Map<String, String> = emptyMap(),
-        card: Card? = null,
-        blockchain: String? = null,
-    ) {
-        handleEvent(event.event, prepareParams(card, blockchain, params))
-    }
-
-    fun prepareParams(
-        card: Card? = null,
-        blockchain: String? = null,
-        params: Map<String, String> = emptyMap(),
-    ): Map<String, String> = mapOf(
-        AnalyticsParam.Firmware to card?.firmwareVersion?.stringValue,
-        AnalyticsParam.BatchId to card?.batchId,
-        AnalyticsParam.Blockchain to blockchain,
-    ).filterNotNull() + params
-
-    fun prepareEventString(category: String, event: String): String {
-        return "[$category] $event"
-    }
+    fun prepareEventString(event: AnalyticsEvent): String = "[${event.category}] ${event.event}"
 }
 
 interface ErrorEventHandler {
-    fun handleErrorEvent(
+    fun send(
         error: Throwable,
         params: Map<String, String> = emptyMap(),
     )
 }
 
-interface SdkErrorEventHandler : CardSdkErrorEventHandler, BlockchainSdkErrorEventHandler
+interface AnalyticsHandlerHolder {
+    fun addHandler(name: String, handler: AnalyticsHandler)
+    fun removeHandler(name: String): AnalyticsHandler?
+}
 
-interface CardSdkErrorEventHandler {
-    fun handleCardSdkErrorEvent(
-        error: TangemSdkError,
-        action: AnalyticsAnOld.ActionToLog,
-        params: Map<AnalyticsParamAnOld, String> = emptyMap(),
-        card: Card? = null,
+interface AnalyticsHandlerBuilder {
+    fun build(data: Data): AnalyticsHandler?
+
+    data class Data(
+        val application: Application,
+        val config: Config,
+        val isDebug: Boolean,
+        val logConfig: AnalyticsHandlersLogConfig,
+        val jsonConverter: MoshiJsonConverter,
     )
 }
-
-interface BlockchainSdkErrorEventHandler {
-    fun handleBlockchainSdkErrorEvent(
-        error: BlockchainError,
-        action: AnalyticsAnOld.ActionToLog,
-        params: Map<AnalyticsParamAnOld, String> = mapOf(),
-        card: Card? = null,
-    )
-}
-
-interface ShopifyOrderEventHandler {
-    fun handleShopifyOrderEvent(order: Storefront.Order)
-}
-
