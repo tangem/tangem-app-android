@@ -5,6 +5,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
+import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.extensions.copyToClipboard
 import com.tangem.tap.common.extensions.dispatchDialogHide
 import com.tangem.tap.common.extensions.dispatchShare
@@ -21,7 +23,7 @@ import com.tangem.wallet.databinding.DialogOnboardingAddressInfoBinding
  */
 class AddressInfoBottomSheetDialog(
     private val stateDialog: AppDialog.AddressInfoDialog,
-    context: Context
+    context: Context,
 ) : BottomSheetDialog(context) {
 
     var binding: DialogOnboardingAddressInfoBinding? = null
@@ -40,6 +42,7 @@ class AddressInfoBottomSheetDialog(
 
     override fun show() {
         super.show()
+        Analytics.send(Token.Recieve.ScreenOpened())
         showData(data = stateDialog.addressData)
     }
 
@@ -51,10 +54,12 @@ class AddressInfoBottomSheetDialog(
         imvQrCode.setImageBitmap(data.qrCode)
         tvAddress.text = data.address
         btnFlCopyAddress.setOnClickListener {
+            Analytics.send(Token.Recieve.ButtonCopyAddress())
             context.copyToClipboard(data.address)
             store.dispatchToastNotification(R.string.copy_toast_msg)
         }
         btnFlShare.setOnClickListener {
+            Analytics.send(Token.Recieve.ButtonShareAddress())
             store.dispatchShare(data.shareUrl)
         }
         tvReceiveMessage.text = getQRReceiveMessage(tvReceiveMessage.context, stateDialog.currency)
@@ -67,7 +72,7 @@ fun getQRReceiveMessage(context: Context, currency: Currency): String {
             context.getString(
                 R.string.address_qr_code_message_format,
                 currency.blockchain.fullName,
-                currency.currencySymbol
+                currency.currencySymbol,
             )
         }
         is Currency.Token -> {
@@ -75,7 +80,7 @@ fun getQRReceiveMessage(context: Context, currency: Currency): String {
                 R.string.address_qr_code_message_token_format,
                 currency.token.name,
                 currency.currencySymbol,
-                currency.blockchain.fullName
+                currency.blockchain.fullName,
             )
         }
     }
