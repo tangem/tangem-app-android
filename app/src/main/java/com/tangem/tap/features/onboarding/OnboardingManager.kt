@@ -67,8 +67,10 @@ class OnboardingManager(
             }
         }
 
-        return balance.copy(currency = Currency.Blockchain(
-            walletManager.wallet.blockchain, walletManager.wallet.publicKey.derivationPath?.rawPath)
+        return balance.copy(
+            currency = Currency.Blockchain(
+                walletManager.wallet.blockchain, walletManager.wallet.publicKey.derivationPath?.rawPath,
+            ),
         )
     }
 
@@ -78,6 +80,14 @@ class OnboardingManager(
 
     fun activationFinished(cardId: String) {
         usedCardsPrefStorage.activationFinished(cardId)
+    }
+
+    fun isActivationFinished(cardId: String): Boolean {
+        return usedCardsPrefStorage.isActivationFinished(cardId)
+    }
+
+    fun isActivationStarted(cardId: String): Boolean {
+        return usedCardsPrefStorage.isActivationStarted(cardId)
     }
 }
 
@@ -98,23 +108,23 @@ data class OnboardingWalletBalance(
     companion object {
         fun error(error: TapError): OnboardingWalletBalance = OnboardingWalletBalance(
             state = ProgressState.Error,
-            error = error
+            error = error,
         )
 
         fun criticalError(error: TapError): OnboardingWalletBalance = OnboardingWalletBalance(
             state = ProgressState.Error,
-            criticalError = error
+            criticalError = error,
         )
 
         fun loading(value: BigDecimal = BigDecimal.ZERO): OnboardingWalletBalance = OnboardingWalletBalance(
             value,
-            state = ProgressState.Loading
+            state = ProgressState.Loading,
         )
 
         fun done(value: BigDecimal, hasTransactions: Boolean): OnboardingWalletBalance = OnboardingWalletBalance(
             value,
             hasIncomingTransaction = hasTransactions,
-            state = ProgressState.Done
+            state = ProgressState.Done,
         )
     }
 }
