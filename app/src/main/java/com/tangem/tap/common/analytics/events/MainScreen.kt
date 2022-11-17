@@ -19,7 +19,7 @@ sealed class MainScreen(
         params = mapOf("Currency Type" to currencyType.value),
     )
 
-    sealed class NoticeRateAppButton(result: AnalyticsParam.RateApp) : MainScreen(
+    class NoticeRateAppButton(result: AnalyticsParam.RateApp) : MainScreen(
         event = "Notice - Rate The App Button Tapped",
         params = mapOf("Result" to result.value),
     )
