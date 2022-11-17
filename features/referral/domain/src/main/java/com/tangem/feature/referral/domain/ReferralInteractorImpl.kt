@@ -1,8 +1,8 @@
 package com.tangem.feature.referral.domain
 
-import com.tangem.crypto.DerivationManager
-import com.tangem.crypto.UserWalletManager
-import com.tangem.crypto.models.Token
+import com.tangem.lib.crypto.DerivationManager
+import com.tangem.lib.crypto.UserWalletManager
+import com.tangem.lib.crypto.models.Token
 import com.tangem.feature.referral.domain.converter.TokensConverter
 import com.tangem.feature.referral.domain.models.ReferralData
 import com.tangem.feature.referral.domain.models.TokenData
