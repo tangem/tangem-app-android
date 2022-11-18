@@ -10,6 +10,8 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
 import androidx.transition.TransitionInflater
 import com.google.accompanist.appcompattheme.AppCompatTheme
+import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.store
@@ -24,7 +26,7 @@ class DetailsFragment : Fragment(), StoreSubscriber<DetailsState> {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        Analytics.send(Settings.ScreenOpened())
         val inflater = TransitionInflater.from(requireContext())
         enterTransition = inflater.inflateTransition(android.R.transition.fade)
         exitTransition = inflater.inflateTransition(android.R.transition.fade)
