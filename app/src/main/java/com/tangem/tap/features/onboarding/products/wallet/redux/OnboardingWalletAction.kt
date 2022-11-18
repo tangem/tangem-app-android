@@ -5,7 +5,6 @@ import org.rekotlin.Action
 
 sealed class OnboardingWalletAction : Action {
     object Init : OnboardingWalletAction()
-    object StartSaltPayCardActivation : OnboardingWalletAction()
     object GetToCreateWalletStep : OnboardingWalletAction()
     object GetToSaltPayStep : OnboardingWalletAction()
     object CreateWallet : OnboardingWalletAction()
