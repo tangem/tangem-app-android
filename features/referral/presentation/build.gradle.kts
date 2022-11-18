@@ -1,8 +1,6 @@
 plugins {
     id("com.android.library")
     kotlin("android")
-    kotlin("kapt")
-    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -22,11 +20,25 @@ android {
         targetCompatibility = JavaVersion.VERSION_1_8
         isCoreLibraryDesugaringEnabled = false
     }
+
+    buildFeatures {
+        compose = true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion = Versions.compose
+    }
 }
 
 dependencies {
+    /** Core modules */
+    implementation(project(":core:ui"))
 
-    /** DI */
-    implementation(Library.hilt)
-    kapt(Library.hiltKapt)
+    /** Compose */
+    implementation(Compose.foundation)
+    implementation(Compose.material)
+    implementation(Compose.uiTooling)
+
+    /** Other libraries */
+    implementation(Library.composeShimmer)
 }
