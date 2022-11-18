@@ -17,7 +17,7 @@ class OnboardingSaltPayReducer {
 private fun internalReduce(anyAction: Action, onboardingWalletState: OnboardingWalletState): OnboardingWalletState {
     val action = anyAction as? OnboardingSaltPayAction ?: return onboardingWalletState
 
-    if (onboardingWalletState.onboardingSaltPayState == null && action is OnboardingSaltPayAction.Init.SetDependencies) {
+    if (onboardingWalletState.onboardingSaltPayState == null && action is OnboardingSaltPayAction.SetDependencies) {
         return onboardingWalletState.copy(
             onboardingSaltPayState = OnboardingSaltPayState(
                 saltPayManager = action.registrationManager,
