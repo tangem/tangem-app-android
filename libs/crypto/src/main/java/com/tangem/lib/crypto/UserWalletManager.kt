@@ -1,6 +1,6 @@
 package com.tangem.lib.crypto
 
-import com.tangem.lib.crypto.models.Token
+import com.tangem.lib.crypto.models.Currency
 
 /**
  * Provider for user tokens data
@@ -10,7 +10,7 @@ interface UserWalletManager {
     /**
      * Returns all user tokens (merged from local and backend)
      */
-    suspend fun getUserTokens(): List<Token>
+    suspend fun getUserTokens(): List<Currency>
 
     /**
      * Returns user walletId
@@ -20,21 +20,21 @@ interface UserWalletManager {
     /**
      * Checks that token added to user wallet
      *
-     * @param token to receive referral payments
+     * @param currency to receive referral payments
      */
-    suspend fun isTokenAdded(token: Token): Boolean
+    suspend fun isTokenAdded(currency: Currency): Boolean
 
     /**
      * Adds token to wallet if its not
      *
-     * @param token to add to wallet
+     * @param currency to add to wallet
      */
-    fun addToken(token: Token)
+    fun addToken(currency: Currency)
 
     /**
      * Returns wallet public address for token
      *
-     * @param token for which find address
+     * @param currency for which find address
      */
-    fun getWalletAddress(token: Token): String
+    fun getWalletAddress(currency: Currency): String
 }

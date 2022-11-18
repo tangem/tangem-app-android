@@ -1,11 +1,11 @@
 package com.tangem.feature.referral.domain
 
-import com.tangem.lib.crypto.DerivationManager
-import com.tangem.lib.crypto.UserWalletManager
-import com.tangem.lib.crypto.models.Token
 import com.tangem.feature.referral.domain.converter.TokensConverter
 import com.tangem.feature.referral.domain.models.ReferralData
 import com.tangem.feature.referral.domain.models.TokenData
+import com.tangem.lib.crypto.DerivationManager
+import com.tangem.lib.crypto.UserWalletManager
+import com.tangem.lib.crypto.models.Currency
 
 internal class ReferralInteractorImpl(
     private val repository: ReferralRepository,
@@ -24,13 +24,13 @@ internal class ReferralInteractorImpl(
 
     override suspend fun startReferral(): ReferralData {
         if (tokensForReferral.isNotEmpty()) {
-            val token = tokensConverter.convert(tokensForReferral.first())
-            deriveOrAddTokens(token)
-            val publicAddress = userWalletManager.getWalletAddress(token)
+            val currency = tokensConverter.convert(tokensForReferral.first())
+            deriveOrAddTokens(currency)
+            val publicAddress = userWalletManager.getWalletAddress(currency)
             return repository.startReferral(
                 walletId = userWalletManager.getWalletId(),
-                networkId = token.networkId ?: "",
-                tokenId = token.id,
+                networkId = currency.networkId,
+                tokenId = currency.id,
                 address = publicAddress,
             )
         } else {
@@ -38,12 +38,12 @@ internal class ReferralInteractorImpl(
         }
     }
 
-    private fun deriveOrAddTokens(token: Token) {
-        if (!derivationManager.hasDerivation()) {
-            derivationManager.deriveMissingBlockchains(token.networkId)
+    private suspend fun deriveOrAddTokens(currency: Currency) {
+        if (!derivationManager.hasDerivation(currency.networkId)) {
+            derivationManager.deriveMissingBlockchains(currency)
         }
-        if (!userWalletManager.isTokenAdded(token)) {
-            userWalletManager.addToken(token)
+        if (!userWalletManager.isTokenAdded(currency)) {
+            userWalletManager.addToken(currency)
         }
     }
 
