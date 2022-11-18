@@ -34,7 +34,7 @@ data class TokenData(
     val id: String,
     val name: String,
     val symbol: String,
-    val networkId: String?,
+    val networkId: String,
     val contractAddress: String?,
     val decimalCount: Int?,
 )
