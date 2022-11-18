@@ -101,6 +101,7 @@ fun Preview_PrimaryEndIconButton_Disabled_InDarkTheme() {
 /**
  * Primary button with an icon at the beginning of the layout
  *
+ * @param modifier  button modifier
  * @param text      button text
  * @param iconResId button icon res id
  * @param enabled   controls the enabled state of the button
@@ -110,8 +111,14 @@ fun Preview_PrimaryEndIconButton_Disabled_InDarkTheme() {
  * >Figma component</a>
  */
 @Composable
-fun PrimaryStartIconButton(text: String, @DrawableRes iconResId: Int, enabled: Boolean = true, onClicked: () -> Unit) {
-    PrimaryButtonRow(enabled = enabled, onClicked = onClicked) {
+fun PrimaryStartIconButton(
+    modifier: Modifier = Modifier,
+    text: String,
+    @DrawableRes iconResId: Int,
+    enabled: Boolean = true,
+    onClicked: () -> Unit,
+) {
+    PrimaryButtonRow(modifier = modifier, enabled = enabled, onClicked = onClicked) {
         Icon(
             painter = painterResource(id = iconResId),
             contentDescription = null,
@@ -124,6 +131,7 @@ fun PrimaryStartIconButton(text: String, @DrawableRes iconResId: Int, enabled: B
 /**
  * Primary button with an icon at the end of the layout
  *
+ * @param modifier  button modifier
  * @param text      button text
  * @param iconResId button icon res id
  * @param enabled   controls the enabled state of the button
@@ -133,8 +141,14 @@ fun PrimaryStartIconButton(text: String, @DrawableRes iconResId: Int, enabled: B
  * >Figma component</a>
  */
 @Composable
-fun PrimaryEndIconButton(text: String, @DrawableRes iconResId: Int, enabled: Boolean = true, onClicked: () -> Unit) {
-    PrimaryButtonRow(enabled = enabled, onClicked = onClicked) {
+fun PrimaryEndIconButton(
+    modifier: Modifier = Modifier,
+    text: String,
+    @DrawableRes iconResId: Int,
+    enabled: Boolean = true,
+    onClicked: () -> Unit,
+) {
+    PrimaryButtonRow(modifier = modifier, enabled = enabled, onClicked = onClicked) {
         Text(text = text)
         Spacer(modifier = Modifier.width(dimensionResource(R.dimen.spacing8)))
         Icon(
@@ -145,10 +159,15 @@ fun PrimaryEndIconButton(text: String, @DrawableRes iconResId: Int, enabled: Boo
 }
 
 @Composable
-private fun PrimaryButtonRow(enabled: Boolean, onClicked: () -> Unit, content: @Composable (RowScope.() -> Unit)) {
+private fun PrimaryButtonRow(
+    modifier: Modifier,
+    enabled: Boolean,
+    onClicked: () -> Unit,
+    content: @Composable (RowScope.() -> Unit),
+) {
     Button(
         onClick = onClicked,
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(dimensionResource(R.dimen.size48)),
         enabled = enabled,
