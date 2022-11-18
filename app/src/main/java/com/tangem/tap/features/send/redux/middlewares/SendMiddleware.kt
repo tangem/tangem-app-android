@@ -17,9 +17,9 @@ import com.tangem.common.services.Result
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
-import com.tangem.tap.common.analytics.AnalyticsAnOld
-import com.tangem.tap.common.analytics.AnalyticsEventAnOld
-import com.tangem.tap.common.analytics.AnalyticsParamAnOld
+import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.AnalyticsParam
+import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -219,13 +219,10 @@ private fun sendTransaction(
             dispatch(SendAction.ChangeSendButtonState(ButtonState.ENABLED))
             tangemSdk.config.linkedTerminal = isLinkedTerminal
 
+            val currencyType = AnalyticsParam.CurrencyType.Amount(amountToSend)
             when (sendResult) {
                 is SimpleResult.Success -> {
-                    store.state.globalState.analyticsHandler?.handleAnalyticsEvent(
-                        event = AnalyticsEventAnOld.TRANSACTION_IS_SENT,
-                        card = card,
-                        blockchain = walletManager.wallet.blockchain.currency,
-                    )
+                    Analytics.send(Token.Send.TransactionSent(currencyType))
                     dispatch(SendAction.SendSuccess)
 
                     if (externalTransactionData != null) {
@@ -250,14 +247,9 @@ private fun sendTransaction(
                         feeAmount = feeAmount,
                         destinationAddress = destinationAddress,
                     )
-                    store.state.globalState.analyticsHandler?.handleBlockchainSdkErrorEvent(
-                        error = sendResult.error,
-                        action = AnalyticsAnOld.ActionToLog.SendTransaction,
-                        params = mapOf(AnalyticsParamAnOld.BLOCKCHAIN to walletManager.wallet.blockchain.currency),
-                        card = card,
-                    )
-
                     val error = (sendResult.error as? BlockchainSdkError) ?: return@withMainContext
+
+                    Analytics.send(Token.Send.TransactionSent(currencyType, error))
 
                     when (error) {
                         is BlockchainSdkError.WrappedTangemError -> {
