@@ -20,6 +20,8 @@ import com.tangem.domain.redux.domainStore
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.assetReader
+import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.ManageTokens
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
@@ -51,6 +53,7 @@ class TokensMiddleware {
                         handleAddingCustomToken(action)
                     }
                     is TokensAction.SetSearchInput -> {
+                        Analytics.send(ManageTokens.TokenSearched())
                         handleLoadCurrencies(
                             scanResponse = store.state.globalState.scanResponse,
                             newSearchInput = action.searchInput
@@ -335,6 +338,7 @@ class TokensMiddleware {
                 store.dispatchOnMain(NavigationAction.PopBackTo())
             }
 
+            Analytics.send(ManageTokens.CustomToken.TokenWasAdded(customCurrency))
             val currency = Currency.fromCustomCurrency(customCurrency)
             val isNeedToDerive = isNeedToDerive(scanResponse, currency)
             val currencyList = listOf(currency)
