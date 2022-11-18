@@ -73,7 +73,7 @@ class ScanProductTask(
                             // it need because processorResult.data.card doesn't contains attestation result
                             // and CardWallet.derivedKeys
                             val processorScanResponseWithNewCard = processorResult.data.copy(
-                                card = scanTaskResult.data
+                                card = scanTaskResult.data,
                             )
                             callback(CompletionResult.Success(processorScanResponseWithNewCard))
                         }
@@ -96,7 +96,7 @@ private class ScanNoteProcessor : ProductCommandProcessor<ScanResponse> {
     override fun proceed(
         card: Card,
         session: CardSession,
-        callback: (result: CompletionResult<ScanResponse>) -> Unit
+        callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
         callback(
             CompletionResult.Success(
@@ -145,7 +145,7 @@ private class ScanWalletProcessor(
                 is CompletionResult.Success -> {
                     PreflightReadTask(
                         readMode = PreflightReadMode.FullCardRead,
-                        cardId = card.cardId
+                        cardId = card.cardId,
                     ).run(session) { readResult ->
                         when (readResult) {
                             is CompletionResult.Success -> startLinkingForBackupIfNeeded(card, session, callback)
@@ -157,14 +157,17 @@ private class ScanWalletProcessor(
             }
         }
     }
+
     private fun startLinkingForBackupIfNeeded(
         card: Card,
         session: CardSession,
         callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
-        val activationIsFinished = preferencesStorage.usedCardsPrefStorage.isActivationFinished(card.cardId)
+        val activationInProgress = preferencesStorage.usedCardsPrefStorage.isActivationInProgress(card.cardId)
 
-        if (card.backupStatus == Card.BackupStatus.NoBackup && !activationIsFinished && card.wallets.isNotEmpty()) {
+        if ((card.backupStatus == Card.BackupStatus.NoBackup && card.wallets.isNotEmpty())
+            && (activationInProgress || card.isSaltPay)
+        ) {
             StartPrimaryCardLinkingTask().run(session) { linkingResult ->
                 when (linkingResult) {
                     is CompletionResult.Success -> {
@@ -180,6 +183,7 @@ private class ScanWalletProcessor(
             deriveKeysIfNeeded(card, session, callback)
         }
     }
+
     private fun deriveKeysIfNeeded(
         card: Card,
         session: CardSession,
@@ -251,7 +255,7 @@ private class ScanWalletProcessor(
                     Blockchain.RSK,
                     Blockchain.Fantom, Blockchain.FantomTestnet,
                     Blockchain.Avalanche, Blockchain.AvalancheTestnet,
-                ).map { BlockchainNetwork(it, card) }
+                ).map { BlockchainNetwork(it, card) },
             )
         }
         return blockchainsToDerive.distinct()
