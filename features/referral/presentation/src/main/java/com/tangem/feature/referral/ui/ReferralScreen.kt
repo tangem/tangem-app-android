@@ -14,7 +14,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
@@ -167,7 +169,8 @@ fun ReferralScreen(stateHolder: ReferralStateHolder) {
     Column(
         modifier = Modifier
             .background(color = MaterialTheme.colors.primary)
-            .fillMaxSize(),
+            .fillMaxSize()
+            .verticalScroll(rememberScrollState()),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Header(stateHolder = stateHolder)
@@ -201,18 +204,20 @@ private fun ColumnScope.Header(stateHolder: ReferralStateHolder) {
 @Composable
 fun ReferralInfo(stateHolder: ReferralStateHolder) {
     when (val state = stateHolder.referralInfoState) {
-        is ReferralInfoState.ParticipantContent,
+        is ReferralInfoState.ParticipantContent -> {
+            Conditions(state = state)
+            VerticalSpacer(spaceResId = R.dimen.spacing44)
+            ParticipantBottomBlock(state = state)
+        }
         is ReferralInfoState.NonParticipantContent -> {
-            Column(verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing32))) {
-                ConditionForYou(state = state as ReferralStateHolder.ReferralInfoContentState)
-                ConditionForYourFriend(state = state)
-            }
+            Conditions(state = state)
+            VerticalSpacer(spaceResId = R.dimen.spacing24)
+            NonParticipantBottomBlock(state = state)
         }
         is ReferralInfoState.Loading -> {
-            Column(verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing32))) {
-                LoadingCondition(iconResId = R.drawable.ic_tether)
-                LoadingCondition(iconResId = R.drawable.ic_discount)
-            }
+            LoadingCondition(iconResId = R.drawable.ic_tether)
+            VerticalSpacer(spaceResId = R.dimen.spacing32)
+            LoadingCondition(iconResId = R.drawable.ic_discount)
         }
     }
 }
@@ -223,6 +228,13 @@ private fun AppBar(stateHolder: ReferralStateHolder) {
         text = stringResource(R.string.details_referral_title),
         onBackClick = stateHolder.headerState.onBackClicked,
     )
+}
+
+@Composable
+private fun Conditions(state: ReferralStateHolder.ReferralInfoContentState) {
+    ConditionForYou(state = state)
+    VerticalSpacer(spaceResId = R.dimen.spacing32)
+    ConditionForYourFriend(state = state)
 }
 
 @Composable
@@ -248,7 +260,7 @@ private fun ConditionForYourFriend(state: ReferralStateHolder.ReferralInfoConten
 @Composable
 private fun LoadingCondition(@DrawableRes iconResId: Int) {
     Condition(iconResId = iconResId) {
-        ShimmerCondition()
+        ShimmerInfo()
     }
 }
 
@@ -335,7 +347,7 @@ private fun ConditionInfo(title: String, subtitleContent: @Composable () -> Unit
 }
 
 @Composable
-private fun ShimmerCondition() {
+private fun ShimmerInfo() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -358,5 +370,24 @@ private fun ShimmerCondition() {
                 .background(White),
         )
     }
+}
+
+@Composable
+private fun ParticipantBottomBlock(state: ReferralInfoState.ParticipantContent) {
+    ParticipateBottomBlock(
+        onAgreementClicked = state.onAgreementClicked,
+        onParticipateClicked = state.onParticipateClicked,
+    )
+}
+
+@Composable
+private fun NonParticipantBottomBlock(state: ReferralInfoState.NonParticipantContent) {
+    NonParticipateBottomBlock(
+        purchasedWalletCount = state.purchasedWalletCount,
+        code = state.code,
+        onCopyClicked = state.onCopyClicked,
+        onShareClicked = state.onShareClicked,
+        onAgreementClicked = state.onAgreementClicked,
+    )
 }
 
