@@ -1,5 +1,6 @@
 package com.tangem.tap.features.onboarding.products.wallet.redux
 
+import android.net.Uri
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.ifNotNull
@@ -100,11 +101,11 @@ private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch:
         }
         is OnboardingWalletAction.LoadArtwork -> {
             scope.launch {
-                val artwork = onboardingManager?.loadArtworkUrl()
-                val cardArtwork = if (artwork == Artwork.DEFAULT_IMG_URL) {
-                    null
-                } else {
-                    artwork
+                val cardArtwork = when (onboardingManager) {
+                    null -> action.cardArtworkUriForUnfinishedBackup
+                    else -> onboardingManager.loadArtworkUrl()
+                        .takeIf { it != Artwork.DEFAULT_IMG_URL }
+                        ?.let { Uri.parse(it) }
                 }
                 store.dispatchOnMain(OnboardingWalletAction.SetArtworkUrl(cardArtwork))
             }
