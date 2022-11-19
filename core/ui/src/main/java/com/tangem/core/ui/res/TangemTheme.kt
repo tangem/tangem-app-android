@@ -4,6 +4,8 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.darkColors
 import androidx.compose.material.lightColors
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
+import com.google.accompanist.systemuicontroller.rememberSystemUiController
 
 internal val isSystemInDarkTheme: Boolean = false // TODO: use isSystemInDarkTheme() for automatic color detection
 
@@ -12,6 +14,11 @@ fun TangemTheme(
     isDarkTheme: Boolean = isSystemInDarkTheme,
     content: @Composable () -> Unit,
 ) {
+    val systemUiController = rememberSystemUiController()
+    SideEffect {
+        systemUiController.setSystemBarsColor(color = if (isDarkTheme) Black else Light1, darkIcons = !isDarkTheme)
+    }
+
     MaterialTheme(
         colors = if (isDarkTheme) DarkColors else LightColors,
         typography = TangemTypography,
