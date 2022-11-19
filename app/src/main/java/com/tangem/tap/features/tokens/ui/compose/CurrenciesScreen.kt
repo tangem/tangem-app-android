@@ -8,8 +8,16 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.*
-import androidx.compose.runtime.*
+import androidx.compose.material.CircularProgressIndicator
+import androidx.compose.material.ExtendedFloatingActionButton
+import androidx.compose.material.FabPosition
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -20,6 +28,9 @@ import androidx.compose.ui.unit.dp
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
 import com.tangem.domain.common.extensions.fromNetworkId
+import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.AnalyticsParam
+import com.tangem.tap.common.analytics.events.ManageTokens
 import com.tangem.tap.common.compose.Keyboard
 import com.tangem.tap.common.compose.extensions.addAndNotify
 import com.tangem.tap.common.compose.extensions.removeAndNotify
@@ -41,7 +52,7 @@ fun CurrenciesScreen(
     tokensState: MutableState<TokensState> = mutableStateOf(store.state.tokensState),
     onSaveChanges: (List<TokenWithBlockchain>, List<Blockchain>) -> Unit,
     onNetworkItemClicked: (ContractAddress) -> Unit,
-    onLoadMore: () -> Unit
+    onLoadMore: () -> Unit,
 ) {
     val tokensAddedOnMainScreen = remember { tokensState.value.addedTokens }
     val blockchainsAddedOnMainScreen = remember { tokensState.value.addedBlockchains }
@@ -82,21 +93,21 @@ fun CurrenciesScreen(
         AnimatedVisibility(
             visible = tokensState.value.loadCoinsState == LoadCoinsState.LOADING,
             enter = fadeIn(),
-            exit = fadeOut()
+            exit = fadeOut(),
         ) {
             Box(
                 contentAlignment = Alignment.Center,
-                modifier = Modifier.fillMaxSize()
+                modifier = Modifier.fillMaxSize(),
             ) {
                 CircularProgressIndicator(
-                    color = Color(0xFF1ACE80)
+                    color = Color(0xFF1ACE80),
                 )
             }
         }
         AnimatedVisibility(
             visible = tokensState.value.loadCoinsState == LoadCoinsState.LOADED,
             enter = fadeIn(animationSpec = tween(1000)),
-            exit = fadeOut(animationSpec = tween(1000))
+            exit = fadeOut(animationSpec = tween(1000)),
         ) {
             Column {
                 val showHeader = tokensState.value.scanResponse?.card?.useOldStyleDerivation == true
@@ -110,7 +121,7 @@ fun CurrenciesScreen(
                         onAddCurrencyToggleClick(currency, token)
                     },
                     onNetworkItemClicked = onNetworkItemClicked,
-                    onLoadMore = onLoadMore
+                    onLoadMore = onLoadMore,
                 )
             }
         }
@@ -122,29 +133,39 @@ private fun toggleBlockchain(
     blockchain: Blockchain,
     blockchainsAddedOnMainScreen: List<Blockchain>,
     addedBlockchainsState: MutableState<List<Blockchain>>,
-    addedTokens: List<TokenWithBlockchain>
+    addedTokens: List<TokenWithBlockchain>,
 ) {
     val isTryingToRemove = addedBlockchainsState.value.contains(blockchain)
     val isAddedOnMainScreen = blockchainsAddedOnMainScreen.contains(blockchain)
     val isTokenWithSameBlockchainFound = addedTokens.any { it.blockchain == blockchain }
+    val analyticsCurrencyTypeParam = AnalyticsParam.CurrencyType.Blockchain(blockchain)
 
     if (isTryingToRemove) {
         if (isTokenWithSameBlockchainFound) {
-            store.dispatchDialogShow(WalletDialog.TokensAreLinkedDialog(
-                currencyTitle = blockchain.name,
-                currencySymbol = blockchain.currency
-            ))
+            store.dispatchDialogShow(
+                WalletDialog.TokensAreLinkedDialog(
+                    currencyTitle = blockchain.name,
+                    currencySymbol = blockchain.currency,
+                ),
+            )
         } else {
             if (isAddedOnMainScreen) {
-                store.dispatchDialogShow(WalletDialog.RemoveWalletDialog(
-                    currencyTitle = blockchain.name,
-                    onOk = { addedBlockchainsState.removeAndNotify(blockchain) }
-                ))
+                store.dispatchDialogShow(
+                    WalletDialog.RemoveWalletDialog(
+                        currencyTitle = blockchain.name,
+                        onOk = {
+                            analyticsCurrencyTypeParam.sendOn()
+                            addedBlockchainsState.removeAndNotify(blockchain)
+                        },
+                    ),
+                )
             } else {
+                analyticsCurrencyTypeParam.sendOff()
                 addedBlockchainsState.removeAndNotify(blockchain)
             }
         }
     } else {
+        analyticsCurrencyTypeParam.sendOn()
         addedBlockchainsState.addAndNotify(blockchain)
     }
 }
@@ -158,26 +179,44 @@ private fun toggleToken(
     val isTryingToRemove = addedTokensState.value.contains(token)
     val isAddedOnMainScreen = tokensAddedOnMainScreen.contains(token)
     val isUnsupportedToken = !tokensState.canHandleToken(token)
+    val analyticsCurrencyTypeParam = AnalyticsParam.CurrencyType.Token(token.token)
 
     if (isTryingToRemove) {
         if (isAddedOnMainScreen) {
-            store.dispatchDialogShow(WalletDialog.RemoveWalletDialog(
-                currencyTitle = token.token.name,
-                onOk = { addedTokensState.removeAndNotify(token) }
-            ))
+            store.dispatchDialogShow(
+                WalletDialog.RemoveWalletDialog(
+                    currencyTitle = token.token.name,
+                    onOk = {
+                        analyticsCurrencyTypeParam.sendOff()
+                        addedTokensState.removeAndNotify(token)
+                    },
+                ),
+            )
         } else {
+            analyticsCurrencyTypeParam.sendOff()
             addedTokensState.removeAndNotify(token)
         }
     } else {
         if (isUnsupportedToken) {
-            store.dispatchDialogShow(AppDialog.SimpleOkDialogRes(
-                headerId = R.string.common_warning,
-                messageId = R.string.alert_manage_tokens_unsupported_message,
-            ))
+            store.dispatchDialogShow(
+                AppDialog.SimpleOkDialogRes(
+                    headerId = R.string.common_warning,
+                    messageId = R.string.alert_manage_tokens_unsupported_message,
+                ),
+            )
         } else {
+            analyticsCurrencyTypeParam.sendOn()
             addedTokensState.addAndNotify(token)
         }
     }
+}
+
+private fun AnalyticsParam.CurrencyType.sendOn() {
+    Analytics.send(ManageTokens.TokenSwitcherChanged(this, AnalyticsParam.OnOffState.On))
+}
+
+private fun AnalyticsParam.CurrencyType.sendOff() {
+    Analytics.send(ManageTokens.TokenSwitcherChanged(this, AnalyticsParam.OnOffState.Off))
 }
 
 @Composable
@@ -198,6 +237,6 @@ fun SaveChangesButton(keyboardState: Keyboard, onSaveChanges: () -> Unit) {
         onClick = onSaveChanges,
         backgroundColor = colorResource(id = R.color.accent),
         contentColor = Color.White,
-        modifier = Modifier.padding(bottom = padding.dp)
+        modifier = Modifier.padding(bottom = padding.dp),
     )
 }
