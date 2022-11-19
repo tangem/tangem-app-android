@@ -19,10 +19,14 @@
     <!-- endregion Radius -->
 
     <!--  region Size  -->
+    <dimen name="size0">0dp</dimen>
+    <dimen name="size4">4dp</dimen>
     <dimen name="size11">11dp</dimen>
     <dimen name="size16">16dp</dimen>
+    <dimen name="size20">20dp</dimen>
     <dimen name="size24">24dp</dimen>
     <dimen name="size28">28dp</dimen>
+    <dimen name="size32">32dp</dimen>
     <dimen name="size40">40dp</dimen>
     <dimen name="size48">48dp</dimen>
     <dimen name="size56">56dp</dimen>
@@ -45,5 +49,6 @@
     <dimen name="spacing44">44dp</dimen>
     <dimen name="spacing50">50dp</dimen>
     <dimen name="spacing54">54dp</dimen>
+    <dimen name="radius2">2dp</dimen>
     <!--  endregion Spacing  -->
 </resources>
