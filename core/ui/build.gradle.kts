@@ -35,4 +35,7 @@ dependencies {
     implementation(Compose.foundation)
     implementation(Compose.material)
     implementation(Compose.uiTooling)
+
+    /** Other libraries */
+    implementation(Library.accompanistSystemUiController)
 }
