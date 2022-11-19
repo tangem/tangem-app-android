@@ -4,6 +4,7 @@ data class ReferralStateHolder(
     val headerState: HeaderState,
     val referralInfoState: ReferralInfoState,
     val effects: Effects,
+    val agreementBottomSheetState: AgreementBottomSheetState
 ) {
 
     data class HeaderState(val onBackClicked: () -> Unit)
@@ -16,7 +17,6 @@ data class ReferralStateHolder(
             val award: String,
             val address: String,
             val discount: String,
-            val onAgreementClicked: () -> Unit,
             val onParticipateClicked: () -> Unit,
         ) : ReferralInfoState, ReferralInfoContentState
 
@@ -27,11 +27,12 @@ data class ReferralStateHolder(
             val code: String,
             val onCopyClicked: () -> Unit,
             val onShareClicked: () -> Unit,
-            val onAgreementClicked: () -> Unit,
         ) : ReferralInfoState, ReferralInfoContentState
 
         object Loading : ReferralInfoState
     }
 
     data class Effects(val showErrorToast: Boolean)
+
+    data class AgreementBottomSheetState(val url: String)
 }
