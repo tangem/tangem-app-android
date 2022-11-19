@@ -111,6 +111,7 @@ dependencies {
     implementation(project(":common"))
     implementation(project(":core:ui"))
     implementation(project(":libs:crypto"))
+    implementation(project(":features:referral:presentation"))
 
     /** AndroidX libraries */
     implementation(AndroidX.coreKtx)
@@ -144,7 +145,7 @@ dependencies {
 
     /** DI */
     implementation(Library.hilt)
-    implementation(Library.hiltKapt)
+    kapt(Library.hiltKapt)
 
     /** Other libraries */
     implementation(Library.materialComponent)
