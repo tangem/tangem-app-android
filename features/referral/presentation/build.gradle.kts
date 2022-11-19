@@ -34,6 +34,9 @@ dependencies {
     /** Core modules */
     implementation(project(":core:ui"))
 
+    /** AndroidX */
+    implementation(AndroidX.appCompat)
+
     /** Compose */
     implementation(Compose.foundation)
     implementation(Compose.material)
