@@ -4,6 +4,8 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CompletionResult
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
+import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.onCardScanned
 import com.tangem.tap.common.postUi
 import com.tangem.tap.common.redux.AppState
@@ -45,6 +47,11 @@ private fun handleOtherCardsAction(action: Action, dispatch: DispatchFunction) {
     val card = onboardingManager.scanResponse.card
 
     when (action) {
+        is OnboardingOtherCardsAction.Init -> {
+            if (!onboardingManager.isActivationStarted(card.cardId)) {
+                Analytics.send(Onboarding.Started())
+            }
+        }
         is OnboardingOtherCardsAction.LoadCardArtwork -> {
             scope.launch {
                 val artworkUrl = onboardingManager.loadArtworkUrl()
@@ -59,9 +66,15 @@ private fun handleOtherCardsAction(action: Action, dispatch: DispatchFunction) {
             store.dispatch((OnboardingOtherCardsAction.SetStepOfScreen(step)))
         }
         is OnboardingOtherCardsAction.SetStepOfScreen -> {
-            if (action.step == OnboardingOtherCardsStep.Done) {
-                onboardingManager.activationFinished(card.cardId)
-                postUi(200) { store.dispatch(OnboardingOtherCardsAction.Confetti.Show) }
+            when (action.step) {
+                OnboardingOtherCardsStep.CreateWallet -> {
+                    Analytics.send(Onboarding.CreateWallet.ScreenOpened())
+                }
+                OnboardingOtherCardsStep.Done -> {
+                    Analytics.send(Onboarding.Finished())
+                    onboardingManager.activationFinished(card.cardId)
+                    postUi(200) { store.dispatch(OnboardingOtherCardsAction.Confetti.Show) }
+                }
             }
         }
         is OnboardingOtherCardsAction.CreateWallet -> {
@@ -70,8 +83,9 @@ private fun handleOtherCardsAction(action: Action, dispatch: DispatchFunction) {
                 withMainContext {
                     when (result) {
                         is CompletionResult.Success -> {
+                            Analytics.send(Onboarding.CreateWallet.WalletCreatedSuccessfully())
                             val updatedResponse = onboardingManager.scanResponse.copy(
-                                card = result.data.card
+                                card = result.data.card,
                             )
                             onboardingManager.scanResponse = updatedResponse
                             onboardingManager.activationStarted(updatedResponse.card.cardId)
