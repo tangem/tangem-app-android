@@ -153,7 +153,7 @@ class DialogManager : StoreSubscriber<GlobalState> {
                 primaryButtonAction = state.dialog.onOk,
             )
             is WalletDialog.RussianCardholdersWarningDialog ->
-                RussianCardholdersWarningBottomSheetDialog(context, state.dialog.topUpUrl)
+                RussianCardholdersWarningBottomSheetDialog(context, state.dialog.data)
             else -> null
         }
         dialog?.show()
