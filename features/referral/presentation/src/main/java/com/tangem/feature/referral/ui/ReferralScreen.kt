@@ -17,10 +17,16 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.BottomSheetScaffold
+import androidx.compose.material.BottomSheetState
+import androidx.compose.material.BottomSheetValue
+import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
+import androidx.compose.material.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,8 +38,8 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
-import com.tangem.core.ui.components.AppBarWithBackButton
 import com.tangem.core.ui.components.VerticalSpacer
+import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.res.ButtonColorType
 import com.tangem.core.ui.res.IconColorType
 import com.tangem.core.ui.res.TangemTheme
@@ -46,126 +52,51 @@ import com.tangem.feature.referral.models.ReferralStateHolder
 import com.tangem.feature.referral.models.ReferralStateHolder.ReferralInfoState
 import com.tangem.feature.referral.presentation.R
 import com.valentinilk.shimmer.shimmer
-
-@Preview(widthDp = 360, showBackground = true)
-@Composable
-fun Preview_ReferralScreen_Participant_InLightTheme() {
-    TangemTheme(isDarkTheme = false) {
-        ReferralScreen(
-            stateHolder = ReferralStateHolder(
-                headerState = ReferralStateHolder.HeaderState(onBackClicked = {}),
-                referralInfoState = ReferralInfoState.ParticipantContent(
-                    award = "10 USDT",
-                    address = "ma80...zk8q2",
-                    discount = "10%",
-                    onAgreementClicked = {},
-                    onParticipateClicked = {},
-                ),
-                effects = ReferralStateHolder.Effects(showErrorToast = false),
-            ),
-        )
-    }
-}
-
-@Preview(widthDp = 360, showBackground = true)
-@Composable
-fun Preview_ReferralScreen_Participant_InDarkTheme() {
-    TangemTheme(isDarkTheme = true) {
-        ReferralScreen(
-            stateHolder = ReferralStateHolder(
-                headerState = ReferralStateHolder.HeaderState(onBackClicked = {}),
-                referralInfoState = ReferralInfoState.ParticipantContent(
-                    award = "10 USDT",
-                    address = "ma80...zk8q2",
-                    discount = "10%",
-                    onAgreementClicked = {},
-                    onParticipateClicked = {},
-                ),
-                effects = ReferralStateHolder.Effects(showErrorToast = false),
-            ),
-        )
-    }
-}
-
-@Preview(widthDp = 360, showBackground = true)
-@Composable
-fun Preview_ReferralScreen_NonParticipant_InLightTheme() {
-    TangemTheme(isDarkTheme = false) {
-        ReferralScreen(
-            stateHolder = ReferralStateHolder(
-                headerState = ReferralStateHolder.HeaderState(onBackClicked = {}),
-                referralInfoState = ReferralInfoState.NonParticipantContent(
-                    award = "10 USDT",
-                    discount = "10%",
-                    purchasedWalletCount = 3,
-                    code = "x4JdK",
-                    onCopyClicked = {},
-                    onShareClicked = {},
-                    onAgreementClicked = {},
-                ),
-                effects = ReferralStateHolder.Effects(showErrorToast = false),
-            ),
-        )
-    }
-}
-
-@Preview(widthDp = 360, showBackground = true)
-@Composable
-fun Preview_ReferralScreen_NonParticipant_InDarkTheme() {
-    TangemTheme(isDarkTheme = true) {
-        ReferralScreen(
-            stateHolder = ReferralStateHolder(
-                headerState = ReferralStateHolder.HeaderState(onBackClicked = {}),
-                referralInfoState = ReferralInfoState.NonParticipantContent(
-                    award = "10 USDT",
-                    discount = "10%",
-                    purchasedWalletCount = 3,
-                    code = "x4JdK",
-                    onCopyClicked = {},
-                    onShareClicked = {},
-                    onAgreementClicked = {},
-                ),
-                effects = ReferralStateHolder.Effects(showErrorToast = false),
-            ),
-        )
-    }
-}
-
-@Preview(widthDp = 360, showBackground = true)
-@Composable
-fun Preview_ReferralScreen_Loading_InLightTheme() {
-    TangemTheme(isDarkTheme = false) {
-        ReferralScreen(
-            stateHolder = ReferralStateHolder(
-                headerState = ReferralStateHolder.HeaderState(onBackClicked = {}),
-                referralInfoState = ReferralInfoState.Loading,
-                effects = ReferralStateHolder.Effects(showErrorToast = false),
-            ),
-        )
-    }
-}
-
-@Preview(widthDp = 360, showBackground = true)
-@Composable
-fun Preview_ReferralScreen_Loading_InDarkTheme() {
-    TangemTheme(isDarkTheme = true) {
-        ReferralScreen(
-            stateHolder = ReferralStateHolder(
-                headerState = ReferralStateHolder.HeaderState(onBackClicked = {}),
-                referralInfoState = ReferralInfoState.Loading,
-                effects = ReferralStateHolder.Effects(showErrorToast = false),
-            ),
-        )
-    }
-}
+import kotlinx.coroutines.launch
 
 /**
  * Referral program screen for participant and non-participant
  *
  * @param stateHolder state holder
  */
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun ReferralScreen(stateHolder: ReferralStateHolder) {
+    val coroutineScope = rememberCoroutineScope()
+    val bottomSheetScaffoldState = rememberBottomSheetScaffoldState(
+        bottomSheetState = BottomSheetState(BottomSheetValue.Collapsed),
+    )
+
+    TangemTheme {
+        BottomSheetScaffold(
+            sheetContent = { AgreementBottomSheetContent(stateHolder.agreementBottomSheetState.url) },
+            scaffoldState = bottomSheetScaffoldState,
+            sheetShape = RoundedCornerShape(
+                topStart = dimensionResource(id = R.dimen.radius16),
+                topEnd = dimensionResource(id = R.dimen.radius16),
+            ),
+            sheetElevation = dimensionResource(id = R.dimen.elevation24),
+            sheetPeekHeight = dimensionResource(id = R.dimen.size0),
+            content = {
+                ReferralContent(
+                    stateHolder = stateHolder,
+                    onAgreementClicked = {
+                        coroutineScope.launch {
+                            if (bottomSheetScaffoldState.bottomSheetState.isCollapsed) {
+                                bottomSheetScaffoldState.bottomSheetState.expand()
+                            } else {
+                                bottomSheetScaffoldState.bottomSheetState.collapse()
+                            }
+                        }
+                    },
+                )
+            },
+        )
+    }
+}
+
+@Composable
+fun ReferralContent(stateHolder: ReferralStateHolder, onAgreementClicked: () -> Unit) {
     Column(
         modifier = Modifier
             .background(color = MaterialTheme.colors.primary)
@@ -175,7 +106,7 @@ fun ReferralScreen(stateHolder: ReferralStateHolder) {
     ) {
         Header(stateHolder = stateHolder)
         VerticalSpacer(spaceResId = R.dimen.spacing16)
-        ReferralInfo(stateHolder = stateHolder)
+        ReferralInfo(stateHolder = stateHolder, onAgreementClicked = onAgreementClicked)
     }
 }
 
@@ -202,17 +133,17 @@ private fun ColumnScope.Header(stateHolder: ReferralStateHolder) {
 }
 
 @Composable
-fun ReferralInfo(stateHolder: ReferralStateHolder) {
+fun ReferralInfo(stateHolder: ReferralStateHolder, onAgreementClicked: () -> Unit) {
     when (val state = stateHolder.referralInfoState) {
         is ReferralInfoState.ParticipantContent -> {
             Conditions(state = state)
             VerticalSpacer(spaceResId = R.dimen.spacing44)
-            ParticipantBottomBlock(state = state)
+            ParticipantBottomBlock(state = state, onAgreementClicked = onAgreementClicked)
         }
         is ReferralInfoState.NonParticipantContent -> {
             Conditions(state = state)
             VerticalSpacer(spaceResId = R.dimen.spacing24)
-            NonParticipantBottomBlock(state = state)
+            NonParticipantBottomBlock(state = state, onAgreementClicked = onAgreementClicked)
         }
         is ReferralInfoState.Loading -> {
             LoadingCondition(iconResId = R.drawable.ic_tether)
@@ -373,21 +304,150 @@ private fun ShimmerInfo() {
 }
 
 @Composable
-private fun ParticipantBottomBlock(state: ReferralInfoState.ParticipantContent) {
+private fun ParticipantBottomBlock(state: ReferralInfoState.ParticipantContent, onAgreementClicked: () -> Unit) {
     ParticipateBottomBlock(
-        onAgreementClicked = state.onAgreementClicked,
+        onAgreementClicked = onAgreementClicked,
         onParticipateClicked = state.onParticipateClicked,
     )
 }
 
 @Composable
-private fun NonParticipantBottomBlock(state: ReferralInfoState.NonParticipantContent) {
+private fun NonParticipantBottomBlock(state: ReferralInfoState.NonParticipantContent, onAgreementClicked: () -> Unit) {
     NonParticipateBottomBlock(
         purchasedWalletCount = state.purchasedWalletCount,
         code = state.code,
         onCopyClicked = state.onCopyClicked,
         onShareClicked = state.onShareClicked,
-        onAgreementClicked = state.onAgreementClicked,
+        onAgreementClicked = onAgreementClicked,
     )
+}
+
+@Preview(widthDp = 360, showBackground = true)
+@Composable
+fun Preview_ReferralScreen_Participant_InLightTheme() {
+    TangemTheme(isDarkTheme = false) {
+        ReferralScreen(
+            stateHolder = ReferralStateHolder(
+                headerState = ReferralStateHolder.HeaderState(onBackClicked = {}),
+                referralInfoState = ReferralInfoState.ParticipantContent(
+                    award = "10 USDT",
+                    address = "ma80...zk8q2",
+                    discount = "10%",
+                    onParticipateClicked = {},
+                ),
+                effects = ReferralStateHolder.Effects(showErrorToast = false),
+                agreementBottomSheetState = ReferralStateHolder.AgreementBottomSheetState(
+                    url = "",
+                ),
+            ),
+        )
+    }
+}
+
+@Preview(widthDp = 360, showBackground = true)
+@Composable
+fun Preview_ReferralScreen_Participant_InDarkTheme() {
+    TangemTheme(isDarkTheme = true) {
+        ReferralScreen(
+            stateHolder = ReferralStateHolder(
+                headerState = ReferralStateHolder.HeaderState(onBackClicked = {}),
+                referralInfoState = ReferralInfoState.ParticipantContent(
+                    award = "10 USDT",
+                    address = "ma80...zk8q2",
+                    discount = "10%",
+
+                    onParticipateClicked = {},
+                ),
+                effects = ReferralStateHolder.Effects(showErrorToast = false),
+                agreementBottomSheetState = ReferralStateHolder.AgreementBottomSheetState(
+                    url = "",
+                ),
+            ),
+        )
+    }
+}
+
+@Preview(widthDp = 360, showBackground = true)
+@Composable
+fun Preview_ReferralScreen_NonParticipant_InLightTheme() {
+    TangemTheme(isDarkTheme = false) {
+        ReferralScreen(
+            stateHolder = ReferralStateHolder(
+                headerState = ReferralStateHolder.HeaderState(onBackClicked = {}),
+                referralInfoState = ReferralInfoState.NonParticipantContent(
+                    award = "10 USDT",
+                    discount = "10%",
+                    purchasedWalletCount = 3,
+                    code = "x4JdK",
+                    onCopyClicked = {},
+                    onShareClicked = {},
+
+                    ),
+                effects = ReferralStateHolder.Effects(showErrorToast = false),
+                agreementBottomSheetState = ReferralStateHolder.AgreementBottomSheetState(
+                    url = "",
+                ),
+            ),
+        )
+    }
+}
+
+@Preview(widthDp = 360, showBackground = true)
+@Composable
+fun Preview_ReferralScreen_NonParticipant_InDarkTheme() {
+    TangemTheme(isDarkTheme = true) {
+        ReferralScreen(
+            stateHolder = ReferralStateHolder(
+                headerState = ReferralStateHolder.HeaderState(onBackClicked = {}),
+                referralInfoState = ReferralInfoState.NonParticipantContent(
+                    award = "10 USDT",
+                    discount = "10%",
+                    purchasedWalletCount = 3,
+                    code = "x4JdK",
+                    onCopyClicked = {},
+                    onShareClicked = {},
+
+                    ),
+                effects = ReferralStateHolder.Effects(showErrorToast = false),
+                agreementBottomSheetState = ReferralStateHolder.AgreementBottomSheetState(
+                    url = "",
+                ),
+            ),
+        )
+    }
+}
+
+@Preview(widthDp = 360, showBackground = true)
+@Composable
+fun Preview_ReferralScreen_Loading_InLightTheme() {
+    TangemTheme(isDarkTheme = false) {
+        ReferralScreen(
+            stateHolder = ReferralStateHolder(
+                headerState = ReferralStateHolder.HeaderState(onBackClicked = {}),
+                referralInfoState = ReferralInfoState.Loading,
+                effects = ReferralStateHolder.Effects(showErrorToast = false),
+                agreementBottomSheetState = ReferralStateHolder.AgreementBottomSheetState(
+                    url = "",
+                ),
+            ),
+        )
+    }
+}
+
+@Preview(widthDp = 360, showBackground = true)
+@Composable
+fun Preview_ReferralScreen_Loading_InDarkTheme() {
+    TangemTheme(isDarkTheme = true) {
+        ReferralScreen(
+            stateHolder = ReferralStateHolder(
+                headerState = ReferralStateHolder.HeaderState(onBackClicked = {}),
+                referralInfoState = ReferralInfoState.Loading,
+                effects = ReferralStateHolder.Effects(showErrorToast = false),
+                agreementBottomSheetState = ReferralStateHolder.AgreementBottomSheetState(
+                    url = "",
+                ),
+            ),
+        )
+    }
 }
 
