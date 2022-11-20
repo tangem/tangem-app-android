@@ -1,6 +1,8 @@
 plugins {
     id("com.android.library")
     kotlin("android")
+    kotlin("kapt")
+    id("com.google.dagger.hilt.android")
 }
 
 android {
@@ -42,6 +44,13 @@ dependencies {
     implementation(Compose.material)
     implementation(Compose.uiTooling)
 
+    /** Domain */
+    implementation(project(":features:referral:domain"))
+
     /** Other libraries */
     implementation(Library.composeShimmer)
+
+    /** DI */
+    implementation(Library.hilt)
+    kapt(Library.hiltKapt)
 }
