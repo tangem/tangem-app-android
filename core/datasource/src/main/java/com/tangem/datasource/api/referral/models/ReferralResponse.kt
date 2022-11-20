@@ -14,17 +14,26 @@ data class ReferralResponse(
 
 data class Conditions(
     @Json(name = "award") val award: Int,
-    @Json(name = "discount") val discount: Int,
-    @Json(name = "discountType") val discountType: DiscountType,
+    @Json(name = "discount") val discount: Discount,
+    @Json(name = "awards") val awards: List<Award>,
     @Json(name = "tosLink") val tosLink: String,
-    @Json(name = "tokens") val tokens: List<Token>,
+)
+
+data class Discount(
+    @Json(name = "amount") val amount: Int,
+    @Json(name = "discountType") val discountType: DiscountType,
+)
+
+data class Award(
+    @Json(name = "amount") val amount: Int,
+    @Json(name = "token") val token: Token,
 )
 
 data class Token(
     @Json(name = "id") val id: String,
     @Json(name = "name") val name: String,
     @Json(name = "symbol") val symbol: String,
-    @Json(name = "networkId") val networkId: String?,
+    @Json(name = "networkId") val networkId: String,
     @Json(name = "contractAddress") val contractAddress: String?,
     @Json(name = "decimalCount") val decimalCount: Int?,
 )
