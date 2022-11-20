@@ -8,15 +8,14 @@ import com.tangem.lib.crypto.DerivationManager
 import com.tangem.lib.crypto.models.Currency
 import com.tangem.lib.crypto.models.NonNativeToken
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
-import com.tangem.tap.features.tokens.redux.TokensMiddleware
 import kotlin.coroutines.suspendCoroutine
 
 class DerivationManagerImpl(
-    private val tokesMiddleware: TokensMiddleware,
     private val appStateHolder: AppStateHolder,
 ) : DerivationManager {
 
     override suspend fun deriveMissingBlockchains(currency: Currency) = suspendCoroutine<Boolean> { continuation ->
+        val tokesMiddleware = requireNotNull(appStateHolder.tokesMiddleware) { "tokesMiddleware is null" }
         val blockchain = Blockchain.fromNetworkId(currency.networkId)
         val card = appStateHolder.getActualCard()
         if (blockchain != null && card != null) {
