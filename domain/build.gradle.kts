@@ -75,9 +75,13 @@ dependencies {
     implementation(project(":common"))
 
     /** Tangem libraries */
-    implementation(Tangem.blockchain)
+    implementation(Tangem.blockchain) {
+        exclude(module = "joda-time")
+    }
     implementation(Tangem.cardCore)
-    implementation(Tangem.cardAndroid)
+    implementation(Tangem.cardAndroid) {
+        exclude(module = "joda-time")
+    }
 
     /** Other libraries */
     implementation(Library.reKotlin)

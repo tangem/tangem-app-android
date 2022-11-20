@@ -12,24 +12,21 @@ import com.tangem.lib.crypto.UserWalletManager
 import com.tangem.lib.crypto.models.Currency
 import com.tangem.lib.crypto.models.NativeToken
 import com.tangem.lib.crypto.models.NonNativeToken
-import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.extensions.getUserWalletId
 import com.tangem.tap.domain.extensions.makeWalletManagerForApp
-import com.tangem.tap.domain.tokens.UserTokensRepository
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.wallet.redux.WalletAction
 import org.rekotlin.Action
-import org.rekotlin.Store
 
 class UserWalletManagerImpl(
-    private val userTokensRepository: UserTokensRepository,
     private val appStateHolder: AppStateHolder,
-    private val mainStore: Store<AppState>,
     private val walletManagerFactory: WalletManagerFactory,
 ) : UserWalletManager {
 
     override suspend fun getUserTokens(): List<Currency> {
         val card = appStateHolder.getActualCard()
+        val userTokensRepository =
+            requireNotNull(appStateHolder.userTokensRepository) { "userTokensRepository is null" }
         if (card != null) {
             userTokensRepository.getUserTokens(card)
                 .filter { it.isToken() }
@@ -62,6 +59,8 @@ class UserWalletManagerImpl(
 
     override suspend fun isTokenAdded(currency: Currency): Boolean {
         val card = appStateHolder.getActualCard()
+        val userTokensRepository =
+            requireNotNull(appStateHolder.userTokensRepository) { "userTokensRepository is null" }
         if (card != null) {
             return userTokensRepository.getUserTokens(card)
                 .any { it.coinId.equals(currency.id) } //todo ensure that its the same ids
@@ -81,7 +80,7 @@ class UserWalletManagerImpl(
         } else {
             addNonNativeTokenToWalletAction(currency as NonNativeToken)
         }
-
+        val mainStore = requireNotNull(appStateHolder.mainStore) { "mainStore is null" }
         mainStore.dispatch(action)
     }
 
