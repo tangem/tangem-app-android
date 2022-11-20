@@ -18,10 +18,10 @@ class ReferralConverter @Inject constructor() : Converter<ReferralResponse, Refe
         return if (referral != null) {
             ReferralData.ParticipantData(
                 award = conditions.award,
-                discount = conditions.discount,
-                discountType = DiscountType.valueOf(conditions.discountType.name),
+                discount = conditions.discount.amount,
+                discountType = DiscountType.valueOf(conditions.discount.discountType.name),
                 tosLink = conditions.tosLink,
-                tokens = tokenConverter.convertList(conditions.tokens),
+                tokens = tokenConverter.convertList(conditions.awards.map { it.token }),
                 referral = ReferralInfo(
                     shareLink = referral.shareLink,
                     address = referral.address,
@@ -33,10 +33,10 @@ class ReferralConverter @Inject constructor() : Converter<ReferralResponse, Refe
         } else {
             ReferralData.NonParticipantData(
                 award = conditions.award,
-                discount = conditions.discount,
-                discountType = DiscountType.valueOf(conditions.discountType.name),
+                discount = conditions.discount.amount,
+                discountType = DiscountType.valueOf(conditions.discount.discountType.name),
                 tosLink = conditions.tosLink,
-                tokens = tokenConverter.convertList(conditions.tokens),
+                tokens = tokenConverter.convertList(conditions.awards.map { it.token }),
             )
         }
     }
