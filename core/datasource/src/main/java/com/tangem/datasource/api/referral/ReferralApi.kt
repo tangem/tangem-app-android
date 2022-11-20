@@ -10,7 +10,8 @@ import retrofit2.http.Query
 /**
  * Api for referral feature
  */
-interface ReferralApi {
+interface
+ReferralApi {
 
     /** Returns referral status by [walletId] */
     @GET("referral/{walletId}")
