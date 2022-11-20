@@ -111,7 +111,11 @@ dependencies {
     implementation(project(":common"))
     implementation(project(":core:ui"))
     implementation(project(":libs:crypto"))
+
+    /** Features */
     implementation(project(":features:referral:presentation"))
+    implementation(project(":features:referral:domain"))
+    implementation(project(":features:referral:data"))
 
     /** AndroidX libraries */
     implementation(AndroidX.coreKtx)
@@ -139,9 +143,13 @@ dependencies {
     implementation(Firebase.firebaseCrashlytics)
 
     /** Tangem libraries */
-    implementation(Tangem.blockchain)
+    implementation(Tangem.blockchain) {
+        exclude(module = "joda-time")
+    }
     implementation(Tangem.cardCore)
-    implementation(Tangem.cardAndroid)
+    implementation(Tangem.cardAndroid) {
+        exclude(module = "joda-time")
+    }
 
     /** DI */
     implementation(Library.hilt)
