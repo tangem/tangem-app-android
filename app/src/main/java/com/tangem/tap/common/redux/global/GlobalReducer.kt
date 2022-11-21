@@ -5,9 +5,10 @@ import com.tangem.domain.redux.global.DomainGlobalAction
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.onboarding.OnboardingManager
 import com.tangem.tap.preferencesStorage
+import com.tangem.tap.proxy.AppStateHolder
 import org.rekotlin.Action
 
-fun globalReducer(action: Action, state: AppState): GlobalState {
+fun globalReducer(action: Action, state: AppState, appStateHolder: AppStateHolder): GlobalState {
 
     if (action !is GlobalAction) return state.globalState
 
@@ -34,7 +35,8 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
         is GlobalAction.ScanFailsCounter.Reset -> {
             globalState.copy(scanCardFailsCounter = 0)
         }
-        is GlobalAction.SaveScanNoteResponse ->{
+        is GlobalAction.SaveScanNoteResponse -> {
+            appStateHolder.scanResponse = action.scanResponse
             domainStore.dispatch(DomainGlobalAction.SaveScanNoteResponse(action.scanResponse))
             globalState.copy(scanResponse = action.scanResponse)
         }
@@ -52,10 +54,13 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
             val card = globalState.scanResponse?.card ?: return globalState
             val wallet = card.wallet(action.walletPublicKey) ?: return globalState
 
-            val newCardInstance = card.updateWallet(wallet.copy(
-                totalSignedHashes = action.walletSignedHashes,
-                remainingSignatures = action.remainingSignatures
-            ))
+            val newCardInstance =
+                card.updateWallet(
+                    wallet.copy(
+                        totalSignedHashes = action.walletSignedHashes,
+                        remainingSignatures = action.remainingSignatures,
+                    ),
+                )
             globalState.copy(scanResponse = globalState.scanResponse.copy(card = newCardInstance))
         }
         is GlobalAction.SetFeedbackManager -> {
@@ -73,7 +78,7 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
         is GlobalAction.SetIfCardVerifiedOnline ->
             globalState.copy(cardVerifiedOnline = action.verified)
         is GlobalAction.FetchUserCountry.Success -> globalState.copy(
-            userCountryCode = action.countryCode
+            userCountryCode = action.countryCode,
         )
         else -> globalState
     }
