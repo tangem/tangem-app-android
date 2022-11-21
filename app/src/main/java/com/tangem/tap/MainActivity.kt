@@ -26,6 +26,7 @@ import com.tangem.tap.common.shop.GooglePayService.Companion.LOAD_PAYMENT_DATA_R
 import com.tangem.tap.common.shop.googlepay.GooglePayUtil.createPaymentsClient
 import com.tangem.tap.domain.TangemSdkManager
 import com.tangem.tap.features.shop.redux.ShopAction
+import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.ActivityMainBinding
 import dagger.hilt.android.AndroidEntryPoint
@@ -33,6 +34,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import java.lang.ref.WeakReference
+import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
 
 lateinit var tangemSdk: TangemSdk
@@ -51,6 +53,9 @@ val mainScope = CoroutineScope(mainCoroutineContext)
 @AndroidEntryPoint
 class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbackHolder {
 
+    @Inject
+    lateinit var appStateHolder: AppStateHolder
+
     private var snackbar: Snackbar? = null
     private val dialogManager = DialogManager()
     private val intentHandler = IntentHandler()
@@ -66,6 +71,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
         tangemSdk = TangemSdk.init(this, TangemSdkManager.config)
         tangemSdkManager = TangemSdkManager(tangemSdk, this)
+        appStateHolder.tangemSdkManager = tangemSdkManager
         backupService = BackupService.init(tangemSdk, this)
 
         store.dispatch(
