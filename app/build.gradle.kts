@@ -111,6 +111,7 @@ dependencies {
     implementation(project(":common"))
     implementation(project(":core:ui"))
     implementation(project(":libs:crypto"))
+    implementation(project(":libs:auth"))
 
     /** Features */
     implementation(project(":features:referral:presentation"))
