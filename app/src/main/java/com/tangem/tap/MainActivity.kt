@@ -30,6 +30,7 @@ import com.tangem.tap.domain.TangemSdkManager
 import com.tangem.tap.features.shop.redux.ShopAction
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.ActivityMainBinding
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -49,6 +50,7 @@ private val mainCoroutineContext: CoroutineContext
     get() = Job() + Dispatchers.Main + FeatureCoroutineExceptionHandler.create("mainScope")
 val mainScope = CoroutineScope(mainCoroutineContext)
 
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbackHolder {
 
     private var snackbar: Snackbar? = null
