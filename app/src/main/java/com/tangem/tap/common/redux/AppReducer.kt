@@ -14,20 +14,21 @@ import com.tangem.tap.features.send.redux.reducers.SendScreenReducer
 import com.tangem.tap.features.shop.redux.ShopReducer
 import com.tangem.tap.features.tokens.redux.TokensReducer
 import com.tangem.tap.features.wallet.redux.reducers.WalletReducer
+import com.tangem.tap.proxy.AppStateHolder
 import org.rekotlin.Action
 
-fun appReducer(action: Action, state: AppState?): AppState {
+fun appReducer(action: Action, state: AppState?, appStateHolder: AppStateHolder): AppState {
     requireNotNull(state)
     if (action is AppAction.RestoreState) return action.state
 
     return AppState(
         navigationState = NavigationReducer.reduce(action, state),
-        globalState = globalReducer(action, state),
+        globalState = globalReducer(action, state, appStateHolder),
         homeState = HomeReducer.reduce(action, state),
         onboardingNoteState = OnboardingNoteReducer.reduce(action, state),
         onboardingWalletState = OnboardingWalletReducer.reduce(action, state),
         onboardingOtherCardsState = OnboardingOtherCardsReducer.reduce(action, state),
-        walletState = WalletReducer.reduce(action, state),
+        walletState = WalletReducer.reduce(action, state, appStateHolder),
         twinCardsState = TwinCardsReducer.reduce(action, state),
         sendState = SendScreenReducer.reduce(action, state.sendState),
         detailsState = DetailsReducer.reduce(action, state),
