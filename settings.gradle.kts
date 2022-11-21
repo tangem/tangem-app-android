@@ -11,6 +11,7 @@ include(":core:ui")
 
 // region Libs modules
 include(":libs:crypto")
+include(":libs:auth")
 // endregion Libs modules
 
 // region Feature modules

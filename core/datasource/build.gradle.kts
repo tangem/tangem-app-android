@@ -25,6 +25,9 @@ android {
 
 dependencies {
 
+    /** Project */
+    implementation(project(":libs:auth"))
+
     /** DI */
     implementation(Library.hilt)
     kapt(Library.hiltKapt)
