@@ -184,7 +184,7 @@ class TokensMiddleware {
         }
     }
 
-    private fun deriveMissingBlockchains(
+    fun deriveMissingBlockchains(
         scanResponse: ScanResponse,
         currencyList: List<Currency>,
         onSuccess: (ScanResponse) -> Unit,
