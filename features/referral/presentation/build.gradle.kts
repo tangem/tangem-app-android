@@ -34,10 +34,13 @@ android {
 
 dependencies {
     /** Core modules */
+    implementation(project(":core:utils"))
     implementation(project(":core:ui"))
 
     /** AndroidX */
     implementation(AndroidX.appCompat)
+    implementation(AndroidX.fragmentKtx)
+    implementation(AndroidX.lifecycleViewModelKtx)
 
     /** Compose */
     implementation(Compose.foundation)
