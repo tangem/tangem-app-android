@@ -3,8 +3,8 @@ package com.tangem.tap.proxy
 import com.tangem.common.card.Card
 import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.redux.AppState
+import com.tangem.tap.domain.TangemSdkManager
 import com.tangem.tap.domain.tokens.UserTokensRepository
-import com.tangem.tap.features.tokens.redux.TokensMiddleware
 import com.tangem.tap.features.wallet.redux.WalletState
 import org.rekotlin.Store
 
@@ -14,11 +14,11 @@ import org.rekotlin.Store
  */
 class AppStateHolder {
 
-    val scanResponse: ScanResponse? = null
-    val walletState: WalletState? = null
-    val userTokensRepository: UserTokensRepository? = null
-    val mainStore: Store<AppState>? = null
-    val tokesMiddleware: TokensMiddleware? = null
+    var scanResponse: ScanResponse? = null
+    var walletState: WalletState? = null
+    var userTokensRepository: UserTokensRepository? = null
+    var mainStore: Store<AppState>? = null
+    var tangemSdkManager: TangemSdkManager? = null
 
     fun getActualCard(): Card? {
         return scanResponse?.card
