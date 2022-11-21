@@ -206,8 +206,6 @@
 
     <string name="wallet_balance_blockchain_unreachable_try_later" translatable="false">Blockchain is unreachable. Try later</string>
 
-    <string name="warning_button_ok" translatable="false">Ok, Got it!</string>
-
     <string name="onboarding_success" translatable="false">Success!</string>
     <string name="onboarding_getting_started" translatable="false">Getting started</string>
 
@@ -290,7 +288,6 @@
     <string name="details_row_title_reset_factory_settings" translatable="false">Reset to factory settings</string>
 
     <string name="details_manage_security_access_code_disclaimer" translatable="false">Access code is available only for cards with a backup.</string>
-
 
 
     <string name="wallet_connect_bnb_transaction_signed" translatable="false">The BNB transaction has been successfully signed and sent to the Dapp</string>
