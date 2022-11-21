@@ -1,5 +1,7 @@
 package com.tangem.datasource.di
 
+import com.squareup.moshi.Moshi
+import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.tangem.datasource.api.AuthHeaderInterceptor
 import com.tangem.datasource.api.referral.ReferralApi
 import com.tangem.lib.auth.AuthProvider
@@ -22,7 +24,11 @@ class NetworkModule {
     fun provideReferralApi(okHttpClient: OkHttpClient): ReferralApi {
         return Retrofit.Builder()
             .addConverterFactory(
-                MoshiConverterFactory.create(),
+                MoshiConverterFactory.create(
+                    Moshi.Builder()
+                        .addLast(KotlinJsonAdapterFactory())
+                        .build(),
+                ),
             )
             .baseUrl(PROD_REFERRAL_BASE_URL)
             .client(okHttpClient)
@@ -34,14 +40,14 @@ class NetworkModule {
     @Singleton
     fun provideOkHttpClient(authProvider: AuthProvider): OkHttpClient {
         return OkHttpClient.Builder()
-            .addInterceptor(
-                HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BASIC),
-            )
             .addInterceptor(AuthHeaderInterceptor(authProvider))
+            .addInterceptor(
+                HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY),
+            )
             .build()
     }
 
     private companion object {
-        const val PROD_REFERRAL_BASE_URL = "https://api.tangem-tech.com/v1/"
+        const val PROD_REFERRAL_BASE_URL = "https://devapi.tangem-tech.com/v1/"//"https://api.tangem-tech.com/v1/"
     }
 }

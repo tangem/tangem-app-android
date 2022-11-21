@@ -7,6 +7,8 @@ import com.tangem.feature.referral.domain.models.ReferralData
 import com.tangem.feature.referral.domain.models.ReferralInfo
 import com.tangem.feature.referral.domain.models.TokenData
 import com.tangem.utils.converter.Converter
+import com.tangem.utils.safeValueOf
+import org.joda.time.format.ISODateTimeFormat
 import javax.inject.Inject
 
 class ReferralConverter @Inject constructor() : Converter<ReferralResponse, ReferralData> {
@@ -19,7 +21,7 @@ class ReferralConverter @Inject constructor() : Converter<ReferralResponse, Refe
             ReferralData.ParticipantData(
                 award = conditions.award,
                 discount = conditions.discount.amount,
-                discountType = DiscountType.valueOf(conditions.discount.discountType.name),
+                discountType = safeValueOf(conditions.discount.discountType.uppercase(), DiscountType.PERCENTAGE),
                 tosLink = conditions.tosLink,
                 tokens = tokenConverter.convertList(conditions.awards.map { it.token }),
                 referral = ReferralInfo(
@@ -27,14 +29,16 @@ class ReferralConverter @Inject constructor() : Converter<ReferralResponse, Refe
                     address = referral.address,
                     promocode = referral.promocode,
                     walletsPurchased = referral.walletsPurchased,
-                    termsAcceptedAt = referral.termsAcceptedAt,
+                    termsAcceptedAt = referral.termsAcceptedAt?.let {
+                        ISODateTimeFormat.dateTimeParser().parseDateTime(referral.termsAcceptedAt)
+                    },
                 ),
             )
         } else {
             ReferralData.NonParticipantData(
                 award = conditions.award,
                 discount = conditions.discount.amount,
-                discountType = DiscountType.valueOf(conditions.discount.discountType.name),
+                discountType = safeValueOf(conditions.discount.discountType.uppercase(), DiscountType.PERCENTAGE),
                 tosLink = conditions.tosLink,
                 tokens = tokenConverter.convertList(conditions.awards.map { it.token }),
             )
