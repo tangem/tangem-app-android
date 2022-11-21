@@ -41,18 +41,16 @@ import com.tangem.tap.domain.walletconnect.WalletConnectRepository
 import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.tap.persistence.CardBalanceStateAdapter
 import com.tangem.tap.persistence.PreferencesStorage
+import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.wallet.BuildConfig
 import com.zendesk.logger.Logger
 import dagger.hilt.android.HiltAndroidApp
 import org.rekotlin.Store
 import timber.log.Timber
 import zendesk.chat.Chat
+import javax.inject.Inject
 
-val store = Store(
-    reducer = ::appReducer,
-    middleware = AppState.getMiddleware(),
-    state = AppState(),
-)
+lateinit var store: Store<AppState>
 
 lateinit var foregroundActivityObserver: ForegroundActivityObserver
 lateinit var preferencesStorage: PreferencesStorage
@@ -64,8 +62,20 @@ lateinit var userTokensRepository: UserTokensRepository
 @HiltAndroidApp
 class TapApplication : Application(), ImageLoaderFactory {
 
+    @Inject
+    lateinit var appStateHolder: AppStateHolder
+
     override fun onCreate() {
         super.onCreate()
+
+        store = Store(
+            reducer = { action, state ->
+                appReducer(action, state, appStateHolder)
+            },
+            middleware = AppState.getMiddleware(),
+            state = AppState(),
+        )
+        appStateHolder.mainStore = store
 
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
@@ -91,6 +101,7 @@ class TapApplication : Application(), ImageLoaderFactory {
             context = this,
             tangemTechService = store.state.domainNetworks.tangemTechService,
         )
+        appStateHolder.userTokensRepository = userTokensRepository
     }
 
     private fun initMoshiConverter() {
