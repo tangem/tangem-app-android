@@ -20,14 +20,14 @@ enum class SettingsElement(
     WalletConnect(R.drawable.ic_walletconnect, R.string.wallet_connect_title),
     Chat(R.drawable.ic_chat, R.string.details_ask_a_question),
     SendFeedback(R.drawable.ic_comment, R.string.details_row_title_send_feedback),
+    ReferralProgram(R.drawable.ic_add_friends, R.string.details_referral_title),
     CardSettings(R.drawable.ic_card_settings, R.string.card_settings_title),
     AppCurrency(R.drawable.ic_currency, R.string.details_row_title_currency),
     AppSettings(R.drawable.ic_settings, R.string.app_settings_title),
     LinkMoreCards(R.drawable.ic_more_cards, R.string.details_row_title_create_backup),
     TermsOfService(R.drawable.ic_text, R.string.disclaimer_title), // General Terms of Service of the App
     TermsOfUse(R.drawable.ic_text, R.string.details_row_title_card_tou), // Terms of Use for S2C cards only
-    PrivacyPolicy(R.drawable.ic_lock, R.string.details_row_privacy_policy),
-    ;
+    PrivacyPolicy(R.drawable.ic_lock, R.string.details_row_privacy_policy);
 }
 
 data class SocialNetworkLink(

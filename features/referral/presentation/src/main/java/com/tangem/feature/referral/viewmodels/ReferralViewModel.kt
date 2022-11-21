@@ -22,7 +22,7 @@ class ReferralViewModel @Inject constructor(
     private val dispatchers: CoroutineDispatcherProvider,
 ) : ViewModel() {
 
-    var uiState by mutableStateOf(createInitiallyUiState())
+    var uiState: ReferralStateHolder by mutableStateOf(createInitiallyUiState())
         private set
 
     init {
@@ -36,15 +36,24 @@ class ReferralViewModel @Inject constructor(
     private fun createInitiallyUiState() = ReferralStateHolder(
         headerState = ReferralStateHolder.HeaderState(onBackClicked = { }),
         referralInfoState = ReferralInfoState.Loading,
-        errorToast = ReferralStateHolder.ErrorToast(visibility = false, changeVisibility = ::cancelErrorToast),
+        errorToast = ReferralStateHolder.ErrorToast(
+            visibility = false,
+            changeVisibility = {
+                uiState = uiState.copy(
+                    referralInfoState = uiState.referralInfoState,
+                    errorToast = uiState.errorToast.copy(visibility = false),
+                )
+            },
+        ),
     )
 
     private fun loadReferralData() {
+        val lastUiState = uiState
         uiState = uiState.copy(referralInfoState = ReferralInfoState.Loading)
         viewModelScope.launch(dispatchers.main) {
             runCatching(dispatchers.io) { referralInteractor.getReferralStatus() }
                 .onSuccess { uiState = uiState.copy(referralInfoState = it.convertToReferralInfoState()) }
-                .onFailure { uiState = uiState.copy(errorToast = uiState.errorToast.copy(visibility = true)) }
+                .onFailure { uiState = lastUiState.copy(errorToast = lastUiState.errorToast.copy(visibility = true)) }
         }
     }
 
@@ -77,15 +86,12 @@ class ReferralViewModel @Inject constructor(
     }
 
     private fun onParticipateClicked() {
+        val lastUiState = uiState
         uiState = uiState.copy(referralInfoState = ReferralInfoState.Loading)
         viewModelScope.launch(dispatchers.main) {
             runCatching(dispatchers.io) { referralInteractor.startReferral() }
                 .onSuccess { uiState = uiState.copy(referralInfoState = it.convertToReferralInfoState()) }
-                .onFailure { uiState = uiState.copy(errorToast = uiState.errorToast.copy(visibility = true)) }
+                .onFailure { uiState = lastUiState.copy(errorToast = lastUiState.errorToast.copy(visibility = true)) }
         }
-    }
-
-    private fun cancelErrorToast() {
-        uiState = uiState.copy(errorToast = uiState.errorToast.copy(visibility = false))
     }
 }
