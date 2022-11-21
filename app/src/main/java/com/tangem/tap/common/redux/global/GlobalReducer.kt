@@ -5,9 +5,10 @@ import com.tangem.domain.redux.global.DomainGlobalAction
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.onboarding.OnboardingManager
 import com.tangem.tap.preferencesStorage
+import com.tangem.tap.proxy.AppStateHolder
 import org.rekotlin.Action
 
-fun globalReducer(action: Action, state: AppState): GlobalState {
+fun globalReducer(action: Action, state: AppState, appStateHolder: AppStateHolder): GlobalState {
 
     if (action !is GlobalAction) return state.globalState
 
@@ -32,6 +33,7 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
             globalState.copy(scanCardFailsCounter = 0)
         }
         is GlobalAction.SaveScanNoteResponse -> {
+            appStateHolder.scanResponse = action.scanResponse
             domainStore.dispatch(DomainGlobalAction.SaveScanNoteResponse(action.scanResponse))
             globalState.copy(scanResponse = action.scanResponse)
         }
@@ -70,7 +72,9 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
         }
         is GlobalAction.SetIfCardVerifiedOnline ->
             globalState.copy(cardVerifiedOnline = action.verified)
-        is GlobalAction.FetchUserCountry.Success -> globalState.copy(userCountryCode = action.countryCode)
+        is GlobalAction.FetchUserCountry.Success -> globalState.copy(
+            userCountryCode = action.countryCode,
+        )
         else -> globalState
     }
 }
