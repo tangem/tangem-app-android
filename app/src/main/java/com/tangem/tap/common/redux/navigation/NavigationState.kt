@@ -19,5 +19,6 @@ enum class AppScreen {
     Details, DetailsSecurity, CardSettings, AppSettings, ResetToFactory,
     AddTokens, AddCustomToken,
     WalletConnectSessions,
-    QrScan
+    QrScan,
+    ReferralProgram
 }
