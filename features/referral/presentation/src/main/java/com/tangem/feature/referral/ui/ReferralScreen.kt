@@ -75,7 +75,7 @@ fun ReferralScreen(stateHolder: ReferralStateHolder) {
         BottomSheetScaffold(
             sheetContent = {
                 AgreementBottomSheetContent(
-                    url = (stateHolder.referralInfoState as ReferralInfoContentState).url,
+                    url = (stateHolder.referralInfoState as? ReferralInfoContentState)?.url ?: "",
                 )
             },
             scaffoldState = bottomSheetScaffoldState,

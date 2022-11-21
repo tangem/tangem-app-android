@@ -1,6 +1,7 @@
 package com.tangem.datasource.api.referral.models
 
 import com.squareup.moshi.Json
+import com.squareup.moshi.JsonClass
 import org.joda.time.DateTime
 
 /**
@@ -21,7 +22,7 @@ data class Conditions(
 
 data class Discount(
     @Json(name = "amount") val amount: Int,
-    @Json(name = "discountType") val discountType: DiscountType,
+    @Json(name = "type") val discountType: String,
 )
 
 data class Award(
@@ -41,11 +42,7 @@ data class Token(
 data class Referral(
     @Json(name = "shareLink") val shareLink: String,
     @Json(name = "address") val address: String,
-    @Json(name = "promocode") val promocode: String,
+    @Json(name = "promoCode") val promocode: String,
     @Json(name = "walletsPurchased") val walletsPurchased: Int,
-    @Json(name = "termsAcceptedAt") val termsAcceptedAt: DateTime?,
+    @Json(name = "termsAcceptedAt") val termsAcceptedAt: String?,
 )
-
-enum class DiscountType {
-    PERCENTAGE, VALUE
-}
