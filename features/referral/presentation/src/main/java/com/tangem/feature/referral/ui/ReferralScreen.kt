@@ -1,5 +1,6 @@
 package com.tangem.feature.referral.ui
 
+import android.widget.Toast
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -26,10 +27,12 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.material.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -49,6 +52,7 @@ import com.tangem.core.ui.res.buttonColor
 import com.tangem.core.ui.res.iconColor
 import com.tangem.core.ui.res.textColor
 import com.tangem.feature.referral.models.ReferralStateHolder
+import com.tangem.feature.referral.models.ReferralStateHolder.ReferralInfoContentState
 import com.tangem.feature.referral.models.ReferralStateHolder.ReferralInfoState
 import com.tangem.feature.referral.presentation.R
 import com.valentinilk.shimmer.shimmer
@@ -69,7 +73,11 @@ fun ReferralScreen(stateHolder: ReferralStateHolder) {
 
     TangemTheme {
         BottomSheetScaffold(
-            sheetContent = { AgreementBottomSheetContent(stateHolder.agreementBottomSheetState.url) },
+            sheetContent = {
+                AgreementBottomSheetContent(
+                    url = (stateHolder.referralInfoState as ReferralInfoContentState).url,
+                )
+            },
             scaffoldState = bottomSheetScaffoldState,
             sheetShape = RoundedCornerShape(
                 topStart = dimensionResource(id = R.dimen.radius16),
@@ -92,6 +100,15 @@ fun ReferralScreen(stateHolder: ReferralStateHolder) {
                 )
             },
         )
+
+        val context = LocalContext.current
+        SideEffect {
+            if (stateHolder.errorToast.visibility) {
+                //TODO("[REDACTED_JIRA]")
+                Toast.makeText(context, "", Toast.LENGTH_LONG).show()
+                stateHolder.errorToast.changeVisibility()
+            }
+        }
     }
 }
 
@@ -137,12 +154,11 @@ fun ReferralInfo(stateHolder: ReferralStateHolder, onAgreementClicked: () -> Uni
     when (val state = stateHolder.referralInfoState) {
         is ReferralInfoState.ParticipantContent -> {
             Conditions(state = state)
-            VerticalSpacer(spaceResId = R.dimen.spacing44)
             ParticipantBottomBlock(state = state, onAgreementClicked = onAgreementClicked)
         }
         is ReferralInfoState.NonParticipantContent -> {
             Conditions(state = state)
-            VerticalSpacer(spaceResId = R.dimen.spacing24)
+            VerticalSpacer(spaceResId = R.dimen.spacing44)
             NonParticipantBottomBlock(state = state, onAgreementClicked = onAgreementClicked)
         }
         is ReferralInfoState.Loading -> {
@@ -162,14 +178,14 @@ private fun AppBar(stateHolder: ReferralStateHolder) {
 }
 
 @Composable
-private fun Conditions(state: ReferralStateHolder.ReferralInfoContentState) {
+private fun Conditions(state: ReferralInfoContentState) {
     ConditionForYou(state = state)
     VerticalSpacer(spaceResId = R.dimen.spacing32)
     ConditionForYourFriend(state = state)
 }
 
 @Composable
-private fun ConditionForYou(state: ReferralStateHolder.ReferralInfoContentState) {
+private fun ConditionForYou(state: ReferralInfoContentState) {
     Condition(iconResId = R.drawable.ic_tether) {
         when (state) {
             is ReferralInfoState.ParticipantContent -> InfoForYou(award = state.award, address = state.address)
@@ -179,7 +195,7 @@ private fun ConditionForYou(state: ReferralStateHolder.ReferralInfoContentState)
 }
 
 @Composable
-private fun ConditionForYourFriend(state: ReferralStateHolder.ReferralInfoContentState) {
+private fun ConditionForYourFriend(state: ReferralInfoContentState) {
     Condition(iconResId = R.drawable.ic_discount) {
         when (state) {
             is ReferralInfoState.ParticipantContent -> InfoForYourFriend(discount = state.discount)
@@ -306,19 +322,17 @@ private fun ShimmerInfo() {
 @Composable
 private fun ParticipantBottomBlock(state: ReferralInfoState.ParticipantContent, onAgreementClicked: () -> Unit) {
     ParticipateBottomBlock(
+        purchasedWalletCount = state.purchasedWalletCount,
+        code = state.code,
         onAgreementClicked = onAgreementClicked,
-        onParticipateClicked = state.onParticipateClicked,
     )
 }
 
 @Composable
 private fun NonParticipantBottomBlock(state: ReferralInfoState.NonParticipantContent, onAgreementClicked: () -> Unit) {
     NonParticipateBottomBlock(
-        purchasedWalletCount = state.purchasedWalletCount,
-        code = state.code,
-        onCopyClicked = state.onCopyClicked,
-        onShareClicked = state.onShareClicked,
         onAgreementClicked = onAgreementClicked,
+        onParticipateClicked = state.onParticipateClicked,
     )
 }
 
@@ -333,12 +347,11 @@ fun Preview_ReferralScreen_Participant_InLightTheme() {
                     award = "10 USDT",
                     address = "ma80...zk8q2",
                     discount = "10%",
-                    onParticipateClicked = {},
-                ),
-                effects = ReferralStateHolder.Effects(showErrorToast = false),
-                agreementBottomSheetState = ReferralStateHolder.AgreementBottomSheetState(
+                    purchasedWalletCount = 3,
+                    code = "x4JdK",
                     url = "",
                 ),
+                errorToast = ReferralStateHolder.ErrorToast(visibility = false, changeVisibility = {}),
             ),
         )
     }
@@ -355,13 +368,11 @@ fun Preview_ReferralScreen_Participant_InDarkTheme() {
                     award = "10 USDT",
                     address = "ma80...zk8q2",
                     discount = "10%",
-
-                    onParticipateClicked = {},
-                ),
-                effects = ReferralStateHolder.Effects(showErrorToast = false),
-                agreementBottomSheetState = ReferralStateHolder.AgreementBottomSheetState(
+                    purchasedWalletCount = 3,
+                    code = "x4JdK",
                     url = "",
                 ),
+                errorToast = ReferralStateHolder.ErrorToast(visibility = false, changeVisibility = {}),
             ),
         )
     }
@@ -377,16 +388,10 @@ fun Preview_ReferralScreen_NonParticipant_InLightTheme() {
                 referralInfoState = ReferralInfoState.NonParticipantContent(
                     award = "10 USDT",
                     discount = "10%",
-                    purchasedWalletCount = 3,
-                    code = "x4JdK",
-                    onCopyClicked = {},
-                    onShareClicked = {},
-
-                    ),
-                effects = ReferralStateHolder.Effects(showErrorToast = false),
-                agreementBottomSheetState = ReferralStateHolder.AgreementBottomSheetState(
                     url = "",
+                    onParticipateClicked = {},
                 ),
+                errorToast = ReferralStateHolder.ErrorToast(visibility = false, changeVisibility = {}),
             ),
         )
     }
@@ -402,16 +407,10 @@ fun Preview_ReferralScreen_NonParticipant_InDarkTheme() {
                 referralInfoState = ReferralInfoState.NonParticipantContent(
                     award = "10 USDT",
                     discount = "10%",
-                    purchasedWalletCount = 3,
-                    code = "x4JdK",
-                    onCopyClicked = {},
-                    onShareClicked = {},
-
-                    ),
-                effects = ReferralStateHolder.Effects(showErrorToast = false),
-                agreementBottomSheetState = ReferralStateHolder.AgreementBottomSheetState(
                     url = "",
+                    onParticipateClicked = {},
                 ),
+                errorToast = ReferralStateHolder.ErrorToast(visibility = false, changeVisibility = {}),
             ),
         )
     }
@@ -425,10 +424,7 @@ fun Preview_ReferralScreen_Loading_InLightTheme() {
             stateHolder = ReferralStateHolder(
                 headerState = ReferralStateHolder.HeaderState(onBackClicked = {}),
                 referralInfoState = ReferralInfoState.Loading,
-                effects = ReferralStateHolder.Effects(showErrorToast = false),
-                agreementBottomSheetState = ReferralStateHolder.AgreementBottomSheetState(
-                    url = "",
-                ),
+                errorToast = ReferralStateHolder.ErrorToast(visibility = false, changeVisibility = {}),
             ),
         )
     }
@@ -442,10 +438,7 @@ fun Preview_ReferralScreen_Loading_InDarkTheme() {
             stateHolder = ReferralStateHolder(
                 headerState = ReferralStateHolder.HeaderState(onBackClicked = {}),
                 referralInfoState = ReferralInfoState.Loading,
-                effects = ReferralStateHolder.Effects(showErrorToast = false),
-                agreementBottomSheetState = ReferralStateHolder.AgreementBottomSheetState(
-                    url = "",
-                ),
+                errorToast = ReferralStateHolder.ErrorToast(visibility = false, changeVisibility = {}),
             ),
         )
     }
