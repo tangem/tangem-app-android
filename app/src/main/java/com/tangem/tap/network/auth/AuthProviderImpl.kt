@@ -6,7 +6,11 @@ import com.tangem.tap.proxy.AppStateHolder
 
 class AuthProviderImpl(private val appStateHolder: AppStateHolder) : AuthProvider {
 
-    override fun getAuthToken(): String {
+    override fun getCardPublicKey(): String {
         return appStateHolder.scanResponse?.card?.cardPublicKey?.toHexString() ?: ""
+    }
+
+    override fun getCardId(): String {
+        return appStateHolder.scanResponse?.card?.cardId ?: ""
     }
 }
