@@ -5,17 +5,16 @@ import com.tangem.datasource.api.referral.models.StartReferralBody
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.POST
-import retrofit2.http.Query
+import retrofit2.http.Path
 
 /**
  * Api for referral feature
  */
-interface
-ReferralApi {
+interface ReferralApi {
 
     /** Returns referral status by [walletId] */
     @GET("referral/{walletId}")
-    suspend fun getReferralStatus(@Query("name") walletId: String): ReferralResponse
+    suspend fun getReferralStatus(@Path("walletId") walletId: String): ReferralResponse
 
     /** Make user referral, requires [StartReferralBody] */
     @POST("referral")
