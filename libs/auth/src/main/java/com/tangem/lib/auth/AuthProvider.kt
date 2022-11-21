@@ -8,5 +8,7 @@ interface AuthProvider {
     /**
      * Returns authToken for tangem tech api
      */
-    fun getAuthToken(): String
+    fun getCardPublicKey(): String
+
+    fun getCardId(): String
 }
