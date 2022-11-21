@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="details_referral_title">Реферальная программа</string>
+    <string name="referral_title">Приведи друга в Tangem</string>
+    <string name="referral_point_currencies_title">Вы</string>
+    <string name="referral_point_currencies_description_prefix">Получите</string>
+    <string name="referral_point_currencies_description_suffix">за каждый кошелек, который купит ваш друг на ваш адрес в сети Tron %s</string>
+    <string name="referral_point_discount_title">Ваш друг</string>
+    <string name="referral_point_discount_description_prefix">Получит</string>
+    <string name="referral_point_discount_description_value">%s скидку</string>
+    <string name="referral_point_discount_description_suffix">при покупке карточки на сайте tangem.com</string>
+    <string name="referral_tou_not_enroled_prefix">Нажимая на эту кнопку вы принимаете</string>
+    <string name="common_terms_and_conditions">условия участия</string>
+    <string name="referral_tou_suffix">в реферальной программе</string>
+    <string name="referral_button_participate">Участвовать</string>
+    <string name="referral_tou_enroled_prefix">Вы приняли</string>
+    <string name="referral_promo_code_title">Ваш персональный код</string>
+    <string name="referral_wallets_purchased_count">%d кошельков</string>
+    <string name="referral_friends_bought_title">Ваши друзья купили</string>
+</resources>
