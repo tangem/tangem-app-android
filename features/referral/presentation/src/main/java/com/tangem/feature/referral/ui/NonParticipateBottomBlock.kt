@@ -26,7 +26,7 @@ import com.tangem.feature.referral.presentation.R
 @Preview(widthDp = 360, showBackground = true)
 @Composable
 fun Preview_NonParticipateBottomBlock_InLightTheme() {
-    TangemTheme(isDarkTheme = false) {
+    TangemTheme(isDark = false) {
         Column(Modifier.background(MaterialTheme.colors.primary)) {
             NonParticipateBottomBlock(
                 purchasedWalletCount = 3,
@@ -42,7 +42,7 @@ fun Preview_NonParticipateBottomBlock_InLightTheme() {
 @Preview(widthDp = 360, showBackground = true)
 @Composable
 fun Preview_NonParticipateBottomBlock_InDarkTheme() {
-    TangemTheme(isDarkTheme = true) {
+    TangemTheme(isDark = true) {
         Column(Modifier.background(MaterialTheme.colors.primary)) {
             NonParticipateBottomBlock(
                 purchasedWalletCount = 3,

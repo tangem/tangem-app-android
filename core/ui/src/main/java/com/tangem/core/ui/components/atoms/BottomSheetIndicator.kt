@@ -46,7 +46,7 @@ fun BottomSheetIndicator() {
 @Preview(heightDp = 20, showBackground = true)
 @Composable
 fun Preview_BottomSheetIndicator_InLightTheme() {
-    TangemTheme(isDarkTheme = false) {
+    TangemTheme(isDark = false) {
         BottomSheetIndicator()
     }
 }
@@ -54,7 +54,7 @@ fun Preview_BottomSheetIndicator_InLightTheme() {
 @Preview(heightDp = 20, showBackground = true)
 @Composable
 fun Preview_BottomSheetIndicator_InDarkTheme() {
-    TangemTheme(isDarkTheme = true) {
+    TangemTheme(isDark = true) {
         BottomSheetIndicator()
     }
 }
