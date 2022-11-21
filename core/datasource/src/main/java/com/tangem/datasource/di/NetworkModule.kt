@@ -1,6 +1,8 @@
 package com.tangem.datasource.di
 
+import com.tangem.datasource.api.AuthHeaderInterceptor
 import com.tangem.datasource.api.referral.ReferralApi
+import com.tangem.lib.auth.AuthProvider
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -30,15 +32,16 @@ class NetworkModule {
 
     @Provides
     @Singleton
-    fun provideOkHttpClient(): OkHttpClient {
+    fun provideOkHttpClient(authProvider: AuthProvider): OkHttpClient {
         return OkHttpClient.Builder()
             .addInterceptor(
                 HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BASIC),
             )
+            .addInterceptor(AuthHeaderInterceptor(authProvider))
             .build()
     }
 
     private companion object {
-        const val PROD_REFERRAL_BASE_URL = ""
+        const val PROD_REFERRAL_BASE_URL = "https://api.tangem-tech.com/v1/"
     }
 }
