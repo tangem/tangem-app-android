@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="common_share">Share</string>
+    <string name="common_copy">Copy</string>
+</resources>
