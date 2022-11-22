@@ -16,7 +16,7 @@ import com.tangem.feature.referral.presentation.R
 @Preview(widthDp = 360, showBackground = true)
 @Composable
 fun Preview_ParticipateBottomBlock_InLightTheme() {
-    TangemTheme(isDarkTheme = false) {
+    TangemTheme(isDark = false) {
         Column(Modifier.background(MaterialTheme.colors.primary)) {
             ParticipateBottomBlock(onAgreementClicked = {}, onParticipateClicked = {})
         }
@@ -26,7 +26,7 @@ fun Preview_ParticipateBottomBlock_InLightTheme() {
 @Preview(widthDp = 360, showBackground = true)
 @Composable
 fun Preview_ParticipateBottomBlock_InDarkTheme() {
-    TangemTheme(isDarkTheme = true) {
+    TangemTheme(isDark = true) {
         Column(Modifier.background(MaterialTheme.colors.primary)) {
             ParticipateBottomBlock(onAgreementClicked = {}, onParticipateClicked = {})
         }
