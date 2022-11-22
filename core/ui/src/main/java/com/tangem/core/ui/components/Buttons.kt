@@ -27,7 +27,7 @@ import com.tangem.core.ui.res.textColor
 @Preview(widthDp = 328, heightDp = 48, showBackground = true)
 @Composable
 fun Preview_PrimaryStartIconButton_Enabled_InLightTheme() {
-    TangemTheme(isDarkTheme = false) {
+    TangemTheme(isDark = false) {
         PrimaryStartIconButton(text = "Manage tokens", iconResId = R.drawable.ic_tangem, enabled = true, onClicked = {})
     }
 }
@@ -35,7 +35,7 @@ fun Preview_PrimaryStartIconButton_Enabled_InLightTheme() {
 @Preview(widthDp = 328, heightDp = 48, showBackground = true)
 @Composable
 fun Preview_PrimaryStartIconButton_Enabled_InDarkTheme() {
-    TangemTheme(isDarkTheme = true) {
+    TangemTheme(isDark = true) {
         PrimaryStartIconButton(text = "Manage tokens", iconResId = R.drawable.ic_tangem, enabled = true, onClicked = {})
     }
 }
@@ -43,7 +43,7 @@ fun Preview_PrimaryStartIconButton_Enabled_InDarkTheme() {
 @Preview(widthDp = 328, heightDp = 48, showBackground = true)
 @Composable
 fun Preview_PrimaryStartIconButton_Disabled_InLightTheme() {
-    TangemTheme(isDarkTheme = false) {
+    TangemTheme(isDark = false) {
         PrimaryStartIconButton(
             text = "Manage tokens",
             iconResId = R.drawable.ic_tangem,
@@ -56,7 +56,7 @@ fun Preview_PrimaryStartIconButton_Disabled_InLightTheme() {
 @Preview(widthDp = 328, heightDp = 48, showBackground = true)
 @Composable
 fun Preview_PrimaryStartIconButton_Disabled_InDarkTheme() {
-    TangemTheme(isDarkTheme = true) {
+    TangemTheme(isDark = true) {
         PrimaryStartIconButton(
             text = "Manage tokens",
             iconResId = R.drawable.ic_tangem,
@@ -69,7 +69,7 @@ fun Preview_PrimaryStartIconButton_Disabled_InDarkTheme() {
 @Preview(widthDp = 328, heightDp = 48, showBackground = true)
 @Composable
 fun Preview_PrimaryEndIconButton_Enabled_InLightTheme() {
-    TangemTheme(isDarkTheme = false) {
+    TangemTheme(isDark = false) {
         PrimaryEndIconButton(text = "Manage tokens", iconResId = R.drawable.ic_tangem, enabled = true, onClicked = {})
     }
 }
@@ -77,7 +77,7 @@ fun Preview_PrimaryEndIconButton_Enabled_InLightTheme() {
 @Preview(widthDp = 328, heightDp = 48, showBackground = true)
 @Composable
 fun Preview_PrimaryEndIconButton_Enabled_InDarkTheme() {
-    TangemTheme(isDarkTheme = true) {
+    TangemTheme(isDark = true) {
         PrimaryEndIconButton(text = "Manage tokens", iconResId = R.drawable.ic_tangem, enabled = true, onClicked = {})
     }
 }
@@ -85,7 +85,7 @@ fun Preview_PrimaryEndIconButton_Enabled_InDarkTheme() {
 @Preview(widthDp = 328, heightDp = 48, showBackground = true)
 @Composable
 fun Preview_PrimaryEndIconButton_Disabled_InLightTheme() {
-    TangemTheme(isDarkTheme = false) {
+    TangemTheme(isDark = false) {
         PrimaryEndIconButton(text = "Manage tokens", iconResId = R.drawable.ic_tangem, enabled = false, onClicked = {})
     }
 }
@@ -93,7 +93,7 @@ fun Preview_PrimaryEndIconButton_Disabled_InLightTheme() {
 @Preview(widthDp = 328, heightDp = 48, showBackground = true)
 @Composable
 fun Preview_PrimaryEndIconButton_Disabled_InDarkTheme() {
-    TangemTheme(isDarkTheme = true) {
+    TangemTheme(isDark = true) {
         PrimaryEndIconButton(text = "Manage tokens", iconResId = R.drawable.ic_tangem, enabled = false, onClicked = {})
     }
 }
