@@ -22,7 +22,7 @@ import com.tangem.core.ui.res.textColor
 @Preview(widthDp = 328, heightDp = 48, showBackground = true)
 @Composable
 fun Preview_SimpleInfoCard_InLightTheme() {
-    TangemTheme(isDarkTheme = false) {
+    TangemTheme(isDark = false) {
         SmallInfoCard(startText = "Balance", endText = "0.4405434 BTC")
     }
 }
@@ -30,7 +30,7 @@ fun Preview_SimpleInfoCard_InLightTheme() {
 @Preview(widthDp = 328, heightDp = 48, showBackground = true)
 @Composable
 fun Preview_SimpleInfoCard_InDarkTheme() {
-    TangemTheme(isDarkTheme = true) {
+    TangemTheme(isDark = true) {
         SmallInfoCard(startText = "Balance", endText = "0.4405434 BTC")
     }
 }
