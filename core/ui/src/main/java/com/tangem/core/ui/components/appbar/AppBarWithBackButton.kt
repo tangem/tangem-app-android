@@ -21,7 +21,7 @@ import com.tangem.core.ui.res.TangemTheme
 @Preview(widthDp = 360, heightDp = 56, showBackground = true)
 @Composable
 fun PreviewAppBarWithBackButtonInLightTheme() {
-    TangemTheme(isDarkTheme = false) {
+    TangemTheme(isDark = false) {
         AppBarWithBackButton(text = "Title", onBackClick = {})
     }
 }
@@ -29,7 +29,7 @@ fun PreviewAppBarWithBackButtonInLightTheme() {
 @Preview(widthDp = 360, heightDp = 56, showBackground = true)
 @Composable
 fun PreviewAppBarWithBackButtonInDarkTheme() {
-    TangemTheme(isDarkTheme = true) {
+    TangemTheme(isDark = true) {
         AppBarWithBackButton(text = "Title", onBackClick = {})
     }
 }
