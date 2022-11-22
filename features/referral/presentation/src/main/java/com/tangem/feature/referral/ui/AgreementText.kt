@@ -25,7 +25,7 @@ import com.tangem.feature.referral.presentation.R
 @Preview(widthDp = 360, showBackground = true)
 @Composable
 fun Preview_AgreementText_InLightTheme() {
-    TangemTheme(isDarkTheme = false) {
+    TangemTheme(isDark = false) {
         Box(modifier = Modifier.background(MaterialTheme.colors.primary)) {
             AgreementText(firstPartResId = R.string.referral_tou_not_enroled_prefix, onClicked = {})
         }
@@ -35,7 +35,7 @@ fun Preview_AgreementText_InLightTheme() {
 @Preview(widthDp = 360, showBackground = true)
 @Composable
 fun Preview_AgreementText_InDarkTheme() {
-    TangemTheme(isDarkTheme = true) {
+    TangemTheme(isDark = true) {
         Box(modifier = Modifier.background(MaterialTheme.colors.primary)) {
             AgreementText(firstPartResId = R.string.referral_tou_not_enroled_prefix, onClicked = {})
         }
