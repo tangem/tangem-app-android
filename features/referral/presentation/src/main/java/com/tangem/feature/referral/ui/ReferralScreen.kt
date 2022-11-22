@@ -42,9 +42,9 @@ import com.tangem.core.ui.components.VerticalSpacer
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.res.ButtonColorType
 import com.tangem.core.ui.res.IconColorType
+import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TextColorType
-import com.tangem.core.ui.res.White
 import com.tangem.core.ui.res.buttonColor
 import com.tangem.core.ui.res.iconColor
 import com.tangem.core.ui.res.textColor
@@ -291,14 +291,14 @@ private fun ShimmerInfo() {
                 .clip(RoundedCornerShape(dimensionResource(id = R.dimen.radius6)))
                 .width(dimensionResource(id = R.dimen.size102))
                 .height(dimensionResource(id = R.dimen.size16))
-                .background(White),
+                .background(TangemColorPalette.White),
         )
         Box(
             modifier = Modifier
                 .clip(RoundedCornerShape(dimensionResource(id = R.dimen.radius6)))
                 .width(dimensionResource(id = R.dimen.size40))
                 .height(dimensionResource(id = R.dimen.size11))
-                .background(White),
+                .background(TangemColorPalette.White),
         )
     }
 }
@@ -325,7 +325,7 @@ private fun NonParticipantBottomBlock(state: ReferralInfoState.NonParticipantCon
 @Preview(widthDp = 360, showBackground = true)
 @Composable
 fun Preview_ReferralScreen_Participant_InLightTheme() {
-    TangemTheme(isDarkTheme = false) {
+    TangemTheme(isDark = false) {
         ReferralScreen(
             stateHolder = ReferralStateHolder(
                 headerState = ReferralStateHolder.HeaderState(onBackClicked = {}),
@@ -347,7 +347,7 @@ fun Preview_ReferralScreen_Participant_InLightTheme() {
 @Preview(widthDp = 360, showBackground = true)
 @Composable
 fun Preview_ReferralScreen_Participant_InDarkTheme() {
-    TangemTheme(isDarkTheme = true) {
+    TangemTheme(isDark = true) {
         ReferralScreen(
             stateHolder = ReferralStateHolder(
                 headerState = ReferralStateHolder.HeaderState(onBackClicked = {}),
@@ -370,7 +370,7 @@ fun Preview_ReferralScreen_Participant_InDarkTheme() {
 @Preview(widthDp = 360, showBackground = true)
 @Composable
 fun Preview_ReferralScreen_NonParticipant_InLightTheme() {
-    TangemTheme(isDarkTheme = false) {
+    TangemTheme(isDark = false) {
         ReferralScreen(
             stateHolder = ReferralStateHolder(
                 headerState = ReferralStateHolder.HeaderState(onBackClicked = {}),
@@ -395,7 +395,7 @@ fun Preview_ReferralScreen_NonParticipant_InLightTheme() {
 @Preview(widthDp = 360, showBackground = true)
 @Composable
 fun Preview_ReferralScreen_NonParticipant_InDarkTheme() {
-    TangemTheme(isDarkTheme = true) {
+    TangemTheme(isDark = true) {
         ReferralScreen(
             stateHolder = ReferralStateHolder(
                 headerState = ReferralStateHolder.HeaderState(onBackClicked = {}),
@@ -420,7 +420,7 @@ fun Preview_ReferralScreen_NonParticipant_InDarkTheme() {
 @Preview(widthDp = 360, showBackground = true)
 @Composable
 fun Preview_ReferralScreen_Loading_InLightTheme() {
-    TangemTheme(isDarkTheme = false) {
+    TangemTheme(isDark = false) {
         ReferralScreen(
             stateHolder = ReferralStateHolder(
                 headerState = ReferralStateHolder.HeaderState(onBackClicked = {}),
@@ -437,7 +437,7 @@ fun Preview_ReferralScreen_Loading_InLightTheme() {
 @Preview(widthDp = 360, showBackground = true)
 @Composable
 fun Preview_ReferralScreen_Loading_InDarkTheme() {
-    TangemTheme(isDarkTheme = true) {
+    TangemTheme(isDark = true) {
         ReferralScreen(
             stateHolder = ReferralStateHolder(
                 headerState = ReferralStateHolder.HeaderState(onBackClicked = {}),
@@ -450,4 +450,3 @@ fun Preview_ReferralScreen_Loading_InDarkTheme() {
         )
     }
 }
-
