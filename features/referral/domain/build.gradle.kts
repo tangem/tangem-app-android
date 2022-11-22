@@ -1,27 +1,7 @@
 plugins {
-    id("com.android.library")
-    kotlin("android")
+    id("java-library")
+    id("org.jetbrains.kotlin.jvm")
     kotlin("kapt")
-    id("com.google.dagger.hilt.android")
-}
-
-android {
-
-    defaultConfig {
-        compileSdk = AppConfig.compileSdkVersion
-        minSdk = AppConfig.minSdkVersion
-        targetSdk = AppConfig.targetSdkVersion
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_1_8.toString()
-    }
-
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_1_8
-        targetCompatibility = JavaVersion.VERSION_1_8
-        isCoreLibraryDesugaringEnabled = false
-    }
 }
 
 dependencies {
@@ -34,6 +14,11 @@ dependencies {
     implementation(Library.jodatime)
 
     /** DI */
-    implementation(Library.hilt)
+    implementation(Library.hiltCore)
     kapt(Library.hiltKapt)
+}
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
 }
