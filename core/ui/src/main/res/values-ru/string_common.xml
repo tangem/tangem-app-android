@@ -2,4 +2,5 @@
 <resources>
     <string name="common_share">Поделиться</string>
     <string name="common_copy">Копировать</string>
+    <string name="common_terms_and_conditions">условия участия</string>
 </resources>
