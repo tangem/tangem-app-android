@@ -1,5 +1,6 @@
 package com.tangem.core.ui.components.appbar
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -18,22 +19,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
 import com.tangem.core.ui.res.TangemTheme
 
-@Preview(widthDp = 360, heightDp = 56, showBackground = true)
-@Composable
-fun PreviewAppBarWithBackButtonInLightTheme() {
-    TangemTheme(isDark = false) {
-        AppBarWithBackButton(text = "Title", onBackClick = {})
-    }
-}
-
-@Preview(widthDp = 360, heightDp = 56, showBackground = true)
-@Composable
-fun PreviewAppBarWithBackButtonInDarkTheme() {
-    TangemTheme(isDark = true) {
-        AppBarWithBackButton(text = "Title", onBackClick = {})
-    }
-}
-
 /**
  * App bar with back button and optional title
  *
@@ -47,8 +32,9 @@ fun PreviewAppBarWithBackButtonInDarkTheme() {
 fun AppBarWithBackButton(text: String? = null, onBackClick: () -> Unit) {
     Row(
         modifier = Modifier
-            .padding(all = dimensionResource(R.dimen.spacing16))
-            .fillMaxWidth(),
+            .background(MaterialTheme.colors.primary)
+            .fillMaxWidth()
+            .padding(all = dimensionResource(R.dimen.spacing16)),
         horizontalArrangement = Arrangement.spacedBy(dimensionResource(R.dimen.spacing16)),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -68,5 +54,21 @@ fun AppBarWithBackButton(text: String? = null, onBackClick: () -> Unit) {
                 style = MaterialTheme.typography.subtitle1,
             )
         }
+    }
+}
+
+@Preview(widthDp = 360, heightDp = 56, showBackground = true)
+@Composable
+fun PreviewAppBarWithBackButtonInLightTheme() {
+    TangemTheme(isDark = false) {
+        AppBarWithBackButton(text = "Title", onBackClick = {})
+    }
+}
+
+@Preview(widthDp = 360, heightDp = 56, showBackground = true)
+@Composable
+fun PreviewAppBarWithBackButtonInDarkTheme() {
+    TangemTheme(isDark = true) {
+        AppBarWithBackButton(text = "Title", onBackClick = {})
     }
 }
