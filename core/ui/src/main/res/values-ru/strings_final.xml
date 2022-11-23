@@ -139,4 +139,8 @@
     <string name="onboarding_exit_alert_message">В этом случае вам будет необходимо начать процесс заново.</string>
     <string name="error_wrong_wallet_tapped">Вы использовали карту от другого кошелька. Приложите карту, связанную с этим кошельком.</string>
     <string name="internal_error_wallet_manager_not_found">Внутренняя ошибка: не удается найти менеджер кошельков</string>
+    <string name="welcome_unlock_title">C возвращением!</string>
+    <string name="welcome_unlock_description">Используйте биометрическую аутентификацию или код доступа для входа в приложение</string>
+    <string name="welcome_unlock_face_id">Войти с биометрией</string>
+    <string name="welcome_unlock_card">Сканировать карту</string>
 </resources>
