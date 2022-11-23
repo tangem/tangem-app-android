@@ -22,5 +22,6 @@ enum class AppScreen(
     AddTokens, AddCustomToken,
     WalletConnectSessions,
     QrScan,
-    ReferralProgram
+    ReferralProgram,
+    Welcome
 }
