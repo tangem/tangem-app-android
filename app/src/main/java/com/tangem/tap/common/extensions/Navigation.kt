@@ -1,6 +1,7 @@
 package com.tangem.tap.common.extensions
 
 import androidx.activity.OnBackPressedCallback
+import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
@@ -29,12 +30,10 @@ import com.tangem.tap.features.wallet.ui.WalletFragment
 import com.tangem.wallet.R
 import timber.log.Timber
 
-private class Navigation
-
 fun FragmentActivity.openFragment(
     screen: AppScreen,
     addToBackstack: Boolean,
-    fgShareTransition: FragmentShareTransition? = null
+    fgShareTransition: FragmentShareTransition? = null,
 ) {
     val transaction = this.supportFragmentManager.beginTransaction()
     val fragment = fragmentFactory(screen)
@@ -48,9 +47,14 @@ fun FragmentActivity.openFragment(
             }
         }
     }
-    transaction.replace(R.id.fragment_container, fragment, screen.name)
-    if (addToBackstack && screen != AppScreen.Home) transaction.addToBackStack(null)
-    transaction.commitAllowingStateLoss()
+    if (screen.isDialogFragment) {
+        (fragment as DialogFragment).show(transaction, screen.name)
+        if (addToBackstack && screen != AppScreen.Home) transaction.addToBackStack(null)
+    } else {
+        transaction.replace(R.id.fragment_container, fragment, screen.name)
+        if (addToBackstack && screen != AppScreen.Home) transaction.addToBackStack(null)
+        transaction.commitAllowingStateLoss()
+    }
 }
 
 fun FragmentActivity.popBackTo(screen: AppScreen?, inclusive: Boolean = false) {
