@@ -4,7 +4,7 @@
     <string name="referral_title">Приведи друга в Tangem</string>
     <string name="referral_point_currencies_title">Вы</string>
     <string name="referral_point_currencies_description_prefix">Получите</string>
-    <string name="referral_point_currencies_description_suffix">за каждый кошелек, который купит ваш друг на ваш адрес в сети Tron %s</string>
+    <string name="referral_point_currencies_description_suffix">на ваш адрес в сети %s%s за каждый кошелек, который купит ваш друг</string>
     <string name="referral_point_discount_title">Ваш друг</string>
     <string name="referral_point_discount_description_prefix">Получит</string>
     <string name="referral_point_discount_description_value">%s скидку</string>
@@ -17,4 +17,8 @@
     <string name="referral_promo_code_title">Ваш персональный код</string>
     <string name="referral_wallets_purchased_count">%d кошельков</string>
     <string name="referral_friends_bought_title">Ваши друзья купили</string>
+    <string name="referral_error_failed_to_load_info">Не удалось загрузить информацию по реферальной программе. Пожалуйста, попробуйте позже.</string>
+    <string name="referral_error_failed_to_load_info_with_reason">Не удалось загрузить информацию по реферальной программе. Причина: %s. Пожалуйста, попробуйте позже.</string>
+    <string name="referral_error_failed_to_participate">Не удалось обработать вашу заявку на участие. Причина: %s. Пожалуйста, попробуйте позже. Если проблема сохранится, вы можете обратиться в техподдержку.</string>
+    <string name="referral_promo_code_copied">Персональный код скопирован!</string>
 </resources>
