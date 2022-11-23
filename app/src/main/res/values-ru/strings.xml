@@ -175,6 +175,7 @@
     <string name="onboarding_twin_exit_warning">Процесс связывания карт частично завершен. Вы не можете выйти из него сейчас.</string>
     <string name="wallet_balance_blockchain_unreachable_try_later">Блокчейн недоступен. Попробуй позже.</string>
     <string name="warning_button_ok">Хорошо, понял!</string>
+    <string name="onboarding_success">Успешно!</string>
     <string name="onboarding_getting_started">Начнем</string>
     <string name="onboarding_button_backup_now">Выполнить резервное копирование</string>
     <string name="onboarding_button_skip_backup">Оставить на потом</string>
