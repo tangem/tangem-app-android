@@ -153,6 +153,7 @@
 
     <string name="warning_button_ok" translatable="false">Ok, Got it!</string>
 
+    <string name="onboarding_success" translatable="false">Success!</string>
     <string name="onboarding_getting_started" translatable="false">Getting started</string>
 
     <string name="onboarding_button_backup_now" translatable="false">Backup now</string>
@@ -219,7 +220,6 @@
     <string name="onboarding_subtitle_scan_backup_card_format" translatable="false">Prepare the backup card with number %s</string>
     <string name="onboarding_subtitle_scan_primary_card_format" translatable="false">Prepare the primary card with number %s</string>
     <string name="details_row_title_reset_factory_settings" translatable="false">Reset to factory settings</string>
-
 
 
 
