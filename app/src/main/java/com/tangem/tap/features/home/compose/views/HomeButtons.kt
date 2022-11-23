@@ -16,7 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.tangem.tap.common.compose.SpacerS8
+import com.tangem.core.ui.components.SpacerS8
 import com.tangem.wallet.R
 
 @Composable
