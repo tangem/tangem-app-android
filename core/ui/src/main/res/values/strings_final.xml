@@ -141,4 +141,8 @@
     <string name="onboarding_exit_alert_message">In this case, you will need to start from the beginning.</string>
     <string name="error_wrong_wallet_tapped">You have used a card from another wallet. Tap the card associated with this wallet</string>
     <string name="internal_error_wallet_manager_not_found" translatable="false">Internal error: wallet manager not found</string>
+    <string name="welcome_unlock_title">Welcome back!</string>
+    <string name="welcome_unlock_description">Use biometric authentication or scan a card to access the app</string>
+    <string name="welcome_unlock_face_id">Log in with biometric</string>
+    <string name="welcome_unlock_card">Scan card</string>
 </resources>
