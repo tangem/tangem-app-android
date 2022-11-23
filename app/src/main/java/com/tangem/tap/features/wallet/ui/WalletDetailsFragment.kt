@@ -149,14 +149,16 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
 
         binding.srlWalletDetails.setOnRefreshListener {
             if (selectedWallet.currencyData.status != BalanceStatus.Loading) {
-                store.dispatch(WalletAction.LoadWallet(
-                    blockchain = BlockchainNetwork(
-                        selectedWallet.currency.blockchain,
-                        selectedWallet.currency.derivationPath,
-                        emptyList()
-                    )
+                store.dispatch(
+                    WalletAction.LoadWallet(
+                        blockchain = BlockchainNetwork(
+                            selectedWallet.currency.blockchain,
+                            selectedWallet.currency.derivationPath,
+                            emptyList(),
+                        ),
+                    ),
                 )
-                )
+                store.dispatch(WalletAction.LoadFiatRate(coinsList = listOf(selectedWallet.currency)))
             }
         }
 
