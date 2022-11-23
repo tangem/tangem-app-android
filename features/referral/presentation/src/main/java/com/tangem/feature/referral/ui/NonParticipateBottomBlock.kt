@@ -14,7 +14,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.referral.presentation.R
 
 @Composable
-fun NonParticipateBottomBlock(onAgreementClicked: () -> Unit, onParticipateClicked: () -> Unit) {
+internal fun NonParticipateBottomBlock(onAgreementClicked: () -> Unit, onParticipateClicked: () -> Unit) {
     Column {
         AgreementText(
             firstPartResId = R.string.referral_tos_not_enroled_prefix,
