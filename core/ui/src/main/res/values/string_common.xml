@@ -2,4 +2,5 @@
 <resources>
     <string name="common_share" translatable="false">Share</string>
     <string name="common_copy" translatable="false">Copy</string>
+    <string name="common_terms_and_conditions">terms and conditions</string>
 </resources>
