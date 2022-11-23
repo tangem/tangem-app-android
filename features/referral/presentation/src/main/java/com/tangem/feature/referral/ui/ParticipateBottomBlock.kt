@@ -1,5 +1,6 @@
 package com.tangem.feature.referral.ui
 
+import android.content.Context
 import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -14,8 +15,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
@@ -29,10 +32,12 @@ import com.tangem.core.ui.res.textColor
 import com.tangem.feature.referral.presentation.R
 
 @Composable
-fun ParticipateBottomBlock(
+internal fun ParticipateBottomBlock(
     purchasedWalletCount: Int,
     code: String,
+    shareLink: String,
     onAgreementClicked: () -> Unit,
+    showCopySnackbar: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -51,7 +56,7 @@ fun ParticipateBottomBlock(
             ),
         )
         PersonalCodeCard(code = code)
-        AdditionalButtons(code = code)
+        AdditionalButtons(shareLink = shareLink, showCopySnackbar = showCopySnackbar)
         AgreementText(firstPartResId = R.string.referral_tos_enroled_prefix, onClicked = onAgreementClicked)
     }
 }
@@ -89,9 +94,9 @@ private fun PersonalCodeCard(code: String) {
 }
 
 @Composable
-private fun AdditionalButtons(code: String) {
+private fun AdditionalButtons(shareLink: String, showCopySnackbar: () -> Unit) {
     val clipboardManager = LocalClipboardManager.current
-    val context = LocalContext.current
+    val hapticFeedback = LocalHapticFeedback.current
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -101,23 +106,34 @@ private fun AdditionalButtons(code: String) {
             modifier = Modifier.weight(1f),
             text = stringResource(id = R.string.common_copy),
             iconResId = R.drawable.ic_copy,
-            onClicked = { clipboardManager.setText(AnnotatedString(code)) },
+            onClicked = {
+                hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                clipboardManager.setText(AnnotatedString(shareLink))
+                showCopySnackbar()
+            },
         )
+
+        val context = LocalContext.current
         PrimaryStartIconButton(
             modifier = Modifier.weight(1f),
             text = stringResource(id = R.string.common_share),
             iconResId = R.drawable.ic_share,
             onClicked = {
-                val sendIntent: Intent = Intent().apply {
-                    action = Intent.ACTION_SEND
-                    putExtra(Intent.EXTRA_TEXT, code)
-                    type = "text/plain"
-                }
-                val shareIntent = Intent.createChooser(sendIntent, null)
-                startActivity(context, shareIntent, null)
+                hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                context.shareText(shareLink)
             },
         )
     }
+}
+
+private fun Context.shareText(text: String) {
+    val sendIntent: Intent = Intent().apply {
+        action = Intent.ACTION_SEND
+        putExtra(Intent.EXTRA_TEXT, text)
+        type = "text/plain"
+    }
+    val shareIntent = Intent.createChooser(sendIntent, null)
+    startActivity(this, shareIntent, null)
 }
 
 @Preview(widthDp = 360, showBackground = true)
@@ -128,7 +144,9 @@ fun Preview_ParticipateBottomBlock_InLightTheme() {
             ParticipateBottomBlock(
                 purchasedWalletCount = 3,
                 code = "x4JdK",
+                shareLink = "",
                 onAgreementClicked = {},
+                showCopySnackbar = {},
             )
         }
     }
@@ -142,7 +160,9 @@ fun Preview_ParticipateBottomBlock_InDarkTheme() {
             ParticipateBottomBlock(
                 purchasedWalletCount = 3,
                 code = "x4JdK",
+                shareLink = "",
                 onAgreementClicked = {},
+                showCopySnackbar = {},
             )
         }
     }
