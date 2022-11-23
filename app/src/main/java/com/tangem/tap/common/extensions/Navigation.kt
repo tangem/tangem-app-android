@@ -27,6 +27,7 @@ import com.tangem.tap.features.tokens.addCustomToken.AddCustomTokenFragment
 import com.tangem.tap.features.tokens.ui.AddTokensFragment
 import com.tangem.tap.features.wallet.ui.WalletDetailsFragment
 import com.tangem.tap.features.wallet.ui.WalletFragment
+import com.tangem.tap.features.welcome.ui.WelcomeFragment
 import com.tangem.wallet.R
 import timber.log.Timber
 
@@ -108,5 +109,6 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
         AppScreen.WalletDetails -> WalletDetailsFragment()
         AppScreen.WalletConnectSessions -> WalletConnectFragment()
         AppScreen.QrScan -> QrScanFragment()
+        AppScreen.Welcome -> WelcomeFragment()
     }
 }
