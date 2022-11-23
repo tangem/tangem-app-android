@@ -20,21 +20,18 @@ class RatesRepository {
         val throttledResult = coinsList.filter { throttler.isStillThrottled(it) }.map {
             Pair(it, throttler.geValue(it))
         }
-        if (throttledResult.isNotEmpty()) {
-            return handleFiatRatesResult(throttledResult.toMap())
-        }
 
         val currenciesToUpdate = coinsList.filter { !throttler.isStillThrottled(it) }
         val coinIds = currenciesToUpdate.mapNotNull { it.coinId }.distinct()
-        if (coinIds.isEmpty()) return EMPTY_RESULT
+        if (coinIds.isEmpty()) return handleFiatRatesResult(throttledResult.toMap())
 
         return when (val result = tangemTechService.rates(currencyId, coinIds)) {
             is Result.Success -> {
                 val ratesResultList: Map<String, Result<BigDecimal>> = result.data.rates.mapValues {
                     Result.Success(it.value.toBigDecimal())
                 }
-                val updatedCurrencies = mutableMapOf<Currency, Result<BigDecimal>?>()
-                currenciesToUpdate.forEach { currency ->
+                val updatedCurrencies = throttledResult.toMap().toMutableMap()
+                coinsList.forEach { currency ->
                     ratesResultList[currency.coinId]?.let {
                         updatedCurrencies[currency] = it
                         throttler.updateThrottlingTo(currency)
@@ -64,13 +61,6 @@ class RatesRepository {
 
     fun clear() {
         throttler.clear()
-    }
-
-    companion object {
-        val EMPTY_RESULT = Result.Success(Pair(
-            mutableMapOf<Currency, BigDecimal>(),
-            mutableMapOf<Currency, Throwable>()
-        ))
     }
 }
 
