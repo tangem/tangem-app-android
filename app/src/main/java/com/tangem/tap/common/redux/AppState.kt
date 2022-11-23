@@ -33,6 +33,7 @@ import com.tangem.tap.features.tokens.redux.TokensMiddleware
 import com.tangem.tap.features.tokens.redux.TokensState
 import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.redux.middlewares.WalletMiddleware
+import com.tangem.tap.features.welcome.redux.WelcomeState
 import org.rekotlin.Middleware
 import org.rekotlin.StateType
 
@@ -51,6 +52,7 @@ data class AppState(
     val tokensState: TokensState = TokensState(),
     val walletConnectState: WalletConnectState = WalletConnectState(),
     val shopState: ShopState = ShopState(),
+    val welcomeState: WelcomeState = WelcomeState(),
 ) : StateType {
 
     val domainState: DomainState
@@ -82,4 +84,3 @@ data class AppState(
         }
     }
 }
-
