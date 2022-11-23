@@ -22,28 +22,8 @@ import com.tangem.core.ui.res.TextColorType
 import com.tangem.core.ui.res.textColor
 import com.tangem.feature.referral.presentation.R
 
-@Preview(widthDp = 360, showBackground = true)
 @Composable
-fun Preview_AgreementText_InLightTheme() {
-    TangemTheme(isDark = false) {
-        Box(modifier = Modifier.background(MaterialTheme.colors.primary)) {
-            AgreementText(firstPartResId = R.string.referral_tos_not_enroled_prefix, onClicked = {})
-        }
-    }
-}
-
-@Preview(widthDp = 360, showBackground = true)
-@Composable
-fun Preview_AgreementText_InDarkTheme() {
-    TangemTheme(isDark = true) {
-        Box(modifier = Modifier.background(MaterialTheme.colors.primary)) {
-            AgreementText(firstPartResId = R.string.referral_tos_not_enroled_prefix, onClicked = {})
-        }
-    }
-}
-
-@Composable
-fun AgreementText(@StringRes firstPartResId: Int, onClicked: () -> Unit) {
+internal fun AgreementText(@StringRes firstPartResId: Int, onClicked: () -> Unit) {
     val agreementText = annotatedAgreementString(firstPart = stringResource(firstPartResId))
     ClickableText(
         text = agreementText,
@@ -72,6 +52,26 @@ private fun annotatedAgreementString(firstPart: String): AnnotatedString {
         }
         withStyle(SpanStyle(color = MaterialTheme.colors.textColor(type = TextColorType.TERTIARY))) {
             append(" ${stringResource(id = R.string.referral_tos_suffix)}")
+        }
+    }
+}
+
+@Preview(widthDp = 360, showBackground = true)
+@Composable
+fun Preview_AgreementText_InLightTheme() {
+    TangemTheme(isDark = false) {
+        Box(modifier = Modifier.background(MaterialTheme.colors.primary)) {
+            AgreementText(firstPartResId = R.string.referral_tos_not_enroled_prefix, onClicked = {})
+        }
+    }
+}
+
+@Preview(widthDp = 360, showBackground = true)
+@Composable
+fun Preview_AgreementText_InDarkTheme() {
+    TangemTheme(isDark = true) {
+        Box(modifier = Modifier.background(MaterialTheme.colors.primary)) {
+            AgreementText(firstPartResId = R.string.referral_tos_not_enroled_prefix, onClicked = {})
         }
     }
 }
