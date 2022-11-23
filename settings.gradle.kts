@@ -17,4 +17,7 @@ include(":libs:crypto")
 include(":features:referral:data")
 include(":features:referral:domain")
 include(":features:referral:presentation")
+include(":features:swap:data")
+include(":features:swap:domain")
+include(":features:swap:presentation")
 // endregion Feature modules
