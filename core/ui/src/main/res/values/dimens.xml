@@ -13,7 +13,9 @@
     <!-- endregion Elevation -->
 
     <!-- region Radius -->
+    <dimen name="radius2">2dp</dimen>
     <dimen name="radius6">6dp</dimen>
+    <dimen name="radius8">8dp</dimen>
     <dimen name="radius12">12dp</dimen>
     <dimen name="radius16">16dp</dimen>
     <!-- endregion Radius -->
@@ -43,12 +45,14 @@
     <dimen name="spacing8">8dp</dimen>
     <dimen name="spacing10">10dp</dimen>
     <dimen name="spacing12">12dp</dimen>
+    <dimen name="spacing14">14dp</dimen>
     <dimen name="spacing16">16dp</dimen>
     <dimen name="spacing24">24dp</dimen>
     <dimen name="spacing32">32dp</dimen>
     <dimen name="spacing44">44dp</dimen>
     <dimen name="spacing50">50dp</dimen>
     <dimen name="spacing54">54dp</dimen>
-    <dimen name="radius2">2dp</dimen>
+    <dimen name="spacing56">56dp</dimen>
+    <dimen name="spacing92">92dp</dimen>
     <!--  endregion Spacing  -->
 </resources>
