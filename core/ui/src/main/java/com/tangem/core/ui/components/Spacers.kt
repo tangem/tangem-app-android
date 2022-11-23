@@ -3,6 +3,7 @@
 package com.tangem.core.ui.components
 
 import androidx.annotation.DimenRes
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
@@ -57,6 +58,12 @@ fun SpacerH24(modifier: Modifier = Modifier) {
 @Composable
 fun SpacerH32(modifier: Modifier = Modifier) {
     SpacerH(32.dp, modifier)
+}
+
+// TODO: Refactor with context receivers
+@Composable
+fun ColumnScope.SpacerHMax(modifier: Modifier = Modifier) {
+    Spacer(modifier = modifier.weight(1f))
 }
 // endregion Horizontal
 
