@@ -191,10 +191,16 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
 
     private fun setupCurrency(currencyData: BalanceWidgetData, currency: Currency) = with(binding) {
         tvCurrencyTitle.text = currencyData.currency
-        tvCurrencySubtitle.text = tvCurrencySubtitle.getString(
-            R.string.wallet_currency_subtitle,
-            currency.blockchain.fullName,
-        )
+
+        if (currency is Currency.Token) {
+            tvCurrencySubtitle.text = tvCurrencySubtitle.getString(
+                R.string.wallet_currency_subtitle,
+                currency.blockchain.fullName,
+            )
+            tvCurrencySubtitle.show()
+        } else {
+            tvCurrencySubtitle.hide()
+        }
     }
 
     private fun setupButtons(selectedWallet: WalletData, isExchangeServiceFeatureOn: Boolean) = with(binding) {
