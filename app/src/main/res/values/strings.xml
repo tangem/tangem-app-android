@@ -9,7 +9,6 @@
     <string name="common_cancel">Cancel</string>
     <string name="common_accept">Accept</string>
     <string name="common_delete">Delete</string>
-    <string name="common_custom_string" translatable="false">%s</string>
 
     <string name="common_camera_denied_alert_title">Camera access denied</string>
     <string name="common_camera_denied_alert_message">You have not given access to your camera, please adjust your privacy settings</string>
@@ -78,7 +77,7 @@
     <string name="send_total_subtitle_fiat_format">≈ %s (inc. fee: %s)</string>
     <string name="send_total_subtitle_asset_format">%s %s and %s %s will be sent</string>
     <string name="send_balance_subtitle_format">Balance: %s %s</string>
-    <string name="send_transaction_success">Transaction has been successfully signed and sent to blockchain node. Wallet balance will be updated in a while</string>
+    <string name="send_transaction_success">Transaction has been successfully signed and sent to the blockchain node. Wallet balance will be updated in a while</string>
 
     <string name="details_title">Details</string>
     <string name="details_row_title_cid">Card ID</string>
@@ -95,25 +94,25 @@
     <string name="details_security_management_warning">If you forget the code, you will lose the ability to use the card. There is no way to recover or change your code if you lose it.</string>
     <string name="details_manage_security_title">Manage Security</string>
     <string name="details_manage_security_long_tap">Long Tap</string>
-    <string name="details_manage_security_long_tap_description">This mechanism protects against proximity attack on a card. It will enforce a delay between reception and execution of a command. After the first signed transaction this phone will be linked with the card and transactions will be signed immediately.</string>
+    <string name="details_manage_security_long_tap_description">This mechanism protects against proximity attacks on a card. It will enforce a delay between reception and execution of a command.</string>
     <string name="details_manage_security_passcode">Passcode</string>
     <string name="details_manage_security_passcode_description">Before execution any command entailing a change of the card state you will have to enter the passcode.</string>
     <string name="details_manage_security_access_code">Access code</string>
     <string name="details_manage_security_access_code_description">You will have to submit the correct access code before scanning the card</string>
 
     <string name="alert_old_device_this_card">You may experience NFC problems with some iPhone 7/7+ during the extraction</string>
-    <string name="alert_card_signed_transactions">This card has been already topped up and signed transactions in the past. Consider immediate withdrawal of all funds if you have received this card from an untrusted source.</string>
+    <string name="alert_card_signed_transactions">This card has been already topped up and signed transactions in the past. Consider immediate withdrawal of all funds if you have received this card from an untrusted source. If it\'s your card, there is nothing to worry about.</string>
     <string name="alert_title">Warning</string>
     <string name="alert_unsupported_card">This card is not designed to work with this app</string>
     <string name="alert_developer_card">The card you scanned is a development card. Don\'t accept it as a payment</string>
     <string name="alert_old_card">Tangem cards manufactured before September 2019 cannot currently be extracted with an iPhone. We\'re working hard with Apple to make it possible in future versions of iOS.</string>
 
     <string name="initial_message_sign_header">Tap to sign</string>
-    <string name="initial_message_sign_body">Tap the card to your phone as shown above</string>
-    <string name="initial_message_purge_wallet_body">Tap to erase wallet</string>
+    <string name="initial_message_sign_body">To sign, connect your phone and the card exactly as it shown above</string>
+    <string name="initial_message_purge_wallet_body">To reset to factory settings, connect your phone and the card exactly as it shown above</string>
     <string name="initial_message_create_wallet_body">Tap to create wallet</string>
-    <string name="initial_message_change_access_code_body">Tap to change the access code</string>
-    <string name="initial_message_change_passcode_body">Tap to change the passcode</string>
+    <string name="initial_message_change_access_code_body">To change the access code, connect your phone and the card exactly as it shown above</string>
+    <string name="initial_message_change_passcode_body">To change the passcode, connect your phone and the card exactly as it shown above</string>
 
     <string name="payid_service_error_loading">Invalid PayString</string>
 
