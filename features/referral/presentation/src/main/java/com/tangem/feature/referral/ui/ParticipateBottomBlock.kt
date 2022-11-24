@@ -56,7 +56,7 @@ internal fun ParticipateBottomBlock(
             ),
         )
         PersonalCodeCard(code = code)
-        AdditionalButtons(shareLink = shareLink, showCopySnackbar = showCopySnackbar)
+        AdditionalButtons(code = code, shareLink = shareLink, showCopySnackbar = showCopySnackbar)
         AgreementText(firstPartResId = R.string.referral_tos_enroled_prefix, onClicked = onAgreementClicked)
     }
 }
@@ -94,7 +94,7 @@ private fun PersonalCodeCard(code: String) {
 }
 
 @Composable
-private fun AdditionalButtons(shareLink: String, showCopySnackbar: () -> Unit) {
+private fun AdditionalButtons(code: String, shareLink: String, showCopySnackbar: () -> Unit) {
     val clipboardManager = LocalClipboardManager.current
     val hapticFeedback = LocalHapticFeedback.current
 
@@ -108,7 +108,7 @@ private fun AdditionalButtons(shareLink: String, showCopySnackbar: () -> Unit) {
             iconResId = R.drawable.ic_copy,
             onClicked = {
                 hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                clipboardManager.setText(AnnotatedString(shareLink))
+                clipboardManager.setText(AnnotatedString(code))
                 showCopySnackbar()
             },
         )
@@ -120,7 +120,7 @@ private fun AdditionalButtons(shareLink: String, showCopySnackbar: () -> Unit) {
             iconResId = R.drawable.ic_share,
             onClicked = {
                 hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
-                context.shareText(shareLink)
+                context.shareText(context.getString(R.string.referral_share_link, shareLink))
             },
         )
     }
