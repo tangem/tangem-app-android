@@ -350,7 +350,7 @@ data class WalletData(
 
     private fun assembleNonTypedWarnings(walletWarnings: MutableList<WalletWarning>) {
         if (currencyData.status == BalanceStatus.SameCurrencyTransactionInProgress) {
-            walletWarnings.add(WalletWarning.TransactionInProgress)
+            walletWarnings.add(WalletWarning.TransactionInProgress(currency.currencyName))
         }
     }
 
