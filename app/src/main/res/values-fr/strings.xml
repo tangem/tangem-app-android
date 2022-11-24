@@ -166,7 +166,6 @@ Avertissement
     <string name="wallet_create_payid_empty">Saisissez d\'abord le PayString requis</string>
     <string name="initial_message_scan_header">Posez pour scanner</string>
     <string name="initial_message_tap_header">Posez la carte</string>
-    <string name="details_notification_erase_wallet_not_possible">Votre solde sur ce portefeuille n\'est pas nul, ou vous avez des transactions non confirmées. Impossible de supprimer la fonction du portefeuille</string>
     <string name="details_notification_security_option_already_active">Cette option est déjà active</string>
 
 
