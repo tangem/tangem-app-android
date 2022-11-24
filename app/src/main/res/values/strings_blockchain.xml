@@ -11,9 +11,9 @@
     <string name="send_error_unknown">Unknown error</string>
     <string name="send_validation_invalid_address">Invalid address</string>
     <string name="send_validation_invalid_amount">Invalid amount</string>
-    <string name="send_validation_amount_exceeds_balance">Amount Exceeds Balance</string>
-    <string name="send_validation_invalid_total">Total Exceeds Balance</string>
-    <string name="send_validation_invalid_fee">Fee Exceeds Balance</string>
+    <string name="send_validation_amount_exceeds_balance">Amount exceeds balance</string>
+    <string name="send_validation_invalid_total">Total amount exceeds balance</string>
+    <string name="send_validation_invalid_fee">Fee exceeds balance</string>
     <string name="xtz_withdrawal_message_warning">To avoid paying an increased commission the next time you top up your wallet, reduce the amount by %s XTZ</string>
     <string name="xtz_withdrawal_message_reduce">Reduce by %s XTZ</string>
     <string name="xtz_withdrawal_message_ignore">No, send all</string>
