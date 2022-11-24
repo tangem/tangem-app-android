@@ -7,7 +7,6 @@ import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.extensions.dispatchDialogShow
-import com.tangem.tap.common.extensions.dispatchNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
@@ -18,7 +17,6 @@ import com.tangem.tap.domain.extensions.getUserWalletId
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.onboarding.products.twins.redux.CreateTwinWalletMode
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
-import com.tangem.tap.features.wallet.models.hasSendableAmountsOrPendingTransactions
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
@@ -56,21 +54,8 @@ class DetailsMiddleware {
                 }
             }
             is DetailsAction.ReCreateTwinsWallet -> {
-                val wallet =
-                    store.state.walletState.walletManagers.map { it.wallet }.firstOrNull()
-                if (wallet == null) {
-                    store.dispatch(TwinCardsAction.SetMode(CreateTwinWalletMode.RecreateWallet))
-                    store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingTwins))
-                } else {
-                    if (wallet.hasSendableAmountsOrPendingTransactions()) {
-                        val walletIsNotEmpty =
-                            store.state.globalState.resources.strings.walletIsNotEmpty
-                        store.dispatchNotification(walletIsNotEmpty)
-                    } else {
-                        store.dispatch(TwinCardsAction.SetMode(CreateTwinWalletMode.RecreateWallet))
-                        store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingTwins))
-                    }
-                }
+                store.dispatch(TwinCardsAction.SetMode(CreateTwinWalletMode.RecreateWallet))
+                store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingTwins))
             }
             is DetailsAction.CreateBackup -> {
                 store.state.detailsState.scanResponse?.let {
