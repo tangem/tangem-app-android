@@ -30,7 +30,7 @@
     <string name="wallet_balance_loading">Загрузка баланса…</string>
     <string name="wallet_balance_blockchain_unreachable">Блокчейн недоступен</string>
     <string name="wallet_error_no_account">Аккаунт не создан</string>
-    <string name="wallet_error_no_account_subtitle_format">Загрузите %1$s+ %2$s для создания учетной записи</string>
+    <string name="wallet_error_no_account_subtitle_format">Загрузите %s+ %s для создания учетной записи</string>
     <string name="wallet_error_empty_card">Карта пуста</string>
     <string name="wallet_error_empty_card_subtitle">Создайте кошелек, чтобы начать пользоваться картой Tangem</string>
     <string name="wallet_error_unsupported_blockchain">Эта карта не поддерживается</string>
@@ -64,10 +64,10 @@
     <string name="send_fee_picker_normal">Нормальный</string>
     <string name="send_fee_picker_priority">Приоритетный</string>
     <string name="send_fee_include_description">Включить коммисию</string>
-    <string name="send_total_subtitle_format">%1$s %2$s будет отправлено</string>
-    <string name="send_total_subtitle_fiat_format">≈ %1$s (включая комиссию: %2$s)</string>
-    <string name="send_total_subtitle_asset_format">%1$s %2$s и %3$s %4$s будут отправлены</string>
-    <string name="send_balance_subtitle_format">Баланс: %1$s %2$s</string>
+    <string name="send_total_subtitle_format">%s %s будет отправлено</string>
+    <string name="send_total_subtitle_fiat_format">≈ %s (включая комиссию: %s)</string>
+    <string name="send_total_subtitle_asset_format">%s %s и %s %s будут отправлены</string>
+    <string name="send_balance_subtitle_format">Баланс: %s %s</string>
     <string name="send_transaction_success">Транзакция успешно подписана и отправлена в блокчейн. Баланс кошелька будет обновлен через некоторое время.</string>
     <string name="details_title">Подробности</string>
     <string name="details_row_title_cid">ID карты</string>
@@ -114,7 +114,6 @@
     <string name="wallet_create_payid_empty">Сначала введите желаемую PayString</string>
     <string name="initial_message_scan_header">Приложите, чтобы отсканировать</string>
     <string name="initial_message_tap_header">Приложите карту</string>
-    <string name="details_notification_erase_wallet_not_possible">Ваш баланс на этом кошельке не равен нулю, или у Вас есть неподтвержденные транзакции</string>
     <string name="details_notification_security_option_already_active">Это текущая активная опция</string>
     <string name="scan_card_error">Ошибка сканирования карты. Попробуй снова.</string>
     <string name="wallet_button_buy">Купить</string>
@@ -206,7 +205,7 @@
     <string name="wallet_address_button_copy">Копировать</string>
     <string name="wallet_address_button_share">Поделиться</string>
     <string name="wallet_button_add_tokens">+ Добавить токены</string>
-    <string name="wallet_pending_transaction_warning">Пожалуйста, дождитесь завершения транзакции, чтобы иметь возможность отправить средства</string>
+    <string name="token_details_send_blocked_tx_format">Пожалуйста, дождитесь завершения транзакции %s, чтобы иметь возможность отправить средства</string>
     <string name="warning_failed_to_verify_card_title">Проверка подлинности не удалась</string>
     <string name="warning_failed_to_verify_card_message">Эта карта может быть производственным образцом или подделкой</string>
     <string name="warning_important_security_info">Важная информация о безопасности \u26A0</string>
@@ -319,11 +318,11 @@
     <string name="details_row_title_reset_factory_settings">Сброс до заводских настроек</string>
     <string name="details_manage_security_access_code_disclaimer">Код доступа доступен только для карт с резервной копией</string>
     <string name="solana_rent_warning">Сеть Solana взымает арендную плату в размере %s каждые 2 дня. Аккаунты, которые не могут позволить себе арендную плату, удаляются из сети. Пополните свой счет более чем на %s, чтобы использовать его бесплатно.</string>
-    <string name="token_symbol_address_format">%1s (%2s)</string>
+    <string name="token_symbol_address_format">%s (%s)</string>
     <string name="alert_signed_hashes_message">Эта карта не является векселем на предъявителя. В настоящее время мы не можем сопоставить количество подписей на карте с информацией в блокчейне. Это нормально, но в редких случаях может означать, что предыдущий владелец скрывает автономную подпись, что является проблемой безопасности.\n\nНе принимайте эту карту в качестве физического платежа от кого-то, кому Вы не доверяете.\n\nВо всех остальных отношениях - это совершенно безопасно.\n\nTangem — единственный аппаратный кошелек, предлагающий защиту от подсчета подписей.</string>
     <string name="wallet_connect">WalletConnect</string>
-    <string name="wallet_connect_create_tx_message">Запрос на создание транзакции для %1s\n%2s\n\nСумма: %3s\nКомиссия: %4s\nВсего: %5s\nБаланс: %6s</string>
-    <string name="wallet_connect_request_session_start">Запрос на запуск сеанса для %1s\n\nURL: %2s</string>
+    <string name="wallet_connect_create_tx_message">Запрос на создание транзакции для %s\n%s\n\nСумма: %s\nКомиссия: %s\nВсего: %s\nБаланс: %s</string>
+    <string name="wallet_connect_request_session_start">Запрос на запуск сеанса для %s\n\nURL: %s</string>
     <string name="wallet_connect_sessions_title">Сессии WalletConnect</string>
     <string name="wallet_connect_session_opened">Сеанс WalletConnect открыт с %s</string>
     <string name="wallet_connect_no_sessions_title">Упс. Нет сессий.</string>

@@ -174,7 +174,6 @@ RECHTLICHER HAFTUNGSAUSSCHLUSS
     <string name="initial_message_scan_header">Legen Sie die Karte zum Scannen an</string>
     <string name="initial_message_tap_header">Legen Sie die Karte an</string>
 
-    <string name="details_notification_erase_wallet_not_possible">Ihr Kontostand in dieser Brieftasche ist nicht Null, oder Sie haben unbestätigte Transaktionen. Es ist unmöglich die Funktion der Brieftasche zu löschen.</string>
     <string name="details_notification_security_option_already_active">Dies ist die derzeit aktive Wahl</string>
 
 </resources>
