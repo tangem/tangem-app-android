@@ -14,9 +14,6 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
     val globalState = state.globalState
 
     return when (action) {
-        is GlobalAction.SetResources -> {
-            globalState.copy(resources = action.resources)
-        }
         is GlobalAction.Onboarding.Start -> {
             val usedCardsPrefStorage = preferencesStorage.usedCardsPrefStorage
             val onboardingManager = OnboardingManager(action.scanResponse, usedCardsPrefStorage)
@@ -34,7 +31,7 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
         is GlobalAction.ScanFailsCounter.Reset -> {
             globalState.copy(scanCardFailsCounter = 0)
         }
-        is GlobalAction.SaveScanNoteResponse ->{
+        is GlobalAction.SaveScanNoteResponse -> {
             domainStore.dispatch(DomainGlobalAction.SaveScanNoteResponse(action.scanResponse))
             globalState.copy(scanResponse = action.scanResponse)
         }
@@ -51,11 +48,12 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
         is GlobalAction.UpdateWalletSignedHashes -> {
             val card = globalState.scanResponse?.card ?: return globalState
             val wallet = card.wallet(action.walletPublicKey) ?: return globalState
-
-            val newCardInstance = card.updateWallet(wallet.copy(
-                totalSignedHashes = action.walletSignedHashes,
-                remainingSignatures = action.remainingSignatures
-            ))
+            val newCardInstance = card.updateWallet(
+                wallet.copy(
+                    totalSignedHashes = action.walletSignedHashes,
+                    remainingSignatures = action.remainingSignatures,
+                ),
+            )
             globalState.copy(scanResponse = globalState.scanResponse.copy(card = newCardInstance))
         }
         is GlobalAction.SetFeedbackManager -> {
@@ -72,9 +70,7 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
         }
         is GlobalAction.SetIfCardVerifiedOnline ->
             globalState.copy(cardVerifiedOnline = action.verified)
-        is GlobalAction.FetchUserCountry.Success -> globalState.copy(
-            userCountryCode = action.countryCode
-        )
+        is GlobalAction.FetchUserCountry.Success -> globalState.copy(userCountryCode = action.countryCode)
         else -> globalState
     }
 }
