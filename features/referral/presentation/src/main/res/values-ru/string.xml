@@ -21,4 +21,5 @@
     <string name="referral_error_failed_to_load_info_with_reason">Не удалось загрузить информацию по реферальной программе. Причина: %s. Пожалуйста, попробуйте позже.</string>
     <string name="referral_error_failed_to_participate">Не удалось обработать вашу заявку на участие. Причина: %s. Пожалуйста, попробуйте позже. Если проблема сохранится, вы можете обратиться в техподдержку.</string>
     <string name="referral_promo_code_copied">Персональный код скопирован!</string>
+    <string name="referral_share_link">Купи Tangem Wallet со скидкой!\n%s</string>
 </resources>
