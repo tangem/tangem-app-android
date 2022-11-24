@@ -67,7 +67,7 @@
     <string name="send_total_subtitle_fiat_format">≈ %s (inc. commissione: %s)</string>
     <string name="send_total_subtitle_asset_format">Sarà inviato %s %s e %s %s</string>
     <string name="send_balance_subtitle_format">Saldo: %s %s</string>
-    <string name="send_transaction_success">La transazione è stata firmata con successo e inviata al nodo blockchain. Il saldo del portafoglio verrà aggiornato dopo un po\' di tempo </string>
+    <string name="send_transaction_success">La transazione è stata firmata con successo e inviata al nodo blockchain. Il saldo del portafoglio verrà aggiornato dopo un po\' di tempo</string>
     <string name="details_title">Requisiti</string>
     <string name="details_row_title_cid">ID carta</string>
     <string name="details_row_title_issuer">Emittente</string>
