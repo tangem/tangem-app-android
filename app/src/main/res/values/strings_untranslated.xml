@@ -24,7 +24,6 @@
     <string name="twins_recreate_title_format" translatable="false">Tap the #%s twin card</string>
     <string name="twins_recreate_title_preparing" translatable="false">Preparing card</string>
     <string name="twins_recreate_title_creating_wallet" translatable="false">Creating wallet</string>
-    <string name="twins_recreate_subtitle" translatable="false">The wallet creation procedure consists of three steps. You must complete it to the end, otherwise you will have to start from the beginning.</string>
     <string name="twins_recreate_button_format" translatable="false">Scan the card #%s</string>
     <string name="twins_recreate_alert" translatable="false">You have already started the process of recreating twin wallet. If you interrupt it, you won\'t be able to use your twin cards until you start it again and complete recreating the wallet.</string>
     <string name="twins_wrong_card_error" translatable="false">You\'ve tapped the same card. To create twin wallet you need to tap a second twin card.</string>
@@ -176,7 +175,7 @@
     <string name="onboarding_create_wallet_button_create_wallet" translatable="false">Create wallet</string>
 
     <string name="onboarding_top_up_header" translatable="false">Top up your wallet</string>
-    <string name="onboarding_top_up_body" translatable="false">To get started, simply top up the card with any amount</string>
+    <string name="onboarding_top_up_body" translatable="false">To get started, simply top up the wallet with any amount</string>
     <string name="onboarding_top_up_body_no_account_error" translatable="false">To get started, simply top up the wallet with more than %s %s.</string>
     <string name="onboarding_top_up_button_but_crypto" translatable="false">Buy crypto</string>
     <string name="onboarding_top_up_button_show_wallet_address" translatable="false">Show the wallet\'s address</string>
@@ -218,7 +217,7 @@
     <string name="onboarding_title_backup_card_format" translatable="false">Backup card #%d</string>
 
     <string name="onboarding_subtitle_backup_card" translatable="false">You can backup your keys up to two other blank wallet cards</string>
-    <string name="onboarding_subtitle_no_backup_cards" translatable="false">To start the backup process add up to two cards</string>
+    <string name="onboarding_subtitle_no_backup_cards" translatable="false">To start the backup process add up to two backup cards.</string>
     <string name="onboarding_subtitle_scan_origin_card_format" translatable="false">Prepare the primary card with number %s</string>
     <string name="onboarding_subtitle_scan_origin_card" translatable="false">Prepare the primary card</string>
     <string name="onboarding_subtitle_one_backup_card" translatable="false">You can add one more card or finalize the backup process</string>
