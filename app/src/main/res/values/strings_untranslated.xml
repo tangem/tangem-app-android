@@ -105,7 +105,7 @@
     <string name="wallet_address_button_copy" translatable="false">Copy</string>
     <string name="wallet_address_button_share" translatable="false">Share</string>
     <string name="wallet_button_add_tokens" translatable="false">+ Add tokens</string>
-    <string name="wallet_pending_transaction_warning" translatable="false">Please wait for the transaction to complete to be able to send funds</string>
+    <string name="token_details_send_blocked_tx_format" translatable="false">Please wait for %s transaction to complete to be able to send funds</string>
 
     <string name="warning_failed_to_verify_card_title" translatable="false">Authenticity check failed</string>
     <string name="warning_failed_to_verify_card_message" translatable="false">This card might be a production sample or counterfeit</string>
@@ -132,21 +132,11 @@
     <string name="wallet_connect_card_number" translatable="false">Card: %s</string>
     <string name="wallet_connect_scan_card_message" translatable="false">Tap card to bind to wallet connect</string>
 
-    <string name="wallet_connect_create_tx_message" translatable="false">
-    Request to create transaction for %1s
-    \n%2s
-
-    \n\nAmount: %3s
-    \nFee: %4s
-    \nTotal: %5s
-    \nBalance: %6s</string>
+    <string name="wallet_connect_create_tx_message" translatable="false">Request to create transaction for %s\n%s\n\nAmount: %s\nFee: %s\nTotal: %s\nBalance: %s</string>
 
     <string name="wallet_connect_create_tx_not_enough_funds" translatable="false">Can\'t send transaction. Not enough funds.</string>
 
-    <string name="wallet_connect_request_session_start" translatable="false">Request to start a session for %1s\n\n
-
-    URL: %2s</string>
-
+    <string name="wallet_connect_request_session_start" translatable="false">Request to start a session for %s\n\nURL: %s</string>
 
     <string name="wallet_connect_alert_sign_message" translatable="false">Requesting to sign a message\n</string>
     <string name="wallet_connect_personal_sign_message" translatable="false">Message for %s:\n%s</string>
@@ -309,7 +299,7 @@ Amount to pay: %s</string>
 
     <string name="solana_rent_warning" translatable="false">Solana network charges a rent of %s every 2 days. Accounts that can\'t afford the rent are purged from the network. Deposit your account with more than %s to use it for free.</string>
 
-    <string name="token_symbol_address_format" translatable="false">%1s (%2s)</string>
+    <string name="token_symbol_address_format" translatable="false">%s (%s)</string>
     <string name="add_token_search_hint" translatable="false">Type here to search</string>
 
     <string name="feedback_subject_rate_negative" translatable="false">My suggestions</string>
