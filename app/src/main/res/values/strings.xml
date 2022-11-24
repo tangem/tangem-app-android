@@ -36,7 +36,7 @@
     <string name="wallet_balance_blockchain_unreachable">Blockchain is unreachable</string>
 
     <string name="wallet_error_no_account">Account is not created</string>
-    <string name="wallet_error_no_account_subtitle_format">Load %1$s+ %2$s to create account</string>
+    <string name="wallet_error_no_account_subtitle_format">Load %s+ %s to create account</string>
     <string name="wallet_error_empty_card">Empty card</string>
     <string name="wallet_error_empty_card_subtitle">Create wallet to start using Tangem card</string>
     <string name="wallet_error_unsupported_blockchain">This card is not supported</string>
@@ -74,10 +74,10 @@
     <string name="send_fee_picker_normal">Normal</string>
     <string name="send_fee_picker_priority">Priority</string>
     <string name="send_fee_include_description">Include fee</string>
-    <string name="send_total_subtitle_format">%1$s %2$s will be sent</string>
-    <string name="send_total_subtitle_fiat_format">≈ %1$s (inc. fee: %2$s)</string>
-    <string name="send_total_subtitle_asset_format">%1$s %2$s and %3$s %4$s will be sent</string>
-    <string name="send_balance_subtitle_format">Balance: %1$s %2$s</string>
+    <string name="send_total_subtitle_format">%s %s will be sent</string>
+    <string name="send_total_subtitle_fiat_format">≈ %s (inc. fee: %s)</string>
+    <string name="send_total_subtitle_asset_format">%s %s and %s %s will be sent</string>
+    <string name="send_balance_subtitle_format">Balance: %s %s</string>
     <string name="send_transaction_success">Transaction has been successfully signed and sent to blockchain node. Wallet balance will be updated in a while</string>
 
     <string name="details_title">Details</string>
@@ -168,7 +168,7 @@
     \nThis disclaimer was amended for the last time on October 1st, 2020.</string>
     <string name="disclaimer_title">Terms of service</string>
 
-  <string name="wallet_notification_no_internet">No internet connection</string>
+    <string name="wallet_notification_no_internet">No internet connection</string>
 
     <string name="send_error_payid_verification_failed">PayString verification failed</string>
     <string name="send_error_payid_unsupported_by_blockchain">PayString unsupported by blockchain</string>
@@ -185,6 +185,5 @@
     <string name="initial_message_scan_header">Tap to scan</string>
     <string name="initial_message_tap_header">Tap the card</string>
 
-    <string name="details_notification_erase_wallet_not_possible">Your balance on this wallet is not zero, or you have unconfirmed transactions</string>
     <string name="details_notification_security_option_already_active">This is the currently active option</string>
 </resources>
