@@ -19,8 +19,6 @@ import com.tangem.tap.common.IntentHandler
 import com.tangem.tap.common.OnActivityResultCallback
 import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.redux.NotificationsHandler
-import com.tangem.tap.common.redux.global.AndroidResources
-import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.common.shop.GooglePayService
@@ -70,19 +68,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         tangemSdkManager = TangemSdkManager(tangemSdk, this)
         backupService = BackupService.init(tangemSdk, this)
 
-        store.dispatch(GlobalAction.SetResources(getAndroidResources()))
         store.dispatch(
             ShopAction.CheckIfGooglePayAvailable(
                 GooglePayService(createPaymentsClient(this), this),
-            ),
-        )
-    }
-
-    private fun getAndroidResources(): AndroidResources {
-        return AndroidResources(
-            AndroidResources.RString(
-                R.string.copy_toast_msg,
-                R.string.details_notification_erase_wallet_not_possible,
             ),
         )
     }
