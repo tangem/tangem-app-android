@@ -1,6 +1,8 @@
 package com.tangem.datasource.di
 
+import com.tangem.datasource.api.oneinch.OneInchApi
 import com.tangem.datasource.api.referral.ReferralApi
+import com.tangem.datasource.di.qualifiers.OneInchEthereum
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -14,6 +16,20 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 class NetworkModule {
+
+    @Provides
+    @Singleton
+    @OneInchEthereum
+    fun provideOneInchEthereumApi(): OneInchApi {
+        return Retrofit.Builder()
+            .addConverterFactory(
+                MoshiConverterFactory.create(),
+            )
+            .baseUrl(ONE_INCH_ETHER_BASE_URL)
+            .client(OkHttpClient())
+            .build()
+            .create(OneInchApi::class.java)
+    }
 
     @Provides
     @Singleton
@@ -40,5 +56,6 @@ class NetworkModule {
 
     private companion object {
         const val PROD_REFERRAL_BASE_URL = ""
+        const val ONE_INCH_ETHER_BASE_URL = ""
     }
 }
