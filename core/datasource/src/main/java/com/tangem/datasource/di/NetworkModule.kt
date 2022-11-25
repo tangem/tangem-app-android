@@ -3,7 +3,9 @@ package com.tangem.datasource.di
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.tangem.datasource.api.AuthHeaderInterceptor
+import com.tangem.datasource.api.oneinch.OneInchApi
 import com.tangem.datasource.api.referral.ReferralApi
+import com.tangem.datasource.di.qualifiers.OneInchEthereum
 import com.tangem.lib.auth.AuthProvider
 import dagger.Module
 import dagger.Provides
@@ -18,6 +20,20 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 class NetworkModule {
+
+    @Provides
+    @Singleton
+    @OneInchEthereum
+    fun provideOneInchEthereumApi(): OneInchApi {
+        return Retrofit.Builder()
+            .addConverterFactory(
+                MoshiConverterFactory.create(),
+            )
+            .baseUrl(ONE_INCH_ETHER_BASE_URL)
+            .client(OkHttpClient())
+            .build()
+            .create(OneInchApi::class.java)
+    }
 
     @Provides
     @Singleton
@@ -49,5 +65,6 @@ class NetworkModule {
 
     private companion object {
         const val PROD_REFERRAL_BASE_URL = "https://devapi.tangem-tech.com/v1/"//"https://api.tangem-tech.com/v1/"
+        const val ONE_INCH_ETHER_BASE_URL = ""
     }
 }
