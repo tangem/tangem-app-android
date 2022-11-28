@@ -1,10 +1,10 @@
-package com.tangem.network.api.tangemTech
+package com.tangem.datasource.api.tangemTech
 
 import com.tangem.common.services.Result
 import com.tangem.common.services.performRequest
-import com.tangem.network.common.AddHeaderInterceptor
-import com.tangem.network.common.CacheControlHttpInterceptor
-import com.tangem.network.common.createRetrofitInstance
+import com.tangem.datasource.api.common.AddHeaderInterceptor
+import com.tangem.datasource.api.common.CacheControlHttpInterceptor
+import com.tangem.datasource.api.common.createRetrofitInstance
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 

@@ -1,4 +1,4 @@
-package com.tangem.network.api.tangemTech
+package com.tangem.datasource.api.tangemTech
 
 import retrofit2.http.Body
 import retrofit2.http.GET

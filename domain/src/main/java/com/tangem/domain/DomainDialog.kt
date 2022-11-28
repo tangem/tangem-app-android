@@ -1,7 +1,7 @@
 package com.tangem.domain
 
 import com.tangem.common.extensions.VoidCallback
-import com.tangem.network.api.tangemTech.CoinsResponse
+import com.tangem.datasource.api.tangemTech.CoinsResponse
 
 /**
  * Created by Anton Zhilenkov on 10/04/2022.

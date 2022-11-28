@@ -1,4 +1,4 @@
-package com.tangem.network.api.tangemTech
+package com.tangem.datasource.api.tangemTech
 
 import java.math.BigDecimal
 
