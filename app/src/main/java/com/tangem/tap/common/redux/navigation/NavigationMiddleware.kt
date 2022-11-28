@@ -1,6 +1,10 @@
 package com.tangem.tap.common.redux.navigation
 
 import android.content.Intent
+import android.hardware.biometrics.BiometricManager
+import android.os.Build
+import android.provider.Settings
+import com.tangem.tap.activityResultCaller
 import com.tangem.tap.common.CustomTabsManager
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.openFragment
@@ -47,6 +51,28 @@ val navigationMiddleware: Middleware<AppState> = { _, state ->
                         val intent = Intent(Intent.ACTION_VIEW)
                         intent.data = action.url
                         navState?.activity?.get()?.startActivity(intent)
+                    }
+                    is NavigationAction.OpenBiometricsSettings -> {
+                        val settingsAction = when {
+                            Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> {
+                                Settings.ACTION_BIOMETRIC_ENROLL
+                            }
+                            Build.VERSION.SDK_INT >= Build.VERSION_CODES.P -> {
+                                Settings.ACTION_FINGERPRINT_ENROLL
+                            }
+                            else -> {
+                                Settings.ACTION_SETTINGS
+                            }
+                        }
+                        val intent = Intent(settingsAction).apply {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                                putExtra(
+                                    Settings.EXTRA_BIOMETRIC_AUTHENTICATORS_ALLOWED,
+                                    BiometricManager.Authenticators.BIOMETRIC_STRONG,
+                                )
+                            }
+                        }
+                        activityResultCaller.activityResultLauncher?.launch(intent)
                     }
                     is NavigationAction.Share -> {
                         navState?.activity?.get()?.shareText(action.data)
