@@ -56,7 +56,7 @@ import com.tangem.domain.redux.domainStore
 import com.tangem.domain.redux.extensions.dispatchOnMain
 import com.tangem.domain.redux.global.DomainGlobalAction
 import com.tangem.domain.redux.global.DomainGlobalState
-import com.tangem.network.api.tangemTech.CoinsResponse
+import com.tangem.datasource.api.tangemTech.CoinsResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -342,7 +342,7 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
 
     private suspend fun requestInfoAboutToken(
         contractAddress: String,
-    ): List<CoinsResponse.Coin> {
+    ): List<com.tangem.datasource.api.tangemTech.CoinsResponse.Coin> {
         val tangemTechServiceManager = requireNotNull(hubState.tangemTechServiceManager)
         dispatchOnMain(Screen.UpdateTokenFields(listOf(ContractAddress to ViewStates.TokenField(isLoading = true))))
 
@@ -432,8 +432,8 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
     )
 
     private suspend fun fillTokenFields(
-        token: CoinsResponse.Coin,
-        coinNetwork: CoinsResponse.Coin.Network,
+        token: com.tangem.datasource.api.tangemTech.CoinsResponse.Coin,
+        coinNetwork: com.tangem.datasource.api.tangemTech.CoinsResponse.Coin.Network,
     ) {
         val blockchain = Blockchain.fromNetworkId(coinNetwork.networkId) ?: Blockchain.Unknown
         Network.setFieldValue(Field.Data(blockchain, false))
