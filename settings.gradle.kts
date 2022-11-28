@@ -1,6 +1,5 @@
 include(":app")
 include(":domain")
-include(":network")
 include(":common")
 
 // region Core modules
