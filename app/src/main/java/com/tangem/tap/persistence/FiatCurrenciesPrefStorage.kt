@@ -3,7 +3,7 @@ package com.tangem.tap.persistence
 import android.content.SharedPreferences
 import androidx.core.content.edit
 import com.tangem.common.json.MoshiJsonConverter
-import com.tangem.network.api.tangemTech.CurrenciesResponse
+import com.tangem.datasource.api.tangemTech.CurrenciesResponse
 import com.tangem.tap.common.entities.FiatCurrency
 
 /**
