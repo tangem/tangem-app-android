@@ -5,6 +5,7 @@ import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.tangem.datasource.api.AuthHeaderInterceptor
 import com.tangem.datasource.api.oneinch.OneInchApi
 import com.tangem.datasource.api.referral.ReferralApi
+import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.di.qualifiers.OneInchEthereum
 import com.tangem.lib.auth.AuthProvider
 import dagger.Module
@@ -20,6 +21,19 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 class NetworkModule {
+
+    @Provides
+    @Singleton
+    fun provideTangemTechApi(okHttpClient: OkHttpClient): TangemTechApi {
+        return Retrofit.Builder()
+            .addConverterFactory(
+                MoshiConverterFactory.create(),
+            )
+            .baseUrl(DEV_TANGEM_TECH_BASE_URL)
+            .client(okHttpClient)
+            .build()
+            .create(TangemTechApi::class.java)
+    }
 
     @Provides
     @Singleton
@@ -46,7 +60,7 @@ class NetworkModule {
                         .build(),
                 ),
             )
-            .baseUrl(PROD_REFERRAL_BASE_URL)
+            .baseUrl(DEV_TANGEM_TECH_BASE_URL)
             .client(okHttpClient)
             .build()
             .create(ReferralApi::class.java)
@@ -64,7 +78,8 @@ class NetworkModule {
     }
 
     private companion object {
-        const val PROD_REFERRAL_BASE_URL = "https://devapi.tangem-tech.com/v1/"//"https://api.tangem-tech.com/v1/"
+        const val PROD_TANGEM_TECH_BASE_URL = "https://api.tangem-tech.com/v1/"
+        const val DEV_TANGEM_TECH_BASE_URL = "https://devapi.tangem-tech.com/v1/"
         const val ONE_INCH_ETHER_BASE_URL = ""
     }
 }
