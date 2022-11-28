@@ -5,7 +5,7 @@ import org.rekotlin.StateType
 import java.lang.ref.WeakReference
 
 data class NavigationState(
-    val backStack: List<AppScreen> = listOf(AppScreen.Home),
+    val backStack: List<AppScreen> = emptyList(),
     val activity: WeakReference<AppCompatActivity>? = null,
 ) : StateType
 
