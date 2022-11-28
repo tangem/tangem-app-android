@@ -20,6 +20,7 @@ import com.tangem.core.ui.components.dialogs.EnrollBiometricsDialogContent
 import com.tangem.core.ui.fragments.ComposeBottomSheetFragment
 import com.tangem.core.ui.models.EnrollBiometricsDialog
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.tap.features.details.ui.cardsettings.resolveReference
 import com.tangem.tap.features.saveWallet.ui.components.SaveWalletScreenContent
 
 internal class SaveWalletBottomSheetFragment : ComposeBottomSheetFragment<SaveWalletScreenState>() {
@@ -43,7 +44,7 @@ internal class SaveWalletBottomSheetFragment : ComposeBottomSheetFragment<SaveWa
         state: SaveWalletScreenState,
     ) {
         val snackbarHostState = remember { SnackbarHostState() }
-        val errorMessage by rememberUpdatedState(newValue = state.error?.customMessage)
+        val errorMessage by rememberUpdatedState(newValue = state.error?.resolveReference())
         val enrollBiometricsDialog by rememberUpdatedState(newValue = state.enrollBiometricsDialog)
 
         Box(modifier = modifier) {
