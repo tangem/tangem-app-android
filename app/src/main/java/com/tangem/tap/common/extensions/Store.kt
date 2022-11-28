@@ -6,6 +6,7 @@ import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.TapError
+import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import kotlinx.coroutines.Dispatchers
@@ -24,6 +25,11 @@ fun Store<*>.dispatchOnMain(action: Action) {
 
 fun Store<*>.dispatchNotification(resId: Int) {
     dispatchOnMain(GlobalAction.ShowNotification(resId))
+}
+
+@Suppress("unused") // receiver type
+fun Store<*>.onUserWalletSelected(userWallet: UserWallet, refresh: Boolean = false) {
+    // TODO: Load tokens for selected user wallet. Will be created in further MRs
 }
 
 fun Store<*>.dispatchToastNotification(resId: Int) {
