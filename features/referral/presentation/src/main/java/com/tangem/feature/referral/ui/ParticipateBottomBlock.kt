@@ -37,7 +37,7 @@ fun Preview_ParticipateBottomBlock_InDarkTheme() {
 fun ParticipateBottomBlock(onAgreementClicked: () -> Unit, onParticipateClicked: () -> Unit) {
     Column {
         AgreementText(
-            firstPartResId = R.string.referral_tou_not_enroled_prefix,
+            firstPartResId = R.string.referral_tos_not_enroled_prefix,
             onClicked = onAgreementClicked,
         )
         PrimaryEndIconButton(

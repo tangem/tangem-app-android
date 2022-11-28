@@ -27,7 +27,7 @@ import com.tangem.feature.referral.presentation.R
 fun Preview_AgreementText_InLightTheme() {
     TangemTheme(isDark = false) {
         Box(modifier = Modifier.background(MaterialTheme.colors.primary)) {
-            AgreementText(firstPartResId = R.string.referral_tou_not_enroled_prefix, onClicked = {})
+            AgreementText(firstPartResId = R.string.referral_tos_not_enroled_prefix, onClicked = {})
         }
     }
 }
@@ -37,7 +37,7 @@ fun Preview_AgreementText_InLightTheme() {
 fun Preview_AgreementText_InDarkTheme() {
     TangemTheme(isDark = true) {
         Box(modifier = Modifier.background(MaterialTheme.colors.primary)) {
-            AgreementText(firstPartResId = R.string.referral_tou_not_enroled_prefix, onClicked = {})
+            AgreementText(firstPartResId = R.string.referral_tos_not_enroled_prefix, onClicked = {})
         }
     }
 }
@@ -71,7 +71,7 @@ private fun annotatedAgreementString(firstPart: String): AnnotatedString {
             append(stringResource(id = R.string.common_terms_and_conditions))
         }
         withStyle(SpanStyle(color = MaterialTheme.colors.textColor(type = TextColorType.TERTIARY))) {
-            append(" ${stringResource(id = R.string.referral_tou_suffix)}")
+            append(" ${stringResource(id = R.string.referral_tos_suffix)}")
         }
     }
 }
