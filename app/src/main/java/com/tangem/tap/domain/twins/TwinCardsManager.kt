@@ -10,7 +10,7 @@ import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
 import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.ScanResponse
-import com.tangem.network.common.MoshiConverter
+import com.tangem.datasource.api.common.MoshiConverter
 import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.tap.common.AssetReader
 import com.tangem.tap.tangemSdkManager
@@ -85,7 +85,7 @@ class TwinCardsManager(
         }
 
         private fun getAdapter(): JsonAdapter<List<Issuer>> {
-            return MoshiConverter.defaultMoshi().adapter(
+            return com.tangem.datasource.api.common.MoshiConverter.defaultMoshi().adapter(
                 Types.newParameterizedType(List::class.java, Issuer::class.java),
             )
         }
