@@ -18,6 +18,7 @@ import com.tangem.tap.common.DialogManager
 import com.tangem.tap.common.IntentHandler
 import com.tangem.tap.common.OnActivityResultCallback
 import com.tangem.tap.common.SnackbarHandler
+import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.NotificationsHandler
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
@@ -25,6 +26,8 @@ import com.tangem.tap.common.shop.GooglePayService
 import com.tangem.tap.common.shop.GooglePayService.Companion.LOAD_PAYMENT_DATA_REQUEST_CODE
 import com.tangem.tap.common.shop.googlepay.GooglePayUtil.createPaymentsClient
 import com.tangem.tap.domain.TangemSdkManager
+import com.tangem.tap.domain.userWalletList.UserWalletsListManager
+import com.tangem.tap.domain.userWalletList.di.provideDummyImplementation
 import com.tangem.tap.features.shop.redux.ShopAction
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.wallet.R
@@ -40,6 +43,7 @@ import kotlin.coroutines.CoroutineContext
 lateinit var tangemSdk: TangemSdk
 lateinit var tangemSdkManager: TangemSdkManager
 lateinit var backupService: BackupService
+lateinit var userWalletsListManager: UserWalletsListManager
 var notificationsHandler: NotificationsHandler? = null
 
 private val coroutineContext: CoroutineContext
@@ -73,6 +77,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         tangemSdkManager = TangemSdkManager(tangemSdk, this)
         appStateHolder.tangemSdkManager = tangemSdkManager
         backupService = BackupService.init(tangemSdk, this)
+        userWalletsListManager = UserWalletsListManager.provideDummyImplementation()
 
         store.dispatch(
             ShopAction.CheckIfGooglePayAvailable(
@@ -82,7 +87,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     }
 
     private fun systemActions() {
-
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
         val windowInsetsController = WindowInsetsControllerCompat(window, binding.root)
@@ -106,7 +110,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         val isOnboardingServiceActive = store.state.globalState.onboardingState.onboardingStarted
         val shopOpened = store.state.shopState.total != null
         if (backStackIsEmpty || (!isOnboardingServiceActive && !isScannedBefore && !shopOpened)) {
-            store.dispatch(NavigationAction.NavigateTo(AppScreen.Home))
+            val navigateTo = if (userWalletsListManager.hasSavedUserWallets) AppScreen.Welcome else AppScreen.Home
+
+            store.dispatchOnMain(NavigationAction.NavigateTo(navigateTo))
         }
         intentHandler.handleIntent(intent)
     }
