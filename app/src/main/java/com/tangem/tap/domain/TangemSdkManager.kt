@@ -8,11 +8,13 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CardFilter
 import com.tangem.common.CompletionResult
 import com.tangem.common.SuccessResponse
+import com.tangem.common.UserCodeType
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.core.CardIdDisplayFormat
 import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.Config
 import com.tangem.common.core.TangemSdkError
+import com.tangem.common.core.UserCodeRequestPolicy
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.hdWallet.DerivationPath
 import com.tangem.common.map
@@ -46,7 +48,10 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         userTokensRepository: UserTokensRepository,
         additionalBlockchainsToDerive: Collection<Blockchain>? = null,
         messageRes: Int? = null,
+        useBiometricsForAccessCode: Boolean = false,
     ): CompletionResult<ScanResponse> {
+        setAccessCodeRequestPolicy(useBiometricsForAccessCode)
+
         val message = Message(context.getString(messageRes ?: R.string.initial_message_scan_header))
         return runTaskAsyncReturnOnMain(
             runnable = ScanProductTask(null, userTokensRepository, additionalBlockchainsToDerive),
@@ -173,6 +178,16 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
 
     fun getString(@StringRes stringResId: Int, vararg formatArgs: Any?): String {
         return context.getString(stringResId, formatArgs)
+    }
+
+    fun setAccessCodeRequestPolicy(
+        useBiometricsForAccessCode: Boolean,
+    ) {
+        tangemSdk.config.userCodeRequestPolicy = if (useBiometricsForAccessCode) {
+            UserCodeRequestPolicy.AlwaysWithBiometrics(codeType = UserCodeType.AccessCode)
+        } else {
+            UserCodeRequestPolicy.Default
+        }
     }
 
     companion object {
