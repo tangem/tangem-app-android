@@ -10,6 +10,7 @@ import com.tangem.tap.features.onboarding.products.note.redux.OnboardingNoteRedu
 import com.tangem.tap.features.onboarding.products.otherCards.redux.OnboardingOtherCardsReducer
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsReducer
 import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletReducer
+import com.tangem.tap.features.saveWallet.redux.SaveWalletReducer
 import com.tangem.tap.features.send.redux.reducers.SendScreenReducer
 import com.tangem.tap.features.shop.redux.ShopReducer
 import com.tangem.tap.features.tokens.redux.TokensReducer
@@ -38,6 +39,7 @@ fun appReducer(action: Action, state: AppState?, appStateHolder: AppStateHolder)
         walletConnectState = WalletConnectReducer.reduce(action, state.walletConnectState),
         shopState = ShopReducer.reduce(action, state.shopState),
         welcomeState = WelcomeReducer.reduce(action, state),
+        saveWalletState = SaveWalletReducer.reduce(action, state),
     )
 }
 

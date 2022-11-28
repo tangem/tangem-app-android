@@ -15,6 +15,9 @@ data class UserWallet(
     val cardId: String
         get() = scanResponse.card.cardId
 
+    val hasAccessCode: Boolean
+        get() = scanResponse.card.isAccessCodeSet
+
     companion object {
         suspend operator fun invoke(
             scanResponse: ScanResponse,
