@@ -3,8 +3,8 @@ package com.tangem.domain.redux.global
 import com.tangem.domain.DomainDialog
 import com.tangem.domain.common.LogConfig
 import com.tangem.domain.common.ScanResponse
-import com.tangem.network.api.paymentology.PaymentologyApiService
-import com.tangem.network.api.tangemTech.TangemTechService
+import com.tangem.datasource.api.paymentology.PaymentologyApiService
+import com.tangem.datasource.api.tangemTech.TangemTechService
 
 /**
  * Created by Anton Zhilenkov on 07/04/2022.
@@ -19,7 +19,9 @@ data class DomainGlobalState(
 )
 
 data class NetworkServices(
-    val tangemTechService: TangemTechService = TangemTechService(LogConfig.network.tangemTechService),
-    val paymentologyService: PaymentologyApiService = PaymentologyApiService(LogConfig.network.paymentologyApiService),
+    val tangemTechService: TangemTechService = TangemTechService(
+        LogConfig.network.tangemTechService),
+    val paymentologyService: PaymentologyApiService = PaymentologyApiService(
+        LogConfig.network.paymentologyApiService),
 )
 

@@ -2,8 +2,8 @@ package com.tangem.domain.features.addCustomToken
 
 import com.tangem.common.services.Result
 import com.tangem.domain.common.extensions.getTokens
-import com.tangem.network.api.tangemTech.CoinsResponse
-import com.tangem.network.api.tangemTech.TangemTechService
+import com.tangem.datasource.api.tangemTech.CoinsResponse
+import com.tangem.datasource.api.tangemTech.TangemTechService
 
 /**
  * Created by Anton Zhilenkov on 02/04/2022.

@@ -1,4 +1,4 @@
-package com.tangem.network.api.paymentology
+package com.tangem.datasource.api.paymentology
 
 import retrofit2.http.Body
 import retrofit2.http.Headers

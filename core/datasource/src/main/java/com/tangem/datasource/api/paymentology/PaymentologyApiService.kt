@@ -1,10 +1,10 @@
-package com.tangem.network.api.paymentology
+package com.tangem.datasource.api.paymentology
 
 import com.tangem.common.extensions.toHexString
 import com.tangem.common.services.Result
 import com.tangem.common.services.performRequest
-import com.tangem.network.common.MoshiConverter
-import com.tangem.network.common.createRetrofitInstance
+import com.tangem.datasource.api.common.MoshiConverter
+import com.tangem.datasource.api.common.createRetrofitInstance
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 

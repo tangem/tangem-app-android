@@ -1,4 +1,4 @@
-package com.tangem.network.common
+package com.tangem.datasource.api.common
 
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
@@ -9,8 +9,10 @@ import retrofit2.converter.moshi.MoshiConverterFactory
 /**
  * Created by Anton Zhilenkov on 02/04/2022.
  */
+//todo needs to be refactored
 object MoshiConverter {
 
+    //todo refactor: provide via DI
     var INSTANCE = MoshiJsonConverter()
         private set
 
@@ -23,7 +25,9 @@ object MoshiConverter {
 
     fun createFactory(moshi: Moshi = INSTANCE.moshi): Converter.Factory = MoshiConverterFactory.create(moshi)
 
+    //todo provide via DI using quealifiers
     fun defaultMoshi(): Moshi = INSTANCE.moshi
 
+    //todo provide via DI using quealifiers
     fun sdkMoshi(): Moshi = MoshiJsonConverter.INSTANCE.moshi
 }

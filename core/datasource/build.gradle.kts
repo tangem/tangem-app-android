@@ -25,6 +25,9 @@ android {
 
 dependencies {
 
+    /** Tangem libraries */
+    implementation(Tangem.cardCore)
+
     /** DI */
     implementation(Library.hilt)
     kapt(Library.hiltKapt)

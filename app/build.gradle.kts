@@ -107,9 +107,9 @@ repositories {
 dependencies {
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.aar"))))
     implementation(project(":domain"))
-    implementation(project(":network"))
     implementation(project(":common"))
     implementation(project(":core:ui"))
+    implementation(project(":core:datasource"))
     implementation(project(":libs:crypto"))
 
     /** Features */
