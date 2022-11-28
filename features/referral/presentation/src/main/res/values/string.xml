@@ -9,11 +9,11 @@
     <string name="referral_point_discount_description_prefix">Will get a</string>
     <string name="referral_point_discount_description_value">%s discount</string>
     <string name="referral_point_discount_description_suffix">when buying a card on tangem.com</string>
-    <string name="referral_tou_not_enroled_prefix">By tapping this button you accept</string>
+    <string name="referral_tos_not_enroled_prefix">By tapping this button you accept</string>
     <string name="common_terms_and_conditions">terms and conditions</string>
-    <string name="referral_tou_suffix">of the referral program</string>
+    <string name="referral_tos_suffix">of the referral program</string>
     <string name="referral_button_participate">Participate</string>
-    <string name="referral_tou_enroled_prefix">You\'ve accepted</string>
+    <string name="referral_tos_enroled_prefix">You\'ve accepted</string>
     <string name="referral_promo_code_title">Your personal code</string>
     <string name="referral_wallets_purchased_count">%d wallets</string>
     <string name="referral_friends_bought_title">Your friends bought</string>
