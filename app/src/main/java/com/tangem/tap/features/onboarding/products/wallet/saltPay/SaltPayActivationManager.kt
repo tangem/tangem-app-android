@@ -12,13 +12,13 @@ import com.tangem.common.extensions.isZero
 import com.tangem.common.services.Result
 import com.tangem.domain.common.extensions.successOr
 import com.tangem.domain.common.util.UserWalletId
-import com.tangem.network.api.paymentology.AttestationResponse
-import com.tangem.network.api.paymentology.PaymentologyApiService
-import com.tangem.network.api.paymentology.RegisterKYCRequest
-import com.tangem.network.api.paymentology.RegisterWalletRequest
-import com.tangem.network.api.paymentology.RegisterWalletResponse
-import com.tangem.network.api.paymentology.RegistrationResponse
-import com.tangem.network.api.paymentology.tryExtractError
+import com.tangem.datasource.api.paymentology.AttestationResponse
+import com.tangem.datasource.api.paymentology.PaymentologyApiService
+import com.tangem.datasource.api.paymentology.RegisterKYCRequest
+import com.tangem.datasource.api.paymentology.RegisterWalletRequest
+import com.tangem.datasource.api.paymentology.RegisterWalletResponse
+import com.tangem.datasource.api.paymentology.RegistrationResponse
+import com.tangem.datasource.api.paymentology.tryExtractError
 import com.tangem.operations.attestation.AttestWalletKeyResponse
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.domain.getFirstToken
@@ -79,7 +79,7 @@ class SaltPayActivationManager(
         }
     }
 
-    suspend fun requestAttestationChallenge(): Result<AttestationResponse> {
+    suspend fun requestAttestationChallenge(): Result<com.tangem.datasource.api.paymentology.AttestationResponse> {
         return paymentologyService.requestAttestationChallenge(cardId, cardPublicKey)
             .successOr { return it }
             .tryExtractError()
@@ -94,8 +94,8 @@ class SaltPayActivationManager(
     suspend fun registerWallet(
         attestResponse: AttestWalletKeyResponse,
         pinCode: String,
-    ): Result<RegisterWalletResponse> {
-        val request = RegisterWalletRequest(
+    ): Result<com.tangem.datasource.api.paymentology.RegisterWalletResponse> {
+        val request = com.tangem.datasource.api.paymentology.RegisterWalletRequest(
             cardId = cardId,
             publicKey = cardPublicKey,
             walletPublicKey = walletPublicKey,
@@ -152,12 +152,13 @@ class SaltPayActivationManager(
         )
     }
 
-    private fun makeRegisterKYCRequest(): RegisterKYCRequest = RegisterKYCRequest(
-        cardId = cardId,
-        publicKey = cardPublicKey,
-        kycProvider = "UTORG",
-        kycRefId = kycUrlProvider.kycRefId,
-    )
+    private fun makeRegisterKYCRequest(): com.tangem.datasource.api.paymentology.RegisterKYCRequest =
+        com.tangem.datasource.api.paymentology.RegisterKYCRequest(
+            cardId = cardId,
+            publicKey = cardPublicKey,
+            kycProvider = "UTORG",
+            kycRefId = kycUrlProvider.kycRefId,
+        )
 
     companion object {
         fun stub(): SaltPayActivationManager = SaltPayActivationManager(
