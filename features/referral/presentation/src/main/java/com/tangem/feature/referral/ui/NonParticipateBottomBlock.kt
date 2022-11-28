@@ -81,7 +81,7 @@ fun NonParticipateBottomBlock(
         )
         PersonalCodeCard(code = code)
         AdditionalButtons(onCopyClicked = onCopyClicked, onShareClicked = onShareClicked)
-        AgreementText(firstPartResId = R.string.referral_tou_enroled_prefix, onClicked = onAgreementClicked)
+        AgreementText(firstPartResId = R.string.referral_tos_enroled_prefix, onClicked = onAgreementClicked)
     }
 }
 
