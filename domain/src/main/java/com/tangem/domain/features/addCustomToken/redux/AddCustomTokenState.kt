@@ -37,7 +37,7 @@ import com.tangem.domain.features.addCustomToken.TokenDerivationPathField
 import com.tangem.domain.features.addCustomToken.TokenField
 import com.tangem.domain.redux.DomainState
 import com.tangem.domain.redux.state.StringActionStateConverter
-import com.tangem.network.api.tangemTech.CoinsResponse
+import com.tangem.datasource.api.tangemTech.CoinsResponse
 import org.rekotlin.Action
 import org.rekotlin.StateType
 
@@ -48,7 +48,7 @@ data class AddCustomTokenState(
     val form: Form = Form(listOf()),
     val formValidators: Map<CustomTokenFieldId, CustomTokenValidator<out Any>> = createFormValidators(),
     val formErrors: Map<CustomTokenFieldId, AddCustomTokenError> = emptyMap(),
-    val foundToken: CoinsResponse.Coin? = null,
+    val foundToken: com.tangem.datasource.api.tangemTech.CoinsResponse.Coin? = null,
     val warnings: Set<AddCustomTokenError.Warning> = emptySet(),
     val screenState: ScreenState = createInitialScreenState(),
     val tangemTechServiceManager: AddCustomTokenService? = null,
