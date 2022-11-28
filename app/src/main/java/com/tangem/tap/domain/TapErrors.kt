@@ -2,7 +2,7 @@ package com.tangem.tap.domain
 
 import androidx.annotation.StringRes
 import com.tangem.common.core.TangemError
-import com.tangem.network.api.tangemTech.TangemTechError
+import com.tangem.datasource.api.tangemTech.TangemTechError
 import com.tangem.wallet.R
 
 interface TapErrors
