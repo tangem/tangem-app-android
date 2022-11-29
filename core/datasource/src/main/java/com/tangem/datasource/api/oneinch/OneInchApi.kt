@@ -42,7 +42,7 @@ interface OneInchApi {
     @GET("approve/transaction")
     suspend fun approveTransaction(
         @Query("tokenAddress") tokenAddress: String,
-        @Query("amount") amount: String?,
+        @Query("amount") amount: String? = null,
     ): ApproveCalldataResponse
 
     /**
@@ -118,14 +118,14 @@ interface OneInchApi {
         @Query("fromTokenAddress") fromTokenAddress: String,
         @Query("toTokenAddress") toTokenAddress: String,
         @Query("amount") amount: String,
-        @Query("protocols") protocols: String?,
-        @Query("fee") fee: String?,
-        @Query("gasLimit") gasLimit: String?,
-        @Query("connectorTokens") connectorTokens: String?,
-        @Query("complexityLevel") complexityLevel: String?,
-        @Query("mainRouteParts") mainRouteParts: String?,
-        @Query("parts") parts: String?,
-        @Query("gasPrice") gasPrice: String?,
+        @Query("protocols") protocols: String? = null,
+        @Query("fee") fee: String? = null,
+        @Query("gasLimit") gasLimit: String? = null,
+        @Query("connectorTokens") connectorTokens: String? = null,
+        @Query("complexityLevel") complexityLevel: String? = null,
+        @Query("mainRouteParts") mainRouteParts: String? = null,
+        @Query("parts") parts: String? = null,
+        @Query("gasPrice") gasPrice: String? = null,
     ): QuoteResponse
 
     /**
@@ -180,21 +180,21 @@ interface OneInchApi {
         @Query("amount") amount: String,
         @Query("fromAddress") fromAddress: String,
         @Query("slippage") slippage: Int,
-        @Query("protocols") protocols: String?,
-        @Query("destReceiver") destinationAddress: String?,
-        @Query("referrerAddress") referrerAddress: String?,
-        @Query("fee") fee: String?,
-        @Query("disableEstimate") disableEstimate: Boolean?,
-        @Query("permit") permit: String?,
-        @Query("compatibilityMode") compatibilityMode: Boolean?,
-        @Query("burnChi") burnChi: Boolean?,
-        @Query("allowPartialFill") allowPartialFill: Boolean?,
-        @Query("parts") parts: String?,
-        @Query("mainRouteParts") mainRouteParts: String?,
-        @Query("connectorTokens") connectorTokens: String?,
-        @Query("complexityLevel") complexityLevel: String?,
-        @Query("gasLimit") gasLimit: String?,
-        @Query("gasPrice") gasPrice: String?,
+        @Query("protocols") protocols: String? = null,
+        @Query("destReceiver") destinationAddress: String? = null,
+        @Query("referrerAddress") referrerAddress: String? = null,
+        @Query("fee") fee: String? = null,
+        @Query("disableEstimate") disableEstimate: Boolean? = null,
+        @Query("permit") permit: String? = null,
+        @Query("compatibilityMode") compatibilityMode: Boolean? = null,
+        @Query("burnChi") burnChi: Boolean? = null,
+        @Query("allowPartialFill") allowPartialFill: Boolean? = null,
+        @Query("parts") parts: String? = null,
+        @Query("mainRouteParts") mainRouteParts: String? = null,
+        @Query("connectorTokens") connectorTokens: String? = null,
+        @Query("complexityLevel") complexityLevel: String? = null,
+        @Query("gasLimit") gasLimit: String? = null,
+        @Query("gasPrice") gasPrice: String? = null,
     ): SwapResponse
     //endregion Swap
 }
