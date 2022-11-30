@@ -19,7 +19,7 @@
     <string name="wallet_balance_loading">Загрузка баланса…</string>
     <string name="wallet_balance_blockchain_unreachable">Блокчейн недоступен</string>
     <string name="wallet_error_no_account">Аккаунт не создан</string>
-    <string name="wallet_error_no_account_subtitle_format">Загрузите %s+ %s для создания учетной записи</string>
+    <string name="no_account_generic">Пополните счет на %s+ %s, чтобы создать аккаунт</string>
     <string name="wallet_error_empty_card">Карта пуста</string>
     <string name="wallet_error_empty_card_subtitle">Создайте кошелек, чтобы начать пользоваться картой Tangem</string>
     <string name="wallet_error_unsupported_blockchain">Эта карта не поддерживается</string>
@@ -89,8 +89,8 @@
     <string name="wallet_button_buy">Купить</string>
     <string name="wallet_button_sell">Продать</string>
     <string name="wallet_button_trade">Торговать</string>
-    <string name="wallet_address_chip_default">По умолчанию</string>
-    <string name="wallet_address_chip_legacy">Устаревший</string>
+    <string name="address_type_default">По умолчанию</string>
+    <string name="address_type_legacy">Устаревший</string>
     <string name="wallet_error_empty_twin_card">Создать кошелек</string>
     <string name="wallet_error_empty_twin_card_subtitle">Сгенерируйте ключи кошелька на обеих картах, чтобы начать использовать свои Twin карты</string>
     <string name="twins_onboarding_subtitle">Один кошелек. Две карты.</string>
@@ -139,15 +139,13 @@
     <string name="custom_token_token_symbol_input_title">Символ токена</string>
     <string name="custom_token_derivation_path_input_title">Деривация по BIP44</string>
     <string name="custom_token_derivation_path_default">По-умолчанию</string>
-    <string name="wallet_address_button_copy">Копировать</string>
-    <string name="wallet_address_button_share">Поделиться</string>
     <string name="token_details_send_blocked_tx_format">Пожалуйста, дождитесь завершения транзакции %s, чтобы иметь возможность отправить средства</string>
     <string name="warning_failed_to_verify_card_title">Проверка подлинности не удалась</string>
     <string name="warning_failed_to_verify_card_message">Эта карта может быть производственным образцом или подделкой</string>
     <string name="warning_important_security_info">Важная информация о безопасности \u26A0</string>
     <string name="warning_signed_tx_previously">Эта карта ранее подписывала транзакции</string>
     <string name="warning_button_learn_more">Узнать подробнее</string>
-    <string name="alert_button_i_understand">Я понял</string>
+    <string name="common_understand">Я понял</string>
     <string name="warning_low_signatures_format">На этой карте доступно только %s подписей. Вы должны вывести все свои средства.</string>
     <string name="common_disconnect">Отключить</string>
     <string name="common_sign">Подписать</string>
