@@ -2,9 +2,12 @@ package com.tangem.feature.swap
 
 import com.tangem.datasource.api.oneinch.OneInchApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.feature.swap.converters.ApproveConverter
 import com.tangem.feature.swap.converters.QuotesConverter
+import com.tangem.feature.swap.converters.SwapConverter
 import com.tangem.feature.swap.converters.TokensConverter
 import com.tangem.feature.swap.domain.SwapRepository
+import com.tangem.feature.swap.domain.models.ApproveModel
 import com.tangem.feature.swap.domain.models.Currency
 import com.tangem.feature.swap.domain.models.QuoteModel
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -16,6 +19,8 @@ class SwapRepositoryImpl @Inject constructor(
     private val oneInchApi: OneInchApi,
     private val tokensConverter: TokensConverter,
     private val quotesConverter: QuotesConverter,
+    private val swapConverter: SwapConverter,
+    private val approveConverter: ApproveConverter,
     private val coroutineDispatcher: CoroutineDispatcherProvider,
 ) : SwapRepository {
 
@@ -40,6 +45,38 @@ class SwapRepositoryImpl @Inject constructor(
     override suspend fun addressForTrust(): String {
         return withContext(coroutineDispatcher.io) {
             oneInchApi.approveSpender().address
+        }
+    }
+
+    override suspend fun dataToApprove(tokenAddress: String, amount: String): ApproveModel {
+        return withContext(coroutineDispatcher.io) {
+            approveConverter.convert(oneInchApi.approveTransaction(tokenAddress, amount))
+        }
+    }
+
+    override suspend fun checkTokensSpendAllowance(tokenAddress: String, walletAddress: String): String {
+        return withContext(coroutineDispatcher.io) {
+            oneInchApi.approveAllowance(tokenAddress, walletAddress).allowance
+        }
+    }
+
+    override suspend fun prepareSwapTransaction(
+        fromTokenAddress: String,
+        toTokenAddress: String,
+        amount: String,
+        fromAddress: String,
+        slippage: Int,
+    ) {
+        return withContext(coroutineDispatcher.io) {
+            swapConverter.convert(
+                oneInchApi.swap(
+                    fromTokenAddress = fromTokenAddress,
+                    toTokenAddress = toTokenAddress,
+                    amount = amount,
+                    fromAddress = fromAddress,
+                    slippage = slippage,
+                ),
+            )
         }
     }
 }
