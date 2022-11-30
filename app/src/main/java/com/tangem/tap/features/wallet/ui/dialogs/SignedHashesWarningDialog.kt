@@ -14,7 +14,7 @@ class SignedHashesWarningDialog {
             return AlertDialog.Builder(context).apply {
                 setTitle(context.getString(R.string.warning_important_security_info))
                 setMessage(R.string.alert_signed_hashes_message)
-                setPositiveButton(R.string.alert_button_i_understand) { _, _ ->
+                setPositiveButton(R.string.common_understand) { _, _ ->
                     store.dispatch(WalletAction.Warnings.CheckHashesCount.SaveCardId)
                     store.dispatch(
                         GlobalAction.HideWarningMessage(
