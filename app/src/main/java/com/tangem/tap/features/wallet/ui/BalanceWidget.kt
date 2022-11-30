@@ -128,7 +128,7 @@ class BalanceWidget(
                 tvErrorTitle.text = fragment.getText(R.string.wallet_error_no_account)
                 tvErrorDescriptions.text =
                     fragment.getString(
-                        R.string.wallet_error_no_account_subtitle_format,
+                        R.string.no_account_generic,
                         data.amountToCreateAccount, data.currencySymbol
                     )
             }

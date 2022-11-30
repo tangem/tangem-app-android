@@ -26,7 +26,7 @@
     <string name="story_currencies_title">Thousands of Currencies</string>
     <string name="story_currencies_description">A hardware wallet for your Bitcoin, Ethereum and many more currencies simultaneously – all in one card</string>
     <string name="story_web3_title">DeFi Compatible</string>
-    <string name="story_web3_description">Exchange, buy NFT’s, make loans and deposits in more than 100 different decentralized services</string>
+    <string name="story_web3_description">Exchange, buy NFT\'s, make loans and deposits in more than 100 different decentralized services</string>
     <string name="story_finish_title">The Wallet for Everyone</string>
     <string name="story_finish_description">Use it on the go, anywhere, anytime. No wires or batteries. Just tap the card to your phone when you need your crypto.</string>
     <string name="home_button_order">Order</string>
@@ -68,7 +68,7 @@
     <string name="card_settings_change_access_code">Change access code</string>
     <string name="card_settings_change_access_code_footer">Access code will be changed on this card only</string>
     <string name="scan_card_settings_title">Get your card ready!</string>
-    <string name="scan_card_settings_message">Scan the card to change its settings. The changes will impact only the card you’ve scanned and will not affect other cards tied to your wallet.</string>
+    <string name="scan_card_settings_message">Scan the card to change its settings. The changes will impact only the card you\'ve scanned and will not affect other cards tied to your wallet.</string>
     <string name="scan_card_settings_button">Scan Card</string>
     <string name="app_settings_title">App settings</string>
     <string name="app_settings_saved_wallet">Keep the wallet in the app</string>
