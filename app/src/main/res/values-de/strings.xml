@@ -18,7 +18,7 @@
     <string name="wallet_balance_loading">Die Bilanz wird aufgeladen…</string>
     <string name="wallet_balance_blockchain_unreachable">Blockchain ist nicht erreichbar</string>
     <string name="wallet_error_no_account">Das Konto ist nicht erstellt</string>
-    <string name="wallet_error_no_account_subtitle_format">%s+ %s aufladen um ein Konto zu erstellen</string>
+    <string name="no_account_generic">Laden Sie %s+ %s auf um ein Konto zu erstellen</string>
     <string name="wallet_error_empty_card">Leere Karte</string>
     <string name="wallet_error_empty_card_subtitle">Erstellen Sie ein Wallet um die Tangem-Karte verwenden zu können</string>
     <string name="wallet_error_unsupported_blockchain">Diese Karte wird nicht unterstützt</string>
