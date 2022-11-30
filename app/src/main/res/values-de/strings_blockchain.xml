@@ -6,7 +6,7 @@
     <string name="send_error_dust_amount_format">Minimaler Betrag ist %s</string>
     <string name="send_error_dust_change">Restbestand zu klein</string>
     <string name="send_error_no_target_account">Das Zielkonto ist nicht erstellt. Der abzusendende Betrag soll %s + Gebühr oder mehr sein</string>
-    <string name="send_error_fee_request_failed">Erhalt der Gebühr fehlgeschlagen</string>
+    <string name="common_fee_error">Erhalt der Gebühr fehlgeschlagen</string>
     <string name="send_error_unknown">Unbekannter Fehler</string>
     <string name="xtz_withdrawal_message_warning">Damit Sie beim nächsten Aufladen Ihrer Brieftasche keine erhöhte Provision zahlen, soll der Betrag um %s XTZ reduziert werden</string>
     <string name="xtz_withdrawal_message_reduce">Um %s XTZ reduzieren</string>

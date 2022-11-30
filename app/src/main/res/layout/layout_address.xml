@@ -43,14 +43,14 @@
                     style="@style/TapChip"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/wallet_address_chip_default" />
+                    android:text="@string/address_type_default" />
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/chip_legacy"
                     style="@style/TapChip"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/wallet_address_chip_legacy" />
+                    android:text="@string/address_type_legacy" />
 
             </com.google.android.material.chip.ChipGroup>
 
