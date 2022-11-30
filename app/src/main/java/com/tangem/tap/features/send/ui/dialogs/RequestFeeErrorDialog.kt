@@ -18,7 +18,7 @@ class RequestFeeErrorDialog {
             val errorMessage = dialog.error.customMessage
 
             return AlertDialog.Builder(context).apply {
-                setTitle(R.string.send_error_fee_request_failed)
+                setTitle(R.string.common_fee_error)
                 setMessage(context.getString(R.string.alert_failed_to_send_transaction_message, errorMessage))
                 setNegativeButton(R.string.alert_button_send_feedback) { _, _ ->
                     store.dispatch(GlobalAction.SendEmail(SendTransactionFailedEmail(errorMessage)))
