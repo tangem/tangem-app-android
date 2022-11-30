@@ -17,7 +17,7 @@
     <string name="wallet_balance_loading">Il saldo sta per essere caricato…</string>
     <string name="wallet_balance_blockchain_unreachable">Blockchain non raggiungibile</string>
     <string name="wallet_error_no_account">Conto non creato</string>
-    <string name="wallet_error_no_account_subtitle_format">Carica %s+ %s per creare un conto</string>
+    <string name="no_account_generic">Scarica %s+ %s per creare un account</string>
     <string name="wallet_error_empty_card">Carta vuota</string>
     <string name="wallet_error_empty_card_subtitle">Crea un portafoglio per iniziare ad utilizzare la tua carta Tangem </string>
     <string name="wallet_error_unsupported_blockchain">Questa carta non è supportata</string>
