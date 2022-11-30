@@ -8,7 +8,7 @@
     <string name="send_error_unknown">Errore sconosciuto</string>
     <string name="send_validation_amount_exceeds_balance">L\'importo supera il saldo</string>
     <string name="send_error_no_target_account">Il conto totale non è stato creato L\'importo da inviare deve essere %s + commissione o maggiore</string>
-    <string name="send_error_fee_request_failed">Impossibile ottenere la commissione</string>
+    <string name="common_fee_error">Impossibile ottenere la commissione</string>
     <string name="send_validation_invalid_address">Indirizzo non valido</string>
     <string name="send_validation_invalid_amount">Importo non valido</string>
     <string name="send_validation_invalid_total">Il totale supera il saldo</string>
