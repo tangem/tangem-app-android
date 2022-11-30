@@ -9,7 +9,7 @@ import com.squareup.moshi.Json
  * @property toAddress transactions will be sent to our(1inch) contract address
  * @property data The encoded data to call the approve method on the swapped token contract
  * @property value Native token value in WEI (for approve is always 0)
- * @property gasPrice The encoded data to call the approve method on the swapped token contract
+ * @property gasPrice maximum amount of gas for a swap default: 11500000; max: 11500000
  * @property gas estimated amount of the gas limit, increase this value by 25%
  * @constructor Create empty Transaction dto
  */
