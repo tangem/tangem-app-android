@@ -1,11 +1,7 @@
 package com.tangem.tap.features.wallet.ui
 
 import android.os.Bundle
-import android.view.Menu
-import android.view.MenuInflater
-import android.view.MenuItem
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.widget.TextView
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.ColorRes
@@ -22,33 +18,26 @@ import com.tangem.tap.common.TestActions
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.events.DetailsScreen
 import com.tangem.tap.common.analytics.events.Token
-import com.tangem.tap.common.extensions.appendIfNotNull
-import com.tangem.tap.common.extensions.beginDelayedTransition
-import com.tangem.tap.common.extensions.fitChipsByGroupWidth
-import com.tangem.tap.common.extensions.getColor
-import com.tangem.tap.common.extensions.getString
-import com.tangem.tap.common.extensions.hide
-import com.tangem.tap.common.extensions.show
-import com.tangem.tap.common.extensions.toQrCode
+import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.recyclerView.SpaceItemDecoration
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.onboarding.getQRReceiveMessage
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.PendingTransaction
-import com.tangem.tap.features.wallet.redux.ErrorType
-import com.tangem.tap.features.wallet.redux.ProgressState
-import com.tangem.tap.features.wallet.redux.WalletAction
-import com.tangem.tap.features.wallet.redux.WalletData
-import com.tangem.tap.features.wallet.redux.WalletState
+import com.tangem.tap.features.wallet.redux.*
 import com.tangem.tap.features.wallet.redux.WalletState.Companion.UNKNOWN_AMOUNT_SIGN
 import com.tangem.tap.features.wallet.ui.adapters.PendingTransactionsAdapter
 import com.tangem.tap.features.wallet.ui.adapters.WalletDetailWarningMessagesAdapter
 import com.tangem.tap.features.wallet.ui.images.load
 import com.tangem.tap.features.wallet.ui.test.TestWallet
+import com.tangem.tap.scope
 import com.tangem.tap.store
+import com.tangem.tap.userWalletsListManagerSafe
+import com.tangem.tap.walletCurrenciesManager
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentWalletDetailsBinding
+import kotlinx.coroutines.launch
 import org.rekotlin.StoreSubscriber
 
 class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
@@ -158,15 +147,19 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
         binding.srlWalletDetails.setOnRefreshListener {
             if (selectedWallet.currencyData.status != BalanceStatus.Loading) {
                 Analytics.send(Token.Refreshed())
-                store.dispatch(
-                    WalletAction.LoadWallet(
-                        blockchain = BlockchainNetwork(
-                            selectedWallet.currency.blockchain,
-                            selectedWallet.currency.derivationPath,
-                            emptyList(),
-                        ),
-                    ),
+                val blockchainNetwork = BlockchainNetwork(
+                    blockchain = selectedWallet.currency.blockchain,
+                    derivationPath = selectedWallet.currency.derivationPath,
+                    tokens = emptyList(),
                 )
+                val selectedUserWallet = userWalletsListManagerSafe?.selectedUserWalletSync
+                if (selectedUserWallet != null) scope.launch {
+                    walletCurrenciesManager.update(selectedUserWallet, blockchainNetwork)
+                } else {
+                    store.dispatch(
+                        WalletAction.LoadWallet(blockchainNetwork),
+                    )
+                }
             }
         }
 

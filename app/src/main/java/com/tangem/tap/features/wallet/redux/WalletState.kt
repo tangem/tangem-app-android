@@ -14,16 +14,13 @@ import com.tangem.tap.common.toggleWidget.WidgetState
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
-import com.tangem.tap.features.wallet.models.Currency
-import com.tangem.tap.features.wallet.models.PendingTransaction
-import com.tangem.tap.features.wallet.models.TotalBalance
-import com.tangem.tap.features.wallet.models.WalletRent
-import com.tangem.tap.features.wallet.models.WalletWarning
+import com.tangem.tap.features.wallet.models.*
 import com.tangem.tap.features.wallet.redux.reducers.calculateTotalFiatAmount
 import com.tangem.tap.features.wallet.redux.reducers.findProgressState
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.store
+import com.tangem.tap.userWalletsListManager
 import org.rekotlin.StateType
 import java.math.BigDecimal
 import kotlin.properties.ReadOnlyProperty
@@ -79,6 +76,9 @@ data class WalletState(
     val shouldShowDetails: Boolean =
         primaryWallet?.currencyData?.status != BalanceStatus.EmptyCard &&
             primaryWallet?.currencyData?.status != BalanceStatus.UnknownBlockchain
+
+    val hasSavedWallets: Boolean
+        get() = userWalletsListManager.hasSavedUserWallets
 
     fun getWalletManager(currency: Currency?): WalletManager? {
         if (currency?.blockchain == null) return null
@@ -242,11 +242,11 @@ data class WalletState(
                 totalBalance = TotalBalance(
                     state = walletsData.findProgressState(),
                     fiatAmount = walletsData.calculateTotalFiatAmount(),
-                    fiatCurrency = store.state.globalState.appCurrency
-                )
+                    fiatCurrency = store.state.globalState.appCurrency,
+                ),
             )
         } else this.copy(
-            totalBalance = null
+            totalBalance = null,
         )
     }
 

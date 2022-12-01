@@ -162,4 +162,5 @@
     <string name="user_wallet_list_add_button">Add new wallet</string>
     <string name="user_wallet_list_editing_count">%d selected</string>
     <string name="user_wallet_list_title">My Wallets</string>
+    <string name="user_wallet_list_error_wallet_already_saved">This wallet has already been saved, you can add another one</string>
 </resources>

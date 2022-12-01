@@ -27,7 +27,7 @@ import com.tangem.tap.common.shop.GooglePayService.Companion.LOAD_PAYMENT_DATA_R
 import com.tangem.tap.common.shop.googlepay.GooglePayUtil.createPaymentsClient
 import com.tangem.tap.domain.TangemSdkManager
 import com.tangem.tap.domain.userWalletList.UserWalletsListManager
-import com.tangem.tap.domain.userWalletList.di.provideDummyImplementation
+import com.tangem.tap.domain.userWalletList.di.provideBiometricImplementation
 import com.tangem.tap.features.shop.redux.ShopAction
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.ActivityMainBinding
@@ -42,6 +42,10 @@ lateinit var tangemSdk: TangemSdk
 lateinit var tangemSdkManager: TangemSdkManager
 lateinit var backupService: BackupService
 lateinit var userWalletsListManager: UserWalletsListManager
+internal var lockUserWalletsTimer: LockUserWalletsTimer? = null
+    private set
+var userWalletsListManagerSafe: UserWalletsListManager? = null
+    private set
 var notificationsHandler: NotificationsHandler? = null
 
 private val coroutineContext: CoroutineContext
@@ -71,7 +75,12 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         tangemSdk = TangemSdk.init(this, TangemSdkManager.config)
         tangemSdkManager = TangemSdkManager(tangemSdk, this)
         backupService = BackupService.init(tangemSdk, this)
-        userWalletsListManager = UserWalletsListManager.provideDummyImplementation()
+        userWalletsListManager = UserWalletsListManager.provideBiometricImplementation(
+            context = applicationContext,
+            tangemSdkManager = tangemSdkManager,
+        )
+        userWalletsListManagerSafe = userWalletsListManager
+        lockUserWalletsTimer = LockUserWalletsTimer(owner = this)
 
         store.dispatch(
             ShopAction.CheckIfGooglePayAvailable(
@@ -169,5 +178,11 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     override fun removeOnActivityResultCallback(callback: OnActivityResultCallback) {
         onActivityResultCallbacks.remove(callback)
+    }
+
+    override fun onUserInteraction() {
+        super.onUserInteraction()
+
+        lockUserWalletsTimer?.restart()
     }
 }

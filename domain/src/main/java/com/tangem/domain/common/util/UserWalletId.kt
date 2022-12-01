@@ -26,6 +26,12 @@ class UserWalletId(
     override fun hashCode(): Int {
         return stringValue.hashCode()
     }
+
+    override fun toString(): String {
+        return with(stringValue) {
+            "UserWalletId(${take(3)}...${takeLast(3)})"
+        }
+    }
 }
 
 private fun calculateUserWalletId(publicKey: ByteArray): ByteArray {
