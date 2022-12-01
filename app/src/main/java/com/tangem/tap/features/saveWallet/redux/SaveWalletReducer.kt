@@ -12,8 +12,8 @@ internal object SaveWalletReducer {
 
     private fun internalReduce(action: SaveWalletAction, state: SaveWalletState): SaveWalletState {
         return when (action) {
-            is SaveWalletAction.ProvideAdditionalInfo -> state.copy(
-                additionalInfo = SaveWalletState.WalletAdditionalInfo(
+            is SaveWalletAction.ProvideBackupInfo -> state.copy(
+                backupInfo = SaveWalletState.WalletBackupInfo(
                     scanResponse = action.scanResponse,
                     accessCode = action.accessCode,
                     backupCardsIds = action.backupCardsIds,
@@ -27,11 +27,11 @@ internal object SaveWalletReducer {
                 isSaveInProgress = false,
             )
             is SaveWalletAction.Save.Success -> state.copy(
-                additionalInfo = null,
+                backupInfo = null,
                 isSaveInProgress = false,
             )
             is SaveWalletAction.Dismiss -> state.copy(
-                additionalInfo = null,
+                backupInfo = null,
             )
             is SaveWalletAction.CloseError -> state.copy(
                 error = null,
