@@ -6,13 +6,11 @@ import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.events.Onboarding
-import com.tangem.tap.common.extensions.onCardScanned
 import com.tangem.tap.common.postUi
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.common.redux.navigation.AppScreen
-import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
+import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.scope
 import com.tangem.tap.store
@@ -130,10 +128,7 @@ private fun handleOtherCardsAction(action: Action) {
         }
         OnboardingOtherCardsAction.Done -> {
             store.dispatch(GlobalAction.Onboarding.Stop)
-            scope.launch {
-                store.onCardScanned(onboardingManager.scanResponse)
-                withMainContext { store.dispatch(NavigationAction.NavigateTo(AppScreen.Wallet)) }
-            }
+            OnboardingHelper.trySaveWalletAndNavigateToWalletScreen(onboardingManager.scanResponse)
         }
         is OnboardingOtherCardsAction.Confetti.Hide,
         is OnboardingOtherCardsAction.SetArtworkUrl,
