@@ -3,12 +3,7 @@ package com.tangem.tap.features.wallet.ui.wallet
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.tangem.domain.common.TwinCardNumber
-import com.tangem.tap.common.extensions.beginDelayedTransition
-import com.tangem.tap.common.extensions.fitChipsByGroupWidth
-import com.tangem.tap.common.extensions.getQuantityString
-import com.tangem.tap.common.extensions.hide
-import com.tangem.tap.common.extensions.show
+import com.tangem.tap.common.extensions.*
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.PendingTransaction
@@ -38,9 +33,12 @@ class SingleWalletView : WalletView() {
         btnAddToken.hide()
         rvPendingTransaction.hide()
         pbLoadingUserTokens.hide()
+        lCardTotalBalance.root.hide()
+        lSingleWalletBalance.root.hide()
+        lWalletRescanWarning.root.hide()
         lCardBalance.root.show()
         lAddress.root.show()
-        lSingleWalletBalance.root.hide()
+        rowButtons.show()
     }
 
     override fun onViewCreated() {

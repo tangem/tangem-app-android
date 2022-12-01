@@ -5,12 +5,12 @@ import com.tangem.domain.common.ScanResponse
 import org.rekotlin.StateType
 
 data class SaveWalletState(
-    val additionalInfo: WalletAdditionalInfo? = null,
+    val backupInfo: WalletBackupInfo? = null,
     val isSaveInProgress: Boolean = false,
     val needEnrollBiometrics: Boolean = false,
     val error: TangemError? = null,
 ) : StateType {
-    data class WalletAdditionalInfo(
+    data class WalletBackupInfo(
         val scanResponse: ScanResponse,
         val accessCode: String?,
         val backupCardsIds: Set<String>?,

@@ -21,6 +21,7 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.redux.HomeAction
+import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.dialog.SaltPayDialog
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayAction
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayState
@@ -69,17 +70,14 @@ private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch:
                     Analytics.send(Onboarding.Started())
                 }
             }
-
             when {
                 card == null -> {
                     // it's possible when found unfinished backup for standard Wallet cards
                     store.dispatch(OnboardingWalletAction.ResumeBackup)
                 }
-
                 card.wallets.isNotEmpty() && card.backupStatus == CardDTO.BackupStatus.NoBackup -> {
                     store.dispatch(OnboardingWalletAction.ResumeBackup)
                 }
-
                 card.wallets.isNotEmpty() && card.backupStatus?.isActive == true -> {
                     when {
                         // check for unfinished backup for saltPay cards. See more
@@ -162,8 +160,11 @@ private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch:
             } else {
                 val backupState = store.state.onboardingWalletState.backupState
                 val updatedScanResponse = updateScanResponseAfterBackup(scanResponse, backupState)
-                scope.launch { globalState.tapWalletManager.onCardScanned(updatedScanResponse) }
-                store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Wallet))
+                OnboardingHelper.trySaveWalletAndNavigateToWalletScreen(
+                    scanResponse = updatedScanResponse,
+                    accessCode = backupState.accessCode,
+                    backupCardsIds = backupState.backupCardIds,
+                )
             }
         }
         is OnboardingWalletAction.ResumeBackup -> {
@@ -233,6 +234,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
 
     when (action) {
         is BackupAction.StartBackup -> {
+            tangemSdkManager.setAccessCodeRequestPolicy(useBiometricsForAccessCode = false)
             Analytics.send(Onboarding.Backup.Started())
             backupService.discardSavedBackup()
             val primaryCard = scanResponse?.primaryCard
