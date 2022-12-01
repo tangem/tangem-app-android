@@ -1,12 +1,18 @@
 package com.tangem.tap.features.walletSelector.ui
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.features.walletSelector.redux.WalletSelectorAction
 import com.tangem.tap.features.walletSelector.redux.WalletSelectorState
 import com.tangem.tap.features.walletSelector.ui.model.RenameWalletDialog
 import com.tangem.tap.store
+import com.tangem.tap.userWalletsListManager
+import com.tangem.tap.walletStoresManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.update
 import org.rekotlin.StoreSubscriber
 
@@ -18,6 +24,7 @@ internal class WalletSelectorViewModel : ViewModel(), StoreSubscriber<WalletSele
         subscribeToStoreChanges()
         bootstrapWalletListChanges()
         bootstrapWalletsStoresChanges()
+        bootstrapAppFiatCurrency()
     }
 
     fun unlock() {
@@ -104,7 +111,9 @@ internal class WalletSelectorViewModel : ViewModel(), StoreSubscriber<WalletSele
     }
 
     override fun newState(state: WalletSelectorState) {
-        // TODO: Update UI state
+        stateInternal.update { prevState ->
+            prevState.updateWithNewState(state)
+        }
     }
 
     override fun onCleared() {
@@ -135,10 +144,38 @@ internal class WalletSelectorViewModel : ViewModel(), StoreSubscriber<WalletSele
     }
 
     private fun bootstrapWalletListChanges() {
-        // TODO
+        userWalletsListManager.userWallets
+            .onEach {
+                store.dispatchOnMain(WalletSelectorAction.UserWalletsLoaded(userWallets = it))
+            }
+            .launchIn(viewModelScope)
+
+        userWalletsListManager.selectedUserWallet
+            .onEach {
+                store.dispatchOnMain(WalletSelectorAction.SelectedWalletChanged(selectedWallet = it))
+            }
+            .launchIn(viewModelScope)
+
+        userWalletsListManager.isLocked
+            .onEach {
+                store.dispatchOnMain(WalletSelectorAction.IsLockedChanged(isLocked = it))
+            }
+            .launchIn(viewModelScope)
     }
 
     private fun bootstrapWalletsStoresChanges() {
-        // TODO
+        walletStoresManager.getAll()
+            .onEach { walletStores ->
+                store.dispatchOnMain(WalletSelectorAction.WalletStoresChanged(walletStores))
+            }
+            .launchIn(viewModelScope)
+    }
+
+    private fun bootstrapAppFiatCurrency() {
+        store.dispatch(
+            WalletSelectorAction.ChangeAppCurrency(
+                fiatCurrency = store.state.globalState.appCurrency,
+            ),
+        )
     }
 }
