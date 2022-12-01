@@ -45,6 +45,7 @@ object ScanCardProcessor {
     suspend fun scan(
         useBiometricsForAccessCode: Boolean = false,
         additionalBlockchainsToDerive: Collection<Blockchain>? = null,
+        cardId: String? = null,
         onProgressStateChange: suspend (showProgress: Boolean) -> Unit = {},
         onScanStateChange: suspend (scanInProgress: Boolean) -> Unit = {},
         onWalletNotCreated: suspend (() -> Unit) = {},
@@ -55,6 +56,7 @@ object ScanCardProcessor {
         onScanStateChange(true)
         tangemSdkManager.scanProduct(
             userTokensRepository = userTokensRepository,
+            cardId = cardId,
             additionalBlockchainsToDerive = additionalBlockchainsToDerive,
             useBiometricsForAccessCode = useBiometricsForAccessCode,
         )
@@ -201,7 +203,7 @@ object ScanCardProcessor {
             } else {
                 if (scanResponse.twinsIsTwinned() && !preferencesStorage.wasTwinsOnboardingShown()) {
                     onWalletNotCreated()
-                    store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.WelcomeOnly))
+                    store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.WelcomeOnly(scanResponse)))
                     navigateTo(AppScreen.OnboardingTwins) { onProgressStateChange(it) }
                 } else {
                     delay(DELAY_SDK_DIALOG_CLOSE)

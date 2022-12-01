@@ -106,7 +106,7 @@ class ConfigManager {
                 blockchairApiKey = values.blockchairApiKey,
                 blockchairAuthorizationToken = values.blockchairAuthorizationToken,
                 blockcypherTokens = values.blockcypherTokens,
-                infuraProjectId = values.infuraProjectId
+                infuraProjectId = values.infuraProjectId,
             ),
             appsFlyerDevKey = values.appsFlyerDevKey,
             amplitudeApiKey = values.amplitudeApiKey,

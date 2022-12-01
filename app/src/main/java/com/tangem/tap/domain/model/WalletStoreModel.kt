@@ -10,7 +10,8 @@ import java.math.BigDecimal
  * Contains info about the blockchain and its currencies
  * @param userWalletId ID of the [UserWallet] which uses that store
  * @param blockchainNetwork Store's [BlockchainNetwork]
- * @param walletManager Store's [WalletManager], may be null if it fails to create this manager
+ * @param walletManager Store's [WalletManager], may be null if it fails to create this manager. TODO: Remove after
+ * WalletMiddleware refactoring
  * @param walletsData List of [WalletDataModel] which represents store's blockchain currency and tokens currencies
  * @param walletRent Store's [WalletRent], null if store has no rent or currency balance is greater then
  * [WalletRent.exemptionAmount]
@@ -18,6 +19,7 @@ import java.math.BigDecimal
 data class WalletStoreModel(
     val userWalletId: UserWalletId,
     val blockchainNetwork: BlockchainNetwork,
+    @Deprecated("Don't use it, will be removed")
     val walletManager: WalletManager?,
     val walletsData: List<WalletDataModel>,
     val walletRent: WalletRent?,
