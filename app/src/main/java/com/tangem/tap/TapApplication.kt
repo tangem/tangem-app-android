@@ -55,6 +55,7 @@ val store = Store(
 )
 
 lateinit var foregroundActivityObserver: ForegroundActivityObserver
+lateinit var activityResultCaller: ActivityResultCaller
 lateinit var preferencesStorage: PreferencesStorage
 lateinit var walletConnectRepository: WalletConnectRepository
 lateinit var shopService: TangemShopService
@@ -72,6 +73,7 @@ class TapApplication : Application(), ImageLoaderFactory {
         }
 
         foregroundActivityObserver = ForegroundActivityObserver()
+        activityResultCaller = foregroundActivityObserver
         registerActivityLifecycleCallbacks(foregroundActivityObserver.callbacks)
 
         initMoshiConverter()
