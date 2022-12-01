@@ -1,7 +1,7 @@
 package com.tangem.tap.features.walletSelector.ui
 
 import androidx.compose.runtime.Immutable
-import com.tangem.common.core.TangemError
+import com.tangem.tap.features.details.ui.cardsettings.TextReference
 import com.tangem.tap.features.walletSelector.ui.model.MultiCurrencyUserWalletItem
 import com.tangem.tap.features.walletSelector.ui.model.RenameWalletDialog
 import com.tangem.tap.features.walletSelector.ui.model.SingleCurrencyUserWalletItem
@@ -16,5 +16,5 @@ internal data class WalletSelectorScreenState(
     val renameWalletDialog: RenameWalletDialog? = null,
     val showAddCardProgress: Boolean = false,
     val showUnlockProgress: Boolean = false,
-    val error: TangemError? = null,
+    val error: TextReference? = null,
 )
