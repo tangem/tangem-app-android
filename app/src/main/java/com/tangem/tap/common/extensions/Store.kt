@@ -28,8 +28,8 @@ fun Store<*>.dispatchNotification(resId: Int) {
 }
 
 @Suppress("unused") // receiver type
-fun Store<*>.onUserWalletSelected(userWallet: UserWallet, refresh: Boolean = false) {
-    // TODO: Load tokens for selected user wallet. Will be created in further MRs
+suspend fun Store<*>.onUserWalletSelected(userWallet: UserWallet, refresh: Boolean = false) {
+    store.state.globalState.tapWalletManager.onWalletSelected(userWallet, refresh)
 }
 
 fun Store<*>.dispatchToastNotification(resId: Int) {
@@ -77,7 +77,6 @@ suspend fun Store<*>.onCardScanned(scanResponse: ScanResponse) {
 fun Store<*>.dispatchOpenUrl(url: String) {
     store.dispatch(NavigationAction.OpenUrl(url))
 }
-
 fun Store<*>.dispatchShare(url: String) {
     store.dispatch(NavigationAction.Share(url))
 }
