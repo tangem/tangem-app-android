@@ -67,16 +67,20 @@ class WarningsMiddleware {
         }
     }
 
-    fun tryToShowAppRatingWarning(wallet: Wallet) {
-        val nonZeroWalletsCount = wallet.amounts.filter {
-            it.value.value?.isGreaterThan(BigDecimal.ZERO) ?: false
-        }.size
-        if (nonZeroWalletsCount > 0) {
+    fun tryToShowAppRatingWarning(hasNonZeroWallets: Boolean) {
+        if (hasNonZeroWallets) {
             preferencesStorage.appRatingLaunchObserver.foundWalletWithFunds()
         }
         if (preferencesStorage.appRatingLaunchObserver.isReadyToShow()) {
             addWarningMessage(WarningMessagesManager.appRatingWarning(), true)
         }
+    }
+
+    fun tryToShowAppRatingWarning(wallet: Wallet) {
+        val nonZeroWalletsCount = wallet.amounts.filter {
+            it.value.value?.isGreaterThan(BigDecimal.ZERO) ?: false
+        }.size
+        tryToShowAppRatingWarning(hasNonZeroWallets = nonZeroWalletsCount > 0)
     }
 
     private fun showCardWarningsIfNeeded(globalState: GlobalState?) {
