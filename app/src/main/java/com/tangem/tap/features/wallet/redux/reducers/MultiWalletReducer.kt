@@ -9,17 +9,9 @@ import com.tangem.tap.common.extensions.toFiatString
 import com.tangem.tap.common.extensions.toFormattedCurrencyString
 import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
-import com.tangem.tap.features.wallet.models.Currency
-import com.tangem.tap.features.wallet.models.WalletRent
-import com.tangem.tap.features.wallet.models.filterByToken
-import com.tangem.tap.features.wallet.models.getPendingTransactions
-import com.tangem.tap.features.wallet.models.removeUnknownTransactions
-import com.tangem.tap.features.wallet.redux.WalletAction
-import com.tangem.tap.features.wallet.redux.WalletData
-import com.tangem.tap.features.wallet.redux.WalletMainButton
-import com.tangem.tap.features.wallet.redux.WalletState
+import com.tangem.tap.features.wallet.models.*
+import com.tangem.tap.features.wallet.redux.*
 import com.tangem.tap.features.wallet.redux.WalletState.Companion.UNKNOWN_AMOUNT_SIGN
-import com.tangem.tap.features.wallet.redux.WalletStore
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.features.wallet.ui.TokenData
@@ -174,9 +166,13 @@ class MultiWalletReducer {
             is WalletAction.MultiWallet.ShowWalletBackupWarning -> state.copy(
                 showBackupWarning = action.show,
             )
-            is WalletAction.MultiWallet.AddMissingDerivations -> state.copy(missingDerivations = action.blockchains)
+            is WalletAction.MultiWallet.AddMissingDerivations -> state.copy(
+                missingDerivations = action.blockchains,
+            )
             is WalletAction.MultiWallet.BackupWallet -> state
-            is WalletAction.MultiWallet.ScanToGetDerivations -> state
+            is WalletAction.MultiWallet.ScanToGetDerivations -> state.copy(
+                state = ProgressState.Loading,
+            )
         }
     }
 
