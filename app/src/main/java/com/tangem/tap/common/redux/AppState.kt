@@ -35,6 +35,7 @@ import com.tangem.tap.features.tokens.redux.TokensMiddleware
 import com.tangem.tap.features.tokens.redux.TokensState
 import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.redux.middlewares.WalletMiddleware
+import com.tangem.tap.features.walletSelector.redux.WalletSelectorMiddleware
 import com.tangem.tap.features.walletSelector.redux.WalletSelectorState
 import com.tangem.tap.features.welcome.redux.WelcomeMiddleware
 import com.tangem.tap.features.welcome.redux.WelcomeState
@@ -88,6 +89,7 @@ data class AppState(
                 ShopMiddleware().shopMiddleware,
                 WelcomeMiddleware().middleware,
                 SaveWalletMiddleware().middleware,
+                WalletSelectorMiddleware().middleware,
             )
         }
     }
