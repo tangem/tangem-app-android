@@ -36,7 +36,7 @@ class AppSettingsFragment : Fragment(), StoreSubscriber<DetailsState> {
         return ComposeView(requireContext()).apply {
             setContent {
                 isTransitionGroup = true
-                AppCompatTheme {
+                TangemTheme {
                     AppSettingsScreen(
                         state = screenState.value,
                         onBackPressed = {
