@@ -50,7 +50,7 @@ object Versions {
     const val spongycastleCryptoCore = "1.58.0.0"
     const val timber = "4.7.1"
     const val viewBindingDelegate = "1.5.6"
-    const val xmlShimmer = "1.1.2"
+    const val xmlShimmer = "1.1.3"
     const val zendeskChat = "3.3.5"
     const val zendeskMessaging = "5.2.4"
     const val zxingQrBarcodeScanner = "1.9.8"
