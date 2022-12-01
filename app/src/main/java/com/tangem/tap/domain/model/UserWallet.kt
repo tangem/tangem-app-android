@@ -22,4 +22,6 @@ data class UserWallet(
 ) {
     val cardId: String
         get() = scanResponse.card.cardId
+
+    internal var isSaved: Boolean = true
 }
