@@ -60,7 +60,8 @@ internal class WalletSelectorViewModel : ViewModel(), StoreSubscriber<WalletSele
     fun renameWallet() = with(state.value) {
         if (editingWalletsIds.isNotEmpty() && renameWalletDialog == null) {
             val editedWalletId = editingWalletsIds.first()
-            val editedWallet = wallets.find { it.id == editedWalletId }
+            val editedWallet = (multiCurrencyWallets + singleCurrencyWallets)
+                .find { it.id == editedWalletId }
 
             if (editedWallet != null) {
                 val dialog = RenameWalletDialog(
