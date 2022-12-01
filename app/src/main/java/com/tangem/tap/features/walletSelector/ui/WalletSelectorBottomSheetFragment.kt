@@ -5,15 +5,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.SnackbarHost
 import androidx.compose.material.SnackbarHostState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.State
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.rememberNestedScrollInteropConnection
 import androidx.fragment.app.viewModels
 import com.tangem.core.ui.fragments.ComposeBottomSheetFragment
 import com.tangem.core.ui.res.TangemTheme
@@ -29,6 +26,7 @@ internal class WalletSelectorBottomSheetFragment : ComposeBottomSheetFragment<Wa
         return viewModel.state.collectAsState()
     }
 
+    @OptIn(ExperimentalComposeUiApi::class)
     @Composable
     override fun ScreenContent(
         modifier: Modifier,
@@ -38,7 +36,10 @@ internal class WalletSelectorBottomSheetFragment : ComposeBottomSheetFragment<Wa
         val errorMessage by rememberUpdatedState(newValue = state.error?.customMessage)
         val renameWalletDialog by rememberUpdatedState(newValue = state.renameWalletDialog)
 
-        Box(modifier = modifier) {
+        Box(
+            modifier = modifier
+                .nestedScroll(connection = rememberNestedScrollInteropConnection()),
+        ) {
             WalletSelectorScreenContent(
                 state = state,
                 onWalletClick = viewModel::walletClicked,
