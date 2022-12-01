@@ -25,5 +25,7 @@ interface UserWalletsListManager {
     suspend fun delete(walletIds: List<UserWalletId>): CompletionResult<Unit>
     suspend fun clear(): CompletionResult<Unit>
 
+    suspend fun get(walletId: UserWalletId): CompletionResult<UserWallet>
+
     companion object
 }
