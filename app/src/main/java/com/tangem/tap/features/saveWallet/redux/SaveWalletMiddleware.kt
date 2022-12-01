@@ -7,6 +7,7 @@ import com.tangem.common.flatMap
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppState
+import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.domain.model.builders.UserWalletBuilder
@@ -34,10 +35,10 @@ internal class SaveWalletMiddleware {
     private fun handleAction(action: SaveWalletAction, state: SaveWalletState) {
         when (action) {
             is SaveWalletAction.Save -> saveWalletIfBiometricsEnrolled(state)
-            is SaveWalletAction.Save.Success -> popBack()
             is SaveWalletAction.EnrollBiometrics.Enroll -> enrollBiometrics()
             is SaveWalletAction.SaveWalletWasShown -> saveWalletWasShown()
-            is SaveWalletAction.ProvideAdditionalInfo,
+            is SaveWalletAction.Save.Success,
+            is SaveWalletAction.ProvideBackupInfo,
             is SaveWalletAction.Dismiss,
             is SaveWalletAction.CloseError,
             is SaveWalletAction.Save.Error,
@@ -60,52 +61,56 @@ internal class SaveWalletMiddleware {
     }
 
     private fun saveWallet(state: SaveWalletState) {
-        val scanResponse = state.additionalInfo?.scanResponse
+        val scanResponse = state.backupInfo?.scanResponse
             ?: store.state.globalState.scanResponse
             ?: return
 
         scope.launch {
             val userWallet = UserWalletBuilder(scanResponse)
-                .setBackupCardsIds(backupCardsIds = state.additionalInfo?.backupCardsIds)
+                .setBackupCardsIds(backupCardsIds = state.backupInfo?.backupCardsIds)
                 .build()
 
-            userWalletsListManager.save(userWallet)
-                .flatMap {
-                    trySaveAccessCode(
-                        userWallet = userWallet,
-                        additionalInfo = state.additionalInfo,
-                    )
-                }
+            saveAccessCodeIfNeeded(state.backupInfo?.accessCode, userWallet.cardsInWallet)
+                .flatMap { userWalletsListManager.save(userWallet) }
                 .doOnFailure { error ->
                     store.dispatchOnMain(SaveWalletAction.Save.Error(error))
                 }
                 .doOnSuccess {
                     preferencesStorage.shouldSaveUserWallets = true
                     preferencesStorage.shouldSaveAccessCodes = true
+
+                    val isSavedWalletSelected =
+                        userWalletsListManager.selectedUserWalletSync?.walletId == userWallet.walletId
+
+                    if (isSavedWalletSelected) {
+                        store.dispatchOnMain(NavigationAction.PopBackTo())
+                    } else {
+                        store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.WalletSelector))
+                    }
+
                     store.dispatchOnMain(SaveWalletAction.Save.Success)
                     store.onUserWalletSelected(userWallet)
                 }
         }
     }
 
-    private fun popBack() {
-        store.dispatchOnMain(NavigationAction.PopBackTo())
-    }
-
     private fun saveWalletWasShown() {
         preferencesStorage.shouldShowSaveWallet = false
     }
 
-    private suspend fun trySaveAccessCode(
-        userWallet: UserWallet,
-        additionalInfo: SaveWalletState.WalletAdditionalInfo?,
+    private suspend fun saveAccessCodeIfNeeded(
+        accessCode: String?,
+        cardsInWallet: Set<String>,
     ): CompletionResult<Unit> {
         return when {
-            additionalInfo?.accessCode != null -> {
-                tangemSdkManager.saveAccessCode(
-                    accessCode = additionalInfo.accessCode,
-                    cardsIds = userWallet.cardsInWallet,
-                )
+            accessCode != null -> {
+                tangemSdkManager.unlockBiometricKeys()
+                    .flatMap {
+                        tangemSdkManager.saveAccessCode(
+                            accessCode = accessCode,
+                            cardsIds = cardsInWallet,
+                        )
+                    }
             }
             else -> {
                 CompletionResult.Success(Unit)
