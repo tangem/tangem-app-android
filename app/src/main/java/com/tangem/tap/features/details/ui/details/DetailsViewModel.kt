@@ -36,7 +36,7 @@ class DetailsViewModel(private val store: Store<AppState>) {
                 SettingsElement.PrivacyPolicy -> {
                     if (state.privacyPolicyUrl != null) it else null
                 }
-                SettingsElement.AppSettings -> null // TODO: until we implement settings from this screen
+                SettingsElement.AppSettings -> if (state.isBiometricsAvailable) it else null
                 SettingsElement.AppCurrency -> if (state.scanResponse?.card?.isMultiwalletAllowed != true) it else null
                 SettingsElement.TermsOfUse -> if (state.scanResponse?.card?.isStart2Coin == true) it else null
                 else -> it
@@ -44,7 +44,7 @@ class DetailsViewModel(private val store: Store<AppState>) {
         }
 
         return DetailsScreenState(
-            settings,
+            elements = settings,
             tangemLinks = getSocialLinks(),
             tangemVersion = getTangemAppVersion(),
             appCurrency = state.appCurrency.name,
@@ -80,7 +80,7 @@ class DetailsViewModel(private val store: Store<AppState>) {
             }
             SettingsElement.AppSettings -> {
                 Analytics.send(Settings.ButtonAppSettings())
-                store.dispatch(NavigationAction.NavigateTo(AppScreen.AppSettings)) //TODO: To be available later
+                store.dispatch(NavigationAction.NavigateTo(AppScreen.AppSettings))
             }
             SettingsElement.LinkMoreCards -> {
                 Analytics.send(Settings.ButtonCreateBackup())

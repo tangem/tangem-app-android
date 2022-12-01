@@ -45,8 +45,20 @@ sealed class DetailsAction : Action {
     }
 
     sealed class AppSettings : DetailsAction() {
-        data class SwitchPrivacySetting(val enable: Boolean, val setting: PrivacySetting) :
-            AppSettings()
+        data class SwitchPrivacySetting(
+            val enable: Boolean,
+            val setting: PrivacySetting,
+        ) : AppSettings() {
+            data class Success(
+                val enable: Boolean,
+                val setting: PrivacySetting,
+            ) : AppSettings()
+        }
+
+        object EnrollBiometrics : AppSettings() {
+            object Enroll : AppSettings()
+            object Cancel : AppSettings()
+        }
     }
 
     data class ChangeAppCurrency(val fiatCurrency: FiatCurrency) : DetailsAction()

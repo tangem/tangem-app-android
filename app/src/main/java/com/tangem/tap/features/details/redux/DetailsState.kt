@@ -22,6 +22,8 @@ data class DetailsState(
     val appCurrency: FiatCurrency = FiatCurrency.Default,
     val saveWallets: Boolean = false,
     val saveAccessCodes: Boolean = false,
+    val isBiometricsAvailable: Boolean = false,
+    val needEnrollBiometrics: Boolean = false,
 ) : StateType {
 
     // if you do not delegate - the application crashes on startup,

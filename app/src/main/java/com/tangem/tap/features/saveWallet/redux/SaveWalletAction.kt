@@ -5,7 +5,7 @@ import com.tangem.domain.common.ScanResponse
 import org.rekotlin.Action
 
 internal sealed interface SaveWalletAction : Action {
-    data class ProvideAdditionalInfo(
+    data class ProvideBackupInfo(
         val scanResponse: ScanResponse,
         val accessCode: String?,
         val backupCardsIds: Set<String>?,

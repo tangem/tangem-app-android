@@ -5,11 +5,21 @@ import androidx.annotation.StringRes
 import com.tangem.Message
 import com.tangem.TangemSdk
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.common.*
+import com.tangem.common.CardFilter
+import com.tangem.common.CompletionResult
+import com.tangem.common.SuccessResponse
+import com.tangem.common.UserCode
+import com.tangem.common.UserCodeType
+import com.tangem.common.biometric.BiometricManager
 import com.tangem.common.card.FirmwareVersion
-import com.tangem.common.core.*
+import com.tangem.common.core.CardIdDisplayFormat
+import com.tangem.common.core.CardSessionRunnable
+import com.tangem.common.core.Config
+import com.tangem.common.core.TangemSdkError
+import com.tangem.common.core.UserCodeRequestPolicy
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.hdWallet.DerivationPath
+import com.tangem.common.map
 import com.tangem.common.usersCode.UserCodeRepository
 import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.ScanResponse
@@ -28,6 +38,7 @@ import com.tangem.tap.domain.tasks.product.CreateProductWalletTaskResponse
 import com.tangem.tap.domain.tasks.product.ResetToFactorySettingsTask
 import com.tangem.tap.domain.tasks.product.ScanProductTask
 import com.tangem.tap.domain.tokens.UserTokensRepository
+import com.tangem.tap.domain.userWalletList.di.USER_WALLETS_BIOMETRIC_KEY_NAME
 import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.isActive
@@ -42,8 +53,12 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
     val canEnrollBiometrics: Boolean
         get() = tangemSdk.biometricManager.canEnrollBiometrics
 
+    val biometricManager: BiometricManager
+        get() = tangemSdk.biometricManager
+
     suspend fun scanProduct(
         userTokensRepository: UserTokensRepository,
+        cardId: String? = null,
         additionalBlockchainsToDerive: Collection<Blockchain>? = null,
         messageRes: Int? = null,
         useBiometricsForAccessCode: Boolean = false,
@@ -52,8 +67,13 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
 
         val message = Message(context.getString(messageRes ?: R.string.initial_message_scan_header))
         return runTaskAsyncReturnOnMain(
-            runnable = ScanProductTask(null, userTokensRepository, additionalBlockchainsToDerive),
-            cardId = null, initialMessage = message,
+            runnable = ScanProductTask(
+                card = null,
+                userTokensRepository = userTokensRepository,
+                additionalBlockchainsToDerive = additionalBlockchainsToDerive,
+            ),
+            cardId = cardId,
+            initialMessage = message,
         ).also { sendScanResultsToAnalytics(it) }
     }
 
@@ -89,7 +109,9 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
     suspend fun derivePublicKeys(
         cardId: String,
         derivations: Map<ByteArrayKey, List<DerivationPath>>,
+        useBiometricsForAccessCode: Boolean = false,
     ): CompletionResult<DerivationTaskResponse> {
+        setAccessCodeRequestPolicy(useBiometricsForAccessCode)
         return runTaskAsyncReturnOnMain(DeriveMultipleWalletPublicKeysTask(derivations), cardId)
     }
 
@@ -102,6 +124,16 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
             .map { CardDTO(it) }
     }
 
+    suspend fun unlockBiometricKeys(): CompletionResult<Unit> {
+        return biometricManager.authenticate(
+            mode = BiometricManager.AuthenticationMode.Keys(
+                USER_WALLETS_BIOMETRIC_KEY_NAME,
+                tangemSdk.config.userCodesBiometricKeyName,
+            ),
+        )
+            .map { /* no-op */ }
+    }
+
     suspend fun saveAccessCode(accessCode: String, cardsIds: Set<String>): CompletionResult<Unit> {
         return createUserCodeRepository().save(
             cardIds = cardsIds,
@@ -110,6 +142,20 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
                 stringValue = accessCode,
             ),
         )
+            .map {
+                biometricManager.unauthenticate(
+                    keyName = tangemSdk.config.userCodesBiometricKeyName,
+                )
+            }
+    }
+
+    suspend fun clearSavedUserCodes(): CompletionResult<Unit> {
+        return createUserCodeRepository().clear()
+            .map {
+                biometricManager.unauthenticate(
+                    keyName = tangemSdk.config.userCodesBiometricKeyName,
+                )
+            }
     }
 
     suspend fun setPasscode(cardId: String?): CompletionResult<SuccessResponse> {
