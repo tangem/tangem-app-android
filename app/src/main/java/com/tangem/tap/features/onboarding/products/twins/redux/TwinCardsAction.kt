@@ -45,13 +45,16 @@ sealed class TwinCardsAction : Action {
         data class LaunchThirdStep(val message: Message) : TwinCardsAction()
     }
 
-
     // for the onboarding
     data class SetPairCardId(val cardId: String) : TwinCardsAction()
     object TopUp : TwinCardsAction()
     object ShowAddressInfoDialog : TwinCardsAction()
     data class SetWalletManager(val walletManager: WalletManager) : TwinCardsAction()
     object Done : TwinCardsAction()
+
+    data class SaveScannedTwinCardAndNavigateToWallet(
+        val scanResponse: ScanResponse,
+    ) : TwinCardsAction()
 
     sealed class Balance {
         object Update : TwinCardsAction()

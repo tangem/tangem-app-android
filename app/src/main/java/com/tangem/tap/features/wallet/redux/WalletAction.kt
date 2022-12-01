@@ -1,17 +1,16 @@
 package com.tangem.tap.features.wallet.redux
 
 import android.content.Context
-import com.tangem.blockchain.common.Amount
-import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.Token
-import com.tangem.blockchain.common.Wallet
-import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.common.*
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.domain.common.CardDTO
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.redux.NotificationAction
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
+import com.tangem.tap.domain.model.TotalFiatBalance
+import com.tangem.tap.domain.model.UserWallet
+import com.tangem.tap.domain.model.WalletStoreModel
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.models.WalletDialog
@@ -27,7 +26,8 @@ sealed class WalletAction : Action {
 
     object LoadData : WalletAction() {
         object Refresh : WalletAction()
-        data class Failure(val error: TapError) : WalletAction()
+        object Success : WalletAction()
+        data class Failure(val error: TapError?) : WalletAction()
     }
 
     data class LoadWallet(
@@ -54,20 +54,28 @@ sealed class WalletAction : Action {
     sealed class MultiWallet : WalletAction() {
         data class SetIsMultiwalletAllowed(val isMultiwalletAllowed: Boolean) : MultiWallet()
 
+        data class AddBlockchains(
+            val blockchains: List<BlockchainNetwork>,
+            val walletManagers: List<WalletManager>,
+        ) : MultiWallet()
+
+        data class AddTokens(
+            val tokens: List<Token>,
+            val blockchain: BlockchainNetwork,
+        ) : MultiWallet()
+
         data class AddBlockchain(
             val blockchain: BlockchainNetwork,
             val walletManager: WalletManager?,
             val save: Boolean,
         ) : MultiWallet()
 
-        data class AddBlockchains(
-            val blockchains: List<BlockchainNetwork>, val walletManagers: List<WalletManager>, val save: Boolean,
+        data class AddToken(
+            val token: Token,
+            val blockchain: BlockchainNetwork,
+            val save: Boolean,
         ) : MultiWallet()
 
-        data class AddTokens(val tokens: List<Token>, val blockchain: BlockchainNetwork, val save: Boolean) :
-            MultiWallet()
-
-        data class AddToken(val token: Token, val blockchain: BlockchainNetwork, val save: Boolean) : MultiWallet()
         data class SaveCurrencies(
             val blockchainNetworks: List<BlockchainNetwork>, val card: CardDTO? = null,
         ) : MultiWallet()
@@ -161,6 +169,8 @@ sealed class WalletAction : Action {
 
     object CreateWallet : WalletAction()
     object EmptyWallet : WalletAction()
+    object ChangeWallet : WalletAction()
+    object ShowSaveWalletIfNeeded : WalletAction()
 
     sealed class TradeCryptoAction : WalletAction() {
         object Sell : TradeCryptoAction()
@@ -190,4 +200,8 @@ sealed class WalletAction : Action {
         object ChooseAppCurrency : AppCurrencyAction()
         data class SelectAppCurrency(val fiatCurrency: FiatCurrency) : AppCurrencyAction()
     }
+
+    data class UserWalletChanged(val userWallet: UserWallet) : WalletAction()
+    data class WalletStoresChanged(val walletStores: List<WalletStoreModel>) : WalletAction()
+    data class TotalFiatBalanceChanged(val balance: TotalFiatBalance) : WalletAction()
 }

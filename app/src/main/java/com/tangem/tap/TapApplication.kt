@@ -7,6 +7,8 @@ import coil.ImageLoader
 import coil.ImageLoaderFactory
 import com.tangem.Log
 import com.tangem.LogFormat
+import com.tangem.blockchain.common.BlockchainSdkConfig
+import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.common.json.MoshiJsonConverter
 import com.tangem.domain.DomainLayer
@@ -39,8 +41,14 @@ import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.domain.tokens.UserTokensRepository
 import com.tangem.tap.domain.totalBalance.TotalFiatBalanceCalculator
 import com.tangem.tap.domain.totalBalance.di.provideDefaultImplementation
+import com.tangem.tap.domain.walletCurrencies.WalletCurrenciesManager
+import com.tangem.tap.domain.walletCurrencies.di.provideDefaultImplementation
 import com.tangem.tap.domain.walletStores.WalletStoresManager
-import com.tangem.tap.domain.walletStores.di.provideDummyImplementation
+import com.tangem.tap.domain.walletStores.di.provideDefaultImplementation
+import com.tangem.tap.domain.walletStores.repository.WalletAmountsRepository
+import com.tangem.tap.domain.walletStores.repository.WalletManagersRepository
+import com.tangem.tap.domain.walletStores.repository.WalletStoresRepository
+import com.tangem.tap.domain.walletStores.repository.di.provideDefaultImplementation
 import com.tangem.tap.domain.walletconnect.WalletConnectRepository
 import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.tap.persistence.CardBalanceStateAdapter
@@ -64,10 +72,40 @@ lateinit var shopService: TangemShopService
 lateinit var assetReader: AssetReader
 lateinit var userTokensRepository: UserTokensRepository
 
-val walletStoresManager by lazy {
-    WalletStoresManager.provideDummyImplementation()
+private val walletStoresRepository by lazy { WalletStoresRepository.provideDefaultImplementation() }
+private val walletManagersRepository by lazy {
+    WalletManagersRepository.provideDefaultImplementation(
+        walletManagerFactory = WalletManagerFactory(
+            blockchainSdkConfig = store.state.globalState.configManager
+                ?.config
+                ?.blockchainSdkConfig
+                ?: BlockchainSdkConfig(),
+        ),
+    )
 }
-
+private val walletAmountsRepository by lazy {
+    WalletAmountsRepository.provideDefaultImplementation(
+        tangemTechService = store.state.domainNetworks.tangemTechService,
+    )
+}
+val walletStoresManager by lazy {
+    WalletStoresManager.provideDefaultImplementation(
+        userTokensRepository = userTokensRepository,
+        walletStoresRepository = walletStoresRepository,
+        walletManagersRepository = walletManagersRepository,
+        walletAmountsRepository = walletAmountsRepository,
+        appCurrencyProvider = { store.state.globalState.appCurrency },
+    )
+}
+val walletCurrenciesManager by lazy {
+    WalletCurrenciesManager.provideDefaultImplementation(
+        userTokensRepository = userTokensRepository,
+        walletStoresRepository = walletStoresRepository,
+        walletManagersRepository = walletManagersRepository,
+        walletAmountsRepository = walletAmountsRepository,
+        appCurrencyProvider = { store.state.globalState.appCurrency },
+    )
+}
 val totalFiatBalanceCalculator by lazy {
     TotalFiatBalanceCalculator.provideDefaultImplementation()
 }

@@ -17,6 +17,9 @@ data class TangemShapes internal constructor(
         roundedCornersSmall2 = RoundedCornerShape(size = dimens.radius4),
         roundedCornersMedium = RoundedCornerShape(size = dimens.radius12),
         roundedCornersLarge = RoundedCornerShape(size = dimens.radius28),
-        bottomSheet = RoundedCornerShape(size = dimens.radius16),
+        bottomSheet = RoundedCornerShape(
+            topStart = dimens.radius16,
+            topEnd = dimens.radius16,
+        ),
     )
 }

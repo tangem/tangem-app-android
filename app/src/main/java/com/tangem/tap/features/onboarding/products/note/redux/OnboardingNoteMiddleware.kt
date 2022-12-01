@@ -14,17 +14,15 @@ import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchOpenUrl
 import com.tangem.tap.common.extensions.getAddressData
 import com.tangem.tap.common.extensions.getTopUpUrl
-import com.tangem.tap.common.extensions.onCardScanned
 import com.tangem.tap.common.postUi
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.common.redux.navigation.AppScreen
-import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.makePrimaryWalletManager
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
+import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.features.wallet.redux.WalletAction
@@ -190,10 +188,7 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
         }
         OnboardingNoteAction.Done -> {
             store.dispatch(GlobalAction.Onboarding.Stop)
-            scope.launch {
-                store.onCardScanned(scanResponse)
-                withMainContext { store.dispatch(NavigationAction.NavigateTo(AppScreen.Wallet)) }
-            }
+            OnboardingHelper.trySaveWalletAndNavigateToWalletScreen(scanResponse)
         }
     }
 }
