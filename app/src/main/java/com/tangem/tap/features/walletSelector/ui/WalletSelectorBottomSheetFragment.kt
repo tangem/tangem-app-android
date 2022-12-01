@@ -14,6 +14,7 @@ import androidx.compose.ui.platform.rememberNestedScrollInteropConnection
 import androidx.fragment.app.viewModels
 import com.tangem.core.ui.fragments.ComposeBottomSheetFragment
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.tap.features.details.ui.cardsettings.resolveReference
 import com.tangem.tap.features.walletSelector.ui.components.RenameWalletDialogContent
 import com.tangem.tap.features.walletSelector.ui.components.WalletSelectorScreenContent
 import com.tangem.tap.features.walletSelector.ui.model.RenameWalletDialog
@@ -33,7 +34,7 @@ internal class WalletSelectorBottomSheetFragment : ComposeBottomSheetFragment<Wa
         state: WalletSelectorScreenState,
     ) {
         val snackbarHostState = remember { SnackbarHostState() }
-        val errorMessage by rememberUpdatedState(newValue = state.error?.customMessage)
+        val errorMessage by rememberUpdatedState(newValue = state.error?.resolveReference())
         val renameWalletDialog by rememberUpdatedState(newValue = state.renameWalletDialog)
 
         Box(
