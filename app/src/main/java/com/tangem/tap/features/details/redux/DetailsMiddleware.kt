@@ -2,6 +2,9 @@ package com.tangem.tap.features.details.redux
 
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
+import com.tangem.common.doOnFailure
+import com.tangem.common.doOnSuccess
+import com.tangem.common.flatMap
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.common.util.userWalletId
 import com.tangem.tap.common.analytics.Analytics
@@ -9,44 +12,53 @@ import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.domain.model.builders.UserWalletBuilder
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.onboarding.products.twins.redux.CreateTwinWalletMode
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
+import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
+import com.tangem.tap.userWalletsListManager
+import com.tangem.tap.walletStoresManager
 import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.rekotlin.Action
 import org.rekotlin.Middleware
+import timber.log.Timber
 
 class DetailsMiddleware {
     private val eraseWalletMiddleware = EraseWalletMiddleware()
     private val manageSecurityMiddleware = ManageSecurityMiddleware()
     private val managePrivacyMiddleware = ManagePrivacyMiddleware()
-    val detailsMiddleware: Middleware<AppState> = { _, state ->
+    val detailsMiddleware: Middleware<AppState> = { _, stateProvider ->
         { next ->
             { action ->
-                handleAction(state, action)
+                if (!DemoHelper.tryHandle(stateProvider, action)) {
+                    val detailsState = stateProvider()?.detailsState
+                    if (detailsState != null) {
+                        handleAction(detailsState, action)
+                    }
+                }
                 next(action)
             }
         }
     }
 
-    private fun handleAction(state: () -> AppState?, action: Action) {
-        if (DemoHelper.tryHandle(state, action)) return
-
+    private fun handleAction(state: DetailsState, action: Action) {
         when (action) {
             is DetailsAction.ResetToFactory -> eraseWalletMiddleware.handle(action)
             is DetailsAction.ManageSecurity -> manageSecurityMiddleware.handle(action)
-            is DetailsAction.AppSettings -> managePrivacyMiddleware.handle(action)
+            is DetailsAction.AppSettings -> managePrivacyMiddleware.handle(state, action)
             is DetailsAction.ShowDisclaimer -> {
                 val uri = store.state.detailsState.cardTermsOfUseUrl
                 if (uri != null) {
@@ -65,14 +77,17 @@ class DetailsMiddleware {
             }
             DetailsAction.ScanCard -> {
                 scope.launch {
-                    when (val result = tangemSdkManager.scanCard()) {
-                        is CompletionResult.Success -> {
-                            val scannedCard = result.data
+                    tangemSdkManager.scanCard(
+                        cardId = state.scanResponse?.card?.cardId,
+                        useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes &&
+                            state.scanResponse?.card?.isAccessCodeSet == true,
+                    )
+                        .doOnSuccess { card ->
                             val currentCardId = store.state.globalState.scanResponse?.card
                                 ?.userWalletId
                                 ?.stringValue
-                            if (scannedCard.userWalletId.stringValue == currentCardId) {
-                                store.dispatchOnMain(DetailsAction.PrepareCardSettingsData(scannedCard))
+                            if (card.userWalletId.stringValue == currentCardId) {
+                                store.dispatchOnMain(DetailsAction.PrepareCardSettingsData(card))
                             } else {
                                 store.dispatchDialogShow(
                                     AppDialog.SimpleOkDialogRes(
@@ -82,8 +97,6 @@ class DetailsMiddleware {
                                 )
                             }
                         }
-                        is CompletionResult.Failure -> Unit
-                    }
                 }
             }
         }
@@ -104,17 +117,22 @@ class DetailsMiddleware {
                 is DetailsAction.ResetToFactory.Proceed -> {
                     val card = store.state.detailsState.cardSettingsState?.card ?: return
                     scope.launch {
-                        when (val result = tangemSdkManager.resetToFactorySettings(card.cardId)) {
-                            is CompletionResult.Success -> {
+                        tangemSdkManager.resetToFactorySettings(card.cardId)
+                            .flatMap { userWalletsListManager.delete(listOf(card.userWalletId)) }
+                            .doOnSuccess {
                                 Analytics.send(Settings.CardSettings.FactoryResetFinished())
-                                store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Home))
+                                val screen = if (userWalletsListManager.hasSavedUserWallets) {
+                                    AppScreen.Welcome
+                                } else {
+                                    AppScreen.Home
+                                }
+                                store.dispatchOnMain(NavigationAction.PopBackTo(screen))
                             }
-
-                            is CompletionResult.Failure -> {
-                                (result.error as? TangemSdkError)?.let { error ->
-                                    Analytics.send(Settings.CardSettings.FactoryResetFinished(error))                                }
+                            .doOnFailure { error ->
+                                (error as? TangemSdkError)?.let { sdkError ->
+                                    Analytics.send(Settings.CardSettings.FactoryResetFinished(sdkError))
+                                }
                             }
-                        }
                     }
                 }
                 else -> Unit
@@ -174,12 +192,109 @@ class DetailsMiddleware {
     }
 
     class ManagePrivacyMiddleware {
-        fun handle(action: DetailsAction.AppSettings) {
+        fun handle(state: DetailsState, action: DetailsAction.AppSettings) {
             when (action) {
                 is DetailsAction.AppSettings.SwitchPrivacySetting -> {
-//                    TODO()
+                    if (tangemSdkManager.canEnrollBiometrics) {
+                        store.dispatch(DetailsAction.AppSettings.EnrollBiometrics)
+                    }
+                    when (action.setting) {
+                        PrivacySetting.SaveWallets -> toggleSaveWallets(state, enable = action.enable)
+                        PrivacySetting.SaveAccessCode -> toggleSaveAccessCodes(state, enable = action.enable)
+                    }
+                }
+                is DetailsAction.AppSettings.SwitchPrivacySetting.Success -> Unit
+                is DetailsAction.AppSettings.EnrollBiometrics -> Unit
+                is DetailsAction.AppSettings.EnrollBiometrics.Enroll -> enrollBiometrics()
+                is DetailsAction.AppSettings.EnrollBiometrics.Cancel -> Unit
+            }
+        }
+
+        private fun enrollBiometrics() {
+            store.dispatchOnMain(NavigationAction.OpenBiometricsSettings)
+        }
+
+        private fun toggleSaveWallets(state: DetailsState, enable: Boolean) = scope.launch {
+            if (state.saveWallets == enable) return@launch
+            if (enable) {
+                saveCurrentWallet()
+            } else {
+                deleteSavedWallets()
+                if (state.saveAccessCodes) {
+                    deleteSavedAccessCodes()
                 }
             }
+        }
+
+        private fun toggleSaveAccessCodes(state: DetailsState, enable: Boolean) = scope.launch {
+            if (state.saveAccessCodes == enable) return@launch
+            if (enable) {
+                if (!state.saveWallets) {
+                    saveCurrentWallet()
+                }
+                saveAccessCodes()
+            } else {
+                deleteSavedAccessCodes()
+            }
+        }
+
+        private suspend fun saveCurrentWallet() {
+            val scanResponse = store.state.detailsState.scanResponse ?: return
+            val userWallet = UserWalletBuilder(scanResponse).build()
+
+            userWalletsListManager.save(userWallet)
+                .doOnFailure { error ->
+                    Timber.e(error, "Wallet saving failed")
+                }
+                .doOnSuccess {
+                    preferencesStorage.shouldShowSaveWallet = false
+                    preferencesStorage.shouldSaveUserWallets = true
+                    store.dispatchOnMain(
+                        DetailsAction.AppSettings.SwitchPrivacySetting.Success(
+                            setting = PrivacySetting.SaveWallets,
+                            enable = true,
+                        ),
+                    )
+                    store.onUserWalletSelected(userWallet)
+                }
+        }
+
+        private suspend fun deleteSavedWallets() {
+            userWalletsListManager.clear()
+                .flatMap { walletStoresManager.clear() }
+                .doOnSuccess {
+                    preferencesStorage.shouldSaveUserWallets = false
+                    store.dispatchOnMain(
+                        DetailsAction.AppSettings.SwitchPrivacySetting.Success(
+                            setting = PrivacySetting.SaveWallets,
+                            enable = false,
+                        ),
+                    )
+                    store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Home))
+                }
+        }
+
+        private fun saveAccessCodes() {
+            preferencesStorage.shouldSaveAccessCodes = true
+            store.dispatchOnMain(
+                DetailsAction.AppSettings.SwitchPrivacySetting.Success(
+                    setting = PrivacySetting.SaveAccessCode,
+                    enable = true,
+                ),
+            )
+        }
+
+        private suspend fun deleteSavedAccessCodes() {
+            tangemSdkManager.clearSavedUserCodes()
+                .doOnSuccess {
+                    preferencesStorage.shouldSaveAccessCodes = false
+                    store.dispatchOnMain(
+                        DetailsAction.AppSettings.SwitchPrivacySetting.Success(
+                            setting = PrivacySetting.SaveAccessCode,
+                            enable = false,
+                        ),
+                    )
+                }
         }
     }
 }

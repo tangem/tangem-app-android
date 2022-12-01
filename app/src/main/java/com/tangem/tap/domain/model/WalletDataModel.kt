@@ -35,6 +35,12 @@ data class WalletDataModel(
         open val pendingTransactions: List<PendingTransaction> = emptyList()
         open val errorMessage: String? = null
         open val isErrorStatus: Boolean = false
+
+        fun asRefreshing() = Refreshing(
+            amount = amount,
+            pendingTransactions = pendingTransactions,
+            errorMessage = errorMessage,
+        )
     }
 
     object Loading : Status()
