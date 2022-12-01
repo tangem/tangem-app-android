@@ -1,18 +1,8 @@
-@file:OptIn(ExperimentalComposeUiApi::class)
-
 package com.tangem.tap.features.walletSelector.ui.components
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
@@ -34,8 +24,11 @@ import com.tangem.core.ui.components.SpacerW6
 import com.tangem.core.ui.components.SpacerW8
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.common.compose.TangemTypography
+import com.tangem.tap.features.walletSelector.ui.model.MultiCurrencyUserWalletItem
+import com.tangem.tap.features.walletSelector.ui.model.SingleCurrencyUserWalletItem
 import com.tangem.tap.features.walletSelector.ui.model.UserWalletItem
 import com.tangem.wallet.R
+import com.valentinilk.shimmer.shimmer
 
 @Composable
 internal fun WalletItem(
@@ -49,146 +42,250 @@ internal fun WalletItem(
         modifier = modifier,
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        WalletCardImage(
+            cardImageUrl = wallet.imageUrl,
+            isChecked = isChecked,
+            isSelected = isSelected,
+        )
+        SpacerW8()
+        WalletInfo(
+            modifier = Modifier.weight(weight = .6f),
+            wallet = wallet,
+            isSelected = isSelected,
+        )
+        SpacerW6()
+        TokensInfo(
+            modifier = Modifier.weight(weight = .4f),
+            isLocked = isLocked,
+            balance = wallet.balance,
+            tokensCount = (wallet as? MultiCurrencyUserWalletItem)?.tokensCount,
+        )
+    }
+}
+
+@Composable
+private fun WalletCardImage(
+    modifier: Modifier = Modifier,
+    cardImageUrl: String,
+    isChecked: Boolean,
+    isSelected: Boolean,
+) {
+    Box(
+        modifier = modifier
+            .width(TangemTheme.dimens.size62)
+            .height(TangemTheme.dimens.size42),
+    ) {
+        val cardImageModifier = Modifier
+            .align(Alignment.Center)
+            .width(TangemTheme.dimens.size56)
+            .height(TangemTheme.dimens.size32)
+            .clip(TangemTheme.shapes.roundedCornersSmall)
+
+        SubcomposeAsyncImage(
+            modifier = cardImageModifier,
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(cardImageUrl)
+                .crossfade(true)
+                .build(),
+            loading = { CardImageShimmer(modifier = cardImageModifier) },
+            error = { CardImagePlaceholder(modifier = cardImageModifier) },
+            contentDescription = null,
+        )
+
+        when {
+            isChecked -> {
+                Box(
+                    modifier = cardImageModifier
+                        .background(
+                            color = TangemTheme.colors.icon.accent.copy(alpha = .5f),
+                        ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        painter = painterResource(id = R.drawable.ic_check_24),
+                        tint = TangemTheme.colors.icon.primary2,
+                        contentDescription = null,
+                    )
+                }
+            }
+            isSelected -> {
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .size(TangemTheme.dimens.size18)
+                        .background(
+                            color = Color.White,
+                            shape = CircleShape,
+                        ),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        modifier = Modifier
+                            .padding(all = (0.5).dp),
+                        painter = painterResource(id = R.drawable.ic_check_circle_18),
+                        tint = TangemTheme.colors.icon.accent,
+                        contentDescription = null,
+                    )
+                }
+            }
+            else -> Unit
+        }
+    }
+}
+
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+private fun WalletInfo(
+    modifier: Modifier = Modifier,
+    wallet: UserWalletItem,
+    isSelected: Boolean,
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.SpaceAround,
+    ) {
+        Text(
+            modifier = Modifier.fillMaxWidth(),
+            text = wallet.name,
+            color = if (isSelected) TangemTheme.colors.text.accent else TangemTheme.colors.text.primary1,
+            style = TangemTypography.subtitle1,
+        )
+        SpacerH2()
+        Text(
+            modifier = Modifier.fillMaxWidth(),
+            text = when (wallet) {
+                is MultiCurrencyUserWalletItem -> pluralStringResource(
+                    id = R.plurals.card_label_card_count,
+                    count = wallet.cardsInWallet,
+                    wallet.cardsInWallet,
+                )
+                is SingleCurrencyUserWalletItem -> wallet.tokenName
+            },
+            style = TangemTheme.typography.caption,
+            color = TangemTheme.colors.text.tertiary,
+        )
+    }
+}
+
+@Composable
+private fun TokensInfo(
+    modifier: Modifier = Modifier,
+    isLocked: Boolean,
+    balance: UserWalletItem.Balance,
+    tokensCount: Int?,
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.SpaceAround,
+        horizontalAlignment = Alignment.End,
+    ) {
+        if (isLocked) {
+            LockedPlaceholder()
+        } else {
+            if (balance.isLoading) {
+                LoadingTokensInfo(
+                    isMultiCurrencyWallet = tokensCount != null,
+                )
+            } else {
+                LoadedTokensInfo(
+                    balanceAmount = balance.amount,
+                    tokensCount = tokensCount,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun LoadingTokensInfo(
+    modifier: Modifier = Modifier,
+    isMultiCurrencyWallet: Boolean,
+) {
+    Column(
+        modifier = modifier.shimmer(),
+        horizontalAlignment = Alignment.End,
+        verticalArrangement = Arrangement.SpaceAround,
+    ) {
         Box(
             modifier = Modifier
                 .width(TangemTheme.dimens.size62)
-                .height(TangemTheme.dimens.size42),
-        ) {
-            val cardImageModifier = Modifier
-                .align(Alignment.Center)
-                .width(TangemTheme.dimens.size56)
-                .height(TangemTheme.dimens.size32)
-                .clip(TangemTheme.shapes.roundedCornersSmall)
-            SubcomposeAsyncImage(
-                modifier = cardImageModifier,
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(wallet.imageUrl)
-                    .crossfade(true)
-                    .build(),
-                loading = { CardImagePlaceholder(modifier = cardImageModifier) },
-                error = { CardImagePlaceholder(modifier = cardImageModifier) },
-                contentDescription = null,
-            )
-            when {
-                isChecked -> {
-                    Box(
-                        modifier = cardImageModifier
-                            .background(
-                                color = TangemTheme.colors.icon.accent.copy(alpha = .5f),
-                            ),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(
-                            painter = painterResource(id = R.drawable.ic_check_24),
-                            tint = TangemTheme.colors.icon.primary2,
-                            contentDescription = null,
-                        )
-                    }
-                }
-                isSelected -> {
-                    Box(
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .size(TangemTheme.dimens.size18)
-                            .background(
-                                color = Color.White,
-                                shape = CircleShape,
-                            ),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(
-                            modifier = Modifier
-                                .padding(all = (0.5).dp),
-                            painter = painterResource(id = R.drawable.ic_check_circle_18),
-                            tint = TangemTheme.colors.icon.accent,
-                            contentDescription = null,
-                        )
-                    }
-                }
-                else -> Unit
-            }
-        }
-        SpacerW8()
-        Column(
-            modifier = Modifier.weight(weight = .6f),
-            verticalArrangement = Arrangement.SpaceAround,
-        ) {
-            Text(
-                modifier = Modifier.fillMaxWidth(),
-                text = wallet.name,
-                color = if (isSelected) TangemTheme.colors.text.accent else TangemTheme.colors.text.primary1,
-                style = TangemTypography.subtitle1,
-            )
+                .height(TangemTheme.dimens.size16)
+                .background(
+                    color = TangemTheme.colors.button.secondary,
+                    shape = TangemTheme.shapes.roundedCornersSmall2,
+                ),
+        )
+        if (isMultiCurrencyWallet) {
             SpacerH2()
-            Text(
-                modifier = Modifier.fillMaxWidth(),
-                text = when (val type = wallet.type) {
-                    is UserWalletItem.Type.MultiCurrency -> pluralStringResource(
-                        id = R.plurals.card_label_card_count,
-                        count = type.cardsInWallet,
-                        type.cardsInWallet,
-                    )
-
-                    is UserWalletItem.Type.SingleCurrency -> type.tokenName
-                },
-                style = TangemTheme.typography.caption,
-                color = TangemTheme.colors.text.tertiary,
-            )
-        }
-        SpacerW6()
-        if (isLocked) {
             Box(
                 modifier = Modifier
-                    .padding(vertical = TangemTheme.dimens.spacing2)
+                    .width(TangemTheme.dimens.size48)
+                    .height(TangemTheme.dimens.size12)
                     .background(
                         color = TangemTheme.colors.button.secondary,
-                        shape = TangemTheme.shapes.roundedCornersMedium,
+                        shape = TangemTheme.shapes.roundedCornersSmall2,
                     ),
-            ) {
-                Icon(
-                    modifier = Modifier
-                        .padding(
-                            vertical = TangemTheme.dimens.spacing8,
-                            horizontal = TangemTheme.dimens.spacing12,
-                        )
-                        .size(TangemTheme.dimens.size20),
-                    painter = painterResource(id = R.drawable.ic_locked_24),
-                    tint = TangemTheme.colors.icon.primary1,
-                    contentDescription = null,
-                )
-            }
-        } else {
-            Column(
-                modifier = Modifier.weight(weight = .4f),
-                verticalArrangement = Arrangement.SpaceAround,
-            ) {
-                Text(
-                    modifier = Modifier.fillMaxWidth(),
-                    text = wallet.balance.amount,
-                    style = TangemTheme.typography.subtitle1,
-                    color = TangemTheme.colors.text.primary1,
-                    textAlign = TextAlign.End,
-                )
-                when (val type = wallet.type) {
-                    is UserWalletItem.Type.MultiCurrency -> {
-                        SpacerH2()
-                        Text(
-                            modifier = Modifier.fillMaxWidth(),
-                            text = pluralStringResource(
-                                id = R.plurals.tokens_count,
-                                count = type.tokensCount,
-                                type.tokensCount,
-                            ),
-                            style = TangemTheme.typography.caption,
-                            color = TangemTheme.colors.text.tertiary,
-                            textAlign = TextAlign.End,
-                        )
-                    }
-
-                    is UserWalletItem.Type.SingleCurrency -> Unit
-                }
-            }
+            )
         }
+    }
+}
+
+@OptIn(ExperimentalComposeUiApi::class)
+@Composable
+private fun LoadedTokensInfo(
+    modifier: Modifier = Modifier,
+    balanceAmount: String,
+    tokensCount: Int?,
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.End,
+    ) {
+        Text(
+            text = balanceAmount,
+            style = TangemTheme.typography.subtitle1,
+            color = TangemTheme.colors.text.primary1,
+            textAlign = TextAlign.End,
+        )
+        if (tokensCount != null) {
+            SpacerH2()
+            Text(
+                text = pluralStringResource(
+                    id = R.plurals.tokens_count,
+                    count = tokensCount,
+                    tokensCount,
+                ),
+                style = TangemTheme.typography.caption,
+                color = TangemTheme.colors.text.tertiary,
+                textAlign = TextAlign.End,
+            )
+        }
+    }
+}
+
+@Composable
+private fun LockedPlaceholder(
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .padding(vertical = TangemTheme.dimens.spacing2)
+            .background(
+                color = TangemTheme.colors.button.secondary,
+                shape = TangemTheme.shapes.roundedCornersMedium,
+            ),
+    ) {
+        Icon(
+            modifier = Modifier
+                .padding(
+                    vertical = TangemTheme.dimens.spacing8,
+                    horizontal = TangemTheme.dimens.spacing12,
+                )
+                .size(TangemTheme.dimens.size20),
+            painter = painterResource(id = R.drawable.ic_locked_24),
+            tint = TangemTheme.colors.icon.primary1,
+            contentDescription = null,
+        )
     }
 }
 
@@ -196,9 +293,24 @@ internal fun WalletItem(
 private fun CardImagePlaceholder(
     modifier: Modifier = Modifier,
 ) {
-    Image(
-        modifier = modifier,
-        painter = painterResource(id = R.drawable.card_placeholder_black),
-        contentDescription = null,
-    )
+    Box(modifier = modifier) {
+        Image(
+            modifier = Modifier.matchParentSize(),
+            painter = painterResource(id = R.drawable.card_placeholder_black),
+            contentDescription = null,
+        )
+    }
+}
+
+@Composable
+private fun CardImageShimmer(
+    modifier: Modifier = Modifier,
+) {
+    Box(modifier = modifier.shimmer()) {
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .background(TangemTheme.colors.button.secondary),
+        )
+    }
 }
