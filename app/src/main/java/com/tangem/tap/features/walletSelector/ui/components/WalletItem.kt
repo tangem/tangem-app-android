@@ -7,11 +7,15 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
@@ -79,7 +83,16 @@ private fun WalletCardImage(
             .align(Alignment.Center)
             .width(TangemTheme.dimens.size56)
             .height(TangemTheme.dimens.size32)
-            .clip(TangemTheme.shapes.roundedCornersSmall)
+            .clip(TangemTheme.shapes.roundedCornersSmall2)
+
+        val checkedColorFilter by rememberUpdatedState(
+            newValue = if (isChecked) {
+                ColorFilter.tint(
+                    color = TangemTheme.colors.icon.accent.copy(alpha = .6f),
+                    blendMode = BlendMode.SrcOver,
+                )
+            } else null,
+        )
 
         SubcomposeAsyncImage(
             modifier = cardImageModifier,
@@ -89,46 +102,28 @@ private fun WalletCardImage(
                 .build(),
             loading = { CardImageShimmer(modifier = cardImageModifier) },
             error = { CardImagePlaceholder(modifier = cardImageModifier) },
+            colorFilter = checkedColorFilter,
             contentDescription = null,
         )
 
-        when {
-            isChecked -> {
-                Box(
-                    modifier = cardImageModifier
-                        .background(
-                            color = TangemTheme.colors.icon.accent.copy(alpha = .5f),
-                        ),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.ic_check_24),
-                        tint = TangemTheme.colors.icon.primary2,
-                        contentDescription = null,
-                    )
-                }
+        if (isSelected) {
+            Box(
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .size(TangemTheme.dimens.size18)
+                    .background(
+                        color = Color.White,
+                        shape = CircleShape,
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    modifier = Modifier.padding(all = (0.5).dp),
+                    painter = painterResource(id = R.drawable.ic_check_circle_18),
+                    tint = TangemTheme.colors.icon.accent,
+                    contentDescription = null,
+                )
             }
-            isSelected -> {
-                Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .size(TangemTheme.dimens.size18)
-                        .background(
-                            color = Color.White,
-                            shape = CircleShape,
-                        ),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        modifier = Modifier
-                            .padding(all = (0.5).dp),
-                        painter = painterResource(id = R.drawable.ic_check_circle_18),
-                        tint = TangemTheme.colors.icon.accent,
-                        contentDescription = null,
-                    )
-                }
-            }
-            else -> Unit
         }
     }
 }
