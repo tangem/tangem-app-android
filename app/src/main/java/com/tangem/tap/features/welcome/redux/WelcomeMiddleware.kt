@@ -8,7 +8,7 @@ import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
-import com.tangem.tap.domain.model.UserWallet
+import com.tangem.tap.domain.model.builders.UserWalletBuilder
 import com.tangem.tap.domain.scanCard.ScanCardProcessor
 import com.tangem.tap.scope
 import com.tangem.tap.store
@@ -58,7 +58,7 @@ internal class WelcomeMiddleware {
 
     private fun proceedWithCard() = scope.launch {
         scanCardInternal { scanResponse ->
-            val userWallet = UserWallet(scanResponse)
+            val userWallet = UserWalletBuilder(scanResponse).build()
 
             userWalletsListManager.unlockWithCard(userWallet)
                 .doOnFailure { error ->
