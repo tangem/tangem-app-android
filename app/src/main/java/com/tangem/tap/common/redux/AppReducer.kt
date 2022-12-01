@@ -14,6 +14,7 @@ import com.tangem.tap.features.send.redux.reducers.SendScreenReducer
 import com.tangem.tap.features.shop.redux.ShopReducer
 import com.tangem.tap.features.tokens.redux.TokensReducer
 import com.tangem.tap.features.wallet.redux.reducers.WalletReducer
+import com.tangem.tap.features.welcome.redux.WelcomeReducer
 import org.rekotlin.Action
 
 fun appReducer(action: Action, state: AppState?): AppState {
@@ -35,6 +36,7 @@ fun appReducer(action: Action, state: AppState?): AppState {
         tokensState = TokensReducer.reduce(action, state),
         walletConnectState = WalletConnectReducer.reduce(action, state.walletConnectState),
         shopState = ShopReducer.reduce(action, state.shopState),
+        welcomeState = WelcomeReducer.reduce(action, state),
     )
 }
 

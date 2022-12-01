@@ -1,6 +1,8 @@
 package com.tangem.tap.features.welcome.ui
 
 import androidx.lifecycle.ViewModel
+import com.tangem.tap.common.redux.global.GlobalAction
+import com.tangem.tap.features.details.ui.cardsettings.TextReference
 import com.tangem.tap.features.welcome.redux.WelcomeAction
 import com.tangem.tap.features.welcome.redux.WelcomeState
 import com.tangem.tap.store
@@ -15,6 +17,7 @@ internal class WelcomeViewModel : ViewModel(), StoreSubscriber<WelcomeState> {
 
     init {
         subscribeToStoreChanges()
+        initGlobalState()
     }
 
     fun unlockWallets() {
@@ -31,8 +34,16 @@ internal class WelcomeViewModel : ViewModel(), StoreSubscriber<WelcomeState> {
 
     override fun newState(state: WelcomeState) {
         stateInternal.update { prevState ->
-            // TODO: Update screen state
-            prevState
+            prevState.copy(
+                showUnlockWithBiometricsProgress = state.isUnlockWithBiometricsInProgress,
+                showUnlockWithCardProgress = state.isUnlockWithCardInProgress,
+                error = state.error
+                    ?.takeUnless { it.silent }
+                    ?.let { error ->
+                        error.messageResId?.let { TextReference.Res(it) }
+                            ?: TextReference.Str(error.customMessage)
+                    },
+            )
         }
     }
 
@@ -45,5 +56,11 @@ internal class WelcomeViewModel : ViewModel(), StoreSubscriber<WelcomeState> {
             appState.skip { old, new -> old.welcomeState == new.welcomeState }
                 .select { it.welcomeState }
         }
+    }
+
+    private fun initGlobalState() {
+        store.dispatch(GlobalAction.RestoreAppCurrency)
+        store.dispatch(GlobalAction.ExchangeManager.Init)
+        store.dispatch(GlobalAction.FetchUserCountry)
     }
 }
