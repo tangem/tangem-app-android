@@ -55,4 +55,10 @@ class DummyUserWalletsListManager : UserWalletsListManager {
     override suspend fun clear(): CompletionResult<Unit> {
         return CompletionResult.Success(Unit)
     }
+
+    override suspend fun get(walletId: UserWalletId): CompletionResult<UserWallet> {
+        return catching {
+            error("Not implemented")
+        }
+    }
 }
