@@ -8,7 +8,10 @@ import com.tangem.domain.common.isTangemTwin
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.extensions.isWalletDataSupported
 import com.tangem.tap.domain.extensions.signedHashesCount
+import com.tangem.tap.preferencesStorage
 import com.tangem.tap.store
+import com.tangem.tap.tangemSdkManager
+import com.tangem.tap.userWalletsListManager
 import org.rekotlin.Action
 import java.util.*
 
@@ -53,6 +56,9 @@ private fun handlePrepareScreen(
         cardTermsOfUseUrl = action.cardTou.getUrl(action.scanResponse.card),
         createBackupAllowed = action.scanResponse.card.backupStatus == CardDTO.BackupStatus.NoBackup,
         appCurrency = store.state.globalState.appCurrency,
+        isBiometricsAvailable = tangemSdkManager.canUseBiometry,
+        saveWallets = userWalletsListManager.hasSavedUserWallets,
+        saveAccessCodes = preferencesStorage.shouldSaveAccessCodes,
     )
 }
 
@@ -151,12 +157,15 @@ private fun handlePrivacyAction(
     state: DetailsState,
 ): DetailsState {
     return when (action) {
-        is DetailsAction.AppSettings.SwitchPrivacySetting -> {
-            when (action.setting) {
-                PrivacySetting.SaveWallets -> state.copy(saveWallets = action.enable)
-                PrivacySetting.SaveAccessCode -> state.copy(saveAccessCodes = action.enable)
-            }
+        is DetailsAction.AppSettings.SwitchPrivacySetting -> state
+        is DetailsAction.AppSettings.SwitchPrivacySetting.Success -> when (action.setting) {
+            PrivacySetting.SaveWallets -> state.copy(saveWallets = action.enable)
+            PrivacySetting.SaveAccessCode -> state.copy(saveAccessCodes = action.enable)
         }
+        is DetailsAction.AppSettings.EnrollBiometrics -> state.copy(needEnrollBiometrics = true)
+        is DetailsAction.AppSettings.EnrollBiometrics.Enroll,
+        is DetailsAction.AppSettings.EnrollBiometrics.Cancel,
+        -> state.copy(needEnrollBiometrics = false)
     }
 }
 
