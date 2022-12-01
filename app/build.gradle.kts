@@ -75,6 +75,7 @@ android {
             initWith(getByName("release"))
             versionNameSuffix = "-beta"
             applicationIdSuffix = ".debug"
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
 

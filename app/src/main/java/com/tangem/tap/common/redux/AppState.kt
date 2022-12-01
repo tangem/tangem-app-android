@@ -71,7 +71,9 @@ data class AppState(
     companion object {
         fun getMiddleware(): List<Middleware<AppState>> {
             return listOf(
-                logMiddleware, navigationMiddleware, notificationsMiddleware,
+                logMiddleware,
+                navigationMiddleware,
+                notificationsMiddleware,
                 GlobalMiddleware.handler,
                 HomeMiddleware.handler,
                 OnboardingNoteMiddleware.handler,
@@ -90,6 +92,7 @@ data class AppState(
                 WelcomeMiddleware().middleware,
                 SaveWalletMiddleware().middleware,
                 WalletSelectorMiddleware().middleware,
+                LockUserWalletsTimerMiddleware().middleware,
             )
         }
     }
