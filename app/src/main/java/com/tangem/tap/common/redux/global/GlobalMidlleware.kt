@@ -167,9 +167,9 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
             scope.launch {
                 tangemSdkManager.changeDisplayedCardIdNumbersCount(null)
                 val result = tangemSdkManager.scanProduct(
-                    userTokensRepository,
-                    action.additionalBlockchainsToDerive,
-                    action.messageResId,
+                    userTokensRepository = userTokensRepository,
+                    additionalBlockchainsToDerive = action.additionalBlockchainsToDerive,
+                    messageRes = action.messageResId,
                 )
                 withMainContext {
                     store.dispatch(GlobalAction.ScanFailsCounter.ChooseBehavior(result))
