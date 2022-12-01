@@ -4,12 +4,12 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.common.flatMap
-import com.tangem.common.map
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.model.UserWallet
+import com.tangem.tap.domain.model.builders.UserWalletBuilder
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
@@ -65,10 +65,9 @@ internal class SaveWalletMiddleware {
             ?: return
 
         scope.launch {
-            val userWallet = UserWallet(
-                scanResponse = scanResponse,
-                backupCardsIds = state.additionalInfo?.backupCardsIds,
-            )
+            val userWallet = UserWalletBuilder(scanResponse)
+                .setBackupCardsIds(backupCardsIds = state.additionalInfo?.backupCardsIds)
+                .build()
 
             userWalletsListManager.save(userWallet)
                 .flatMap {
@@ -107,14 +106,6 @@ internal class SaveWalletMiddleware {
                     accessCode = additionalInfo.accessCode,
                     cardsIds = userWallet.cardsInWallet,
                 )
-            }
-            userWallet.hasAccessCode -> {
-                tangemSdkManager
-                    .scanCard(
-                        cardId = userWallet.cardId,
-                        useBiometricsForAccessCode = true,
-                    )
-                    .map { /* no-op */ }
             }
             else -> {
                 CompletionResult.Success(Unit)
