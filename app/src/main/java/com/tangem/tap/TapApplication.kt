@@ -37,6 +37,10 @@ import com.tangem.tap.domain.configurable.config.ConfigManager
 import com.tangem.tap.domain.configurable.config.FeaturesLocalLoader
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.domain.tokens.UserTokensRepository
+import com.tangem.tap.domain.totalBalance.TotalFiatBalanceCalculator
+import com.tangem.tap.domain.totalBalance.di.provideDefaultImplementation
+import com.tangem.tap.domain.walletStores.WalletStoresManager
+import com.tangem.tap.domain.walletStores.di.provideDummyImplementation
 import com.tangem.tap.domain.walletconnect.WalletConnectRepository
 import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.tap.persistence.CardBalanceStateAdapter
@@ -59,6 +63,14 @@ lateinit var walletConnectRepository: WalletConnectRepository
 lateinit var shopService: TangemShopService
 lateinit var assetReader: AssetReader
 lateinit var userTokensRepository: UserTokensRepository
+
+val walletStoresManager by lazy {
+    WalletStoresManager.provideDummyImplementation()
+}
+
+val totalFiatBalanceCalculator by lazy {
+    TotalFiatBalanceCalculator.provideDefaultImplementation()
+}
 
 @HiltAndroidApp
 class TapApplication : Application(), ImageLoaderFactory {
