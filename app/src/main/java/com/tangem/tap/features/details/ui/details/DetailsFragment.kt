@@ -9,7 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
 import androidx.transition.TransitionInflater
-import com.google.accompanist.appcompattheme.AppCompatTheme
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.redux.navigation.NavigationAction
@@ -40,7 +40,7 @@ class DetailsFragment : Fragment(), StoreSubscriber<DetailsState> {
         return ComposeView(requireContext()).apply {
             setContent {
                 isTransitionGroup = true
-                AppCompatTheme {
+                TangemTheme {
                     DetailsScreen(
                         state = detailsScreenState.value,
                         onBackPressed = { store.dispatch(NavigationAction.PopBackTo()) },
