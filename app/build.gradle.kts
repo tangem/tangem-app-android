@@ -190,6 +190,7 @@ dependencies {
     implementation(Library.viewBindingDelegate)
     implementation(Library.armadillo)
     implementation(Library.googlePlayServicesWallet)
+    implementation(Library.composeShimmer)
 
     /** Testing libraries */
     testImplementation(Test.junit)
