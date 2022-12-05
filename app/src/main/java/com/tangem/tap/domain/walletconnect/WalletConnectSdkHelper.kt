@@ -39,6 +39,9 @@ import com.tangem.tap.store
 import com.tangem.tap.tangemSdk
 import com.tangem.tap.tangemSdkManager
 import com.trustwallet.walletconnect.models.ethereum.WCEthereumSignMessage
+import com.trustwallet.walletconnect.models.ethereum.WCEthereumSignMessage.WCSignType.MESSAGE
+import com.trustwallet.walletconnect.models.ethereum.WCEthereumSignMessage.WCSignType.PERSONAL_MESSAGE
+import com.trustwallet.walletconnect.models.ethereum.WCEthereumSignMessage.WCSignType.TYPED_MESSAGE
 import com.trustwallet.walletconnect.models.ethereum.WCEthereumTransaction
 import timber.log.Timber
 import java.math.BigDecimal
@@ -206,18 +209,14 @@ class WalletConnectSdkHelper {
         session: WalletConnectSession,
         id: Long,
     ): WcPersonalSignData {
-        val messageData =
-            try {
-                message.data.removePrefix(HEX_PREFIX).hexToBytes()
-            } catch (exception: Exception) {
-                message.data.asciiToHex()!!.hexToBytes()
-            }
+        val messageData = when (message.type) {
+            MESSAGE, PERSONAL_MESSAGE -> createMessageData(message)
+            TYPED_MESSAGE -> EthereumUtils.makeTypedDataHash(message.data)
+        }
+
         val messageString = message.data.hexToAscii()
             ?: EthSignHelper.tryToParseEthTypedMessageString(message.data)
             ?: message.data
-
-        val prefixData = (ETH_MESSAGE_PREFIX + messageData.size.toString()).toByteArray()
-        val hashToSign = (prefixData + messageData).toKeccak()
 
         val dialogData = PersonalSignDialogData(
             dAppName = session.peerMeta.name,
@@ -226,11 +225,22 @@ class WalletConnectSdkHelper {
             id = id,
         )
         return WcPersonalSignData(
-            hash = hashToSign,
+            hash = messageData,
             session = session,
             id = id,
             dialogData = dialogData,
         )
+    }
+
+    private fun createMessageData(message: WCEthereumSignMessage): ByteArray {
+        val messageData = try {
+            message.data.removePrefix(HEX_PREFIX).hexToBytes()
+        } catch (exception: Exception) {
+            message.data.asciiToHex()?.hexToBytes() ?: byteArrayOf()
+        }
+
+        val prefixData = (ETH_MESSAGE_PREFIX + messageData.size.toString()).toByteArray()
+        return (prefixData + messageData).toKeccak()
     }
 
     private fun String.hexToAscii(): String? {
