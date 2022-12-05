@@ -475,40 +475,6 @@ class WalletConnectManager {
                 store.dispatchOnMain(WalletConnectAction.SwitchBlockchain(blockchain, session))
             }
         }
-        client.onCustomRequest = { id: Long, data: String ->
-            Timber.d("Custom Request")
-            Timber.d(data)
-            val request = EthSignHelper.parseCustomRequest(data)
-
-            when (request.method) {
-                WCMethodExtended.ETH_SIGN_TYPE_DATA_V4 -> handleTypedDataV4(request, client, id)
-                else -> {
-                    Timber.d("WC: unrecognized custom request")
-                }
-            }
-        }
-
-    }
-
-    private fun handleTypedDataV4(request: CustomJsonRpcRequest, client: WCClient, id: Long) {
-        val message = EthSignHelper.tryToParseEthTypedMessage(request)
-        if (message != null) {
-            Timber.d("onEthSign_v4: $message")
-            // Analytics.logWcEvent(
-            //     AnalyticsAnOld.WcAnalyticsEvent.Action(
-            //         AnalyticsAnOld.WcAction.PersonalSign
-            //     )
-            // )
-            sessions[client.session]?.toWalletConnectSession()?.let { sessionData ->
-                store.dispatchOnMain(
-                    WalletConnectAction.HandlePersonalSignRequest(
-                        message,
-                        sessionData,
-                        id
-                    )
-                )
-            }
-        }
     }
 
     companion object {
