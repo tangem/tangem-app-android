@@ -1,4 +1,4 @@
-package com.tangem.core.ui.models
+package com.tangem.tap.features.saveWallet.ui.models
 
 import androidx.compose.runtime.Immutable
 
