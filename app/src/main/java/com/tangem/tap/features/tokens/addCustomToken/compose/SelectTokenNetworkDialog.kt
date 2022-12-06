@@ -13,9 +13,9 @@ import com.tangem.wallet.R
 @Composable
 fun SelectTokenNetworkDialog(dialog: DomainDialog.SelectTokenDialog, onDismissRequest: () -> Unit) {
     SimpleDialog(
-        title = stringResource(id = R.string.custom_token_type_network),
+        title = stringResource(id = R.string.custom_token_network_input_title),
         items = dialog.items,
         onSelect = dialog.onSelect,
-        onDismissRequest = onDismissRequest
+        onDismissRequest = onDismissRequest,
     ) { network -> TitleSubtitle(dialog.networkIdConverter(network.networkId), network.contractAddress ?: "") }
 }
