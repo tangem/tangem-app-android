@@ -52,7 +52,7 @@ internal class SaveWalletMiddleware {
     }
 
     private fun saveWalletIfBiometricsEnrolled(state: SaveWalletState) {
-        if (tangemSdkManager.canEnrollBiometrics) {
+        if (tangemSdkManager.needEnrollBiometrics) {
             store.dispatchOnMain(SaveWalletAction.EnrollBiometrics)
         } else {
             saveWallet(state)
