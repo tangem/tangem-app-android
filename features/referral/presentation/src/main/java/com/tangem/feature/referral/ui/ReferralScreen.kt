@@ -56,7 +56,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.VerticalSpacer
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
-import com.tangem.core.ui.res.Black
+import com.tangem.core.ui.res.TangemColorPalette.Black
 import com.tangem.core.ui.res.ButtonColorType
 import com.tangem.core.ui.res.IconColorType
 import com.tangem.core.ui.res.TangemColorPalette
