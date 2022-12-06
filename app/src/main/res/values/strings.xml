@@ -13,16 +13,16 @@
 
     <string name="common_camera_denied_alert_message">You have not given access to your camera, please adjust your privacy settings</string>
 
-    <string name="home_button_scan">Scan card</string>
+    <string name="welcome_unlock_card">Scan card</string>
 
     <string name="wallet_button_send">Send</string>
     <string name="wallet_button_create_wallet">Create wallet</string>
     <string name="wallet_title">Tangem</string>
 
-    <string name="wallet_balance_tokens_title">Tokens</string>
+    <string name="main_tokens">Tokens</string>
     <string name="wallet_balance_verified">Verified Balance</string>
     <string name="wallet_balance_loading">Balance is loading…</string>
-    <string name="wallet_balance_blockchain_unreachable">Blockchain is unreachable</string>
+    <string name="wallet_balance_blockchain_unreachable" translatable="false">Network is unreachable</string>
 
     <string name="wallet_error_no_account">Account is not created</string>
     <string name="no_account_generic">Load %s+ %s to create account</string>
@@ -59,9 +59,9 @@
     <string name="send_fee_picker_normal">Normal</string>
     <string name="send_fee_picker_priority">Priority</string>
     <string name="send_fee_include_description">Include fee</string>
-    <string name="send_total_subtitle_format">%s %s will be sent</string>
-    <string name="send_total_subtitle_asset_format">%s %s and %s %s will be sent</string>
-    <string name="send_balance_subtitle_format">Balance: %s %s</string>
+    <string name="send_total_subtitle_format">%s will be sent</string>
+    <string name="send_total_subtitle_asset_format">%s and %s will be sent</string>
+    <string name="common_balance">Balance: %s</string>
     <string name="send_transaction_success">Transaction has been successfully signed and sent to the blockchain node. Wallet balance will be updated in a while</string>
 
     <string name="details_title">Details</string>
@@ -69,7 +69,7 @@
     <string name="details_row_title_issuer">Issuer</string>
     <string name="details_row_title_signed_hashes">Signed</string>
     <string name="details_row_subtitle_signed_hashes_format">%s hashes</string>
-    <string name="details_row_title_currency">App currency</string>
+    <string name="details_row_title_currency">App Currency</string>
     <string name="details_erase_wallet_warning">This action is irreversible. If, after deleting the wallet, someone sends funds to it, then you will not be able to withdraw them.</string>
     <string name="details_manage_security_long_tap">Long Tap</string>
     <string name="details_manage_security_long_tap_description">This mechanism protects against proximity attacks on a card. It will enforce a delay between reception and execution of a command.</string>
@@ -81,10 +81,10 @@
     <string name="alert_card_signed_transactions">This card has been already topped up and signed transactions in the past. Consider immediate withdrawal of all funds if you have received this card from an untrusted source. If it\'s your card, there is nothing to worry about.</string>
     <string name="alert_title">Warning</string>
     <string name="alert_unsupported_card">This card is not designed to work with this app</string>
-    <string name="alert_developer_card">The card you scanned is a development card. Don\'t accept it as a payment</string>
+    <string name="alert_developer_card">The card you scanned is a development card. Don\'t accept it as a payment.</string>
 
     <string name="initial_message_sign_header">Tap to sign</string>
-    <string name="initial_message_create_wallet_body">Tap to create wallet</string>
+    <string name="initial_message_create_wallet_body" translatable="false">To create wallet, connect your phone and the card exactly as it shown above</string>
     <string name="initial_message_change_access_code_body">To change the access code, connect your phone and the card exactly as it shown above</string>
     <string name="initial_message_change_passcode_body">To change the passcode, connect your phone and the card exactly as it shown above</string>
 
@@ -138,7 +138,7 @@
     \n8. Last amendment
     \n
     \nThis disclaimer was amended for the last time on October 1st, 2020.</string>
-    <string name="disclaimer_title">Terms of service</string>
+    <string name="disclaimer_title">Terms of Service</string>
 
     <string name="wallet_notification_no_internet">No internet connection</string>
 
@@ -156,4 +156,5 @@
     <string name="initial_message_scan_header">Tap to scan</string>
     <string name="initial_message_tap_header">Tap the card</string>
 
+    <string name="send_total_subtitle_fiat_format">≈ %s (inc. fee: %s)</string>
 </resources>

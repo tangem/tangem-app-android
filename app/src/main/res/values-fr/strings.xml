@@ -10,14 +10,13 @@
     <string name="common_delete">Supprimer</string>
 
     <string name="common_camera_denied_alert_message">Vous n\'avez pas octroyé l\'accès à votre caméra, veuillez modifier vos paramètres de confidentialité</string>
-    <string name="home_button_scan">Scannez la carte</string>
+    <string name="welcome_unlock_card">Scannez la carte</string>
     <string name="wallet_button_send">Envoyer</string>
     <string name="wallet_button_create_wallet">Créer un portefeuille</string>
     <string name="wallet_title">Tangem</string>
-    <string name="wallet_balance_tokens_title">Jetons d\'authentification</string>
+    <string name="main_tokens">Jetons d\'authentification</string>
     <string name="wallet_balance_verified">Solde confirmé</string>
     <string name="wallet_balance_loading">Solde est en cours de téléchargement …</string>
-    <string name="wallet_balance_blockchain_unreachable">Blockchain est inaccessible</string>
     <string name="wallet_error_no_account">Compte n\'est pas créé</string>
     <string name="no_account_generic">Pour créer un compte, téléchargez %s+ %s</string>
     <string name="wallet_error_empty_card">Carte vide</string>
@@ -49,9 +48,9 @@
     <string name="send_fee_picker_normal">Normal</string>
     <string name="send_fee_picker_priority">Priorité</string>
     <string name="send_fee_include_description">Inclure les commissions</string>
-    <string name="send_total_subtitle_format">Sera envoyé %s %s</string>
-    <string name="send_total_subtitle_asset_format">Sera envoyé %s %s et %s %s</string>
-    <string name="send_balance_subtitle_format">Solde : %s %s</string>
+    <string name="send_total_subtitle_format">Sera envoyé %s</string>
+    <string name="send_total_subtitle_asset_format">Sera envoyé %s et %s</string>
+    <string name="common_balance">Solde : %s</string>
     <string name="send_transaction_success">La transaction a été signée avec succès et envoyée au nœud de blockchain. Le solde du portefeuille sera mis à jour après un certain temps</string>
     <string name="details_title">Référénces</string>
     <string name="details_row_title_cid">ID de la carte</string>
@@ -69,9 +68,8 @@
     <string name="alert_card_signed_transactions">Cette carte a déjà été rechargée et a signé des transactions avant. Envisagez la possibilité de retirer tous les fonds immédiatement si vous avez reçu cette carte d\'une source non fiable.</string>
     <string name="alert_title">Attention</string>
     <string name="alert_unsupported_card">Cette carte n\'est pas conçue pour fonctionner avec Tangem</string>
-    <string name="alert_developer_card">La carte que vous avez scannée est une carte de développement. Ne l\'acceptez pas comme paiement</string>
+    <string name="alert_developer_card">La carte que vous avez scannée est une carte de développement. Ne l\'acceptez pas comme paiement.</string>
     <string name="initial_message_sign_header">Touchez pour signer</string>
-    <string name="initial_message_create_wallet_body">Touchez, pour créer un portefeuille</string>
     <string name="initial_message_change_access_code_body">Touchez, pour modifier le code d\'accès</string>
     <string name="initial_message_change_passcode_body">Touchez, pour modifier le mot de passe</string>
 
@@ -138,5 +136,5 @@ Avertissement
     <string name="initial_message_scan_header">Posez pour scanner</string>
     <string name="initial_message_tap_header">Posez la carte</string>
 
-
+    <string name="send_total_subtitle_fiat_format">≈ %s (incl. les commissions : %s)</string>
 </resources>

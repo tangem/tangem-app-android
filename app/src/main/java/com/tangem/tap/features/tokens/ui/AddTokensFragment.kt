@@ -118,7 +118,7 @@ class AddTokensFragment : Fragment(R.layout.fragment_add_tokens),
     override fun newState(state: TokensState) {
         if (activity == null || view == null) return
         val toolbarTitle =
-            if (state.allowToAdd) R.string.add_tokens_title else R.string.search_tokens_title
+            if (state.allowToAdd) R.string.main_manage_tokens else R.string.search_tokens_title
         tokensState.value = state
         binding.toolbar.title = getString(toolbarTitle)
     }
@@ -143,7 +143,7 @@ class AddTokensFragment : Fragment(R.layout.fragment_add_tokens),
 
         val menuItem = menu.findItem(R.id.menu_search)
         val searchView: SearchView = menuItem.actionView as SearchView
-        searchView.queryHint = searchView.getString(R.string.add_token_search_hint)
+        searchView.queryHint = searchView.getString(R.string.common_search)
         searchView.maxWidth = android.R.attr.width
         searchView.inputtedTextAsFlow()
             .debounce(800)
