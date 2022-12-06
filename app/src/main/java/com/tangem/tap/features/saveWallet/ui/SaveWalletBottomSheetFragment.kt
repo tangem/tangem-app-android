@@ -16,12 +16,12 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.fragment.app.viewModels
-import com.tangem.core.ui.components.dialogs.EnrollBiometricsDialogContent
 import com.tangem.core.ui.fragments.ComposeBottomSheetFragment
-import com.tangem.core.ui.models.EnrollBiometricsDialog
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.features.details.ui.cardsettings.resolveReference
+import com.tangem.tap.features.saveWallet.ui.components.EnrollBiometricsDialogContent
 import com.tangem.tap.features.saveWallet.ui.components.SaveWalletScreenContent
+import com.tangem.tap.features.saveWallet.ui.models.EnrollBiometricsDialog
 
 internal class SaveWalletBottomSheetFragment : ComposeBottomSheetFragment<SaveWalletScreenState>() {
     override val expandedHeightFraction: Float = .98f
