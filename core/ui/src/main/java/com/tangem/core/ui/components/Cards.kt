@@ -47,17 +47,17 @@ fun Preview_SimpleInfoCard_InDarkTheme() {
 @Composable
 fun SmallInfoCard(startText: String, endText: String) {
     Surface(
-        shape = RoundedCornerShape(dimensionResource(id = R.dimen.radius12)),
+        shape = RoundedCornerShape(TangemTheme.dimens.radius12),
         color = MaterialTheme.colors.secondary,
-        elevation = dimensionResource(id = R.dimen.elevation2),
+        elevation = TangemTheme.dimens.elevation2,
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(dimensionResource(R.dimen.size48))
+                .height(TangemTheme.dimens.size48)
                 .padding(
-                    horizontal = dimensionResource(id = R.dimen.spacing16),
-                    vertical = dimensionResource(id = R.dimen.spacing12),
+                    horizontal = TangemTheme.dimens.spacing16,
+                    vertical = TangemTheme.dimens.spacing12,
                 ),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
