@@ -121,7 +121,7 @@ class DerivationManagerImpl(
                     )
                 }
                 else -> {
-                    throw IllegalStateException("result result is null")
+                    error("result result is null")
                 }
             }
         }
