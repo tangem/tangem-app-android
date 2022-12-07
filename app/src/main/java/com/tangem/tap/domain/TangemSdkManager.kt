@@ -92,7 +92,7 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         return runTaskAsyncReturnOnMain(
             ResetToFactorySettingsTask(),
             card.cardId,
-            initialMessage = Message(context.getString(R.string.details_row_title_reset_factory_settings)),
+            initialMessage = Message(context.getString(R.string.card_settings_reset_card_to_factory)),
         )
     }
 
