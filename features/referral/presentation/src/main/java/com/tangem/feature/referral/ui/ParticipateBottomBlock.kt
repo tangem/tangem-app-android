@@ -19,7 +19,6 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
@@ -42,11 +41,11 @@ internal fun ParticipateBottomBlock(
     Column(
         modifier = Modifier
             .padding(
-                top = dimensionResource(id = R.dimen.spacing24),
-                bottom = dimensionResource(id = R.dimen.spacing16),
+                top = TangemTheme.dimens.spacing24,
+                bottom = TangemTheme.dimens.spacing16,
             )
-            .padding(horizontal = dimensionResource(id = R.dimen.spacing16)),
-        verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing16)),
+            .padding(horizontal = TangemTheme.dimens.spacing16),
+        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
     ) {
         SmallInfoCard(
             startText = stringResource(id = R.string.referral_friends_bought_title),
@@ -66,17 +65,17 @@ private fun PersonalCodeCard(code: String) {
     Column(
         modifier = Modifier
             .shadow(
-                elevation = dimensionResource(id = R.dimen.elevation2),
-                shape = RoundedCornerShape(dimensionResource(id = R.dimen.radius12)),
+                elevation = TangemTheme.dimens.elevation2,
+                shape = RoundedCornerShape(TangemTheme.dimens.radius12),
             )
             .background(
                 color = MaterialTheme.colors.secondary,
-                shape = RoundedCornerShape(dimensionResource(id = R.dimen.radius12)),
+                shape = RoundedCornerShape(TangemTheme.dimens.radius12),
             )
             .fillMaxWidth()
-            .padding(vertical = dimensionResource(id = R.dimen.spacing12)),
+            .padding(vertical = TangemTheme.dimens.spacing12),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing4)),
+        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
     ) {
         Text(
             text = stringResource(id = R.string.referral_promo_code_title),
@@ -100,7 +99,7 @@ private fun AdditionalButtons(code: String, shareLink: String, showCopySnackbar:
 
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing16)),
+        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
     ) {
         PrimaryStartIconButton(
             modifier = Modifier.weight(1f),
