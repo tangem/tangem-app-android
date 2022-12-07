@@ -51,7 +51,7 @@ fun HomeButtons(
             },
             content = {
                 Text(
-                    text = stringResource(id = R.string.home_button_scan),
+                    text = stringResource(id = R.string.welcome_unlock_card),
                     fontWeight = FontWeight.Medium,
                     fontSize = 16.sp,
                     textAlign = TextAlign.Center,
