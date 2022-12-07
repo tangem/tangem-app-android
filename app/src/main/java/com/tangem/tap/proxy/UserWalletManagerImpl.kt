@@ -93,10 +93,10 @@ class UserWalletManagerImpl(
             if (walletManager != null) {
                 return walletManager.wallet.address
             } else {
-                throw IllegalStateException("no wallet manager found")
+                error("no wallet manager found")
             }
         } else {
-            throw IllegalStateException("no blockchain or card found")
+            error("no blockchain or card found")
         }
     }
 
@@ -119,7 +119,7 @@ class UserWalletManagerImpl(
                 save = true,
             )
         } else {
-            throw IllegalStateException("blockchain is not supported")
+            error("blockchain is not supported")
         }
     }
 
@@ -142,7 +142,7 @@ class UserWalletManagerImpl(
                 save = true,
             )
         } else {
-            throw IllegalStateException("no card or blockchain found")
+            error("no card or blockchain found")
         }
     }
 
