@@ -173,7 +173,7 @@ private fun PrimaryButtonRow(
             .fillMaxWidth()
             .height(dimensionResource(R.dimen.size48)),
         enabled = enabled,
-        shape = RoundedCornerShape(dimensionResource(id = R.dimen.radius12)),
+        shape = RoundedCornerShape(TangemTheme.dimens.radius12),
         colors = ButtonDefaults.buttonColors(
             backgroundColor = MaterialTheme.colors.buttonColor(type = ButtonColorType.PRIMARY),
             contentColor = MaterialTheme.colors.textColor(type = TextColorType.PRIMARY2),
