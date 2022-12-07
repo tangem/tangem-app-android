@@ -122,9 +122,8 @@ internal class DefaultWalletStoresManager(
                         { walletManager ->
                             walletStoresRepository.storeOrUpdate(
                                 userWalletId = userWalletId,
-                                walletStore = WalletStoreBuilder(userWallet)
-                                    .setWalletManager(walletManager)
-                                    .setBlockchainNetwork(blockchainNetwork)
+                                walletStore = WalletStoreBuilder(userWallet, blockchainNetwork)
+                                    .walletManager(walletManager)
                                     .build(),
                             )
                         }
@@ -161,8 +160,7 @@ internal class DefaultWalletStoresManager(
             .flatMap { walletManager ->
                 walletStoresRepository.storeOrUpdate(
                     userWalletId = userWallet.walletId,
-                    walletStore = WalletStoreBuilder(userWallet)
-                        .setWalletManager(walletManager)
+                    walletStore = WalletStoreBuilder(userWallet, walletManager)
                         .build(),
                 )
             }
