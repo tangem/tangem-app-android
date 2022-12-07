@@ -91,8 +91,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         (activity as? AppCompatActivity)?.setSupportActionBar(binding.toolbar)
 
         binding.toolbar.setNavigationOnClickListener {
-            Analytics.send(MainScreen.ButtonScanCard())
-            store.dispatch(WalletAction.Scan)
+            store.dispatch(NavigationAction.NavigateTo(AppScreen.Send))
         }
         setupWarningsRecyclerView()
         walletView.changeWalletView(this, binding)
