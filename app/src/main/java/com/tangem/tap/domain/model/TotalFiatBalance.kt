@@ -11,15 +11,15 @@ sealed class TotalFiatBalance {
 
     object Loading : TotalFiatBalance()
 
-    class Refreshing(
+    data class Refreshing(
         override val amount: BigDecimal,
     ) : TotalFiatBalance()
 
-    class Error(
+    data class Error(
         override val amount: BigDecimal,
     ) : TotalFiatBalance()
 
-    class Loaded(
+    data class Loaded(
         override val amount: BigDecimal,
     ) : TotalFiatBalance()
 }
