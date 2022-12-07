@@ -352,7 +352,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
     }
 
     private fun setupDoneState(state: TwinCardsState) = with(mainBinding.onboardingActionContainer) {
-        btnMainAction.setText(R.string.onboarding_done_button_continue)
+        btnMainAction.setText(R.string.common_continue)
         btnMainAction.setOnClickListener {
             store.dispatch(TwinCardsAction.Confetti.Hide)
             store.dispatch(TwinCardsAction.Done)
