@@ -5,6 +5,7 @@ include(":common")
 
 // region Core modules
 include(":core:datasource")
+include(":core:res")
 include(":core:utils")
 include(":core:ui")
 // endregion Core modules

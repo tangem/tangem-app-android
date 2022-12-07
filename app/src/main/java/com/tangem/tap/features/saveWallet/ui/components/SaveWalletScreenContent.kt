@@ -83,7 +83,7 @@ internal fun SaveWalletScreenContent(
         SpacerH24()
         Text(
             modifier = Modifier.fillMaxWidth(),
-            text = stringResource(R.string.save_user_wallet_agreement_header),
+            text = stringResource(R.string.onboarding_navbar_save_wallet),
             style = TangemTheme.typography.h2,
             color = TangemTheme.colors.text.primary1,
             textAlign = TextAlign.Center,
@@ -100,7 +100,10 @@ internal fun SaveWalletScreenContent(
         PrimaryButton(
             modifier = Modifier.fillMaxWidth(),
             showProgress = showProgress,
-            text = stringResource(R.string.save_user_wallet_agreement_allow),
+            text = stringResource(
+                id = R.string.save_user_wallet_agreement_allow,
+                stringResource(id = R.string.common_biometric_authentication),
+            ),
             onClick = onSaveWalletClick,
         )
         SpacerH16()

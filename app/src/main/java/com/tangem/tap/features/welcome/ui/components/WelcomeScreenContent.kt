@@ -58,7 +58,10 @@ internal fun WelcomeScreenContent(
             modifier = Modifier
                 .padding(horizontal = TangemTheme.dimens.spacing44)
                 .fillMaxWidth(),
-            text = stringResource(R.string.welcome_unlock_description),
+            text = stringResource(
+                id = R.string.welcome_unlock_description,
+                stringResource(id = R.string.common_biometric_authentication),
+            ),
             style = TangemTheme.typography.body1,
             color = TangemTheme.colors.text.secondary,
             textAlign = TextAlign.Center,
@@ -68,7 +71,10 @@ internal fun WelcomeScreenContent(
             modifier = Modifier
                 .padding(horizontal = TangemTheme.dimens.spacing16)
                 .fillMaxWidth(),
-            text = stringResource(R.string.welcome_unlock_face_id),
+            text = stringResource(
+                id = R.string.welcome_unlock,
+                stringResource(id = R.string.common_biometrics),
+            ),
             showProgress = showUnlockProgress,
             onClick = onUnlockClick,
         )
