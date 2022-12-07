@@ -187,9 +187,8 @@ internal class DefaultWalletCurrenciesManager(
                     .flatMap { walletManager ->
                         walletStoresRepository.storeOrUpdate(
                             userWalletId = userWalletId,
-                            walletStore = WalletStoreBuilder(userWallet)
-                                .setWalletManager(walletManager)
-                                .setBlockchainNetwork(blockchainNetwork)
+                            walletStore = WalletStoreBuilder(userWallet, walletManager)
+                                .blockchainNetwork(blockchainNetwork)
                                 .build(),
                         )
                     }

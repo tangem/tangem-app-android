@@ -9,7 +9,6 @@ import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
-import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.domain.model.builders.UserWalletBuilder
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
@@ -67,7 +66,7 @@ internal class SaveWalletMiddleware {
 
         scope.launch {
             val userWallet = UserWalletBuilder(scanResponse)
-                .setBackupCardsIds(backupCardsIds = state.backupInfo?.backupCardsIds)
+                .backupCardsIds(state.backupInfo?.backupCardsIds)
                 .build()
 
             saveAccessCodeIfNeeded(state.backupInfo?.accessCode, userWallet.cardsInWallet)
