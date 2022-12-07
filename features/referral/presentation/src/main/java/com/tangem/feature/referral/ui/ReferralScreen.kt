@@ -355,7 +355,7 @@ private fun ShimmerInfo() {
             modifier = Modifier
                 .clip(RoundedCornerShape(TangemTheme.dimens.radius6))
                 .width(TangemTheme.dimens.size40)
-                .height(TangemTheme.dimens.size11)
+                .height(TangemTheme.dimens.size12)
                 .background(TangemColorPalette.White),
         )
     }
