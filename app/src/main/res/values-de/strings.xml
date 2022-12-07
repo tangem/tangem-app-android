@@ -9,14 +9,13 @@
     <string name="common_delete">Entfernen</string>
 
     <string name="common_camera_denied_alert_message">Sie haben keinen Zugang zur Kamera erteilt, bitte passen Sie Ihre Datenschutzeinstellungen an</string>
-    <string name="home_button_scan">Karte scannen</string>
+    <string name="welcome_unlock_card">Karte scannen</string>
     <string name="wallet_button_send">Absenden</string>
     <string name="wallet_button_create_wallet">ein Wallet erstellen</string>
     <string name="wallet_title">Tangem</string>
-    <string name="wallet_balance_tokens_title">Tokens</string>
+    <string name="main_tokens">Tokens</string>
     <string name="wallet_balance_verified">Verifizierte Bilanz</string>
     <string name="wallet_balance_loading">Die Bilanz wird aufgeladen…</string>
-    <string name="wallet_balance_blockchain_unreachable">Blockchain ist nicht erreichbar</string>
     <string name="wallet_error_no_account">Das Konto ist nicht erstellt</string>
     <string name="no_account_generic">Laden Sie %s+ %s auf um ein Konto zu erstellen</string>
     <string name="wallet_error_empty_card">Leere Karte</string>
@@ -48,9 +47,9 @@
     <string name="send_fee_picker_normal">Normal</string>
     <string name="send_fee_picker_priority">Priorität</string>
     <string name="send_fee_include_description">inkl. Gebühr</string>
-    <string name="send_total_subtitle_format">%s %s wird gesendet</string>
-    <string name="send_total_subtitle_asset_format">%s %s und %s %s werden gesendet</string>
-    <string name="send_balance_subtitle_format">Bilanz: %s %s</string>
+    <string name="send_total_subtitle_format">%s wird gesendet</string>
+    <string name="send_total_subtitle_asset_format">%s und %s werden gesendet</string>
+    <string name="common_balance">Bilanz: %s</string>
     <string name="send_transaction_success">Die Transaktion wurde erfolgreich signiert und an den Blockchain-Knoten gesendet. Die Walletbilanz wird aktualisiert</string>
     <string name="details_title">Details</string>
     <string name="details_row_title_cid">KartenID</string>
@@ -58,7 +57,6 @@
     <string name="details_row_title_signed_hashes">Signiert</string>
     <string name="details_row_subtitle_signed_hashes_format">%s Hasch</string>
     <string name="details_row_title_currency">App Währung</string>
-    <string name="details_erase_wallet_warning">Dieser Vorgang ist irriversibel. Wenn jemand nach dem Löschen des Wallets Geld überweist, können Sie es nicht mehr abheben.</string>
     <string name="details_manage_security_long_tap">Langes Tippen</string>
     <string name="details_manage_security_long_tap_description">Dieser Mechanismus schützt vor Annäherungsangriffen auf eine Karte. Es wird eine Verzögerung zwischen dem Empfang und der Ausführung eines Befehls erzwungen. Nach der ersten signierten Transaktion wird dieses Telefon mit der Karte verknüpft und die Transaktionen werden sofort signiert</string>
     <string name="details_manage_security_passcode">Passcode</string>
@@ -69,65 +67,12 @@
     <string name="alert_title">Warnung</string>
 
     <string name="alert_unsupported_card">Diese Karte ist für die Zusammenarbeit mit Tangem nicht geeignet</string>
-    <string name="alert_developer_card">Die von Ihnen gescannte Karte ist eine Entwicklungskarte. Akzeptieren Sie sie nicht als Zahlungsmittel</string>
+    <string name="alert_developer_card">Die von Ihnen gescannte Karte ist eine Entwicklungskarte. Akzeptieren Sie sie nicht als Zahlungsmittel.</string>
     <string name="initial_message_sign_header">Tippen um zu signieren</string>
-    <string name="initial_message_create_wallet_body">Tippen Sie um ein Wallet zu erstellen</string>
     <string name="initial_message_change_access_code_body">Tippen Sie um den Zugangscode zu ändern</string>
     <string name="initial_message_change_passcode_body">Tippen Sie um den Passcode zu ändern</string>
 
 
-    <string name="disclaimer_text">
-RECHTLICHER HAFTUNGSAUSSCHLUSS
-\n\n1.Tangem App (Software)
- 
-\n\nDie Software ist nur für die Verwendung mit Tangem hardware Wallets (Karten) über NFC-Schnittstelle geeignet. Die Software:
- 
-\n\na.	generieret, speichert, überträgt KEINE privaten (geheimen) kryptografischen Schlüssel für Blockchain- Wallets mit digitalen Assets, einschließlich Kryptowährung, und hat KEINEN Zugriff darauf.
-\n\nb.	generieret, speichert, überträgt KEINE geheimen Schlüssel, Passwörter, Passphrasen, Wiederherstellungssätze, die verwendet werden können, um private (geheime) Schlüssel in Blockchain- Wallets, die digitale Assets enthalten, wiederherzustellen oder zu kopieren, einschließlich Kryptowährung, und hat KEINEN Zugriff darauf.
-\n\nc.	erbringt KEINE Wechsel-, Handels- und Investitionsdienstleistungen im Auftrag der Tangem AG.
- 
- 
-\n\n2.	Risiken im Zusammenhang mit der Verwendung von Software
- 
-\n\nTangem haftet nicht für Verluste, Schäden oder Ansprüche aus den Ereignissen, die in den Geltungsbereich von folgenden fünf Kategorien fallen:
- 
-\n\na.	Fehler, die der Benutzer einer kryptowährungsbezogenen Software oder eines kryptowährungsbezogenen Services macht, z.B. vergessene Passwörter, an falsche Adressen gesendete Zahlungen und zufälliges Löschen von Blockchain-Wallets auf Karten.
-\n\nb.	Probleme mit Software und/oder blockchain- oder kryptowährungsbezogener Software oder Services, z.B. beschädigte Dateien, falsch konstruierte Transaktionen, unsichere kryptografische Bibliotheken, Schadsoftware.
-\n\nc.	Technische Ausfälle in der Hardware des Benutzers, einschließlich Karten, jeglicher kryptowährungsbezogener Software oder Services, z.B. Datenverlust infolge eines fehlerhaften oder beschädigten Speichers.
-\n\nd.	Sicherheitsprobleme, die der Benutzer einer kryptowährungsbezogenen Software oder eines kryptowährungsbezogenen Services hat, z.B. unbefugter Zugriff auf Benutzer-Wallets und/oder -Konten.
-\n\ne.	Handlungen oder Untätigkeit Dritter und/oder Vorkommnisse bei den Dritten, z.B. Insolvenz von Dienstleistungserbringern, Informationssicherheitsattacken bei den Dienstleistungserbringern und Betrug durch Dritte.
- 
-
-\n\n3.  Tradings- und Investitionsrisiken
- 
-\n\nBei jeder Kryptowährung oder einer anderen digitalen Assetwechsel-Transaktion besteht ein hohes Risiko. Jede Transaktion mit Währungen birgt Risiken, einschließlich, aber nicht beschränkt auf das Potenzial für sich ändernde wirtschaftliche Bedingungen, die den Preis oder die Liquidität einer Währung erheblich beeinflussen können. Investitionen in Kryptowährungsspekulationen können auch anfällig für starke Anstiege und Rückgänge sein, wenn die relevanten Marktwerte schwanken. Aus diesem Grund ist es bei Spekulationen auf solchen Märkten ratsam, nur das Risikokapital zu verwenden.
- 
-
-\n\n4. Risiken im Zusammenhang mit elektronischem Trading
- 
-\n\nBevor Sie Transaktionen über ein elektronisches System tätigen, sollten Sie die Regeln und Vorschriften der Börsen, die das System anbieten, und/oder die Instrumente, mit denen Sie handeln möchten, sorgfältig überprüfen. Der Online-Handel birgt ein dazugehörendes Risiko aufgrund der Systemreaktion und der Zugriffszeiten, die aufgrund der Marktbedingungen, der Systemleistung und anderer Faktoren variieren können. Sie sollten diese und andere Risiken vor dem Tradingsbeginn berücksichtigen.
- 
-
-\n\n5. Einhaltung der Steuerpflichten
- 
-\n\nDie Benutzer der Software müssen allein bestimmen, welche Steuern, wenn überhaupt, für Ihre Kryptowährungstransaktionen gelten. Die Eigentümer oder die Mitwirkenden an der Software sind für die Ermittlung der Steuern, die für Kryptowährungstransaktionen gelten, NICHT verantwortlich.
- 
-
-\n\n6. Garantieausschluss
-
-\n\nDie Software wird „wie gesehen“ bereitgestellt, ohne jegliche Gewährleistung in Bezug auf die Software und/oder Inhalte, Daten, Materialien und/oder Services, die zur Software gehören.
- 
-
-\n\n7. Haftungsbeschränkung
- 
-\n\nSofern gesetzlich nichts anderes vorgesehen ist, haften die Eigentümer oder die Mitwirkenden an der Software in keinem Fall für Schäden jeglicher Art, einschließlich, aber nicht beschränkt auf Nutzungsausfall, entgangenen Gewinn oder Datenverlust, die aus der Verwendung der Software oder in Zusammenhang mit der jeglichen Verwendung der Software entstehen. Auf keine Weise sind die Eigentümer oder die Mitwirkenden an der Software für die von Ihnen im Vertrauen auf die Software vorgenommenen oder unterlassenen Handlungen, Entscheidungen oder sonstigen Verhaltensweisen verantwortlich.
- 
- 
-\n\n8. Letzte Änderung
- 
-\n\nDieser Haftungsausschuss wurde am 1. Oktober 2020 zum letzten Mal geändert.
-
-    </string>
     <string name="disclaimer_title">Nutzungsbedingungen</string>
 
     <string name="wallet_notification_no_internet">Keine Internetverbindung</string>
@@ -145,5 +90,5 @@ RECHTLICHER HAFTUNGSAUSSCHLUSS
     <string name="initial_message_scan_header">Legen Sie die Karte zum Scannen an</string>
     <string name="initial_message_tap_header">Legen Sie die Karte an</string>
 
-
+    <string name="send_total_subtitle_fiat_format">≈ %s (inkl. Gebühr: %s)</string>
 </resources>
