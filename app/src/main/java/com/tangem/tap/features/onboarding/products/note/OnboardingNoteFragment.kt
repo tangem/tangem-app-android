@@ -178,7 +178,7 @@ class OnboardingNoteFragment : BaseOnboardingFragment<OnboardingNoteState>() {
     }
 
     private fun setupDoneState(state: OnboardingNoteState) = with(mainBinding.onboardingActionContainer) {
-        btnMainAction.setText(R.string.onboarding_done_button_continue)
+        btnMainAction.setText(R.string.common_continue)
         btnMainAction.setOnClickListener {
             showConfetti(false)
             store.dispatch(OnboardingNoteAction.Done)
