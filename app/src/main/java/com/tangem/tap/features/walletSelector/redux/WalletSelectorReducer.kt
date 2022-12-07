@@ -93,15 +93,12 @@ internal object WalletSelectorReducer {
     private fun UserWallet.getType(): UserWalletModel.Type {
         return if (scanResponse.card.isMultiwalletAllowed) {
             UserWalletModel.Type.MultiCurrency(
-                tokensCount = 0,
                 cardsInWallet = (scanResponse.card.backupStatus as? CardDTO.BackupStatus.Active)
                     ?.cardCount?.inc()
                     ?: 1,
             )
         } else {
-            UserWalletModel.Type.SingleCurrency(
-                blockchainName = null,
-            )
+            UserWalletModel.Type.SingleCurrency()
         }
     }
 }
