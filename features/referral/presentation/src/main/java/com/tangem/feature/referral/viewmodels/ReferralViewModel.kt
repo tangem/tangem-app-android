@@ -107,7 +107,7 @@ internal class ReferralViewModel @Inject constructor(
     private fun ReferralData.getDiscountValue(): String {
         val discountSymbol = when (discountType) {
             DiscountType.PERCENTAGE -> "%"
-            DiscountType.VALUE -> throw java.lang.IllegalStateException("Value doesn't support")
+            DiscountType.VALUE -> error("Value doesn't support")
         }
         return "$discount $discountSymbol"
     }
