@@ -56,10 +56,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.VerticalSpacer
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
-import com.tangem.core.ui.res.TangemColorPalette.Black
 import com.tangem.core.ui.res.ButtonColorType
 import com.tangem.core.ui.res.IconColorType
 import com.tangem.core.ui.res.TangemColorPalette
+import com.tangem.core.ui.res.TangemColorPalette.Black
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.core.ui.res.TextColorType
 import com.tangem.core.ui.res.buttonColor
@@ -99,11 +99,11 @@ internal fun ReferralScreen(stateHolder: ReferralStateHolder) {
             },
             scaffoldState = bottomSheetScaffoldState,
             sheetShape = RoundedCornerShape(
-                topStart = dimensionResource(id = R.dimen.radius16),
-                topEnd = dimensionResource(id = R.dimen.radius16),
+                topStart = TangemTheme.dimens.radius16,
+                topEnd = TangemTheme.dimens.radius16,
             ),
-            sheetElevation = dimensionResource(id = R.dimen.elevation24),
-            sheetPeekHeight = dimensionResource(id = R.dimen.size0),
+            sheetElevation = TangemTheme.dimens.elevation24,
+            sheetPeekHeight = TangemTheme.dimens.size0,
             content = {
                 ReferralContent(
                     stateHolder = stateHolder,
@@ -164,7 +164,7 @@ private fun Header() {
             painter = painterResource(R.drawable.ill_businessman_3d),
             contentDescription = null,
             modifier = Modifier
-                .padding(horizontal = dimensionResource(id = R.dimen.spacing32))
+                .padding(horizontal = TangemTheme.dimens.spacing32)
                 .fillMaxWidth()
                 .height(dimensionResource(R.dimen.size200)),
         )
@@ -255,23 +255,23 @@ private fun LoadingCondition(@DrawableRes iconResId: Int) {
 @Composable
 private fun Condition(@DrawableRes iconResId: Int, infoBlock: @Composable () -> Unit) {
     Row(
-        modifier = Modifier.padding(horizontal = dimensionResource(id = R.dimen.spacing16)),
-        horizontalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing12)),
+        modifier = Modifier.padding(horizontal = TangemTheme.dimens.spacing16),
+        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
         verticalAlignment = Alignment.Top,
     ) {
         Box(
             modifier = Modifier
                 .background(
                     color = MaterialTheme.colors.buttonColor(type = ButtonColorType.SECONDARY),
-                    shape = RoundedCornerShape(dimensionResource(id = R.dimen.radius16)),
+                    shape = RoundedCornerShape(TangemTheme.dimens.radius16),
                 )
-                .size(dimensionResource(id = R.dimen.size56)),
+                .size(TangemTheme.dimens.size56),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 painter = painterResource(id = iconResId),
                 contentDescription = null,
-                modifier = Modifier.size(dimensionResource(id = R.dimen.size28)),
+                modifier = Modifier.size(TangemTheme.dimens.size28),
                 tint = MaterialTheme.colors.iconColor(type = IconColorType.PRIMARY1),
             )
         }
@@ -325,7 +325,7 @@ private fun InfoForYourFriend(discount: String) {
 
 @Composable
 private fun ConditionInfo(title: String, subtitleContent: @Composable () -> Unit) {
-    Column(verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing2))) {
+    Column(verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing2)) {
         Text(
             text = title,
             color = MaterialTheme.colors.textColor(type = TextColorType.PRIMARY1),
@@ -340,22 +340,22 @@ private fun ShimmerInfo() {
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(top = dimensionResource(id = R.dimen.spacing4))
+            .padding(top = TangemTheme.dimens.spacing4)
             .shimmer(),
-        verticalArrangement = Arrangement.spacedBy(dimensionResource(id = R.dimen.spacing10)),
+        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing10),
     ) {
         Box(
             modifier = Modifier
-                .clip(RoundedCornerShape(dimensionResource(id = R.dimen.radius6)))
-                .width(dimensionResource(id = R.dimen.size102))
-                .height(dimensionResource(id = R.dimen.size16))
+                .clip(RoundedCornerShape(TangemTheme.dimens.radius6))
+                .width(TangemTheme.dimens.size102)
+                .height(TangemTheme.dimens.size16)
                 .background(TangemColorPalette.White),
         )
         Box(
             modifier = Modifier
-                .clip(RoundedCornerShape(dimensionResource(id = R.dimen.radius6)))
-                .width(dimensionResource(id = R.dimen.size40))
-                .height(dimensionResource(id = R.dimen.size11))
+                .clip(RoundedCornerShape(TangemTheme.dimens.radius6))
+                .width(TangemTheme.dimens.size40)
+                .height(TangemTheme.dimens.size11)
                 .background(TangemColorPalette.White),
         )
     }
@@ -370,17 +370,17 @@ private fun ErrorSnackbarHost(errorSnackbar: ErrorSnackbar?) {
 
         SnackbarHost(
             hostState = snackbarHostState,
-            modifier = Modifier.padding(top = dimensionResource(id = R.dimen.spacing56)),
+            modifier = Modifier.padding(top = TangemTheme.dimens.spacing56),
             snackbar = {
                 Snackbar(
                     snackbarData = it,
                     modifier = Modifier.fillMaxWidth(),
                     actionOnNewLine = true,
-                    shape = RoundedCornerShape(size = dimensionResource(id = R.dimen.radius8)),
+                    shape = RoundedCornerShape(size = TangemTheme.dimens.radius8),
                     backgroundColor = Black,
                     contentColor = MaterialTheme.colors.textColor(type = TextColorType.PRIMARY2),
                     actionColor = MaterialTheme.colors.textColor(type = TextColorType.PRIMARY2),
-                    elevation = dimensionResource(id = R.dimen.elevation3),
+                    elevation = TangemTheme.dimens.elevation3,
                 )
             },
         )
@@ -424,20 +424,20 @@ private fun CopySnackbarHost(isCopyButtonPressed: MutableState<Boolean>) {
         SnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier
-                .padding(top = dimensionResource(id = R.dimen.spacing56), start = (width - snackbarWidth).div(2))
+                .padding(top = TangemTheme.dimens.spacing56, start = (width - snackbarWidth).div(2))
                 .fillMaxWidth(),
             snackbar = {
                 Box(
                     modifier = Modifier
                         .onSizeChanged { snackbarSize = it.width }
-                        .background(Black, RoundedCornerShape(size = dimensionResource(id = R.dimen.radius8)))
+                        .background(Black, RoundedCornerShape(size = TangemTheme.dimens.radius8))
                         .shadow(
-                            dimensionResource(id = R.dimen.elevation3),
-                            RoundedCornerShape(size = dimensionResource(id = R.dimen.radius8)),
+                            TangemTheme.dimens.elevation3,
+                            RoundedCornerShape(size = TangemTheme.dimens.radius8),
                         )
                         .padding(
-                            horizontal = dimensionResource(id = R.dimen.spacing16),
-                            vertical = dimensionResource(id = R.dimen.spacing14),
+                            horizontal = TangemTheme.dimens.spacing16,
+                            vertical = TangemTheme.dimens.spacing14,
                         ),
                 ) {
                     Text(
