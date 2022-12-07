@@ -70,7 +70,7 @@
     <string name="scan_card_settings_title">Get your card ready!</string>
     <string name="scan_card_settings_message">Scan the card to change its settings. The changes will impact only the card you\'ve scanned and will not affect other cards tied to your wallet.</string>
     <string name="scan_card_settings_button">Scan Card</string>
-    <string name="app_settings_title">App settings</string>
+    <string name="app_settings_title">App Settings</string>
     <string name="app_settings_saved_wallet">Keep the wallet in the app</string>
     <string name="app_settings_saved_wallet_footer">Enable to link all the wallets to Tangem app. Biometric authentication will be required for unlocking the app. Transaction signing requires tapping your Tangem card.</string>
     <string name="app_settings_saved_access_codes">Save Access Code</string>
