@@ -41,15 +41,15 @@ fun AppBarWithAdditionalButtons(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(dimensionResource(id = R.dimen.size56))
-            .padding(all = dimensionResource(id = R.dimen.spacing16)),
+            .height(TangemTheme.dimens.size56)
+            .padding(all = TangemTheme.dimens.spacing16),
     ) {
         if (startButton != null) {
             IconButton(modifier = Modifier.align(Alignment.CenterStart), onClick = startButton.onIconClicked) {
                 Icon(
                     painter = painterResource(id = startButton.iconRes),
                     contentDescription = null,
-                    modifier = Modifier.size(dimensionResource(id = R.dimen.size24)),
+                    modifier = Modifier.size(TangemTheme.dimens.size24),
                     tint = MaterialTheme.colors.iconColor(type = IconColorType.PRIMARY1),
                 )
             }
@@ -68,7 +68,7 @@ fun AppBarWithAdditionalButtons(
                 Icon(
                     painter = painterResource(id = endButton.iconRes),
                     contentDescription = null,
-                    modifier = Modifier.size(dimensionResource(id = R.dimen.size24)),
+                    modifier = Modifier.size(TangemTheme.dimens.size24),
                     tint = MaterialTheme.colors.iconColor(type = IconColorType.PRIMARY1),
                 )
             }
