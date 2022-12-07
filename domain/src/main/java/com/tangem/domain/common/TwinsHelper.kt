@@ -15,18 +15,10 @@ class TwinsHelper {
             return CryptoUtils.verify(cardWalletPublicKey, publicKey, signedKey)
         }
 
-        fun getTwinCardNumber(cardId: String): TwinCardNumber? {
-            return when {
-                firstCardSeries.map { cardId.startsWith(it) }.contains(true) -> {
-                    TwinCardNumber.First
-                }
-                secondCardSeries.map { cardId.startsWith(it) }.contains(true) -> {
-                    TwinCardNumber.Second
-                }
-                else -> {
-                    null
-                }
-            }
+        fun getTwinCardNumber(cardId: String): TwinCardNumber? = when {
+            firstCardSeries.any(cardId::startsWith) -> TwinCardNumber.First
+            secondCardSeries.any(cardId::startsWith) -> TwinCardNumber.Second
+            else -> null
         }
 
         fun getPairCardSeries(cardId: String): String? {
