@@ -34,7 +34,7 @@ internal fun AgreementBottomSheetContent(url: String) {
         modifier = Modifier
             .background(color = MaterialTheme.colors.secondary)
             .fillMaxWidth()
-            .height(LocalConfiguration.current.screenHeightDp.dp - dimensionResource(id = R.dimen.spacing16)),
+            .height(LocalConfiguration.current.screenHeightDp.dp - TangemTheme.dimens.spacing16),
     ) {
         BottomSheetIndicator()
         Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
