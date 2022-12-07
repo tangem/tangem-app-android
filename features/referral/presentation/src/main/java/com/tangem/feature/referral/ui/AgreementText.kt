@@ -29,7 +29,7 @@ internal fun AgreementText(@StringRes firstPartResId: Int, onClicked: () -> Unit
         text = agreementText,
         modifier = Modifier
             .fillMaxWidth()
-            .padding(horizontal = dimensionResource(id = R.dimen.spacing54)),
+            .padding(horizontal = TangemTheme.dimens.spacing54),
         style = MaterialTheme.typography.caption.copy(textAlign = TextAlign.Center),
         maxLines = 2,
         onClick = {

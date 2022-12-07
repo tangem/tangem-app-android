@@ -34,7 +34,7 @@ internal class ReferralInteractorImpl(
                 address = publicAddress,
             )
         } else {
-            throw IllegalStateException("tokens for ref is empty")
+            error("tokens for ref is empty")
         }
     }
 
