@@ -91,20 +91,20 @@ class OnboardingOtherCardsFragment : BaseOnboardingFragment<OnboardingOtherCards
     }
 
     private fun setupDoneState() = with(mainBinding.onboardingActionContainer) {
-        btnMainAction.setText(R.string.onboarding_done_button_continue)
+        btnMainAction.setText(R.string.common_continue)
         btnMainAction.setOnClickListener {
             showConfetti(false)
             store.dispatch(OnboardingOtherCardsAction.Done)
         }
 
         btnAlternativeAction.isVisible = false
-        btnAlternativeAction.setText("")
+        btnAlternativeAction.text = ""
         btnAlternativeAction.setOnClickListener { }
 
         tvHeader.setText(R.string.onboarding_done_header)
         tvBody.setText(R.string.onboarding_done_body)
 
-        mainBinding.onboardingTopContainer.imvCardBackground?.setBackgroundDrawable(
+        mainBinding.onboardingTopContainer.imvCardBackground.setBackgroundDrawable(
             requireContext().getDrawableCompat(R.drawable.shape_rectangle_rounded_8),
         )
         updateConstraints(R.layout.lp_onboarding_done)
