@@ -4,6 +4,8 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
+import com.tangem.domain.common.TwinCardNumber
+import com.tangem.domain.common.TwinsHelper
 import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.operations.wallet.CreateWalletTask
 import com.tangem.operations.wallet.PurgeWalletCommand
@@ -14,8 +16,14 @@ class CreateFirstTwinWalletTask : CardSessionRunnable<CreateWalletResponse> {
         session: CardSession,
         callback: (result: CompletionResult<CreateWalletResponse>) -> Unit,
     ) {
-        val publicKey = session.environment.card?.getSingleWallet()?.publicKey
+        val card = session.environment.card
+        val publicKey = card?.getSingleWallet()?.publicKey
         if (publicKey != null) {
+            if (TwinsHelper.getTwinCardNumber(card.cardId) == TwinCardNumber.Second) {
+                callback(CompletionResult.Failure(WrongTwinCard(TwinCardNumber.First)))
+                return
+            }
+
             PurgeWalletCommand(publicKey).run(session) { response ->
                 when (response) {
                     is CompletionResult.Success -> {

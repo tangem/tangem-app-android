@@ -13,7 +13,7 @@ class ClipboardOrScanQrDialog {
     companion object {
         fun create(wcUri: String, context: Context): AlertDialog {
             return AlertDialog.Builder(context).apply {
-                setTitle(context.getString(R.string.wallet_connect))
+                setTitle(context.getString(R.string.wallet_connect_title))
                 setMessage(context.getText(R.string.wallet_connect_clipboard_alert))
                 setPositiveButton(context.getText(R.string.wallet_connect_paste_from_clipboard)) { _, _ ->
                     store.dispatch(WalletConnectAction.OpenSession(wcUri))
