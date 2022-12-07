@@ -331,7 +331,7 @@ class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_walle
             tvBody.text = getString(R.string.onboarding_twins_interrupt_warning)
             layoutButtonsCommon.btnWalletMainAction.text = getText(R.string.onboarding_saltpay_button_backup_origin)
         } else {
-            tvHeader.text = getText(R.string.onboarding_title_prepare_origin)
+            tvHeader.text = getText(R.string.common_origin_card)
             tvBody.text = getString(
                 R.string.onboarding_subtitle_scan_primary_card_format,
                 state.primaryCardId?.let { cardIdFormatter.getFormattedCardId(it) },
