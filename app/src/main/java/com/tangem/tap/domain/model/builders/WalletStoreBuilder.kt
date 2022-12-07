@@ -10,25 +10,70 @@ import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.reducers.createAddressesData
 import java.math.BigDecimal
 
-class WalletStoreBuilder(
-    private val userWallet: UserWallet,
-) {
-    private var walletManager: WalletManager? = null
-    private var blockchainNetwork: BlockchainNetwork? = null
+interface WalletStoreBuilder {
+    fun build(): WalletStoreModel
 
-    fun setWalletManager(walletManager: WalletManager?) = this.apply {
+    interface BlockchainNetworkWalletStoreBuilder : WalletStoreBuilder {
+        fun walletManager(walletManager: WalletManager?): WalletStoreBuilder
+    }
+
+    interface WalletMangerWalletStoreBuilder : WalletStoreBuilder {
+        fun blockchainNetwork(blockchainNetwork: BlockchainNetwork?): WalletStoreBuilder
+    }
+
+    companion object {
+        operator fun invoke(
+            userWallet: UserWallet,
+            blockchainNetwork: BlockchainNetwork,
+        ): BlockchainNetworkWalletStoreBuilder {
+            return BlockchainNetworkWalletStoreBuilderImpl(userWallet, blockchainNetwork)
+        }
+
+        operator fun invoke(
+            userWallet: UserWallet,
+            walletManager: WalletManager,
+        ): WalletMangerWalletStoreBuilder {
+            return WalletMangerWalletStoreBuilderImpl(userWallet, walletManager)
+        }
+    }
+}
+
+private class BlockchainNetworkWalletStoreBuilderImpl(
+    private val userWallet: UserWallet,
+    private val blockchainNetwork: BlockchainNetwork,
+) : WalletStoreBuilder.BlockchainNetworkWalletStoreBuilder {
+    private var walletManager: WalletManager? = null
+
+    override fun walletManager(walletManager: WalletManager?) = this.apply {
         this.walletManager = walletManager
     }
 
-    fun setBlockchainNetwork(blockchainNetwork: BlockchainNetwork?) = this.apply {
+    override fun build(): WalletStoreModel {
+        val blockchainWalletData = blockchainNetwork.getBlockchainWalletData(walletManager)
+        val tokensWalletsData = blockchainNetwork.getTokensWalletsData(walletManager)
+
+        return WalletStoreModel(
+            userWalletId = userWallet.walletId,
+            blockchainNetwork = blockchainNetwork,
+            walletManager = walletManager,
+            walletsData = (listOf(blockchainWalletData) + tokensWalletsData),
+            walletRent = null,
+        )
+    }
+}
+
+private class WalletMangerWalletStoreBuilderImpl(
+    private val userWallet: UserWallet,
+    private val walletManager: WalletManager,
+) : WalletStoreBuilder.WalletMangerWalletStoreBuilder {
+    private var blockchainNetwork: BlockchainNetwork? = null
+
+    override fun blockchainNetwork(blockchainNetwork: BlockchainNetwork?) = this.apply {
         this.blockchainNetwork = blockchainNetwork
     }
 
-    fun build(): WalletStoreModel {
-        val blockchainNetwork = this.blockchainNetwork
-            ?: walletManager?.let(BlockchainNetwork::fromWalletManager)
-            ?: error("Blockchain network and wallet manager must not be null")
-
+    override fun build(): WalletStoreModel {
+        val blockchainNetwork = this.blockchainNetwork ?: BlockchainNetwork.fromWalletManager(walletManager)
         val blockchainWalletData = blockchainNetwork.getBlockchainWalletData(walletManager)
         val tokensWalletsData = blockchainNetwork.getTokensWalletsData(walletManager)
 
