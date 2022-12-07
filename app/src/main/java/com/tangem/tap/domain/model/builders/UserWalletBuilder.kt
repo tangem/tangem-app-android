@@ -10,7 +10,7 @@ class UserWalletBuilder(
 ) {
     private var backupCardsIds: Set<String> = emptySet()
 
-    fun setBackupCardsIds(backupCardsIds: Set<String>?) = this.apply {
+    fun backupCardsIds(backupCardsIds: Set<String>?) = this.apply {
         if (backupCardsIds != null) {
             this.backupCardsIds = backupCardsIds
         }

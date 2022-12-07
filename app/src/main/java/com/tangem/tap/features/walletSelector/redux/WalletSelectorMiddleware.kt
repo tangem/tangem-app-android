@@ -6,7 +6,6 @@ import com.tangem.common.flatMap
 import com.tangem.common.map
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.util.UserWalletId
-import com.tangem.tap.*
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppState
@@ -16,6 +15,12 @@ import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.domain.model.WalletStoreModel
 import com.tangem.tap.domain.model.builders.UserWalletBuilder
 import com.tangem.tap.domain.scanCard.ScanCardProcessor
+import com.tangem.tap.preferencesStorage
+import com.tangem.tap.scope
+import com.tangem.tap.store
+import com.tangem.tap.totalFiatBalanceCalculator
+import com.tangem.tap.userWalletsListManager
+import com.tangem.tap.walletStoresManager
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
@@ -86,26 +91,7 @@ internal class WalletSelectorMiddleware {
             scope.launch {
                 val updatedWallet = state.wallets
                     .find { it.id == walletId.stringValue }
-                    ?.let { wallet ->
-                        wallet.copy(
-                            type = when (val type = wallet.type) {
-                                is UserWalletModel.Type.MultiCurrency -> type.copy(
-                                    tokensCount = walletStores.flatMap { it.walletsData }.size,
-                                )
-                                is UserWalletModel.Type.SingleCurrency -> type.copy(
-                                    blockchainName = walletStores
-                                        .firstOrNull()
-                                        ?.blockchainNetwork
-                                        ?.blockchain
-                                        ?.fullName,
-                                )
-                            },
-                            fiatBalance = totalFiatBalanceCalculator.calculate(
-                                prevAmount = wallet.fiatBalance.amount,
-                                walletStores = walletStores,
-                            ),
-                        )
-                    }
+                    ?.updateWalletStoresAndCalculateFiatBalance(walletStores)
 
                 if (updatedWallet != null) {
                     store.dispatchOnMain(WalletSelectorAction.BalanceLoaded(updatedWallet))
@@ -138,6 +124,7 @@ internal class WalletSelectorMiddleware {
                     val selectedWallet = userWalletsListManager.selectedUserWallet.first()
                     val isSavedWalletSelected = userWallet == selectedWallet
                     store.dispatchOnMain(WalletSelectorAction.AddWallet.Success)
+
                     if (isSavedWalletSelected) {
                         store.dispatchOnMain(NavigationAction.PopBackTo())
                         store.onUserWalletSelected(selectedWallet)
@@ -207,6 +194,29 @@ internal class WalletSelectorMiddleware {
                 store.dispatchOnMain(WalletSelectorAction.AddWallet.Success)
                 store.dispatchOnMain(NavigationAction.PopBackTo())
             },
+        )
+    }
+
+    private suspend fun UserWalletModel.updateWalletStoresAndCalculateFiatBalance(
+        walletStores: List<WalletStoreModel>,
+    ): UserWalletModel {
+        return this.copy(
+            type = when (type) {
+                is UserWalletModel.Type.MultiCurrency -> type.copy(
+                    tokensCount = walletStores.flatMap { it.walletsData }.size,
+                )
+                is UserWalletModel.Type.SingleCurrency -> type.copy(
+                    blockchainName = walletStores
+                        .firstOrNull()
+                        ?.blockchainNetwork
+                        ?.blockchain
+                        ?.fullName,
+                )
+            },
+            fiatBalance = totalFiatBalanceCalculator.calculate(
+                prevAmount = fiatBalance.amount,
+                walletStores = walletStores,
+            ),
         )
     }
 }
