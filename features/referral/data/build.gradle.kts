@@ -22,6 +22,20 @@ android {
         targetCompatibility = JavaVersion.VERSION_1_8
         isCoreLibraryDesugaringEnabled = false
     }
+
+    buildTypes {
+        create("debug_beta") {
+            initWith(getByName("release"))
+            BuildConfigFieldFactory(
+                fields = listOf(
+                    Field.Environment("release"),
+                    Field.TestActionEnabled(true),
+                    Field.LogEnabled(true),
+                ),
+                builder = ::buildConfigField,
+            ).create()
+        }
+    }
 }
 
 dependencies {
