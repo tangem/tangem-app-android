@@ -29,16 +29,16 @@ fun BottomSheetIndicator() {
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(dimensionResource(id = R.dimen.size20)),
+            .height(TangemTheme.dimens.size20),
         contentAlignment = Alignment.Center,
     ) {
         Box(
             modifier = Modifier
-                .width(dimensionResource(id = R.dimen.size32))
-                .height(dimensionResource(id = R.dimen.size4))
+                .width(TangemTheme.dimens.size32)
+                .height(TangemTheme.dimens.size4)
                 .background(
                     color = MaterialTheme.colors.iconColor(type = IconColorType.INACTIVE),
-                    shape = RoundedCornerShape(dimensionResource(id = R.dimen.radius2)),
+                    shape = RoundedCornerShape(TangemTheme.dimens.radius2),
                 ),
         )
     }
