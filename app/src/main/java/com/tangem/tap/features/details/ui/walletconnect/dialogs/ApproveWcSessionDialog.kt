@@ -20,7 +20,7 @@ class ApproveWcSessionDialog {
                 session.peerMeta.url,
             )
             return AlertDialog.Builder(context).apply {
-                setTitle(context.getString(R.string.wallet_connect))
+                setTitle(context.getString(R.string.wallet_connect_title))
                 setMessage(message)
                 setPositiveButton(context.getText(R.string.common_start)) { _, _ ->
                     store.dispatch(GlobalAction.HideDialog)
