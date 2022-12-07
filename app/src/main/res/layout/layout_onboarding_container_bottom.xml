@@ -75,7 +75,7 @@
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_main_action"
             style="@style/OnboardingButton"
-            tools:text="@string/home_button_scan" />
+            tools:text="@string/welcome_unlock_card" />
 
         <ProgressBar
             android:id="@+id/progress"
