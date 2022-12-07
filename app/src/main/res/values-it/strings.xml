@@ -8,14 +8,13 @@
     <string name="common_cancel">Annulla</string>
     <string name="common_delete">Rimuovere</string>
     <string name="common_camera_denied_alert_message">Non hai fornito l\'accesso alla tua videocamera, modifica le tue impostazioni sulla privacy</string>
-    <string name="home_button_scan">Scansiona carta</string>
+    <string name="welcome_unlock_card">Scansiona carta</string>
     <string name="wallet_button_send">Invia</string>
     <string name="wallet_button_create_wallet">Crea portafoglio</string>
     <string name="wallet_title">Tangem</string>
-    <string name="wallet_balance_tokens_title">Token</string>
+    <string name="main_tokens">Token</string>
     <string name="wallet_balance_verified">Saldo verificato</string>
     <string name="wallet_balance_loading">Il saldo sta per essere caricato…</string>
-    <string name="wallet_balance_blockchain_unreachable">Blockchain non raggiungibile</string>
     <string name="wallet_error_no_account">Conto non creato</string>
     <string name="no_account_generic">Scarica %s+ %s per creare un account</string>
     <string name="wallet_error_empty_card">Carta vuota</string>
@@ -48,9 +47,9 @@
     <string name="send_fee_picker_normal">Normale</string>
     <string name="send_fee_picker_priority">Prioritario</string>
     <string name="send_fee_include_description">Includi commissione</string>
-    <string name="send_total_subtitle_format">Sarà inviato %s %s</string>
-    <string name="send_total_subtitle_asset_format">Sarà inviato %s %s e %s %s</string>
-    <string name="send_balance_subtitle_format">Saldo: %s %s</string>
+    <string name="send_total_subtitle_format">Sarà inviato %s</string>
+    <string name="send_total_subtitle_asset_format">Sarà inviato %s e %s</string>
+    <string name="common_balance">Saldo: %s</string>
     <string name="send_transaction_success">La transazione è stata firmata con successo e inviata al nodo blockchain. Il saldo del portafoglio verrà aggiornato dopo un po\' di tempo</string>
     <string name="details_title">Requisiti</string>
     <string name="details_row_title_cid">ID carta</string>
@@ -58,7 +57,6 @@
     <string name="details_row_title_signed_hashes">Firmato</string>
     <string name="details_row_subtitle_signed_hashes_format">Hash %s</string>
     <string name="details_row_title_currency">Valuta dell\'applicazione</string>
-    <string name="details_erase_wallet_warning">Questa azione è irreversibile. Se dopo aver eliminato il portafoglio qualcuno invia dei fondi, non potrai ritirarli.</string>
     <string name="details_manage_security_long_tap">Mantenimento della carta</string>
     <string name="details_manage_security_long_tap_description">Questo meccanismo protegge dagli avvicinamenti senza contatto sulla carta. Attiva un ritardo tra la ricezione e l\'esecuzione di un comando. Dopo la prima transazione firmata, questo telefono verrà associato alla carta e le transazioni verranno firmate immediatamente.</string>
     <string name="details_manage_security_passcode">Password</string>
@@ -68,65 +66,11 @@
     <string name="alert_card_signed_transactions">Questa carta è già stata ricaricata e ha firmato transazioni in passato. Valuta la possibilità di prelevare immediatamente tutti i fondi se hai ricevuto questa carta da una fonte inaffidabile.</string>
     <string name="alert_title">Attenzione</string>
     <string name="alert_unsupported_card">Questa carta non è progettata per funzionare con Tangem</string>
-    <string name="alert_developer_card">La carta che hai scansionato è una carta di sviluppo. Non utilizzarla come strumento di pagamento</string>
+    <string name="alert_developer_card">La carta che hai scansionato è una carta di sviluppo. Non utilizzarla come strumento di pagamento.</string>
     <string name="initial_message_sign_header">Avvicina per firmare</string>
-    <string name="initial_message_create_wallet_body">Avvicina per creare il portafoglio</string>
     <string name="initial_message_change_access_code_body">Avvicina per modificare il codice di accesso</string>
     <string name="initial_message_change_passcode_body">Avvicina per modificare la password</string>
 
-    <string name="disclaimer_text">
-
-        NOTA LEGALE\n
-\n
-App Tangem (software)\n
-\n
-1. Il software può essere utilizzato solo con i portafogli hardware Tangem (schede) tramite l\'interfaccia NFC. Il software NON esegue le seguenti operazioni:\n
-\n
-a) Generazione, archiviazione, trasferimento o accesso a chiavi crittografiche private (segrete) di portafogli blockchain contenenti risorse digitali, inclusa la criptovaluta.\n
-\n
-b) Generazione, archiviazione, trasferimento o accesso a chiavi segrete, password, passphrase, frasi di ripristino che possono essere utilizzate per recuperare o copiare chiavi private (segrete) su portafogli blockchain contenenti risorse digitali, inclusa la criptovaluta.\n
-\n
-c) Fornitura di servizi di scambio, negoziazione e investimento per conto di Tandem AG.\n
-\n
-2. Rischi associati al funzionamento del Software\n
-\n
-Tandem non sarà ritenuta responsabile per eventuali perdite, danni o reclami derivanti da eventi che rientrano nelle seguenti cinque categorie:\n
-\n
-a) Errori commessi dall\'utente di qualsiasi software o servizio relativo alla criptovaluta, ad esempio password dimenticate, pagamenti inviati a indirizzi errati e cancellazione accidentale di portafogli blockchain su Schede.\n
-\n
-b) Problemi con il software e/o qualsiasi software o servizio correlato a blockchain o criptovaluta, come file danneggiati, transazioni generate in modo improprio, librerie crittografiche non sicure, malware.\n
-\n
-c) Malfunzionamenti tecnici nell\'hardware dell\'utente, incluse le Schede, qualsiasi software o servizio relativo alla criptovaluta, ad esempio, perdita di dati a causa di un dispositivo di archiviazione difettoso o danneggiato.\n
-\n
-d) Problemi di sicurezza affrontati dall\'utente di qualsiasi software o servizio relativo alla criptovaluta, ad esempio l\'accesso non autorizzato a portafogli e/o account utente.\n
-\n
-e) Azioni o inattività di terze parti e/o eventi con cui si sono scontrate terze parti, come la bancarotta di fornitori di servizi, attacchi alla sicurezza delle informazioni relative ai fornitori di servizi e frodi perpetrate da terzi.\n
-\n
-3. Rischi commerciali e di investimento\n
-\n
-Qualsiasi transazione che coinvolge lo scambio di criptovalute o altre risorse digitali comporta rischi significativi. Qualsiasi transazione che include una valuta comporta dei rischi, inclusa ma non limitata alla possibilità di cambiamenti nelle condizioni economiche che potrebbero influenzare materialmente il valore o la liquidità della valuta. L\'investimento nella speculazione sui cambi di criptovaluta può anche essere soggetto a forti alti e bassi poiché i rispettivi prezzi di mercato fluttuano. È per questo motivo che è consigliabile utilizzare solo capitale di rischio quando si fanno affari in questi mercati.\n
-\n
-4. Rischi dell\'e-commerce\n
-\n
-Prima di effettuare transazioni utilizzando un sistema elettronico, è necessario leggere attentamente le norme e i regolamenti delle borse che offrono questo sistema e/o elencano i titoli che si intende negoziare. Il trading online presenta un rischio intrinseco dovuto alla risposta del sistema e ai tempi di accesso, che possono variare a seconda delle condizioni di mercato, delle prestazioni del sistema ed altri fattori. È necessario comprendere questi e altri rischi prima di fare trading.\n
-\n
-5. Rispetto degli obblighi fiscali\n
-\n
-Gli utenti del Software sono gli unici responsabili del determinare le eventuali tasse applicate alle loro transazioni in criptovaluta.  I proprietari o i contributori del Software NON sono responsabili della determinazione delle tasse che si applicano alle transazioni in criptovaluta.\n
-\n
-6. Assenza di garanzie\n
-\n
-Il Software viene fornito &quot;così com\'è&quot; senza garanzia di alcun tipo riguardo al Software e/o a qualsiasi contenuto, dato, materiale e/o servizio fornito con il Software.\n
-\n
-7. Limitazione di responsabilità\n
-\n
-Salvo quanto diversamente previsto dalla legge, i proprietari o i contributori del Software non saranno in nessun caso responsabili per eventuali danni di qualsiasi tipo, inclusi, ma non limitati a, perdita di utilizzo, perdita di profitti o perdita di dati derivanti o in qualsiasi modo correlati all\'uso del Software.  In nessun modo i proprietari o i contributori del Software sono responsabili delle azioni, decisioni o altri comportamenti presi o non presi da voi in relazione al Software.\n
-\n
-8. Ultima modifica\n
-\n
-Questa nota legale è stata modificata l\'ultima volta 01.10.2020.
-
-    </string>
     <string name="common_accept">Accetta</string>
     <string name="disclaimer_title">Termini del servizio</string>
     <string name="wallet_notification_no_internet">Nessuna connessione a Internet</string>
@@ -145,5 +89,5 @@ Questa nota legale è stata modificata l\'ultima volta 01.10.2020.
     <string name="initial_message_scan_header">Avvicina per scansionare</string>
     <string name="initial_message_tap_header">Avvicina la carta</string>
 
-
+    <string name="send_total_subtitle_fiat_format">≈ %s (inc. commissione: %s)</string>
 </resources>
