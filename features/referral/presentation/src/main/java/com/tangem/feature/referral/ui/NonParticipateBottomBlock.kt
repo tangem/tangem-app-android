@@ -21,7 +21,7 @@ internal fun NonParticipateBottomBlock(onAgreementClicked: () -> Unit, onPartici
             onClicked = onAgreementClicked,
         )
         PrimaryEndIconButton(
-            modifier = Modifier.padding(all = dimensionResource(id = R.dimen.spacing16)),
+            modifier = Modifier.padding(all = TangemTheme.dimens.spacing16),
             text = stringResource(id = R.string.referral_button_participate),
             iconResId = R.drawable.ic_tangem,
             onClicked = onParticipateClicked,
