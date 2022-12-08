@@ -25,8 +25,8 @@ import com.tangem.tap.features.wallet.models.WalletRent
 import com.tangem.tap.features.wallet.redux.*
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
-import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.features.wallet.ui.TokenData
+import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.tap.store
 import org.rekotlin.Action
 import timber.log.Timber
