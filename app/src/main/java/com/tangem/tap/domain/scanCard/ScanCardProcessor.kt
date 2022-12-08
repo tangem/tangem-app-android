@@ -124,15 +124,15 @@ object ScanCardProcessor {
         crossinline nextHandler: suspend (ScanResponse) -> Unit,
     ) {
         val disclaimerType = DisclaimerType.get(scanResponse)
-        store.dispatch(DisclaimerAction.SetDisclaimerType(disclaimerType))
+        store.dispatchOnMain(DisclaimerAction.SetDisclaimerType(disclaimerType))
 
         if (disclaimerType.isAccepted()) {
             nextHandler((scanResponse))
         } else scope.launch(Dispatchers.Main) {
             delay(DELAY_SDK_DIALOG_CLOSE)
-            store.dispatch(
+            store.dispatchOnMain(
                 DisclaimerAction.Show {
-                    scope.launch {
+                    scope.launch(Dispatchers.Main) {
                         nextHandler(scanResponse)
                     }
                 },
@@ -155,7 +155,7 @@ object ScanCardProcessor {
 
         Analytics.addParamsInterceptor(BatchIdParamsInterceptor(scanResponse.card.batchId))
 
-        store.dispatch(TwinCardsAction.IfTwinsPrepareState(scanResponse))
+        store.dispatchOnMain(TwinCardsAction.IfTwinsPrepareState(scanResponse))
 
         if (scanResponse.isSaltPay()) {
             if (scanResponse.isSaltPayVisa()) {
@@ -168,9 +168,9 @@ object ScanCardProcessor {
                             val isOnboardingCase = result.data
                             if (isOnboardingCase) {
                                 onWalletNotCreated()
-                                store.dispatch(GlobalAction.Onboarding.Start(scanResponse, canSkipBackup = false))
-                                store.dispatch(OnboardingSaltPayAction.SetDependencies(manager, config))
-                                store.dispatch(OnboardingSaltPayAction.Update)
+                                store.dispatchOnMain(GlobalAction.Onboarding.Start(scanResponse, canSkipBackup = false))
+                                store.dispatchOnMain(OnboardingSaltPayAction.SetDependencies(manager, config))
+                                store.dispatchOnMain(OnboardingSaltPayAction.Update)
                                 navigateTo(AppScreen.OnboardingWallet) { onProgressStateChange(it) }
                             } else {
                                 delay(DELAY_SDK_DIALOG_CLOSE)
@@ -198,13 +198,13 @@ object ScanCardProcessor {
         } else {
             if (OnboardingHelper.isOnboardingCase(scanResponse)) {
                 onWalletNotCreated()
-                store.dispatch(GlobalAction.Onboarding.Start(scanResponse, canSkipBackup = true))
+                store.dispatchOnMain(GlobalAction.Onboarding.Start(scanResponse, canSkipBackup = true))
                 val appScreen = OnboardingHelper.whereToNavigate(scanResponse)
                 navigateTo(appScreen) { onProgressStateChange(it) }
             } else {
                 if (scanResponse.twinsIsTwinned() && !preferencesStorage.wasTwinsOnboardingShown()) {
                     onWalletNotCreated()
-                    store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.WelcomeOnly(scanResponse)))
+                    store.dispatchOnMain(TwinCardsAction.SetStepOfScreen(TwinCardsStep.WelcomeOnly(scanResponse)))
                     navigateTo(AppScreen.OnboardingTwins) { onProgressStateChange(it) }
                 } else {
                     delay(DELAY_SDK_DIALOG_CLOSE)
