@@ -1,6 +1,11 @@
 package com.tangem.tap.domain
 
-import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.BlockchainSdkConfig
+import com.tangem.blockchain.common.Token
+import com.tangem.blockchain.common.Wallet
+import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.common.services.Result
@@ -93,18 +98,16 @@ class TapWalletManager {
         updateConfigManager(scanResponse)
 
         withMainContext {
+            store.dispatch(WalletAction.UserWalletChanged(userWallet))
             store.dispatch(TwinCardsAction.IfTwinsPrepareState(scanResponse))
             store.dispatch(WalletConnectAction.ResetState)
             store.dispatch(GlobalAction.SaveScanNoteResponse(scanResponse))
             store.dispatch(WalletConnectAction.RestoreSessions(scanResponse))
-            store.dispatch(WalletAction.UserWalletChanged(userWallet))
             store.dispatch(GlobalAction.SetIfCardVerifiedOnline(!attestationFailed))
             store.dispatch(WalletAction.Warnings.CheckIfNeeded)
-
-            if (refresh) {
-                loadData(userWallet, refresh = true)
-            }
         }
+
+        loadData(userWallet, refresh)
     }
 
     suspend fun loadData(userWallet: UserWallet, refresh: Boolean = false) {
