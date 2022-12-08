@@ -5,4 +5,11 @@
         <item quantity="many">%d карт</item>
         <item quantity="other">%d карт</item>
     </plurals>
+
+    <plurals name="tokens_count">
+        <item quantity="one">%d токен</item>
+        <item quantity="few">%d токена</item>
+        <item quantity="many">%d токенов</item>
+        <item quantity="other">%d токенов</item>
+    </plurals>
 </resources>
