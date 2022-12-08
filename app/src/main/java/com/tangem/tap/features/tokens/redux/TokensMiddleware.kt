@@ -19,7 +19,8 @@ import com.tangem.domain.features.addCustomToken.CustomCurrency
 import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction
 import com.tangem.domain.redux.domainStore
 import com.tangem.operations.derivation.ExtendedPublicKeysMap
-import com.tangem.tap.*
+import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
+import com.tangem.tap.assetReader
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.events.ManageTokens
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
@@ -34,6 +35,12 @@ import com.tangem.tap.domain.tokens.LoadAvailableCoinsService
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.preferencesStorage
+import com.tangem.tap.scope
+import com.tangem.tap.store
+import com.tangem.tap.tangemSdkManager
+import com.tangem.tap.userWalletsListManager
+import com.tangem.tap.walletCurrenciesManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
@@ -195,10 +202,11 @@ class TokensMiddleware {
         }
 
         scope.launch {
+            val card = scanResponse.card
             val result = tangemSdkManager.derivePublicKeys(
-                cardId = scanResponse.card.cardId,
+                cardId = card.cardId,
                 derivations = derivations,
-                useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes,
+                useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes && card.isAccessCodeSet,
             )
             when (result) {
                 is CompletionResult.Success -> {
@@ -220,6 +228,7 @@ class TokensMiddleware {
 
                     onSuccess(updatedScanResponse)
                 }
+
                 is CompletionResult.Failure -> {
                     store.dispatchDebugErrorNotification(TapError.CustomError("Error adding tokens"))
                 }
