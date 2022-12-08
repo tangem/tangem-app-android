@@ -27,7 +27,7 @@ fun Store<*>.dispatchNotification(resId: Int) {
     dispatchOnMain(GlobalAction.ShowNotification(resId))
 }
 
-@Suppress("unused") // receiver type
+@Suppress("UnusedReceiverParameter")
 suspend fun Store<*>.onUserWalletSelected(userWallet: UserWallet, refresh: Boolean = false) {
     store.state.globalState.tapWalletManager.onWalletSelected(userWallet, refresh)
 }
