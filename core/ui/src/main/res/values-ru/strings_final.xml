@@ -59,6 +59,7 @@
     <string name="russian_bank_card_warning_title">Карты банков РФ в данный момент не принимаются</string>
     <string name="russian_bank_card_warning_subtitle">У вас есть карта банка другой страны или платежной системы UnionPay?</string>
     <string name="common_yes">Да</string>
+    <string name="common_no">Нет</string>
     <string name="details_ask_a_question">Чат</string>
     <string name="chat_bot_name">Tangem Bot</string>
     <string name="card_settings_title">Настройки карты</string>
@@ -139,4 +140,26 @@
     <string name="onboarding_exit_alert_message">В этом случае вам будет необходимо начать процесс заново.</string>
     <string name="error_wrong_wallet_tapped">Вы использовали карту от другого кошелька. Приложите карту, связанную с этим кошельком.</string>
     <string name="internal_error_wallet_manager_not_found">Внутренняя ошибка: не удается найти менеджер кошельков</string>
+    <string name="welcome_unlock_title">C возвращением!</string>
+    <string name="welcome_unlock_description">Используйте биометрическую аутентификацию или код доступа для входа в приложение</string>
+    <string name="welcome_unlock_face_id">Войти с биометрией</string>
+    <string name="welcome_unlock_card">Сканировать карту</string>
+    <string name="save_user_wallet_agreement_new_feature">Новый функционал</string>
+    <string name="save_user_wallet_agreement_header">Сохраните свой кошелек</string>
+    <string name="save_user_wallet_agreement_description">Функция сохранения кошелька позволяет вам использовать свой кошелек с биометрической авторизацией, не прикладывая карту к телефону для получения доступа.</string>
+    <string name="save_user_wallet_agreement_allow">Разрешить привязку кошелька</string>
+    <string name="save_user_wallet_agreement_notice">Обратите внимание, что для совершения транзакции с вашими средствами по-прежнему потребуется ваша карта</string>
+    <string name="save_user_wallet_agreement_enroll_biometrics_title">Включите биометрическую авторизацию</string>
+    <string name="save_user_wallet_agreement_enroll_biometrics_description">Похоже, что у вас отключена биометрическая авторизация, она необходима для сохранения кошельков</string>
+    <string name="common_enable">Включить</string>
+    <string name="common_cancel">Отмена</string>
+    <string name="user_wallet_list_multi_header">Мультивалютные</string>
+    <string name="user_wallet_list_single_header">Одновалютные</string>
+    <string name="user_wallet_list_rename_popup_title">Переименование кошелька</string>
+    <string name="user_wallet_list_rename_popup_placeholder">Имя кошелька</string>
+    <string name="user_wallet_list_unlock_all_face_id">Разблокировать все с биометрией</string>
+    <string name="user_wallet_list_add_button">Добавить новый кошелек</string>
+    <string name="user_wallet_list_editing_count">%d выбрано</string>
+    <string name="user_wallet_list_title">Мои кошельки</string>
+    <string name="user_wallet_list_error_wallet_already_saved">Этот кошелек уже был сохранен, вы можете добавить другой</string>
 </resources>

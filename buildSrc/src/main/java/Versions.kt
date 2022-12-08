@@ -50,7 +50,7 @@ object Versions {
     const val spongycastleCryptoCore = "1.58.0.0"
     const val timber = "4.7.1"
     const val viewBindingDelegate = "1.5.6"
-    const val xmlShimmer = "1.1.2"
+    const val xmlShimmer = "1.1.3"
     const val zendeskChat = "3.3.5"
     const val zendeskMessaging = "5.2.4"
     const val zxingQrBarcodeScanner = "1.9.8"
@@ -58,11 +58,8 @@ object Versions {
     // endregion Other libraries
 
     // region Tangem
-    const val tangemBlockchainSdk = "develop-140"
-
-    // const val tangemBlockchainSdk = "0.0.1"
-    const val tangemCardSgk = "develop-169"
-    // const val tangemCardSgk = "0.0.1"
+    const val tangemBlockchainSdk = "develop-141"
+    const val tangemCardSgk = "develop-171"
     // endregion Tangem
 
     // region Testing
