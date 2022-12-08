@@ -1,8 +1,9 @@
 package com.tangem.feature.swap.domain
 
-import com.tangem.feature.swap.domain.models.ApproveModel
-import com.tangem.feature.swap.domain.models.Currency
-import com.tangem.feature.swap.domain.models.QuoteModel
+import com.tangem.feature.swap.domain.models.data.ApproveModel
+import com.tangem.feature.swap.domain.models.data.Currency
+import com.tangem.feature.swap.domain.models.data.QuoteModel
+import com.tangem.feature.swap.domain.models.data.SwapDataModel
 
 interface SwapRepository {
 
@@ -46,7 +47,7 @@ interface SwapRepository {
         fromTokenAddress: String,
         toTokenAddress: String,
         amount: String,
-        fromAddress: String,
+        fromWalletAddress: String,
         slippage: Int,
-    )
+    ): SwapDataModel
 }
