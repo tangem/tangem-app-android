@@ -58,16 +58,16 @@ sealed class Settings(
         params: Map<String, String> = mapOf(),
     ) : Settings("Settings / App Settings", event, params) {
 
-        sealed class FaceIDSwitcherChanged(state: AnalyticsParam.OnOffState) : CardSettings(
-            event = "Face ID Switcher Changed",
+        class SaveWalletSwitcherChanged(state: AnalyticsParam.OnOffState) : CardSettings(
+            event = "Save Wallet Switcher Changed",
             params = mapOf("State" to state.value),
         )
 
-        sealed class SaveAccessCodeSwitcherChanged(state: AnalyticsParam.OnOffState) : CardSettings(
+        class SaveAccessCodeSwitcherChanged(state: AnalyticsParam.OnOffState) : CardSettings(
             event = "Save Access Code Switcher Changed",
             params = mapOf("State" to state.value),
         )
 
-        class ButtonEnableBiometricAuthentication : AppSettings("Button - Enable Biometric Authentication")
+        object ButtonEnableBiometricAuthentication : AppSettings("Button - Enable Biometric Authentication")
     }
 }
