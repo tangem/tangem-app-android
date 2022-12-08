@@ -1,4 +1,4 @@
-package com.tangem.feature.swap.domain.models
+package com.tangem.feature.swap.domain.models.data
 
 sealed class Currency(
     open val id: String,
