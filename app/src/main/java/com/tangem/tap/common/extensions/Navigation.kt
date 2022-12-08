@@ -7,6 +7,7 @@ import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
 import com.tangem.common.extensions.VoidCallback
 import com.tangem.feature.referral.ReferralFragment
+import com.tangem.feature.swap.presentation.SwapFragment
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.FragmentShareTransition
 import com.tangem.tap.features.details.ui.appsettings.AppSettingsFragment
@@ -105,7 +106,7 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
         AppScreen.OnboardingOther -> OnboardingOtherCardsFragment()
         AppScreen.Wallet -> WalletFragment()
         AppScreen.Send -> SendFragment()
-        AppScreen.Details -> DetailsFragment()
+        AppScreen.Details -> SwapFragment()//DetailsFragment()
         AppScreen.DetailsSecurity -> SecurityModeFragment()
         AppScreen.CardSettings -> CardSettingsFragment()
         AppScreen.AppSettings -> AppSettingsFragment()

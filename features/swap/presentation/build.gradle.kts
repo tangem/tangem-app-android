@@ -49,6 +49,7 @@ dependencies {
 
     /** Domain */
     implementation(project(":features:swap:domain"))
+    implementation(project(":features:swap:data"))//todo remove, only for test
 
     /** Other libraries */
     implementation(Library.composeShimmer)
