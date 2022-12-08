@@ -30,6 +30,20 @@ android {
     composeOptions {
         kotlinCompilerExtensionVersion = Versions.compose
     }
+
+    buildTypes {
+        create("debug_beta") {
+            initWith(getByName("release"))
+            BuildConfigFieldFactory(
+                fields = listOf(
+                    Field.Environment("release"),
+                    Field.TestActionEnabled(true),
+                    Field.LogEnabled(true),
+                ),
+                builder = ::buildConfigField,
+            ).create()
+        }
+    }
 }
 
 dependencies {

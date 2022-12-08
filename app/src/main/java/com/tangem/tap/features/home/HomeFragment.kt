@@ -26,7 +26,6 @@ import org.rekotlin.StoreSubscriber
 class HomeFragment : Fragment(), StoreSubscriber<HomeState> {
 
     private var homeState: MutableState<HomeState> = mutableStateOf(store.state.homeState)
-    private var composeView: ComposeView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,20 +37,16 @@ class HomeFragment : Fragment(), StoreSubscriber<HomeState> {
         inflater: LayoutInflater,
         container: ViewGroup?,
         savedInstanceState: Bundle?,
-    ): View? {
-        val context = container?.context ?: return null
-
+    ): View {
         store.dispatch(BackupAction.CheckForUnfinishedBackup)
 
-        composeView = ComposeView(context).apply {
+        return ComposeView(inflater.context).apply {
             setContent {
                 AppCompatTheme {
                     ScreenContent()
                 }
             }
         }
-
-        return composeView
     }
 
     override fun onStart() {
@@ -71,7 +66,6 @@ class HomeFragment : Fragment(), StoreSubscriber<HomeState> {
     override fun onDestroyView() {
         super.onDestroyView()
         rollbackStatusBarIconsColor()
-        composeView = null
     }
 
     override fun newState(state: HomeState) {

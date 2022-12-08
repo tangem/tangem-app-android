@@ -64,8 +64,7 @@ sealed class TapError(
     ) : TapError(-1), MultiMessageError
 }
 
-sealed class TapSdkError(override val messageResId: Int?) : Throwable(), TangemError {
-    final override val code: Int = 50100
+sealed class TapSdkError(override val messageResId: Int?) : TangemError(code = 50100) {
     override var customMessage: String = code.toString()
 
     object CardForDifferentApp : TapSdkError(R.string.alert_unsupported_card)
