@@ -30,7 +30,7 @@ enum class SettingsElement(
     LinkMoreCards(R.drawable.ic_more_cards, R.string.details_row_title_create_backup),
     TermsOfService(R.drawable.ic_text, R.string.disclaimer_title), // General Terms of Service of the App
     TermsOfUse(R.drawable.ic_text, R.string.details_row_title_card_tou), // Terms of Use for S2C cards only
-    PrivacyPolicy(R.drawable.ic_lock, R.string.details_row_privacy_policy);
+    PrivacyPolicy(R.drawable.ic_lock_24, R.string.details_row_privacy_policy);
 }
 
 @Immutable
