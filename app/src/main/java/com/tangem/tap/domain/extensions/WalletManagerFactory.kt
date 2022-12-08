@@ -7,13 +7,12 @@ import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.WalletManagerFactory
-import com.tangem.common.card.Card
-import com.tangem.common.card.CardWallet
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toMapKey
 import com.tangem.common.hdWallet.DerivationPath
+import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.SaltPayWorkaround
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.isTestCard
@@ -82,7 +81,7 @@ fun WalletManagerFactory.makeWalletManagerForApp(
     )
 }
 
-private fun getDerivationParams(derivationPath: String?, card: Card): DerivationParams? {
+private fun getDerivationParams(derivationPath: String?, card: CardDTO): DerivationParams? {
     return derivationPath?.let {
         DerivationParams.Custom(
             DerivationPath(it),
@@ -132,7 +131,7 @@ fun WalletManagerFactory.makePrimaryWalletManager(
     )
 }
 
-private fun selectWallet(wallets: List<CardWallet>): CardWallet? {
+private fun selectWallet(wallets: List<CardDTO.Wallet>): CardDTO.Wallet? {
     return when (wallets.size) {
         0 -> null
         1 -> wallets[0]
