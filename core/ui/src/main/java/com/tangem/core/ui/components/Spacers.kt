@@ -3,6 +3,8 @@
 package com.tangem.core.ui.components
 
 import androidx.annotation.DimenRes
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
@@ -27,6 +29,11 @@ fun HorizontalSpacer(@DimenRes spaceResId: Int) {
 @Composable
 fun SpacerH(height: Dp, modifier: Modifier = Modifier) {
     Spacer(modifier = modifier.height(height))
+}
+
+@Composable
+fun SpacerH2(modifier: Modifier = Modifier) {
+    SpacerH(2.dp, modifier)
 }
 
 @Composable
@@ -58,6 +65,12 @@ fun SpacerH24(modifier: Modifier = Modifier) {
 fun SpacerH32(modifier: Modifier = Modifier) {
     SpacerH(32.dp, modifier)
 }
+
+// TODO: Refactor with context receivers
+@Composable
+fun ColumnScope.SpacerHMax(modifier: Modifier = Modifier) {
+    Spacer(modifier = modifier.weight(1f))
+}
 // endregion Horizontal
 
 // region Vertical
@@ -69,6 +82,11 @@ fun SpacerW(width: Dp, modifier: Modifier = Modifier) {
 @Composable
 fun SpacerW4(modifier: Modifier = Modifier) {
     SpacerW(4.dp, modifier)
+}
+
+@Composable
+fun SpacerW6(modifier: Modifier = Modifier) {
+    SpacerW(6.dp, modifier)
 }
 
 @Composable
@@ -89,6 +107,12 @@ fun SpacerW24(modifier: Modifier = Modifier) {
 @Composable
 fun SpacerW32(modifier: Modifier = Modifier) {
     SpacerW(32.dp, modifier)
+}
+
+// TODO: Refactor with context receivers
+@Composable
+fun RowScope.SpacerWMax(modifier: Modifier = Modifier) {
+    Spacer(modifier = modifier.weight(1f))
 }
 // endregion Vertical
 

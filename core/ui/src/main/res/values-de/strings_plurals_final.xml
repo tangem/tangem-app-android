@@ -3,4 +3,9 @@
         <item quantity="one">%d card</item>
         <item quantity="other">%d cards</item>
     </plurals>
+
+    <plurals name="tokens_count">
+        <item quantity="one">%d token</item>
+        <item quantity="other">%d tokens</item>
+    </plurals>
 </resources>
