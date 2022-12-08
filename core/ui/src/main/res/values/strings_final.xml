@@ -141,4 +141,26 @@
     <string name="onboarding_exit_alert_message">In this case, you will need to start from the beginning.</string>
     <string name="error_wrong_wallet_tapped">You have used a card from another wallet. Tap the card associated with this wallet</string>
     <string name="internal_error_wallet_manager_not_found" translatable="false">Internal error: wallet manager not found</string>
+    <string name="welcome_unlock_title">Welcome back!</string>
+    <string name="welcome_unlock_description">Use biometric authentication or scan a card to access the app</string>
+    <string name="welcome_unlock_face_id">Log in with biometric</string>
+    <string name="welcome_unlock_card">Scan card</string>
+    <string name="save_user_wallet_agreement_new_feature">New feature</string>
+    <string name="save_user_wallet_agreement_header">Save your Wallet</string>
+    <string name="save_user_wallet_agreement_description">Save your Wallet feature allows you to use your wallet with biometric auth without tapping your card to the phone to gain access.</string>
+    <string name="save_user_wallet_agreement_allow">Allow to link wallet</string>
+    <string name="save_user_wallet_agreement_notice">Making a transaction with your funds will still require card tapping</string>
+    <string name="save_user_wallet_agreement_enroll_biometrics_title">Enable biometric authorization</string>
+    <string name="save_user_wallet_agreement_enroll_biometrics_description">It looks like you have biometric authorization disabled, it is necessary to save wallets</string>
+    <string name="common_enable">Enable</string>
+    <string name="common_cancel">Cancel</string>
+    <string name="user_wallet_list_multi_header">Multi-currency</string>
+    <string name="user_wallet_list_single_header">Single-currency</string>
+    <string name="user_wallet_list_rename_popup_title">Rename Wallet</string>
+    <string name="user_wallet_list_rename_popup_placeholder">Wallet name</string>
+    <string name="user_wallet_list_unlock_all_face_id">Unlock all with biometrics</string>
+    <string name="user_wallet_list_add_button">Add new wallet</string>
+    <string name="user_wallet_list_editing_count">%d selected</string>
+    <string name="user_wallet_list_title">My Wallets</string>
+    <string name="user_wallet_list_error_wallet_already_saved">This wallet has already been saved, you can add another one</string>
 </resources>
