@@ -22,12 +22,15 @@ import com.tangem.tap.features.onboarding.products.note.OnboardingNoteFragment
 import com.tangem.tap.features.onboarding.products.otherCards.OnboardingOtherCardsFragment
 import com.tangem.tap.features.onboarding.products.twins.ui.TwinsCardsFragment
 import com.tangem.tap.features.onboarding.products.wallet.ui.OnboardingWalletFragment
+import com.tangem.tap.features.saveWallet.ui.SaveWalletBottomSheetFragment
 import com.tangem.tap.features.send.ui.SendFragment
 import com.tangem.tap.features.shop.ui.ShopFragment
 import com.tangem.tap.features.tokens.addCustomToken.AddCustomTokenFragment
 import com.tangem.tap.features.tokens.ui.AddTokensFragment
 import com.tangem.tap.features.wallet.ui.WalletDetailsFragment
 import com.tangem.tap.features.wallet.ui.WalletFragment
+import com.tangem.tap.features.walletSelector.ui.WalletSelectorBottomSheetFragment
+import com.tangem.tap.features.welcome.ui.WelcomeFragment
 import com.tangem.wallet.R
 import timber.log.Timber
 
@@ -50,10 +53,14 @@ fun FragmentActivity.openFragment(
     }
     if (screen.isDialogFragment) {
         (fragment as DialogFragment).show(transaction, screen.name)
-        if (addToBackstack && screen != AppScreen.Home) transaction.addToBackStack(null)
+        if (addToBackstack) {
+            transaction.addToBackStack(null)
+        }
     } else {
         transaction.replace(R.id.fragment_container, fragment, screen.name)
-        if (addToBackstack && screen != AppScreen.Home) transaction.addToBackStack(null)
+        if (addToBackstack && (screen != AppScreen.Home && screen != AppScreen.Welcome)) {
+            transaction.addToBackStack(null)
+        }
         transaction.commitAllowingStateLoss()
     }
 }
@@ -110,5 +117,8 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
         AppScreen.WalletConnectSessions -> WalletConnectFragment()
         AppScreen.QrScan -> QrScanFragment()
         AppScreen.ReferralProgram -> ReferralFragment()
+        AppScreen.Welcome -> WelcomeFragment()
+        AppScreen.SaveWallet -> SaveWalletBottomSheetFragment()
+        AppScreen.WalletSelector -> WalletSelectorBottomSheetFragment()
     }
 }
