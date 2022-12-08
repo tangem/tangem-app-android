@@ -1,5 +1,6 @@
 package com.tangem.tap.features.walletSelector.redux
 
+import com.tangem.common.CompletionResult
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.common.flatMap
@@ -149,18 +150,8 @@ internal class WalletSelectorMiddleware {
     private fun removeWallets(walletIdsToRemove: List<String>, state: WalletSelectorState) {
         scope.launch {
             when (walletIdsToRemove.size) {
-                state.wallets.size -> { // Removing all wallets
-                    userWalletsListManager.clear()
-                        .flatMap { walletStoresManager.clear() }
-                        .doOnSuccess {
-                            store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Home))
-                        }
-                }
-
-                else -> {
-                    userWalletsListManager.delete(walletIdsToRemove.map { UserWalletId(it) })
-                        .flatMap { walletStoresManager.delete(walletIdsToRemove) }
-                }
+                state.wallets.size -> clearUserWallets()
+                else -> removeUserWallets(walletIdsToRemove, state)
             }
                 .doOnFailure { error ->
                     store.dispatchOnMain(WalletSelectorAction.HandleError(error))
@@ -197,6 +188,31 @@ internal class WalletSelectorMiddleware {
         )
     }
 
+    private suspend fun clearUserWallets(): CompletionResult<Unit> {
+        return userWalletsListManager.clear()
+            .flatMap { walletStoresManager.clear() }
+            .doOnSuccess {
+                store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Home))
+            }
+    }
+
+    private suspend fun removeUserWallets(
+        walletIdsToRemove: List<String>,
+        state: WalletSelectorState,
+    ): CompletionResult<Unit> {
+        val prevSelectedWalletId = state.selectedWalletId
+        return userWalletsListManager.delete(walletIdsToRemove.map { UserWalletId(it) })
+            .flatMap { walletStoresManager.delete(walletIdsToRemove) }
+            .doOnSuccess {
+                val selectedWallet = userWalletsListManager.selectedUserWalletSync ?: return@doOnSuccess
+                val isSelectedWalletRemoved = prevSelectedWalletId != selectedWallet.walletId.stringValue
+
+                if (isSelectedWalletRemoved) {
+                    store.onUserWalletSelected(selectedWallet)
+                }
+            }
+    }
+
     private suspend fun UserWalletModel.updateWalletStoresAndCalculateFiatBalance(
         walletStores: List<WalletStoreModel>,
     ): UserWalletModel {
@@ -205,6 +221,7 @@ internal class WalletSelectorMiddleware {
                 is UserWalletModel.Type.MultiCurrency -> type.copy(
                     tokensCount = walletStores.flatMap { it.walletsData }.size,
                 )
+
                 is UserWalletModel.Type.SingleCurrency -> type.copy(
                     blockchainName = walletStores
                         .firstOrNull()
