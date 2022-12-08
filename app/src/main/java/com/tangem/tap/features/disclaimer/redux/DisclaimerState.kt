@@ -1,8 +1,8 @@
 package com.tangem.tap.features.disclaimer.redux
 
 import android.net.Uri
-import com.tangem.common.card.Card
 import com.tangem.common.extensions.VoidCallback
+import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.isSaltPay
 import org.rekotlin.StateType
@@ -22,7 +22,7 @@ sealed class DisclaimerType(
     companion object {
         fun get(scanResponse: ScanResponse): DisclaimerType = get(scanResponse.card)
 
-        fun get(card: Card): DisclaimerType = when {
+        fun get(card: CardDTO): DisclaimerType = when {
             card.isSaltPay -> SaltPay
             else -> Tangem
         }
