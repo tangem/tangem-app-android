@@ -6,7 +6,6 @@ import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.doOnSuccess
 import com.tangem.common.extensions.guard
 import com.tangem.domain.common.extensions.withMainContext
-import com.tangem.tap.*
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Token.ButtonRemoveToken
@@ -30,6 +29,12 @@ import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.redux.models.WalletDialog
 import com.tangem.tap.features.wallet.redux.reducers.toWallet
+import com.tangem.tap.preferencesStorage
+import com.tangem.tap.scope
+import com.tangem.tap.store
+import com.tangem.tap.userTokensRepository
+import com.tangem.tap.userWalletsListManager
+import com.tangem.tap.walletCurrenciesManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
