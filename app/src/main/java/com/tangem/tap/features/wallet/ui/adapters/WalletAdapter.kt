@@ -6,8 +6,6 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.tangem.blockchain.common.Blockchain
-import com.tangem.blockchain.common.Token
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.events.Portfolio
@@ -26,15 +24,6 @@ class WalletAdapter : ListAdapter<WalletData, WalletAdapter.WalletsViewHolder>(D
 
     override fun getItemId(position: Int): Long {
         return currentList[position].currencyData.currencySymbol?.hashCode()?.toLong() ?: 0
-    }
-
-    fun submitList(
-        list: List<WalletData>,
-        primaryBlockchain: Blockchain?,
-        primaryToken: Token? = null,
-    ) {
-        // We used this method to sort the list of currencies. Sorting is disabled for now.
-        super.submitList(list)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): WalletsViewHolder {
@@ -73,15 +62,7 @@ class WalletAdapter : ListAdapter<WalletData, WalletAdapter.WalletsViewHolder>(D
                 BalanceStatus.Unreachable -> {
                     root.getString(R.string.wallet_balance_blockchain_unreachable)
                 }
-                BalanceStatus.NoAccount,
-                BalanceStatus.VerifiedOnline,
-                BalanceStatus.SameCurrencyTransactionInProgress,
-                BalanceStatus.EmptyCard,
-                BalanceStatus.UnknownBlockchain,
-                BalanceStatus.Loading,
-                BalanceStatus.Refreshing,
-                null,
-                -> null
+                else -> null
             }
 
             if (status == null || status == BalanceStatus.Loading) {
@@ -101,8 +82,8 @@ class WalletAdapter : ListAdapter<WalletData, WalletAdapter.WalletsViewHolder>(D
             )
 
             lContent.tvCurrency.text = wallet.currencyData.currency
-            lContent.tvAmountFiat.text = wallet.currencyData.fiatAmountFormatted
-            lContent.tvAmount.text = wallet.currencyData.amountFormatted
+            lContent.tvAmountFiat.text = wallet.currencyData.fiatAmountFormatted ?: "—"
+            lContent.tvAmount.text = wallet.currencyData.amountFormatted ?: "—"
 
             lContent.tvStatus.isVisible = statusMessage != null
             lContent.tvStatus.text = statusMessage
