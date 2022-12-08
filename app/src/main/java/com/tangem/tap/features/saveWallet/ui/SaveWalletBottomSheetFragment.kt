@@ -6,7 +6,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.SnackbarHost
 import androidx.compose.material.SnackbarHostState
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.fragment.app.viewModels
@@ -18,7 +24,7 @@ import com.tangem.tap.features.details.ui.cardsettings.resolveReference
 import com.tangem.tap.features.saveWallet.ui.components.SaveWalletScreenContent
 
 internal class SaveWalletBottomSheetFragment : ComposeBottomSheetFragment<SaveWalletScreenState>() {
-    override val expandedHeightFraction: Float = .95f
+    override val expandedHeightFraction: Float = .98f
 
     private val viewModel by viewModels<SaveWalletViewModel>()
 
