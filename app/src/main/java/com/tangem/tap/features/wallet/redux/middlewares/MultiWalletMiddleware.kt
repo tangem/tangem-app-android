@@ -183,7 +183,8 @@ class MultiWalletMiddleware {
         state: WalletState?,
     ) = scope.launch {
         ScanCardProcessor.scan(
-            useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes,
+            useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes &&
+                selectedWallet.scanResponse.card.isAccessCodeSet,
             cardId = selectedWallet.cardId,
             additionalBlockchainsToDerive = state?.missingDerivations?.map { it.blockchain },
         ) { scanResponse ->
