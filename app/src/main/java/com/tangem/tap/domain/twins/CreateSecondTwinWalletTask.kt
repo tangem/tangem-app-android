@@ -12,7 +12,6 @@ import com.tangem.domain.common.TwinsHelper
 import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.operations.wallet.CreateWalletTask
 import com.tangem.operations.wallet.PurgeWalletCommand
-import com.tangem.tap.domain.extensions.getSingleWallet
 
 class CreateSecondTwinWalletTask(
     private val firstPublicKey: String,
