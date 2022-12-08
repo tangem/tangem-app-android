@@ -2,6 +2,7 @@ package com.tangem.tap.common.redux.global
 
 import com.tangem.domain.redux.domainStore
 import com.tangem.domain.redux.global.DomainGlobalAction
+import com.tangem.tap.common.extensions.replaceBy
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.onboarding.OnboardingManager
 import com.tangem.tap.preferencesStorage
@@ -49,12 +50,19 @@ fun globalReducer(action: Action, state: AppState, appStateHolder: AppStateHolde
         is GlobalAction.SetWarningManager -> globalState.copy(warningManager = action.warningManager)
         is GlobalAction.UpdateWalletSignedHashes -> {
             val card = globalState.scanResponse?.card ?: return globalState
-            val wallet = card.wallet(action.walletPublicKey) ?: return globalState
-            val newCardInstance = card.updateWallet(
-                wallet.copy(
-                    totalSignedHashes = action.walletSignedHashes,
-                    remainingSignatures = action.remainingSignatures,
-                ),
+            val wallet = card.wallets
+                .firstOrNull { it.publicKey.contentEquals(action.walletPublicKey) }
+                ?: return globalState
+
+            val newCardInstance = card.copy(
+                wallets = card.wallets.toMutableList().also { walletsMutable ->
+                    walletsMutable.replaceBy(
+                        item = wallet.copy(
+                            totalSignedHashes = action.walletSignedHashes,
+                            remainingSignatures = action.remainingSignatures,
+                        ),
+                    ) { it.index == wallet.index }
+                },
             )
             globalState.copy(scanResponse = globalState.scanResponse.copy(card = newCardInstance))
         }

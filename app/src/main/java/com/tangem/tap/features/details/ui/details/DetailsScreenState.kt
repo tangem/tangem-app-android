@@ -1,7 +1,9 @@
 package com.tangem.tap.features.details.ui.details
 
+import androidx.compose.runtime.Immutable
 import com.tangem.wallet.R
 
+@Immutable
 data class DetailsScreenState(
     val elements: List<SettingsElement>,
     val tangemLinks: List<SocialNetworkLink>,
@@ -13,6 +15,7 @@ data class DetailsScreenState(
     val appNameRes: Int = R.string.app_name
 }
 
+@Immutable
 enum class SettingsElement(
     val iconRes: Int,
     val titleRes: Int,
@@ -30,6 +33,7 @@ enum class SettingsElement(
     PrivacyPolicy(R.drawable.ic_lock, R.string.details_row_privacy_policy);
 }
 
+@Immutable
 data class SocialNetworkLink(
     val network: SocialNetwork,
     val url: String,

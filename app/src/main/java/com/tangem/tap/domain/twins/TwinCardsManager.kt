@@ -6,9 +6,9 @@ import com.tangem.Message
 import com.tangem.blockchain.extensions.Result
 import com.tangem.common.CompletionResult
 import com.tangem.common.KeyPair
-import com.tangem.common.card.Card
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
+import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.ScanResponse
 import com.tangem.network.common.MoshiConverter
 import com.tangem.operations.wallet.CreateWalletResponse
@@ -16,19 +16,24 @@ import com.tangem.tap.common.AssetReader
 import com.tangem.tap.tangemSdkManager
 
 class TwinCardsManager(
-    card: Card,
+    card: CardDTO,
     assetReader: AssetReader,
 ) {
-
-    private val currentCardId: String = card.cardId
+    private val firstCardId: String = card.cardId
+    private var secondCardId: String? = null
 
     private var currentCardPublicKey: String? = null
-    private var secondCardPublicKey: String? = null
+    var secondCardPublicKey: String? = null
+        private set
 
     private val issuerKeyPair: KeyPair = getIssuerKeys(assetReader, card.issuer.publicKey.toHexString())
 
     suspend fun createFirstWallet(message: Message): CompletionResult<CreateWalletResponse> {
-        val response = tangemSdkManager.runTaskAsync(CreateFirstTwinWalletTask(), currentCardId, message)
+        val response = tangemSdkManager.runTaskAsync(
+            runnable = CreateFirstTwinWalletTask(),
+            cardId = firstCardId,
+            initialMessage = message,
+        )
         when (response) {
             is CompletionResult.Success -> currentCardPublicKey = response.data.wallet.publicKey.toHexString()
             is CompletionResult.Failure -> {}
@@ -51,6 +56,7 @@ class TwinCardsManager(
         when (response) {
             is CompletionResult.Success -> {
                 secondCardPublicKey = response.data.wallet.publicKey.toHexString()
+                secondCardId = response.data.cardId
             }
             is CompletionResult.Failure -> {}
         }
@@ -59,8 +65,9 @@ class TwinCardsManager(
 
     suspend fun complete(message: Message): Result<ScanResponse> {
         val response = tangemSdkManager.runTaskAsync(
-            FinalizeTwinTask(secondCardPublicKey!!.hexToBytes(), issuerKeyPair),
-            currentCardId, message,
+            runnable = FinalizeTwinTask(secondCardPublicKey!!.hexToBytes(), issuerKeyPair),
+            cardId = firstCardId,
+            initialMessage = message,
         )
         return when (response) {
             is CompletionResult.Success -> Result.Success(response.data)
@@ -91,7 +98,6 @@ class TwinCardsManager(
 }
 
 private class Issuer(
-    val id: String,
     val privateKey: String,
     val publicKey: String,
 )

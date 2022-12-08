@@ -34,7 +34,7 @@ data class BalanceWidgetData(
 )
 
 data class TokenData(
-    val amountFormatted: String,
+    val amountFormatted: String?,
     val amount: BigDecimal? = null,
     val tokenSymbol: String,
     val fiatAmountFormatted: String? = null,

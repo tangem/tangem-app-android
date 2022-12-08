@@ -9,7 +9,6 @@ import com.tangem.domain.common.TwinsHelper
 import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.operations.wallet.CreateWalletTask
 import com.tangem.operations.wallet.PurgeWalletCommand
-import com.tangem.tap.domain.extensions.getSingleWallet
 
 class CreateFirstTwinWalletTask : CardSessionRunnable<CreateWalletResponse> {
     override fun run(
@@ -17,7 +16,7 @@ class CreateFirstTwinWalletTask : CardSessionRunnable<CreateWalletResponse> {
         callback: (result: CompletionResult<CreateWalletResponse>) -> Unit,
     ) {
         val card = session.environment.card
-        val publicKey = card?.getSingleWallet()?.publicKey
+        val publicKey = card?.wallets?.firstOrNull()?.publicKey
         if (publicKey != null) {
             if (TwinsHelper.getTwinCardNumber(card.cardId) == TwinCardNumber.Second) {
                 callback(CompletionResult.Failure(WrongTwinCard(TwinCardNumber.First)))

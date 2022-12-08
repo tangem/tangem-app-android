@@ -75,6 +75,7 @@ android {
             initWith(getByName("release"))
             versionNameSuffix = "-beta"
             applicationIdSuffix = ".debug"
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
 
@@ -192,6 +193,7 @@ dependencies {
     implementation(Library.viewBindingDelegate)
     implementation(Library.armadillo)
     implementation(Library.googlePlayServicesWallet)
+    implementation(Library.composeShimmer)
 
     /** Testing libraries */
     testImplementation(Test.junit)
