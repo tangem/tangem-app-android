@@ -16,7 +16,7 @@ class CreateFirstTwinWalletTask : CardSessionRunnable<CreateWalletResponse> {
         callback: (result: CompletionResult<CreateWalletResponse>) -> Unit,
     ) {
         val card = session.environment.card
-        val publicKey = card?.getSingleWallet()?.publicKey
+        val publicKey = card?.wallets?.firstOrNull()?.publicKey
         if (publicKey != null) {
             if (TwinsHelper.getTwinCardNumber(card.cardId) == TwinCardNumber.Second) {
                 callback(CompletionResult.Failure(WrongTwinCard(TwinCardNumber.First)))
