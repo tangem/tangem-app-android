@@ -33,6 +33,24 @@ class PreferencesStorage(applicationContext: Application) {
         get() = preferences.getLong(CHAT_FIRST_LAUNCH_KEY, 0).takeIf { it != 0L }
         set(value) = preferences.edit { putLong(CHAT_FIRST_LAUNCH_KEY, value ?: 0) }
 
+    var shouldShowSaveWallet: Boolean
+        get() = preferences.getBoolean(SAVE_WALLET_DIALOG_SHOWN_KEY, true)
+        set(value) = preferences.edit {
+            putBoolean(SAVE_WALLET_DIALOG_SHOWN_KEY, value)
+        }
+
+    var shouldSaveUserWallets: Boolean
+        get() = preferences.getBoolean(SAVE_USER_WALLETS_KEY, false)
+        set(value) = preferences.edit {
+            putBoolean(SAVE_USER_WALLETS_KEY, value)
+        }
+
+    var shouldSaveAccessCodes: Boolean
+        get() = preferences.getBoolean(SAVE_ACCESS_CODES_KEY, false)
+        set(value) = preferences.edit {
+            putBoolean(SAVE_ACCESS_CODES_KEY, value)
+        }
+
     fun getCountOfLaunches(): Int = preferences.getInt(APP_LAUNCH_COUNT_KEY, 1)
 
     fun saveTwinsOnboardingShown() {
@@ -53,6 +71,9 @@ class PreferencesStorage(applicationContext: Application) {
         private const val TWINS_ONBOARDING_SHOWN_KEY = "twinsOnboardingShown"
         private const val APP_LAUNCH_COUNT_KEY = "launchCount"
         private const val CHAT_FIRST_LAUNCH_KEY = "chatFirstLaunchKey"
+        private const val SAVE_WALLET_DIALOG_SHOWN_KEY = "saveUserWalletShown"
+        private const val SAVE_USER_WALLETS_KEY = "saveUserWallets"
+        private const val SAVE_ACCESS_CODES_KEY = "saveAccessCodes"
     }
 }
 
