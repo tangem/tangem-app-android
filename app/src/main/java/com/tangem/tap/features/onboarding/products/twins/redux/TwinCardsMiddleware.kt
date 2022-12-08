@@ -12,10 +12,10 @@ import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchErrorNotification
+import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchOpenUrl
 import com.tangem.tap.common.extensions.getAddressData
 import com.tangem.tap.common.extensions.getTopUpUrl
-import com.tangem.tap.common.extensions.onCardScanned
 import com.tangem.tap.common.postUi
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
@@ -25,6 +25,7 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.makePrimaryWalletManager
 import com.tangem.tap.domain.twins.TwinCardsManager
+import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.preferencesStorage
@@ -88,7 +89,7 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
 
     when (action) {
         is TwinCardsAction.Init -> {
-            if (twinCardsState.currentStep == TwinCardsStep.WelcomeOnly) return
+            if (twinCardsState.currentStep is TwinCardsStep.WelcomeOnly) return
 
             val scanResponse = getScanResponse()
             onboardingManager?.apply {
@@ -141,7 +142,7 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
         }
         is TwinCardsAction.SetStepOfScreen -> {
             when (action.step) {
-                TwinCardsStep.WelcomeOnly, TwinCardsStep.Welcome -> {
+                is TwinCardsStep.WelcomeOnly, TwinCardsStep.Welcome -> {
                     Analytics.send(Onboarding.Twins.ScreenOpened())
                     preferencesStorage.saveTwinsOnboardingShown()
                 }
@@ -150,6 +151,13 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
                     finishCardActivation()
                     postUi(500) { store.dispatch(TwinCardsAction.Confetti.Show) }
                 }
+
+                TwinCardsStep.None,
+                TwinCardsStep.Warning,
+                TwinCardsStep.CreateFirstWallet,
+                TwinCardsStep.CreateSecondWallet,
+                TwinCardsStep.CreateThirdWallet,
+                -> Unit
             }
         }
         is TwinCardsAction.Wallet.LaunchFirstStep -> {
@@ -282,21 +290,24 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
             store.dispatchOpenUrl(topUpUrl)
         }
         TwinCardsAction.Done -> {
-            scope.launch {
-                val scanResponse = getScanResponse()
-                store.onCardScanned(scanResponse)
-                withMainContext {
-                    when (twinCardsState.mode) {
-                        CreateTwinWalletMode.CreateWallet -> {
-                            store.dispatch(GlobalAction.Onboarding.Stop)
-                            store.dispatch(NavigationAction.NavigateTo(AppScreen.Wallet))
-                        }
-                        CreateTwinWalletMode.RecreateWallet -> {
-                            store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
-                        }
-                    }
+            val scanResponse = getScanResponse()
+            when (twinCardsState.mode) {
+                CreateTwinWalletMode.CreateWallet -> {
+                    store.dispatchOnMain(GlobalAction.Onboarding.Stop)
+                    OnboardingHelper.trySaveWalletAndNavigateToWalletScreen(
+                        scanResponse = scanResponse,
+                        backupCardsIds = listOfNotNull(twinCardsState.twinCardsManager?.secondCardPublicKey),
+                    )
+                }
+                CreateTwinWalletMode.RecreateWallet -> {
+                    store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Home))
                 }
             }
+        }
+        is TwinCardsAction.SaveScannedTwinCardAndNavigateToWallet -> {
+            OnboardingHelper.trySaveWalletAndNavigateToWalletScreen(
+                scanResponse = action.scanResponse,
+            )
         }
     }
 }

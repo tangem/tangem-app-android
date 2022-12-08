@@ -1,6 +1,5 @@
 package com.tangem.domain.common
 
-import com.tangem.common.card.Card
 import com.tangem.crypto.CryptoUtils
 
 class TwinsHelper {
@@ -57,14 +56,14 @@ enum class TwinCardNumber(val number: Int) {
 }
 
 @Deprecated("Use ScanResponse.isTangemTwin")
-fun Card.isTangemTwin(): Boolean {
+fun CardDTO.isTangemTwin(): Boolean {
     return TwinsHelper.getTwinCardNumber(cardId) != null
 }
 
-fun Card.getTwinCardNumber(): TwinCardNumber? {
+fun CardDTO.getTwinCardNumber(): TwinCardNumber? {
     return TwinsHelper.getTwinCardNumber(this.cardId)
 }
 
-fun Card.getTwinCardIdForUser(): String {
+fun CardDTO.getTwinCardIdForUser(): String {
     return TwinsHelper.getTwinCardIdForUser(this.cardId)
 }
