@@ -1,5 +1,7 @@
 package com.tangem.tap.features.walletSelector.ui
 
+import android.app.Dialog
+import android.os.Bundle
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -14,6 +16,8 @@ import androidx.compose.ui.platform.rememberNestedScrollInteropConnection
 import androidx.fragment.app.viewModels
 import com.tangem.core.ui.fragments.ComposeBottomSheetFragment
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.MyWallets
 import com.tangem.tap.features.details.ui.cardsettings.resolveReference
 import com.tangem.tap.features.walletSelector.ui.components.RenameWalletDialogContent
 import com.tangem.tap.features.walletSelector.ui.components.WalletSelectorScreenContent
@@ -21,6 +25,12 @@ import com.tangem.tap.features.walletSelector.ui.model.RenameWalletDialog
 
 internal class WalletSelectorBottomSheetFragment : ComposeBottomSheetFragment<WalletSelectorScreenState>() {
     private val viewModel by viewModels<WalletSelectorViewModel>()
+
+    override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
+        Analytics.send(MyWallets.MyWalletsScreenOpened)
+
+        return super.onCreateDialog(savedInstanceState)
+    }
 
     @Composable
     override fun provideState(): State<WalletSelectorScreenState> {
