@@ -232,6 +232,7 @@ class DetailsMiddleware {
         }
 
         private fun enrollBiometrics() {
+            Analytics.send(Settings.AppSettings.ButtonEnableBiometricAuthentication)
             store.dispatchOnMain(NavigationAction.OpenBiometricsSettings)
         }
 
@@ -268,14 +269,18 @@ class DetailsMiddleware {
                     Timber.e(error, "Wallet saving failed")
                 }
                 .doOnSuccess {
+                    Analytics.send(Settings.AppSettings.SaveWalletSwitcherChanged(AnalyticsParam.OnOffState.On))
+
                     preferencesStorage.shouldShowSaveUserWalletScreen = false
                     preferencesStorage.shouldSaveUserWallets = true
+
                     store.dispatchOnMain(
                         DetailsAction.AppSettings.SwitchPrivacySetting.Success(
                             setting = PrivacySetting.SaveWallets,
                             enable = true,
                         ),
                     )
+
                     store.onUserWalletSelected(userWallet)
                 }
         }
@@ -284,22 +289,29 @@ class DetailsMiddleware {
             userWalletsListManager.clear()
                 .flatMap { walletStoresManager.clear() }
                 .doOnSuccess {
+                    Analytics.send(Settings.AppSettings.SaveWalletSwitcherChanged(AnalyticsParam.OnOffState.Off))
+
                     preferencesStorage.shouldSaveUserWallets = false
+
                     store.dispatchOnMain(
                         DetailsAction.AppSettings.SwitchPrivacySetting.Success(
                             setting = PrivacySetting.SaveWallets,
                             enable = false,
                         ),
                     )
+
                     store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Home))
                 }
         }
 
         private fun saveAccessCodes(state: DetailsState) {
+            Analytics.send(Settings.AppSettings.SaveAccessCodeSwitcherChanged(AnalyticsParam.OnOffState.On))
+
             preferencesStorage.shouldSaveAccessCodes = true
             tangemSdkManager.setAccessCodeRequestPolicy(
                 useBiometricsForAccessCode = state.scanResponse?.card?.isAccessCodeSet == true,
             )
+
             store.dispatchOnMain(
                 DetailsAction.AppSettings.SwitchPrivacySetting.Success(
                     setting = PrivacySetting.SaveAccessCode,
@@ -311,10 +323,13 @@ class DetailsMiddleware {
         private suspend fun deleteSavedAccessCodes() {
             tangemSdkManager.clearSavedUserCodes()
                 .doOnSuccess {
+                    Analytics.send(Settings.AppSettings.SaveAccessCodeSwitcherChanged(AnalyticsParam.OnOffState.Off))
+
                     preferencesStorage.shouldSaveAccessCodes = false
                     tangemSdkManager.setAccessCodeRequestPolicy(
                         useBiometricsForAccessCode = false,
                     )
+
                     store.dispatchOnMain(
                         DetailsAction.AppSettings.SwitchPrivacySetting.Success(
                             setting = PrivacySetting.SaveAccessCode,
