@@ -48,7 +48,6 @@ class TwinCardsManager(
     ): CompletionResult<CreateWalletResponse> {
         val task = CreateSecondTwinWalletTask(
             firstPublicKey = currentCardPublicKey!!,
-            firstCardId = firstCardId,
             issuerKeys = issuerKeyPair,
             preparingMessage = preparingMessage,
             creatingWalletMessage = creatingWalletMessage,
