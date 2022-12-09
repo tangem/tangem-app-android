@@ -4,25 +4,19 @@
 
     <string name="common_save_changes">Save changes</string>
     <string name="common_warning">Warning</string>
-    <string name="common_retry">Retry</string>
     <string name="common_done">Done</string>
-    <string name="common_cancel">Cancel</string>
     <string name="common_accept">Accept</string>
     <string name="common_delete">Delete</string>
     <string name="common_custom_string" translatable="false">%s</string>
 
     <string name="common_camera_denied_alert_message">You have not given access to your camera, please adjust your privacy settings</string>
 
-    <string name="welcome_unlock_card">Scan card</string>
-
     <string name="wallet_button_send">Send</string>
     <string name="wallet_button_create_wallet">Create wallet</string>
     <string name="wallet_title">Tangem</string>
 
-    <string name="main_tokens">Tokens</string>
     <string name="wallet_balance_verified">Verified Balance</string>
     <string name="wallet_balance_loading">Balance is loading…</string>
-    <string name="wallet_balance_blockchain_unreachable" translatable="false">Network is unreachable</string>
 
     <string name="wallet_error_no_account">Account is not created</string>
     <string name="no_account_generic">Load %s+ %s to create account</string>
@@ -61,7 +55,6 @@
     <string name="send_fee_include_description">Include fee</string>
     <string name="send_total_subtitle_format">%s will be sent</string>
     <string name="send_total_subtitle_asset_format">%s and %s will be sent</string>
-    <string name="common_balance">Balance: %s</string>
     <string name="send_transaction_success">Transaction has been successfully signed and sent to the blockchain node. Wallet balance will be updated in a while</string>
 
     <string name="details_title">Details</string>
