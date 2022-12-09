@@ -1,6 +1,7 @@
 package com.tangem.tap.features.onboarding.products.twins.redux
 
 import com.tangem.blockchain.common.WalletManager
+import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TwinCardNumber
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.twins.TwinCardsManager
@@ -62,9 +63,19 @@ data class TwinCardsState(
 
 enum class CreateTwinWalletMode { CreateWallet, RecreateWallet }
 
-enum class TwinCardsStep {
-    None, WelcomeOnly, Welcome, Warning, CreateFirstWallet, CreateSecondWallet, CreateThirdWallet,
+sealed class TwinCardsStep {
+    object None : TwinCardsStep()
+    data class WelcomeOnly(
+        val scanResponse: ScanResponse,
+    ) : TwinCardsStep()
+
+    object Welcome : TwinCardsStep()
+    object Warning : TwinCardsStep()
+    object CreateFirstWallet : TwinCardsStep()
+    object CreateSecondWallet : TwinCardsStep()
+    object CreateThirdWallet : TwinCardsStep()
 
     // for the onboarding
-    TopUpWallet, Done
+    object TopUpWallet : TwinCardsStep()
+    object Done : TwinCardsStep()
 }
