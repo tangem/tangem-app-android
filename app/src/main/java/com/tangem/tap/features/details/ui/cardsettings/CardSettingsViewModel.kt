@@ -2,6 +2,9 @@ package com.tangem.tap.features.details.ui.cardsettings
 
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.common.getTwinCardIdForUser
+import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.AnalyticsParam
+import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.details.redux.CardSettingsState
 import com.tangem.tap.features.details.redux.DetailsAction
@@ -59,12 +62,15 @@ class CardSettingsViewModel(private val store: Store<AppState>) {
     private fun handleClickingItem(item: CardInfo) {
         when (item) {
             is CardInfo.ChangeAccessCode -> {
+                Analytics.send(Settings.CardSettings.ButtonChangeUserCode(AnalyticsParam.UserCode.AccessCode))
                 store.dispatch(DetailsAction.ManageSecurity.ChangeAccessCode)
             }
             is CardInfo.ResetToFactorySettings -> {
+                Analytics.send(Settings.CardSettings.ButtonFactoryReset())
                 store.dispatch(DetailsAction.ResetToFactory.Start)
             }
             is CardInfo.SecurityMode -> {
+                Analytics.send(Settings.CardSettings.ButtonChangeSecurityMode())
                 store.dispatch(DetailsAction.ManageSecurity.OpenSecurity)
             }
             else -> {}
