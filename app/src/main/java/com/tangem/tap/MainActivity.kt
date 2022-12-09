@@ -132,7 +132,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
     }
 
     override fun onDestroy() {
-        store.dispatch(NavigationAction.ActivityDestroyed)
+        store.dispatch(NavigationAction.ActivityDestroyed(WeakReference(this)))
         super.onDestroy()
     }
 
