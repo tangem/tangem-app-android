@@ -24,6 +24,7 @@ class CurrencyIconRequest(
     private val currencyTextView: TextView?,
     private val token: Token?,
     private val blockchain: Blockchain,
+    private val getLocalImage: Boolean = false,
 ) {
     fun load() {
         when {
@@ -84,7 +85,7 @@ class CurrencyIconRequest(
         crossinline onError: (Blockchain) -> Unit = {},
     ) {
         currencyImageView.loadIcon(
-            data = getIconUrl(blockchain.toNetworkId()),
+            data = if (getLocalImage) blockchain.getRoundIconRes() else getIconUrl(blockchain.toNetworkId()),
             placeholderRes = blockchain.getRoundIconRes(),
             onStart = { onStart(blockchain) },
             onSuccess = { onSuccess(blockchain) },
