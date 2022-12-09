@@ -3,7 +3,7 @@ package com.tangem.tap.network.payid
 import com.squareup.moshi.JsonClass
 import com.tangem.common.services.Result
 import com.tangem.common.services.performRequest
-import com.tangem.network.common.createRetrofitInstance
+import com.tangem.datasource.api.common.createRetrofitInstance
 import retrofit2.Retrofit
 
 class PayIdService {
