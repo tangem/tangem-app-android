@@ -16,7 +16,7 @@ android {
         targetSdk = AppConfig.targetSdkVersion
 
         versionCode = if (project.hasProperty("versionCode")) {
-            project.property("versionCode") as Int
+            (project.property("versionCode") as String).toInt()
         } else {
             AppConfig.versionCode
         }
