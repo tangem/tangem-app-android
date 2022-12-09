@@ -7,7 +7,7 @@ import okhttp3.Response
 [REDACTED_AUTHOR]
  */
 open class AddHeaderInterceptor(
-    private val headers: Map<String, String>
+    private val headers: Map<String, String>,
 ) : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
@@ -21,10 +21,10 @@ open class AddHeaderInterceptor(
     }
 }
 
-class CacheControlHttpInterceptor(maxAgeSeconds: Int) : AddHeaderInterceptor(mapOf(
-    "Cache-Control" to "max-age=$maxAgeSeconds",
-))
+class CacheControlHttpInterceptor(maxAgeSeconds: Int) : AddHeaderInterceptor(
+    mapOf("Cache-Control" to "max-age=$maxAgeSeconds"),
+)
 
-class CardPublicKeyHttpInterceptor(cardPublicKeyHex: String) : AddHeaderInterceptor(mapOf(
-    "card_public_key" to cardPublicKeyHex,
-))
+class CardPublicKeyHttpInterceptor(cardPublicKeyHex: String) : AddHeaderInterceptor(
+    mapOf("card_public_key" to cardPublicKeyHex),
+)
