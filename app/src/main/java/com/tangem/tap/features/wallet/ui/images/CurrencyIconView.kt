@@ -68,6 +68,7 @@ fun CurrencyIconView.load(
             currencyTextView = null,
             token = null,
             blockchain = currency.blockchain,
+            getLocalImage = true,
         ).load()
     }
 }
