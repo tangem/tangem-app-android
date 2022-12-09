@@ -160,6 +160,11 @@ class MultiWalletReducer {
             is WalletAction.MultiWallet.RemoveWallet -> {
                 state.removeWallet(state.getWalletData(action.currency))
             }
+            is WalletAction.MultiWallet.RemoveWallets -> {
+                var updatedState = state
+                action.currencies.forEach { updatedState = updatedState.removeWallet(state.getWalletData(it)) }
+                updatedState
+            }
             is WalletAction.MultiWallet.SetPrimaryBlockchain ->
                 state.copy(primaryBlockchain = action.blockchain)
 
