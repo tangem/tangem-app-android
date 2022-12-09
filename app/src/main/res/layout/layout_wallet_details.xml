@@ -60,14 +60,14 @@
                     style="@style/TapChip"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/wallet_address_chip_default" />
+                    android:text="@string/address_type_default" />
 
                 <com.google.android.material.chip.Chip
                     android:id="@+id/chip_legacy"
                     style="@style/TapChip"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="@string/wallet_address_chip_legacy" />
+                    android:text="@string/address_type_legacy" />
 
             </com.google.android.material.chip.ChipGroup>
 
@@ -127,7 +127,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="4dp"
                 android:src="@drawable/ic_inactive"
-                android:text="@string/wallet_address_button_copy"
+                android:text="@string/common_copy"
                 android:textAlignment="center"
                 android:textColor="@color/colorSecondary"
                 app:chipBackgroundColor="@color/blue_pale"
@@ -148,7 +148,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="4dp"
                 android:src="@drawable/ic_inactive"
-                android:text="@string/wallet_address_button_share"
+                android:text="@string/common_share"
                 android:textAlignment="center"
                 android:textColor="@color/colorSecondary"
                 app:chipBackgroundColor="@color/blue_pale"

@@ -2,21 +2,20 @@ package com.tangem.tap.common.redux.global
 
 import com.tangem.domain.redux.domainStore
 import com.tangem.domain.redux.global.DomainGlobalAction
+import com.tangem.tap.common.extensions.replaceBy
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.onboarding.OnboardingManager
 import com.tangem.tap.preferencesStorage
+import com.tangem.tap.proxy.AppStateHolder
 import org.rekotlin.Action
 
-fun globalReducer(action: Action, state: AppState): GlobalState {
+fun globalReducer(action: Action, state: AppState, appStateHolder: AppStateHolder): GlobalState {
 
     if (action !is GlobalAction) return state.globalState
 
     val globalState = state.globalState
 
     return when (action) {
-        is GlobalAction.SetResources -> {
-            globalState.copy(resources = action.resources)
-        }
         is GlobalAction.Onboarding.Start -> {
             val usedCardsPrefStorage = preferencesStorage.usedCardsPrefStorage
             val onboardingManager = OnboardingManager(action.scanResponse, usedCardsPrefStorage)
@@ -34,7 +33,8 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
         is GlobalAction.ScanFailsCounter.Reset -> {
             globalState.copy(scanCardFailsCounter = 0)
         }
-        is GlobalAction.SaveScanNoteResponse ->{
+        is GlobalAction.SaveScanNoteResponse -> {
+            appStateHolder.scanResponse = action.scanResponse
             domainStore.dispatch(DomainGlobalAction.SaveScanNoteResponse(action.scanResponse))
             globalState.copy(scanResponse = action.scanResponse)
         }
@@ -48,15 +48,22 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
             globalState.copy(configManager = action.configManager)
         }
         is GlobalAction.SetWarningManager -> globalState.copy(warningManager = action.warningManager)
-        is GlobalAction.SetGlobalAnalyticsHandler -> globalState.copy(analyticsHandler = action.analyticsHandler)
         is GlobalAction.UpdateWalletSignedHashes -> {
             val card = globalState.scanResponse?.card ?: return globalState
-            val wallet = card.wallet(action.walletPublicKey) ?: return globalState
+            val wallet = card.wallets
+                .firstOrNull { it.publicKey.contentEquals(action.walletPublicKey) }
+                ?: return globalState
 
-            val newCardInstance = card.updateWallet(wallet.copy(
-                totalSignedHashes = action.walletSignedHashes,
-                remainingSignatures = action.remainingSignatures
-            ))
+            val newCardInstance = card.copy(
+                wallets = card.wallets.toMutableList().also { walletsMutable ->
+                    walletsMutable.replaceBy(
+                        item = wallet.copy(
+                            totalSignedHashes = action.walletSignedHashes,
+                            remainingSignatures = action.remainingSignatures,
+                        ),
+                    ) { it.index == wallet.index }
+                },
+            )
             globalState.copy(scanResponse = globalState.scanResponse.copy(card = newCardInstance))
         }
         is GlobalAction.SetFeedbackManager -> {
@@ -74,7 +81,7 @@ fun globalReducer(action: Action, state: AppState): GlobalState {
         is GlobalAction.SetIfCardVerifiedOnline ->
             globalState.copy(cardVerifiedOnline = action.verified)
         is GlobalAction.FetchUserCountry.Success -> globalState.copy(
-            userCountryCode = action.countryCode
+            userCountryCode = action.countryCode,
         )
         else -> globalState
     }
