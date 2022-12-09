@@ -1,6 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="wallet_connect_error_failed_to_connect">Failed to establish WalletConnect session</string>
-    <string name="details_row_title_create_backup">Link More Cards</string>
-    <string name="common_cancel">Annulla</string>
-</resources>
