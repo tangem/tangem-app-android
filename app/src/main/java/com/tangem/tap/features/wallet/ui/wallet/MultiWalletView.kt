@@ -3,14 +3,13 @@ package com.tangem.tap.features.wallet.ui.wallet
 import android.widget.Button
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.tangem.common.card.Card
+import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.TapWorkarounds.isTestCard
-import com.tangem.tap.common.extensions.animateVisibility
-import com.tangem.tap.common.extensions.formatAmountAsSpannedString
-import com.tangem.tap.common.extensions.getQuantityString
-import com.tangem.tap.common.extensions.hide
-import com.tangem.tap.common.extensions.show
+import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.MainScreen
+import com.tangem.tap.common.analytics.events.Portfolio
+import com.tangem.tap.common.extensions.*
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.tokens.CurrenciesRepository
@@ -51,8 +50,8 @@ class MultiWalletView : WalletView() {
 
     private fun setupWalletCardNumber(binding: FragmentWalletBinding) = with(binding) {
         val card = store.state.globalState.scanResponse?.card
-        if (card?.backupStatus is Card.BackupStatus.Active) {
-            val cardCount = (card.backupStatus as Card.BackupStatus.Active).cardCount + 1
+        if (card?.backupStatus is CardDTO.BackupStatus.Active) {
+            val cardCount = (card.backupStatus as CardDTO.BackupStatus.Active).cardCount + 1
             tvTwinCardNumber.show()
             tvTwinCardNumber.text = tvTwinCardNumber.getQuantityString(R.plurals.card_label_card_count, cardCount)
         } else {
@@ -70,21 +69,23 @@ class MultiWalletView : WalletView() {
         walletsAdapter.setHasStableIds(true)
         binding?.rvMultiwallet?.layoutManager = LinearLayoutManager(fragment.requireContext())
         binding?.rvMultiwallet?.adapter = walletsAdapter
+        binding?.rvMultiwallet?.itemAnimator = null
     }
 
     override fun onNewState(state: WalletState) {
         val fragment = fragment ?: return
         val binding = binding ?: return
 
-        handleTotalBalance(binding, state.totalBalance)
+        handleTotalBalance(binding, state.totalBalance, state.state)
         handleBackupWarning(binding, state.showBackupWarning)
         handleRescanWarning(binding, state.missingDerivations.isNotEmpty())
-        walletsAdapter.submitList(state.walletsData, state.primaryBlockchain, state.primaryToken)
+        walletsAdapter.submitList(state.walletsData)
 
         binding.pbLoadingUserTokens.show(state.loadingUserTokens)
 
         binding.btnAddToken.setOnClickListener {
             val card = store.state.globalState.scanResponse!!.card
+            Analytics.send(Portfolio.ButtonManageTokens())
             store.dispatch(
                 TokensAction.LoadCurrencies(
                     supportedBlockchains = CurrenciesRepository.getBlockchains(
@@ -112,6 +113,7 @@ class MultiWalletView : WalletView() {
     ) = with(binding.lWalletBackupWarning) {
         root.isVisible = showBackupWarning
         root.setOnClickListener {
+            Analytics.send(MainScreen.NoticeBackupYourWalletTapped())
             store.dispatch(WalletAction.MultiWallet.BackupWallet)
         }
     }
@@ -122,6 +124,7 @@ class MultiWalletView : WalletView() {
     ) = with(binding.lWalletRescanWarning) {
         root.isVisible = showRescanWarning
         root.setOnClickListener {
+            Analytics.send(MainScreen.NoticeScanYourCardTapped())
             store.dispatch(WalletAction.MultiWallet.ScanToGetDerivations)
         }
     }
@@ -129,11 +132,14 @@ class MultiWalletView : WalletView() {
     private fun handleTotalBalance(
         binding: FragmentWalletBinding,
         totalBalance: TotalBalance?,
+        progressState: ProgressState,
     ) = with(binding.lCardTotalBalance) {
         root.isVisible = totalBalance != null
         if (totalBalance != null) {
             // Skip changes when on refreshing state
-            if (totalBalance.state == ProgressState.Refreshing) return@with
+            if (totalBalance.state == ProgressState.Refreshing ||
+                progressState == ProgressState.Refreshing
+            ) return@with
 
             if (totalBalance.state == ProgressState.Loading) {
                 veilBalance.veil()
