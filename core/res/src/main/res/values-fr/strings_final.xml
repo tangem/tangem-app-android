@@ -113,6 +113,11 @@
     <string name="welcome_unlock">Log in with %s</string>
     <string name="welcome_unlock_card">Scannez la carte</string>
     <string name="onboarding_navbar_save_wallet">Save your Wallet</string>
+    <string name="save_user_wallet_agreement_header">Would you like to use %s?</string>
+    <string name="save_user_wallet_agreement_access_title">Access the app</string>
+    <string name="save_user_wallet_agreement_access_description">Log into the app and check your balance without scanning the card</string>
+    <string name="save_user_wallet_agreement_code_title">Access code</string>
+    <string name="save_user_wallet_agreement_code_description">%s will be requested instead of the access code for interactions with your wallet</string>
     <string name="save_user_wallet_agreement_notice">Note that making a transaction with your funds will still require your card</string>
     <string name="save_user_wallet_agreement_allow">Allow to use %s</string>
     <string name="save_user_wallet_agreement_new_feature">New feature</string>
