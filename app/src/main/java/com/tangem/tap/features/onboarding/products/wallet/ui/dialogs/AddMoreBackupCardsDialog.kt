@@ -11,7 +11,7 @@ class AddMoreBackupCardsDialog {
     companion object {
         fun create(context: Context): AlertDialog {
             return AlertDialog.Builder(context).apply {
-                setTitle(R.string.alert_title)
+                setTitle(R.string.common_warning)
                 setMessage(R.string.onboarding_alert_message_not_max_backup_cards_added)
                 setPositiveButton(R.string.common_continue) { _, _ ->
                     store.dispatch(BackupAction.ShowAccessCodeInfoScreen)
