@@ -79,7 +79,7 @@ class SaltPayActivationManager(
         }
     }
 
-    suspend fun requestAttestationChallenge(): Result<com.tangem.datasource.api.paymentology.AttestationResponse> {
+    suspend fun requestAttestationChallenge(): Result<AttestationResponse> {
         return paymentologyService.requestAttestationChallenge(cardId, cardPublicKey)
             .successOr { return it }
             .tryExtractError()
@@ -94,8 +94,8 @@ class SaltPayActivationManager(
     suspend fun registerWallet(
         attestResponse: AttestWalletKeyResponse,
         pinCode: String,
-    ): Result<com.tangem.datasource.api.paymentology.RegisterWalletResponse> {
-        val request = com.tangem.datasource.api.paymentology.RegisterWalletRequest(
+    ): Result<RegisterWalletResponse> {
+        val request = RegisterWalletRequest(
             cardId = cardId,
             publicKey = cardPublicKey,
             walletPublicKey = walletPublicKey,
@@ -152,8 +152,8 @@ class SaltPayActivationManager(
         )
     }
 
-    private fun makeRegisterKYCRequest(): com.tangem.datasource.api.paymentology.RegisterKYCRequest =
-        com.tangem.datasource.api.paymentology.RegisterKYCRequest(
+    private fun makeRegisterKYCRequest(): RegisterKYCRequest =
+        RegisterKYCRequest(
             cardId = cardId,
             publicKey = cardPublicKey,
             kycProvider = "UTORG",
