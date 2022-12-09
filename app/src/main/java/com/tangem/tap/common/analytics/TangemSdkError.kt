@@ -74,7 +74,7 @@ object TangemSdk {
             is TangemSdkError.UnsupportedWalletConfig -> TangemSdkError.UnsupportedWalletConfig()
             is TangemSdkError.CryptoUtilsError -> TangemSdkError.CryptoUtilsError(error.customMessage)
             is TangemSdkError.NetworkError -> TangemSdkError.NetworkError(error.customMessage)
-            is TangemSdkError.ExceptionError -> TangemSdkError.ExceptionError(error.throwable)
+            is TangemSdkError.ExceptionError -> TangemSdkError.ExceptionError(error.cause)
             is TangemSdkError.TooMuchBackupCards -> TangemSdkError.TooMuchBackupCards()
             is TangemSdkError.BackupCardRequired -> TangemSdkError.BackupCardRequired()
             is TangemSdkError.CertificateSignatureRequired -> TangemSdkError.CertificateSignatureRequired()
@@ -107,6 +107,8 @@ object TangemSdk {
             is TangemSdkError.BackupFailedFirmware -> TangemSdkError.BackupFailedFirmware()
             is TangemSdkError.UserForgotTheCode -> TangemSdkError.UserForgotTheCode()
             is TangemSdkError.BackupFailedIncompatibleBatch -> TangemSdkError.BackupFailedIncompatibleBatch()
+            is TangemSdkError.BiometricsUnavailable -> error
+            is TangemSdkError.BiometricsAuthenticationFailed -> error
         }
     }
 
