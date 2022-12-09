@@ -5,12 +5,15 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.tap.common.analytics.AnalyticsAnOld
 import com.tangem.tap.common.analytics.AnalyticsParamAnOld
+import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.domain.extensions.getUserWalletId
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.onboarding.products.twins.redux.CreateTwinWalletMode
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
@@ -18,6 +21,7 @@ import com.tangem.tap.features.wallet.models.hasSendableAmountsOrPendingTransact
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
+import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -78,7 +82,18 @@ class DetailsMiddleware {
                     when (val result = tangemSdkManager.scanCard()) {
                         is CompletionResult.Success -> {
                             val card = result.data
-                            store.dispatchOnMain(DetailsAction.PrepareCardSettingsData(card))
+                            if (card.getUserWalletId() ==
+                                store.state.globalState.scanResponse?.card?.getUserWalletId()
+                            ) {
+                                store.dispatchOnMain(DetailsAction.PrepareCardSettingsData(card))
+                            } else {
+                                store.dispatchDialogShow(
+                                    AppDialog.SimpleOkDialogRes(
+                                        headerId = R.string.common_warning,
+                                        messageId = R.string.error_wrong_wallet_tapped,
+                                    ),
+                                )
+                            }
                         }
                         is CompletionResult.Failure -> {
                         }
@@ -110,7 +125,7 @@ class DetailsMiddleware {
                                 }
                                 is CompletionResult.Failure -> {
                                     (result.error as? TangemSdkError)?.let { error ->
-                                        store.state.globalState.analyticsHandler?.handleCardSdkErrorEvent(
+                                        store.state.globalState.analyticsHandler.handleCardSdkErrorEvent(
                                             error,
                                             AnalyticsAnOld.ActionToLog.PurgeWallet,
                                             card = store.state.detailsState.scanResponse?.card,
@@ -154,7 +169,7 @@ class DetailsMiddleware {
                                 }
                                 is CompletionResult.Failure -> {
                                     (result.error as? TangemSdkError)?.let { error ->
-                                        store.state.globalState.analyticsHandler?.handleCardSdkErrorEvent(
+                                        store.state.globalState.analyticsHandler.handleCardSdkErrorEvent(
                                             error = error,
                                             action = AnalyticsAnOld.ActionToLog.ChangeSecOptions,
                                             params = mapOf(
