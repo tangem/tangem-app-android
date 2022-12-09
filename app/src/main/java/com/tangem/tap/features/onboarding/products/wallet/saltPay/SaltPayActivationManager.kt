@@ -11,6 +11,7 @@ import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.isZero
 import com.tangem.common.services.Result
 import com.tangem.domain.common.extensions.successOr
+import com.tangem.domain.common.util.UserWalletId
 import com.tangem.network.api.paymentology.AttestationResponse
 import com.tangem.network.api.paymentology.PaymentologyApiService
 import com.tangem.network.api.paymentology.RegisterKYCRequest
@@ -20,7 +21,6 @@ import com.tangem.network.api.paymentology.RegistrationResponse
 import com.tangem.network.api.paymentology.tryExtractError
 import com.tangem.operations.attestation.AttestWalletKeyResponse
 import com.tangem.tap.common.extensions.safeUpdate
-import com.tangem.tap.domain.extensions.UserWalletId
 import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.message.SaltPayActivationError
 import java.math.BigDecimal
@@ -123,7 +123,7 @@ class SaltPayActivationManager(
     }
 
     suspend fun claim(amountToClaim: BigDecimal, signer: TransactionSigner): Result<Unit> {
-        val result = gnosisRegistrator.transferFrom(amountToClaim, signer).successOr {
+        gnosisRegistrator.transferFrom(amountToClaim, signer).successOr {
             return Result.Failure(SaltPayActivationError.ClaimTransactionFailed)
         }
         return Result.Success(Unit)

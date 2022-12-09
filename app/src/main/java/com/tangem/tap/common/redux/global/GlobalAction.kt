@@ -5,7 +5,6 @@ import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemError
 import com.tangem.domain.common.ScanResponse
-import com.tangem.tap.common.analytics.GlobalAnalyticsEventHandler
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.feedback.FeedbackData
 import com.tangem.tap.common.feedback.FeedbackManager
@@ -29,9 +28,6 @@ sealed class GlobalAction : Action {
     data class ShowToastNotification(override val messageResource: Int) : GlobalAction(), ToastNotificationAction
     data class ShowErrorNotification(override val error: TapError) : GlobalAction(), ErrorAction
     data class DebugShowErrorNotification(override val error: TapError) : GlobalAction(), DebugErrorAction
-
-    // android resources
-    data class SetResources(val resources: AndroidResources) : GlobalAction()
 
     // dialogs
     data class ShowDialog(val stateDialog: StateDialog) : GlobalAction()
@@ -89,7 +85,6 @@ sealed class GlobalAction : Action {
     data class SetConfigManager(val configManager: ConfigManager) : GlobalAction()
     data class SetWarningManager(val warningManager: WarningMessagesManager) : GlobalAction()
     data class SetFeedbackManager(val feedbackManager: FeedbackManager) : GlobalAction()
-    data class SetGlobalAnalyticsHandler(val analyticsHandler: GlobalAnalyticsEventHandler) : GlobalAction()
 
     data class SendEmail(val feedbackData: FeedbackData) : GlobalAction()
     data class OpenChat(val feedbackData: FeedbackData, val zendeskConfig: ZendeskConfig? = null) : GlobalAction()
