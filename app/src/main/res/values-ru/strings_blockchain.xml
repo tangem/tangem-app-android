@@ -17,4 +17,6 @@
     <string name="xtz_withdrawal_message_ignore">Нет, отправить все</string>
     <string name="send_error_minimum_balance_format">Минимальный баланс: %s</string>
     <string name="no_account_polkadot">Аккаунт получателя не активирован. Отправьте %s или более для активации аккаунта.</string>
+    <string name="address_type_default" translatable="false">По умолчанию</string>
+    <string name="address_type_legacy" translatable="false">Устаревший</string>
 </resources>
