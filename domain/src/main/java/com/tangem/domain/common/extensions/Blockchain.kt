@@ -44,8 +44,7 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
         "polkadot" -> Blockchain.Polkadot
         "polkadot/test" -> Blockchain.PolkadotTestnet
         "kusama" -> Blockchain.Kusama
-        // "optimistic-ethereum" -> Blockchain.Optimism
-        "optimistic-ethereum" -> null //TODO: Optimism is disabled until next release
+        "optimistic-ethereum" -> Blockchain.Optimism
         "optimistic-ethereum/test" -> Blockchain.OptimismTestnet
         "dash" -> Blockchain.Dash
         "sxdai" -> Blockchain.SaltPay
@@ -144,6 +143,5 @@ fun Blockchain.isSupportedInApp(): Boolean {
 }
 
 private val excludedBlockchains = listOf(
-    Blockchain.Optimism, // TODO: remove when fee calculation is fixed
     Blockchain.SaltPay,
 )
