@@ -37,7 +37,7 @@ import com.tangem.domain.features.addCustomToken.TokenDerivationPathField
 import com.tangem.domain.features.addCustomToken.TokenField
 import com.tangem.domain.redux.DomainState
 import com.tangem.domain.redux.state.StringActionStateConverter
-import com.tangem.network.api.tangemTech.CoinsResponse
+import com.tangem.datasource.api.tangemTech.CoinsResponse
 import org.rekotlin.Action
 import org.rekotlin.StateType
 
