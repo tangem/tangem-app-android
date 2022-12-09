@@ -10,8 +10,10 @@ import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.model.builders.UserWalletBuilder
 import com.tangem.tap.domain.scanCard.ScanCardProcessor
+import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
+import com.tangem.tap.tangemSdkManager
 import com.tangem.tap.userWalletsListManager
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
@@ -48,6 +50,11 @@ internal class WelcomeMiddleware {
                 }
                 .doOnSuccess { selectedUserWallet ->
                     if (selectedUserWallet != null) {
+                        tangemSdkManager.setAccessCodeRequestPolicy(
+                            useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes &&
+                                selectedUserWallet.scanResponse.card.isAccessCodeSet,
+                        )
+
                         store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Wallet))
                         store.dispatchOnMain(WelcomeAction.ProceedWithBiometrics.Success)
                         store.onUserWalletSelected(selectedUserWallet)
@@ -65,6 +72,9 @@ internal class WelcomeMiddleware {
                     store.dispatchOnMain(WelcomeAction.ProceedWithCard.Error(error))
                 }
                 .doOnSuccess {
+                    tangemSdkManager.setAccessCodeRequestPolicy(
+                        useBiometricsForAccessCode = false,
+                    )
                     store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Wallet))
                     store.dispatchOnMain(WelcomeAction.ProceedWithCard.Success)
                     store.onUserWalletSelected(userWallet)
