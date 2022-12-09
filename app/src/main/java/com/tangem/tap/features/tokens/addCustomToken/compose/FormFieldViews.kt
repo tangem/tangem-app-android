@@ -6,14 +6,25 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
+import com.tangem.core.ui.components.SpacerH8
 import com.tangem.domain.common.form.Field
 import com.tangem.domain.features.addCustomToken.TokenBlockchainField
 import com.tangem.domain.features.addCustomToken.TokenDerivationPathField
 import com.tangem.domain.features.addCustomToken.TokenField
-import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction.*
+import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction.OnTokenContractAddressChanged
+import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction.OnTokenDecimalsChanged
+import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction.OnTokenDerivationPathChanged
+import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction.OnTokenNameChanged
+import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction.OnTokenNetworkChanged
+import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenAction.OnTokenSymbolChanged
 import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenState
 import com.tangem.domain.redux.domainStore
-import com.tangem.tap.common.compose.*
+import com.tangem.tap.common.compose.BlockchainSpinner
+import com.tangem.tap.common.compose.ClearButton
+import com.tangem.tap.common.compose.ClosePopupTrigger
+import com.tangem.tap.common.compose.OutlinedTextFieldWidget
+import com.tangem.tap.common.compose.PasteButton
+import com.tangem.tap.common.compose.TitleSubtitle
 import com.tangem.tap.common.extensions.getFromClipboard
 import com.tangem.wallet.R
 
