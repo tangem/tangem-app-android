@@ -3,10 +3,10 @@ package com.tangem.tap.domain.tokens
 import android.content.Context
 import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.common.services.Result
+import com.tangem.datasource.api.tangemTech.TangemTechService
+import com.tangem.datasource.api.tangemTech.UserTokensResponse
 import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.util.userWalletId
-import com.tangem.network.api.tangemTech.TangemTechService
-import com.tangem.network.api.tangemTech.UserTokensResponse
 import com.tangem.tap.common.AndroidFileReader
 import com.tangem.tap.domain.NoDataError
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
