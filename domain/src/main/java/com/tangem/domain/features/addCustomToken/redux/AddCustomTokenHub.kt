@@ -342,7 +342,7 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
 
     private suspend fun requestInfoAboutToken(
         contractAddress: String,
-    ): List<com.tangem.datasource.api.tangemTech.CoinsResponse.Coin> {
+    ): List<CoinsResponse.Coin> {
         val tangemTechServiceManager = requireNotNull(hubState.tangemTechServiceManager)
         dispatchOnMain(Screen.UpdateTokenFields(listOf(ContractAddress to ViewStates.TokenField(isLoading = true))))
 
@@ -432,8 +432,8 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
     )
 
     private suspend fun fillTokenFields(
-        token: com.tangem.datasource.api.tangemTech.CoinsResponse.Coin,
-        coinNetwork: com.tangem.datasource.api.tangemTech.CoinsResponse.Coin.Network,
+        token: CoinsResponse.Coin,
+        coinNetwork: CoinsResponse.Coin.Network,
     ) {
         val blockchain = Blockchain.fromNetworkId(coinNetwork.networkId) ?: Blockchain.Unknown
         Network.setFieldValue(Field.Data(blockchain, false))
