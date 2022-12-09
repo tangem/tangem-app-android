@@ -55,4 +55,6 @@ dependencies {
     /** Other libraries */
     implementation(Library.accompanistSystemUiController)
     implementation(Library.materialComponent)
+
+    implementation(project(":core:res"))
 }
