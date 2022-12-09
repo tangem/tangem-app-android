@@ -1,6 +1,0 @@
-<resources>
-    <plurals name="card_label_card_count">
-        <item quantity="one">%d card</item>
-        <item quantity="other">%d cards</item>
-    </plurals>
-</resources>
