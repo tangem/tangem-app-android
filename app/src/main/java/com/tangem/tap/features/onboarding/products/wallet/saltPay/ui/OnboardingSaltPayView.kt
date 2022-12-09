@@ -250,7 +250,7 @@ internal class OnboardingSaltPayView(
     }
 
     private fun handleClaim(state: OnboardingSaltPayState) = with(walletFragment.bindingSaltPay) {
-        toolbar.title = getText(R.string.onboarding_navbar_claim)
+        toolbar.title = getText(R.string.onboarding_getting_started)
         val btnMain = actionContainer.btnContainer.findViewById<MaterialButton>(R.id.btn_main_action)
         val tvHeader = actionContainer.tvHeader
         val tvBody = actionContainer.tvBody
