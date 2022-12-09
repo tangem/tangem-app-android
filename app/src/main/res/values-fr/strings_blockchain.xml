@@ -8,7 +8,6 @@
     <string name="send_error_no_target_account">Le compte cible n\'a pas été créé. Le montant à envoyer doit être de %s + commissions ou plus</string>
     <string name="common_fee_error">Échec de réception des commissions</string>
     <string name="send_error_unknown">Erreur inconnue</string>
-    <string name="send_validation_invalid_address">Adresse incorrecte</string>
     <string name="send_validation_invalid_amount">Somme incorrecte</string>
     <string name="send_validation_amount_exceeds_balance">Le montant dépasse le solde</string>
     <string name="send_validation_invalid_total">Le total dépasse le solde</string>
