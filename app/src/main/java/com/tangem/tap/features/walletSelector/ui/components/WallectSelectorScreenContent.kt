@@ -81,7 +81,10 @@ internal fun WalletSelectorScreenContent(
                     modifier = Modifier
                         .padding(horizontal = TangemTheme.dimens.spacing16)
                         .fillMaxWidth(),
-                    text = stringResource(R.string.user_wallet_list_unlock_all_face_id),
+                    text = stringResource(
+                        id = R.string.user_wallet_list_unlock_all,
+                        stringResource(id = R.string.common_biometrics),
+                    ),
                     showProgress = state.showUnlockProgress,
                     onClick = onUnlockClick,
                 )

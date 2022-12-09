@@ -3,18 +3,14 @@
 
     <string name="common_save_changes">Sauvegarder les modifications</string>
     <string name="common_warning">Alerte</string>
-    <string name="common_retry">Réessayer</string>
     <string name="common_done">Exécuté</string>
-    <string name="common_cancel">Annuler</string>
     <string name="common_accept">J\'accepte</string>
     <string name="common_delete">Supprimer</string>
 
     <string name="common_camera_denied_alert_message">Vous n\'avez pas octroyé l\'accès à votre caméra, veuillez modifier vos paramètres de confidentialité</string>
-    <string name="welcome_unlock_card">Scannez la carte</string>
     <string name="wallet_button_send">Envoyer</string>
     <string name="wallet_button_create_wallet">Créer un portefeuille</string>
     <string name="wallet_title">Tangem</string>
-    <string name="main_tokens">Jetons d\'authentification</string>
     <string name="wallet_balance_verified">Solde confirmé</string>
     <string name="wallet_balance_loading">Solde est en cours de téléchargement …</string>
     <string name="wallet_error_no_account">Compte n\'est pas créé</string>
@@ -50,7 +46,6 @@
     <string name="send_fee_include_description">Inclure les commissions</string>
     <string name="send_total_subtitle_format">Sera envoyé %s</string>
     <string name="send_total_subtitle_asset_format">Sera envoyé %s et %s</string>
-    <string name="common_balance">Solde : %s</string>
     <string name="send_transaction_success">La transaction a été signée avec succès et envoyée au nœud de blockchain. Le solde du portefeuille sera mis à jour après un certain temps</string>
     <string name="details_title">Référénces</string>
     <string name="details_row_title_cid">ID de la carte</string>
