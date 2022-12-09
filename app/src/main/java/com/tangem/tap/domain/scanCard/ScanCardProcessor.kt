@@ -43,7 +43,6 @@ import kotlinx.coroutines.launch
 // [REDACTED_TODO_COMMENT]
 object ScanCardProcessor {
     suspend fun scan(
-        useBiometricsForAccessCode: Boolean = false,
         additionalBlockchainsToDerive: Collection<Blockchain>? = null,
         cardId: String? = null,
         onProgressStateChange: suspend (showProgress: Boolean) -> Unit = {},
@@ -61,7 +60,6 @@ object ScanCardProcessor {
             userTokensRepository = userTokensRepository,
             cardId = cardId,
             additionalBlockchainsToDerive = additionalBlockchainsToDerive,
-            useBiometricsForAccessCode = useBiometricsForAccessCode,
         )
 
         store.dispatchOnMain(GlobalAction.ScanFailsCounter.ChooseBehavior(result))
