@@ -2,18 +2,14 @@
 <resources>
     <string name="common_save_changes">Änderungen speichern</string>
     <string name="common_warning">Warnung</string>
-    <string name="common_retry">Erneut versuchen</string>
     <string name="common_done">Erledigt</string>
-    <string name="common_cancel">Abbrechen</string>
     <string name="common_accept">Akzeptieren</string>
     <string name="common_delete">Entfernen</string>
 
     <string name="common_camera_denied_alert_message">Sie haben keinen Zugang zur Kamera erteilt, bitte passen Sie Ihre Datenschutzeinstellungen an</string>
-    <string name="welcome_unlock_card">Karte scannen</string>
     <string name="wallet_button_send">Absenden</string>
     <string name="wallet_button_create_wallet">ein Wallet erstellen</string>
     <string name="wallet_title">Tangem</string>
-    <string name="main_tokens">Tokens</string>
     <string name="wallet_balance_verified">Verifizierte Bilanz</string>
     <string name="wallet_balance_loading">Die Bilanz wird aufgeladen…</string>
     <string name="wallet_error_no_account">Das Konto ist nicht erstellt</string>
@@ -49,7 +45,6 @@
     <string name="send_fee_include_description">inkl. Gebühr</string>
     <string name="send_total_subtitle_format">%s wird gesendet</string>
     <string name="send_total_subtitle_asset_format">%s und %s werden gesendet</string>
-    <string name="common_balance">Bilanz: %s</string>
     <string name="send_transaction_success">Die Transaktion wurde erfolgreich signiert und an den Blockchain-Knoten gesendet. Die Walletbilanz wird aktualisiert</string>
     <string name="details_title">Details</string>
     <string name="details_row_title_cid">KartenID</string>
