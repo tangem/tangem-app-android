@@ -13,16 +13,17 @@ import coil.load
 import com.tangem.Message
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.VoidCallback
+import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TwinCardNumber
 import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.LeapfrogWidget
 import com.tangem.tap.common.AndroidAssetReader
+import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.beginDelayedTransition
 import com.tangem.tap.common.extensions.getDrawableCompat
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.extensions.stripZeroPlainString
-import com.tangem.tap.common.redux.navigation.AppScreen
-import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.common.redux.navigation.ShareElement
 import com.tangem.tap.common.toggleWidget.RefreshBalanceWidget
 import com.tangem.tap.common.transitions.InternalNoteLayoutTransition
@@ -41,7 +42,7 @@ import com.tangem.wallet.databinding.LayoutOnboardingContainerTopBinding
 class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
 
     private val mainBinding by lazy { binding.vMain }
-    private var previousStep = TwinCardsStep.None
+    private var previousStep: TwinCardsStep = TwinCardsStep.None
 
     private lateinit var twinsWidget: TwinsCardWidget
     private lateinit var btnRefreshBalanceWidget: RefreshBalanceWidget
@@ -125,7 +126,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
         pbBinding.pbState.progress = state.progress
 
         when (state.currentStep) {
-            TwinCardsStep.WelcomeOnly -> setupWelcomeOnlyState(state)
+            is TwinCardsStep.WelcomeOnly -> setupWelcomeOnlyState(state, state.currentStep.scanResponse)
             TwinCardsStep.Welcome -> setupWelcomeState(state)
             TwinCardsStep.Warning -> setupWarningState(state)
             TwinCardsStep.CreateFirstWallet -> setupCreateFirstWalletState(state)
@@ -155,9 +156,9 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
         }
     }
 
-    private fun setupWelcomeOnlyState(state: TwinCardsState) {
+    private fun setupWelcomeOnlyState(state: TwinCardsState, scanResponse: ScanResponse) {
         setupWelcomeState(state) {
-            store.dispatch(NavigationAction.NavigateTo(AppScreen.Wallet))
+            store.dispatch(TwinCardsAction.SaveScannedTwinCardAndNavigateToWallet(scanResponse))
             store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.None))
         }
     }
@@ -238,6 +239,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
 
         btnMainAction.text = getString(R.string.twins_recreate_button_format, twinIndexNumber)
         btnMainAction.setOnClickListener {
+            Analytics.send(Onboarding.CreateWallet.ButtonCreateWallet())
             store.dispatch(
                 TwinCardsAction.Wallet.LaunchFirstStep(
                     Message(getString(R.string.twins_recreate_title_format, twinIndexNumber)),
@@ -349,7 +351,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
     }
 
     private fun setupDoneState(state: TwinCardsState) = with(mainBinding.onboardingActionContainer) {
-        btnMainAction.setText(R.string.onboarding_done_button_continue)
+        btnMainAction.setText(R.string.common_continue)
         btnMainAction.setOnClickListener {
             store.dispatch(TwinCardsAction.Confetti.Hide)
             store.dispatch(TwinCardsAction.Done)
