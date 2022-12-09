@@ -11,9 +11,9 @@ import com.tangem.blockchain.common.BlockchainSdkConfig
 import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.common.json.MoshiJsonConverter
+import com.tangem.datasource.api.common.MoshiConverter
 import com.tangem.domain.DomainLayer
 import com.tangem.domain.common.LogConfig
-import com.tangem.network.common.MoshiConverter
 import com.tangem.tap.common.AndroidAssetReader
 import com.tangem.tap.common.AssetReader
 import com.tangem.tap.common.analytics.Analytics
@@ -156,6 +156,7 @@ class TapApplication : Application(), ImageLoaderFactory {
         appStateHolder.userTokensRepository = userTokensRepository
     }
 
+    //todo refactor: move to datasource and provide via DI
     private fun initMoshiConverter() {
         fun appAdapters(): List<Any> = listOf(
             BigDecimalAdapter(),
