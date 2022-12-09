@@ -5,7 +5,7 @@ import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.extensions.toCoinId
 import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.features.addCustomToken.CustomCurrency
-import com.tangem.network.api.tangemTech.TokenResponse
+import com.tangem.datasource.api.tangemTech.TokenResponse
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
