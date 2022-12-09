@@ -68,7 +68,7 @@ class WalletBackupAnimator(
         when (backupCardsCounts) {
             0 -> {
                 when (currentStep) {
-                    STEP_CREATE_WALLET -> {
+                    UNDEFINED, STEP_CREATE_WALLET -> {
                         cardsWidget.toFolded(false) { cardsWidget.toFan() }
 
                         FIRST_BACKUP.animateAlpha(0.6f, 0)
