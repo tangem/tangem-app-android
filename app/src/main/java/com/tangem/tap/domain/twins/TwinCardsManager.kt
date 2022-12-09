@@ -85,7 +85,7 @@ class TwinCardsManager(
         }
 
         private fun getAdapter(): JsonAdapter<List<Issuer>> {
-            return com.tangem.datasource.api.common.MoshiConverter.defaultMoshi().adapter(
+            return MoshiConverter.defaultMoshi().adapter(
                 Types.newParameterizedType(List::class.java, Issuer::class.java),
             )
         }
