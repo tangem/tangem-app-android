@@ -1,7 +1,6 @@
 package com.tangem.tap.features.details.ui.resetcard
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -64,7 +63,7 @@ fun ResetCardView(
                 contentDescription = "",
                 modifier = modifier.offset(y = (-82).dp),
             )
-            ScreenTitle(titleRes = R.string.reset_card_to_factory_navigation_title)
+            ScreenTitle(titleRes = R.string.card_settings_reset_card_to_factory)
         }
         Spacer(
             modifier = modifier.weight(1f),
