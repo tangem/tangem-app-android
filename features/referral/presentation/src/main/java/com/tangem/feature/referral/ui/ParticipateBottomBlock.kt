@@ -13,12 +13,14 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
@@ -30,6 +32,7 @@ import com.tangem.core.ui.res.TextColorType
 import com.tangem.core.ui.res.textColor
 import com.tangem.feature.referral.presentation.R
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 internal fun ParticipateBottomBlock(
     purchasedWalletCount: Int,
@@ -49,9 +52,10 @@ internal fun ParticipateBottomBlock(
     ) {
         SmallInfoCard(
             startText = stringResource(id = R.string.referral_friends_bought_title),
-            endText = String.format(
-                stringResource(id = R.string.referral_wallets_purchased_count),
-                purchasedWalletCount,
+            endText = pluralStringResource(
+                id = R.plurals.referral_wallets_purchased_count,
+                count = purchasedWalletCount,
+                purchasedWalletCount
             ),
         )
         PersonalCodeCard(code = code)
