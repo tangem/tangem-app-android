@@ -48,7 +48,7 @@ data class AddCustomTokenState(
     val form: Form = Form(listOf()),
     val formValidators: Map<CustomTokenFieldId, CustomTokenValidator<out Any>> = createFormValidators(),
     val formErrors: Map<CustomTokenFieldId, AddCustomTokenError> = emptyMap(),
-    val foundToken: com.tangem.datasource.api.tangemTech.CoinsResponse.Coin? = null,
+    val foundToken: CoinsResponse.Coin? = null,
     val warnings: Set<AddCustomTokenError.Warning> = emptySet(),
     val screenState: ScreenState = createInitialScreenState(),
     val tangemTechServiceManager: AddCustomTokenService? = null,
