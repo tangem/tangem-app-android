@@ -7,8 +7,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -85,14 +84,15 @@ private fun WalletCardImage(
             .height(TangemTheme.dimens.size32)
             .clip(TangemTheme.shapes.roundedCornersSmall2)
 
-        val checkedColorFilter by rememberUpdatedState(
-            newValue = if (isChecked) {
+        val tintColor = TangemTheme.colors.icon.accent.copy(alpha = .6f)
+        val checkedColorFilter = remember(isChecked) {
+            if (isChecked) {
                 ColorFilter.tint(
-                    color = TangemTheme.colors.icon.accent.copy(alpha = .6f),
+                    color = tintColor,
                     blendMode = BlendMode.SrcOver,
                 )
-            } else null,
-        )
+            } else null
+        }
 
         SubcomposeAsyncImage(
             modifier = cardImageModifier,
@@ -106,22 +106,15 @@ private fun WalletCardImage(
             contentDescription = null,
         )
 
-        if (isSelected) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .size(TangemTheme.dimens.size18)
-                    .background(
-                        color = Color.White,
-                        shape = CircleShape,
-                    ),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    modifier = Modifier.padding(all = (0.5).dp),
-                    painter = painterResource(id = R.drawable.ic_check_circle_18),
-                    tint = TangemTheme.colors.icon.accent,
-                    contentDescription = null,
+        when {
+            isChecked -> {
+                CheckedWalletMark(
+                    modifier = Modifier.matchParentSize(),
+                )
+            }
+            isSelected -> {
+                SelectedWalletBadge(
+                    modifier = Modifier.align(Alignment.TopEnd),
                 )
             }
         }
@@ -306,6 +299,44 @@ private fun CardImageShimmer(
             modifier = Modifier
                 .matchParentSize()
                 .background(TangemTheme.colors.button.secondary),
+        )
+    }
+}
+
+@Composable
+private fun SelectedWalletBadge(
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .size(TangemTheme.dimens.size18)
+            .background(
+                color = Color.White,
+                shape = CircleShape,
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            modifier = Modifier.padding(all = (0.5).dp),
+            painter = painterResource(id = R.drawable.ic_check_circle_18),
+            tint = TangemTheme.colors.icon.accent,
+            contentDescription = null,
+        )
+    }
+}
+
+@Composable
+private fun CheckedWalletMark(
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier,
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            painter = painterResource(id = R.drawable.ic_check_24),
+            tint = TangemTheme.colors.icon.primary2,
+            contentDescription = null,
         )
     }
 }
