@@ -21,7 +21,7 @@ enum class SettingsElement(
     val titleRes: Int,
 ) {
     WalletConnect(R.drawable.ic_walletconnect, R.string.wallet_connect_title),
-    Chat(R.drawable.ic_chat, R.string.details_ask_a_question),
+    Chat(R.drawable.ic_chat, R.string.details_chat),
     SendFeedback(R.drawable.ic_comment, R.string.details_row_title_send_feedback),
     // ReferralProgram(R.drawable.ic_add_friends, R.string.details_referral_title),
     CardSettings(R.drawable.ic_card_settings, R.string.card_settings_title),
