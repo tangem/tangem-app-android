@@ -108,10 +108,10 @@ repositories {
 dependencies {
     implementation(fileTree(mapOf("dir" to "libs", "include" to listOf("*.aar"))))
     implementation(project(":domain"))
-    implementation(project(":network"))
     implementation(project(":common"))
     implementation(project(":core:res"))
     implementation(project(":core:ui"))
+    implementation(project(":core:datasource"))
     implementation(project(":core:utils"))
     implementation(project(":libs:crypto"))
     implementation(project(":libs:auth"))
@@ -120,6 +120,9 @@ dependencies {
     implementation(project(":features:referral:presentation"))
     implementation(project(":features:referral:domain"))
     implementation(project(":features:referral:data"))
+    implementation(project(":features:swap:presentation"))
+    implementation(project(":features:swap:domain"))
+    implementation(project(":features:swap:data"))
 
     /** AndroidX libraries */
     implementation(AndroidX.coreKtx)
