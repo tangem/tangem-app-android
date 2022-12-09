@@ -295,7 +295,7 @@ suspend fun SaltPayActivationManager.update(
 private fun determineStep(
     currentStep: SaltPayActivationStep,
     amountToClaim: Amount?,
-    response: com.tangem.datasource.api.paymentology.RegistrationResponse.Item,
+    response: RegistrationResponse.Item,
 ): SaltPayActivationStep {
     fun getStepBaseOnAmountToClaim(amount: Amount?): SaltPayActivationStep = when (amount) {
         null -> SaltPayActivationStep.Success
@@ -315,25 +315,25 @@ private fun determineStep(
         response.kycStatus != null -> {
             when (currentStep) {
                 SaltPayActivationStep.KycWaiting -> when (response.kycStatus) {
-                    com.tangem.datasource.api.paymentology.KYCStatus.NOT_STARTED, com.tangem.datasource.api.paymentology.KYCStatus.STARTED -> SaltPayActivationStep.KycIntro
-                    com.tangem.datasource.api.paymentology.KYCStatus.WAITING_FOR_APPROVAL -> SaltPayActivationStep.KycWaiting
-                    com.tangem.datasource.api.paymentology.KYCStatus.CORRECTION_REQUESTED, com.tangem.datasource.api.paymentology.KYCStatus.REJECTED -> SaltPayActivationStep.KycReject
-                    com.tangem.datasource.api.paymentology.KYCStatus.APPROVED -> getStepBaseOnAmountToClaim(amountToClaim)
+                    KYCStatus.NOT_STARTED, KYCStatus.STARTED -> SaltPayActivationStep.KycIntro
+                    KYCStatus.WAITING_FOR_APPROVAL -> SaltPayActivationStep.KycWaiting
+                    KYCStatus.CORRECTION_REQUESTED, KYCStatus.REJECTED -> SaltPayActivationStep.KycReject
+                    KYCStatus.APPROVED -> getStepBaseOnAmountToClaim(amountToClaim)
                     else -> SaltPayActivationStep.KycIntro
                 }
                 SaltPayActivationStep.KycReject -> when (response.kycStatus) {
-                    com.tangem.datasource.api.paymentology.KYCStatus.NOT_STARTED, com.tangem.datasource.api.paymentology.KYCStatus.STARTED -> SaltPayActivationStep.KycStart
-                    com.tangem.datasource.api.paymentology.KYCStatus.WAITING_FOR_APPROVAL -> SaltPayActivationStep.KycWaiting
-                    com.tangem.datasource.api.paymentology.KYCStatus.CORRECTION_REQUESTED -> SaltPayActivationStep.KycStart
-                    com.tangem.datasource.api.paymentology.KYCStatus.REJECTED -> SaltPayActivationStep.KycStart
-                    com.tangem.datasource.api.paymentology.KYCStatus.APPROVED -> getStepBaseOnAmountToClaim(amountToClaim)
+                    KYCStatus.NOT_STARTED, KYCStatus.STARTED -> SaltPayActivationStep.KycStart
+                    KYCStatus.WAITING_FOR_APPROVAL -> SaltPayActivationStep.KycWaiting
+                    KYCStatus.CORRECTION_REQUESTED -> SaltPayActivationStep.KycStart
+                    KYCStatus.REJECTED -> SaltPayActivationStep.KycStart
+                    KYCStatus.APPROVED -> getStepBaseOnAmountToClaim(amountToClaim)
                     else -> SaltPayActivationStep.KycIntro
                 }
                 else -> when (response.kycStatus) {
-                    com.tangem.datasource.api.paymentology.KYCStatus.NOT_STARTED, com.tangem.datasource.api.paymentology.KYCStatus.STARTED -> SaltPayActivationStep.KycIntro
-                    com.tangem.datasource.api.paymentology.KYCStatus.WAITING_FOR_APPROVAL -> SaltPayActivationStep.KycWaiting
-                    com.tangem.datasource.api.paymentology.KYCStatus.CORRECTION_REQUESTED, com.tangem.datasource.api.paymentology.KYCStatus.REJECTED -> SaltPayActivationStep.KycReject
-                    com.tangem.datasource.api.paymentology.KYCStatus.APPROVED -> getStepBaseOnAmountToClaim(amountToClaim)
+                    KYCStatus.NOT_STARTED, KYCStatus.STARTED -> SaltPayActivationStep.KycIntro
+                    KYCStatus.WAITING_FOR_APPROVAL -> SaltPayActivationStep.KycWaiting
+                    KYCStatus.CORRECTION_REQUESTED, KYCStatus.REJECTED -> SaltPayActivationStep.KycReject
+                    KYCStatus.APPROVED -> getStepBaseOnAmountToClaim(amountToClaim)
                     else -> SaltPayActivationStep.KycIntro
                 }
             }
@@ -413,7 +413,7 @@ private suspend fun checkGasIfNeeded(
 }
 
 @Throws(SaltPayActivationError::class)
-fun com.tangem.datasource.api.paymentology.RegistrationResponse.Item.toSaltPayStep(currentStep: SaltPayActivationStep): SaltPayActivationStep {
+fun RegistrationResponse.Item.toSaltPayStep(currentStep: SaltPayActivationStep): SaltPayActivationStep {
     return when {
         passed != true -> throw SaltPayActivationError.CardNotPassed(this.error)
         disabledByAdmin == true -> throw SaltPayActivationError.CardDisabled(this.error)
@@ -426,10 +426,10 @@ fun com.tangem.datasource.api.paymentology.RegistrationResponse.Item.toSaltPaySt
 
         kycStatus != null -> {
             when (kycStatus) {
-                com.tangem.datasource.api.paymentology.KYCStatus.NOT_STARTED, com.tangem.datasource.api.paymentology.KYCStatus.STARTED -> SaltPayActivationStep.KycIntro
-                com.tangem.datasource.api.paymentology.KYCStatus.WAITING_FOR_APPROVAL -> SaltPayActivationStep.KycWaiting
-                com.tangem.datasource.api.paymentology.KYCStatus.CORRECTION_REQUESTED, com.tangem.datasource.api.paymentology.KYCStatus.REJECTED -> SaltPayActivationStep.KycReject
-                com.tangem.datasource.api.paymentology.KYCStatus.APPROVED -> SaltPayActivationStep.Claim
+                KYCStatus.NOT_STARTED, KYCStatus.STARTED -> SaltPayActivationStep.KycIntro
+                KYCStatus.WAITING_FOR_APPROVAL -> SaltPayActivationStep.KycWaiting
+                KYCStatus.CORRECTION_REQUESTED, KYCStatus.REJECTED -> SaltPayActivationStep.KycReject
+                KYCStatus.APPROVED -> SaltPayActivationStep.Claim
                 null -> throw UnsupportedOperationException()
             }
         }
