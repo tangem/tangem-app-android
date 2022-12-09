@@ -6,19 +6,20 @@ import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.CompletionResult
-import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.isZero
 import com.tangem.common.services.Result
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.operations.attestation.Attestation
 import com.tangem.operations.attestation.OnlineCardVerifier
-import com.tangem.tap.common.analytics.AnalyticsAnOld
+import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.extensions.copyToClipboard
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchOpenUrl
 import com.tangem.tap.common.extensions.dispatchToastNotification
+import com.tangem.tap.common.extensions.isGreaterThan
 import com.tangem.tap.common.extensions.onCardScanned
 import com.tangem.tap.common.extensions.shareText
 import com.tangem.tap.common.extensions.stripZeroPlainString
@@ -29,6 +30,8 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.failedRates
 import com.tangem.tap.domain.loadedRates
+import com.tangem.tap.domain.model.WalletDataModel
+import com.tangem.tap.domain.model.WalletStoreModel
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.send.redux.PrepareSendScreen
@@ -47,7 +50,11 @@ import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
+import com.tangem.tap.totalFiatBalanceCalculator
+import com.tangem.tap.userWalletsListManager
+import com.tangem.tap.userWalletsListManagerSafe
 import com.tangem.wallet.R
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
@@ -189,15 +196,7 @@ class WalletMiddleware {
                                 globalState.scanResponse?.copy(card = result.data)
                             scanNoteResponse?.let { store.onCardScanned(scanNoteResponse) }
                         }
-                        is CompletionResult.Failure -> {
-                            (result.error as? TangemSdkError)?.let { error ->
-                                store.state.globalState.analyticsHandler.handleCardSdkErrorEvent(
-                                    error,
-                                    AnalyticsAnOld.ActionToLog.CreateWallet,
-                                    card = store.state.detailsState.scanResponse?.card,
-                                )
-                            }
-                        }
+                        is CompletionResult.Failure -> {}
                     }
                 }
             }
@@ -227,20 +226,34 @@ class WalletMiddleware {
                 }
             }
             is WalletAction.LoadData,
-            is WalletAction.LoadData.Refresh -> {
+            is WalletAction.LoadData.Refresh,
+            -> {
+                val selectedWallet = userWalletsListManager.selectedUserWalletSync
                 scope.launch {
-                    val scanNoteResponse = globalState.scanResponse ?: return@launch
-                    if (walletState.walletsData.isNotEmpty()) {
-                        globalState.tapWalletManager.reloadData(scanNoteResponse)
+                    if (selectedWallet != null) {
+                        globalState.tapWalletManager.loadData(
+                            userWallet = selectedWallet,
+                            refresh = action is WalletAction.LoadData.Refresh,
+                        )
                     } else {
-                        globalState.tapWalletManager.loadData(scanNoteResponse)
+                        val scanNoteResponse = globalState.scanResponse ?: return@launch
+                        if (walletState.walletsData.isNotEmpty()) {
+                            globalState.tapWalletManager.reloadData(scanNoteResponse)
+                        } else {
+                            globalState.tapWalletManager.loadData(scanNoteResponse)
+                        }
                     }
                 }
             }
             is NetworkStateChanged -> {
-                globalState.scanResponse?.let { scanNoteResponse ->
-                    store.dispatch(WalletAction.Warnings.CheckHashesCount.CheckHashesCountOnline)
-                    scope.launch { globalState.tapWalletManager.loadData(scanNoteResponse) }
+                store.dispatch(WalletAction.Warnings.CheckHashesCount.CheckHashesCountOnline)
+                val selectedUserWallet = userWalletsListManagerSafe?.selectedUserWalletSync
+                if (selectedUserWallet != null) scope.launch {
+                    globalState.tapWalletManager.loadData(selectedUserWallet)
+                } else {
+                    globalState.scanResponse?.let { scanNoteResponse ->
+                        scope.launch { globalState.tapWalletManager.loadData(scanNoteResponse) }
+                    }
                 }
             }
             is WalletAction.CopyAddress -> {
@@ -251,6 +264,7 @@ class WalletMiddleware {
                 action.context.shareText(action.address)
             }
             is WalletAction.ExploreAddress -> {
+                Analytics.send(Token.ButtonExplore())
                 store.dispatchOpenUrl(action.exploreUrl)
             }
             is WalletAction.Send -> {
@@ -262,7 +276,7 @@ class WalletMiddleware {
                 if (newAction is PrepareSendScreen && newAction.walletManager == null) {
                     store.dispatch(NavigationAction.PopBackTo(screen = AppScreen.Home))
                     FirebaseCrashlytics.getInstance().recordException(
-                        IllegalStateException("PrepareSendScreen: walletManager is null")
+                        IllegalStateException("PrepareSendScreen: walletManager is null"),
                     )
                     store.dispatchToastNotification(R.string.internal_error_wallet_manager_not_found)
                 } else {
@@ -271,6 +285,71 @@ class WalletMiddleware {
                         store.dispatch(NavigationAction.NavigateTo(AppScreen.Send))
                     }
                 }
+            }
+            is WalletAction.ShowSaveWalletIfNeeded -> {
+                showSaveWalletIfNeeded()
+            }
+            is WalletAction.ChangeWallet -> {
+                changeWallet()
+            }
+            is WalletAction.UserWalletChanged -> Unit
+            is WalletAction.WalletStoresChanged -> {
+                scope.launch(Dispatchers.Default) {
+                    fetchTotalFiatBalance(action.walletStores, walletState)
+                    findMissedDerivations(action.walletStores)
+                    tryToShowAppRatingWarning(action.walletStores)
+                }
+            }
+            is WalletAction.TotalFiatBalanceChanged -> Unit
+        }
+    }
+
+    private fun fetchTotalFiatBalance(walletStores: List<WalletStoreModel>, state: WalletState) {
+        scope.launch {
+            val totalFiatBalance = totalFiatBalanceCalculator.calculate(
+                prevAmount = state.totalBalance?.fiatAmount ?: BigDecimal.ZERO,
+                walletStores = walletStores,
+            )
+            store.dispatchOnMain(WalletAction.TotalFiatBalanceChanged(totalFiatBalance))
+        }
+    }
+
+    private fun findMissedDerivations(wallStores: List<WalletStoreModel>) {
+        scope.launch {
+            val missedDerivations = wallStores
+                .filter { store ->
+                    store.walletsData.any { it.status is WalletDataModel.MissedDerivation }
+                }
+                .map { it.blockchainNetwork }
+
+            store.dispatchOnMain(WalletAction.MultiWallet.AddMissingDerivations(missedDerivations))
+        }
+    }
+
+    private fun tryToShowAppRatingWarning(walletStores: List<WalletStoreModel>) {
+        warningsMiddleware.tryToShowAppRatingWarning(
+            hasNonZeroWallets = walletStores
+                .flatMap { it.walletsData }
+                .any { it.status.amount.isGreaterThan(BigDecimal.ZERO) },
+        )
+    }
+
+    private fun showSaveWalletIfNeeded() {
+        if (preferencesStorage.shouldShowSaveWallet
+            && tangemSdkManager.canUseBiometry
+            && store.state.navigationState.backStack.lastOrNull() == AppScreen.Wallet
+        ) {
+            store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.SaveWallet))
+        }
+    }
+
+    private fun changeWallet() {
+        when {
+            userWalletsListManager.hasSavedUserWallets -> {
+                store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.WalletSelector))
+            }
+            else -> {
+                store.dispatch(WalletAction.Scan)
             }
         }
     }
