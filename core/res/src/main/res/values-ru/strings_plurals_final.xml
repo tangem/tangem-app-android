@@ -12,4 +12,11 @@
         <item quantity="many">%d токенов</item>
         <item quantity="other">%d токенов</item>
     </plurals>
+
+    <plurals name="referral_wallets_purchased_count">
+        <item quantity="one">%d кошелек</item>
+        <item quantity="few">%d кошелька</item>
+        <item quantity="many">%d кошельков</item>
+        <item quantity="other">%d кошельков</item>
+    </plurals>
 </resources>
