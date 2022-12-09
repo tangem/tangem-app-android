@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="no_account_generic">Laden Sie %s+ %s auf um ein Konto zu erstellen</string>
+</resources>

@@ -1,6 +1,7 @@
 package com.tangem.tap.features.wallet.redux.models
 
 import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.redux.StateDialog
 import com.tangem.wallet.R
@@ -31,5 +32,7 @@ sealed interface WalletDialog : StateDialog {
         val titleRes: Int = R.string.token_details_unable_hide_alert_title
     }
 
-    data class RussianCardholdersWarningDialog(val topUpUrl: String?) : WalletDialog
+    data class RussianCardholdersWarningDialog(val data: Data?) : WalletDialog {
+        data class Data(val topUpUrl: String, val blockchain: Blockchain)
+    }
 }
