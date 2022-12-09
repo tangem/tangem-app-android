@@ -43,23 +43,6 @@
     //Manage tokens
 
     <string name="add_custom_token_title" translatable="false">Add Token</string>
-    <string name="custom_token_contract_address_input_title" translatable="false">Contract address</string>
-    <string name="custom_token_creation_error_required_field" translatable="false">Required field</string>
-    <string name="custom_token_creation_error_network_not_selected" translatable="false">Please select the network</string>
-    <string name="custom_token_creation_error_wrong_decimals" translatable="false">Decimal number must be a valid integer, no higher than %d</string>
-    <string name="custom_token_creation_error_invalid_contract_address" translatable="false">Contract address is invalid</string>
-    <string name="custom_token_creation_error_invalid_derivation_path" translatable="false">Derivation path is invalid</string>
-    <string name="custom_token_validation_error_not_found" translatable="false">Note that tokens can be created by anyone. Be aware of adding scam tokens, they can cost nothing.</string>
-    <string name="custom_token_validation_error_already_added" translatable="false">This token/network has already been added to your list</string>
-    <string name="custom_token_decimals_input_title" translatable="false">Decimals</string>
-    <string name="custom_token_network_input_title" translatable="false">Network</string>
-    <string name="custom_token_network_input_not_selected" translatable="false">Not selected</string>
-    <string name="custom_token_name_input_placeholder" translatable="false">E.g. USD Coin</string>
-    <string name="custom_token_name_input_title" translatable="false">Name</string>
-    <string name="custom_token_token_symbol_input_placeholder" translatable="false">E.g. USDC</string>
-    <string name="custom_token_token_symbol_input_title" translatable="false">Token symbol</string>
-    <string name="custom_token_derivation_path_input_title" translatable="false">BIP44 coin type</string>
-    <string name="custom_token_derivation_path_default" translatable="false">Default</string>
 
     //Details
 
@@ -73,7 +56,6 @@
     <string name="warning_signed_tx_previously" translatable="false">This card has signed transactions in the past</string>
     <string name="warning_button_learn_more" translatable="false">Learn more</string>
     <string name="alert_signed_hashes_message" translatable="false">This card is not a bearer note. We can\'t currently match the signature count on the card with the information on the blockchain. This is normal but in rare cases can mean a previous holder is holding back an offline signature, which is a security concern.\nDo not accept this card as physical payment from someone you don\'t trust.\nIt\'s perfectly safe in all other respects.\nTangem is the only hardware wallet to offer signature count protection.</string>
-    <string name="common_understand" translatable="false">I understand</string>
 
     <string name="warning_low_signatures_format" translatable="false">There are only %s signatures available on this card. You must withdraw all of your funds.</string>
 
@@ -129,7 +111,6 @@
 
     <string name="onboarding_done_header" translatable="false">Success!</string>
     <string name="onboarding_done_body" translatable="false">Your card is activated and ready to be used</string>
-    <string name="common_continue" translatable="false">Continue</string>
     <string name="onboarding_balance_title" translatable="false">Balance</string>
     <string name="address_qr_code_message_format" translatable="false">Send only %s (%s) to this address. Using other tokens and networks may result in loss of funds.</string>
     <string name="address_qr_code_message_token_format" translatable="false">Send only %s (%s) from %s network to this address. Using other tokens and networks may result in loss of funds.</string>

@@ -110,6 +110,7 @@ dependencies {
     implementation(project(":domain"))
     implementation(project(":network"))
     implementation(project(":common"))
+    implementation(project(":core:res"))
     implementation(project(":core:ui"))
     implementation(project(":core:utils"))
     implementation(project(":libs:crypto"))
