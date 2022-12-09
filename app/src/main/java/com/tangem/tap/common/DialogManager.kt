@@ -77,7 +77,7 @@ class DialogManager : StoreSubscriber<GlobalState> {
             is WalletConnectDialog.UnsupportedCard ->
                 SimpleAlertDialog.create(
                     titleRes = R.string.wallet_connect_title,
-                    messageRes = R.string.wallet_connect_scanner_error_no_ethereum_wallet,
+                    messageRes = R.string.wallet_connect_scanner_error_not_valid_card,
                     context = context,
                 )
             is WalletConnectDialog.AddNetwork ->
