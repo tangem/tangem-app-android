@@ -16,7 +16,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.tangem.tap.common.compose.SpacerS8
+import com.tangem.core.ui.components.SpacerS8
 import com.tangem.wallet.R
 
 @Composable
@@ -51,7 +51,7 @@ fun HomeButtons(
             },
             content = {
                 Text(
-                    text = stringResource(id = R.string.home_button_scan),
+                    text = stringResource(id = R.string.welcome_unlock_card),
                     fontWeight = FontWeight.Medium,
                     fontSize = 16.sp,
                     textAlign = TextAlign.Center,

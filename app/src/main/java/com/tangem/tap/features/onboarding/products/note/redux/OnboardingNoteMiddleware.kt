@@ -4,27 +4,29 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.guard
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
+import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.AnalyticsParam
+import com.tangem.tap.common.analytics.events.Onboarding
+import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchOpenUrl
 import com.tangem.tap.common.extensions.getAddressData
-import com.tangem.tap.common.extensions.getToUpUrl
-import com.tangem.tap.common.extensions.onCardScanned
+import com.tangem.tap.common.extensions.getTopUpUrl
 import com.tangem.tap.common.postUi
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
-import com.tangem.tap.common.redux.navigation.AppScreen
-import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.TapError
-import com.tangem.tap.domain.extensions.hasWallets
 import com.tangem.tap.domain.extensions.makePrimaryWalletManager
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
+import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.features.wallet.redux.models.WalletDialog
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
@@ -61,6 +63,11 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
     val noteState = store.state.onboardingNoteState
 
     when (action) {
+        is OnboardingNoteAction.Init -> {
+            if (!onboardingManager.isActivationStarted(card.cardId)) {
+                Analytics.send(Onboarding.Started())
+            }
+        }
         is OnboardingNoteAction.LoadCardArtwork -> {
             scope.launch {
                 val artworkUrl = onboardingManager.loadArtworkUrl()
@@ -69,7 +76,7 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
         }
         is OnboardingNoteAction.DetermineStepOfScreen -> {
             val step = when {
-                !card.hasWallets() -> OnboardingNoteStep.CreateWallet
+                card.wallets.isEmpty() -> OnboardingNoteStep.CreateWallet
                 noteState.walletBalance.balanceIsToppedUp() -> OnboardingNoteStep.Done
                 else -> OnboardingNoteStep.TopUpWallet
             }
@@ -77,10 +84,15 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
         }
         is OnboardingNoteAction.SetStepOfScreen -> {
             when (action.step) {
+                OnboardingNoteStep.CreateWallet -> {
+                    Analytics.send(Onboarding.CreateWallet.ScreenOpened())
+                }
                 OnboardingNoteStep.TopUpWallet -> {
+                    Analytics.send(Onboarding.Topup.ScreenOpened())
                     store.dispatch(OnboardingNoteAction.Balance.Update)
                 }
                 OnboardingNoteStep.Done -> {
+                    Analytics.send(Onboarding.Finished())
                     onboardingManager.activationFinished(card.cardId)
                     postUi(DELAY_SDK_DIALOG_CLOSE) { store.dispatch(OnboardingNoteAction.Confetti.Show) }
                 }
@@ -92,6 +104,7 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
                 withMainContext {
                     when (result) {
                         is CompletionResult.Success -> {
+                            Analytics.send(Onboarding.CreateWallet.WalletCreatedSuccessfully())
                             val updatedResponse = scanResponse.copy(card = result.data.card)
                             onboardingManager.scanResponse = updatedResponse
                             onboardingManager.activationStarted(updatedResponse.card.cardId)
@@ -150,23 +163,32 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
         is OnboardingNoteAction.ShowAddressInfoDialog -> {
             val addressData = noteState.walletManager?.getAddressData() ?: return
 
+            Analytics.send(Onboarding.Topup.ButtonShowWalletAddress())
             val appDialog = AppDialog.AddressInfoDialog(noteState.walletBalance.currency, addressData)
             store.dispatchDialogShow(appDialog)
         }
         is OnboardingNoteAction.TopUp -> {
-            val topUpUrl = noteState.walletManager?.getToUpUrl() ?: return
-            if (globalState.userCountryCode == RUSSIA_COUNTRY_CODE) {
-                store.dispatchOnMain(WalletAction.DialogAction.RussianCardholdersWarningDialog(topUpUrl))
+            val walletManager = noteState.walletManager.guard {
+                store.dispatchDebugErrorNotification("NPE: WalletManager")
                 return
             }
+
+            val topUpUrl = walletManager.getTopUpUrl() ?: return
+            val blockchain = walletManager.wallet.blockchain
+            if (globalState.userCountryCode == RUSSIA_COUNTRY_CODE) {
+                val dialogData = WalletDialog.RussianCardholdersWarningDialog.Data(topUpUrl, blockchain)
+                store.dispatchOnMain(WalletAction.DialogAction.RussianCardholdersWarningDialog(dialogData))
+                return
+            }
+
+            val currencyType = AnalyticsParam.CurrencyType.Blockchain(blockchain)
+            Analytics.send(Onboarding.Topup.ButtonBuyCrypto(currencyType))
+
             store.dispatchOpenUrl(topUpUrl)
         }
         OnboardingNoteAction.Done -> {
             store.dispatch(GlobalAction.Onboarding.Stop)
-            scope.launch {
-                store.onCardScanned(scanResponse)
-                withMainContext { store.dispatch(NavigationAction.NavigateTo(AppScreen.Wallet)) }
-            }
+            OnboardingHelper.trySaveWalletAndNavigateToWalletScreen(scanResponse)
         }
     }
 }

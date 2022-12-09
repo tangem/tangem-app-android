@@ -10,19 +10,10 @@ import com.trustwallet.walletconnect.models.session.WCSession
 
 class PersonalSignDialog {
     companion object {
-        fun create(
-            data: PersonalSignDialogData,
-            context: Context,
-        ): AlertDialog {
-            val message =
-                context.getString(R.string.wallet_connect_alert_sign_message) +
-                    context.getString(
-                        R.string.wallet_connect_personal_sign_message,
-                        data.dAppName,
-                        data.message,
-                    )
+        fun create(data: PersonalSignDialogData, context: Context): AlertDialog {
+            val message = context.getString(R.string.wallet_connect_alert_sign_message, data.message)
             return AlertDialog.Builder(context).apply {
-                setTitle(context.getString(R.string.wallet_connect))
+                setTitle(context.getString(R.string.wallet_connect_title))
                 setMessage(message)
                 setPositiveButton(context.getText(R.string.common_sign)) { _, _ ->
                     store.dispatch(WalletConnectAction.SignMessage(data.session))
