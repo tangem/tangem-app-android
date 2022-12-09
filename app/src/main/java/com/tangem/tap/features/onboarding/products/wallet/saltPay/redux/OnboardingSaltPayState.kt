@@ -6,7 +6,7 @@ import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.common.extensions.guard
 import com.tangem.domain.common.SaltPayWorkaround
 import com.tangem.domain.common.ScanResponse
-import com.tangem.network.api.paymentology.PaymentologyApiService
+import com.tangem.datasource.api.paymentology.PaymentologyApiService
 import com.tangem.tap.common.toggleWidget.WidgetState
 import com.tangem.tap.domain.extensions.makeSaltPayWalletManager
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.GnosisRegistrator
