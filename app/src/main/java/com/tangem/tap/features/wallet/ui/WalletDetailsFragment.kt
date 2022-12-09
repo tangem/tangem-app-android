@@ -157,8 +157,15 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
                     walletCurrenciesManager.update(selectedUserWallet, blockchainNetwork)
                 } else {
                     store.dispatch(
-                        WalletAction.LoadWallet(blockchainNetwork),
+                        WalletAction.LoadWallet(
+                            blockchain = BlockchainNetwork(
+                                selectedWallet.currency.blockchain,
+                                selectedWallet.currency.derivationPath,
+                                emptyList(),
+                            ),
+                        ),
                     )
+                    store.dispatch(WalletAction.LoadFiatRate(coinsList = listOf(selectedWallet.currency)))
                 }
             }
         }
