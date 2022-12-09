@@ -2,8 +2,8 @@ package com.tangem.tap.domain.tokens
 
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.services.Result
-import com.tangem.network.api.tangemTech.TangemTechService
-import com.tangem.network.api.tangemTech.UserTokensResponse
+import com.tangem.datasource.api.tangemTech.TangemTechService
+import com.tangem.datasource.api.tangemTech.UserTokensResponse
 import com.tangem.tap.domain.NoDataError
 
 class UserTokensNetworkService(private val tangemTechService: TangemTechService) {
