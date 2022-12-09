@@ -2,7 +2,7 @@ package com.tangem.tap.features.details.redux
 
 import android.net.Uri
 import com.tangem.blockchain.common.Wallet
-import com.tangem.common.card.Card
+import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.entities.Button
 import com.tangem.tap.common.entities.FiatCurrency
@@ -20,13 +20,15 @@ data class DetailsState(
     val privacyPolicyUrl: String? = null,
     val createBackupAllowed: Boolean = false,
     val appCurrency: FiatCurrency = FiatCurrency.Default,
-    val saveWallets: Boolean = true,
-    val saveAccessCodes: Boolean = true,
+    val saveWallets: Boolean = false,
+    val saveAccessCodes: Boolean = false,
+    val isBiometricsAvailable: Boolean = false,
+    val needEnrollBiometrics: Boolean = false,
 ) : StateType {
 
     // if you do not delegate - the application crashes on startup,
     // because twinCardsState has not been created yet
-    val twinCardsState: TwinCardsState by ReadOnlyProperty<Any, TwinCardsState> { thisRef, property ->
+    val twinCardsState: TwinCardsState by ReadOnlyProperty<Any, TwinCardsState> { _, _ ->
         store.state.twinCardsState
     }
 
@@ -42,7 +44,7 @@ data class CardInfo(
 
 data class CardSettingsState(
     val cardInfo: CardInfo,
-    val card: Card,
+    val card: CardDTO,
     val manageSecurityState: ManageSecurityState?,
     val resetCardAllowed: Boolean,
     val resetConfirmed: Boolean = false,

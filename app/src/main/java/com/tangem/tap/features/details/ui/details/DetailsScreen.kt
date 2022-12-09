@@ -162,8 +162,8 @@ fun DetailsItem(
 
 @Composable
 fun TangemSocialAccounts(
-    links: List<TangemLink>,
-    onSocialNetworkClick: (String) -> Unit,
+    links: List<SocialNetworkLink>,
+    onSocialNetworkClick: (SocialNetworkLink) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyRow(
@@ -171,11 +171,11 @@ fun TangemSocialAccounts(
     ) {
         items(links) {
             Icon(
-                painter = painterResource(id = it.iconRes),
+                painter = painterResource(id = it.network.iconRes),
                 contentDescription = "",
                 modifier = modifier
                     .padding(8.dp)
-                    .clickable { onSocialNetworkClick(it.url) },
+                    .clickable { onSocialNetworkClick(it) },
                 tint = colorResource(id = R.color.icon_informative),
             )
         }
