@@ -12,6 +12,7 @@ import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.domain.model.TotalFiatBalance
 import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.domain.model.WalletStoreModel
 import com.tangem.tap.domain.model.builders.UserWalletBuilder
@@ -26,6 +27,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
 import timber.log.Timber
+import java.math.BigDecimal
 
 internal class WalletSelectorMiddleware {
     val middleware: Middleware<AppState> = { _, appStateProvider ->
@@ -221,7 +223,6 @@ internal class WalletSelectorMiddleware {
                 is UserWalletModel.Type.MultiCurrency -> type.copy(
                     tokensCount = walletStores.flatMap { it.walletsData }.size,
                 )
-
                 is UserWalletModel.Type.SingleCurrency -> type.copy(
                     blockchainName = walletStores
                         .firstOrNull()
@@ -233,6 +234,7 @@ internal class WalletSelectorMiddleware {
             fiatBalance = totalFiatBalanceCalculator.calculate(
                 prevAmount = fiatBalance.amount,
                 walletStores = walletStores,
+                initial = TotalFiatBalance.Loaded(BigDecimal.ZERO),
             ),
         )
     }
