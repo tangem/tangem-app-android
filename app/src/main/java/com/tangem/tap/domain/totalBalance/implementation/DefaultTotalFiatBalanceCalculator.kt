@@ -11,11 +11,19 @@ import java.math.BigDecimal
 
 internal class DefaultTotalFiatBalanceCalculator : TotalFiatBalanceCalculator {
     override suspend fun calculate(
-        prevAmount: BigDecimal,
+        prevAmount: BigDecimal?,
         walletStores: List<WalletStoreModel>,
+        initial: TotalFiatBalance,
     ): TotalFiatBalance {
+        return calculateOrNull(prevAmount, walletStores) ?: initial
+    }
+
+    override suspend fun calculateOrNull(
+        prevAmount: BigDecimal?,
+        walletStores: List<WalletStoreModel>,
+    ): TotalFiatBalance? {
         return if (walletStores.isEmpty()) {
-            TotalFiatBalance.Loading
+            null
         } else {
             withContext(Dispatchers.Default) {
                 val walletsData = walletStores
@@ -25,7 +33,9 @@ internal class DefaultTotalFiatBalanceCalculator : TotalFiatBalanceCalculator {
 
                 when (walletsData.findStatus()) {
                     TotalFiatBalanceStatus.Loading -> TotalFiatBalance.Loading
-                    TotalFiatBalanceStatus.Refreshing -> TotalFiatBalance.Refreshing(prevAmount)
+                    TotalFiatBalanceStatus.Refreshing -> TotalFiatBalance.Refreshing(
+                        amount = prevAmount ?: BigDecimal.ZERO,
+                    )
                     TotalFiatBalanceStatus.Error -> TotalFiatBalance.Error(calculateAmount())
                     TotalFiatBalanceStatus.Loaded -> TotalFiatBalance.Loaded(calculateAmount())
                 }
