@@ -82,7 +82,7 @@ internal class SaveWalletMiddleware {
                         userWalletsListManager.selectedUserWalletSync?.walletId == userWallet.walletId
 
                     if (isSavedWalletSelected) {
-                        store.dispatchOnMain(NavigationAction.PopBackTo())
+                        store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
                     } else {
                         store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.WalletSelector))
                     }
