@@ -147,7 +147,7 @@ class TapWalletManager {
         updateConfigManager(data)
 
         withMainContext {
-            store.dispatch(WalletAction.ResetState(data.card.cardId))
+            store.dispatch(WalletAction.ResetState(data.card))
             store.dispatch(WalletConnectAction.ResetState)
             store.dispatch(GlobalAction.SaveScanNoteResponse(data))
             store.dispatch(WalletAction.SetIfTestnetCard(data.card.isTestCard))
