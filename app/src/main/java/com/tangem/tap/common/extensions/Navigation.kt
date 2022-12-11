@@ -54,12 +54,12 @@ fun FragmentActivity.openFragment(
     if (screen.isDialogFragment) {
         (fragment as DialogFragment).show(transaction, screen.name)
         if (addToBackstack) {
-            transaction.addToBackStack(null)
+            transaction.addToBackStack(screen.name)
         }
     } else {
         transaction.replace(R.id.fragment_container, fragment, screen.name)
-        if (addToBackstack && (screen != AppScreen.Home && screen != AppScreen.Welcome)) {
-            transaction.addToBackStack(null)
+        if (addToBackstack) {
+            transaction.addToBackStack(screen.name)
         }
         transaction.commitAllowingStateLoss()
     }
