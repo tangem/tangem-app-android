@@ -168,7 +168,7 @@ internal class WalletSelectorMiddleware {
         scope.launch {
             userWalletsListManager.get(walletId = UserWalletId(walletId))
                 .map { it.copy(name = newName) }
-                .flatMap { userWalletsListManager.update(it) }
+                .flatMap { userWalletsListManager.save(it, canOverride = true) }
                 .doOnFailure { error ->
                     store.dispatchOnMain(WalletSelectorAction.HandleError(error))
                 }
