@@ -48,9 +48,9 @@ import kotlin.coroutines.suspendCoroutine
 
 class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Context) {
     val canUseBiometry: Boolean
-        get() = tangemSdk.biometricManager.canAuthenticate || canEnrollBiometrics
+        get() = tangemSdk.biometricManager.canAuthenticate || needEnrollBiometrics
 
-    val canEnrollBiometrics: Boolean
+    val needEnrollBiometrics: Boolean
         get() = tangemSdk.biometricManager.canEnrollBiometrics
 
     val biometricManager: BiometricManager
@@ -61,10 +61,7 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         cardId: String? = null,
         additionalBlockchainsToDerive: Collection<Blockchain>? = null,
         messageRes: Int? = null,
-        useBiometricsForAccessCode: Boolean = false,
     ): CompletionResult<ScanResponse> {
-        setAccessCodeRequestPolicy(useBiometricsForAccessCode)
-
         val message = Message(context.getString(messageRes ?: R.string.initial_message_scan_header))
         return runTaskAsyncReturnOnMain(
             runnable = ScanProductTask(
@@ -109,9 +106,7 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
     suspend fun derivePublicKeys(
         cardId: String,
         derivations: Map<ByteArrayKey, List<DerivationPath>>,
-        useBiometricsForAccessCode: Boolean = false,
     ): CompletionResult<DerivationTaskResponse> {
-        setAccessCodeRequestPolicy(useBiometricsForAccessCode)
         return runTaskAsyncReturnOnMain(DeriveMultipleWalletPublicKeysTask(derivations), cardId)
     }
 
@@ -192,9 +187,7 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
 
     suspend fun scanCard(
         cardId: String? = null,
-        useBiometricsForAccessCode: Boolean = false,
     ): CompletionResult<CardDTO> {
-        setAccessCodeRequestPolicy(useBiometricsForAccessCode)
         return runTaskAsyncReturnOnMain(
             runnable = ScanTask(),
             cardId = cardId,
