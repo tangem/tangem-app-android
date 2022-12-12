@@ -11,7 +11,6 @@ import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
-import com.tangem.tap.userWalletsListManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 
@@ -56,8 +55,7 @@ class OnboardingHelper {
             backupCardsIds: List<String>? = null,
         ) {
             when {
-                userWalletsListManager.hasSavedUserWallets -> scope.launch {
-                    delay(timeMillis = 1_200)
+                preferencesStorage.shouldSaveUserWallets -> scope.launch {
                     store.dispatchOnMain(
                         SaveWalletAction.ProvideBackupInfo(
                             scanResponse = scanResponse,
@@ -68,7 +66,7 @@ class OnboardingHelper {
                     store.dispatchOnMain(SaveWalletAction.Save)
                 }
                 tangemSdkManager.canUseBiometry &&
-                    preferencesStorage.shouldShowSaveWallet -> scope.launch {
+                    preferencesStorage.shouldShowSaveUserWalletScreen -> scope.launch {
                     delay(timeMillis = 1_200)
                     store.dispatchOnMain(
                         SaveWalletAction.ProvideBackupInfo(
