@@ -15,7 +15,6 @@ import com.tangem.operations.backup.BackupService
 import com.tangem.tangem_sdk_new.extensions.init
 import com.tangem.tap.common.ActivityResultCallbackHolder
 import com.tangem.tap.common.DialogManager
-import com.tangem.tap.common.IntentHandler
 import com.tangem.tap.common.OnActivityResultCallback
 import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -29,6 +28,7 @@ import com.tangem.tap.domain.TangemSdkManager
 import com.tangem.tap.domain.userWalletList.UserWalletsListManager
 import com.tangem.tap.domain.userWalletList.di.provideBiometricImplementation
 import com.tangem.tap.features.shop.redux.ShopAction
+import com.tangem.tap.features.welcome.redux.WelcomeAction
 import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.ActivityMainBinding
@@ -66,7 +66,6 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     private var snackbar: Snackbar? = null
     private val dialogManager = DialogManager()
-    private val intentHandler = IntentHandler()
     private val binding: ActivityMainBinding by viewBinding(ActivityMainBinding::bind)
 
     private val onActivityResultCallbacks = mutableListOf<OnActivityResultCallback>()
@@ -119,16 +118,23 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         val isOnboardingServiceActive = store.state.globalState.onboardingState.onboardingStarted
         val shopOpened = store.state.shopState.total != null
         if (backStackIsEmpty || (!isOnboardingServiceActive && !isScannedBefore && !shopOpened)) {
-            val navigateTo = if (userWalletsListManager.hasSavedUserWallets) AppScreen.Welcome else AppScreen.Home
-
-            store.dispatchOnMain(NavigationAction.NavigateTo(navigateTo))
+            if (userWalletsListManager.hasSavedUserWallets) {
+                store.dispatchOnMain(WelcomeAction.HandleDeepLink(intent))
+                store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Welcome))
+            } else {
+                store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Home))
+                intentHandler.handleWalletConnectLink(intent)
+            }
         }
-        intentHandler.handleIntent(intent)
+        intentHandler.handleBackgroundScan(intent)
+        intentHandler.handleSellCurrencyCallback(intent)
     }
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
-        intentHandler.handleIntent(intent)
+        intentHandler.handleBackgroundScan(intent)
+        intentHandler.handleSellCurrencyCallback(intent)
+        intentHandler.handleWalletConnectLink(intent)
     }
 
     override fun onStart() {
