@@ -12,6 +12,8 @@ import com.tangem.domain.common.util.UserWalletId
  * @param scanResponse [ScanResponse] of primary user's wallet card.
 * [REDACTED_TODO_COMMENT]
  * @property cardId ID of user's wallet primary card
+ * @property hasAccessCode Indicates if the user's wallet primary card has access code
+ * @property isSaved Indicates if this user wallet is saved
  * */
 data class UserWallet(
     val name: String,
@@ -22,6 +24,9 @@ data class UserWallet(
 ) {
     val cardId: String
         get() = scanResponse.card.cardId
+
+    val hasAccessCode: Boolean
+        get() = scanResponse.card.isAccessCodeSet
 
     internal var isSaved: Boolean = true
 }
