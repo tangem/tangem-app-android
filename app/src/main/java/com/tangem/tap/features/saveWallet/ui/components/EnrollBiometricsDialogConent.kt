@@ -1,4 +1,4 @@
-package com.tangem.core.ui.components.dialogs
+package com.tangem.tap.features.saveWallet.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -17,8 +17,8 @@ import com.tangem.core.ui.components.SpacerH16
 import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.components.SpacerW8
 import com.tangem.core.ui.components.TextButton
-import com.tangem.core.ui.models.EnrollBiometricsDialog
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.tap.features.saveWallet.ui.models.EnrollBiometricsDialog
 
 @Composable
 fun EnrollBiometricsDialogContent(
