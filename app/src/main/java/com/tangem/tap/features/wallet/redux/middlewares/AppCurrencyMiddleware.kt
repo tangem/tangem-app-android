@@ -1,8 +1,8 @@
 package com.tangem.tap.features.wallet.redux.middlewares
 
 import com.tangem.common.services.Result
-import com.tangem.network.api.tangemTech.CurrenciesResponse
-import com.tangem.network.api.tangemTech.TangemTechService
+import com.tangem.datasource.api.tangemTech.CurrenciesResponse
+import com.tangem.datasource.api.tangemTech.TangemTechService
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.MainScreen
