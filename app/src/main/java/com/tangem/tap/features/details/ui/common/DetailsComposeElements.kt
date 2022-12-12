@@ -102,7 +102,7 @@ fun EmptyTopBarWithNavigation(
         {
             IconButton(onClick = onBackClick) {
                 Icon(
-                    painter = painterResource(id = R.drawable.ic_back),
+                    painter = painterResource(id = R.drawable.ic_back_24),
                     contentDescription = null,
                     tint = TangemTheme.colors.icon.primary1,
                 )
@@ -136,6 +136,6 @@ fun DetailsMainButton(
     ) {
         Text(text = title)
         Spacer(modifier = modifier.size(8.dp))
-        Icon(painter = painterResource(id = R.drawable.ic_tangem), contentDescription = "")
+        Icon(painter = painterResource(id = R.drawable.ic_tangem_24), contentDescription = "")
     }
 }

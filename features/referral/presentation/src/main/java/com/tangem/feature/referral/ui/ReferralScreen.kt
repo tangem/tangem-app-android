@@ -207,9 +207,9 @@ private fun ReferralInfo(
             )
         }
         is ReferralInfoState.Loading -> {
-            LoadingCondition(iconResId = R.drawable.ic_tether)
+            LoadingCondition(iconResId = R.drawable.ic_tether_28)
             VerticalSpacer(spaceResId = R.dimen.spacing32)
-            LoadingCondition(iconResId = R.drawable.ic_discount)
+            LoadingCondition(iconResId = R.drawable.ic_discount_28)
         }
     }
 }
@@ -223,7 +223,7 @@ private fun Conditions(state: ReferralInfoContentState) {
 
 @Composable
 private fun ConditionForYou(state: ReferralInfoContentState) {
-    Condition(iconResId = R.drawable.ic_tether) {
+    Condition(iconResId = R.drawable.ic_tether_28) {
         when (state) {
             is ReferralInfoState.ParticipantContent -> InfoForYou(
                 award = state.award,
@@ -240,7 +240,7 @@ private fun ConditionForYou(state: ReferralInfoContentState) {
 
 @Composable
 private fun ConditionForYourFriend(discount: String) {
-    Condition(iconResId = R.drawable.ic_discount) {
+    Condition(iconResId = R.drawable.ic_discount_28) {
         InfoForYourFriend(discount = discount)
     }
 }

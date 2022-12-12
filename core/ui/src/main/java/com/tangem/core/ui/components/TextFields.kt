@@ -140,7 +140,7 @@ private fun TangemTextField(
             },
             trailingIcon = {
                 val iconRes by rememberUpdatedState(
-                    newValue = if (isError) R.drawable.ic_alert else R.drawable.ic_close,
+                    newValue = if (isError) R.drawable.ic_alert_24 else R.drawable.ic_close_24,
                 )
                 IconButton(
                     modifier = Modifier.size(32.dp),
