@@ -11,6 +11,7 @@ import com.tangem.blockchain.common.BlockchainSdkConfig
 import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.common.json.MoshiJsonConverter
+import com.tangem.datasource.api.common.BigDecimalAdapter
 import com.tangem.datasource.api.common.MoshiConverter
 import com.tangem.domain.DomainLayer
 import com.tangem.domain.common.LogConfig
@@ -30,7 +31,6 @@ import com.tangem.tap.common.feedback.AdditionalFeedbackInfo
 import com.tangem.tap.common.feedback.FeedbackManager
 import com.tangem.tap.common.images.createCoilImageLoader
 import com.tangem.tap.common.log.TangemLogCollector
-import com.tangem.tap.common.moshi.BigDecimalAdapter
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.appReducer
 import com.tangem.tap.common.redux.global.GlobalAction
