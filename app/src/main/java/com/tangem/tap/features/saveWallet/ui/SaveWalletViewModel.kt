@@ -1,11 +1,11 @@
 package com.tangem.tap.features.saveWallet.ui
 
 import androidx.lifecycle.ViewModel
-import com.tangem.core.ui.models.EnrollBiometricsDialog
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.features.details.ui.cardsettings.TextReference
 import com.tangem.tap.features.saveWallet.redux.SaveWalletAction
 import com.tangem.tap.features.saveWallet.redux.SaveWalletState
+import com.tangem.tap.features.saveWallet.ui.models.EnrollBiometricsDialog
 import com.tangem.tap.store
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow

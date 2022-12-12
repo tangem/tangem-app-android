@@ -12,7 +12,10 @@ sealed class NavigationAction : Action {
         val addToBackstack: Boolean = true,
     ) : NavigationAction()
 
-    data class PopBackTo(val screen: AppScreen? = null) : NavigationAction()
+    data class PopBackTo(
+        val screen: AppScreen? = null,
+        val inclusive: Boolean = false,
+    ) : NavigationAction()
 
     data class OpenUrl(val url: String) : NavigationAction()
 

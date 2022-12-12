@@ -1,27 +1,32 @@
 package com.tangem.tap.features.saveWallet.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.PrimaryButton
-import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.SpacerH16
-import com.tangem.core.ui.components.SpacerH24
+import com.tangem.core.ui.components.SpacerH32
+import com.tangem.core.ui.components.SpacerH4
+import com.tangem.core.ui.components.SpacerHHalf
+import com.tangem.core.ui.components.SpacerW24
+import com.tangem.core.ui.components.SpacerW8
 import com.tangem.core.ui.components.atoms.Hand
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.wallet.R
@@ -34,79 +39,132 @@ internal fun SaveWalletScreenContent(
     onCloseClick: () -> Unit,
 ) {
     Column(
-        modifier = modifier
-            .padding(horizontal = TangemTheme.dimens.spacing16),
+        modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Hand()
-        IconButton(
+        Header(
+            modifier = Modifier.fillMaxWidth(),
+            onCloseClick = onCloseClick,
+        )
+        SpacerHHalf()
+        Title(
             modifier = Modifier
-                .align(Alignment.End)
-                .padding(all = TangemTheme.dimens.spacing8)
-                .size(TangemTheme.dimens.size32),
-            onClick = onCloseClick,
+                .widthIn(max = TangemTheme.dimens.size200),
+        )
+        SpacerH32()
+        Description(
+            modifier = Modifier
+                .padding(
+                    start = TangemTheme.dimens.spacing34,
+                    end = TangemTheme.dimens.spacing56,
+                )
+                .fillMaxWidth(),
+        )
+        SpacerHHalf()
+        Footer(
+            modifier = Modifier
+                .padding(horizontal = TangemTheme.dimens.spacing16)
+                .fillMaxWidth(),
+            showProgress = showProgress,
+            onSaveWalletClick = onSaveWalletClick,
+        )
+        SpacerH16()
+    }
+}
+
+@Composable
+private fun Header(
+    modifier: Modifier = Modifier,
+    onCloseClick: () -> Unit,
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),
+    ) {
+        Hand()
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.End,
         ) {
-            Icon(
-                modifier = Modifier.size(TangemTheme.dimens.size24),
-                painter = painterResource(id = R.drawable.ic_close),
-                tint = TangemTheme.colors.icon.secondary,
-                contentDescription = stringResource(id = R.string.common_cancel),
-            )
+            IconButton(
+                modifier = Modifier.size(TangemTheme.dimens.size32),
+                onClick = onCloseClick,
+            ) {
+                Icon(
+                    modifier = Modifier.size(TangemTheme.dimens.size24),
+                    painter = painterResource(id = R.drawable.ic_close),
+                    tint = TangemTheme.colors.icon.secondary,
+                    contentDescription = stringResource(id = R.string.common_cancel),
+                )
+            }
+            SpacerW8()
         }
-        Spacer(modifier = Modifier.weight(.7f))
+    }
+}
+
+@Composable
+private fun Title(
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing32),
+    ) {
         Icon(
             modifier = Modifier.size(TangemTheme.dimens.size56),
             painter = painterResource(id = R.drawable.ic_fingerprint_24),
-            tint = TangemTheme.colors.icon.informative,
+            tint = TangemTheme.colors.icon.primary1,
             contentDescription = null,
         )
-        SpacerH24()
-        Box(
-            modifier = Modifier
-                .background(
-                    color = TangemTheme.colors.text.accent.copy(alpha = .12f),
-                    shape = TangemTheme.shapes.roundedCornersMedium,
-                ),
-        ) {
-            Text(
-                modifier = Modifier
-                    .padding(
-                        vertical = TangemTheme.dimens.spacing4,
-                        horizontal = TangemTheme.dimens.spacing12,
-                    ),
-                text = stringResource(R.string.save_user_wallet_agreement_new_feature),
-                style = TangemTheme.typography.subtitle2,
-                color = TangemTheme.colors.text.accent,
-                textAlign = TextAlign.Center,
-            )
-        }
-        SpacerH24()
         Text(
-            modifier = Modifier.fillMaxWidth(),
-            text = stringResource(R.string.onboarding_navbar_save_wallet),
+            text = stringResource(id = R.string.save_user_wallet_agreement_header_biometrics),
             style = TangemTheme.typography.h2,
             color = TangemTheme.colors.text.primary1,
             textAlign = TextAlign.Center,
         )
-        SpacerH12()
-        Text(
-            modifier = Modifier.fillMaxWidth(fraction = .87f),
-            text = stringResource(R.string.save_user_wallet_agreement_description),
-            style = TangemTheme.typography.body1,
-            color = TangemTheme.colors.text.secondary,
-            textAlign = TextAlign.Center,
+    }
+}
+
+@Composable
+private fun Description(
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing24),
+        horizontalAlignment = Alignment.Start,
+    ) {
+        DescriptionItem(
+            iconPainter = painterResource(id = R.drawable.ic_face_recognition_24),
+            title = stringResource(id = R.string.save_user_wallet_agreement_access_title),
+            description = stringResource(id = R.string.save_user_wallet_agreement_access_description),
         )
-        Spacer(modifier = Modifier.weight(1f))
+        DescriptionItem(
+            iconPainter = painterResource(id = R.drawable.ic_lock_24),
+            title = stringResource(id = R.string.save_user_wallet_agreement_code_title),
+            description = stringResource(id = R.string.save_user_wallet_agreement_code_description_biometrics),
+        )
+    }
+}
+
+@Composable
+private fun Footer(
+    modifier: Modifier = Modifier,
+    showProgress: Boolean,
+    onSaveWalletClick: () -> Unit,
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
+    ) {
         PrimaryButton(
             modifier = Modifier.fillMaxWidth(),
             showProgress = showProgress,
-            text = stringResource(
-                id = R.string.save_user_wallet_agreement_allow,
-                stringResource(id = R.string.common_biometric_authentication),
-            ),
+            text = stringResource(id = R.string.save_user_wallet_agreement_allow_biometrics),
             onClick = onSaveWalletClick,
         )
-        SpacerH16()
         Text(
             modifier = Modifier.fillMaxWidth(fraction = .7f),
             text = stringResource(R.string.save_user_wallet_agreement_notice),
@@ -114,7 +172,41 @@ internal fun SaveWalletScreenContent(
             color = TangemTheme.colors.text.tertiary,
             textAlign = TextAlign.Center,
         )
-        SpacerH16()
+    }
+}
+
+@Composable
+private fun DescriptionItem(
+    modifier: Modifier = Modifier,
+    iconPainter: Painter,
+    title: String,
+    description: String,
+) {
+    Row(
+        modifier = modifier,
+        verticalAlignment = Alignment.Top,
+        horizontalArrangement = Arrangement.SpaceEvenly,
+    ) {
+        Icon(
+            modifier = Modifier.size(TangemTheme.dimens.size24),
+            painter = iconPainter,
+            tint = TangemTheme.colors.icon.primary1,
+            contentDescription = null,
+        )
+        SpacerW24()
+        Column {
+            Text(
+                text = title,
+                style = TangemTheme.typography.subtitle1,
+                color = TangemTheme.colors.text.primary1,
+            )
+            SpacerH4()
+            Text(
+                text = description,
+                style = TangemTheme.typography.body2,
+                color = TangemTheme.colors.text.secondary,
+            )
+        }
     }
 }
 
