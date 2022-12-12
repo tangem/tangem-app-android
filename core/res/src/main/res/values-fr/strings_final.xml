@@ -227,4 +227,6 @@
     <string name="user_wallet_list_editing_count">%d selected</string>
     <string name="common_biometric_authentication">biometric authentication</string>
     <string name="common_biometrics">biometrics</string>
+    <string name="app_settings_enable_biometrics_title">Enable biometric authentication</string>
+    <string name="app_settings_enable_biometrics_description">Go to settings to enable biometric authentication in the Tangem App</string>
 </resources>
