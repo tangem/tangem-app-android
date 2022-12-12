@@ -3,7 +3,10 @@ package com.tangem.datasource.di
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.tangem.datasource.api.AuthHeaderInterceptor
+import com.tangem.datasource.api.oneinch.OneInchApi
 import com.tangem.datasource.api.referral.ReferralApi
+import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.datasource.di.qualifiers.OneInchEthereum
 import com.tangem.lib.auth.AuthProvider
 import dagger.Module
 import dagger.Provides
@@ -21,6 +24,33 @@ class NetworkModule {
 
     @Provides
     @Singleton
+    fun provideTangemTechApi(okHttpClient: OkHttpClient): TangemTechApi {
+        return Retrofit.Builder()
+            .addConverterFactory(
+                MoshiConverterFactory.create(),
+            )
+            .baseUrl(DEV_TANGEM_TECH_BASE_URL)
+            .client(okHttpClient)
+            .build()
+            .create(TangemTechApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    @OneInchEthereum
+    fun provideOneInchEthereumApi(): OneInchApi {
+        return Retrofit.Builder()
+            .addConverterFactory(
+                MoshiConverterFactory.create(),
+            )
+            .baseUrl(ONE_INCH_ETHER_BASE_URL)
+            .client(OkHttpClient())
+            .build()
+            .create(OneInchApi::class.java)
+    }
+
+    @Provides
+    @Singleton
     fun provideReferralApi(okHttpClient: OkHttpClient): ReferralApi {
         return Retrofit.Builder()
             .addConverterFactory(
@@ -30,7 +60,7 @@ class NetworkModule {
                         .build(),
                 ),
             )
-            .baseUrl(PROD_REFERRAL_BASE_URL)
+            .baseUrl(DEV_TANGEM_TECH_BASE_URL)
             .client(okHttpClient)
             .build()
             .create(ReferralApi::class.java)
@@ -48,6 +78,8 @@ class NetworkModule {
     }
 
     private companion object {
-        const val PROD_REFERRAL_BASE_URL = "https://devapi.tangem-tech.com/v1/"//"https://api.tangem-tech.com/v1/"
+        const val PROD_TANGEM_TECH_BASE_URL = "https://api.tangem-tech.com/v1/"
+        const val DEV_TANGEM_TECH_BASE_URL = "https://devapi.tangem-tech.com/v1/"
+        const val ONE_INCH_ETHER_BASE_URL = ""
     }
 }
