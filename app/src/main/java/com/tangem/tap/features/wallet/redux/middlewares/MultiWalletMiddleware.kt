@@ -189,7 +189,7 @@ class MultiWalletMiddleware {
                 scanResponse = scanResponse,
             )
 
-            userWalletsListManager.update(userWallet)
+            userWalletsListManager.save(userWallet, canOverride = true)
                 .doOnSuccess {
                     store.state.globalState.tapWalletManager.loadData(userWallet, refresh = true)
                 }
