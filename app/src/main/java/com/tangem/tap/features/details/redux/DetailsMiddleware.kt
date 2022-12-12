@@ -30,6 +30,7 @@ import com.tangem.tap.userWalletsListManager
 import com.tangem.tap.walletStoresManager
 import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.rekotlin.Action
@@ -77,11 +78,7 @@ class DetailsMiddleware {
             }
             DetailsAction.ScanCard -> {
                 scope.launch {
-                    tangemSdkManager.scanCard(
-                        cardId = state.scanResponse?.card?.cardId,
-                        useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes &&
-                            state.scanResponse?.card?.isAccessCodeSet == true,
-                    )
+                    tangemSdkManager.scanCard(cardId = state.scanResponse?.card?.cardId)
                         .doOnSuccess { card ->
                             val currentCardId = store.state.globalState.scanResponse?.card
                                 ?.userWalletId
@@ -121,12 +118,15 @@ class DetailsMiddleware {
                             .flatMap { userWalletsListManager.delete(listOf(card.userWalletId)) }
                             .doOnSuccess {
                                 Analytics.send(Settings.CardSettings.FactoryResetFinished())
-                                val screen = if (userWalletsListManager.hasSavedUserWallets) {
-                                    AppScreen.Welcome
+
+                                val selectedUserWallet = userWalletsListManager.selectedUserWalletSync
+                                if (selectedUserWallet != null) {
+                                    store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
+                                    store.onUserWalletSelected(selectedUserWallet)
                                 } else {
-                                    AppScreen.Home
+                                    userWalletsListManager.lock()
+                                    store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Home))
                                 }
-                                store.dispatchOnMain(NavigationAction.PopBackTo(screen))
                             }
                             .doOnFailure { error ->
                                 (error as? TangemSdkError)?.let { sdkError ->
@@ -195,18 +195,39 @@ class DetailsMiddleware {
         fun handle(state: DetailsState, action: DetailsAction.AppSettings) {
             when (action) {
                 is DetailsAction.AppSettings.SwitchPrivacySetting -> {
-                    if (tangemSdkManager.canEnrollBiometrics) {
-                        store.dispatch(DetailsAction.AppSettings.EnrollBiometrics)
-                    }
                     when (action.setting) {
                         PrivacySetting.SaveWallets -> toggleSaveWallets(state, enable = action.enable)
                         PrivacySetting.SaveAccessCode -> toggleSaveAccessCodes(state, enable = action.enable)
                     }
                 }
-                is DetailsAction.AppSettings.SwitchPrivacySetting.Success -> Unit
-                is DetailsAction.AppSettings.EnrollBiometrics -> Unit
-                is DetailsAction.AppSettings.EnrollBiometrics.Enroll -> enrollBiometrics()
-                is DetailsAction.AppSettings.EnrollBiometrics.Cancel -> Unit
+                is DetailsAction.AppSettings.CheckBiometricsStatus -> {
+                    checkBiometricsStatus(action.awaitStatusChange, state)
+                }
+                is DetailsAction.AppSettings.EnrollBiometrics -> {
+                    enrollBiometrics()
+                }
+                is DetailsAction.AppSettings.SwitchPrivacySetting.Success,
+                is DetailsAction.AppSettings.BiometricsStatusChanged,
+                -> Unit
+            }
+        }
+
+        /**
+         * @param awaitStatusChange If true then start a new coroutine and check the biometric status every 100
+         * milliseconds until it changes
+         * */
+        private fun checkBiometricsStatus(awaitStatusChange: Boolean, state: DetailsState) {
+            scope.launch {
+                if (awaitStatusChange) {
+                    while (state.needEnrollBiometrics == tangemSdkManager.needEnrollBiometrics) {
+                        delay(timeMillis = 100)
+                    }
+                }
+                store.dispatchOnMain(
+                    DetailsAction.AppSettings.BiometricsStatusChanged(
+                        needEnrollBiometrics = tangemSdkManager.needEnrollBiometrics,
+                    ),
+                )
             }
         }
 
@@ -217,7 +238,7 @@ class DetailsMiddleware {
         private fun toggleSaveWallets(state: DetailsState, enable: Boolean) = scope.launch {
             if (state.saveWallets == enable) return@launch
             if (enable) {
-                saveCurrentWallet()
+                saveCurrentWallet(state)
             } else {
                 deleteSavedWallets()
                 if (state.saveAccessCodes) {
@@ -230,16 +251,16 @@ class DetailsMiddleware {
             if (state.saveAccessCodes == enable) return@launch
             if (enable) {
                 if (!state.saveWallets) {
-                    saveCurrentWallet()
+                    saveCurrentWallet(state)
                 }
-                saveAccessCodes()
+                saveAccessCodes(state)
             } else {
                 deleteSavedAccessCodes()
             }
         }
 
-        private suspend fun saveCurrentWallet() {
-            val scanResponse = store.state.detailsState.scanResponse ?: return
+        private suspend fun saveCurrentWallet(state: DetailsState) {
+            val scanResponse = state.scanResponse ?: return
             val userWallet = UserWalletBuilder(scanResponse).build()
 
             userWalletsListManager.save(userWallet)
@@ -247,7 +268,7 @@ class DetailsMiddleware {
                     Timber.e(error, "Wallet saving failed")
                 }
                 .doOnSuccess {
-                    preferencesStorage.shouldShowSaveWallet = false
+                    preferencesStorage.shouldShowSaveUserWalletScreen = false
                     preferencesStorage.shouldSaveUserWallets = true
                     store.dispatchOnMain(
                         DetailsAction.AppSettings.SwitchPrivacySetting.Success(
@@ -274,8 +295,11 @@ class DetailsMiddleware {
                 }
         }
 
-        private fun saveAccessCodes() {
+        private fun saveAccessCodes(state: DetailsState) {
             preferencesStorage.shouldSaveAccessCodes = true
+            tangemSdkManager.setAccessCodeRequestPolicy(
+                useBiometricsForAccessCode = state.scanResponse?.card?.isAccessCodeSet == true,
+            )
             store.dispatchOnMain(
                 DetailsAction.AppSettings.SwitchPrivacySetting.Success(
                     setting = PrivacySetting.SaveAccessCode,
@@ -288,6 +312,9 @@ class DetailsMiddleware {
             tangemSdkManager.clearSavedUserCodes()
                 .doOnSuccess {
                     preferencesStorage.shouldSaveAccessCodes = false
+                    tangemSdkManager.setAccessCodeRequestPolicy(
+                        useBiometricsForAccessCode = false,
+                    )
                     store.dispatchOnMain(
                         DetailsAction.AppSettings.SwitchPrivacySetting.Success(
                             setting = PrivacySetting.SaveAccessCode,

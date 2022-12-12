@@ -35,7 +35,6 @@ import com.tangem.tap.domain.tokens.LoadAvailableCoinsService
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.WalletAction
-import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
@@ -206,7 +205,6 @@ class TokensMiddleware {
             val result = tangemSdkManager.derivePublicKeys(
                 cardId = card.cardId,
                 derivations = derivations,
-                useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes && card.isAccessCodeSet,
             )
             when (result) {
                 is CompletionResult.Success -> {
@@ -288,7 +286,7 @@ class TokensMiddleware {
             )
 
             scope.launch {
-                userWalletsListManager.update(updatedUserWallet)
+                userWalletsListManager.save(updatedUserWallet, canOverride = true)
                     .flatMap {
                         walletCurrenciesManager.addCurrencies(
                             userWallet = updatedUserWallet,
