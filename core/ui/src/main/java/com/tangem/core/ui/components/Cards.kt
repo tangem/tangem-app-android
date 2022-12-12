@@ -60,7 +60,8 @@ fun SmallInfoCard(startText: String, endText: String, isLoading: Boolean = false
  */
 @Composable
 fun SmallInfoCardWithWarning(
-    startText: String, endText: String,
+    startText: String,
+    endText: String,
     warningText: String,
 ) {
     Surface(
