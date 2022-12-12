@@ -48,9 +48,9 @@ import kotlin.coroutines.suspendCoroutine
 
 class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Context) {
     val canUseBiometry: Boolean
-        get() = tangemSdk.biometricManager.canAuthenticate || canEnrollBiometrics
+        get() = tangemSdk.biometricManager.canAuthenticate || needEnrollBiometrics
 
-    val canEnrollBiometrics: Boolean
+    val needEnrollBiometrics: Boolean
         get() = tangemSdk.biometricManager.canEnrollBiometrics
 
     val biometricManager: BiometricManager
