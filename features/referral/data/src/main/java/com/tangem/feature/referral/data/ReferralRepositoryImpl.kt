@@ -7,8 +7,9 @@ import com.tangem.feature.referral.domain.ReferralRepository
 import com.tangem.feature.referral.domain.models.ReferralData
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
+import javax.inject.Inject
 
-internal class ReferralRepositoryImpl(
+internal class ReferralRepositoryImpl @Inject constructor(
     private val referralApi: ReferralApi,
     private val referralConverter: ReferralConverter,
     private val coroutineDispatcher: CoroutineDispatcherProvider,
