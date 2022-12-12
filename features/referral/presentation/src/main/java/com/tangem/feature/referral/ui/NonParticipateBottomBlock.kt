@@ -6,7 +6,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.PrimaryEndIconButton
@@ -23,7 +22,7 @@ internal fun NonParticipateBottomBlock(onAgreementClicked: () -> Unit, onPartici
         PrimaryEndIconButton(
             modifier = Modifier.padding(all = TangemTheme.dimens.spacing16),
             text = stringResource(id = R.string.referral_button_participate),
-            iconResId = R.drawable.ic_tangem,
+            iconResId = R.drawable.ic_tangem_24,
             onClicked = onParticipateClicked,
         )
     }
