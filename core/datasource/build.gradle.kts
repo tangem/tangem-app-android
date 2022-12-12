@@ -42,6 +42,9 @@ dependencies {
     /** Project */
     implementation(project(":libs:auth"))
 
+    /** Tangem libraries */
+    implementation(Tangem.cardCore)
+
     /** DI */
     implementation(Library.hilt)
     kapt(Library.hiltKapt)
