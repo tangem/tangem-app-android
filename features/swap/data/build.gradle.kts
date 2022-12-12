@@ -31,8 +31,6 @@ dependencies {
     implementation(project(":core:utils"))
     implementation(project(":features:swap:domain"))
 
-    kapt("com.squareup.moshi:moshi-kotlin-codegen:1.14.0")
-
     /** DI */
     implementation(Library.hilt)
     kapt(Library.hiltKapt)
