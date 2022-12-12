@@ -29,7 +29,6 @@ import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.redux.models.WalletDialog
 import com.tangem.tap.features.wallet.redux.reducers.toWallet
-import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.userTokensRepository
@@ -183,8 +182,6 @@ class MultiWalletMiddleware {
         state: WalletState?,
     ) = scope.launch {
         ScanCardProcessor.scan(
-            useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes &&
-                selectedWallet.scanResponse.card.isAccessCodeSet,
             cardId = selectedWallet.cardId,
             additionalBlockchainsToDerive = state?.missingDerivations?.map { it.blockchain },
         ) { scanResponse ->
