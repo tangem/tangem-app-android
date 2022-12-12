@@ -338,7 +338,7 @@ class WalletMiddleware {
     }
 
     private fun showSaveWalletIfNeeded() {
-        if (preferencesStorage.shouldShowSaveWallet
+        if (preferencesStorage.shouldShowSaveUserWalletScreen
             && tangemSdkManager.canUseBiometry
             && store.state.navigationState.backStack.lastOrNull() == AppScreen.Wallet
         ) {
