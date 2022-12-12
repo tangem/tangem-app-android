@@ -20,6 +20,7 @@ import com.tangem.tap.domain.scanCard.ScanCardProcessor
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
+import com.tangem.tap.tangemSdkManager
 import com.tangem.tap.totalFiatBalanceCalculator
 import com.tangem.tap.userWalletsListManager
 import com.tangem.tap.walletStoresManager
@@ -129,6 +130,7 @@ internal class WalletSelectorMiddleware {
                     store.dispatchOnMain(WalletSelectorAction.AddWallet.Success)
 
                     if (isSavedWalletSelected) {
+                        updateAccessCodeRequestPolicy(selectedWallet)
                         store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
                         store.onUserWalletSelected(selectedWallet)
                     }
@@ -143,6 +145,7 @@ internal class WalletSelectorMiddleware {
                     store.dispatchOnMain(WalletSelectorAction.HandleError(error))
                 }
                 .doOnSuccess { selectedWallet ->
+                    updateAccessCodeRequestPolicy(selectedWallet)
                     store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
                     store.onUserWalletSelected(selectedWallet)
                 }
@@ -176,7 +179,6 @@ internal class WalletSelectorMiddleware {
         crossinline onCardScanned: suspend (ScanResponse) -> Unit,
     ) {
         ScanCardProcessor.scan(
-            useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes,
             onSuccess = {
                 onCardScanned(it)
             },
@@ -210,9 +212,17 @@ internal class WalletSelectorMiddleware {
                 val isSelectedWalletRemoved = prevSelectedWalletId != selectedWallet.walletId.stringValue
 
                 if (isSelectedWalletRemoved) {
+                    updateAccessCodeRequestPolicy(selectedWallet)
                     store.onUserWalletSelected(selectedWallet)
                 }
             }
+    }
+
+    private fun updateAccessCodeRequestPolicy(userWallet: UserWallet) {
+        tangemSdkManager.setAccessCodeRequestPolicy(
+            useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes &&
+                userWallet.scanResponse.card.isAccessCodeSet,
+        )
     }
 
     private suspend fun UserWalletModel.updateWalletStoresAndCalculateFiatBalance(
