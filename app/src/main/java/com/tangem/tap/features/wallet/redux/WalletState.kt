@@ -14,7 +14,11 @@ import com.tangem.tap.common.toggleWidget.WidgetState
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
-import com.tangem.tap.features.wallet.models.*
+import com.tangem.tap.features.wallet.models.Currency
+import com.tangem.tap.features.wallet.models.PendingTransaction
+import com.tangem.tap.features.wallet.models.TotalBalance
+import com.tangem.tap.features.wallet.models.WalletRent
+import com.tangem.tap.features.wallet.models.WalletWarning
 import com.tangem.tap.features.wallet.redux.reducers.calculateTotalFiatAmount
 import com.tangem.tap.features.wallet.redux.reducers.findProgressState
 import com.tangem.tap.features.wallet.ui.BalanceStatus
@@ -43,6 +47,7 @@ data class WalletState(
     val showBackupWarning: Boolean = false,
     val missingDerivations: List<BlockchainNetwork> = emptyList(),
     val loadingUserTokens: Boolean = false,
+    val walletCardsCount: Int? = null,
 ) : StateType {
 
     // if you do not delegate - the application crashes on startup,
