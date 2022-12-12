@@ -9,7 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
 import androidx.transition.TransitionInflater
-import com.google.accompanist.appcompattheme.AppCompatTheme
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
@@ -39,7 +39,7 @@ class CardSettingsFragment : Fragment(), StoreSubscriber<DetailsState> {
         return ComposeView(requireContext()).apply {
             setContent {
                 isTransitionGroup = true
-                AppCompatTheme {
+                TangemTheme {
                     CardSettingsScreen(
                         state = screenState.value,
                         onBackPressed = {
