@@ -114,6 +114,7 @@ interface OneInchApi {
      *
      * @return [QuoteResponse]
      */
+    @GET("quote")
     suspend fun quote(
         @Query("fromTokenAddress") fromTokenAddress: String,
         @Query("toTokenAddress") toTokenAddress: String,
@@ -174,6 +175,7 @@ interface OneInchApi {
      *
      * @return [SwapResponse]
      */
+    @GET("swap")
     suspend fun swap(
         @Query("fromTokenAddress") fromTokenAddress: String,
         @Query("toTokenAddress") toTokenAddress: String,
