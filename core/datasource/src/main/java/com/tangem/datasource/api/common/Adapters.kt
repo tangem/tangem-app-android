@@ -1,4 +1,4 @@
-package com.tangem.tap.common.moshi
+package com.tangem.datasource.api.common
 
 import com.squareup.moshi.FromJson
 import com.squareup.moshi.ToJson
