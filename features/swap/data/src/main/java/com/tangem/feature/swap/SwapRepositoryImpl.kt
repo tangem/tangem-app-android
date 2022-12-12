@@ -7,14 +7,15 @@ import com.tangem.feature.swap.converters.QuotesConverter
 import com.tangem.feature.swap.converters.SwapConverter
 import com.tangem.feature.swap.converters.TokensConverter
 import com.tangem.feature.swap.domain.SwapRepository
-import com.tangem.feature.swap.domain.models.ApproveModel
-import com.tangem.feature.swap.domain.models.Currency
-import com.tangem.feature.swap.domain.models.QuoteModel
+import com.tangem.feature.swap.domain.models.data.ApproveModel
+import com.tangem.feature.swap.domain.models.data.Currency
+import com.tangem.feature.swap.domain.models.data.QuoteModel
+import com.tangem.feature.swap.domain.models.data.SwapDataModel
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
-class SwapRepositoryImpl @Inject constructor(
+internal class SwapRepositoryImpl @Inject constructor(
     private val tangemTechApi: TangemTechApi,
     private val oneInchApi: OneInchApi,
     private val tokensConverter: TokensConverter,
@@ -64,16 +65,16 @@ class SwapRepositoryImpl @Inject constructor(
         fromTokenAddress: String,
         toTokenAddress: String,
         amount: String,
-        fromAddress: String,
+        fromWalletAddress: String,
         slippage: Int,
-    ) {
+    ): SwapDataModel {
         return withContext(coroutineDispatcher.io) {
             swapConverter.convert(
                 oneInchApi.swap(
                     fromTokenAddress = fromTokenAddress,
                     toTokenAddress = toTokenAddress,
                     amount = amount,
-                    fromAddress = fromAddress,
+                    fromAddress = fromWalletAddress,
                     slippage = slippage,
                 ),
             )
