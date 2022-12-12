@@ -14,9 +14,9 @@ import com.tangem.common.flatMap
 import com.tangem.common.flatMapOnFailure
 import com.tangem.common.map
 import com.tangem.common.services.Result
+import com.tangem.datasource.api.tangemTech.TangemTechService
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.util.UserWalletId
-import com.tangem.network.api.tangemTech.TangemTechService
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.replaceByOrAdd
 import com.tangem.tap.domain.model.UserWallet
