@@ -55,29 +55,38 @@ object ScanCardProcessor {
     ) = withMainContext {
         onProgressStateChange(true)
         onScanStateChange(true)
-        tangemSdkManager.scanProduct(
+
+        tangemSdkManager.changeDisplayedCardIdNumbersCount(null)
+
+        val result = tangemSdkManager.scanProduct(
             userTokensRepository = userTokensRepository,
             cardId = cardId,
             additionalBlockchainsToDerive = additionalBlockchainsToDerive,
             useBiometricsForAccessCode = useBiometricsForAccessCode,
         )
+
+        store.dispatchOnMain(GlobalAction.ScanFailsCounter.ChooseBehavior(result))
+
+        result
             .doOnFailure { error ->
                 onProgressStateChange(false)
                 onScanStateChange(false)
                 onFailure(error)
             }
             .doOnSuccess { scanResponse ->
+                tangemSdkManager.changeDisplayedCardIdNumbersCount(scanResponse)
+
                 onScanStateChange(false)
                 checkForUnfinishedBackupForSaltPay(
                     backupService = backupService,
                     scanResponse = scanResponse,
                     onProgressStateChange = { onProgressStateChange(it) },
-                    nextHandler = {
+                    nextHandler = { scanResponse1 ->
                         showDisclaimerIfNeed(
-                            scanResponse = scanResponse,
-                            nextHandler = {
+                            scanResponse = scanResponse1,
+                            nextHandler = { scanResponse2 ->
                                 onScanSuccess(
-                                    scanResponse = scanResponse,
+                                    scanResponse = scanResponse2,
                                     onProgressStateChange = onProgressStateChange,
                                     onSuccess = onSuccess,
                                     onWalletNotCreated = onWalletNotCreated,
@@ -87,7 +96,6 @@ object ScanCardProcessor {
                         )
                     },
                 )
-
             }
     }
 
