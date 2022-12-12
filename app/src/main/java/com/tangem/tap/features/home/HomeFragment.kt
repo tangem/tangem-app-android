@@ -4,6 +4,7 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.activity.compose.BackHandler
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
@@ -42,6 +43,10 @@ class HomeFragment : Fragment(), StoreSubscriber<HomeState> {
 
         return ComposeView(inflater.context).apply {
             setContent {
+                BackHandler {
+                    requireActivity().finish()
+                }
+
                 AppCompatTheme {
                     ScreenContent()
                 }
