@@ -15,7 +15,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
-class SwapRepositoryImpl @Inject constructor(
+internal class SwapRepositoryImpl @Inject constructor(
     private val tangemTechApi: TangemTechApi,
     private val oneInchApi: OneInchApi,
     private val tokensConverter: TokensConverter,

@@ -15,8 +15,7 @@ class TangemTechService(
     private val logIsEnabled: Boolean = false,
 ) {
 
-    private val
-        headerInterceptors = mutableListOf<AddHeaderInterceptor>(
+    private val headerInterceptors = mutableListOf<AddHeaderInterceptor>(
         CacheControlHttpInterceptor(cacheMaxAge),
     )
 
