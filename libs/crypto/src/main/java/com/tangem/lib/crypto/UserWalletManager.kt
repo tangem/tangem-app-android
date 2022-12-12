@@ -34,7 +34,7 @@ interface UserWalletManager {
     /**
      * Returns wallet public address for token
      *
-     * @param currency for which find address
+     * @param networkId for currency
      */
-    fun getWalletAddress(currency: Currency): String
+    fun getWalletAddress(networkId: String): String
 }
