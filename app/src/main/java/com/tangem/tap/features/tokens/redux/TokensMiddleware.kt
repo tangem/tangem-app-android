@@ -286,7 +286,7 @@ class TokensMiddleware {
             )
 
             scope.launch {
-                userWalletsListManager.update(updatedUserWallet)
+                userWalletsListManager.save(updatedUserWallet, canOverride = true)
                     .flatMap {
                         walletCurrenciesManager.addCurrencies(
                             userWallet = updatedUserWallet,
