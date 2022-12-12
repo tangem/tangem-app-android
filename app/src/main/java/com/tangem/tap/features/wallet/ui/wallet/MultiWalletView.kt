@@ -3,7 +3,6 @@ package com.tangem.tap.features.wallet.ui.wallet
 import android.widget.Button
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
-import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.tap.common.analytics.Analytics
@@ -50,19 +49,8 @@ class MultiWalletView : WalletView() {
         lCardTotalBalance.root.show()
         rvMultiwallet.show()
         btnAddToken.show()
-        setupWalletCardNumber(binding)
     }
 
-    private fun setupWalletCardNumber(binding: FragmentWalletBinding) = with(binding) {
-        val card = store.state.globalState.scanResponse?.card
-        if (card?.backupStatus is CardDTO.BackupStatus.Active) {
-            val cardCount = (card.backupStatus as CardDTO.BackupStatus.Active).cardCount + 1
-            tvTwinCardNumber.show()
-            tvTwinCardNumber.text = tvTwinCardNumber.getQuantityString(R.plurals.card_label_card_count, cardCount)
-        } else {
-            tvTwinCardNumber.hide()
-        }
-    }
 
     override fun onViewCreated() {
         setupWalletsRecyclerView()
@@ -84,6 +72,7 @@ class MultiWalletView : WalletView() {
         handleTotalBalance(binding, state.totalBalance, state.state)
         handleBackupWarning(binding, state.showBackupWarning)
         handleRescanWarning(binding, state.missingDerivations.isNotEmpty())
+        setupWalletCardNumber(binding, state.walletCardsCount)
         walletsAdapter.submitList(state.walletsData)
 
         binding.pbLoadingUserTokens.show(state.loadingUserTokens)
@@ -110,6 +99,16 @@ class MultiWalletView : WalletView() {
             store.dispatch(NavigationAction.NavigateTo(AppScreen.AddTokens))
         }
         handleErrorStates(state = state, binding = binding, fragment = fragment)
+    }
+
+    private fun setupWalletCardNumber(binding: FragmentWalletBinding, walletCardsCount: Int?) = with(binding) {
+        if (walletCardsCount != null) {
+            tvTwinCardNumber.show()
+            tvTwinCardNumber.text =
+                tvTwinCardNumber.getQuantityString(R.plurals.card_label_card_count, walletCardsCount)
+        } else {
+            tvTwinCardNumber.hide()
+        }
     }
 
     private fun handleBackupWarning(
