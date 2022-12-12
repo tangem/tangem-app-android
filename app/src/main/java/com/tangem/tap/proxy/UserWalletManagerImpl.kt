@@ -84,8 +84,8 @@ class UserWalletManagerImpl(
         mainStore.dispatch(action)
     }
 
-    override fun getWalletAddress(currency: Currency): String {
-        val blockchain = Blockchain.fromNetworkId(currency.networkId)
+    override fun getWalletAddress(networkId: String): String {
+        val blockchain = Blockchain.fromNetworkId(networkId)
         val card = appStateHolder.getActualCard()
         if (blockchain != null && card != null) {
             val blockchainNetwork = BlockchainNetwork(blockchain, card)
