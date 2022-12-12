@@ -92,7 +92,7 @@ private fun Header(
             ) {
                 Icon(
                     modifier = Modifier.size(TangemTheme.dimens.size24),
-                    painter = painterResource(id = R.drawable.ic_close),
+                    painter = painterResource(id = R.drawable.ic_close_24),
                     tint = TangemTheme.colors.icon.secondary,
                     contentDescription = stringResource(id = R.string.common_cancel),
                 )
