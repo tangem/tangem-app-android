@@ -9,7 +9,11 @@ import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.analytics.events.Portfolio
-import com.tangem.tap.common.extensions.*
+import com.tangem.tap.common.extensions.animateVisibility
+import com.tangem.tap.common.extensions.formatAmountAsSpannedString
+import com.tangem.tap.common.extensions.getQuantityString
+import com.tangem.tap.common.extensions.hide
+import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.tokens.CurrenciesRepository
@@ -43,6 +47,7 @@ class MultiWalletView : WalletView() {
         lAddress.root.hide()
         rowButtons.hide()
         lSingleWalletBalance.root.hide()
+        lCardTotalBalance.root.show()
         rvMultiwallet.show()
         btnAddToken.show()
         setupWalletCardNumber(binding)
@@ -134,21 +139,20 @@ class MultiWalletView : WalletView() {
         totalBalance: TotalBalance?,
         progressState: ProgressState,
     ) = with(binding.lCardTotalBalance) {
-        root.isVisible = totalBalance != null
-        if (totalBalance != null) {
-            // Skip changes when on refreshing state
-            if (totalBalance.state == ProgressState.Refreshing ||
-                progressState == ProgressState.Refreshing
-            ) return@with
+        if (totalBalance == null) {
+            veilBalance.animateVisibility(show = true)
+            root.isVisible = progressState == ProgressState.Loading
+        } else {
+            root.isVisible = true
 
-            if (totalBalance.state == ProgressState.Loading) {
-                veilBalance.veil()
-            } else {
-                veilBalance.unVeil()
+            // Skip changes when on refreshing state
+            if (totalBalance.state == ProgressState.Refreshing || progressState == ProgressState.Refreshing) {
+                return@with
             }
-            tvProcessing.animateVisibility(
-                show = totalBalance.state == ProgressState.Error,
-            )
+
+            veilBalance.animateVisibility(show = totalBalance.state == ProgressState.Loading)
+            tvBalance.animateVisibility(show = totalBalance.state != ProgressState.Loading)
+            tvProcessing.animateVisibility(show = totalBalance.state == ProgressState.Error)
 
             tvBalance.text = totalBalance.fiatAmount.formatAmountAsSpannedString(
                 currencySymbol = totalBalance.fiatCurrency.symbol,
