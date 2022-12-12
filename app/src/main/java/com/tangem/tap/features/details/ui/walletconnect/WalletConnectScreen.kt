@@ -81,7 +81,7 @@ private fun AddSessionFab(
         modifier = modifier,
     ) {
         Icon(
-            painter = painterResource(id = R.drawable.ic_plus),
+            painter = painterResource(id = R.drawable.ic_plus_24),
             contentDescription = "",
         )
     }
