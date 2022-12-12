@@ -114,12 +114,15 @@
     <string name="welcome_unlock_card">Сканировать карту</string>
     <string name="onboarding_navbar_save_wallet">Сохраните ваш кошелек</string>
     <string name="save_user_wallet_agreement_header">Вы хотите использовать %s?</string>
+    <string name="save_user_wallet_agreement_header_biometrics">Вы хотите использовать биометрию?</string>
     <string name="save_user_wallet_agreement_access_title">Доступ в приложение</string>
     <string name="save_user_wallet_agreement_access_description">Войдите в приложение и следите за своим балансом без сканирования карты</string>
     <string name="save_user_wallet_agreement_code_title">Код доступа</string>
     <string name="save_user_wallet_agreement_code_description">Для операций с вашим кошельком будет запрашиваться %s вместо кода доступа карты</string>
+    <string name="save_user_wallet_agreement_code_description_biometrics">Для операций с вашим кошельком будет запрашиваться биометрия вместо кода доступа карты</string>
     <string name="save_user_wallet_agreement_notice">Обратите внимание, что для совершения транзакции с вашими средствами по-прежнему потребуется ваша карта</string>
     <string name="save_user_wallet_agreement_allow">Использовать %s</string>
+    <string name="save_user_wallet_agreement_allow_biometrics">Использовать биометрию</string>
     <string name="save_user_wallet_agreement_new_feature">Новый функционал</string>
     <string name="user_wallet_list_title">Мои кошельки</string>
     <string name="user_wallet_list_multi_header">Мультивалютные</string>
