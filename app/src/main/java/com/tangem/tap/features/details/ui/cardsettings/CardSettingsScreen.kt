@@ -15,6 +15,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.layout.ContentScale
@@ -23,6 +25,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.common.compose.TangemTypography
 import com.tangem.tap.features.details.ui.common.DetailsMainButton
 import com.tangem.tap.features.details.ui.common.SettingsScreensScaffold
@@ -34,14 +37,22 @@ fun CardSettingsScreen(
     onBackPressed: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val needReadCard = state.cardDetails == null
+    val backgroundColor by rememberUpdatedState(
+        newValue = if (needReadCard) TangemTheme.colors.background.primary
+        else TangemTheme.colors.background.secondary,
+    )
+
     SettingsScreensScaffold(
-        content =
-        if (state.cardDetails == null) {
-            { CardSettingsReadCard(state.onScanCardClick, modifier = modifier) }
-        } else {
-            { CardSettings(state = state, modifier = modifier) }
+        content = {
+            if (needReadCard) {
+                CardSettingsReadCard(state.onScanCardClick, modifier = modifier)
+            } else {
+                CardSettings(state = state, modifier = modifier)
+            }
         },
         titleRes = R.string.card_settings_title,
+        backgroundColor = backgroundColor,
         onBackClick = onBackPressed,
     )
 }
