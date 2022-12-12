@@ -30,6 +30,7 @@ import com.tangem.tap.userWalletsListManager
 import com.tangem.tap.walletStoresManager
 import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.rekotlin.Action
@@ -194,18 +195,39 @@ class DetailsMiddleware {
         fun handle(state: DetailsState, action: DetailsAction.AppSettings) {
             when (action) {
                 is DetailsAction.AppSettings.SwitchPrivacySetting -> {
-                    if (tangemSdkManager.canEnrollBiometrics) {
-                        store.dispatch(DetailsAction.AppSettings.EnrollBiometrics)
-                    }
                     when (action.setting) {
                         PrivacySetting.SaveWallets -> toggleSaveWallets(state, enable = action.enable)
                         PrivacySetting.SaveAccessCode -> toggleSaveAccessCodes(state, enable = action.enable)
                     }
                 }
-                is DetailsAction.AppSettings.SwitchPrivacySetting.Success -> Unit
-                is DetailsAction.AppSettings.EnrollBiometrics -> Unit
-                is DetailsAction.AppSettings.EnrollBiometrics.Enroll -> enrollBiometrics()
-                is DetailsAction.AppSettings.EnrollBiometrics.Cancel -> Unit
+                is DetailsAction.AppSettings.CheckBiometricsStatus -> {
+                    checkBiometricsStatus(action.awaitStatusChange, state)
+                }
+                is DetailsAction.AppSettings.EnrollBiometrics -> {
+                    enrollBiometrics()
+                }
+                is DetailsAction.AppSettings.SwitchPrivacySetting.Success,
+                is DetailsAction.AppSettings.BiometricsStatusChanged,
+                -> Unit
+            }
+        }
+
+        /**
+         * @param awaitStatusChange If true then start a new coroutine and check the biometric status every 100
+         * milliseconds until it changes
+         * */
+        private fun checkBiometricsStatus(awaitStatusChange: Boolean, state: DetailsState) {
+            scope.launch {
+                if (awaitStatusChange) {
+                    while (state.needEnrollBiometrics == tangemSdkManager.needEnrollBiometrics) {
+                        delay(timeMillis = 100)
+                    }
+                }
+                store.dispatchOnMain(
+                    DetailsAction.AppSettings.BiometricsStatusChanged(
+                        needEnrollBiometrics = tangemSdkManager.needEnrollBiometrics,
+                    ),
+                )
             }
         }
 
