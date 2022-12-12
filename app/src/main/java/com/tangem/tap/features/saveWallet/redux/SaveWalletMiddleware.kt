@@ -82,7 +82,7 @@ internal class SaveWalletMiddleware {
             val isFirstSavedWallet = !userWalletsListManager.hasSavedUserWallets
 
             saveAccessCodeIfNeeded(state.backupInfo?.accessCode, userWallet.cardsInWallet)
-                .flatMap { userWalletsListManager.save(userWallet) }
+                .flatMap { userWalletsListManager.save(userWallet, canOverride = true) }
                 .doOnFailure { error ->
                     store.dispatchOnMain(SaveWalletAction.Save.Error(error))
                 }
@@ -109,7 +109,7 @@ internal class SaveWalletMiddleware {
     }
 
     private fun saveWalletWasShown() {
-        preferencesStorage.shouldShowSaveWallet = false
+        preferencesStorage.shouldShowSaveUserWalletScreen = false
     }
 
     private suspend fun saveAccessCodeIfNeeded(
