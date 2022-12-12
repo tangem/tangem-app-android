@@ -4,7 +4,7 @@ import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
-import com.tangem.network.common.MoshiConverter
+import com.tangem.datasource.api.common.MoshiConverter
 import java.util.*
 
 class PreferencesStorage(applicationContext: Application) {
@@ -33,7 +33,7 @@ class PreferencesStorage(applicationContext: Application) {
         get() = preferences.getLong(CHAT_FIRST_LAUNCH_KEY, 0).takeIf { it != 0L }
         set(value) = preferences.edit { putLong(CHAT_FIRST_LAUNCH_KEY, value ?: 0) }
 
-    var shouldShowSaveWallet: Boolean
+    var shouldShowSaveUserWalletScreen: Boolean
         get() = preferences.getBoolean(SAVE_WALLET_DIALOG_SHOWN_KEY, true)
         set(value) = preferences.edit {
             putBoolean(SAVE_WALLET_DIALOG_SHOWN_KEY, value)
