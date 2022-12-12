@@ -15,6 +15,7 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
+import retrofit2.Converter
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import javax.inject.Singleton
@@ -25,16 +26,12 @@ class NetworkModule {
 
     @Provides
     @Singleton
-    fun provideTangemTechApi(okHttpClient: OkHttpClient): TangemTechApi {
+    fun provideTangemTechApi(
+        okHttpClient: OkHttpClient,
+        converter: Converter.Factory,
+    ): TangemTechApi {
         return Retrofit.Builder()
-            .addConverterFactory(
-                MoshiConverterFactory.create(
-                    Moshi.Builder()
-                        .add(KotlinJsonAdapterFactory())
-                        .add(BigDecimalAdapter())
-                        .build(),
-                ),
-            )
+            .addConverterFactory(converter)
             .baseUrl(DEV_TANGEM_TECH_BASE_URL)
             .client(okHttpClient)
             .build()
@@ -44,28 +41,26 @@ class NetworkModule {
     @Provides
     @Singleton
     @OneInchEthereum
-    fun provideOneInchEthereumApi(): OneInchApi {
+    fun provideOneInchEthereumApi(converter: Converter.Factory): OneInchApi {
         return Retrofit.Builder()
-            .addConverterFactory(
-                MoshiConverterFactory.create(),
-            )
+            .addConverterFactory(converter)
             .baseUrl(ONE_INCH_ETHER_BASE_URL)
-            .client(OkHttpClient())
+            .client(
+                OkHttpClient.Builder()
+                    .addInterceptor(
+                        HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY),
+                    )
+                    .build(),
+            )
             .build()
             .create(OneInchApi::class.java)
     }
 
     @Provides
     @Singleton
-    fun provideReferralApi(okHttpClient: OkHttpClient): ReferralApi {
+    fun provideReferralApi(okHttpClient: OkHttpClient, converter: Converter.Factory): ReferralApi {
         return Retrofit.Builder()
-            .addConverterFactory(
-                MoshiConverterFactory.create(
-                    Moshi.Builder()
-                        .addLast(KotlinJsonAdapterFactory())
-                        .build(),
-                ),
-            )
+            .addConverterFactory(converter)
             .baseUrl(DEV_TANGEM_TECH_BASE_URL)
             .client(okHttpClient)
             .build()
@@ -83,9 +78,20 @@ class NetworkModule {
             .build()
     }
 
+    @Provides
+    @Singleton
+    fun provideMoshiConverter(): Converter.Factory {
+        return MoshiConverterFactory.create(
+            Moshi.Builder()
+                .add(KotlinJsonAdapterFactory())
+                .add(BigDecimalAdapter())
+                .build(),
+        )
+    }
+
     private companion object {
         const val PROD_TANGEM_TECH_BASE_URL = "https://api.tangem-tech.com/v1/"
         const val DEV_TANGEM_TECH_BASE_URL = "https://devapi.tangem-tech.com/v1/"
-        const val ONE_INCH_ETHER_BASE_URL = "https://api.1inch.io/swagger/ethereum-json/"
+        const val ONE_INCH_ETHER_BASE_URL = "https://api.1inch.io/v5.0/1/"
     }
 }
