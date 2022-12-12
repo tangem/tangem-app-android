@@ -294,28 +294,29 @@ class WalletMiddleware {
             }
             is WalletAction.UserWalletChanged -> Unit
             is WalletAction.WalletStoresChanged -> {
-                scope.launch(Dispatchers.Default) {
-                    fetchTotalFiatBalance(action.walletStores, walletState)
-                    findMissedDerivations(action.walletStores)
-                    tryToShowAppRatingWarning(action.walletStores)
-                }
+                fetchTotalFiatBalance(action.walletStores, walletState)
+                findMissedDerivations(action.walletStores)
+                tryToShowAppRatingWarning(action.walletStores)
             }
             is WalletAction.TotalFiatBalanceChanged -> Unit
         }
     }
 
     private fun fetchTotalFiatBalance(walletStores: List<WalletStoreModel>, state: WalletState) {
-        scope.launch {
-            val totalFiatBalance = totalFiatBalanceCalculator.calculate(
-                prevAmount = state.totalBalance?.fiatAmount ?: BigDecimal.ZERO,
+        scope.launch(Dispatchers.Default) {
+            val totalFiatBalance = totalFiatBalanceCalculator.calculateOrNull(
+                prevAmount = state.totalBalance?.fiatAmount,
                 walletStores = walletStores,
             )
-            store.dispatchOnMain(WalletAction.TotalFiatBalanceChanged(totalFiatBalance))
+
+            if (totalFiatBalance != null) {
+                store.dispatchOnMain(WalletAction.TotalFiatBalanceChanged(totalFiatBalance))
+            }
         }
     }
 
     private fun findMissedDerivations(wallStores: List<WalletStoreModel>) {
-        scope.launch {
+        scope.launch(Dispatchers.Default) {
             val missedDerivations = wallStores
                 .filter { store ->
                     store.walletsData.any { it.status is WalletDataModel.MissedDerivation }
@@ -327,15 +328,17 @@ class WalletMiddleware {
     }
 
     private fun tryToShowAppRatingWarning(walletStores: List<WalletStoreModel>) {
-        warningsMiddleware.tryToShowAppRatingWarning(
-            hasNonZeroWallets = walletStores
-                .flatMap { it.walletsData }
-                .any { it.status.amount.isGreaterThan(BigDecimal.ZERO) },
-        )
+        scope.launch(Dispatchers.Default) {
+            warningsMiddleware.tryToShowAppRatingWarning(
+                hasNonZeroWallets = walletStores
+                    .flatMap { it.walletsData }
+                    .any { it.status.amount.isGreaterThan(BigDecimal.ZERO) },
+            )
+        }
     }
 
     private fun showSaveWalletIfNeeded() {
-        if (preferencesStorage.shouldShowSaveWallet
+        if (preferencesStorage.shouldShowSaveUserWalletScreen
             && tangemSdkManager.canUseBiometry
             && store.state.navigationState.backStack.lastOrNull() == AppScreen.Wallet
         ) {
