@@ -121,12 +121,15 @@ class DetailsMiddleware {
                             .flatMap { userWalletsListManager.delete(listOf(card.userWalletId)) }
                             .doOnSuccess {
                                 Analytics.send(Settings.CardSettings.FactoryResetFinished())
-                                val screen = if (userWalletsListManager.hasSavedUserWallets) {
-                                    AppScreen.Welcome
+
+                                val selectedUserWallet = userWalletsListManager.selectedUserWalletSync
+                                if (selectedUserWallet != null) {
+                                    store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
+                                    store.onUserWalletSelected(selectedUserWallet)
                                 } else {
-                                    AppScreen.Home
+                                    userWalletsListManager.lock()
+                                    store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Home))
                                 }
-                                store.dispatchOnMain(NavigationAction.PopBackTo(screen))
                             }
                             .doOnFailure { error ->
                                 (error as? TangemSdkError)?.let { sdkError ->
