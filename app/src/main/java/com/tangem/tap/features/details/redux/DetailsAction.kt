@@ -55,10 +55,14 @@ sealed class DetailsAction : Action {
             ) : AppSettings()
         }
 
-        object EnrollBiometrics : AppSettings() {
-            object Enroll : AppSettings()
-            object Cancel : AppSettings()
-        }
+        data class CheckBiometricsStatus(
+            val awaitStatusChange: Boolean,
+        ) : AppSettings()
+
+        object EnrollBiometrics : AppSettings()
+        data class BiometricsStatusChanged(
+            val needEnrollBiometrics: Boolean,
+        ) : AppSettings()
     }
 
     data class ChangeAppCurrency(val fiatCurrency: FiatCurrency) : DetailsAction()

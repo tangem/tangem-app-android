@@ -157,15 +157,17 @@ private fun handlePrivacyAction(
     state: DetailsState,
 ): DetailsState {
     return when (action) {
-        is DetailsAction.AppSettings.SwitchPrivacySetting -> state
         is DetailsAction.AppSettings.SwitchPrivacySetting.Success -> when (action.setting) {
             PrivacySetting.SaveWallets -> state.copy(saveWallets = action.enable)
             PrivacySetting.SaveAccessCode -> state.copy(saveAccessCodes = action.enable)
         }
-        is DetailsAction.AppSettings.EnrollBiometrics -> state.copy(needEnrollBiometrics = true)
-        is DetailsAction.AppSettings.EnrollBiometrics.Enroll,
-        is DetailsAction.AppSettings.EnrollBiometrics.Cancel,
-        -> state.copy(needEnrollBiometrics = false)
+        is DetailsAction.AppSettings.BiometricsStatusChanged -> state.copy(
+            needEnrollBiometrics = action.needEnrollBiometrics,
+        )
+        is DetailsAction.AppSettings.SwitchPrivacySetting,
+        is DetailsAction.AppSettings.EnrollBiometrics,
+        is DetailsAction.AppSettings.CheckBiometricsStatus,
+        -> state
     }
 }
 
