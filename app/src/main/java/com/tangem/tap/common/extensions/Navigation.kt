@@ -88,7 +88,7 @@ fun FragmentActivity.getPreviousScreen(): AppScreen? {
 
 fun FragmentActivity.addOnBackPressedDispatcher(
     isEnabled: Boolean = true,
-    onBackPressed: VoidCallback
+    onBackPressed: VoidCallback,
 ): OnBackPressedCallback = (object : OnBackPressedCallback(isEnabled) {
     override fun handleOnBackPressed() {
         onBackPressed()
