@@ -22,6 +22,7 @@ import com.tangem.tap.features.send.redux.states.ButtonState
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
+import com.tangem.tap.tangemSdkManager
 import com.tangem.tap.userWalletsListManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -71,8 +72,10 @@ private fun handleHomeAction(action: Action) {
 
 private fun readCard() = scope.launch {
     delay(timeMillis = 200)
-    ScanCardProcessor.scan(
+    tangemSdkManager.setAccessCodeRequestPolicy(
         useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes,
+    )
+    ScanCardProcessor.scan(
         onProgressStateChange = { showProgress ->
             if (showProgress) {
                 changeButtonState(ButtonState.PROGRESS)

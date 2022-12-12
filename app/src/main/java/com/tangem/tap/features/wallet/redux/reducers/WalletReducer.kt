@@ -53,7 +53,12 @@ private fun internalReduce(action: Action, state: AppState, appStateHolder: AppS
         is WalletAction.Warnings -> newState = handleCheckSignedHashesActions(action, newState)
         is WalletAction.MultiWallet -> newState = multiWalletReducer.reduce(action, newState)
 
-        is WalletAction.ResetState -> newState = WalletState(cardId = action.newCardId)
+        is WalletAction.ResetState -> {
+            newState = WalletState(
+                cardId = action.newCard.cardId,
+                walletCardsCount = action.newCard.findCardsCount(),
+            )
+        }
         is WalletAction.SetIfTestnetCard -> newState = newState.copy(isTestnet = action.isTestnet)
         is WalletAction.EmptyWallet -> {
             newState = newState.copy(
@@ -333,6 +338,7 @@ private fun internalReduce(action: Action, state: AppState, appStateHolder: AppS
                 showBackupWarning = card.isMultiwalletAllowed &&
                     card.settings.isBackupAllowed &&
                     card.backupStatus == CardDTO.BackupStatus.NoBackup,
+                walletCardsCount = card.findCardsCount(),
             )
         }
         is WalletAction.WalletStoresChanged -> {
@@ -364,6 +370,11 @@ private fun internalReduce(action: Action, state: AppState, appStateHolder: AppS
     }
     appStateHolder.walletState = newState
     return newState
+}
+
+private fun CardDTO.findCardsCount(): Int? {
+    return (this.backupStatus as? CardDTO.BackupStatus.Active)?.cardCount?.inc()
+        ?.takeIf { this.isMultiwalletAllowed }
 }
 
 @JvmName("walletStoreModelToReduxModel")

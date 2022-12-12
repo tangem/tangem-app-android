@@ -11,11 +11,12 @@ import com.tangem.blockchain.common.BlockchainSdkConfig
 import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.common.json.MoshiJsonConverter
+import com.tangem.datasource.api.common.MoshiConverter
 import com.tangem.domain.DomainLayer
 import com.tangem.domain.common.LogConfig
-import com.tangem.network.common.MoshiConverter
 import com.tangem.tap.common.AndroidAssetReader
 import com.tangem.tap.common.AssetReader
+import com.tangem.tap.common.IntentHandler
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
@@ -109,6 +110,7 @@ val walletCurrenciesManager by lazy {
 val totalFiatBalanceCalculator by lazy {
     TotalFiatBalanceCalculator.provideDefaultImplementation()
 }
+val intentHandler by lazy { IntentHandler() }
 
 @HiltAndroidApp
 class TapApplication : Application(), ImageLoaderFactory {
@@ -155,7 +157,7 @@ class TapApplication : Application(), ImageLoaderFactory {
         )
         appStateHolder.userTokensRepository = userTokensRepository
     }
-
+// [REDACTED_TODO_COMMENT]
     private fun initMoshiConverter() {
         fun appAdapters(): List<Any> = listOf(
             BigDecimalAdapter(),

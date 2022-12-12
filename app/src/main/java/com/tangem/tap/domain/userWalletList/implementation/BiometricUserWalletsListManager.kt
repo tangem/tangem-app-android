@@ -110,12 +110,36 @@ internal class BiometricUserWalletsListManager(
         findSelectedWallet()!!
     }
 
-    override suspend fun save(userWallet: UserWallet): CompletionResult<Unit> {
-        return saveInternal(userWallet, override = false)
-    }
+    override suspend fun save(
+        userWallet: UserWallet,
+        canOverride: Boolean,
+    ): CompletionResult<Unit> = withUnlock {
+        val isWalletSaved = state.value.wallets
+            .filter { it.isSaved }
+            .flatMap(UserWallet::cardsInWallet)
+            .contains(userWallet.cardId)
 
-    override suspend fun update(userWallet: UserWallet): CompletionResult<Unit> {
-        return saveInternal(userWallet, override = true)
+        if (isWalletSaved && !canOverride) {
+            CompletionResult.Failure(UserWalletListError.WalletAlreadySaved)
+        } else {
+            keysRepository.save(
+                walletId = userWallet.walletId,
+                encryptionKey = userWallet.scanResponse.card.encryptionKey,
+            )
+                .doOnSuccess { keys ->
+                    state.update { prevState ->
+                        prevState.copy(
+                            encryptionKeys = (keys + prevState.encryptionKeys).distinctBy { it.walletId },
+                        )
+                    }
+                }
+                .flatMap { publicInformationRepository.save(userWallet) }
+                .flatMap { sensitiveInformationRepository.save(userWallet) }
+                .flatMap { loadModels() }
+                .doOnSuccess {
+                    userWallet.isSaved = true
+                }
+        }
     }
 
     override suspend fun delete(walletIds: List<UserWalletId>): CompletionResult<Unit> {
@@ -159,38 +183,6 @@ internal class BiometricUserWalletsListManager(
     override suspend fun get(walletId: UserWalletId): CompletionResult<UserWallet> = withUnlock {
         return catching {
             state.value.wallets.first { it.walletId == walletId }
-        }
-    }
-
-    private suspend fun saveInternal(
-        userWallet: UserWallet,
-        override: Boolean,
-    ): CompletionResult<Unit> = withUnlock {
-        val isWalletSaved = state.value.wallets
-            .filter { it.isSaved }
-            .flatMap(UserWallet::cardsInWallet)
-            .contains(userWallet.cardId)
-
-        if (isWalletSaved && !override) {
-            CompletionResult.Failure(UserWalletListError.WalletAlreadySaved)
-        } else {
-            keysRepository.save(
-                walletId = userWallet.walletId,
-                encryptionKey = userWallet.scanResponse.card.encryptionKey,
-            )
-                .doOnSuccess { keys ->
-                    state.update { prevState ->
-                        prevState.copy(
-                            encryptionKeys = (keys + prevState.encryptionKeys).distinctBy { it.walletId },
-                        )
-                    }
-                }
-                .flatMap { publicInformationRepository.save(userWallet) }
-                .flatMap { sensitiveInformationRepository.save(userWallet) }
-                .flatMap { loadModels() }
-                .doOnSuccess {
-                    userWallet.isSaved = true
-                }
         }
     }
 

@@ -54,7 +54,7 @@ fun TextButton(
         onClick = onClick,
         enabled = enabled,
         showProgress = false,
-        colors = TangemButtonsDefaults.textButtonColors,
+        colors = TangemButtonsDefaults.defaultTextButtonColors,
         size = TangemButtonSize.Text,
     )
 }
@@ -77,7 +77,26 @@ fun TextButtonIconLeft(
         onClick = onClick,
         enabled = enabled,
         showProgress = false,
-        colors = TangemButtonsDefaults.textButtonColors,
+        colors = TangemButtonsDefaults.defaultTextButtonColors,
+        size = TangemButtonSize.Text,
+    )
+}
+
+@Composable
+fun WarningTextButton(
+    modifier: Modifier = Modifier,
+    text: String,
+    enabled: Boolean = true,
+    onClick: () -> Unit,
+) {
+    TangemButton(
+        modifier = modifier,
+        text = text,
+        icon = TangemButtonIcon.None,
+        onClick = onClick,
+        enabled = enabled,
+        showProgress = false,
+        colors = TangemButtonsDefaults.warningTextButtonColors,
         size = TangemButtonSize.Text,
     )
 }
@@ -325,7 +344,7 @@ private fun TangemButtonSize.toShape(): Shape = when (this) {
     TangemButtonSize.Text -> TangemTheme.shapes.roundedCornersSmall
 }
 
-private object TangemButtonsDefaults {
+object TangemButtonsDefaults {
     val elevation: ButtonElevation
         @Composable get() = ButtonDefaults
             .elevation(
@@ -349,17 +368,25 @@ private object TangemButtonsDefaults {
             disabledContentColor = TangemTheme.colors.text.disabled,
         )
 
-    val textButtonColors: ButtonColors
+    val defaultTextButtonColors: ButtonColors
         @Composable get() = TangemButtonColors(
             backgroundColor = Color.Transparent,
             contentColor = TangemTheme.colors.text.secondary,
             disabledBackgroundColor = Color.Transparent,
             disabledContentColor = TangemTheme.colors.text.disabled,
         )
+
+    val warningTextButtonColors: ButtonColors
+        @Composable get() = TangemButtonColors(
+            backgroundColor = Color.Transparent,
+            contentColor = TangemTheme.colors.text.warning,
+            disabledBackgroundColor = Color.Transparent,
+            disabledContentColor = TangemTheme.colors.text.disabled,
+        )
 }
 
 @Immutable
-private class TangemButtonColors(
+private open class TangemButtonColors(
     private val backgroundColor: Color,
     private val contentColor: Color,
     private val disabledBackgroundColor: Color,
@@ -559,6 +586,11 @@ private fun TextButtonSample(
             text = "Enabled",
             icon = painterResource(id = R.drawable.ic_plus),
             enabled = false,
+            onClick = { /* no-op */ },
+        )
+        Divider(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8))
+        WarningTextButton(
+            text = "Delete",
             onClick = { /* no-op */ },
         )
     }
