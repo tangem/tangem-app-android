@@ -25,18 +25,19 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.common.compose.TangemTypography
 import com.tangem.wallet.R
 
 @Composable
 fun SettingsScreensScaffold(
+    modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
     background: @Composable (() -> Unit)? = null,
     fab: @Composable (() -> Unit)? = null,
-    backgroundColor: Color = colorResource(id = R.color.background_primary),
+    backgroundColor: Color = TangemTheme.colors.background.secondary,
     titleRes: Int? = null,
     onBackClick: () -> Unit,
-    modifier: Modifier = Modifier,
 ) {
     BackHandler(true, onBackClick)
 
@@ -58,9 +59,13 @@ fun SettingsScreensScaffold(
                 Column(modifier = modifier.fillMaxWidth()) {
                     Text(
                         text = stringResource(id = titleRes),
-                        modifier = modifier.padding(start = 20.dp, end = 20.dp, bottom = 52.dp),
-                        style = TangemTypography.headline1,
-                        color = colorResource(id = R.color.text_primary_1),
+                        modifier = modifier.padding(
+                            start = TangemTheme.dimens.spacing20,
+                            end = TangemTheme.dimens.spacing20,
+                            bottom = TangemTheme.dimens.spacing54,
+                        ),
+                        style = TangemTheme.typography.h1,
+                        color = TangemTheme.colors.text.primary1,
                     )
                     content()
                 }
@@ -86,18 +91,20 @@ fun ScreenTitle(
 
 @Composable
 fun EmptyTopBarWithNavigation(
-    onBackClick: () -> Unit,
-    backgroundColor: Color = colorResource(id = R.color.background_primary),
     modifier: Modifier = Modifier,
+    onBackClick: () -> Unit,
+    backgroundColor: Color = TangemTheme.colors.background.primary,
 ) {
     TopAppBar(
+        modifier = modifier,
         title = { },
         navigationIcon =
         {
             IconButton(onClick = onBackClick) {
                 Icon(
-                    painterResource(id = R.drawable.ic_back), "",
-                    tint = colorResource(id = R.color.icon_primary_1),
+                    painter = painterResource(id = R.drawable.ic_back),
+                    contentDescription = null,
+                    tint = TangemTheme.colors.icon.primary1,
                 )
             }
         },
@@ -108,10 +115,10 @@ fun EmptyTopBarWithNavigation(
 
 @Composable
 fun DetailsMainButton(
+    modifier: Modifier = Modifier,
     title: String,
     enabled: Boolean = true,
     onClick: (() -> Unit),
-    modifier: Modifier = Modifier,
 ) {
     Button(
         onClick = onClick,
