@@ -127,7 +127,7 @@ internal class WalletSelectorMiddleware {
                     store.dispatchOnMain(WalletSelectorAction.AddWallet.Success)
 
                     if (isSavedWalletSelected) {
-                        store.dispatchOnMain(NavigationAction.PopBackTo())
+                        store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
                         store.onUserWalletSelected(selectedWallet)
                     }
                 }
@@ -141,7 +141,7 @@ internal class WalletSelectorMiddleware {
                     store.dispatchOnMain(WalletSelectorAction.HandleError(error))
                 }
                 .doOnSuccess { selectedWallet ->
-                    store.dispatchOnMain(NavigationAction.PopBackTo())
+                    store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
                     store.onUserWalletSelected(selectedWallet)
                 }
         }
