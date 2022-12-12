@@ -33,6 +33,7 @@ class SingleWalletView : WalletView() {
     }
 
     private fun showSingleWalletView(binding: FragmentWalletBinding) = with(binding) {
+        tvTwinCardNumber.hide()
         rvMultiwallet.hide()
         btnAddToken.hide()
         rvPendingTransaction.hide()
