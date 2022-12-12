@@ -59,6 +59,16 @@ internal class SaveWalletMiddleware {
         }
     }
 
+    /**
+
+     * or from [SaveWalletState.backupInfo] if provided from
+     * [com.tangem.tap.features.onboarding.OnboardingHelper.trySaveWalletAndNavigateToWalletScreen]
+     *
+     * If saved user's wallet was selected then pop back to [AppScreen.Wallet]
+     * or navigate to [AppScreen.WalletSelector] otherwise
+     *
+     * TODO: Update that logic after onboarding and backup features refactoring
+     * */
     private fun saveWallet(state: SaveWalletState) {
         val scanResponse = state.backupInfo?.scanResponse
             ?: store.state.globalState.scanResponse
@@ -69,6 +79,8 @@ internal class SaveWalletMiddleware {
                 .backupCardsIds(state.backupInfo?.backupCardsIds)
                 .build()
 
+            val isFirstSavedWallet = !userWalletsListManager.hasSavedUserWallets
+
             saveAccessCodeIfNeeded(state.backupInfo?.accessCode, userWallet.cardsInWallet)
                 .flatMap { userWalletsListManager.save(userWallet) }
                 .doOnFailure { error ->
@@ -76,19 +88,22 @@ internal class SaveWalletMiddleware {
                 }
                 .doOnSuccess {
                     preferencesStorage.shouldSaveUserWallets = true
-                    preferencesStorage.shouldSaveAccessCodes = true
+
+                    // Enable saving access codes only if this is the first time user save the wallet
+                    preferencesStorage.shouldSaveAccessCodes = isFirstSavedWallet ||
+                        preferencesStorage.shouldSaveAccessCodes
 
                     val isSavedWalletSelected =
                         userWalletsListManager.selectedUserWalletSync?.walletId == userWallet.walletId
 
+                    store.dispatchOnMain(SaveWalletAction.Save.Success)
+
                     if (isSavedWalletSelected) {
                         store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
+                        store.onUserWalletSelected(userWallet)
                     } else {
                         store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.WalletSelector))
                     }
-
-                    store.dispatchOnMain(SaveWalletAction.Save.Success)
-                    store.onUserWalletSelected(userWallet)
                 }
         }
     }
