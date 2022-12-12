@@ -221,7 +221,7 @@
     <string name="common_delete">Entfernen</string>
     <string name="details_row_privacy_policy">Privacy policy</string>
     <string name="save_user_wallet_agreement_enroll_biometrics_title">Enable biometric authorization</string>
-    <string name="save_user_wallet_agreement_enroll_biometrics_description">It looks like you have biometric authorization disabled, it is necessary to save wallets</string>
+    <string name="save_user_wallet_agreement_enroll_biometrics_description">It looks like you have biometric authentication disabled, it is necessary to save wallets</string>
     <string name="common_enable">Enable</string>
     <string name="save_user_wallet_agreement_description">Save your Wallet feature allows you to use your wallet with biometric auth without tapping your card to the phone to gain access.</string>
     <string name="user_wallet_list_editing_count">%d selected</string>
