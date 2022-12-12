@@ -1,7 +1,7 @@
 package com.tangem.tap.domain.walletStores.repository.di
 
 import com.tangem.blockchain.common.WalletManagerFactory
-import com.tangem.network.api.tangemTech.TangemTechService
+import com.tangem.datasource.api.tangemTech.TangemTechService
 import com.tangem.tap.domain.walletStores.repository.WalletAmountsRepository
 import com.tangem.tap.domain.walletStores.repository.WalletManagersRepository
 import com.tangem.tap.domain.walletStores.repository.WalletStoresRepository
