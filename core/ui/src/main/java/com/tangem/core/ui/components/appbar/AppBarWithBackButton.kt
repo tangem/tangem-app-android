@@ -13,6 +13,7 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -29,7 +30,11 @@ import com.tangem.core.ui.res.TangemTheme
  * >Figma component</a>
  */
 @Composable
-fun AppBarWithBackButton(text: String? = null, onBackClick: () -> Unit) {
+fun AppBarWithBackButton(
+    text: String? = null,
+    navigationIcon: Painter? = null,
+    onBackClick: () -> Unit,
+) {
     Row(
         modifier = Modifier
             .background(MaterialTheme.colors.primary)
@@ -39,7 +44,7 @@ fun AppBarWithBackButton(text: String? = null, onBackClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
-            painter = painterResource(R.drawable.ic_back),
+            painter = navigationIcon ?: painterResource(R.drawable.ic_back_24),
             contentDescription = null,
             modifier = Modifier
                 .size(size = dimensionResource(R.dimen.size24))
