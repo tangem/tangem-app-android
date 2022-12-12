@@ -40,11 +40,7 @@ class DummyUserWalletsListManager : UserWalletsListManager {
         }
     }
 
-    override suspend fun save(userWallet: UserWallet): CompletionResult<Unit> {
-        return CompletionResult.Success(Unit)
-    }
-
-    override suspend fun update(userWallet: UserWallet): CompletionResult<Unit> {
+    override suspend fun save(userWallet: UserWallet, canOverride: Boolean): CompletionResult<Unit> {
         return CompletionResult.Success(Unit)
     }
 
