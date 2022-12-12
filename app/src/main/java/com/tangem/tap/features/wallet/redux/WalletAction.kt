@@ -1,7 +1,11 @@
 package com.tangem.tap.features.wallet.redux
 
 import android.content.Context
-import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.Token
+import com.tangem.blockchain.common.Wallet
+import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.address.AddressType
 import com.tangem.domain.common.CardDTO
 import com.tangem.tap.common.entities.FiatCurrency
@@ -20,7 +24,7 @@ import java.math.BigDecimal
 
 sealed class WalletAction : Action {
 
-    data class ResetState(val newCardId: String) : WalletAction()
+    data class ResetState(val newCard: CardDTO) : WalletAction()
 
     data class SetIfTestnetCard(val isTestnet: Boolean) : WalletAction()
 
