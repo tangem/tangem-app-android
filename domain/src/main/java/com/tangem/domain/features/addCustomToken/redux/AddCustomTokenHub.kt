@@ -56,7 +56,7 @@ import com.tangem.domain.redux.domainStore
 import com.tangem.domain.redux.extensions.dispatchOnMain
 import com.tangem.domain.redux.global.DomainGlobalAction
 import com.tangem.domain.redux.global.DomainGlobalState
-import com.tangem.network.api.tangemTech.CoinsResponse
+import com.tangem.datasource.api.tangemTech.CoinsResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
