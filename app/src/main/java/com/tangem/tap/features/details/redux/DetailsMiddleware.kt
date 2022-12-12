@@ -77,11 +77,7 @@ class DetailsMiddleware {
             }
             DetailsAction.ScanCard -> {
                 scope.launch {
-                    tangemSdkManager.scanCard(
-                        cardId = state.scanResponse?.card?.cardId,
-                        useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes &&
-                            state.scanResponse?.card?.isAccessCodeSet == true,
-                    )
+                    tangemSdkManager.scanCard(cardId = state.scanResponse?.card?.cardId)
                         .doOnSuccess { card ->
                             val currentCardId = store.state.globalState.scanResponse?.card
                                 ?.userWalletId
@@ -220,7 +216,7 @@ class DetailsMiddleware {
         private fun toggleSaveWallets(state: DetailsState, enable: Boolean) = scope.launch {
             if (state.saveWallets == enable) return@launch
             if (enable) {
-                saveCurrentWallet()
+                saveCurrentWallet(state)
             } else {
                 deleteSavedWallets()
                 if (state.saveAccessCodes) {
@@ -233,16 +229,16 @@ class DetailsMiddleware {
             if (state.saveAccessCodes == enable) return@launch
             if (enable) {
                 if (!state.saveWallets) {
-                    saveCurrentWallet()
+                    saveCurrentWallet(state)
                 }
-                saveAccessCodes()
+                saveAccessCodes(state)
             } else {
                 deleteSavedAccessCodes()
             }
         }
 
-        private suspend fun saveCurrentWallet() {
-            val scanResponse = store.state.detailsState.scanResponse ?: return
+        private suspend fun saveCurrentWallet(state: DetailsState) {
+            val scanResponse = state.scanResponse ?: return
             val userWallet = UserWalletBuilder(scanResponse).build()
 
             userWalletsListManager.save(userWallet)
@@ -277,8 +273,11 @@ class DetailsMiddleware {
                 }
         }
 
-        private fun saveAccessCodes() {
+        private fun saveAccessCodes(state: DetailsState) {
             preferencesStorage.shouldSaveAccessCodes = true
+            tangemSdkManager.setAccessCodeRequestPolicy(
+                useBiometricsForAccessCode = state.scanResponse?.card?.isAccessCodeSet == true,
+            )
             store.dispatchOnMain(
                 DetailsAction.AppSettings.SwitchPrivacySetting.Success(
                     setting = PrivacySetting.SaveAccessCode,
@@ -291,6 +290,9 @@ class DetailsMiddleware {
             tangemSdkManager.clearSavedUserCodes()
                 .doOnSuccess {
                     preferencesStorage.shouldSaveAccessCodes = false
+                    tangemSdkManager.setAccessCodeRequestPolicy(
+                        useBiometricsForAccessCode = false,
+                    )
                     store.dispatchOnMain(
                         DetailsAction.AppSettings.SwitchPrivacySetting.Success(
                             setting = PrivacySetting.SaveAccessCode,
