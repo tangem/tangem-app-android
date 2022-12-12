@@ -19,13 +19,13 @@ class IntentHandler {
     private val CURRENCY_AMOUNT_PARAM = "baseCurrencyAmount"
     private val DEPOSIT_WALLET_ADDRESS_PARAM = "depositWalletAddress"
 
-    fun handleIntent(intent: Intent?) {
-        handleBackgroundScan(intent)
-        handleWalletConnectLink(intent)
-        handleSellCurrencyCallback(intent)
+    fun handleWalletConnectLink(intent: Intent?) {
+        if (intent?.scheme == WalletConnectManager.WC_SCHEME) {
+            store.dispatch(WalletConnectAction.HandleDeepLink(intent.data?.toString()))
+        }
     }
 
-    private fun handleBackgroundScan(intent: Intent?) {
+    fun handleBackgroundScan(intent: Intent?) {
         if (intent != null && (NfcAdapter.ACTION_TECH_DISCOVERED == intent.action ||
                 NfcAdapter.ACTION_NDEF_DISCOVERED == intent.action
                 )
@@ -40,13 +40,7 @@ class IntentHandler {
         }
     }
 
-    private fun handleWalletConnectLink(intent: Intent?) {
-        if (intent?.scheme == WalletConnectManager.WC_SCHEME) {
-            store.dispatch(WalletConnectAction.HandleDeepLink(intent.data?.toString()))
-        }
-    }
-
-    private fun handleSellCurrencyCallback(intent: Intent?) {
+    fun handleSellCurrencyCallback(intent: Intent?) {
         try {
             val transactionID =
                 intent?.data?.getQueryParameter(TRANSACTION_ID_PARAM) ?: return
