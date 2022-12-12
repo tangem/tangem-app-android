@@ -246,7 +246,7 @@ class DetailsMiddleware {
                     Timber.e(error, "Wallet saving failed")
                 }
                 .doOnSuccess {
-                    preferencesStorage.shouldShowSaveWallet = false
+                    preferencesStorage.shouldShowSaveUserWalletScreen = false
                     preferencesStorage.shouldSaveUserWallets = true
                     store.dispatchOnMain(
                         DetailsAction.AppSettings.SwitchPrivacySetting.Success(
