@@ -27,20 +27,13 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <com.skydoves.androidveil.VeilLayout
-            android:id="@+id/veil_balance"
+        <FrameLayout
+            android:id="@+id/balance_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
             app:layout_constraintBottom_toTopOf="@id/tv_processing"
-            app:layout_constraintTop_toBottomOf="@id/tv_title"
-            app:veilLayout_baseColor="@color/lightGray0"
-            app:veilLayout_highlightColor="@color/lightGray1"
-            app:veilLayout_layout="@layout/card_total_balance_shimmer"
-            app:veilLayout_radius="4dp"
-            app:veilLayout_shimmerEnable="true"
-            app:veilLayout_veiled="true"
-            tools:veilLayout_veiled="false">
+            app:layout_constraintTop_toBottomOf="@id/tv_title">
 
             <TextView
                 android:id="@+id/tv_balance"
@@ -51,9 +44,23 @@
                 android:textColor="@color/darkGray6"
                 android:textSize="26sp"
                 android:textStyle="bold"
+                android:visibility="gone"
+                tools:visibility="visible"
                 tools:text="22 325.40 $" />
 
-        </com.skydoves.androidveil.VeilLayout>
+            <com.skydoves.androidveil.VeilLayout
+                android:id="@+id/veil_balance"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:visibility="visible"
+                app:veilLayout_baseColor="@color/lightGray0"
+                app:veilLayout_highlightColor="@color/lightGray1"
+                app:veilLayout_layout="@layout/card_total_balance_shimmer"
+                app:veilLayout_radius="4dp"
+                app:veilLayout_shimmerEnable="true"
+                app:veilLayout_veiled="true" />
+
+        </FrameLayout>
 
         <TextView
             android:id="@+id/tv_processing"
@@ -65,7 +72,7 @@
             android:textSize="12sp"
             android:visibility="gone"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/veil_balance"
+            app:layout_constraintTop_toBottomOf="@id/balance_container"
             tools:visibility="visible" />
 
         <TextView
