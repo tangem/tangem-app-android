@@ -1,6 +1,5 @@
 package com.tangem.tap.features.details.ui.appsettings
 
-import com.tangem.core.ui.models.EnrollBiometricsDialog
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.details.redux.DetailsAction
@@ -20,8 +19,14 @@ class AppSettingsViewModel(private val store: Store<AppState>) {
                 PrivacySetting.SaveWallets to state.saveWallets,
                 PrivacySetting.SaveAccessCode to state.saveAccessCodes,
             ),
-            enrollBiometricsDialog = if (state.needEnrollBiometrics) createEnrollBiometricsDialog() else null,
-            onSettingToggled = { privacySetting, enabled -> onSettingsToggled(privacySetting, enabled) },
+            showEnrollBiometricsCard = state.needEnrollBiometrics,
+            isTogglesEnabled = !state.needEnrollBiometrics,
+            onSettingToggled = { privacySetting, enabled ->
+                onSettingsToggled(privacySetting, enabled)
+            },
+            onEnrollBiometrics = {
+                store.dispatchOnMain(DetailsAction.AppSettings.EnrollBiometrics)
+            },
         )
     }
 
@@ -29,12 +34,11 @@ class AppSettingsViewModel(private val store: Store<AppState>) {
         store.dispatch(DetailsAction.AppSettings.SwitchPrivacySetting(enable = enable, setting = setting))
     }
 
-    private fun createEnrollBiometricsDialog() = EnrollBiometricsDialog(
-        onCancel = {
-            store.dispatchOnMain(DetailsAction.AppSettings.EnrollBiometrics.Cancel)
-        },
-        onEnroll = {
-            store.dispatchOnMain(DetailsAction.AppSettings.EnrollBiometrics.Enroll)
-        },
-    )
+    fun checkBiometricsStatus() {
+        store.dispatch(DetailsAction.AppSettings.CheckBiometricsStatus(awaitStatusChange = false))
+    }
+
+    fun refreshBiometricsStatus() {
+        store.dispatch(DetailsAction.AppSettings.CheckBiometricsStatus(awaitStatusChange = true))
+    }
 }

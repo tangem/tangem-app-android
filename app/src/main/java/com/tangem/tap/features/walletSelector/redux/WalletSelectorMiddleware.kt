@@ -12,6 +12,7 @@ import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.domain.model.TotalFiatBalance
 import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.domain.model.WalletStoreModel
 import com.tangem.tap.domain.model.builders.UserWalletBuilder
@@ -19,6 +20,7 @@ import com.tangem.tap.domain.scanCard.ScanCardProcessor
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
+import com.tangem.tap.tangemSdkManager
 import com.tangem.tap.totalFiatBalanceCalculator
 import com.tangem.tap.userWalletsListManager
 import com.tangem.tap.walletStoresManager
@@ -26,6 +28,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
 import timber.log.Timber
+import java.math.BigDecimal
 
 internal class WalletSelectorMiddleware {
     val middleware: Middleware<AppState> = { _, appStateProvider ->
@@ -127,7 +130,8 @@ internal class WalletSelectorMiddleware {
                     store.dispatchOnMain(WalletSelectorAction.AddWallet.Success)
 
                     if (isSavedWalletSelected) {
-                        store.dispatchOnMain(NavigationAction.PopBackTo())
+                        updateAccessCodeRequestPolicy(selectedWallet)
+                        store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
                         store.onUserWalletSelected(selectedWallet)
                     }
                 }
@@ -141,7 +145,8 @@ internal class WalletSelectorMiddleware {
                     store.dispatchOnMain(WalletSelectorAction.HandleError(error))
                 }
                 .doOnSuccess { selectedWallet ->
-                    store.dispatchOnMain(NavigationAction.PopBackTo())
+                    updateAccessCodeRequestPolicy(selectedWallet)
+                    store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
                     store.onUserWalletSelected(selectedWallet)
                 }
         }
@@ -163,7 +168,7 @@ internal class WalletSelectorMiddleware {
         scope.launch {
             userWalletsListManager.get(walletId = UserWalletId(walletId))
                 .map { it.copy(name = newName) }
-                .flatMap { userWalletsListManager.update(it) }
+                .flatMap { userWalletsListManager.save(it, canOverride = true) }
                 .doOnFailure { error ->
                     store.dispatchOnMain(WalletSelectorAction.HandleError(error))
                 }
@@ -174,7 +179,6 @@ internal class WalletSelectorMiddleware {
         crossinline onCardScanned: suspend (ScanResponse) -> Unit,
     ) {
         ScanCardProcessor.scan(
-            useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes,
             onSuccess = {
                 onCardScanned(it)
             },
@@ -208,9 +212,17 @@ internal class WalletSelectorMiddleware {
                 val isSelectedWalletRemoved = prevSelectedWalletId != selectedWallet.walletId.stringValue
 
                 if (isSelectedWalletRemoved) {
+                    updateAccessCodeRequestPolicy(selectedWallet)
                     store.onUserWalletSelected(selectedWallet)
                 }
             }
+    }
+
+    private fun updateAccessCodeRequestPolicy(userWallet: UserWallet) {
+        tangemSdkManager.setAccessCodeRequestPolicy(
+            useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes &&
+                userWallet.scanResponse.card.isAccessCodeSet,
+        )
     }
 
     private suspend fun UserWalletModel.updateWalletStoresAndCalculateFiatBalance(
@@ -221,7 +233,6 @@ internal class WalletSelectorMiddleware {
                 is UserWalletModel.Type.MultiCurrency -> type.copy(
                     tokensCount = walletStores.flatMap { it.walletsData }.size,
                 )
-
                 is UserWalletModel.Type.SingleCurrency -> type.copy(
                     blockchainName = walletStores
                         .firstOrNull()
@@ -233,6 +244,7 @@ internal class WalletSelectorMiddleware {
             fiatBalance = totalFiatBalanceCalculator.calculate(
                 prevAmount = fiatBalance.amount,
                 walletStores = walletStores,
+                initial = TotalFiatBalance.Loaded(BigDecimal.ZERO),
             ),
         )
     }
