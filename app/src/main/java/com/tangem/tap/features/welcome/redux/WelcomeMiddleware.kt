@@ -61,7 +61,7 @@ internal class WelcomeMiddleware {
                     if (selectedUserWallet != null) {
                         tangemSdkManager.setAccessCodeRequestPolicy(
                             useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes &&
-                                selectedUserWallet.scanResponse.card.isAccessCodeSet,
+                                selectedUserWallet.hasAccessCode,
                         )
 
                         store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Wallet))
