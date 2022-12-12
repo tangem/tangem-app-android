@@ -18,8 +18,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.capitalize
-import androidx.compose.ui.text.intl.Locale
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.PrimaryButton
@@ -120,10 +118,7 @@ private fun Title(
             contentDescription = null,
         )
         Text(
-            text = stringResource(
-                id = R.string.save_user_wallet_agreement_header,
-                stringResource(id = R.string.common_biometrics).capitalize(Locale.current),
-            ),
+            text = stringResource(id = R.string.save_user_wallet_agreement_header_biometrics),
             style = TangemTheme.typography.h2,
             color = TangemTheme.colors.text.primary1,
             textAlign = TextAlign.Center,
@@ -148,10 +143,7 @@ private fun Description(
         DescriptionItem(
             iconPainter = painterResource(id = R.drawable.ic_lock_24),
             title = stringResource(id = R.string.save_user_wallet_agreement_code_title),
-            description = stringResource(
-                id = R.string.save_user_wallet_agreement_code_description,
-                stringResource(id = R.string.common_biometrics).capitalize(Locale.current),
-            ),
+            description = stringResource(id = R.string.save_user_wallet_agreement_code_description_biometrics),
         )
     }
 }
@@ -170,10 +162,7 @@ private fun Footer(
         PrimaryButton(
             modifier = Modifier.fillMaxWidth(),
             showProgress = showProgress,
-            text = stringResource(
-                id = R.string.save_user_wallet_agreement_allow,
-                stringResource(id = R.string.common_biometrics).capitalize(Locale.current),
-            ),
+            text = stringResource(id = R.string.save_user_wallet_agreement_allow_biometrics),
             onClick = onSaveWalletClick,
         )
         Text(
