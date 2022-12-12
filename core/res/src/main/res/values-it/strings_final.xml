@@ -114,12 +114,15 @@
     <string name="welcome_unlock_card">Scansiona carta</string>
     <string name="onboarding_navbar_save_wallet">Save your Wallet</string>
     <string name="save_user_wallet_agreement_header">Would you like to use %s?</string>
+    <string name="save_user_wallet_agreement_header_biometrics">Would you like to use biometrics?</string>
     <string name="save_user_wallet_agreement_access_title">Access the app</string>
     <string name="save_user_wallet_agreement_access_description">Log into the app and check your balance without scanning the card</string>
     <string name="save_user_wallet_agreement_code_title">Access code</string>
     <string name="save_user_wallet_agreement_code_description">%s will be requested instead of the access code for interactions with your wallet</string>
+    <string name="save_user_wallet_agreement_code_description_biometrics">Biometrics will be requested instead of the access code for interactions with your wallet</string>
     <string name="save_user_wallet_agreement_notice">Note that making a transaction with your funds will still require your card</string>
     <string name="save_user_wallet_agreement_allow">Allow to use %s</string>
+    <string name="save_user_wallet_agreement_allow_biometrics">Allow to use biometrics</string>
     <string name="save_user_wallet_agreement_new_feature">New feature</string>
     <string name="user_wallet_list_title">My Wallets</string>
     <string name="user_wallet_list_multi_header">Multi-currency</string>
@@ -218,7 +221,7 @@
     <string name="common_delete">Rimuovere</string>
     <string name="details_row_privacy_policy">Privacy policy</string>
     <string name="save_user_wallet_agreement_enroll_biometrics_title">Enable biometric authorization</string>
-    <string name="save_user_wallet_agreement_enroll_biometrics_description">It looks like you have biometric authorization disabled, it is necessary to save wallets</string>
+    <string name="save_user_wallet_agreement_enroll_biometrics_description">It looks like you have biometric authentication disabled, it is necessary to save wallets</string>
     <string name="common_enable">Enable</string>
     <string name="save_user_wallet_agreement_description">Save your Wallet feature allows you to use your wallet with biometric auth without tapping your card to the phone to gain access.</string>
     <string name="user_wallet_list_editing_count">%d selected</string>
