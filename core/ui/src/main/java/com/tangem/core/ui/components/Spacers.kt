@@ -62,6 +62,11 @@ fun SpacerH24(modifier: Modifier = Modifier) {
 }
 
 @Composable
+fun SpacerH28(modifier: Modifier = Modifier) {
+    SpacerH(28.dp, modifier)
+}
+
+@Composable
 fun SpacerH32(modifier: Modifier = Modifier) {
     SpacerH(32.dp, modifier)
 }
@@ -70,6 +75,12 @@ fun SpacerH32(modifier: Modifier = Modifier) {
 @Composable
 fun ColumnScope.SpacerHMax(modifier: Modifier = Modifier) {
     Spacer(modifier = modifier.weight(1f))
+}
+
+// TODO: Refactor with context receivers
+@Composable
+fun ColumnScope.SpacerHHalf(modifier: Modifier = Modifier) {
+    Spacer(modifier = modifier.weight(.5f))
 }
 // endregion Horizontal
 
