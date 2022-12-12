@@ -93,6 +93,12 @@ internal class SaveWalletMiddleware {
                     preferencesStorage.shouldSaveAccessCodes = isFirstSavedWallet ||
                         preferencesStorage.shouldSaveAccessCodes
 
+
+                    tangemSdkManager.setAccessCodeRequestPolicy(
+                        useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes &&
+                            userWallet.hasAccessCode,
+                    )
+
                     val isSavedWalletSelected =
                         userWalletsListManager.selectedUserWalletSync?.walletId == userWallet.walletId
 
