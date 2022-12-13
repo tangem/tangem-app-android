@@ -138,13 +138,10 @@ internal class SaveWalletMiddleware {
     ): CompletionResult<Unit> {
         return when {
             accessCode != null -> {
-                tangemSdkManager.unlockBiometricKeys()
-                    .flatMap {
-                        tangemSdkManager.saveAccessCode(
-                            accessCode = accessCode,
-                            cardsIds = cardsInWallet,
-                        )
-                    }
+                tangemSdkManager.saveAccessCode(
+                    accessCode = accessCode,
+                    cardsIds = cardsInWallet,
+                )
             }
             else -> {
                 CompletionResult.Success(Unit)
