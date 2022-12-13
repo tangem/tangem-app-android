@@ -66,10 +66,13 @@ internal object WalletSelectorReducer {
         return this.map { userWallet ->
             prevWallets
                 .find { it.id == userWallet.walletId.stringValue }
-                ?.copy(
-                    name = userWallet.name,
-                    artworkUrl = userWallet.artworkUrl,
-                )
+                ?.let {
+                    it.copy(
+                        name = userWallet.name,
+                        artworkUrl = userWallet.artworkUrl,
+                        type = userWallet.getType(prevType = it.type),
+                    )
+                }
                 ?: with(userWallet) {
                     UserWalletModel(
                         id = walletId.stringValue,
@@ -90,15 +93,18 @@ internal object WalletSelectorReducer {
         }
     }
 
-    private fun UserWallet.getType(): UserWalletModel.Type {
+    private fun UserWallet.getType(prevType: UserWalletModel.Type? = null): UserWalletModel.Type {
         return if (scanResponse.card.isMultiwalletAllowed) {
             UserWalletModel.Type.MultiCurrency(
                 cardsInWallet = (scanResponse.card.backupStatus as? CardDTO.BackupStatus.Active)
                     ?.cardCount?.inc()
                     ?: 1,
+                tokensCount = (prevType as? UserWalletModel.Type.MultiCurrency)?.tokensCount ?: 0,
             )
         } else {
-            UserWalletModel.Type.SingleCurrency()
+            UserWalletModel.Type.SingleCurrency(
+                blockchainName = (prevType as? UserWalletModel.Type.SingleCurrency)?.blockchainName,
+            )
         }
     }
 }
