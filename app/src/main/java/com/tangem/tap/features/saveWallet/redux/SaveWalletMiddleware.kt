@@ -4,6 +4,10 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.common.flatMap
+import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.AnalyticsParam
+import com.tangem.tap.common.analytics.events.MainScreen
+import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppState
@@ -36,9 +40,9 @@ internal class SaveWalletMiddleware {
             is SaveWalletAction.Save -> saveWalletIfBiometricsEnrolled(state)
             is SaveWalletAction.EnrollBiometrics.Enroll -> enrollBiometrics()
             is SaveWalletAction.SaveWalletWasShown -> saveWalletWasShown()
+            is SaveWalletAction.Dismiss -> dismiss(state)
             is SaveWalletAction.Save.Success,
             is SaveWalletAction.ProvideBackupInfo,
-            is SaveWalletAction.Dismiss,
             is SaveWalletAction.CloseError,
             is SaveWalletAction.Save.Error,
             is SaveWalletAction.EnrollBiometrics,
@@ -73,6 +77,13 @@ internal class SaveWalletMiddleware {
         val scanResponse = state.backupInfo?.scanResponse
             ?: store.state.globalState.scanResponse
             ?: return
+
+        if (state.backupInfo != null) {
+            // TODO: Remove after onboarding refactoring
+            Analytics.send(Onboarding.EnableBiometrics(AnalyticsParam.OnOffState.On))
+        } else {
+            Analytics.send(MainScreen.EnableBiometrics(AnalyticsParam.OnOffState.On))
+        }
 
         scope.launch {
             val userWallet = UserWalletBuilder(scanResponse)
@@ -111,6 +122,15 @@ internal class SaveWalletMiddleware {
                         store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.WalletSelector))
                     }
                 }
+        }
+    }
+
+    private fun dismiss(state: SaveWalletState) {
+        if (state.backupInfo != null) {
+            // TODO: Remove after onboarding refactoring
+            Analytics.send(Onboarding.EnableBiometrics(AnalyticsParam.OnOffState.Off))
+        } else {
+            Analytics.send(MainScreen.EnableBiometrics(AnalyticsParam.OnOffState.Off))
         }
     }
 
