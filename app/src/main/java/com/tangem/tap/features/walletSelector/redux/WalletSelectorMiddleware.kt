@@ -7,6 +7,8 @@ import com.tangem.common.flatMap
 import com.tangem.common.map
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.util.UserWalletId
+import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.MyWallets
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppState
@@ -104,6 +106,8 @@ internal class WalletSelectorMiddleware {
     }
 
     private fun unlockWalletsWithBiometry() {
+        Analytics.send(MyWallets.Button.UnlockWithBiometrics)
+
         scope.launch {
             userWalletsListManager.unlockWithBiometry()
                 .doOnFailure { error ->
@@ -116,6 +120,8 @@ internal class WalletSelectorMiddleware {
     }
 
     private fun addWallet() = scope.launch {
+        Analytics.send(MyWallets.Button.ScanNewCard)
+
         scanCardInternal { scanResponse ->
             val userWallet = UserWalletBuilder(scanResponse).build()
 
@@ -124,6 +130,8 @@ internal class WalletSelectorMiddleware {
                     store.dispatchOnMain(WalletSelectorAction.AddWallet.Error(error))
                 }
                 .doOnSuccess {
+                    Analytics.send(MyWallets.CardWasScanned)
+
                     userWalletsListManager.selectWallet(userWallet.walletId)
                     store.dispatchOnMain(WalletSelectorAction.AddWallet.Success)
                     updateAccessCodeRequestPolicy(userWallet)
@@ -148,6 +156,8 @@ internal class WalletSelectorMiddleware {
     }
 
     private fun removeWallets(walletIdsToRemove: List<String>, state: WalletSelectorState) {
+        Analytics.send(MyWallets.Button.DeleteWalletTapped)
+
         scope.launch {
             when (walletIdsToRemove.size) {
                 state.wallets.size -> clearUserWallets()
@@ -160,6 +170,8 @@ internal class WalletSelectorMiddleware {
     }
 
     private fun renameWallet(walletId: String, newName: String) {
+        Analytics.send(MyWallets.Button.EditWalletTapped)
+
         scope.launch {
             userWalletsListManager.get(walletId = UserWalletId(walletId))
                 .map { it.copy(name = newName) }
