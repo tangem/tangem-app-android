@@ -94,6 +94,7 @@ internal class SaveWalletMiddleware {
 
             saveAccessCodeIfNeeded(state.backupInfo?.accessCode, userWallet.cardsInWallet)
                 .flatMap { userWalletsListManager.save(userWallet, canOverride = true) }
+                .flatMap { userWalletsListManager.selectWallet(userWallet.walletId) }
                 .doOnFailure { error ->
                     store.dispatchOnMain(SaveWalletAction.Save.Error(error))
                 }
@@ -110,17 +111,10 @@ internal class SaveWalletMiddleware {
                             userWallet.hasAccessCode,
                     )
 
-                    val isSavedWalletSelected =
-                        userWalletsListManager.selectedUserWalletSync?.walletId == userWallet.walletId
-
                     store.dispatchOnMain(SaveWalletAction.Save.Success)
 
-                    if (isSavedWalletSelected) {
-                        store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
-                        store.onUserWalletSelected(userWallet)
-                    } else {
-                        store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.WalletSelector))
-                    }
+                    store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
+                    store.onUserWalletSelected(userWallet)
                 }
         }
     }
