@@ -1,12 +1,14 @@
 package com.tangem.feature.swap
 
 import com.tangem.datasource.api.oneinch.OneInchApi
+import com.tangem.datasource.api.oneinch.OneInchErrorsHandler
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.feature.swap.converters.ApproveConverter
 import com.tangem.feature.swap.converters.QuotesConverter
 import com.tangem.feature.swap.converters.SwapConverter
 import com.tangem.feature.swap.converters.TokensConverter
 import com.tangem.feature.swap.domain.SwapRepository
+import com.tangem.feature.swap.domain.models.AggregatedSwapDataModel
 import com.tangem.feature.swap.domain.models.data.ApproveModel
 import com.tangem.feature.swap.domain.models.data.Currency
 import com.tangem.feature.swap.domain.models.data.QuoteModel
@@ -22,6 +24,7 @@ internal class SwapRepositoryImpl @Inject constructor(
     private val quotesConverter: QuotesConverter,
     private val swapConverter: SwapConverter,
     private val approveConverter: ApproveConverter,
+    private val oneInchErrorsHandler: OneInchErrorsHandler,
     private val coroutineDispatcher: CoroutineDispatcherProvider,
 ) : SwapRepository {
 
@@ -31,15 +34,17 @@ internal class SwapRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun findBestQuote(fromTokenAddress: String, toTokenAddress: String, amount: String): QuoteModel {
+    override suspend fun findBestQuote(fromTokenAddress: String, toTokenAddress: String, amount: String):
+        AggregatedSwapDataModel<QuoteModel> {
         return withContext(coroutineDispatcher.io) {
-            quotesConverter.convert(
+            val quoteResponse = oneInchErrorsHandler.handleOneInchResponse(
                 oneInchApi.quote(
                     fromTokenAddress = fromTokenAddress,
                     toTokenAddress = toTokenAddress,
                     amount = amount,
                 ),
             )
+            quotesConverter.convert(quoteResponse)
         }
     }
 
@@ -67,9 +72,9 @@ internal class SwapRepositoryImpl @Inject constructor(
         amount: String,
         fromWalletAddress: String,
         slippage: Int,
-    ): SwapDataModel {
+    ): AggregatedSwapDataModel<SwapDataModel> {
         return withContext(coroutineDispatcher.io) {
-            swapConverter.convert(
+            val swapResponse = oneInchErrorsHandler.handleOneInchResponse(
                 oneInchApi.swap(
                     fromTokenAddress = fromTokenAddress,
                     toTokenAddress = toTokenAddress,
@@ -77,6 +82,9 @@ internal class SwapRepositoryImpl @Inject constructor(
                     fromAddress = fromWalletAddress,
                     slippage = slippage,
                 ),
+            )
+            swapConverter.convert(
+                swapResponse,
             )
         }
     }
