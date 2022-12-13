@@ -3,7 +3,6 @@ package com.tangem.tap.domain.userWalletList.implementation
 import com.tangem.common.*
 import com.tangem.domain.common.util.UserWalletId
 import com.tangem.domain.common.util.encryptionKey
-import com.tangem.tap.domain.TangemSdkManager
 import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.domain.userWalletList.UserWalletListError
 import com.tangem.tap.domain.userWalletList.UserWalletsListManager
@@ -20,7 +19,6 @@ import timber.log.Timber
 
 @OptIn(ExperimentalCoroutinesApi::class)
 internal class BiometricUserWalletsListManager(
-    private val tangemSdkManager: TangemSdkManager,
     private val keysRepository: UserWalletsKeysRepository,
     private val publicInformationRepository: UserWalletsPublicInformationRepository,
     private val sensitiveInformationRepository: UserWalletsSensitiveInformationRepository,
@@ -83,7 +81,6 @@ internal class BiometricUserWalletsListManager(
     }
 
     override fun lock() {
-        tangemSdkManager.biometricManager.unauthenticate()
         state.update { prevState ->
             prevState.copy(
                 encryptionKeys = emptyList(),
@@ -122,14 +119,15 @@ internal class BiometricUserWalletsListManager(
         if (isWalletSaved && !canOverride) {
             CompletionResult.Failure(UserWalletListError.WalletAlreadySaved)
         } else {
-            keysRepository.save(
-                walletId = userWallet.walletId,
-                encryptionKey = userWallet.scanResponse.card.encryptionKey,
-            )
-                .doOnSuccess { keys ->
+            val newEncryptionKeys = state.value.encryptionKeys
+                .plus(UserWalletEncryptionKey(userWallet.walletId, userWallet.scanResponse.card.encryptionKey))
+                .distinctBy { it.walletId }
+
+            keysRepository.store(newEncryptionKeys)
+                .doOnSuccess {
                     state.update { prevState ->
                         prevState.copy(
-                            encryptionKeys = (keys + prevState.encryptionKeys).distinctBy { it.walletId },
+                            encryptionKeys = newEncryptionKeys,
                         )
                     }
                 }
@@ -146,21 +144,22 @@ internal class BiometricUserWalletsListManager(
         val walletIdsToRemove = state.value.wallets
             .map { it.walletId }
             .filter { it in walletIds }
+        val remainingEncryptionKeys = state.value.encryptionKeys
+            .filter { it.walletId !in walletIdsToRemove }
 
         changeSelectedWalletIfNeeded(walletIdsToRemove)
 
         return sensitiveInformationRepository.delete(walletIdsToRemove)
             .flatMap { publicInformationRepository.delete(walletIdsToRemove) }
-            .flatMap { keysRepository.delete(walletIdsToRemove) }
-            .map { keys ->
+            .flatMap { keysRepository.store(remainingEncryptionKeys) }
+            .map {
                 state.update { prevState ->
                     prevState.copy(
-                        encryptionKeys = keys,
+                        encryptionKeys = remainingEncryptionKeys,
                         wallets = prevState.wallets.filter { it.walletId !in walletIdsToRemove },
                     )
                 }
             }
-            .flatMap { loadModels() }
     }
 
     override suspend fun clear(): CompletionResult<Unit> {
@@ -171,12 +170,11 @@ internal class BiometricUserWalletsListManager(
             .flatMap { keysRepository.clear() }
             .map {
                 selectedUserWalletRepository.set(null)
-                tangemSdkManager.biometricManager.unauthenticate()
                 state.update { State() }
             }
     }
 
-    override suspend fun get(walletId: UserWalletId): CompletionResult<UserWallet> = withUnlock {
+    override suspend fun get(walletId: UserWalletId): CompletionResult<UserWallet> {
         return catching {
             state.value.wallets.first { it.walletId == walletId }
         }
