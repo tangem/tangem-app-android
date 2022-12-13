@@ -8,6 +8,7 @@ data class UserWalletModel(
     val artworkUrl: String,
     val type: Type,
     val fiatBalance: TotalFiatBalance,
+    val isLocked: Boolean,
 ) {
     sealed interface Type {
         data class SingleCurrency(
