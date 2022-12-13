@@ -61,6 +61,9 @@ internal class WalletSelectorMiddleware {
             is WalletSelectorAction.SelectWallet -> {
                 selectWallet(action.walletId)
             }
+            is WalletSelectorAction.UnlockWalletWithCard -> {
+                unlockWalletWithCard(action.walletId)
+            }
             is WalletSelectorAction.RemoveWallets -> {
                 removeWallets(action.walletIdsToRemove, state)
             }
@@ -153,6 +156,40 @@ internal class WalletSelectorMiddleware {
                     store.onUserWalletSelected(selectedWallet)
                 }
         }
+    }
+
+    private fun unlockWalletWithCard(id: String) {
+        scope.launch {
+            userWalletsListManager.get(UserWalletId(id))
+                .flatMap { userWallet ->
+                    updateUserWalletWithScannedCard(userWallet)
+                }
+                .flatMap { updatedUserWallet ->
+                    unlockUserWallet(updatedUserWallet)
+                }
+                .doOnFailure { error ->
+                    store.dispatchOnMain(WalletSelectorAction.HandleError(error))
+                }
+        }
+    }
+
+    private suspend fun updateUserWalletWithScannedCard(userWallet: UserWallet): CompletionResult<UserWallet> {
+        return tangemSdkManager.scanCard(userWallet.cardId)
+            .map { scannedCard ->
+                userWallet.copy(
+                    scanResponse = userWallet.scanResponse.copy(
+                        card = scannedCard,
+                    ),
+                )
+            }
+    }
+
+    private suspend fun unlockUserWallet(userWallet: UserWallet): CompletionResult<Unit> {
+        return userWalletsListManager.unlockWithCard(userWallet)
+            .doOnSuccess {
+                store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
+                store.onUserWalletSelected(userWallet)
+            }
     }
 
     private fun removeWallets(walletIdsToRemove: List<String>, state: WalletSelectorState) {
