@@ -121,8 +121,12 @@ class DetailsMiddleware {
 
                                 val selectedUserWallet = userWalletsListManager.selectedUserWalletSync
                                 if (selectedUserWallet != null) {
-                                    store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
-                                    store.onUserWalletSelected(selectedUserWallet)
+                                    if (userWalletsListManager.isLockedSync) {
+                                        store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Welcome))
+                                    } else {
+                                        store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
+                                        store.onUserWalletSelected(selectedUserWallet)
+                                    }
                                 } else {
                                     userWalletsListManager.lock()
                                     store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Home))
