@@ -24,7 +24,6 @@ import com.tangem.tap.tangemSdkManager
 import com.tangem.tap.totalFiatBalanceCalculator
 import com.tangem.tap.userWalletsListManager
 import com.tangem.tap.walletStoresManager
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
 import timber.log.Timber
@@ -125,15 +124,11 @@ internal class WalletSelectorMiddleware {
                     store.dispatchOnMain(WalletSelectorAction.AddWallet.Error(error))
                 }
                 .doOnSuccess {
-                    val selectedWallet = userWalletsListManager.selectedUserWallet.first()
-                    val isSavedWalletSelected = userWallet == selectedWallet
+                    userWalletsListManager.selectWallet(userWallet.walletId)
                     store.dispatchOnMain(WalletSelectorAction.AddWallet.Success)
-
-                    if (isSavedWalletSelected) {
-                        updateAccessCodeRequestPolicy(selectedWallet)
-                        store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
-                        store.onUserWalletSelected(selectedWallet)
-                    }
+                    updateAccessCodeRequestPolicy(userWallet)
+                    store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
+                    store.onUserWalletSelected(userWallet)
                 }
         }
     }
