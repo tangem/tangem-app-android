@@ -165,6 +165,14 @@ internal class DefaultWalletStoresManager(
                         .build(),
                 )
             }
+            .flatMapOnFailure { error ->
+                when (error) {
+                    is WalletStoresError.WalletManagerNotCreated,
+                    is WalletStoresError.UpdateWalletManagerError,
+                    -> CompletionResult.Success(Unit)
+                    else -> CompletionResult.Failure(error)
+                }
+            }
     }
 
     internal data class State(
