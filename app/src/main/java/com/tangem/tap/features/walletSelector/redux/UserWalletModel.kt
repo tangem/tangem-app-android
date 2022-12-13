@@ -11,12 +11,12 @@ data class UserWalletModel(
 ) {
     sealed interface Type {
         data class SingleCurrency(
-            val blockchainName: String? = null,
+            val blockchainName: String?,
         ) : Type
 
         data class MultiCurrency(
             val cardsInWallet: Int,
-            val tokensCount: Int = 0,
+            val tokensCount: Int,
         ) : Type
     }
 }
