@@ -36,8 +36,13 @@ internal class SwapInteractorImpl @Inject constructor(
             repository.checkTokensSpendAllowance(fromTokenAddress, userWalletManager.getWalletAddress(networkId)) != "0"
         }
         repository.findBestQuote(fromTokenAddress, toTokenAddress, amount).let { quotes ->
-            cache.cacheSwapParams(quotes.copy(isAllowedToSpend = isAllowedToSpend), amount)
-            return quotes
+            val quoteDataModel = quotes.dataModel
+            if (quoteDataModel != null) {
+                cache.cacheSwapParams(quoteDataModel.copy(isAllowedToSpend = isAllowedToSpend), amount)
+                return quoteDataModel
+            } else {
+                error("") //todo handle error in domain layer(task AND-2515)
+            }
         }
     }
 
@@ -52,12 +57,16 @@ internal class SwapInteractorImpl @Inject constructor(
                 amount = amountToSwap,
                 slippage = DEFAULT_SLIPPAGE,
                 fromWalletAddress = getWalletAddress(networkId),
-            )
-            signTransactionData(swapData.transaction) //todo implement
-            return SwapResultModel.SwapSuccess(
-                quoteModel.fromTokenAmount,
-                quoteModel.toTokenAmount,
-            )
+            ).dataModel
+            if (swapData != null) {
+                signTransactionData(swapData.transaction) //todo implement
+                return SwapResultModel.SwapSuccess(
+                    quoteModel.fromTokenAmount,
+                    quoteModel.toTokenAmount,
+                )
+            } else {
+                error("") //todo handle error in domain layer(task AND-2515)
+            }
         }
         return SwapResultModel.SwapError(
             0,
