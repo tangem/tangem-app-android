@@ -1,6 +1,7 @@
 package com.tangem.feature.swap.di
 
 import com.tangem.datasource.api.oneinch.OneInchApi
+import com.tangem.datasource.api.oneinch.OneInchErrorsHandler
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.di.qualifiers.OneInchEthereum
 import com.tangem.feature.swap.SwapRepositoryImpl
@@ -29,6 +30,7 @@ class SwapDataModule {
         quotesConverter: QuotesConverter,
         swapConverter: SwapConverter,
         approveConverter: ApproveConverter,
+        oneInchErrorsHandler: OneInchErrorsHandler,
         coroutineDispatcher: CoroutineDispatcherProvider,
     ): SwapRepository {
         return SwapRepositoryImpl(
@@ -38,6 +40,7 @@ class SwapDataModule {
             quotesConverter = quotesConverter,
             swapConverter = swapConverter,
             approveConverter = approveConverter,
+            oneInchErrorsHandler = oneInchErrorsHandler,
             coroutineDispatcher = coroutineDispatcher,
         )
     }
