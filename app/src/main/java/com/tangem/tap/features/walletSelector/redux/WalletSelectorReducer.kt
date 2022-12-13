@@ -56,6 +56,7 @@ internal object WalletSelectorReducer {
             )
             is WalletSelectorAction.WalletStoresChanged,
             is WalletSelectorAction.SelectWallet,
+            is WalletSelectorAction.UnlockWalletWithCard,
             is WalletSelectorAction.RemoveWallets,
             is WalletSelectorAction.RenameWallet,
             -> state
@@ -70,6 +71,7 @@ internal object WalletSelectorReducer {
                     it.copy(
                         name = userWallet.name,
                         artworkUrl = userWallet.artworkUrl,
+                        isLocked = userWallet.isLocked,
                         type = userWallet.getType(prevType = it.type),
                     )
                 }
@@ -80,6 +82,7 @@ internal object WalletSelectorReducer {
                         artworkUrl = artworkUrl,
                         type = getType(),
                         fiatBalance = TotalFiatBalance.Loading,
+                        isLocked = isLocked,
                     )
                 }
         }
