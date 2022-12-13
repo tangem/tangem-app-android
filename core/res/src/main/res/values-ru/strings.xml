@@ -56,7 +56,7 @@
     <string name="custom_token_token_symbol_input_placeholder">Например, USDC</string>
     <string name="custom_token_token_symbol_input_title">Символ токена</string>
     <string name="custom_token_derivation_path_input_title">Деривация по BIP44</string>
-    <string name="custom_token_derivation_path_default">По умолчанию</string>
+    <string name="custom_token_derivation_path_default">По-умолчанию</string>
     <string name="common_server_unavailable">Сервер недоступен, повторите попытку позднее</string>
     <string name="main_page_balance">Баланс</string>
     <string name="main_processing_full_amount">В сумме учтены не все монеты</string>
