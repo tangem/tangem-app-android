@@ -78,14 +78,12 @@ internal class WelcomeMiddleware {
         scanCardInternal { scanResponse ->
             val userWallet = UserWalletBuilder(scanResponse).build()
 
+            tangemSdkManager.setAccessCodeRequestPolicy(useBiometricsForAccessCode = false)
             userWalletsListManager.unlockWithCard(userWallet)
                 .doOnFailure { error ->
                     store.dispatchOnMain(WelcomeAction.ProceedWithCard.Error(error))
                 }
                 .doOnSuccess {
-                    tangemSdkManager.setAccessCodeRequestPolicy(
-                        useBiometricsForAccessCode = false,
-                    )
                     store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Wallet))
                     store.dispatchOnMain(WelcomeAction.ProceedWithCard.Success)
                     store.onUserWalletSelected(userWallet)
