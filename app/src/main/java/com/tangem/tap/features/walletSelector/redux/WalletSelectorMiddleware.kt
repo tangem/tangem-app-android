@@ -221,7 +221,7 @@ internal class WalletSelectorMiddleware {
     private fun updateAccessCodeRequestPolicy(userWallet: UserWallet) {
         tangemSdkManager.setAccessCodeRequestPolicy(
             useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes &&
-                userWallet.scanResponse.card.isAccessCodeSet,
+                userWallet.hasAccessCode,
         )
     }
 
