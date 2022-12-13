@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.domain
 
+import com.tangem.feature.swap.domain.models.AggregatedSwapDataModel
 import com.tangem.feature.swap.domain.models.data.ApproveModel
 import com.tangem.feature.swap.domain.models.data.Currency
 import com.tangem.feature.swap.domain.models.data.QuoteModel
@@ -13,7 +14,7 @@ interface SwapRepository {
         fromTokenAddress: String,
         toTokenAddress: String,
         amount: String,
-    ): QuoteModel
+    ): AggregatedSwapDataModel<QuoteModel>
 
     /**
      * Returns address of 1inch router that must be trusted
@@ -49,5 +50,5 @@ interface SwapRepository {
         amount: String,
         fromWalletAddress: String,
         slippage: Int,
-    ): SwapDataModel
+    ): AggregatedSwapDataModel<SwapDataModel>
 }
