@@ -14,7 +14,7 @@ interface TangemTechApi {
     @GET("coins")
     suspend fun coins(
         @Query("contractAddress") contractAddress: String? = null,
-        @Query("exchangeable") exchangeable: Boolean? = false,
+        @Query("exchangeable") exchangeable: Boolean? = null,
         @Query("networkIds") networkIds: String? = null,
         @Query("active") active: Boolean? = null,
         @Query("searchText") searchText: String? = null,
