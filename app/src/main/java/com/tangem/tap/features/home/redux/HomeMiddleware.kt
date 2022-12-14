@@ -93,9 +93,14 @@ private fun readCard() = scope.launch {
                     userWalletsListManager.save(userWallet)
                         .doOnFailure { error ->
                             Timber.e(error, "Unable to save user wallet")
+                            tangemSdkManager.setAccessCodeRequestPolicy(useBiometricsForAccessCode = false)
                             store.onCardScanned(scanResponse)
                         }
                         .doOnSuccess {
+                            tangemSdkManager.setAccessCodeRequestPolicy(
+                                useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes &&
+                                    userWallet.hasAccessCode,
+                            )
                             store.onUserWalletSelected(userWallet)
                         }
                         .doOnResult {
