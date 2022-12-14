@@ -5,12 +5,10 @@ import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
 import android.view.View
-import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SearchView
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
-import androidx.fragment.app.Fragment
 import androidx.transition.TransitionInflater
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.google.accompanist.appcompattheme.AppCompatTheme
@@ -22,6 +20,8 @@ import com.tangem.tap.common.extensions.dispatchNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.getString
 import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.features.BaseFragment
+import com.tangem.tap.features.addBackPressHandler
 import com.tangem.tap.features.tokens.redux.ContractAddress
 import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
 import com.tangem.tap.features.tokens.redux.TokensAction
@@ -40,8 +40,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.rekotlin.StoreSubscriber
 
-class AddTokensFragment : Fragment(R.layout.fragment_add_tokens),
-    StoreSubscriber<TokensState> {
+class AddTokensFragment : BaseFragment(R.layout.fragment_add_tokens), StoreSubscriber<TokensState> {
 
     private val binding: FragmentAddTokensBinding by viewBinding(FragmentAddTokensBinding::bind)
     private var tokensState: MutableState<TokensState> = mutableStateOf(store.state.tokensState)
@@ -51,33 +50,7 @@ class AddTokensFragment : Fragment(R.layout.fragment_add_tokens),
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
         Analytics.send(ManageTokens.ScreenOpened())
-
-        activity?.onBackPressedDispatcher?.addCallback(
-            this,
-            object : OnBackPressedCallback(true) {
-                override fun handleOnBackPressed() {
-                    store.dispatch(NavigationAction.PopBackTo())
-                    store.dispatch(TokensAction.ResetState)
-                }
-            },
-        )
-        val inflater = TransitionInflater.from(requireContext())
-        enterTransition = inflater.inflateTransition(R.transition.slide_right)
-        exitTransition = inflater.inflateTransition(R.transition.fade)
-    }
-
-    override fun onStart() {
-        super.onStart()
-        store.subscribe(this) { state ->
-            state.skipRepeats { oldState, newState ->
-                oldState.tokensState == newState.tokensState
-            }.select { it.tokensState }
-        }
-    }
-
-    override fun onStop() {
-        super.onStop()
-        store.unsubscribe(this)
+        addBackPressHandler(this)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) = with(binding) {
@@ -96,11 +69,7 @@ class AddTokensFragment : Fragment(R.layout.fragment_add_tokens),
         }
 
         val onLoadMore = {
-            store.dispatch(
-                TokensAction.LoadMore(
-                    scanResponse = store.state.globalState.scanResponse,
-                ),
-            )
+            store.dispatch(TokensAction.LoadMore(scanResponse = store.state.globalState.scanResponse))
         }
 
         cvCurrencies.setContent {
@@ -115,24 +84,23 @@ class AddTokensFragment : Fragment(R.layout.fragment_add_tokens),
         }
     }
 
-    override fun newState(state: TokensState) {
-        if (activity == null || view == null) return
-        val toolbarTitle =
-            if (state.allowToAdd) R.string.main_manage_tokens else R.string.search_tokens_title
-        tokensState.value = state
-        binding.toolbar.title = getString(toolbarTitle)
+    override fun onStart() {
+        super.onStart()
+        store.subscribe(this) { state ->
+            state
+                .skipRepeats { oldState, newState -> oldState.tokensState == newState.tokensState }
+                .select { it.tokensState }
+        }
     }
 
-    override fun onOptionsItemSelected(item: MenuItem): Boolean {
-        return when (item.itemId) {
-            R.id.menu_search -> true
-            R.id.menu_navigate_add_custom_token -> {
-                Analytics.send(ManageTokens.ButtonCustomToken())
-                store.dispatch(TokensAction.PrepareAndNavigateToAddCustomToken)
-                true
-            }
-            else -> super.onOptionsItemSelected(item)
-        }
+    override fun onStop() {
+        super.onStop()
+        store.unsubscribe(this)
+    }
+
+    override fun onDestroy() {
+        store.dispatch(TokensAction.ResetState)
+        super.onDestroy()
     }
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -156,25 +124,50 @@ class AddTokensFragment : Fragment(R.layout.fragment_add_tokens),
         return super.onCreateOptionsMenu(menu, inflater)
     }
 
-    override fun onDestroy() {
+    override fun onOptionsItemSelected(item: MenuItem): Boolean {
+        return when (item.itemId) {
+            R.id.menu_search -> true
+            R.id.menu_navigate_add_custom_token -> {
+                Analytics.send(ManageTokens.ButtonCustomToken())
+                store.dispatch(TokensAction.PrepareAndNavigateToAddCustomToken)
+                true
+            }
+            else -> super.onOptionsItemSelected(item)
+        }
+    }
+
+    override fun configureTransitions() {
+        super.configureTransitions()
+        val inflater = TransitionInflater.from(requireContext())
+        enterTransition = inflater.inflateTransition(R.transition.slide_right)
+        exitTransition = inflater.inflateTransition(R.transition.fade)
+    }
+
+    override fun handleOnBackPressed() {
+        super.handleOnBackPressed()
+        store.dispatch(NavigationAction.PopBackTo())
         store.dispatch(TokensAction.ResetState)
-        super.onDestroy()
+    }
+
+    override fun newState(state: TokensState) {
+        if (activity == null || view == null) return
+        val toolbarTitle =
+            if (state.allowToAdd) R.string.main_manage_tokens else R.string.search_tokens_title
+        tokensState.value = state
+        binding.toolbar.title = getString(toolbarTitle)
     }
 }
 
 fun SearchView.inputtedTextAsFlow(): Flow<String> = callbackFlow {
-    val watcher =
-        setOnQueryTextListener(
-            object : SearchView.OnQueryTextListener {
-                override fun onQueryTextSubmit(query: String?): Boolean {
-                    return false
-                }
+    val watcher = setOnQueryTextListener(
+        object : SearchView.OnQueryTextListener {
+            override fun onQueryTextSubmit(query: String?): Boolean = false
 
-                override fun onQueryTextChange(newText: String?): Boolean {
-                    trySend(newText ?: "")
-                    return false
-                }
-            },
-        )
+            override fun onQueryTextChange(newText: String?): Boolean {
+                trySend(newText ?: "")
+                return false
+            }
+        },
+    )
     awaitClose { (watcher) }
 }
