@@ -45,7 +45,7 @@ class ScanProductTask(
     private val additionalBlockchainsToDerive: Collection<Blockchain>? = null,
 ) : CardSessionRunnable<ScanResponse> {
 
-    override val allowsAccessCodeFromRepository: Boolean
+    override val allowsRequestAccessCodeFromRepository: Boolean
         get() = !additionalBlockchainsToDerive.isNullOrEmpty()
 
     override fun run(
