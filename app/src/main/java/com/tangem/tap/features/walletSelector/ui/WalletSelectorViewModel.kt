@@ -37,7 +37,9 @@ internal class WalletSelectorViewModel : ViewModel(), StoreSubscriber<WalletSele
 
     fun walletClicked(walletId: String) = with(state.value) {
         when {
-            isLocked -> Unit
+            isLocked -> {
+                store.dispatch(WalletSelectorAction.UnlockWalletWithCard(walletId))
+            }
             editingWalletsIds.isNotEmpty() && !editingWalletsIds.contains(walletId) -> {
                 editWallet(walletId)
             }
