@@ -39,7 +39,6 @@ internal fun WalletItem(
     wallet: UserWalletItem,
     isSelected: Boolean,
     isChecked: Boolean,
-    isLocked: Boolean,
 ) {
     Row(
         modifier = modifier,
@@ -59,7 +58,7 @@ internal fun WalletItem(
         SpacerW6()
         TokensInfo(
             modifier = Modifier.weight(weight = .4f),
-            isLocked = isLocked,
+            isLocked = wallet.isLocked,
             balance = wallet.balance,
             tokensCount = (wallet as? MultiCurrencyUserWalletItem)?.tokensCount,
         )
