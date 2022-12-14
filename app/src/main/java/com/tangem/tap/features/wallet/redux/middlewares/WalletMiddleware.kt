@@ -12,6 +12,7 @@ import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.operations.attestation.Attestation
 import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.extensions.copyToClipboard
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
@@ -349,9 +350,11 @@ class WalletMiddleware {
     private fun changeWallet() {
         when {
             userWalletsListManager.hasSavedUserWallets -> {
+                Analytics.send(MainScreen.ButtonMyWallets())
                 store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.WalletSelector))
             }
             else -> {
+                Analytics.send(MainScreen.ButtonScanCard())
                 store.dispatch(WalletAction.Scan)
             }
         }
