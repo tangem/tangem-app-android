@@ -2,8 +2,8 @@ package com.tangem.tap.domain.userWalletList.implementation
 
 import com.tangem.common.*
 import com.tangem.domain.common.util.UserWalletId
-import com.tangem.domain.common.util.encryptionKey
 import com.tangem.tap.domain.model.UserWallet
+import com.tangem.tap.domain.model.isTwinnedWith
 import com.tangem.tap.domain.userWalletList.UserWalletListError
 import com.tangem.tap.domain.userWalletList.UserWalletsListManager
 import com.tangem.tap.domain.userWalletList.model.UserWalletEncryptionKey
@@ -124,14 +124,16 @@ internal class BiometricUserWalletsListManager(
     ): CompletionResult<Unit> = withUnlock {
         val isWalletSaved = state.value.wallets
             .filter { it.isSaved }
-            .flatMap(UserWallet::cardsInWallet)
-            .contains(userWallet.cardId)
+            .any {
+                // Workaround, check [UserWallet.isTwinnedWith]
+                it.cardsInWallet.contains(userWallet.cardId) || it.isTwinnedWith(userWallet)
+            }
 
         if (isWalletSaved && !canOverride) {
             CompletionResult.Failure(UserWalletListError.WalletAlreadySaved)
         } else {
             val newEncryptionKeys = state.value.encryptionKeys
-                .plus(UserWalletEncryptionKey(userWallet.walletId, userWallet.scanResponse.card.encryptionKey))
+                .plus(UserWalletEncryptionKey(userWallet))
                 .distinctBy { it.walletId }
 
             keysRepository.store(newEncryptionKeys)
