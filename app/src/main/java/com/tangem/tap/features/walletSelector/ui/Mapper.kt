@@ -60,6 +60,7 @@ private fun List<UserWalletModel>.toUiModels(
                     name = name,
                     imageUrl = artworkUrl,
                     balance = balance,
+                    isLocked = isLocked,
                     cardsInWallet = type.cardsInWallet,
                     tokensCount = type.tokensCount,
                 )
@@ -68,6 +69,7 @@ private fun List<UserWalletModel>.toUiModels(
                     name = name,
                     imageUrl = artworkUrl,
                     balance = balance,
+                    isLocked = isLocked,
                     tokenName = type.blockchainName ?: "—",
                 )
             }
