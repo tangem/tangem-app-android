@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.View
 import androidx.transition.TransitionInflater
 import by.kirich1409.viewbindingdelegate.viewBinding
-import com.tangem.tap.common.extensions.configureSettings
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.BaseFragment
@@ -24,7 +23,11 @@ class DisclaimerFragment : BaseFragment(R.layout.fragment_disclaimer), StoreSubs
         super.onViewCreated(view, savedInstanceState)
         addBackPressHandler(handler = this)
         binding.toolbar.setNavigationOnClickListener { handleOnBackPressed() }
-        binding.webView.configureSettings()
+        binding.webView.apply {
+            settings.allowFileAccess = false
+            settings.javaScriptEnabled = false
+            webViewClient = DisclaimerWebViewClient
+        }
     }
 
     override fun onStart() {
