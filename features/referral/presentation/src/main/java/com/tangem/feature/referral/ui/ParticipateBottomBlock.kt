@@ -108,7 +108,7 @@ private fun AdditionalButtons(code: String, shareLink: String, showCopySnackbar:
         PrimaryStartIconButton(
             modifier = Modifier.weight(1f),
             text = stringResource(id = R.string.common_copy),
-            iconResId = R.drawable.ic_copy,
+            iconResId = R.drawable.ic_copy_24,
             onClicked = {
                 hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                 clipboardManager.setText(AnnotatedString(code))
@@ -120,7 +120,7 @@ private fun AdditionalButtons(code: String, shareLink: String, showCopySnackbar:
         PrimaryStartIconButton(
             modifier = Modifier.weight(1f),
             text = stringResource(id = R.string.common_share),
-            iconResId = R.drawable.ic_share,
+            iconResId = R.drawable.ic_share_24,
             onClicked = {
                 hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                 context.shareText(context.getString(R.string.referral_share_link, shareLink))
