@@ -234,7 +234,6 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
 
     when (action) {
         is BackupAction.StartBackup -> {
-            tangemSdkManager.setAccessCodeRequestPolicy(useBiometricsForAccessCode = false)
             Analytics.send(Onboarding.Backup.Started())
             backupService.discardSavedBackup()
             val primaryCard = scanResponse?.primaryCard
