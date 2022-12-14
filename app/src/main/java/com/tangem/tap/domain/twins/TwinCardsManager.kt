@@ -8,9 +8,9 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.KeyPair
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toHexString
+import com.tangem.datasource.api.common.MoshiConverter
 import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.ScanResponse
-import com.tangem.datasource.api.common.MoshiConverter
 import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.tap.common.AssetReader
 import com.tangem.tap.tangemSdkManager
@@ -30,7 +30,7 @@ class TwinCardsManager(
 
     suspend fun createFirstWallet(message: Message): CompletionResult<CreateWalletResponse> {
         val response = tangemSdkManager.runTaskAsync(
-            runnable = CreateFirstTwinWalletTask(),
+            runnable = CreateFirstTwinWalletTask(firstCardId),
             cardId = firstCardId,
             initialMessage = message,
         )
@@ -48,6 +48,7 @@ class TwinCardsManager(
     ): CompletionResult<CreateWalletResponse> {
         val task = CreateSecondTwinWalletTask(
             firstPublicKey = currentCardPublicKey!!,
+            firstCardId = firstCardId,
             issuerKeys = issuerKeyPair,
             preparingMessage = preparingMessage,
             creatingWalletMessage = creatingWalletMessage,
