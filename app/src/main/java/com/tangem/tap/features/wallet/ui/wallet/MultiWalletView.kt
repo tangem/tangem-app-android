@@ -51,7 +51,6 @@ class MultiWalletView : WalletView() {
         btnAddToken.show()
     }
 
-
     override fun onViewCreated() {
         setupWalletsRecyclerView()
     }
@@ -69,7 +68,7 @@ class MultiWalletView : WalletView() {
         val fragment = fragment ?: return
         val binding = binding ?: return
 
-        handleTotalBalance(binding, state.totalBalance, state.state)
+        handleTotalBalance(binding, state.totalBalance, state.state, state.walletsData.size)
         handleBackupWarning(binding, state.showBackupWarning)
         handleRescanWarning(binding, state.missingDerivations.isNotEmpty())
         setupWalletCardNumber(binding, state.walletCardsCount)
@@ -137,29 +136,34 @@ class MultiWalletView : WalletView() {
         binding: FragmentWalletBinding,
         totalBalance: TotalBalance?,
         progressState: ProgressState,
+        walletsCount: Int,
     ) = with(binding.lCardTotalBalance) {
-        if (totalBalance == null) {
-            veilBalance.animateVisibility(show = true)
-            root.isVisible = progressState == ProgressState.Loading
+        if (walletsCount == 0) {
+            root.isVisible = false
         } else {
-            root.isVisible = true
+            if (totalBalance == null) {
+                veilBalance.animateVisibility(show = true)
+                root.isVisible = progressState == ProgressState.Loading
+            } else {
+                root.isVisible = true
 
-            // Skip changes when on refreshing state
-            if (totalBalance.state == ProgressState.Refreshing || progressState == ProgressState.Refreshing) {
-                return@with
-            }
+                // Skip changes when on refreshing state
+                if (totalBalance.state == ProgressState.Refreshing || progressState == ProgressState.Refreshing) {
+                    return@with
+                }
 
-            veilBalance.animateVisibility(show = totalBalance.state == ProgressState.Loading)
-            tvBalance.animateVisibility(show = totalBalance.state != ProgressState.Loading)
-            tvProcessing.animateVisibility(show = totalBalance.state == ProgressState.Error)
+                veilBalance.animateVisibility(show = totalBalance.state == ProgressState.Loading)
+                tvBalance.animateVisibility(show = totalBalance.state != ProgressState.Loading)
+                tvProcessing.animateVisibility(show = totalBalance.state == ProgressState.Error)
 
-            tvBalance.text = totalBalance.fiatAmount.formatAmountAsSpannedString(
-                currencySymbol = totalBalance.fiatCurrency.symbol,
-            )
-            tvCurrencyName.text = totalBalance.fiatCurrency.code
+                tvBalance.text = totalBalance.fiatAmount.formatAmountAsSpannedString(
+                    currencySymbol = totalBalance.fiatCurrency.symbol,
+                )
+                tvCurrencyName.text = totalBalance.fiatCurrency.code
 
-            tvCurrencyName.setOnClickListener {
-                store.dispatch(WalletAction.AppCurrencyAction.ChooseAppCurrency)
+                tvCurrencyName.setOnClickListener {
+                    store.dispatch(WalletAction.AppCurrencyAction.ChooseAppCurrency)
+                }
             }
         }
     }

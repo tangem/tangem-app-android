@@ -14,10 +14,13 @@ import com.tangem.tap.domain.userWalletList.repository.implementation.BiometricU
 import com.tangem.tap.domain.userWalletList.repository.implementation.DefaultSelectedUserWalletRepository
 import com.tangem.tap.domain.userWalletList.repository.implementation.DefaultUserWalletsPublicInformationRepository
 import com.tangem.tap.domain.userWalletList.repository.implementation.DefaultUserWalletsSensitiveInformationRepository
-import com.tangem.tap.domain.userWalletList.utils.json.*
+import com.tangem.tap.domain.userWalletList.utils.json.ByteArrayKeyAdapter
+import com.tangem.tap.domain.userWalletList.utils.json.CardBackupStatusAdapter
+import com.tangem.tap.domain.userWalletList.utils.json.ExtendedPublicKeysMapAdapter
+import com.tangem.tap.domain.userWalletList.utils.json.ScanResponseDerivedKeysMapAdapter
+import com.tangem.tap.domain.userWalletList.utils.json.WalletDerivedKeysMapAdapter
 
-const val USER_WALLETS_STORAGE_NAME = "user_wallets_storage"
-const val USER_WALLETS_BIOMETRIC_KEY_NAME = "user_wallets"
+private const val USER_WALLETS_STORAGE_NAME = "user_wallets_storage"
 
 fun UserWalletsListManager.Companion.provideBiometricImplementation(
     context: Context,
@@ -43,7 +46,6 @@ fun UserWalletsListManager.Companion.provideBiometricImplementation(
     )
 
     val keysRepository = BiometricUserWalletsKeysRepository(
-        biometricKeyName = USER_WALLETS_BIOMETRIC_KEY_NAME,
         moshi = moshi,
         secureStorage = secureStorage,
         biometricManager = tangemSdkManager.biometricManager,
@@ -61,7 +63,6 @@ fun UserWalletsListManager.Companion.provideBiometricImplementation(
     )
 
     return BiometricUserWalletsListManager(
-        tangemSdkManager = tangemSdkManager,
         keysRepository = keysRepository,
         publicInformationRepository = publicInformationRepository,
         sensitiveInformationRepository = sensitiveInformationRepository,

@@ -15,7 +15,6 @@ import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
-import retrofit2.Converter
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import javax.inject.Singleton
@@ -28,10 +27,12 @@ class NetworkModule {
     @Singleton
     fun provideTangemTechApi(
         okHttpClient: OkHttpClient,
-        converter: Converter.Factory,
+        moshi: Moshi,
     ): TangemTechApi {
         return Retrofit.Builder()
-            .addConverterFactory(converter)
+            .addConverterFactory(
+                MoshiConverterFactory.create(moshi),
+            )
             .baseUrl(DEV_TANGEM_TECH_BASE_URL)
             .client(okHttpClient)
             .build()
@@ -41,9 +42,11 @@ class NetworkModule {
     @Provides
     @Singleton
     @OneInchEthereum
-    fun provideOneInchEthereumApi(converter: Converter.Factory): OneInchApi {
+    fun provideOneInchEthereumApi(moshi: Moshi): OneInchApi {
         return Retrofit.Builder()
-            .addConverterFactory(converter)
+            .addConverterFactory(
+                MoshiConverterFactory.create(moshi),
+            )
             .baseUrl(ONE_INCH_ETHER_BASE_URL)
             .client(
                 OkHttpClient.Builder()
@@ -58,9 +61,11 @@ class NetworkModule {
 
     @Provides
     @Singleton
-    fun provideReferralApi(okHttpClient: OkHttpClient, converter: Converter.Factory): ReferralApi {
+    fun provideReferralApi(okHttpClient: OkHttpClient, moshi: Moshi): ReferralApi {
         return Retrofit.Builder()
-            .addConverterFactory(converter)
+            .addConverterFactory(
+                MoshiConverterFactory.create(moshi),
+            )
             .baseUrl(DEV_TANGEM_TECH_BASE_URL)
             .client(okHttpClient)
             .build()
@@ -80,13 +85,11 @@ class NetworkModule {
 
     @Provides
     @Singleton
-    fun provideMoshiConverter(): Converter.Factory {
-        return MoshiConverterFactory.create(
-            Moshi.Builder()
-                .add(KotlinJsonAdapterFactory())
-                .add(BigDecimalAdapter())
-                .build(),
-        )
+    fun provideMoshi(): Moshi {
+        return Moshi.Builder()
+            .add(KotlinJsonAdapterFactory())
+            .add(BigDecimalAdapter())
+            .build()
     }
 
     private companion object {

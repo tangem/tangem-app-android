@@ -59,7 +59,7 @@ class CreateProductWalletTask(
     private val type: ProductType,
 ) : CardSessionRunnable<CreateProductWalletTaskResponse> {
 
-    override val allowsAccessCodeFromRepository: Boolean = false
+    override val allowsRequestAccessCodeFromRepository: Boolean = false
 
     override fun run(
         session: CardSession,

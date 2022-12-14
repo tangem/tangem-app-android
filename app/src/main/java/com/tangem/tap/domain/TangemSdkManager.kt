@@ -38,7 +38,6 @@ import com.tangem.tap.domain.tasks.product.CreateProductWalletTaskResponse
 import com.tangem.tap.domain.tasks.product.ResetToFactorySettingsTask
 import com.tangem.tap.domain.tasks.product.ScanProductTask
 import com.tangem.tap.domain.tokens.UserTokensRepository
-import com.tangem.tap.domain.userWalletList.di.USER_WALLETS_BIOMETRIC_KEY_NAME
 import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.isActive
@@ -119,16 +118,6 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
             .map { CardDTO(it) }
     }
 
-    suspend fun unlockBiometricKeys(): CompletionResult<Unit> {
-        return biometricManager.authenticate(
-            mode = BiometricManager.AuthenticationMode.Keys(
-                USER_WALLETS_BIOMETRIC_KEY_NAME,
-                tangemSdk.config.userCodesBiometricKeyName,
-            ),
-        )
-            .map { /* no-op */ }
-    }
-
     suspend fun saveAccessCode(accessCode: String, cardsIds: Set<String>): CompletionResult<Unit> {
         return createUserCodeRepository().save(
             cardIds = cardsIds,
@@ -137,20 +126,10 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
                 stringValue = accessCode,
             ),
         )
-            .map {
-                biometricManager.unauthenticate(
-                    keyName = tangemSdk.config.userCodesBiometricKeyName,
-                )
-            }
     }
 
     suspend fun clearSavedUserCodes(): CompletionResult<Unit> {
         return createUserCodeRepository().clear()
-            .map {
-                biometricManager.unauthenticate(
-                    keyName = tangemSdk.config.userCodesBiometricKeyName,
-                )
-            }
     }
 
     suspend fun setPasscode(cardId: String?): CompletionResult<SuccessResponse> {
@@ -229,7 +208,7 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
     }
 
     fun getString(@StringRes stringResId: Int, vararg formatArgs: Any?): String {
-        return context.getString(stringResId, formatArgs)
+        return context.getString(stringResId, *formatArgs)
     }
 
     fun setAccessCodeRequestPolicy(
