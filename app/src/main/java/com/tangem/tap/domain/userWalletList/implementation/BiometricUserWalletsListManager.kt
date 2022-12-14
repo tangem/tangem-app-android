@@ -62,10 +62,22 @@ internal class BiometricUserWalletsListManager(
 
     override suspend fun unlockWithCard(userWallet: UserWallet): CompletionResult<Unit> {
         state.update { prevState ->
-            userWallet.isSaved = false
+            // If the previous state contains a saved user wallet with the same ID, it is also saved
+            userWallet.isSaved = prevState.wallets.any {
+                it.walletId == userWallet.walletId && it.isSaved
+            }
+
+            val newEncryptionKeys = prevState.encryptionKeys
+                .plus(UserWalletEncryptionKey(userWallet))
+                .distinctBy { it.walletId }
+            val newUserWallets = prevState.wallets
+                .plus(userWallet)
+                .distinctBy { it.walletId }
+
             prevState.copy(
-                encryptionKeys = listOf(UserWalletEncryptionKey(userWallet)),
-                wallets = listOf(userWallet),
+                encryptionKeys = newEncryptionKeys,
+                wallets = newUserWallets,
+                selectedWalletId = userWallet.walletId,
             )
         }
 
@@ -73,8 +85,7 @@ internal class BiometricUserWalletsListManager(
             .map {
                 state.update { prevState ->
                     prevState.copy(
-                        selectedWalletId = userWallet.walletId,
-                        isLocked = prevState.wallets.size != 1,
+                        isLocked = prevState.wallets.any { it.isLocked },
                     )
                 }
             }
