@@ -39,7 +39,7 @@ fun AppBarWithBackButton(text: String? = null, onBackClick: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
-            painter = painterResource(R.drawable.ic_back),
+            painter = navigationIcon ?: painterResource(R.drawable.ic_back_24),
             contentDescription = null,
             modifier = Modifier
                 .size(size = dimensionResource(R.dimen.size24))

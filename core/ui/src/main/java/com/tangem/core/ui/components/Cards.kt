@@ -107,7 +107,7 @@ fun SmallInfoCardWithWarning(
                     contentAlignment = Alignment.Center,
                 ) {
                     Image(
-                        painter = painterResource(id = R.drawable.ic_attention),
+                        painter = painterResource(id = R.drawable.img_attention_20),
                         contentDescription = null,
                     )
                 }
@@ -292,7 +292,7 @@ private fun CardsPreview() {
             description = "26:30",
             icon = {
                 Icon(
-                    painterResource(id = R.drawable.ic_clock),
+                    painterResource(id = R.drawable.ic_clock_24),
                     contentDescription = null,
                     tint = TangemTheme.colors.icon.primary1,
                 )
