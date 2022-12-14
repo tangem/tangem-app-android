@@ -32,10 +32,8 @@ val navigationMiddleware: Middleware<AppState> = { _, state ->
                             AppScreen.Home,
                             AppScreen.Welcome,
                             -> {
-                                navState?.activity?.get()?.popBackTo(screen, action.inclusive)
-                                if (navState?.backStack?.contains(screen) != true) {
-                                    store.dispatchOnMain(NavigationAction.NavigateTo(screen))
-                                }
+                                navState?.activity?.get()?.popBackTo(screen, inclusive = true)
+                                store.dispatchOnMain(NavigationAction.NavigateTo(screen))
                             }
                             else -> {
                                 navState?.activity?.get()?.popBackTo(screen, action.inclusive)
