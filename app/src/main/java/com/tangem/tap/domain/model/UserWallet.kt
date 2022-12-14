@@ -1,5 +1,6 @@
 package com.tangem.tap.domain.model
 
+import com.tangem.common.extensions.toHexString
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.util.UserWalletId
 
@@ -33,4 +34,20 @@ data class UserWallet(
         get() = scanResponse.card.wallets.isEmpty()
 
     internal var isSaved: Boolean = true
+}
+
+/**
+ * !!! Workaround !!!
+ *
+ * Calculate same [UserWalletId] for twins instead
+ * */
+fun UserWallet.isTwinnedWith(other: UserWallet): Boolean {
+    if (!scanResponse.isTangemTwins()) return false
+    if (other.scanResponse.secondTwinPublicKey == scanResponse.card.wallets.firstOrNull()?.publicKey?.toHexString()) {
+        return true
+    }
+    if (scanResponse.secondTwinPublicKey == other.scanResponse.card.wallets.firstOrNull()?.publicKey?.toHexString()) {
+        return true
+    }
+    return false
 }
