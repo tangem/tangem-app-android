@@ -7,7 +7,6 @@ import com.tangem.common.card.EllipticCurve
 import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.extensions.hexToBytes
-import com.tangem.domain.common.TwinCardNumber
 import com.tangem.domain.common.TwinsHelper
 import com.tangem.operations.wallet.CreateWalletResponse
 import com.tangem.operations.wallet.CreateWalletTask
@@ -15,6 +14,7 @@ import com.tangem.operations.wallet.PurgeWalletCommand
 
 class CreateSecondTwinWalletTask(
     private val firstPublicKey: String,
+    private val firstCardId: String,
     private val issuerKeys: KeyPair,
     private val preparingMessage: Message,
     private val creatingWalletMessage: Message,
@@ -24,8 +24,11 @@ class CreateSecondTwinWalletTask(
         val card = session.environment.card
         val publicKey = card?.wallets?.firstOrNull()?.publicKey
         if (publicKey != null) {
-            if (TwinsHelper.getTwinCardNumber(card.cardId) == TwinCardNumber.First) {
-                callback(CompletionResult.Failure(WrongTwinCard(TwinCardNumber.Second)))
+            val currentTwinCardNumber = TwinsHelper.getTwinCardNumber(card.cardId)
+            if (TwinsHelper.getTwinCardNumber(firstCardId) == currentTwinCardNumber) {
+                currentTwinCardNumber?.pairNumber()?.let {
+                    callback(CompletionResult.Failure(WrongTwinCard(it)))
+                }
                 return
             }
 
