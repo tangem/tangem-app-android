@@ -51,6 +51,18 @@ class PreferencesStorage(applicationContext: Application) {
             putBoolean(SAVE_ACCESS_CODES_KEY, value)
         }
 
+    var wasApplicationStopped: Boolean
+        get() = preferences.getBoolean(APPLICATION_STOPPED_KEY, false)
+        set(value) = preferences.edit {
+            putBoolean(APPLICATION_STOPPED_KEY, value)
+        }
+
+    var shouldOpenWelcomeScreenOnResume: Boolean
+        get() = preferences.getBoolean(OPEN_WELCOME_ON_RESUME_KEY, false)
+        set(value) = preferences.edit {
+            putBoolean(OPEN_WELCOME_ON_RESUME_KEY, value)
+        }
+
     fun getCountOfLaunches(): Int = preferences.getInt(APP_LAUNCH_COUNT_KEY, 1)
 
     fun saveTwinsOnboardingShown() {
@@ -74,6 +86,8 @@ class PreferencesStorage(applicationContext: Application) {
         private const val SAVE_WALLET_DIALOG_SHOWN_KEY = "saveUserWalletShown"
         private const val SAVE_USER_WALLETS_KEY = "saveUserWallets"
         private const val SAVE_ACCESS_CODES_KEY = "saveAccessCodes"
+        private const val APPLICATION_STOPPED_KEY = "applicationStopped"
+        private const val OPEN_WELCOME_ON_RESUME_KEY = "openWelcomeOnResume"
     }
 }
 
