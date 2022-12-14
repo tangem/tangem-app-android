@@ -72,7 +72,6 @@ internal fun WalletSelectorScreenContent(
                 singleCurrencyWallets = state.singleCurrencyWallets,
                 selectedWalletId = state.selectedWalletId,
                 checkedWalletIds = state.editingWalletsIds,
-                isLocked = state.isLocked,
                 onWalletClick = onWalletClick,
                 onWalletLongClick = onWalletLongClick,
             )
@@ -141,7 +140,6 @@ private fun WalletsList(
     singleCurrencyWallets: List<UserWalletItem>,
     selectedWalletId: String?,
     checkedWalletIds: List<String>,
-    isLocked: Boolean,
     onWalletClick: (walletId: String) -> Unit,
     onWalletLongClick: (walletId: String) -> Unit,
 ) {
@@ -166,7 +164,6 @@ private fun WalletsList(
                     wallet = wallet,
                     isSelected = wallet.id == selectedWalletId,
                     isChecked = wallet.id in checkedWalletIds,
-                    isLocked = isLocked && wallet.id != selectedWalletId,
                 )
             }
         }

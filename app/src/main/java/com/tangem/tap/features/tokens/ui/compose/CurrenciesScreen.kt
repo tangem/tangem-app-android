@@ -83,25 +83,21 @@ fun CurrenciesScreen(
 
     Scaffold(
         floatingActionButton = {
-            if (tokensState.value.allowToAdd) SaveChangesButton(isKeyboardOpen) {
-                onSaveChanges(addedTokensState.value, addedBlockchainsState.value)
+            if (tokensState.value.allowToAdd) {
+                SaveChangesButton(isKeyboardOpen) {
+                    onSaveChanges(addedTokensState.value, addedBlockchainsState.value)
+                }
             }
         },
         floatingActionButtonPosition = FabPosition.Center,
     ) {
-
         AnimatedVisibility(
             visible = tokensState.value.loadCoinsState == LoadCoinsState.LOADING,
             enter = fadeIn(),
             exit = fadeOut(),
         ) {
-            Box(
-                contentAlignment = Alignment.Center,
-                modifier = Modifier.fillMaxSize(),
-            ) {
-                CircularProgressIndicator(
-                    color = Color(0xFF1ACE80),
-                )
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(color = Color(0xFF1ACE80))
             }
         }
         AnimatedVisibility(
@@ -148,21 +144,19 @@ private fun toggleBlockchain(
                     currencySymbol = blockchain.currency,
                 ),
             )
+        } else if (isAddedOnMainScreen) {
+            store.dispatchDialogShow(
+                WalletDialog.RemoveWalletDialog(
+                    currencyTitle = blockchain.name,
+                    onOk = {
+                        analyticsCurrencyTypeParam.sendOn()
+                        addedBlockchainsState.removeAndNotify(blockchain)
+                    },
+                ),
+            )
         } else {
-            if (isAddedOnMainScreen) {
-                store.dispatchDialogShow(
-                    WalletDialog.RemoveWalletDialog(
-                        currencyTitle = blockchain.name,
-                        onOk = {
-                            analyticsCurrencyTypeParam.sendOn()
-                            addedBlockchainsState.removeAndNotify(blockchain)
-                        },
-                    ),
-                )
-            } else {
-                analyticsCurrencyTypeParam.sendOff()
-                addedBlockchainsState.removeAndNotify(blockchain)
-            }
+            analyticsCurrencyTypeParam.sendOff()
+            addedBlockchainsState.removeAndNotify(blockchain)
         }
     } else {
         analyticsCurrencyTypeParam.sendOn()
