@@ -14,6 +14,7 @@ internal object MockData {
         ),
         name = "Wallet",
         imageUrl = "https://app.tangem.com/cards/card_default.png",
+        isLocked = false,
         tokensCount = 12,
         cardsInWallet = 3,
     )
@@ -26,6 +27,7 @@ internal object MockData {
         ),
         name = "Wallet",
         imageUrl = "https://app.tangem.com/cards/card_default.png",
+        isLocked = false,
         tokenName = "Ethereum",
     )
 
