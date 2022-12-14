@@ -7,6 +7,8 @@ import com.tangem.common.flatMap
 import com.tangem.common.map
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.util.UserWalletId
+import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.MyWallets
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppState
@@ -24,7 +26,6 @@ import com.tangem.tap.tangemSdkManager
 import com.tangem.tap.totalFiatBalanceCalculator
 import com.tangem.tap.userWalletsListManager
 import com.tangem.tap.walletStoresManager
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
 import timber.log.Timber
@@ -59,6 +60,9 @@ internal class WalletSelectorMiddleware {
             }
             is WalletSelectorAction.SelectWallet -> {
                 selectWallet(action.walletId)
+            }
+            is WalletSelectorAction.UnlockWalletWithCard -> {
+                unlockWalletWithCard(action.walletId)
             }
             is WalletSelectorAction.RemoveWallets -> {
                 removeWallets(action.walletIdsToRemove, state)
@@ -105,6 +109,8 @@ internal class WalletSelectorMiddleware {
     }
 
     private fun unlockWalletsWithBiometry() {
+        Analytics.send(MyWallets.Button.UnlockWithBiometrics)
+
         scope.launch {
             userWalletsListManager.unlockWithBiometry()
                 .doOnFailure { error ->
@@ -117,6 +123,8 @@ internal class WalletSelectorMiddleware {
     }
 
     private fun addWallet() = scope.launch {
+        Analytics.send(MyWallets.Button.ScanNewCard)
+
         scanCardInternal { scanResponse ->
             val userWallet = UserWalletBuilder(scanResponse).build()
 
@@ -125,15 +133,13 @@ internal class WalletSelectorMiddleware {
                     store.dispatchOnMain(WalletSelectorAction.AddWallet.Error(error))
                 }
                 .doOnSuccess {
-                    val selectedWallet = userWalletsListManager.selectedUserWallet.first()
-                    val isSavedWalletSelected = userWallet == selectedWallet
-                    store.dispatchOnMain(WalletSelectorAction.AddWallet.Success)
+                    Analytics.send(MyWallets.CardWasScanned)
 
-                    if (isSavedWalletSelected) {
-                        updateAccessCodeRequestPolicy(selectedWallet)
-                        store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
-                        store.onUserWalletSelected(selectedWallet)
-                    }
+                    userWalletsListManager.selectWallet(userWallet.walletId)
+                    store.dispatchOnMain(WalletSelectorAction.AddWallet.Success)
+                    updateAccessCodeRequestPolicy(userWallet)
+                    store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
+                    store.onUserWalletSelected(userWallet)
                 }
         }
     }
@@ -152,7 +158,43 @@ internal class WalletSelectorMiddleware {
         }
     }
 
+    private fun unlockWalletWithCard(id: String) {
+        scope.launch {
+            userWalletsListManager.get(UserWalletId(id))
+                .flatMap { userWallet ->
+                    updateUserWalletWithScannedCard(userWallet)
+                }
+                .flatMap { updatedUserWallet ->
+                    unlockUserWallet(updatedUserWallet)
+                }
+                .doOnFailure { error ->
+                    store.dispatchOnMain(WalletSelectorAction.HandleError(error))
+                }
+        }
+    }
+
+    private suspend fun updateUserWalletWithScannedCard(userWallet: UserWallet): CompletionResult<UserWallet> {
+        return tangemSdkManager.scanCard(userWallet.cardId)
+            .map { scannedCard ->
+                userWallet.copy(
+                    scanResponse = userWallet.scanResponse.copy(
+                        card = scannedCard,
+                    ),
+                )
+            }
+    }
+
+    private suspend fun unlockUserWallet(userWallet: UserWallet): CompletionResult<Unit> {
+        return userWalletsListManager.unlockWithCard(userWallet)
+            .doOnSuccess {
+                store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
+                store.onUserWalletSelected(userWallet)
+            }
+    }
+
     private fun removeWallets(walletIdsToRemove: List<String>, state: WalletSelectorState) {
+        Analytics.send(MyWallets.Button.DeleteWalletTapped)
+
         scope.launch {
             when (walletIdsToRemove.size) {
                 state.wallets.size -> clearUserWallets()
@@ -165,6 +207,8 @@ internal class WalletSelectorMiddleware {
     }
 
     private fun renameWallet(walletId: String, newName: String) {
+        Analytics.send(MyWallets.Button.EditWalletTapped)
+
         scope.launch {
             userWalletsListManager.get(walletId = UserWalletId(walletId))
                 .map { it.copy(name = newName) }
@@ -221,7 +265,7 @@ internal class WalletSelectorMiddleware {
     private fun updateAccessCodeRequestPolicy(userWallet: UserWallet) {
         tangemSdkManager.setAccessCodeRequestPolicy(
             useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes &&
-                userWallet.scanResponse.card.isAccessCodeSet,
+                userWallet.hasAccessCode,
         )
     }
 
@@ -233,13 +277,7 @@ internal class WalletSelectorMiddleware {
                 is UserWalletModel.Type.MultiCurrency -> type.copy(
                     tokensCount = walletStores.flatMap { it.walletsData }.size,
                 )
-                is UserWalletModel.Type.SingleCurrency -> type.copy(
-                    blockchainName = walletStores
-                        .firstOrNull()
-                        ?.blockchainNetwork
-                        ?.blockchain
-                        ?.fullName,
-                )
+                is UserWalletModel.Type.SingleCurrency -> type
             },
             fiatBalance = totalFiatBalanceCalculator.calculate(
                 prevAmount = fiatBalance.amount,
