@@ -240,13 +240,7 @@ internal class WalletSelectorMiddleware {
                 is UserWalletModel.Type.MultiCurrency -> type.copy(
                     tokensCount = walletStores.flatMap { it.walletsData }.size,
                 )
-                is UserWalletModel.Type.SingleCurrency -> type.copy(
-                    blockchainName = walletStores
-                        .firstOrNull()
-                        ?.blockchainNetwork
-                        ?.blockchain
-                        ?.fullName,
-                )
+                is UserWalletModel.Type.SingleCurrency -> type
             },
             fiatBalance = totalFiatBalanceCalculator.calculate(
                 prevAmount = fiatBalance.amount,
