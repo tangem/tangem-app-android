@@ -56,6 +56,7 @@ internal object WalletSelectorReducer {
             )
             is WalletSelectorAction.WalletStoresChanged,
             is WalletSelectorAction.SelectWallet,
+            is WalletSelectorAction.UnlockWalletWithCard,
             is WalletSelectorAction.RemoveWallets,
             is WalletSelectorAction.RenameWallet,
             -> state
@@ -66,10 +67,14 @@ internal object WalletSelectorReducer {
         return this.map { userWallet ->
             prevWallets
                 .find { it.id == userWallet.walletId.stringValue }
-                ?.copy(
-                    name = userWallet.name,
-                    artworkUrl = userWallet.artworkUrl,
-                )
+                ?.let {
+                    it.copy(
+                        name = userWallet.name,
+                        artworkUrl = userWallet.artworkUrl,
+                        isLocked = userWallet.isLocked,
+                        type = userWallet.getType(prevType = it.type),
+                    )
+                }
                 ?: with(userWallet) {
                     UserWalletModel(
                         id = walletId.stringValue,
@@ -77,6 +82,7 @@ internal object WalletSelectorReducer {
                         artworkUrl = artworkUrl,
                         type = getType(),
                         fiatBalance = TotalFiatBalance.Loading,
+                        isLocked = isLocked,
                     )
                 }
         }
@@ -90,15 +96,18 @@ internal object WalletSelectorReducer {
         }
     }
 
-    private fun UserWallet.getType(): UserWalletModel.Type {
+    private fun UserWallet.getType(prevType: UserWalletModel.Type? = null): UserWalletModel.Type {
         return if (scanResponse.card.isMultiwalletAllowed) {
             UserWalletModel.Type.MultiCurrency(
                 cardsInWallet = (scanResponse.card.backupStatus as? CardDTO.BackupStatus.Active)
                     ?.cardCount?.inc()
                     ?: 1,
+                tokensCount = (prevType as? UserWalletModel.Type.MultiCurrency)?.tokensCount ?: 0,
             )
         } else {
-            UserWalletModel.Type.SingleCurrency()
+            UserWalletModel.Type.SingleCurrency(
+                blockchainName = scanResponse.getBlockchain().fullName,
+            )
         }
     }
 }
