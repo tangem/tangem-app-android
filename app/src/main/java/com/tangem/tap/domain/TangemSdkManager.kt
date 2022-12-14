@@ -208,7 +208,7 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
     }
 
     fun getString(@StringRes stringResId: Int, vararg formatArgs: Any?): String {
-        return context.getString(stringResId, formatArgs)
+        return context.getString(stringResId, *formatArgs)
     }
 
     fun setAccessCodeRequestPolicy(
