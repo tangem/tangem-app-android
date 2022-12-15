@@ -58,7 +58,8 @@ object Versions {
     // endregion Other libraries
 
     // region Tangem
-    const val tangemBlockchainSdk = "develop-141"
+    const val tangemBlockchainSdk = "develop-142"
+    // const val tangemBlockchainSdk = "0.0.1"
 
     const val tangemCardSgk = "develop-173"
     // endregion Tangem
