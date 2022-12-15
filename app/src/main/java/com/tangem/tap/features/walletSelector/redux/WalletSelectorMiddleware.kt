@@ -26,6 +26,7 @@ import com.tangem.tap.tangemSdkManager
 import com.tangem.tap.totalFiatBalanceCalculator
 import com.tangem.tap.userWalletsListManager
 import com.tangem.tap.walletStoresManager
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
 import timber.log.Timber
@@ -70,7 +71,9 @@ internal class WalletSelectorMiddleware {
             is WalletSelectorAction.RenameWallet -> {
                 renameWallet(action.walletId, action.newName)
             }
-            is WalletSelectorAction.ChangeAppCurrency,
+            is WalletSelectorAction.ChangeAppCurrency -> {
+                refreshUserWalletsAmounts()
+            }
             is WalletSelectorAction.AddWallet.Success,
             is WalletSelectorAction.AddWallet.Error,
             is WalletSelectorAction.SelectedWalletChanged,
@@ -213,6 +216,17 @@ internal class WalletSelectorMiddleware {
             userWalletsListManager.get(walletId = UserWalletId(walletId))
                 .map { it.copy(name = newName) }
                 .flatMap { userWalletsListManager.save(it, canOverride = true) }
+                .doOnFailure { error ->
+                    store.dispatchOnMain(WalletSelectorAction.HandleError(error))
+                }
+        }
+    }
+
+    private fun refreshUserWalletsAmounts() {
+        scope.launch {
+            walletStoresManager.updateAmounts(
+                userWallets = userWalletsListManager.userWallets.first(),
+            )
                 .doOnFailure { error ->
                     store.dispatchOnMain(WalletSelectorAction.HandleError(error))
                 }

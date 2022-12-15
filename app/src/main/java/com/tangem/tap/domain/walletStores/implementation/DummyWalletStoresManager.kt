@@ -32,4 +32,8 @@ internal class DummyWalletStoresManager : WalletStoresManager {
     override suspend fun fetch(userWallets: List<UserWallet>, refresh: Boolean): CompletionResult<Unit> {
         return CompletionResult.Success(Unit)
     }
+
+    override suspend fun updateAmounts(userWallets: List<UserWallet>): CompletionResult<Unit> {
+        return CompletionResult.Success(Unit)
+    }
 }
