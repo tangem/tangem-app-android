@@ -177,12 +177,18 @@ internal class WalletSelectorMiddleware {
     }
 
     private suspend fun updateUserWalletWithScannedCard(userWallet: UserWallet): CompletionResult<UserWallet> {
+        tangemSdkManager.changeDisplayedCardIdNumbersCount(userWallet.scanResponse)
         return tangemSdkManager.scanCard(userWallet.cardId)
             .map { scannedCard ->
                 userWallet.copy(
                     scanResponse = userWallet.scanResponse.copy(
                         card = scannedCard,
                     ),
+                )
+            }
+            .doOnFailure {
+                tangemSdkManager.changeDisplayedCardIdNumbersCount(
+                    scanResponse = userWalletsListManager.selectedUserWalletSync?.scanResponse,
                 )
             }
     }
