@@ -1,7 +1,7 @@
 package com.tangem.feature.swap.domain.cache
 
 import com.tangem.feature.swap.domain.models.data.Currency
-import com.tangem.feature.swap.domain.models.data.QuoteModel
+import com.tangem.feature.swap.domain.models.data.SwapState.QuoteModel
 
 interface SwapDataCache {
 
