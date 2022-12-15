@@ -3,8 +3,8 @@ package com.tangem.feature.swap.domain
 import com.tangem.feature.swap.domain.models.AggregatedSwapDataModel
 import com.tangem.feature.swap.domain.models.data.ApproveModel
 import com.tangem.feature.swap.domain.models.data.Currency
-import com.tangem.feature.swap.domain.models.data.QuoteModel
 import com.tangem.feature.swap.domain.models.data.SwapDataModel
+import com.tangem.feature.swap.domain.models.data.SwapState
 
 interface SwapRepository {
 
@@ -14,7 +14,7 @@ interface SwapRepository {
         fromTokenAddress: String,
         toTokenAddress: String,
         amount: String,
-    ): AggregatedSwapDataModel<QuoteModel>
+    ): AggregatedSwapDataModel<SwapState.QuoteModel>
 
     /**
      * Returns address of 1inch router that must be trusted
@@ -31,7 +31,7 @@ interface SwapRepository {
      */
     suspend fun dataToApprove(
         tokenAddress: String,
-        amount: String,
+        amount: String? = null,
     ): ApproveModel
 
     /**
@@ -42,7 +42,7 @@ interface SwapRepository {
      *
      * @return amount of tokens allowed to spend
      */
-    suspend fun checkTokensSpendAllowance(tokenAddress: String, walletAddress: String): String
+    suspend fun checkTokensSpendAllowance(tokenAddress: String, walletAddress: String): AggregatedSwapDataModel<String>
 
     suspend fun prepareSwapTransaction(
         fromTokenAddress: String,
