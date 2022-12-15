@@ -294,10 +294,7 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
             when (twinCardsState.mode) {
                 CreateTwinWalletMode.CreateWallet -> {
                     store.dispatchOnMain(GlobalAction.Onboarding.Stop)
-                    OnboardingHelper.trySaveWalletAndNavigateToWalletScreen(
-                        scanResponse = scanResponse,
-                        backupCardsIds = listOfNotNull(twinCardsState.twinCardsManager?.secondCardPublicKey),
-                    )
+                    OnboardingHelper.trySaveWalletAndNavigateToWalletScreen(scanResponse)
                 }
                 CreateTwinWalletMode.RecreateWallet -> {
                     store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Home))

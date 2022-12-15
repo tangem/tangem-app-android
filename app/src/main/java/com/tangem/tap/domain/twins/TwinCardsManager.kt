@@ -19,19 +19,18 @@ class TwinCardsManager(
     card: CardDTO,
     assetReader: AssetReader,
 ) {
-    private val firstCardId: String = card.cardId
-    private var secondCardId: String? = null
+
+    private val currentCardId: String = card.cardId
 
     private var currentCardPublicKey: String? = null
-    var secondCardPublicKey: String? = null
-        private set
+    private var secondCardPublicKey: String? = null
 
     private val issuerKeyPair: KeyPair = getIssuerKeys(assetReader, card.issuer.publicKey.toHexString())
 
     suspend fun createFirstWallet(message: Message): CompletionResult<CreateWalletResponse> {
         val response = tangemSdkManager.runTaskAsync(
-            runnable = CreateFirstTwinWalletTask(firstCardId),
-            cardId = firstCardId,
+            runnable = CreateFirstTwinWalletTask(currentCardId),
+            cardId = currentCardId,
             initialMessage = message,
         )
         when (response) {
@@ -48,7 +47,7 @@ class TwinCardsManager(
     ): CompletionResult<CreateWalletResponse> {
         val task = CreateSecondTwinWalletTask(
             firstPublicKey = currentCardPublicKey!!,
-            firstCardId = firstCardId,
+            firstCardId = currentCardId,
             issuerKeys = issuerKeyPair,
             preparingMessage = preparingMessage,
             creatingWalletMessage = creatingWalletMessage,
@@ -57,7 +56,6 @@ class TwinCardsManager(
         when (response) {
             is CompletionResult.Success -> {
                 secondCardPublicKey = response.data.wallet.publicKey.toHexString()
-                secondCardId = response.data.cardId
             }
             is CompletionResult.Failure -> {}
         }
@@ -67,7 +65,7 @@ class TwinCardsManager(
     suspend fun complete(message: Message): Result<ScanResponse> {
         val response = tangemSdkManager.runTaskAsync(
             runnable = FinalizeTwinTask(secondCardPublicKey!!.hexToBytes(), issuerKeyPair),
-            cardId = firstCardId,
+            cardId = currentCardId,
             initialMessage = message,
         )
         return when (response) {
