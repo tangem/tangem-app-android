@@ -1,25 +1,25 @@
 package com.tangem.datasource.api.oneinch
 
 import com.squareup.moshi.Moshi
+import com.tangem.datasource.api.oneinch.errors.OneIncResponseException
 import com.tangem.datasource.api.oneinch.models.SwapErrorDto
 import retrofit2.HttpException
 import retrofit2.Response
 import javax.inject.Inject
 
-class OneInchErrorsHandler @Inject constructor(private val moshi: Moshi) {
+class OneInchErrorsHandler @Inject constructor(moshi: Moshi) {
 
-    fun <T> handleOneInchResponse(response: Response<T>): BaseOneInchResponse<T> {
-        val body = response.body()
+    private val errorMoshiAdapter = moshi.adapter(SwapErrorDto::class.java)
+
+    @Throws(OneIncResponseException::class)
+    fun <T> handleOneInchResponse(response: Response<T>): T {
         return if (response.isSuccessful) {
-            return BaseOneInchResponse(body, null)
+            response.body() ?: error("response body is null")
         } else {
             when (response.code()) {
                 HTTP_CODE_400 -> {
-                    if (body != null) {
-                        BaseOneInchResponse(null, moshi.adapter(SwapErrorDto::class.java).fromJson(body.toString()))
-                    } else {
-                        throw HttpException(response)
-                    }
+                    val swapErrorDto = errorMoshiAdapter.fromJson(response.errorBody()?.string() ?: "")
+                    throw OneIncResponseException(swapErrorDto ?: throw HttpException(response))
                 }
                 else -> {
                     throw HttpException(response)
