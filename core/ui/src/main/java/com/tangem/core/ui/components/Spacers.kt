@@ -47,6 +47,11 @@ fun SpacerH8(modifier: Modifier = Modifier) {
 }
 
 @Composable
+fun SpacerH10(modifier: Modifier = Modifier) {
+    SpacerH(10.dp, modifier)
+}
+
+@Composable
 fun SpacerH12(modifier: Modifier = Modifier) {
     SpacerH(12.dp, modifier)
 }
@@ -69,6 +74,11 @@ fun SpacerH28(modifier: Modifier = Modifier) {
 @Composable
 fun SpacerH32(modifier: Modifier = Modifier) {
     SpacerH(32.dp, modifier)
+}
+
+@Composable
+fun SpacerH50(modifier: Modifier = Modifier) {
+    SpacerH(50.dp, modifier)
 }
 // [REDACTED_TODO_COMMENT]
 @Composable
@@ -101,6 +111,11 @@ fun SpacerW6(modifier: Modifier = Modifier) {
 @Composable
 fun SpacerW8(modifier: Modifier = Modifier) {
     SpacerW(8.dp, modifier)
+}
+
+@Composable
+fun SpacerW12(modifier: Modifier = Modifier) {
+    SpacerW(12.dp, modifier)
 }
 
 @Composable
