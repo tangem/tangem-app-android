@@ -66,12 +66,12 @@ class ConfigManager {
         config = config.copy(
             isTopUpEnabled = model.isTopUpEnabled,
             isSendingToPayIdEnabled = model.isSendingToPayIdEnabled,
-            isCreatingTwinCardsAllowed = model.isCreatingTwinCardsAllowed
+            isCreatingTwinCardsAllowed = model.isCreatingTwinCardsAllowed,
         )
         defaultConfig = defaultConfig.copy(
             isTopUpEnabled = model.isTopUpEnabled,
             isSendingToPayIdEnabled = model.isSendingToPayIdEnabled,
-            isCreatingTwinCardsAllowed = model.isCreatingTwinCardsAllowed
+            isCreatingTwinCardsAllowed = model.isCreatingTwinCardsAllowed,
         )
     }
 
@@ -88,7 +88,8 @@ class ConfigManager {
                 blockchairAuthorizationToken = values.blockchairAuthorizationToken,
                 blockcypherTokens = values.blockcypherTokens,
                 infuraProjectId = values.infuraProjectId,
-                tronGridApiKey = values.tronGridApiKey
+                tronGridApiKey = values.tronGridApiKey,
+                saltPayAuthToken = values.saltPay.credentials.token,
             ),
             appsFlyerDevKey = values.appsFlyerDevKey,
             amplitudeApiKey = values.amplitudeApiKey,
@@ -107,6 +108,7 @@ class ConfigManager {
                 blockchairAuthorizationToken = values.blockchairAuthorizationToken,
                 blockcypherTokens = values.blockcypherTokens,
                 infuraProjectId = values.infuraProjectId,
+                saltPayAuthToken = values.saltPay.credentials.token,
             ),
             appsFlyerDevKey = values.appsFlyerDevKey,
             amplitudeApiKey = values.amplitudeApiKey,
