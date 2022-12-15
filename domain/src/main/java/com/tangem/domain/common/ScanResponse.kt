@@ -30,7 +30,7 @@ data class ScanResponse(
 ) : CommandResponse {
     fun getBlockchain(): Blockchain {
         return when (productType) {
-            ProductType.SaltPay -> if (card.isTestCard) Blockchain.SaltPayTestnet else Blockchain.SaltPay
+            ProductType.SaltPay -> Blockchain.SaltPay
             ProductType.Note -> card.getTangemNoteBlockchain() ?: Blockchain.Unknown
             else -> {
                 val blockchainName: String = walletData?.blockchain ?: return Blockchain.Unknown
