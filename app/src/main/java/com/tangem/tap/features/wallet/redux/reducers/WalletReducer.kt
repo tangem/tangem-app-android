@@ -439,9 +439,8 @@ private fun List<WalletDataModel>.mapToReduxModel(
                         is WalletDataModel.Refreshing -> BalanceStatus.Refreshing
                         is WalletDataModel.SameCurrencyTransactionInProgress -> BalanceStatus.SameCurrencyTransactionInProgress
                         is WalletDataModel.TransactionInProgress -> BalanceStatus.TransactionInProgress
-                        is WalletDataModel.Unreachable,
-                        is WalletDataModel.MissedDerivation,
-                        -> BalanceStatus.Unreachable
+                        is WalletDataModel.Unreachable -> BalanceStatus.Unreachable
+                        is WalletDataModel.MissedDerivation -> BalanceStatus.MissedDerivation
                         is WalletDataModel.VerifiedOnline -> BalanceStatus.VerifiedOnline
                     },
                     currency = currency.currencyName,
