@@ -33,6 +33,7 @@ import com.tangem.tap.features.wallet.models.toBlockchainNetworks
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.tap.store
+import com.tangem.tap.tangemSdkManager
 import com.tangem.tap.userTokensRepository
 import com.tangem.tap.walletStoresManager
 import kotlinx.coroutines.Dispatchers
@@ -94,6 +95,7 @@ class TapWalletManager {
         val card = scanResponse.card
         val attestationFailed = card.attestation.status == Attestation.Status.Failed
 
+        tangemSdkManager.changeDisplayedCardIdNumbersCount(scanResponse)
         store.state.globalState.feedbackManager?.infoHolder?.setCardInfo(scanResponse)
         updateConfigManager(scanResponse)
 
