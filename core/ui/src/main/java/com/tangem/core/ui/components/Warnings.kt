@@ -30,11 +30,11 @@ fun WarningCard(
     description: String,
 ) {
     WarningCardSurface(
+        modifier = modifier,
         content = {
             WarningBody(
                 title = title,
                 description = description,
-                modifier = modifier,
             )
         },
     )
@@ -58,8 +58,9 @@ fun ClickableWarningCard(
     onClick: () -> Unit,
 ) {
     WarningCardSurface(
+        modifier = modifier,
         content = {
-            WarningBody(modifier = modifier, title = title, description = description) {
+            WarningBody(title = title, description = description) {
                 SpacerW12()
                 Icon(
                     painter = painterResource(id = R.drawable.ic_chevron_right_24),
@@ -90,8 +91,9 @@ fun RefreshableWaringCard(
     onClick: () -> Unit,
 ) {
     WarningCardSurface(
+        modifier = modifier,
         content = {
-            WarningBody(modifier = modifier, title = title, description = description) {
+            WarningBody(title = title, description = description) {
                 SpacerW12()
                 Icon(
                     painter = painterResource(id = R.drawable.ic_refresh_24),
