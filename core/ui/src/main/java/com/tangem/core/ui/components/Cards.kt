@@ -38,13 +38,23 @@ import com.valentinilk.shimmer.shimmer
  * >Figma component</a>
  */
 @Composable
-fun SmallInfoCard(startText: String, endText: String, isLoading: Boolean = false) {
+fun SmallInfoCard(
+    modifier: Modifier = Modifier,
+    startText: String,
+    endText: String,
+    isLoading: Boolean = false,
+) {
     Surface(
         shape = RoundedCornerShape(TangemTheme.dimens.radius12),
         color = TangemTheme.colors.background.primary,
         elevation = TangemTheme.dimens.elevation2,
     ) {
-        CardInfoBox(startText = startText, endText = endText, isLoading = isLoading)
+        CardInfoBox(
+            modifier = modifier,
+            startText = startText,
+            endText = endText,
+            isLoading = isLoading,
+        )
     }
 }
 
@@ -60,6 +70,7 @@ fun SmallInfoCard(startText: String, endText: String, isLoading: Boolean = false
  */
 @Composable
 fun SmallInfoCardWithWarning(
+    modifier: Modifier = Modifier,
     startText: String,
     endText: String,
     warningText: String,
@@ -70,7 +81,7 @@ fun SmallInfoCardWithWarning(
         elevation = TangemTheme.dimens.elevation2,
     ) {
         Column(
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxWidth(),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -136,6 +147,7 @@ fun SmallInfoCardWithWarning(
  */
 @Composable
 fun CardWithIcon(
+    modifier: Modifier = Modifier,
     title: String,
     description: String,
     icon: @Composable () -> Unit,
@@ -147,6 +159,7 @@ fun CardWithIcon(
         elevation = TangemTheme.dimens.elevation2,
     ) {
         IconWithTitleAndDescription(
+            modifier = modifier,
             title = title,
             description = description,
             icon = icon,
@@ -228,9 +241,14 @@ fun IconWithTitleAndDescription(
 // region elements
 
 @Composable
-private fun CardInfoBox(startText: String, endText: String, isLoading: Boolean = false) {
+private fun CardInfoBox(
+    modifier: Modifier = Modifier,
+    startText: String,
+    endText: String,
+    isLoading: Boolean = false,
+) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .height(TangemTheme.dimens.size48)
             .padding(
