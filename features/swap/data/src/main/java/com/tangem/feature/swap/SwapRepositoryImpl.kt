@@ -2,6 +2,7 @@ package com.tangem.feature.swap
 
 import com.tangem.datasource.api.oneinch.OneInchApi
 import com.tangem.datasource.api.oneinch.OneInchErrorsHandler
+import com.tangem.datasource.api.oneinch.errors.OneIncResponseException
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.feature.swap.converters.ApproveConverter
 import com.tangem.feature.swap.converters.QuotesConverter
@@ -11,8 +12,9 @@ import com.tangem.feature.swap.domain.SwapRepository
 import com.tangem.feature.swap.domain.models.AggregatedSwapDataModel
 import com.tangem.feature.swap.domain.models.data.ApproveModel
 import com.tangem.feature.swap.domain.models.data.Currency
-import com.tangem.feature.swap.domain.models.data.QuoteModel
 import com.tangem.feature.swap.domain.models.data.SwapDataModel
+import com.tangem.feature.swap.domain.models.data.SwapState.QuoteModel
+import com.tangem.feature.swap.domain.models.data.mapErrors
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -37,14 +39,18 @@ internal class SwapRepositoryImpl @Inject constructor(
     override suspend fun findBestQuote(fromTokenAddress: String, toTokenAddress: String, amount: String):
         AggregatedSwapDataModel<QuoteModel> {
         return withContext(coroutineDispatcher.io) {
-            val quoteResponse = oneInchErrorsHandler.handleOneInchResponse(
-                oneInchApi.quote(
-                    fromTokenAddress = fromTokenAddress,
-                    toTokenAddress = toTokenAddress,
-                    amount = amount,
-                ),
-            )
-            quotesConverter.convert(quoteResponse)
+            try {
+                val response = oneInchErrorsHandler.handleOneInchResponse(
+                    oneInchApi.quote(
+                        fromTokenAddress = fromTokenAddress,
+                        toTokenAddress = toTokenAddress,
+                        amount = amount,
+                    ),
+                )
+                AggregatedSwapDataModel(dataModel = quotesConverter.convert(response))
+            } catch (ex: OneIncResponseException) {
+                AggregatedSwapDataModel(null, mapErrors(ex.data.description))
+            }
         }
     }
 
@@ -54,15 +60,23 @@ internal class SwapRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun dataToApprove(tokenAddress: String, amount: String): ApproveModel {
+    override suspend fun dataToApprove(tokenAddress: String, amount: String?): ApproveModel {
         return withContext(coroutineDispatcher.io) {
             approveConverter.convert(oneInchApi.approveTransaction(tokenAddress, amount))
         }
     }
 
-    override suspend fun checkTokensSpendAllowance(tokenAddress: String, walletAddress: String): String {
+    override suspend fun checkTokensSpendAllowance(tokenAddress: String, walletAddress: String):
+        AggregatedSwapDataModel<String> {
         return withContext(coroutineDispatcher.io) {
-            oneInchApi.approveAllowance(tokenAddress, walletAddress).allowance
+            try {
+                val response = oneInchErrorsHandler.handleOneInchResponse(
+                    oneInchApi.approveAllowance(tokenAddress, walletAddress)
+                )
+                AggregatedSwapDataModel(response.allowance)
+            } catch (ex: OneIncResponseException) {
+                AggregatedSwapDataModel(null, mapErrors(ex.data.description))
+            }
         }
     }
 
@@ -74,18 +88,20 @@ internal class SwapRepositoryImpl @Inject constructor(
         slippage: Int,
     ): AggregatedSwapDataModel<SwapDataModel> {
         return withContext(coroutineDispatcher.io) {
-            val swapResponse = oneInchErrorsHandler.handleOneInchResponse(
-                oneInchApi.swap(
-                    fromTokenAddress = fromTokenAddress,
-                    toTokenAddress = toTokenAddress,
-                    amount = amount,
-                    fromAddress = fromWalletAddress,
-                    slippage = slippage,
-                ),
-            )
-            swapConverter.convert(
-                swapResponse,
-            )
+            try {
+                val swapResponse = oneInchErrorsHandler.handleOneInchResponse(
+                    oneInchApi.swap(
+                        fromTokenAddress = fromTokenAddress,
+                        toTokenAddress = toTokenAddress,
+                        amount = amount,
+                        fromAddress = fromWalletAddress,
+                        slippage = slippage,
+                    ),
+                )
+                AggregatedSwapDataModel(swapConverter.convert(swapResponse))
+            } catch (ex: OneIncResponseException) {
+                AggregatedSwapDataModel(null, mapErrors(ex.data.description))
+            }
         }
     }
 }
