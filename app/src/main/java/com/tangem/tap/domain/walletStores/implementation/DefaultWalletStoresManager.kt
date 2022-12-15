@@ -2,6 +2,7 @@ package com.tangem.tap.domain.walletStores.implementation
 
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.CompletionResult
+import com.tangem.common.doOnSuccess
 import com.tangem.common.flatMap
 import com.tangem.common.flatMapOnFailure
 import com.tangem.common.map
@@ -85,6 +86,19 @@ internal class DefaultWalletStoresManager(
         refresh: Boolean,
     ): CompletionResult<Unit> {
         return fetch(listOf(userWallet), refresh)
+    }
+
+    override suspend fun updateAmounts(userWallets: List<UserWallet>): CompletionResult<Unit> {
+        val fiatCurrency = appCurrencyProvider.invoke()
+
+        return walletAmountsRepository.update(userWallets, fiatCurrency)
+            .doOnSuccess {
+                state.update { prevState ->
+                    prevState.copy(
+                        fiatCurrency = fiatCurrency,
+                    )
+                }
+            }
     }
 
     private suspend fun fetchWalletsIfNeeded(

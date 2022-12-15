@@ -23,5 +23,9 @@ interface WalletStoresManager {
         refresh: Boolean = false,
     ): CompletionResult<Unit>
 
+    suspend fun updateAmounts(
+        userWallets: List<UserWallet>,
+    ): CompletionResult<Unit>
+
     companion object
 }
