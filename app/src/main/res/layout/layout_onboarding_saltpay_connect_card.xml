@@ -59,7 +59,7 @@
             style="@style/OnboardingButton"
             android:layout_height="wrap_content"
             android:text="@string/onboarding_button_register_wallet"
-            app:icon="@drawable/ic_tangem"
+            app:icon="@drawable/ic_tangem_24"
             app:iconGravity="textEnd" />
 
         <ProgressBar
