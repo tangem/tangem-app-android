@@ -58,7 +58,7 @@ interface OneInchApi {
     suspend fun approveAllowance(
         @Query("tokenAddress") tokenAddress: String,
         @Query("walletAddress") walletAddress: String,
-    ): AllowanceResponse
+    ): Response<AllowanceResponse>
     //endregion Approve
 
     //region Info
