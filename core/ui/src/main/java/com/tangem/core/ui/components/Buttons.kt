@@ -429,14 +429,14 @@ private fun PrimaryButtonSample(
         PrimaryButtonIconRight(
             modifier = Modifier.fillMaxWidth(),
             text = "Manage tokens",
-            icon = painterResource(id = R.drawable.ic_tangem),
+            icon = painterResource(id = R.drawable.ic_tangem_24),
             onClick = { /* no-op */ },
         )
         Divider(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8))
         PrimaryButtonIconLeft(
             modifier = Modifier.fillMaxWidth(),
             text = "Manage tokens",
-            icon = painterResource(id = R.drawable.ic_tangem),
+            icon = painterResource(id = R.drawable.ic_tangem_24),
             onClick = { /* no-op */ },
         )
         Divider(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8))
@@ -450,7 +450,7 @@ private fun PrimaryButtonSample(
         PrimaryButtonIconRight(
             modifier = Modifier.fillMaxWidth(),
             text = "Manage tokens",
-            icon = painterResource(id = R.drawable.ic_tangem),
+            icon = painterResource(id = R.drawable.ic_tangem_24),
             enabled = false,
             onClick = { /* no-op */ },
         )
@@ -458,7 +458,7 @@ private fun PrimaryButtonSample(
         PrimaryButtonIconLeft(
             modifier = Modifier.fillMaxWidth(),
             text = "Manage tokens",
-            icon = painterResource(id = R.drawable.ic_tangem),
+            icon = painterResource(id = R.drawable.ic_tangem_24),
             enabled = false,
             onClick = { /* no-op */ },
         )
@@ -505,14 +505,14 @@ private fun SecondaryButtonSample(
         SecondaryButtonIconRight(
             modifier = Modifier.fillMaxWidth(),
             text = "Manage tokens",
-            icon = painterResource(id = R.drawable.ic_tangem),
+            icon = painterResource(id = R.drawable.ic_tangem_24),
             onClick = { /* no-op */ },
         )
         Divider(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8))
         SecondaryButtonIconLeft(
             modifier = Modifier.fillMaxWidth(),
             text = "Manage tokens",
-            icon = painterResource(id = R.drawable.ic_tangem),
+            icon = painterResource(id = R.drawable.ic_tangem_24),
             onClick = { /* no-op */ },
         )
         Divider(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8))
@@ -526,7 +526,7 @@ private fun SecondaryButtonSample(
         SecondaryButtonIconRight(
             modifier = Modifier.fillMaxWidth(),
             text = "Manage tokens",
-            icon = painterResource(id = R.drawable.ic_tangem),
+            icon = painterResource(id = R.drawable.ic_tangem_24),
             enabled = false,
             onClick = { /* no-op */ },
         )
@@ -534,7 +534,7 @@ private fun SecondaryButtonSample(
         SecondaryButtonIconLeft(
             modifier = Modifier.fillMaxWidth(),
             text = "Manage tokens",
-            icon = painterResource(id = R.drawable.ic_tangem),
+            icon = painterResource(id = R.drawable.ic_tangem_24),
             enabled = false,
             onClick = { /* no-op */ },
         )
@@ -572,7 +572,7 @@ private fun TextButtonSample(
         Divider(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8))
         TextButtonIconLeft(
             text = "Enabled",
-            icon = painterResource(id = R.drawable.ic_plus),
+            icon = painterResource(id = R.drawable.ic_plus_24),
             onClick = { /* no-op */ },
         )
         Divider(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8))
@@ -584,7 +584,7 @@ private fun TextButtonSample(
         Divider(modifier = Modifier.padding(vertical = TangemTheme.dimens.spacing8))
         TextButtonIconLeft(
             text = "Enabled",
-            icon = painterResource(id = R.drawable.ic_plus),
+            icon = painterResource(id = R.drawable.ic_plus_24),
             enabled = false,
             onClick = { /* no-op */ },
         )
