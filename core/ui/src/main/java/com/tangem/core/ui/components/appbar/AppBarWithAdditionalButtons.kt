@@ -12,7 +12,6 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
@@ -83,11 +82,11 @@ fun Preview_AppBarWithAdditionalButtons_InLightTheme() {
         AppBarWithAdditionalButtons(
             text = "Tangem",
             startButton = AdditionalButton(
-                iconRes = R.drawable.ic_scan,
+                iconRes = R.drawable.ic_scan_24,
                 onIconClicked = {},
             ),
             endButton = AdditionalButton(
-                iconRes = R.drawable.ic_more_vertical,
+                iconRes = R.drawable.ic_more_vertical_24,
                 onIconClicked = {},
             ),
         )
@@ -101,11 +100,11 @@ fun Preview_AppBarWithAdditionalButtons_InDarkTheme() {
         AppBarWithAdditionalButtons(
             text = "Tangem",
             startButton = AdditionalButton(
-                iconRes = R.drawable.ic_scan,
+                iconRes = R.drawable.ic_scan_24,
                 onIconClicked = {},
             ),
             endButton = AdditionalButton(
-                iconRes = R.drawable.ic_more_vertical,
+                iconRes = R.drawable.ic_more_vertical_24,
                 onIconClicked = {},
             ),
         )
@@ -119,7 +118,7 @@ fun Preview_AppBarWithOnlyStartButtons_InLightTheme() {
         AppBarWithAdditionalButtons(
             text = "Tangem",
             startButton = AdditionalButton(
-                iconRes = R.drawable.ic_scan,
+                iconRes = R.drawable.ic_scan_24,
                 onIconClicked = {},
             ),
         )
@@ -133,7 +132,7 @@ fun Preview_AppBarWithOnlyStartButtons_InDarkTheme() {
         AppBarWithAdditionalButtons(
             text = "Tangem",
             startButton = AdditionalButton(
-                iconRes = R.drawable.ic_scan,
+                iconRes = R.drawable.ic_scan_24,
                 onIconClicked = {},
             ),
         )
@@ -147,7 +146,7 @@ fun Preview_AppBarWithOnlyEndButtons_InLightTheme() {
         AppBarWithAdditionalButtons(
             text = "Tangem",
             endButton = AdditionalButton(
-                iconRes = R.drawable.ic_more_vertical,
+                iconRes = R.drawable.ic_more_vertical_24,
                 onIconClicked = {},
             ),
         )
@@ -161,7 +160,7 @@ fun Preview_AppBarWithOnlyEndButtons_InDarkTheme() {
         AppBarWithAdditionalButtons(
             text = "Tangem",
             endButton = AdditionalButton(
-                iconRes = R.drawable.ic_more_vertical,
+                iconRes = R.drawable.ic_more_vertical_24,
                 onIconClicked = {},
             ),
         )
