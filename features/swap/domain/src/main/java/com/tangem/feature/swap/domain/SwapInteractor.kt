@@ -1,8 +1,7 @@
 package com.tangem.feature.swap.domain
 
-import com.tangem.feature.swap.domain.models.SwapResultModel
 import com.tangem.feature.swap.domain.models.data.Currency
-import com.tangem.feature.swap.domain.models.data.QuoteModel
+import com.tangem.feature.swap.domain.models.data.SwapState
 
 interface SwapInteractor {
 
@@ -10,11 +9,13 @@ interface SwapInteractor {
 
     suspend fun getTokenBalance(tokenId: String): String
 
+    suspend fun givePermissionToSwap(tokenAddress: String)
+
     suspend fun findBestQuote(
         fromTokenAddress: String,
         toTokenAddress: String,
         amount: String,
-    ): QuoteModel
+    ): SwapState
 
-    suspend fun onSwap(): SwapResultModel
+    suspend fun onSwap(): SwapState
 }
