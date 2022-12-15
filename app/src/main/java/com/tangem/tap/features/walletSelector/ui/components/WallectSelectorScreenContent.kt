@@ -201,7 +201,7 @@ private fun Footer(
             modifier = Modifier.fillMaxWidth(),
             text = stringResource(R.string.user_wallet_list_add_button),
             showProgress = showAddCardProgress,
-            icon = painterResource(id = R.drawable.ic_tangem),
+            icon = painterResource(id = R.drawable.ic_tangem_24),
             onClick = onAddCardClick,
         )
     }
@@ -230,7 +230,7 @@ private fun EditWalletsBar(
         ) {
             Icon(
                 modifier = Modifier.size(TangemTheme.dimens.size24),
-                painter = painterResource(id = R.drawable.ic_close),
+                painter = painterResource(id = R.drawable.ic_close_24),
                 tint = TangemTheme.colors.icon.primary1,
                 contentDescription = "Unselect wallets",
             )
