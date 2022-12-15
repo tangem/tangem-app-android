@@ -62,6 +62,9 @@ class WalletAdapter : ListAdapter<WalletData, WalletAdapter.WalletsViewHolder>(D
                 BalanceStatus.Unreachable -> {
                     root.getString(R.string.wallet_balance_blockchain_unreachable)
                 }
+                BalanceStatus.MissedDerivation -> {
+                    root.getString(R.string.wallet_balance_missing_derivation)
+                }
                 else -> null
             }
 
