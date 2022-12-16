@@ -154,6 +154,10 @@ internal class BiometricUserWalletsListManager(
     }
 
     override suspend fun delete(walletIds: List<UserWalletId>): CompletionResult<Unit> {
+        if (walletIds.isEmpty()) {
+            return CompletionResult.Success(Unit)
+        }
+
         val walletIdsToRemove = state.value.wallets
             .map { it.walletId }
             .filter { it in walletIds }
