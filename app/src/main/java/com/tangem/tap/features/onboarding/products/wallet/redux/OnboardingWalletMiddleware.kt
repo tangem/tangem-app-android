@@ -22,7 +22,6 @@ import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.onboarding.OnboardingHelper
-import com.tangem.tap.features.onboarding.products.wallet.saltPay.dialog.SaltPayDialog
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayAction
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayState
 import com.tangem.tap.features.wallet.redux.Artwork
@@ -188,12 +187,7 @@ private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch:
             }
             newAction?.let { store.dispatch(it) }
         }
-        OnboardingWalletAction.OnBackPressed -> {
-            when {
-                onboardingWalletState.isSaltPay -> handleOnBackPressedSaltPay(onboardingWalletState)
-                else -> handleOnBackPressed(onboardingWalletState)
-            }
-        }
+        OnboardingWalletAction.OnBackPressed -> handleOnBackPressed(onboardingWalletState)
     }
 }
 
@@ -408,30 +402,33 @@ private fun initSaltPayOnBackupFinishedIfNeeded(
     }
 }
 
-private fun handleOnBackPressedSaltPay(state: OnboardingWalletState) {
+private fun handleOnBackPressed(state: OnboardingWalletState) {
     when (state.backupState.backupStep) {
-        BackupStep.Finished -> {
-            store.dispatchDialogShow(
-                SaltPayDialog.Activation.TryToInterrupt(
-                    onOk = { store.dispatch(NavigationAction.PopBackTo()) },
-                    onCancel = { /* do nothing */ },
-                ),
-            )
+        BackupStep.InitBackup, BackupStep.ScanOriginCard, BackupStep.AddBackupCards, BackupStep.EnterAccessCode,
+        BackupStep.ReenterAccessCode, BackupStep.SetAccessCode, BackupStep.WritePrimaryCard,
+        -> {
+            showInterruptOnboardingDialog()
         }
-        else -> handleOnBackPressed(state)
+        is BackupStep.WriteBackupCard -> {
+            store.dispatch(GlobalAction.ShowDialog(BackupDialog.BackupInProgress))
+        }
+        BackupStep.Finished -> {
+            if (state.isSaltPay) {
+                showInterruptOnboardingDialog()
+            } else {
+                store.dispatch(NavigationAction.PopBackTo())
+            }
+        }
     }
 }
 
-private fun handleOnBackPressed(state: OnboardingWalletState) {
-    when (state.backupState.backupStep) {
-        BackupStep.InitBackup, BackupStep.Finished -> store.dispatch(NavigationAction.PopBackTo())
-        BackupStep.ScanOriginCard, BackupStep.AddBackupCards, BackupStep.EnterAccessCode,
-        BackupStep.ReenterAccessCode, BackupStep.SetAccessCode, BackupStep.WritePrimaryCard,
-        -> {
-            store.dispatch(BackupAction.DiscardBackup)
-            store.dispatch(NavigationAction.PopBackTo())
-        }
-        is BackupStep.WriteBackupCard ->
-            store.dispatch(GlobalAction.ShowDialog(BackupDialog.BackupInProgress))
-    }
+private fun showInterruptOnboardingDialog() {
+    store.dispatchDialogShow(
+        OnboardingDialog.InterruptOnboarding(
+            onOk = {
+                store.dispatch(BackupAction.DiscardBackup)
+                store.dispatch(NavigationAction.PopBackTo())
+            },
+        ),
+    )
 }
