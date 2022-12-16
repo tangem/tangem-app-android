@@ -1,6 +1,10 @@
 package com.tangem.tap.domain.walletStores.repository.implementation
 
-import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.DerivationParams
+import com.tangem.blockchain.common.DerivationStyle
+import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.common.CompletionResult
 import com.tangem.common.catching
 import com.tangem.common.hdWallet.DerivationPath
@@ -18,6 +22,7 @@ import com.tangem.tap.domain.walletStores.WalletStoresError
 import com.tangem.tap.domain.walletStores.repository.WalletManagersRepository
 import com.tangem.tap.domain.walletStores.storage.WalletManagerStorage
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
@@ -170,7 +175,7 @@ internal class DefaultWalletManagersRepository(
         userWalletId: UserWalletId,
         blockchain: Blockchain?,
     ): WalletManager? {
-        return walletManagersStorage.getAllSync()[userWalletId]?.let { userWalletManagers ->
+        return walletManagersStorage.getAll().first()[userWalletId]?.let { userWalletManagers ->
             if (blockchain == null) userWalletManagers.firstOrNull()
             else userWalletManagers.find { it.wallet.blockchain == blockchain }
         }

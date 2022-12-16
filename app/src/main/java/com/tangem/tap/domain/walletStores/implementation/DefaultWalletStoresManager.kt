@@ -23,6 +23,7 @@ import com.tangem.tap.features.wallet.models.toBlockchainNetworks
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.withContext
 
@@ -41,6 +42,7 @@ internal class DefaultWalletStoresManager(
 
     override fun get(userWalletId: UserWalletId): Flow<List<WalletStoreModel>> {
         return walletStoresRepository.get(userWalletId)
+            .distinctUntilChanged()
     }
 
     override suspend fun delete(userWalletsIds: List<String>): CompletionResult<Unit> {
@@ -56,7 +58,7 @@ internal class DefaultWalletStoresManager(
     override suspend fun fetch(
         userWallets: List<UserWallet>,
         refresh: Boolean,
-    ): CompletionResult<Unit> {
+    ): CompletionResult<Unit> = withContext(Dispatchers.Default) {
         val fiatCurrency = appCurrencyProvider.invoke()
         val isFiatCurrencyChanged = state.value.fiatCurrency != fiatCurrency
 
@@ -66,7 +68,7 @@ internal class DefaultWalletStoresManager(
             )
         }
 
-        return userWallets
+        userWallets
             .mapNotNull { userWallet ->
                 val hasNotWalletStoresForUserWallet = !walletStoresRepository.contains(userWallet.walletId)
                 if (refresh || hasNotWalletStoresForUserWallet || isFiatCurrencyChanged) {

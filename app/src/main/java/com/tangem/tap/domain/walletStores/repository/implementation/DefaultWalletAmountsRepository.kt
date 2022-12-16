@@ -41,6 +41,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.math.BigDecimal
@@ -98,7 +99,9 @@ internal class DefaultWalletAmountsRepository(
         userWallets.map { userWallet ->
             val walletId = userWallet.walletId
             val scanResponse = userWallet.scanResponse
-            val walletStores = walletStoresStorage.getSync(walletId)
+            val walletStores = walletStoresStorage.getAll()
+                .first()
+                .getOrElse(walletId) { emptyList() }
 
             walletStores.map { walletStore ->
                 async {
@@ -120,7 +123,11 @@ internal class DefaultWalletAmountsRepository(
     ): CompletionResult<Unit> {
         val walletsIds = userWallets.map { it.walletId }
         val walletStores = walletsIds
-            .flatMap { walletStoresStorage.getSync(it) }
+            .flatMap {
+                walletStoresStorage.getAll()
+                    .first()
+                    .getOrElse(it) { emptyList() }
+            }
 
         val currencies = walletStores
             .asSequence()
