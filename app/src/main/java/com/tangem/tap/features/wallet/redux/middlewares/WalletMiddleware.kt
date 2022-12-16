@@ -249,8 +249,10 @@ class WalletMiddleware {
             is NetworkStateChanged -> {
                 store.dispatch(WalletAction.Warnings.CheckHashesCount.CheckHashesCountOnline)
                 val selectedUserWallet = userWalletsListManagerSafe?.selectedUserWalletSync
-                if (selectedUserWallet != null) scope.launch {
-                    globalState.tapWalletManager.loadData(selectedUserWallet)
+                if (selectedUserWallet != null) {
+                    scope.launch {
+                        globalState.tapWalletManager.loadData(selectedUserWallet)
+                    }
                 } else {
                     globalState.scanResponse?.let { scanNoteResponse ->
                         scope.launch { globalState.tapWalletManager.loadData(scanNoteResponse) }
@@ -295,11 +297,29 @@ class WalletMiddleware {
             }
             is WalletAction.UserWalletChanged -> Unit
             is WalletAction.WalletStoresChanged -> {
+                updateWalletStores(action.walletStores, walletState)
                 fetchTotalFiatBalance(action.walletStores, walletState)
                 findMissedDerivations(action.walletStores)
                 tryToShowAppRatingWarning(action.walletStores)
             }
             is WalletAction.TotalFiatBalanceChanged -> Unit
+        }
+    }
+
+    private fun updateWalletStores(wallStores: List<WalletStoreModel>, state: WalletState) {
+        scope.launch(Dispatchers.Default) {
+            val reduxWalletStores = wallStores.asSequence().mapToReduxModels(state.isMultiwalletAllowed)
+            val reduxWalletsData = reduxWalletStores.flatMap { it.walletsData }
+            val selectedWalletData = reduxWalletsData
+                .find { it.currency == state.selectedWalletData?.currency }
+
+            store.dispatchOnMain(
+                WalletAction.WalletStoresChanged.UpdateWalletStores(
+                    reduxWalletStores = reduxWalletStores.toList(),
+                    reduxWalletData = reduxWalletsData.toList(),
+                    selectedWalletData = selectedWalletData,
+                ),
+            )
         }
     }
 
@@ -309,6 +329,7 @@ class WalletMiddleware {
                 prevAmount = state.totalBalance?.fiatAmount,
                 walletStores = walletStores,
             )
+                ?.mapToReduxModel()
 
             if (totalFiatBalance != null) {
                 store.dispatchOnMain(WalletAction.TotalFiatBalanceChanged(totalFiatBalance))
@@ -361,7 +382,7 @@ class WalletMiddleware {
     }
 
     private fun prepareSendAction(amount: Amount?, state: WalletState?): Action {
-        val selectedWalletData = state?.getSelectedWalletData()
+        val selectedWalletData = state?.selectedWalletData
         val currency = selectedWalletData?.currency
         val walletStore = state?.getWalletStore(currency)
 
