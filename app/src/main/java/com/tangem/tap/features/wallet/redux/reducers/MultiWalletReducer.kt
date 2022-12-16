@@ -9,9 +9,18 @@ import com.tangem.tap.common.extensions.toFiatString
 import com.tangem.tap.common.extensions.toFormattedCurrencyString
 import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
-import com.tangem.tap.features.wallet.models.*
-import com.tangem.tap.features.wallet.redux.*
+import com.tangem.tap.features.wallet.models.Currency
+import com.tangem.tap.features.wallet.models.WalletRent
+import com.tangem.tap.features.wallet.models.filterByToken
+import com.tangem.tap.features.wallet.models.getPendingTransactions
+import com.tangem.tap.features.wallet.models.removeUnknownTransactions
+import com.tangem.tap.features.wallet.redux.ProgressState
+import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.features.wallet.redux.WalletData
+import com.tangem.tap.features.wallet.redux.WalletMainButton
+import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.redux.WalletState.Companion.UNKNOWN_AMOUNT_SIGN
+import com.tangem.tap.features.wallet.redux.WalletStore
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.features.wallet.ui.TokenData
@@ -57,13 +66,13 @@ class MultiWalletReducer {
                 }
 
                 val selectedCurrency = if (!state.isMultiwalletAllowed) {
-                    wallets.firstOrNull()?.walletsData?.firstOrNull()?.currency
+                    wallets.firstOrNull()?.walletsData?.firstOrNull()
                 } else {
-                    state.selectedCurrency
+                    state.selectedWalletData
                 }
                 state.copy(
                     wallets = wallets,
-                    selectedCurrency = selectedCurrency
+                    selectedWalletData = selectedCurrency,
                 )
             }
             is WalletAction.MultiWallet.AddBlockchain -> {
@@ -147,7 +156,7 @@ class MultiWalletReducer {
                 state.copy(isMultiwalletAllowed = action.isMultiwalletAllowed)
 
             is WalletAction.MultiWallet.SelectWallet ->
-                state.copy(selectedCurrency = action.walletData?.currency)
+                state.copy(selectedWalletData = action.walletData)
             is WalletAction.MultiWallet.TryToRemoveWallet -> state
             is WalletAction.MultiWallet.RemoveWallet -> {
                 state.removeWallet(state.getWalletData(action.currency))

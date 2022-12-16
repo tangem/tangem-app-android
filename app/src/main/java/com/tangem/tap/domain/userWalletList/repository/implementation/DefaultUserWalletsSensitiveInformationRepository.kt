@@ -98,10 +98,12 @@ internal class DefaultUserWalletsSensitiveInformationRepository(
     }
 
     override suspend fun delete(walletIds: List<UserWalletId>): CompletionResult<Unit> = catching {
-        walletIds
-            .forEach { walletId ->
-                secureStorage.delete(StorageKey.SensitiveInformation(walletId).name)
-            }
+        withContext(Dispatchers.IO) {
+            walletIds
+                .forEach { walletId ->
+                    secureStorage.delete(StorageKey.SensitiveInformation(walletId).name)
+                }
+        }
     }
 
     private fun ByteArray.encryptAndStoreIv(walletId: UserWalletId, encryptionKey: ByteArray): ByteArray {

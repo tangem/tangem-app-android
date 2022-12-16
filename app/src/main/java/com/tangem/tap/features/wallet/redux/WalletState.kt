@@ -37,9 +37,10 @@ data class WalletState(
     val hashesCountVerified: Boolean? = null,
     val mainWarningsList: List<WarningMessage> = mutableListOf(),
     val wallets: List<WalletStore> = listOf(),
+    val walletsData: List<WalletData> = listOf(),
     val isMultiwalletAllowed: Boolean = false,
     val cardCurrency: CryptoCurrencyName? = null,
-    val selectedCurrency: Currency? = null,
+    val selectedWalletData: WalletData? = null,
     val primaryBlockchain: Blockchain? = null,
     val primaryToken: Token? = null,
     val isTestnet: Boolean = false,
@@ -67,9 +68,6 @@ data class WalletState(
 
     val currencies: List<Currency>
         get() = wallets.flatMap { it.walletsData }.map { it.currency }
-
-    val walletsData: List<WalletData>
-        get() = wallets.flatMap { it.walletsData }
 
     val walletManagers: List<WalletManager>
         get() = wallets.mapNotNull { it.walletManager }
@@ -129,10 +127,6 @@ data class WalletState(
     fun getWalletData(currency: Currency?): WalletData? {
         if (currency == null) return null
         return getWalletStore(currency)?.walletsData?.firstOrNull { it.currency == currency }
-    }
-
-    fun getSelectedWalletData(): WalletData? {
-        return walletsData.find { it.currency == selectedCurrency }
     }
 
     private fun isPrimaryCurrency(walletData: WalletData): Boolean {

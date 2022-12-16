@@ -3,6 +3,8 @@ package com.tangem.tap.features.wallet.ui.wallet
 import android.widget.Button
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.badoo.mvicore.DiffStrategy
+import com.badoo.mvicore.modelWatcher
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.tap.common.analytics.Analytics
@@ -33,6 +35,41 @@ class MultiWalletView : WalletView() {
 
     private lateinit var walletsAdapter: WalletAdapter
 
+    private val watcher = modelWatcher<WalletState> {
+        val totalBalanceStrategy: DiffStrategy<WalletState> = { old, new ->
+            old.totalBalance != new.totalBalance ||
+                old.state != new.state ||
+                old.walletsData.size != new.walletsData.size
+        }
+
+        (WalletState::walletsData or WalletState::state) { walletState ->
+            walletsAdapter.submitList(walletState.walletsData)
+        }
+        WalletState::loadingUserTokens {
+            binding?.pbLoadingUserTokens?.show(it)
+        }
+        WalletState::walletCardsCount { walletCardsCount ->
+            binding?.let {
+                setupWalletCardNumber(it, walletCardsCount)
+            }
+        }
+        WalletState::missingDerivations { missingDerivations ->
+            binding?.let {
+                handleRescanWarning(it, missingDerivations.isNotEmpty())
+            }
+        }
+        WalletState::showBackupWarning { showBackupWarnings ->
+            binding?.let {
+                handleBackupWarning(it, showBackupWarnings)
+            }
+        }
+        watch({ it }, totalBalanceStrategy) { walletState ->
+            binding?.let {
+                handleTotalBalance(it, walletState.totalBalance, walletState.state, walletState.walletsData.size)
+            }
+        }
+    }
+
     override fun changeWalletView(fragment: WalletFragment, binding: FragmentWalletBinding) {
         setFragment(fragment, binding)
         onViewCreated()
@@ -40,6 +77,7 @@ class MultiWalletView : WalletView() {
     }
 
     private fun showMultiWalletView(binding: FragmentWalletBinding) = with(binding) {
+        watcher.clear()
         tvTwinCardNumber.hide()
         rvPendingTransaction.hide()
         lCardBalance.root.hide()
@@ -68,13 +106,7 @@ class MultiWalletView : WalletView() {
         val fragment = fragment ?: return
         val binding = binding ?: return
 
-        handleTotalBalance(binding, state.totalBalance, state.state, state.walletsData.size)
-        handleBackupWarning(binding, state.showBackupWarning)
-        handleRescanWarning(binding, state.missingDerivations.isNotEmpty())
-        setupWalletCardNumber(binding, state.walletCardsCount)
-        walletsAdapter.submitList(state.walletsData)
-
-        binding.pbLoadingUserTokens.show(state.loadingUserTokens)
+        watcher.invoke(state)
 
         binding.btnAddToken.setOnClickListener {
             val card = store.state.globalState.scanResponse!!.card

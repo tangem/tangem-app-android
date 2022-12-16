@@ -110,6 +110,12 @@ class OnWalletLoadedReducer {
         val wallets = walletState.replaceSomeWallets((newWallets))
 
         return walletState
+            .copy(
+                selectedWalletData = wallets
+                    .find { it.currency == walletState.selectedWalletData?.currency }
+                    ?: walletState.selectedWalletData,
+                walletsData = wallets,
+            )
             .updateWalletsData(wallets)
     }
 

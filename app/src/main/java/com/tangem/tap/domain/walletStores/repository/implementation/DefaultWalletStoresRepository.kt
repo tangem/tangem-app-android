@@ -12,6 +12,8 @@ import com.tangem.tap.domain.walletStores.repository.implementation.utils.update
 import com.tangem.tap.domain.walletStores.storage.WalletStoresStorage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
 internal class DefaultWalletStoresRepository : WalletStoresRepository {
@@ -22,11 +24,11 @@ internal class DefaultWalletStoresRepository : WalletStoresRepository {
     }
 
     override fun get(userWalletId: UserWalletId): Flow<List<WalletStoreModel>> {
-        return walletStoresStorage.get(userWalletId)
+        return getAll().map { it[userWalletId].orEmpty() }
     }
 
     override suspend fun contains(userWalletId: UserWalletId): Boolean {
-        return walletStoresStorage.getSync(userWalletId).isNotEmpty()
+        return get(userWalletId).first().isNotEmpty()
     }
 
     override suspend fun delete(userWalletsIds: List<UserWalletId>): CompletionResult<Unit> = catching {
@@ -75,16 +77,22 @@ internal class DefaultWalletStoresRepository : WalletStoresRepository {
         } else {
             val oldWalletStore = walletStores.find(walletStore::isSameWalletStore)
 
-            if (oldWalletStore == null) {
-                prevStores.apply {
-                    set(userWalletId, walletStores + walletStore)
+            when {
+                oldWalletStore == null -> {
+                    prevStores.apply {
+                        set(userWalletId, walletStores + walletStore)
+                    }
                 }
-            } else {
-                prevStores.replaceWalletStore(
-                    walletId = userWalletId,
-                    walletStore = oldWalletStore,
-                    update = { it.updateWithSelf(walletStore) },
-                )
+                oldWalletStore.blockchainNetwork.tokens == walletStore.blockchainNetwork.tokens -> {
+                    prevStores
+                }
+                else -> {
+                    prevStores.replaceWalletStore(
+                        walletId = userWalletId,
+                        walletStore = oldWalletStore,
+                        update = { it.updateWithSelf(walletStore) },
+                    )
+                }
             }
         }
     }

@@ -55,6 +55,7 @@ object Versions {
     const val zendeskMessaging = "5.2.4"
     const val zxingQrBarcodeScanner = "1.9.8"
     const val zxingQrCode = "3.3.3"
+    const val mviCore = "1.3.1"
     // endregion Other libraries
 
     // region Tangem
