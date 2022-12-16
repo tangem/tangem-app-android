@@ -1,7 +1,9 @@
 package com.tangem.tap.features.walletSelector.ui.components
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Icon
@@ -33,15 +35,23 @@ import com.tangem.tap.features.walletSelector.ui.model.UserWalletItem
 import com.tangem.wallet.R
 import com.valentinilk.shimmer.shimmer
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun WalletItem(
-    modifier: Modifier = Modifier,
     wallet: UserWalletItem,
     isSelected: Boolean,
     isChecked: Boolean,
+    onWalletClick: (walletId: String) -> Unit,
+    onWalletLongClick: (walletId: String) -> Unit,
 ) {
     Row(
-        modifier = modifier,
+        modifier = Modifier
+            .combinedClickable(
+                onClick = { onWalletClick(wallet.id) },
+                onLongClick = { onWalletLongClick(wallet.id) },
+            )
+            .height(72.dp)
+            .padding(all = TangemTheme.dimens.spacing16),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         WalletCardImage(
