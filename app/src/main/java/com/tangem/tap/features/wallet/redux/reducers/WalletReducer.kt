@@ -101,8 +101,7 @@ private fun internalReduce(action: Action, state: AppState, appStateHolder: AppS
                                         ),
                                     )
                                 },
-
-                                )
+                            )
                         }
 
                     newState = newState.copy(

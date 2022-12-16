@@ -166,7 +166,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
 
         binding.srlWallet.isRefreshing = state.state == ProgressState.Refreshing
         binding.srlWallet.setOnRefreshListener {
-            if (state.state != ProgressState.Loading ||
+            if (state.state != ProgressState.Loading &&
                 state.state != ProgressState.Refreshing
             ) {
                 Analytics.send(Portfolio.Refreshed())

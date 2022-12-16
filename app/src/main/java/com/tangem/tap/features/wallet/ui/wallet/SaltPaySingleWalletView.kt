@@ -53,4 +53,3 @@ class SaltPaySingleWalletView : WalletView() {
         ).setup()
     }
 }
-
