@@ -25,19 +25,21 @@ internal class DefaultUserWalletsPublicInformationRepository(
     )
 
     override suspend fun save(userWallet: UserWallet): CompletionResult<Unit> {
-        return getAll()
-            .flatMap { savedInformation ->
-                val infoToSave = withContext(Dispatchers.Default) {
-                    savedInformation.toMutableList()
-                        .apply {
-                            replaceByOrAdd(userWallet.publicInformation) {
-                                userWallet.walletId == it.walletId
+        return withContext(Dispatchers.IO) {
+            getAll()
+                .flatMap { savedInformation ->
+                    val infoToSave = withContext(Dispatchers.Default) {
+                        savedInformation.toMutableList()
+                            .apply {
+                                replaceByOrAdd(userWallet.publicInformation) {
+                                    userWallet.walletId == it.walletId
+                                }
                             }
-                        }
-                }
+                    }
 
-                save(infoToSave)
-            }
+                    save(infoToSave)
+                }
+        }
     }
 
     override suspend fun getAll(): CompletionResult<List<UserWalletPublicInformation>> = catching {
@@ -50,20 +52,24 @@ internal class DefaultUserWalletsPublicInformationRepository(
     }
 
     override suspend fun delete(walletIds: List<UserWalletId>): CompletionResult<Unit> {
-        return getAll()
-            .flatMap { publicInformation ->
-                val infoToRemove = publicInformation
-                    .filter { it.walletId in walletIds }
-                    .toSet()
+        return withContext(Dispatchers.IO) {
+            getAll()
+                .flatMap { publicInformation ->
+                    val infoToRemove = publicInformation
+                        .filter { it.walletId in walletIds }
+                        .toSet()
 
-                save(
-                    publicInformation = publicInformation - infoToRemove,
-                )
-            }
+                    save(
+                        publicInformation = publicInformation - infoToRemove,
+                    )
+                }
+        }
     }
 
     override suspend fun clear(): CompletionResult<Unit> = catching {
-        secureStorage.delete(StorageKey.UserWalletPublicInformation.name)
+        withContext(Dispatchers.IO) {
+            secureStorage.delete(StorageKey.UserWalletPublicInformation.name)
+        }
     }
 
     @JvmName("saveWithPublicInformation")

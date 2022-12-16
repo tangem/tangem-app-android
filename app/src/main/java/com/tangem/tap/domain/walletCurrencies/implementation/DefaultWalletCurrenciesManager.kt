@@ -32,14 +32,14 @@ internal class DefaultWalletCurrenciesManager(
     override suspend fun update(
         userWallet: UserWallet,
         blockchainNetwork: BlockchainNetwork,
-    ): CompletionResult<Unit> {
+    ): CompletionResult<Unit> = withContext(Dispatchers.Default) {
         val walletStore = walletStoresRepository.get(userWallet.walletId).first()
             .find {
                 it.blockchainNetwork.blockchain == blockchainNetwork.blockchain
                     && it.blockchainNetwork.derivationPath == blockchainNetwork.derivationPath
             }
 
-        return if (walletStore != null) {
+        if (walletStore != null) {
             walletAmountsRepository.update(
                 userWallet = userWallet,
                 walletStore = walletStore,

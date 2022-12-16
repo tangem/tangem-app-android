@@ -12,6 +12,8 @@ import com.tangem.common.services.secure.SecureStorage
 import com.tangem.tap.domain.userWalletList.UserWalletListError
 import com.tangem.tap.domain.userWalletList.model.UserWalletEncryptionKey
 import com.tangem.tap.domain.userWalletList.repository.UserWalletsKeysRepository
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 internal class BiometricUserWalletsKeysRepository(
     moshi: Moshi,
@@ -27,38 +29,50 @@ internal class BiometricUserWalletsKeysRepository(
     )
 
     override suspend fun getAll(): CompletionResult<List<UserWalletEncryptionKey>> {
-        return biometricStorage.get(key = StorageKey.WalletEncryptionKeys.name)
-            .map { encryptionKeys ->
-                encryptionKeys.decodeToKeys()
-            }
-            .mapFailure { error ->
-                UserWalletListError.ReceiveEncryptionKeysError(error.cause ?: error)
-            }
+        return withContext(Dispatchers.IO) {
+            biometricStorage.get(key = StorageKey.WalletEncryptionKeys.name)
+                .map { encryptionKeys ->
+                    encryptionKeys.decodeToKeys()
+                }
+                .mapFailure { error ->
+                    UserWalletListError.ReceiveEncryptionKeysError(error.cause ?: error)
+                }
+        }
     }
 
     override suspend fun store(encryptionKeys: List<UserWalletEncryptionKey>): CompletionResult<Unit> {
-        return biometricStorage.store(
-            key = StorageKey.WalletEncryptionKeys.name,
-            data = encryptionKeys.encode(),
-        )
-            .mapFailure { error ->
-                UserWalletListError.SaveEncryptionKeysError(error.cause ?: error)
-            }
+        return withContext(Dispatchers.IO) {
+            biometricStorage.store(
+                key = StorageKey.WalletEncryptionKeys.name,
+                data = encryptionKeys.encode(),
+            )
+                .mapFailure { error ->
+                    UserWalletListError.SaveEncryptionKeysError(error.cause ?: error)
+                }
+        }
     }
 
     override suspend fun clear(): CompletionResult<Unit> {
-        return biometricStorage.delete(key = StorageKey.WalletEncryptionKeys.name)
+        return withContext(Dispatchers.IO) {
+            biometricStorage.delete(key = StorageKey.WalletEncryptionKeys.name)
+        }
     }
 
-    private fun List<UserWalletEncryptionKey>.encode(): ByteArray {
-        return this.let(walletsKeysAdapter::toJson)
-            .encodeToByteArray(throwOnInvalidSequence = true)
+    private suspend fun List<UserWalletEncryptionKey>.encode(): ByteArray {
+        return withContext(Dispatchers.Default) {
+            this@encode
+                .let(walletsKeysAdapter::toJson)
+                .encodeToByteArray(throwOnInvalidSequence = true)
+        }
     }
 
-    private fun ByteArray?.decodeToKeys(): List<UserWalletEncryptionKey> {
-        return this?.decodeToString(throwOnInvalidSequence = true)
-            ?.let(walletsKeysAdapter::fromJson)
-            .orEmpty()
+    private suspend fun ByteArray?.decodeToKeys(): List<UserWalletEncryptionKey> {
+        return withContext(Dispatchers.Default) {
+            this@decodeToKeys
+                ?.decodeToString(throwOnInvalidSequence = true)
+                ?.let(walletsKeysAdapter::fromJson)
+                .orEmpty()
+        }
     }
 
     private enum class StorageKey {
