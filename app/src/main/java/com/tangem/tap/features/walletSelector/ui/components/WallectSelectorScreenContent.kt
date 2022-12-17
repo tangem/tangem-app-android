@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Text
@@ -49,7 +48,7 @@ internal fun WalletSelectorScreenContent(
     onEditSelectedWalletClick: () -> Unit,
     onDeleteSelectedWalletsClick: () -> Unit,
 ) {
-    LazyColumn(state = rememberLazyListState()) {
+    LazyColumn {
         stickyHeader {
             Header(
                 editingWalletsIds = state.editingWalletsIds,
@@ -63,11 +62,15 @@ internal fun WalletSelectorScreenContent(
             WalletsTitle(textResId = R.string.user_wallet_list_multi_header, wallets = state.multiCurrencyWallets)
         }
 
-        itemsIndexed(state.multiCurrencyWallets) { _, wallet ->
+        itemsIndexed(
+            items = state.multiCurrencyWallets,
+            key = { _, wallet -> wallet.id },
+        ) { _, wallet ->
+
             WalletItem(
                 wallet = wallet,
-                isSelected = wallet.id == state.selectedWalletId,
-                isChecked = wallet.id in state.editingWalletsIds,
+                isSelected = remember(state.selectedWalletId) { wallet.id == state.selectedWalletId },
+                isChecked = remember(state.editingWalletsIds) { wallet.id in state.editingWalletsIds },
                 onWalletClick = onWalletClick,
                 onWalletLongClick = onWalletLongClick,
             )
@@ -77,11 +80,14 @@ internal fun WalletSelectorScreenContent(
             WalletsTitle(textResId = R.string.user_wallet_list_single_header, wallets = state.singleCurrencyWallets)
         }
 
-        itemsIndexed(state.singleCurrencyWallets) { _, wallet ->
+        itemsIndexed(
+            items = state.singleCurrencyWallets,
+            key = { _, wallet -> wallet.id },
+        ) { _, wallet ->
             WalletItem(
                 wallet = wallet,
-                isSelected = wallet.id == state.selectedWalletId,
-                isChecked = wallet.id in state.editingWalletsIds,
+                isSelected = remember(state.selectedWalletId) { wallet.id == state.selectedWalletId },
+                isChecked = remember(state.editingWalletsIds) { wallet.id in state.editingWalletsIds },
                 onWalletClick = onWalletClick,
                 onWalletLongClick = onWalletLongClick,
             )

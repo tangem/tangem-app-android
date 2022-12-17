@@ -26,6 +26,7 @@ import com.tangem.tap.tangemSdkManager
 import com.tangem.tap.totalFiatBalanceCalculator
 import com.tangem.tap.userWalletsListManager
 import com.tangem.tap.walletStoresManager
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
@@ -99,13 +100,17 @@ internal class WalletSelectorMiddleware {
 
     private fun updateBalances(walletStores: Map<UserWalletId, List<WalletStoreModel>>, state: WalletSelectorState) {
         walletStores.forEach { (walletId, walletStores) ->
-            scope.launch {
-                val updatedWallet = state.wallets
+            scope.launch(Dispatchers.Default) {
+                val foundWallet = state.wallets
                     .find { it.id == walletId.stringValue }
-                    ?.updateWalletStoresAndCalculateFiatBalance(walletStores)
 
-                if (updatedWallet != null) {
-                    store.dispatchOnMain(WalletSelectorAction.BalanceLoaded(updatedWallet))
+                if (foundWallet != null) {
+                    val updatedWallet = foundWallet
+                        .updateWalletStoresAndCalculateFiatBalance(walletStores)
+
+                    if (foundWallet != updatedWallet) {
+                        store.dispatchOnMain(WalletSelectorAction.BalanceLoaded(updatedWallet))
+                    }
                 }
             }
         }
