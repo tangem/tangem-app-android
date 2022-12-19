@@ -40,9 +40,9 @@ internal class DefaultWalletCurrenciesManager(
             }
 
         if (walletStore != null) {
-            walletAmountsRepository.update(
-                userWallet = userWallet,
+            walletAmountsRepository.updateAmountsForWalletStore(
                 walletStore = walletStore,
+                userWallet = userWallet,
                 fiatCurrency = appCurrencyProvider(),
             )
         } else CompletionResult.Success(Unit)
@@ -195,7 +195,7 @@ internal class DefaultWalletCurrenciesManager(
             }
             .fold()
             .flatMap {
-                walletAmountsRepository.update(
+                walletAmountsRepository.updateAmountsForUserWallet(
                     userWallet = userWallet,
                     fiatCurrency = appCurrencyProvider(),
                 )

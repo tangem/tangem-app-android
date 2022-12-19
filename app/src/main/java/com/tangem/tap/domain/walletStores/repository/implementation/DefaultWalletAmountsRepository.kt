@@ -9,7 +9,7 @@ import com.tangem.blockchain.extensions.Result.Failure
 import com.tangem.blockchain.extensions.Result.Success
 import com.tangem.common.CompletionResult
 import com.tangem.common.catching
-import com.tangem.common.doOnSuccess
+import com.tangem.common.core.TangemError
 import com.tangem.common.flatMap
 import com.tangem.common.flatMapOnFailure
 import com.tangem.common.map
@@ -40,7 +40,6 @@ import com.tangem.tap.network.NetworkConnectivity
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -52,30 +51,30 @@ internal class DefaultWalletAmountsRepository(
     private val walletStoresStorage = WalletStoresStorage
     private val walletManagersStorage = WalletManagerStorage
 
-    override suspend fun update(
+    override suspend fun updateAmountsForUserWallets(
         userWallets: List<UserWallet>,
         fiatCurrency: FiatCurrency,
     ): CompletionResult<Unit> {
         return if (userWallets.isEmpty()) CompletionResult.Success(Unit)
         else withContext(Dispatchers.Default) {
             awaitAll(
-                async { fetchAmounts(userWallets) },
+                async { fetchAmountsForUserWallets(userWallets) },
                 async { fetchFiatRates(userWallets, fiatCurrency) },
             )
                 .fold()
         }
     }
 
-    override suspend fun update(
+    override suspend fun updateAmountsForUserWallet(
         userWallet: UserWallet,
         fiatCurrency: FiatCurrency,
     ): CompletionResult<Unit> {
-        return update(listOf(userWallet), fiatCurrency)
+        return updateAmountsForUserWallets(listOf(userWallet), fiatCurrency)
     }
 
-    override suspend fun update(
-        userWallet: UserWallet,
+    override suspend fun updateAmountsForWalletStore(
         walletStore: WalletStoreModel,
+        userWallet: UserWallet,
         fiatCurrency: FiatCurrency,
     ): CompletionResult<Unit> = withContext(Dispatchers.Default) {
         val walletId = userWallet.walletId
@@ -85,35 +84,18 @@ internal class DefaultWalletAmountsRepository(
             async {
                 // TODO: Find wallet manager via [com.tangem.tap.domain.walletStores.repository.WalletManagersRepository]
                 val walletManager = walletStore.walletManager
-                fetchAmounts(walletId, scanResponse, walletStore, walletManager)
-                    .flatMap { fetchRentIfNeeded(walletStore, walletManager) }
+                fetchAmountsForWalletStore(walletId, scanResponse, walletStore, walletManager)
             },
             async { fetchFiatRates(listOf(userWallet), fiatCurrency) },
         )
             .fold()
     }
 
-    private suspend fun fetchAmounts(
+    private suspend fun fetchAmountsForUserWallets(
         userWallets: List<UserWallet>,
-    ): CompletionResult<Unit> = coroutineScope {
-        userWallets.map { userWallet ->
-            val walletId = userWallet.walletId
-            val scanResponse = userWallet.scanResponse
-            val walletStores = walletStoresStorage.getAll()
-                .first()
-                .getOrElse(walletId) { emptyList() }
-
-            walletStores.map { walletStore ->
-                async {
-                    // TODO: Find wallet manager via [com.tangem.tap.domain.walletStores.repository.WalletManagersRepository]
-                    val walletManager = walletStore.walletManager
-                    fetchAmounts(walletId, scanResponse, walletStore, walletManager)
-                        .flatMap { fetchRentIfNeeded(walletStore, walletManager) }
-                }
-            }
-                .awaitAll()
-                .fold()
-        }
+    ): CompletionResult<Unit> = withContext(Dispatchers.Default) {
+        userWallets.map { async { fetchAmountsForUserWallet(it) } }
+            .awaitAll()
             .fold()
     }
 
@@ -154,7 +136,7 @@ internal class DefaultWalletAmountsRepository(
                 )
 
                 walletStores.forEach { walletStore ->
-                    updateWithFiatRates(
+                    updateWalletStoreWithFiatRates(
                         walletStore = walletStore,
                         fiatRates = fiatRatesResult.data.rates,
                     )
@@ -182,7 +164,27 @@ internal class DefaultWalletAmountsRepository(
         }
     }
 
-    private suspend fun fetchAmounts(
+    private suspend fun fetchAmountsForUserWallet(
+        userWallet: UserWallet,
+    ): CompletionResult<Unit> = withContext(Dispatchers.Default) {
+        val walletId = userWallet.walletId
+        val scanResponse = userWallet.scanResponse
+        val walletStores = walletStoresStorage.getAll()
+            .first()
+            .getOrElse(walletId) { emptyList() }
+
+        walletStores.map { walletStore ->
+            async {
+                // TODO: Find wallet manager via [com.tangem.tap.domain.walletStores.repository.WalletManagersRepository]
+                val walletManager = walletStore.walletManager
+                fetchAmountsForWalletStore(walletId, scanResponse, walletStore, walletManager)
+            }
+        }
+            .awaitAll()
+            .fold()
+    }
+
+    private suspend fun fetchAmountsForWalletStore(
         walletId: UserWalletId,
         scanResponse: ScanResponse,
         walletStore: WalletStoreModel,
@@ -191,93 +193,32 @@ internal class DefaultWalletAmountsRepository(
         val hasMissedDerivations = with(walletStore.blockchainNetwork) {
             derivationPath != null && !scanResponse.hasDerivation(blockchain, derivationPath)
         }
-        val blockchain = walletStore.blockchainNetwork.blockchain
-        val tokens = walletStore.blockchainNetwork.tokens.map { it.name }
 
         return when {
-            hasMissedDerivations -> {
-                Timber.e(
-                    """
-                        Missed derivation
-                        |- User wallet id: $walletId
-                        |- Blockchain: $blockchain
-                    """.trimIndent(),
-                )
-
-                updateWithMissedDerivation(
-                    walletStore = walletStore,
-                )
-
-                CompletionResult.Success(Unit)
-            }
-            walletManager == null -> {
-                Timber.e(
-                    """
-                        Wallet manager is null
-                        |- User wallet id: $walletId
-                        |- Blockchain: $blockchain
-                    """.trimIndent(),
-                )
-
-                updateWithUnreachable(
-                    walletStore = walletStore,
-                )
-
-                CompletionResult.Success(Unit)
-            }
+            hasMissedDerivations -> updateWalletStoreWithMissedDerivation(walletStore)
+            walletManager == null -> updateWalletStoreWithUnreachable(walletStore)
             else -> {
                 withInternetConnection { walletManager.update() }
                     .map { updateWalletManagerWithAmounts(walletId, walletManager) }
-                    .doOnSuccess {
-                        Timber.d(
-                            """
-                                Fetched amounts
-                                |- User wallet id: $walletId
-                                |- Blockchain: $blockchain
-                                |- Tokens: $tokens
-                            """.trimIndent(),
-                        )
-
-                        updateWithAmounts(
+                    .flatMap { updateWalletStoreWithAmounts(walletStore, walletManager.wallet) }
+                    .flatMap { fetchWalletStoreRentIfNeeded(walletStore, walletManager) }
+                    .flatMapOnFailure { error ->
+                        updateWalletStoreWithError(
                             walletStore = walletStore,
                             wallet = walletManager.wallet,
+                            error = error,
                         )
-                    }
-                    .flatMapOnFailure { error ->
-                        Timber.e(
-                            error,
-                            """
-                                Unable to fetch amounts
-                                |- User wallet id: $walletId
-                                |- Blockchain: $blockchain
-                                |- Tokens: $tokens
-                            """.trimIndent(),
-                        )
-
-                        if (error is BlockchainSdkError) {
-                            updateWithError(
-                                walletStore = walletStore,
-                                wallet = walletManager.wallet,
-                                error = error,
-                            )
-                            CompletionResult.Success(Unit)
-                        } else {
-                            CompletionResult.Failure(error)
-                        }
                     }
             }
         }
     }
 
-    private suspend fun fetchRentIfNeeded(
+    private suspend fun fetchWalletStoreRentIfNeeded(
         walletStore: WalletStoreModel,
-        walletManager: WalletManager?,
+        walletManager: WalletManager,
     ): CompletionResult<Unit> {
         val rentProvider = walletManager as? RentProvider
-
-        if (walletManager == null || rentProvider == null) {
-            return CompletionResult.Success(Unit)
-        }
+            ?: return CompletionResult.Success(Unit)
 
         when (val result = rentProvider.minimalBalanceForRentExemption()) {
             is Success -> {
@@ -295,7 +236,7 @@ internal class DefaultWalletAmountsRepository(
                     balance < rest
                 }
 
-                updateWithRent(
+                updateWalletStoreWithRent(
                     walletStore = walletStore,
                     rent = if (setRent) {
                         WalletStoreModel.WalletRent(
@@ -340,29 +281,54 @@ internal class DefaultWalletAmountsRepository(
         }
     }
 
-    private suspend fun updateWithError(
+    private suspend fun updateWalletStoreWithError(
         walletStore: WalletStoreModel,
         wallet: Wallet,
-        error: BlockchainSdkError,
+        error: TangemError,
     ) = withContext(Dispatchers.Default) {
-        walletStoresStorage.update { prevState ->
-            prevState.replaceWalletStore(
-                walletId = walletStore.userWalletId,
-                walletStore = walletStore,
-                update = {
-                    it.updateWithError(
-                        wallet = wallet,
-                        error = error,
-                    )
-                },
-            )
+        Timber.e(
+            error,
+            """
+                Unable to fetch amounts
+                |- User wallet id: ${walletStore.userWalletId}
+                |- Blockchain: ${walletStore.blockchainNetwork.blockchain}
+                |- Tokens: ${walletStore.blockchainNetwork.tokens.map { it.name }}
+            """.trimIndent(),
+        )
+
+        if (error is BlockchainSdkError) {
+            walletStoresStorage.update { prevState ->
+                prevState.replaceWalletStore(
+                    walletId = walletStore.userWalletId,
+                    walletStore = walletStore,
+                    update = {
+                        it.updateWithError(
+                            wallet = wallet,
+                            error = error,
+                        )
+                    },
+                )
+            }
+
+            CompletionResult.Success(Unit)
+        } else {
+            CompletionResult.Failure(error)
         }
     }
 
-    private suspend fun updateWithAmounts(
+    private suspend fun updateWalletStoreWithAmounts(
         walletStore: WalletStoreModel,
         wallet: Wallet,
     ) = withContext(Dispatchers.Default) {
+        Timber.d(
+            """
+                Fetched amounts
+                |- User wallet id: ${walletStore.userWalletId}
+                |- Blockchain: ${walletStore.blockchainNetwork.blockchain}
+                |- Tokens: ${walletStore.blockchainNetwork.tokens.map { it.name }}
+            """.trimIndent(),
+        )
+
         walletStoresStorage.update { prevState ->
             prevState.replaceWalletStore(
                 walletId = walletStore.userWalletId,
@@ -372,11 +338,21 @@ internal class DefaultWalletAmountsRepository(
                 },
             )
         }
+
+        CompletionResult.Success(Unit)
     }
 
-    private suspend fun updateWithMissedDerivation(
+    private suspend fun updateWalletStoreWithMissedDerivation(
         walletStore: WalletStoreModel,
     ) = withContext(Dispatchers.Default) {
+        Timber.e(
+            """
+                Missed derivation
+                |- User wallet id: ${walletStore.userWalletId}
+                |- Blockchain: ${walletStore.blockchainNetwork.blockchain}
+            """.trimIndent(),
+        )
+
         walletStoresStorage.update { prevState ->
             prevState.replaceWalletStore(
                 walletId = walletStore.userWalletId,
@@ -386,11 +362,21 @@ internal class DefaultWalletAmountsRepository(
                 },
             )
         }
+
+        CompletionResult.Success(Unit)
     }
 
-    private suspend fun updateWithUnreachable(
+    private suspend fun updateWalletStoreWithUnreachable(
         walletStore: WalletStoreModel,
     ) = withContext(Dispatchers.Default) {
+        Timber.e(
+            """
+                Wallet manager is null
+                |- User wallet id: ${walletStore.userWalletId}
+                |- Blockchain: ${walletStore.blockchainNetwork.blockchain}
+            """.trimIndent(),
+        )
+
         walletStoresStorage.update { prevState ->
             prevState.replaceWalletStore(
                 walletId = walletStore.userWalletId,
@@ -400,9 +386,11 @@ internal class DefaultWalletAmountsRepository(
                 },
             )
         }
+
+        CompletionResult.Success(Unit)
     }
 
-    private suspend fun updateWithFiatRates(
+    private suspend fun updateWalletStoreWithFiatRates(
         walletStore: WalletStoreModel,
         fiatRates: Map<String, Double>,
     ) = withContext(Dispatchers.Default) {
@@ -417,7 +405,7 @@ internal class DefaultWalletAmountsRepository(
         }
     }
 
-    private suspend fun updateWithRent(
+    private suspend fun updateWalletStoreWithRent(
         walletStore: WalletStoreModel,
         rent: WalletStoreModel.WalletRent?,
     ) = withContext(Dispatchers.Default) {
