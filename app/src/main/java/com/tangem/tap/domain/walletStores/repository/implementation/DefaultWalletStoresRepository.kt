@@ -12,7 +12,7 @@ import com.tangem.tap.domain.walletStores.repository.implementation.utils.update
 import com.tangem.tap.domain.walletStores.storage.WalletStoresStorage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
@@ -27,8 +27,12 @@ internal class DefaultWalletStoresRepository : WalletStoresRepository {
         return getAll().map { it[userWalletId].orEmpty() }
     }
 
+    override suspend fun getSync(userWalletId: UserWalletId): List<WalletStoreModel> {
+        return get(userWalletId).firstOrNull() ?: emptyList()
+    }
+
     override suspend fun contains(userWalletId: UserWalletId): Boolean {
-        return get(userWalletId).first().isNotEmpty()
+        return getSync(userWalletId).isNotEmpty()
     }
 
     override suspend fun delete(userWalletsIds: List<UserWalletId>): CompletionResult<Unit> = catching {
