@@ -40,6 +40,8 @@ data class UserWallet(
  * !!! Workaround !!!
  *
  * Calculate same [UserWalletId] for twins instead
+ *
+ * TODO: Remove after https://tangem.atlassian.net/browse/AND-2638
  * */
 fun UserWallet.isTwinnedWith(other: UserWallet): Boolean {
     if (!scanResponse.isTangemTwins()) return false
