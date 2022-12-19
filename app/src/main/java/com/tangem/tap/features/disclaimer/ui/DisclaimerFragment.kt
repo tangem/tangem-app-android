@@ -62,4 +62,8 @@ class DisclaimerFragment : BaseFragment(R.layout.fragment_disclaimer), StoreSubs
 
         webView.loadUrl(state.type.uri.toString())
     }
+
+    override fun handleOnBackPressed() {
+        store.dispatch(DisclaimerAction.OnBackPressed)
+    }
 }
