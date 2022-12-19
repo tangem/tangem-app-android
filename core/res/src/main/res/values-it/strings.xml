@@ -191,6 +191,8 @@
     <string name="common_share">Share</string>
     <string name="common_copy">Copy</string>
     <string name="common_success">Con successo</string>
+    <string name="exchange_send_view_header">You Send</string>
+    <string name="exchange_receive_view_header">You Receive</string>
     <string name="swapping_permission_header">Give Permission</string>
     <string name="swapping_permission_subheader">To continue you need to allow 1inch smart contracts to use your %s</string>
     <string name="swapping_permission_rows_amount">Amount %s</string>
