@@ -44,7 +44,7 @@ fun SuccessScreenContent(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .background(TangemTheme.colors.background.secondary)
+            .background(TangemTheme.colors.background.primary)
             .padding(
                 horizontal = TangemTheme.dimens.spacing16,
                 vertical = TangemTheme.dimens.spacing32,
