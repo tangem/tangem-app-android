@@ -171,21 +171,26 @@ class MultiWalletView : WalletView() {
         walletsCount: Int,
     ) = with(binding.lCardTotalBalance) {
         if (walletsCount == 0) {
-            root.isVisible = false
+            if (progressState != ProgressState.Loading) {
+                root.isVisible = false
+            }
         } else {
             if (totalBalance == null) {
-                veilBalance.animateVisibility(show = true)
-                root.isVisible = progressState == ProgressState.Loading
+                if (progressState != ProgressState.Loading) {
+                    root.isVisible = false
+                }
             } else {
                 root.isVisible = true
-
                 // Skip changes when on refreshing state
                 if (totalBalance.state == ProgressState.Refreshing || progressState == ProgressState.Refreshing) {
                     return@with
                 }
 
-                veilBalance.animateVisibility(show = totalBalance.state == ProgressState.Loading)
-                tvBalance.animateVisibility(show = totalBalance.state != ProgressState.Loading)
+                if (totalBalance.state == ProgressState.Loading) {
+                    veilBalance.veil()
+                } else {
+                    veilBalance.unVeil()
+                }
                 tvProcessing.animateVisibility(show = totalBalance.state == ProgressState.Error)
 
                 tvBalance.text = totalBalance.fiatAmount.formatAmountAsSpannedString(
