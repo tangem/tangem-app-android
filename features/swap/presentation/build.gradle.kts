@@ -60,6 +60,7 @@ dependencies {
     implementation(Compose.foundation)
     implementation(Compose.material)
     implementation(Compose.uiTooling)
+    implementation(Compose.coil)
 
     /** Domain */
     implementation(project(":features:swap:domain"))
