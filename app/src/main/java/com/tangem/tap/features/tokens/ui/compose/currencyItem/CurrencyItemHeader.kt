@@ -31,9 +31,9 @@ import androidx.compose.ui.unit.sp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.core.ui.extensions.getActiveIconRes
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.tap.common.extensions.getGreyedOutIconRes
-import com.tangem.tap.common.extensions.getRoundIconRes
 import com.tangem.tap.domain.tokens.Currency
 import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
 import com.tangem.tap.features.tokens.ui.compose.CurrencyPlaceholderIcon
@@ -142,7 +142,7 @@ private fun NetworksRow(
                 } else {
                     val isAdded = addedTokens.map { it.token.contractAddress }.contains(contract.address)
                     val iconResId = if (isAdded) {
-                        contract.blockchain.getRoundIconRes()
+                        getActiveIconRes(contract.blockchain.id)
                     } else {
                         contract.blockchain.getGreyedOutIconRes()
                     }
@@ -173,7 +173,7 @@ private fun BlockchainNetworkItem(
     addedBlockchains: List<Blockchain>,
 ) {
     val added = addedBlockchains.contains(blockchain)
-    val icon = if (added) blockchain?.getRoundIconRes() else blockchain?.getGreyedOutIconRes()
+    val icon = if (added) blockchain?.let { getActiveIconRes(it.id) } else blockchain?.getGreyedOutIconRes()
     if (icon != null) {
         Box(
             Modifier
