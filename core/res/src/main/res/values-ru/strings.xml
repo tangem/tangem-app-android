@@ -191,6 +191,8 @@
     <string name="common_share">Поделиться</string>
     <string name="common_copy">Копировать</string>
     <string name="common_success">Успешно</string>
+    <string name="exchange_send_view_header">Вы отправляете</string>
+    <string name="exchange_receive_view_header">Вы получаете</string>
     <string name="swapping_permission_header">Дать разрешение</string>
     <string name="swapping_permission_subheader">Чтобы продолжить, вам нужно разрешить смарт-контракту 1inch использовать ваш %s</string>
     <string name="swapping_permission_rows_amount">Количество %s</string>
