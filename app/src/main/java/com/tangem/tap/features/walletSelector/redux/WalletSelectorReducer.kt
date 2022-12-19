@@ -1,7 +1,6 @@
 package com.tangem.tap.features.walletSelector.redux
 
 import com.tangem.domain.common.CardDTO
-import com.tangem.tap.common.extensions.replaceByOrAdd
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.extensions.isMultiwalletAllowed
 import com.tangem.tap.domain.model.TotalFiatBalance
@@ -92,7 +91,12 @@ internal object WalletSelectorReducer {
         userWalletModel: UserWalletModel,
     ): List<UserWalletModel> {
         return ArrayList(this).apply {
-            replaceByOrAdd(userWalletModel) { it.id == userWalletModel.id }
+            val index = indexOfFirst { it.id == userWalletModel.id }
+            if (index == -1) {
+                add(userWalletModel)
+            } else {
+                this[index] = userWalletModel
+            }
         }
     }
 

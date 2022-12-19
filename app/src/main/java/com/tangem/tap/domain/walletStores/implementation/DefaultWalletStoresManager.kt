@@ -79,7 +79,7 @@ internal class DefaultWalletStoresManager(
                 acc.apply { add(data) }
             }
             .flatMap {
-                walletAmountsRepository.update(it, fiatCurrency)
+                walletAmountsRepository.updateAmountsForUserWallets(it, fiatCurrency)
             }
     }
 
@@ -93,7 +93,7 @@ internal class DefaultWalletStoresManager(
     override suspend fun updateAmounts(userWallets: List<UserWallet>): CompletionResult<Unit> {
         val fiatCurrency = appCurrencyProvider.invoke()
 
-        return walletAmountsRepository.update(userWallets, fiatCurrency)
+        return walletAmountsRepository.updateAmountsForUserWallets(userWallets, fiatCurrency)
             .doOnSuccess {
                 state.update { prevState ->
                     prevState.copy(

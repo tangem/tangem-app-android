@@ -221,20 +221,21 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
             if (currencyData.status != BalanceStatus.Loading && currencyData.status != BalanceStatus.Refreshing) {
                 Analytics.send(Token.Refreshed())
                 lifecycleScope.launch(Dispatchers.Default) {
-                    val blockchainNetwork = BlockchainNetwork(
-                        blockchain = currency.blockchain,
-                        derivationPath = currency.derivationPath,
-                        tokens = emptyList(),
-                    )
                     val selectedUserWallet = userWalletsListManagerSafe?.selectedUserWalletSync
                     if (selectedUserWallet != null) {
-                        walletCurrenciesManager.update(selectedUserWallet, blockchainNetwork)
+                        walletCurrenciesManager.update(selectedUserWallet, currency)
                             .doOnResult {
                                 withContext(Dispatchers.Main) {
                                     binding.srlWalletDetails.isRefreshing = false
                                 }
                             }
                     } else {
+                        val blockchainNetwork = BlockchainNetwork(
+                            blockchain = currency.blockchain,
+                            derivationPath = currency.derivationPath,
+                            tokens = emptyList(),
+                        )
+
                         store.dispatch(WalletAction.LoadWallet(blockchainNetwork))
                         store.dispatch(WalletAction.LoadFiatRate(coinsList = listOf(currency)))
                     }
