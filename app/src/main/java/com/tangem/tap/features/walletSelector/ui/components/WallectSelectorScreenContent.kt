@@ -124,7 +124,6 @@ private fun Header(
 
     Column(
         modifier = Modifier
-            .padding(horizontal = TangemTheme.dimens.spacing16)
             .fillMaxWidth()
             .background(
                 color = TangemTheme.colors.background.plain,
@@ -140,7 +139,9 @@ private fun Header(
         ) {
             if (hasEditingWallets) {
                 EditWalletsBar(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .padding(horizontal = TangemTheme.dimens.spacing16)
+                        .fillMaxWidth(),
                     editingWalletsSize = editingWalletsSize,
                     onClearSelectedClick = onClearSelectedClick,
                     onEditSelectedWalletClick = onEditSelectedWalletClick,

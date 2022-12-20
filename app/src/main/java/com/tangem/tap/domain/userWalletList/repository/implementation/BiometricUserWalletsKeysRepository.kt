@@ -6,34 +6,40 @@ import com.squareup.moshi.Types
 import com.tangem.common.CompletionResult
 import com.tangem.common.biometric.BiometricManager
 import com.tangem.common.biometric.BiometricStorage
+import com.tangem.common.core.TangemSdkError
+import com.tangem.common.doOnFailure
 import com.tangem.common.map
 import com.tangem.common.mapFailure
 import com.tangem.common.services.secure.SecureStorage
+import com.tangem.domain.common.util.UserWalletId
 import com.tangem.tap.domain.userWalletList.UserWalletListError
 import com.tangem.tap.domain.userWalletList.model.UserWalletEncryptionKey
 import com.tangem.tap.domain.userWalletList.repository.UserWalletsKeysRepository
+import com.tangem.tap.domain.walletStores.implementation.utils.fold
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 internal class BiometricUserWalletsKeysRepository(
     moshi: Moshi,
-    secureStorage: SecureStorage,
     biometricManager: BiometricManager,
+    private val secureStorage: SecureStorage,
 ) : UserWalletsKeysRepository {
     private val biometricStorage = BiometricStorage(
         biometricManager = biometricManager,
         secureStorage = secureStorage,
     )
-    private val walletsKeysAdapter: JsonAdapter<List<UserWalletEncryptionKey>> = moshi.adapter(
-        Types.newParameterizedType(List::class.java, UserWalletEncryptionKey::class.java),
+    private val encryptionKeyAdapter: JsonAdapter<UserWalletEncryptionKey> = moshi.adapter(
+        UserWalletEncryptionKey::class.java,
     )
+    private val userWalletsIdsListAdapter: JsonAdapter<List<UserWalletId>> = moshi.adapter(
+        Types.newParameterizedType(List::class.java, UserWalletId::class.java),
+    )
+
+    private var storedUserWalletsIds: List<UserWalletId>? = null
 
     override suspend fun getAll(): CompletionResult<List<UserWalletEncryptionKey>> {
         return withContext(Dispatchers.IO) {
-            biometricStorage.get(key = StorageKey.WalletEncryptionKeys.name)
-                .map { encryptionKeys ->
-                    encryptionKeys.decodeToKeys()
-                }
+            getAllInternal()
                 .mapFailure { error ->
                     UserWalletListError.ReceiveEncryptionKeysError(error.cause ?: error)
                 }
@@ -42,40 +48,151 @@ internal class BiometricUserWalletsKeysRepository(
 
     override suspend fun store(encryptionKeys: List<UserWalletEncryptionKey>): CompletionResult<Unit> {
         return withContext(Dispatchers.IO) {
-            biometricStorage.store(
-                key = StorageKey.WalletEncryptionKeys.name,
-                data = encryptionKeys.encode(),
-            )
+            encryptionKeys.map { storeEncryptionKey(it) }
+                .fold()
                 .mapFailure { error ->
                     UserWalletListError.SaveEncryptionKeysError(error.cause ?: error)
                 }
         }
     }
 
-    override suspend fun clear(): CompletionResult<Unit> {
+    override suspend fun delete(userWalletsIds: List<UserWalletId>): CompletionResult<Unit> {
         return withContext(Dispatchers.IO) {
-            biometricStorage.delete(key = StorageKey.WalletEncryptionKeys.name)
+            userWalletsIds.map { userWalletId ->
+                deleteEncryptionKey(userWalletId)
+            }
+                .fold()
+                .map { deleteUserWalletsIds(userWalletsIds) }
         }
     }
 
-    private suspend fun List<UserWalletEncryptionKey>.encode(): ByteArray {
+    override suspend fun clear(): CompletionResult<Unit> {
+        return withContext(Dispatchers.IO) {
+            getUserWalletsIds()
+                .map { userWalletId ->
+                    deleteEncryptionKey(userWalletId)
+                }
+                .fold()
+                .map {
+                    clearUserWalletsIds()
+                }
+        }
+    }
+
+    private suspend fun getAllInternal(): CompletionResult<List<UserWalletEncryptionKey>> {
+        return getUserWalletsIds()
+            .map { userWalletId ->
+                // This is possible because the Card SDK cipher key has an expiration time
+                // If this operation runs more than that expiration time, the user will not receive all encryption keys
+                getEncryptionKey(userWalletId)
+                    .doOnFailure { error ->
+                        // If the user cancels biometric authentication, cancel the request for all keys
+                        if (error is TangemSdkError.BiometricsAuthenticationFailed) {
+                            return CompletionResult.Failure(error)
+                        }
+                    }
+            }
+            .fold(listOf()) { acc, data ->
+                if (data != null) acc + data else acc
+            }
+    }
+
+    private suspend fun getEncryptionKey(userWalletId: UserWalletId): CompletionResult<UserWalletEncryptionKey?> {
+        return biometricStorage.get(StorageKey.WalletEncryptionKey(userWalletId).name)
+            .map { it.decodeToKey() }
+    }
+
+    private suspend fun storeEncryptionKey(encryptionKey: UserWalletEncryptionKey): CompletionResult<Unit> {
+        return if (encryptionKey.walletId in getUserWalletsIds()) {
+            CompletionResult.Success(Unit)
+        } else {
+            biometricStorage.store(
+                key = StorageKey.WalletEncryptionKey(encryptionKey.walletId).name,
+                data = encryptionKey.encode(),
+            )
+                .map { storeUserWalletId(encryptionKey.walletId) }
+        }
+    }
+
+    private suspend fun deleteEncryptionKey(userWalletId: UserWalletId): CompletionResult<Unit> {
+        return biometricStorage.delete(StorageKey.WalletEncryptionKey(userWalletId).name)
+    }
+
+    private suspend fun getUserWalletsIds(): List<UserWalletId> {
+        return storedUserWalletsIds
+            ?: withContext(Dispatchers.IO) {
+                secureStorage.get(StorageKey.UserWalletIds.name)
+                    .decodeToUserWalletsIds()
+                    .also { storedUserWalletsIds = it }
+            }
+    }
+
+    private suspend fun storeUserWalletId(userWalletId: UserWalletId) {
+        val userWalletIds = (getUserWalletsIds() + userWalletId).distinct()
+        storedUserWalletsIds = userWalletIds
+
+        withContext(Dispatchers.IO) {
+            secureStorage.store(userWalletIds.encode(), StorageKey.UserWalletIds.name)
+        }
+    }
+
+    private suspend fun deleteUserWalletsIds(userWalletsIds: List<UserWalletId>) {
+        val remainingIds = (getUserWalletsIds() - userWalletsIds.toSet())
+        storedUserWalletsIds = remainingIds
+
+        withContext(Dispatchers.IO) {
+            secureStorage.store(remainingIds.encode(), StorageKey.UserWalletIds.name)
+        }
+    }
+
+    private suspend fun clearUserWalletsIds() {
+        withContext(Dispatchers.IO) {
+            secureStorage.delete(StorageKey.UserWalletIds.name)
+        }
+    }
+
+    private suspend fun UserWalletEncryptionKey.encode(): ByteArray {
         return withContext(Dispatchers.Default) {
             this@encode
-                .let(walletsKeysAdapter::toJson)
+                .let(encryptionKeyAdapter::toJson)
                 .encodeToByteArray(throwOnInvalidSequence = true)
         }
     }
 
-    private suspend fun ByteArray?.decodeToKeys(): List<UserWalletEncryptionKey> {
+    private suspend fun ByteArray?.decodeToKey(): UserWalletEncryptionKey? {
         return withContext(Dispatchers.Default) {
-            this@decodeToKeys
+            this@decodeToKey
                 ?.decodeToString(throwOnInvalidSequence = true)
-                ?.let(walletsKeysAdapter::fromJson)
+                ?.let(encryptionKeyAdapter::fromJson)
+        }
+    }
+
+    private suspend fun List<UserWalletId>.encode(): ByteArray {
+        return withContext(Dispatchers.Default) {
+            this@encode
+                .let(userWalletsIdsListAdapter::toJson)
+                .encodeToByteArray(throwOnInvalidSequence = true)
+        }
+    }
+
+    private suspend fun ByteArray?.decodeToUserWalletsIds(): List<UserWalletId> {
+        return withContext(Dispatchers.Default) {
+            this@decodeToUserWalletsIds
+                ?.decodeToString(throwOnInvalidSequence = true)
+                ?.let(userWalletsIdsListAdapter::fromJson)
                 .orEmpty()
         }
     }
 
-    private enum class StorageKey {
-        WalletEncryptionKeys
+    private sealed interface StorageKey {
+        val name: String
+
+        class WalletEncryptionKey(userWalletId: UserWalletId) : StorageKey {
+            override val name: String = "user_wallet_encryption_key_${userWalletId.stringValue}"
+        }
+
+        object UserWalletIds : StorageKey {
+            override val name: String = "user_wallets_ids_with_saved_keys"
+        }
     }
 }
