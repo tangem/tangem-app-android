@@ -99,11 +99,11 @@
     <string name="app_settings_off_saved_access_code_alert_message">Все сохраненные коды доступа будут удалены. Вам потребуется вводить код доступа при работе с кошельком.</string>
     <string name="wallet_connect_title">WalletConnect</string>
     <string name="wallet_connect_subtitle">Подключение к Dapps</string>
-    <string name="reset_card_to_factory_message">Это действие приведет к полному удалению кошелька на этой карте. Кошелек невозможно будет восстановить или использовать данную карту для восстановления кода доступа</string>
+    <string name="reset_card_without_backup_to_factory_message">Сброс к заводским настройкам приведет к полному удалению кошелька на этой карте, а также отвязыванию карты из приложения. Кошелек невозможно будет восстановить.</string>
+    <string name="reset_card_with_backup_to_factory_message">Сброс к заводским настройкам приведет к полному удалению кошелька на этой карте, а также отвязыванию карты из приложения. Кошелек невозможно будет восстановить или использовать данную карту для восстановления кода доступа.</string>
     <string name="reset_card_to_factory_warning_message">Я понимаю, что после выполнения этого действия у меня больше не будет доступа к текущему кошельку</string>
     <string name="reset_card_to_factory_button_title">Сбросить карту</string>
     <string name="card_settings_reset_card_to_factory">Сброс к заводским настройкам</string>
-    <string name="card_settings_reset_card_to_factory_footer">Сброс к заводским настройкам приведет к полному удалению кошелька с выбранной карты. Вы не сможете восстановить текущий кошелек или использовать эту карту для восстановления кода доступа.</string>
     <string name="wallet_connect_select_network">Выберите сеть</string>
     <string name="main_scan_card_warning_view_title">Отсканируйте карту</string>
     <string name="main_scan_card_warning_view_subtitle">Чтобы получить доступ ко всем сетям, вам необходимо отсканировать карту</string>
@@ -279,9 +279,9 @@
     <string name="alert_unsupported_card">Эта карта не предназначена для работы с этим приложением</string>
     <string name="alert_developer_card">Карта, которую вы отсканировали, является картой разработчика. Не принимайте её в качестве оплаты.</string>
     <string name="initial_message_sign_header">Нажмите, чтобы подписать</string>
-    <string name="initial_message_create_wallet_body">Чтобы создать кошелек, соедините телефон и карту в точности, как показано выше.</string>
-    <string name="initial_message_change_access_code_body">Чтобы изменить код доступа, соедините телефон и карту в точности, как показано выше.</string>
-    <string name="initial_message_change_passcode_body">Чтобы изменить пароль, соедините телефон и карту в точности, как показано выше.</string>
+    <string name="initial_message_create_wallet_body">Чтобы создать кошелек, приложите карту как показано выше и не убирайте до окончания операции</string>
+    <string name="initial_message_change_access_code_body">Чтобы изменить код доступа, приложите карту как показано выше и не убирайте до окончания операции</string>
+    <string name="initial_message_change_passcode_body">Чтобы изменить пароль, приложите карту как показано выше и не убирайте до окончания операции</string>
     <string name="disclaimer_title">Условия использования</string>
     <string name="wallet_notification_no_internet">Нет соединения с интернетом</string>
     <string name="send_error_payid_unsupported_by_blockchain">PayString не поддерживается блокчейном</string>
