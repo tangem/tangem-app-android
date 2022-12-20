@@ -37,6 +37,7 @@ fun ResetCardScreen(state: ResetCardScreenState, onBackPressed: () -> Unit) {
     SettingsScreensScaffold(
         content = { ResetCardView(state = state) },
         onBackClick = onBackPressed,
+        backgroundColor = Color.Transparent,
     )
 }
 
