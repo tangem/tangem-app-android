@@ -8,6 +8,7 @@ import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.details.redux.CardSettingsState
 import com.tangem.tap.features.details.redux.DetailsAction
+import com.tangem.wallet.R
 import org.rekotlin.Store
 
 class CardSettingsViewModel(private val store: Store<AppState>) {
@@ -46,7 +47,17 @@ class CardSettingsViewModel(private val store: Store<AppState>) {
                 cardDetails.add(CardInfo.ChangeAccessCode)
             }
             if (state.resetCardAllowed) {
-                cardDetails.add(CardInfo.ResetToFactorySettings)
+                cardDetails.add(
+                    CardInfo.ResetToFactorySettings(
+                        subtitle = TextReference.Res(
+                            if (state.card.backupStatus?.isActive == true) {
+                                R.string.reset_card_with_backup_to_factory_message
+                            } else {
+                                R.string.reset_card_without_backup_to_factory_message
+                            },
+                        ),
+                    ),
+                )
             }
 
             CardSettingsScreenState(
