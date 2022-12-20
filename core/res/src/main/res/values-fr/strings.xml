@@ -99,11 +99,11 @@
     <string name="app_settings_off_saved_access_code_alert_message">This will delete all the saved wallet access codes. Any further operation with the wallet will require submitting the access code.</string>
     <string name="wallet_connect_title">WalletConnect</string>
     <string name="wallet_connect_subtitle">Connect to Dapps</string>
-    <string name="reset_card_to_factory_message">This action will completely remove the wallet from the selected card. You will not be able to restore the current wallet or use the card to recover the access code.</string>
+    <string name="reset_card_without_backup_to_factory_message">Factory Reset will completely delete the wallet from the selected card and remove it from the app. You will not be able to restore the current wallet.</string>
+    <string name="reset_card_with_backup_to_factory_message">Factory Reset will completely delete the wallet from the selected card and remove it from the app. You will not be able to restore the current wallet or use the card to recover the access code.</string>
     <string name="reset_card_to_factory_warning_message">I understand that after performing this action, I will no longer have access to the current wallet</string>
     <string name="reset_card_to_factory_button_title">Reset the Card</string>
     <string name="card_settings_reset_card_to_factory">Reset to Factory Settings</string>
-    <string name="card_settings_reset_card_to_factory_footer">Factory Reset will completely delete the wallet from the selected card. You will not be able to restore the current wallet or use the card to recover the access code.</string>
     <string name="wallet_connect_select_network">Select network</string>
     <string name="main_scan_card_warning_view_title">Scan your card</string>
     <string name="main_scan_card_warning_view_subtitle">To access all the networks you need to scan the card</string>
@@ -279,7 +279,7 @@
     <string name="alert_unsupported_card">Cette carte n\'est pas conçue pour fonctionner avec Tangem</string>
     <string name="alert_developer_card">La carte que vous avez scannée est une carte de développement. Ne l\'acceptez pas comme paiement.</string>
     <string name="initial_message_sign_header">Touchez pour signer</string>
-    <string name="initial_message_create_wallet_body">To create wallet, connect your phone and the card exactly as it shown above</string>
+    <string name="initial_message_create_wallet_body">To create the wallet tap the card as shown above and do not remove until the end of the operation</string>
     <string name="initial_message_change_access_code_body">Touchez, pour modifier le code d\'accès</string>
     <string name="initial_message_change_passcode_body">Touchez, pour modifier le mot de passe</string>
     <string name="disclaimer_title">Conditions d\'utilisation</string>
@@ -449,6 +449,7 @@
     <string name="save_user_wallet_agreement_allow_biometrics">Allow to use biometrics</string>
     <string name="app_settings_enable_biometrics_title">Enable biometric authentication</string>
     <string name="app_settings_enable_biometrics_description">Go to settings to enable biometric authentication in the Tangem App</string>
+    <string name="wallet_balance_missing_derivation">Scan the card</string>
 
     <!-- Special string -->
     <string name="common_custom_string">%s</string>
