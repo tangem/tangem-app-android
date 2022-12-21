@@ -71,7 +71,7 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
     fun updateScanResponse(response: ScanResponse) {
         when (twinCardsState.mode) {
             CreateTwinWalletMode.CreateWallet -> onboardingManager?.scanResponse = response
-            CreateTwinWalletMode.RecreateWallet -> store.dispatch(GlobalAction.SaveScanNoteResponse(response))
+            CreateTwinWalletMode.RecreateWallet -> store.dispatch(GlobalAction.SaveScanResponse(response))
         }
     }
 

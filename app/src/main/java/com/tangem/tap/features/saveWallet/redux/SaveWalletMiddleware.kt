@@ -104,13 +104,6 @@ internal class SaveWalletMiddleware {
                     preferencesStorage.shouldSaveAccessCodes = isFirstSavedWallet ||
                         preferencesStorage.shouldSaveAccessCodes
 
-
-                    tangemSdkManager.setAccessCodeRequestPolicy(
-                        useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes &&
-                            !userWalletsListManager.isLockedSync &&
-                            userWallet.hasAccessCode,
-                    )
-
                     store.dispatchOnMain(SaveWalletAction.Save.Success)
 
                     store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))

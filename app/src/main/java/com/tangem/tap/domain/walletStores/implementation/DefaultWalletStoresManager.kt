@@ -5,6 +5,7 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.doOnSuccess
 import com.tangem.common.flatMap
 import com.tangem.common.flatMapOnFailure
+import com.tangem.common.fold
 import com.tangem.common.map
 import com.tangem.domain.common.util.UserWalletId
 import com.tangem.tap.common.entities.FiatCurrency
@@ -15,7 +16,6 @@ import com.tangem.tap.domain.model.builders.WalletStoreBuilder
 import com.tangem.tap.domain.tokens.UserTokensRepository
 import com.tangem.tap.domain.walletStores.WalletStoresError
 import com.tangem.tap.domain.walletStores.WalletStoresManager
-import com.tangem.tap.domain.walletStores.implementation.utils.fold
 import com.tangem.tap.domain.walletStores.repository.WalletAmountsRepository
 import com.tangem.tap.domain.walletStores.repository.WalletManagersRepository
 import com.tangem.tap.domain.walletStores.repository.WalletStoresRepository
@@ -45,10 +45,9 @@ internal class DefaultWalletStoresManager(
             .distinctUntilChanged()
     }
 
-    override suspend fun delete(userWalletsIds: List<String>): CompletionResult<Unit> {
-        val walletIds = userWalletsIds.map { UserWalletId(it) }
-        return walletStoresRepository.delete(walletIds)
-            .flatMap { walletManagersRepository.delete(walletIds) }
+    override suspend fun delete(userWalletsIds: List<UserWalletId>): CompletionResult<Unit> {
+        return walletStoresRepository.delete(userWalletsIds)
+            .flatMap { walletManagersRepository.delete(userWalletsIds) }
     }
 
     override suspend fun clear(): CompletionResult<Unit> {
@@ -75,7 +74,7 @@ internal class DefaultWalletStoresManager(
                     fetchWalletsIfNeeded(userWallet, refresh)
                 } else null
             }
-            .fold(initial = arrayListOf<UserWallet>()) { acc, data ->
+            .fold(arrayListOf<UserWallet>()) { acc, data ->
                 acc.apply { add(data) }
             }
             .flatMap {

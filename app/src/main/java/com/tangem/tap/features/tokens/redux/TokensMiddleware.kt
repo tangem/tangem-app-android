@@ -221,7 +221,7 @@ class TokensMiddleware {
                     val updatedScanResponse = scanResponse.copy(
                         derivedKeys = updatedDerivedKeys,
                     )
-                    store.dispatchOnMain(GlobalAction.SaveScanNoteResponse(updatedScanResponse))
+                    store.dispatchOnMain(GlobalAction.SaveScanResponse(updatedScanResponse))
                     delay(DELAY_SDK_DIALOG_CLOSE)
 
                     onSuccess(updatedScanResponse)

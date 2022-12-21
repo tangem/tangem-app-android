@@ -20,7 +20,7 @@ internal object WalletSelectorReducer {
                 wallets = action.userWallets.updateWalletsModels(state.wallets),
             )
             is WalletSelectorAction.SelectedWalletChanged -> state.copy(
-                selectedWalletId = action.selectedWallet.walletId.stringValue,
+                selectedWalletId = action.selectedWallet.walletId,
             )
             is WalletSelectorAction.IsLockedChanged -> state.copy(
                 isLocked = action.isLocked,
@@ -55,7 +55,6 @@ internal object WalletSelectorReducer {
             )
             is WalletSelectorAction.WalletStoresChanged,
             is WalletSelectorAction.SelectWallet,
-            is WalletSelectorAction.UnlockWalletWithCard,
             is WalletSelectorAction.RemoveWallets,
             is WalletSelectorAction.RenameWallet,
             -> state
@@ -65,7 +64,7 @@ internal object WalletSelectorReducer {
     private fun List<UserWallet>.updateWalletsModels(prevWallets: List<UserWalletModel>): List<UserWalletModel> {
         return this.map { userWallet ->
             prevWallets
-                .find { it.id == userWallet.walletId.stringValue }
+                .find { it.id == userWallet.walletId }
                 ?.let {
                     it.copy(
                         name = userWallet.name,
@@ -76,7 +75,7 @@ internal object WalletSelectorReducer {
                 }
                 ?: with(userWallet) {
                     UserWalletModel(
-                        id = walletId.stringValue,
+                        id = walletId,
                         name = name,
                         artworkUrl = artworkUrl,
                         type = getType(),

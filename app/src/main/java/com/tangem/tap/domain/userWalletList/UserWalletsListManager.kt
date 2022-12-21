@@ -16,7 +16,7 @@ interface UserWalletsListManager {
     suspend fun unlockWithBiometry(): CompletionResult<UserWallet?>
     fun lock()
 
-    suspend fun selectWallet(walletId: UserWalletId): CompletionResult<UserWallet>
+    suspend fun selectWallet(userWalletId: UserWalletId): CompletionResult<UserWallet>
 
     /**
      * Save user wallet
@@ -27,10 +27,10 @@ interface UserWalletsListManager {
      * */
     suspend fun save(userWallet: UserWallet, canOverride: Boolean = false): CompletionResult<Unit>
 
-    suspend fun delete(walletIds: List<UserWalletId>): CompletionResult<Unit>
+    suspend fun delete(userWalletIds: List<UserWalletId>): CompletionResult<Unit>
     suspend fun clear(): CompletionResult<Unit>
 
-    suspend fun get(walletId: UserWalletId): CompletionResult<UserWallet>
+    suspend fun get(userWalletId: UserWalletId): CompletionResult<UserWallet>
 
     companion object
 }

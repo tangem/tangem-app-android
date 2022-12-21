@@ -79,7 +79,7 @@ class DetailsMiddleware {
             }
             DetailsAction.ScanCard -> {
                 scope.launch {
-                    tangemSdkManager.scanCard()
+                    tangemSdkManager.scanCard(allowRequestAccessCodeFromRepository = true)
                         .doOnSuccess { card ->
                             val isSameWallet = state.scanResponse?.card?.userWalletId
                                 ?.equals(card.userWalletId)
@@ -263,10 +263,10 @@ class DetailsMiddleware {
         private fun toggleSaveAccessCodes(state: DetailsState, enable: Boolean) = scope.launch {
             if (state.saveAccessCodes == enable) return@launch
             if (enable) {
+                saveAccessCodes(state)
                 if (!state.saveWallets) {
                     saveCurrentWallet(state)
                 }
-                saveAccessCodes(state)
             } else {
                 deleteSavedAccessCodes()
             }
@@ -342,12 +342,15 @@ class DetailsMiddleware {
                         useBiometricsForAccessCode = false,
                     )
 
-                    store.dispatchOnMain(
-                        DetailsAction.AppSettings.SwitchPrivacySetting.Success(
-                            setting = PrivacySetting.SaveAccessCode,
-                            enable = false,
-                        ),
-                    )
+                    tangemSdkManager.clearSavedUserCodes()
+                        .doOnSuccess {
+                            store.dispatchOnMain(
+                                DetailsAction.AppSettings.SwitchPrivacySetting.Success(
+                                    setting = PrivacySetting.SaveAccessCode,
+                                    enable = false,
+                                ),
+                            )
+                        }
                 }
         }
     }

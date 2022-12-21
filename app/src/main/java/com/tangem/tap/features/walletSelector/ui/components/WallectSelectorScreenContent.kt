@@ -33,6 +33,7 @@ import com.tangem.core.ui.components.SecondaryButtonIconRight
 import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.atoms.Hand
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.domain.common.util.UserWalletId
 import com.tangem.tap.features.walletSelector.ui.WalletSelectorScreenState
 import com.tangem.wallet.R
 
@@ -40,8 +41,8 @@ import com.tangem.wallet.R
 @Composable
 internal fun WalletSelectorScreenContent(
     state: WalletSelectorScreenState,
-    onWalletClick: (walletId: String) -> Unit,
-    onWalletLongClick: (walletId: String) -> Unit,
+    onWalletClick: (UserWalletId) -> Unit,
+    onWalletLongClick: (UserWalletId) -> Unit,
     onUnlockClick: () -> Unit,
     onAddCardClick: () -> Unit,
     onClearSelectedClick: () -> Unit,
@@ -51,7 +52,7 @@ internal fun WalletSelectorScreenContent(
     LazyColumn {
         stickyHeader {
             Header(
-                editingWalletsIds = state.editingWalletsIds,
+                editingWalletsIds = state.editingUserWalletsIds,
                 onClearSelectedClick = onClearSelectedClick,
                 onEditSelectedWalletClick = onEditSelectedWalletClick,
                 onDeleteSelectedWalletsClick = onDeleteSelectedWalletsClick,
@@ -64,13 +65,13 @@ internal fun WalletSelectorScreenContent(
 
         itemsIndexed(
             items = state.multiCurrencyWallets,
-            key = { _, wallet -> wallet.id },
+            key = { _, wallet -> wallet.id.stringValue },
         ) { _, wallet ->
 
             WalletItem(
                 wallet = wallet,
-                isSelected = remember(state.selectedWalletId) { wallet.id == state.selectedWalletId },
-                isChecked = remember(state.editingWalletsIds) { wallet.id in state.editingWalletsIds },
+                isSelected = remember(state.selectedUserWalletId) { wallet.id == state.selectedUserWalletId },
+                isChecked = remember(state.editingUserWalletsIds) { wallet.id in state.editingUserWalletsIds },
                 onWalletClick = onWalletClick,
                 onWalletLongClick = onWalletLongClick,
             )
@@ -82,12 +83,12 @@ internal fun WalletSelectorScreenContent(
 
         itemsIndexed(
             items = state.singleCurrencyWallets,
-            key = { _, wallet -> wallet.id },
+            key = { _, wallet -> wallet.id.stringValue },
         ) { _, wallet ->
             WalletItem(
                 wallet = wallet,
-                isSelected = remember(state.selectedWalletId) { wallet.id == state.selectedWalletId },
-                isChecked = remember(state.editingWalletsIds) { wallet.id in state.editingWalletsIds },
+                isSelected = remember(state.selectedUserWalletId) { wallet.id == state.selectedUserWalletId },
+                isChecked = remember(state.editingUserWalletsIds) { wallet.id in state.editingUserWalletsIds },
                 onWalletClick = onWalletClick,
                 onWalletLongClick = onWalletLongClick,
             )
@@ -114,7 +115,7 @@ internal fun WalletSelectorScreenContent(
 
 @Composable
 private fun Header(
-    editingWalletsIds: List<String>,
+    editingWalletsIds: List<UserWalletId>,
     onClearSelectedClick: () -> Unit,
     onEditSelectedWalletClick: () -> Unit,
     onDeleteSelectedWalletsClick: () -> Unit,
@@ -314,7 +315,7 @@ private fun WalletSelectorScreenContent_EditWallets_Sample(
     ) {
         WalletSelectorScreenContent(
             state = MockData.state
-                .copy(editingWalletsIds = listOf(MockData.state.multiCurrencyWallets[2].id)),
+                .copy(editingUserWalletsIds = listOf(MockData.state.multiCurrencyWallets[2].id)),
             onWalletClick = { /* no-op */ },
             onWalletLongClick = { /* no-op */ },
             onUnlockClick = { /* no-op */ },
