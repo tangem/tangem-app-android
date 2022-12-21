@@ -93,7 +93,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
         }
         (WalletState::selectedWalletData or WalletState::isExchangeServiceFeatureOn) { state ->
             if (state.selectedWalletData != null) {
-                setupButtons(state.selectedWalletData, state.isExchangeServiceFeatureOn)
+                setupButtons(state.selectedWalletData!!, state.isExchangeServiceFeatureOn)
             }
         }
         (WalletState::state or WalletState::error) { state ->
