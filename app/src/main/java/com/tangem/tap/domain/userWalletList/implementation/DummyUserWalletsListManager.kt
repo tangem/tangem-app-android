@@ -26,10 +26,6 @@ class DummyUserWalletsListManager : UserWalletsListManager {
         return CompletionResult.Success(null)
     }
 
-    override suspend fun unlockWithCard(userWallet: UserWallet): CompletionResult<Unit> {
-        return CompletionResult.Success(Unit)
-    }
-
     override fun lock() {
         /* no-op */
     }

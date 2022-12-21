@@ -15,7 +15,6 @@ import com.tangem.domain.common.util.UserWalletId
  * @property cardId ID of user's wallet primary card
  * @property hasAccessCode Indicates if the user's wallet primary card has access code
  * @property isLocked Indicates if this primary card has no currency wallets
- * @property isSaved Indicates if this user wallet is saved
  * */
 data class UserWallet(
     val name: String,
@@ -32,8 +31,6 @@ data class UserWallet(
 
     val isLocked: Boolean
         get() = scanResponse.card.wallets.isEmpty()
-
-    internal var isSaved: Boolean = true
 }
 
 /**

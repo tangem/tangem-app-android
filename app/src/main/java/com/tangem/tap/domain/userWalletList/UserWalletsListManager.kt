@@ -14,17 +14,16 @@ interface UserWalletsListManager {
     val hasSavedUserWallets: Boolean
 
     suspend fun unlockWithBiometry(): CompletionResult<UserWallet?>
-    suspend fun unlockWithCard(userWallet: UserWallet): CompletionResult<Unit>
     fun lock()
 
     suspend fun selectWallet(walletId: UserWalletId): CompletionResult<UserWallet>
 
     /**
-     * Save user's wallet
-     * @param userWallet User's wallet to save
+     * Save user wallet
+     * @param userWallet [UserWallet] to save
      * @param canOverride If false, then terminate with [UserWalletListError.WalletAlreadySaved] when user tries to save an
      * already saved card
-     * @return [CompletionResult] operation result
+     * @return [CompletionResult] of operation
      * */
     suspend fun save(userWallet: UserWallet, canOverride: Boolean = false): CompletionResult<Unit>
 

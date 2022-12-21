@@ -124,7 +124,11 @@ internal class WalletSelectorMiddleware {
                 .doOnFailure { error ->
                     store.dispatchOnMain(WalletSelectorAction.UnlockWithBiometry.Error(error))
                 }
-                .doOnSuccess {
+                .doOnSuccess { selectedUserWallet ->
+                    if (selectedUserWallet != null) {
+                        updateAccessCodeRequestPolicy(selectedUserWallet)
+                    }
+
                     store.dispatchOnMain(WalletSelectorAction.UnlockWithBiometry.Success)
                 }
         }
@@ -143,7 +147,6 @@ internal class WalletSelectorMiddleware {
                 .doOnSuccess {
                     Analytics.send(MyWallets.CardWasScanned)
 
-                    userWalletsListManager.selectWallet(userWallet.walletId)
                     store.dispatchOnMain(WalletSelectorAction.AddWallet.Success)
                     updateAccessCodeRequestPolicy(userWallet)
                     store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
@@ -199,7 +202,7 @@ internal class WalletSelectorMiddleware {
     }
 
     private suspend fun unlockUserWallet(userWallet: UserWallet): CompletionResult<Unit> {
-        return userWalletsListManager.unlockWithCard(userWallet)
+        return userWalletsListManager.save(userWallet, canOverride = true)
             .doOnSuccess {
                 store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
                 store.onUserWalletSelected(userWallet)
