@@ -349,8 +349,6 @@ data class WalletData(
         return walletWarnings.sortedBy { it.showingPosition }
     }
 
-    fun isTheSame(data: WalletData): Boolean = this.currency == data.currency
-
     private fun assembleNonTypedWarnings(walletWarnings: MutableList<WalletWarning>) {
         if (currencyData.status == BalanceStatus.SameCurrencyTransactionInProgress) {
             walletWarnings.add(WalletWarning.TransactionInProgress(currency.currencyName))
