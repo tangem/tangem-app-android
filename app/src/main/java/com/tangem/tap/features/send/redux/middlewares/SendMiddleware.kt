@@ -5,18 +5,26 @@ import com.tangem.blockchain.blockchains.binance.BinanceTransactionExtras
 import com.tangem.blockchain.blockchains.polkadot.ExistentialDepositProvider
 import com.tangem.blockchain.blockchains.stellar.StellarTransactionExtras
 import com.tangem.blockchain.blockchains.xrp.XrpTransactionBuilder
-import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.Amount
+import com.tangem.blockchain.common.BlockchainSdkError
+import com.tangem.blockchain.common.TransactionError
+import com.tangem.blockchain.common.TransactionSender
+import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.services.Result
 import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.extensions.withMainContext
-import com.tangem.tap.*
+import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Token
-import com.tangem.tap.common.extensions.*
+import com.tangem.tap.common.extensions.dispatchDialogShow
+import com.tangem.tap.common.extensions.dispatchErrorNotification
+import com.tangem.tap.common.extensions.dispatchOnMain
+import com.tangem.tap.common.extensions.safeUpdate
+import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -28,13 +36,24 @@ import com.tangem.tap.domain.extensions.minimalAmount
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.demo.DemoTransactionSender
 import com.tangem.tap.features.demo.isDemoCard
-import com.tangem.tap.features.send.redux.*
+import com.tangem.tap.features.send.redux.AddressPayIdActionUi
+import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction
+import com.tangem.tap.features.send.redux.AmountAction
+import com.tangem.tap.features.send.redux.AmountActionUi
 import com.tangem.tap.features.send.redux.FeeAction.RequestFee
+import com.tangem.tap.features.send.redux.PrepareSendScreen
+import com.tangem.tap.features.send.redux.SendAction
+import com.tangem.tap.features.send.redux.SendActionUi
 import com.tangem.tap.features.send.redux.states.ButtonState
 import com.tangem.tap.features.send.redux.states.ExternalTransactionData
 import com.tangem.tap.features.send.redux.states.MainCurrencyType
 import com.tangem.tap.features.send.redux.states.TransactionExtrasState
 import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.scope
+import com.tangem.tap.store
+import com.tangem.tap.tangemSdk
+import com.tangem.tap.userWalletsListManager
+import com.tangem.tap.walletCurrenciesManager
 import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -163,7 +182,7 @@ private fun sendTransaction(
             return@launch
         }
 
-        val isLinkedTerminal = tangemSdk.config.linkedTerminal
+        val linkedTerminalState = tangemSdk.config.linkedTerminal
         if (card.isStart2Coin) {
             tangemSdk.config.linkedTerminal = false
         }
@@ -191,6 +210,7 @@ private fun sendTransaction(
             FirebaseCrashlytics.getInstance().recordException(ex)
             delay(DELAY_SDK_DIALOG_CLOSE)
             withMainContext {
+                tangemSdk.config.linkedTerminal = linkedTerminalState
                 dispatch(SendAction.ChangeSendButtonState(ButtonState.ENABLED))
                 store.dispatchErrorNotification(TapError.CustomError(ex.localizedMessage ?: "Unknown error"))
             }
@@ -199,7 +219,7 @@ private fun sendTransaction(
 
         withMainContext {
             dispatch(SendAction.ChangeSendButtonState(ButtonState.ENABLED))
-            tangemSdk.config.linkedTerminal = isLinkedTerminal
+            tangemSdk.config.linkedTerminal = linkedTerminalState
 
             val currencyType = AnalyticsParam.CurrencyType.Amount(amountToSend)
             when (sendResult) {
