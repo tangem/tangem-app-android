@@ -383,7 +383,7 @@ class TokensMiddleware {
             }
         }
 
-        val addedCurrencies = store.state.walletState.wallets.map { walletStore ->
+        val addedCurrencies = store.state.walletState.walletsStores.map { walletStore ->
             walletStore.walletsData.map { walletData -> walletData.currency }
         }.flatten().map {
             when (it) {

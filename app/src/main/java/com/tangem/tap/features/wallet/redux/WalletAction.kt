@@ -90,7 +90,7 @@ sealed class WalletAction : Action {
             val blockchain: BlockchainNetwork,
         ) : MultiWallet()
 
-        data class SelectWallet(val walletData: WalletData?) : MultiWallet()
+        data class SelectWallet(val currency: Currency?) : MultiWallet()
 
         data class TryToRemoveWallet(val currency: Currency) : MultiWallet()
         data class RemoveWallet(val currency: Currency) : MultiWallet()

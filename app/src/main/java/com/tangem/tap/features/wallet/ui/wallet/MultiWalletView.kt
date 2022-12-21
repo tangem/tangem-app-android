@@ -39,11 +39,11 @@ class MultiWalletView : WalletView() {
         val totalBalanceStrategy: DiffStrategy<WalletState> = { old, new ->
             old.totalBalance != new.totalBalance ||
                 old.state != new.state ||
-                old.walletsData.size != new.walletsData.size
+                old.walletsDataFromStores.size != new.walletsDataFromStores.size
         }
 
-        (WalletState::walletsData or WalletState::state) { walletState ->
-            walletsAdapter.submitList(walletState.walletsData)
+        (WalletState::walletsStores or WalletState::state) { walletState ->
+            walletsAdapter.submitList(walletState.walletsDataFromStores)
         }
         WalletState::loadingUserTokens {
             binding?.pbLoadingUserTokens?.show(it)
@@ -65,7 +65,7 @@ class MultiWalletView : WalletView() {
         }
         watch({ it }, totalBalanceStrategy) { walletState ->
             binding?.let {
-                handleTotalBalance(it, walletState.totalBalance, walletState.state, walletState.walletsData.size)
+                handleTotalBalance(it, walletState.totalBalance, walletState.state, walletState.walletsDataFromStores.size)
             }
         }
     }
@@ -123,7 +123,7 @@ class MultiWalletView : WalletView() {
             store.dispatch(TokensAction.AllowToAddTokens(true))
             store.dispatch(
                 TokensAction.SetAddedCurrencies(
-                    wallets = state.walletsData,
+                    wallets = state.walletsDataFromStores,
                     derivationStyle = card.derivationStyle,
                 ),
             )
@@ -255,6 +255,11 @@ class MultiWalletView : WalletView() {
             rowButtons.btnSend.text = fragment?.getText(R.string.wallet_button_create_wallet)
             rowButtons.onSendClick = { store.dispatch(WalletAction.CreateWallet) }
         }
+
+    override fun onDestroyFragment() {
+        super.onDestroyFragment()
+        watcher.clear()
+    }
 }
 
 private val WalletDetailsButtonsRow.btnBuy: Button
