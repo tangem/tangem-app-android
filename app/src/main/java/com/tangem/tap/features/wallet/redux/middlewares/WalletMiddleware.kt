@@ -150,7 +150,7 @@ class WalletMiddleware {
                         action.coinsList != null -> action.coinsList
                         else -> {
                             if (walletState.isMultiwalletAllowed) {
-                                walletState.walletsData.map { it.currency }
+                                walletState.walletsDataFromStores.map { it.currency }
                             } else {
                                 val derivationPath = walletState.primaryWallet?.currency?.derivationPath
                                 val primaryBlockchain = walletState.primaryBlockchain
@@ -238,7 +238,7 @@ class WalletMiddleware {
                         )
                     } else {
                         val scanNoteResponse = globalState.scanResponse ?: return@launch
-                        if (walletState.walletsData.isNotEmpty()) {
+                        if (walletState.walletsDataFromStores.isNotEmpty()) {
                             globalState.tapWalletManager.reloadData(scanNoteResponse)
                         } else {
                             globalState.tapWalletManager.loadData(scanNoteResponse)

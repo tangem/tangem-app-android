@@ -84,16 +84,17 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
     }
 
     private val walletStateWatcher = modelWatcher<WalletState> {
-        WalletState::selectedWalletData { walletData ->
-            if (walletData != null) {
-                walletDataWatcher.invoke(walletData)
-                setupAddressCard(walletData)
-                handleWarnings(walletData)
+        (WalletState::selectedCurrency or WalletState::selectedWalletData) { state ->
+            val selectedWalletData = state.selectedWalletData
+            if (selectedWalletData != null) {
+                walletDataWatcher.invoke(selectedWalletData)
+                setupAddressCard(selectedWalletData)
+                handleWarnings(selectedWalletData)
             }
         }
-        (WalletState::selectedWalletData or WalletState::isExchangeServiceFeatureOn) { state ->
+        (WalletState::selectedCurrency or WalletState::isExchangeServiceFeatureOn) { state ->
             if (state.selectedWalletData != null) {
-                setupButtons(state.selectedWalletData, state.isExchangeServiceFeatureOn)
+                setupButtons(state.selectedWalletData!!, state.isExchangeServiceFeatureOn)
             }
         }
         (WalletState::state or WalletState::error) { state ->
@@ -130,6 +131,12 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
     override fun onStop() {
         super.onStop()
         store.unsubscribe(this)
+    }
+
+    override fun onDestroy() {
+        walletDataWatcher.clear()
+        walletStateWatcher.clear()
+        super.onDestroy()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
