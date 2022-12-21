@@ -377,35 +377,7 @@ private fun internalReduce(action: Action, state: AppState, appStateHolder: AppS
     }
     appStateHolder.walletState = newState
     return newState
-    // return updateWalletStoreStateIfNeed(newState)
 }
-
-// private fun updateWalletStoreStateIfNeed(state: WalletState): WalletState {
-// val transitionMap = mutableMapOf<WalletData, WalletData>()
-// state.walletsDataCopyFromStore.forEach { walletDataInState ->
-//     // Выбираем только изменившиеся WalletData относительно state.walletsData
-//     state.getWalletData(walletDataInState.currency)?.let { walletDataInStore ->
-//         if (walletDataInStore != walletDataInState) {
-//             transitionMap[walletDataInState] = walletDataInStore
-//         }
-//     }
-// }
-// if (transitionMap.isEmpty()) return state
-// val mutableWalletsData = state.walletsDataFromStore.toMutableList()
-// transitionMap.forEach { entry ->
-//     val index = mutableWalletsData.indexOf(entry.key)
-//     if (index != -1) {
-//         mutableWalletsData.removeAt(index)
-//         mutableWalletsData.add(index, entry.value)
-//     }
-// }
-
-// val selectedWallet = mutableWalletsData.firstOrNull { it.currency == state.selectedWalletData?.currency }
-// return state.copy(
-// walletsDataCopyFromStore = mutableWalletsData,
-// selectedWalletData = selectedWallet,
-// )
-// }
 
 private fun CardDTO.findCardsCount(): Int? {
     return (this.backupStatus as? CardDTO.BackupStatus.Active)?.cardCount?.inc()
