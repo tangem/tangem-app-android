@@ -28,6 +28,7 @@ import com.tangem.tap.userWalletsListManager
 import com.tangem.tap.walletStoresManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
 import timber.log.Timber
@@ -238,6 +239,7 @@ internal class WalletSelectorMiddleware {
     private suspend fun clearUserWallets(): CompletionResult<Unit> {
         return userWalletsListManager.clear()
             .flatMap { walletStoresManager.clear() }
+            .flatMap { tangemSdkManager.clearSavedUserCodes() }
             .doOnSuccess {
                 store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Home))
             }
@@ -249,6 +251,7 @@ internal class WalletSelectorMiddleware {
     ): CompletionResult<Unit> {
         return userWalletsListManager.delete(userWalletsIds)
             .flatMap { walletStoresManager.delete(userWalletsIds) }
+            .flatMap { deleteAccessCodes(userWalletsIds) }
             .doOnSuccess {
                 val currentSelectedWallet = userWalletsListManager.selectedUserWalletSync ?: return@doOnSuccess
                 val isSelectedWalletRemoved = selectedWalletId != currentSelectedWallet.walletId
@@ -274,6 +277,15 @@ internal class WalletSelectorMiddleware {
                 store.dispatchOnMain(NavigationAction.PopBackTo())
             },
         )
+    }
+
+    private suspend fun deleteAccessCodes(userWalletsIds: List<UserWalletId>): CompletionResult<Unit> {
+        val cardsIds = userWalletsListManager.userWallets.firstOrNull().orEmpty()
+            .asSequence()
+            .filter { it.walletId in userWalletsIds }
+            .flatMap { it.cardsInWallet }
+
+        return tangemSdkManager.deleteSavedUserCodes(cardsIds.toSet())
     }
 
     private suspend fun UserWalletModel.updateWalletStoresAndCalculateFiatBalance(

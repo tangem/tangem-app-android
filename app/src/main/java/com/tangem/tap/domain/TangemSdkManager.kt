@@ -136,6 +136,10 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         )
     }
 
+    suspend fun deleteSavedUserCodes(cardsIds: Set<String>): CompletionResult<Unit> {
+        return userCodeRepository.delete(cardsIds.toSet())
+    }
+
     suspend fun clearSavedUserCodes(): CompletionResult<Unit> {
         return userCodeRepository.clear()
     }
