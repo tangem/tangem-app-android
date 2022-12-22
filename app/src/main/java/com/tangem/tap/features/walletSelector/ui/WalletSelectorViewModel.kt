@@ -37,7 +37,7 @@ internal class WalletSelectorViewModel : ViewModel(), StoreSubscriber<WalletSele
 
     fun walletClicked(walletId: String) = with(state.value) {
         when {
-            isLocked -> {
+            isWalletLocked(walletId, this) && editingWalletsIds.isEmpty() -> {
                 store.dispatch(WalletSelectorAction.UnlockWalletWithCard(walletId))
             }
             editingWalletsIds.isNotEmpty() && !editingWalletsIds.contains(walletId) -> {
@@ -53,7 +53,7 @@ internal class WalletSelectorViewModel : ViewModel(), StoreSubscriber<WalletSele
     }
 
     fun walletLongClicked(walletId: String) = with(state.value) {
-        if (!isLocked && editingWalletsIds.isEmpty()) {
+        if (!isWalletLocked(walletId, this) && editingWalletsIds.isEmpty()) {
             editWallet(walletId)
         }
     }
@@ -128,6 +128,11 @@ internal class WalletSelectorViewModel : ViewModel(), StoreSubscriber<WalletSele
                 editingWalletsIds = prevState.editingWalletsIds + walletId,
             )
         }
+    }
+
+    private fun isWalletLocked(walletId: String, state: WalletSelectorScreenState): Boolean = with(state) {
+        multiCurrencyWallets.find { it.id == walletId }?.isLocked
+            ?: singleCurrencyWallets.find { it.id == walletId }?.isLocked ?: isLocked
     }
 
     private fun cancelWalletEditing(walletId: String) {
