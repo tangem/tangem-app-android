@@ -125,10 +125,9 @@ internal fun WalletDataModel.updateWithSelf(
         status = when (val newStatus = newWalletData.status) {
             is WalletDataModel.Loading -> when (oldStatus) {
                 is WalletDataModel.MissedDerivation -> WalletDataModel.Loading
-                else -> oldStatus.asRefreshing()
+                else -> oldStatus
             }
             is WalletDataModel.MissedDerivation,
-            is WalletDataModel.Refreshing,
             is WalletDataModel.NoAccount,
             is WalletDataModel.Unreachable,
             is WalletDataModel.SameCurrencyTransactionInProgress,

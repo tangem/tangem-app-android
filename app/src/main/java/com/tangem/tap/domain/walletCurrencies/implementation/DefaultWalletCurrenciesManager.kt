@@ -19,7 +19,6 @@ import com.tangem.tap.domain.walletStores.repository.WalletManagersRepository
 import com.tangem.tap.domain.walletStores.repository.WalletStoresRepository
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.toBlockchainNetworks
-import com.tangem.tap.features.wallet.models.toCurrencies
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -36,8 +35,8 @@ internal class DefaultWalletCurrenciesManager(
     ): CompletionResult<Unit> = withContext(Dispatchers.Default) {
         val walletStore = walletStoresRepository.getSync(userWallet.walletId)
             .find {
-                it.blockchainNetwork.blockchain == currency.blockchain
-                    && it.blockchainNetwork.derivationPath == currency.derivationPath
+                it.blockchain == currency.blockchain
+                    && it.derivationPath?.rawPath == currency.derivationPath
             }
 
         if (walletStore != null) {
@@ -102,7 +101,9 @@ internal class DefaultWalletCurrenciesManager(
     private suspend fun getSavedCurrencies(userWalletId: UserWalletId): List<Currency> {
         return withContext(Dispatchers.Default) {
             walletStoresRepository.getSync(userWalletId)
-                .flatMap { it.blockchainNetwork.toCurrencies() }
+                .flatMap { walletStore ->
+                    walletStore.walletsData.map { it.currency }
+                }
         }
     }
 
@@ -157,10 +158,9 @@ internal class DefaultWalletCurrenciesManager(
         val userWalletId = userWallet.walletId
         return blockchainNetworks
             .map { blockchainNetwork ->
-                walletManagersRepository.findOrMake(
+                walletManagersRepository.findOrMakeMultiCurrencyWalletManager(
                     userWallet = userWallet,
                     blockchainNetwork = blockchainNetwork,
-                    refresh = true,
                 )
                     .flatMap { walletManager ->
                         walletStoresRepository.storeOrUpdate(

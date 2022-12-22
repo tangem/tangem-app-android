@@ -25,6 +25,7 @@ import com.tangem.tap.domain.model.WalletStoreModel
 import com.tangem.tap.domain.walletStores.WalletStoresError
 import com.tangem.tap.domain.walletStores.repository.WalletAmountsRepository
 import com.tangem.tap.domain.walletStores.repository.implementation.utils.replaceWalletStore
+import com.tangem.tap.domain.walletStores.repository.implementation.utils.replaceWalletStores
 import com.tangem.tap.domain.walletStores.repository.implementation.utils.updateWithAmounts
 import com.tangem.tap.domain.walletStores.repository.implementation.utils.updateWithError
 import com.tangem.tap.domain.walletStores.repository.implementation.utils.updateWithFiatRates
@@ -127,20 +128,10 @@ internal class DefaultWalletAmountsRepository(
 
         return when (fiatRatesResult) {
             is Result.Success -> {
-                Timber.d(
-                    """
-                        Fetched fiat rates
-                        |- User wallets ids: $walletsIds
-                        |- Coins ids: $coinsIds
-                    """.trimIndent(),
+                updateWalletStoresWithFiatRates(
+                    walletStores = walletStores,
+                    fiatRates = fiatRatesResult.data.rates,
                 )
-
-                walletStores.forEach { walletStore ->
-                    updateWalletStoreWithFiatRates(
-                        walletStore = walletStore,
-                        fiatRates = fiatRatesResult.data.rates,
-                    )
-                }
 
                 CompletionResult.Success(Unit)
             }
@@ -190,8 +181,8 @@ internal class DefaultWalletAmountsRepository(
         walletStore: WalletStoreModel,
         walletManager: WalletManager?,
     ): CompletionResult<Unit> {
-        val hasMissedDerivations = with(walletStore.blockchainNetwork) {
-            derivationPath != null && !scanResponse.hasDerivation(blockchain, derivationPath)
+        val hasMissedDerivations = with(walletStore) {
+            derivationPath != null && !scanResponse.hasDerivation(blockchain, derivationPath.rawPath)
         }
 
         return when {
@@ -200,7 +191,12 @@ internal class DefaultWalletAmountsRepository(
             else -> {
                 withInternetConnection { walletManager.update() }
                     .map { updateWalletManagerWithAmounts(walletId, walletManager) }
-                    .flatMap { updateWalletStoreWithAmounts(walletStore, walletManager.wallet) }
+                    .flatMap {
+                        updateWalletStoreWithAmounts(
+                            walletStore = walletStore,
+                            updatedWallet = walletManager.wallet,
+                        )
+                    }
                     .flatMap { fetchWalletStoreRentIfNeeded(walletStore, walletManager) }
                     .flatMapOnFailure { error ->
                         updateWalletStoreWithError(
@@ -291,16 +287,14 @@ internal class DefaultWalletAmountsRepository(
             """
                 Unable to fetch amounts
                 |- User wallet id: ${walletStore.userWalletId}
-                |- Blockchain: ${walletStore.blockchainNetwork.blockchain}
-                |- Tokens: ${walletStore.blockchainNetwork.tokens.map { it.name }}
+                |- Blockchain: ${walletStore.blockchain}
             """.trimIndent(),
         )
 
         if (error is BlockchainSdkError) {
             walletStoresStorage.update { prevState ->
                 prevState.replaceWalletStore(
-                    walletId = walletStore.userWalletId,
-                    walletStore = walletStore,
+                    walletStoreToUpdate = walletStore,
                     update = {
                         it.updateWithError(
                             wallet = wallet,
@@ -318,23 +312,21 @@ internal class DefaultWalletAmountsRepository(
 
     private suspend fun updateWalletStoreWithAmounts(
         walletStore: WalletStoreModel,
-        wallet: Wallet,
+        updatedWallet: Wallet,
     ) = withContext(Dispatchers.Default) {
         Timber.d(
             """
                 Fetched amounts
                 |- User wallet id: ${walletStore.userWalletId}
-                |- Blockchain: ${walletStore.blockchainNetwork.blockchain}
-                |- Tokens: ${walletStore.blockchainNetwork.tokens.map { it.name }}
+                |- Blockchain: ${walletStore.blockchain}
             """.trimIndent(),
         )
 
         walletStoresStorage.update { prevState ->
             prevState.replaceWalletStore(
-                walletId = walletStore.userWalletId,
-                walletStore = walletStore,
+                walletStoreToUpdate = walletStore,
                 update = {
-                    it.updateWithAmounts(wallet = wallet)
+                    it.updateWithAmounts(wallet = updatedWallet)
                 },
             )
         }
@@ -349,14 +341,13 @@ internal class DefaultWalletAmountsRepository(
             """
                 Missed derivation
                 |- User wallet id: ${walletStore.userWalletId}
-                |- Blockchain: ${walletStore.blockchainNetwork.blockchain}
+                |- Blockchain: ${walletStore.blockchain}
             """.trimIndent(),
         )
 
         walletStoresStorage.update { prevState ->
             prevState.replaceWalletStore(
-                walletId = walletStore.userWalletId,
-                walletStore = walletStore,
+                walletStoreToUpdate = walletStore,
                 update = {
                     it.updateWithMissedDerivation()
                 },
@@ -373,14 +364,13 @@ internal class DefaultWalletAmountsRepository(
             """
                 Wallet manager is null
                 |- User wallet id: ${walletStore.userWalletId}
-                |- Blockchain: ${walletStore.blockchainNetwork.blockchain}
+                |- Blockchain: ${walletStore.blockchain}
             """.trimIndent(),
         )
 
         walletStoresStorage.update { prevState ->
             prevState.replaceWalletStore(
-                walletId = walletStore.userWalletId,
-                walletStore = walletStore,
+                walletStoreToUpdate = walletStore,
                 update = {
                     it.updateWithUnreachable()
                 },
@@ -390,14 +380,20 @@ internal class DefaultWalletAmountsRepository(
         CompletionResult.Success(Unit)
     }
 
-    private suspend fun updateWalletStoreWithFiatRates(
-        walletStore: WalletStoreModel,
+    private suspend fun updateWalletStoresWithFiatRates(
+        walletStores: List<WalletStoreModel>,
         fiatRates: Map<String, Double>,
     ) = withContext(Dispatchers.Default) {
+        Timber.d(
+            """
+                Fetched fiat rates
+                |- User wallets ids: ${walletStores.map { it.userWalletId }.distinct()}
+            """.trimIndent(),
+        )
+
         walletStoresStorage.update { prevState ->
-            prevState.replaceWalletStore(
-                walletId = walletStore.userWalletId,
-                walletStore = walletStore,
+            prevState.replaceWalletStores(
+                walletStoresToUpdate = walletStores,
                 update = {
                     it.updateWithFiatRates(rates = fiatRates)
                 },
@@ -409,14 +405,24 @@ internal class DefaultWalletAmountsRepository(
         walletStore: WalletStoreModel,
         rent: WalletStoreModel.WalletRent?,
     ) = withContext(Dispatchers.Default) {
-        walletStoresStorage.update { prevState ->
-            prevState.replaceWalletStore(
-                walletId = walletStore.userWalletId,
-                walletStore = walletStore,
-                update = {
-                    it.updateWithRent(rent)
-                },
-            )
+        Timber.d(
+            """
+                Fetched wallet rent
+                |- User wallet id: ${walletStore.userWalletId}
+                |- Blockchain: ${walletStore.blockchain}
+                |- Rent: $rent
+            """.trimIndent(),
+        )
+
+        if (rent != walletStore.walletRent) {
+            walletStoresStorage.update { prevState ->
+                prevState.replaceWalletStore(
+                    walletStoreToUpdate = walletStore,
+                    update = {
+                        it.updateWithRent(rent)
+                    },
+                )
+            }
         }
     }
 }

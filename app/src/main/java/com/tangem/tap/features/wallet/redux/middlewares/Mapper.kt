@@ -22,9 +22,9 @@ import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.features.wallet.ui.TokenData
 import com.tangem.tap.store
 
-internal fun Sequence<WalletStoreModel>.mapToReduxModels(
+internal fun List<WalletStoreModel>.mapToReduxModels(
     isMultiWalletAllowed: Boolean,
-): Sequence<WalletStore> {
+): List<WalletStore> {
     return this.map { walletStoreModel ->
         walletStoreModel.mapToReduxModel(isMultiWalletAllowed)
     }
@@ -34,7 +34,6 @@ internal fun TotalFiatBalance.mapToReduxModel(): TotalBalance {
     return TotalBalance(
         state = when (this) {
             is TotalFiatBalance.Loading -> ProgressState.Loading
-            is TotalFiatBalance.Refreshing -> ProgressState.Refreshing
             is TotalFiatBalance.Error -> ProgressState.Error
             is TotalFiatBalance.Loaded -> ProgressState.Done
         },
@@ -96,7 +95,6 @@ private fun List<WalletDataModel>.mapToReduxModel(
                     status = when (status) {
                         is WalletDataModel.Loading -> BalanceStatus.Loading
                         is WalletDataModel.NoAccount -> BalanceStatus.NoAccount
-                        is WalletDataModel.Refreshing -> BalanceStatus.Refreshing
                         is WalletDataModel.SameCurrencyTransactionInProgress -> BalanceStatus.SameCurrencyTransactionInProgress
                         is WalletDataModel.TransactionInProgress -> BalanceStatus.TransactionInProgress
                         is WalletDataModel.Unreachable -> BalanceStatus.Unreachable

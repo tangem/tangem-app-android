@@ -37,9 +37,10 @@ class MultiWalletView : WalletView() {
 
     private val watcher = modelWatcher<WalletState> {
         val totalBalanceStrategy: DiffStrategy<WalletState> = { old, new ->
-            old.totalBalance != new.totalBalance ||
+            old.cardId != new.cardId ||
+                old.totalBalance != new.totalBalance ||
                 old.state != new.state ||
-                old.walletsDataFromStores.size != new.walletsDataFromStores.size
+                old.walletsStores.size != new.walletsStores.size
         }
 
         (WalletState::walletsStores or WalletState::state) { walletState ->

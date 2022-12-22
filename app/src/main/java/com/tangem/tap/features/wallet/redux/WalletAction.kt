@@ -209,8 +209,6 @@ sealed class WalletAction : Action {
     data class WalletStoresChanged(val walletStores: List<WalletStoreModel>) : WalletAction() {
         data class UpdateWalletStores(
             val reduxWalletStores: List<WalletStore>,
-            val reduxWalletData: List<WalletData>,
-            val selectedWalletData: WalletData?,
         ) : WalletAction()
     }
 

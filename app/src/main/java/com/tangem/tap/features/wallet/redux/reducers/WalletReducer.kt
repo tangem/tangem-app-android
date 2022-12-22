@@ -20,6 +20,7 @@ import com.tangem.tap.domain.extensions.isMultiwalletAllowed
 import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.wallet.models.Currency
+import com.tangem.tap.features.wallet.models.TotalBalance
 import com.tangem.tap.features.wallet.models.WalletRent
 import com.tangem.tap.features.wallet.redux.AddressData
 import com.tangem.tap.features.wallet.redux.Artwork
@@ -35,6 +36,7 @@ import com.tangem.tap.features.wallet.redux.replaceSomeWalletsData
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.proxy.AppStateHolder
+import com.tangem.tap.store
 import org.rekotlin.Action
 import timber.log.Timber
 import java.math.BigDecimal
@@ -344,13 +346,16 @@ private fun internalReduce(action: Action, state: AppState, appStateHolder: AppS
                     card.settings.isBackupAllowed &&
                     card.backupStatus == CardDTO.BackupStatus.NoBackup,
                 walletCardsCount = card.findCardsCount(),
+                totalBalance = if (card.isMultiwalletAllowed) {
+                    TotalBalance(ProgressState.Loading, BigDecimal.ZERO, store.state.globalState.appCurrency)
+                } else {
+                    null
+                },
             )
         }
         is WalletAction.WalletStoresChanged.UpdateWalletStores -> {
             newState = newState.copy(
                 walletsStores = action.reduxWalletStores,
-                // walletsDataCopyFromStore = action.reduxWalletData,
-                selectedCurrency = action.selectedWalletData?.currency,
             )
         }
         is WalletAction.TotalFiatBalanceChanged -> {
