@@ -43,8 +43,11 @@ class MultiWalletView : WalletView() {
                 old.walletsStores.size != new.walletsStores.size
         }
 
-        (WalletState::walletsStores or WalletState::state) { walletState ->
-            walletsAdapter.submitList(walletState.walletsDataFromStores)
+        // !!! Workaround !!!
+        // Checking state properties instead of state params can reduce application performance,
+        // but here it is necessary because the WalletStore has an unsuitable equals method
+        WalletState::walletsDataFromStores {
+            walletsAdapter.submitList(it)
         }
         WalletState::loadingUserTokens {
             binding?.pbLoadingUserTokens?.show(it)
