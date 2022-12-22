@@ -45,11 +45,13 @@ internal class DefaultWalletStoresRepository : WalletStoresRepository {
         userWalletId: UserWalletId,
         currentBlockchains: List<Blockchain>,
     ): CompletionResult<Unit> = catching {
-        walletStoresStorage.update { prevStores ->
-            prevStores.apply {
-                this[userWalletId] = this[userWalletId]
-                    ?.filter { it.blockchainNetwork.blockchain in currentBlockchains }
-                    .orEmpty()
+        if (currentBlockchains != getSync(userWalletId).map { it.blockchain }) {
+            walletStoresStorage.update { prevStores ->
+                prevStores.apply {
+                    this[userWalletId] = this[userWalletId]
+                        ?.filter { it.blockchain in currentBlockchains }
+                        .orEmpty()
+                }
             }
         }
     }
@@ -71,32 +73,24 @@ internal class DefaultWalletStoresRepository : WalletStoresRepository {
         userWalletId: UserWalletId,
         walletStore: WalletStoreModel,
     ): HashMap<UserWalletId, List<WalletStoreModel>> = withContext(Dispatchers.Default) {
-        val prevStores = this@addOrUpdate
-        val walletStores = prevStores[userWalletId]
+        val currentWalletStores = this@addOrUpdate
+        val userWalletStores = currentWalletStores[userWalletId]
 
-        if (walletStores.isNullOrEmpty()) {
-            prevStores.apply {
+        if (userWalletStores.isNullOrEmpty()) {
+            currentWalletStores.apply {
                 set(userWalletId, listOf(walletStore))
             }
         } else {
-            val oldWalletStore = walletStores.find(walletStore::isSameWalletStore)
-
-            when {
-                oldWalletStore == null -> {
-                    prevStores.apply {
-                        set(userWalletId, walletStores + walletStore)
-                    }
+            val currentWalletStore = userWalletStores.find(walletStore::isSameWalletStore)
+            if (currentWalletStore == null) {
+                currentWalletStores.apply {
+                    set(userWalletId, userWalletStores + walletStore)
                 }
-                oldWalletStore.blockchainNetwork.tokens == walletStore.blockchainNetwork.tokens -> {
-                    prevStores
-                }
-                else -> {
-                    prevStores.replaceWalletStore(
-                        walletId = userWalletId,
-                        walletStore = oldWalletStore,
-                        update = { it.updateWithSelf(walletStore) },
-                    )
-                }
+            } else {
+                currentWalletStores.replaceWalletStore(
+                    walletStoreToUpdate = currentWalletStore,
+                    update = { it.updateWithSelf(walletStore) },
+                )
             }
         }
     }

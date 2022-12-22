@@ -308,16 +308,11 @@ class WalletMiddleware {
 
     private fun updateWalletStores(wallStores: List<WalletStoreModel>, state: WalletState) {
         scope.launch(Dispatchers.Default) {
-            val reduxWalletStores = wallStores.asSequence().mapToReduxModels(state.isMultiwalletAllowed)
-            val reduxWalletsData = reduxWalletStores.flatMap { it.walletsData }
-            val selectedWalletData = reduxWalletsData
-                .find { it.currency == state.selectedWalletData?.currency }
+            val reduxWalletStores = wallStores.mapToReduxModels(state.isMultiwalletAllowed)
 
             store.dispatchOnMain(
                 WalletAction.WalletStoresChanged.UpdateWalletStores(
                     reduxWalletStores = reduxWalletStores.toList(),
-                    reduxWalletData = reduxWalletsData.toList(),
-                    selectedWalletData = selectedWalletData,
                 ),
             )
         }

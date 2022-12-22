@@ -71,7 +71,7 @@ internal class DefaultWalletStoresManager(
             .mapNotNull { userWallet ->
                 val hasNotWalletStoresForUserWallet = !walletStoresRepository.contains(userWallet.walletId)
                 if (refresh || hasNotWalletStoresForUserWallet || isFiatCurrencyChanged) {
-                    fetchWalletsIfNeeded(userWallet, refresh)
+                    fetchWalletsIfNeeded(userWallet)
                 } else null
             }
             .fold(arrayListOf<UserWallet>()) { acc, data ->
@@ -102,22 +102,16 @@ internal class DefaultWalletStoresManager(
             }
     }
 
-    private suspend fun fetchWalletsIfNeeded(
-        userWallet: UserWallet,
-        refresh: Boolean,
-    ): CompletionResult<UserWallet> {
+    private suspend fun fetchWalletsIfNeeded(userWallet: UserWallet): CompletionResult<UserWallet> {
         return if (userWallet.scanResponse.card.isMultiwalletAllowed) {
-            fetchMultiWallets(userWallet, refresh)
+            fetchMultiWallets(userWallet)
         } else {
-            fetchSingleWallet(userWallet, refresh)
+            fetchSingleWallet(userWallet)
         }
             .map { userWallet }
     }
 
-    private suspend fun fetchMultiWallets(
-        userWallet: UserWallet,
-        refresh: Boolean,
-    ): CompletionResult<Unit> {
+    private suspend fun fetchMultiWallets(userWallet: UserWallet): CompletionResult<Unit> {
         val scanResponse = userWallet.scanResponse
         val userTokens = withContext(Dispatchers.IO) {
             userTokensRepository.getUserTokens(scanResponse.card)
@@ -143,10 +137,9 @@ internal class DefaultWalletStoresManager(
                             )
                         }
 
-                    walletManagersRepository.findOrMake(
+                    walletManagersRepository.findOrMakeMultiCurrencyWalletManager(
                         userWallet = userWallet,
                         blockchainNetwork = blockchainNetwork,
-                        refresh = refresh,
                     )
                         .flatMap { walletManager ->
                             storeWalletStore(walletManager)
@@ -164,13 +157,9 @@ internal class DefaultWalletStoresManager(
         }
     }
 
-    private suspend fun fetchSingleWallet(
-        userWallet: UserWallet,
-        refresh: Boolean,
-    ): CompletionResult<Unit> {
-        return walletManagersRepository.findOrMake(
+    private suspend fun fetchSingleWallet(userWallet: UserWallet): CompletionResult<Unit> {
+        return walletManagersRepository.findOrMakeSingleCurrencyWalletManager(
             userWallet = userWallet,
-            refresh = refresh,
         )
             .flatMap { walletManager ->
                 val userWalletId = userWallet.walletId
