@@ -4,6 +4,7 @@ import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.feature.swap.domain.SwapInteractorImpl
 import com.tangem.feature.swap.domain.SwapRepository
 import com.tangem.feature.swap.domain.cache.SwapDataCacheImpl
+import com.tangem.lib.crypto.TransactionManager
 import com.tangem.lib.crypto.UserWalletManager
 import dagger.Module
 import dagger.Provides
@@ -18,12 +19,14 @@ class SwapDomainModule {
     @Provides
     @Singleton
     fun provideSwapInteractor(
-        referralRepository: SwapRepository,
+        swapRepository: SwapRepository,
         userWalletManager: UserWalletManager,
+        transactionManager: TransactionManager,
     ): SwapInteractor {
         return SwapInteractorImpl(
+            transactionManager = transactionManager,
             userWalletManager = userWalletManager,
-            repository = referralRepository,
+            repository = swapRepository,
             cache = SwapDataCacheImpl(),
         )
     }
