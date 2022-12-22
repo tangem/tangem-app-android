@@ -88,6 +88,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
             val selectedWalletData = state.selectedWalletData
             if (selectedWalletData != null) {
                 walletDataWatcher.invoke(selectedWalletData)
+                setupButtons(selectedWalletData, state.isExchangeServiceFeatureOn)
                 setupAddressCard(selectedWalletData)
                 handleWarnings(selectedWalletData)
             }
