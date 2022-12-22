@@ -35,6 +35,14 @@ class UserWalletBuilder(
             }
         }
 
+    private val ScanResponse.isMultiCurrency: Boolean
+        get() = when (productType) {
+            ProductType.Note -> false
+            ProductType.Twins -> false
+            ProductType.SaltPay -> false
+            ProductType.Wallet -> !card.isStart2Coin
+        }
+
     fun backupCardsIds(backupCardsIds: Set<String>?) = this.apply {
         if (backupCardsIds != null) {
             this.backupCardsIds = backupCardsIds
@@ -49,6 +57,7 @@ class UserWalletBuilder(
                 artworkUrl = loadArtworkUrl(card.cardId, card.cardPublicKey),
                 cardsInWallet = backupCardsIds.plus(card.cardId),
                 scanResponse = this,
+                isMultiCurrency = isMultiCurrency,
             )
         }
     }

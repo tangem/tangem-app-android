@@ -6,10 +6,11 @@ import com.tangem.domain.common.util.UserWalletId
 
 /**
  * Represents user's wallet which stored in app persistence
- * @param name User's wallet name
- * @param walletId User's wallet [UserWalletId]
+ * @param name User wallet name
+ * @param walletId User wallet [UserWalletId]
  * @param artworkUrl User wallet card artwork URL
  * @param cardsInWallet List of cards IDs assigned with this user's wallet
+ * @param isMultiCurrency Indicates whether this user wallet can work with more than one currency
  * @param scanResponse [ScanResponse] of primary user's wallet card.
  * TODO: Replace with [com.tangem.domain.common.CardDTO]
  * @property cardId ID of user's wallet primary card
@@ -21,6 +22,7 @@ data class UserWallet(
     val walletId: UserWalletId,
     val artworkUrl: String,
     val cardsInWallet: Set<String>,
+    val isMultiCurrency: Boolean,
     val scanResponse: ScanResponse,
 ) {
     val cardId: String

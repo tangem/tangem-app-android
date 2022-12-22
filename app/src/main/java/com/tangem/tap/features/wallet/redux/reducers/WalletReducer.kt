@@ -336,17 +336,17 @@ private fun internalReduce(action: Action, state: AppState, appStateHolder: AppS
             val card = scanResponse.card
             newState = WalletState(
                 cardId = card.cardId,
-                isMultiwalletAllowed = card.isMultiwalletAllowed,
+                isMultiwalletAllowed = isMultiCurrency,
                 cardImage = Artwork(
                     artworkId = artworkUrl,
                 ),
                 isTestnet = card.isTestCard,
                 state = ProgressState.Loading,
-                showBackupWarning = card.isMultiwalletAllowed &&
+                showBackupWarning = isMultiCurrency &&
                     card.settings.isBackupAllowed &&
                     card.backupStatus == CardDTO.BackupStatus.NoBackup,
                 walletCardsCount = card.findCardsCount(),
-                totalBalance = if (card.isMultiwalletAllowed) {
+                totalBalance = if (isMultiCurrency) {
                     TotalBalance(ProgressState.Loading, BigDecimal.ZERO, store.state.globalState.appCurrency)
                 } else {
                     null

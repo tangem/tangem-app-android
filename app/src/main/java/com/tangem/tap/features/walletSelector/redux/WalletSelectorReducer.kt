@@ -2,7 +2,6 @@ package com.tangem.tap.features.walletSelector.redux
 
 import com.tangem.domain.common.CardDTO
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.domain.extensions.isMultiwalletAllowed
 import com.tangem.tap.domain.model.TotalFiatBalance
 import com.tangem.tap.domain.model.UserWallet
 import org.rekotlin.Action
@@ -100,7 +99,7 @@ internal object WalletSelectorReducer {
     }
 
     private fun UserWallet.getType(prevType: UserWalletModel.Type? = null): UserWalletModel.Type {
-        return if (scanResponse.card.isMultiwalletAllowed) {
+        return if (isMultiCurrency) {
             UserWalletModel.Type.MultiCurrency(
                 cardsInWallet = (scanResponse.card.backupStatus as? CardDTO.BackupStatus.Active)
                     ?.cardCount?.inc()

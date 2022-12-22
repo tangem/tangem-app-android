@@ -9,7 +9,6 @@ import com.tangem.common.fold
 import com.tangem.common.map
 import com.tangem.domain.common.util.UserWalletId
 import com.tangem.tap.common.entities.FiatCurrency
-import com.tangem.tap.domain.extensions.isMultiwalletAllowed
 import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.domain.model.WalletStoreModel
 import com.tangem.tap.domain.model.builders.WalletStoreBuilder
@@ -103,7 +102,7 @@ internal class DefaultWalletStoresManager(
     }
 
     private suspend fun fetchWalletsIfNeeded(userWallet: UserWallet): CompletionResult<UserWallet> {
-        return if (userWallet.scanResponse.card.isMultiwalletAllowed) {
+        return if (userWallet.isMultiCurrency) {
             fetchMultiWallets(userWallet)
         } else {
             fetchSingleWallet(userWallet)
