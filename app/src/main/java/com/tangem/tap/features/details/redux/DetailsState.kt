@@ -40,6 +40,8 @@ data class CardInfo(
     val cardId: String,
     val issuer: String,
     val signedHashes: Int,
+    val isTwin: Boolean,
+    val hasBackup: Boolean,
 )
 
 data class CardSettingsState(
