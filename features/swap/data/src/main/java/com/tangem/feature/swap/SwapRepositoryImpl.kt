@@ -4,6 +4,7 @@ import com.tangem.datasource.api.oneinch.OneInchApi
 import com.tangem.datasource.api.oneinch.OneInchErrorsHandler
 import com.tangem.datasource.api.oneinch.errors.OneIncResponseException
 import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.datasource.di.OneInchApiFactory
 import com.tangem.feature.swap.converters.ApproveConverter
 import com.tangem.feature.swap.converters.QuotesConverter
 import com.tangem.feature.swap.converters.SwapConverter
@@ -21,7 +22,7 @@ import javax.inject.Inject
 
 internal class SwapRepositoryImpl @Inject constructor(
     private val tangemTechApi: TangemTechApi,
-    private val oneInchApi: OneInchApi,
+    private val oneInchApiFactory: OneInchApiFactory,
     private val tokensConverter: TokensConverter,
     private val quotesConverter: QuotesConverter,
     private val swapConverter: SwapConverter,
@@ -36,12 +37,16 @@ internal class SwapRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun findBestQuote(fromTokenAddress: String, toTokenAddress: String, amount: String):
+    override suspend fun findBestQuote(
+        networkId: String, fromTokenAddress: String, toTokenAddress: String,
+        amount:
+        String,
+    ):
         AggregatedSwapDataModel<QuoteModel> {
         return withContext(coroutineDispatcher.io) {
             try {
                 val response = oneInchErrorsHandler.handleOneInchResponse(
-                    oneInchApi.quote(
+                    getOneInchApi(networkId).quote(
                         fromTokenAddress = fromTokenAddress,
                         toTokenAddress = toTokenAddress,
                         amount = amount,
@@ -54,24 +59,24 @@ internal class SwapRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun addressForTrust(): String {
+    override suspend fun addressForTrust(networkId: String): String {
         return withContext(coroutineDispatcher.io) {
-            oneInchApi.approveSpender().address
+            getOneInchApi(networkId).approveSpender().address
         }
     }
 
-    override suspend fun dataToApprove(tokenAddress: String, amount: String?): ApproveModel {
+    override suspend fun dataToApprove(networkId: String, tokenAddress: String, amount: String?): ApproveModel {
         return withContext(coroutineDispatcher.io) {
-            approveConverter.convert(oneInchApi.approveTransaction(tokenAddress, amount))
+            approveConverter.convert(getOneInchApi(networkId).approveTransaction(tokenAddress, amount))
         }
     }
 
-    override suspend fun checkTokensSpendAllowance(tokenAddress: String, walletAddress: String):
+    override suspend fun checkTokensSpendAllowance(networkId: String, tokenAddress: String, walletAddress: String):
         AggregatedSwapDataModel<String> {
         return withContext(coroutineDispatcher.io) {
             try {
                 val response = oneInchErrorsHandler.handleOneInchResponse(
-                    oneInchApi.approveAllowance(tokenAddress, walletAddress)
+                    getOneInchApi(networkId).approveAllowance(tokenAddress, walletAddress),
                 )
                 AggregatedSwapDataModel(response.allowance)
             } catch (ex: OneIncResponseException) {
@@ -81,6 +86,7 @@ internal class SwapRepositoryImpl @Inject constructor(
     }
 
     override suspend fun prepareSwapTransaction(
+        networkId: String,
         fromTokenAddress: String,
         toTokenAddress: String,
         amount: String,
@@ -90,7 +96,7 @@ internal class SwapRepositoryImpl @Inject constructor(
         return withContext(coroutineDispatcher.io) {
             try {
                 val swapResponse = oneInchErrorsHandler.handleOneInchResponse(
-                    oneInchApi.swap(
+                    getOneInchApi(networkId).swap(
                         fromTokenAddress = fromTokenAddress,
                         toTokenAddress = toTokenAddress,
                         amount = amount,
@@ -103,5 +109,9 @@ internal class SwapRepositoryImpl @Inject constructor(
                 AggregatedSwapDataModel(null, mapErrors(ex.data.description))
             }
         }
+    }
+
+    private fun getOneInchApi(networkId: String): OneInchApi {
+        return oneInchApiFactory.getApi(networkId)
     }
 }
