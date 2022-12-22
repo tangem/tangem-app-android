@@ -79,6 +79,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         tangemSdk = TangemSdk.init(this, TangemSdkManager.config)
         tangemSdkManager = TangemSdkManager(tangemSdk, this)
         appStateHolder.tangemSdkManager = tangemSdkManager
+        appStateHolder.tangemSdk = tangemSdk
         backupService = BackupService.init(tangemSdk, this)
         userWalletsListManager = UserWalletsListManager.provideBiometricImplementation(
             context = applicationContext,
