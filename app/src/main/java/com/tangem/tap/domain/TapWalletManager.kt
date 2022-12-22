@@ -103,7 +103,7 @@ class TapWalletManager {
             store.dispatch(WalletAction.UserWalletChanged(userWallet))
             store.dispatch(TwinCardsAction.IfTwinsPrepareState(scanResponse))
             store.dispatch(WalletConnectAction.ResetState)
-            store.dispatch(GlobalAction.SaveScanNoteResponse(scanResponse))
+            store.dispatch(GlobalAction.SaveScanResponse(scanResponse))
             store.dispatch(WalletConnectAction.RestoreSessions(scanResponse))
             store.dispatch(GlobalAction.SetIfCardVerifiedOnline(!attestationFailed))
             store.dispatch(WalletAction.Warnings.CheckIfNeeded)
@@ -151,7 +151,7 @@ class TapWalletManager {
         withMainContext {
             store.dispatch(WalletAction.ResetState(data.card))
             store.dispatch(WalletConnectAction.ResetState)
-            store.dispatch(GlobalAction.SaveScanNoteResponse(data))
+            store.dispatch(GlobalAction.SaveScanResponse(data))
             store.dispatch(WalletAction.SetIfTestnetCard(data.card.isTestCard))
             store.dispatch(WalletAction.MultiWallet.SetIsMultiwalletAllowed(data.card.isMultiwalletAllowed))
             store.dispatch(WalletConnectAction.RestoreSessions(data))

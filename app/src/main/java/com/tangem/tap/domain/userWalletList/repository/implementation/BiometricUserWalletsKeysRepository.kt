@@ -8,6 +8,7 @@ import com.tangem.common.biometric.BiometricManager
 import com.tangem.common.biometric.BiometricStorage
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.doOnFailure
+import com.tangem.common.fold
 import com.tangem.common.map
 import com.tangem.common.mapFailure
 import com.tangem.common.services.secure.SecureStorage
@@ -15,7 +16,6 @@ import com.tangem.domain.common.util.UserWalletId
 import com.tangem.tap.domain.userWalletList.UserWalletListError
 import com.tangem.tap.domain.userWalletList.model.UserWalletEncryptionKey
 import com.tangem.tap.domain.userWalletList.repository.UserWalletsKeysRepository
-import com.tangem.tap.domain.walletStores.implementation.utils.fold
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 

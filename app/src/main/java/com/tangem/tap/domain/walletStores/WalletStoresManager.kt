@@ -10,7 +10,7 @@ interface WalletStoresManager {
     fun getAll(): Flow<Map<UserWalletId, List<WalletStoreModel>>>
     fun get(userWalletId: UserWalletId): Flow<List<WalletStoreModel>>
 
-    suspend fun delete(userWalletsIds: List<String>): CompletionResult<Unit>
+    suspend fun delete(userWalletsIds: List<UserWalletId>): CompletionResult<Unit>
     suspend fun clear(): CompletionResult<Unit>
 
     suspend fun fetch(

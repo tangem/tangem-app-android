@@ -17,7 +17,7 @@ internal class DummyWalletStoresManager : WalletStoresManager {
         return emptyFlow()
     }
 
-    override suspend fun delete(userWalletsIds: List<String>): CompletionResult<Unit> {
+    override suspend fun delete(userWalletsIds: List<UserWalletId>): CompletionResult<Unit> {
         return CompletionResult.Success(Unit)
     }
 

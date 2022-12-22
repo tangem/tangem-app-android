@@ -28,6 +28,7 @@ import com.tangem.core.ui.components.SpacerH2
 import com.tangem.core.ui.components.SpacerW6
 import com.tangem.core.ui.components.SpacerW8
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.domain.common.util.UserWalletId
 import com.tangem.tap.common.compose.TangemTypography
 import com.tangem.tap.features.walletSelector.ui.model.MultiCurrencyUserWalletItem
 import com.tangem.tap.features.walletSelector.ui.model.SingleCurrencyUserWalletItem
@@ -41,8 +42,8 @@ internal fun WalletItem(
     wallet: UserWalletItem,
     isSelected: Boolean,
     isChecked: Boolean,
-    onWalletClick: (walletId: String) -> Unit,
-    onWalletLongClick: (walletId: String) -> Unit,
+    onWalletClick: (UserWalletId) -> Unit,
+    onWalletLongClick: (UserWalletId) -> Unit,
 ) {
     Row(
         modifier = Modifier

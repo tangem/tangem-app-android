@@ -28,6 +28,7 @@ import com.tangem.tap.userWalletsListManager
 import com.tangem.tap.walletStoresManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
 import timber.log.Timber
@@ -61,16 +62,13 @@ internal class WalletSelectorMiddleware {
                 addWallet()
             }
             is WalletSelectorAction.SelectWallet -> {
-                selectWallet(action.walletId)
-            }
-            is WalletSelectorAction.UnlockWalletWithCard -> {
-                unlockWalletWithCard(action.walletId)
+                selectWallet(action.userWalletId)
             }
             is WalletSelectorAction.RemoveWallets -> {
-                removeWallets(action.walletIdsToRemove, state)
+                removeWallets(action.userWalletsIds, state)
             }
             is WalletSelectorAction.RenameWallet -> {
-                renameWallet(action.walletId, action.newName)
+                renameWallet(action.userWalletId, action.newName)
             }
             is WalletSelectorAction.ChangeAppCurrency -> {
                 refreshUserWalletsAmounts()
@@ -102,7 +100,7 @@ internal class WalletSelectorMiddleware {
         walletStores.forEach { (walletId, walletStores) ->
             scope.launch(Dispatchers.Default) {
                 val foundWallet = state.wallets
-                    .find { it.id == walletId.stringValue }
+                    .find { it.id == walletId }
 
                 if (foundWallet != null) {
                     val updatedWallet = foundWallet
@@ -124,11 +122,7 @@ internal class WalletSelectorMiddleware {
                 .doOnFailure { error ->
                     store.dispatchOnMain(WalletSelectorAction.UnlockWithBiometry.Error(error))
                 }
-                .doOnSuccess { selectedUserWallet ->
-                    if (selectedUserWallet != null) {
-                        updateAccessCodeRequestPolicy(selectedUserWallet)
-                    }
-
+                .doOnSuccess {
                     store.dispatchOnMain(WalletSelectorAction.UnlockWithBiometry.Success)
                 }
         }
@@ -148,43 +142,40 @@ internal class WalletSelectorMiddleware {
                     Analytics.send(MyWallets.CardWasScanned)
 
                     store.dispatchOnMain(WalletSelectorAction.AddWallet.Success)
-                    updateAccessCodeRequestPolicy(userWallet)
                     store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
                     store.onUserWalletSelected(userWallet)
                 }
         }
     }
 
-    private fun selectWallet(id: String) {
+    private fun selectWallet(userWalletId: UserWalletId) {
         scope.launch {
-            userWalletsListManager.selectWallet(UserWalletId(id))
-                .doOnFailure { error ->
-                    store.dispatchOnMain(WalletSelectorAction.HandleError(error))
-                }
-                .doOnSuccess { selectedWallet ->
-                    updateAccessCodeRequestPolicy(selectedWallet)
-                    store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
-                    store.onUserWalletSelected(selectedWallet)
-                }
-        }
-    }
-
-    private fun unlockWalletWithCard(id: String) {
-        scope.launch {
-            userWalletsListManager.get(UserWalletId(id))
+            userWalletsListManager.get(userWalletId)
                 .flatMap { userWallet ->
-                    updateUserWalletWithScannedCard(userWallet)
-                }
-                .flatMap { updatedUserWallet ->
-                    unlockUserWallet(updatedUserWallet)
+                    if (userWallet.isLocked) {
+                        unlockUserWalletWithScannedCard(userWallet)
+                    } else {
+                        userWalletsListManager.selectWallet(userWalletId)
+                    }
                 }
                 .doOnFailure { error ->
+                    tangemSdkManager.setAccessCodeRequestPolicy(
+                        useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes &&
+                            userWalletsListManager.selectedUserWalletSync?.hasAccessCode == true,
+                    )
                     store.dispatchOnMain(WalletSelectorAction.HandleError(error))
+                }
+                .doOnSuccess {
+                    val selectedUserWallet = userWalletsListManager.selectedUserWalletSync
+                    if (selectedUserWallet != null) {
+                        store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
+                        store.onUserWalletSelected(selectedUserWallet)
+                    }
                 }
         }
     }
 
-    private suspend fun updateUserWalletWithScannedCard(userWallet: UserWallet): CompletionResult<UserWallet> {
+    private suspend fun unlockUserWalletWithScannedCard(userWallet: UserWallet): CompletionResult<Unit> {
         tangemSdkManager.changeDisplayedCardIdNumbersCount(userWallet.scanResponse)
         return tangemSdkManager.scanCard(userWallet.cardId)
             .map { scannedCard ->
@@ -194,6 +185,9 @@ internal class WalletSelectorMiddleware {
                     ),
                 )
             }
+            .flatMap { updatedUserWallet ->
+                userWalletsListManager.save(updatedUserWallet, canOverride = true)
+            }
             .doOnFailure {
                 tangemSdkManager.changeDisplayedCardIdNumbersCount(
                     scanResponse = userWalletsListManager.selectedUserWalletSync?.scanResponse,
@@ -201,21 +195,16 @@ internal class WalletSelectorMiddleware {
             }
     }
 
-    private suspend fun unlockUserWallet(userWallet: UserWallet): CompletionResult<Unit> {
-        return userWalletsListManager.save(userWallet, canOverride = true)
-            .doOnSuccess {
-                store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
-                store.onUserWalletSelected(userWallet)
-            }
-    }
-
-    private fun removeWallets(walletIdsToRemove: List<String>, state: WalletSelectorState) {
+    private fun removeWallets(userWalletsIds: List<UserWalletId>, state: WalletSelectorState) {
         Analytics.send(MyWallets.Button.DeleteWalletTapped)
 
         scope.launch {
-            when (walletIdsToRemove.size) {
+            when (userWalletsIds.size) {
                 state.wallets.size -> clearUserWallets()
-                else -> removeUserWallets(walletIdsToRemove, state)
+                else -> removeUserWallets(
+                    userWalletsIds = userWalletsIds,
+                    selectedWalletId = state.selectedWalletId,
+                )
             }
                 .doOnFailure { error ->
                     store.dispatchOnMain(WalletSelectorAction.HandleError(error))
@@ -223,11 +212,11 @@ internal class WalletSelectorMiddleware {
         }
     }
 
-    private fun renameWallet(walletId: String, newName: String) {
+    private fun renameWallet(userWalletId: UserWalletId, newName: String) {
         Analytics.send(MyWallets.Button.EditWalletTapped)
 
         scope.launch {
-            userWalletsListManager.get(walletId = UserWalletId(walletId))
+            userWalletsListManager.get(userWalletId)
                 .map { it.copy(name = newName) }
                 .flatMap { userWalletsListManager.save(it, canOverride = true) }
                 .doOnFailure { error ->
@@ -247,6 +236,32 @@ internal class WalletSelectorMiddleware {
         }
     }
 
+    private suspend fun clearUserWallets(): CompletionResult<Unit> {
+        return userWalletsListManager.clear()
+            .flatMap { walletStoresManager.clear() }
+            .flatMap { tangemSdkManager.clearSavedUserCodes() }
+            .doOnSuccess {
+                store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Home))
+            }
+    }
+
+    private suspend fun removeUserWallets(
+        userWalletsIds: List<UserWalletId>,
+        selectedWalletId: UserWalletId?,
+    ): CompletionResult<Unit> {
+        return userWalletsListManager.delete(userWalletsIds)
+            .flatMap { walletStoresManager.delete(userWalletsIds) }
+            .flatMap { deleteAccessCodes(userWalletsIds) }
+            .doOnSuccess {
+                val currentSelectedWallet = userWalletsListManager.selectedUserWalletSync ?: return@doOnSuccess
+                val isSelectedWalletRemoved = selectedWalletId != currentSelectedWallet.walletId
+
+                if (isSelectedWalletRemoved) {
+                    store.onUserWalletSelected(currentSelectedWallet)
+                }
+            }
+    }
+
     private suspend inline fun scanCardInternal(
         crossinline onCardScanned: suspend (ScanResponse) -> Unit,
     ) {
@@ -264,37 +279,13 @@ internal class WalletSelectorMiddleware {
         )
     }
 
-    private suspend fun clearUserWallets(): CompletionResult<Unit> {
-        return userWalletsListManager.clear()
-            .flatMap { walletStoresManager.clear() }
-            .doOnSuccess {
-                store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Home))
-            }
-    }
+    private suspend fun deleteAccessCodes(userWalletsIds: List<UserWalletId>): CompletionResult<Unit> {
+        val cardsIds = userWalletsListManager.userWallets.firstOrNull().orEmpty()
+            .asSequence()
+            .filter { it.walletId in userWalletsIds }
+            .flatMap { it.cardsInWallet }
 
-    private suspend fun removeUserWallets(
-        walletIdsToRemove: List<String>,
-        state: WalletSelectorState,
-    ): CompletionResult<Unit> {
-        val prevSelectedWalletId = state.selectedWalletId
-        return userWalletsListManager.delete(walletIdsToRemove.map { UserWalletId(it) })
-            .flatMap { walletStoresManager.delete(walletIdsToRemove) }
-            .doOnSuccess {
-                val selectedWallet = userWalletsListManager.selectedUserWalletSync ?: return@doOnSuccess
-                val isSelectedWalletRemoved = prevSelectedWalletId != selectedWallet.walletId.stringValue
-
-                if (isSelectedWalletRemoved) {
-                    updateAccessCodeRequestPolicy(selectedWallet)
-                    store.onUserWalletSelected(selectedWallet)
-                }
-            }
-    }
-
-    private fun updateAccessCodeRequestPolicy(userWallet: UserWallet) {
-        tangemSdkManager.setAccessCodeRequestPolicy(
-            useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes &&
-                userWallet.hasAccessCode,
-        )
+        return tangemSdkManager.deleteSavedUserCodes(cardsIds.toSet())
     }
 
     private suspend fun UserWalletModel.updateWalletStoresAndCalculateFiatBalance(

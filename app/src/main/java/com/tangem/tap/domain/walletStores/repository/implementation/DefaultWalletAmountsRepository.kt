@@ -12,6 +12,7 @@ import com.tangem.common.catching
 import com.tangem.common.core.TangemError
 import com.tangem.common.flatMap
 import com.tangem.common.flatMapOnFailure
+import com.tangem.common.fold
 import com.tangem.common.map
 import com.tangem.common.services.Result
 import com.tangem.datasource.api.tangemTech.TangemTechService
@@ -22,7 +23,6 @@ import com.tangem.tap.common.extensions.replaceByOrAdd
 import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.domain.model.WalletStoreModel
 import com.tangem.tap.domain.walletStores.WalletStoresError
-import com.tangem.tap.domain.walletStores.implementation.utils.fold
 import com.tangem.tap.domain.walletStores.repository.WalletAmountsRepository
 import com.tangem.tap.domain.walletStores.repository.implementation.utils.replaceWalletStore
 import com.tangem.tap.domain.walletStores.repository.implementation.utils.updateWithAmounts
