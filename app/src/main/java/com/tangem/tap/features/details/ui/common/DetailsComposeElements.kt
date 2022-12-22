@@ -26,7 +26,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.tap.common.compose.TangemTypography
 import com.tangem.wallet.R
 
 @Composable
@@ -84,8 +83,8 @@ fun ScreenTitle(
     Text(
         text = stringResource(id = titleRes),
         modifier = modifier.padding(start = 20.dp, end = 20.dp),
-        style = TangemTypography.headline1,
-        color = colorResource(id = R.color.text_primary_1),
+        style = TangemTheme.typography.h1,
+        color = TangemTheme.colors.text.primary1,
     )
 }
 
