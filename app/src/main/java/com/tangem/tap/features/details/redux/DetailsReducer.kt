@@ -4,6 +4,7 @@ import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.TapWorkarounds.isSaltPay
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.TapWorkarounds.isTangemNote
+import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.common.isTangemTwin
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.extensions.isWalletDataSupported
@@ -193,5 +194,12 @@ private fun CardDTO.toCardInfo(): CardInfo {
     val cardId = this.cardId.chunked(4).joinToString(separator = " ")
     val issuer = this.issuer.name
     val signedHashes = this.signedHashesCount()
-    return CardInfo(cardId, issuer, signedHashes)
+
+    return CardInfo(
+        cardId = cardId,
+        issuer = issuer,
+        signedHashes = signedHashes,
+        isTwin = isTangemTwins,
+        hasBackup = backupStatus?.isActive == true,
+    )
 }
