@@ -5,10 +5,13 @@ import com.tangem.feature.swap.domain.models.data.Currency
 import com.tangem.feature.swap.domain.models.data.DataError
 import com.tangem.feature.swap.domain.models.data.SwapState
 import com.tangem.feature.swap.domain.models.data.TransactionModel
+import com.tangem.lib.crypto.TransactionManager
 import com.tangem.lib.crypto.UserWalletManager
+import java.math.BigDecimal
 import javax.inject.Inject
 
 internal class SwapInteractorImpl @Inject constructor(
+    private val transactionManager: TransactionManager,
     private val userWalletManager: UserWalletManager,
     private val repository: SwapRepository,
     private val cache: SwapDataCache,
@@ -29,21 +32,40 @@ internal class SwapInteractorImpl @Inject constructor(
     }
 
     override suspend fun givePermissionToSwap(tokenAddress: String) {
-        val oneInchAddress = repository.addressForTrust()
-        val transactionData = repository.dataToApprove(tokenAddress)
-        //todo sign transaction (next tasks)
+        cache.getNetworkId()?.let { networkId ->
+            val oneInchAddress = repository.addressForTrust(networkId)
+            val transactionData = repository.dataToApprove(networkId, tokenAddress)
+            //todo for test
+            // transactionManager.sendTransaction(
+            //     networkId = networkId,
+            //     amountToSend = BigDecimal.ZERO,
+            //     currencyToSend = ,
+            //     feeAmount = BigDecimal.ZERO,
+            //     destinationAddress = oneInchAddress,
+            //     dataToSign = transactionData.data
+            // )
+        }
     }
 
     override suspend fun findBestQuote(fromTokenAddress: String, toTokenAddress: String, amount: String): SwapState {
         val networkId = cache.getNetworkId()
         val isAllowedToSpend = if (networkId.isNullOrEmpty()) {
-            false
+            error("no networkId found, please call getTokensToSwap first")
         } else {
             val allowance =
-                repository.checkTokensSpendAllowance(fromTokenAddress, userWalletManager.getWalletAddress(networkId))
+                repository.checkTokensSpendAllowance(
+                    networkId = networkId,
+                    tokenAddress = fromTokenAddress,
+                    walletAddress = userWalletManager.getWalletAddress(networkId),
+                )
             allowance.error == DataError.NO_ERROR && allowance.dataModel != "0"
         }
-        repository.findBestQuote(fromTokenAddress, toTokenAddress, amount).let { quotes ->
+        repository.findBestQuote(
+            networkId = networkId,
+            fromTokenAddress = fromTokenAddress,
+            toTokenAddress = toTokenAddress,
+            amount = amount,
+        ).let { quotes ->
             val quoteDataModel = quotes.dataModel
             if (quoteDataModel != null) {
                 cache.cacheSwapParams(quoteDataModel.copy(isAllowedToSpend = isAllowedToSpend), amount)
@@ -60,6 +82,7 @@ internal class SwapInteractorImpl @Inject constructor(
         val networkId = cache.getNetworkId()
         if (quoteModel != null && amountToSwap != null && networkId != null) {
             repository.prepareSwapTransaction(
+                networkId = networkId,
                 fromTokenAddress = quoteModel.fromTokenAmount,
                 toTokenAddress = quoteModel.toTokenAmount,
                 amount = amountToSwap,
