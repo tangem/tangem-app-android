@@ -96,11 +96,9 @@ private inline fun List<WalletStoreModel>.replaceWalletStores(
     update: (walletStore: WalletStoreModel) -> WalletStoreModel,
 ): List<WalletStoreModel> {
     val mutableStores = ArrayList<WalletStoreModel>(this)
-    mutableStores.sortBy { it.blockchain }
 
     walletStoresToUpdate
         .asSequence()
-        .sortedBy { it.blockchain }
         .map { it.blockchain to it.derivationPath }
         .forEach { (blockchain, derivationPath) ->
             val index = mutableStores.indexOfFirst {
