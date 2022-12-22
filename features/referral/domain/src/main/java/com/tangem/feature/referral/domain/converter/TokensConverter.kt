@@ -5,6 +5,7 @@ import com.tangem.lib.crypto.models.Currency
 import com.tangem.lib.crypto.models.NativeToken
 import com.tangem.lib.crypto.models.NonNativeToken
 import com.tangem.utils.converter.Converter
+
 import javax.inject.Inject
 
 class TokensConverter @Inject constructor() : Converter<TokenData, Currency> {
