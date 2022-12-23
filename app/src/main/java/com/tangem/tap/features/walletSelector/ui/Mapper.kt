@@ -31,8 +31,8 @@ internal fun WalletSelectorScreenState.updateWithNewState(
     return this.copy(
         multiCurrencyWallets = multiCurrencyWallets,
         singleCurrencyWallets = singleCurrencyWallets,
-        selectedWalletId = newState.selectedWalletId,
-        editingWalletsIds = editingWalletsIds.filter { it in walletsIds },
+        selectedUserWalletId = newState.selectedWalletId,
+        editingUserWalletsIds = editingUserWalletsIds.filter { it in walletsIds },
         isLocked = newState.isLocked,
         showUnlockProgress = newState.isUnlockInProgress,
         showAddCardProgress = newState.isCardSavingInProgress,
@@ -70,7 +70,7 @@ private fun List<UserWalletModel>.toUiModels(
                     imageUrl = artworkUrl,
                     balance = balance,
                     isLocked = isLocked,
-                    tokenName = type.blockchainName ?: "—",
+                    tokenName = type.blockchainName,
                 )
             }
         }
