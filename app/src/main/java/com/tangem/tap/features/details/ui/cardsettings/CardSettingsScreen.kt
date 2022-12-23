@@ -156,18 +156,26 @@ fun CardSettings(
                     )
                     .padding(start = 20.dp, end = 20.dp, bottom = paddingBottom, top = paddingTop),
             ) {
-                val titleColor = if (it.clickable) R.color.text_primary_1 else R.color.text_tertiary
-                val subtitleColor = if (it.clickable) R.color.text_secondary else R.color.text_tertiary
+                val titleColor = if (it.clickable) {
+                    TangemTheme.colors.text.primary1
+                } else {
+                    TangemTheme.colors.text.tertiary
+                }
+                val subtitleColor = if (it.clickable) {
+                    TangemTheme.colors.text.secondary
+                } else {
+                    TangemTheme.colors.text.tertiary
+                }
                 Text(
                     text = it.titleRes.resolveReference(),
-                    color = colorResource(id = titleColor),
-                    style = TangemTypography.subtitle1,
+                    color = titleColor,
+                    style = TangemTheme.typography.subtitle1,
                 )
                 Spacer(modifier = modifier.size(4.dp))
                 Text(
                     text = it.subtitle.resolveReference(),
-                    color = colorResource(id = subtitleColor),
-                    style = TangemTypography.body2,
+                    color = subtitleColor,
+                    style = TangemTheme.typography.body2,
                 )
             }
         }
