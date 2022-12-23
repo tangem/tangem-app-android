@@ -6,7 +6,6 @@ import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.CompletionResult
-import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.isZero
 import com.tangem.common.services.Result
 import com.tangem.domain.common.extensions.withMainContext
@@ -30,7 +29,6 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.TapError
-import com.tangem.tap.domain.extensions.isMultiwalletAllowed
 import com.tangem.tap.domain.failedRates
 import com.tangem.tap.domain.loadedRates
 import com.tangem.tap.domain.model.WalletDataModel
@@ -56,14 +54,10 @@ import com.tangem.tap.tangemSdkManager
 import com.tangem.tap.totalFiatBalanceCalculator
 import com.tangem.tap.userWalletsListManager
 import com.tangem.tap.userWalletsListManagerSafe
-import com.tangem.tap.walletStoresManager
 import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.flow.filter
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.DispatchFunction
@@ -191,8 +185,8 @@ class WalletMiddleware {
                     val result = tangemSdkManager.createWallet(globalState.scanResponse?.card?.cardId)
                     when (result) {
                         is CompletionResult.Success -> {
-                            val scanNoteResponse = globalState.scanResponse?.copy(card = result.data)
-                            scanNoteResponse?.let { store.onCardScanned(scanNoteResponse) }
+                            val scanResponse = globalState.scanResponse?.copy(card = result.data)
+                            scanResponse?.let { store.onCardScanned(scanResponse) }
                         }
                         is CompletionResult.Failure -> {}
                     }
@@ -232,12 +226,12 @@ class WalletMiddleware {
                             refresh = action is WalletAction.LoadData.Refresh,
                         )
                     } else {
-                        val scanNoteResponse = globalState.scanResponse ?: return@launch
+                        val scanResponse = globalState.scanResponse ?: return@launch
 
                         if (walletState.walletsDataFromStores.isNotEmpty()) {
-                            globalState.tapWalletManager.reloadData(scanNoteResponse)
+                            globalState.tapWalletManager.reloadData(scanResponse)
                         } else {
-                            globalState.tapWalletManager.loadData(scanNoteResponse)
+                            globalState.tapWalletManager.loadData(scanResponse)
                         }
                     }
                 }
@@ -289,19 +283,7 @@ class WalletMiddleware {
             is WalletAction.ChangeWallet -> {
                 changeWallet()
             }
-            is WalletAction.UserWalletChanged -> {
-                if (!action.userWallet.scanResponse.card.isMultiwalletAllowed) return
-
-                walletStoresManager.get(action.userWallet.walletId)
-                    .filter { it.isNotEmpty() && it.size == 1 }
-                    .onEach { walletStoreModelList ->
-                        val walletData = walletStoreModelList.firstOrNull()?.walletsData?.firstOrNull().guard {
-                            store.dispatchDebugErrorNotification("WalletStores doesn't contains any WalletData")
-                            return@onEach
-                        }
-                        store.dispatchOnMain(WalletAction.MultiWallet.SetSingleWalletCurrency(walletData.currency))
-                    }.launchIn(scope)
-            }
+            is WalletAction.UserWalletChanged -> Unit
             is WalletAction.WalletStoresChanged -> {
                 updateWalletStores(action.walletStores, walletState)
                 fetchTotalFiatBalance(action.walletStores, walletState)
@@ -314,8 +296,13 @@ class WalletMiddleware {
 
     private fun updateWalletStores(wallStores: List<WalletStoreModel>, state: WalletState) {
         scope.launch(Dispatchers.Default) {
-            val reduxWalletStores = wallStores.mapToReduxModels(state.isMultiwalletAllowed)
+            if (!state.isMultiwalletAllowed) {
+                wallStores.firstOrNull()?.walletsData?.firstOrNull()?.let {
+                    store.dispatchOnMain(WalletAction.MultiWallet.SetSingleWalletCurrency(it.currency))
+                }
+            }
 
+            val reduxWalletStores = wallStores.mapToReduxModels(state.isMultiwalletAllowed)
             store.dispatchOnMain(
                 WalletAction.WalletStoresChanged.UpdateWalletStores(
                     reduxWalletStores = reduxWalletStores.toList(),

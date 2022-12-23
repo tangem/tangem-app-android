@@ -81,6 +81,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         val inflater = TransitionInflater.from(requireContext())
         enterTransition = inflater.inflateTransition(R.transition.slide_right)
         exitTransition = inflater.inflateTransition(R.transition.fade)
+        viewModel.launch()
     }
 
     override fun onStart() {
@@ -115,7 +116,6 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         setupWarningsRecyclerView()
         walletView.changeWalletView(this, binding)
         addCustomActionOnCard()
-        viewModel.launch()
     }
 
     private fun addCustomActionOnCard() {
