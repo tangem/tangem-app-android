@@ -8,11 +8,12 @@ import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 
 interface WalletManagersRepository {
-    suspend fun findOrMake(
+    suspend fun findOrMakeMultiCurrencyWalletManager(
         userWallet: UserWallet,
-        blockchainNetwork: BlockchainNetwork? = null,
-        refresh: Boolean = false,
+        blockchainNetwork: BlockchainNetwork,
     ): CompletionResult<WalletManager>
+
+    suspend fun findOrMakeSingleCurrencyWalletManager(userWallet: UserWallet): CompletionResult<WalletManager>
 
     suspend fun delete(userWalletIds: List<UserWalletId>): CompletionResult<Unit>
 

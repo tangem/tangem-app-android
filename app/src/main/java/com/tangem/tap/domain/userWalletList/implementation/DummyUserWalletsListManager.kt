@@ -26,15 +26,11 @@ class DummyUserWalletsListManager : UserWalletsListManager {
         return CompletionResult.Success(null)
     }
 
-    override suspend fun unlockWithCard(userWallet: UserWallet): CompletionResult<Unit> {
-        return CompletionResult.Success(Unit)
-    }
-
     override fun lock() {
         /* no-op */
     }
 
-    override suspend fun selectWallet(walletId: UserWalletId): CompletionResult<UserWallet> {
+    override suspend fun selectWallet(userWalletId: UserWalletId): CompletionResult<UserWallet> {
         return catching {
             error("Not implemented")
         }
@@ -44,7 +40,7 @@ class DummyUserWalletsListManager : UserWalletsListManager {
         return CompletionResult.Success(Unit)
     }
 
-    override suspend fun delete(walletIds: List<UserWalletId>): CompletionResult<Unit> {
+    override suspend fun delete(userWalletIds: List<UserWalletId>): CompletionResult<Unit> {
         return CompletionResult.Success(Unit)
     }
 
@@ -52,7 +48,7 @@ class DummyUserWalletsListManager : UserWalletsListManager {
         return CompletionResult.Success(Unit)
     }
 
-    override suspend fun get(walletId: UserWalletId): CompletionResult<UserWallet> {
+    override suspend fun get(userWalletId: UserWalletId): CompletionResult<UserWallet> {
         return catching {
             error("Not implemented")
         }
