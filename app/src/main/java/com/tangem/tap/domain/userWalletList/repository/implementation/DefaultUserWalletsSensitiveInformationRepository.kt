@@ -3,12 +3,14 @@ package com.tangem.tap.domain.userWalletList.repository.implementation
 import android.security.keystore.KeyProperties
 import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Moshi
+import com.squareup.moshi.Types
 import com.tangem.common.CompletionResult
 import com.tangem.common.catching
 import com.tangem.common.mapFailure
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.domain.common.util.UserWalletId
 import com.tangem.domain.common.util.encryptionKey
+import com.tangem.tap.common.extensions.filterNotNull
 import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.domain.userWalletList.UserWalletListError
 import com.tangem.tap.domain.userWalletList.model.UserWalletEncryptionKey
@@ -28,29 +30,23 @@ internal class DefaultUserWalletsSensitiveInformationRepository(
     private val sensitiveInformationAdapter: JsonAdapter<UserWalletSensitiveInformation> = moshi.adapter(
         UserWalletSensitiveInformation::class.java,
     )
+    private val encryptedSensitiveInformationMapAdapter: JsonAdapter<Map<String, ByteArray>> = moshi.adapter(
+        Types.newParameterizedType(Map::class.java, String::class.java, ByteArray::class.java),
+    )
+
     private val cipher: Cipher by lazy {
         Cipher.getInstance("$algorithm/$blockMode/$encryptionPadding")
     }
 
     override suspend fun save(userWallet: UserWallet): CompletionResult<Unit> {
         return catching {
-            withContext(Dispatchers.Default) {
-                userWallet.sensitiveInformation
-                    .let(sensitiveInformationAdapter::toJson)
-                    .encodeToByteArray(throwOnInvalidSequence = true)
-                    .encryptAndStoreIv(
-                        walletId = userWallet.walletId,
-                        encryptionKey = userWallet.scanResponse.card.encryptionKey,
-                    )
-                    .let { encryptedInformation ->
-                        withContext(Dispatchers.IO) {
-                            secureStorage.store(
-                                data = encryptedInformation,
-                                account = StorageKey.SensitiveInformation(userWallet.walletId).name,
-                            )
-                        }
-                    }
-            }
+            val encryptedSensitiveInformation = userWallet.sensitiveInformation
+                .encode()
+                .encryptAndStoreIv(userWallet.walletId.stringValue, userWallet.scanResponse.card.encryptionKey)
+
+            getAllEncrypted().toMutableMap()
+                .apply { set(userWallet.walletId.stringValue, encryptedSensitiveInformation) }
+                .let { saveInternal(it) }
         }
             .mapFailure { error ->
                 UserWalletListError.SaveSensitiveInformationError(error.cause ?: error)
@@ -60,77 +56,130 @@ internal class DefaultUserWalletsSensitiveInformationRepository(
     override suspend fun getAll(
         encryptionKeys: List<UserWalletEncryptionKey>,
     ): CompletionResult<Map<UserWalletId, UserWalletSensitiveInformation>> {
+        if (encryptionKeys.isEmpty()) {
+            return CompletionResult.Success(emptyMap())
+        }
+
         return catching {
-            if (encryptionKeys.isEmpty()) {
-                return@catching emptyMap()
-            }
+            val encryptedSensitiveInformation = getAllEncrypted()
 
-            val keyToEncryptedInformation = withContext(Dispatchers.IO) {
-                encryptionKeys.associateWith { encryptionKey ->
-                    secureStorage.get(StorageKey.SensitiveInformation(encryptionKey.walletId).name)
+            encryptionKeys
+                .associateBy { it.walletId }
+                .mapValues { (userWalletId, encryptionKey) ->
+                    encryptedSensitiveInformation[userWalletId.stringValue]
+                        ?.getIvAndDecrypt(userWalletId.stringValue, encryptionKey.encryptionKey)
+                        .decodeToSensitiveInformation()
                 }
-            }
-
-            withContext(Dispatchers.Default) {
-                val keyToInformation =
-                    mutableMapOf<UserWalletId, UserWalletSensitiveInformation>()
-
-                keyToEncryptedInformation.forEach { (key, encryptedInformation) ->
-                    val information = encryptedInformation
-                        ?.getIvAndDecrypt(
-                            walletId = key.walletId,
-                            encryptionKey = key.encryptionKey,
-                        )
-                        ?.decodeToString(throwOnInvalidSequence = true)
-                        ?.let(sensitiveInformationAdapter::fromJson)
-
-                    if (information != null) {
-                        keyToInformation[key.walletId] = information
-                    }
-                }
-
-                keyToInformation
-            }
+                .filterNotNull()
         }
             .mapFailure { error ->
                 UserWalletListError.ReceiveSensitiveInformationError(error.cause ?: error)
             }
     }
 
-    override suspend fun delete(walletIds: List<UserWalletId>): CompletionResult<Unit> = catching {
-        walletIds
-            .forEach { walletId ->
-                secureStorage.delete(StorageKey.SensitiveInformation(walletId).name)
-            }
+    override suspend fun delete(userWalletsIds: List<UserWalletId>): CompletionResult<Unit> {
+        return catching { deleteInternal(userWalletsIds) }
     }
 
-    private fun ByteArray.encryptAndStoreIv(walletId: UserWalletId, encryptionKey: ByteArray): ByteArray {
-        val secretKey = SecretKeySpec(encryptionKey, algorithm)
-        cipher.init(Cipher.ENCRYPT_MODE, secretKey)
-        val encryptedData = cipher.doFinal(this)
-        secureStorage.store(data = cipher.iv, account = StorageKey.SensitiveInformationIv(walletId).name)
-        return encryptedData
+    override suspend fun clear(): CompletionResult<Unit> {
+        return catching { clearInternal() }
     }
 
-    private fun ByteArray.getIvAndDecrypt(walletId: UserWalletId, encryptionKey: ByteArray): ByteArray? {
-        val iv = secureStorage.get(StorageKey.SensitiveInformationIv(walletId).name)
-            ?: error("IV not found")
-        val ivParam = IvParameterSpec(iv)
-        val secretKeySpec = SecretKeySpec(encryptionKey, algorithm)
-        return cipher
-            .also { it.init(Cipher.DECRYPT_MODE, secretKeySpec, ivParam) }
-            .doFinal(this)
+    private suspend fun getAllEncrypted(): Map<String, ByteArray> {
+        return withContext(Dispatchers.IO) {
+            secureStorage.get(StorageKey.UserWalletsSensitiveInformation.name)
+                .decodeToEncryptedSensitiveInformation()
+        }
+    }
+
+    private suspend fun saveInternal(sensitiveInformation: Map<String, ByteArray>) {
+        return withContext(Dispatchers.IO) {
+            secureStorage.store(
+                account = StorageKey.UserWalletsSensitiveInformation.name,
+                data = sensitiveInformation.encode(),
+            )
+        }
+    }
+
+    private suspend fun deleteInternal(userWalletsIds: List<UserWalletId>) {
+        return saveInternal(
+            sensitiveInformation = getAllEncrypted() - userWalletsIds.map { it.stringValue }.toSet(),
+        )
+    }
+
+    private suspend fun clearInternal() {
+        withContext(Dispatchers.IO) {
+            secureStorage.delete(StorageKey.UserWalletsSensitiveInformation.name)
+        }
+    }
+
+    private suspend fun ByteArray?.decodeToEncryptedSensitiveInformation(): Map<String, ByteArray> {
+        return withContext(Dispatchers.Default) {
+            this@decodeToEncryptedSensitiveInformation
+                ?.decodeToString(throwOnInvalidSequence = true)
+                ?.let(encryptedSensitiveInformationMapAdapter::fromJson)
+                .orEmpty()
+        }
+    }
+
+    private suspend fun ByteArray?.decodeToSensitiveInformation(): UserWalletSensitiveInformation? {
+        return withContext(Dispatchers.Default) {
+            this@decodeToSensitiveInformation
+                ?.decodeToString(throwOnInvalidSequence = true)
+                ?.let(sensitiveInformationAdapter::fromJson)
+        }
+    }
+
+    private suspend fun UserWalletSensitiveInformation.encode(): ByteArray {
+        return withContext(Dispatchers.Default) {
+            this@encode
+                .let(sensitiveInformationAdapter::toJson)
+                .encodeToByteArray(throwOnInvalidSequence = true)
+        }
+    }
+
+    private suspend fun Map<String, ByteArray>.encode(): ByteArray {
+        return withContext(Dispatchers.Default) {
+            this@encode
+                .let(encryptedSensitiveInformationMapAdapter::toJson)
+                .encodeToByteArray(throwOnInvalidSequence = true)
+        }
+    }
+
+    private suspend fun ByteArray.encryptAndStoreIv(userWalletId: String, encryptionKey: ByteArray): ByteArray {
+        return withContext(Dispatchers.Default) {
+            val secretKey = SecretKeySpec(encryptionKey, algorithm)
+            cipher.init(Cipher.ENCRYPT_MODE, secretKey)
+            val encryptedData = cipher.doFinal(this@encryptAndStoreIv)
+            secureStorage.store(data = cipher.iv, account = StorageKey.SensitiveInformationIv(userWalletId).name)
+            encryptedData
+        }
+    }
+
+    private suspend fun ByteArray.getIvAndDecrypt(
+        userWalletId: String,
+        encryptionKey: ByteArray,
+    ): ByteArray? {
+        return withContext(Dispatchers.Default) {
+            val iv = secureStorage.get(StorageKey.SensitiveInformationIv(userWalletId).name)
+                ?: error("IV not found")
+            val ivParam = IvParameterSpec(iv)
+            val secretKeySpec = SecretKeySpec(encryptionKey, algorithm)
+            cipher
+                .also { it.init(Cipher.DECRYPT_MODE, secretKeySpec, ivParam) }
+                .doFinal(this@getIvAndDecrypt)
+        }
     }
 
     private sealed interface StorageKey {
         val name: String
 
-        class SensitiveInformation(walletId: UserWalletId) : StorageKey {
-            override val name: String = "user_wallet_sensitive_information_${walletId.stringValue}"
+        object UserWalletsSensitiveInformation : StorageKey {
+            override val name: String = "user_wallets_sensitive_information"
         }
 
-        class SensitiveInformationIv(walletId: UserWalletId) : StorageKey {
-            override val name: String = "user_wallet_sensitive_information_iv_${walletId.stringValue}"
+        class SensitiveInformationIv(userWalletId: String) : StorageKey {
+            override val name: String = "user_wallet_sensitive_information_iv_${userWalletId}"
         }
     }
 
