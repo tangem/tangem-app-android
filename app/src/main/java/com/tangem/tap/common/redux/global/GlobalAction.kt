@@ -64,7 +64,7 @@ sealed class GlobalAction : Action {
         object Increment : GlobalAction()
     }
 
-    data class SaveScanNoteResponse(val scanResponse: ScanResponse) : GlobalAction()
+    data class SaveScanResponse(val scanResponse: ScanResponse) : GlobalAction()
 
     data class SetIfCardVerifiedOnline(val verified: Boolean) : GlobalAction()
 
