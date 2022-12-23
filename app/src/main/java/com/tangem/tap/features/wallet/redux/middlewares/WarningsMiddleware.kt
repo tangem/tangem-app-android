@@ -125,7 +125,8 @@ class WarningsMiddleware {
         if (scanResponse.isTangemTwins() || scanResponse.isDemoCard()) return null
 
         if (scanResponse.card.isMultiwalletAllowed) {
-            return if (scanResponse.card.hasSignedHashes()) {
+            val isBackupForbidden = with(scanResponse.card.settings) { !(isBackupAllowed || isHDWalletAllowed) }
+            return if (scanResponse.card.hasSignedHashes() && isBackupForbidden) {
                 WarningMessagesManager.signedHashesMultiWalletWarning()
             } else {
                 store.dispatch(WalletAction.Warnings.CheckHashesCount.SaveCardId)
@@ -133,8 +134,7 @@ class WarningsMiddleware {
             }
         }
 
-        val validator = store.state.walletState.walletManagers.firstOrNull()
-            as? SignatureCountValidator
+        val validator = store.state.walletState.walletManagers.firstOrNull() as? SignatureCountValidator
         return if (validator == null) {
             if (scanResponse.card.hasSignedHashes()) {
                 WarningMessagesManager.alreadySignedHashesWarning()
