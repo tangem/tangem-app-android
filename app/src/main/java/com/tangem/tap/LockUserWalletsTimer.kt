@@ -16,7 +16,7 @@ import kotlin.time.Duration
 
 internal class LockUserWalletsTimer(
     owner: LifecycleOwner,
-    private val duration: Duration = with(Duration) { 5.minutes },
+    private val duration: Duration = with(Duration) { 10.minutes },
 ) : LifecycleOwner by owner,
     DefaultLifecycleObserver {
 
@@ -25,8 +25,6 @@ internal class LockUserWalletsTimer(
             field?.cancel()
             field = value
         }
-    private var isStopped = false
-    private var openWelcomeScreenWhenResumed = false
 
     init {
         lifecycle.addObserver(this)
@@ -35,22 +33,22 @@ internal class LockUserWalletsTimer(
     override fun onResume(owner: LifecycleOwner) {
         Timber.d(
             """
-            Owner resumed
-            |- Was stopped: $isStopped
-            |- Need to open welcome screen: $openWelcomeScreenWhenResumed
-        """.trimIndent(),
+                Owner resumed
+                |- Was stopped: ${preferencesStorage.wasApplicationStopped}
+                |- Need to open welcome screen: ${preferencesStorage.shouldOpenWelcomeScreenOnResume}
+            """.trimIndent(),
         )
-        isStopped = false
+        preferencesStorage.wasApplicationStopped = false
         start()
-        if (openWelcomeScreenWhenResumed) {
+        if (preferencesStorage.shouldOpenWelcomeScreenOnResume) {
             store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Welcome))
-            openWelcomeScreenWhenResumed = false
+            preferencesStorage.shouldOpenWelcomeScreenOnResume = false
         }
     }
 
     override fun onStop(owner: LifecycleOwner) {
         Timber.d("Owner stopped")
-        isStopped = true
+        preferencesStorage.wasApplicationStopped = true
     }
 
     override fun onDestroy(owner: LifecycleOwner) {
@@ -103,13 +101,13 @@ internal class LockUserWalletsTimer(
                 Timber.d(
                     """
                         Finished
-                        |- App is stopped: $isStopped
+                        |- App is stopped: ${preferencesStorage.wasApplicationStopped}
                         |- Millis passed: ${currentTime - startTime}
                     """.trimIndent(),
                 )
                 userWalletsListManager.lock()
-                if (isStopped) {
-                    openWelcomeScreenWhenResumed = true
+                if (preferencesStorage.wasApplicationStopped) {
+                    preferencesStorage.shouldOpenWelcomeScreenOnResume = true
                 } else {
                     store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Welcome))
                 }
