@@ -43,7 +43,8 @@ data class UserWallet(
  * TODO: Remove after https://tangem.atlassian.net/browse/AND-2638
  * */
 fun UserWallet.isTwinnedWith(other: UserWallet): Boolean {
-    if (!scanResponse.isTangemTwins()) return false
+    if (!scanResponse.isTangemTwins() || !other.scanResponse.isTangemTwins()) return false
+    if (scanResponse.secondTwinPublicKey == null || other.scanResponse.secondTwinPublicKey == null) return false
     if (other.scanResponse.secondTwinPublicKey == scanResponse.card.wallets.firstOrNull()?.publicKey?.toHexString()) {
         return true
     }

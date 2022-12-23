@@ -35,8 +35,6 @@ internal class BiometricUserWalletsKeysRepository(
         Types.newParameterizedType(List::class.java, UserWalletId::class.java),
     )
 
-    private var storedUserWalletsIds: List<UserWalletId>? = null
-
     override suspend fun getAll(): CompletionResult<List<UserWalletEncryptionKey>> {
         return withContext(Dispatchers.IO) {
             getAllInternal()
@@ -103,15 +101,11 @@ internal class BiometricUserWalletsKeysRepository(
     }
 
     private suspend fun storeEncryptionKey(encryptionKey: UserWalletEncryptionKey): CompletionResult<Unit> {
-        return if (encryptionKey.walletId in getUserWalletsIds()) {
-            CompletionResult.Success(Unit)
-        } else {
-            biometricStorage.store(
-                key = StorageKey.WalletEncryptionKey(encryptionKey.walletId).name,
-                data = encryptionKey.encode(),
-            )
-                .map { storeUserWalletId(encryptionKey.walletId) }
-        }
+        return biometricStorage.store(
+            key = StorageKey.WalletEncryptionKey(encryptionKey.walletId).name,
+            data = encryptionKey.encode(),
+        )
+            .map { storeUserWalletId(encryptionKey.walletId) }
     }
 
     private suspend fun deleteEncryptionKey(userWalletId: UserWalletId): CompletionResult<Unit> {
@@ -119,17 +113,14 @@ internal class BiometricUserWalletsKeysRepository(
     }
 
     private suspend fun getUserWalletsIds(): List<UserWalletId> {
-        return storedUserWalletsIds
-            ?: withContext(Dispatchers.IO) {
-                secureStorage.get(StorageKey.UserWalletIds.name)
-                    .decodeToUserWalletsIds()
-                    .also { storedUserWalletsIds = it }
-            }
+        return withContext(Dispatchers.IO) {
+            secureStorage.get(StorageKey.UserWalletIds.name)
+                .decodeToUserWalletsIds()
+        }
     }
 
     private suspend fun storeUserWalletId(userWalletId: UserWalletId) {
         val userWalletIds = (getUserWalletsIds() + userWalletId).distinct()
-        storedUserWalletsIds = userWalletIds
 
         withContext(Dispatchers.IO) {
             secureStorage.store(userWalletIds.encode(), StorageKey.UserWalletIds.name)
@@ -138,7 +129,6 @@ internal class BiometricUserWalletsKeysRepository(
 
     private suspend fun deleteUserWalletsIds(userWalletsIds: List<UserWalletId>) {
         val remainingIds = (getUserWalletsIds() - userWalletsIds.toSet())
-        storedUserWalletsIds = remainingIds
 
         withContext(Dispatchers.IO) {
             secureStorage.store(remainingIds.encode(), StorageKey.UserWalletIds.name)

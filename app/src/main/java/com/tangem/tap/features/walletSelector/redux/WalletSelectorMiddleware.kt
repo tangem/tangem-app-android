@@ -198,7 +198,7 @@ internal class WalletSelectorMiddleware {
                 state.wallets.size -> clearUserWallets()
                 else -> removeUserWallets(
                     userWalletsIds = userWalletsIds,
-                    selectedWalletId = state.selectedWalletId,
+                    currentSelectedWalletId = state.selectedWalletId,
                 )
             }
                 .doOnFailure { error ->
@@ -242,17 +242,21 @@ internal class WalletSelectorMiddleware {
 
     private suspend fun removeUserWallets(
         userWalletsIds: List<UserWalletId>,
-        selectedWalletId: UserWalletId?,
+        currentSelectedWalletId: UserWalletId?,
     ): CompletionResult<Unit> {
         return userWalletsListManager.delete(userWalletsIds)
             .flatMap { walletStoresManager.delete(userWalletsIds) }
             .flatMap { deleteAccessCodes(userWalletsIds) }
             .doOnSuccess {
-                val currentSelectedWallet = userWalletsListManager.selectedUserWalletSync ?: return@doOnSuccess
-                val isSelectedWalletRemoved = selectedWalletId != currentSelectedWallet.walletId
+                val selectedWallet = userWalletsListManager.selectedUserWalletSync
 
-                if (isSelectedWalletRemoved) {
-                    store.onUserWalletSelected(currentSelectedWallet)
+                when {
+                    selectedWallet == null -> {
+                        store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Welcome))
+                    }
+                    currentSelectedWalletId != selectedWallet.walletId -> {
+                        store.onUserWalletSelected(selectedWallet)
+                    }
                 }
             }
     }
