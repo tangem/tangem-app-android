@@ -1,9 +1,10 @@
 package com.tangem.tap.features.walletSelector.redux
 
+import com.tangem.domain.common.util.UserWalletId
 import com.tangem.tap.domain.model.TotalFiatBalance
 
 data class UserWalletModel(
-    val id: String,
+    val id: UserWalletId,
     val name: String,
     val artworkUrl: String,
     val type: Type,
