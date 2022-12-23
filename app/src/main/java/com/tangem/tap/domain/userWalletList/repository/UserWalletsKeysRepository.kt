@@ -15,7 +15,6 @@ internal interface UserWalletsKeysRepository {
 
     /**
      * Store the encryption keys for user wallets. Biometric authentication not required
-     * If one of these encryption keys is already stored, it is skipped
      * @param encryptionKeys List of encryption keys for user wallets
      * @return [CompletionResult] of operation
      * */
