@@ -221,7 +221,7 @@ class TokensMiddleware {
                     val updatedScanResponse = scanResponse.copy(
                         derivedKeys = updatedDerivedKeys,
                     )
-                    store.dispatchOnMain(GlobalAction.SaveScanNoteResponse(updatedScanResponse))
+                    store.dispatchOnMain(GlobalAction.SaveScanResponse(updatedScanResponse))
                     delay(DELAY_SDK_DIALOG_CLOSE)
 
                     onSuccess(updatedScanResponse)
@@ -383,7 +383,7 @@ class TokensMiddleware {
             }
         }
 
-        val addedCurrencies = store.state.walletState.wallets.map { walletStore ->
+        val addedCurrencies = store.state.walletState.walletsStores.map { walletStore ->
             walletStore.walletsData.map { walletData -> walletData.currency }
         }.flatten().map {
             when (it) {
