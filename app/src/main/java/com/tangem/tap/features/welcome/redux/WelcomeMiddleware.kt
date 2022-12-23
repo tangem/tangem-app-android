@@ -12,8 +12,10 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.model.builders.UserWalletBuilder
 import com.tangem.tap.domain.scanCard.ScanCardProcessor
 import com.tangem.tap.intentHandler
+import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
+import com.tangem.tap.tangemSdkManager
 import com.tangem.tap.userWalletsListManager
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
@@ -92,6 +94,9 @@ internal class WelcomeMiddleware {
     private suspend inline fun scanCardInternal(
         crossinline onCardScanned: suspend (ScanResponse) -> Unit,
     ) {
+        tangemSdkManager.setAccessCodeRequestPolicy(
+            useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes,
+        )
         ScanCardProcessor.scan(
             onSuccess = { scanResponse ->
                 scope.launch { onCardScanned(scanResponse) }

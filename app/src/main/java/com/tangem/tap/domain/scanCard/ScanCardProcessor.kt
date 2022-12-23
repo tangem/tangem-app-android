@@ -56,9 +56,6 @@ object ScanCardProcessor {
         onScanStateChange(true)
 
         tangemSdkManager.changeDisplayedCardIdNumbersCount(null)
-        tangemSdkManager.setAccessCodeRequestPolicy(
-            useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes,
-        )
 
         val result = tangemSdkManager.scanProduct(
             userTokensRepository = userTokensRepository,
