@@ -1,5 +1,6 @@
 package com.tangem.tap.features.walletSelector.ui.components
 
+import com.tangem.domain.common.util.UserWalletId
 import com.tangem.tap.features.walletSelector.ui.WalletSelectorScreenState
 import com.tangem.tap.features.walletSelector.ui.model.MultiCurrencyUserWalletItem
 import com.tangem.tap.features.walletSelector.ui.model.SingleCurrencyUserWalletItem
@@ -7,7 +8,7 @@ import com.tangem.tap.features.walletSelector.ui.model.UserWalletItem
 
 internal object MockData {
     private val multiCurrencyUserWallet = MultiCurrencyUserWalletItem(
-        id = "wallet_1",
+        id = UserWalletId("wallet_1"),
         balance = UserWalletItem.Balance(
             amount = "6781.05 $",
             isLoading = false,
@@ -20,7 +21,7 @@ internal object MockData {
     )
 
     private val singleCurrencyUserWallet = SingleCurrencyUserWalletItem(
-        id = "wallet_4",
+        id = UserWalletId("wallet_4"),
         balance = UserWalletItem.Balance(
             amount = "6781.05 $",
             isLoading = false,
@@ -34,11 +35,11 @@ internal object MockData {
     val state = WalletSelectorScreenState(
         multiCurrencyWallets = listOf(
             multiCurrencyUserWallet,
-            multiCurrencyUserWallet.copy(id = "wallet_2"),
-            multiCurrencyUserWallet.copy(id = "wallet_3", tokensCount = 2, cardsInWallet = 1),
+            multiCurrencyUserWallet.copy(id = UserWalletId("wallet_2")),
+            multiCurrencyUserWallet.copy(id = UserWalletId("wallet_3"), tokensCount = 2, cardsInWallet = 1),
         ),
         singleCurrencyWallets = listOf(singleCurrencyUserWallet),
-        selectedWalletId = multiCurrencyUserWallet.id,
+        selectedUserWalletId = multiCurrencyUserWallet.id,
         isLocked = false,
     )
 }
