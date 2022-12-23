@@ -208,8 +208,8 @@ class TangemShopService(application: Application, shopifyShop: ShopifyShop) {
     }
 
     companion object {
-        const val TANGEM_WALLET_2_CARDS_SKU = "TG115x2"
-        const val TANGEM_WALLET_3_CARDS_SKU = "TG115x3"
+        const val TANGEM_WALLET_2_CARDS_SKU = "TG115X2-S"
+        const val TANGEM_WALLET_3_CARDS_SKU = "TG115X3-S"
         val SKUS_TO_DISPLAY = listOf(TANGEM_WALLET_2_CARDS_SKU, TANGEM_WALLET_3_CARDS_SKU)
     }
 }
