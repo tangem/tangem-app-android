@@ -57,7 +57,7 @@ class AddTokensFragment : BaseFragment(R.layout.fragment_add_tokens), StoreSubsc
         super.onViewCreated(view, savedInstanceState)
 
         (activity as? AppCompatActivity)?.setSupportActionBar(toolbar)
-        toolbar.setNavigationOnClickListener { activity?.onBackPressed() }
+        toolbar.setNavigationOnClickListener { handleOnBackPressed() }
 
         val onSaveChanges = { tokens: List<TokenWithBlockchain>, blockchains: List<Blockchain> ->
             Analytics.send(ManageTokens.ButtonSaveChanges())
@@ -144,7 +144,6 @@ class AddTokensFragment : BaseFragment(R.layout.fragment_add_tokens), StoreSubsc
     }
 
     override fun handleOnBackPressed() {
-        super.handleOnBackPressed()
         store.dispatch(NavigationAction.PopBackTo())
         store.dispatch(TokensAction.ResetState)
     }
