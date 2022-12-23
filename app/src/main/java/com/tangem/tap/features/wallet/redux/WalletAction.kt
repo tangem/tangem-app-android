@@ -36,7 +36,7 @@ sealed class WalletAction : Action {
 
     data class LoadWallet(
         val blockchain: BlockchainNetwork? = null,
-        val walletManager: WalletManager? = null
+        val walletManager: WalletManager? = null,
     ) : WalletAction() {
         data class Success(val wallet: Wallet, val blockchain: BlockchainNetwork) : WalletAction()
         data class NoAccount(
@@ -91,6 +91,7 @@ sealed class WalletAction : Action {
         ) : MultiWallet()
 
         data class SelectWallet(val currency: Currency?) : MultiWallet()
+        data class SetSingleWalletCurrency(val currency: Currency?) : MultiWallet()
 
         data class TryToRemoveWallet(val currency: Currency) : MultiWallet()
         data class RemoveWallet(val currency: Currency) : MultiWallet()
@@ -128,7 +129,7 @@ sealed class WalletAction : Action {
         val wallet: Wallet? = null, val coinsList: List<Currency>? = null,
     ) : WalletAction() {
         data class Success(
-            val fiatRates: Map<Currency, BigDecimal?>
+            val fiatRates: Map<Currency, BigDecimal?>,
         ) : WalletAction()
 
         object Failure : WalletAction()
@@ -163,7 +164,7 @@ sealed class WalletAction : Action {
         object ChooseTradeActionDialog : DialogAction()
         data class ChooseCurrency(val amounts: List<Amount>?) : DialogAction()
         data class RussianCardholdersWarningDialog(
-            val dialogData: WalletDialog.RussianCardholdersWarningDialog.Data? = null
+            val dialogData: WalletDialog.RussianCardholdersWarningDialog.Data? = null,
         ) : DialogAction()
 
         object Hide : DialogAction()
@@ -181,12 +182,13 @@ sealed class WalletAction : Action {
         data class Buy(
             val checkUserLocation: Boolean = true,
         ) : TradeCryptoAction()
+
         data class FinishSelling(val transactionId: String) : TradeCryptoAction()
         data class SendCrypto(
             val currencyId: String,
             val amount: String,
             val destinationAddress: String,
-            val transactionId: String
+            val transactionId: String,
         ) : TradeCryptoAction()
     }
 
@@ -207,9 +209,7 @@ sealed class WalletAction : Action {
 
     data class UserWalletChanged(val userWallet: UserWallet) : WalletAction()
     data class WalletStoresChanged(val walletStores: List<WalletStoreModel>) : WalletAction() {
-        data class UpdateWalletStores(
-            val reduxWalletStores: List<WalletStore>,
-        ) : WalletAction()
+        data class UpdateWalletStores(val reduxWalletStores: List<WalletStore>) : WalletAction()
     }
 
     data class TotalFiatBalanceChanged(val balance: TotalBalance) : WalletAction()

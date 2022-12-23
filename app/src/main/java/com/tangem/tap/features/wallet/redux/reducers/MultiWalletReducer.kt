@@ -155,8 +155,12 @@ class MultiWalletReducer {
             is WalletAction.MultiWallet.SetIsMultiwalletAllowed ->
                 state.copy(isMultiwalletAllowed = action.isMultiwalletAllowed)
 
-            is WalletAction.MultiWallet.SelectWallet ->
+            is WalletAction.MultiWallet.SelectWallet -> {
                 state.copy(selectedCurrency = action.currency)
+            }
+            is WalletAction.MultiWallet.SetSingleWalletCurrency -> {
+                state.copy(selectedCurrency = action.currency)
+            }
             is WalletAction.MultiWallet.TryToRemoveWallet -> state
             is WalletAction.MultiWallet.RemoveWallet -> {
                 state.removeWalletData(state.getWalletData(action.currency))

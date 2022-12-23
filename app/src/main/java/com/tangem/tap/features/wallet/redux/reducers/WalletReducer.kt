@@ -300,15 +300,13 @@ private fun internalReduce(action: Action, state: AppState, appStateHolder: AppS
         }
         is WalletAction.TradeCryptoAction -> return newState
         is WalletAction.ChangeSelectedAddress -> {
-            val selectedWalletData = newState.getWalletData(newState.selectedWalletData?.currency)
-
-            val walletAddresses =
-                newState.getWalletData(selectedWalletData?.currency)?.walletAddresses
-                    ?: return newState
+            val walletAddresses = newState.getWalletData(newState.selectedCurrency)?.walletAddresses
+                ?: return newState
             val address = walletAddresses.list.firstOrNull { it.type == action.type }
                 ?: return newState
+
             newState = newState.updateWalletData(
-                selectedWalletData?.copy(
+                newState.selectedWalletData?.copy(
                     walletAddresses = WalletAddresses(
                         selectedAddress = address,
                         list = walletAddresses.list,
