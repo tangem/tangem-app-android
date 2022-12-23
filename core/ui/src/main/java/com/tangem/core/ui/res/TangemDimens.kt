@@ -20,6 +20,7 @@ data class TangemDimens internal constructor(
     // endregion Elevation
     // region Radius
     val radius2: Dp = 2.dp,
+    val radius3: Dp = 3.dp,
     val radius4: Dp = 4.dp,
     val radius6: Dp = 6.dp,
     val radius8: Dp = 8.dp,
@@ -61,6 +62,7 @@ data class TangemDimens internal constructor(
     val size200: Dp = 200.dp,
     // endregion Size
     // region Spacing
+    val spacing0_5: Dp = 0.5.dp,
     val spacing2: Dp = 2.dp,
     val spacing4: Dp = 4.dp,
     val spacing8: Dp = 8.dp,
