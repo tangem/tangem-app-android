@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.Flow
 interface WalletStoresRepository {
     fun getAll(): Flow<Map<UserWalletId, List<WalletStoreModel>>>
     fun get(userWalletId: UserWalletId): Flow<List<WalletStoreModel>>
+    suspend fun getSync(userWalletId: UserWalletId): List<WalletStoreModel>
 
     suspend fun contains(userWalletId: UserWalletId): Boolean
 
