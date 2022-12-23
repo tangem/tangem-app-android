@@ -11,6 +11,7 @@ data class DisclaimerState(
     val accepted: Boolean = false,
     val type: DisclaimerType = DisclaimerType.Tangem,
     val onAcceptCallback: VoidCallback? = null,
+    val onDismissCallback: VoidCallback? = null,
 ) : StateType
 
 sealed class DisclaimerType(

@@ -51,7 +51,7 @@ class MultiWalletMiddleware {
                 handleAddingWalletManagers(globalState, action.walletManagers)
             }
             is WalletAction.MultiWallet.SelectWallet -> {
-                if (action.walletData != null) {
+                if (action.currency != null) {
                     store.dispatch(NavigationAction.NavigateTo(AppScreen.WalletDetails))
                 }
             }
