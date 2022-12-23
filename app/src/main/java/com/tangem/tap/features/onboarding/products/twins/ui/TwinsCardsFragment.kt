@@ -13,6 +13,7 @@ import coil.load
 import com.tangem.Message
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.VoidCallback
+import com.tangem.core.ui.fragments.setStatusBarColor
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TwinCardNumber
 import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.LeapfrogWidget
@@ -95,6 +96,11 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
             error(R.drawable.card_placeholder_white)
             fallback(R.drawable.card_placeholder_white)
         }
+    }
+
+    override fun onStart() {
+        super.onStart()
+        setStatusBarColor(R.color.backgroundWhite)
     }
 
     private fun reconfigureLayoutForTwins(containerBinding: LayoutOnboardingContainerTopBinding) =
