@@ -44,7 +44,7 @@ class TradeCryptoMiddleware {
             return
         }
 
-        val selectedWalletData = store.state.walletState.getSelectedWalletData() ?: return
+        val selectedWalletData = store.state.walletState.selectedWalletData ?: return
         val card = store.state.globalState.scanResponse?.card ?: return
 
         val addresses = selectedWalletData.walletAddresses?.list.orEmpty()
@@ -85,7 +85,7 @@ class TradeCryptoMiddleware {
     }
 
     private fun proceedSellAction() {
-        val selectedWalletData = store.state.walletState.getSelectedWalletData() ?: return
+        val selectedWalletData = store.state.walletState.selectedWalletData ?: return
 
         val appCurrency = store.state.globalState.appCurrency
         val addresses = selectedWalletData.walletAddresses?.list.orEmpty()
@@ -107,7 +107,7 @@ class TradeCryptoMiddleware {
     }
 
     private fun preconfigureAndOpenSendScreen(action: WalletAction.TradeCryptoAction.SendCrypto) {
-        val selectedWalletData = store.state.walletState.getSelectedWalletData() ?: return
+        val selectedWalletData = store.state.walletState.selectedWalletData ?: return
 
         Analytics.send(Token.ButtonSend(AnalyticsParam.CurrencyType.Currency(selectedWalletData.currency)))
 
