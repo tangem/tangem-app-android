@@ -12,5 +12,6 @@ internal interface UserWalletsSensitiveInformationRepository {
         encryptionKeys: List<UserWalletEncryptionKey>,
     ): CompletionResult<Map<UserWalletId, UserWalletSensitiveInformation>>
 
-    suspend fun delete(walletIds: List<UserWalletId>): CompletionResult<Unit>
+    suspend fun delete(userWalletsIds: List<UserWalletId>): CompletionResult<Unit>
+    suspend fun clear(): CompletionResult<Unit>
 }
