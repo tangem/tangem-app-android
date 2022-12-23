@@ -124,6 +124,7 @@ class DetailsMiddleware {
                     scope.launch {
                         tangemSdkManager.resetToFactorySettings(card.cardId)
                             .flatMap { userWalletsListManager.delete(listOf(card.userWalletId)) }
+                            .flatMap { tangemSdkManager.deleteSavedUserCodes(setOf(card.cardId)) }
                             .doOnSuccess {
                                 Analytics.send(Settings.CardSettings.FactoryResetFinished())
 

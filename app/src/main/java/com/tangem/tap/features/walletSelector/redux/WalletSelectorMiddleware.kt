@@ -19,7 +19,6 @@ import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.domain.model.WalletStoreModel
 import com.tangem.tap.domain.model.builders.UserWalletBuilder
 import com.tangem.tap.domain.scanCard.ScanCardProcessor
-import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
@@ -159,10 +158,6 @@ internal class WalletSelectorMiddleware {
                     }
                 }
                 .doOnFailure { error ->
-                    tangemSdkManager.setAccessCodeRequestPolicy(
-                        useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes &&
-                            userWalletsListManager.selectedUserWalletSync?.hasAccessCode == true,
-                    )
                     store.dispatchOnMain(WalletSelectorAction.HandleError(error))
                 }
                 .doOnSuccess {
