@@ -92,7 +92,6 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
             state.select { it.walletState }
         }
         walletView.setFragment(this, binding)
-        viewModel.launch()
     }
 
     override fun onStop() {
@@ -116,6 +115,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         setupWarningsRecyclerView()
         walletView.changeWalletView(this, binding)
         addCustomActionOnCard()
+        viewModel.launch()
     }
 
     private fun addCustomActionOnCard() {
