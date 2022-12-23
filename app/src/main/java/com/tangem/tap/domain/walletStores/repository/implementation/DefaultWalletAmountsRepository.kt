@@ -169,6 +169,26 @@ internal class DefaultWalletAmountsRepository(
             .fold()
     }
 
+    private suspend fun fetchAmountsForUserWallet(
+        userWallet: UserWallet,
+    ): CompletionResult<Unit> = withContext(Dispatchers.Default) {
+        val walletId = userWallet.walletId
+        val scanResponse = userWallet.scanResponse
+        val walletStores = walletStoresStorage.getAll()
+            .first()
+            .getOrElse(walletId) { emptyList() }
+
+        walletStores.map { walletStore ->
+            async {
+// [REDACTED_TODO_COMMENT]
+                val walletManager = walletStore.walletManager
+                fetchAmountsForWalletStore(walletId, scanResponse, walletStore, walletManager)
+            }
+        }
+            .awaitAll()
+            .fold()
+    }
+
     private suspend fun fetchAmountsForWalletStore(
         walletId: UserWalletId,
         scanResponse: ScanResponse,
