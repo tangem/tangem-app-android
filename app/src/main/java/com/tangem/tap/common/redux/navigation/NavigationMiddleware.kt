@@ -28,15 +28,17 @@ val navigationMiddleware: Middleware<AppState> = { _, state ->
                         )
                     }
                     is NavigationAction.PopBackTo -> {
-                        when (val screen = action.screen) {
-                            AppScreen.Home,
-                            AppScreen.Welcome,
-                            -> {
-                                navState?.activity?.get()?.popBackTo(screen, inclusive = true)
-                                store.dispatchOnMain(NavigationAction.NavigateTo(screen))
-                            }
-                            else -> {
-                                navState?.activity?.get()?.popBackTo(screen, action.inclusive)
+                        if (navState?.backStack?.lastOrNull() != action.screen) {
+                            when (val screen = action.screen) {
+                                AppScreen.Home,
+                                AppScreen.Welcome,
+                                -> {
+                                    navState?.activity?.get()?.popBackTo(screen, inclusive = true)
+                                    store.dispatchOnMain(NavigationAction.NavigateTo(screen))
+                                }
+                                else -> {
+                                    navState?.activity?.get()?.popBackTo(screen, action.inclusive)
+                                }
                             }
                         }
                     }
