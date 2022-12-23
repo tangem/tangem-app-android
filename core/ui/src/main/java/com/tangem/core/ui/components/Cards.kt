@@ -268,10 +268,11 @@ private fun CardInfoBox(
         if (isLoading) {
             Box(
                 modifier = Modifier
+                    .size(width = TangemTheme.dimens.size40, height = TangemTheme.dimens.size12)
                     .shimmer()
-                    .size(
-                        width = TangemTheme.dimens.size80,
-                        height = TangemTheme.dimens.size20,
+                    .background(
+                        color = TangemTheme.colors.button.secondary,
+                        shape = RoundedCornerShape(TangemTheme.dimens.radius3),
                     ),
             )
         } else {
