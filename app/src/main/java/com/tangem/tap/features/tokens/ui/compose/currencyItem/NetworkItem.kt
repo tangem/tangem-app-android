@@ -31,10 +31,10 @@ import androidx.compose.ui.unit.sp
 import coil.compose.SubcomposeAsyncImage
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
+import com.tangem.core.ui.extensions.getActiveIconRes
 import com.tangem.tap.common.extensions.fullNameWithoutTestnet
 import com.tangem.tap.common.extensions.getGreyedOutIconRes
 import com.tangem.tap.common.extensions.getNetworkName
-import com.tangem.tap.common.extensions.getRoundIconRes
 import com.tangem.tap.domain.tokens.Contract
 import com.tangem.tap.domain.tokens.Currency
 import com.tangem.tap.features.tokens.redux.ContractAddress
@@ -85,7 +85,7 @@ fun NetworkItem(
                 .align(Alignment.CenterVertically),
         ) {
             SubcomposeAsyncImage(
-                model = if (added) blockchain.getRoundIconRes() else blockchain.getGreyedOutIconRes(),
+                model = if (added) getActiveIconRes(blockchain.id) else blockchain.getGreyedOutIconRes(),
                 contentDescription = blockchain.fullName,
                 loading = { CurrencyPlaceholderIcon(blockchain.id) },
                 error = { CurrencyPlaceholderIcon(blockchain.id) },
