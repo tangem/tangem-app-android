@@ -229,4 +229,5 @@
     <string name="common_biometrics">биометрией</string>
     <string name="app_settings_enable_biometrics_title">Включите биометрическую аутентификацию</string>
     <string name="app_settings_enable_biometrics_description">Перейдите в настройки, чтобы включить биометрическую аутентификацию в приложении Tangem App</string>
+    <string name="wallet_balance_missing_derivation">Отсканируйте карту</string>
 </resources>
