@@ -10,6 +10,9 @@ import com.tangem.operations.wallet.CreateWalletTask
 import com.tangem.operations.wallet.PurgeWalletCommand
 
 class CreateFirstTwinWalletTask(private val firstCardId: String) : CardSessionRunnable<CreateWalletResponse> {
+
+    override val allowsRequestAccessCodeFromRepository: Boolean = false
+
     override fun run(
         session: CardSession,
         callback: (result: CompletionResult<CreateWalletResponse>) -> Unit,
