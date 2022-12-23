@@ -26,6 +26,7 @@ import com.tangem.tap.totalFiatBalanceCalculator
 import com.tangem.tap.userWalletsListManager
 import com.tangem.tap.walletStoresManager
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
@@ -64,7 +65,7 @@ internal class WalletSelectorMiddleware {
                 selectWallet(action.userWalletId)
             }
             is WalletSelectorAction.RemoveWallets -> {
-                removeWallets(action.userWalletsIds, state)
+                deleteWallets(action.userWalletsIds, state)
             }
             is WalletSelectorAction.RenameWallet -> {
                 renameWallet(action.userWalletId, action.newName)
@@ -190,13 +191,13 @@ internal class WalletSelectorMiddleware {
             }
     }
 
-    private fun removeWallets(userWalletsIds: List<UserWalletId>, state: WalletSelectorState) {
+    private fun deleteWallets(userWalletsIds: List<UserWalletId>, state: WalletSelectorState) {
         Analytics.send(MyWallets.Button.DeleteWalletTapped)
 
         scope.launch {
             when (userWalletsIds.size) {
                 state.wallets.size -> clearUserWallets()
-                else -> removeUserWallets(
+                else -> deleteUserWallets(
                     userWalletsIds = userWalletsIds,
                     currentSelectedWalletId = state.selectedWalletId,
                 )
@@ -236,11 +237,14 @@ internal class WalletSelectorMiddleware {
             .flatMap { walletStoresManager.clear() }
             .flatMap { tangemSdkManager.clearSavedUserCodes() }
             .doOnSuccess {
+                // !!! Workaround !!!
+                store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
+                delay(timeMillis = 280)
                 store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Home))
             }
     }
 
-    private suspend fun removeUserWallets(
+    private suspend fun deleteUserWallets(
         userWalletsIds: List<UserWalletId>,
         currentSelectedWalletId: UserWalletId?,
     ): CompletionResult<Unit> {
