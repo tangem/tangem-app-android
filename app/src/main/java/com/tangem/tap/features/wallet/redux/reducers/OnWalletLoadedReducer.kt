@@ -17,6 +17,7 @@ import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.features.wallet.redux.WalletMainButton
 import com.tangem.tap.features.wallet.redux.WalletState
 import com.tangem.tap.features.wallet.redux.WalletState.Companion.UNKNOWN_AMOUNT_SIGN
+import com.tangem.tap.features.wallet.redux.replaceSomeWalletsData
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.features.wallet.ui.TokenData
@@ -106,18 +107,15 @@ class OnWalletLoadedReducer {
                 mainButton = WalletMainButton.SendButton(isTokenSendButtonEnabled),
             )
         }
-        val newWallets = tokens + newWalletData
-        val wallets = walletState.replaceSomeWallets((newWallets))
+        val newWalletsData = tokens + newWalletData
+        val walletsData = walletState.walletsDataFromStores.replaceSomeWalletsData(newWalletsData)
 
-        return walletState
-            .updateWalletsData(wallets)
+        return walletState.updateWalletsData(walletsData)
     }
 
     private fun onSingleWalletLoaded(wallet: Wallet, walletState: WalletState): WalletState {
         if (wallet.blockchain != walletState.primaryBlockchain) return walletState
 
-        // val ratesRespository = store.state.globalState.tapWalletManager.ratesRepository
-        // val tokenCurrency =
         val fiatCurrencyName = store.state.globalState.appCurrency.code
         val token = wallet.getFirstToken()
         val tokenData = if (token != null) {
