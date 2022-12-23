@@ -15,6 +15,7 @@ import androidx.transition.TransitionInflater
 import by.kirich1409.viewbindingdelegate.viewBinding
 import coil.load
 import coil.size.Scale
+import com.tangem.core.ui.fragments.setStatusBarColor
 import com.tangem.domain.common.TapWorkarounds.isSaltPay
 import com.tangem.tap.MainActivity
 import com.tangem.tap.common.analytics.Analytics
@@ -80,21 +81,29 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         val inflater = TransitionInflater.from(requireContext())
         enterTransition = inflater.inflateTransition(R.transition.slide_right)
         exitTransition = inflater.inflateTransition(R.transition.fade)
+        viewModel.launch()
     }
 
     override fun onStart() {
         super.onStart()
+
+        setStatusBarColor(R.color.background_secondary)
+
         store.subscribe(this) { state ->
             state.select { it.walletState }
         }
         walletView.setFragment(this, binding)
-        viewModel.launch()
     }
 
     override fun onStop() {
         super.onStop()
         store.unsubscribe(this)
         walletView.removeFragment()
+    }
+
+    override fun onDestroy() {
+        walletView.onDestroyFragment()
+        super.onDestroy()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -166,7 +175,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
 
         binding.srlWallet.isRefreshing = state.state == ProgressState.Refreshing
         binding.srlWallet.setOnRefreshListener {
-            if (state.state != ProgressState.Loading ||
+            if (state.state != ProgressState.Loading &&
                 state.state != ProgressState.Refreshing
             ) {
                 Analytics.send(Portfolio.Refreshed())

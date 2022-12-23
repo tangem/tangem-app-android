@@ -4,6 +4,7 @@ import com.tangem.blockchain.blockchains.polkadot.ExistentialDepositProvider
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.WalletManager
+import com.tangem.common.hdWallet.DerivationPath
 import com.tangem.domain.common.util.UserWalletId
 import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.domain.model.WalletStoreModel
@@ -54,10 +55,12 @@ private class BlockchainNetworkWalletStoreBuilderImpl(
 
         return WalletStoreModel(
             userWalletId = userWalletId,
-            blockchainNetwork = blockchainNetwork,
-            walletManager = walletManager,
+            blockchain = blockchainNetwork.blockchain,
+            derivationPath = blockchainNetwork.derivationPath?.let { DerivationPath(it) },
             walletsData = (listOf(blockchainWalletData) + tokensWalletsData),
             walletRent = null,
+            walletManager = walletManager,
+            blockchainNetwork = blockchainNetwork,
         )
     }
 }
@@ -74,10 +77,12 @@ private class WalletMangerWalletStoreBuilderImpl(
 
         return WalletStoreModel(
             userWalletId = userWalletId,
-            blockchainNetwork = BlockchainNetwork.fromWalletManager(walletManager),
-            walletManager = walletManager,
+            blockchain = wallet.blockchain,
+            derivationPath = wallet.publicKey.derivationPath,
             walletsData = (listOf(blockchainWalletData) + listOfNotNull(tokenWalletsData)),
             walletRent = null,
+            walletManager = walletManager,
+            blockchainNetwork = BlockchainNetwork.fromWalletManager(walletManager),
         )
     }
 }
