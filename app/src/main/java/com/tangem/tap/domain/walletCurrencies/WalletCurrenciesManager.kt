@@ -2,13 +2,12 @@ package com.tangem.tap.domain.walletCurrencies
 
 import com.tangem.common.CompletionResult
 import com.tangem.tap.domain.model.UserWallet
-import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.wallet.models.Currency
 
 interface WalletCurrenciesManager {
     suspend fun update(
         userWallet: UserWallet,
-        blockchainNetwork: BlockchainNetwork,
+        currency: Currency,
     ): CompletionResult<Unit>
 
     suspend fun addCurrencies(
