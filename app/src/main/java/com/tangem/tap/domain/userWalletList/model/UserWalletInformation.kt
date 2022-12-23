@@ -17,4 +17,5 @@ internal data class UserWalletPublicInformation(
     val artworkUrl: String,
     val cardsInWallet: Set<String>,
     val scanResponse: ScanResponse,
+    val isMultiCurrency: Boolean,
 )
