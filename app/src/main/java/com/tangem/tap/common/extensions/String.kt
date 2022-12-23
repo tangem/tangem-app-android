@@ -63,3 +63,8 @@ fun String.toQrCode(): Bitmap {
 }
 
 fun String.urlEncode(): String = Uri.encode(this)
+
+fun String.removePrefixOrNull(prefix: String): String? = when {
+    startsWith(prefix) -> substring(prefix.length)
+    else -> null
+}
