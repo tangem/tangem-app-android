@@ -3,6 +3,8 @@ package com.tangem.tap.features.wallet.ui.wallet
 import android.widget.Button
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.badoo.mvicore.DiffStrategy
+import com.badoo.mvicore.modelWatcher
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.tap.common.analytics.Analytics
@@ -33,6 +35,45 @@ class MultiWalletView : WalletView() {
 
     private lateinit var walletsAdapter: WalletAdapter
 
+    private val watcher = modelWatcher<WalletState> {
+        val totalBalanceStrategy: DiffStrategy<WalletState> = { old, new ->
+            old.cardId != new.cardId ||
+                old.totalBalance != new.totalBalance ||
+                old.state != new.state ||
+                old.walletsStores.size != new.walletsStores.size
+        }
+
+        // !!! Workaround !!!
+        // Checking state properties instead of state params can reduce application performance,
+        // but here it is necessary because the WalletStore has an unsuitable equals method
+        WalletState::walletsDataFromStores {
+            walletsAdapter.submitList(it)
+        }
+        WalletState::loadingUserTokens {
+            binding?.pbLoadingUserTokens?.show(it)
+        }
+        WalletState::walletCardsCount { walletCardsCount ->
+            binding?.let {
+                setupWalletCardNumber(it, walletCardsCount)
+            }
+        }
+        WalletState::missingDerivations { missingDerivations ->
+            binding?.let {
+                handleRescanWarning(it, missingDerivations.isNotEmpty())
+            }
+        }
+        WalletState::showBackupWarning { showBackupWarnings ->
+            binding?.let {
+                handleBackupWarning(it, showBackupWarnings)
+            }
+        }
+        watch({ it }, totalBalanceStrategy) { walletState ->
+            binding?.let {
+                handleTotalBalance(it, walletState.totalBalance, walletState.state, walletState.walletsDataFromStores.size)
+            }
+        }
+    }
+
     override fun changeWalletView(fragment: WalletFragment, binding: FragmentWalletBinding) {
         setFragment(fragment, binding)
         onViewCreated()
@@ -40,6 +81,7 @@ class MultiWalletView : WalletView() {
     }
 
     private fun showMultiWalletView(binding: FragmentWalletBinding) = with(binding) {
+        watcher.clear()
         tvTwinCardNumber.hide()
         rvPendingTransaction.hide()
         lCardBalance.root.hide()
@@ -68,13 +110,7 @@ class MultiWalletView : WalletView() {
         val fragment = fragment ?: return
         val binding = binding ?: return
 
-        handleTotalBalance(binding, state.totalBalance, state.state, state.walletsData.size)
-        handleBackupWarning(binding, state.showBackupWarning)
-        handleRescanWarning(binding, state.missingDerivations.isNotEmpty())
-        setupWalletCardNumber(binding, state.walletCardsCount)
-        walletsAdapter.submitList(state.walletsData)
-
-        binding.pbLoadingUserTokens.show(state.loadingUserTokens)
+        watcher.invoke(state)
 
         binding.btnAddToken.setOnClickListener {
             val card = store.state.globalState.scanResponse!!.card
@@ -91,7 +127,7 @@ class MultiWalletView : WalletView() {
             store.dispatch(TokensAction.AllowToAddTokens(true))
             store.dispatch(
                 TokensAction.SetAddedCurrencies(
-                    wallets = state.walletsData,
+                    wallets = state.walletsDataFromStores,
                     derivationStyle = card.derivationStyle,
                 ),
             )
@@ -139,21 +175,26 @@ class MultiWalletView : WalletView() {
         walletsCount: Int,
     ) = with(binding.lCardTotalBalance) {
         if (walletsCount == 0) {
-            root.isVisible = false
+            if (progressState != ProgressState.Loading) {
+                root.isVisible = false
+            }
         } else {
             if (totalBalance == null) {
-                veilBalance.animateVisibility(show = true)
-                root.isVisible = progressState == ProgressState.Loading
+                if (progressState != ProgressState.Loading) {
+                    root.isVisible = false
+                }
             } else {
                 root.isVisible = true
-
                 // Skip changes when on refreshing state
                 if (totalBalance.state == ProgressState.Refreshing || progressState == ProgressState.Refreshing) {
                     return@with
                 }
 
-                veilBalance.animateVisibility(show = totalBalance.state == ProgressState.Loading)
-                tvBalance.animateVisibility(show = totalBalance.state != ProgressState.Loading)
+                if (totalBalance.state == ProgressState.Loading) {
+                    veilBalance.veil()
+                } else {
+                    veilBalance.unVeil()
+                }
                 tvProcessing.animateVisibility(show = totalBalance.state == ProgressState.Error)
 
                 tvBalance.text = totalBalance.fiatAmount.formatAmountAsSpannedString(
@@ -218,6 +259,11 @@ class MultiWalletView : WalletView() {
             rowButtons.btnSend.text = fragment?.getText(R.string.wallet_button_create_wallet)
             rowButtons.onSendClick = { store.dispatch(WalletAction.CreateWallet) }
         }
+
+    override fun onDestroyFragment() {
+        super.onDestroyFragment()
+        watcher.clear()
+    }
 }
 
 private val WalletDetailsButtonsRow.btnBuy: Button

@@ -198,6 +198,7 @@ dependencies {
     implementation(Library.armadillo)
     implementation(Library.googlePlayServicesWallet)
     implementation(Library.composeShimmer)
+    implementation(Library.mviCoreWatcher)
 
     /** Testing libraries */
     testImplementation(Test.junit)
