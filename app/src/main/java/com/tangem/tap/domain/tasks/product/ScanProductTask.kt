@@ -18,6 +18,7 @@ import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.isExcluded
 import com.tangem.domain.common.TapWorkarounds.isNotSupportedInThatRelease
 import com.tangem.domain.common.TapWorkarounds.isSaltPay
+import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.TapWorkarounds.isTangemNote
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
@@ -73,7 +74,7 @@ class ScanProductTask(
                             // it need because processorResult.data.card doesn't contains attestation result
                             // and CardWallet.derivedKeys
                             val processorScanResponseWithNewCard = processorResult.data.copy(
-                                card = scanTaskResult.data
+                                card = scanTaskResult.data,
                             )
                             callback(CompletionResult.Success(processorScanResponseWithNewCard))
                         }
@@ -96,7 +97,7 @@ private class ScanNoteProcessor : ProductCommandProcessor<ScanResponse> {
     override fun proceed(
         card: Card,
         session: CardSession,
-        callback: (result: CompletionResult<ScanResponse>) -> Unit
+        callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
         callback(
             CompletionResult.Success(
@@ -145,7 +146,7 @@ private class ScanWalletProcessor(
                 is CompletionResult.Success -> {
                     PreflightReadTask(
                         readMode = PreflightReadMode.FullCardRead,
-                        cardId = card.cardId
+                        cardId = card.cardId,
                     ).run(session) { readResult ->
                         when (readResult) {
                             is CompletionResult.Success -> startLinkingForBackupIfNeeded(card, session, callback)
@@ -157,6 +158,7 @@ private class ScanWalletProcessor(
             }
         }
     }
+
     private fun startLinkingForBackupIfNeeded(
         card: Card,
         session: CardSession,
@@ -180,13 +182,15 @@ private class ScanWalletProcessor(
             deriveKeysIfNeeded(card, session, callback)
         }
     }
+
     private fun deriveKeysIfNeeded(
         card: Card,
         session: CardSession,
         callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
-        val productType = when (card.isSaltPay) {
-            true -> ProductType.SaltPay
+        val productType = when {
+            card.isSaltPay -> ProductType.SaltPay
+            card.isStart2Coin -> ProductType.Start2Coin
             else -> ProductType.Wallet
         }
         scope.launch {
@@ -251,7 +255,7 @@ private class ScanWalletProcessor(
                     Blockchain.RSK,
                     Blockchain.Fantom, Blockchain.FantomTestnet,
                     Blockchain.Avalanche, Blockchain.AvalancheTestnet,
-                ).map { BlockchainNetwork(it, card) }
+                ).map { BlockchainNetwork(it, card) },
             )
         }
         return blockchainsToDerive.distinct()
