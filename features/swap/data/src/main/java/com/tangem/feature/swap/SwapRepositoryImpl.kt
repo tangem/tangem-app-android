@@ -41,8 +41,7 @@ internal class SwapRepositoryImpl @Inject constructor(
         networkId: String, fromTokenAddress: String, toTokenAddress: String,
         amount:
         String,
-    ):
-        AggregatedSwapDataModel<QuoteModel> {
+    ): AggregatedSwapDataModel<QuoteModel> {
         return withContext(coroutineDispatcher.io) {
             try {
                 val response = oneInchErrorsHandler.handleOneInchResponse(
