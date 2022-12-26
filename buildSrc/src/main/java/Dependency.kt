@@ -66,6 +66,7 @@ object Library {
     const val zendeskMessaging = "com.zendesk:messaging:" + Versions.zendeskMessaging
     const val zxingQrBarcodeScanner = "me.dm7.barcodescanner:zxing:" + Versions.zxingQrBarcodeScanner
     const val zxingQrCore = "com.google.zxing:core:" + Versions.zxingQrCode
+    const val mviCoreWatcher = "com.github.badoo.mvicore:mvicore-diff:" + Versions.mviCore
 }
 
 object Tangem {

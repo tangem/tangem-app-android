@@ -1,9 +1,7 @@
 package com.tangem.tap.features.walletSelector.redux
 
 import com.tangem.domain.common.CardDTO
-import com.tangem.tap.common.extensions.replaceByOrAdd
 import com.tangem.tap.common.redux.AppState
-import com.tangem.tap.domain.extensions.isMultiwalletAllowed
 import com.tangem.tap.domain.model.TotalFiatBalance
 import com.tangem.tap.domain.model.UserWallet
 import org.rekotlin.Action
@@ -21,7 +19,7 @@ internal object WalletSelectorReducer {
                 wallets = action.userWallets.updateWalletsModels(state.wallets),
             )
             is WalletSelectorAction.SelectedWalletChanged -> state.copy(
-                selectedWalletId = action.selectedWallet.walletId.stringValue,
+                selectedWalletId = action.selectedWallet.walletId,
             )
             is WalletSelectorAction.IsLockedChanged -> state.copy(
                 isLocked = action.isLocked,
@@ -56,7 +54,6 @@ internal object WalletSelectorReducer {
             )
             is WalletSelectorAction.WalletStoresChanged,
             is WalletSelectorAction.SelectWallet,
-            is WalletSelectorAction.UnlockWalletWithCard,
             is WalletSelectorAction.RemoveWallets,
             is WalletSelectorAction.RenameWallet,
             -> state
@@ -66,7 +63,7 @@ internal object WalletSelectorReducer {
     private fun List<UserWallet>.updateWalletsModels(prevWallets: List<UserWalletModel>): List<UserWalletModel> {
         return this.map { userWallet ->
             prevWallets
-                .find { it.id == userWallet.walletId.stringValue }
+                .find { it.id == userWallet.walletId }
                 ?.let {
                     it.copy(
                         name = userWallet.name,
@@ -77,7 +74,7 @@ internal object WalletSelectorReducer {
                 }
                 ?: with(userWallet) {
                     UserWalletModel(
-                        id = walletId.stringValue,
+                        id = walletId,
                         name = name,
                         artworkUrl = artworkUrl,
                         type = getType(),
@@ -92,12 +89,17 @@ internal object WalletSelectorReducer {
         userWalletModel: UserWalletModel,
     ): List<UserWalletModel> {
         return ArrayList(this).apply {
-            replaceByOrAdd(userWalletModel) { it.id == userWalletModel.id }
+            val index = indexOfFirst { it.id == userWalletModel.id }
+            if (index == -1) {
+                add(userWalletModel)
+            } else {
+                this[index] = userWalletModel
+            }
         }
     }
 
     private fun UserWallet.getType(prevType: UserWalletModel.Type? = null): UserWalletModel.Type {
-        return if (scanResponse.card.isMultiwalletAllowed) {
+        return if (isMultiCurrency) {
             UserWalletModel.Type.MultiCurrency(
                 cardsInWallet = (scanResponse.card.backupStatus as? CardDTO.BackupStatus.Active)
                     ?.cardCount?.inc()

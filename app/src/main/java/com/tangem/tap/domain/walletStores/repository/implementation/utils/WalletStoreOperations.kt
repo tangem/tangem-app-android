@@ -4,16 +4,28 @@ import com.tangem.blockchain.common.Wallet
 import com.tangem.common.core.TangemError
 import com.tangem.domain.common.util.UserWalletId
 import com.tangem.tap.domain.model.WalletStoreModel
+import timber.log.Timber
 
 internal inline fun HashMap<UserWalletId, List<WalletStoreModel>>.replaceWalletStore(
-    walletId: UserWalletId,
-    walletStore: WalletStoreModel,
+    walletStoreToUpdate: WalletStoreModel,
+    update: (walletStore: WalletStoreModel) -> WalletStoreModel,
+): HashMap<UserWalletId, List<WalletStoreModel>> {
+    return replaceWalletStores(listOf(walletStoreToUpdate), update)
+}
+
+internal inline fun HashMap<UserWalletId, List<WalletStoreModel>>.replaceWalletStores(
+    walletStoresToUpdate: List<WalletStoreModel>,
     update: (walletStore: WalletStoreModel) -> WalletStoreModel,
 ): HashMap<UserWalletId, List<WalletStoreModel>> {
     return this.apply {
-        this[walletId] = this[walletId]
-            ?.replaceWalletStore(walletStore, update)
-            .orEmpty()
+        val currentWalletStores = this
+        walletStoresToUpdate
+            .groupBy { it.userWalletId }
+            .forEach { (userWalletId, walletStoresToUpdate) ->
+                currentWalletStores[userWalletId] = currentWalletStores[userWalletId]
+                    ?.replaceWalletStores(walletStoresToUpdate, update)
+                    .orEmpty()
+            }
     }
 }
 
@@ -74,20 +86,39 @@ internal fun WalletStoreModel.updateWithRent(rent: WalletStoreModel.WalletRent?)
     )
 }
 
-internal inline fun List<WalletStoreModel>.replaceWalletStore(
-    newWalletStore: WalletStoreModel,
-    update: (walletStore: WalletStoreModel) -> WalletStoreModel,
-): List<WalletStoreModel> {
-    val mutableStores = ArrayList(this)
-    for ((index, walletStore) in this.withIndex()) {
-        if (walletStore.isSameWalletStore(newWalletStore)) {
-            mutableStores[index] = update(walletStore)
-            break
-        }
-    }
-    return mutableStores
+internal fun WalletStoreModel.isSameWalletStore(other: WalletStoreModel): Boolean {
+    return this.blockchain == other.blockchain &&
+        this.derivationPath == other.derivationPath
 }
 
-internal fun WalletStoreModel.isSameWalletStore(other: WalletStoreModel): Boolean {
-    return blockchainNetwork == other.blockchainNetwork
+private inline fun List<WalletStoreModel>.replaceWalletStores(
+    walletStoresToUpdate: List<WalletStoreModel>,
+    update: (walletStore: WalletStoreModel) -> WalletStoreModel,
+): List<WalletStoreModel> {
+    val mutableStores = ArrayList<WalletStoreModel>(this)
+
+    walletStoresToUpdate
+        .asSequence()
+        .map { it.blockchain to it.derivationPath }
+        .forEach { (blockchain, derivationPath) ->
+            val index = mutableStores.indexOfFirst {
+                it.blockchain == blockchain && it.derivationPath == derivationPath
+            }
+            val currentWalletStore = mutableStores[index]
+            val updatedWalletStore = update(currentWalletStore)
+
+            if (currentWalletStore != updatedWalletStore) {
+                Timber.d(
+                    """
+                        Update wallet store in storage
+                        |- User wallet ID: ${updatedWalletStore.userWalletId}
+                        |- Blockchain: ${updatedWalletStore.blockchain}
+                    """.trimIndent(),
+                )
+
+                mutableStores[index] = updatedWalletStore
+            }
+        }
+
+    return mutableStores
 }
