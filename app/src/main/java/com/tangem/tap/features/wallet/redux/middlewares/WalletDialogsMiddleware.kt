@@ -17,7 +17,7 @@ class WalletDialogsMiddleware {
                 store.dispatchDialogShow(WalletDialog.SignedHashesMultiWalletDialog)
             }
             is WalletAction.DialogAction.ChooseTradeActionDialog -> {
-                store.state.walletState.getSelectedWalletData()?.let {
+                store.state.walletState.selectedWalletData?.let {
                     Analytics.send(Token.ButtonExchange(AnalyticsParam.CurrencyType.Currency(it.currency)))
                 }
                 store.dispatchDialogShow(WalletDialog.ChooseTradeActionDialog)

@@ -108,7 +108,7 @@ class DerivationManagerImpl(
                     val updatedScanResponse = scanResponse.copy(
                         derivedKeys = updatedDerivedKeys,
                     )
-                    appStateHolder.mainStore?.dispatchOnMain(GlobalAction.SaveScanNoteResponse(updatedScanResponse))
+                    appStateHolder.mainStore?.dispatchOnMain(GlobalAction.SaveScanResponse(updatedScanResponse))
                     delay(DELAY_SDK_DIALOG_CLOSE)
                     onSuccess(updatedScanResponse)
                 }
