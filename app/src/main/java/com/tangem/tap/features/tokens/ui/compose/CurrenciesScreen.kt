@@ -26,6 +26,7 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.tap.common.analytics.Analytics
@@ -79,6 +80,11 @@ fun CurrenciesScreen(
                 tokensState.value,
             )
         }
+    }
+
+    val statusBarColor = colorResource(id = R.color.backgroundLightGray)
+    SystemBarsEffect {
+        setSystemBarsColor(color = statusBarColor)
     }
 
     Scaffold(
