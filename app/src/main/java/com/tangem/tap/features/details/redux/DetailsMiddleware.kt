@@ -4,6 +4,7 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
+import com.tangem.common.extensions.toHexString
 import com.tangem.common.flatMap
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.common.util.userWalletId
@@ -61,7 +62,7 @@ class DetailsMiddleware {
             is DetailsAction.ManageSecurity -> manageSecurityMiddleware.handle(action)
             is DetailsAction.AppSettings -> managePrivacyMiddleware.handle(state, action)
             is DetailsAction.ShowDisclaimer -> {
-                val uri = store.state.detailsState.cardTermsOfUseUrl
+                val uri = state.cardTermsOfUseUrl
                 if (uri != null) {
                     store.dispatch(NavigationAction.OpenDocument(uri))
                 }
@@ -71,19 +72,26 @@ class DetailsMiddleware {
                 store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingTwins))
             }
             is DetailsAction.CreateBackup -> {
-                store.state.detailsState.scanResponse?.let {
+                state.scanResponse?.let {
                     store.dispatch(GlobalAction.Onboarding.Start(it, canSkipBackup = false))
                     store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingWallet))
                 }
             }
             DetailsAction.ScanCard -> {
                 scope.launch {
-                    tangemSdkManager.scanCard(cardId = state.scanResponse?.card?.cardId)
+                    tangemSdkManager.scanCard(allowRequestAccessCodeFromRepository = true)
                         .doOnSuccess { card ->
-                            val currentCardId = store.state.globalState.scanResponse?.card
-                                ?.userWalletId
-                                ?.stringValue
-                            if (card.userWalletId.stringValue == currentCardId) {
+                            val isSameWallet = state.scanResponse?.card?.userWalletId
+                                ?.equals(card.userWalletId)
+                                ?: false
+
+                            // !!! Workaround !!!
+                            // TODO: Remove after [REDACTED_JIRA]
+                            val isTwinned = card.wallets.firstOrNull()?.publicKey?.toHexString()
+                                ?.equals(state.scanResponse?.secondTwinPublicKey)
+                                ?: false
+
+                            if (isSameWallet || isTwinned) {
                                 store.dispatchOnMain(DetailsAction.PrepareCardSettingsData(card))
                             } else {
                                 store.dispatchDialogShow(
@@ -116,6 +124,7 @@ class DetailsMiddleware {
                     scope.launch {
                         tangemSdkManager.resetToFactorySettings(card.cardId)
                             .flatMap { userWalletsListManager.delete(listOf(card.userWalletId)) }
+                            .flatMap { tangemSdkManager.deleteSavedUserCodes(setOf(card.cardId)) }
                             .doOnSuccess {
                                 Analytics.send(Settings.CardSettings.FactoryResetFinished())
 
@@ -255,10 +264,10 @@ class DetailsMiddleware {
         private fun toggleSaveAccessCodes(state: DetailsState, enable: Boolean) = scope.launch {
             if (state.saveAccessCodes == enable) return@launch
             if (enable) {
+                saveAccessCodes(state)
                 if (!state.saveWallets) {
                     saveCurrentWallet(state)
                 }
-                saveAccessCodes(state)
             } else {
                 deleteSavedAccessCodes()
             }
@@ -334,12 +343,15 @@ class DetailsMiddleware {
                         useBiometricsForAccessCode = false,
                     )
 
-                    store.dispatchOnMain(
-                        DetailsAction.AppSettings.SwitchPrivacySetting.Success(
-                            setting = PrivacySetting.SaveAccessCode,
-                            enable = false,
-                        ),
-                    )
+                    tangemSdkManager.clearSavedUserCodes()
+                        .doOnSuccess {
+                            store.dispatchOnMain(
+                                DetailsAction.AppSettings.SwitchPrivacySetting.Success(
+                                    setting = PrivacySetting.SaveAccessCode,
+                                    enable = false,
+                                ),
+                            )
+                        }
                 }
         }
     }
