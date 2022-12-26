@@ -35,12 +35,6 @@ data class WalletDataModel(
         open val pendingTransactions: List<PendingTransaction> = emptyList()
         open val errorMessage: String? = null
         open val isErrorStatus: Boolean = false
-
-        fun asRefreshing() = Refreshing(
-            amount = amount,
-            pendingTransactions = pendingTransactions,
-            errorMessage = errorMessage,
-        )
     }
 
     object Loading : Status()
@@ -73,13 +67,5 @@ data class WalletDataModel(
 
     object MissedDerivation : Status() {
         override val isErrorStatus: Boolean = true
-    }
-
-    data class Refreshing(
-        override val amount: BigDecimal,
-        override val pendingTransactions: List<PendingTransaction>,
-        override val errorMessage: String?,
-    ) : Status() {
-        override val isErrorStatus: Boolean = errorMessage != null
     }
 }
