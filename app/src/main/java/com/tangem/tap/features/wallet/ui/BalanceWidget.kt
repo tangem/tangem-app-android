@@ -16,7 +16,8 @@ enum class BalanceStatus {
     Refreshing,
     NoAccount,
     EmptyCard,
-    UnknownBlockchain
+    UnknownBlockchain,
+    MissedDerivation,
 }
 
 data class BalanceWidgetData(
