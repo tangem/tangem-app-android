@@ -12,6 +12,8 @@ import com.tangem.tap.domain.walletStores.repository.implementation.utils.update
 import com.tangem.tap.domain.walletStores.storage.WalletStoresStorage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.firstOrNull
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.withContext
 
 internal class DefaultWalletStoresRepository : WalletStoresRepository {
@@ -22,11 +24,15 @@ internal class DefaultWalletStoresRepository : WalletStoresRepository {
     }
 
     override fun get(userWalletId: UserWalletId): Flow<List<WalletStoreModel>> {
-        return walletStoresStorage.get(userWalletId)
+        return getAll().map { it[userWalletId].orEmpty() }
+    }
+
+    override suspend fun getSync(userWalletId: UserWalletId): List<WalletStoreModel> {
+        return get(userWalletId).firstOrNull() ?: emptyList()
     }
 
     override suspend fun contains(userWalletId: UserWalletId): Boolean {
-        return walletStoresStorage.getSync(userWalletId).isNotEmpty()
+        return getSync(userWalletId).isNotEmpty()
     }
 
     override suspend fun delete(userWalletsIds: List<UserWalletId>): CompletionResult<Unit> = catching {
@@ -39,11 +45,13 @@ internal class DefaultWalletStoresRepository : WalletStoresRepository {
         userWalletId: UserWalletId,
         currentBlockchains: List<Blockchain>,
     ): CompletionResult<Unit> = catching {
-        walletStoresStorage.update { prevStores ->
-            prevStores.apply {
-                this[userWalletId] = this[userWalletId]
-                    ?.filter { it.blockchainNetwork.blockchain in currentBlockchains }
-                    .orEmpty()
+        if (currentBlockchains != getSync(userWalletId).map { it.blockchain }) {
+            walletStoresStorage.update { prevStores ->
+                prevStores.apply {
+                    this[userWalletId] = this[userWalletId]
+                        ?.filter { it.blockchain in currentBlockchains }
+                        .orEmpty()
+                }
             }
         }
     }
@@ -65,24 +73,22 @@ internal class DefaultWalletStoresRepository : WalletStoresRepository {
         userWalletId: UserWalletId,
         walletStore: WalletStoreModel,
     ): HashMap<UserWalletId, List<WalletStoreModel>> = withContext(Dispatchers.Default) {
-        val prevStores = this@addOrUpdate
-        val walletStores = prevStores[userWalletId]
+        val currentWalletStores = this@addOrUpdate
+        val userWalletStores = currentWalletStores[userWalletId]
 
-        if (walletStores.isNullOrEmpty()) {
-            prevStores.apply {
+        if (userWalletStores.isNullOrEmpty()) {
+            currentWalletStores.apply {
                 set(userWalletId, listOf(walletStore))
             }
         } else {
-            val oldWalletStore = walletStores.find(walletStore::isSameWalletStore)
-
-            if (oldWalletStore == null) {
-                prevStores.apply {
-                    set(userWalletId, walletStores + walletStore)
+            val currentWalletStore = userWalletStores.find(walletStore::isSameWalletStore)
+            if (currentWalletStore == null) {
+                currentWalletStores.apply {
+                    set(userWalletId, userWalletStores + walletStore)
                 }
             } else {
-                prevStores.replaceWalletStore(
-                    walletId = userWalletId,
-                    walletStore = oldWalletStore,
+                currentWalletStores.replaceWalletStore(
+                    walletStoreToUpdate = currentWalletStore,
                     update = { it.updateWithSelf(walletStore) },
                 )
             }
