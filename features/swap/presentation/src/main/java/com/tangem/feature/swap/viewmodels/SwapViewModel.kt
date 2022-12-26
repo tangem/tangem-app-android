@@ -61,21 +61,10 @@ internal class SwapViewModel @Inject constructor(
                 val tokens = referralInteractor.getTokensToSwap("binance-smart-chain")
                 val token = tokens[1]
                 val token2 = tokens[2]
-                if (token is Currency.NonNativeToken && token2 is Currency.NonNativeToken) {
-                    findBestQuotes(token.contractAddress, token2.contractAddress)
-                }
             }.onFailure {
                 Log.e("SwapViewModel", it.message ?: it.cause.toString())
             }
         }
-    }
-
-    private suspend fun findBestQuotes(fromTokenAddress: String, toTokenAddress: String) {
-        referralInteractor.findBestQuote(
-            fromTokenAddress,
-            toTokenAddress,
-            "1",
-        )
     }
 
     private fun createTestUiState(): SwapStateHolder {
