@@ -12,6 +12,7 @@ import com.tangem.domain.common.TapWorkarounds.getTangemNoteBlockchain
 import com.tangem.domain.common.TapWorkarounds.isSaltPay
 import com.tangem.domain.common.TapWorkarounds.isSaltPayVisa
 import com.tangem.domain.common.TapWorkarounds.isSaltPayWallet
+import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.TapWorkarounds.isTangemNote
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.common.TapWorkarounds.isTestCard
@@ -32,6 +33,7 @@ data class ScanResponse(
 ) : CommandResponse {
     fun getBlockchain(): Blockchain {
         return when (productType) {
+            ProductType.Start2Coin -> if (card.isTestCard) Blockchain.BitcoinTestnet else Blockchain.Bitcoin
             ProductType.SaltPay -> if (card.isTestCard) Blockchain.SaltPayTestnet else Blockchain.SaltPay
             ProductType.Note -> card.getTangemNoteBlockchain() ?: Blockchain.Unknown
             else -> {
@@ -90,7 +92,7 @@ data class ScanResponse(
 }
 
 enum class ProductType {
-    Note, Twins, Wallet, SaltPay
+    Note, Twins, Wallet, SaltPay, Start2Coin
 }
 
 val Card.productType: ProductType
@@ -98,6 +100,7 @@ val Card.productType: ProductType
         isTangemTwins -> ProductType.Twins
         isTangemNote -> ProductType.Note
         isSaltPay -> ProductType.SaltPay
+        isStart2Coin -> ProductType.Start2Coin
         else -> ProductType.Wallet
     }
 
