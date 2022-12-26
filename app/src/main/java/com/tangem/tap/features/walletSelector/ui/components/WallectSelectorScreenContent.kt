@@ -1,8 +1,8 @@
 package com.tangem.tap.features.walletSelector.ui.components
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
-import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,8 +11,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.Text
@@ -23,61 +23,84 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.SecondaryButtonIconRight
-import com.tangem.core.ui.components.SpacerH16
-import com.tangem.core.ui.components.SpacerH24
 import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.components.atoms.Hand
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.tap.features.details.ui.cardsettings.resolveReference
+import com.tangem.domain.common.util.UserWalletId
 import com.tangem.tap.features.walletSelector.ui.WalletSelectorScreenState
-import com.tangem.tap.features.walletSelector.ui.model.UserWalletItem
 import com.tangem.wallet.R
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun WalletSelectorScreenContent(
-    modifier: Modifier = Modifier,
     state: WalletSelectorScreenState,
-    onWalletClick: (walletId: String) -> Unit,
-    onWalletLongClick: (walletId: String) -> Unit,
+    onWalletClick: (UserWalletId) -> Unit,
+    onWalletLongClick: (UserWalletId) -> Unit,
     onUnlockClick: () -> Unit,
     onAddCardClick: () -> Unit,
     onClearSelectedClick: () -> Unit,
     onEditSelectedWalletClick: () -> Unit,
     onDeleteSelectedWalletsClick: () -> Unit,
 ) {
-    Column(modifier = modifier) {
-        Header(
-            modifier = Modifier
-                .padding(horizontal = TangemTheme.dimens.spacing16)
-                .fillMaxWidth(),
-            editingWalletsIds = state.editingWalletsIds,
-            onClearSelectedClick = onClearSelectedClick,
-            onEditSelectedWalletClick = onEditSelectedWalletClick,
-            onDeleteSelectedWalletsClick = onDeleteSelectedWalletsClick,
-        )
-        Column(
-            modifier = Modifier
-                .verticalScroll(
-                    state = rememberScrollState(),
-                ),
-        ) {
-            WalletsList(
-                multiCurrencyWallets = state.multiCurrencyWallets,
-                singleCurrencyWallets = state.singleCurrencyWallets,
-                selectedWalletId = state.selectedWalletId,
-                checkedWalletIds = state.editingWalletsIds,
+    LazyColumn {
+        stickyHeader {
+            Header(
+                editingWalletsIds = state.editingUserWalletsIds,
+                onClearSelectedClick = onClearSelectedClick,
+                onEditSelectedWalletClick = onEditSelectedWalletClick,
+                onDeleteSelectedWalletsClick = onDeleteSelectedWalletsClick,
+            )
+        }
+
+        item {
+            WalletsTitle(textResId = R.string.user_wallet_list_multi_header, wallets = state.multiCurrencyWallets)
+        }
+
+        itemsIndexed(
+            items = state.multiCurrencyWallets,
+            key = { _, wallet -> wallet.id.stringValue },
+        ) { _, wallet ->
+
+            WalletItem(
+                wallet = wallet,
+                isSelected = remember(state.selectedUserWalletId) { wallet.id == state.selectedUserWalletId },
+                isChecked = remember(state.editingUserWalletsIds) { wallet.id in state.editingUserWalletsIds },
                 onWalletClick = onWalletClick,
                 onWalletLongClick = onWalletLongClick,
             )
-            SpacerH24()
+        }
+
+        item {
+            WalletsTitle(textResId = R.string.user_wallet_list_single_header, wallets = state.singleCurrencyWallets)
+        }
+
+        itemsIndexed(
+            items = state.singleCurrencyWallets,
+            key = { _, wallet -> wallet.id.stringValue },
+        ) { _, wallet ->
+            WalletItem(
+                wallet = wallet,
+                isSelected = remember(state.selectedUserWalletId) { wallet.id == state.selectedUserWalletId },
+                isChecked = remember(state.editingUserWalletsIds) { wallet.id in state.editingUserWalletsIds },
+                onWalletClick = onWalletClick,
+                onWalletLongClick = onWalletLongClick,
+            )
+        }
+
+        item {
             Footer(
                 modifier = Modifier
+                    .padding(
+                        top = dimensionResource(id = R.dimen.spacing24),
+                        bottom = dimensionResource(id = R.dimen.spacing16),
+                    )
                     .padding(horizontal = TangemTheme.dimens.spacing16)
                     .fillMaxWidth(),
                 isLocked = state.isLocked,
@@ -86,25 +109,28 @@ internal fun WalletSelectorScreenContent(
                 onUnlockClick = onUnlockClick,
                 onAddCardClick = onAddCardClick,
             )
-            SpacerH16()
         }
     }
 }
 
 @Composable
 private fun Header(
-    modifier: Modifier = Modifier,
-    editingWalletsIds: List<String>,
+    editingWalletsIds: List<UserWalletId>,
     onClearSelectedClick: () -> Unit,
     onEditSelectedWalletClick: () -> Unit,
     onDeleteSelectedWalletsClick: () -> Unit,
 ) {
     val editingWalletsSize by rememberUpdatedState(newValue = editingWalletsIds.size)
-    val hasEditingWallets by remember {
-        derivedStateOf { editingWalletsSize > 0 }
-    }
+    val hasEditingWallets by remember { derivedStateOf { editingWalletsSize > 0 } }
 
-    Column(modifier = modifier) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(
+                color = TangemTheme.colors.background.plain,
+                shape = TangemTheme.shapes.bottomSheet,
+            ),
+    ) {
         Hand()
         Box(
             modifier = Modifier
@@ -114,7 +140,9 @@ private fun Header(
         ) {
             if (hasEditingWallets) {
                 EditWalletsBar(
-                    modifier = Modifier.fillMaxWidth(),
+                    modifier = Modifier
+                        .padding(horizontal = TangemTheme.dimens.spacing16)
+                        .fillMaxWidth(),
                     editingWalletsSize = editingWalletsSize,
                     onClearSelectedClick = onClearSelectedClick,
                     onEditSelectedWalletClick = onEditSelectedWalletClick,
@@ -132,44 +160,15 @@ private fun Header(
     }
 }
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun WalletsList(
-    modifier: Modifier = Modifier,
-    multiCurrencyWallets: List<UserWalletItem>,
-    singleCurrencyWallets: List<UserWalletItem>,
-    selectedWalletId: String?,
-    checkedWalletIds: List<String>,
-    onWalletClick: (walletId: String) -> Unit,
-    onWalletLongClick: (walletId: String) -> Unit,
-) {
-    Column(modifier = modifier) {
-        val walletsSection = @Composable { wallets: List<UserWalletItem> ->
-            wallets.forEachIndexed { index, wallet ->
-                if (index == 0) {
-                    Text(
-                        modifier = Modifier.padding(start = TangemTheme.dimens.spacing16),
-                        text = wallet.headerText.resolveReference(),
-                        style = TangemTheme.typography.subtitle2,
-                        color = TangemTheme.colors.text.tertiary,
-                    )
-                }
-                WalletItem(
-                    modifier = Modifier
-                        .combinedClickable(
-                            onClick = { onWalletClick(wallet.id) },
-                            onLongClick = { onWalletLongClick(wallet.id) },
-                        )
-                        .padding(all = TangemTheme.dimens.spacing16),
-                    wallet = wallet,
-                    isSelected = wallet.id == selectedWalletId,
-                    isChecked = wallet.id in checkedWalletIds,
-                )
-            }
-        }
-
-        walletsSection(multiCurrencyWallets)
-        walletsSection(singleCurrencyWallets)
+private fun WalletsTitle(@StringRes textResId: Int, wallets: List<*>) {
+    if (wallets.isNotEmpty()) {
+        Text(
+            modifier = Modifier.padding(start = TangemTheme.dimens.spacing16),
+            text = stringResource(id = textResId),
+            style = TangemTheme.typography.subtitle2,
+            color = TangemTheme.colors.text.tertiary,
+        )
     }
 }
 
@@ -278,11 +277,6 @@ private fun WalletSelectorScreenContentSample(
             .background(color = TangemTheme.colors.background.primary),
     ) {
         WalletSelectorScreenContent(
-            modifier = Modifier
-                .background(
-                    color = TangemTheme.colors.background.plain,
-                    shape = TangemTheme.shapes.bottomSheet,
-                ),
             state = MockData.state.copy(isLocked = true),
             onWalletClick = { /* no-op */ },
             onWalletLongClick = { /* no-op */ },
@@ -320,13 +314,8 @@ private fun WalletSelectorScreenContent_EditWallets_Sample(
             .background(TangemTheme.colors.background.primary),
     ) {
         WalletSelectorScreenContent(
-            modifier = Modifier
-                .background(
-                    color = TangemTheme.colors.background.plain,
-                    shape = TangemTheme.shapes.bottomSheet,
-                ),
             state = MockData.state
-                .copy(editingWalletsIds = listOf(MockData.state.multiCurrencyWallets[2].id)),
+                .copy(editingUserWalletsIds = listOf(MockData.state.multiCurrencyWallets[2].id)),
             onWalletClick = { /* no-op */ },
             onWalletLongClick = { /* no-op */ },
             onUnlockClick = { /* no-op */ },
