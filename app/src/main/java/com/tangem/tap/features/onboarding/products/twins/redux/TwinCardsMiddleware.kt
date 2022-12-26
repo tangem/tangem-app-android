@@ -6,6 +6,7 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.guard
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.extensions.withMainContext
+import com.tangem.domain.common.util.userWalletId
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.events.AnalyticsParam
@@ -31,6 +32,7 @@ import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
+import com.tangem.tap.userWalletsListManager
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
@@ -69,7 +71,7 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
     fun updateScanResponse(response: ScanResponse) {
         when (twinCardsState.mode) {
             CreateTwinWalletMode.CreateWallet -> onboardingManager?.scanResponse = response
-            CreateTwinWalletMode.RecreateWallet -> store.dispatch(GlobalAction.SaveScanNoteResponse(response))
+            CreateTwinWalletMode.RecreateWallet -> store.dispatch(GlobalAction.SaveScanResponse(response))
         }
     }
 
@@ -151,10 +153,15 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
                     finishCardActivation()
                     postUi(500) { store.dispatch(TwinCardsAction.Confetti.Show) }
                 }
-
+                TwinCardsStep.CreateFirstWallet -> {
+                    scope.launch {
+                        userWalletsListManager.delete(
+                            listOf(getScanResponse().card.userWalletId),
+                        )
+                    }
+                }
                 TwinCardsStep.None,
                 TwinCardsStep.Warning,
-                TwinCardsStep.CreateFirstWallet,
                 TwinCardsStep.CreateSecondWallet,
                 TwinCardsStep.CreateThirdWallet,
                 -> Unit
@@ -294,13 +301,14 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
             when (twinCardsState.mode) {
                 CreateTwinWalletMode.CreateWallet -> {
                     store.dispatchOnMain(GlobalAction.Onboarding.Stop)
-                    OnboardingHelper.trySaveWalletAndNavigateToWalletScreen(
-                        scanResponse = scanResponse,
-                        backupCardsIds = listOfNotNull(twinCardsState.twinCardsManager?.secondCardPublicKey),
-                    )
+                    OnboardingHelper.trySaveWalletAndNavigateToWalletScreen(scanResponse)
                 }
                 CreateTwinWalletMode.RecreateWallet -> {
-                    store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Home))
+                    if (preferencesStorage.shouldSaveUserWallets) {
+                        OnboardingHelper.trySaveWalletAndNavigateToWalletScreen(scanResponse)
+                    } else {
+                        store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Home))
+                    }
                 }
             }
         }
