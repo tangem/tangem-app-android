@@ -7,7 +7,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.SnackbarHost
 import androidx.compose.material.SnackbarHostState
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
@@ -39,18 +45,12 @@ internal class WalletSelectorBottomSheetFragment : ComposeBottomSheetFragment<Wa
 
     @OptIn(ExperimentalComposeUiApi::class)
     @Composable
-    override fun ScreenContent(
-        modifier: Modifier,
-        state: WalletSelectorScreenState,
-    ) {
+    override fun ScreenContent(modifier: Modifier, state: WalletSelectorScreenState) {
         val snackbarHostState = remember { SnackbarHostState() }
         val errorMessage by rememberUpdatedState(newValue = state.error?.resolveReference())
         val renameWalletDialog by rememberUpdatedState(newValue = state.renameWalletDialog)
 
-        Box(
-            modifier = modifier
-                .nestedScroll(connection = rememberNestedScrollInteropConnection()),
-        ) {
+        Box(modifier = modifier.nestedScroll(rememberNestedScrollInteropConnection())) {
             WalletSelectorScreenContent(
                 state = state,
                 onWalletClick = viewModel::walletClicked,
@@ -82,10 +82,7 @@ internal class WalletSelectorBottomSheetFragment : ComposeBottomSheetFragment<Wa
     }
 
     @Composable
-    private fun RenameWalletDialog(
-        modifier: Modifier = Modifier,
-        dialog: RenameWalletDialog?,
-    ) {
+    private fun RenameWalletDialog(modifier: Modifier = Modifier, dialog: RenameWalletDialog?) {
         if (dialog == null) return
         RenameWalletDialogContent(modifier, dialog)
     }

@@ -4,6 +4,8 @@ import com.tangem.blockchain.common.WalletManager
 import com.tangem.domain.common.util.UserWalletId
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -16,8 +18,8 @@ internal object WalletManagerStorage {
         managers.tryEmit(hashMapOf())
     }
 
-    suspend fun getAllSync(): Map<UserWalletId, List<WalletManager>> {
-        return managers.first()
+    fun getAll(): SharedFlow<Map<UserWalletId, List<WalletManager>>> {
+        return managers.asSharedFlow()
     }
 
     private val mutex = Mutex()
