@@ -9,7 +9,6 @@ import com.squareup.moshi.Json
  * @property toToken Destination token info
  * @property toTokenAmount Expected amount of destination token
  * @property fromTokenAmount Amount of source token
- * @property protocols Selected protocols in a path
  * @property estimatedGas gas fee
  */
 data class QuoteResponse(
@@ -17,6 +16,5 @@ data class QuoteResponse(
     @Json(name = "toToken") val toToken: TokenOneInchDto,
     @Json(name = "toTokenAmount") val toTokenAmount: String,
     @Json(name = "fromTokenAmount") val fromTokenAmount: String,
-    @Json(name = "protocols") val protocols: List<PathViewDto>,
     @Json(name = "estimatedGas") val estimatedGas: Int,
 )
