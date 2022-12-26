@@ -15,8 +15,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.layout.ContentScale
@@ -38,10 +36,6 @@ fun CardSettingsScreen(
     modifier: Modifier = Modifier,
 ) {
     val needReadCard = state.cardDetails == null
-    val backgroundColor by rememberUpdatedState(
-        newValue = if (needReadCard) TangemTheme.colors.background.primary
-        else TangemTheme.colors.background.secondary,
-    )
 
     SettingsScreensScaffold(
         content = {
@@ -52,7 +46,7 @@ fun CardSettingsScreen(
             }
         },
         titleRes = R.string.card_settings_title,
-        backgroundColor = backgroundColor,
+        backgroundColor = TangemTheme.colors.background.secondary,
         onBackClick = onBackPressed,
     )
 }
