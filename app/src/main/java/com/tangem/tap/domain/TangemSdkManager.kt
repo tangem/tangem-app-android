@@ -46,6 +46,14 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
 class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Context) {
+
+    private val userCodeRepository by lazy {
+        UserCodeRepository(
+            biometricManager = tangemSdk.biometricManager,
+            secureStorage = tangemSdk.secureStorage,
+        )
+    }
+
     val canUseBiometry: Boolean
         get() = tangemSdk.biometricManager.canAuthenticate || needEnrollBiometrics
 
@@ -119,8 +127,8 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
     }
 
     suspend fun saveAccessCode(accessCode: String, cardsIds: Set<String>): CompletionResult<Unit> {
-        return createUserCodeRepository().save(
-            cardIds = cardsIds,
+        return userCodeRepository.save(
+            cardsIds = cardsIds,
             userCode = UserCode(
                 type = UserCodeType.AccessCode,
                 stringValue = accessCode,
@@ -128,8 +136,12 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         )
     }
 
+    suspend fun deleteSavedUserCodes(cardsIds: Set<String>): CompletionResult<Unit> {
+        return userCodeRepository.delete(cardsIds.toSet())
+    }
+
     suspend fun clearSavedUserCodes(): CompletionResult<Unit> {
-        return createUserCodeRepository().clear()
+        return userCodeRepository.clear()
     }
 
     suspend fun setPasscode(cardId: String?): CompletionResult<SuccessResponse> {
@@ -166,9 +178,10 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
 
     suspend fun scanCard(
         cardId: String? = null,
+        allowRequestAccessCodeFromRepository: Boolean = false,
     ): CompletionResult<CardDTO> {
         return runTaskAsyncReturnOnMain(
-            runnable = ScanTask(),
+            runnable = ScanTask(allowRequestAccessCodeFromRepository),
             cardId = cardId,
             initialMessage = Message(context.getString(R.string.initial_message_tap_header)),
         )
@@ -219,13 +232,6 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         } else {
             UserCodeRequestPolicy.Default
         }
-    }
-
-    private fun createUserCodeRepository() = with(tangemSdk) {
-        UserCodeRepository(
-            biometricManager = biometricManager,
-            secureStorage = secureStorage,
-        )
     }
 
     companion object {

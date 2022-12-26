@@ -17,7 +17,7 @@ internal class DummyWalletStoresManager : WalletStoresManager {
         return emptyFlow()
     }
 
-    override suspend fun delete(userWalletsIds: List<String>): CompletionResult<Unit> {
+    override suspend fun delete(userWalletsIds: List<UserWalletId>): CompletionResult<Unit> {
         return CompletionResult.Success(Unit)
     }
 
@@ -30,6 +30,10 @@ internal class DummyWalletStoresManager : WalletStoresManager {
     }
 
     override suspend fun fetch(userWallets: List<UserWallet>, refresh: Boolean): CompletionResult<Unit> {
+        return CompletionResult.Success(Unit)
+    }
+
+    override suspend fun updateAmounts(userWallets: List<UserWallet>): CompletionResult<Unit> {
         return CompletionResult.Success(Unit)
     }
 }
