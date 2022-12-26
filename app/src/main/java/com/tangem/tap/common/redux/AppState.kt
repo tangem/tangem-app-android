@@ -93,6 +93,7 @@ data class AppState(
                 SaveWalletMiddleware().middleware,
                 WalletSelectorMiddleware().middleware,
                 LockUserWalletsTimerMiddleware().middleware,
+                AccessCodeRequestPolicyMiddleware().middleware,
             )
         }
     }

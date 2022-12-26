@@ -62,6 +62,9 @@ class WalletAdapter : ListAdapter<WalletData, WalletAdapter.WalletsViewHolder>(D
                 BalanceStatus.Unreachable -> {
                     root.getString(R.string.wallet_balance_blockchain_unreachable)
                 }
+                BalanceStatus.MissedDerivation -> {
+                    root.getString(R.string.wallet_balance_missing_derivation)
+                }
                 else -> null
             }
 
@@ -95,7 +98,7 @@ class WalletAdapter : ListAdapter<WalletData, WalletAdapter.WalletsViewHolder>(D
             if (wallet.walletAddresses != null) {
                 cardWallet.setOnClickListener {
                     Analytics.send(Portfolio.TokenTapped())
-                    store.dispatch(WalletAction.MultiWallet.SelectWallet(wallet))
+                    store.dispatch(WalletAction.MultiWallet.SelectWallet(wallet.currency))
                 }
             } else {
                 cardWallet.setOnClickListener(null)

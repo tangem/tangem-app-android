@@ -1,20 +1,13 @@
 package com.tangem.tap.features.walletSelector.ui.model
 
-import com.tangem.tap.features.details.ui.cardsettings.TextReference
-import com.tangem.wallet.R
+import com.tangem.domain.common.util.UserWalletId
 
 internal sealed interface UserWalletItem {
-    val id: String
+    val id: UserWalletId
     val name: String
     val imageUrl: String
     val balance: Balance
     val isLocked: Boolean
-
-    val headerText: TextReference
-        get() = when (this) {
-            is MultiCurrencyUserWalletItem -> TextReference.Res(R.string.user_wallet_list_multi_header)
-            is SingleCurrencyUserWalletItem -> TextReference.Res(R.string.user_wallet_list_single_header)
-        }
 
     data class Balance(
         val amount: String,
@@ -23,7 +16,7 @@ internal sealed interface UserWalletItem {
 }
 
 internal data class MultiCurrencyUserWalletItem(
-    override val id: String,
+    override val id: UserWalletId,
     override val name: String,
     override val imageUrl: String,
     override val balance: UserWalletItem.Balance,
@@ -33,7 +26,7 @@ internal data class MultiCurrencyUserWalletItem(
 ) : UserWalletItem
 
 internal data class SingleCurrencyUserWalletItem(
-    override val id: String,
+    override val id: UserWalletId,
     override val name: String,
     override val imageUrl: String,
     override val balance: UserWalletItem.Balance,

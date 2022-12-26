@@ -48,6 +48,7 @@ import com.tangem.tap.features.send.redux.states.ButtonState
 import com.tangem.tap.features.send.redux.states.ExternalTransactionData
 import com.tangem.tap.features.send.redux.states.MainCurrencyType
 import com.tangem.tap.features.send.redux.states.TransactionExtrasState
+import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.scope
 import com.tangem.tap.store
@@ -328,12 +329,15 @@ private fun updateWarnings(dispatch: (Action) -> Unit) {
 }
 
 private suspend fun updateWallet(walletManager: WalletManager) {
-    val blockchainNetwork = BlockchainNetwork.fromWalletManager(walletManager)
     val selectedUserWallet = userWalletsListManager.selectedUserWalletSync
     if (selectedUserWallet != null) {
+        val wallet = walletManager.wallet
         walletCurrenciesManager.update(
             userWallet = selectedUserWallet,
-            blockchainNetwork = blockchainNetwork,
+            currency = Currency.Blockchain(
+                blockchain = wallet.blockchain,
+                derivationPath = wallet.publicKey.derivationPath?.rawPath,
+            ),
         )
     } else {
         store.dispatchOnMain(WalletAction.LoadWallet(BlockchainNetwork.fromWalletManager(walletManager)))

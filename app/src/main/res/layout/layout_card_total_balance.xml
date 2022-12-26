@@ -12,8 +12,7 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="18dp"
         android:layout_marginEnd="16dp"
-        android:layout_marginBottom="18dp"
-        android:animateLayoutChanges="true">
+        android:layout_marginBottom="18dp">
 
         <TextView
             android:id="@+id/tv_title"
@@ -21,19 +20,26 @@
             android:layout_height="wrap_content"
             android:layout_marginEnd="8dp"
             android:text="@string/main_page_balance"
-            android:textColor="@color/iconGray"
+            android:textColor="@color/text_tertiary"
             android:textSize="14sp"
             app:layout_constraintEnd_toStartOf="@id/tv_currency_name"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
-        <FrameLayout
-            android:id="@+id/balance_container"
+        <com.skydoves.androidveil.VeilLayout
+            android:id="@+id/veil_balance"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="4dp"
+            android:visibility="visible"
             app:layout_constraintBottom_toTopOf="@id/tv_processing"
-            app:layout_constraintTop_toBottomOf="@id/tv_title">
+            app:layout_constraintTop_toBottomOf="@id/tv_title"
+            app:veilLayout_baseColor="@color/lightGray0"
+            app:veilLayout_highlightColor="@color/lightGray1"
+            app:veilLayout_layout="@layout/card_total_balance_shimmer"
+            app:veilLayout_radius="4dp"
+            app:veilLayout_shimmerEnable="true"
+            app:veilLayout_veiled="true">
 
             <TextView
                 android:id="@+id/tv_balance"
@@ -41,26 +47,13 @@
                 android:layout_height="wrap_content"
                 android:maxLines="1"
                 android:minWidth="152dp"
-                android:textColor="@color/darkGray6"
+                android:textColor="@color/text_primary_1"
                 android:textSize="26sp"
                 android:textStyle="bold"
-                android:visibility="gone"
-                tools:visibility="visible"
-                tools:text="22 325.40 $" />
-
-            <com.skydoves.androidveil.VeilLayout
-                android:id="@+id/veil_balance"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
                 android:visibility="visible"
-                app:veilLayout_baseColor="@color/lightGray0"
-                app:veilLayout_highlightColor="@color/lightGray1"
-                app:veilLayout_layout="@layout/card_total_balance_shimmer"
-                app:veilLayout_radius="4dp"
-                app:veilLayout_shimmerEnable="true"
-                app:veilLayout_veiled="true" />
-
-        </FrameLayout>
+                tools:text="22 325.40 $"
+                tools:visibility="visible" />
+        </com.skydoves.androidveil.VeilLayout>
 
         <TextView
             android:id="@+id/tv_processing"
@@ -68,21 +61,21 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="2dp"
             android:text="@string/main_processing_full_amount"
-            android:textColor="@color/warning"
+            android:textColor="@color/text_secondary"
             android:textSize="12sp"
             android:visibility="gone"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/balance_container"
+            app:layout_constraintTop_toBottomOf="@id/veil_balance"
             tools:visibility="visible" />
 
         <TextView
             android:id="@+id/tv_currency_name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="@color/darkGray1"
+            android:textColor="@color/text_tertiary"
             android:textSize="16sp"
             app:drawableEndCompat="@drawable/ic_arrow_angle_down"
-            app:drawableTint="@color/darkGray1"
+            app:drawableTint="@color/icon_informative"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             tools:text="USD" />

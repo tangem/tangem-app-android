@@ -4,6 +4,8 @@ import android.os.Bundle
 import android.view.View
 import androidx.transition.TransitionInflater
 import by.kirich1409.viewbindingdelegate.viewBinding
+import com.tangem.core.ui.fragments.setStatusBarColor
+import com.tangem.tap.common.extensions.configureSettings
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.BaseFragment
@@ -32,6 +34,7 @@ class DisclaimerFragment : BaseFragment(R.layout.fragment_disclaimer), StoreSubs
 
     override fun onStart() {
         super.onStart()
+        setStatusBarColor(R.color.backgroundLightGray)
         store.subscribe(subscriber = this) { state ->
             state
                 .skipRepeats { oldState, newState -> oldState.disclaimerState == newState.disclaimerState }
@@ -64,5 +67,9 @@ class DisclaimerFragment : BaseFragment(R.layout.fragment_disclaimer), StoreSubs
         }
 
         webView.loadUrl(state.type.uri.toString())
+    }
+
+    override fun handleOnBackPressed() {
+        store.dispatch(DisclaimerAction.OnBackPressed)
     }
 }

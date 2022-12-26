@@ -82,6 +82,7 @@ object ScanCardProcessor {
                     nextHandler = { scanResponse1 ->
                         showDisclaimerIfNeed(
                             scanResponse = scanResponse1,
+                            onProgressStateChange = onProgressStateChange,
                             nextHandler = { scanResponse2 ->
                                 onScanSuccess(
                                     scanResponse = scanResponse2,
@@ -127,6 +128,7 @@ object ScanCardProcessor {
 
     private suspend inline fun showDisclaimerIfNeed(
         scanResponse: ScanResponse,
+        crossinline onProgressStateChange: suspend (showProgress: Boolean) -> Unit,
         crossinline nextHandler: suspend (ScanResponse) -> Unit,
     ) {
         val disclaimerType = DisclaimerType.get(scanResponse)
@@ -137,11 +139,18 @@ object ScanCardProcessor {
         } else scope.launch(Dispatchers.Main) {
             delay(DELAY_SDK_DIALOG_CLOSE)
             store.dispatchOnMain(
-                DisclaimerAction.Show {
-                    scope.launch(Dispatchers.Main) {
-                        nextHandler(scanResponse)
-                    }
-                },
+                DisclaimerAction.Show(
+                    onAcceptCallback = {
+                        scope.launch(Dispatchers.Main) {
+                            nextHandler(scanResponse)
+                        }
+                    },
+                    onDismissCallback = {
+                        scope.launch(Dispatchers.Main) {
+                            onProgressStateChange(false)
+                        }
+                    },
+                ),
             )
         }
     }
