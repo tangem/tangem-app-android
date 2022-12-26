@@ -9,20 +9,21 @@ sealed class Currency(
     open val name: String,
     open val symbol: String,
     open val networkId: String,
-)
+) {
 
-data class NativeToken(
-    override val id: String,
-    override val name: String,
-    override val symbol: String,
-    override val networkId: String,
-) : Currency(id, name, symbol, networkId)
+    data class NativeToken(
+        override val id: String,
+        override val name: String,
+        override val symbol: String,
+        override val networkId: String,
+    ) : Currency(id, name, symbol, networkId)
 
-class NonNativeToken(
-    override val id: String,
-    override val name: String,
-    override val symbol: String,
-    override val networkId: String,
-    val contractAddress: String,
-    val decimalCount: Int,
-) : Currency(id, name, symbol, networkId)
+    class NonNativeToken(
+        override val id: String,
+        override val name: String,
+        override val symbol: String,
+        override val networkId: String,
+        val contractAddress: String,
+        val decimalCount: Int,
+    ) : Currency(id, name, symbol, networkId)
+}
