@@ -36,6 +36,7 @@ private fun List<WalletData>.mapToProgressState(): List<ProgressState> {
             BalanceStatus.Unreachable,
             BalanceStatus.EmptyCard,
             BalanceStatus.UnknownBlockchain,
+            BalanceStatus.MissedDerivation,
             -> ProgressState.Error
             BalanceStatus.Loading,
             null,
