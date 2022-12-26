@@ -22,18 +22,6 @@ data class SwapStateHolder(
     val onSuccess: (() -> Unit)? = null,
 )
 
-data class TokenToSelect(
-    val id: String,
-    val name: String,
-    val symbol: String,
-    val addedTokenBalanceData: TokenBalanceData? = null,
-)
-
-data class TokenBalanceData(
-    val amount: String?,
-    val amountEquivalent: String?,
-)
-
 data class SwapCardData(
     val type: TransactionCardType,
     val amount: String?,
