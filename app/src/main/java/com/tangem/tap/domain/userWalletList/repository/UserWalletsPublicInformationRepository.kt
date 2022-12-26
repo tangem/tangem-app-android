@@ -12,4 +12,6 @@ internal interface UserWalletsPublicInformationRepository {
 
     suspend fun delete(walletIds: List<UserWalletId>): CompletionResult<Unit>
     suspend fun clear(): CompletionResult<Unit>
+
+    fun isNotEmpty(): Boolean
 }
