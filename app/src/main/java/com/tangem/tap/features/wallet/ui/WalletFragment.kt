@@ -16,6 +16,7 @@ import by.kirich1409.viewbindingdelegate.viewBinding
 import coil.load
 import coil.size.Scale
 import com.tangem.core.ui.fragments.setStatusBarColor
+import com.tangem.core.ui.utils.OneTouchClickListener
 import com.tangem.domain.common.TapWorkarounds.isSaltPay
 import com.tangem.tap.MainActivity
 import com.tangem.tap.common.analytics.Analytics
@@ -110,9 +111,9 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         super.onViewCreated(view, savedInstanceState)
         (activity as? AppCompatActivity)?.setSupportActionBar(binding.toolbar)
 
-        binding.toolbar.setNavigationOnClickListener {
-            store.dispatch(WalletAction.ChangeWallet)
-        }
+        binding.toolbar.setNavigationOnClickListener(
+            OneTouchClickListener { store.dispatch(WalletAction.ChangeWallet) },
+        )
         setupWarningsRecyclerView()
         walletView.changeWalletView(this, binding)
         addCustomActionOnCard()
