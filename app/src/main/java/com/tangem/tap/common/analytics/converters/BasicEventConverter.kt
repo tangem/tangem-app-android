@@ -25,7 +25,7 @@ class BasicSignInEventConverter(
         val cardCurrency = ParamCardCurrencyConverter().convert(scanResponse) ?: return null
 
         return Basic.SignedIn(
-            state = AnalyticsParam.CardBalanceState.from(value.walletsData),
+            state = AnalyticsParam.CardBalanceState.from(value.walletsDataFromStores),
             currency = cardCurrency,
             batch = scanResponse.card.batchId,
         ).apply {
@@ -44,7 +44,7 @@ class BasicTopUpEventConverter(
 
         val data = BasicTopUpFilter.Data(
             walletId = scanResponse.card.userWalletId.stringValue,
-            cardBalanceState = AnalyticsParam.CardBalanceState.from(value.walletsData),
+            cardBalanceState = AnalyticsParam.CardBalanceState.from(value.walletsDataFromStores),
         )
 
         return Basic.ToppedUp(cardCurrency).apply { filterData = data }
@@ -61,16 +61,16 @@ private fun AnalyticsParam.CardBalanceState.Companion.from(walletsData: List<Wal
 
 private fun statesIsReadyToCreateEvent(scanResponse: ScanResponse, state: WalletState): Boolean {
     if (scanResponse.card.isMultiwalletAllowed && state.missingDerivations.isNotEmpty()) return false
-    if (state.walletsData.isEmpty()) return false
+    if (state.walletsDataFromStores.isEmpty()) return false
 
     val totalBalanceState = state.totalBalance?.state ?: return false
     if (totalBalanceState == ProgressState.Loading || totalBalanceState == ProgressState.Refreshing) return false
 
-    val balancesCount = state.walletsData.map {
+    val balancesCount = state.walletsDataFromStores.map {
         if (it.currencyData.amount == null) 0 else 1
     }.reduce { acc, i -> acc + i }
 
-    if (balancesCount != state.wallets.size) return false
+    if (balancesCount != state.walletsStores.size) return false
 
     return true
 }
