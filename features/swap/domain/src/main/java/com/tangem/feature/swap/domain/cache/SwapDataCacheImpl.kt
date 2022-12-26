@@ -1,16 +1,35 @@
 package com.tangem.feature.swap.domain.cache
 
+import com.tangem.feature.swap.domain.models.ExchangeCurrencies
 import com.tangem.feature.swap.domain.models.SwapDataHolder
 import com.tangem.feature.swap.domain.models.data.Currency
 import com.tangem.feature.swap.domain.models.data.SwapState.QuoteModel
+import java.math.BigDecimal
 
 class SwapDataCacheImpl : SwapDataCache {
 
     private var lastDataForSwap: SwapDataHolder = SwapDataHolder()
     private val availableTokensForNetwork: MutableMap<String, List<Currency>> = mutableMapOf()
 
-    override fun cacheSwapParams(quoteModel: QuoteModel, amount: String) {
-        lastDataForSwap = lastDataForSwap.copy(quoteModel = quoteModel, amountToSwap = amount)
+    override fun cacheSwapParams(
+        quoteModel: QuoteModel,
+        amount: BigDecimal,
+        fromCurrency: Currency,
+        toCurrency: Currency,
+    ) {
+        lastDataForSwap =
+            lastDataForSwap.copy(
+                quoteModel = quoteModel,
+                amountToSwap = amount,
+                exchangeCurrencies = ExchangeCurrencies(
+                    fromCurrency = fromCurrency,
+                    toCurrency = toCurrency,
+                ),
+            )
+    }
+
+    override fun getExchangeCurrencies(): ExchangeCurrencies? {
+        return lastDataForSwap.exchangeCurrencies
     }
 
     override fun cacheAvailableToSwapTokens(networkId: String, tokens: List<Currency>) {
@@ -33,7 +52,7 @@ class SwapDataCacheImpl : SwapDataCache {
         return lastDataForSwap.quoteModel
     }
 
-    override fun getAmountToSwap(): String? {
+    override fun getAmountToSwap(): BigDecimal? {
         return lastDataForSwap.amountToSwap
     }
 }
