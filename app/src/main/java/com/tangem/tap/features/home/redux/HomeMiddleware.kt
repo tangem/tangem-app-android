@@ -79,12 +79,16 @@ private fun readCard() = scope.launch {
         onProgressStateChange = { showProgress ->
             if (showProgress) {
                 changeButtonState(ButtonState.PROGRESS)
-            } else {
-                changeButtonState(ButtonState.ENABLED)
             }
+            // else { //todo hide this because
+            //     changeButtonState(ButtonState.ENABLED)
+            // }
         },
         onScanStateChange = { scanInProgress ->
             store.dispatch(HomeAction.ScanInProgress(scanInProgress))
+        },
+        onFailure = {
+            changeButtonState(ButtonState.ENABLED)
         },
         onSuccess = { scanResponse ->
             scope.launch {
@@ -93,21 +97,18 @@ private fun readCard() = scope.launch {
                     userWalletsListManager.save(userWallet)
                         .doOnFailure { error ->
                             Timber.e(error, "Unable to save user wallet")
-                            tangemSdkManager.setAccessCodeRequestPolicy(useBiometricsForAccessCode = false)
                             store.onCardScanned(scanResponse)
                         }
                         .doOnSuccess {
-                            tangemSdkManager.setAccessCodeRequestPolicy(
-                                useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes &&
-                                    userWallet.hasAccessCode,
-                            )
-                            store.onUserWalletSelected(userWallet)
+                            scope.launch { store.onUserWalletSelected(userWallet) }
                         }
                         .doOnResult {
+                            changeButtonState(ButtonState.ENABLED)
                             store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Wallet))
                         }
                 } else {
                     store.onCardScanned(scanResponse)
+                    changeButtonState(ButtonState.ENABLED)
                     store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Wallet))
                 }
             }
