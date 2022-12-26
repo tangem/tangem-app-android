@@ -20,11 +20,9 @@ class TwinCardsManager(
     assetReader: AssetReader,
 ) {
     private val firstCardId: String = card.cardId
-    private var secondCardId: String? = null
 
     private var currentCardPublicKey: String? = null
-    var secondCardPublicKey: String? = null
-        private set
+    private var secondCardPublicKey: String? = null
 
     private val issuerKeyPair: KeyPair = getIssuerKeys(assetReader, card.issuer.publicKey.toHexString())
 
@@ -57,7 +55,6 @@ class TwinCardsManager(
         when (response) {
             is CompletionResult.Success -> {
                 secondCardPublicKey = response.data.wallet.publicKey.toHexString()
-                secondCardId = response.data.cardId
             }
             is CompletionResult.Failure -> {}
         }
