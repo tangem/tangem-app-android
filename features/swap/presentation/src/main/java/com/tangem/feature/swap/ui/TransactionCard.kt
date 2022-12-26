@@ -3,6 +3,7 @@ package com.tangem.feature.swap.ui
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -15,10 +16,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.Card
-import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
@@ -46,9 +47,9 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.models.TransactionCardType
 import com.valentinilk.shimmer.shimmer
 
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun TransactionCard(
+    modifier: Modifier = Modifier,
     type: TransactionCardType,
     amount: String?,
     amountEquivalent: String?,
@@ -56,15 +57,12 @@ fun TransactionCard(
     tokenCurrency: String,
     @DrawableRes networkIconRes: Int? = null,
     onChangeTokenClick: (() -> Unit)? = null,
-    modifier: Modifier = Modifier,
 ) {
     Card(
         modifier = modifier,
         shape = RoundedCornerShape(TangemTheme.dimens.radius12),
         backgroundColor = TangemTheme.colors.background.primary,
         elevation = TangemTheme.dimens.elevation2,
-        onClick = onChangeTokenClick ?: {},
-        enabled = onChangeTokenClick != null,
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             Column(
@@ -96,6 +94,13 @@ fun TransactionCard(
                 Box(modifier = Modifier.align(Alignment.CenterEnd)) {
                     ChangeTokenSelector()
                 }
+                Box(
+                    Modifier
+                        .align(Alignment.CenterEnd)
+                        .height(TangemTheme.dimens.size116)
+                        .width(TangemTheme.dimens.size102)
+                        .clickable { onChangeTokenClick() },
+                )
             }
         }
 

@@ -14,9 +14,12 @@ import com.tangem.feature.swap.models.FeeState
 import com.tangem.feature.swap.models.SwapButton
 import com.tangem.feature.swap.models.SwapCardData
 import com.tangem.feature.swap.models.SwapPermissionStateHolder
+import com.tangem.feature.swap.models.SwapSelectTokenStateHolder
 import com.tangem.feature.swap.models.SwapStateHolder
 import com.tangem.feature.swap.models.SwapSuccessStateHolder
 import com.tangem.feature.swap.models.SwapWarning
+import com.tangem.feature.swap.models.TokenBalanceData
+import com.tangem.feature.swap.models.TokenToSelect
 import com.tangem.feature.swap.models.TransactionCardType
 import com.tangem.feature.swap.presentation.R
 import com.tangem.feature.swap.router.SwapRouter
@@ -45,7 +48,7 @@ internal class SwapViewModel @Inject constructor(
         swapRouter = router
         uiState = uiState.copy(
             onBackClicked = router::back,
-            onSelectTokenClick = { router.openScreen(SwapScreen.Success) },
+            onSelectTokenClick = { router.openScreen(SwapScreen.SelectToken) },
             onSuccess = { router.openScreen(SwapScreen.Success) },
         )
     }
@@ -108,6 +111,19 @@ internal class SwapViewModel @Inject constructor(
             cancelButton = CancelPermissionButton(true) {},
         )
 
+        val token = TokenToSelect(
+            id = "USDC",
+            name = "USDC",
+            symbol = "USDC",
+            iconUrl = "",
+            addedTokenBalanceData = TokenBalanceData(amount = "15 000 $", amountEquivalent = "15 000 USDT"),
+        )
+
+        val selectTokenState = SwapSelectTokenStateHolder(
+            listOf(token, token, token, token, token, token, token, token, token),
+            listOf(token, token, token, token, token, token, token, token, token), {}, {},
+        )
+
         return SwapStateHolder(
             sendCardData = sendCard,
             receiveCardData = receiveCard,
@@ -118,6 +134,7 @@ internal class SwapViewModel @Inject constructor(
             onRefresh = {}, onBackClicked = {}, onChangeCardsClicked = {},
             permissionState = permissionState,
             successState = SwapSuccessStateHolder("Success"),
+            selectTokenState = selectTokenState,
         )
     }
     // endregion temp for test
