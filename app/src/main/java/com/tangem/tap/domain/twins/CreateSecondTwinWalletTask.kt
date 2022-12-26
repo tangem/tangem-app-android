@@ -20,6 +20,8 @@ class CreateSecondTwinWalletTask(
     private val creatingWalletMessage: Message,
 ) : CardSessionRunnable<CreateWalletResponse> {
 
+    override val allowsRequestAccessCodeFromRepository: Boolean = false
+
     override fun run(session: CardSession, callback: (result: CompletionResult<CreateWalletResponse>) -> Unit) {
         val card = session.environment.card
         val publicKey = card?.wallets?.firstOrNull()?.publicKey
