@@ -33,7 +33,7 @@ fun globalReducer(action: Action, state: AppState, appStateHolder: AppStateHolde
         is GlobalAction.ScanFailsCounter.Reset -> {
             globalState.copy(scanCardFailsCounter = 0)
         }
-        is GlobalAction.SaveScanNoteResponse -> {
+        is GlobalAction.SaveScanResponse -> {
             appStateHolder.scanResponse = action.scanResponse
             domainStore.dispatch(DomainGlobalAction.SaveScanNoteResponse(action.scanResponse))
             globalState.copy(scanResponse = action.scanResponse)
