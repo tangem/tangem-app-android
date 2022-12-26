@@ -2,20 +2,24 @@ package com.tangem.tap.proxy
 
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.Message
+import com.tangem.blockchain.blockchains.ethereum.EthereumTransactionExtras
+import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.Token
+import com.tangem.blockchain.common.TransactionExtras
 import com.tangem.blockchain.common.TransactionSender
 import com.tangem.blockchain.common.TransactionSigner
 import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.extensions.Result
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.common.core.TangemSdkError
+import com.tangem.common.extensions.hexToBytes
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.lib.crypto.TransactionManager
 import com.tangem.lib.crypto.models.Currency
-import com.tangem.lib.crypto.models.NativeToken
-import com.tangem.lib.crypto.models.NonNativeToken
+import com.tangem.lib.crypto.models.ProxyAmount
 import com.tangem.lib.crypto.models.transactions.SendTxResult
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TangemSigner
@@ -23,6 +27,7 @@ import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdk
 import java.math.BigDecimal
+import java.math.BigInteger
 
 class TransactionManagerImpl(
     private val appStateHolder: AppStateHolder,
@@ -39,22 +44,13 @@ class TransactionManagerImpl(
     ): SendTxResult {
         val blockchain = requireNotNull(Blockchain.fromNetworkId(networkId)) { "blockchain not found" }
         val walletManager = getActualWalletManager(blockchain)
-        val amount = when (currencyToSend) {
-            is NativeToken -> {
-                Amount(value = amountToSend, blockchain = blockchain)
-            }
-            is NonNativeToken -> {
-                Amount(
-                    convertNonNativeToken(currencyToSend),
-                    amountToSend,
-                )
-            }
-        }
+        val amount = createAmount(amountToSend, currencyToSend, blockchain)
+
         val txData = walletManager.createTransaction(
             amount = amount,
             fee = Amount(value = feeAmount, blockchain = blockchain),
             destination = destinationAddress,
-        ).copy(hash = dataToSign)
+        ).copy(hash = dataToSign, extras = createExtras(walletManager, feeAmount, dataToSign))
 
         val signer = transactionSigner(walletManager)
 
@@ -65,6 +61,33 @@ class TransactionManagerImpl(
             return SendTxResult.UnknownError(ex)
         }
         return handleSendResult(sendResult)
+    }
+
+    @Throws(IllegalStateException::class)
+    override suspend fun getFee(
+        networkId: String,
+        amountToSend: BigDecimal,
+        currencyToSend: Currency,
+        destinationAddress: String,
+    ): ProxyAmount {
+        val blockchain = requireNotNull(Blockchain.fromNetworkId(networkId)) { "blockchain not found" }
+        val walletManager = getActualWalletManager(blockchain)
+        val fee = (walletManager as TransactionSender).getFee(
+            amount = createAmount(amountToSend, currencyToSend, blockchain),
+            destination = destinationAddress,
+        )
+        when (fee) {
+            is Result.Success -> {
+                return convertToProxyAmount(fee.data.firstOrNull() ?: error("no fee found"))
+            }
+            is Result.Failure -> {
+                error(fee.error.message ?: fee.error.customMessage)
+            }
+        }
+    }
+
+    override fun getNativeAddress(networkId: String): String {
+        return "" //todo implement
     }
 
     private fun handleSendResult(result: SimpleResult): SendTxResult {
@@ -121,7 +144,40 @@ class TransactionManagerImpl(
         }
     }
 
-    private fun convertNonNativeToken(token: NonNativeToken): Token {
+    private fun createExtras(
+        walletManager: WalletManager,
+        feeAmount: BigDecimal,
+        transactionHash: String,
+    ): TransactionExtras? {
+        return when (walletManager) {
+            is EthereumWalletManager -> {
+                return EthereumTransactionExtras(
+                    data = transactionHash.removePrefix(HEX_PREFIX).hexToBytes(),
+                    gasLimit = BigInteger.valueOf(DEFAULT_GAS_LIMIT),
+                )
+            }
+            else -> {
+                null
+            }
+        }
+    }
+
+    private fun createAmount(
+        amount: BigDecimal,
+        currency: Currency,
+        blockchain: Blockchain,
+    ): Amount {
+        return when (currency) {
+            is Currency.NativeToken -> {
+                Amount(value = amount, blockchain = blockchain)
+            }
+            is Currency.NonNativeToken -> {
+                Amount(convertNonNativeToken(currency), amount)
+            }
+        }
+    }
+
+    private fun convertNonNativeToken(token: Currency.NonNativeToken): Token {
         return Token(
             name = token.name,
             symbol = token.symbol,
@@ -129,5 +185,18 @@ class TransactionManagerImpl(
             decimals = token.decimalCount,
             id = token.id,
         )
+    }
+
+    private fun convertToProxyAmount(amount: Amount): ProxyAmount {
+        return ProxyAmount(
+            currencySymbol = amount.currencySymbol,
+            value = amount.value ?: BigDecimal.ZERO,
+            decimals = amount.decimals,
+        )
+    }
+
+    companion object {
+        private const val HEX_PREFIX = "0x"
+        private const val DEFAULT_GAS_LIMIT = 300000L
     }
 }
