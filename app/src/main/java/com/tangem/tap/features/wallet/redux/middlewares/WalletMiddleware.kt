@@ -97,11 +97,7 @@ class WalletMiddleware {
         when (action) {
             is WalletAction.TradeCryptoAction -> tradeCryptoMiddleware.handle(state, action)
             is WalletAction.Warnings -> warningsMiddleware.handle(action, globalState)
-            is WalletAction.MultiWallet -> multiWalletMiddleware.handle(
-                action,
-                walletState,
-                globalState
-            )
+            is WalletAction.MultiWallet -> multiWalletMiddleware.handle(action, walletState, globalState)
             is WalletAction.AppCurrencyAction -> appCurrencyMiddleware.handle(action)
             is WalletAction.DialogAction -> walletDialogMiddleware.handle(action)
             is WalletAction.LoadWallet -> {
@@ -129,9 +125,7 @@ class WalletMiddleware {
                                 true,
                             ),
                         )
-                        store.dispatch(
-                            action = WalletAction.LoadWallet.Success(action.wallet, action.blockchain)
-                        )
+                        store.dispatch(WalletAction.LoadWallet.Success(action.wallet, action.blockchain))
                     }
                 }
                 store.dispatch(WalletAction.Warnings.CheckHashesCount.CheckHashesCountOnline)
@@ -150,7 +144,7 @@ class WalletMiddleware {
                         action.coinsList != null -> action.coinsList
                         else -> {
                             if (walletState.isMultiwalletAllowed) {
-                                walletState.walletsData.map { it.currency }
+                                walletState.walletsDataFromStores.map { it.currency }
                             } else {
                                 val derivationPath = walletState.primaryWallet?.currency?.derivationPath
                                 val primaryBlockchain = walletState.primaryBlockchain
@@ -175,7 +169,7 @@ class WalletMiddleware {
                                 Timber.e(
                                     throwable,
                                     "Loading rates failed for [%s]",
-                                    currency.currencySymbol
+                                    currency.currencySymbol,
                                 )
                             }
                         }
@@ -188,14 +182,11 @@ class WalletMiddleware {
             }
             is WalletAction.CreateWallet -> {
                 scope.launch {
-                    val result = tangemSdkManager.createWallet(
-                        globalState.scanResponse?.card?.cardId
-                    )
+                    val result = tangemSdkManager.createWallet(globalState.scanResponse?.card?.cardId)
                     when (result) {
                         is CompletionResult.Success -> {
-                            val scanNoteResponse =
-                                globalState.scanResponse?.copy(card = result.data)
-                            scanNoteResponse?.let { store.onCardScanned(scanNoteResponse) }
+                            val scanResponse = globalState.scanResponse?.copy(card = result.data)
+                            scanResponse?.let { store.onCardScanned(scanResponse) }
                         }
                         is CompletionResult.Failure -> {}
                     }
@@ -210,9 +201,7 @@ class WalletMiddleware {
                 store.dispatchOnMain(GlobalAction.SetIfCardVerifiedOnline(!attestationFailed))
 
                 scope.launch {
-                    val response = OnlineCardVerifier().getCardInfo(
-                        action.card.cardId, action.card.cardPublicKey
-                    )
+                    val response = OnlineCardVerifier().getCardInfo(action.card.cardId, action.card.cardPublicKey)
                     when (response) {
                         is Result.Success -> {
                             val actionList = listOf(
@@ -237,11 +226,12 @@ class WalletMiddleware {
                             refresh = action is WalletAction.LoadData.Refresh,
                         )
                     } else {
-                        val scanNoteResponse = globalState.scanResponse ?: return@launch
-                        if (walletState.walletsData.isNotEmpty()) {
-                            globalState.tapWalletManager.reloadData(scanNoteResponse)
+                        val scanResponse = globalState.scanResponse ?: return@launch
+
+                        if (walletState.walletsDataFromStores.isNotEmpty()) {
+                            globalState.tapWalletManager.reloadData(scanResponse)
                         } else {
-                            globalState.tapWalletManager.loadData(scanNoteResponse)
+                            globalState.tapWalletManager.loadData(scanResponse)
                         }
                     }
                 }
@@ -249,8 +239,8 @@ class WalletMiddleware {
             is NetworkStateChanged -> {
                 store.dispatch(WalletAction.Warnings.CheckHashesCount.CheckHashesCountOnline)
                 val selectedUserWallet = userWalletsListManagerSafe?.selectedUserWalletSync
-                if (selectedUserWallet != null) scope.launch {
-                    globalState.tapWalletManager.loadData(selectedUserWallet)
+                if (selectedUserWallet != null) {
+                    scope.launch { globalState.tapWalletManager.loadData(selectedUserWallet) }
                 } else {
                     globalState.scanResponse?.let { scanNoteResponse ->
                         scope.launch { globalState.tapWalletManager.loadData(scanNoteResponse) }
@@ -295,6 +285,7 @@ class WalletMiddleware {
             }
             is WalletAction.UserWalletChanged -> Unit
             is WalletAction.WalletStoresChanged -> {
+                updateWalletStores(action.walletStores, walletState)
                 fetchTotalFiatBalance(action.walletStores, walletState)
                 findMissedDerivations(action.walletStores)
                 tryToShowAppRatingWarning(action.walletStores)
@@ -303,12 +294,29 @@ class WalletMiddleware {
         }
     }
 
+    private fun updateWalletStores(wallStores: List<WalletStoreModel>, state: WalletState) {
+        scope.launch(Dispatchers.Default) {
+            if (!state.isMultiwalletAllowed) {
+                wallStores.firstOrNull()?.walletsData?.firstOrNull()?.let {
+                    store.dispatchOnMain(WalletAction.MultiWallet.SetSingleWalletCurrency(it.currency))
+                }
+            }
+
+            val reduxWalletStores = wallStores.mapToReduxModels(state.isMultiwalletAllowed)
+            store.dispatchOnMain(
+                WalletAction.WalletStoresChanged.UpdateWalletStores(
+                    reduxWalletStores = reduxWalletStores.toList(),
+                ),
+            )
+        }
+    }
+
     private fun fetchTotalFiatBalance(walletStores: List<WalletStoreModel>, state: WalletState) {
         scope.launch(Dispatchers.Default) {
             val totalFiatBalance = totalFiatBalanceCalculator.calculateOrNull(
                 prevAmount = state.totalBalance?.fiatAmount,
                 walletStores = walletStores,
-            )
+            )?.mapToReduxModel()
 
             if (totalFiatBalance != null) {
                 store.dispatchOnMain(WalletAction.TotalFiatBalanceChanged(totalFiatBalance))
@@ -361,7 +369,7 @@ class WalletMiddleware {
     }
 
     private fun prepareSendAction(amount: Amount?, state: WalletState?): Action {
-        val selectedWalletData = state?.getSelectedWalletData()
+        val selectedWalletData = state?.selectedWalletData
         val currency = selectedWalletData?.currency
         val walletStore = state?.getWalletStore(currency)
 
@@ -376,36 +384,34 @@ class WalletMiddleware {
             if (currency != null && state.isMultiwalletAllowed) {
                 when (currency) {
                     is Currency.Blockchain -> {
-                        val amountToSend =
-                            amounts?.find { it.currencySymbol == currency.blockchain.currency }
-                                ?: return WalletAction.DialogAction.ChooseCurrency(amounts)
+                        val amountToSend = amounts?.find { it.currencySymbol == currency.blockchain.currency }
+                            ?: return WalletAction.DialogAction.ChooseCurrency(amounts)
                         PrepareSendScreen(
                             coinAmount = amountToSend,
                             coinRate = selectedWalletData.fiatRate,
-                            walletManager = walletStore.walletManager
+                            walletManager = walletStore.walletManager,
                         )
                     }
                     is Currency.Token -> {
-                        val amountToSend =
-                            amounts?.find { it.currencySymbol == currency.token.symbol }
-                                ?: return WalletAction.DialogAction.ChooseCurrency(amounts)
+                        val amountToSend = amounts?.find { it.currencySymbol == currency.token.symbol }
+                            ?: return WalletAction.DialogAction.ChooseCurrency(amounts)
                         prepareSendActionForToken(
                             amount = amountToSend,
                             state = state,
                             selectedWalletData = selectedWalletData,
-                            walletStore = walletStore
+                            walletStore = walletStore,
                         )
                     }
                 }
             } else {
-                if (amounts?.size ?: 0 > 1) {
+                if ((amounts?.size ?: 0) > 1) {
                     WalletAction.DialogAction.ChooseCurrency(amounts)
                 } else {
                     val amountToSend = amounts?.first()
                     PrepareSendScreen(
                         coinAmount = amountToSend,
                         coinRate = selectedWalletData?.fiatRate,
-                        walletManager = walletStore?.walletManager
+                        walletManager = walletStore?.walletManager,
                     )
                 }
             }
@@ -416,7 +422,7 @@ class WalletMiddleware {
         amount: Amount,
         state: WalletState?,
         selectedWalletData: WalletData?,
-        walletStore: WalletStore?
+        walletStore: WalletStore?,
     ): PrepareSendScreen {
         val coinRate = state?.getWalletData(walletStore?.blockchainNetwork)?.fiatRate
         val tokenRate = if (state?.isMultiwalletAllowed == true) {
@@ -431,7 +437,7 @@ class WalletMiddleware {
             coinRate = coinRate,
             walletManager = walletStore?.walletManager,
             tokenAmount = amount,
-            tokenRate = tokenRate
+            tokenRate = tokenRate,
         )
     }
 
@@ -447,7 +453,7 @@ class WalletMiddleware {
 
                     val balance = walletManager.wallet.fundsAvailable(AmountType.Coin)
                     val outgoingTxs = walletManager.wallet.getPendingTransactions(
-                        PendingTransactionType.Outgoing
+                        PendingTransactionType.Outgoing,
                     ).filterByCoin()
 
                     val rentExempt = result.data
@@ -465,8 +471,8 @@ class WalletMiddleware {
                             WalletAction.SetWalletRent(
                                 wallet = walletManager.wallet,
                                 minRent = ("${rentProvider.rentAmount().stripZeroPlainString()} $currency"),
-                                rentExempt = ("${rentExempt.stripZeroPlainString()} $currency")
-                            )
+                                rentExempt = ("${rentExempt.stripZeroPlainString()} $currency"),
+                            ),
                         )
                     } else {
                         dispatchOnMain(WalletAction.RemoveWalletRent(walletManager.wallet))

@@ -94,7 +94,6 @@ internal class SaveWalletMiddleware {
 
             saveAccessCodeIfNeeded(state.backupInfo?.accessCode, userWallet.cardsInWallet)
                 .flatMap { userWalletsListManager.save(userWallet, canOverride = true) }
-                .flatMap { userWalletsListManager.selectWallet(userWallet.walletId) }
                 .doOnFailure { error ->
                     store.dispatchOnMain(SaveWalletAction.Save.Error(error))
                 }
@@ -104,12 +103,6 @@ internal class SaveWalletMiddleware {
                     // Enable saving access codes only if this is the first time user save the wallet
                     preferencesStorage.shouldSaveAccessCodes = isFirstSavedWallet ||
                         preferencesStorage.shouldSaveAccessCodes
-
-
-                    tangemSdkManager.setAccessCodeRequestPolicy(
-                        useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes &&
-                            userWallet.hasAccessCode,
-                    )
 
                     store.dispatchOnMain(SaveWalletAction.Save.Success)
 
