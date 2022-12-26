@@ -37,6 +37,9 @@ class OnboardingHelper {
                 }
                 ProductType.Twins -> AppScreen.OnboardingTwins
                 ProductType.SaltPay -> AppScreen.OnboardingWallet
+                ProductType.Start2Coin -> throw java.lang.UnsupportedOperationException(
+                    "Onboarding for Start2Coin cards is not supported"
+                )
             }
         }
     }
