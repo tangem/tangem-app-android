@@ -1,6 +1,10 @@
 package com.tangem.tap.domain.walletStores.repository.implementation
 
-import com.tangem.blockchain.common.*
+import com.tangem.blockchain.common.Blockchain
+import com.tangem.blockchain.common.DerivationParams
+import com.tangem.blockchain.common.DerivationStyle
+import com.tangem.blockchain.common.WalletManager
+import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.common.CompletionResult
 import com.tangem.common.catching
 import com.tangem.common.hdWallet.DerivationPath
@@ -18,6 +22,7 @@ import com.tangem.tap.domain.walletStores.WalletStoresError
 import com.tangem.tap.domain.walletStores.repository.WalletManagersRepository
 import com.tangem.tap.domain.walletStores.storage.WalletManagerStorage
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 
@@ -26,26 +31,31 @@ internal class DefaultWalletManagersRepository(
 ) : WalletManagersRepository {
     private val walletManagersStorage = WalletManagerStorage
 
-    override suspend fun findOrMake(
+    override suspend fun findOrMakeMultiCurrencyWalletManager(
+        userWallet: UserWallet,
+        blockchainNetwork: BlockchainNetwork,
+    ): CompletionResult<WalletManager> {
+        return findOrMakeInternal(userWallet, blockchainNetwork)
+    }
+
+    override suspend fun findOrMakeSingleCurrencyWalletManager(userWallet: UserWallet): CompletionResult<WalletManager> {
+        return findOrMakeInternal(userWallet, blockchainNetwork = null)
+    }
+
+    private suspend fun findOrMakeInternal(
         userWallet: UserWallet,
         blockchainNetwork: BlockchainNetwork?,
-        refresh: Boolean,
     ): CompletionResult<WalletManager> = withContext(Dispatchers.Default) {
-        if (refresh) {
-            deleteInternal(userWallet.walletId, blockchainNetwork?.blockchain)
-            makeAndStore(userWallet, blockchainNetwork)
-        } else {
-            val foundWalletManager = findWalletManager(
-                userWalletId = userWallet.walletId,
-                blockchain = blockchainNetwork?.blockchain,
-            )
+        val foundWalletManager = findWalletManager(
+            userWalletId = userWallet.walletId,
+            blockchain = blockchainNetwork?.blockchain,
+        )
 
-            foundWalletManager?.updateTokens(
-                scanResponse = userWallet.scanResponse,
-                blockchainNetwork = blockchainNetwork,
-            )
-                ?: makeAndStore(userWallet, blockchainNetwork)
-        }
+        foundWalletManager?.updateTokens(
+            scanResponse = userWallet.scanResponse,
+            blockchainNetwork = blockchainNetwork,
+        )
+            ?: makeAndStore(userWallet, blockchainNetwork)
     }
 
     private suspend fun makeAndStore(
@@ -150,8 +160,11 @@ internal class DefaultWalletManagersRepository(
         return catching {
             val tokens = blockchainNetwork?.tokens ?: listOfNotNull(scanResponse.getPrimaryToken())
 
-            if (tokens.isNotEmpty()) {
-                walletManager.addTokens(tokens)
+            if (tokens != cardTokens) {
+                cardTokens.clear()
+                if (tokens.isNotEmpty()) {
+                    walletManager.cardTokens.addAll(tokens)
+                }
             }
 
             walletManager
@@ -170,7 +183,7 @@ internal class DefaultWalletManagersRepository(
         userWalletId: UserWalletId,
         blockchain: Blockchain?,
     ): WalletManager? {
-        return walletManagersStorage.getAllSync()[userWalletId]?.let { userWalletManagers ->
+        return walletManagersStorage.getAll().first()[userWalletId]?.let { userWalletManagers ->
             if (blockchain == null) userWalletManagers.firstOrNull()
             else userWalletManagers.find { it.wallet.blockchain == blockchain }
         }

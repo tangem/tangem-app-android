@@ -33,6 +33,7 @@ import com.tangem.tap.features.wallet.models.toBlockchainNetworks
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.tap.store
+import com.tangem.tap.tangemSdkManager
 import com.tangem.tap.userTokensRepository
 import com.tangem.tap.walletStoresManager
 import kotlinx.coroutines.Dispatchers
@@ -94,6 +95,7 @@ class TapWalletManager {
         val card = scanResponse.card
         val attestationFailed = card.attestation.status == Attestation.Status.Failed
 
+        tangemSdkManager.changeDisplayedCardIdNumbersCount(scanResponse)
         store.state.globalState.feedbackManager?.infoHolder?.setCardInfo(scanResponse)
         updateConfigManager(scanResponse)
 
@@ -101,7 +103,7 @@ class TapWalletManager {
             store.dispatch(WalletAction.UserWalletChanged(userWallet))
             store.dispatch(TwinCardsAction.IfTwinsPrepareState(scanResponse))
             store.dispatch(WalletConnectAction.ResetState)
-            store.dispatch(GlobalAction.SaveScanNoteResponse(scanResponse))
+            store.dispatch(GlobalAction.SaveScanResponse(scanResponse))
             store.dispatch(WalletConnectAction.RestoreSessions(scanResponse))
             store.dispatch(GlobalAction.SetIfCardVerifiedOnline(!attestationFailed))
             store.dispatch(WalletAction.Warnings.CheckIfNeeded)
@@ -149,7 +151,7 @@ class TapWalletManager {
         withMainContext {
             store.dispatch(WalletAction.ResetState(data.card))
             store.dispatch(WalletConnectAction.ResetState)
-            store.dispatch(GlobalAction.SaveScanNoteResponse(data))
+            store.dispatch(GlobalAction.SaveScanResponse(data))
             store.dispatch(WalletAction.SetIfTestnetCard(data.card.isTestCard))
             store.dispatch(WalletAction.MultiWallet.SetIsMultiwalletAllowed(data.card.isMultiwalletAllowed))
             store.dispatch(WalletConnectAction.RestoreSessions(data))
