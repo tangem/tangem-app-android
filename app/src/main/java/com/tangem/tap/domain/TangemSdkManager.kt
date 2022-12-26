@@ -234,6 +234,11 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         }
     }
 
+    fun useBiometricsForAccessCode(): Boolean {
+        val policy = tangemSdk.config.userCodeRequestPolicy
+        return policy is UserCodeRequestPolicy.AlwaysWithBiometrics && policy.codeType == UserCodeType.AccessCode
+    }
+
     companion object {
         val config = Config(
             linkedTerminal = true,
