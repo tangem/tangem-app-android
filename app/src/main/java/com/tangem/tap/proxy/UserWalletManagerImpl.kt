@@ -11,8 +11,8 @@ import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.common.util.userWalletId
 import com.tangem.lib.crypto.UserWalletManager
 import com.tangem.lib.crypto.models.Currency
-import com.tangem.lib.crypto.models.NativeToken
-import com.tangem.lib.crypto.models.NonNativeToken
+import com.tangem.lib.crypto.models.Currency.NativeToken
+import com.tangem.lib.crypto.models.Currency.NonNativeToken
 import com.tangem.tap.domain.extensions.makeWalletManagerForApp
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.wallet.redux.WalletAction

@@ -2,8 +2,8 @@ package com.tangem.feature.referral.domain.converter
 
 import com.tangem.feature.referral.domain.models.TokenData
 import com.tangem.lib.crypto.models.Currency
-import com.tangem.lib.crypto.models.NativeToken
-import com.tangem.lib.crypto.models.NonNativeToken
+import com.tangem.lib.crypto.models.Currency.NativeToken
+import com.tangem.lib.crypto.models.Currency.NonNativeToken
 import com.tangem.utils.converter.Converter
 
 import javax.inject.Inject
