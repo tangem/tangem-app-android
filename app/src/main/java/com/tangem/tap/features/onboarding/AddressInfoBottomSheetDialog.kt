@@ -11,8 +11,8 @@ import com.tangem.tap.common.extensions.copyToClipboard
 import com.tangem.tap.common.extensions.dispatchDialogHide
 import com.tangem.tap.common.extensions.dispatchShare
 import com.tangem.tap.common.extensions.dispatchToastNotification
+import com.tangem.tap.common.extensions.getString
 import com.tangem.tap.common.redux.AppDialog
-import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.AddressData
 import com.tangem.tap.store
 import com.tangem.wallet.R
@@ -62,26 +62,12 @@ class AddressInfoBottomSheetDialog(
             Analytics.send(Token.Recieve.ButtonShareAddress())
             store.dispatchShare(data.shareUrl)
         }
-        tvReceiveMessage.text = getQRReceiveMessage(tvReceiveMessage.context, stateDialog.currency)
-    }
-}
-
-fun getQRReceiveMessage(context: Context, currency: Currency): String {
-    return when (currency) {
-        is Currency.Blockchain -> {
-            context.getString(
-                R.string.address_qr_code_message_format,
-                currency.blockchain.fullName,
-                currency.currencySymbol,
-            )
-        }
-        is Currency.Token -> {
-            context.getString(
-                R.string.address_qr_code_message_token_format,
-                currency.token.name,
-                currency.currencySymbol,
-                currency.blockchain.fullName,
-            )
-        }
+        val blockchain = stateDialog.currency.blockchain
+        tvReceiveMessage.text = tvReceiveMessage.getString(
+            id = R.string.address_qr_code_message_format,
+            blockchain.fullName,
+            blockchain.currency,
+            blockchain.fullName,
+        )
     }
 }
