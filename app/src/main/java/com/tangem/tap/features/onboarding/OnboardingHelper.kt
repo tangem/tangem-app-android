@@ -70,7 +70,10 @@ class OnboardingHelper {
                 // then open save wallet screen
                 tangemSdkManager.canUseBiometry &&
                     preferencesStorage.shouldShowSaveUserWalletScreen -> scope.launch {
+                    store.onCardScanned(scanResponse)
+
                     delay(timeMillis = 1_200)
+
                     store.dispatchOnMain(
                         SaveWalletAction.ProvideBackupInfo(
                             scanResponse = scanResponse,
