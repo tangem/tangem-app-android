@@ -56,7 +56,7 @@
     <string name="custom_token_token_symbol_input_placeholder">Например, USDC</string>
     <string name="custom_token_token_symbol_input_title">Символ токена</string>
     <string name="custom_token_derivation_path_input_title">Деривация по BIP44</string>
-    <string name="custom_token_derivation_path_default">По-умолчанию</string>
+    <string name="custom_token_derivation_path_default">По умолчанию</string>
     <string name="common_server_unavailable">Сервер недоступен, повторите попытку позднее</string>
     <string name="main_page_balance">Баланс</string>
     <string name="main_processing_full_amount">В сумме учтены не все монеты</string>
@@ -99,8 +99,8 @@
     <string name="app_settings_off_saved_access_code_alert_message">Все сохраненные коды доступа будут удалены. Вам потребуется вводить код доступа при работе с кошельком.</string>
     <string name="wallet_connect_title">WalletConnect</string>
     <string name="wallet_connect_subtitle">Подключение к Dapps</string>
-    <string name="reset_card_without_backup_to_factory_message">Сброс к заводским настройкам приведет к полному удалению кошелька на этой карте, а также отвязыванию карты из приложения. Кошелек невозможно будет восстановить.</string>
-    <string name="reset_card_with_backup_to_factory_message">Сброс к заводским настройкам приведет к полному удалению кошелька на этой карте, а также отвязыванию карты из приложения. Кошелек невозможно будет восстановить или использовать данную карту для восстановления кода доступа.</string>
+    <string name="reset_card_without_backup_to_factory_message">Сброс к заводским настройкам приведет к полному удалению кошелька с выбранной карты. Вы не сможете восстановить текущий кошелек.</string>
+    <string name="reset_card_with_backup_to_factory_message">Сброс к заводским настройкам приведет к полному удалению кошелька с выбранной карты. Вы не сможете восстановить текущий кошелек или использовать данную карту для восстановления кода доступа.</string>
     <string name="reset_card_to_factory_warning_message">Я понимаю, что после выполнения этого действия у меня больше не будет доступа к текущему кошельку</string>
     <string name="reset_card_to_factory_button_title">Сбросить карту</string>
     <string name="card_settings_reset_card_to_factory">Сброс к заводским настройкам</string>
