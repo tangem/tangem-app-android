@@ -3,7 +3,6 @@ package com.tangem.tap.domain.userWalletList.implementation
 import com.tangem.common.*
 import com.tangem.domain.common.util.UserWalletId
 import com.tangem.tap.domain.model.UserWallet
-import com.tangem.tap.domain.model.isTwinnedWith
 import com.tangem.tap.domain.userWalletList.UserWalletListError
 import com.tangem.tap.domain.userWalletList.UserWalletsListManager
 import com.tangem.tap.domain.userWalletList.model.UserWalletEncryptionKey
@@ -89,8 +88,7 @@ internal class BiometricUserWalletsListManager(
         } else {
             val isWalletSaved = state.value.userWallets
                 .any {
-                    // Workaround, check [UserWallet.isTwinnedWith]
-                    it.cardsInWallet.contains(userWallet.cardId) || it.isTwinnedWith(userWallet)
+                    it.walletId == userWallet.walletId || it.cardsInWallet.contains(userWallet.cardId)
                 }
 
             if (isWalletSaved) {
