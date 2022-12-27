@@ -38,6 +38,7 @@ open class IndeterminateProgressButtonWidget(
         when (progressState) {
             ProgressState.Done, ProgressState.Error -> switchToNone()
             ProgressState.Loading -> switchToProgress()
+            else -> {}
         }
     }
 
