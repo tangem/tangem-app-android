@@ -396,6 +396,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
                         data.amountToCreateAccount, data.currencySymbol,
                     )
             }
+            else -> {}
         }
     }
 
