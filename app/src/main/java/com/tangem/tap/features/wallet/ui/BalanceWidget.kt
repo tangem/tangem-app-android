@@ -141,6 +141,7 @@ class BalanceWidget(
                 tvErrorDescriptions.text =
                     fragment.getString(R.string.wallet_error_unsupported_blockchain_subtitle)
             }
+            else -> {}
         }
     }
 
