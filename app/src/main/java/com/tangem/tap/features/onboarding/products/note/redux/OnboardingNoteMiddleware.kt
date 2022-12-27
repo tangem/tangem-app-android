@@ -96,6 +96,7 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
                     onboardingManager.activationFinished(card.cardId)
                     postUi(DELAY_SDK_DIALOG_CLOSE) { store.dispatch(OnboardingNoteAction.Confetti.Show) }
                 }
+                else -> {}
             }
         }
         is OnboardingNoteAction.CreateWallet -> {
@@ -186,9 +187,10 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
 
             store.dispatchOpenUrl(topUpUrl)
         }
-        OnboardingNoteAction.Done -> {
+        is OnboardingNoteAction.Done -> {
             store.dispatch(GlobalAction.Onboarding.Stop)
             OnboardingHelper.trySaveWalletAndNavigateToWalletScreen(scanResponse)
         }
+        else -> {}
     }
 }

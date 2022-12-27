@@ -65,6 +65,7 @@ class OnboardingOtherCardsFragment : BaseOnboardingFragment<OnboardingOtherCards
         when (state.currentStep) {
             OnboardingOtherCardsStep.CreateWallet -> setupCreateWalletState()
             OnboardingOtherCardsStep.Done -> setupDoneState()
+            else -> {}
         }
         showConfetti(state.showConfetti)
     }
