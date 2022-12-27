@@ -99,6 +99,11 @@ fun SpacerW(width: Dp, modifier: Modifier = Modifier) {
 }
 
 @Composable
+fun SpacerW2(modifier: Modifier = Modifier) {
+    SpacerW(2.dp, modifier)
+}
+
+@Composable
 fun SpacerW4(modifier: Modifier = Modifier) {
     SpacerW(4.dp, modifier)
 }

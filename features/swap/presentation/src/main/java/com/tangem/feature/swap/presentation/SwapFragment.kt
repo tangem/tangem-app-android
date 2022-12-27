@@ -12,6 +12,7 @@ import androidx.fragment.app.viewModels
 import com.tangem.feature.swap.router.SwapRouter
 import com.tangem.feature.swap.router.SwapScreen
 import com.tangem.feature.swap.ui.SwapScreen
+import com.tangem.feature.swap.ui.SwapSelectTokenScreen
 import com.tangem.feature.swap.ui.SwapSuccessScreen
 import com.tangem.feature.swap.viewmodels.SwapViewModel
 import dagger.hilt.android.AndroidEntryPoint
@@ -38,7 +39,18 @@ class SwapFragment : Fragment() {
                                 SwapScreen(stateHolder = viewModel.uiState)
                             }
                         }
-                        SwapScreen.SelectToken -> SwapScreen(stateHolder = viewModel.uiState)// TODO: use proper screen
+                        SwapScreen.SelectToken -> {
+                            val tokenState = viewModel.uiState.selectTokenState
+                            if (tokenState != null) {
+                                SwapSelectTokenScreen(
+                                    state = tokenState,
+                                    onBack = viewModel.uiState.onBackClicked,
+                                )
+                            } else {
+                                SwapScreen(stateHolder = viewModel.uiState)
+                            }
+                        }
+                        // screen
                     }
                 }
 
