@@ -4,10 +4,8 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
-import com.tangem.common.extensions.toHexString
 import com.tangem.common.flatMap
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
-import com.tangem.domain.common.util.userWalletId
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
@@ -20,6 +18,7 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.model.builders.UserWalletBuilder
+import com.tangem.tap.domain.model.builders.UserWalletIdBuilder
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.onboarding.products.twins.redux.CreateTwinWalletMode
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
@@ -27,6 +26,7 @@ import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
+import com.tangem.tap.userTokensRepository
 import com.tangem.tap.userWalletsListManager
 import com.tangem.tap.walletStoresManager
 import com.tangem.wallet.R
@@ -79,20 +79,16 @@ class DetailsMiddleware {
             }
             DetailsAction.ScanCard -> {
                 scope.launch {
-                    tangemSdkManager.scanCard(allowRequestAccessCodeFromRepository = true)
-                        .doOnSuccess { card ->
-                            val isSameWallet = state.scanResponse?.card?.userWalletId
-                                ?.equals(card.userWalletId)
-                                ?: false
+                    tangemSdkManager.scanProduct(userTokensRepository)
+                        .doOnSuccess { scanResponse ->
+                            val currentUserWalletId = state.scanResponse
+                                ?.let { UserWalletIdBuilder.scanResponse(it).build() }
+                            val scannedUserWalletId = UserWalletIdBuilder.scanResponse(scanResponse)
+                                .build()
+                            val isSameWallet = currentUserWalletId == scannedUserWalletId
 
-                            // !!! Workaround !!!
-// [REDACTED_TODO_COMMENT]
-                            val isTwinned = card.wallets.firstOrNull()?.publicKey?.toHexString()
-                                ?.equals(state.scanResponse?.secondTwinPublicKey)
-                                ?: false
-
-                            if (isSameWallet || isTwinned) {
-                                store.dispatchOnMain(DetailsAction.PrepareCardSettingsData(card))
+                            if (isSameWallet) {
+                                store.dispatchOnMain(DetailsAction.PrepareCardSettingsData(scanResponse.card))
                             } else {
                                 store.dispatchDialogShow(
                                     AppDialog.SimpleOkDialogRes(
@@ -122,8 +118,10 @@ class DetailsMiddleware {
                 is DetailsAction.ResetToFactory.Proceed -> {
                     val card = store.state.detailsState.cardSettingsState?.card ?: return
                     scope.launch {
+                        val userWalletId = UserWalletIdBuilder.card(card).build()
+
                         tangemSdkManager.resetToFactorySettings(card.cardId)
-                            .flatMap { userWalletsListManager.delete(listOf(card.userWalletId)) }
+                            .flatMap { userWalletsListManager.delete(listOfNotNull(userWalletId)) }
                             .flatMap { tangemSdkManager.deleteSavedUserCodes(setOf(card.cardId)) }
                             .doOnSuccess {
                                 Analytics.send(Settings.CardSettings.FactoryResetFinished())
@@ -275,7 +273,7 @@ class DetailsMiddleware {
 
         private suspend fun saveCurrentWallet(state: DetailsState) {
             val scanResponse = state.scanResponse ?: return
-            val userWallet = UserWalletBuilder(scanResponse).build()
+            val userWallet = UserWalletBuilder(scanResponse).build() ?: return
 
             userWalletsListManager.save(userWallet)
                 .doOnFailure { error ->
