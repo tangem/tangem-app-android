@@ -71,6 +71,7 @@ private fun handleOtherCardsAction(action: Action) {
                     onboardingManager.activationFinished(card.cardId)
                     postUi(200) { store.dispatch(OnboardingOtherCardsAction.Confetti.Show) }
                 }
+                else -> {}
             }
         }
         is OnboardingOtherCardsAction.CreateWallet -> {
