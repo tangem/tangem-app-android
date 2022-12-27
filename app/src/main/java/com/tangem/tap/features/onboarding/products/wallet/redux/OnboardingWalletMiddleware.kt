@@ -188,6 +188,7 @@ private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch:
             newAction?.let { store.dispatch(it) }
         }
         OnboardingWalletAction.OnBackPressed -> handleOnBackPressed(onboardingWalletState)
+        else -> {}
     }
 }
 
@@ -355,6 +356,7 @@ private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) 
             if (onboardingWalletState.isSaltPay) throw UnsupportedOperationException()
             store.dispatch(BackupAction.FinishBackup)
         }
+        else -> {}
     }
 }
 
