@@ -277,26 +277,32 @@ internal class WalletSelectorMiddleware {
             .flatMap { walletStoresManager.delete(userWalletsIds) }
             .flatMap { deleteAccessCodes(userWalletsIds) }
             .doOnSuccess {
-                val selectedWallet = userWalletsListManager.selectedUserWalletSync
+                val selectedUserWallet = userWalletsListManager.selectedUserWalletSync
 
                 when {
-                    selectedWallet == null -> {
+                    selectedUserWallet == null -> {
                         store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Welcome))
                     }
-                    currentSelectedWalletId != selectedWallet.walletId -> {
-                        store.onUserWalletSelected(selectedWallet)
+
+                    currentSelectedWalletId != selectedUserWallet.walletId -> {
+                        store.onUserWalletSelected(selectedUserWallet)
                     }
                 }
             }
     }
 
     private suspend fun deleteAccessCodes(userWalletsIds: List<UserWalletId>): CompletionResult<Unit> {
-        val cardsIds = userWalletsListManager.userWallets.firstOrNull().orEmpty()
-            .asSequence()
-            .filter { it.walletId in userWalletsIds }
-            .flatMap { it.cardsInWallet }
+        val cardsIds = userWalletsListManager.userWallets.firstOrNull()
+            ?.asSequence()
+            ?.filter { it.walletId in userWalletsIds }
+            ?.flatMap { it.cardsInWallet }
+            ?.toSet()
 
-        return tangemSdkManager.deleteSavedUserCodes(cardsIds.toSet())
+        return if (cardsIds.isNullOrEmpty()) {
+            CompletionResult.Success(Unit)
+        } else {
+            tangemSdkManager.deleteSavedUserCodes(cardsIds.toSet())
+        }
     }
 
     private suspend fun UserWalletModel.updateWalletStoresAndCalculateFiatBalance(
