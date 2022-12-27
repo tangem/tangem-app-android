@@ -4,7 +4,7 @@ object Versions {
     const val androidMavenGradlePlugin = "2.1"
     const val googleFirebaseCrashlytics = "2.7.1"
     const val googleServices = "4.3.10"
-    const val kotlin = "1.6.10"
+    const val kotlin = "1.7.10"
     // endregion Classpath
 
     // region AndroidX
@@ -18,8 +18,8 @@ object Versions {
     // endregion AndroidX
 
     // region Compose
-    const val compose = "1.1.0"
-    const val composeFoundation = "1.2.0-rc03"
+    const val compose = "1.3.1"
+    const val composeFoundation = "1.3.1"
     // endregion Compose
 
     // region Other libraries
