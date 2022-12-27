@@ -1,6 +1,7 @@
 package com.tangem.tap.features.walletSelector.redux
 
 import com.tangem.common.CompletionResult
+import com.tangem.common.core.TangemSdkError
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.common.flatMap
@@ -162,6 +163,7 @@ internal class WalletSelectorMiddleware {
 
     private suspend fun saveUserWalletAndPopBackToWalletScreen(scanResponse: ScanResponse): CompletionResult<Unit> {
         val userWallet = UserWalletBuilder(scanResponse).build()
+            ?: return CompletionResult.Failure(TangemSdkError.WalletIsNotCreated())
 
         return userWalletsListManager.save(userWallet)
             .doOnSuccess {
