@@ -362,13 +362,13 @@ private fun internalReduce(action: Action, state: AppState, appStateHolder: AppS
             )
         }
         is WalletAction.LoadData.Success -> {
-            val selectedCurrency = if (!newState.isMultiwalletAllowed) {
+            val selectedCurrency = if (newState.isMultiwalletAllowed) {
+                newState.selectedCurrency
+            } else {
                 newState.walletsStores.firstOrNull()
                     ?.walletsData
                     ?.firstOrNull()
                     ?.currency
-            } else {
-                newState.selectedWalletData?.currency
             }
 
             newState = newState.copy(
