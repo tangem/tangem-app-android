@@ -19,6 +19,7 @@ import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.domain.model.WalletStoreModel
 import com.tangem.tap.domain.model.builders.UserWalletBuilder
 import com.tangem.tap.domain.scanCard.ScanCardProcessor
+import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
@@ -131,21 +132,45 @@ internal class WalletSelectorMiddleware {
     private fun addWallet() = scope.launch {
         Analytics.send(MyWallets.Button.ScanNewCard)
 
-        scanCardInternal { scanResponse ->
-            val userWallet = UserWalletBuilder(scanResponse).build()
+        val prevUseBiometricsForAccessCode = tangemSdkManager.useBiometricsForAccessCode()
 
-            userWalletsListManager.save(userWallet)
-                .doOnFailure { error ->
-                    store.dispatchOnMain(WalletSelectorAction.AddWallet.Error(error))
-                }
-                .doOnSuccess {
-                    Analytics.send(MyWallets.CardWasScanned)
+        // Update access code policy for access code saving when a card was scanned
+        tangemSdkManager.setAccessCodeRequestPolicy(
+            useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes,
+        )
+        ScanCardProcessor.scan(
+            onSuccess = { scanResponse ->
+                saveUserWalletAndPopBackToWalletScreen(scanResponse)
+                    .doOnFailure { error ->
+                        // Rollback policy if card saving was failed
+                        tangemSdkManager.setAccessCodeRequestPolicy(prevUseBiometricsForAccessCode)
+                        store.dispatchOnMain(WalletSelectorAction.AddWallet.Error(error))
+                    }
+            },
+            onFailure = { error ->
+                // Rollback policy if card scanning was failed
+                tangemSdkManager.setAccessCodeRequestPolicy(prevUseBiometricsForAccessCode)
+                store.dispatchOnMain(WalletSelectorAction.AddWallet.Error(error))
+            },
+            onWalletNotCreated = {
+                // No need to rollback policy, continue with the policy set before the card scan
+                store.dispatchOnMain(WalletSelectorAction.AddWallet.Success)
+                store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
+            },
+        )
+    }
 
-                    store.dispatchOnMain(WalletSelectorAction.AddWallet.Success)
-                    store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
-                    store.onUserWalletSelected(userWallet)
-                }
-        }
+    private suspend fun saveUserWalletAndPopBackToWalletScreen(scanResponse: ScanResponse): CompletionResult<Unit> {
+        val userWallet = UserWalletBuilder(scanResponse).build()
+
+        return userWalletsListManager.save(userWallet)
+            .doOnSuccess {
+                Analytics.send(MyWallets.CardWasScanned)
+
+                store.dispatchOnMain(WalletSelectorAction.AddWallet.Success)
+                store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
+                store.onUserWalletSelected(userWallet)
+            }
     }
 
     private fun selectWallet(userWalletId: UserWalletId) {
@@ -263,23 +288,6 @@ internal class WalletSelectorMiddleware {
                     }
                 }
             }
-    }
-
-    private suspend inline fun scanCardInternal(
-        crossinline onCardScanned: suspend (ScanResponse) -> Unit,
-    ) {
-        ScanCardProcessor.scan(
-            onSuccess = {
-                onCardScanned(it)
-            },
-            onFailure = { error ->
-                store.dispatchOnMain(WalletSelectorAction.AddWallet.Error(error))
-            },
-            onWalletNotCreated = {
-                store.dispatchOnMain(WalletSelectorAction.AddWallet.Success)
-                store.dispatchOnMain(NavigationAction.PopBackTo())
-            },
-        )
     }
 
     private suspend fun deleteAccessCodes(userWalletsIds: List<UserWalletId>): CompletionResult<Unit> {
