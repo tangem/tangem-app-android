@@ -146,6 +146,7 @@ internal class OnboardingSaltPayView(
             SaltPayActivationStep.ClaimInProgress -> handleClaim(state)
             SaltPayActivationStep.ClaimSuccess -> handleClaim(state)
             SaltPayActivationStep.Success -> handleSuccess(state)
+            else -> {}
         }
         progressButton?.changeState(state.mainButtonState)
     }

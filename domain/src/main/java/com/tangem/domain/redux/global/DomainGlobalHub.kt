@@ -31,8 +31,8 @@ internal class DomainGlobalHub : BaseStoreHub<DomainGlobalState>("DomainGlobalHu
 
         val state = storeState.globalState
 
-        when (action) {
-        }
+        // when (action) {
+        // }
     }
 
     override fun getReducer(): ReStoreReducer<DomainGlobalState> = DomainGlobalReducer()

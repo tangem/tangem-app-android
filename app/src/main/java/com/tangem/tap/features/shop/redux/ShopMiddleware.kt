@@ -122,5 +122,6 @@ private fun handle(action: Action) {
                 shopService.waitForCheckout(shopState.selectedProduct)
             }
         }
+        else -> {}
     }
 }

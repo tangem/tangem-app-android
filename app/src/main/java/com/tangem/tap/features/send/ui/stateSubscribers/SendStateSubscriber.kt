@@ -289,6 +289,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
                 pbReceiptFee.hide()
                 tvReceiptFeeValue.show()
             }
+            else -> {}
         }
 
 
@@ -356,6 +357,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
                     }
                 llTotalContainer.tvTotalTokenCryptoValue.update(willSent.toString())
             }
+            else -> {}
         }
     }
 }
