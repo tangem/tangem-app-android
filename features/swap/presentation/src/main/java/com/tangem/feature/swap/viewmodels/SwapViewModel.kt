@@ -7,7 +7,6 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tangem.feature.swap.domain.SwapInteractor
-import com.tangem.feature.swap.domain.models.data.Currency
 import com.tangem.feature.swap.models.ApprovePermissionButton
 import com.tangem.feature.swap.models.CancelPermissionButton
 import com.tangem.feature.swap.models.FeeState
@@ -72,7 +71,7 @@ internal class SwapViewModel @Inject constructor(
 
     private fun createTestUiState(): SwapStateHolder {
         val sendCard = SwapCardData(
-            type = TransactionCardType.SendCard("123", false),
+            type = TransactionCardType.SendCard("123", false, {}),
             amount = "1 000 000 000 000 000 000",
             amountEquivalent = "1 000 000 000 000 000 000",
             tokenIconUrl = "",
