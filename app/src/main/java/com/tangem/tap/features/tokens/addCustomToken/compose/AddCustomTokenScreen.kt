@@ -38,6 +38,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.components.keyboardAsState
 import com.tangem.domain.AddCustomTokenError
 import com.tangem.domain.common.form.DataField
 import com.tangem.domain.common.form.FieldId
@@ -56,7 +57,6 @@ import com.tangem.tap.common.compose.AddCustomTokenWarning
 import com.tangem.tap.common.compose.ClosePopupTrigger
 import com.tangem.tap.common.compose.ComposeDialogManager
 import com.tangem.tap.common.compose.ToggledRippleTheme
-import com.tangem.tap.common.compose.keyboardAsState
 import com.tangem.tap.domain.moduleMessage.ModuleMessageConverter
 import com.tangem.tap.features.tokens.addCustomToken.compose.test.TestCase
 import com.tangem.tap.features.tokens.addCustomToken.compose.test.TestCasesList
@@ -66,7 +66,7 @@ import kotlinx.coroutines.launch
 /**
 [REDACTED_AUTHOR]
  */
-private class AddCustomTokenScreen {} // for simple search
+private class AddCustomTokenScreen  // for simple search
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
@@ -91,11 +91,13 @@ fun AddCustomTokenScreen(
         },
         sheetPeekHeight = 0.dp,
     ) {
-        Column() {
-            TestCasesList(onItemClick = {
-                selectedTestCase.value = it
-                toggleBottomSheet()
-            })
+        Column {
+            TestCasesList(
+                onItemClick = {
+                    selectedTestCase.value = it
+                    toggleBottomSheet()
+                },
+            )
             ScreenContent(state, closePopupTrigger)
         }
     }

@@ -20,6 +20,7 @@ data class SwapStateHolder(
     val onChangeCardsClicked: () -> Unit,
     val onSelectTokenClick: (() -> Unit)? = null,
     val onSuccess: (() -> Unit)? = null,
+    val onMaxAmountSelected: (() -> Unit)? = null,
 )
 
 data class SwapCardData(
@@ -53,6 +54,7 @@ sealed interface TransactionCardType {
     data class SendCard(
         val balance: String,
         val permissionIsGiven: Boolean,
+        val onAmountChanged: ((String) -> Unit),
     ) : TransactionCardType
 
     data class ReceiveCard(
@@ -62,6 +64,7 @@ sealed interface TransactionCardType {
 
 sealed interface SwapWarning {
     data class PermissionNeeded(val tokenCurrency: String) : SwapWarning
+    data class GenericWarning(val message: String, val onClick: () -> Unit) : SwapWarning
     // data class RateExpired(val onClick: () -> Unit) : SwapWarning
     // object HighPriceImpact : SwapWarning
 }
