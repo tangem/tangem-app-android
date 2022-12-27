@@ -74,6 +74,7 @@ class RefreshBalanceWidget(
                 progressViewAnimation?.repeatCount = -1
                 progressViewAnimation?.let { arrowView.startAnimation(it) }
             }
+            else -> {}
         }
     }
 
