@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -19,18 +20,31 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.ParagraphIntrinsics
+import androidx.compose.ui.text.font.createFontFamilyResolver
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -192,24 +206,34 @@ private fun Content(
             horizontalAlignment = Alignment.Start,
         ) {
 
-            if (amount != null) {
-                ResizableText(
-                    text = amount,
-                    color = TangemTheme.colors.text.primary1,
-                    style = TangemTheme.typography.h2,
-                    fontSizeRange =
-                    FontSizeRange(min = 16.sp, max = TangemTheme.typography.h2.fontSize),
-                )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .size(width = TangemTheme.dimens.size102, height = TangemTheme.dimens.size24)
-                        .shimmer()
-                        .background(
-                            color = TangemTheme.colors.button.secondary,
-                            shape = RoundedCornerShape(TangemTheme.dimens.radius6),
-                        ),
-                )
+            when (type) {
+                is TransactionCardType.ReceiveCard -> {
+                    if (amount != null) {
+                        ResizableText(
+                            text = amount,
+                            color = TangemTheme.colors.text.primary1,
+                            style = TangemTheme.typography.h2,
+                            fontSizeRange =
+                            FontSizeRange(min = 16.sp, max = TangemTheme.typography.h2.fontSize),
+                        )
+                    } else {
+                        Box(
+                            modifier = Modifier
+                                .size(width = TangemTheme.dimens.size102, height = TangemTheme.dimens.size24)
+                                .shimmer()
+                                .background(
+                                    color = TangemTheme.colors.button.secondary,
+                                    shape = RoundedCornerShape(TangemTheme.dimens.radius6),
+                                ),
+                        )
+                    }
+                }
+                is TransactionCardType.SendCard -> {
+                    AutoSizeTextField(
+                        amount = amount ?: "0",
+                        onAmoutChanged = { type.onAmountChanged(it) },
+                    )
+                }
             }
 
             Spacer(
@@ -238,6 +262,65 @@ private fun Content(
             }
         }
 
+    }
+}
+
+@Composable
+private fun AutoSizeTextField(
+    amount: String,
+    onAmoutChanged: (String) -> Unit,
+) {
+    val focusManager = LocalFocusManager.current
+    val textFieldFocusRequester = remember { FocusRequester() }
+
+    BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
+
+        var shrunkFontSize = TangemTheme.typography.h2.fontSize
+        val calculateIntrinsics = @Composable {
+            ParagraphIntrinsics(
+                text = amount,
+                style = TangemTheme.typography.h2.copy(
+                    color = TangemTheme.colors.text.primary1,
+                    fontSize = shrunkFontSize,
+                ),
+                density = LocalDensity.current,
+                fontFamilyResolver = createFontFamilyResolver(LocalContext.current),
+            )
+        }
+
+        var intrinsics = calculateIntrinsics()
+
+        with(LocalDensity.current) {
+            while (intrinsics.maxIntrinsicWidth > maxWidth.toPx()) {
+                shrunkFontSize *= 0.9f
+                intrinsics = calculateIntrinsics()
+            }
+        }
+
+        BasicTextField(
+            value = amount,
+            onValueChange = {
+                onAmoutChanged(it)
+            },
+            singleLine = true,
+            modifier = Modifier
+                .fillMaxWidth()
+                .focusRequester(textFieldFocusRequester),
+            keyboardOptions = KeyboardOptions(
+                imeAction = ImeAction.Done,
+                keyboardType = KeyboardType.Decimal,
+            ),
+            keyboardActions = KeyboardActions(
+                onDone = {
+                    focusManager.clearFocus()
+                },
+            ),
+            textStyle = TangemTheme.typography.h2.copy(
+                color = TangemTheme.colors.text.primary1,
+                fontSize = shrunkFontSize,
+            ),
+            cursorBrush = SolidColor(TangemTheme.colors.text.primary1),
+        )
     }
 }
 
@@ -370,7 +453,7 @@ fun Preview_SwapMainCard_InDarkTheme() {
 @Composable
 private fun TransactionCardPreview() {
     TransactionCard(
-        type = TransactionCardType.SendCard("123", false),
+        type = TransactionCardType.SendCard("123", false, {}),
         amount = "1 000 000",
         amountEquivalent = "1 000 000",
         tokenIconUrl = "",
