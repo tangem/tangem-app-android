@@ -31,7 +31,7 @@ class MultiWalletReducer {
     fun reduce(action: WalletAction.MultiWallet, state: WalletState): WalletState {
         return when (action) {
             is WalletAction.MultiWallet.AddBlockchains -> {
-                val walletStores: List<WalletStore> = action.blockchains.mapNotNull { blockchain ->
+                val walletStores: List<WalletStore> = action.blockchains.map { blockchain ->
                     val walletManager = action.walletManagers.firstOrNull {
                         it.wallet.blockchain == blockchain.blockchain &&
                             (it.wallet.publicKey.derivationPath?.rawPath == blockchain.derivationPath)
@@ -65,10 +65,10 @@ class MultiWalletReducer {
                     )
                 }
 
-                val selectedCurrency = if (!state.isMultiwalletAllowed) {
-                    walletStores.firstOrNull()?.walletsData?.firstOrNull()?.currency
+                val selectedCurrency = if (state.isMultiwalletAllowed) {
+                    state.selectedCurrency
                 } else {
-                    state.selectedWalletData?.currency
+                    walletStores.firstOrNull()?.walletsData?.firstOrNull()?.currency
                 }
                 state.copy(
                     walletsStores = walletStores,
