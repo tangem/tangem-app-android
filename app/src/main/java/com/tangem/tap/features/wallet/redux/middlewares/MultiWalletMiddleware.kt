@@ -175,6 +175,7 @@ class MultiWalletMiddleware {
                     store.dispatch(WalletAction.Scan)
                 }
             }
+            else -> {}
         }
     }
 

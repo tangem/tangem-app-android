@@ -317,5 +317,6 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
                 scanResponse = action.scanResponse,
             )
         }
+        else -> {}
     }
 }

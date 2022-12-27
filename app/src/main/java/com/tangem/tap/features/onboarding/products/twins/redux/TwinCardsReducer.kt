@@ -67,6 +67,7 @@ private fun internalReduce(action: Action, state: AppState): TwinCardsState {
         is TwinCardsAction.Confetti.Hide -> {
             state = state.copy(showConfetti = false)
         }
+        else -> {}
     }
 
     return state
