@@ -10,8 +10,8 @@ import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.address.Address
 import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.ScanResponse
-import com.tangem.domain.common.util.userWalletId
 import com.tangem.tap.common.extensions.stripZeroPlainString
+import com.tangem.tap.domain.model.builders.UserWalletIdBuilder
 
 class AdditionalFeedbackInfo {
     class EmailWalletInfo(
@@ -54,7 +54,7 @@ class AdditionalFeedbackInfo {
         cardFirmwareVersion = data.card.firmwareVersion.stringValue
         cardIssuer = data.card.issuer.name
         signedHashesCount = formatSignedHashes(data.card.wallets)
-        userWalletId = data.card.userWalletId.stringValue
+        userWalletId = UserWalletIdBuilder.scanResponse(data).build()?.stringValue ?: ""
     }
 
     fun setWalletsInfo(walletManagers: List<WalletManager>) {
