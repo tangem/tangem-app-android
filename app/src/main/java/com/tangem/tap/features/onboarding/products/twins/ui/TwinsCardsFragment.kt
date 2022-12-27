@@ -133,13 +133,14 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
 
         when (state.currentStep) {
             is TwinCardsStep.WelcomeOnly -> setupWelcomeOnlyState(state, state.currentStep.scanResponse)
-            TwinCardsStep.Welcome -> setupWelcomeState(state)
-            TwinCardsStep.Warning -> setupWarningState(state)
-            TwinCardsStep.CreateFirstWallet -> setupCreateFirstWalletState(state)
-            TwinCardsStep.CreateSecondWallet -> setupCreateSecondWalletState(state)
-            TwinCardsStep.CreateThirdWallet -> setupCreateThirdWalletState(state)
-            TwinCardsStep.TopUpWallet -> setupTopUpWalletState(state)
-            TwinCardsStep.Done -> setupDoneState(state)
+            is TwinCardsStep.Welcome -> setupWelcomeState(state)
+            is TwinCardsStep.Warning -> setupWarningState(state)
+            is TwinCardsStep.CreateFirstWallet -> setupCreateFirstWalletState(state)
+            is TwinCardsStep.CreateSecondWallet -> setupCreateSecondWalletState(state)
+            is TwinCardsStep.CreateThirdWallet -> setupCreateThirdWalletState(state)
+            is TwinCardsStep.TopUpWallet -> setupTopUpWalletState(state)
+            is TwinCardsStep.Done -> setupDoneState(state)
+            else -> {}
         }
 
         setBalance(state)
@@ -231,12 +232,14 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
                                 false,
                             )
                         }
+                        else -> {}
                     }
                 }
             }
             TwinCardsStep.Welcome, TwinCardsStep.Warning -> {
                 twinsWidget.toLeapfrog(onEnd = { switchToCard(state.cardNumber) })
             }
+            else -> {}
         }
 
         val twinIndexNumber = state.cardNumber?.indexNumber()
@@ -314,11 +317,13 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
                             twinsWidget.toActivate(false)
                         }
                     }
+                    else -> {}
                 }
             }
             TwinCardsStep.CreateThirdWallet -> {
                 twinsWidget.toActivate()
             }
+            else -> {}
         }
 
         if (state.isBuyAllowed) {
