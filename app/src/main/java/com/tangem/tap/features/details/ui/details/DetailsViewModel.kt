@@ -95,9 +95,9 @@ class DetailsViewModel(private val store: Store<AppState>) {
             SettingsElement.PrivacyPolicy -> {
                 // TODO: To be available later
             }
-            // SettingsElement.ReferralProgram -> {
-            //     store.dispatch(NavigationAction.NavigateTo(AppScreen.ReferralProgram))
-            // }
+            SettingsElement.ReferralProgram -> {
+                store.dispatch(NavigationAction.NavigateTo(AppScreen.ReferralProgram))
+            }
         }
     }
 
