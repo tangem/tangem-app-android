@@ -133,8 +133,7 @@
     <string name="onboarding_done_header">Успешно!</string>
     <string name="onboarding_done_body">Ваша карта активирована и готова к использованию</string>
     <string name="onboarding_balance_title">Баланс</string>
-    <string name="address_qr_code_message_format">Отправляйте только %s (%s) на этот адрес. Иначе это может привести к утрате средств.</string>
-    <string name="address_qr_code_message_token_format">Отправляйте только %s (%s) из сети %s на этот адрес. Иначе это может привести к утрате средств.</string>
+    <string name="address_qr_code_message_format">Отправляйте только %s (%s) в сети %s на этот адрес. Использование другой сети может привести к утрате средств.</string>
     <string name="onboarding_twins_interrupt_warning">Если процесc создания кошелька каким-либо образом прервется, вам придется начинать сначала.</string>
     <string name="onboarding_twin_exit_warning">Процесс связывания карт частично завершен. Вы не можете выйти из него сейчас.</string>
     <string name="warning_button_ok">Понятно!</string>
