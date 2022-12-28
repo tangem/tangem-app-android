@@ -51,7 +51,7 @@ internal class BiometricUserWalletsListManager(
         get() = state.value.isLocked
 
     override val hasSavedUserWallets: Boolean
-        get() = publicInformationRepository.isNotEmpty()
+        get() = keysRepository.hasSavedEncryptionKeys()
 
     override suspend fun unlockWithBiometry(): CompletionResult<UserWallet?> {
         return unlockWithBiometryInternal()
