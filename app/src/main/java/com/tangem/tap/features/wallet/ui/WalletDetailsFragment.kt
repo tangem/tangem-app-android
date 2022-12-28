@@ -132,12 +132,8 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
     override fun onStop() {
         super.onStop()
         store.unsubscribe(this)
-    }
-
-    override fun onDestroy() {
         walletDataWatcher.clear()
         walletStateWatcher.clear()
-        super.onDestroy()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
