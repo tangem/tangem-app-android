@@ -36,7 +36,6 @@ import com.tangem.tap.common.extensions.toQrCode
 import com.tangem.tap.common.recyclerView.SpaceItemDecoration
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
-import com.tangem.tap.features.onboarding.getQRReceiveMessage
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.redux.ErrorType
@@ -324,8 +323,21 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
                 )
             }
             ivQrCode.setImageBitmap(state.walletAddresses.selectedAddress.shareUrl.toQrCode())
-            tvReceiveMessage.text =
-                getQRReceiveMessage(tvReceiveMessage.context, state.currency)
+
+            tvReceiveMessage.text = when (val currency = state.currency) {
+                is Currency.Blockchain -> tvReceiveMessage.getString(
+                    id = R.string.address_qr_code_message_format,
+                    currency.blockchain.fullName,
+                    currency.currencySymbol,
+                    currency.blockchain.fullName,
+                )
+                is Currency.Token -> tvReceiveMessage.getString(
+                    id = R.string.address_qr_code_message_format,
+                    currency.token.name,
+                    currency.currencySymbol,
+                    currency.blockchain.fullName,
+                )
+            }
         }
     }
 
