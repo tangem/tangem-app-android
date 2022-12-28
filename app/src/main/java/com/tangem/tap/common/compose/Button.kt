@@ -92,7 +92,7 @@ fun PasteButton(
         when (content) {
             null -> {
                 val tintColor = tint
-                    ?: colorResource(id = if (enabled) R.color.accent else R.color.accent_disabled)
+                    ?: colorResource(id = if (enabled) R.color.button_positive else R.color.button_positive_disabled)
                 Icon(
                     painterResource(id = R.drawable.ic_paste),
                     contentDescription = "Paste",
@@ -121,7 +121,7 @@ fun ClearButton(
         when (content) {
             null -> {
                 val tintColor = tint
-                    ?: colorResource(id = if (enabled) R.color.accent else R.color.accent_disabled)
+                    ?: colorResource(id = if (enabled) R.color.button_positive else R.color.button_positive_disabled)
                 Icon(
                     painterResource(id = R.drawable.ic_clear),
                     contentDescription = "Clear",
