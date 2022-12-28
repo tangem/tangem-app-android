@@ -32,4 +32,10 @@ internal interface UserWalletsKeysRepository {
      * @return [CompletionResult] of operation
      * */
     suspend fun clear(): CompletionResult<Unit>
+
+    /**
+     * Determine if the user has saved user wallets
+     * @return [Boolean] true if user has saved wallets
+     * */
+    fun hasSavedEncryptionKeys(): Boolean
 }
