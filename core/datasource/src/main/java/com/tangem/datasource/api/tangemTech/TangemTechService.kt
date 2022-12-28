@@ -19,7 +19,7 @@ class TangemTechService(
         CacheControlHttpInterceptor(cacheMaxAge),
     )
 
-    private var api: TangemTechApi = createApi()
+    var api: TangemTechApi = createApi()
 
     suspend fun coins(
         contractAddress: String? = null,
@@ -52,10 +52,6 @@ class TangemTechService(
 
     suspend fun userCountry(): Result<GeoResponse> = withContext(Dispatchers.IO) {
         performRequest { api.geo() }
-    }
-
-    suspend fun currencies(): Result<CurrenciesResponse> = withContext(Dispatchers.IO) {
-        performRequest { api.currencies() }
     }
 
     suspend fun getUserTokens(userId: String): Result<UserTokensResponse> = withContext(Dispatchers.IO) {

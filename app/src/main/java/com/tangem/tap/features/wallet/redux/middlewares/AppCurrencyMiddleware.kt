@@ -1,8 +1,6 @@
 package com.tangem.tap.features.wallet.redux.middlewares
 
-import com.tangem.common.services.Result
-import com.tangem.datasource.api.tangemTech.CurrenciesResponse
-import com.tangem.datasource.api.tangemTech.TangemTechService
+import com.tangem.datasource.api.tangemTech.models.Currency
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.MainScreen
@@ -11,6 +9,7 @@ import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TapWalletManager
 import com.tangem.tap.features.details.redux.DetailsAction
+import com.tangem.tap.features.wallet.domain.WalletRepository
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.models.WalletDialog
 import com.tangem.tap.features.walletSelector.redux.WalletSelectorAction
@@ -21,7 +20,7 @@ import com.tangem.tap.userWalletsListManager
 import kotlinx.coroutines.launch
 
 class AppCurrencyMiddleware(
-    private val tangemTechService: TangemTechService,
+    private val walletRepository: WalletRepository,
     private val tapWalletManager: TapWalletManager,
     private val fiatCurrenciesPrefStorage: FiatCurrenciesPrefStorage,
     private val appCurrencyProvider: () -> FiatCurrency,
@@ -45,12 +44,10 @@ class AppCurrencyMiddleware(
         }
 
         scope.launch {
-            when (val result = tangemTechService.currencies()) {
-                is Result.Success -> {
-                    val currenciesList = result.data.currencies
-                    if (currenciesList.isNotEmpty() &&
-                        currenciesList.toSet() != storedFiatCurrencies.toSet()
-                    ) {
+            runCatching { walletRepository.getCurrencyList() }
+                .onSuccess {
+                    val currenciesList = it.currencies
+                    if (currenciesList.isNotEmpty() && !currenciesList.toSet().equals(storedFiatCurrencies.toSet())) {
                         fiatCurrenciesPrefStorage.save(currenciesList)
                         store.dispatchDialogShow(
                             WalletDialog.CurrencySelectionDialog(
@@ -60,8 +57,6 @@ class AppCurrencyMiddleware(
                         )
                     }
                 }
-                is Result.Failure -> {}
-            }
         }
     }
 
@@ -82,7 +77,7 @@ class AppCurrencyMiddleware(
         }
     }
 
-    private fun List<CurrenciesResponse.Currency>.mapToUiModel(): List<FiatCurrency> {
+    private fun List<Currency>.mapToUiModel(): List<FiatCurrency> {
         return this.map {
             FiatCurrency(
                 code = it.code,
