@@ -63,8 +63,6 @@ dependencies {
     implementation(Library.okHttp)
     implementation(Library.okHttpLogging)
 
-    // kapt("com.squareup.moshi:moshi-kotlin-codegen:1.14.0")
-
     /** Time */
     implementation(Library.jodatime)
 }
