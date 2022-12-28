@@ -305,7 +305,7 @@ class WalletMiddleware {
             val reduxWalletStores = wallStores.mapToReduxModels(state.isMultiwalletAllowed)
             store.dispatchOnMain(
                 WalletAction.WalletStoresChanged.UpdateWalletStores(
-                    reduxWalletStores = reduxWalletStores.toList(),
+                    reduxWalletStores = reduxWalletStores,
                 ),
             )
         }
