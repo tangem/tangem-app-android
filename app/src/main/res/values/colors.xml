@@ -4,7 +4,7 @@
     <color name="colorPrimary">#0029FF</color>
     <color name="colorSecondary">#0022D4</color>
     <color name="accent">#19C878</color>
-    <color name="accent_disabled">#801ACE80</color>
+    <color name="accent_disabled">#4fd79e</color>
 
     <color name="menu_accent_color">@color/accent</color>
 
