@@ -12,7 +12,6 @@ import com.tangem.tap.domain.extensions.signedHashesCount
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
-import com.tangem.tap.userWalletsListManager
 import org.rekotlin.Action
 import java.util.*
 
@@ -58,7 +57,7 @@ private fun handlePrepareScreen(
         createBackupAllowed = action.scanResponse.card.backupStatus == CardDTO.BackupStatus.NoBackup,
         appCurrency = store.state.globalState.appCurrency,
         isBiometricsAvailable = tangemSdkManager.canUseBiometry,
-        saveWallets = userWalletsListManager.hasSavedUserWallets,
+        saveWallets = preferencesStorage.shouldSaveUserWallets,
         saveAccessCodes = preferencesStorage.shouldSaveAccessCodes,
     )
 }
