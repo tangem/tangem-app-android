@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -21,7 +22,6 @@ import androidx.compose.material.BottomSheetState
 import androidx.compose.material.BottomSheetValue
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Snackbar
 import androidx.compose.material.SnackbarDuration
 import androidx.compose.material.SnackbarHost
@@ -56,15 +56,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.VerticalSpacer
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
-import com.tangem.core.ui.res.ButtonColorType
-import com.tangem.core.ui.res.IconColorType
 import com.tangem.core.ui.res.TangemColorPalette
-import com.tangem.core.ui.res.TangemColorPalette.Black
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TextColorType
-import com.tangem.core.ui.res.buttonColor
-import com.tangem.core.ui.res.iconColor
-import com.tangem.core.ui.res.textColor
 import com.tangem.feature.referral.models.ReferralStateHolder
 import com.tangem.feature.referral.models.ReferralStateHolder.ErrorSnackbar
 import com.tangem.feature.referral.models.ReferralStateHolder.ReferralInfoContentState
@@ -131,14 +124,15 @@ private fun ReferralContent(stateHolder: ReferralStateHolder, onAgreementClicked
         CompositionLocalProvider(LocalOverscrollConfiguration provides null) {
             LazyColumn(
                 modifier = Modifier
-                    .background(color = MaterialTheme.colors.primary)
-                    .fillMaxWidth(),
+                    .background(color = TangemTheme.colors.background.secondary)
+                    .fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 stickyHeader {
                     AppBarWithBackButton(
                         text = stringResource(R.string.details_referral_title),
                         onBackClick = stateHolder.headerState.onBackClicked,
+                        modifier = Modifier.background(color = TangemTheme.colors.background.secondary),
                     )
                 }
                 item { Header() }
@@ -172,10 +166,10 @@ private fun Header() {
         Text(
             text = stringResource(id = R.string.referral_title),
             modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.spacing50)),
-            color = MaterialTheme.colors.textColor(type = TextColorType.PRIMARY1),
+            color = TangemTheme.colors.text.primary1,
             textAlign = TextAlign.Center,
             maxLines = 2,
-            style = MaterialTheme.typography.h2,
+            style = TangemTheme.typography.h2,
         )
         VerticalSpacer(spaceResId = R.dimen.spacing16)
     }
@@ -262,7 +256,7 @@ private fun Condition(@DrawableRes iconResId: Int, infoBlock: @Composable () -> 
         Box(
             modifier = Modifier
                 .background(
-                    color = MaterialTheme.colors.buttonColor(type = ButtonColorType.SECONDARY),
+                    color = TangemTheme.colors.button.secondary,
                     shape = RoundedCornerShape(TangemTheme.dimens.radius16),
                 )
                 .size(TangemTheme.dimens.size56),
@@ -272,7 +266,7 @@ private fun Condition(@DrawableRes iconResId: Int, infoBlock: @Composable () -> 
                 painter = painterResource(id = iconResId),
                 contentDescription = null,
                 modifier = Modifier.size(TangemTheme.dimens.size28),
-                tint = MaterialTheme.colors.iconColor(type = IconColorType.PRIMARY1),
+                tint = TangemTheme.colors.icon.primary1,
             )
         }
         infoBlock()
@@ -285,7 +279,7 @@ private fun InfoForYou(award: String, networkName: String, address: String? = nu
         Text(
             text = buildAnnotatedString {
                 append(stringResource(id = R.string.referral_point_currencies_description_prefix))
-                withStyle(SpanStyle(color = MaterialTheme.colors.textColor(type = TextColorType.PRIMARY1))) {
+                withStyle(SpanStyle(color = TangemTheme.colors.text.primary1)) {
                     append(" $award ")
                 }
                 append(
@@ -296,8 +290,8 @@ private fun InfoForYou(award: String, networkName: String, address: String? = nu
                     ),
                 )
             },
-            color = MaterialTheme.colors.textColor(type = TextColorType.TERTIARY),
-            style = MaterialTheme.typography.body2,
+            color = TangemTheme.colors.text.tertiary,
+            style = TangemTheme.typography.body2,
         )
     }
 }
@@ -317,8 +311,8 @@ private fun InfoForYourFriend(discount: String) {
                 append(" ")
                 append(stringResource(id = R.string.referral_point_discount_description_suffix))
             },
-            color = MaterialTheme.colors.textColor(type = TextColorType.TERTIARY),
-            style = MaterialTheme.typography.body2,
+            color = TangemTheme.colors.text.tertiary,
+            style = TangemTheme.typography.body2,
         )
     }
 }
@@ -328,8 +322,8 @@ private fun ConditionInfo(title: String, subtitleContent: @Composable () -> Unit
     Column(verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing2)) {
         Text(
             text = title,
-            color = MaterialTheme.colors.textColor(type = TextColorType.PRIMARY1),
-            style = MaterialTheme.typography.subtitle1,
+            color = TangemTheme.colors.text.primary1,
+            style = TangemTheme.typography.subtitle1,
         )
         subtitleContent()
     }
@@ -350,6 +344,7 @@ private fun ShimmerInfo() {
                 .width(TangemTheme.dimens.size102)
                 .height(TangemTheme.dimens.size16)
                 .background(TangemColorPalette.White),
+            // .background(Color(0xFFF8F8F8)),
         )
         Box(
             modifier = Modifier
@@ -376,9 +371,9 @@ private fun ErrorSnackbarHost(errorSnackbar: ErrorSnackbar?) {
                     modifier = Modifier.fillMaxWidth(),
                     actionOnNewLine = true,
                     shape = RoundedCornerShape(size = TangemTheme.dimens.radius8),
-                    backgroundColor = Black,
-                    contentColor = MaterialTheme.colors.textColor(type = TextColorType.PRIMARY2),
-                    actionColor = MaterialTheme.colors.textColor(type = TextColorType.PRIMARY2),
+                    backgroundColor = TangemColorPalette.Black,
+                    contentColor = TangemTheme.colors.text.primary2,
+                    actionColor = TangemTheme.colors.text.primary2,
                     elevation = TangemTheme.dimens.elevation3,
                 )
             },
@@ -428,7 +423,7 @@ private fun CopySnackbarHost(isCopyButtonPressed: MutableState<Boolean>) {
                 Box(
                     modifier = Modifier
                         .onSizeChanged { snackbarSize = it.width }
-                        .background(Black, RoundedCornerShape(size = TangemTheme.dimens.radius8))
+                        .background(TangemColorPalette.Black, RoundedCornerShape(size = TangemTheme.dimens.radius8))
                         .shadow(
                             TangemTheme.dimens.elevation3,
                             RoundedCornerShape(size = TangemTheme.dimens.radius8),
@@ -440,8 +435,8 @@ private fun CopySnackbarHost(isCopyButtonPressed: MutableState<Boolean>) {
                 ) {
                     Text(
                         text = it.message,
-                        color = MaterialTheme.colors.textColor(type = TextColorType.PRIMARY2),
-                        style = MaterialTheme.typography.body2,
+                        color = TangemTheme.colors.text.primary2,
+                        style = TangemTheme.typography.body2,
                     )
                 }
             },
