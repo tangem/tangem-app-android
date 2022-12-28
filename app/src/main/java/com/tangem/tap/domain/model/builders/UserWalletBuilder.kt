@@ -1,5 +1,7 @@
 package com.tangem.tap.domain.model.builders
 
+import com.tangem.common.card.EllipticCurve
+import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.extensions.toHexString
 import com.tangem.common.services.Result
 import com.tangem.domain.common.CardDTO
@@ -40,7 +42,16 @@ class UserWalletBuilder(
             ProductType.Note -> false
             ProductType.Twins -> false
             ProductType.SaltPay -> false
-            ProductType.Wallet -> !card.isStart2Coin
+            ProductType.Wallet -> when {
+                card.isStart2Coin -> false
+                card.firmwareVersion >= FirmwareVersion.MultiWalletAvailable -> true
+                else -> {
+                    val cardWallets = card.wallets
+                    require(cardWallets.isNotEmpty()) { "Card wallets must not be empty" }
+
+                    cardWallets.first().curve == EllipticCurve.Secp256k1
+                }
+            }
         }
 
     fun backupCardsIds(backupCardsIds: Set<String>?) = this.apply {
