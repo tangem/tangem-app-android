@@ -25,6 +25,8 @@ class ConfigValueModel(
     val blockchairAuthorizationToken: String?,
     val quiknodeSubdomain: String,
     val quiknodeApiKey: String,
+    val bscQuiknodeSubdomain: String,
+    val bscQuiknodeApiKey: String,
     val blockcypherTokens: Set<String>?,
     val infuraProjectId: String?,
     val appsFlyerDevKey: String,
