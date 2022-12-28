@@ -7,6 +7,7 @@ import androidx.compose.foundation.LocalOverscrollConfiguration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -300,14 +301,16 @@ private fun InfoForYou(award: String, networkName: String, address: String? = nu
 private fun InfoForYourFriend(discount: String) {
     ConditionInfo(title = stringResource(id = R.string.referral_point_discount_title)) {
         Text(
-            text = buildString {
+            text = buildAnnotatedString {
                 append(stringResource(id = R.string.referral_point_discount_description_prefix))
-                append(
-                    String.format(
-                        stringResource(id = R.string.referral_point_discount_description_value),
-                        " $discount",
-                    ),
-                )
+                withStyle(SpanStyle(color = TangemTheme.colors.text.primary1)) {
+                    append(
+                        String.format(
+                            stringResource(id = R.string.referral_point_discount_description_value),
+                            " $discount",
+                        ),
+                    )
+                }
                 append(" ")
                 append(stringResource(id = R.string.referral_point_discount_description_suffix))
             },
@@ -358,14 +361,14 @@ private fun ShimmerInfo() {
 
 // TODO() Replace component with component from ds
 @Composable
-private fun ErrorSnackbarHost(errorSnackbar: ErrorSnackbar?) {
+private fun BoxScope.ErrorSnackbarHost(errorSnackbar: ErrorSnackbar?) {
     if (errorSnackbar != null) {
         val snackbarHostState by remember { mutableStateOf(SnackbarHostState()) }
         val coroutineScope = rememberCoroutineScope()
 
         SnackbarHost(
             hostState = snackbarHostState,
-            modifier = Modifier.padding(top = TangemTheme.dimens.spacing56),
+            modifier = Modifier.align(Alignment.BottomCenter),
             snackbar = {
                 Snackbar(
                     snackbarData = it,
@@ -407,7 +410,7 @@ private fun ErrorSnackbarHost(errorSnackbar: ErrorSnackbar?) {
 
 // TODO() Replace component with component from ds
 @Composable
-private fun CopySnackbarHost(isCopyButtonPressed: MutableState<Boolean>) {
+private fun BoxScope.CopySnackbarHost(isCopyButtonPressed: MutableState<Boolean>) {
     if (isCopyButtonPressed.value) {
         val snackbarHostState by remember { mutableStateOf(SnackbarHostState()) }
         val coroutineScope = rememberCoroutineScope()
@@ -419,7 +422,8 @@ private fun CopySnackbarHost(isCopyButtonPressed: MutableState<Boolean>) {
         SnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier
-                .padding(top = TangemTheme.dimens.spacing56, start = (width - snackbarWidth).div(2))
+                .align(Alignment.BottomCenter)
+                .padding(start = (width - snackbarWidth).div(2), bottom = dimensionResource(R.dimen.spacing12))
                 .fillMaxWidth(),
             snackbar = {
                 Box(
