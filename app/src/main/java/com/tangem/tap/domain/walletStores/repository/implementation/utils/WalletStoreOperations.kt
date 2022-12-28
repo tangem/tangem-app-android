@@ -62,9 +62,11 @@ internal fun WalletStoreModel.updateWithSelf(
 ): WalletStoreModel {
     val oldStore = this
     return oldStore.copy(
-        walletManager = newWalletStore.walletManager,
-        walletRent = newWalletStore.walletRent,
+        derivationPath = newWalletStore.derivationPath,
         walletsData = oldStore.walletsData.updateWithSelf(newWalletStore.walletsData),
+        walletRent = newWalletStore.walletRent,
+        blockchainNetwork = newWalletStore.blockchainNetwork,
+        walletManager = newWalletStore.walletManager,
     )
 }
 
