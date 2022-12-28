@@ -20,7 +20,6 @@ import com.tangem.tap.domain.extensions.isMultiwalletAllowed
 import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.wallet.models.Currency
-import com.tangem.tap.features.wallet.models.TotalBalance
 import com.tangem.tap.features.wallet.models.WalletRent
 import com.tangem.tap.features.wallet.redux.AddressData
 import com.tangem.tap.features.wallet.redux.Artwork
@@ -36,7 +35,6 @@ import com.tangem.tap.features.wallet.redux.replaceSomeWalletsData
 import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.proxy.AppStateHolder
-import com.tangem.tap.store
 import org.rekotlin.Action
 import timber.log.Timber
 import java.math.BigDecimal
@@ -344,8 +342,9 @@ private fun internalReduce(action: Action, state: AppState, appStateHolder: AppS
                     card.settings.isBackupAllowed &&
                     card.backupStatus == CardDTO.BackupStatus.NoBackup,
                 walletCardsCount = card.findCardsCount(),
+                walletsStores = newState.walletsStores,
                 totalBalance = if (isMultiCurrency) {
-                    TotalBalance(ProgressState.Loading, BigDecimal.ZERO, store.state.globalState.appCurrency)
+                    newState.totalBalance
                 } else {
                     null
                 },
@@ -362,13 +361,13 @@ private fun internalReduce(action: Action, state: AppState, appStateHolder: AppS
             )
         }
         is WalletAction.LoadData.Success -> {
-            val selectedCurrency = if (!newState.isMultiwalletAllowed) {
+            val selectedCurrency = if (newState.isMultiwalletAllowed) {
+                newState.selectedCurrency
+            } else {
                 newState.walletsStores.firstOrNull()
                     ?.walletsData
                     ?.firstOrNull()
                     ?.currency
-            } else {
-                newState.selectedWalletData?.currency
             }
 
             newState = newState.copy(
