@@ -60,7 +60,7 @@ class NetworkModule {
                         .build(),
                 ),
             )
-            .baseUrl(DEV_TANGEM_TECH_BASE_URL)
+            .baseUrl(PROD_TANGEM_TECH_BASE_URL)
             .client(okHttpClient)
             .build()
             .create(ReferralApi::class.java)
