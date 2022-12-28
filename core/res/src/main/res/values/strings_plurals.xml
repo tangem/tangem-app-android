@@ -16,5 +16,6 @@
     <plurals name="referral_wallets_purchased_count">
         <item quantity="zero">%d wallets</item>
         <item quantity="one">%d wallet</item>
+        <item quantity="other">%d wallets</item>
     </plurals>
 </resources>
