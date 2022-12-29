@@ -14,11 +14,11 @@ internal interface UserWalletsKeysRepository {
     suspend fun getAll(): CompletionResult<List<UserWalletEncryptionKey>>
 
     /**
-     * Store the encryption keys for user wallets. Biometric authentication not required
-     * @param encryptionKeys List of encryption keys for user wallets
+     * Save the encryption key for user wallet. Biometric authentication not required
+     * @param encryptionKey [UserWalletEncryptionKey] to save
      * @return [CompletionResult] of operation
      * */
-    suspend fun store(encryptionKeys: List<UserWalletEncryptionKey>): CompletionResult<Unit>
+    suspend fun save(encryptionKey: UserWalletEncryptionKey): CompletionResult<Unit>
 
     /**
      * Delete encryption keys for user wallets. Biometric authentication not required
