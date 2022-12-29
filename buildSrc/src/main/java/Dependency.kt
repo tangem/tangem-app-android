@@ -67,6 +67,7 @@ object Library {
     const val zxingQrBarcodeScanner = "me.dm7.barcodescanner:zxing:" + Versions.zxingQrBarcodeScanner
     const val zxingQrCore = "com.google.zxing:core:" + Versions.zxingQrCode
     const val mviCoreWatcher = "com.github.badoo.mvicore:mvicore-diff:" + Versions.mviCore
+    const val kotlinSerialization = "org.jetbrains.kotlinx:kotlinx-serialization-json:" + Versions.kotlinSerialization
 }
 
 object Tangem {

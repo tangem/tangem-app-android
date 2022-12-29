@@ -165,15 +165,6 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
     }
 
     private fun setupButtons() = with(binding) {
-        rowButtons.onBuyClick = {
-            store.dispatch(WalletAction.TradeCryptoAction.Buy())
-        }
-        rowButtons.onSellClick = {
-            store.dispatch(WalletAction.TradeCryptoAction.Sell)
-        }
-        rowButtons.onTradeClick = {
-            store.dispatch(WalletAction.DialogAction.ChooseTradeActionDialog)
-        }
         rowButtons.onSendClick = {
             store.dispatch(WalletAction.Send())
         }
@@ -273,6 +264,15 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
             sellAllowed = selectedWallet.isAvailableToSell,
             sendAllowed = selectedWallet.mainButton.enabled,
         )
+        rowButtons.onTradeClick = {
+            store.dispatch(
+                WalletAction.DialogAction.ChooseTradeActionDialog(
+                    buyAllowed = selectedWallet.isAvailableToBuy,
+                    sellAllowed = selectedWallet.isAvailableToSell,
+                    swapAllowed = selectedWallet.isAvailableToSwap,
+                ),
+            )
+        }
     }
 
     private fun handleWarnings(selectedWallet: WalletData) = with(binding) {
