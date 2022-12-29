@@ -93,7 +93,7 @@ private fun readCard() = scope.launch {
         onSuccess = { scanResponse ->
             scope.launch {
                 if (preferencesStorage.shouldSaveUserWallets) {
-                    val userWallet = UserWalletBuilder(scanResponse).build()
+                    val userWallet = UserWalletBuilder(scanResponse).build() ?: return@launch
                     userWalletsListManager.save(userWallet)
                         .doOnFailure { error ->
                             Timber.e(error, "Unable to save user wallet")
