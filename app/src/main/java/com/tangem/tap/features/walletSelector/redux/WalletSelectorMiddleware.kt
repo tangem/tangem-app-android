@@ -239,9 +239,7 @@ internal class WalletSelectorMiddleware {
         Analytics.send(MyWallets.Button.EditWalletTapped)
 
         scope.launch {
-            userWalletsListManager.get(userWalletId)
-                .map { it.copy(name = newName) }
-                .flatMap { userWalletsListManager.save(it, canOverride = true) }
+            userWalletsListManager.update(userWalletId) { it.copy(name = newName) }
                 .doOnFailure { error ->
                     store.dispatchOnMain(WalletSelectorAction.HandleError(error))
                 }
