@@ -20,6 +20,7 @@ import com.tangem.tap.domain.walletStores.repository.WalletStoresRepository
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.toBlockchainNetworks
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
 
 internal class DefaultWalletCurrenciesManager(
@@ -64,7 +65,15 @@ internal class DefaultWalletCurrenciesManager(
                 saveUserCurrencies(card, newCurrencies)
             }
             .flatMap {
-                walletAmountsRepository.updateAmountsForUserWallet(
+                val updatedBlockchains = updatedBlockchainNetworks
+                    .map { it.blockchain }
+                val updatedWalletStores = walletStoresRepository.get(userWallet.walletId)
+                    .firstOrNull()
+                    ?.filter { it.blockchain in updatedBlockchains }
+                    ?: return@flatMap CompletionResult.Success(Unit)
+
+                walletAmountsRepository.updateAmountsForWalletStores(
+                    walletStores = updatedWalletStores,
                     userWallet = userWallet,
                     fiatCurrency = appCurrencyProvider(),
                 )
