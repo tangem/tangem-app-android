@@ -124,16 +124,15 @@ private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch:
                                 primaryCard = result.data.primaryCard,
                             )
                             onboardingManager.scanResponse = updatedResponse
-                            val blockchainNetworks = listOf(
-                                BlockchainNetwork(
-                                    blockchain = Blockchain.Bitcoin,
-                                    card = result.data.card,
-                                ),
-                                BlockchainNetwork(
-                                    blockchain = Blockchain.Ethereum,
-                                    card = result.data.card,
-                                ),
-                            )
+
+                            val blockchainNetworks = if (DemoHelper.isDemoCardId(result.data.card.cardId)) {
+                                DemoHelper.config.demoBlockchains
+                            } else {
+                                listOf(Blockchain.Bitcoin, Blockchain.Ethereum)
+                            }.map { blockchain ->
+                                BlockchainNetwork(blockchain, result.data.card)
+                            }
+
                             store.dispatch(
                                 WalletAction.MultiWallet.SaveCurrencies(
                                     blockchainNetworks = blockchainNetworks,
