@@ -56,6 +56,7 @@ object Versions {
     const val zxingQrBarcodeScanner = "1.9.8"
     const val zxingQrCode = "3.3.3"
     const val mviCore = "1.3.1"
+    const val kotlinSerialization = "1.4.1"
     // endregion Other libraries
 
     // region Tangem
