@@ -2,6 +2,7 @@ plugins {
     id("com.android.library")
     kotlin("android")
     kotlin("kapt")
+    kotlin("plugin.serialization")
     id("com.google.dagger.hilt.android")
 }
 
@@ -68,6 +69,7 @@ dependencies {
 
     /** Other libraries */
     implementation(Library.composeShimmer)
+    implementation(Library.kotlinSerialization)
 
     /** DI */
     implementation(Library.hilt)
