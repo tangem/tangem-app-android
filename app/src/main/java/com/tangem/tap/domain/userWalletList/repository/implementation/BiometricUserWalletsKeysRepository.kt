@@ -45,10 +45,9 @@ internal class BiometricUserWalletsKeysRepository(
         }
     }
 
-    override suspend fun store(encryptionKeys: List<UserWalletEncryptionKey>): CompletionResult<Unit> {
+    override suspend fun save(encryptionKey: UserWalletEncryptionKey): CompletionResult<Unit> {
         return withContext(Dispatchers.IO) {
-            encryptionKeys.map { storeEncryptionKey(it) }
-                .fold()
+            storeEncryptionKey(encryptionKey)
                 .mapFailure { error ->
                     UserWalletListError.SaveEncryptionKeysError(error.cause ?: error)
                 }
