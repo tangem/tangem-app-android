@@ -8,12 +8,12 @@ import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.extensions.toNetworkId
-import com.tangem.domain.common.util.userWalletId
 import com.tangem.lib.crypto.UserWalletManager
 import com.tangem.lib.crypto.models.Currency
 import com.tangem.lib.crypto.models.NativeToken
 import com.tangem.lib.crypto.models.NonNativeToken
 import com.tangem.tap.domain.extensions.makeWalletManagerForApp
+import com.tangem.tap.domain.model.builders.UserWalletIdBuilder
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.wallet.redux.WalletAction
 import org.rekotlin.Action
@@ -54,7 +54,12 @@ class UserWalletManagerImpl(
     }
 
     override fun getWalletId(): String {
-        return appStateHolder.getActualCard()?.userWalletId?.stringValue ?: ""
+        return appStateHolder.getActualCard()?.let {
+            UserWalletIdBuilder.card(it)
+                .build()
+                ?.stringValue
+        }
+            ?: ""
     }
 
     override suspend fun isTokenAdded(currency: Currency): Boolean {
