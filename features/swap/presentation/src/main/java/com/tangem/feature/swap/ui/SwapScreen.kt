@@ -33,12 +33,10 @@ internal fun SwapScreen(stateHolder: SwapStateHolder) {
                 )
             },
             sheetContent = {
-                if (stateHolder.permissionState != null) {
                     SwapPermissionBottomSheetContent(
                         data = stateHolder.permissionState,
                         onCancel = { coroutineScope.launch { bottomSheetScaffoldState.bottomSheetState.collapse() } },
                     )
-                }
             },
             scaffoldState = bottomSheetScaffoldState,
             sheetShape = RoundedCornerShape(
@@ -52,7 +50,9 @@ internal fun SwapScreen(stateHolder: SwapStateHolder) {
                     state = stateHolder,
                     onPermissionWarningClick = {
                         coroutineScope.launch {
-                            if (bottomSheetScaffoldState.bottomSheetState.isCollapsed) {
+                            if (bottomSheetScaffoldState.bottomSheetState.isCollapsed
+                                && stateHolder.permissionState != null
+                            ) {
                                 bottomSheetScaffoldState.bottomSheetState.expand()
                             } else {
                                 bottomSheetScaffoldState.bottomSheetState.collapse()
