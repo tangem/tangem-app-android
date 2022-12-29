@@ -29,6 +29,12 @@ interface WalletAmountsRepository {
         fiatCurrency: FiatCurrency,
     ): CompletionResult<Unit>
 
+    suspend fun updateAmountsForWalletStores(
+        walletStores: List<WalletStoreModel>,
+        userWallet: UserWallet,
+        fiatCurrency: FiatCurrency,
+    ): CompletionResult<Unit>
+
     /**
      * Fetch wallet amounts and fiat rates then update [com.tangem.tap.domain.walletStores.storage.WalletStoresStorage]
      * and [com.tangem.tap.domain.walletStores.storage.WalletManagerStorage] with new data
