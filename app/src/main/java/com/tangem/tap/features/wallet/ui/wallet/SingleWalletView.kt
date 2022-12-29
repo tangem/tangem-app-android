@@ -134,9 +134,15 @@ class SingleWalletView : WalletView() {
             sendAllowed = walletData.mainButton.enabled,
         )
 
-        rowButtons.onBuyClick = { store.dispatch(WalletAction.TradeCryptoAction.Buy()) }
-        rowButtons.onSendClick = { store.dispatch(WalletAction.TradeCryptoAction.Sell) }
-        rowButtons.onTradeClick = { store.dispatch(WalletAction.DialogAction.ChooseTradeActionDialog) }
+        rowButtons.onTradeClick = {
+            store.dispatch(
+                WalletAction.DialogAction.ChooseTradeActionDialog(
+                    buyAllowed = walletData.isAvailableToBuy,
+                    sellAllowed = walletData.isAvailableToSell,
+                    swapAllowed = walletData.isAvailableToSwap,
+                ),
+            )
+        }
 
         rowButtons.onSendClick = {
             when (walletData.mainButton) {
