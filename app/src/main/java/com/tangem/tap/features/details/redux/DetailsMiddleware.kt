@@ -278,9 +278,6 @@ class DetailsMiddleware {
             val userWallet = UserWalletBuilder(scanResponse).build()
 
             userWalletsListManager.save(userWallet)
-                .doOnFailure { error ->
-                    Timber.e(error, "Wallet saving failed")
-                }
                 .doOnSuccess {
                     Analytics.send(Settings.AppSettings.SaveWalletSwitcherChanged(AnalyticsParam.OnOffState.On))
 
@@ -295,6 +292,9 @@ class DetailsMiddleware {
                     )
 
                     store.onUserWalletSelected(userWallet)
+                }
+                .doOnFailure { error ->
+                    Timber.e(error, "Unable to save user wallet")
                 }
         }
 
@@ -314,6 +314,9 @@ class DetailsMiddleware {
                     )
 
                     store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Home))
+                }
+                .doOnFailure { error ->
+                    Timber.e(error, "Unable to delete saved wallets")
                 }
         }
 
@@ -352,6 +355,9 @@ class DetailsMiddleware {
                                 ),
                             )
                         }
+                }
+                .doOnFailure { error ->
+                    Timber.e(error, "Unable to delete saved access codes")
                 }
         }
     }
