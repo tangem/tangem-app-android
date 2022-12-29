@@ -17,6 +17,7 @@ import com.tangem.tap.domain.userWalletList.UserWalletListError
 import com.tangem.tap.domain.userWalletList.model.UserWalletEncryptionKey
 import com.tangem.tap.domain.userWalletList.repository.UserWalletsKeysRepository
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 
 internal class BiometricUserWalletsKeysRepository(
@@ -74,6 +75,12 @@ internal class BiometricUserWalletsKeysRepository(
                 .map {
                     clearUserWalletsIds()
                 }
+        }
+    }
+
+    override fun hasSavedEncryptionKeys(): Boolean {
+        return runBlocking {
+            getUserWalletsIds().isNotEmpty()
         }
     }
 
