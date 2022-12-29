@@ -38,11 +38,12 @@ internal class DefaultUserWalletsSensitiveInformationRepository(
         Cipher.getInstance("$algorithm/$blockMode/$encryptionPadding")
     }
 
-    override suspend fun save(userWallet: UserWallet): CompletionResult<Unit> {
+    override suspend fun save(userWallet: UserWallet, encryptionKey: ByteArray?): CompletionResult<Unit> {
+        if (encryptionKey == null) return CompletionResult.Success(Unit) // Encryption key is null, do nothing
         return catching {
             val encryptedSensitiveInformation = userWallet.sensitiveInformation
                 .encode()
-                .encryptAndStoreIv(userWallet.walletId.stringValue, userWallet.scanResponse.card.encryptionKey)
+                .encryptAndStoreIv(userWallet.walletId.stringValue, encryptionKey)
 
             getAllEncrypted().toMutableMap()
                 .apply { set(userWallet.walletId.stringValue, encryptedSensitiveInformation) }
