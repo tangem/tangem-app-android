@@ -161,7 +161,12 @@ sealed class WalletAction : Action {
         ) : DialogAction()
 
         object SignedHashesMultiWalletDialog : DialogAction()
-        object ChooseTradeActionDialog : DialogAction()
+        data class ChooseTradeActionDialog(
+            val buyAllowed: Boolean,
+            val sellAllowed: Boolean,
+            val swapAllowed: Boolean,
+        ) : DialogAction()
+
         data class ChooseCurrency(val amounts: List<Amount>?) : DialogAction()
         data class RussianCardholdersWarningDialog(
             val dialogData: WalletDialog.RussianCardholdersWarningDialog.Data? = null,
@@ -190,6 +195,8 @@ sealed class WalletAction : Action {
             val destinationAddress: String,
             val transactionId: String,
         ) : TradeCryptoAction()
+
+        object Swap : TradeCryptoAction()
     }
 
     data class ChangeSelectedAddress(val type: AddressType) : WalletAction()
