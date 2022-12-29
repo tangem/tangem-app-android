@@ -19,13 +19,24 @@ interface UserWalletsListManager {
     suspend fun selectWallet(userWalletId: UserWalletId): CompletionResult<UserWallet>
 
     /**
-     * Save user wallet
+     * Save provided user wallet and set it as selected
      * @param userWallet [UserWallet] to save
      * @param canOverride If false, then terminate with [UserWalletListError.WalletAlreadySaved] when user tries to save an
      * already saved card
      * @return [CompletionResult] of operation
      * */
     suspend fun save(userWallet: UserWallet, canOverride: Boolean = false): CompletionResult<Unit>
+
+    /**
+     * Same as [save] but not change selected user wallet ID
+     * and not terminate with [UserWalletListError.WalletAlreadySaved] if [UserWallet] already saved
+     *
+     * Can terminate with [NoSuchElementException] if unable to find [UserWallet] with provided [UserWalletId]
+     * @param userWalletId update [UserWallet] with that [UserWalletId]
+     * @param update lambda that receives stored [UserWallet] and returns updated [UserWallet]
+     * @return [CompletionResult] of operation with updated [UserWallet]
+     * */
+    suspend fun update(userWalletId: UserWalletId, update: (UserWallet) -> UserWallet): CompletionResult<UserWallet>
 
     suspend fun delete(userWalletIds: List<UserWalletId>): CompletionResult<Unit>
     suspend fun clear(): CompletionResult<Unit>
