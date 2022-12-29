@@ -10,7 +10,6 @@ import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.TwinCardNumber
 import com.tangem.domain.common.TwinsHelper
-import com.tangem.domain.common.util.userWalletId
 import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.operations.attestation.TangemApi
 import com.tangem.tap.domain.model.UserWallet
@@ -60,16 +59,20 @@ class UserWalletBuilder(
         }
     }
 
-    suspend fun build(): UserWallet {
+    suspend fun build(): UserWallet? {
         return with(scanResponse) {
-            UserWallet(
-                walletId = card.userWalletId,
-                name = userWalletName,
-                artworkUrl = loadArtworkUrl(card.cardId, card.cardPublicKey),
-                cardsInWallet = backupCardsIds.plus(card.cardId),
-                scanResponse = this,
-                isMultiCurrency = isMultiCurrency,
-            )
+            UserWalletIdBuilder.scanResponse(scanResponse)
+                .build()
+                ?.let {
+                    UserWallet(
+                        walletId = it,
+                        name = userWalletName,
+                        artworkUrl = loadArtworkUrl(card.cardId, card.cardPublicKey),
+                        cardsInWallet = backupCardsIds.plus(card.cardId),
+                        scanResponse = this,
+                        isMultiCurrency = isMultiCurrency,
+                    )
+                }
         }
     }
 
