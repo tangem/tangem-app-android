@@ -4,15 +4,8 @@ import com.tangem.common.extensions.calculateSha256
 import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.extensions.calculateHmacSha256
 
-internal val CardDTO.encryptionKey: ByteArray
-    @Throws(IllegalArgumentException::class)
-    get() {
-        val walletPublicKey = requireNotNull(findPublicKey(wallets)) {
-            "Wallet public key must not be null"
-        }
-
-        return calculateEncryptionKey(walletPublicKey)
-    }
+internal val CardDTO.encryptionKey: ByteArray?
+    get() = findPublicKey(wallets)?.let { calculateEncryptionKey(it) }
 
 private fun calculateEncryptionKey(publicKey: ByteArray): ByteArray {
     val message = MESSAGE_FOR_ENCRYPTION_KEY.toByteArray()
