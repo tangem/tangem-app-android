@@ -72,10 +72,6 @@ internal class DefaultUserWalletsPublicInformationRepository(
         }
     }
 
-    override fun isNotEmpty(): Boolean {
-        return secureStorage.get(StorageKey.UserWalletPublicInformation.name)?.isNotEmpty() == true
-    }
-
     @JvmName("saveWithPublicInformation")
     private suspend fun save(
         publicInformation: List<UserWalletPublicInformation>,
