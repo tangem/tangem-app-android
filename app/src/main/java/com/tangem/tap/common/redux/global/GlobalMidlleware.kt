@@ -4,7 +4,6 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.guard
 import com.tangem.common.extensions.ifNotNull
-import com.tangem.common.services.Result
 import com.tangem.domain.common.LogConfig
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
@@ -187,23 +186,20 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
         }
         is GlobalAction.FetchUserCountry -> {
             scope.launch {
-                val techService = store.state.domainNetworks.tangemTechService
-                when (val result = techService.userCountry()) {
-                    is Result.Success -> {
+// [REDACTED_TODO_COMMENT]
+                runCatching { store.state.featureRepositoryProvider.homeRepository.getUserCountryCode() }
+                    .onSuccess {
                         store.dispatchOnMain(
-                            GlobalAction.FetchUserCountry.Success(
-                                countryCode = result.data.code.lowercase(),
-                            ),
+                            GlobalAction.FetchUserCountry.Success(countryCode = it.code.lowercase()),
                         )
                     }
-                    is Result.Failure -> {
+                    .onFailure {
                         store.dispatchOnMain(
                             GlobalAction.FetchUserCountry.Success(
                                 countryCode = Locale.getDefault().country.lowercase(),
                             ),
                         )
                     }
-                }
             }
         }
     }
