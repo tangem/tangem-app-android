@@ -71,7 +71,7 @@ internal class WelcomeMiddleware {
 
     private fun proceedWithCard(state: WelcomeState) = scope.launch {
         scanCardInternal { scanResponse ->
-            val userWallet = UserWalletBuilder(scanResponse).build()
+            val userWallet = UserWalletBuilder(scanResponse).build() ?: return@scanCardInternal
 
             userWalletsListManager.save(userWallet, canOverride = true)
                 .doOnFailure { error ->

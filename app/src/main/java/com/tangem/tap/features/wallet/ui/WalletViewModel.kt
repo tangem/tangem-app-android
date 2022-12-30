@@ -8,8 +8,10 @@ import com.tangem.tap.store
 import com.tangem.tap.userWalletsListManager
 import com.tangem.tap.walletStoresManager
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 
@@ -21,8 +23,10 @@ internal class WalletViewModel : ViewModel() {
 
     private fun bootstrapSelectedWalletStoresChanges() {
         userWalletsListManager.selectedUserWallet
-            .flatMapLatest { selectedWallet ->
-                walletStoresManager.get(selectedWallet.walletId)
+            .map { it.walletId }
+            .distinctUntilChanged()
+            .flatMapLatest { selectedUserWalletId ->
+                walletStoresManager.get(selectedUserWalletId)
             }
             .onEach { walletStores ->
                 store.dispatch(WalletAction.WalletStoresChanged(walletStores))
