@@ -329,6 +329,9 @@ data class WalletData(
     val isAvailableToSell: Boolean
         get() = store.state.globalState.exchangeManager.availableForSell(currency)
 
+    val isAvailableToSwap: Boolean
+        get() = currency.blockchain.isEvm() && currency.coinId != null
+
     fun shouldShowMultipleAddress(): Boolean {
         val listOfAddresses = walletAddresses?.list ?: return false
         return listOfAddresses.size > 1
