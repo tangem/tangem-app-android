@@ -6,7 +6,6 @@ import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.guard
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.extensions.withMainContext
-import com.tangem.domain.common.util.userWalletId
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.events.AnalyticsParam
@@ -25,6 +24,7 @@ import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.makePrimaryWalletManager
+import com.tangem.tap.domain.model.builders.UserWalletIdBuilder
 import com.tangem.tap.domain.twins.TwinCardsManager
 import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.features.wallet.models.Currency
@@ -156,7 +156,7 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
                 TwinCardsStep.CreateFirstWallet -> {
                     scope.launch {
                         userWalletsListManager.delete(
-                            listOf(getScanResponse().card.userWalletId),
+                            listOfNotNull(UserWalletIdBuilder.scanResponse(getScanResponse()).build()),
                         )
                     }
                 }
