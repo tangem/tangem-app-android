@@ -16,6 +16,7 @@ buildscript {
 
 plugins {
     id("com.google.dagger.hilt.android") version "2.44" apply false
+    kotlin("plugin.serialization") version Versions.kotlin apply false
 }
 
 allprojects {

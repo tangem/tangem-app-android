@@ -133,7 +133,7 @@ class DialogManager : StoreSubscriber<GlobalState> {
             is SaltPayDialog.Activation.NoGas -> NoFundsForActivationDialog.create(context)
             is SaltPayDialog.Activation.OnError -> RegistrationErrorDialog.create(context, state.dialog)
             is WalletDialog.CurrencySelectionDialog -> CurrencySelectionDialog.create(state.dialog, context)
-            is WalletDialog.ChooseTradeActionDialog -> ChooseTradeActionBottomSheetDialog(context)
+            is WalletDialog.ChooseTradeActionDialog -> ChooseTradeActionBottomSheetDialog(context, state.dialog)
             is WalletDialog.SelectAmountToSendDialog -> AmountToSendBottomSheetDialog(context, state.dialog)
             is WalletDialog.SignedHashesMultiWalletDialog -> SignedHashesWarningDialog.create(context)
             is WalletDialog.TokensAreLinkedDialog -> SimpleAlertDialog.create(
