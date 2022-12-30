@@ -1,6 +1,7 @@
 package com.tangem.tap.features.walletSelector.redux
 
 import com.tangem.common.CompletionResult
+import com.tangem.common.core.TangemSdkError
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.common.flatMap
@@ -19,6 +20,7 @@ import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.domain.model.WalletStoreModel
 import com.tangem.tap.domain.model.builders.UserWalletBuilder
 import com.tangem.tap.domain.scanCard.ScanCardProcessor
+import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
@@ -131,21 +133,46 @@ internal class WalletSelectorMiddleware {
     private fun addWallet() = scope.launch {
         Analytics.send(MyWallets.Button.ScanNewCard)
 
-        scanCardInternal { scanResponse ->
-            val userWallet = UserWalletBuilder(scanResponse).build()
+        val prevUseBiometricsForAccessCode = tangemSdkManager.useBiometricsForAccessCode()
 
-            userWalletsListManager.save(userWallet)
-                .doOnFailure { error ->
-                    store.dispatchOnMain(WalletSelectorAction.AddWallet.Error(error))
-                }
-                .doOnSuccess {
-                    Analytics.send(MyWallets.CardWasScanned)
+        // Update access code policy for access code saving when a card was scanned
+        tangemSdkManager.setAccessCodeRequestPolicy(
+            useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes,
+        )
+        ScanCardProcessor.scan(
+            onSuccess = { scanResponse ->
+                saveUserWalletAndPopBackToWalletScreen(scanResponse)
+                    .doOnFailure { error ->
+                        // Rollback policy if card saving was failed
+                        tangemSdkManager.setAccessCodeRequestPolicy(prevUseBiometricsForAccessCode)
+                        store.dispatchOnMain(WalletSelectorAction.AddWallet.Error(error))
+                    }
+            },
+            onFailure = { error ->
+                // Rollback policy if card scanning was failed
+                tangemSdkManager.setAccessCodeRequestPolicy(prevUseBiometricsForAccessCode)
+                store.dispatchOnMain(WalletSelectorAction.AddWallet.Error(error))
+            },
+            onWalletNotCreated = {
+                // No need to rollback policy, continue with the policy set before the card scan
+                store.dispatchOnMain(WalletSelectorAction.AddWallet.Success)
+                store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
+            },
+        )
+    }
 
-                    store.dispatchOnMain(WalletSelectorAction.AddWallet.Success)
-                    store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
-                    store.onUserWalletSelected(userWallet)
-                }
-        }
+    private suspend fun saveUserWalletAndPopBackToWalletScreen(scanResponse: ScanResponse): CompletionResult<Unit> {
+        val userWallet = UserWalletBuilder(scanResponse).build()
+            ?: return CompletionResult.Failure(TangemSdkError.WalletIsNotCreated())
+
+        return userWalletsListManager.save(userWallet)
+            .doOnSuccess {
+                Analytics.send(MyWallets.CardWasScanned)
+
+                store.dispatchOnMain(WalletSelectorAction.AddWallet.Success)
+                store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
+                store.onUserWalletSelected(userWallet)
+            }
     }
 
     private fun selectWallet(userWalletId: UserWalletId) {
@@ -212,9 +239,7 @@ internal class WalletSelectorMiddleware {
         Analytics.send(MyWallets.Button.EditWalletTapped)
 
         scope.launch {
-            userWalletsListManager.get(userWalletId)
-                .map { it.copy(name = newName) }
-                .flatMap { userWalletsListManager.save(it, canOverride = true) }
+            userWalletsListManager.update(userWalletId) { it.copy(name = newName) }
                 .doOnFailure { error ->
                     store.dispatchOnMain(WalletSelectorAction.HandleError(error))
                 }
@@ -252,43 +277,32 @@ internal class WalletSelectorMiddleware {
             .flatMap { walletStoresManager.delete(userWalletsIds) }
             .flatMap { deleteAccessCodes(userWalletsIds) }
             .doOnSuccess {
-                val selectedWallet = userWalletsListManager.selectedUserWalletSync
+                val selectedUserWallet = userWalletsListManager.selectedUserWalletSync
 
                 when {
-                    selectedWallet == null -> {
+                    selectedUserWallet == null -> {
                         store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Welcome))
                     }
-                    currentSelectedWalletId != selectedWallet.walletId -> {
-                        store.onUserWalletSelected(selectedWallet)
+
+                    currentSelectedWalletId != selectedUserWallet.walletId -> {
+                        store.onUserWalletSelected(selectedUserWallet)
                     }
                 }
             }
     }
 
-    private suspend inline fun scanCardInternal(
-        crossinline onCardScanned: suspend (ScanResponse) -> Unit,
-    ) {
-        ScanCardProcessor.scan(
-            onSuccess = {
-                onCardScanned(it)
-            },
-            onFailure = { error ->
-                store.dispatchOnMain(WalletSelectorAction.AddWallet.Error(error))
-            },
-            onWalletNotCreated = {
-                store.dispatchOnMain(WalletSelectorAction.AddWallet.Success)
-                store.dispatchOnMain(NavigationAction.PopBackTo())
-            },
-        )
-    }
-
     private suspend fun deleteAccessCodes(userWalletsIds: List<UserWalletId>): CompletionResult<Unit> {
-        val cardsIds = userWalletsListManager.userWallets.firstOrNull().orEmpty()
-            .asSequence()
-            .filter { it.walletId in userWalletsIds }
-            .flatMap { it.cardsInWallet }
+        val cardsIds = userWalletsListManager.userWallets.firstOrNull()
+            ?.asSequence()
+            ?.filter { it.walletId in userWalletsIds }
+            ?.flatMap { it.cardsInWallet }
+            ?.toSet()
 
-        return tangemSdkManager.deleteSavedUserCodes(cardsIds.toSet())
+        return if (cardsIds.isNullOrEmpty()) {
+            CompletionResult.Success(Unit)
+        } else {
+            tangemSdkManager.deleteSavedUserCodes(cardsIds.toSet())
+        }
     }
 
     private suspend fun UserWalletModel.updateWalletStoresAndCalculateFiatBalance(
