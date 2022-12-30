@@ -2,6 +2,7 @@ package com.tangem.datasource.api.tangemTech
 
 import com.tangem.datasource.api.tangemTech.models.CurrenciesResponse
 import com.tangem.datasource.api.tangemTech.models.GeoResponse
+import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.PUT
@@ -40,5 +41,5 @@ interface TangemTechApi {
     suspend fun getUserTokens(@Path(value = "user-id") userId: String): UserTokensResponse
 
     @PUT("user-tokens/{user-id}")
-    suspend fun putUserTokens(@Path(value = "user-id") userId: String, @Body userTokens: UserTokensResponse)
+    suspend fun saveUserTokens(@Path(value = "user-id") userId: String, @Body userTokens: UserTokensResponse)
 }
