@@ -57,4 +57,8 @@ class SwapFragment : Fragment() {
             }
         }
     }
+
+    companion object {
+        const val CURRENCY_BUNDLE_KEY = "swap_currency"
+    }
 }
