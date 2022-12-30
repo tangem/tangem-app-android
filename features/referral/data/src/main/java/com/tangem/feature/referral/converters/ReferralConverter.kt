@@ -36,7 +36,7 @@ class ReferralConverter @Inject constructor() : Converter<ReferralResponse, Refe
             )
         } else {
             ReferralData.NonParticipantData(
-                award = conditions.award,
+                award = conditions.awards.firstOrNull()?.amount ?: conditions.award,
                 discount = conditions.discount.amount,
                 discountType = safeValueOf(conditions.discount.discountType.uppercase(), DiscountType.PERCENTAGE),
                 tosLink = conditions.tosLink,
