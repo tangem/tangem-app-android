@@ -1,5 +1,6 @@
 package com.tangem.datasource.api.tangemTech
 
+import com.tangem.datasource.api.tangemTech.models.CurrenciesResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.PUT
@@ -29,7 +30,7 @@ interface TangemTechApi {
     ): RatesResponse
 
     @GET("currencies")
-    suspend fun currencies(): CurrenciesResponse
+    suspend fun getCurrencyList(): CurrenciesResponse
 
     @GET("geo")
     suspend fun geo(): GeoResponse
