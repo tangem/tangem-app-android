@@ -106,11 +106,7 @@ internal class DefaultWalletManagersRepository(
 
     override suspend fun delete(userWalletIds: List<UserWalletId>): CompletionResult<Unit> = catching {
         walletManagersStorage.update { prevManagers ->
-            prevManagers.apply {
-                userWalletIds.forEach { userWalletId ->
-                    remove(userWalletId)
-                }
-            }
+            prevManagers.filterKeys { it !in userWalletIds } as HashMap<UserWalletId, List<WalletManager>>
         }
     }
 
