@@ -31,7 +31,7 @@ import com.tangem.feature.swap.presentation.R
 
 @Composable
 fun SwapPermissionBottomSheetContent(
-    data: SwapPermissionStateHolder,
+    data: SwapPermissionStateHolder?,
     onCancel: () -> Unit,
 ) {
     Column(
@@ -54,7 +54,10 @@ fun SwapPermissionBottomSheetContent(
         SpacerH10()
 
         Text(
-            text = stringResource(id = R.string.swapping_permission_subheader, data.currency),
+            text = stringResource(
+                id = R.string.swapping_permission_subheader,
+                data?.currency ?: "",
+            ),
             color = TangemTheme.colors.text.secondary,
             style = TangemTheme.typography.body2,
             textAlign = TextAlign.Center,
@@ -64,11 +67,11 @@ fun SwapPermissionBottomSheetContent(
         SpacerH16()
 
         ApprovalBottomSheetInfo(
-            currency = data.currency,
-            amount = data.amount,
-            walletAddress = data.walletAddress,
-            spenderAddress = data.spenderAddress,
-            fee = data.fee,
+            currency = data?.currency ?: "",
+            amount = data?.amount ?: "",
+            walletAddress = data?.walletAddress ?: "",
+            spenderAddress = data?.spenderAddress ?: "",
+            fee = data?.fee ?: "",
         )
 
         SpacerH28()
@@ -77,7 +80,7 @@ fun SwapPermissionBottomSheetContent(
             text = stringResource(id = R.string.swapping_permission_buttons_approve),
             icon = painterResource(id = R.drawable.ic_tangem_24),
             modifier = Modifier.fillMaxWidth(),
-            onClick = data.approveButton.onClick,
+            onClick = { data?.approveButton?.onClick?.invoke() },
         )
 
         SpacerH12()
@@ -86,7 +89,7 @@ fun SwapPermissionBottomSheetContent(
             text = stringResource(id = R.string.common_cancel),
             modifier = Modifier.fillMaxWidth(),
         ) {
-            data.cancelButton.onClick()
+            data?.cancelButton?.onClick?.invoke()
             onCancel()
         }
 
