@@ -50,10 +50,6 @@ class TangemTechService(
         }
     }
 
-    suspend fun userCountry(): Result<GeoResponse> = withContext(Dispatchers.IO) {
-        performRequest { api.geo() }
-    }
-
     suspend fun getUserTokens(userId: String): Result<UserTokensResponse> = withContext(Dispatchers.IO) {
         performRequest { api.getUserTokens(userId) }
     }
