@@ -1,12 +1,15 @@
 package com.tangem.tap.features.wallet.redux.reducers
 
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.tangem.blockchain.blockchains.polkadot.ExistentialDepositProvider
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.WalletManager
-import com.tangem.common.extensions.guard
+import com.tangem.tap.common.extensions.dispatchToastNotification
 import com.tangem.tap.common.extensions.toFiatString
 import com.tangem.tap.common.extensions.toFormattedCurrencyString
+import com.tangem.tap.common.redux.navigation.AppScreen
+import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.getFirstToken
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.wallet.models.Currency
@@ -25,13 +28,15 @@ import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.features.wallet.ui.TokenData
 import com.tangem.tap.store
+import com.tangem.tap.userWalletsListManager
+import com.tangem.wallet.R
 import java.math.BigDecimal
 
 class MultiWalletReducer {
     fun reduce(action: WalletAction.MultiWallet, state: WalletState): WalletState {
         return when (action) {
             is WalletAction.MultiWallet.AddBlockchains -> {
-                val walletStores: List<WalletStore> = action.blockchains.mapNotNull { blockchain ->
+                val walletStores: List<WalletStore> = action.blockchains.map { blockchain ->
                     val walletManager = action.walletManagers.firstOrNull {
                         it.wallet.blockchain == blockchain.blockchain &&
                             (it.wallet.publicKey.derivationPath?.rawPath == blockchain.derivationPath)
@@ -65,10 +70,10 @@ class MultiWalletReducer {
                     )
                 }
 
-                val selectedCurrency = if (!state.isMultiwalletAllowed) {
-                    walletStores.firstOrNull()?.walletsData?.firstOrNull()?.currency
+                val selectedCurrency = if (state.isMultiwalletAllowed) {
+                    state.selectedCurrency
                 } else {
-                    state.selectedWalletData?.currency
+                    walletStores.firstOrNull()?.walletsData?.firstOrNull()?.currency
                 }
                 state.copy(
                     walletsStores = walletStores,
@@ -106,16 +111,22 @@ class MultiWalletReducer {
                     newState
                 }
             }
-            is WalletAction.MultiWallet.AddTokens -> {
-                addTokens(action.tokens, action.blockchain, state)
-            }
-            is WalletAction.MultiWallet.AddToken -> {
-                addTokens(listOf(action.token), action.blockchain, state)
-            }
+            is WalletAction.MultiWallet.AddTokens -> addTokens(action.tokens, action.blockchain, state)
+            is WalletAction.MultiWallet.AddToken -> addTokens(listOf(action.token), action.blockchain, state)
             is WalletAction.MultiWallet.TokenLoaded -> {
                 val currency = Currency.fromBlockchainNetwork(action.blockchain, action.token)
-                val walletManager = state.getWalletManager(currency).guard {
-                    throw NullPointerException("MultiWallet.TokenLoaded: WalletManager must be not NULL")
+                val walletManager = state.getWalletManager(currency)
+                if (walletManager == null) {
+                    if (userWalletsListManager.hasSavedUserWallets) {
+                        store.dispatch(NavigationAction.PopBackTo(screen = AppScreen.Welcome))
+                    } else {
+                        store.dispatch(NavigationAction.PopBackTo(screen = AppScreen.Home))
+                    }
+                    FirebaseCrashlytics.getInstance().recordException(
+                        IllegalStateException("MultiWallet.TokenLoaded: walletManager is null"),
+                    )
+                    store.dispatchToastNotification(R.string.internal_error_wallet_manager_not_found)
+                    return state
                 }
                 val wallet = walletManager.wallet
                 val pendingTransactions = wallet.getPendingTransactions()
@@ -170,41 +181,28 @@ class MultiWalletReducer {
                 action.currencies.forEach { updatedState = updatedState.removeWalletData(state.getWalletData(it)) }
                 updatedState
             }
-            is WalletAction.MultiWallet.SetPrimaryBlockchain ->
-                state.copy(primaryBlockchain = action.blockchain)
-
-            is WalletAction.MultiWallet.SetPrimaryToken ->
-                state.copy(primaryToken = action.token)
+            is WalletAction.MultiWallet.SetPrimaryBlockchain -> state.copy(primaryBlockchain = action.blockchain)
+            is WalletAction.MultiWallet.SetPrimaryToken -> state.copy(primaryToken = action.token)
             is WalletAction.MultiWallet.SaveCurrencies -> state
-            is WalletAction.MultiWallet.ShowWalletBackupWarning -> state.copy(
-                showBackupWarning = action.show,
-            )
-            is WalletAction.MultiWallet.AddMissingDerivations -> state.copy(
-                missingDerivations = action.blockchains,
-            )
+            is WalletAction.MultiWallet.ShowWalletBackupWarning -> state.copy(showBackupWarning = action.show)
+            is WalletAction.MultiWallet.AddMissingDerivations -> state.copy(missingDerivations = action.blockchains)
             is WalletAction.MultiWallet.BackupWallet -> state
-            is WalletAction.MultiWallet.ScanToGetDerivations -> state.copy(
-                state = ProgressState.Loading,
-            )
+            is WalletAction.MultiWallet.ScanToGetDerivations -> state.copy(state = ProgressState.Loading)
         }
     }
 
     private fun findWalletRent(walletStore: WalletStore?): WalletRent? {
-        return walletStore?.walletsData?.firstOrNull {
-            it.walletRent != null
-        }?.walletRent
+        return walletStore?.walletsData?.firstOrNull { it.walletRent != null }?.walletRent
     }
 
     private fun getExistentialDeposit(walletManager: WalletManager?): String? {
         return (walletManager as? ExistentialDepositProvider)?.getExistentialDeposit()?.toPlainString()
     }
-}
 
-private fun addTokens(
-    tokens: List<Token>, blockchain: BlockchainNetwork, state: WalletState,
-): WalletState {
-    val wallets = tokens.mapNotNull { token -> token.toWallet(state, blockchain) }
-    return state.updateWalletsData(wallets)
+    private fun addTokens(tokens: List<Token>, blockchain: BlockchainNetwork, state: WalletState): WalletState {
+        val wallets = tokens.mapNotNull { token -> token.toWallet(state, blockchain) }
+        return state.updateWalletsData(wallets)
+    }
 }
 
 fun Token.toWallet(state: WalletState, blockchain: BlockchainNetwork): WalletData? {
