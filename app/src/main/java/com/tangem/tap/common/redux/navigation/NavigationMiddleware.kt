@@ -57,11 +57,8 @@ val navigationMiddleware: Middleware<AppState> = { _, state ->
                             Build.VERSION.SDK_INT >= Build.VERSION_CODES.R -> {
                                 Settings.ACTION_BIOMETRIC_ENROLL
                             }
-                            Build.VERSION.SDK_INT >= Build.VERSION_CODES.P -> {
-                                Settings.ACTION_FINGERPRINT_ENROLL
-                            }
                             else -> {
-                                Settings.ACTION_SETTINGS
+                                Settings.ACTION_SECURITY_SETTINGS
                             }
                         }
                         val intent = Intent(settingsAction).apply {
