@@ -31,6 +31,12 @@ val CardDTO.isMultiwalletAllowed: Boolean
 val CardDTO.isHdWalletAllowedByApp: Boolean
     get() = settings.isHDWalletAllowed && !isSaltPay
 
+val CardDTO.isTangemWallet: Boolean
+    get() = settings.isBackupAllowed
+        && settings.isHDWalletAllowed
+        && firmwareVersion >= FirmwareVersion.MultiWalletAvailable
+        && !isSaltPay
+
 fun CardDTO.hasSignedHashes(): Boolean {
     return wallets.any { (it.totalSignedHashes ?: 0) > 0 }
 }
