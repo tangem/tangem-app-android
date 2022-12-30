@@ -149,7 +149,7 @@ class TokensMiddleware {
             && blockchainsToAdd.isEmpty() && blockchainsToRemove.isEmpty()
         ) {
             store.dispatchDebugErrorNotification("Nothing to save")
-            store.dispatch(NavigationAction.PopBackTo())
+            store.dispatchOnMain(NavigationAction.PopBackTo())
             return@launch
         }
 
@@ -281,13 +281,16 @@ class TokensMiddleware {
     ) {
         val selectedUserWallet = userWalletsListManager.selectedUserWalletSync
         if (selectedUserWallet != null) {
-            val updatedUserWallet = selectedUserWallet.copy(
-                scanResponse = scanResponse,
-            )
-
             scope.launch {
-                userWalletsListManager.save(updatedUserWallet, canOverride = true)
-                    .flatMap {
+                userWalletsListManager.update(
+                    userWalletId = selectedUserWallet.walletId,
+                    update = { userWallet ->
+                        userWallet.copy(
+                            scanResponse = scanResponse,
+                        )
+                    },
+                )
+                    .flatMap { updatedUserWallet ->
                         walletCurrenciesManager.addCurrencies(
                             userWallet = updatedUserWallet,
                             currenciesToAdd = currencyList,
