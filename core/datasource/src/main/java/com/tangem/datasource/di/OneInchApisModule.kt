@@ -2,12 +2,13 @@ package com.tangem.datasource.di
 
 import com.squareup.moshi.Moshi
 import com.tangem.datasource.api.oneinch.OneInchApi
+import com.tangem.datasource.api.oneinch.OneInchApiFactory
+import com.tangem.datasource.utils.allowLogging
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import okhttp3.OkHttpClient
-import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import javax.inject.Singleton
@@ -33,9 +34,7 @@ class OneInchApisModule {
             .baseUrl(url)
             .client(
                 OkHttpClient.Builder()
-                    .addInterceptor(
-                        HttpLoggingInterceptor().setLevel(HttpLoggingInterceptor.Level.BODY),
-                    )
+                    .allowLogging()
                     .build(),
             )
             .build()
