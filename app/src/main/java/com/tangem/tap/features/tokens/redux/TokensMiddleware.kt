@@ -149,7 +149,7 @@ class TokensMiddleware {
             && blockchainsToAdd.isEmpty() && blockchainsToRemove.isEmpty()
         ) {
             store.dispatchDebugErrorNotification("Nothing to save")
-            store.dispatch(NavigationAction.PopBackTo())
+            store.dispatchOnMain(NavigationAction.PopBackTo())
             return@launch
         }
 
