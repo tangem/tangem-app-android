@@ -27,7 +27,7 @@
         android:textColor="@color/darkGray3"
         android:textSize="14sp"
         android:textStyle="bold"
-        app:drawableStartCompat="@drawable/ic_arrow_up" />
+        app:drawableStartCompat="@drawable/ic_arrow_up_24" />
 
     <TextView
         android:id="@+id/dialog_btn_sell"
@@ -42,6 +42,21 @@
         android:textColor="@color/darkGray3"
         android:textSize="14sp"
         android:textStyle="bold"
-        app:drawableStartCompat="@drawable/ic_arrow_down" />
+        app:drawableStartCompat="@drawable/ic_arrow_down_24" />
+
+    <TextView
+        android:id="@+id/dialog_btn_swap"
+        android:layout_width="match_parent"
+        android:layout_height="56dp"
+        android:clickable="true"
+        android:drawablePadding="32dp"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:padding="16dp"
+        android:text="@string/swapping_swap"
+        android:textColor="@color/darkGray3"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        app:drawableStartCompat="@drawable/ic_exchange_vertical_24" />
 
 </LinearLayout>
