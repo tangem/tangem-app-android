@@ -34,18 +34,6 @@ data class CoinsResponse(
 //rates.keys = networkId's
 data class RatesResponse(val rates: Map<String, Double>) : TangemTechResponse
 
-data class CurrenciesResponse(val currencies: List<Currency>) {
-
-    data class Currency(
-        val id: String,
-        val code: String,       // this is an uppercase id
-        val name: String,
-        val rateBTC: String,
-        val unit: String,       // $, €, ₽
-        val type: String,
-    ) : TangemTechResponse
-}
-
 data class GeoResponse(
     val code: String,
 ) : TangemTechResponse
