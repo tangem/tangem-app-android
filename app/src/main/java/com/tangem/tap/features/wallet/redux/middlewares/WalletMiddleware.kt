@@ -36,7 +36,6 @@ import com.tangem.tap.domain.model.WalletStoreModel
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.send.redux.PrepareSendScreen
-import com.tangem.tap.features.wallet.data.WalletRepositoryImpl
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.PendingTransactionType
 import com.tangem.tap.features.wallet.models.filterByCoin
@@ -74,7 +73,7 @@ class WalletMiddleware {
     private val appCurrencyMiddleware by lazy(mode = LazyThreadSafetyMode.NONE) {
         AppCurrencyMiddleware(
             // TODO("After adding DI") get dependencies by DI
-            walletRepository = WalletRepositoryImpl(store.state.domainNetworks.tangemTechService.api),
+            walletRepository = store.state.featureRepositoryProvider.walletRepository,
             tapWalletManager = store.state.globalState.tapWalletManager,
             fiatCurrenciesPrefStorage = preferencesStorage.fiatCurrenciesPrefStorage,
             appCurrencyProvider = { store.state.globalState.appCurrency },
