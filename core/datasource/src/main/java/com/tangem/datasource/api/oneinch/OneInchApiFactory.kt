@@ -1,6 +1,4 @@
-package com.tangem.datasource.di
-
-import com.tangem.datasource.api.oneinch.OneInchApi
+package com.tangem.datasource.api.oneinch
 
 class OneInchApiFactory {
 
