@@ -34,10 +34,6 @@ data class CoinsResponse(
 //rates.keys = networkId's
 data class RatesResponse(val rates: Map<String, Double>) : TangemTechResponse
 
-data class GeoResponse(
-    val code: String,
-) : TangemTechResponse
-
 data class UserTokensResponse(
     val version: Int = 0,
     val group: String? = null,
