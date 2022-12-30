@@ -6,9 +6,9 @@ import com.tangem.common.services.Result
 import com.tangem.datasource.api.tangemTech.TangemTechService
 import com.tangem.datasource.api.tangemTech.UserTokensResponse
 import com.tangem.domain.common.CardDTO
-import com.tangem.domain.common.util.userWalletId
 import com.tangem.tap.common.AndroidFileReader
 import com.tangem.tap.domain.NoDataError
+import com.tangem.tap.domain.model.builders.UserWalletIdBuilder
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.wallet.models.Currency
@@ -24,7 +24,7 @@ class UserTokensRepository(
     private val networkService: UserTokensNetworkService,
 ) {
     suspend fun getUserTokens(card: CardDTO): List<Currency> {
-        val userId = card.userWalletId.stringValue
+        val userId = getUserWalletId(card) ?: return emptyList()
         if (DemoHelper.isDemoCardId(card.cardId)) {
             return loadTokensOffline(card, userId).ifEmpty { loadDemoCurrencies() }
         }
@@ -47,14 +47,14 @@ class UserTokensRepository(
     }
 
     suspend fun saveUserTokens(card: CardDTO, tokens: List<Currency>) {
-        val userId = card.userWalletId.stringValue
+        val userId = getUserWalletId(card) ?: return
         val userTokens = tokens.toUserTokensResponse()
         networkService.saveUserTokens(userId, userTokens)
         storageService.saveUserTokens(userId, userTokens)
     }
 
     suspend fun removeUserTokens(card: CardDTO) {
-        val userId = card.userWalletId.stringValue
+        val userId = getUserWalletId(card) ?: return
         val userTokens = emptyList<Currency>().toUserTokensResponse()
         networkService.saveUserTokens(userId, userTokens)
         storageService.saveUserTokens(userId, userTokens)
@@ -70,7 +70,7 @@ class UserTokensRepository(
     }
 
     suspend fun loadBlockchainsToDerive(card: CardDTO): List<BlockchainNetwork> {
-        val userId = card.userWalletId.stringValue
+        val userId = getUserWalletId(card) ?: return emptyList()
         val blockchainNetworks = loadTokensOffline(card, userId).toBlockchainNetworks()
 
         if (DemoHelper.isDemoCardId(card.cardId)) {
@@ -103,6 +103,7 @@ class UserTokensRepository(
                 coroutineScope { launch { networkService.saveUserTokens(userId = userId, tokens = userTokens) } }
                 tokens
             }
+
             else -> {
                 val tokens = storageService.getUserTokens(userId) ?: storageService.getUserTokens(card)
                 tokens.distinct()
@@ -112,6 +113,11 @@ class UserTokensRepository(
 
     private suspend fun loadTokensOffline(card: CardDTO, userId: String): List<Currency> {
         return storageService.getUserTokens(userId) ?: storageService.getUserTokens(card)
+    }
+
+    private fun getUserWalletId(card: CardDTO): String? {
+        return UserWalletIdBuilder.card(card).build()
+            ?.stringValue
     }
 
     companion object {
