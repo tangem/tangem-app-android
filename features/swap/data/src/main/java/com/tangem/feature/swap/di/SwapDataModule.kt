@@ -1,8 +1,8 @@
 package com.tangem.feature.swap.di
 
+import com.tangem.datasource.api.oneinch.OneInchApiFactory
 import com.tangem.datasource.api.oneinch.OneInchErrorsHandler
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.di.OneInchApiFactory
 import com.tangem.feature.swap.SwapRepositoryImpl
 import com.tangem.feature.swap.converters.ApproveConverter
 import com.tangem.feature.swap.converters.QuotesConverter
