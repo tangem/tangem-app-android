@@ -1,6 +1,7 @@
 package com.tangem.datasource.api.tangemTech
 
 import com.tangem.datasource.api.tangemTech.models.CurrenciesResponse
+import com.tangem.datasource.api.tangemTech.models.GeoResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.PUT
@@ -33,7 +34,7 @@ interface TangemTechApi {
     suspend fun getCurrencyList(): CurrenciesResponse
 
     @GET("geo")
-    suspend fun geo(): GeoResponse
+    suspend fun getUserCountryCode(): GeoResponse
 
     @GET("user-tokens/{user-id}")
     suspend fun getUserTokens(@Path(value = "user-id") userId: String): UserTokensResponse
