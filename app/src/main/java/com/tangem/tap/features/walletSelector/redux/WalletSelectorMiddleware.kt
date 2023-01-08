@@ -138,7 +138,16 @@ internal class WalletSelectorMiddleware {
         tangemSdkManager.setAccessCodeRequestPolicy(
             useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes,
         )
+
         ScanCardProcessor.scan(
+            onWalletNotCreated = {
+                // No need to rollback policy, continue with the policy set before the card scan
+                store.dispatchOnMain(WalletSelectorAction.AddWallet.Success)
+                store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
+            },
+            disclaimerWillShow = {
+                store.dispatchOnMain(NavigationAction.PopBackTo())
+            },
             onSuccess = { scanResponse ->
                 saveUserWalletAndPopBackToWalletScreen(scanResponse)
                     .doOnFailure { error ->
@@ -151,11 +160,6 @@ internal class WalletSelectorMiddleware {
                 // Rollback policy if card scanning was failed
                 tangemSdkManager.setAccessCodeRequestPolicy(prevUseBiometricsForAccessCode)
                 store.dispatchOnMain(WalletSelectorAction.AddWallet.Error(error))
-            },
-            onWalletNotCreated = {
-                // No need to rollback policy, continue with the policy set before the card scan
-                store.dispatchOnMain(WalletSelectorAction.AddWallet.Success)
-                store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
             },
         )
     }
