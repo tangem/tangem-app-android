@@ -22,6 +22,7 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
+import com.tangem.tap.features.disclaimer.redux.DisclaimerCallback
 import com.tangem.tap.features.disclaimer.redux.DisclaimerType
 import com.tangem.tap.features.disclaimer.redux.isAccepted
 import com.tangem.tap.features.onboarding.OnboardingHelper
@@ -48,7 +49,8 @@ object ScanCardProcessor {
         cardId: String? = null,
         onProgressStateChange: suspend (showProgress: Boolean) -> Unit = {},
         onScanStateChange: suspend (scanInProgress: Boolean) -> Unit = {},
-        onWalletNotCreated: suspend (() -> Unit) = {},
+        onWalletNotCreated: suspend () -> Unit = {},
+        disclaimerWillShow: () -> Unit = {},
         onFailure: suspend (error: TangemError) -> Unit = {},
         onSuccess: suspend (scanResponse: ScanResponse) -> Unit = {},
     ) = withMainContext {
@@ -83,6 +85,8 @@ object ScanCardProcessor {
                         showDisclaimerIfNeed(
                             scanResponse = scanResponse1,
                             onProgressStateChange = onProgressStateChange,
+                            disclaimerWillShow = disclaimerWillShow,
+                            onFailure = onFailure,
                             nextHandler = { scanResponse2 ->
                                 onScanSuccess(
                                     scanResponse = scanResponse2,
@@ -128,8 +132,10 @@ object ScanCardProcessor {
 
     private suspend inline fun showDisclaimerIfNeed(
         scanResponse: ScanResponse,
+        crossinline disclaimerWillShow: () -> Unit = {},
         crossinline onProgressStateChange: suspend (showProgress: Boolean) -> Unit,
         crossinline nextHandler: suspend (ScanResponse) -> Unit,
+        crossinline onFailure: suspend (error: TangemError) -> Unit,
     ) {
         val disclaimerType = DisclaimerType.get(scanResponse)
         store.dispatchOnMain(DisclaimerAction.SetDisclaimerType(disclaimerType))
@@ -138,18 +144,22 @@ object ScanCardProcessor {
             nextHandler((scanResponse))
         } else scope.launch(Dispatchers.Main) {
             delay(DELAY_SDK_DIALOG_CLOSE)
+            disclaimerWillShow()
             store.dispatchOnMain(
                 DisclaimerAction.Show(
-                    onAcceptCallback = {
-                        scope.launch(Dispatchers.Main) {
-                            nextHandler(scanResponse)
-                        }
-                    },
-                    onDismissCallback = {
-                        scope.launch(Dispatchers.Main) {
-                            onProgressStateChange(false)
-                        }
-                    },
+                    callback = DisclaimerCallback(
+                        onAccept = {
+                            scope.launch(Dispatchers.Main) {
+                                nextHandler(scanResponse)
+                            }
+                        },
+                        onDismiss = {
+                            scope.launch(Dispatchers.Main) {
+                                onProgressStateChange(false)
+                                onFailure(TangemSdkError.UserCancelled())
+                            }
+                        },
+                    ),
                 ),
             )
         }
