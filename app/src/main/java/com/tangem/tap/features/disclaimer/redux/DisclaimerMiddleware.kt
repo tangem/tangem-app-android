@@ -28,33 +28,31 @@ private fun handleDisclaimerMiddleware(action: Action, appState: AppState) {
         }
         is DisclaimerAction.Show -> {
             handleUpdateState = state.type.createUpdateState()
-            store.dispatch(DisclaimerAction.SetCallbacks(action.onAcceptCallback, action.onDismissCallback))
             store.dispatch(NavigationAction.NavigateTo(AppScreen.Disclaimer))
         }
         is DisclaimerAction.AcceptDisclaimer -> {
             action.type.accept()
             handleUpdateState = action.type.createUpdateState()
             store.dispatch(NavigationAction.PopBackTo())
-            state.onAcceptCallback?.invoke()
-            store.dispatch(DisclaimerAction.SetCallbacks(null, null))
+            state.callback?.onAccept?.invoke()
         }
         is DisclaimerAction.OnBackPressed -> {
-            state.onDismissCallback?.invoke()
-            store.dispatch(DisclaimerAction.SetCallbacks(null, null))
             store.dispatch(NavigationAction.PopBackTo())
-
+            state.callback?.onDismiss?.invoke()
         }
     }
 }
 
 private fun DisclaimerType.accept() = when (this) {
-    DisclaimerType.SaltPay -> preferencesStorage.disclaimerPrefStorage.hasSaltPayTosAccepted = true
     DisclaimerType.Tangem -> preferencesStorage.disclaimerPrefStorage.hasTangemTosAccepted = true
+    DisclaimerType.Start2Coin -> preferencesStorage.disclaimerPrefStorage.hasStart2CoinTosAccepted = true
+    DisclaimerType.SaltPay -> preferencesStorage.disclaimerPrefStorage.hasSaltPayTosAccepted = true
 }
 
 fun DisclaimerType.isAccepted(): Boolean = when (this) {
-    DisclaimerType.SaltPay -> preferencesStorage.disclaimerPrefStorage.hasSaltPayTosAccepted
     DisclaimerType.Tangem -> preferencesStorage.disclaimerPrefStorage.hasTangemTosAccepted
+    DisclaimerType.Start2Coin -> preferencesStorage.disclaimerPrefStorage.hasStart2CoinTosAccepted
+    DisclaimerType.SaltPay -> preferencesStorage.disclaimerPrefStorage.hasSaltPayTosAccepted
 }
 
 private fun DisclaimerType.createUpdateState(): DisclaimerAction.UpdateState {
