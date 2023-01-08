@@ -61,12 +61,6 @@ class DetailsMiddleware {
             is DetailsAction.ResetToFactory -> eraseWalletMiddleware.handle(action)
             is DetailsAction.ManageSecurity -> manageSecurityMiddleware.handle(action)
             is DetailsAction.AppSettings -> managePrivacyMiddleware.handle(state, action)
-            is DetailsAction.ShowDisclaimer -> {
-                val uri = state.cardTermsOfUseUrl
-                if (uri != null) {
-                    store.dispatch(NavigationAction.OpenDocument(uri))
-                }
-            }
             is DetailsAction.ReCreateTwinsWallet -> {
                 store.dispatch(TwinCardsAction.SetMode(CreateTwinWalletMode.RecreateWallet))
                 store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingTwins))
