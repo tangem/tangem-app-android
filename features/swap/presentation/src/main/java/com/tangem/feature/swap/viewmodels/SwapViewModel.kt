@@ -4,38 +4,44 @@ import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tangem.feature.swap.domain.SwapInteractor
-import com.tangem.feature.swap.models.ApprovePermissionButton
-import com.tangem.feature.swap.models.CancelPermissionButton
-import com.tangem.feature.swap.models.FeeState
-import com.tangem.feature.swap.models.SwapButton
-import com.tangem.feature.swap.models.SwapCardData
-import com.tangem.feature.swap.models.SwapPermissionStateHolder
-import com.tangem.feature.swap.models.SwapSelectTokenStateHolder
+import com.tangem.feature.swap.domain.models.data.Currency
+import com.tangem.feature.swap.domain.models.data.SwapState
+import com.tangem.feature.swap.domain.models.data.createFromAmountWithoutOffset
 import com.tangem.feature.swap.models.SwapStateHolder
-import com.tangem.feature.swap.models.SwapSuccessStateHolder
-import com.tangem.feature.swap.models.SwapWarning
-import com.tangem.feature.swap.models.TokenBalanceData
-import com.tangem.feature.swap.models.TokenToSelect
-import com.tangem.feature.swap.models.TransactionCardType
-import com.tangem.feature.swap.presentation.R
+import com.tangem.feature.swap.presentation.SwapFragment
 import com.tangem.feature.swap.router.SwapRouter
 import com.tangem.feature.swap.router.SwapScreen
+import com.tangem.feature.swap.ui.StateBuilder
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
 @HiltViewModel
 internal class SwapViewModel @Inject constructor(
-    private val referralInteractor: SwapInteractor,
+    private val swapInteractor: SwapInteractor,
     private val dispatchers: CoroutineDispatcherProvider,
+    savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
-    var uiState: SwapStateHolder by mutableStateOf(createInitialUiState())
+    private val stateBuilder = StateBuilder()
+    private val currency = Json.decodeFromString<Currency>(
+        savedStateHandle[SwapFragment.CURRENCY_BUNDLE_KEY]
+            ?: error("no expected parameter Currency found"),
+    )
+
+    var uiState: SwapStateHolder by mutableStateOf(
+        stateBuilder.createInitialLoadingState(currency.symbol)
+        { /**todo debounce events on change amount*/ },
+    )
         private set
 
     private var swapRouter: SwapRouter by Delegates.notNull()
@@ -52,78 +58,87 @@ internal class SwapViewModel @Inject constructor(
         )
     }
 
-    private fun createInitialUiState(): SwapStateHolder { // TODO: create using real state
-        return createTestUiState()
-    }
-
-    // region temp for test
     init {
-        viewModelScope.launch {
+        viewModelScope.launch(dispatchers.main) {
             runCatching {
-                val tokens = referralInteractor.getTokensToSwap("binance-smart-chain")
-                val token = tokens[1]
-                val token2 = tokens[2]
-            }.onFailure {
-                Log.e("SwapViewModel", it.message ?: it.cause.toString())
+                withContext(dispatchers.io) {
+                    swapInteractor.getTokensToSwap(currency.networkId)
+                }
             }
+                .onSuccess { tokens ->
+                    if (tokens.size > MIN_TOKENS_IN_LIST) {
+                        tokens.firstOrNull { token ->
+                            token.id == currency.id
+                        }?.let {
+                            loadQuotes(it, tokens[1], INITIAL_AMOUNT)
+                        }
+                    }
+                }
+                .onFailure {
+                    Log.e("SwapViewModel", it.message ?: it.cause.toString())
+                }
         }
     }
 
-    private fun createTestUiState(): SwapStateHolder {
-        val sendCard = SwapCardData(
-            type = TransactionCardType.SendCard("123", false, {}),
-            amount = "1 000 000 000 000 000 000",
-            amountEquivalent = "1 000 000 000 000 000 000",
-            tokenIconUrl = "",
-            tokenCurrency = "DAI",
-            networkIconRes = R.drawable.img_polygon_22,
-        )
-
-        val receiveCard = SwapCardData(
-            type = TransactionCardType.ReceiveCard(),
-            amount = "1 000 000",
-            amountEquivalent = "1 000 000",
-            tokenIconUrl = "",
-            tokenCurrency = "DAI",
-            networkIconRes = R.drawable.img_polygon_22,
-            canSelectAnotherToken = true,
-        )
-
-        val permissionState = SwapPermissionStateHolder(
-            currency = "DAI",
-            amount = "∞",
-            walletAddress = "",
-            spenderAddress = "",
-            fee = "2,14$",
-            approveButton = ApprovePermissionButton(true) {},
-            cancelButton = CancelPermissionButton(true) {},
-        )
-
-        val token = TokenToSelect(
-            id = "USDC",
-            name = "USDC",
-            symbol = "USDC",
-            iconUrl = "",
-            addedTokenBalanceData = TokenBalanceData(amount = "15 000 $", amountEquivalent = "15 000 USDT"),
-        )
-
-        val selectTokenState = SwapSelectTokenStateHolder(
-            listOf(token, token, token, token, token, token, token, token, token),
-            listOf(token, token, token, token, token, token, token, token, token), {}, {},
-        )
-
-        return SwapStateHolder(
-            sendCardData = sendCard,
-            receiveCardData = receiveCard,
-            fee = FeeState.Loaded(fee = "0.155 MATIC (0.14 $)"),
-            warnings = listOf(SwapWarning.PermissionNeeded("DAI")),
-            networkCurrency = "MATIC",
-            swapButton = SwapButton(enabled = true, loading = false, onClick = {}),
-            onRefresh = {}, onBackClicked = {}, onChangeCardsClicked = {},
-            permissionState = permissionState,
-            successState = SwapSuccessStateHolder("Success"),
-            selectTokenState = selectTokenState,
-        )
+    private fun loadQuotes(fromToken: Currency, toToken: Currency, amount: String) {
+        uiState = stateBuilder.createQuotesLoadingState(uiState, fromToken, toToken, currency.id)
+        viewModelScope.launch(dispatchers.main) {
+            runCatching {
+                withContext(dispatchers.io) {
+                    swapInteractor.findBestQuote(
+                        fromToken = fromToken,
+                        toToken = toToken,
+                        amount = createFromAmountWithoutOffset(
+                            amountWithoutOffset = amount,
+                            decimals = swapInteractor.getTokenDecimals(fromToken),
+                        ),
+                    )
+                }
+            }
+                .onSuccess { swapState ->
+                    when (swapState) {
+                        is SwapState.QuoteModel -> {
+                            uiState = stateBuilder.createQuotesLoadedState(uiState, swapState, fromToken) {
+                                onSwapClick(toToken, swapState)
+                            }
+                        }
+                        is SwapState.SwapSuccess -> {
+// [REDACTED_TODO_COMMENT]
+                        }
+                        is SwapState.SwapError -> {
+                        }
+                    }
+                }
+                .onFailure { }
+        }
     }
-    // endregion temp for test
+
+    private fun onSwapClick(toToken: Currency, quoteModel: SwapState.QuoteModel) {
+        viewModelScope.launch(dispatchers.main) {
+            runCatching {
+                if (!quoteModel.isAllowedToSpend) {
+                    swapInteractor.givePermissionToSwap(toToken)
+                } else {
+                    swapInteractor.onSwap()
+                }
+            }
+                .onSuccess {
+                    if (it is SwapState) {
+                        when (it) {
+                            is SwapState.SwapSuccess -> {
+                            }
+                            is SwapState.SwapError -> {
+                            }
+                            else -> {}
+                        }
+                    }
+                }
+                .onFailure { }
+        }
+    }
+
+    companion object {
+        private const val MIN_TOKENS_IN_LIST = 2
+        private const val INITIAL_AMOUNT = "1"
+    }
 }
