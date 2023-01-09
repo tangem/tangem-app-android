@@ -2,13 +2,14 @@ package com.tangem.tap.features.disclaimer.ui
 
 import android.os.Bundle
 import android.view.View
-import androidx.activity.OnBackPressedCallback
-import androidx.fragment.app.Fragment
 import androidx.transition.TransitionInflater
 import by.kirich1409.viewbindingdelegate.viewBinding
+import com.tangem.core.ui.fragments.setStatusBarColor
 import com.tangem.tap.common.extensions.configureSettings
 import com.tangem.tap.common.extensions.hide
-import com.tangem.tap.common.redux.navigation.NavigationAction
+import com.tangem.tap.common.redux.AppState
+import com.tangem.tap.features.BaseFragment
+import com.tangem.tap.features.addBackPressHandler
 import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
 import com.tangem.tap.features.disclaimer.redux.DisclaimerState
 import com.tangem.tap.store
@@ -16,32 +17,24 @@ import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentDisclaimerBinding
 import org.rekotlin.StoreSubscriber
 
-class DisclaimerFragment : Fragment(R.layout.fragment_disclaimer),
-    StoreSubscriber<DisclaimerState> {
+class DisclaimerFragment : BaseFragment(R.layout.fragment_disclaimer), StoreSubscriber<DisclaimerState> {
 
     private val binding: FragmentDisclaimerBinding by viewBinding(FragmentDisclaimerBinding::bind)
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        activity?.onBackPressedDispatcher?.addCallback(
-            this,
-            object : OnBackPressedCallback(true) {
-                override fun handleOnBackPressed() {
-                    store.dispatch(NavigationAction.PopBackTo())
-                }
-            },
-        )
-        val inflater = TransitionInflater.from(requireContext())
-        enterTransition = inflater.inflateTransition(android.R.transition.slide_bottom)
-        exitTransition = inflater.inflateTransition(android.R.transition.slide_top)
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+        addBackPressHandler(handler = this)
+        binding.toolbar.setNavigationOnClickListener { handleOnBackPressed() }
+        binding.webView.configureSettings()
     }
 
     override fun onStart() {
         super.onStart()
-        store.subscribe(this) { state ->
-            state.skipRepeats { oldState, newState ->
-                oldState.disclaimerState == newState.disclaimerState
-            }.select { it.disclaimerState }
+        setStatusBarColor(R.color.backgroundLightGray)
+        store.subscribe(subscriber = this) { state ->
+            state
+                .skipRepeats { oldState, newState -> oldState.disclaimerState == newState.disclaimerState }
+                .select(AppState::disclaimerState)
         }
     }
 
@@ -50,16 +43,11 @@ class DisclaimerFragment : Fragment(R.layout.fragment_disclaimer),
         store.unsubscribe(this)
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        binding.toolbar.setNavigationOnClickListener {
-            store.dispatch(NavigationAction.PopBackTo())
-        }
-        initViews()
-    }
-
-    private fun initViews() {
-        binding.webView.configureSettings()
+    override fun configureTransitions() {
+        super.configureTransitions()
+        val inflater = TransitionInflater.from(requireContext())
+        enterTransition = inflater.inflateTransition(android.R.transition.fade)
+        exitTransition = inflater.inflateTransition(android.R.transition.fade)
     }
 
     override fun newState(state: DisclaimerState) = with(binding) {
@@ -75,5 +63,9 @@ class DisclaimerFragment : Fragment(R.layout.fragment_disclaimer),
         }
 
         webView.loadUrl(state.type.uri.toString())
+    }
+
+    override fun handleOnBackPressed() {
+        store.dispatch(DisclaimerAction.OnBackPressed)
     }
 }
