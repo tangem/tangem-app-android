@@ -22,7 +22,7 @@ class TransactionDialog {
                 data.amount,
                 data.gasAmount,
                 data.totalAmount,
-                data.balance
+                data.balance,
             )
 
             val positiveButtonTitle = when (data.type) {
@@ -30,7 +30,7 @@ class TransactionDialog {
                 WcTransactionType.EthSendTransaction -> context.getText(R.string.common_sign_and_send)
             }
             return AlertDialog.Builder(context).apply {
-                setTitle(context.getString(R.string.wallet_connect))
+                setTitle(context.getString(R.string.wallet_connect_title))
                 setMessage(message)
                 setPositiveButton(positiveButtonTitle) { _, _ ->
                     if (data.isEnoughFundsToSend) {
