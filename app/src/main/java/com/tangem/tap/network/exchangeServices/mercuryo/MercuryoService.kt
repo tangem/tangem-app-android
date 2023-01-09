@@ -6,7 +6,7 @@ import com.tangem.common.extensions.calculateSha512
 import com.tangem.common.extensions.toHexString
 import com.tangem.common.services.Result
 import com.tangem.common.services.performRequest
-import com.tangem.network.common.createRetrofitInstance
+import com.tangem.datasource.api.common.createRetrofitInstance
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.network.exchangeServices.CurrencyExchangeManager

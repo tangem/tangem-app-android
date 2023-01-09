@@ -1,9 +1,9 @@
 package com.tangem.domain.common.extensions
 
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.common.card.Card
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.card.FirmwareVersion
+import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.TapWorkarounds.isTestCard
 
 /**
@@ -12,11 +12,12 @@ import com.tangem.domain.common.TapWorkarounds.isTestCard
 val FirmwareVersion.Companion.SolanaTokensAvailable
     get() = FirmwareVersion(4, 52)
 
-fun Card.supportedBlockchains(): List<Blockchain> {
+fun CardDTO.supportedBlockchains(): List<Blockchain> {
     val supportedBlockchains = when {
         firmwareVersion < FirmwareVersion.MultiWalletAvailable -> {
             Blockchain.fromCurve(EllipticCurve.Secp256k1)
         }
+
         else -> {
             (Blockchain.fromCurve(EllipticCurve.Secp256k1) + Blockchain.fromCurve(EllipticCurve.Ed25519)).distinct()
         }
@@ -26,7 +27,7 @@ fun Card.supportedBlockchains(): List<Blockchain> {
         .filter { it.isSupportedInApp() }
 }
 
-fun Card.supportedTokens(): List<Blockchain> {
+fun CardDTO.supportedTokens(): List<Blockchain> {
     val tokensSupportedByBlockchain = supportedBlockchains().filter { it.canHandleTokens() }.toMutableList()
     val tokensSupportedByCard = when {
         firmwareVersion >= FirmwareVersion.SolanaTokensAvailable -> tokensSupportedByBlockchain
@@ -41,10 +42,10 @@ fun Card.supportedTokens(): List<Blockchain> {
     return filtered
 }
 
-fun Card.canHandleBlockchain(blockchain: Blockchain): Boolean {
+fun CardDTO.canHandleBlockchain(blockchain: Blockchain): Boolean {
     return this.supportedBlockchains().contains(blockchain)
 }
 
-fun Card.canHandleToken(blockchain: Blockchain): Boolean {
+fun CardDTO.canHandleToken(blockchain: Blockchain): Boolean {
     return this.supportedTokens().contains(blockchain)
 }

@@ -55,11 +55,10 @@ suspend fun WalletManager.safeUpdate(): Result<Wallet> = try {
     }
 }
 
-fun WalletManager?.getToUpUrl(): String? {
+fun WalletManager.getTopUpUrl(): String? {
     val globalState = store.state.globalState
-    val wallet = this?.wallet ?: return null
-
     val defaultAddress = wallet.address
+
     return globalState.exchangeManager.getUrl(
         action = CurrencyExchangeManager.Action.Buy,
         blockchain = wallet.blockchain,

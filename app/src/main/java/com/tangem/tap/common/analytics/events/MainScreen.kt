@@ -14,12 +14,17 @@ sealed class MainScreen(
     class CardWasScanned : MainScreen("Card Was Scanned")
     class ButtonMyWallets : MainScreen("Button - My Wallets")
 
+    class EnableBiometrics(state: AnalyticsParam.OnOffState) : MainScreen(
+        event = "Enable Biometric",
+        params = mapOf("State" to state.value),
+    )
+
     class MainCurrencyChanged(currencyType: AnalyticsParam.CurrencyType) : MainScreen(
         event = "Main Currency Changed",
         params = mapOf("Currency Type" to currencyType.value),
     )
 
-    sealed class NoticeRateAppButton(result: AnalyticsParam.RateApp) : MainScreen(
+    class NoticeRateAppButton(result: AnalyticsParam.RateApp) : MainScreen(
         event = "Notice - Rate The App Button Tapped",
         params = mapOf("Result" to result.value),
     )

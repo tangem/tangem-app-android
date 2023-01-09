@@ -23,6 +23,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.common.compose.TangemTypography
 import com.tangem.tap.features.details.ui.common.DetailsMainButton
 import com.tangem.tap.features.details.ui.common.SettingsScreensScaffold
@@ -34,14 +35,18 @@ fun CardSettingsScreen(
     onBackPressed: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val needReadCard = state.cardDetails == null
+
     SettingsScreensScaffold(
-        content =
-        if (state.cardDetails == null) {
-            { CardSettingsReadCard(state.onScanCardClick, modifier = modifier) }
-        } else {
-            { CardSettings(state = state, modifier = modifier) }
+        content = {
+            if (needReadCard) {
+                CardSettingsReadCard(state.onScanCardClick, modifier = modifier)
+            } else {
+                CardSettings(state = state, modifier = modifier)
+            }
         },
         titleRes = R.string.card_settings_title,
+        backgroundColor = TangemTheme.colors.background.secondary,
         onBackClick = onBackPressed,
     )
 }

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="send_error_blockchain_internal">Interner Fehler der Blockchain</string>
+    <string name="send_error_dust_amount_format">Minimaler Betrag ist %s</string>
+    <string name="send_error_dust_change">Restbestand zu klein</string>
+    <string name="common_fee_error">Erhalt der Gebühr fehlgeschlagen</string>
+    <string name="send_error_insufficient_balance">Nicht genug Geld</string>
+    <string name="send_error_invalid_fee_value">Falsche Gebühr</string>
+    <string name="send_error_no_target_account">Das Zielkonto ist nicht erstellt. Der abzusendende Betrag soll %s + Gebühr oder mehr sein</string>
+    <string name="send_error_unknown">Unbekannter Fehler</string>
+    <string name="send_error_minimum_balance_format">Minimum balance is %s</string>
+    <string name="send_validation_invalid_amount">Ungültiger Betrag</string>
+    <string name="send_validation_amount_exceeds_balance">Der Betrag geht über die Bilanz hinaus</string>
+    <string name="send_validation_invalid_total">Der Gesamtbetrag geht über die Bilanz hinaus</string>
+    <string name="send_validation_invalid_fee">Die Gebühr geht über die Bilanz hinaus</string>
+    <string name="xtz_withdrawal_message_warning">Damit Sie beim nächsten Aufladen Ihrer Brieftasche keine erhöhte Provision zahlen, soll der Betrag um %s XTZ reduziert werden</string>
+    <string name="xtz_withdrawal_message_reduce">Um %s XTZ reduzieren</string>
+    <string name="xtz_withdrawal_message_ignore">Nein, alles senden</string>
+    <string name="no_account_polkadot">Destination account is not active. Send %s or more to activate the account.</string>
+    <string name="no_account_generic">Laden Sie %s+ %s auf um ein Konto zu erstellen</string>
+    <string name="address_type_default">Default</string>
+    <string name="address_type_legacy">Legacy</string>
+</resources>
