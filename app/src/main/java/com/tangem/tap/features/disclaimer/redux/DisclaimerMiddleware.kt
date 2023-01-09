@@ -28,7 +28,7 @@ private fun handleDisclaimerMiddleware(action: Action, appState: AppState) {
         }
         is DisclaimerAction.Show -> {
             handleUpdateState = state.type.createUpdateState()
-            store.dispatch(DisclaimerAction.SetOnAcceptCallback(action.onAcceptCallback))
+            store.dispatch(DisclaimerAction.SetCallbacks(action.onAcceptCallback, action.onDismissCallback))
             store.dispatch(NavigationAction.NavigateTo(AppScreen.Disclaimer))
         }
         is DisclaimerAction.AcceptDisclaimer -> {
@@ -36,7 +36,13 @@ private fun handleDisclaimerMiddleware(action: Action, appState: AppState) {
             handleUpdateState = action.type.createUpdateState()
             store.dispatch(NavigationAction.PopBackTo())
             state.onAcceptCallback?.invoke()
-            store.dispatch(DisclaimerAction.SetOnAcceptCallback(null))
+            store.dispatch(DisclaimerAction.SetCallbacks(null, null))
+        }
+        is DisclaimerAction.OnBackPressed -> {
+            state.onDismissCallback?.invoke()
+            store.dispatch(DisclaimerAction.SetCallbacks(null, null))
+            store.dispatch(NavigationAction.PopBackTo())
+
         }
     }
 }

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="send_error_blockchain_internal">Внутренняя ошибка блокчейна</string>
+    <string name="send_error_dust_amount_format">Минимальная сумма: %s</string>
+    <string name="send_error_dust_change">Сдача слишком мала</string>
+    <string name="common_fee_error">Не удалось получить комиссию</string>
+    <string name="send_error_insufficient_balance">Недостаточный баланс</string>
+    <string name="send_error_invalid_fee_value">Неверная комиссия</string>
+    <string name="send_error_no_target_account">Аккаунт получателя не создан. Сумма для отправки должна быть %s + комиссия или больше</string>
+    <string name="send_error_unknown">Неизвестная ошибка</string>
+    <string name="send_error_minimum_balance_format">Минимальный баланс: %s</string>
+    <string name="send_validation_invalid_amount">Недопустимая сумма</string>
+    <string name="send_validation_amount_exceeds_balance">Сумма превышает остаток</string>
+    <string name="send_validation_invalid_total">Отправляемая сумма превышает остаток</string>
+    <string name="send_validation_invalid_fee">Комиссия превышает остаток</string>
+    <string name="xtz_withdrawal_message_warning">Чтобы не платить повышенную комиссию при следующем пополнении кошелька, уменьшите сумму на %s XTZ</string>
+    <string name="xtz_withdrawal_message_reduce">Уменьшить на %s XTZ</string>
+    <string name="xtz_withdrawal_message_ignore">Нет, отправить все</string>
+    <string name="no_account_polkadot">Аккаунт получателя не активирован. Отправьте %s или более для активации аккаунта.</string>
+    <string name="no_account_generic">Пополните счет на %s+ %s, чтобы создать аккаунт</string>
+    <string name="address_type_default">По умолчанию</string>
+    <string name="address_type_legacy">Устаревший</string>
+</resources>
