@@ -15,11 +15,6 @@ class ResetCardViewModel(private val store: Store<AppState>) {
             ?: TextReference.Str(value = "")
 
         return ResetCardScreenState(
-            descriptionResId = if (state?.card?.backupStatus?.isActive == true) {
-                R.string.reset_card_with_backup_to_factory_message
-            } else {
-                R.string.reset_card_without_backup_to_factory_message
-            },
             accepted = state?.resetConfirmed ?: false,
             descriptionText = descriptionText,
             onAcceptWarningToggleClick = { store.dispatch(DetailsAction.ResetToFactory.Confirm(it)) },
