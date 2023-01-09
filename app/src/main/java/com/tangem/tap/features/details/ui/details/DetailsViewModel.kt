@@ -40,7 +40,7 @@ class DetailsViewModel(private val store: Store<AppState>) {
                 SettingsElement.AppSettings -> if (state.isBiometricsAvailable) it else null
                 SettingsElement.AppCurrency -> if (state.scanResponse?.card?.isMultiwalletAllowed != true) it else null
                 SettingsElement.TermsOfUse -> if (state.scanResponse?.card?.isStart2Coin == true) it else null
-                SettingsElement.ReferralProgram -> if (state.scanResponse?.card?.isTangemWallet == true) it else null
+                // SettingsElement.ReferralProgram -> if (state.scanResponse?.card?.isTangemWallet == true) it else null
                 else -> it
             }
         }
@@ -97,9 +97,9 @@ class DetailsViewModel(private val store: Store<AppState>) {
             SettingsElement.PrivacyPolicy -> {
                 // TODO: To be available later
             }
-            SettingsElement.ReferralProgram -> {
-                store.dispatch(NavigationAction.NavigateTo(AppScreen.ReferralProgram))
-            }
+            // SettingsElement.ReferralProgram -> {
+            //     store.dispatch(NavigationAction.NavigateTo(AppScreen.ReferralProgram))
+            // }
         }
     }
 
