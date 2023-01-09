@@ -1,5 +1,6 @@
 package com.tangem.tap.features.wallet.ui
 
+import android.content.Context
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuInflater
@@ -8,14 +9,23 @@ import android.view.View
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.transition.TransitionInflater
 import by.kirich1409.viewbindingdelegate.viewBinding
 import coil.load
 import coil.size.Scale
+import com.tangem.core.ui.fragments.setStatusBarColor
+import com.tangem.core.ui.utils.OneTouchClickListener
 import com.tangem.domain.common.TapWorkarounds.isSaltPay
 import com.tangem.tap.MainActivity
+import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.converters.BasicSignInEventConverter
+import com.tangem.tap.common.analytics.converters.BasicTopUpEventConverter
+import com.tangem.tap.common.analytics.events.MainScreen
+import com.tangem.tap.common.analytics.events.Portfolio
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.recyclerView.SpaceItemDecoration
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -36,6 +46,7 @@ import com.tangem.tap.features.wallet.ui.wallet.SaltPaySingleWalletView
 import com.tangem.tap.features.wallet.ui.wallet.SingleWalletView
 import com.tangem.tap.features.wallet.ui.wallet.WalletView
 import com.tangem.tap.store
+import com.tangem.tap.userWalletsListManager
 import com.tangem.wallet.BuildConfig
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentWalletBinding
@@ -49,14 +60,31 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
 
     private var walletView: WalletView = SingleWalletView()
 
+    private val viewModel by viewModels<WalletViewModel>()
+
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        activity?.lifecycleScope?.launchWhenCreated {
+            viewModel.launch()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
+
+        Analytics.send(MainScreen.ScreenOpened())
         activity?.onBackPressedDispatcher?.addCallback(
             this,
             object : OnBackPressedCallback(true) {
                 override fun handleOnBackPressed() {
-                    store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
+                    val popBackTo = if (userWalletsListManager.hasSavedUserWallets) {
+                        userWalletsListManager.lock()
+                        AppScreen.Welcome
+                    } else {
+                        AppScreen.Home
+                    }
+                    store.dispatch(NavigationAction.PopBackTo(popBackTo))
                 }
             },
         )
@@ -67,12 +95,13 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
 
     override fun onStart() {
         super.onStart()
+
+        setStatusBarColor(R.color.background_secondary)
+
         store.subscribe(this) { state ->
             state.select { it.walletState }
         }
         walletView.setFragment(this, binding)
-//        store.dispatch(WalletAction.UpdateWallet(force = false))
-//        store.dispatch(WalletAction.LoadWallet())
     }
 
     override fun onStop() {
@@ -81,13 +110,18 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         walletView.removeFragment()
     }
 
+    override fun onDestroy() {
+        walletView.onDestroyFragment()
+        super.onDestroy()
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         (activity as? AppCompatActivity)?.setSupportActionBar(binding.toolbar)
 
-        binding.toolbar.setNavigationOnClickListener {
-            store.dispatch(WalletAction.Scan)
-        }
+        binding.toolbar.setNavigationOnClickListener(
+            OneTouchClickListener { store.dispatch(WalletAction.ChangeWallet) },
+        )
         setupWarningsRecyclerView()
         walletView.changeWalletView(this, binding)
         addCustomActionOnCard()
@@ -115,6 +149,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     override fun newState(state: WalletState) {
         if (activity == null || view == null) return
 
+        handleBasicAnalyticsEvent(state)
         val isSaltPay = store.state.globalState.scanResponse?.card?.isSaltPay == true
 
         when {
@@ -149,12 +184,16 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
 
         binding.srlWallet.isRefreshing = state.state == ProgressState.Refreshing
         binding.srlWallet.setOnRefreshListener {
-            if (state.state != ProgressState.Loading ||
+            if (state.state != ProgressState.Loading &&
                 state.state != ProgressState.Refreshing
             ) {
+                Analytics.send(Portfolio.Refreshed())
                 store.dispatch(WalletAction.LoadData.Refresh)
             }
         }
+
+        val navigationIconRes = if (state.hasSavedWallets) R.drawable.ic_wallet_24 else R.drawable.ic_tap_card_24
+        binding.toolbar.setNavigationIcon(navigationIconRes)
     }
 
     private fun showWarningsIfPresent(warnings: List<WarningMessage>) {
@@ -204,9 +243,9 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
                 store.state.globalState.scanResponse?.let { scanNoteResponse ->
                     store.dispatch(
                         DetailsAction.PrepareScreen(
-                            scanNoteResponse,
-                            store.state.walletState.walletManagers.map { it.wallet },
-                            CardTou(),
+                            scanResponse = scanNoteResponse,
+                            wallets = store.state.walletState.walletManagers.map { it.wallet },
+                            cardTou = CardTou(),
                         ),
                     )
                     store.dispatch(NavigationAction.NavigateTo(AppScreen.Details))
@@ -220,5 +259,12 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         if (store.state.walletState.shouldShowDetails) inflater.inflate(R.menu.menu_wallet, menu)
+    }
+
+    private fun handleBasicAnalyticsEvent(state: WalletState) {
+        val scanResponse = store.state.globalState.scanResponse ?: return
+
+        BasicSignInEventConverter(scanResponse).convert(state)?.let { Analytics.send(it) }
+        BasicTopUpEventConverter(scanResponse).convert(state)?.let { Analytics.send(it) }
     }
 }

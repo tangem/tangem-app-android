@@ -5,7 +5,7 @@ import com.tangem.common.extensions.toHexString
 import com.tangem.domain.redux.BaseStoreHub
 import com.tangem.domain.redux.DomainState
 import com.tangem.domain.redux.ReStoreReducer
-import com.tangem.network.common.CardPublicKeyHttpInterceptor
+import com.tangem.datasource.api.common.CardPublicKeyHttpInterceptor
 import org.rekotlin.Action
 
 /**

@@ -1,7 +1,6 @@
 package com.tangem.tap.features.details.ui.resetcard
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -33,77 +32,64 @@ import com.tangem.tap.features.details.ui.common.SettingsScreensScaffold
 import com.tangem.wallet.R
 
 @Composable
-fun ResetCardScreen(
-    state: ResetCardScreenState,
-    onBackPressed: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-        SettingsScreensScaffold(
-            content = { ResetCardView(state = state, modifier = modifier) },
-            onBackClick = onBackPressed,
-            backgroundColor = Color.Transparent,
-        )
+fun ResetCardScreen(state: ResetCardScreenState, onBackPressed: () -> Unit) {
+    SettingsScreensScaffold(
+        content = { ResetCardView(state = state) },
+        onBackClick = onBackPressed,
+        backgroundColor = Color.Transparent,
+    )
 }
 
 @Composable
-fun ResetCardView(
-    state: ResetCardScreenState,
-    modifier: Modifier = Modifier,
-) {
+fun ResetCardView(state: ResetCardScreenState) {
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState()),
         verticalArrangement = Arrangement.SpaceBetween,
     ) {
-        Box(
-            modifier = modifier,
-        ) {
+        Box {
             Image(
                 painter = painterResource(id = R.drawable.ic_reset_background),
-                contentDescription = "",
-                modifier = modifier.offset(y = (-82).dp),
+                contentDescription = null,
+                modifier = Modifier.offset(y = (-82).dp),
             )
-            ScreenTitle(titleRes = R.string.reset_card_to_factory_navigation_title)
+            ScreenTitle(titleRes = R.string.card_settings_reset_card_to_factory)
         }
-        Spacer(
-            modifier = modifier.weight(1f),
-        )
+        Spacer(modifier = Modifier.weight(1f))
         Column(
-            modifier = modifier
-                .offset(y = (-32).dp),
+            modifier = Modifier.offset(y = (-32).dp),
             verticalArrangement = Arrangement.Bottom,
         ) {
             Text(
                 text = stringResource(id = R.string.common_attention),
-                modifier = modifier.padding(start = 20.dp, end = 20.dp),
+                modifier = Modifier.padding(start = 20.dp, end = 20.dp),
                 style = TangemTypography.headline3,
                 color = colorResource(id = R.color.text_primary_1),
             )
 
-            Spacer(modifier = modifier.size(24.dp))
+            Spacer(modifier = Modifier.size(24.dp))
 
             Text(
-                text = stringResource(id = R.string.reset_card_to_factory_message),
-                modifier = modifier
-                    .padding(start = 20.dp, end = 20.dp),
+                text = stringResource(id = state.descriptionResId),
+                modifier = Modifier.padding(start = 20.dp, end = 20.dp),
                 style = TangemTypography.body1,
                 color = colorResource(id = R.color.text_secondary),
             )
 
-            Spacer(modifier = modifier.size(28.dp))
+            Spacer(modifier = Modifier.size(28.dp))
             Row(
-                modifier = modifier
+                modifier = Modifier
                     .fillMaxWidth()
                     .clickable(
-                    onClick = { state.onAcceptWarningToggleClick(!state.accepted) },
-                )
+                        onClick = { state.onAcceptWarningToggleClick(!state.accepted) },
+                    )
                     .padding(top = 16.dp, bottom = 16.dp),
             ) {
                 IconToggleButton(
                     checked = state.accepted,
                     onCheckedChange = state.onAcceptWarningToggleClick,
-                    modifier = modifier.padding(start = 20.dp, end = 20.dp),
+                    modifier = Modifier.padding(start = 20.dp, end = 20.dp),
                 ) {
                     Icon(
                         painter = painterResource(
@@ -125,15 +111,13 @@ fun ResetCardView(
                     text = stringResource(id = R.string.reset_card_to_factory_warning_message),
                     style = TangemTypography.body2,
                     color = colorResource(id = R.color.text_secondary),
-                    modifier = modifier
-                        .padding(end = 20.dp),
+                    modifier = Modifier.padding(end = 20.dp),
                 )
             }
 
-            Spacer(modifier = modifier.size(16.dp))
+            Spacer(modifier = Modifier.size(16.dp))
             Box(
-                modifier = modifier
-                    .padding(start = 16.dp, end = 16.dp, bottom = 32.dp),
+                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 32.dp),
             ) {
                 DetailsMainButton(
                     title = stringResource(id = R.string.reset_card_to_factory_button_title),
@@ -147,8 +131,14 @@ fun ResetCardView(
 
 @Composable
 @Preview
-fun ResetCardScreenPreview(
-
-) {
-    ResetCardScreen(state = ResetCardScreenState(onAcceptWarningToggleClick = {}, accepted = true) {}, {})
+fun ResetCardScreenPreview() {
+    ResetCardScreen(
+        state = ResetCardScreenState(
+            descriptionResId = R.string.reset_card_without_backup_to_factory_message,
+            accepted = false,
+            onAcceptWarningToggleClick = {},
+            onResetButtonClick = {},
+        ),
+        onBackPressed = {},
+    )
 }
