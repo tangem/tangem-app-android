@@ -5,13 +5,13 @@ import com.tangem.TangemSdk
 import com.tangem.blockchain.common.TransactionSigner
 import com.tangem.blockchain.common.Wallet
 import com.tangem.common.CompletionResult
-import com.tangem.common.card.Card
+import com.tangem.domain.common.CardDTO
 import com.tangem.tap.domain.tasks.SignHashesTask
 import kotlin.coroutines.resume
 import kotlin.coroutines.suspendCoroutine
 
 class TangemSigner(
-    private val card: Card,
+    private val card: CardDTO,
     private val tangemSdk: TangemSdk,
     private val initialMessage: Message,
     private val accessCode: String? = null,
