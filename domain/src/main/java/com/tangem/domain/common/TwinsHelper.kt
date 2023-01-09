@@ -1,6 +1,5 @@
 package com.tangem.domain.common
 
-import com.tangem.common.card.Card
 import com.tangem.crypto.CryptoUtils
 
 class TwinsHelper {
@@ -15,18 +14,10 @@ class TwinsHelper {
             return CryptoUtils.verify(cardWalletPublicKey, publicKey, signedKey)
         }
 
-        fun getTwinCardNumber(cardId: String): TwinCardNumber? {
-            return when {
-                firstCardSeries.map { cardId.startsWith(it) }.contains(true) -> {
-                    TwinCardNumber.First
-                }
-                secondCardSeries.map { cardId.startsWith(it) }.contains(true) -> {
-                    TwinCardNumber.Second
-                }
-                else -> {
-                    null
-                }
-            }
+        fun getTwinCardNumber(cardId: String): TwinCardNumber? = when {
+            firstCardSeries.any(cardId::startsWith) -> TwinCardNumber.First
+            secondCardSeries.any(cardId::startsWith) -> TwinCardNumber.Second
+            else -> null
         }
 
         fun getPairCardSeries(cardId: String): String? {
@@ -65,14 +56,14 @@ enum class TwinCardNumber(val number: Int) {
 }
 
 @Deprecated("Use ScanResponse.isTangemTwin")
-fun Card.isTangemTwin(): Boolean {
+fun CardDTO.isTangemTwin(): Boolean {
     return TwinsHelper.getTwinCardNumber(cardId) != null
 }
 
-fun Card.getTwinCardNumber(): TwinCardNumber? {
+fun CardDTO.getTwinCardNumber(): TwinCardNumber? {
     return TwinsHelper.getTwinCardNumber(this.cardId)
 }
 
-fun Card.getTwinCardIdForUser(): String {
+fun CardDTO.getTwinCardIdForUser(): String {
     return TwinsHelper.getTwinCardIdForUser(this.cardId)
 }
