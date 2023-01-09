@@ -14,8 +14,7 @@ import com.tangem.common.flatMap
 import com.tangem.common.flatMapOnFailure
 import com.tangem.common.fold
 import com.tangem.common.map
-import com.tangem.common.services.Result
-import com.tangem.datasource.api.tangemTech.TangemTechService
+import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.util.UserWalletId
 import com.tangem.tap.common.entities.FiatCurrency
@@ -34,10 +33,12 @@ import com.tangem.tap.domain.walletStores.repository.implementation.utils.update
 import com.tangem.tap.domain.walletStores.repository.implementation.utils.updateWithUnreachable
 import com.tangem.tap.domain.walletStores.storage.WalletManagerStorage
 import com.tangem.tap.domain.walletStores.storage.WalletStoresStorage
+import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.PendingTransactionType
 import com.tangem.tap.features.wallet.models.filterByCoin
 import com.tangem.tap.features.wallet.models.getPendingTransactions
 import com.tangem.tap.network.NetworkConnectivity
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -47,7 +48,8 @@ import timber.log.Timber
 import java.math.BigDecimal
 
 internal class DefaultWalletAmountsRepository(
-    private val tangemTechService: TangemTechService,
+    private val tangemTechApi: TangemTechApi,
+    private val dispatchers: CoroutineDispatcherProvider,
 ) : WalletAmountsRepository {
     private val walletStoresStorage = WalletStoresStorage
     private val walletManagersStorage = WalletManagerStorage
@@ -119,39 +121,31 @@ internal class DefaultWalletAmountsRepository(
 
         val coinsIds = currencies.mapNotNull { it.coinId }.distinct().toList()
 
-        val fiatRatesResult = withContext(Dispatchers.IO) {
-            tangemTechService.rates(
-                currency = fiatCurrency.code,
-                ids = coinsIds,
-            )
-        }
+        return withContext(dispatchers.io) {
+            runCatching { tangemTechApi.getRates(fiatCurrency.code.lowercase(), coinsIds.joinToString(",")) }
+                .onSuccess {
+                    updateWalletStoresWithFiatRates(walletStores = walletStores, fiatRates = it.rates)
+                    return@withContext CompletionResult.Success(Unit)
+                }
+                .onFailure {
+                    val error = WalletStoresError.FetchFiatRatesError(
+                        currencies = currencies.map(Currency::currencySymbol).toList(),
+                        cause = it,
+                    )
 
-        return when (fiatRatesResult) {
-            is Result.Success -> {
-                updateWalletStoresWithFiatRates(
-                    walletStores = walletStores,
-                    fiatRates = fiatRatesResult.data.rates,
-                )
-
-                CompletionResult.Success(Unit)
-            }
-            is Result.Failure -> {
-                val error = WalletStoresError.FetchFiatRatesError(
-                    currencies = currencies.map { it.currencySymbol }.toList(),
-                    cause = fiatRatesResult.error,
-                )
-
-                Timber.e(
-                    error,
-                    """
+                    Timber.e(
+                        error,
+                        """
                         Unable to fetch fiat rates
                         |- User wallets ids: $walletsIds
                         |- Coins ids: $coinsIds
                     """.trimIndent(),
-                )
+                    )
 
-                CompletionResult.Failure(error)
-            }
+                    return@withContext CompletionResult.Failure(error)
+                }
+
+            throw IllegalStateException("Unreachable code because runCatching must return result")
         }
     }
 
