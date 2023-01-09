@@ -7,8 +7,8 @@ import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.common.services.Result
 import com.tangem.domain.common.extensions.getTokens
 import com.tangem.domain.common.extensions.toNetworkId
-import com.tangem.network.api.tangemTech.TangemTechService
-import com.tangem.network.common.MoshiConverter
+import com.tangem.datasource.api.tangemTech.TangemTechService
+import com.tangem.datasource.api.common.MoshiConverter
 import com.tangem.tap.common.FileReader
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.domain.tokens.models.TokenDao
