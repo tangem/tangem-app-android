@@ -10,7 +10,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginBottom="2dp"
-        android:text="@string/wallet_balance_tokens_title"
+        android:text="@string/main_tokens"
         android:textColor="@color/darkGray1"
         android:textSize="14sp"
         app:layout_constraintStart_toStartOf="parent"
@@ -22,7 +22,7 @@
         android:layout_height="0dp"
         android:background="@color/backgroundLightGray"
         app:layout_constraintTop_toBottomOf="@id/tv_token_title"
-        app:layout_constraintBottom_toBottomOf="@id/tv_token_fiat_amount"/>
+        app:layout_constraintBottom_toBottomOf="@id/tv_token_fiat_amount" />
 
     <TextView
         android:id="@+id/tv_token_symbol"
