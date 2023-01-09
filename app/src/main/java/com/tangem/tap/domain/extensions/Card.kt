@@ -1,58 +1,45 @@
 package com.tangem.tap.domain.extensions
 
-import com.tangem.common.card.Card
-import com.tangem.common.card.CardWallet
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.card.FirmwareVersion
-import com.tangem.common.extensions.calculateSha256
 import com.tangem.common.extensions.toHexString
 import com.tangem.common.services.Result
+import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.TapWorkarounds.isSaltPay
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.TapWorkarounds.isTangemNote
 import com.tangem.domain.common.TwinCardNumber
-import com.tangem.domain.common.extensions.calculateHmacSha256
 import com.tangem.domain.common.getTwinCardNumber
 import com.tangem.domain.common.isTangemTwin
 import com.tangem.operations.attestation.CardVerifyAndGetInfo
 import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.tap.features.wallet.redux.Artwork
 
-val Card.remainingSignatures: Int?
-    get() = this.getSingleWallet()?.remainingSignatures
+val CardDTO.remainingSignatures: Int?
+    get() = this.wallets.firstOrNull()?.remainingSignatures
 
-val Card.isWalletDataSupported: Boolean
+val CardDTO.isWalletDataSupported: Boolean
     get() = this.firmwareVersion.major >= 4
 
-val Card.isMultiwalletAllowed: Boolean
+val CardDTO.isMultiwalletAllowed: Boolean
     get() {
-        return !isTangemTwin() && !isStart2Coin && !isTangemNote && !isSaltPay
-            && (firmwareVersion >= FirmwareVersion.MultiWalletAvailable ||
-            getSingleWallet()?.curve == EllipticCurve.Secp256k1)
+        return !isTangemTwin() && !isStart2Coin && !isTangemNote && !isSaltPay &&
+            (firmwareVersion >= FirmwareVersion.MultiWalletAvailable ||
+                wallets.firstOrNull()?.curve == EllipticCurve.Secp256k1)
     }
 
-val Card.isHdWalletAllowedByApp: Boolean
+val CardDTO.isHdWalletAllowedByApp: Boolean
     get() = settings.isHDWalletAllowed && !isSaltPay
 
-fun Card.getSingleWallet(): CardWallet? {
-    return wallets.firstOrNull()
+fun CardDTO.hasSignedHashes(): Boolean {
+    return wallets.any { (it.totalSignedHashes ?: 0) > 0 }
 }
 
-fun Card.hasWallets(): Boolean = wallets.isNotEmpty()
-
-fun Card.hasNoWallets(): Boolean = wallets.isEmpty()
-
-fun Card.hasSingleWallet(): Boolean = wallets.size == 1
-
-fun Card.hasSignedHashes(): Boolean {
-    return wallets.any { it.totalSignedHashes ?: 0 > 0 }
+fun CardDTO.signedHashesCount(): Int {
+    return wallets.sumOf { it.totalSignedHashes ?: 0 }
 }
 
-fun Card.signedHashesCount(): Int {
-    return wallets.map { it.totalSignedHashes ?: 0 }.sum()
-}
-
-suspend fun Card.getOrLoadCardArtworkUrl(cardInfo: Result<CardVerifyAndGetInfo.Response.Item>? = null): String {
+suspend fun CardDTO.getOrLoadCardArtworkUrl(cardInfo: Result<CardVerifyAndGetInfo.Response.Item>? = null): String {
     fun ifAnyError(): String {
         return when {
             cardId.startsWith(Artwork.SERGIO_CARD_ID) -> Artwork.SERGIO_CARD_URL
@@ -67,42 +54,28 @@ suspend fun Card.getOrLoadCardArtworkUrl(cardInfo: Result<CardVerifyAndGetInfo.R
         }
     }
 
-    val cardInfoResult = cardInfo ?: OnlineCardVerifier().getCardInfo(cardId, cardPublicKey)
-    return when (cardInfoResult) {
+    return when (val cardInfoResult = cardInfo ?: OnlineCardVerifier().getCardInfo(cardId, cardPublicKey)) {
         is Result.Success -> {
             val artworkId = cardInfoResult.data.artwork?.id
-            if (artworkId == null || artworkId.isEmpty()) {
+            if (artworkId.isNullOrEmpty()) {
                 ifAnyError()
             } else {
                 OnlineCardVerifier.getUrlForArtwork(cardId, cardPublicKey.toHexString(), artworkId)
             }
         }
+
         is Result.Failure -> ifAnyError()
     }
 }
 
-fun Card.getArtworkUrl(artworkId: String?): String? {
+fun CardDTO.getArtworkUrl(artworkId: String?): String? {
     return when {
         artworkId != null -> {
             OnlineCardVerifier.getUrlForArtwork(cardId, cardPublicKey.toHexString(), artworkId)
         }
+
         cardId.startsWith(Artwork.SERGIO_CARD_ID) -> Artwork.SERGIO_CARD_URL
         cardId.startsWith(Artwork.MARTA_CARD_ID) -> Artwork.MARTA_CARD_URL
         else -> null
-    }
-}
-
-fun Card.getUserWalletId(): String {
-    val walletPublicKey = this.wallets.firstOrNull()?.publicKey ?: return ""
-    return UserWalletId(walletPublicKey).stringValue
-}
-
-class UserWalletId(val walletPublicKey: ByteArray) {
-    val stringValue: String = calculateUserId(walletPublicKey)
-
-    private fun calculateUserId(walletPublicKey: ByteArray): String {
-        val message = "UserWalletID".toByteArray()
-        val keyHash = walletPublicKey.calculateSha256()
-        return message.calculateHmacSha256(keyHash).toHexString()
     }
 }

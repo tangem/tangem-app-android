@@ -8,7 +8,7 @@ sealed class WalletWarning(
         val edStringValueWithSymbol: String,
     ) : WalletWarning(1)
 
-    object TransactionInProgress : WalletWarning(10)
+    data class TransactionInProgress(val currencyName: String) : WalletWarning(10)
     data class BalanceNotEnoughForFee(val blockchainFullName: String) : WalletWarning(30)
     data class Rent(val walletRent: WalletRent) : WalletWarning(40)
 }

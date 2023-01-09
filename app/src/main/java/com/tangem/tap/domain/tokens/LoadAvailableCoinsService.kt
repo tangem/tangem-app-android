@@ -6,9 +6,9 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.services.Result
 import com.tangem.domain.common.extensions.getListOfCoins
 import com.tangem.domain.common.extensions.toNetworkId
-import com.tangem.network.api.tangemTech.CoinsResponse
-import com.tangem.network.api.tangemTech.TangemTechService
-import com.tangem.network.common.MoshiConverter
+import com.tangem.datasource.api.tangemTech.CoinsResponse
+import com.tangem.datasource.api.tangemTech.TangemTechService
+import com.tangem.datasource.api.common.MoshiConverter
 import com.tangem.tap.common.AssetReader
 
 class LoadAvailableCoinsService(
