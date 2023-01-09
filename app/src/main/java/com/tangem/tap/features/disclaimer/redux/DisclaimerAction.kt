@@ -9,9 +9,19 @@ sealed class DisclaimerAction : Action {
         val type: DisclaimerType,
     ) : DisclaimerAction()
 
-    data class Show(val onAcceptCallback: VoidCallback? = null) : DisclaimerAction()
+    data class Show(
+        val onAcceptCallback: VoidCallback? = null,
+        val onDismissCallback: VoidCallback? = null,
+    ) : DisclaimerAction()
+
     data class AcceptDisclaimer(val type: DisclaimerType) : DisclaimerAction()
 
     internal data class UpdateState(val type: DisclaimerType, val accepted: Boolean) : DisclaimerAction()
-    internal data class SetOnAcceptCallback(val onAcceptCallback: VoidCallback? = null) : DisclaimerAction()
+
+    internal data class SetCallbacks(
+        val onAcceptCallback: VoidCallback? = null,
+        val onDismissCallback: VoidCallback? = null,
+    ) : DisclaimerAction()
+
+    object OnBackPressed : DisclaimerAction()
 }
