@@ -96,8 +96,8 @@ class FeedbackEmail : FeedbackData {
 }
 
 class SupportInfo : FeedbackData {
-    override val subjectResId: Int = R.string.details_ask_a_question
-    override val mainMessageResId: Int = R.string.details_ask_a_question
+    override val subjectResId: Int = R.string.details_chat
+    override val mainMessageResId: Int = R.string.details_chat
 
     override fun createOptionalMessage(infoHolder: AdditionalFeedbackInfo): String {
         return FeedbackDataBuilder(infoHolder)

@@ -13,6 +13,8 @@ class FinalizeTwinTask(
     private val twinPublicKey: ByteArray, private val issuerKeys: KeyPair,
 ) : CardSessionRunnable<ScanResponse> {
 
+    override val allowsRequestAccessCodeFromRepository: Boolean = false
+
     override fun run(
         session: CardSession,
         callback: (result: CompletionResult<ScanResponse>) -> Unit,

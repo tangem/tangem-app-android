@@ -156,7 +156,7 @@ private class SolanaRentWarningActionEmitter {
     }
 
     private fun getBlockchainNetwork(): BlockchainNetwork {
-        val currency = store.state.walletState.getSelectedWalletData()!!.currency
+        val currency = store.state.walletState.selectedWalletData!!.currency
         return BlockchainNetwork(currency.blockchain, currency.derivationPath, listOf())
     }
 }
