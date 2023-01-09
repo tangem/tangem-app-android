@@ -28,7 +28,7 @@ class UserTokensRepository(
 ) {
 // [REDACTED_TODO_COMMENT]
     suspend fun getUserTokens(card: CardDTO): List<Currency> = withContext(dispatchers.io) {
-        val userId = getUserWalletId(card) ?: return emptyList()
+        val userId = getUserWalletId(card) ?: return@withContext emptyList()
         if (DemoHelper.isDemoCardId(card.cardId)) {
             return@withContext loadTokensOffline(card, userId).ifEmpty(::loadDemoCurrencies)
         }
@@ -53,21 +53,14 @@ class UserTokensRepository(
     }
 // [REDACTED_TODO_COMMENT]
     suspend fun saveUserTokens(card: CardDTO, tokens: List<Currency>) = withContext(dispatchers.io) {
-        val userId = getUserWalletId(card) ?: return
+        val userId = getUserWalletId(card) ?: return@withContext
         val userTokens = tokens.toUserTokensResponse()
         tangemTechApi.saveUserTokens(userId, userTokens)
         storageService.saveUserTokens(userId, userTokens)
     }
 
-    suspend fun removeUserTokens(card: CardDTO) {
-        val userId = getUserWalletId(card) ?: return
-        val userTokens = emptyList<Currency>().toUserTokensResponse()
-        networkService.saveUserTokens(userId, userTokens)
-        storageService.saveUserTokens(userId, userTokens)
-    }
-
     suspend fun loadBlockchainsToDerive(card: CardDTO): List<BlockchainNetwork> = withContext(dispatchers.io) {
-        val userId = getUserWalletId(card) ?: return emptyList()
+        val userId = getUserWalletId(card) ?: return@withContext emptyList()
         val blockchainNetworks = loadTokensOffline(card = card, userId = userId).toBlockchainNetworks()
 
         if (DemoHelper.isDemoCardId(card.cardId)) {
