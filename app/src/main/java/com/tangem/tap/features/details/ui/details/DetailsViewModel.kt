@@ -11,6 +11,7 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.extensions.isMultiwalletAllowed
+import com.tangem.tap.domain.extensions.isTangemWallet
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
@@ -39,6 +40,7 @@ class DetailsViewModel(private val store: Store<AppState>) {
                 SettingsElement.AppSettings -> if (state.isBiometricsAvailable) it else null
                 SettingsElement.AppCurrency -> if (state.scanResponse?.card?.isMultiwalletAllowed != true) it else null
                 SettingsElement.TermsOfUse -> if (state.scanResponse?.card?.isStart2Coin == true) it else null
+                // SettingsElement.ReferralProgram -> if (state.scanResponse?.card?.isTangemWallet == true) it else null
                 else -> it
             }
         }
