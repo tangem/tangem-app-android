@@ -3,10 +3,16 @@ package com.tangem.tap.features.wallet.redux.middlewares
 import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.WalletManager
+import com.tangem.common.doOnSuccess
 import com.tangem.common.extensions.guard
 import com.tangem.domain.common.extensions.withMainContext
+import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.AnalyticsParam
+import com.tangem.tap.common.analytics.events.MainScreen
+import com.tangem.tap.common.analytics.events.Token.ButtonRemoveToken
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchErrorNotification
+import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.global.GlobalState
@@ -14,6 +20,8 @@ import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.makeWalletManagerForApp
+import com.tangem.tap.domain.model.UserWallet
+import com.tangem.tap.domain.scanCard.ScanCardProcessor
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.demo.isDemoCard
@@ -26,6 +34,8 @@ import com.tangem.tap.features.wallet.redux.reducers.toWallet
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.userTokensRepository
+import com.tangem.tap.userWalletsListManager
+import com.tangem.tap.walletCurrenciesManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -42,7 +52,7 @@ class MultiWalletMiddleware {
                 handleAddingWalletManagers(globalState, action.walletManagers)
             }
             is WalletAction.MultiWallet.SelectWallet -> {
-                if (action.walletData != null) {
+                if (action.currency != null) {
                     store.dispatch(NavigationAction.NavigateTo(AppScreen.WalletDetails))
                 }
             }
@@ -50,7 +60,7 @@ class MultiWalletMiddleware {
                 addTokens(listOf(action.token), action.blockchain, walletState, globalState, action.save)
             }
             is WalletAction.MultiWallet.AddTokens -> {
-                addTokens(action.tokens, action.blockchain, walletState, globalState, action.save)
+                addTokens(action.tokens, action.blockchain, walletState, globalState, save = false)
             }
             is WalletAction.MultiWallet.AddBlockchain -> {
                 action.walletManager?.let {
@@ -109,6 +119,7 @@ class MultiWalletMiddleware {
                         WalletDialog.RemoveWalletDialog(
                             currencyTitle = currency.currencyName,
                             onOk = {
+                                Analytics.send(ButtonRemoveToken(AnalyticsParam.CurrencyType.Currency(currency)))
                                 store.dispatch(WalletAction.MultiWallet.RemoveWallet(currency))
                                 store.dispatch(NavigationAction.PopBackTo())
                             },
@@ -117,19 +128,27 @@ class MultiWalletMiddleware {
                 }
             }
             is WalletAction.MultiWallet.RemoveWallet -> {
-                val currency = action.currency
-                val card = globalState.scanResponse?.card.guard {
-                    store.dispatchErrorNotification(TapError.UnsupportedState("card is NULL"))
-                    store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
-                    return
+                val selectedUserWallet = userWalletsListManager.selectedUserWalletSync
+                if (selectedUserWallet != null) scope.launch {
+                    walletCurrenciesManager.removeCurrency(
+                        userWallet = selectedUserWallet,
+                        currencyToRemove = action.currency,
+                    )
+                } else {
+                    val currency = action.currency
+                    val card = globalState.scanResponse?.card.guard {
+                        store.dispatchErrorNotification(TapError.UnsupportedState("card is NULL"))
+                        store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
+                        return
+                    }
+                    var currencies = walletState?.currencies ?: emptyList()
+                    currencies = currencies.filterNot { it == currency }
+                    if (currency.isBlockchain()) {
+                        currencies
+                            .filter { it.blockchain == currency.blockchain && it.derivationPath == currency.derivationPath }
+                    }
+                    scope.launch { userTokensRepository.saveUserTokens(card, currencies) }
                 }
-                var currencies = walletState?.currencies ?: emptyList()
-                currencies = currencies.filterNot { it == currency }
-                if (currency.isBlockchain()) {
-                    currencies
-                        .filter { it.blockchain == currency.blockchain && it.derivationPath == currency.derivationPath }
-                }
-                scope.launch { userTokensRepository.saveUserTokens(card, currencies) }
             }
             is WalletAction.MultiWallet.RemoveWallets -> {
                 val card = globalState.scanResponse?.card.guard {
@@ -150,8 +169,37 @@ class MultiWalletMiddleware {
                 }
             }
             is WalletAction.MultiWallet.ScanToGetDerivations -> {
-                store.dispatch(WalletAction.Scan)
+                val selectedWallet = userWalletsListManager.selectedUserWalletSync
+                if (selectedWallet != null) {
+                    scanAndUpdateCard(selectedWallet, walletState)
+                } else {
+                    store.dispatch(WalletAction.Scan)
+                }
             }
+        }
+    }
+
+    private fun scanAndUpdateCard(
+        selectedUserWallet: UserWallet,
+        state: WalletState?,
+    ) = scope.launch(Dispatchers.Default) {
+        Analytics.send(MainScreen.CardWasScanned())
+        ScanCardProcessor.scan(
+            cardId = selectedUserWallet.cardId,
+            additionalBlockchainsToDerive = state?.missingDerivations?.map { it.blockchain },
+        ) { scanResponse ->
+            userWalletsListManager.update(
+                userWalletId = selectedUserWallet.walletId,
+                update = { userWallet ->
+                    userWallet.copy(
+                        scanResponse = scanResponse,
+                    )
+                },
+            )
+                .doOnSuccess { updatedUserWallet ->
+                    store.dispatchOnMain(WalletAction.MultiWallet.AddMissingDerivations(emptyList()))
+                    store.state.globalState.tapWalletManager.loadData(updatedUserWallet, refresh = true)
+                }
         }
     }
 
