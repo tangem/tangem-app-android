@@ -1,16 +1,16 @@
 package com.tangem.tap.features.wallet.models
 
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.DerivationStyle
-import com.tangem.blockchain.common.Token
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.domain.common.extensions.toCoinId
 import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.features.addCustomToken.CustomCurrency
-import com.tangem.network.api.tangemTech.TokenResponse
+import com.tangem.datasource.api.tangemTech.TokenResponse
 import com.tangem.tap.common.redux.global.CryptoCurrencyName
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
+import com.tangem.blockchain.common.Blockchain as SdkBlockchain
+import com.tangem.blockchain.common.Token as SdkToken
 
 sealed interface Currency {
     val coinId: String?
@@ -18,7 +18,7 @@ sealed interface Currency {
             is Blockchain -> blockchain.toCoinId()
             is Token -> token.id
         }
-    val blockchain: com.tangem.blockchain.common.Blockchain
+    val blockchain: SdkBlockchain
     val currencySymbol: CryptoCurrencyName
     val derivationPath: String?
     val currencyName: String
@@ -33,15 +33,15 @@ sealed interface Currency {
         }
 
     data class Token(
-        val token: com.tangem.blockchain.common.Token,
-        override val blockchain: com.tangem.blockchain.common.Blockchain,
+        val token: SdkToken,
+        override val blockchain: SdkBlockchain,
         override val derivationPath: String?,
     ) : Currency {
         override val currencySymbol = token.symbol
     }
 
     data class Blockchain(
-        override val blockchain: com.tangem.blockchain.common.Blockchain,
+        override val blockchain: SdkBlockchain,
         override val derivationPath: String?,
     ) : Currency {
         override val currencySymbol: CryptoCurrencyName = blockchain.currency
@@ -72,7 +72,7 @@ sealed interface Currency {
     companion object {
         fun fromBlockchainNetwork(
             blockchainNetwork: BlockchainNetwork,
-            token: com.tangem.blockchain.common.Token? = null,
+            token: SdkToken? = null,
         ): Currency {
             return if (token != null) {
                 Token(
@@ -115,7 +115,7 @@ sealed interface Currency {
                 ?: return null
             return when {
                 tokenResponse.contractAddress != null -> Token(
-                    com.tangem.blockchain.common.Token(
+                    token = SdkToken(
                         name = tokenResponse.name,
                         symbol = tokenResponse.symbol,
                         contractAddress = tokenResponse.contractAddress!!,
@@ -148,9 +148,8 @@ fun List<Currency>.toBlockchainNetworks(): List<BlockchainNetwork> {
     return this.filter { it.isBlockchain() }.map { BlockchainNetwork(it.blockchain, it.derivationPath, getTokens(it)) }
 }
 
-private fun List<Currency>.getTokens(currency: Currency): List<Token> {
+fun List<Currency>.getTokens(currency: Currency): List<SdkToken> {
     return this
         .filter { it.isToken() && it.blockchain == currency.blockchain && it.derivationPath == currency.derivationPath }
         .mapNotNull { if (it is Currency.Token) it.token else null }
 }
-

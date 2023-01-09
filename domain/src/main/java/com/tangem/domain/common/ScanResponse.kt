@@ -2,7 +2,6 @@ package com.tangem.domain.common
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
-import com.tangem.common.card.Card
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.card.WalletData
 import com.tangem.common.extensions.ByteArrayKey
@@ -24,7 +23,7 @@ import com.tangem.operations.derivation.ExtendedPublicKeysMap
 * [REDACTED_AUTHOR]
  */
 data class ScanResponse(
-    val card: Card,
+    val card: CardDTO,
     val productType: ProductType,
     val walletData: WalletData?,
     val secondTwinPublicKey: String? = null,
@@ -69,7 +68,7 @@ data class ScanResponse(
         return hasDerivation(blockchain, DerivationPath(rawDerivationPath))
     }
 
-    fun hasDerivation(blockchain: Blockchain, derivationPath: DerivationPath): Boolean {
+    private fun hasDerivation(blockchain: Blockchain, derivationPath: DerivationPath): Boolean {
         val isTestnet = card.isTestCard || blockchain.isTestnet()
         return when {
             Blockchain.secp256k1Blockchains(isTestnet).contains(blockchain) -> {
@@ -82,7 +81,7 @@ data class ScanResponse(
         }
     }
 
-    fun hasDerivation(curve: EllipticCurve, derivationPath: DerivationPath): Boolean {
+    private fun hasDerivation(curve: EllipticCurve, derivationPath: DerivationPath): Boolean {
         val foundWallet = card.wallets.firstOrNull { it.curve == curve }
             ?: return false
         val extendedPublicKeysMap = derivedKeys[foundWallet.publicKey.toMapKey()] ?: return false
@@ -94,14 +93,5 @@ data class ScanResponse(
 enum class ProductType {
     Note, Twins, Wallet, SaltPay, Start2Coin
 }
-
-val Card.productType: ProductType
-    get() = when {
-        isTangemTwins -> ProductType.Twins
-        isTangemNote -> ProductType.Note
-        isSaltPay -> ProductType.SaltPay
-        isStart2Coin -> ProductType.Start2Coin
-        else -> ProductType.Wallet
-    }
 
 typealias KeyWalletPublicKey = ByteArrayKey

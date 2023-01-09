@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.tangem.core.ui.components.SpacerH16
 import com.tangem.domain.DomainDialog
 import com.tangem.domain.redux.domainStore
 import com.tangem.domain.redux.global.DomainGlobalAction
@@ -105,7 +106,7 @@ fun <T> SimpleDialog(
                 modifier = Modifier.padding(22.dp)
             ) {
                 DialogTitle(title = title)
-                LazyColumn() {
+                LazyColumn {
                     items(items) { item ->
                         Row(
                             modifier = Modifier
@@ -155,4 +156,3 @@ fun ErrorDialog(
         }
     )
 }
-

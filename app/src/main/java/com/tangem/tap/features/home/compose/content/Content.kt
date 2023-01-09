@@ -2,7 +2,11 @@ package com.tangem.tap.features.home.compose.content
 
 import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -20,8 +24,8 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.tangem.tap.common.compose.SpacerH16
-import com.tangem.tap.common.compose.SpacerH32
+import com.tangem.core.ui.components.SpacerH16
+import com.tangem.core.ui.components.SpacerH32
 import com.tangem.tap.features.home.compose.StoriesBottomImageAnimation
 import com.tangem.tap.features.home.compose.StoriesTextAnimation
 import com.tangem.wallet.R

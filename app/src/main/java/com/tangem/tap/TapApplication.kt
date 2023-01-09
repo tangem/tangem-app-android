@@ -7,18 +7,30 @@ import coil.ImageLoader
 import coil.ImageLoaderFactory
 import com.tangem.Log
 import com.tangem.LogFormat
+import com.tangem.blockchain.common.BlockchainSdkConfig
+import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.common.json.MoshiJsonConverter
+import com.tangem.datasource.api.common.MoshiConverter
 import com.tangem.domain.DomainLayer
 import com.tangem.domain.common.LogConfig
-import com.tangem.network.common.MoshiConverter
 import com.tangem.tap.common.AndroidAssetReader
 import com.tangem.tap.common.AssetReader
-import com.tangem.tap.common.analytics.GlobalAnalyticsEventHandlerBuilder
+import com.tangem.tap.common.IntentHandler
+import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.AnalyticsFactory
+import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
+import com.tangem.tap.common.analytics.filters.BasicSignInFilter
+import com.tangem.tap.common.analytics.filters.BasicTopUpFilter
+import com.tangem.tap.common.analytics.filters.ShopPurchasedEventFilter
+import com.tangem.tap.common.analytics.handlers.amplitude.AmplitudeAnalyticsHandler
+import com.tangem.tap.common.analytics.handlers.appsFlyer.AppsFlyerAnalyticsHandler
+import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandler
 import com.tangem.tap.common.feedback.AdditionalFeedbackInfo
 import com.tangem.tap.common.feedback.FeedbackManager
 import com.tangem.tap.common.images.createCoilImageLoader
 import com.tangem.tap.common.log.TangemLogCollector
+import com.tangem.tap.common.moshi.BigDecimalAdapter
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.appReducer
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -28,47 +40,112 @@ import com.tangem.tap.domain.configurable.config.ConfigManager
 import com.tangem.tap.domain.configurable.config.FeaturesLocalLoader
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessagesManager
 import com.tangem.tap.domain.tokens.UserTokensRepository
+import com.tangem.tap.domain.totalBalance.TotalFiatBalanceCalculator
+import com.tangem.tap.domain.totalBalance.di.provideDefaultImplementation
+import com.tangem.tap.domain.walletCurrencies.WalletCurrenciesManager
+import com.tangem.tap.domain.walletCurrencies.di.provideDefaultImplementation
+import com.tangem.tap.domain.walletStores.WalletStoresManager
+import com.tangem.tap.domain.walletStores.di.provideDefaultImplementation
+import com.tangem.tap.domain.walletStores.repository.WalletAmountsRepository
+import com.tangem.tap.domain.walletStores.repository.WalletManagersRepository
+import com.tangem.tap.domain.walletStores.repository.WalletStoresRepository
+import com.tangem.tap.domain.walletStores.repository.di.provideDefaultImplementation
 import com.tangem.tap.domain.walletconnect.WalletConnectRepository
 import com.tangem.tap.network.NetworkConnectivity
+import com.tangem.tap.persistence.CardBalanceStateAdapter
 import com.tangem.tap.persistence.PreferencesStorage
+import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.wallet.BuildConfig
 import com.zendesk.logger.Logger
+import dagger.hilt.android.HiltAndroidApp
 import org.rekotlin.Store
 import timber.log.Timber
 import zendesk.chat.Chat
+import javax.inject.Inject
 
-val store = Store(
-    reducer = ::appReducer,
-    middleware = AppState.getMiddleware(),
-    state = AppState(),
-)
+lateinit var store: Store<AppState>
 
 lateinit var foregroundActivityObserver: ForegroundActivityObserver
+lateinit var activityResultCaller: ActivityResultCaller
 lateinit var preferencesStorage: PreferencesStorage
 lateinit var walletConnectRepository: WalletConnectRepository
 lateinit var shopService: TangemShopService
 lateinit var assetReader: AssetReader
 lateinit var userTokensRepository: UserTokensRepository
 
+private val walletStoresRepository by lazy { WalletStoresRepository.provideDefaultImplementation() }
+private val walletManagersRepository by lazy {
+    WalletManagersRepository.provideDefaultImplementation(
+        walletManagerFactory = WalletManagerFactory(
+            blockchainSdkConfig = store.state.globalState.configManager
+                ?.config
+                ?.blockchainSdkConfig
+                ?: BlockchainSdkConfig(),
+        ),
+    )
+}
+private val walletAmountsRepository by lazy {
+    WalletAmountsRepository.provideDefaultImplementation(
+        tangemTechService = store.state.domainNetworks.tangemTechService,
+    )
+}
+val walletStoresManager by lazy {
+    WalletStoresManager.provideDefaultImplementation(
+        userTokensRepository = userTokensRepository,
+        walletStoresRepository = walletStoresRepository,
+        walletManagersRepository = walletManagersRepository,
+        walletAmountsRepository = walletAmountsRepository,
+        appCurrencyProvider = { store.state.globalState.appCurrency },
+    )
+}
+val walletCurrenciesManager by lazy {
+    WalletCurrenciesManager.provideDefaultImplementation(
+        userTokensRepository = userTokensRepository,
+        walletStoresRepository = walletStoresRepository,
+        walletManagersRepository = walletManagersRepository,
+        walletAmountsRepository = walletAmountsRepository,
+        appCurrencyProvider = { store.state.globalState.appCurrency },
+    )
+}
+val totalFiatBalanceCalculator by lazy {
+    TotalFiatBalanceCalculator.provideDefaultImplementation()
+}
+val intentHandler by lazy { IntentHandler() }
+
+@HiltAndroidApp
 class TapApplication : Application(), ImageLoaderFactory {
+
+    @Inject
+    lateinit var appStateHolder: AppStateHolder
 
     override fun onCreate() {
         super.onCreate()
+
+        store = Store(
+            reducer = { action, state ->
+                appReducer(action, state, appStateHolder)
+            },
+            middleware = AppState.getMiddleware(),
+            state = AppState(),
+        )
+        appStateHolder.mainStore = store
 
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
         }
 
         foregroundActivityObserver = ForegroundActivityObserver()
+        activityResultCaller = foregroundActivityObserver
         registerActivityLifecycleCallbacks(foregroundActivityObserver.callbacks)
 
+        initMoshiConverter()
         DomainLayer.init()
         NetworkConnectivity.createInstance(store, this)
         preferencesStorage = PreferencesStorage(this)
         walletConnectRepository = WalletConnectRepository(this)
 
         assetReader = AndroidAssetReader(this)
-        val configLoader = FeaturesLocalLoader(assetReader, MoshiConverter.defaultMoshi())
+        val configLoader = FeaturesLocalLoader(assetReader, MoshiConverter.INSTANCE.moshi)
         initConfigManager(configLoader, ::initWithConfigDependency)
         initWarningMessagesManager()
 
@@ -77,6 +154,18 @@ class TapApplication : Application(), ImageLoaderFactory {
         userTokensRepository = UserTokensRepository.init(
             context = this,
             tangemTechService = store.state.domainNetworks.tangemTechService,
+        )
+        appStateHolder.userTokensRepository = userTokensRepository
+    }
+// [REDACTED_TODO_COMMENT]
+    private fun initMoshiConverter() {
+        fun appAdapters(): List<Any> = listOf(
+            BigDecimalAdapter(),
+            CardBalanceStateAdapter(),
+        )
+        MoshiConverter.reInitInstance(
+            adapters = appAdapters() + MoshiJsonConverter.getTangemSdkAdapters(),
+            typedAdapters = MoshiJsonConverter.getTangemSdkTypedAdapters(),
         )
     }
 
@@ -102,14 +191,23 @@ class TapApplication : Application(), ImageLoaderFactory {
     }
 
     private fun initAnalytics(application: Application, config: Config) {
-        val globalAnalyticsHandler = GlobalAnalyticsEventHandlerBuilder(
+        val factory = AnalyticsFactory()
+        factory.addHandlerBuilder(AmplitudeAnalyticsHandler.Builder())
+        factory.addHandlerBuilder(AppsFlyerAnalyticsHandler.Builder())
+        factory.addHandlerBuilder(FirebaseAnalyticsHandler.Builder())
+
+        factory.addFilter(ShopPurchasedEventFilter())
+        factory.addFilter(BasicSignInFilter())
+        factory.addFilter(BasicTopUpFilter(preferencesStorage.toppedUpWalletStorage))
+
+        val buildData = AnalyticsHandlerBuilder.Data(
             application = application,
             config = config,
             isDebug = BuildConfig.DEBUG,
             logConfig = LogConfig.analyticsHandlers,
-            jsonConverter = MoshiJsonConverter.INSTANCE,
-        ).default()
-        store.dispatch(GlobalAction.SetGlobalAnalyticsHandler(globalAnalyticsHandler))
+            jsonConverter = MoshiConverter.INSTANCE,
+        )
+        factory.build(Analytics, buildData)
     }
 
     private fun initFeedbackManager(context: Context, preferencesStorage: PreferencesStorage, config: Config) {

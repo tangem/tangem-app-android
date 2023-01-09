@@ -1,10 +1,12 @@
 package com.tangem.tap.common.extensions
 
 import androidx.activity.OnBackPressedCallback
+import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
 import com.tangem.common.extensions.VoidCallback
+import com.tangem.feature.referral.ReferralFragment
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.FragmentShareTransition
 import com.tangem.tap.features.details.ui.appsettings.AppSettingsFragment
@@ -20,21 +22,22 @@ import com.tangem.tap.features.onboarding.products.note.OnboardingNoteFragment
 import com.tangem.tap.features.onboarding.products.otherCards.OnboardingOtherCardsFragment
 import com.tangem.tap.features.onboarding.products.twins.ui.TwinsCardsFragment
 import com.tangem.tap.features.onboarding.products.wallet.ui.OnboardingWalletFragment
+import com.tangem.tap.features.saveWallet.ui.SaveWalletBottomSheetFragment
 import com.tangem.tap.features.send.ui.SendFragment
 import com.tangem.tap.features.shop.ui.ShopFragment
 import com.tangem.tap.features.tokens.addCustomToken.AddCustomTokenFragment
 import com.tangem.tap.features.tokens.ui.AddTokensFragment
 import com.tangem.tap.features.wallet.ui.WalletDetailsFragment
 import com.tangem.tap.features.wallet.ui.WalletFragment
+import com.tangem.tap.features.walletSelector.ui.WalletSelectorBottomSheetFragment
+import com.tangem.tap.features.welcome.ui.WelcomeFragment
 import com.tangem.wallet.R
 import timber.log.Timber
-
-private class Navigation
 
 fun FragmentActivity.openFragment(
     screen: AppScreen,
     addToBackstack: Boolean,
-    fgShareTransition: FragmentShareTransition? = null
+    fgShareTransition: FragmentShareTransition? = null,
 ) {
     val transaction = this.supportFragmentManager.beginTransaction()
     val fragment = fragmentFactory(screen)
@@ -48,9 +51,18 @@ fun FragmentActivity.openFragment(
             }
         }
     }
-    transaction.replace(R.id.fragment_container, fragment, screen.name)
-    if (addToBackstack && screen != AppScreen.Home) transaction.addToBackStack(null)
-    transaction.commitAllowingStateLoss()
+    if (screen.isDialogFragment) {
+        (fragment as DialogFragment).show(transaction, screen.name)
+        if (addToBackstack) {
+            transaction.addToBackStack(screen.name)
+        }
+    } else {
+        transaction.replace(R.id.fragment_container, fragment, screen.name)
+        if (addToBackstack) {
+            transaction.addToBackStack(screen.name)
+        }
+        transaction.commitAllowingStateLoss()
+    }
 }
 
 fun FragmentActivity.popBackTo(screen: AppScreen?, inclusive: Boolean = false) {
@@ -104,5 +116,9 @@ private fun fragmentFactory(screen: AppScreen): Fragment {
         AppScreen.WalletDetails -> WalletDetailsFragment()
         AppScreen.WalletConnectSessions -> WalletConnectFragment()
         AppScreen.QrScan -> QrScanFragment()
+        AppScreen.ReferralProgram -> ReferralFragment()
+        AppScreen.Welcome -> WelcomeFragment()
+        AppScreen.SaveWallet -> SaveWalletBottomSheetFragment()
+        AppScreen.WalletSelector -> WalletSelectorBottomSheetFragment()
     }
 }

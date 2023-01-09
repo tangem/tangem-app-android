@@ -9,7 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
 import androidx.transition.TransitionInflater
-import com.google.accompanist.appcompattheme.AppCompatTheme
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
@@ -25,8 +25,9 @@ class AppSettingsFragment : Fragment(), StoreSubscriber<DetailsState> {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val inflater = TransitionInflater.from(requireContext())
-        enterTransition = inflater.inflateTransition(R.transition.slide_right)
+        enterTransition = inflater.inflateTransition(R.transition.fade)
         exitTransition = inflater.inflateTransition(R.transition.fade)
+        viewModel.checkBiometricsStatus()
     }
 
     override fun onCreateView(
@@ -37,7 +38,7 @@ class AppSettingsFragment : Fragment(), StoreSubscriber<DetailsState> {
         return ComposeView(requireContext()).apply {
             setContent {
                 isTransitionGroup = true
-                AppCompatTheme {
+                TangemTheme {
                     AppSettingsScreen(
                         state = screenState.value,
                         onBackPressed = {
@@ -59,6 +60,11 @@ class AppSettingsFragment : Fragment(), StoreSubscriber<DetailsState> {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        viewModel.refreshBiometricsStatus()
+    }
+
     override fun onStop() {
         super.onStop()
         store.unsubscribe(this)
@@ -69,4 +75,3 @@ class AppSettingsFragment : Fragment(), StoreSubscriber<DetailsState> {
         screenState.value = viewModel.updateState(state)
     }
 }
-
