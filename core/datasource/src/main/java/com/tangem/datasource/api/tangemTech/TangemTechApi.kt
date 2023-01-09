@@ -26,7 +26,7 @@ interface TangemTechApi {
     ): CoinsResponse
 
     @GET("rates")
-    suspend fun rates(
+    suspend fun getRates(
         @Query("currencyId") currencyId: String,
         @Query("coinIds") coinIds: String,
     ): RatesResponse
