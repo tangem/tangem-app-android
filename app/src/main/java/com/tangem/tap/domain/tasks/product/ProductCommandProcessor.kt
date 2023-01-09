@@ -1,15 +1,15 @@
 package com.tangem.tap.domain.tasks.product
 
 import com.tangem.common.CompletionResult
-import com.tangem.common.card.Card
 import com.tangem.common.core.CardSession
+import com.tangem.domain.common.CardDTO
 
 /**
 [REDACTED_AUTHOR]
  */
 interface ProductCommandProcessor<T> {
     fun proceed(
-        card: Card,
+        card: CardDTO,
         session: CardSession,
         callback: (result: CompletionResult<T>) -> Unit,
     )

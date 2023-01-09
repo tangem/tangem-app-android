@@ -2,13 +2,13 @@ package com.tangem.tap.domain.tokens
 
 import android.content.Context
 import com.tangem.blockchain.common.DerivationStyle
-import com.tangem.common.card.Card
 import com.tangem.common.services.Result
-import com.tangem.network.api.tangemTech.TangemTechService
-import com.tangem.network.api.tangemTech.UserTokensResponse
+import com.tangem.datasource.api.tangemTech.TangemTechService
+import com.tangem.datasource.api.tangemTech.UserTokensResponse
+import com.tangem.domain.common.CardDTO
 import com.tangem.tap.common.AndroidFileReader
 import com.tangem.tap.domain.NoDataError
-import com.tangem.tap.domain.extensions.getUserWalletId
+import com.tangem.tap.domain.model.builders.UserWalletIdBuilder
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.wallet.models.Currency
@@ -23,8 +23,8 @@ class UserTokensRepository(
     private val storageService: UserTokensStorageService,
     private val networkService: UserTokensNetworkService,
 ) {
-    suspend fun getUserTokens(card: Card): List<Currency> {
-        val userId = card.getUserWalletId()
+    suspend fun getUserTokens(card: CardDTO): List<Currency> {
+        val userId = getUserWalletId(card) ?: return emptyList()
         if (DemoHelper.isDemoCardId(card.cardId)) {
             return loadTokensOffline(card, userId).ifEmpty { loadDemoCurrencies() }
         }
@@ -36,25 +36,28 @@ class UserTokensRepository(
         return when (val networkResult = networkService.getUserTokens(userId)) {
             is Result.Success -> {
                 val tokens = networkResult.data.tokens.mapNotNull { Currency.fromTokenResponse(it) }
-                storageService.saveUserTokens(card.getUserWalletId(), tokens.toUserTokensResponse())
+                storageService.saveUserTokens(userId, tokens.toUserTokensResponse())
                 tokens.distinct()
             }
+
             is Result.Failure -> {
                 handleGetUserTokensFailure(card = card, userId = userId, error = networkResult.error)
             }
         }
     }
 
-    suspend fun saveUserTokens(card: Card, tokens: List<Currency>) {
+    suspend fun saveUserTokens(card: CardDTO, tokens: List<Currency>) {
+        val userId = getUserWalletId(card) ?: return
         val userTokens = tokens.toUserTokensResponse()
-        networkService.saveUserTokens(card.getUserWalletId(), userTokens)
-        storageService.saveUserTokens(card.getUserWalletId(), userTokens)
+        networkService.saveUserTokens(userId, userTokens)
+        storageService.saveUserTokens(userId, userTokens)
     }
 
-    suspend fun removeUserTokens(card: Card) {
+    suspend fun removeUserTokens(card: CardDTO) {
+        val userId = getUserWalletId(card) ?: return
         val userTokens = emptyList<Currency>().toUserTokensResponse()
-        networkService.saveUserTokens(card.getUserWalletId(), userTokens)
-        storageService.saveUserTokens(card.getUserWalletId(), userTokens)
+        networkService.saveUserTokens(userId, userTokens)
+        storageService.saveUserTokens(userId, userTokens)
     }
 
     private fun List<Currency>.toUserTokensResponse(): UserTokensResponse {
@@ -66,8 +69,8 @@ class UserTokensRepository(
         )
     }
 
-    suspend fun loadBlockchainsToDerive(card: Card): List<BlockchainNetwork> {
-        val userId = card.getUserWalletId()
+    suspend fun loadBlockchainsToDerive(card: CardDTO): List<BlockchainNetwork> {
+        val userId = getUserWalletId(card) ?: return emptyList()
         val blockchainNetworks = loadTokensOffline(card, userId).toBlockchainNetworks()
 
         if (DemoHelper.isDemoCardId(card.cardId)) {
@@ -89,7 +92,7 @@ class UserTokensRepository(
     }
 
     private suspend fun handleGetUserTokensFailure(
-        card: Card,
+        card: CardDTO,
         userId: String,
         error: Throwable,
     ): List<Currency> {
@@ -100,6 +103,7 @@ class UserTokensRepository(
                 coroutineScope { launch { networkService.saveUserTokens(userId = userId, tokens = userTokens) } }
                 tokens
             }
+
             else -> {
                 val tokens = storageService.getUserTokens(userId) ?: storageService.getUserTokens(card)
                 tokens.distinct()
@@ -107,8 +111,13 @@ class UserTokensRepository(
         }
     }
 
-    private suspend fun loadTokensOffline(card: Card, userId: String): List<Currency> {
+    private suspend fun loadTokensOffline(card: CardDTO, userId: String): List<Currency> {
         return storageService.getUserTokens(userId) ?: storageService.getUserTokens(card)
+    }
+
+    private fun getUserWalletId(card: CardDTO): String? {
+        return UserWalletIdBuilder.card(card).build()
+            ?.stringValue
     }
 
     companion object {
