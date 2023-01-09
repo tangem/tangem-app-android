@@ -171,6 +171,15 @@
     <style name="Widget.AppTheme.CardView" parent="Widget.MaterialComponents.CardView">
         <item name="cardCornerRadius">8dp</item>
     </style>
+
+    <style name="AppTheme.TransparentBottomSheetDialog" parent="ThemeOverlay.MaterialComponents.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/TransparentBottomSheetDialog</item>
+        <item name="backgroundTint">@android:color/transparent</item>
+    </style>
+
+    <style name="TransparentBottomSheetDialog" parent="Widget.MaterialComponents.BottomSheet">
+        <item name="backgroundTint">@android:color/transparent</item>
+    </style>
 </resources>
 
     <!--    android:fontFamily="sans-serif"           // roboto regular  -->

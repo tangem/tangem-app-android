@@ -52,7 +52,7 @@
             android:textColor="@color/warning"
             app:layout_constraintTop_toBottomOf="@id/iv_warning"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"/>
+            app:layout_constraintEnd_toEndOf="parent" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -66,7 +66,7 @@
             android:textAlignment="center"
             app:layout_constraintTop_toBottomOf="@id/tv_warning"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"/>
+            app:layout_constraintEnd_toEndOf="parent" />
 
         <androidx.constraintlayout.widget.Guideline
             android:id="@+id/guideline"
@@ -84,7 +84,7 @@
             android:layout_marginStart="7dp"
             android:layout_marginTop="30dp"
             android:layout_marginEnd="16dp"
-            tools:text="@string/details_row_title_reset_factory_settings"
+            tools:text="@string/card_settings_reset_card_to_factory"
             tools:icon="@drawable/ic_send"
             app:layout_constraintStart_toEndOf="@+id/guideline"
             app:layout_constraintEnd_toEndOf="parent"

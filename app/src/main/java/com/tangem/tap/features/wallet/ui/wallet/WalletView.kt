@@ -17,6 +17,8 @@ abstract class WalletView {
         binding = null
     }
 
+    open fun onDestroyFragment() {}
+
     abstract fun changeWalletView(fragment: WalletFragment, binding: FragmentWalletBinding)
     abstract fun onViewCreated()
     abstract fun onNewState(state: WalletState)

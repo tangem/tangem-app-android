@@ -8,17 +8,20 @@ import com.tangem.common.extensions.guard
 import com.tangem.common.services.Result
 import com.tangem.domain.common.extensions.successOr
 import com.tangem.domain.common.extensions.withMainContext
-import com.tangem.network.api.paymentology.KYCStatus
-import com.tangem.network.api.paymentology.RegistrationResponse
-import com.tangem.tap.common.analytics.GlobalAnalyticsEventHandler
+import com.tangem.datasource.api.paymentology.KYCStatus
+import com.tangem.datasource.api.paymentology.RegistrationResponse
+import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.events.Onboarding
+import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.isPositive
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TangemSigner
 import com.tangem.tap.features.demo.DemoHelper
+import com.tangem.tap.features.onboarding.OnboardingManager
 import com.tangem.tap.features.onboarding.products.wallet.redux.OnboardingWalletState
+import com.tangem.tap.features.onboarding.products.wallet.redux.finishCardActivation
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.AllSymbolsTheSameFilter
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayActivationManager
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayExceptionHandler
@@ -58,10 +61,23 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
 
     fun getAppState(): AppState = appState()!!
     fun getOnboardingWalletState(): OnboardingWalletState = getAppState().onboardingWalletState
+    fun getOnboardingManager(): OnboardingManager? = getAppState().globalState.onboardingState.onboardingManager
     fun getState(): OnboardingSaltPayState = getOnboardingWalletState().onboardingSaltPayState!!
-    val analyticsHandler = getAppState().globalState.analyticsHandler
 
     when (action) {
+        is OnboardingSaltPayAction.Init -> {
+            if (!getOnboardingWalletState().isSaltPay) return
+            val onboardingManager = getOnboardingManager().guard {
+                // onboardingManager may be null if it's started from standard Wallet unfinished backup
+                return
+            }
+
+            val card = onboardingManager.scanResponse.card
+            if (!onboardingManager.isActivationStarted(card.cardId)) {
+                Analytics.send(Onboarding.Started())
+                onboardingManager.activationStarted(card.cardId)
+            }
+        }
         is OnboardingSaltPayAction.Update -> {
             handleInProgress = true
 
@@ -77,8 +93,6 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
             }
         }
         is OnboardingSaltPayAction.RegisterCard -> {
-            analyticsHandler.handleAnalyticsEvent(Onboarding.ButtonConnect())
-
             handleInProgress = true
             val state = getState()
 
@@ -151,7 +165,7 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
         is OnboardingSaltPayAction.TrySetPin -> {
             try {
                 assertPinValid(action.pin, getState().pinLength)
-                analyticsHandler.handleAnalyticsEvent(Onboarding.PinCodeSet())
+                Analytics.send(Onboarding.PinCodeSet())
                 store.dispatch(OnboardingSaltPayAction.SetPin(action.pin))
                 store.dispatch(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.CardRegistration))
             } catch (error: SaltPayActivationError) {
@@ -159,7 +173,6 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
             }
         }
         is OnboardingSaltPayAction.Claim -> {
-            analyticsHandler.handleAnalyticsEvent(Onboarding.ButtonClaim())
             val state = getState()
             handleInProgress = true
 
@@ -192,7 +205,7 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
                 }
 
                 handleInProgress = false
-                analyticsHandler.handleAnalyticsEvent(Onboarding.ClaimWasSuccessfully())
+                Analytics.send(Onboarding.ClaimWasSuccessfully())
                 dispatchOnMain(OnboardingSaltPayAction.SetStep(SaltPayActivationStep.ClaimInProgress))
                 dispatchOnMain(OnboardingSaltPayAction.RefreshClaim)
             }
@@ -233,20 +246,28 @@ private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> App
                 }
             }
         }
-        is OnboardingSaltPayAction.SetStep -> handleAnalytics(analyticsHandler, action.newStep)
+        is OnboardingSaltPayAction.SetStep -> {
+            when (action.newStep) {
+                SaltPayActivationStep.KycStart -> Analytics.send(Onboarding.KYCStarted())
+                SaltPayActivationStep.KycWaiting -> Analytics.send(Onboarding.KYCInProgress())
+                SaltPayActivationStep.KycReject -> Analytics.send(Onboarding.KYCRejected())
+                SaltPayActivationStep.Claim -> Analytics.send(Onboarding.ClaimScreenOpened())
+                SaltPayActivationStep.ClaimSuccess, SaltPayActivationStep.Success -> {
+                    Analytics.send(Onboarding.Finished())
+                    val onboardingManager = getOnboardingManager().guard {
+                        // Null is possible if it is started from a standard pending backup and in this case
+                        // it is impossible to get here
+                        store.dispatchDebugErrorNotification("OnboardingManager can't be NULL")
+                        return
+                    }
+                    finishCardActivation(getOnboardingWalletState().backupState, onboardingManager.scanResponse.card)
+                }
+                else -> {}
+            }
+        }
         else -> {
             /* do nothing, only reduce */
         }
-    }
-}
-
-private fun handleAnalytics(analyticsHandler: GlobalAnalyticsEventHandler, step: SaltPayActivationStep) {
-    when (step) {
-        SaltPayActivationStep.KycStart -> analyticsHandler.handleAnalyticsEvent(Onboarding.KYCStarted())
-        SaltPayActivationStep.KycWaiting -> analyticsHandler.handleAnalyticsEvent(Onboarding.KYCInProgress())
-        SaltPayActivationStep.KycReject -> analyticsHandler.handleAnalyticsEvent(Onboarding.KYCRejected())
-        SaltPayActivationStep.Claim -> analyticsHandler.handleAnalyticsEvent(Onboarding.ClaimScreenOpened())
-        else -> {}
     }
 }
 
@@ -265,7 +286,7 @@ suspend fun SaltPayActivationManager.update(
         return Result.Failure(ex)
     }
 
-    checkGasIfNeeded(this, newStep).successOr { return it }
+    // checkGasIfNeeded(this, newStep).successOr { return it }
 
     Timber.d("update: success: %s", newStep)
     return Result.Success(newStep)
