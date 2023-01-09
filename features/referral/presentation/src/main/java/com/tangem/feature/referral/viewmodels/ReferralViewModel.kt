@@ -107,9 +107,9 @@ internal class ReferralViewModel @Inject constructor(
     private fun ReferralData.getDiscountValue(): String {
         val discountSymbol = when (discountType) {
             DiscountType.PERCENTAGE -> "%"
-            DiscountType.VALUE -> error("Value doesn't support")
+            DiscountType.VALUE -> this.getToken().symbol
         }
-        return "$discount $discountSymbol"
+        return "$discount$discountSymbol"
     }
 
     private fun ReferralData.getToken() = requireNotNull(tokens.firstOrNull()) { "Token list is empty" }
