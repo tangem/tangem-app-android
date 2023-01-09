@@ -25,6 +25,7 @@ val navigationMiddleware: Middleware<AppState> = { _, state ->
                             screen = action.screen,
                             addToBackstack = action.addToBackstack,
                             fgShareTransition = action.fragmentShareTransition,
+                            bundle = action.bundle,
                         )
                     }
                     is NavigationAction.PopBackTo -> {
