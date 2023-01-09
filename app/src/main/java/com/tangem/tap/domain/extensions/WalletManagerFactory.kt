@@ -143,7 +143,7 @@ fun WalletManagerFactory.makeSaltPayWalletManager(
     scanResponse: ScanResponse,
 ): EthereumWalletManager {
     val blockchain = scanResponse.getBlockchain()
-    if (blockchain != Blockchain.SaltPay && blockchain != Blockchain.SaltPayTestnet)
+    if (blockchain != Blockchain.SaltPay)
         throw IllegalArgumentException()
 
     val token = SaltPayWorkaround.tokenFrom(blockchain)
