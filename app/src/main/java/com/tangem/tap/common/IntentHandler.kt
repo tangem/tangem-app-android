@@ -3,6 +3,7 @@ package com.tangem.tap.common
 import android.content.Intent
 import android.nfc.NfcAdapter
 import android.nfc.Tag
+import com.tangem.tap.common.extensions.removePrefixOrNull
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.walletconnect.WalletConnectManager
@@ -14,18 +15,24 @@ import timber.log.Timber
 
 class IntentHandler {
 
-    private val TRANSACTION_ID_PARAM = "transactionId"
-    private val CURRENCY_CODE_PARAM = "baseCurrencyCode"
-    private val CURRENCY_AMOUNT_PARAM = "baseCurrencyAmount"
-    private val DEPOSIT_WALLET_ADDRESS_PARAM = "depositWalletAddress"
-
-    fun handleIntent(intent: Intent?) {
-        handleBackgroundScan(intent)
-        handleWalletConnectLink(intent)
-        handleSellCurrencyCallback(intent)
+    fun handleWalletConnectLink(intent: Intent?) {
+        val wcUri = when (intent?.scheme) {
+            WalletConnectManager.WC_SCHEME -> {
+                intent.data?.toString()
+            }
+            TANGEM_SCHEME -> {
+                intent.data?.toString()?.removePrefixOrNull(TANGEM_WC_PREFIX)
+            }
+            else -> {
+                null
+            }
+        }
+        if (wcUri != null) {
+            store.dispatch(WalletConnectAction.HandleDeepLink(wcUri))
+        }
     }
 
-    private fun handleBackgroundScan(intent: Intent?) {
+    fun handleBackgroundScan(intent: Intent?) {
         if (intent != null && (NfcAdapter.ACTION_TECH_DISCOVERED == intent.action ||
                 NfcAdapter.ACTION_NDEF_DISCOVERED == intent.action
                 )
@@ -40,13 +47,7 @@ class IntentHandler {
         }
     }
 
-    private fun handleWalletConnectLink(intent: Intent?) {
-        if (intent?.scheme == WalletConnectManager.WC_SCHEME) {
-            store.dispatch(WalletConnectAction.HandleDeepLink(intent.data?.toString()))
-        }
-    }
-
-    private fun handleSellCurrencyCallback(intent: Intent?) {
+    fun handleSellCurrencyCallback(intent: Intent?) {
         try {
             val transactionID =
                 intent?.data?.getQueryParameter(TRANSACTION_ID_PARAM) ?: return
@@ -60,16 +61,25 @@ class IntentHandler {
 
             Timber.d("MoonPay Sell: $amount $currency to $destinationAddress")
 
-            store.dispatch(WalletAction.TradeCryptoAction.SendCrypto(
-                currencyId = currency,
-                amount = amount,
-                destinationAddress = destinationAddress,
-                transactionId = transactionID
-            ))
+            store.dispatch(
+                WalletAction.TradeCryptoAction.SendCrypto(
+                    currencyId = currency,
+                    amount = amount,
+                    destinationAddress = destinationAddress,
+                    transactionId = transactionID,
+                ),
+            )
         } catch (exception: Exception) {
             Timber.d("Not MoonPay URL")
         }
     }
 
-
+    companion object {
+        private const val TRANSACTION_ID_PARAM = "transactionId"
+        private const val CURRENCY_CODE_PARAM = "baseCurrencyCode"
+        private const val CURRENCY_AMOUNT_PARAM = "baseCurrencyAmount"
+        private const val DEPOSIT_WALLET_ADDRESS_PARAM = "depositWalletAddress"
+        private const val TANGEM_SCHEME = "tangem"
+        private const val TANGEM_WC_PREFIX = "tangem://wc?uri="
+    }
 }
