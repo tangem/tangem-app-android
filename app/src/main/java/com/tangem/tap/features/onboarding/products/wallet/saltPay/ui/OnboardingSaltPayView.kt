@@ -14,6 +14,8 @@ import coil.size.Scale
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButton
 import com.tangem.common.extensions.guard
+import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.compose.PinCodeWidget
 import com.tangem.tap.common.extensions.configureSettings
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
@@ -178,6 +180,7 @@ internal class OnboardingSaltPayView(
         showOnlyView(connectCard.root) {
             progressButton = SaltPayProgressButton(connectCard.root)
             connectCard.btnConnect.setOnClickListener {
+                Analytics.send(Onboarding.ButtonConnect())
                 store.dispatch(OnboardingSaltPayAction.RegisterCard)
             }
         }
@@ -247,7 +250,7 @@ internal class OnboardingSaltPayView(
     }
 
     private fun handleClaim(state: OnboardingSaltPayState) = with(walletFragment.bindingSaltPay) {
-        toolbar.title = getText(R.string.onboarding_navbar_claim)
+        toolbar.title = getText(R.string.onboarding_getting_started)
         val btnMain = actionContainer.btnContainer.findViewById<MaterialButton>(R.id.btn_main_action)
         val tvHeader = actionContainer.tvHeader
         val tvBody = actionContainer.tvBody
@@ -286,6 +289,7 @@ internal class OnboardingSaltPayView(
                 btnMain.text = getText(R.string.onboarding_button_claim)
                 btnMain.isEnabled
                 btnMain.setOnClickListener {
+                    Analytics.send(Onboarding.ButtonClaim())
                     store.dispatch(OnboardingSaltPayAction.Claim)
                 }
                 progressButton = SaltPayProgressButton(actionContainer.root)

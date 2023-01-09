@@ -16,6 +16,8 @@ import com.google.android.material.textfield.TextInputEditText
 import com.tangem.Message
 import com.tangem.tangem_sdk_new.extensions.hideSoftKeyboard
 import com.tangem.tap.common.KeyboardObserver
+import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.getFromClipboard
 import com.tangem.tap.common.extensions.setOnImeActionListener
@@ -61,6 +63,11 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
 
     val binding: FragmentSendBinding by viewBinding(FragmentSendBinding::bind)
 
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        Analytics.send(Token.Send.ScreenOpened())
+    }
+
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         addBackPressHandler(this)
@@ -101,10 +108,12 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
                 .launchIn(mainScope)
 
         imvPaste.setOnClickListener {
+            Analytics.send(Token.Send.ButtonPaste())
             store.dispatch(PasteAddressPayId(requireContext().getFromClipboard()?.toString() ?: ""))
             store.dispatch(TruncateOrRestore(!etAddressOrPayId.isFocused))
         }
         imvQrCode.setOnClickListener {
+            Analytics.send(Token.Send.ButtonQRCode())
             startActivityForResult(
                 Intent(requireContext(), ScanQrCodeActivity::class.java),
                 ScanQrCodeActivity.SCAN_QR_REQUEST_CODE
@@ -165,6 +174,7 @@ class SendFragment : BaseStoreFragment(R.layout.fragment_send) {
         store.dispatch(AmountAction.SetDecimalSeparator(decimalSeparator))
 
         binding.lSendAmount.tvAmountCurrency.setOnClickListener {
+            Analytics.send(Token.Send.ButtonSwapCurrency())
             store.dispatch(ToggleMainCurrency)
             store.dispatch(ReceiptAction.RefreshReceipt)
             store.dispatch(SendAction.ChangeSendButtonState(store.state.sendState.getButtonState()))

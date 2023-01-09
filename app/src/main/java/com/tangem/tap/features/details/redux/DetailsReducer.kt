@@ -1,6 +1,6 @@
 package com.tangem.tap.features.details.redux
 
-import com.tangem.common.card.Card
+import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.TapWorkarounds.isSaltPay
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.TapWorkarounds.isTangemNote
@@ -8,7 +8,9 @@ import com.tangem.domain.common.isTangemTwin
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.extensions.isWalletDataSupported
 import com.tangem.tap.domain.extensions.signedHashesCount
+import com.tangem.tap.preferencesStorage
 import com.tangem.tap.store
+import com.tangem.tap.tangemSdkManager
 import org.rekotlin.Action
 import java.util.*
 
@@ -51,12 +53,15 @@ private fun handlePrepareScreen(
         scanResponse = action.scanResponse,
         wallets = action.wallets,
         cardTermsOfUseUrl = action.cardTou.getUrl(action.scanResponse.card),
-        createBackupAllowed = action.scanResponse.card.backupStatus == Card.BackupStatus.NoBackup,
+        createBackupAllowed = action.scanResponse.card.backupStatus == CardDTO.BackupStatus.NoBackup,
         appCurrency = store.state.globalState.appCurrency,
+        isBiometricsAvailable = tangemSdkManager.canUseBiometry,
+        saveWallets = preferencesStorage.shouldSaveUserWallets,
+        saveAccessCodes = preferencesStorage.shouldSaveAccessCodes,
     )
 }
 
-private fun handlePrepareCardSettingsScreen(card: Card, state: DetailsState): DetailsState {
+private fun handlePrepareCardSettingsScreen(card: CardDTO, state: DetailsState): DetailsState {
     val cardSettingsState = CardSettingsState(
         cardInfo = card.toCardInfo(),
         manageSecurityState = prepareSecurityOptions(card),
@@ -66,14 +71,16 @@ private fun handlePrepareCardSettingsScreen(card: Card, state: DetailsState): De
     return state.copy(cardSettingsState = cardSettingsState)
 }
 
-private fun prepareSecurityOptions(card: Card): ManageSecurityState {
+private fun prepareSecurityOptions(card: CardDTO): ManageSecurityState {
     val securityOption = when {
         card.isAccessCodeSet -> {
             SecurityOption.AccessCode
         }
+
         card.isPasscodeSet == true -> {
             SecurityOption.PassCode
         }
+
         else -> {
             SecurityOption.LongTap
         }
@@ -94,7 +101,7 @@ private fun prepareSecurityOptions(card: Card): ManageSecurityState {
     )
 }
 
-private fun isResetToFactoryAllowedByCard(card: Card): Boolean {
+private fun isResetToFactoryAllowedByCard(card: CardDTO): Boolean {
     val notAllowedByAnyWallet = card.wallets.any { it.settings.isPermanent }
     val notAllowedByCard = notAllowedByAnyWallet ||
         (card.isWalletDataSupported && (!card.isTangemNote && !card.settings.isBackupAllowed)) ||
@@ -114,7 +121,8 @@ private fun handleEraseWallet(
 }
 
 private fun handleSecurityAction(
-    action: DetailsAction.ManageSecurity, state: DetailsState,
+    action: DetailsAction.ManageSecurity,
+    state: DetailsState,
 ): DetailsState {
     return when (action) {
         is DetailsAction.ManageSecurity.SelectOption -> {
@@ -144,20 +152,27 @@ private fun handleSecurityAction(
 }
 
 private fun handlePrivacyAction(
-    action: DetailsAction.AppSettings, state: DetailsState,
+    action: DetailsAction.AppSettings,
+    state: DetailsState,
 ): DetailsState {
     return when (action) {
-        is DetailsAction.AppSettings.SwitchPrivacySetting -> {
-            when (action.setting) {
-                PrivacySetting.SaveWallets -> state.copy(saveWallets = action.enable)
-                PrivacySetting.SaveAccessCode -> state.copy(saveAccessCodes = action.enable)
-            }
+        is DetailsAction.AppSettings.SwitchPrivacySetting.Success -> when (action.setting) {
+            PrivacySetting.SaveWallets -> state.copy(saveWallets = action.enable)
+            PrivacySetting.SaveAccessCode -> state.copy(saveAccessCodes = action.enable)
         }
+        is DetailsAction.AppSettings.BiometricsStatusChanged -> state.copy(
+            needEnrollBiometrics = action.needEnrollBiometrics,
+        )
+        is DetailsAction.AppSettings.SwitchPrivacySetting,
+        is DetailsAction.AppSettings.EnrollBiometrics,
+        is DetailsAction.AppSettings.CheckBiometricsStatus,
+        -> state
     }
 }
 
 private fun prepareAllowedSecurityOptions(
-    card: Card?, currentSecurityOption: SecurityOption?,
+    card: CardDTO?,
+    currentSecurityOption: SecurityOption?,
 ): EnumSet<SecurityOption> {
     val allowedSecurityOptions = EnumSet.of(SecurityOption.LongTap)
 
@@ -173,7 +188,7 @@ private fun prepareAllowedSecurityOptions(
     return allowedSecurityOptions
 }
 
-private fun Card.toCardInfo(): CardInfo {
+private fun CardDTO.toCardInfo(): CardInfo {
     val cardId = this.cardId.chunked(4).joinToString(separator = " ")
     val issuer = this.issuer.name
     val signedHashes = this.signedHashesCount()
