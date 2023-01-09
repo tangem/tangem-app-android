@@ -76,13 +76,13 @@ class DialogManager : StoreSubscriber<GlobalState> {
                 CreateWalletInterruptDialog.create(state.dialog, context)
             is WalletConnectDialog.UnsupportedCard ->
                 SimpleAlertDialog.create(
-                    titleRes = R.string.wallet_connect,
-                    messageRes = R.string.wallet_connect_scanner_error_no_ethereum_wallet,
+                    titleRes = R.string.wallet_connect_title,
+                    messageRes = R.string.wallet_connect_scanner_error_not_valid_card,
                     context = context,
                 )
             is WalletConnectDialog.AddNetwork ->
                 SimpleAlertDialog.create(
-                    titleRes = R.string.wallet_connect,
+                    titleRes = R.string.wallet_connect_title,
                     message = context.getString(
                         R.string.wallet_connect_network_not_found_format,
                         state.dialog.network,
@@ -91,14 +91,14 @@ class DialogManager : StoreSubscriber<GlobalState> {
                 )
             is WalletConnectDialog.OpeningSessionRejected -> {
                 SimpleAlertDialog.create(
-                    titleRes = R.string.wallet_connect,
+                    titleRes = R.string.wallet_connect_title,
                     messageRes = R.string.wallet_connect_same_wcuri,
                     context = context,
                 )
             }
             is WalletConnectDialog.SessionTimeout -> {
                 SimpleAlertDialog.create(
-                    titleRes = R.string.wallet_connect,
+                    titleRes = R.string.wallet_connect_title,
                     messageRes = R.string.wallet_connect_error_timeout,
                     context = context,
                 )
@@ -123,7 +123,7 @@ class DialogManager : StoreSubscriber<GlobalState> {
                 )
             is WalletConnectDialog.UnsupportedNetwork ->
                 SimpleAlertDialog.create(
-                    titleRes = R.string.wallet_connect,
+                    titleRes = R.string.wallet_connect_title,
                     messageRes = R.string.wallet_connect_scanner_error_unsupported_network,
                     context = context,
                 )
@@ -153,7 +153,7 @@ class DialogManager : StoreSubscriber<GlobalState> {
                 primaryButtonAction = state.dialog.onOk,
             )
             is WalletDialog.RussianCardholdersWarningDialog ->
-                RussianCardholdersWarningBottomSheetDialog(context, state.dialog.topUpUrl)
+                RussianCardholdersWarningBottomSheetDialog(context, state.dialog.data)
             else -> null
         }
         dialog?.show()

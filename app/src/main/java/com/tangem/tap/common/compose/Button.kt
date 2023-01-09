@@ -1,7 +1,17 @@
 package com.tangem.tap.common.compose
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.material.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.material.Button
+import androidx.compose.material.ButtonDefaults
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
 import androidx.compose.material.ripple.LocalRippleTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -16,6 +26,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.tangem.core.ui.components.SpacerH8
 import com.tangem.tap.common.compose.extensions.stringResourceDefault
 import com.tangem.wallet.R
 
@@ -137,8 +148,7 @@ fun ToggledRippleTheme(
 @Preview
 @Composable
 fun ButtonTest() {
-    Scaffold(
-    ) {
+    Scaffold {
         Column(modifier = Modifier.padding(16.dp)) {
             PreviewItem("Button") {
                 RectangleButton(text = "Some button") {}

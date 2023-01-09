@@ -61,8 +61,8 @@
     <inspection_tool class="RedundantSemicolon" enabled="true" level="ERROR" enabled_by_default="true" />
     <inspection_tool class="RedundantSetter" enabled="true" level="ERROR" enabled_by_default="true" />
     <inspection_tool class="RedundantSuspendModifier" enabled="true" level="ERROR" enabled_by_default="true" />
-    <inspection_tool class="RedundantUnitExpression" enabled="true" level="ERROR" enabled_by_default="true" />
-    <inspection_tool class="RedundantUnitReturnType" enabled="true" level="ERROR" enabled_by_default="true" />
+    <inspection_tool class="RedundantUnitExpression" enabled="false" level="ERROR" enabled_by_default="false" />
+    <inspection_tool class="RedundantUnitReturnType" enabled="false" level="ERROR" enabled_by_default="false" />
     <inspection_tool class="RedundantVisibilityModifier" enabled="true" level="ERROR" enabled_by_default="true" />
     <inspection_tool class="RedundantWith" enabled="true" level="ERROR" enabled_by_default="true" />
     <inspection_tool class="RemoveCurlyBracesFromTemplate" enabled="true" level="ERROR" enabled_by_default="true" />
