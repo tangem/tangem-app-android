@@ -39,7 +39,6 @@ class GnosisRegistrator(
 
     private val otpProcessorContractAddress: String = when (walletManager.wallet.blockchain) {
         Blockchain.SaltPay -> "0x3B4397C817A26521Df8bD01a949AFDE2251d91C2"
-        Blockchain.SaltPayTestnet -> "0x710BF23486b549836509a08c184cE0188830f197"
         else -> throw IllegalArgumentException("GnosisRegistrator supports only the SaltPay blockchain")
     }
 
