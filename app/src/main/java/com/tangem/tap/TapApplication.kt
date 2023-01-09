@@ -128,7 +128,6 @@ class TapApplication : Application(), ImageLoaderFactory {
             middleware = AppState.getMiddleware(),
             state = AppState(),
         )
-        appStateHolder.mainStore = store
 
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
@@ -155,7 +154,9 @@ class TapApplication : Application(), ImageLoaderFactory {
             context = this,
             tangemTechService = store.state.domainNetworks.tangemTechService,
         )
+        appStateHolder.mainStore = store
         appStateHolder.userTokensRepository = userTokensRepository
+        appStateHolder.walletStoresManager = walletStoresManager
     }
 
     //todo refactor: move to datasource and provide via DI
