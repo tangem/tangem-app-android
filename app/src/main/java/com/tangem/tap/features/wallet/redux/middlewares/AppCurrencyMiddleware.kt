@@ -1,8 +1,11 @@
 package com.tangem.tap.features.wallet.redux.middlewares
 
 import com.tangem.common.services.Result
-import com.tangem.network.api.tangemTech.CurrenciesResponse
-import com.tangem.network.api.tangemTech.TangemTechService
+import com.tangem.datasource.api.tangemTech.CurrenciesResponse
+import com.tangem.datasource.api.tangemTech.TangemTechService
+import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.AnalyticsParam
+import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -10,9 +13,11 @@ import com.tangem.tap.domain.TapWalletManager
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.wallet.redux.WalletAction
 import com.tangem.tap.features.wallet.redux.models.WalletDialog
+import com.tangem.tap.features.walletSelector.redux.WalletSelectorAction
 import com.tangem.tap.persistence.FiatCurrenciesPrefStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
+import com.tangem.tap.userWalletsListManager
 import kotlinx.coroutines.launch
 
 class AppCurrencyMiddleware(
@@ -61,11 +66,20 @@ class AppCurrencyMiddleware(
     }
 
     private fun selectCurrency(action: WalletAction.AppCurrencyAction.SelectAppCurrency) {
-        tapWalletManager.rates.clear()
+        Analytics.send(MainScreen.MainCurrencyChanged(AnalyticsParam.CurrencyType.FiatCurrency(action.fiatCurrency)))
         fiatCurrenciesPrefStorage.saveAppCurrency(action.fiatCurrency)
         store.dispatch(GlobalAction.ChangeAppCurrency(action.fiatCurrency))
         store.dispatch(DetailsAction.ChangeAppCurrency(action.fiatCurrency))
-        store.dispatch(WalletAction.LoadFiatRate())
+        store.dispatch(WalletSelectorAction.ChangeAppCurrency(action.fiatCurrency))
+        val selectedUserWallet = userWalletsListManager.selectedUserWalletSync
+        if (selectedUserWallet != null) {
+            scope.launch {
+                tapWalletManager.loadData(selectedUserWallet, refresh = true)
+            }
+        } else {
+            tapWalletManager.rates.clear()
+            store.dispatch(WalletAction.LoadFiatRate())
+        }
     }
 
     private fun List<CurrenciesResponse.Currency>.mapToUiModel(): List<FiatCurrency> {
