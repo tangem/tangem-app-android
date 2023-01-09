@@ -34,11 +34,10 @@
         android:icon="@mipmap/ic_launcher"
         android:roundIcon="@mipmap/ic_launcher"
         android:supportsRtl="true"
-        android:allowBackup="true"
-        android:fullBackupContent="true"
+        android:allowBackup="false"
         android:networkSecurityConfig="@xml/network_security_config"
         tools:ignore="GoogleAppIndexingWarning"
-        tools:replace="android:fullBackupContent">
+        tools:replace="android:allowBackup">
 
         <meta-data
             android:name="com.google.android.gms.wallet.api.enabled"
@@ -108,6 +107,17 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
 
+                <data android:host="wc" />
+                <data android:scheme="tangem" />
+
+            </intent-filter>
+
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
                 <data
                     android:host="success.tangem.com"
                     android:scheme="tangem" />
@@ -142,5 +152,4 @@
         </provider>
 
     </application>
-
 </manifest>
