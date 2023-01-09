@@ -8,9 +8,10 @@ import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.Wallet
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.common.address.Address
-import com.tangem.common.card.CardWallet
+import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.extensions.stripZeroPlainString
+import com.tangem.tap.domain.model.builders.UserWalletIdBuilder
 
 class AdditionalFeedbackInfo {
     class EmailWalletInfo(
@@ -29,6 +30,7 @@ class AdditionalFeedbackInfo {
     var cardFirmwareVersion: String = ""
     var cardIssuer: String = ""
     var cardBlockchain: String = ""
+    var userWalletId: String = ""
 
     // wallets
     internal val walletsInfo = mutableListOf<EmailWalletInfo>()
@@ -52,6 +54,7 @@ class AdditionalFeedbackInfo {
         cardFirmwareVersion = data.card.firmwareVersion.stringValue
         cardIssuer = data.card.issuer.name
         signedHashesCount = formatSignedHashes(data.card.wallets)
+        userWalletId = UserWalletIdBuilder.scanResponse(data).build()?.stringValue ?: ""
     }
 
     fun setWalletsInfo(walletManagers: List<WalletManager>) {
@@ -89,7 +92,7 @@ class AdditionalFeedbackInfo {
         )
     }
 
-    private fun formatSignedHashes(wallets: List<CardWallet>): String {
+    private fun formatSignedHashes(wallets: List<CardDTO.Wallet>): String {
         return wallets.joinToString("\n") { "Signed hashes: ${it.curve.curve} - ${it.totalSignedHashes}" }
     }
 

@@ -4,7 +4,7 @@ import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
-import com.tangem.common.json.MoshiJsonConverter
+import com.tangem.datasource.api.common.MoshiConverter
 import java.util.*
 
 class PreferencesStorage(applicationContext: Application) {
@@ -16,27 +16,54 @@ class PreferencesStorage(applicationContext: Application) {
     val usedCardsPrefStorage: UsedCardsPrefStorage
     val fiatCurrenciesPrefStorage: FiatCurrenciesPrefStorage
     val disclaimerPrefStorage: DisclaimerPrefStorage
+    val toppedUpWalletStorage: ToppedUpWalletStorage
 
     init {
         incrementLaunchCounter()
         appRatingLaunchObserver = AppRatingLaunchObserver(preferences, getCountOfLaunches())
-        usedCardsPrefStorage = UsedCardsPrefStorage(preferences, MoshiJsonConverter.INSTANCE)
+        usedCardsPrefStorage = UsedCardsPrefStorage(preferences, MoshiConverter.INSTANCE)
         usedCardsPrefStorage.migrate()
-        fiatCurrenciesPrefStorage = FiatCurrenciesPrefStorage(preferences, MoshiJsonConverter.INSTANCE)
+        fiatCurrenciesPrefStorage = FiatCurrenciesPrefStorage(preferences, MoshiConverter.INSTANCE)
         fiatCurrenciesPrefStorage.migrate()
         disclaimerPrefStorage = DisclaimerPrefStorage(preferences)
+        toppedUpWalletStorage = ToppedUpWalletStorage(preferences, MoshiConverter.INSTANCE)
     }
 
     var chatFirstLaunchTime: Long?
         get() = preferences.getLong(CHAT_FIRST_LAUNCH_KEY, 0).takeIf { it != 0L }
         set(value) = preferences.edit { putLong(CHAT_FIRST_LAUNCH_KEY, value ?: 0) }
 
-    fun getCountOfLaunches(): Int = preferences.getInt(APP_LAUNCH_COUNT_KEY, 1)
+    var shouldShowSaveUserWalletScreen: Boolean
+        get() = preferences.getBoolean(SAVE_WALLET_DIALOG_SHOWN_KEY, true)
+        set(value) = preferences.edit {
+            putBoolean(SAVE_WALLET_DIALOG_SHOWN_KEY, value)
+        }
 
-    @Deprecated("Use UsedCardsPrefStorage instead")
-    fun wasCardScannedBefore(cardId: String): Boolean {
-        return usedCardsPrefStorage.wasScanned(cardId)
-    }
+    var shouldSaveUserWallets: Boolean
+        get() = preferences.getBoolean(SAVE_USER_WALLETS_KEY, false)
+        set(value) = preferences.edit {
+            putBoolean(SAVE_USER_WALLETS_KEY, value)
+        }
+
+    var shouldSaveAccessCodes: Boolean
+        get() = preferences.getBoolean(SAVE_ACCESS_CODES_KEY, false)
+        set(value) = preferences.edit {
+            putBoolean(SAVE_ACCESS_CODES_KEY, value)
+        }
+
+    var wasApplicationStopped: Boolean
+        get() = preferences.getBoolean(APPLICATION_STOPPED_KEY, false)
+        set(value) = preferences.edit {
+            putBoolean(APPLICATION_STOPPED_KEY, value)
+        }
+
+    var shouldOpenWelcomeScreenOnResume: Boolean
+        get() = preferences.getBoolean(OPEN_WELCOME_ON_RESUME_KEY, false)
+        set(value) = preferences.edit {
+            putBoolean(OPEN_WELCOME_ON_RESUME_KEY, value)
+        }
+
+    fun getCountOfLaunches(): Int = preferences.getInt(APP_LAUNCH_COUNT_KEY, 1)
 
     fun saveTwinsOnboardingShown() {
         preferences.edit { putBoolean(TWINS_ONBOARDING_SHOWN_KEY, true) }
@@ -56,6 +83,11 @@ class PreferencesStorage(applicationContext: Application) {
         private const val TWINS_ONBOARDING_SHOWN_KEY = "twinsOnboardingShown"
         private const val APP_LAUNCH_COUNT_KEY = "launchCount"
         private const val CHAT_FIRST_LAUNCH_KEY = "chatFirstLaunchKey"
+        private const val SAVE_WALLET_DIALOG_SHOWN_KEY = "saveUserWalletShown"
+        private const val SAVE_USER_WALLETS_KEY = "saveUserWallets"
+        private const val SAVE_ACCESS_CODES_KEY = "saveAccessCodes"
+        private const val APPLICATION_STOPPED_KEY = "applicationStopped"
+        private const val OPEN_WELCOME_ON_RESUME_KEY = "openWelcomeOnResume"
     }
 }
 

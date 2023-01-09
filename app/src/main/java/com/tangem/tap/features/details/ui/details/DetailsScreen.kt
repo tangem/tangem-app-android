@@ -25,6 +25,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.components.SystemBarsEffect
+import com.tangem.core.ui.res.TangemColorPalette
 import com.tangem.tap.common.compose.TangemTypography
 import com.tangem.tap.features.details.ui.common.ScreenTitle
 import com.tangem.tap.features.details.ui.common.SettingsScreensScaffold
@@ -36,6 +38,10 @@ fun DetailsScreen(
     onBackPressed: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    SystemBarsEffect {
+        setSystemBarsColor(color = TangemColorPalette.Light1)
+    }
+
     SettingsScreensScaffold(
         content = { Content(state = state, modifier = modifier) },
         onBackClick = onBackPressed,
@@ -162,8 +168,8 @@ fun DetailsItem(
 
 @Composable
 fun TangemSocialAccounts(
-    links: List<TangemLink>,
-    onSocialNetworkClick: (String) -> Unit,
+    links: List<SocialNetworkLink>,
+    onSocialNetworkClick: (SocialNetworkLink) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     LazyRow(
@@ -171,11 +177,11 @@ fun TangemSocialAccounts(
     ) {
         items(links) {
             Icon(
-                painter = painterResource(id = it.iconRes),
+                painter = painterResource(id = it.network.iconRes),
                 contentDescription = "",
                 modifier = modifier
                     .padding(8.dp)
-                    .clickable { onSocialNetworkClick(it.url) },
+                    .clickable { onSocialNetworkClick(it) },
                 tint = colorResource(id = R.color.icon_informative),
             )
         }
