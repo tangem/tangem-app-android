@@ -9,13 +9,13 @@ import com.tangem.wallet.R
 object TangemTypography {
 
     val body1 = TextStyle(
-        fontFamily = FontFamily(Font(R.font.roboto)),
+        fontFamily = FontFamily(Font(R.font.roboto_regular)),
         fontSize = 16.0.sp,
         letterSpacing = 0.5.sp,
         lineHeight = 24.0.sp,
     )
     val body2 = TextStyle(
-        fontFamily = FontFamily(Font(R.font.roboto)),
+        fontFamily = FontFamily(Font(R.font.roboto_regular)),
         fontSize = 14.0.sp,
         letterSpacing = 0.25.sp,
         lineHeight = 20.0.sp,
@@ -27,13 +27,13 @@ object TangemTypography {
         lineHeight = 20.0.sp,
     )
     val caption = TextStyle(
-        fontFamily = FontFamily(Font(R.font.roboto)),
+        fontFamily = FontFamily(Font(R.font.roboto_regular)),
         fontSize = 12.0.sp,
         letterSpacing = 0.4000000059604645.sp,
         lineHeight = 16.0.sp,
     )
     val headline1 = TextStyle(
-        fontFamily = FontFamily(Font(R.font.roboto)),
+        fontFamily = FontFamily(Font(R.font.roboto_regular)),
         fontSize = 34.0.sp,
         letterSpacing = 0.0.sp,
         lineHeight = 44.0.sp,

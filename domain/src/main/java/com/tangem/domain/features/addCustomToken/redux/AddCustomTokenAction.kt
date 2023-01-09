@@ -8,7 +8,7 @@ import com.tangem.domain.common.form.Field
 import com.tangem.domain.common.form.FieldId
 import com.tangem.domain.features.addCustomToken.CustomCurrency
 import com.tangem.domain.features.addCustomToken.CustomTokenFieldId
-import com.tangem.network.api.tangemTech.CoinsResponse
+import com.tangem.datasource.api.tangemTech.CoinsResponse
 import org.rekotlin.Action
 
 /**

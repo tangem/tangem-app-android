@@ -19,8 +19,9 @@ private fun internalReduce(action: Action, state: AppState): DisclaimerState {
             type = action.type,
             accepted = action.accepted,
         )
-        is DisclaimerAction.SetOnAcceptCallback -> disclaimerState.copy(
+        is DisclaimerAction.SetCallbacks -> disclaimerState.copy(
             onAcceptCallback = action.onAcceptCallback,
+            onDismissCallback = action.onDismissCallback,
         )
         else -> disclaimerState
     }

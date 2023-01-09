@@ -1,33 +1,31 @@
 package com.tangem.tap.features.details.ui.appsettings
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CornerSize
-import androidx.compose.material.AlertDialog
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
-import androidx.compose.material.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.tangem.tap.common.compose.TangemTypography
+import com.tangem.core.ui.components.SpacerH24
+import com.tangem.core.ui.components.SpacerH32
+import com.tangem.core.ui.components.SpacerH4
+import com.tangem.core.ui.components.SpacerW32
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.features.details.redux.PrivacySetting
+import com.tangem.tap.features.details.ui.appsettings.components.EnrollBiometricsCard
+import com.tangem.tap.features.details.ui.appsettings.components.SettingsAlertDialog
 import com.tangem.tap.features.details.ui.common.SettingsScreensScaffold
 import com.tangem.tap.features.details.ui.common.TangemSwitch
 import com.tangem.wallet.R
@@ -60,7 +58,6 @@ private fun AppSettings(
             element = it,
             onDialogStateChange = onDialogStateChange,
             onSettingToggled = state.onSettingToggled,
-            modifier = modifier,
         )
     }
 
@@ -68,28 +65,36 @@ private fun AppSettings(
         modifier = modifier
             .fillMaxSize(),
     ) {
+        if (state.showEnrollBiometricsCard) {
+            EnrollBiometricsCard(
+                modifier = Modifier
+                    .padding(horizontal = TangemTheme.dimens.spacing8)
+                    .fillMaxWidth(),
+                onClick = state.onEnrollBiometrics,
+            )
+            SpacerH24()
+        }
+
         AppSettingsElement(
             state = state,
             setting = PrivacySetting.SaveWallets,
             onDialogStateChange = onDialogStateChange,
-            modifier = modifier,
         )
-        Spacer(modifier = Modifier.size(32.dp))
+        SpacerH32()
         AppSettingsElement(
             state = state,
             setting = PrivacySetting.SaveAccessCode,
             onDialogStateChange = onDialogStateChange,
-            modifier = modifier,
         )
     }
 }
 
 @Composable
 private fun AppSettingsElement(
+    modifier: Modifier = Modifier,
     state: AppSettingsScreenState,
     setting: PrivacySetting,
     onDialogStateChange: (PrivacySetting?) -> Unit,
-    modifier: Modifier = Modifier,
 ) {
     val titleRes = when (setting) {
         PrivacySetting.SaveWallets -> R.string.app_settings_saved_wallet
@@ -101,48 +106,63 @@ private fun AppSettingsElement(
     }
     val checked = state.settings[setting] ?: false
 
+    val titleTextColor by rememberUpdatedState(
+        newValue = if (state.isTogglesEnabled) {
+            TangemTheme.colors.text.primary1
+        } else {
+            TangemTheme.colors.text.secondary
+        },
+    )
+    val descriptionTextColor by rememberUpdatedState(
+        newValue = if (state.isTogglesEnabled) {
+            TangemTheme.colors.text.secondary
+        } else {
+            TangemTheme.colors.text.tertiary
+        },
+    )
+
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .padding(start = 20.dp),
+            .padding(horizontal = TangemTheme.dimens.spacing20),
         verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Column(
+            modifier = Modifier.weight(weight = .9f),
             verticalArrangement = Arrangement.Center,
-            modifier = modifier
-                .weight(0.6f)
-                .padding(end = 4.dp),
         ) {
             Text(
                 text = stringResource(id = titleRes),
-                style = TangemTypography.subtitle1,
-                color = colorResource(id = R.color.text_primary_1),
+                style = TangemTheme.typography.subtitle1,
+                color = titleTextColor,
             )
-            Spacer(modifier = Modifier.size(4.dp))
+            SpacerH4()
             Text(
                 text = stringResource(id = subtitleRes),
-                style = TangemTypography.body2,
-                color = colorResource(id = R.color.text_secondary),
+                style = TangemTheme.typography.body2,
+                color = descriptionTextColor,
             )
         }
+        SpacerW32()
         TangemSwitch(
             checked = checked,
-            onCheckedChange = {
+            enabled = state.isTogglesEnabled,
+            onCheckedChange = { isChecked ->
                 onCheckedChange(
                     element = setting,
-                    enabled = it,
+                    enabled = isChecked,
                     onSettingToggled = state.onSettingToggled,
                     onDialogStateChange = onDialogStateChange,
                 )
             },
-            modifier = modifier
-                .padding(20.dp),
         )
     }
 }
 
 private fun onCheckedChange(
-    element: PrivacySetting, enabled: Boolean,
+    element: PrivacySetting,
+    enabled: Boolean,
     onSettingToggled: (PrivacySetting, Boolean) -> Unit,
     onDialogStateChange: (PrivacySetting?) -> Unit,
 ) {
@@ -150,81 +170,88 @@ private fun onCheckedChange(
     if (!enabled) {
         onDialogStateChange(element)
     } else {
-        onSettingToggled(element, enabled)
+        onSettingToggled(element, true)
     }
 }
 
+// region Preview
 @Composable
-private fun SettingsAlertDialog(
-    element: PrivacySetting,
-    onDialogStateChange: (PrivacySetting?) -> Unit,
-    onSettingToggled: (PrivacySetting, Boolean) -> Unit,
+private fun AppSettingsScreenSample(
     modifier: Modifier = Modifier,
 ) {
-    val text = when (element) {
-        PrivacySetting.SaveWallets -> R.string.app_settings_off_saved_wallet_alert_message
-        PrivacySetting.SaveAccessCode -> R.string.app_settings_off_saved_access_code_alert_message
+    Column(
+        modifier = modifier
+            .background(TangemTheme.colors.background.primary),
+    ) {
+        AppSettingsScreen(
+            state = AppSettingsScreenState(
+                settings = mapOf(
+                    PrivacySetting.SaveWallets to true,
+                    PrivacySetting.SaveAccessCode to false,
+                ),
+                showEnrollBiometricsCard = false,
+                isTogglesEnabled = true,
+                onSettingToggled = { _, _ -> },
+                onEnrollBiometrics = {},
+            ),
+            onBackPressed = { },
+        )
     }
-    AlertDialog(
-        onDismissRequest = { onDialogStateChange(null) },
-        confirmButton = {
-            TextButton(
-                onClick = {
-                    onDialogStateChange(null)
-                },
-            ) {
-                Text(
-                    text = stringResource(id = R.string.common_cancel),
-                    color = colorResource(id = R.color.text_secondary),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                )
-            }
-        },
-        dismissButton = {
-            TextButton(
-                onClick = {
-                    onDialogStateChange(null)
-                    onSettingToggled(element, false)
-                },
-                modifier = modifier.padding(bottom = 14.dp),
-            ) {
-                Text(
-                    text = stringResource(id = R.string.common_delete),
-                    color = colorResource(id = R.color.text_warning),
-                    fontSize = 14.sp,
-                    fontWeight = FontWeight.Medium,
-                )
-            }
-        },
-        title = {
-            Text(
-                text = stringResource(id = R.string.common_attention),
-                color = colorResource(id = R.color.text_primary_1),
-            )
-        },
-        text = {
-            Text(
-                text = stringResource(id = text),
-                color = colorResource(id = R.color.text_secondary),
-            )
-        },
-        shape = MaterialTheme.shapes.medium.copy(all = CornerSize(size = 28.dp)),
-        modifier = modifier.padding(vertical = 34.dp, horizontal = 24.dp),
-    )
 }
 
-@Preview
+@Preview(showBackground = true, widthDp = 360)
 @Composable
-fun AppSettingsScreenPreview() {
-    AppSettingsScreen(
-        state = AppSettingsScreenState(
-            settings = mapOf(
-                PrivacySetting.SaveWallets to true,
-                PrivacySetting.SaveAccessCode to false,
-            ),
-            onSettingToggled = { _, _ -> },
-        ),
-        onBackPressed = { },
-    )
+private fun AppSettingsScreenPreview_Light() {
+    TangemTheme {
+        AppSettingsScreenSample()
+    }
 }
+
+@Preview(showBackground = true, widthDp = 360)
+@Composable
+private fun AppSettingsScreenPreview_Dark() {
+    TangemTheme(isDark = true) {
+        AppSettingsScreenSample()
+    }
+}
+
+@Composable
+private fun AppSettingsScreen_EnrollBiometrics_Sample(
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier
+            .background(TangemTheme.colors.background.primary),
+    ) {
+        AppSettingsScreen(
+            state = AppSettingsScreenState(
+                settings = mapOf(
+                    PrivacySetting.SaveWallets to true,
+                    PrivacySetting.SaveAccessCode to false,
+                ),
+                showEnrollBiometricsCard = true,
+                isTogglesEnabled = false,
+                onSettingToggled = { _, _ -> },
+                onEnrollBiometrics = {},
+            ),
+            onBackPressed = { },
+        )
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Composable
+private fun AppSettingsScreen_EnrollBiometrics_Preview_Light() {
+    TangemTheme {
+        AppSettingsScreen_EnrollBiometrics_Sample()
+    }
+}
+
+@Preview(showBackground = true, widthDp = 360)
+@Composable
+private fun AppSettingsScreen_EnrollBiometrics_Preview_Dark() {
+    TangemTheme(isDark = true) {
+        AppSettingsScreen_EnrollBiometrics_Sample()
+    }
+}
+// endregion Preview

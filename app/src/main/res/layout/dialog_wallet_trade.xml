@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="56dp"
         android:padding="16dp"
-        android:text="@string/wallet_dialog_choose_trade_action"
+        android:text="@string/wallet_choose_trade_action"
         android:textColor="@color/darkGray2"
         android:textSize="14sp" />
 

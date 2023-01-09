@@ -3,7 +3,7 @@ package com.tangem.tap.domain.tokens
 import com.squareup.moshi.JsonClass
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.domain.common.extensions.fromNetworkId
-import com.tangem.network.api.tangemTech.CoinsResponse
+import com.tangem.datasource.api.tangemTech.CoinsResponse
 
 @JsonClass(generateAdapter = true)
 data class CurrencyFromJson(

@@ -12,17 +12,19 @@ import com.tangem.wallet.R
 class ApproveWcSessionDialog {
     companion object {
         fun create(session: WalletConnectSession, networks: List<Blockchain>, context: Context): AlertDialog {
+            val sessionBlockchain = requireNotNull(session.wallet.blockchain) { "session network is null" }
             val message = context.getString(
                 R.string.wallet_connect_request_session_start,
                 session.peerMeta.name,
+                sessionBlockchain.fullName,
                 session.peerMeta.url,
             )
             return AlertDialog.Builder(context).apply {
-                setTitle(context.getString(R.string.wallet_connect))
+                setTitle(context.getString(R.string.wallet_connect_title))
                 setMessage(message)
                 setPositiveButton(context.getText(R.string.common_start)) { _, _ ->
                     store.dispatch(GlobalAction.HideDialog)
-                    store.dispatch(WalletConnectAction.ChooseNetwork(session.wallet.blockchain!!))
+                    store.dispatch(WalletConnectAction.ChooseNetwork(sessionBlockchain))
                 }
                 if (networks.size > 1) {
                     setNeutralButton(context.getText(R.string.wallet_connect_select_network)) { _, _ ->

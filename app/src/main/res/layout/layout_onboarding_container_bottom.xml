@@ -51,7 +51,7 @@
         android:id="@+id/chb_understand"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/alert_button_i_understand"
+        android:text="@string/common_understand"
         android:textStyle="bold"
         android:visibility="gone"
         app:buttonTint="@color/accent"
@@ -75,7 +75,7 @@
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_main_action"
             style="@style/OnboardingButton"
-            tools:text="@string/home_button_scan" />
+            tools:text="@string/welcome_unlock_card" />
 
         <ProgressBar
             android:id="@+id/progress"
