@@ -1,8 +1,6 @@
 package com.tangem.datasource.api.referral.models
 
 import com.squareup.moshi.Json
-import com.squareup.moshi.JsonClass
-import org.joda.time.DateTime
 
 /**
  * Main response class for referral API
