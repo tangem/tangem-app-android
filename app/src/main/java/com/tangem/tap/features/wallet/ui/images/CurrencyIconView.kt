@@ -70,5 +70,7 @@ fun CurrencyIconView.load(
             blockchain = currency.blockchain,
             getLocalImage = true,
         ).load()
+    } else {
+        isBlockchainBadgeVisible = false
     }
 }
