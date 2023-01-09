@@ -41,15 +41,6 @@ class TangemTechService(
         }
     }
 
-    suspend fun rates(
-        currency: String,
-        ids: List<String>,
-    ): Result<RatesResponse> = withContext(Dispatchers.IO) {
-        performRequest {
-            api.rates(currency.lowercase(), ids.joinToString(","))
-        }
-    }
-
     fun addHeaderInterceptors(interceptors: List<AddHeaderInterceptor>) {
         headerInterceptors.removeAll(interceptors)
         headerInterceptors.addAll(interceptors)
