@@ -36,6 +36,7 @@ import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
 import com.tangem.tap.userTokensRepository
 import com.tangem.tap.walletStoresManager
+import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import timber.log.Timber
@@ -43,7 +44,14 @@ import timber.log.Timber
 class TapWalletManager {
     val walletManagerFactory: WalletManagerFactory
         by lazy { WalletManagerFactory(blockchainSdkConfig) }
-    val rates: RatesRepository = RatesRepository()
+
+    // TODO("After adding DI") get dependencies by DI
+    val rates: RatesRepository by lazy {
+        RatesRepository(
+            tangemTechApi = store.state.domainNetworks.tangemTechService.api,
+            dispatchers = AppCoroutineDispatcherProvider(),
+        )
+    }
 
     private val blockchainSdkConfig by lazy {
         store.state.globalState.configManager?.config?.blockchainSdkConfig ?: BlockchainSdkConfig()
