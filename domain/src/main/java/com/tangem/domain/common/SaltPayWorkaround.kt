@@ -15,13 +15,6 @@ object SaltPayWorkaround {
                 decimals = 18,
                 id = "wrapped-xdai",
             )
-            Blockchain.SaltPayTestnet -> Token(
-                name = "WXDAI Test",
-                symbol = "MyERC20",
-                contractAddress = "0x69cca8D8295de046C7c14019D9029Ccc77987A48",
-                decimals = 0,
-                id = "wrapped-xdai",
-            )
             else -> throw IllegalArgumentException()
         }
     }
