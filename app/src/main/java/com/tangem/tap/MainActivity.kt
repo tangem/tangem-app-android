@@ -15,30 +15,39 @@ import com.tangem.operations.backup.BackupService
 import com.tangem.tangem_sdk_new.extensions.init
 import com.tangem.tap.common.ActivityResultCallbackHolder
 import com.tangem.tap.common.DialogManager
-import com.tangem.tap.common.IntentHandler
 import com.tangem.tap.common.OnActivityResultCallback
 import com.tangem.tap.common.SnackbarHandler
+import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.NotificationsHandler
-import com.tangem.tap.common.redux.global.AndroidResources
-import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.common.shop.GooglePayService
 import com.tangem.tap.common.shop.GooglePayService.Companion.LOAD_PAYMENT_DATA_REQUEST_CODE
 import com.tangem.tap.common.shop.googlepay.GooglePayUtil.createPaymentsClient
 import com.tangem.tap.domain.TangemSdkManager
+import com.tangem.tap.domain.userWalletList.UserWalletsListManager
+import com.tangem.tap.domain.userWalletList.di.provideBiometricImplementation
 import com.tangem.tap.features.shop.redux.ShopAction
+import com.tangem.tap.features.welcome.redux.WelcomeAction
+import com.tangem.tap.proxy.AppStateHolder
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.ActivityMainBinding
+import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import java.lang.ref.WeakReference
+import javax.inject.Inject
 import kotlin.coroutines.CoroutineContext
 
 lateinit var tangemSdk: TangemSdk
 lateinit var tangemSdkManager: TangemSdkManager
 lateinit var backupService: BackupService
+lateinit var userWalletsListManager: UserWalletsListManager
+internal var lockUserWalletsTimer: LockUserWalletsTimer? = null
+    private set
+var userWalletsListManagerSafe: UserWalletsListManager? = null
+    private set
 var notificationsHandler: NotificationsHandler? = null
 
 private val coroutineContext: CoroutineContext
@@ -49,11 +58,14 @@ private val mainCoroutineContext: CoroutineContext
     get() = Job() + Dispatchers.Main + FeatureCoroutineExceptionHandler.create("mainScope")
 val mainScope = CoroutineScope(mainCoroutineContext)
 
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbackHolder {
+
+    @Inject
+    lateinit var appStateHolder: AppStateHolder
 
     private var snackbar: Snackbar? = null
     private val dialogManager = DialogManager()
-    private val intentHandler = IntentHandler()
     private val binding: ActivityMainBinding by viewBinding(ActivityMainBinding::bind)
 
     private val onActivityResultCallbacks = mutableListOf<OnActivityResultCallback>()
@@ -66,9 +78,15 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
         tangemSdk = TangemSdk.init(this, TangemSdkManager.config)
         tangemSdkManager = TangemSdkManager(tangemSdk, this)
+        appStateHolder.tangemSdkManager = tangemSdkManager
         backupService = BackupService.init(tangemSdk, this)
+        userWalletsListManager = UserWalletsListManager.provideBiometricImplementation(
+            context = applicationContext,
+            tangemSdkManager = tangemSdkManager,
+        )
+        userWalletsListManagerSafe = userWalletsListManager
+        lockUserWalletsTimer = LockUserWalletsTimer(owner = this)
 
-        store.dispatch(GlobalAction.SetResources(getAndroidResources()))
         store.dispatch(
             ShopAction.CheckIfGooglePayAvailable(
                 GooglePayService(createPaymentsClient(this), this),
@@ -76,17 +94,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         )
     }
 
-    private fun getAndroidResources(): AndroidResources {
-        return AndroidResources(
-            AndroidResources.RString(
-                R.string.copy_toast_msg,
-                R.string.details_notification_erase_wallet_not_possible,
-            ),
-        )
-    }
-
     private fun systemActions() {
-
         WindowCompat.setDecorFitsSystemWindows(window, false)
 
         val windowInsetsController = WindowInsetsControllerCompat(window, binding.root)
@@ -110,14 +118,23 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         val isOnboardingServiceActive = store.state.globalState.onboardingState.onboardingStarted
         val shopOpened = store.state.shopState.total != null
         if (backStackIsEmpty || (!isOnboardingServiceActive && !isScannedBefore && !shopOpened)) {
-            store.dispatch(NavigationAction.NavigateTo(AppScreen.Home))
+            if (userWalletsListManager.hasSavedUserWallets) {
+                store.dispatchOnMain(WelcomeAction.HandleDeepLink(intent))
+                store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Welcome))
+            } else {
+                store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Home))
+                intentHandler.handleWalletConnectLink(intent)
+            }
         }
-        intentHandler.handleIntent(intent)
+        intentHandler.handleBackgroundScan(intent)
+        intentHandler.handleSellCurrencyCallback(intent)
     }
 
     override fun onNewIntent(intent: Intent?) {
         super.onNewIntent(intent)
-        intentHandler.handleIntent(intent)
+        intentHandler.handleBackgroundScan(intent)
+        intentHandler.handleSellCurrencyCallback(intent)
+        intentHandler.handleWalletConnectLink(intent)
     }
 
     override fun onStart() {
@@ -173,5 +190,11 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
 
     override fun removeOnActivityResultCallback(callback: OnActivityResultCallback) {
         onActivityResultCallbacks.remove(callback)
+    }
+
+    override fun onUserInteraction() {
+        super.onUserInteraction()
+
+        lockUserWalletsTimer?.restart()
     }
 }
