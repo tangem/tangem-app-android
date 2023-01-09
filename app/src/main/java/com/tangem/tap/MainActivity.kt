@@ -84,6 +84,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
             context = applicationContext,
             tangemSdkManager = tangemSdkManager,
         )
+        appStateHolder.userWalletsListManager = userWalletsListManager
         userWalletsListManagerSafe = userWalletsListManager
         lockUserWalletsTimer = LockUserWalletsTimer(owner = this)
 
