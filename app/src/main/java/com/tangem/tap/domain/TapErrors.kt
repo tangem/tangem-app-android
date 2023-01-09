@@ -2,7 +2,6 @@ package com.tangem.tap.domain
 
 import androidx.annotation.StringRes
 import com.tangem.common.core.TangemError
-import com.tangem.datasource.api.tangemTech.TangemTechError
 import com.tangem.wallet.R
 
 interface TapErrors
@@ -79,12 +78,3 @@ fun TapErrors.assembleErrors(): MutableList<Pair<Int, List<Any>?>> {
     }
     return idList
 }
-
-fun TangemTechError.toTapError(): TapError {
-    return when (this.code) {
-        404 -> NoDataError(this.description)
-        else -> TapError.CustomError(customMessage = this.description)
-    }
-}
-
-class NoDataError(message: String) : TapError.CustomError(customMessage = message)
