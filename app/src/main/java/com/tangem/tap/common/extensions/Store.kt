@@ -6,6 +6,7 @@ import com.tangem.tap.common.redux.StateDialog
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.TapError
+import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import kotlinx.coroutines.Dispatchers
@@ -24,6 +25,11 @@ fun Store<*>.dispatchOnMain(action: Action) {
 
 fun Store<*>.dispatchNotification(resId: Int) {
     dispatchOnMain(GlobalAction.ShowNotification(resId))
+}
+
+@Suppress("UnusedReceiverParameter")
+suspend fun Store<*>.onUserWalletSelected(userWallet: UserWallet, refresh: Boolean = false) {
+    store.state.globalState.tapWalletManager.onWalletSelected(userWallet, refresh)
 }
 
 fun Store<*>.dispatchToastNotification(resId: Int) {
@@ -71,7 +77,6 @@ suspend fun Store<*>.onCardScanned(scanResponse: ScanResponse) {
 fun Store<*>.dispatchOpenUrl(url: String) {
     store.dispatch(NavigationAction.OpenUrl(url))
 }
-
 fun Store<*>.dispatchShare(url: String) {
     store.dispatch(NavigationAction.Share(url))
 }

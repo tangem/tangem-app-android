@@ -2,6 +2,8 @@ package com.tangem.tap.features.details.ui.details
 
 import com.tangem.domain.common.TapWorkarounds.isSaltPay
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
+import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.feedback.FeedbackEmail
 import com.tangem.tap.common.feedback.SupportInfo
 import com.tangem.tap.common.redux.AppState
@@ -34,7 +36,7 @@ class DetailsViewModel(private val store: Store<AppState>) {
                 SettingsElement.PrivacyPolicy -> {
                     if (state.privacyPolicyUrl != null) it else null
                 }
-                SettingsElement.AppSettings -> null // TODO: until we implement settings from this screen
+                SettingsElement.AppSettings -> if (state.isBiometricsAvailable) it else null
                 SettingsElement.AppCurrency -> if (state.scanResponse?.card?.isMultiwalletAllowed != true) it else null
                 SettingsElement.TermsOfUse -> if (state.scanResponse?.card?.isStart2Coin == true) it else null
                 else -> it
@@ -42,7 +44,7 @@ class DetailsViewModel(private val store: Store<AppState>) {
         }
 
         return DetailsScreenState(
-            settings,
+            elements = settings,
             tangemLinks = getSocialLinks(),
             tangemVersion = getTangemAppVersion(),
             appCurrency = state.appCurrency.name,
@@ -51,8 +53,9 @@ class DetailsViewModel(private val store: Store<AppState>) {
         )
     }
 
-    private fun handleSocialNetworkClick(url: String) {
-        store.dispatch(NavigationAction.OpenUrl(url))
+    private fun handleSocialNetworkClick(link: SocialNetworkLink) {
+        Analytics.send(Settings.ButtonSocialNetwork(link.network))
+        store.dispatch(NavigationAction.OpenUrl(link.url))
     }
 
     private fun handleClickingSettingsItem(item: SettingsElement) {
@@ -61,21 +64,26 @@ class DetailsViewModel(private val store: Store<AppState>) {
                 store.dispatch(NavigationAction.NavigateTo(AppScreen.WalletConnectSessions))
             }
             SettingsElement.Chat -> {
+                Analytics.send(Settings.ButtonChat())
                 store.dispatch(GlobalAction.OpenChat(SupportInfo()))
             }
             SettingsElement.SendFeedback -> {
+                Analytics.send(Settings.ButtonSendFeedback())
                 store.dispatch(GlobalAction.SendEmail(FeedbackEmail()))
             }
             SettingsElement.CardSettings -> {
+                Analytics.send(Settings.ButtonCardSettings())
                 store.dispatch(NavigationAction.NavigateTo(AppScreen.CardSettings))
             }
             SettingsElement.AppCurrency -> {
                 store.dispatch(WalletAction.AppCurrencyAction.ChooseAppCurrency)
             }
             SettingsElement.AppSettings -> {
-                store.dispatch(NavigationAction.NavigateTo(AppScreen.AppSettings)) //TODO: To be available later
+                Analytics.send(Settings.ButtonAppSettings())
+                store.dispatch(NavigationAction.NavigateTo(AppScreen.AppSettings))
             }
             SettingsElement.LinkMoreCards -> {
+                Analytics.send(Settings.ButtonCreateBackup())
                 store.dispatch(DetailsAction.CreateBackup)
             }
             SettingsElement.TermsOfService -> {
@@ -87,10 +95,13 @@ class DetailsViewModel(private val store: Store<AppState>) {
             SettingsElement.PrivacyPolicy -> {
                 // TODO: To be available later
             }
+            // SettingsElement.ReferralProgram -> {
+            //     store.dispatch(NavigationAction.NavigateTo(AppScreen.ReferralProgram))
+            // }
         }
     }
 
-    private fun getSocialLinks(): List<TangemLink> {
+    private fun getSocialLinks(): List<SocialNetworkLink> {
         val locale = LocaleRegionProvider().getRegion()
         return if (locale.lowercase() == RUSSIA_COUNTRY_CODE) {
             TangemSocialAccounts.accountsRu

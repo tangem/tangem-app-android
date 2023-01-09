@@ -12,13 +12,19 @@ import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.transition.TransitionInflater
 import by.kirich1409.viewbindingdelegate.viewBinding
+import com.badoo.mvicore.modelWatcher
+import com.tangem.common.doOnResult
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.tangem_sdk_new.extensions.dpToPx
 import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.TestActions
+import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.DetailsScreen
+import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.extensions.appendIfNotNull
 import com.tangem.tap.common.extensions.beginDelayedTransition
 import com.tangem.tap.common.extensions.fitChipsByGroupWidth
@@ -30,7 +36,6 @@ import com.tangem.tap.common.extensions.toQrCode
 import com.tangem.tap.common.recyclerView.SpaceItemDecoration
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
-import com.tangem.tap.features.onboarding.getQRReceiveMessage
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.PendingTransaction
 import com.tangem.tap.features.wallet.redux.ErrorType
@@ -44,8 +49,13 @@ import com.tangem.tap.features.wallet.ui.adapters.WalletDetailWarningMessagesAda
 import com.tangem.tap.features.wallet.ui.images.load
 import com.tangem.tap.features.wallet.ui.test.TestWallet
 import com.tangem.tap.store
+import com.tangem.tap.userWalletsListManagerSafe
+import com.tangem.tap.walletCurrenciesManager
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.FragmentWalletDetailsBinding
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.rekotlin.StoreSubscriber
 
 class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
@@ -56,15 +66,56 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
 
     private val binding: FragmentWalletDetailsBinding by viewBinding(FragmentWalletDetailsBinding::bind)
 
+    private val walletDataWatcher = modelWatcher<WalletData> {
+        WalletData::pendingTransactions {
+            showPendingTransactionsIfPresent(it)
+        }
+        WalletData::currency {
+            handleCurrencyIcon(it)
+        }
+        WalletData::currencyData {
+            setupBalanceData(it)
+        }
+        (WalletData::currencyData or WalletData::currency) { walletData ->
+            setupCurrency(walletData.currencyData, walletData.currency)
+            setupSwipeRefresh(walletData.currencyData, walletData.currency)
+        }
+    }
+
+    private val walletStateWatcher = modelWatcher<WalletState> {
+        (WalletState::selectedCurrency or WalletState::selectedWalletData) { state ->
+            val selectedWalletData = state.selectedWalletData
+            if (selectedWalletData != null) {
+                walletDataWatcher.invoke(selectedWalletData)
+                setupButtons(selectedWalletData, state.isExchangeServiceFeatureOn)
+                setupAddressCard(selectedWalletData)
+                handleWarnings(selectedWalletData)
+            }
+        }
+        (WalletState::selectedCurrency or WalletState::isExchangeServiceFeatureOn) { state ->
+            if (state.selectedWalletData != null) {
+                setupButtons(state.selectedWalletData!!, state.isExchangeServiceFeatureOn)
+            }
+        }
+        (WalletState::state or WalletState::error) { state ->
+            setupNoInternetHandling(state.state, state.error)
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
-        activity?.onBackPressedDispatcher?.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                store.dispatch(WalletAction.MultiWallet.SelectWallet(null))
-                store.dispatch(NavigationAction.PopBackTo())
-            }
-        })
+
+        Analytics.send(DetailsScreen.ScreenOpened())
+        activity?.onBackPressedDispatcher?.addCallback(
+            this,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    store.dispatch(WalletAction.MultiWallet.SelectWallet(null))
+                    store.dispatch(NavigationAction.PopBackTo())
+                }
+            },
+        )
         val inflater = TransitionInflater.from(requireContext())
         enterTransition = inflater.inflateTransition(R.transition.slide_right)
         exitTransition = inflater.inflateTransition(R.transition.fade)
@@ -80,6 +131,8 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
     override fun onStop() {
         super.onStop()
         store.unsubscribe(this)
+        walletDataWatcher.clear()
+        walletStateWatcher.clear()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -125,46 +178,17 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
         view?.findViewById<View>(R.id.l_balance)?.let { view ->
             TestActions.initFor(
                 view = view,
-                actions = TestWallet.solanaRentExemptWarning()
+                actions = TestWallet.solanaRentExemptWarning(),
             )
         }
     }
 
     override fun newState(state: WalletState) {
         if (activity == null || view == null) return
-        if (state.selectedCurrency == null) return
-        val selectedWallet = state.getSelectedWalletData() ?: return
+        if (state.selectedWalletData == null) return
+        walletStateWatcher.invoke(state)
 
-
-        showPendingTransactionsIfPresent(selectedWallet.pendingTransactions)
-        setupCurrency(selectedWallet.currencyData, selectedWallet.currency)
-        setupAddressCard(selectedWallet)
-        setupNoInternetHandling(state)
-        setupBalanceData(selectedWallet.currencyData)
-        setupButtons(selectedWallet, state.isExchangeServiceFeatureOn)
-
-        handleCurrencyIcon(selectedWallet)
-        handleWarnings(selectedWallet)
         updateViewMeasurements()
-
-        binding.srlWalletDetails.setOnRefreshListener {
-            if (selectedWallet.currencyData.status != BalanceStatus.Loading) {
-                store.dispatch(
-                    WalletAction.LoadWallet(
-                        blockchain = BlockchainNetwork(
-                            selectedWallet.currency.blockchain,
-                            selectedWallet.currency.derivationPath,
-                            emptyList(),
-                        ),
-                    ),
-                )
-                store.dispatch(WalletAction.LoadFiatRate(coinsList = listOf(selectedWallet.currency)))
-            }
-        }
-
-        if (selectedWallet.currencyData.status != BalanceStatus.Loading) {
-            binding.srlWalletDetails.isRefreshing = false
-        }
     }
 
     private fun updateViewMeasurements() {
@@ -183,10 +207,47 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
 
     private fun setupCurrency(currencyData: BalanceWidgetData, currency: Currency) = with(binding) {
         tvCurrencyTitle.text = currencyData.currency
-        tvCurrencySubtitle.text = tvCurrencySubtitle.getString(
-            R.string.wallet_currency_subtitle,
-            currency.blockchain.fullName
-        )
+
+        if (currency is Currency.Token) {
+            tvCurrencySubtitle.text = tvCurrencySubtitle.getString(
+                R.string.wallet_currency_subtitle,
+                currency.blockchain.fullName,
+            )
+            tvCurrencySubtitle.show()
+        } else {
+            tvCurrencySubtitle.hide()
+        }
+    }
+
+    private fun setupSwipeRefresh(currencyData: BalanceWidgetData, currency: Currency) {
+        binding.srlWalletDetails.setOnRefreshListener {
+            if (currencyData.status != BalanceStatus.Loading && currencyData.status != BalanceStatus.Refreshing) {
+                Analytics.send(Token.Refreshed())
+                lifecycleScope.launch(Dispatchers.Default) {
+                    val selectedUserWallet = userWalletsListManagerSafe?.selectedUserWalletSync
+                    if (selectedUserWallet != null) {
+                        walletCurrenciesManager.update(selectedUserWallet, currency)
+                            .doOnResult {
+                                withContext(Dispatchers.Main) {
+                                    binding.srlWalletDetails.isRefreshing = false
+                                }
+                            }
+                    } else {
+                        val blockchainNetwork = BlockchainNetwork(
+                            blockchain = currency.blockchain,
+                            derivationPath = currency.derivationPath,
+                            tokens = emptyList(),
+                        )
+
+                        store.dispatch(WalletAction.LoadWallet(blockchainNetwork))
+                        store.dispatch(WalletAction.LoadFiatRate(coinsList = listOf(currency)))
+                    }
+                }
+            }
+        }
+
+        binding.srlWalletDetails.isRefreshing = currencyData.status == BalanceStatus.Loading ||
+            currencyData.status == BalanceStatus.Refreshing
     }
 
     private fun setupButtons(selectedWallet: WalletData, isExchangeServiceFeatureOn: Boolean) = with(binding) {
@@ -217,16 +278,15 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
         rvWarningMessages.show(warningDetails.isNotEmpty())
     }
 
-    private fun handleCurrencyIcon(wallet: WalletData) = with(binding.lWalletDetails.lBalance) {
+    private fun handleCurrencyIcon(currency: Currency) = with(binding.lWalletDetails.lBalance) {
         ivCurrency.load(
-            currency = wallet.currency,
+            currency = currency,
             derivationStyle = store.state.globalState
                 .scanResponse
                 ?.card
                 ?.derivationStyle,
         )
     }
-
 
     private fun showPendingTransactionsIfPresent(pendingTransactions: List<PendingTransaction>) {
         pendingTransactionAdapter.submitList(pendingTransactions)
@@ -258,23 +318,36 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
                 store.dispatch(
                     WalletAction.ExploreAddress(
                         state.walletAddresses.selectedAddress.exploreUrl,
-                        requireContext()
-                    )
+                        requireContext(),
+                    ),
                 )
             }
             ivQrCode.setImageBitmap(state.walletAddresses.selectedAddress.shareUrl.toQrCode())
-            tvReceiveMessage.text =
-                getQRReceiveMessage(tvReceiveMessage.context, state.currency)
+
+            tvReceiveMessage.text = when (val currency = state.currency) {
+                is Currency.Blockchain -> tvReceiveMessage.getString(
+                    id = R.string.address_qr_code_message_format,
+                    currency.blockchain.fullName,
+                    currency.currencySymbol,
+                    currency.blockchain.fullName,
+                )
+                is Currency.Token -> tvReceiveMessage.getString(
+                    id = R.string.address_qr_code_message_format,
+                    currency.token.name,
+                    currency.currencySymbol,
+                    currency.blockchain.fullName,
+                )
+            }
         }
     }
 
-    private fun setupNoInternetHandling(state: WalletState) {
-        if (state.state == ProgressState.Error) {
-            if (state.error == ErrorType.NoInternetConnection) {
+    private fun setupNoInternetHandling(progressState: ProgressState, errorType: ErrorType?) {
+        if (progressState == ProgressState.Error) {
+            if (errorType == ErrorType.NoInternetConnection) {
                 binding.srlWalletDetails.isRefreshing = false
                 (activity as? SnackbarHandler)?.showSnackbar(
                     text = R.string.wallet_notification_no_internet,
-                    buttonTitle = R.string.common_retry
+                    buttonTitle = R.string.common_retry,
                 ) { store.dispatch(WalletAction.LoadData) }
             }
         } else {
@@ -294,7 +367,8 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
                 lBalance.tvStatus.setLoadingStatus(R.string.wallet_balance_loading)
             }
             BalanceStatus.VerifiedOnline, BalanceStatus.SameCurrencyTransactionInProgress,
-            BalanceStatus.TransactionInProgress -> {
+            BalanceStatus.TransactionInProgress,
+            -> {
                 lBalanceError.root.hide()
                 lBalance.root.show()
                 lBalance.groupBalance.show()
@@ -317,7 +391,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
                 lBalance.tvError.show()
                 lBalance.tvError.setWarningStatus(
                     R.string.wallet_balance_blockchain_unreachable,
-                    data.errorMessage
+                    data.errorMessage,
                 )
             }
             BalanceStatus.NoAccount -> {
@@ -326,8 +400,8 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
                 lBalanceError.tvErrorTitle.text = getText(R.string.wallet_error_no_account)
                 lBalanceError.tvErrorDescriptions.text =
                     getString(
-                        R.string.wallet_error_no_account_subtitle_format,
-                        data.amountToCreateAccount, data.currencySymbol
+                        R.string.no_account_generic,
+                        data.amountToCreateAccount, data.currencySymbol,
                     )
             }
         }
@@ -336,7 +410,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
     override fun onOptionsItemSelected(item: MenuItem): Boolean {
         return when (item.itemId) {
             R.id.menu_remove -> {
-                store.state.walletState.getSelectedWalletData()?.let { walletData ->
+                store.state.walletState.selectedWalletData?.let { walletData ->
                     store.dispatch(WalletAction.MultiWallet.TryToRemoveWallet(walletData.currency))
                     true
                 }
@@ -366,7 +440,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
     private fun TextView.setStatus(
         text: String,
         @ColorRes color: Int,
-        @DrawableRes drawable: Int?
+        @DrawableRes drawable: Int?,
     ) {
         this.text = text
         setTextColor(getColor(color))

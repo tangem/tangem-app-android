@@ -19,6 +19,7 @@ import android.view.inputmethod.InputMethodManager
 import androidx.annotation.ColorInt
 import androidx.annotation.ColorRes
 import androidx.annotation.DrawableRes
+import androidx.annotation.PluralsRes
 import androidx.annotation.StringRes
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
@@ -57,7 +58,7 @@ fun View.getString(@StringRes id: Int, vararg formatArgs: String): String {
     return context.getString(id, *formatArgs)
 }
 
-fun View.getQuantityString(@StringRes id: Int, quantity: Int): String {
+fun View.getQuantityString(@PluralsRes id: Int, quantity: Int): String {
     return context.resources.getQuantityString(id, quantity, quantity)
 }
 

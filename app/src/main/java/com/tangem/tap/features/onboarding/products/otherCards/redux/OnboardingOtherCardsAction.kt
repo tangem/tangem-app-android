@@ -7,6 +7,7 @@ import org.rekotlin.Action
  */
 sealed class OnboardingOtherCardsAction : Action {
     // from user, ui
+    object Init : OnboardingOtherCardsAction()
     object LoadCardArtwork : OnboardingOtherCardsAction()
     object CreateWallet : OnboardingOtherCardsAction()
 

@@ -26,14 +26,14 @@ class BnbTransactionDialog {
                         it.symbol,
                         it.price,
                         it.quantity,
-                        it.amount
+                        it.amount,
                     )
-                }.joinToString ( "\n\n" )
+                }.joinToString(separator = "\n\n")
                 is BinanceMessageData.Transfer -> context.getString(
                     R.string.wallet_connect_bnb_transaction_message,
                     data.address,
                     data.outputAddress,
-                    data.amount
+                    data.amount,
                 )
             }
 
@@ -44,14 +44,16 @@ class BnbTransactionDialog {
             val positiveButtonTitle = context.getText(R.string.common_sign)
 
             return AlertDialog.Builder(context).apply {
-                setTitle(context.getString(R.string.wallet_connect))
+                setTitle(context.getString(R.string.wallet_connect_title))
                 setMessage(fullMessage)
                 setPositiveButton(positiveButtonTitle) { _, _ ->
-                        store.dispatch(WalletConnectAction.BinanceTransaction.Sign(
+                    store.dispatch(
+                        WalletConnectAction.BinanceTransaction.Sign(
                             id = sessionId,
                             data = data.data,
-                            sessionData = session
-                        ))
+                            sessionData = session,
+                        ),
+                    )
                 }
                 setNegativeButton(context.getText(R.string.common_reject)) { _, _ ->
                     store.dispatch(WalletConnectAction.RejectRequest(session, sessionId))
