@@ -4,21 +4,21 @@ import com.squareup.moshi.JsonAdapter
 import com.squareup.moshi.Types
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.DerivationStyle
-import com.tangem.common.services.Result
-import com.tangem.domain.common.extensions.getTokens
-import com.tangem.domain.common.extensions.toNetworkId
-import com.tangem.datasource.api.tangemTech.TangemTechService
 import com.tangem.datasource.api.common.MoshiConverter
+import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.tap.common.FileReader
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.domain.tokens.models.TokenDao
+import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.async
-import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.withContext
 
 @Deprecated("Use this only for migration")
 class OldUserTokensRepository(
     private val fileReader: FileReader,
-    private val tangemNetworkService: TangemTechService,
+    private val tangemTechApi: TangemTechApi,
+    private val dispatchers: CoroutineDispatcherProvider,
 ) {
     private val moshi = MoshiConverter.defaultMoshi()
     private val blockchainsAdapter: JsonAdapter<List<Blockchain>> = moshi.adapter(
@@ -104,20 +104,27 @@ class OldUserTokensRepository(
         return blockchainNetworks
     }
 
-    private suspend fun getTokensIds(tokens: List<TokenDao>): Map<String, String> = coroutineScope {
+    private suspend fun getTokensIds(tokens: List<TokenDao>): Map<String, String> = withContext(dispatchers.io) {
         tokens.map {
             async {
-                tangemNetworkService.getTokens(
+                tangemTechApi.getCoins(
                     contractAddress = it.contractAddress,
-                    networkId = it.blockchainDao.toBlockchain().toNetworkId(),
+                    networkIds = it.blockchainDao.toBlockchain().toNetworkId(),
                     active = true,
                 )
             }
-        }.map { it.await() }
-            .map { (it as? Result.Success)?.data?.coins?.firstOrNull()?.id }
+        }
+            .map {
+                runCatching { it.await() }
+                    .onSuccess { return@map it.coins.firstOrNull()?.id }
+                    .onFailure { return@map null }
+
+                throw IllegalStateException("Unreachable code because runCatching must return result")
+            }
             .mapIndexedNotNull { index, id ->
                 if (id == null) null else tokens[index].contractAddress to id
-            }.toMap()
+            }
+            .toMap()
     }
 
     companion object {
