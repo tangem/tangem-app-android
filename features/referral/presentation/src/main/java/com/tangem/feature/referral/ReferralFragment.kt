@@ -1,7 +1,6 @@
 package com.tangem.feature.referral
 
 import android.os.Bundle
-import android.transition.TransitionInflater
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,6 +8,7 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.core.view.WindowCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.transition.TransitionInflater
 import com.tangem.feature.referral.presentation.R
 import com.tangem.feature.referral.router.ReferralRouter
 import com.tangem.feature.referral.ui.ReferralScreen
@@ -31,6 +31,7 @@ class ReferralFragment : Fragment() {
         activity?.window?.let { WindowCompat.setDecorFitsSystemWindows(it, true) }
         viewModel.setRouter(ReferralRouter(fragmentManager = WeakReference(parentFragmentManager)))
         return ComposeView(inflater.context).apply {
+            isTransitionGroup = true
             setContent {
                 ReferralScreen(stateHolder = viewModel.uiState)
             }
