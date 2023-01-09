@@ -33,10 +33,11 @@ import com.tangem.wallet.R
 @Composable
 fun TangemSwitch(
     modifier: Modifier = Modifier,
-    enabledColor: Color = colorResource(id = R.color.control_checked),
-    disabledColor: Color = colorResource(id = R.color.icon_informative),
+    checkedColor: Color = colorResource(id = R.color.control_checked),
+    uncheckedColor: Color = colorResource(id = R.color.icon_informative),
     size: Dp = 48.dp,
     checked: Boolean = false,
+    enabled: Boolean = true,
     onCheckedChange: (Boolean) -> Unit,
 ) {
     val transition = updateTransition(checked, label = "SwitchState")
@@ -45,8 +46,8 @@ fun TangemSwitch(
             tween(durationMillis = 200, easing = FastOutLinearInEasing)
         },
         label = "",
-    ) { enabled ->
-        if (enabled) enabledColor else disabledColor
+    ) { isChecked ->
+        if (isChecked) checkedColor else uncheckedColor
     }
     val interactionSource = remember { MutableInteractionSource() }
 
@@ -55,6 +56,7 @@ fun TangemSwitch(
             .clickable(
                 interactionSource = interactionSource,
                 indication = null,
+                enabled = enabled,
             ) {
                 onCheckedChange(!checked)
             }

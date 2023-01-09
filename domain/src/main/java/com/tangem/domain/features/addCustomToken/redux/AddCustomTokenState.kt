@@ -2,10 +2,10 @@ package com.tangem.domain.features.addCustomToken.redux
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.DerivationStyle
-import com.tangem.common.card.Card
 import com.tangem.common.json.MoshiJsonConverter
 import com.tangem.domain.AddCustomTokenError
 import com.tangem.domain.DomainWrapped
+import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.domain.common.extensions.isSupportedInApp
 import com.tangem.domain.common.extensions.supportedBlockchains
@@ -37,7 +37,7 @@ import com.tangem.domain.features.addCustomToken.TokenDerivationPathField
 import com.tangem.domain.features.addCustomToken.TokenField
 import com.tangem.domain.redux.DomainState
 import com.tangem.domain.redux.state.StringActionStateConverter
-import com.tangem.network.api.tangemTech.CoinsResponse
+import com.tangem.datasource.api.tangemTech.CoinsResponse
 import org.rekotlin.Action
 import org.rekotlin.StateType
 
@@ -133,7 +133,7 @@ data class AddCustomTokenState(
         null
     }
 
-    fun reset(card: Card): AddCustomTokenState {
+    fun reset(card: CardDTO): AddCustomTokenState {
         return this.copy(
             appSavedCurrencies = null,
             onTokenAddCallback = null,
@@ -159,7 +159,7 @@ data class AddCustomTokenState(
             .getConvertedData()
     }
 
-    fun getNetworks(card: Card, type: CustomTokenType): List<Blockchain> {
+    fun getNetworks(card: CardDTO, type: CustomTokenType): List<Blockchain> {
         return getNetworksList(card, type)
     }
 
@@ -189,7 +189,7 @@ data class AddCustomTokenState(
             }.derivationPath(derivationStyleToUse)
         }
 
-        internal fun createFormFields(card: Card, type: CustomTokenType): List<DataField<*>> {
+        internal fun createFormFields(card: CardDTO, type: CustomTokenType): List<DataField<*>> {
             return listOf(
                 TokenField(ContractAddress),
                 TokenBlockchainField(Network, getNetworksList(card, type)),
@@ -204,7 +204,7 @@ data class AddCustomTokenState(
          * Serves to determine the networks (blockchains & tokens) that can be selected by Form.Networks.
          * Blockchain.Unknown - is the default selection
          */
-        private fun getNetworksList(card: Card, type: CustomTokenType): List<Blockchain> {
+        private fun getNetworksList(card: CardDTO, type: CustomTokenType): List<Blockchain> {
             val evmBlockchains = Blockchain.values()
                 .filter { it.isEvm() }
                 .filter { card.isTestCard == it.isTestnet() }
@@ -239,7 +239,7 @@ data class AddCustomTokenState(
             )
         }
 
-        private fun getSupportedDerivations(card: Card): List<Blockchain> {
+        private fun getSupportedDerivations(card: CardDTO): List<Blockchain> {
             val evmBlockchains = Blockchain.values()
                 .filter { card.isTestCard == it.isTestnet() && it.isEvm() }
                 .filter { it.isSupportedInApp() }
