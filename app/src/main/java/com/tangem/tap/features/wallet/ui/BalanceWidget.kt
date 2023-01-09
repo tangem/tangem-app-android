@@ -16,7 +16,8 @@ enum class BalanceStatus {
     Refreshing,
     NoAccount,
     EmptyCard,
-    UnknownBlockchain
+    UnknownBlockchain,
+    MissedDerivation,
 }
 
 data class BalanceWidgetData(
@@ -34,7 +35,7 @@ data class BalanceWidgetData(
 )
 
 data class TokenData(
-    val amountFormatted: String,
+    val amountFormatted: String?,
     val amount: BigDecimal? = null,
     val tokenSymbol: String,
     val fiatAmountFormatted: String? = null,
@@ -128,7 +129,7 @@ class BalanceWidget(
                 tvErrorTitle.text = fragment.getText(R.string.wallet_error_no_account)
                 tvErrorDescriptions.text =
                     fragment.getString(
-                        R.string.wallet_error_no_account_subtitle_format,
+                        R.string.no_account_generic,
                         data.amountToCreateAccount, data.currencySymbol
                     )
             }

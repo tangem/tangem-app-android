@@ -10,7 +10,7 @@ class BackupInProgressDialog {
     companion object {
         fun create(context: Context): AlertDialog {
             return AlertDialog.Builder(context).apply {
-                setTitle(R.string.alert_title)
+                setTitle(R.string.common_warning)
                 setMessage(R.string.onboarding_backup_exit_warning)
                 setPositiveButton(R.string.warning_button_ok) { _, _ ->
                     store.dispatch(GlobalAction.HideDialog)
