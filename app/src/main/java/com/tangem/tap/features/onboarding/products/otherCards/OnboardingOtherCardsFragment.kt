@@ -8,6 +8,8 @@ import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.view.isVisible
 import androidx.transition.TransitionManager
 import coil.load
+import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.getDrawableCompat
 import com.tangem.tap.common.redux.navigation.ShareElement
 import com.tangem.tap.common.transitions.InternalNoteLayoutTransition
@@ -33,6 +35,7 @@ class OnboardingOtherCardsFragment : BaseOnboardingFragment<OnboardingOtherCards
         mainBinding.onboardingTopContainer.imvFrontCard.transitionName = ShareElement.imvFrontCard
 
         binding.toolbar.setTitle(R.string.onboarding_title)
+        store.dispatch(OnboardingOtherCardsAction.Init)
         store.dispatch(OnboardingOtherCardsAction.LoadCardArtwork)
         store.dispatch(OnboardingOtherCardsAction.DetermineStepOfScreen)
     }
@@ -68,7 +71,10 @@ class OnboardingOtherCardsFragment : BaseOnboardingFragment<OnboardingOtherCards
 
     private fun setupCreateWalletState() = with(mainBinding.onboardingActionContainer) {
         btnMainAction.setText(R.string.onboarding_create_wallet_button_create_wallet)
-        btnMainAction.setOnClickListener { store.dispatch(OnboardingOtherCardsAction.CreateWallet) }
+        btnMainAction.setOnClickListener {
+            Analytics.send(Onboarding.CreateWallet.ButtonCreateWallet())
+            store.dispatch(OnboardingOtherCardsAction.CreateWallet)
+        }
         btnAlternativeAction.setText(R.string.onboarding_button_what_does_it_mean)
         btnAlternativeAction.setOnClickListener { }
 
@@ -85,20 +91,20 @@ class OnboardingOtherCardsFragment : BaseOnboardingFragment<OnboardingOtherCards
     }
 
     private fun setupDoneState() = with(mainBinding.onboardingActionContainer) {
-        btnMainAction.setText(R.string.onboarding_done_button_continue)
+        btnMainAction.setText(R.string.common_continue)
         btnMainAction.setOnClickListener {
             showConfetti(false)
             store.dispatch(OnboardingOtherCardsAction.Done)
         }
 
         btnAlternativeAction.isVisible = false
-        btnAlternativeAction.setText("")
+        btnAlternativeAction.text = ""
         btnAlternativeAction.setOnClickListener { }
 
         tvHeader.setText(R.string.onboarding_done_header)
         tvBody.setText(R.string.onboarding_done_body)
 
-        mainBinding.onboardingTopContainer.imvCardBackground?.setBackgroundDrawable(
+        mainBinding.onboardingTopContainer.imvCardBackground.setBackgroundDrawable(
             requireContext().getDrawableCompat(R.drawable.shape_rectangle_rounded_8),
         )
         updateConstraints(R.layout.lp_onboarding_done)
