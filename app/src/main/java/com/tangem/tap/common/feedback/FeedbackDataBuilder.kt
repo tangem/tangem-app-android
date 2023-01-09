@@ -22,6 +22,7 @@ class FeedbackDataBuilder(
         builder.appendKeyValue("Firmware version", infoHolder.cardFirmwareVersion)
         builder.appendKeyValue("Card Blockchain", infoHolder.cardBlockchain)
         builder.appendKeyValue("", infoHolder.signedHashesCount)
+        builder.appendKeyValue("User Wallet ID", infoHolder.userWalletId)
         return this
     }
 
