@@ -1,8 +1,8 @@
 package com.tangem.feature.swap.domain
 
 import com.tangem.feature.swap.domain.models.data.Currency
+import com.tangem.feature.swap.domain.models.data.SwapAmount
 import com.tangem.feature.swap.domain.models.data.SwapState
-import java.math.BigDecimal
 
 interface SwapInteractor {
 
@@ -10,15 +10,18 @@ interface SwapInteractor {
 
     suspend fun getTokenBalance(tokenId: String): String
 
-    suspend fun getFee(): BigDecimal
-
+    @Throws(IllegalStateException::class)
     suspend fun givePermissionToSwap(tokenToApprove: Currency)
 
+    @Throws(IllegalStateException::class)
     suspend fun findBestQuote(
         fromToken: Currency,
         toToken: Currency,
-        amount: String,
+        amount: SwapAmount,
     ): SwapState
 
+    @Throws(IllegalStateException::class)
     suspend fun onSwap(): SwapState
+
+    fun getTokenDecimals(token: Currency): Int
 }
