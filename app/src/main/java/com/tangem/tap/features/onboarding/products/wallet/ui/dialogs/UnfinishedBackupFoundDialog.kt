@@ -12,7 +12,7 @@ class UnfinishedBackupFoundDialog {
     companion object {
         fun create(context: Context): AlertDialog {
             return AlertDialog.Builder(context).apply {
-                setTitle(R.string.alert_title)
+                setTitle(R.string.common_warning)
                 setMessage(R.string.welcome_interrupted_backup_alert_message)
                 setPositiveButton(R.string.welcome_interrupted_backup_alert_resume) { _, _ ->
                     store.dispatch(GlobalAction.HideDialog)
