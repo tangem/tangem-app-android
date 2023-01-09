@@ -3,8 +3,8 @@ package com.tangem.feature.swap.domain.cache
 import com.tangem.feature.swap.domain.models.ExchangeCurrencies
 import com.tangem.feature.swap.domain.models.SwapDataHolder
 import com.tangem.feature.swap.domain.models.data.Currency
+import com.tangem.feature.swap.domain.models.data.SwapAmount
 import com.tangem.feature.swap.domain.models.data.SwapState.QuoteModel
-import java.math.BigDecimal
 
 class SwapDataCacheImpl : SwapDataCache {
 
@@ -13,7 +13,7 @@ class SwapDataCacheImpl : SwapDataCache {
 
     override fun cacheSwapParams(
         quoteModel: QuoteModel,
-        amount: BigDecimal,
+        amount: SwapAmount,
         fromCurrency: Currency,
         toCurrency: Currency,
     ) {
@@ -52,7 +52,7 @@ class SwapDataCacheImpl : SwapDataCache {
         return lastDataForSwap.quoteModel
     }
 
-    override fun getAmountToSwap(): BigDecimal? {
+    override fun getAmountToSwap(): SwapAmount? {
         return lastDataForSwap.amountToSwap
     }
 }
