@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.tap.domain.tokens.Contract
 import com.tangem.tap.domain.tokens.Currency
 import com.tangem.tap.features.tokens.redux.ContractAddress
 import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
@@ -30,22 +31,20 @@ fun CurrencyExpandedContent(
         exit = fadeOut() + shrinkVertically(),
     ) {
         val blockchains = currency.contracts.map { it.blockchain }
-        Column(
-            modifier = Modifier
-                .fillMaxWidth(),
-        ) {
+        Column(modifier = Modifier.fillMaxWidth()) {
             blockchains.mapIndexed { index, blockchain ->
-                val contract = currency.contracts.firstOrNull { it.blockchain == blockchain }
+                val currencyContract = currency.contracts
+                    .firstOrNull { it.blockchain == blockchain }
                     ?: return@mapIndexed
 
-                val added = if (contract.address != null) {
-                    addedTokens.map { it.token.contractAddress }.contains(contract.address)
+                val added = if (currencyContract.address != null) {
+                    addedTokens.any(currencyContract::isInclude)
                 } else {
                     addedBlockchains.contains(blockchain)
                 }
                 NetworkItem(
                     currency = currency,
-                    contract = contract,
+                    contract = currencyContract,
                     blockchain = blockchain,
                     allowToAdd = allowToAdd,
                     added = added,
@@ -58,3 +57,6 @@ fun CurrencyExpandedContent(
         }
     }
 }
+
+private fun Contract.isInclude(addedToken: TokenWithBlockchain): Boolean =
+    address == addedToken.token.contractAddress && blockchain == addedToken.blockchain
