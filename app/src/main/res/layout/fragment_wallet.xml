@@ -5,7 +5,7 @@
     android:id="@+id/coordinator_wallet"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/backgroundLightGray"
+    android:background="@color/background_secondary"
     android:orientation="vertical">
 
     <com.google.android.material.appbar.AppBarLayout
@@ -13,7 +13,7 @@
         style="@style/Widget.MaterialComponents.Toolbar.Surface"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/toolbarColor"
+        android:background="@color/background_secondary"
         android:fitsSystemWindows="true"
         app:liftOnScroll="true">
 
