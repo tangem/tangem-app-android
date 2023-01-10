@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
     <string name="shop_one_wallet">Tangem Wallet</string>
+    <string name="shop_3_cards">3 cards</string>
+    <string name="shop_2_cards">2 cards</string>
     <string name="shop_shipping">Shipping</string>
     <string name="shop_free">Free</string>
     <string name="shop_i_have_a_promo_code">I have a promo code…</string>
