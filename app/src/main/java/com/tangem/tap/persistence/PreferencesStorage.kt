@@ -4,7 +4,7 @@ import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
-import com.tangem.common.json.MoshiJsonConverter
+import com.tangem.network.common.MoshiConverter
 import java.util.*
 
 class PreferencesStorage(applicationContext: Application) {
@@ -16,15 +16,17 @@ class PreferencesStorage(applicationContext: Application) {
     val usedCardsPrefStorage: UsedCardsPrefStorage
     val fiatCurrenciesPrefStorage: FiatCurrenciesPrefStorage
     val disclaimerPrefStorage: DisclaimerPrefStorage
+    val toppedUpWalletStorage: ToppedUpWalletStorage
 
     init {
         incrementLaunchCounter()
         appRatingLaunchObserver = AppRatingLaunchObserver(preferences, getCountOfLaunches())
-        usedCardsPrefStorage = UsedCardsPrefStorage(preferences, MoshiJsonConverter.INSTANCE)
+        usedCardsPrefStorage = UsedCardsPrefStorage(preferences, MoshiConverter.INSTANCE)
         usedCardsPrefStorage.migrate()
-        fiatCurrenciesPrefStorage = FiatCurrenciesPrefStorage(preferences, MoshiJsonConverter.INSTANCE)
+        fiatCurrenciesPrefStorage = FiatCurrenciesPrefStorage(preferences, MoshiConverter.INSTANCE)
         fiatCurrenciesPrefStorage.migrate()
         disclaimerPrefStorage = DisclaimerPrefStorage(preferences)
+        toppedUpWalletStorage = ToppedUpWalletStorage(preferences, MoshiConverter.INSTANCE)
     }
 
     var chatFirstLaunchTime: Long?
@@ -32,11 +34,6 @@ class PreferencesStorage(applicationContext: Application) {
         set(value) = preferences.edit { putLong(CHAT_FIRST_LAUNCH_KEY, value ?: 0) }
 
     fun getCountOfLaunches(): Int = preferences.getInt(APP_LAUNCH_COUNT_KEY, 1)
-
-    @Deprecated("Use UsedCardsPrefStorage instead")
-    fun wasCardScannedBefore(cardId: String): Boolean {
-        return usedCardsPrefStorage.wasScanned(cardId)
-    }
 
     fun saveTwinsOnboardingShown() {
         preferences.edit { putBoolean(TWINS_ONBOARDING_SHOWN_KEY, true) }
