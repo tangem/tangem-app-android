@@ -3,6 +3,9 @@ package com.tangem.tap.features.wallet.redux.middlewares
 import com.tangem.common.services.Result
 import com.tangem.network.api.tangemTech.CurrenciesResponse
 import com.tangem.network.api.tangemTech.TangemTechService
+import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.AnalyticsParam
+import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.entities.FiatCurrency
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -61,6 +64,7 @@ class AppCurrencyMiddleware(
     }
 
     private fun selectCurrency(action: WalletAction.AppCurrencyAction.SelectAppCurrency) {
+        Analytics.send(MainScreen.MainCurrencyChanged(AnalyticsParam.CurrencyType.FiatCurrency(action.fiatCurrency)))
         tapWalletManager.rates.clear()
         fiatCurrenciesPrefStorage.saveAppCurrency(action.fiatCurrency)
         store.dispatch(GlobalAction.ChangeAppCurrency(action.fiatCurrency))
