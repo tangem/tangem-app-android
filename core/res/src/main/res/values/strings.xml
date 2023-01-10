@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
     <string name="shop_one_wallet">Tangem Wallet</string>
-    <string name="shop_3_cards">3 cards</string>
-    <string name="shop_2_cards">2 cards</string>
     <string name="shop_shipping">Shipping</string>
     <string name="shop_free">Free</string>
     <string name="shop_i_have_a_promo_code">I have a promo code…</string>
@@ -33,7 +31,7 @@
     <string name="search_tokens_title">Search tokens</string>
     <string name="alert_demo_message">You are currently running in Demo mode. All funds are not real.</string>
     <string name="alert_demo_feature_disabled">This feature is disabled in Demo mode</string>
-    <string name="token_details_send_blocked_fee_format">Not enough funds for fee on your %s wallet to send a transaction. Top up your %s wallet first.</string>
+    <string name="token_details_send_blocked_fee_format">Not enough funds for fee in your %s wallet to send a transaction. Top up your %s wallet first.</string>
     <string name="currency_subtitle_expanded">Available networks</string>
     <string name="wallet_connect_network_not_found_format">%s network not found. Please, add it first and try again.</string>
     <string name="common_attention">Attention</string>
@@ -208,8 +206,8 @@
     <string name="swapping_token_list_your_tokens">Your tokens</string>
     <string name="swapping_token_list_other_tokens">Other tokens</string>
     <string name="referral_error_failed_to_load_info">Failed to load the information about the referral program. Please try again later.</string>
-    <string name="referral_error_failed_to_load_info_with_reason">Failed to load the information about the referral program. Reason: %s. Please try again later.</string>
-    <string name="referral_error_failed_to_participate">Your participation request could not be processed. Reason: %s. Please try again later. If the problem persists — feel free to contact our support.</string>
+    <string name="referral_error_failed_to_load_info_with_reason">Failed to load the information about the referral program. Error code: %s. Please try again later.</string>
+    <string name="referral_error_failed_to_participate">Your participation request could not be processed. Error code: %s. Please try again later. If the problem persists — feel free to contact our support.</string>
     <string name="referral_promo_code_copied">Personal code copied!</string>
     <string name="referral_share_link">Buy Tangem Wallet with discount!\n%s</string>
     <string name="warning_existential_deposit_message">%s network has a concept of Existential Deposit. If your account drops below %s it will be deactivated and any remaining funds will be destroyed.</string>
