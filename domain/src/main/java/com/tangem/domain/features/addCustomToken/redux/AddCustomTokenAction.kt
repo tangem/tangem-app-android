@@ -2,7 +2,7 @@ package com.tangem.domain.features.addCustomToken.redux
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.DerivationStyle
-import com.tangem.datasource.api.tangemTech.models.Coin
+import com.tangem.datasource.api.tangemTech.models.CoinsResponse
 import com.tangem.domain.AddCustomTokenError
 import com.tangem.domain.DomainWrapped
 import com.tangem.domain.common.form.Field
@@ -35,7 +35,7 @@ sealed class AddCustomTokenAction : Action {
     data class OnTokenDecimalsChanged(val tokenDecimals: Field.Data<String>) : AddCustomTokenAction()
     object OnAddCustomTokenClicked : AddCustomTokenAction()
 
-    data class SetFoundTokenInfo(val foundToken: Coin?) : AddCustomTokenAction()
+    data class SetFoundTokenInfo(val foundToken: CoinsResponse.Coin?) : AddCustomTokenAction()
 
     // form fields
     data class UpdateForm(val state: AddCustomTokenState) : AddCustomTokenAction()

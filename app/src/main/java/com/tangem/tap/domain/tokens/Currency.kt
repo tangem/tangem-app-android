@@ -2,8 +2,7 @@ package com.tangem.tap.domain.tokens
 
 import com.squareup.moshi.JsonClass
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.datasource.api.tangemTech.models.Coin
-import com.tangem.datasource.api.tangemTech.models.Network
+import com.tangem.datasource.api.tangemTech.models.CoinsResponse
 import com.tangem.domain.common.extensions.fromNetworkId
 
 @JsonClass(generateAdapter = true)
@@ -50,7 +49,7 @@ data class Currency(
             )
         }
 
-        fun fromCoinResponse(currency: Coin, imageHost: String?): Currency {
+        fun fromCoinResponse(currency: CoinsResponse.Coin, imageHost: String?): Currency {
             return Currency(
                 id = currency.id,
                 name = currency.name,
@@ -82,7 +81,7 @@ data class Contract(
             )
         }
 
-        fun fromNetwork(contract: Network, imageHost: String?): Contract? {
+        fun fromNetwork(contract: CoinsResponse.Coin.Network, imageHost: String?): Contract? {
             val blockchain = Blockchain.fromNetworkId(contract.networkId) ?: return null
             return Contract(
                 networkId = contract.networkId,

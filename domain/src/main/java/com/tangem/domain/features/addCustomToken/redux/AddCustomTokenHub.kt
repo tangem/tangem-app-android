@@ -3,7 +3,7 @@ package com.tangem.domain.features.addCustomToken.redux
 import android.webkit.ValueCallback
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.guard
-import com.tangem.datasource.api.tangemTech.models.Coin
+import com.tangem.datasource.api.tangemTech.models.CoinsResponse
 import com.tangem.domain.AddCustomTokenError
 import com.tangem.domain.AddCustomTokenError.Warning.PotentialScamToken
 import com.tangem.domain.AddCustomTokenError.Warning.TokenAlreadyAdded
@@ -62,7 +62,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import timber.log.Timber
-import com.tangem.datasource.api.tangemTech.models.Network as CoinNetwork
 
 /**
  * Created by Anton Zhilenkov on 30/03/2022.
@@ -345,7 +344,7 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
         }
     }
 
-    private suspend fun requestInfoAboutToken(contractAddress: String): List<Coin> {
+    private suspend fun requestInfoAboutToken(contractAddress: String): List<CoinsResponse.Coin> {
         val tangemTechServiceManager = requireNotNull(hubState.tangemTechServiceManager)
         dispatchOnMain(Screen.UpdateTokenFields(listOf(ContractAddress to ViewStates.TokenField(isLoading = true))))
 
@@ -427,7 +426,7 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
         derivationStyle = hubState.cardDerivationStyle
     )
 
-    private suspend fun fillTokenFields(token: Coin, coinNetwork: CoinNetwork) {
+    private suspend fun fillTokenFields(token: CoinsResponse.Coin, coinNetwork: CoinsResponse.Coin.Network) {
         val blockchain = Blockchain.fromNetworkId(coinNetwork.networkId) ?: Blockchain.Unknown
         Network.setFieldValue(Field.Data(blockchain, false))
         Name.setFieldValue(Field.Data(token.name, false))

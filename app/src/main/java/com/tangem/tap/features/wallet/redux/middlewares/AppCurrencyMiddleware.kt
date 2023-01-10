@@ -1,6 +1,6 @@
 package com.tangem.tap.features.wallet.redux.middlewares
 
-import com.tangem.datasource.api.tangemTech.models.Currency
+import com.tangem.datasource.api.tangemTech.models.CurrenciesResponse
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.MainScreen
@@ -38,7 +38,7 @@ class AppCurrencyMiddleware(
             store.dispatchDialogShow(
                 WalletDialog.CurrencySelectionDialog(
                     currenciesList = storedFiatCurrencies.mapToUiModel(),
-                    currentAppCurrency = appCurrencyProvider.invoke()
+                    currentAppCurrency = appCurrencyProvider.invoke(),
                 )
             )
         }
@@ -52,7 +52,7 @@ class AppCurrencyMiddleware(
                         store.dispatchDialogShow(
                             WalletDialog.CurrencySelectionDialog(
                                 currenciesList = currenciesList.mapToUiModel(),
-                                currentAppCurrency = appCurrencyProvider.invoke()
+                                currentAppCurrency = appCurrencyProvider.invoke(),
                             )
                         )
                     }
@@ -77,7 +77,7 @@ class AppCurrencyMiddleware(
         }
     }
 
-    private fun List<Currency>.mapToUiModel(): List<FiatCurrency> {
+    private fun List<CurrenciesResponse.Currency>.mapToUiModel(): List<FiatCurrency> {
         return this.map {
             FiatCurrency(
                 code = it.code,

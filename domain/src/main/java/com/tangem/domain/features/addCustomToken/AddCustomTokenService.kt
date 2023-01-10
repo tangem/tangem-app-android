@@ -1,7 +1,7 @@
 package com.tangem.domain.features.addCustomToken
 
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.api.tangemTech.models.Coin
+import com.tangem.datasource.api.tangemTech.models.CoinsResponse
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 
@@ -18,7 +18,7 @@ class AddCustomTokenService(
         contractAddress: String,
         networkId: String? = null,
         active: Boolean? = null,
-    ): List<Coin> = withContext(dispatchers.io) {
+    ): List<CoinsResponse.Coin> = withContext(dispatchers.io) {
         runCatching {
             tangemTechApi.getCoins(
                 contractAddress = contractAddress,
@@ -27,7 +27,7 @@ class AddCustomTokenService(
             )
         }
             .onSuccess { response ->
-                var coinsList = mutableListOf<Coin>()
+                var coinsList = mutableListOf<CoinsResponse.Coin>()
                 response.coins.forEach { coin ->
                     val networksWithTheSameAddress = coin.networks
                         .filter { it.contractAddress != null || it.decimalCount != null }
