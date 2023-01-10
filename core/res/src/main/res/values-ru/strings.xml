@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
     <string name="shop_one_wallet">Tangem Wallet</string>
-    <string name="shop_3_cards">3 карты</string>
-    <string name="shop_2_cards">2 карты</string>
     <string name="shop_shipping">Доставка</string>
     <string name="shop_free">Бесплатно</string>
     <string name="shop_i_have_a_promo_code">У меня есть промо-код…</string>
@@ -56,7 +54,7 @@
     <string name="custom_token_token_symbol_input_placeholder">Например, USDC</string>
     <string name="custom_token_token_symbol_input_title">Символ токена</string>
     <string name="custom_token_derivation_path_input_title">Деривация по BIP44</string>
-    <string name="custom_token_derivation_path_default">По-умолчанию</string>
+    <string name="custom_token_derivation_path_default">По умолчанию</string>
     <string name="common_server_unavailable">Сервер недоступен, повторите попытку позднее</string>
     <string name="main_page_balance">Баланс</string>
     <string name="main_processing_full_amount">В сумме учтены не все монеты</string>
@@ -208,8 +206,8 @@
     <string name="swapping_token_list_your_tokens">Ваши токены</string>
     <string name="swapping_token_list_other_tokens">Другие токены</string>
     <string name="referral_error_failed_to_load_info">Не удалось загрузить информацию по реферальной программе. Пожалуйста, попробуйте позже.</string>
-    <string name="referral_error_failed_to_load_info_with_reason">Не удалось загрузить информацию по реферальной программе. Причина: %s. Пожалуйста, попробуйте позже.</string>
-    <string name="referral_error_failed_to_participate">Не удалось обработать вашу заявку на участие. Причина: %s. Пожалуйста, попробуйте позже. Если проблема сохранится, вы можете обратиться в техподдержку.</string>
+    <string name="referral_error_failed_to_load_info_with_reason">Не удалось загрузить информацию по реферальной программе. Код ошибки: %s. Пожалуйста, попробуйте позже.</string>
+    <string name="referral_error_failed_to_participate">Не удалось обработать вашу заявку на участие. Код ошибки: %s. Пожалуйста, попробуйте позже. Если проблема сохранится, вы можете обратиться в техподдержку.</string>
     <string name="referral_promo_code_copied">Персональный код скопирован!</string>
     <string name="referral_share_link">Купи Tangem Wallet со скидкой!\n%s</string>
     <string name="warning_existential_deposit_message">Сеть %s использует концепцию экзистенциального депозита. Если баланс вашего счета опустится ниже %s, он будет деактивирован, а все оставшиеся средства будут уничтожены.</string>
