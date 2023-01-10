@@ -137,6 +137,17 @@
 
             </FrameLayout>
 
+            <TextView
+                android:id="@+id/tv_info"
+                style="@style/TextViewOnboarding.Body"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_margin="@dimen/spacing16"
+                android:textAlignment="center"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/tv_explore"
+                tools:text="Send only Ethereum (ETH) from Ethereum network to this address. Using other tokens and networks may result in loss of funds." />
+
             <View
                 android:id="@+id/v_payid_divider"
                 android:layout_width="match_parent"
