@@ -10,7 +10,7 @@ import androidx.core.view.WindowInsetsControllerCompat
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.google.android.material.snackbar.Snackbar
 import com.tangem.TangemSdk
-import com.tangem.domain.common.FeatureCoroutineExceptionHandler
+import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
 import com.tangem.operations.backup.BackupService
 import com.tangem.tangem_sdk_new.extensions.init
 import com.tangem.tap.common.ActivityResultCallbackHolder
