@@ -47,7 +47,7 @@ sealed class GlobalAction : Action {
          * For SaltPay cards unfinished backup resumed after scanning the card on HomeScreen through Onboarding.Start.
          * See more Onboarding.Start, CheckForUnfinishedBackup
          */
-        object StartForUnfinishedBackup : Onboarding()
+        data class StartForUnfinishedBackup(val addedBackupCardsCount: Int) : Onboarding()
         object Stop : Onboarding()
     }
 

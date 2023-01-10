@@ -1,5 +1,6 @@
 package com.tangem.tap.features.onboarding.products.wallet.ui
 
+import android.net.Uri
 import android.os.Bundle
 import android.util.TypedValue
 import android.view.View
@@ -23,6 +24,7 @@ import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.inflate
+import com.tangem.tap.common.extensions.resourceUri
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.features.BaseFragment
 import com.tangem.tap.features.FragmentOnBackPressedHandler
@@ -85,12 +87,16 @@ class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_walle
 
         store.dispatch(OnboardingWalletAction.Init)
         store.dispatch(OnboardingSaltPayAction.Init)
-        store.dispatch(OnboardingWalletAction.LoadArtwork)
+        store.dispatch(
+            OnboardingWalletAction.LoadArtwork(
+                cardArtworkUriForUnfinishedBackup = requireContext().resourceUri(R.drawable.card_placeholder_wallet),
+            ),
+        )
     }
 
     override fun loadToolbarMenu(): MenuProvider? = OnboardingMenuProvider()
 
-    private fun reInitCardsWidget(backupCardsCounts: Int) = with(binding) {
+    private fun reInitCardsWidgetIfNeeded(backupCardsCounts: Int) = with(binding) {
         val viewBackupCount = flCardsContainer.childCount - 1
         if (viewBackupCount <= 0) return@with
         if (viewBackupCount == backupCardsCounts) return@with
@@ -137,7 +143,7 @@ class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_walle
 
     override fun newState(state: OnboardingWalletState) {
         if (activity == null || view == null) return
-        if (state.isSaltPay) reInitCardsWidget(1)
+        if (state.isSaltPay) reInitCardsWidgetIfNeeded(1)
 
         animator.updateBackupState(state.backupState)
         requireActivity().invalidateOptionsMenu()
@@ -148,15 +154,15 @@ class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_walle
         if (state.isSaltPay) {
             onboardingSaltPayView.newState(state)
         } else {
-            loadImageIntoImageView(state.cardArtworkUrl, binding.imvFrontCard)
-            loadImageIntoImageView(state.cardArtworkUrl, binding.imvFirstBackupCard)
-            loadImageIntoImageView(state.cardArtworkUrl, binding.imvSecondBackupCard)
+            loadImageIntoImageView(state.cardArtworkUri, binding.imvFrontCard)
+            loadImageIntoImageView(state.cardArtworkUri, binding.imvFirstBackupCard)
+            loadImageIntoImageView(state.cardArtworkUri, binding.imvSecondBackupCard)
             handleOnboardingStep(state)
         }
     }
 
-    internal fun loadImageIntoImageView(url: String?, view: ImageView) {
-        view.load(url) {
+    internal fun loadImageIntoImageView(uri: Uri?, view: ImageView) {
+        view.load(uri) {
             placeholder(R.drawable.card_placeholder_black)
             error(R.drawable.card_placeholder_black)
             fallback(R.drawable.card_placeholder_black)
@@ -322,7 +328,7 @@ class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_walle
     private fun showWritePrimaryCard(state: BackupState, isSaltPay: Boolean) = with(binding) {
         accessCodeDialog?.dismiss()
 
-        reInitCardsWidget(state.backupCardsNumber)
+        reInitCardsWidgetIfNeeded(state.backupCardsNumber)
         prepareViewForFinalizeStep()
 
         val cardIdFormatter = CardIdFormatter(CardIdDisplayFormat.LastMasked(4))
@@ -358,6 +364,7 @@ class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_walle
     private fun showWriteBackupCard(state: BackupState, isSaltPay: Boolean) = with(binding) {
         prepareViewForFinalizeStep()
 
+        reInitCardsWidgetIfNeeded(state.backupCardsNumber)
         val cardNumber = (state.backupStep as? BackupStep.WriteBackupCard)?.cardNumber ?: 1
         if (isSaltPay) {
             tvHeader.text = getString(R.string.onboarding_saltpay_title_backup_card)
