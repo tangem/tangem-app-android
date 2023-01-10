@@ -1,5 +1,6 @@
 package com.tangem.tap.features.onboarding.products.wallet.saltPay.ui
 
+import android.net.Uri
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.OvershootInterpolator
@@ -97,7 +98,8 @@ internal class OnboardingSaltPayView(
                 crossfade(enable = true)
             }
         } else {
-            walletFragment.loadImageIntoImageView(state.onboardingSaltPayState.saltPayCardArtworkUrl, imvFrontCard)
+            val uri = Uri.parse(state.onboardingSaltPayState.saltPayCardArtworkUrl)
+            walletFragment.loadImageIntoImageView(uri, imvFrontCard)
         }
         imvFirstBackupCard.load(R.drawable.card_placeholder_wallet)
 
