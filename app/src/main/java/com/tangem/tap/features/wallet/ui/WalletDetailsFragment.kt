@@ -19,6 +19,9 @@ import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.tangem_sdk_new.extensions.dpToPx
 import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.TestActions
+import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.DetailsScreen
+import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.extensions.appendIfNotNull
 import com.tangem.tap.common.extensions.beginDelayedTransition
 import com.tangem.tap.common.extensions.fitChipsByGroupWidth
@@ -59,12 +62,17 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
-        activity?.onBackPressedDispatcher?.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                store.dispatch(WalletAction.MultiWallet.SelectWallet(null))
-                store.dispatch(NavigationAction.PopBackTo())
-            }
-        })
+
+        Analytics.send(DetailsScreen.ScreenOpened())
+        activity?.onBackPressedDispatcher?.addCallback(
+            this,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    store.dispatch(WalletAction.MultiWallet.SelectWallet(null))
+                    store.dispatch(NavigationAction.PopBackTo())
+                }
+            },
+        )
         val inflater = TransitionInflater.from(requireContext())
         enterTransition = inflater.inflateTransition(R.transition.slide_right)
         exitTransition = inflater.inflateTransition(R.transition.fade)
@@ -125,7 +133,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
         view?.findViewById<View>(R.id.l_balance)?.let { view ->
             TestActions.initFor(
                 view = view,
-                actions = TestWallet.solanaRentExemptWarning()
+                actions = TestWallet.solanaRentExemptWarning(),
             )
         }
     }
@@ -149,6 +157,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
 
         binding.srlWalletDetails.setOnRefreshListener {
             if (selectedWallet.currencyData.status != BalanceStatus.Loading) {
+                Analytics.send(Token.Refreshed())
                 store.dispatch(
                     WalletAction.LoadWallet(
                         blockchain = BlockchainNetwork(
@@ -158,7 +167,6 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
                         ),
                     ),
                 )
-                store.dispatch(WalletAction.LoadFiatRate(coinsList = listOf(selectedWallet.currency)))
             }
         }
 
@@ -185,7 +193,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
         tvCurrencyTitle.text = currencyData.currency
         tvCurrencySubtitle.text = tvCurrencySubtitle.getString(
             R.string.wallet_currency_subtitle,
-            currency.blockchain.fullName
+            currency.blockchain.fullName,
         )
     }
 
@@ -227,7 +235,6 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
         )
     }
 
-
     private fun showPendingTransactionsIfPresent(pendingTransactions: List<PendingTransaction>) {
         pendingTransactionAdapter.submitList(pendingTransactions)
         binding.rvPendingTransaction.show(pendingTransactions.isNotEmpty())
@@ -258,8 +265,8 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
                 store.dispatch(
                     WalletAction.ExploreAddress(
                         state.walletAddresses.selectedAddress.exploreUrl,
-                        requireContext()
-                    )
+                        requireContext(),
+                    ),
                 )
             }
             ivQrCode.setImageBitmap(state.walletAddresses.selectedAddress.shareUrl.toQrCode())
@@ -274,7 +281,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
                 binding.srlWalletDetails.isRefreshing = false
                 (activity as? SnackbarHandler)?.showSnackbar(
                     text = R.string.wallet_notification_no_internet,
-                    buttonTitle = R.string.common_retry
+                    buttonTitle = R.string.common_retry,
                 ) { store.dispatch(WalletAction.LoadData) }
             }
         } else {
@@ -294,7 +301,8 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
                 lBalance.tvStatus.setLoadingStatus(R.string.wallet_balance_loading)
             }
             BalanceStatus.VerifiedOnline, BalanceStatus.SameCurrencyTransactionInProgress,
-            BalanceStatus.TransactionInProgress -> {
+            BalanceStatus.TransactionInProgress,
+            -> {
                 lBalanceError.root.hide()
                 lBalance.root.show()
                 lBalance.groupBalance.show()
@@ -317,7 +325,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
                 lBalance.tvError.show()
                 lBalance.tvError.setWarningStatus(
                     R.string.wallet_balance_blockchain_unreachable,
-                    data.errorMessage
+                    data.errorMessage,
                 )
             }
             BalanceStatus.NoAccount -> {
@@ -327,7 +335,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
                 lBalanceError.tvErrorDescriptions.text =
                     getString(
                         R.string.wallet_error_no_account_subtitle_format,
-                        data.amountToCreateAccount, data.currencySymbol
+                        data.amountToCreateAccount, data.currencySymbol,
                     )
             }
         }
@@ -366,7 +374,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
     private fun TextView.setStatus(
         text: String,
         @ColorRes color: Int,
-        @DrawableRes drawable: Int?
+        @DrawableRes drawable: Int?,
     ) {
         this.text = text
         setTextColor(getColor(color))
