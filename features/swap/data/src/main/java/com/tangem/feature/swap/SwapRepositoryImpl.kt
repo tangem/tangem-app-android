@@ -33,7 +33,7 @@ internal class SwapRepositoryImpl @Inject constructor(
 
     override suspend fun getExchangeableTokens(networkId: String): List<Currency> {
         return withContext(coroutineDispatcher.io) {
-            tokensConverter.convertList(tangemTechApi.coins(exchangeable = true, networkIds = networkId).coins)
+            tokensConverter.convertList(tangemTechApi.getCoins(exchangeable = true, networkIds = networkId).coins)
         }
     }
 
