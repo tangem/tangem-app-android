@@ -6,7 +6,7 @@ import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.common.flatMap
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
-import com.tangem.tap.common.analytics.Analytics
+import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.extensions.dispatchDialogShow
@@ -61,12 +61,6 @@ class DetailsMiddleware {
             is DetailsAction.ResetToFactory -> eraseWalletMiddleware.handle(action)
             is DetailsAction.ManageSecurity -> manageSecurityMiddleware.handle(action)
             is DetailsAction.AppSettings -> managePrivacyMiddleware.handle(state, action)
-            is DetailsAction.ShowDisclaimer -> {
-                val uri = state.cardTermsOfUseUrl
-                if (uri != null) {
-                    store.dispatch(NavigationAction.OpenDocument(uri))
-                }
-            }
             is DetailsAction.ReCreateTwinsWallet -> {
                 store.dispatch(TwinCardsAction.SetMode(CreateTwinWalletMode.RecreateWallet))
                 store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingTwins))
