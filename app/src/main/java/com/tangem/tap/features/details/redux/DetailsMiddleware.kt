@@ -6,7 +6,7 @@ import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.common.flatMap
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
-import com.tangem.tap.common.analytics.Analytics
+import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.extensions.dispatchDialogShow
