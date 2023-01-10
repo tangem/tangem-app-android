@@ -40,6 +40,7 @@ import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
 import com.tangem.tap.userWalletsListManager
 import com.tangem.tap.walletCurrenciesManager
+import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
@@ -83,8 +84,9 @@ class TokensMiddleware {
                 .filter { !it.isTestnet() }
 
         val loadCoinsService = LoadAvailableCoinsService(
-            store.state.domainNetworks.tangemTechService,
-            assetReader,
+            tangemTechApi = store.state.domainNetworks.tangemTechService.api,
+            dispatchers = AppCoroutineDispatcherProvider(),
+            assetReader = assetReader,
         )
 
         scope.launch {
