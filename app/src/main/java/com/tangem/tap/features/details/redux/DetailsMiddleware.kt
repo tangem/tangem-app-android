@@ -3,8 +3,9 @@ package com.tangem.tap.features.details.redux
 import com.tangem.common.CompletionResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
-import com.tangem.tap.common.analytics.AnalyticsAnOld
-import com.tangem.tap.common.analytics.AnalyticsParamAnOld
+import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.AnalyticsParam
+import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -119,19 +120,16 @@ class DetailsMiddleware {
                     val card = store.state.detailsState.cardSettingsState?.card ?: return
                     scope.launch {
                         val result = tangemSdkManager.resetToFactorySettings(card)
-                            when (result) {
-                                is CompletionResult.Success -> {
-                                    store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Home))
+                        when (result) {
+                            is CompletionResult.Success -> {
+                                Analytics.send(Settings.CardSettings.FactoryResetFinished())
+                                store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Home))
+                            }
+                            is CompletionResult.Failure -> {
+                                (result.error as? TangemSdkError)?.let { error ->
+                                    Analytics.send(Settings.CardSettings.FactoryResetFinished(error))
                                 }
-                                is CompletionResult.Failure -> {
-                                    (result.error as? TangemSdkError)?.let { error ->
-                                        store.state.globalState.analyticsHandler.handleCardSdkErrorEvent(
-                                            error,
-                                            AnalyticsAnOld.ActionToLog.PurgeWallet,
-                                            card = store.state.detailsState.scanResponse?.card,
-                                        )
-                                    }
-                                }
+                            }
                         }
                     }
                 }
@@ -156,28 +154,20 @@ class DetailsMiddleware {
                             SecurityOption.LongTap -> tangemSdkManager.setLongTap(cardId)
                             SecurityOption.PassCode -> tangemSdkManager.setPasscode(cardId)
                             SecurityOption.AccessCode -> tangemSdkManager.setAccessCode(cardId)
-                            else -> null
+                            else -> return@launch
                         }
                         withContext(Dispatchers.Main) {
+                            val paramValue = AnalyticsParam.SecurityMode.from(selectedOption)
                             when (result) {
                                 is CompletionResult.Success -> {
-                                    selectedOption?.let {
-                                        store.dispatch(GlobalAction.UpdateSecurityOptions(it))
-                                    }
+                                    Analytics.send(Settings.CardSettings.SecurityModeChanged(paramValue))
+                                    store.dispatch(GlobalAction.UpdateSecurityOptions(selectedOption))
                                     store.dispatch(NavigationAction.PopBackTo())
                                     store.dispatch(DetailsAction.ManageSecurity.SaveChanges.Success)
                                 }
                                 is CompletionResult.Failure -> {
                                     (result.error as? TangemSdkError)?.let { error ->
-                                        store.state.globalState.analyticsHandler.handleCardSdkErrorEvent(
-                                            error = error,
-                                            action = AnalyticsAnOld.ActionToLog.ChangeSecOptions,
-                                            params = mapOf(
-                                                AnalyticsParamAnOld.NEW_SECURITY_OPTION to
-                                                    (selectedOption?.name ?: ""),
-                                            ),
-                                            card = store.state.detailsState.scanResponse?.card,
-                                        )
+                                        Analytics.send(Settings.CardSettings.SecurityModeChanged(paramValue, error))
                                     }
                                     store.dispatch(DetailsAction.ManageSecurity.SaveChanges.Failure)
                                 }
@@ -190,7 +180,10 @@ class DetailsMiddleware {
                 is DetailsAction.ManageSecurity.ChangeAccessCode -> {
                     val card = store.state.detailsState.cardSettingsState?.card ?: return
                     scope.launch {
-                        tangemSdkManager.setAccessCode(card.cardId)
+                        when (tangemSdkManager.setAccessCode(card.cardId)) {
+                            is CompletionResult.Success -> Analytics.send(Settings.CardSettings.UserCodeChanged())
+                            is CompletionResult.Failure -> {}
+                        }
                     }
                 }
                 else -> { /* no-op */
