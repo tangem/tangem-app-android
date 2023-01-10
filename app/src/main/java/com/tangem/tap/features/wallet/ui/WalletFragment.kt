@@ -21,7 +21,7 @@ import com.tangem.core.ui.fragments.setStatusBarColor
 import com.tangem.core.ui.utils.OneTouchClickListener
 import com.tangem.domain.common.TapWorkarounds.isSaltPay
 import com.tangem.tap.MainActivity
-import com.tangem.tap.common.analytics.Analytics
+import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.converters.BasicSignInEventConverter
 import com.tangem.tap.common.analytics.converters.BasicTopUpEventConverter
 import com.tangem.tap.common.analytics.events.MainScreen
@@ -34,7 +34,6 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.configurable.warningMessage.WarningMessage
 import com.tangem.tap.domain.statePrinter.printScanResponseState
 import com.tangem.tap.domain.statePrinter.printWalletState
-import com.tangem.tap.domain.termsOfUse.CardTou
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.wallet.redux.ErrorType
 import com.tangem.tap.features.wallet.redux.ProgressState
@@ -245,7 +244,6 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
                         DetailsAction.PrepareScreen(
                             scanResponse = scanNoteResponse,
                             wallets = store.state.walletState.walletManagers.map { it.wallet },
-                            cardTou = CardTou(),
                         ),
                     )
                     store.dispatch(NavigationAction.NavigateTo(AppScreen.Details))
