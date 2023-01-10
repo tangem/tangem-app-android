@@ -53,7 +53,6 @@ private fun handlePrepareScreen(
     return DetailsState(
         scanResponse = action.scanResponse,
         wallets = action.wallets,
-        cardTermsOfUseUrl = action.cardTou.getUrl(action.scanResponse.card),
         createBackupAllowed = action.scanResponse.card.backupStatus == CardDTO.BackupStatus.NoBackup,
         appCurrency = store.state.globalState.appCurrency,
         isBiometricsAvailable = tangemSdkManager.canUseBiometry,
