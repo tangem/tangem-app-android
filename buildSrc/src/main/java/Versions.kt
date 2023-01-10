@@ -63,7 +63,7 @@ object Versions {
     const val tangemBlockchainSdk = "develop-142"
     // const val tangemBlockchainSdk = "0.0.1"
 
-    const val tangemCardSgk = "develop-178"
+    const val tangemCardSgk = "develop-179"
     // endregion Tangem
 
     // region Testing

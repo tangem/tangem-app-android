@@ -1,5 +1,6 @@
 package com.tangem.tap.features.wallet.ui
 
+import android.content.Context
 import android.os.Bundle
 import android.view.Menu
 import android.view.MenuInflater
@@ -9,6 +10,7 @@ import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.transition.TransitionInflater
@@ -16,6 +18,7 @@ import by.kirich1409.viewbindingdelegate.viewBinding
 import coil.load
 import coil.size.Scale
 import com.tangem.core.ui.fragments.setStatusBarColor
+import com.tangem.core.ui.utils.OneTouchClickListener
 import com.tangem.domain.common.TapWorkarounds.isSaltPay
 import com.tangem.tap.MainActivity
 import com.tangem.tap.common.analytics.Analytics
@@ -59,6 +62,13 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
 
     private val viewModel by viewModels<WalletViewModel>()
 
+    override fun onAttach(context: Context) {
+        super.onAttach(context)
+        activity?.lifecycleScope?.launchWhenCreated {
+            viewModel.launch()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
@@ -81,7 +91,6 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         val inflater = TransitionInflater.from(requireContext())
         enterTransition = inflater.inflateTransition(R.transition.slide_right)
         exitTransition = inflater.inflateTransition(R.transition.fade)
-        viewModel.launch()
     }
 
     override fun onStart() {
@@ -110,9 +119,9 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         super.onViewCreated(view, savedInstanceState)
         (activity as? AppCompatActivity)?.setSupportActionBar(binding.toolbar)
 
-        binding.toolbar.setNavigationOnClickListener {
-            store.dispatch(WalletAction.ChangeWallet)
-        }
+        binding.toolbar.setNavigationOnClickListener(
+            OneTouchClickListener { store.dispatch(WalletAction.ChangeWallet) },
+        )
         setupWarningsRecyclerView()
         walletView.changeWalletView(this, binding)
         addCustomActionOnCard()

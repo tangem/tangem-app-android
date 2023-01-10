@@ -7,8 +7,8 @@ import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.api.tangemTech.TangemTechService
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import com.tangem.domain.common.CardDTO
-import com.tangem.domain.common.util.userWalletId
 import com.tangem.tap.common.AndroidFileReader
+import com.tangem.tap.domain.model.builders.UserWalletIdBuilder
 import com.tangem.tap.domain.tokens.converters.CurrencyConverter
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.demo.DemoHelper
@@ -28,7 +28,7 @@ class UserTokensRepository(
 ) {
 // [REDACTED_TODO_COMMENT]
     suspend fun getUserTokens(card: CardDTO): List<Currency> = withContext(dispatchers.io) {
-        val userId = card.userWalletId.stringValue
+        val userId = getUserWalletId(card) ?: return@withContext emptyList()
         if (DemoHelper.isDemoCardId(card.cardId)) {
             return@withContext loadTokensOffline(card, userId).ifEmpty(::loadDemoCurrencies)
         }
@@ -53,17 +53,15 @@ class UserTokensRepository(
     }
 // [REDACTED_TODO_COMMENT]
     suspend fun saveUserTokens(card: CardDTO, tokens: List<Currency>) = withContext(dispatchers.io) {
-        val userId = card.userWalletId.stringValue
+        val userId = getUserWalletId(card) ?: return@withContext
         val userTokens = tokens.toUserTokensResponse()
         tangemTechApi.saveUserTokens(userId, userTokens)
         storageService.saveUserTokens(userId, userTokens)
     }
 
     suspend fun loadBlockchainsToDerive(card: CardDTO): List<BlockchainNetwork> = withContext(dispatchers.io) {
-        val blockchainNetworks = loadTokensOffline(
-            card = card,
-            userId = card.userWalletId.stringValue,
-        ).toBlockchainNetworks()
+        val userId = getUserWalletId(card) ?: return@withContext emptyList()
+        val blockchainNetworks = loadTokensOffline(card = card, userId = userId).toBlockchainNetworks()
 
         if (DemoHelper.isDemoCardId(card.cardId)) {
             return@withContext blockchainNetworks.ifEmpty(loadDemoCurrencies()::toBlockchainNetworks)
@@ -105,6 +103,11 @@ class UserTokensRepository(
                 tokens.distinct()
             }
         }
+    }
+
+    private fun getUserWalletId(card: CardDTO): String? {
+        return UserWalletIdBuilder.card(card).build()
+            ?.stringValue
     }
 
     companion object {
