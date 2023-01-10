@@ -1,9 +1,9 @@
 package com.tangem.tap.common.analytics.filters
 
 import com.tangem.common.extensions.guard
-import com.tangem.tap.common.analytics.api.AnalyticsEventFilter
-import com.tangem.tap.common.analytics.api.AnalyticsHandler
-import com.tangem.tap.common.analytics.events.AnalyticsEvent
+import com.tangem.core.analytics.api.AnalyticsEventFilter
+import com.tangem.core.analytics.api.AnalyticsHandler
+import com.tangem.core.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.persistence.ToppedUpWalletStorage
