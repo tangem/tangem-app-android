@@ -37,6 +37,8 @@ internal fun ParticipateBottomBlock(
     shareLink: String,
     onAgreementClicked: () -> Unit,
     showCopySnackbar: () -> Unit,
+    onCopyClicked: () -> Unit,
+    onShareClicked: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -56,7 +58,13 @@ internal fun ParticipateBottomBlock(
             ),
         )
         PersonalCodeCard(code = code)
-        AdditionalButtons(code = code, shareLink = shareLink, showCopySnackbar = showCopySnackbar)
+        AdditionalButtons(
+            code = code,
+            shareLink = shareLink,
+            showCopySnackbar = showCopySnackbar,
+            onCopyClicked = onCopyClicked,
+            onShareClicked = onShareClicked,
+        )
         AgreementText(firstPartResId = R.string.referral_tos_enroled_prefix, onClicked = onAgreementClicked)
     }
 }
@@ -94,7 +102,13 @@ private fun PersonalCodeCard(code: String) {
 }
 
 @Composable
-private fun AdditionalButtons(code: String, shareLink: String, showCopySnackbar: () -> Unit) {
+private fun AdditionalButtons(
+    code: String,
+    shareLink: String,
+    showCopySnackbar: () -> Unit,
+    onCopyClicked: () -> Unit,
+    onShareClicked: () -> Unit,
+) {
     val clipboardManager = LocalClipboardManager.current
     val hapticFeedback = LocalHapticFeedback.current
 
@@ -107,6 +121,7 @@ private fun AdditionalButtons(code: String, shareLink: String, showCopySnackbar:
             text = stringResource(id = R.string.common_copy),
             iconResId = R.drawable.ic_copy,
             onClicked = {
+                onCopyClicked.invoke()
                 hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                 clipboardManager.setText(AnnotatedString(code))
                 showCopySnackbar()
@@ -119,6 +134,7 @@ private fun AdditionalButtons(code: String, shareLink: String, showCopySnackbar:
             text = stringResource(id = R.string.common_share),
             iconResId = R.drawable.ic_share,
             onClicked = {
+                onShareClicked.invoke()
                 hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                 context.shareText(context.getString(R.string.referral_share_link, shareLink))
             },
@@ -147,6 +163,8 @@ fun Preview_ParticipateBottomBlock_InLightTheme() {
                 shareLink = "",
                 onAgreementClicked = {},
                 showCopySnackbar = {},
+                onCopyClicked = {},
+                onShareClicked = {},
             )
         }
     }
@@ -163,6 +181,8 @@ fun Preview_ParticipateBottomBlock_InDarkTheme() {
                 shareLink = "",
                 onAgreementClicked = {},
                 showCopySnackbar = {},
+                onCopyClicked = {},
+                onShareClicked = {},
             )
         }
     }
