@@ -28,6 +28,7 @@ import com.trustwallet.walletconnect.models.binance.WCBinanceTransferOrder
 import com.trustwallet.walletconnect.models.binance.WCBinanceTxConfirmParam
 import com.trustwallet.walletconnect.models.ethereum.WCEthereumSignMessage
 import com.trustwallet.walletconnect.models.ethereum.WCEthereumTransaction
+import com.trustwallet.walletconnect.models.session.WCAddNetwork
 import com.trustwallet.walletconnect.models.session.WCSession
 import com.trustwallet.walletconnect.models.session.WCSessionUpdate
 import kotlinx.coroutines.delay
@@ -103,7 +104,7 @@ class WalletConnectManager {
 
     fun updateSession(session: WalletConnectSession) {
         val updatedSession = sessions[session.session]?.copy(
-            wallet = session.wallet
+            wallet = session.wallet,
         )
         if (updatedSession != null) {
             sessions[session.session] = updatedSession
@@ -114,12 +115,11 @@ class WalletConnectManager {
         sessions[session.session]?.client?.updateSession(
             accounts = listOfNotNull(session.getAddress()),
             chainId = session.wallet.blockchain?.getChainId(),
-            approved = true
+            approved = true,
         )
 
-
         val updatedSession = sessions[session.session]?.copy(
-            wallet = session.wallet
+            wallet = session.wallet,
         )
         if (updatedSession != null) {
             sessions[session.session] = updatedSession
@@ -172,7 +172,7 @@ class WalletConnectManager {
         val accounts = listOf(blockchain.makeAddresses(key).first().value)
         val approved = activeData.client.approveSession(
             accounts = accounts,
-            chainId = blockchain.getChainId() ?: Blockchain.Ethereum.getChainId()!!
+            chainId = blockchain.getChainId() ?: Blockchain.Ethereum.getChainId()!!,
         )
         if (approved) {
             val walletConnectSession = WalletConnectSession(
@@ -180,23 +180,22 @@ class WalletConnectManager {
                 remotePeerId = activeData.remotePeerId,
                 wallet = activeData.wallet,
                 session = session,
-                peerMeta = activeData.peerMeta!!
+                peerMeta = activeData.peerMeta!!,
             )
             walletConnectRepository.saveSession(walletConnectSession)
             store.dispatchOnMain(
                 WalletConnectAction.ApproveSession.Success(
-                    walletConnectSession
-                )
+                    walletConnectSession,
+                ),
             )
-
         }
     }
 
     fun removeSimilarSessions(activeData: WalletConnectActiveData) {
         val sessionsToRemove = sessions.filter {
             it.value.wallet.walletPublicKey?.equals(activeData.wallet.walletPublicKey) == true
-                    && it.value.peerMeta?.url == activeData.peerMeta?.url
-                    && it.value.session != activeData.session
+                && it.value.peerMeta?.url == activeData.peerMeta?.url
+                && it.value.session != activeData.session
         }
         Timber.d("RemoveSimilarSessions: ${sessionsToRemove.values.map { it.client.session }}")
         sessionsToRemove.forEach { disconnect(it.value.session) }
@@ -244,14 +243,14 @@ class WalletConnectManager {
                 transaction = transaction,
                 session = session,
                 id = id,
-                type = type
+                type = type,
             ).guard {
                 sessions[session.session] = activeData.copy(transactionData = null)
                 store.dispatchOnMain(
                     WalletConnectAction.RejectRequest(
                         session.session,
-                        id
-                    )
+                        id,
+                    ),
                 )
                 return@launch
             }
@@ -260,9 +259,9 @@ class WalletConnectManager {
             store.dispatchOnMain(
                 GlobalAction.ShowDialog(
                     WalletConnectDialog.RequestTransaction(
-                        data.dialogData
-                    )
-                )
+                        data.dialogData,
+                    ),
+                ),
             )
         }
     }
@@ -312,15 +311,15 @@ class WalletConnectManager {
         val activeData = sessions[session.session] ?: return
         scope.launch {
             val data = WalletConnectSdkHelper().prepareDataForPersonalSign(
-                message = message, session = session, id = id
+                message = message, session = session, id = id,
             )
             sessions[session.session] = activeData.copy(personalSignData = data)
             store.dispatchOnMain(
                 GlobalAction.ShowDialog(
                     WalletConnectDialog.PersonalSign(
-                        data.dialogData
-                    )
-                )
+                        data.dialogData,
+                    ),
+                ),
             )
         }
     }
@@ -345,7 +344,6 @@ class WalletConnectManager {
             sessions[data.session.session] = activeData.copy(transactionData = null)
         }
     }
-
 
     fun setListeners(client: WCClient) {
         client.onSessionRequest = { id: Long, peer: WCPeerMeta ->
@@ -393,8 +391,8 @@ class WalletConnectManager {
                         transaction = transaction,
                         session = sessionData,
                         id = id,
-                        type = WcTransactionType.EthSendTransaction
-                    )
+                        type = WcTransactionType.EthSendTransaction,
+                    ),
                 )
             }
         }
@@ -411,8 +409,8 @@ class WalletConnectManager {
                         transaction = transaction,
                         session = sessionData,
                         id = id,
-                        type = WcTransactionType.EthSignTransaction
-                    )
+                        type = WcTransactionType.EthSignTransaction,
+                    ),
                 )
             }
         }
@@ -428,8 +426,8 @@ class WalletConnectManager {
                     WalletConnectAction.HandlePersonalSignRequest(
                         message,
                         sessionData,
-                        id
-                    )
+                        id,
+                    ),
                 )
             }
         }
@@ -442,8 +440,8 @@ class WalletConnectManager {
             sessions[client.session]?.toWalletConnectSession()?.let { sessionData ->
                 store.dispatchOnMain(
                     WalletConnectAction.BinanceTransaction.Trade(
-                        id = id, order = order, sessionData = sessionData
-                    )
+                        id = id, order = order, sessionData = sessionData,
+                    ),
                 )
             }
         }
@@ -451,8 +449,8 @@ class WalletConnectManager {
             sessions[client.session]?.toWalletConnectSession()?.let { sessionData ->
                 store.dispatchOnMain(
                     WalletConnectAction.BinanceTransaction.Transfer(
-                        id = id, order = order, sessionData = sessionData
-                    )
+                        id = id, order = order, sessionData = sessionData,
+                    ),
                 )
             }
         }
@@ -467,13 +465,27 @@ class WalletConnectManager {
             }
         }
         client.onWalletChangeNetwork = { id: Long, chainId: Int ->
-            Timber.d("On WC Switch Chain")
-            val blockchain = Blockchain.fromChainId(chainId)
-            Timber.d("WC switch chainID\nNew Blockchain: $blockchain")
-            val session = sessions[client.session]?.toWalletConnectSession()
-            if (session != null) {
-                store.dispatchOnMain(WalletConnectAction.SwitchBlockchain(blockchain, session))
+            switchChain(chainId, client)
+        }
+        client.onWalletAddNetwork = { id: Long, network: WCAddNetwork ->
+// [REDACTED_TODO_COMMENT]
+            // In fact this method is used to add a EVM network. It provides RPC url and chain ID.
+            // Here now it just tries to switch to a EVM network with a provided chain ID.
+            try {
+                val chainId = Integer.decode(network.chainIdHex)
+                switchChain(chainId, client)
+            } catch (exception: Exception) {
+                Timber.d("WC add network error: chain could not be parsed")
             }
+        }
+    }
+
+    private fun switchChain(chainId: Int, client: WCClient) {
+        val blockchain = Blockchain.fromChainId(chainId)
+        Timber.d("WC switch chainID\nNew Blockchain: $blockchain")
+        val session = sessions[client.session]?.toWalletConnectSession()
+        if (session != null) {
+            store.dispatchOnMain(WalletConnectAction.SwitchBlockchain(blockchain, session))
         }
     }
 
@@ -504,7 +516,7 @@ data class WalletConnectActiveData(
             remotePeerId = remotePeerId,
             wallet = wallet,
             session = session,
-            peerMeta = peerMeta
+            peerMeta = peerMeta,
         )
     }
 }
