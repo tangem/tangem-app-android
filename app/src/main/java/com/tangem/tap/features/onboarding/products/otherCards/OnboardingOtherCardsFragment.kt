@@ -8,7 +8,7 @@ import androidx.constraintlayout.widget.ConstraintSet
 import androidx.core.view.isVisible
 import androidx.transition.TransitionManager
 import coil.load
-import com.tangem.tap.common.analytics.Analytics
+import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.getDrawableCompat
 import com.tangem.tap.common.redux.navigation.ShareElement
