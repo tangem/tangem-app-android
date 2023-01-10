@@ -9,6 +9,8 @@ import androidx.recyclerview.widget.RecyclerView
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.Token
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
+import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.Portfolio
 import com.tangem.tap.common.extensions.getString
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
@@ -20,8 +22,7 @@ import com.tangem.tap.store
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.ItemCurrencyWalletBinding
 
-class WalletAdapter
-    : ListAdapter<WalletData, WalletAdapter.WalletsViewHolder>(DiffUtilCallback) {
+class WalletAdapter : ListAdapter<WalletData, WalletAdapter.WalletsViewHolder>(DiffUtilCallback) {
 
     override fun getItemId(position: Int): Long {
         return currentList[position].currencyData.currencySymbol?.hashCode()?.toLong() ?: 0
@@ -30,7 +31,7 @@ class WalletAdapter
     fun submitList(
         list: List<WalletData>,
         primaryBlockchain: Blockchain?,
-        primaryToken: Token? = null
+        primaryToken: Token? = null,
     ) {
         // We used this method to sort the list of currencies. Sorting is disabled for now.
         super.submitList(list)
@@ -38,7 +39,7 @@ class WalletAdapter
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): WalletsViewHolder {
         val layout = ItemCurrencyWalletBinding.inflate(
-            LayoutInflater.from(parent.context), parent, false
+            LayoutInflater.from(parent.context), parent, false,
         )
         return WalletsViewHolder(layout)
     }
@@ -49,11 +50,11 @@ class WalletAdapter
 
     object DiffUtilCallback : DiffUtil.ItemCallback<WalletData>() {
         override fun areContentsTheSame(
-            oldItem: WalletData, newItem: WalletData
+            oldItem: WalletData, newItem: WalletData,
         ) = oldItem == newItem
 
         override fun areItemsTheSame(
-            oldItem: WalletData, newItem: WalletData
+            oldItem: WalletData, newItem: WalletData,
         ) = oldItem == newItem
     }
 
@@ -112,6 +113,7 @@ class WalletAdapter
 
             if (wallet.walletAddresses != null) {
                 cardWallet.setOnClickListener {
+                    Analytics.send(Portfolio.TokenTapped())
                     store.dispatch(WalletAction.MultiWallet.SelectWallet(wallet))
                 }
             } else {
