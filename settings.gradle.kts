@@ -3,6 +3,7 @@ include(":domain")
 include(":common")
 
 // region Core modules
+include(":core:analytics")
 include(":core:datasource")
 include(":core:res")
 include(":core:utils")
