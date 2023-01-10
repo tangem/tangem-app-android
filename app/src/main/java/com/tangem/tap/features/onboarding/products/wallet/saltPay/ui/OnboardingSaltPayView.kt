@@ -15,7 +15,7 @@ import coil.size.Scale
 import com.google.android.material.appbar.MaterialToolbar
 import com.google.android.material.button.MaterialButton
 import com.tangem.common.extensions.guard
-import com.tangem.tap.common.analytics.Analytics
+import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.compose.PinCodeWidget
 import com.tangem.tap.common.extensions.configureSettings
