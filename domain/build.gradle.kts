@@ -74,6 +74,7 @@ dependencies {
     implementation(project(":core:datasource"))
     implementation(project(":core:utils"))
     implementation(project(":common"))
+    implementation(project(":libs:auth"))
 
     /** Tangem libraries */
     implementation(Tangem.blockchain) {
