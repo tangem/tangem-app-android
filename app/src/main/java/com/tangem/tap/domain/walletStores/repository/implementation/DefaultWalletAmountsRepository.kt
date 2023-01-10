@@ -42,7 +42,8 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.math.BigDecimal
@@ -62,7 +63,7 @@ internal class DefaultWalletAmountsRepository(
         else withContext(Dispatchers.Default) {
             awaitAll(
                 async { fetchAmountsForUserWallets(userWallets) },
-                async { fetchFiatRates(userWallets, fiatCurrency) },
+                async { fetchFiatRates(userWallets, walletStores = null, fiatCurrency) },
             )
                 .fold()
         }
@@ -75,46 +76,40 @@ internal class DefaultWalletAmountsRepository(
         return updateAmountsForUserWallets(listOf(userWallet), fiatCurrency)
     }
 
+    override suspend fun updateAmountsForWalletStores(
+        walletStores: List<WalletStoreModel>,
+        userWallet: UserWallet,
+        fiatCurrency: FiatCurrency,
+    ): CompletionResult<Unit> {
+        return if (walletStores.isEmpty()) CompletionResult.Success(Unit)
+        else withContext(Dispatchers.Default) {
+            val userWalletId = userWallet.walletId
+            val scanResponse = userWallet.scanResponse
+
+            awaitAll(
+                async { fetchAmountForWalletStores(userWalletId, scanResponse, walletStores) },
+                async { fetchFiatRates(listOf(userWallet), walletStores, fiatCurrency) },
+            )
+                .fold()
+        }
+    }
+
     override suspend fun updateAmountsForWalletStore(
         walletStore: WalletStoreModel,
         userWallet: UserWallet,
         fiatCurrency: FiatCurrency,
-    ): CompletionResult<Unit> = withContext(Dispatchers.Default) {
-        val walletId = userWallet.walletId
-        val scanResponse = userWallet.scanResponse
-
-        awaitAll(
-            async {
-                // TODO: Find wallet manager via [com.tangem.tap.domain.walletStores.repository.WalletManagersRepository]
-                val walletManager = walletStore.walletManager
-                fetchAmountsForWalletStore(walletId, scanResponse, walletStore, walletManager)
-            },
-            async { fetchFiatRates(listOf(userWallet), fiatCurrency) },
-        )
-            .fold()
-    }
-
-    private suspend fun fetchAmountsForUserWallets(
-        userWallets: List<UserWallet>,
-    ): CompletionResult<Unit> = withContext(Dispatchers.Default) {
-        userWallets.map { async { fetchAmountsForUserWallet(it) } }
-            .awaitAll()
-            .fold()
+    ): CompletionResult<Unit> {
+        return updateAmountsForWalletStores(listOf(walletStore), userWallet, fiatCurrency)
     }
 
     private suspend fun fetchFiatRates(
         userWallets: List<UserWallet>,
+        walletStores: List<WalletStoreModel>?,
         fiatCurrency: FiatCurrency,
     ): CompletionResult<Unit> {
-        val walletsIds = userWallets.map { it.walletId }
-        val walletStores = walletsIds
-            .flatMap {
-                walletStoresStorage.getAll()
-                    .first()
-                    .getOrElse(it) { emptyList() }
-            }
+        val walletStoresInternal = walletStores ?: getWalletStores(userWallets)
 
-        val currencies = walletStores
+        val currencies = walletStoresInternal
             .asSequence()
             .flatMap { it.walletsData }
             .map { it.currency }
@@ -124,7 +119,7 @@ internal class DefaultWalletAmountsRepository(
         return withContext(dispatchers.io) {
             runCatching { tangemTechApi.getRates(fiatCurrency.code.lowercase(), coinsIds.joinToString(",")) }
                 .onSuccess {
-                    updateWalletStoresWithFiatRates(walletStores = walletStores, fiatRates = it.rates)
+                    updateWalletStoresWithFiatRates(walletStores = walletStoresInternal, fiatRates = it.rates)
                     return@withContext CompletionResult.Success(Unit)
                 }
                 .onFailure {
@@ -137,7 +132,6 @@ internal class DefaultWalletAmountsRepository(
                         error,
                         """
                         Unable to fetch fiat rates
-                        |- User wallets ids: $walletsIds
                         |- Coins ids: $coinsIds
                     """.trimIndent(),
                     )
@@ -149,20 +143,34 @@ internal class DefaultWalletAmountsRepository(
         }
     }
 
+    private suspend fun fetchAmountsForUserWallets(
+        userWallets: List<UserWallet>,
+    ): CompletionResult<Unit> = withContext(Dispatchers.Default) {
+        userWallets.map { async { fetchAmountsForUserWallet(it) } }
+            .awaitAll()
+            .fold()
+    }
+
     private suspend fun fetchAmountsForUserWallet(
         userWallet: UserWallet,
     ): CompletionResult<Unit> = withContext(Dispatchers.Default) {
-        val walletId = userWallet.walletId
+        val userWalletId = userWallet.walletId
         val scanResponse = userWallet.scanResponse
-        val walletStores = walletStoresStorage.getAll()
-            .first()
-            .getOrElse(walletId) { emptyList() }
+        val walletStores = getWalletStores(listOf(userWallet))
 
+        fetchAmountForWalletStores(userWalletId, scanResponse, walletStores)
+    }
+
+    private suspend fun fetchAmountForWalletStores(
+        userWalletId: UserWalletId,
+        scanResponse: ScanResponse,
+        walletStores: List<WalletStoreModel>,
+    ): CompletionResult<Unit> = coroutineScope {
         walletStores.map { walletStore ->
             async {
                 // TODO: Find wallet manager via [com.tangem.tap.domain.walletStores.repository.WalletManagersRepository]
                 val walletManager = walletStore.walletManager
-                fetchAmountsForWalletStore(walletId, scanResponse, walletStore, walletManager)
+                fetchAmountsForWalletStore(userWalletId, scanResponse, walletStore, walletManager)
             }
         }
             .awaitAll()
@@ -170,7 +178,7 @@ internal class DefaultWalletAmountsRepository(
     }
 
     private suspend fun fetchAmountsForWalletStore(
-        walletId: UserWalletId,
+        userWalletId: UserWalletId,
         scanResponse: ScanResponse,
         walletStore: WalletStoreModel,
         walletManager: WalletManager?,
@@ -180,11 +188,15 @@ internal class DefaultWalletAmountsRepository(
         }
 
         return when {
-            hasMissedDerivations -> updateWalletStoreWithMissedDerivation(walletStore)
-            walletManager == null -> updateWalletStoreWithUnreachable(walletStore)
+            hasMissedDerivations -> {
+                updateWalletStoreWithMissedDerivation(walletStore)
+            }
+            walletManager == null -> {
+                updateWalletStoreWithUnreachable(walletStore)
+            }
             else -> {
                 withInternetConnection { walletManager.update() }
-                    .map { updateWalletManagerWithAmounts(walletId, walletManager) }
+                    .map { updateWalletManagerWithAmounts(userWalletId, walletManager) }
                     .flatMap {
                         updateWalletStoreWithAmounts(
                             walletStore = walletStore,
@@ -240,35 +252,6 @@ internal class DefaultWalletAmountsRepository(
         }
 
         return CompletionResult.Success(Unit)
-    }
-
-    private suspend inline fun withInternetConnection(crossinline block: suspend () -> Unit): CompletionResult<Unit> {
-        return if (!NetworkConnectivity.getInstance().isOnlineOrConnecting()) {
-            val error = WalletStoresError.NoInternetConnection
-            Timber.e(error)
-            CompletionResult.Failure(error)
-        } else withContext(Dispatchers.IO) {
-            catching { block() }
-        }
-    }
-
-    private suspend fun updateWalletManagerWithAmounts(
-        walletId: UserWalletId,
-        walletManager: WalletManager,
-    ) = withContext(Dispatchers.Default) {
-        walletManagersStorage.update { prevManagers ->
-            val newManagersForUserWallet = prevManagers[walletId].orEmpty()
-                .toMutableList()
-                .apply {
-                    replaceByOrAdd(walletManager) {
-                        it.wallet.blockchain == it.wallet.blockchain
-                    }
-                }
-
-            prevManagers.apply {
-                set(walletId, newManagersForUserWallet)
-            }
-        }
     }
 
     private suspend fun updateWalletStoreWithError(
@@ -418,5 +401,45 @@ internal class DefaultWalletAmountsRepository(
                 )
             }
         }
+    }
+
+    private suspend inline fun withInternetConnection(crossinline block: suspend () -> Unit): CompletionResult<Unit> {
+        return if (!NetworkConnectivity.getInstance().isOnlineOrConnecting()) {
+            val error = WalletStoresError.NoInternetConnection
+            Timber.e(error)
+            CompletionResult.Failure(error)
+        } else withContext(Dispatchers.IO) {
+            catching { block() }
+        }
+    }
+
+    private suspend fun updateWalletManagerWithAmounts(
+        userWalletId: UserWalletId,
+        walletManager: WalletManager,
+    ) = withContext(Dispatchers.Default) {
+        walletManagersStorage.update { prevManagers ->
+            val newManagersForUserWallet = prevManagers[userWalletId].orEmpty()
+                .toMutableList()
+                .apply {
+                    replaceByOrAdd(walletManager) {
+                        it.wallet.blockchain == it.wallet.blockchain
+                    }
+                }
+
+            prevManagers.apply {
+                set(userWalletId, newManagersForUserWallet)
+            }
+        }
+    }
+
+    private suspend fun getWalletStores(userWallets: List<UserWallet>): List<WalletStoreModel> {
+        return userWallets
+            .map { it.walletId }
+            .flatMap { userWalletId ->
+                walletStoresStorage.getAll()
+                    .firstOrNull()
+                    ?.get(userWalletId)
+                    .orEmpty()
+            }
     }
 }
