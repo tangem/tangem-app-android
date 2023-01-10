@@ -16,7 +16,6 @@ import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.toBlockchainNetworks
 import com.tangem.tap.features.wallet.models.toCurrencies
 import com.tangem.tap.network.NetworkConnectivity
-import com.tangem.tap.store
 import com.tangem.utils.coroutines.AppCoroutineDispatcherProvider
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
@@ -120,9 +119,12 @@ class UserTokensRepository(
         // TODO("After adding DI") get dependencies by DI
         fun init(context: Context, tangemTechService: TangemTechService): UserTokensRepository {
             val fileReader = AndroidFileReader(context)
+            val dispatchers = AppCoroutineDispatcherProvider()
+
             val oldUserTokensRepository = OldUserTokensRepository(
                 fileReader = fileReader,
-                tangemNetworkService = store.state.domainNetworks.tangemTechService,
+                tangemTechApi = tangemTechService.api,
+                dispatchers = dispatchers,
             )
             val storageService = UserTokensStorageService(
                 oldUserTokensRepository = oldUserTokensRepository,
@@ -132,7 +134,7 @@ class UserTokensRepository(
             return UserTokensRepository(
                 storageService = storageService,
                 tangemTechApi = tangemTechService.api,
-                dispatchers = AppCoroutineDispatcherProvider(),
+                dispatchers = dispatchers,
             )
         }
     }
