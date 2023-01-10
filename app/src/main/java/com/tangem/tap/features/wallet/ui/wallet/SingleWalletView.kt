@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.tangem.tap.common.extensions.beginDelayedTransition
 import com.tangem.tap.common.extensions.fitChipsByGroupWidth
 import com.tangem.tap.common.extensions.getQuantityString
+import com.tangem.tap.common.extensions.getString
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsState
@@ -65,7 +66,7 @@ class SingleWalletView : WalletView() {
 
         setupTwinCards(state.twinCardsState, binding)
         setupButtons(state.primaryWallet, binding, state.isExchangeServiceFeatureOn)
-        setupAddressCard(state.primaryWallet, binding)
+        setupAddressCard(state, binding)
         showPendingTransactionsIfPresent(state.primaryWallet.pendingTransactions)
         setupBalance(state, state.primaryWallet)
     }
@@ -152,35 +153,50 @@ class SingleWalletView : WalletView() {
         }
     }
 
-    private fun setupAddressCard(state: WalletData, binding: FragmentWalletBinding) = with(binding.lAddress) {
-        if (state.walletAddresses != null && state.currency is Currency.Blockchain) {
+    private fun setupAddressCard(state: WalletState, binding: FragmentWalletBinding) = with(binding.lAddress) {
+        val primaryWallet = state.primaryWallet
+        if (primaryWallet?.walletAddresses != null && primaryWallet.currency is Currency.Blockchain) {
             binding.lAddress.root.show()
-            if (state.shouldShowMultipleAddress()) {
+            if (primaryWallet.shouldShowMultipleAddress()) {
                 (binding.lAddress.root as? ViewGroup)?.beginDelayedTransition()
                 chipGroupAddressType.show()
                 chipGroupAddressType.fitChipsByGroupWidth()
-                val checkedId = MultipleAddressUiHelper.typeToId(state.walletAddresses.selectedAddress.type)
+                val checkedId = MultipleAddressUiHelper.typeToId(primaryWallet.walletAddresses.selectedAddress.type)
                 if (checkedId != View.NO_ID) chipGroupAddressType.check(checkedId)
 
                 chipGroupAddressType.setOnCheckedChangeListener { group, checkedId ->
                     if (checkedId == -1) return@setOnCheckedChangeListener
-                    val type = MultipleAddressUiHelper.idToType(checkedId, state.currency.blockchain)
+                    val type = MultipleAddressUiHelper.idToType(checkedId, primaryWallet.currency.blockchain)
                     type?.let { store.dispatch(WalletAction.ChangeSelectedAddress(type)) }
                 }
             } else {
                 chipGroupAddressType.hide()
             }
-            tvAddress.text = state.walletAddresses.selectedAddress.address
+            tvAddress.text = primaryWallet.walletAddresses.selectedAddress.address
             tvExplore.setOnClickListener {
                 store.dispatch(
                     WalletAction.ExploreAddress(
-                        state.walletAddresses.selectedAddress.exploreUrl,
+                        primaryWallet.walletAddresses.selectedAddress.exploreUrl,
                         fragment!!.requireContext(),
                     ),
                 )
             }
+            setupCardInfo(state)
         } else {
             binding.lAddress.root.hide()
+        }
+    }
+
+    private fun setupCardInfo(state: WalletState) {
+        val textView = binding?.lAddress?.tvInfo
+        val blockchain = state.primaryWallet?.currency?.blockchain
+        if (textView != null && blockchain != null) {
+            textView.text = textView.getString(
+                id = R.string.address_qr_code_message_format,
+                blockchain.fullName,
+                blockchain.currency,
+                blockchain.fullName,
+            )
         }
     }
 }
