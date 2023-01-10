@@ -16,6 +16,8 @@ import com.tangem.common.extensions.VoidCallback
 import com.tangem.domain.common.TwinCardNumber
 import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.LeapfrogWidget
 import com.tangem.tap.common.AndroidAssetReader
+import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.beginDelayedTransition
 import com.tangem.tap.common.extensions.getDrawableCompat
 import com.tangem.tap.common.extensions.hide
@@ -238,6 +240,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
 
         btnMainAction.text = getString(R.string.twins_recreate_button_format, twinIndexNumber)
         btnMainAction.setOnClickListener {
+            Analytics.send(Onboarding.CreateWallet.ButtonCreateWallet())
             store.dispatch(
                 TwinCardsAction.Wallet.LaunchFirstStep(
                     Message(getString(R.string.twins_recreate_title_format, twinIndexNumber)),
