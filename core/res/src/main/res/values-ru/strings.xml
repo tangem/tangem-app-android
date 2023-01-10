@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
     <string name="shop_one_wallet">Tangem Wallet</string>
-    <string name="shop_3_cards">3 карты</string>
-    <string name="shop_2_cards">2 карты</string>
     <string name="shop_shipping">Доставка</string>
     <string name="shop_free">Бесплатно</string>
     <string name="shop_i_have_a_promo_code">У меня есть промо-код…</string>
@@ -208,8 +206,8 @@
     <string name="swapping_token_list_your_tokens">Ваши токены</string>
     <string name="swapping_token_list_other_tokens">Другие токены</string>
     <string name="referral_error_failed_to_load_info">Не удалось загрузить информацию по реферальной программе. Пожалуйста, попробуйте позже.</string>
-    <string name="referral_error_failed_to_load_info_with_reason">Не удалось загрузить информацию по реферальной программе. Причина: %s. Пожалуйста, попробуйте позже.</string>
-    <string name="referral_error_failed_to_participate">Не удалось обработать вашу заявку на участие. Причина: %s. Пожалуйста, попробуйте позже. Если проблема сохранится, вы можете обратиться в техподдержку.</string>
+    <string name="referral_error_failed_to_load_info_with_reason">Не удалось загрузить информацию по реферальной программе. Код ошибки: %s. Пожалуйста, попробуйте позже.</string>
+    <string name="referral_error_failed_to_participate">Не удалось обработать вашу заявку на участие. Код ошибки: %s. Пожалуйста, попробуйте позже. Если проблема сохранится, вы можете обратиться в техподдержку.</string>
     <string name="referral_promo_code_copied">Персональный код скопирован!</string>
     <string name="referral_share_link">Купи Tangem Wallet со скидкой!\n%s</string>
     <string name="warning_existential_deposit_message">Сеть %s использует концепцию экзистенциального депозита. Если баланс вашего счета опустится ниже %s, он будет деактивирован, а все оставшиеся средства будут уничтожены.</string>
@@ -355,8 +353,7 @@
     <string name="onboarding_done_header">Успешно!</string>
     <string name="onboarding_done_body">Ваша карта активирована и готова к использованию</string>
     <string name="onboarding_balance_title">Баланс</string>
-    <string name="address_qr_code_message_format">Отправляйте только %s (%s) на этот адрес. Иначе это может привести к утрате средств.</string>
-    <string name="address_qr_code_message_token_format">Отправляйте только %s (%s) из сети %s на этот адрес. Иначе это может привести к утрате средств.</string>
+    <string name="address_qr_code_message_format">Отправляйте только %s (%s) в сети %s на этот адрес. Использование другой сети может привести к утрате средств.</string>
     <string name="onboarding_twins_interrupt_warning">Если процесc создания кошелька каким-либо образом прервется, вам придется начинать сначала.</string>
     <string name="onboarding_twin_exit_warning">Процесс связывания карт частично завершен. Вы не можете выйти из него сейчас.</string>
     <string name="warning_button_ok">Понятно!</string>
