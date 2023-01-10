@@ -38,6 +38,7 @@ class DisclaimerFragment : BaseFragment(R.layout.fragment_disclaimer), StoreSubs
                 enterTransition = inflater.inflateTransition(android.R.transition.fade)
                 exitTransition = inflater.inflateTransition(android.R.transition.fade)
             }
+            else -> {}
         }
     }
 
@@ -116,10 +117,6 @@ class DisclaimerFragment : BaseFragment(R.layout.fragment_disclaimer), StoreSubs
             }
             else -> {}
         }
-    }
-
-    override fun handleOnBackPressed() {
-        store.dispatch(DisclaimerAction.OnBackPressed)
     }
 
     override fun handleOnBackPressed() {
