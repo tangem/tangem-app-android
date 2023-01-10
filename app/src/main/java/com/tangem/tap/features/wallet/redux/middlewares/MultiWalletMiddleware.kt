@@ -12,6 +12,7 @@ import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.analytics.events.Token.ButtonRemoveToken
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchErrorNotification
+import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.global.GlobalState
@@ -180,21 +181,25 @@ class MultiWalletMiddleware {
     }
 
     private fun scanAndUpdateCard(
-        selectedWallet: UserWallet,
+        selectedUserWallet: UserWallet,
         state: WalletState?,
-    ) = scope.launch {
+    ) = scope.launch(Dispatchers.Default) {
         Analytics.send(MainScreen.CardWasScanned())
         ScanCardProcessor.scan(
-            cardId = selectedWallet.cardId,
+            cardId = selectedUserWallet.cardId,
             additionalBlockchainsToDerive = state?.missingDerivations?.map { it.blockchain },
         ) { scanResponse ->
-            val userWallet = selectedWallet.copy(
-                scanResponse = scanResponse,
+            userWalletsListManager.update(
+                userWalletId = selectedUserWallet.walletId,
+                update = { userWallet ->
+                    userWallet.copy(
+                        scanResponse = scanResponse,
+                    )
+                },
             )
-
-            userWalletsListManager.save(userWallet, canOverride = true)
-                .doOnSuccess {
-                    store.state.globalState.tapWalletManager.loadData(userWallet, refresh = true)
+                .doOnSuccess { updatedUserWallet ->
+                    store.dispatchOnMain(WalletAction.MultiWallet.AddMissingDerivations(emptyList()))
+                    store.state.globalState.tapWalletManager.loadData(updatedUserWallet, refresh = true)
                 }
         }
     }
