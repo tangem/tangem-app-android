@@ -3,7 +3,6 @@ package com.tangem.datasource.di
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import com.tangem.datasource.api.common.BigDecimalAdapter
-import com.tangem.datasource.api.referral.ReferralApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
 import com.tangem.datasource.utils.RequestHeader.AuthenticationHeader
 import com.tangem.datasource.utils.RequestHeader.CacheControlHeader
@@ -49,24 +48,6 @@ class NetworkModule {
             )
             .build()
             .create(TangemTechApi::class.java)
-    }
-
-    @Provides
-    @Singleton
-    fun provideReferralApi(authProvider: AuthProvider, moshi: Moshi): ReferralApi {
-        return Retrofit.Builder()
-            .addConverterFactory(
-                MoshiConverterFactory.create(moshi),
-            )
-            .baseUrl(PROD_TANGEM_TECH_BASE_URL)
-            .client(
-                OkHttpClient.Builder()
-                    .addHeaders(AuthenticationHeader(authProvider))
-                    .allowLogging()
-                    .build(),
-            )
-            .build()
-            .create(ReferralApi::class.java)
     }
 
     private companion object {
