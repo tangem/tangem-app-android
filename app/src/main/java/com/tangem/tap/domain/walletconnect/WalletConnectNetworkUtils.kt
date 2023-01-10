@@ -15,6 +15,9 @@ class WalletConnectNetworkUtils {
                 peer.url.contains("pancakeswap.finance") -> {
                     Blockchain.BSC
                 }
+                peer.url.contains("optimism") -> {
+                    Blockchain.Optimism
+                }
                 chainId != null -> {
                     Blockchain.fromChainId(chainId)
                 }
