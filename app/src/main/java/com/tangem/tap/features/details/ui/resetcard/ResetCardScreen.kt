@@ -20,6 +20,7 @@ import androidx.compose.material.IconToggleButton
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -37,6 +38,7 @@ fun ResetCardScreen(state: ResetCardScreenState, onBackPressed: () -> Unit) {
     SettingsScreensScaffold(
         content = { ResetCardView(state = state) },
         onBackClick = onBackPressed,
+        backgroundColor = Color.Transparent,
     )
 }
 

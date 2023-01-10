@@ -8,6 +8,7 @@ import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.features.details.redux.CardSettingsState
 import com.tangem.tap.features.details.redux.DetailsAction
+import com.tangem.wallet.R
 import org.rekotlin.Store
 
 class CardSettingsViewModel(private val store: Store<AppState>) {
