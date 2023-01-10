@@ -33,7 +33,7 @@
     <string name="search_tokens_title">Search tokens</string>
     <string name="alert_demo_message">You are currently running in Demo mode. All funds are not real.</string>
     <string name="alert_demo_feature_disabled">This feature is disabled in Demo mode</string>
-    <string name="token_details_send_blocked_fee_format">Not enough funds for fee in your %s wallet to send a transaction. Top up your %s wallet first.</string>
+    <string name="token_details_send_blocked_fee_format">Not enough funds for fee on your %s wallet to send a transaction. Top up your %s wallet first.</string>
     <string name="currency_subtitle_expanded">Available networks</string>
     <string name="wallet_connect_network_not_found_format">%s network not found. Please, add it first and try again.</string>
     <string name="common_attention">Attention</string>
@@ -100,7 +100,7 @@
     <string name="wallet_connect_title">WalletConnect</string>
     <string name="wallet_connect_subtitle">Connect to Dapps</string>
     <string name="reset_card_without_backup_to_factory_message">Factory Reset will completely delete the wallet from the selected card and remove it from the app. You will not be able to restore the current wallet.</string>
-    <string name="reset_card_with_backup_to_factory_message">Factory Reset will completely delete the wallet from the selected card. You will not be able to restore the current wallet or use the card to recover the access code.</string>
+    <string name="reset_card_with_backup_to_factory_message">Factory Reset will completely delete the wallet from the selected card and remove it from the app. You will not be able to restore the current wallet or use the card to recover the access code.</string>
     <string name="reset_card_to_factory_warning_message">I understand that after performing this action, I will no longer have access to the current wallet</string>
     <string name="reset_card_to_factory_button_title">Reset the Card</string>
     <string name="card_settings_reset_card_to_factory">Reset to Factory Settings</string>
@@ -191,8 +191,6 @@
     <string name="common_share">Share</string>
     <string name="common_copy">Copy</string>
     <string name="common_success">Success</string>
-    <string name="exchange_send_view_header">You Send</string>
-    <string name="exchange_receive_view_header">You Receive</string>
     <string name="swapping_permission_header">Give Permission</string>
     <string name="swapping_permission_subheader">To continue you need to allow 1inch smart contracts to use your %s</string>
     <string name="swapping_permission_rows_amount">Amount %s</string>
@@ -204,12 +202,9 @@
     <string name="swapping_insufficient_funds">Insufficient funds</string>
     <string name="swapping_give_permission">Give Permission</string>
     <string name="swapping_permit_and_swap">Permit and Swap</string>
-    <string name="swapping_token_list_your_title">Choose token</string>
-    <string name="swapping_token_list_your_tokens">Your tokens</string>
-    <string name="swapping_token_list_other_tokens">Other tokens</string>
     <string name="referral_error_failed_to_load_info">Failed to load the information about the referral program. Please try again later.</string>
-    <string name="referral_error_failed_to_load_info_with_reason">Failed to load the information about the referral program. Error code: %s. Please try again later.</string>
-    <string name="referral_error_failed_to_participate">Your participation request could not be processed. Error code: %s. Please try again later. If the problem persists — feel free to contact our support.</string>
+    <string name="referral_error_failed_to_load_info_with_reason">Failed to load the information about the referral program. Reason: %s. Please try again later.</string>
+    <string name="referral_error_failed_to_participate">Your participation request could not be processed. Reason: %s. Please try again later. If the problem persists — feel free to contact our support.</string>
     <string name="referral_promo_code_copied">Personal code copied!</string>
     <string name="referral_share_link">Buy Tangem Wallet with discount!\n%s</string>
     <string name="warning_existential_deposit_message">%s network has a concept of Existential Deposit. If your account drops below %s it will be deactivated and any remaining funds will be destroyed.</string>
@@ -454,6 +449,7 @@
     <string name="app_settings_enable_biometrics_title">Enable biometric authentication</string>
     <string name="app_settings_enable_biometrics_description">Go to settings to enable biometric authentication in the Tangem App</string>
     <string name="wallet_balance_missing_derivation">Scan the card</string>
+    <string name="disclaimer_error_loading">Check your internet connection or switch to a different network</string>
 
     <!-- Special string -->
     <string name="common_custom_string">%s</string>
