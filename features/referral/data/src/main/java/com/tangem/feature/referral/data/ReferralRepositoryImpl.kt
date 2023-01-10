@@ -1,7 +1,7 @@
 package com.tangem.feature.referral.data
 
-import com.tangem.datasource.api.referral.ReferralApi
-import com.tangem.datasource.api.referral.models.StartReferralBody
+import com.tangem.datasource.api.tangemTech.TangemTechApi
+import com.tangem.datasource.api.tangemTech.models.StartReferralBody
 import com.tangem.feature.referral.converters.ReferralConverter
 import com.tangem.feature.referral.domain.ReferralRepository
 import com.tangem.feature.referral.domain.models.ReferralData
@@ -10,7 +10,7 @@ import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 internal class ReferralRepositoryImpl @Inject constructor(
-    private val referralApi: ReferralApi,
+    private val referralApi: TangemTechApi,
     private val referralConverter: ReferralConverter,
     private val coroutineDispatcher: CoroutineDispatcherProvider,
 ) : ReferralRepository {
