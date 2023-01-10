@@ -30,6 +30,7 @@ class ReferralFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         activity?.window?.let { WindowCompat.setDecorFitsSystemWindows(it, true) }
         viewModel.setRouter(ReferralRouter(fragmentManager = WeakReference(parentFragmentManager)))
+        viewModel.onScreenOpened()
         return ComposeView(inflater.context).apply {
             isTransitionGroup = true
             setContent {
