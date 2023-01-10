@@ -164,9 +164,11 @@ private class ScanWalletProcessor(
         session: CardSession,
         callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
-        val activationIsFinished = preferencesStorage.usedCardsPrefStorage.isActivationFinished(card.cardId)
+        val activationInProgress = preferencesStorage.usedCardsPrefStorage.isActivationInProgress(card.cardId)
 
-        if (card.backupStatus == Card.BackupStatus.NoBackup && !activationIsFinished && card.wallets.isNotEmpty()) {
+        if ((card.backupStatus == Card.BackupStatus.NoBackup && card.wallets.isNotEmpty())
+            && (activationInProgress || card.isSaltPay)
+        ) {
             StartPrimaryCardLinkingTask().run(session) { linkingResult ->
                 when (linkingResult) {
                     is CompletionResult.Success -> {
