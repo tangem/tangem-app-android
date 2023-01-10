@@ -102,6 +102,7 @@ internal fun ReferralScreen(stateHolder: ReferralStateHolder) {
                 ReferralContent(
                     stateHolder = stateHolder,
                     onAgreementClicked = {
+                        stateHolder.analytics.onAgreementClicked.invoke()
                         coroutineScope.launch {
                             if (bottomSheetScaffoldState.bottomSheetState.isCollapsed) {
                                 bottomSheetScaffoldState.bottomSheetState.expand()
@@ -191,6 +192,8 @@ private fun ReferralInfo(
                 shareLink = state.shareLink,
                 onAgreementClicked = onAgreementClicked,
                 showCopySnackbar = showCopySnackbar,
+                onCopyClicked = stateHolder.analytics.onCopyClicked,
+                onShareClicked = stateHolder.analytics.onShareClicked,
             )
         }
         is ReferralInfoState.NonParticipantContent -> {
@@ -477,6 +480,11 @@ fun Preview_ReferralScreen_Participant_InLightTheme() {
                     url = "",
                 ),
                 errorSnackbar = null,
+                analytics = ReferralStateHolder.Analytics(
+                    onAgreementClicked = {},
+                    onCopyClicked = {},
+                    onShareClicked = {},
+                ),
             ),
         )
     }
@@ -500,6 +508,11 @@ fun Preview_ReferralScreen_Participant_InDarkTheme() {
                     url = "",
                 ),
                 errorSnackbar = null,
+                analytics = ReferralStateHolder.Analytics(
+                    onAgreementClicked = {},
+                    onCopyClicked = {},
+                    onShareClicked = {},
+                ),
             ),
         )
     }
@@ -520,6 +533,11 @@ fun Preview_ReferralScreen_NonParticipant_InLightTheme() {
                     onParticipateClicked = {},
                 ),
                 errorSnackbar = null,
+                analytics = ReferralStateHolder.Analytics(
+                    onAgreementClicked = {},
+                    onCopyClicked = {},
+                    onShareClicked = {},
+                ),
             ),
         )
     }
@@ -540,6 +558,11 @@ fun Preview_ReferralScreen_NonParticipant_InDarkTheme() {
                     onParticipateClicked = {},
                 ),
                 errorSnackbar = null,
+                analytics = ReferralStateHolder.Analytics(
+                    onAgreementClicked = {},
+                    onCopyClicked = {},
+                    onShareClicked = {},
+                ),
             ),
         )
     }
@@ -554,6 +577,11 @@ fun Preview_ReferralScreen_Loading_InLightTheme() {
                 headerState = ReferralStateHolder.HeaderState(onBackClicked = {}),
                 referralInfoState = ReferralInfoState.Loading,
                 errorSnackbar = null,
+                analytics = ReferralStateHolder.Analytics(
+                    onAgreementClicked = {},
+                    onCopyClicked = {},
+                    onShareClicked = {},
+                ),
             ),
         )
     }
@@ -568,6 +596,11 @@ fun Preview_ReferralScreen_Loading_InDarkTheme() {
                 headerState = ReferralStateHolder.HeaderState(onBackClicked = {}),
                 referralInfoState = ReferralInfoState.Loading,
                 errorSnackbar = null,
+                analytics = ReferralStateHolder.Analytics(
+                    onAgreementClicked = {},
+                    onCopyClicked = {},
+                    onShareClicked = {},
+                ),
             ),
         )
     }
