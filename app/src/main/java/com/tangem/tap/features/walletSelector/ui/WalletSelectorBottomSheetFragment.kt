@@ -22,7 +22,7 @@ import androidx.compose.ui.platform.rememberNestedScrollInteropConnection
 import androidx.fragment.app.viewModels
 import com.tangem.core.ui.fragments.ComposeBottomSheetFragment
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.tap.common.analytics.Analytics
+import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.MyWallets
 import com.tangem.tap.features.details.ui.cardsettings.resolveReference
 import com.tangem.tap.features.walletSelector.ui.components.RenameWalletDialogContent
