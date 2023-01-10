@@ -1,6 +1,7 @@
 package com.tangem.tap.features.onboarding.products.wallet.redux
 
 import android.graphics.Bitmap
+import android.net.Uri
 import com.tangem.common.CardFilter
 import com.tangem.common.extensions.VoidCallback
 import com.tangem.domain.common.SaltPayWorkaround
@@ -17,7 +18,7 @@ data class OnboardingWalletState(
     val backupState: BackupState = BackupState(),
     val onboardingSaltPayState: OnboardingSaltPayState? = null,
     val isSaltPay: Boolean = false,
-    val cardArtworkUrl: String? = null,
+    val cardArtworkUri: Uri? = null,
     val showConfetti: Boolean = false,
 ) : StateType {
 
