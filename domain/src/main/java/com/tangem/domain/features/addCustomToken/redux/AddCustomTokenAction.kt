@@ -2,13 +2,13 @@ package com.tangem.domain.features.addCustomToken.redux
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.DerivationStyle
+import com.tangem.datasource.api.tangemTech.models.CoinsResponse
 import com.tangem.domain.AddCustomTokenError
 import com.tangem.domain.DomainWrapped
 import com.tangem.domain.common.form.Field
 import com.tangem.domain.common.form.FieldId
 import com.tangem.domain.features.addCustomToken.CustomCurrency
 import com.tangem.domain.features.addCustomToken.CustomTokenFieldId
-import com.tangem.datasource.api.tangemTech.CoinsResponse
 import org.rekotlin.Action
 
 /**
