@@ -5,6 +5,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.feature.referral.analytics.ReferralEvents
 import com.tangem.feature.referral.domain.ReferralInteractor
 import com.tangem.feature.referral.domain.models.DiscountType
 import com.tangem.feature.referral.domain.models.ReferralData
@@ -24,6 +26,7 @@ import kotlin.properties.Delegates
 internal class ReferralViewModel @Inject constructor(
     private val referralInteractor: ReferralInteractor,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val analyticsEventHandler: AnalyticsEventHandler,
 ) : ViewModel() {
 
     var uiState: ReferralStateHolder by mutableStateOf(createInitiallyUiState())
@@ -40,10 +43,19 @@ internal class ReferralViewModel @Inject constructor(
         uiState = uiState.copy(headerState = ReferralStateHolder.HeaderState(onBackClicked = router::back))
     }
 
+    fun onScreenOpened() {
+        analyticsEventHandler.send(ReferralEvents.ReferralScreenOpened)
+    }
+
     private fun createInitiallyUiState() = ReferralStateHolder(
         headerState = ReferralStateHolder.HeaderState(onBackClicked = { }),
         referralInfoState = ReferralInfoState.Loading,
         errorSnackbar = null,
+        analytics = ReferralStateHolder.Analytics(
+            onAgreementClicked = ::onAgreementClicked,
+            onCopyClicked = ::onCopyClicked,
+            onShareClicked = ::onShareClicked,
+        ),
     )
 
     private fun loadReferralData() {
@@ -56,6 +68,7 @@ internal class ReferralViewModel @Inject constructor(
     }
 
     private fun participate() {
+        analyticsEventHandler.send(ReferralEvents.ClickParticipate)
         uiState = uiState.copy(referralInfoState = ReferralInfoState.Loading)
         viewModelScope.launch(dispatchers.main) {
             runCatching(dispatchers.io) { referralInteractor.startReferral() }
@@ -72,6 +85,18 @@ internal class ReferralViewModel @Inject constructor(
         uiState = uiState.copy(
             errorSnackbar = ErrorSnackbar(throwable = throwable, onOkClicked = referralRouter::back),
         )
+    }
+
+    private fun onAgreementClicked() {
+        analyticsEventHandler.send(ReferralEvents.ClickTaC)
+    }
+
+    private fun onCopyClicked() {
+        analyticsEventHandler.send(ReferralEvents.ClickCopy)
+    }
+
+    private fun onShareClicked() {
+        analyticsEventHandler.send(ReferralEvents.ClickShare)
     }
 
     private fun ReferralData.convertToReferralInfoState(): ReferralInfoState = when (this) {
