@@ -37,15 +37,15 @@ class NetworkModule {
     fun provideTangemTechApi(authProvider: AuthProvider, moshi: Moshi): TangemTechApi {
         return Retrofit.Builder()
             .addConverterFactory(MoshiConverterFactory.create(moshi))
-            .baseUrl(DEV_TANGEM_TECH_BASE_URL)
+            .baseUrl(PROD_TANGEM_TECH_BASE_URL)
             .client(
                 OkHttpClient.Builder()
                     .addHeaders(
                         CacheControlHeader,
-                        AuthenticationHeader(authProvider)
+                        AuthenticationHeader(authProvider),
                     )
                     .allowLogging()
-                    .build()
+                    .build(),
             )
             .build()
             .create(TangemTechApi::class.java)
@@ -58,12 +58,12 @@ class NetworkModule {
             .addConverterFactory(
                 MoshiConverterFactory.create(moshi),
             )
-            .baseUrl(DEV_TANGEM_TECH_BASE_URL)
+            .baseUrl(PROD_TANGEM_TECH_BASE_URL)
             .client(
                 OkHttpClient.Builder()
                     .addHeaders(AuthenticationHeader(authProvider))
                     .allowLogging()
-                    .build()
+                    .build(),
             )
             .build()
             .create(ReferralApi::class.java)
