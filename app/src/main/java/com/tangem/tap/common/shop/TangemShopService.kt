@@ -4,7 +4,7 @@ import android.app.Application
 import android.content.Intent
 import com.google.android.gms.wallet.PaymentData
 import com.shopify.buy3.Storefront
-import com.tangem.tap.common.analytics.Analytics
+import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.converters.ShopOrderToEventConverter
 import com.tangem.tap.common.extensions.filterNotNull
 import com.tangem.tap.common.shop.data.ProductType
