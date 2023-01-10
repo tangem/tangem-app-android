@@ -72,6 +72,7 @@ android {
 
 dependencies {
     implementation(project(":core:datasource"))
+    implementation(project(":core:utils"))
     implementation(project(":common"))
 
     /** Tangem libraries */

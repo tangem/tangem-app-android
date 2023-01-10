@@ -1,6 +1,8 @@
 package com.tangem.tap.domain.configurable.config
 
 import com.tangem.blockchain.common.BlockchainSdkConfig
+import com.tangem.blockchain.common.BlockchairCredentials
+import com.tangem.blockchain.common.QuickNodeCredentials
 import com.tangem.tap.common.shop.shopify.ShopifyShop
 import com.tangem.tap.common.zendesk.ZendeskConfig
 import com.tangem.tap.domain.configurable.Loader
@@ -66,12 +68,12 @@ class ConfigManager {
         config = config.copy(
             isTopUpEnabled = model.isTopUpEnabled,
             isSendingToPayIdEnabled = model.isSendingToPayIdEnabled,
-            isCreatingTwinCardsAllowed = model.isCreatingTwinCardsAllowed
+            isCreatingTwinCardsAllowed = model.isCreatingTwinCardsAllowed,
         )
         defaultConfig = defaultConfig.copy(
             isTopUpEnabled = model.isTopUpEnabled,
             isSendingToPayIdEnabled = model.isSendingToPayIdEnabled,
-            isCreatingTwinCardsAllowed = model.isCreatingTwinCardsAllowed
+            isCreatingTwinCardsAllowed = model.isCreatingTwinCardsAllowed,
         )
     }
 
@@ -84,11 +86,21 @@ class ConfigManager {
             mercuryoWidgetId = values.mercuryoWidgetId,
             mercuryoSecret = values.mercuryoSecret,
             blockchainSdkConfig = BlockchainSdkConfig(
-                blockchairApiKey = values.blockchairApiKey,
-                blockchairAuthorizationToken = values.blockchairAuthorizationToken,
+                blockchairCredentials = BlockchairCredentials(
+                    apiKey = values.blockchairApiKeys,
+                    authToken = values.blockchairAuthorizationToken,
+                ),
                 blockcypherTokens = values.blockcypherTokens,
+                quickNodeCredentials = QuickNodeCredentials(
+                    apiKey = values.quiknodeApiKey,
+                    subdomain = values.quiknodeSubdomain,
+                ),
+                bscQuickNodeCredentials = QuickNodeCredentials(
+                    apiKey = values.bscQuiknodeApiKey,
+                    subdomain = values.bscQuiknodeSubdomain,
+                ),
                 infuraProjectId = values.infuraProjectId,
-                tronGridApiKey = values.tronGridApiKey
+                tronGridApiKey = values.tronGridApiKey,
             ),
             appsFlyerDevKey = values.appsFlyerDevKey,
             amplitudeApiKey = values.amplitudeApiKey,
@@ -103,9 +115,19 @@ class ConfigManager {
             mercuryoWidgetId = values.mercuryoWidgetId,
             mercuryoSecret = values.mercuryoSecret,
             blockchainSdkConfig = BlockchainSdkConfig(
-                blockchairApiKey = values.blockchairApiKey,
-                blockchairAuthorizationToken = values.blockchairAuthorizationToken,
+                blockchairCredentials = BlockchairCredentials(
+                    apiKey = values.blockchairApiKeys,
+                    authToken = values.blockchairAuthorizationToken,
+                ),
                 blockcypherTokens = values.blockcypherTokens,
+                quickNodeCredentials = QuickNodeCredentials(
+                    apiKey = values.quiknodeApiKey,
+                    subdomain = values.quiknodeSubdomain,
+                ),
+                bscQuickNodeCredentials = QuickNodeCredentials(
+                    apiKey = values.bscQuiknodeApiKey,
+                    subdomain = values.bscQuiknodeSubdomain,
+                ),
                 infuraProjectId = values.infuraProjectId,
             ),
             appsFlyerDevKey = values.appsFlyerDevKey,
