@@ -7,7 +7,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
-import com.tangem.tap.common.analytics.Analytics
+import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.Portfolio
 import com.tangem.tap.common.extensions.getString
 import com.tangem.tap.common.extensions.hide

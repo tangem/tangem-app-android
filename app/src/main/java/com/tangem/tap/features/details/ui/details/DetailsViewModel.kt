@@ -2,7 +2,7 @@ package com.tangem.tap.features.details.ui.details
 
 import com.tangem.domain.common.TapWorkarounds.isSaltPay
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
-import com.tangem.tap.common.analytics.Analytics
+import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.feedback.FeedbackEmail
 import com.tangem.tap.common.feedback.SupportInfo
@@ -11,7 +11,6 @@ import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.extensions.isMultiwalletAllowed
-import com.tangem.tap.domain.extensions.isTangemWallet
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
@@ -39,7 +38,6 @@ class DetailsViewModel(private val store: Store<AppState>) {
                 }
                 SettingsElement.AppSettings -> if (state.isBiometricsAvailable) it else null
                 SettingsElement.AppCurrency -> if (state.scanResponse?.card?.isMultiwalletAllowed != true) it else null
-                SettingsElement.TermsOfUse -> if (state.scanResponse?.card?.isStart2Coin == true) it else null
                 // SettingsElement.ReferralProgram -> if (state.scanResponse?.card?.isTangemWallet == true) it else null
                 else -> it
             }
@@ -89,10 +87,7 @@ class DetailsViewModel(private val store: Store<AppState>) {
                 store.dispatch(DetailsAction.CreateBackup)
             }
             SettingsElement.TermsOfService -> {
-                store.dispatch(DisclaimerAction.Show())
-            }
-            SettingsElement.TermsOfUse -> {
-                store.dispatch(DetailsAction.ShowDisclaimer)
+                store.dispatch(DisclaimerAction.Show(AppScreen.Details))
             }
             SettingsElement.PrivacyPolicy -> {
 // [REDACTED_TODO_COMMENT]
