@@ -2,7 +2,7 @@ package com.tangem.tap.features.details.ui.cardsettings
 
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.common.getTwinCardIdForUser
-import com.tangem.tap.common.analytics.Analytics
+import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.redux.AppState
