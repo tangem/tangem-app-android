@@ -1,7 +1,6 @@
 package com.tangem.feature.referral.converters
 
-import com.tangem.datasource.api.referral.models.ReferralResponse
-import com.tangem.datasource.api.referral.models.Token
+import com.tangem.datasource.api.tangemTech.models.ReferralResponse
 import com.tangem.feature.referral.domain.models.DiscountType
 import com.tangem.feature.referral.domain.models.ReferralData
 import com.tangem.feature.referral.domain.models.ReferralInfo
@@ -46,9 +45,9 @@ class ReferralConverter @Inject constructor() : Converter<ReferralResponse, Refe
     }
 }
 
-private class TokenConverter : Converter<Token, TokenData> {
+private class TokenConverter : Converter<ReferralResponse.Conditions.Award.Token, TokenData> {
 
-    override fun convert(value: Token): TokenData {
+    override fun convert(value: ReferralResponse.Conditions.Award.Token): TokenData {
         return TokenData(
             id = value.id,
             name = value.name,
