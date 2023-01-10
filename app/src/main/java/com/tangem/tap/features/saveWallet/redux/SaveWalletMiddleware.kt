@@ -88,7 +88,7 @@ internal class SaveWalletMiddleware {
         scope.launch {
             val userWallet = UserWalletBuilder(scanResponse)
                 .backupCardsIds(state.backupInfo?.backupCardsIds)
-                .build()
+                .build() ?: return@launch
 
             val isFirstSavedWallet = !userWalletsListManager.hasSavedUserWallets
 

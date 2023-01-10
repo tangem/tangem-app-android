@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <resources>
     <string name="shop_one_wallet">Tangem Wallet</string>
-    <string name="shop_3_cards">3 cards</string>
-    <string name="shop_2_cards">2 cards</string>
     <string name="shop_shipping">Shipping</string>
     <string name="shop_free">Free</string>
     <string name="shop_i_have_a_promo_code">I have a promo code…</string>
@@ -355,8 +353,7 @@
     <string name="onboarding_done_header">Success!</string>
     <string name="onboarding_done_body">Your card is activated and ready to be used</string>
     <string name="onboarding_balance_title">Balance</string>
-    <string name="address_qr_code_message_format">Send only %s (%s) to this address. Using other tokens and networks may result in loss of funds.</string>
-    <string name="address_qr_code_message_token_format">Send only %s (%s) from %s network to this address. Using other tokens and networks may result in loss of funds.</string>
+    <string name="address_qr_code_message_format">Send only %s (%s) from %s network to this address. Using other tokens and networks may result in loss of funds.</string>
     <string name="onboarding_twins_interrupt_warning">If the process of creating the wallet gets interrupted in any way, you\'ll have to start over.</string>
     <string name="onboarding_twin_exit_warning">The twinning process is partly complete. You can\'t exit it now.</string>
     <string name="warning_button_ok">OK, ich hab\'s!</string>
