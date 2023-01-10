@@ -1,7 +1,9 @@
 package com.tangem.datasource.api.tangemTech
 
+import com.tangem.datasource.api.tangemTech.models.CoinsResponse
 import com.tangem.datasource.api.tangemTech.models.CurrenciesResponse
 import com.tangem.datasource.api.tangemTech.models.GeoResponse
+import com.tangem.datasource.api.tangemTech.models.RatesResponse
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
@@ -10,12 +12,14 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 
 /**
+ * Interface of Tangem Tech API
+ *
 * [REDACTED_AUTHOR]
  */
 interface TangemTechApi {
 
     @GET("coins")
-    suspend fun coins(
+    suspend fun getCoins(
         @Query("contractAddress") contractAddress: String? = null,
         @Query("exchangeable") exchangeable: Boolean? = null,
         @Query("networkIds") networkIds: String? = null,
