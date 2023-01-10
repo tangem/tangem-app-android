@@ -134,7 +134,6 @@ private fun ReferralContent(stateHolder: ReferralStateHolder, onAgreementClicked
                     AppBarWithBackButton(
                         text = stringResource(R.string.details_referral_title),
                         onBackClick = stateHolder.headerState.onBackClicked,
-                        modifier = Modifier.background(color = TangemTheme.colors.background.secondary),
                     )
                 }
                 item { Header() }
