@@ -17,7 +17,7 @@ import com.tangem.domain.common.LogConfig
 import com.tangem.tap.common.AndroidAssetReader
 import com.tangem.tap.common.AssetReader
 import com.tangem.tap.common.IntentHandler
-import com.tangem.tap.common.analytics.Analytics
+import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 import com.tangem.tap.common.analytics.filters.BasicSignInFilter
