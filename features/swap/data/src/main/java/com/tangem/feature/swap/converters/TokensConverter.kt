@@ -1,6 +1,6 @@
 package com.tangem.feature.swap.converters
 
-import com.tangem.datasource.api.tangemTech.CoinsResponse
+import com.tangem.datasource.api.tangemTech.models.CoinsResponse
 import com.tangem.feature.swap.domain.models.data.Currency
 import com.tangem.utils.converter.Converter
 import javax.inject.Inject
