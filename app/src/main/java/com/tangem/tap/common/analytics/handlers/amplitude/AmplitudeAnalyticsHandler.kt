@@ -1,6 +1,6 @@
 package com.tangem.tap.common.analytics.handlers.amplitude
 
-import com.tangem.tap.common.analytics.api.AnalyticsHandler
+import com.tangem.core.analytics.api.AnalyticsHandler
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 
 class AmplitudeAnalyticsHandler(

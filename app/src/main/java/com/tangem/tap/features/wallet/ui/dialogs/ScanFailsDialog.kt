@@ -2,7 +2,7 @@ package com.tangem.tap.features.wallet.ui.dialogs
 
 import android.content.Context
 import androidx.appcompat.app.AlertDialog
-import com.tangem.tap.common.analytics.Analytics
+import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.IntroductionProcess
 import com.tangem.tap.common.extensions.dispatchDialogHide
 import com.tangem.tap.common.feedback.ScanFailsEmail
