@@ -1,24 +1,20 @@
-package com.tangem.domain.common.util
+package com.tangem.tap.domain.userWalletList.utils
 
 import com.tangem.common.extensions.calculateSha256
 import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.extensions.calculateHmacSha256
 
-val CardDTO.userWalletId: UserWalletId
-    get() = UserWalletId(findWalletPublicKey(wallets))
-
-val CardDTO.encryptionKey: ByteArray
-    get() = findWalletPublicKey(wallets)
-        ?.let { calculateEncryptionKey(it) }
-        ?: error("Wallet ID not found")
+internal val CardDTO.encryptionKey: ByteArray?
+    get() = findPublicKey(wallets)?.let { calculateEncryptionKey(it) }
 
 private fun calculateEncryptionKey(publicKey: ByteArray): ByteArray {
     val message = MESSAGE_FOR_ENCRYPTION_KEY.toByteArray()
     val keyHash = publicKey.calculateSha256()
+
     return message.calculateHmacSha256(keyHash)
 }
 
-private fun findWalletPublicKey(wallets: List<CardDTO.Wallet>): ByteArray? {
+private fun findPublicKey(wallets: List<CardDTO.Wallet>): ByteArray? {
     return wallets.firstOrNull()
         ?.publicKey
 }
