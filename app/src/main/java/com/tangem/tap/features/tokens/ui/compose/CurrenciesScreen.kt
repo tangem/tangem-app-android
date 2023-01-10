@@ -31,7 +31,7 @@ import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.components.keyboardAsState
 import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
 import com.tangem.domain.common.extensions.fromNetworkId
-import com.tangem.tap.common.analytics.Analytics
+import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.ManageTokens
 import com.tangem.tap.common.compose.extensions.addAndNotify
