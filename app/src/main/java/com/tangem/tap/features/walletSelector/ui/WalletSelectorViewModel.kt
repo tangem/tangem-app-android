@@ -38,7 +38,6 @@ internal class WalletSelectorViewModel : ViewModel(), StoreSubscriber<WalletSele
 
     fun walletClicked(userWalletId: UserWalletId) = with(state.value) {
         when {
-            editingUserWalletsIds.isNotEmpty() && isWalletLocked(userWalletId, this) -> Unit
             editingUserWalletsIds.isNotEmpty() && !editingUserWalletsIds.contains(userWalletId) -> {
                 editWallet(userWalletId)
             }
@@ -52,7 +51,7 @@ internal class WalletSelectorViewModel : ViewModel(), StoreSubscriber<WalletSele
     }
 
     fun walletLongClicked(userWalletId: UserWalletId) = with(state.value) {
-        if (!isWalletLocked(userWalletId, this) && editingUserWalletsIds.isEmpty()) {
+        if (editingUserWalletsIds.isEmpty()) {
             editWallet(userWalletId)
         }
     }
@@ -67,15 +66,15 @@ internal class WalletSelectorViewModel : ViewModel(), StoreSubscriber<WalletSele
 
     fun renameWallet() = with(state.value) {
         if (editingUserWalletsIds.isNotEmpty() && renameWalletDialog == null) {
-            val editedWalletId = editingUserWalletsIds.first()
-            val editedWallet = (multiCurrencyWallets + singleCurrencyWallets)
-                .find { it.id == editedWalletId }
+            val editedUserWalletId = editingUserWalletsIds.first()
+            val editedUserWallet = (multiCurrencyWallets + singleCurrencyWallets)
+                .find { it.id == editedUserWalletId }
 
-            if (editedWallet != null) {
+            if (editedUserWallet != null) {
                 val dialog = RenameWalletDialog(
-                    currentName = editedWallet.name,
+                    currentName = editedUserWallet.name,
                     onApply = { newName ->
-                        store.dispatch(WalletSelectorAction.RenameWallet(editedWalletId, newName))
+                        store.dispatch(WalletSelectorAction.RenameWallet(editedUserWalletId, newName))
                         stateInternal.update { prevState ->
                             prevState.copy(
                                 renameWalletDialog = null,
@@ -135,11 +134,6 @@ internal class WalletSelectorViewModel : ViewModel(), StoreSubscriber<WalletSele
                 editingUserWalletsIds = prevState.editingUserWalletsIds - userWalletId,
             )
         }
-    }
-
-    private fun isWalletLocked(userWalletId: UserWalletId, state: WalletSelectorScreenState): Boolean = with(state) {
-        multiCurrencyWallets.find { it.id == userWalletId }?.isLocked
-            ?: singleCurrencyWallets.find { it.id == userWalletId }?.isLocked ?: isLocked
     }
 
     private fun subscribeToStoreChanges() {

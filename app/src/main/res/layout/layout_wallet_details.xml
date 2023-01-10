@@ -174,7 +174,7 @@
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/btn_copy"
-                tools:text="@string/address_qr_code_message_token_format" />
+                tools:text="Send only Ethereum (ETH) from Ethereum network to this address. Using other tokens and networks may result in loss of funds." />
 
         </androidx.constraintlayout.widget.ConstraintLayout>
 

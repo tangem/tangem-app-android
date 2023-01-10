@@ -9,13 +9,13 @@ import com.tangem.common.catching
 import com.tangem.common.mapFailure
 import com.tangem.common.services.secure.SecureStorage
 import com.tangem.domain.common.util.UserWalletId
-import com.tangem.domain.common.util.encryptionKey
 import com.tangem.tap.common.extensions.filterNotNull
 import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.domain.userWalletList.UserWalletListError
 import com.tangem.tap.domain.userWalletList.model.UserWalletEncryptionKey
 import com.tangem.tap.domain.userWalletList.model.UserWalletSensitiveInformation
 import com.tangem.tap.domain.userWalletList.repository.UserWalletsSensitiveInformationRepository
+import com.tangem.tap.domain.userWalletList.utils.encryptionKey
 import com.tangem.tap.domain.userWalletList.utils.sensitiveInformation
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -38,11 +38,12 @@ internal class DefaultUserWalletsSensitiveInformationRepository(
         Cipher.getInstance("$algorithm/$blockMode/$encryptionPadding")
     }
 
-    override suspend fun save(userWallet: UserWallet): CompletionResult<Unit> {
+    override suspend fun save(userWallet: UserWallet, encryptionKey: ByteArray?): CompletionResult<Unit> {
+        if (encryptionKey == null) return CompletionResult.Success(Unit) // Encryption key is null, do nothing
         return catching {
             val encryptedSensitiveInformation = userWallet.sensitiveInformation
                 .encode()
-                .encryptAndStoreIv(userWallet.walletId.stringValue, userWallet.scanResponse.card.encryptionKey)
+                .encryptAndStoreIv(userWallet.walletId.stringValue, encryptionKey)
 
             getAllEncrypted().toMutableMap()
                 .apply { set(userWallet.walletId.stringValue, encryptedSensitiveInformation) }
