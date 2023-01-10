@@ -10,7 +10,7 @@ import com.tangem.domain.common.extensions.successOr
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.datasource.api.paymentology.KYCStatus
 import com.tangem.datasource.api.paymentology.RegistrationResponse
-import com.tangem.tap.common.analytics.Analytics
+import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
