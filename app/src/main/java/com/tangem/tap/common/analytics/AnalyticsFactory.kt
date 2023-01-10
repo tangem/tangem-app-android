@@ -1,8 +1,9 @@
 package com.tangem.tap.common.analytics
 
-import com.tangem.tap.common.analytics.api.AnalyticsEventFilter
+import com.tangem.core.analytics.Analytics
+import com.tangem.core.analytics.api.AnalyticsEventFilter
+import com.tangem.core.analytics.api.ParamsInterceptor
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
-import com.tangem.tap.common.analytics.api.ParamsInterceptor
 
 /**
 [REDACTED_AUTHOR]

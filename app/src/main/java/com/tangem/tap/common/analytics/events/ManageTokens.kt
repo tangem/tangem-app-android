@@ -1,5 +1,6 @@
 package com.tangem.tap.common.analytics.events
 
+import com.tangem.core.analytics.AnalyticsEvent
 import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.domain.features.addCustomToken.CustomCurrency
 import com.tangem.tap.common.extensions.filterNotNull
