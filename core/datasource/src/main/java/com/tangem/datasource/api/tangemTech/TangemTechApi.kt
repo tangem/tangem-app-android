@@ -4,9 +4,12 @@ import com.tangem.datasource.api.tangemTech.models.CoinsResponse
 import com.tangem.datasource.api.tangemTech.models.CurrenciesResponse
 import com.tangem.datasource.api.tangemTech.models.GeoResponse
 import com.tangem.datasource.api.tangemTech.models.RatesResponse
+import com.tangem.datasource.api.tangemTech.models.ReferralResponse
+import com.tangem.datasource.api.tangemTech.models.StartReferralBody
 import com.tangem.datasource.api.tangemTech.models.UserTokensResponse
 import retrofit2.http.Body
 import retrofit2.http.GET
+import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
@@ -46,4 +49,12 @@ interface TangemTechApi {
 
     @PUT("user-tokens/{user-id}")
     suspend fun saveUserTokens(@Path(value = "user-id") userId: String, @Body userTokens: UserTokensResponse)
+
+    /** Returns referral status by [walletId] */
+    @GET("referral/{walletId}")
+    suspend fun getReferralStatus(@Path("walletId") walletId: String): ReferralResponse
+
+    /** Make user referral, requires [StartReferralBody] */
+    @POST("referral")
+    suspend fun startReferral(@Body startReferralBody: StartReferralBody): ReferralResponse
 }
