@@ -8,7 +8,7 @@ import com.tangem.common.flatMap
 import com.tangem.common.map
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.util.UserWalletId
-import com.tangem.tap.common.analytics.Analytics
+import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.MyWallets
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.onUserWalletSelected
