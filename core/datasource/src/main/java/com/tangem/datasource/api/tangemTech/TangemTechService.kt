@@ -1,12 +1,8 @@
 package com.tangem.datasource.api.tangemTech
 
-import com.tangem.common.services.Result
-import com.tangem.common.services.performRequest
 import com.tangem.datasource.api.common.AddHeaderInterceptor
 import com.tangem.datasource.api.common.CacheControlHttpInterceptor
 import com.tangem.datasource.api.common.createRetrofitInstance
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 /**
 [REDACTED_AUTHOR]
@@ -20,26 +16,6 @@ class TangemTechService(
     )
 
     var api: TangemTechApi = createApi()
-
-    suspend fun coins(
-        contractAddress: String? = null,
-        networkIds: String? = null,
-        active: Boolean? = null,
-        searchText: String? = null,
-        offset: Int? = null,
-        limit: Int? = null,
-    ): Result<CoinsResponse> = withContext(Dispatchers.IO) {
-        performRequest {
-            api.coins(
-                contractAddress = contractAddress,
-                networkIds = networkIds,
-                active = active,
-                searchText = searchText,
-                offset = offset,
-                limit = limit,
-            )
-        }
-    }
 
     fun addHeaderInterceptors(interceptors: List<AddHeaderInterceptor>) {
         headerInterceptors.removeAll(interceptors)
