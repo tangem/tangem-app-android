@@ -1,7 +1,7 @@
 package com.tangem.tap.common.analytics.paramsInterceptor
 
-import com.tangem.tap.common.analytics.api.ParamsInterceptor
-import com.tangem.tap.common.analytics.events.AnalyticsEvent
+import com.tangem.core.analytics.api.ParamsInterceptor
+import com.tangem.core.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 
 /**
