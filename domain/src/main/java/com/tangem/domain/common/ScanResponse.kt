@@ -30,6 +30,7 @@ data class ScanResponse(
 ) : CommandResponse {
     fun getBlockchain(): Blockchain {
         return when (productType) {
+            ProductType.Start2Coin -> if (card.isTestCard) Blockchain.BitcoinTestnet else Blockchain.Bitcoin
             ProductType.SaltPay -> Blockchain.SaltPay
             ProductType.Note -> card.getTangemNoteBlockchain() ?: Blockchain.Unknown
             else -> {
@@ -71,11 +72,9 @@ data class ScanResponse(
             Blockchain.secp256k1Blockchains(isTestnet).contains(blockchain) -> {
                 hasDerivation(EllipticCurve.Secp256k1, derivationPath)
             }
-
             Blockchain.ed25519OnlyBlockchains(isTestnet).contains(blockchain) -> {
                 hasDerivation(EllipticCurve.Ed25519, derivationPath)
             }
-
             else -> false
         }
     }
@@ -90,7 +89,7 @@ data class ScanResponse(
 }
 
 enum class ProductType {
-    Note, Twins, Wallet, SaltPay
+    Note, Twins, Wallet, SaltPay, Start2Coin
 }
 
 typealias KeyWalletPublicKey = ByteArrayKey
