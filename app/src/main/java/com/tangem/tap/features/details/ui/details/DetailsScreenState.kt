@@ -4,11 +4,11 @@ import com.tangem.wallet.R
 
 data class DetailsScreenState(
     val elements: List<SettingsElement>,
-    val tangemLinks: List<TangemLink>,
+    val tangemLinks: List<SocialNetworkLink>,
     val tangemVersion: String,
     val appCurrency: String,
     val onItemsClick: (SettingsElement) -> Unit,
-    val onSocialNetworkClick: (String) -> Unit,
+    val onSocialNetworkClick: (SocialNetworkLink) -> Unit,
 ) {
     val appNameRes: Int = R.string.app_name
 }
@@ -30,28 +30,38 @@ enum class SettingsElement(
     ;
 }
 
-data class TangemLink(
-    val iconRes: Int,
+data class SocialNetworkLink(
+    val network: SocialNetwork,
     val url: String,
 )
 
+sealed class SocialNetwork(val id: String, val iconRes: Int) {
+    object Telegram : SocialNetwork("Telegram", R.drawable.ic_telegram)
+    object Twitter : SocialNetwork("Twitter", R.drawable.ic_twitter)
+    object Facebook : SocialNetwork("Facebook", R.drawable.ic_facebook)
+    object Instagram : SocialNetwork("Instagram", R.drawable.ic_instagram)
+    object GitHub : SocialNetwork("GitHub", R.drawable.ic_github)
+    object Youtube : SocialNetwork("Youtube", R.drawable.ic_youtube)
+    object LinkedIn : SocialNetwork("LinkedIn", R.drawable.ic_linkedin)
+}
+
 object TangemSocialAccounts {
-    val accountsEn: List<TangemLink> = listOf(
-        TangemLink(R.drawable.ic_telegram, "https://t.me/TangemCards"),
-        TangemLink(R.drawable.ic_twitter, "https://twitter.com/tangem"),
-        TangemLink(R.drawable.ic_facebook, "https://m.facebook.com/TangemCards/"),
-        TangemLink(R.drawable.ic_instagram, "https://instagram.com/tangemcards"),
-        TangemLink(R.drawable.ic_github, "https://github.com/tangem"),
-        TangemLink(R.drawable.ic_youtube, "https://youtube.com/channel/UCFGwLS7yggzVkP6ozte0m1w"),
-        TangemLink(R.drawable.ic_linkedin, "https://www.linkedin.com/company/tangem"),
+    val accountsEn: List<SocialNetworkLink> = listOf(
+        SocialNetworkLink(SocialNetwork.Telegram, "https://t.me/TangemCards"),
+        SocialNetworkLink(SocialNetwork.Twitter, "https://twitter.com/tangem"),
+        SocialNetworkLink(SocialNetwork.Facebook, "https://m.facebook.com/TangemCards/"),
+        SocialNetworkLink(SocialNetwork.Instagram, "https://instagram.com/tangemcards"),
+        SocialNetworkLink(SocialNetwork.GitHub, "https://github.com/tangem"),
+        SocialNetworkLink(SocialNetwork.Youtube, "https://youtube.com/channel/UCFGwLS7yggzVkP6ozte0m1w"),
+        SocialNetworkLink(SocialNetwork.LinkedIn, "https://www.linkedin.com/company/tangem"),
     )
-    val accountsRu: List<TangemLink> = listOf(
-        TangemLink(R.drawable.ic_telegram, "https://t.me/tangem_ru"),
-        TangemLink(R.drawable.ic_twitter, "https://twitter.com/tangem"),
-        TangemLink(R.drawable.ic_facebook, "https://m.facebook.com/TangemCards/"),
-        TangemLink(R.drawable.ic_instagram, "https://instagram.com/tangemcards"),
-        TangemLink(R.drawable.ic_github, "https://github.com/tangem"),
-        TangemLink(R.drawable.ic_youtube, "https://youtube.com/channel/UCFGwLS7yggzVkP6ozte0m1w"),
-        TangemLink(R.drawable.ic_linkedin, "https://www.linkedin.com/company/tangem"),
+    val accountsRu: List<SocialNetworkLink> = listOf(
+        SocialNetworkLink(SocialNetwork.Telegram, "https://t.me/tangem_ru"),
+        SocialNetworkLink(SocialNetwork.Twitter, "https://twitter.com/tangem"),
+        SocialNetworkLink(SocialNetwork.Facebook, "https://m.facebook.com/TangemCards/"),
+        SocialNetworkLink(SocialNetwork.Instagram, "https://instagram.com/tangemcards"),
+        SocialNetworkLink(SocialNetwork.GitHub, "https://github.com/tangem"),
+        SocialNetworkLink(SocialNetwork.Youtube, "https://youtube.com/channel/UCFGwLS7yggzVkP6ozte0m1w"),
+        SocialNetworkLink(SocialNetwork.LinkedIn, "https://www.linkedin.com/company/tangem"),
     )
 }
