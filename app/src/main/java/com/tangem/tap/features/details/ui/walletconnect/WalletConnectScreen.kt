@@ -30,6 +30,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.compose.TangemTypography
 import com.tangem.tap.common.extensions.getFromClipboard
 import com.tangem.tap.features.details.ui.common.SettingsScreensScaffold
@@ -53,7 +55,12 @@ fun WalletConnectScreen(
         },
         fab = {
             if (!state.isLoading) {
-                AddSessionFab(onAddSession = { state.onAddSession(context.getFromClipboard()?.toString()) })
+                AddSessionFab(
+                    onAddSession = {
+                        Analytics.send(Settings.ButtonStartWalletConnectSession())
+                        state.onAddSession(context.getFromClipboard()?.toString())
+                    },
+                )
             }
         },
         titleRes = R.string.wallet_connect_title,
@@ -147,7 +154,10 @@ private fun WalletConnectSessions(
                     modifier = modifier.weight(1f),
                 )
                 IconButton(
-                    onClick = { state.onRemoveSession(session.sessionId) },
+                    onClick = {
+                        Analytics.send(Settings.ButtonStopWalletConnectSession())
+                        state.onRemoveSession(session.sessionId)
+                    },
                 ) {
                     Icon(
                         painter = painterResource(id = R.drawable.ic_cross_rounded_24),

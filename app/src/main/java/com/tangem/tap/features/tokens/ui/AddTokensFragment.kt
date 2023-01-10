@@ -15,6 +15,8 @@ import androidx.transition.TransitionInflater
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.google.accompanist.appcompattheme.AppCompatTheme
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.ManageTokens
 import com.tangem.tap.common.extensions.copyToClipboard
 import com.tangem.tap.common.extensions.dispatchNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -48,12 +50,17 @@ class AddTokensFragment : Fragment(R.layout.fragment_add_tokens),
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
-        activity?.onBackPressedDispatcher?.addCallback(this, object : OnBackPressedCallback(true) {
-            override fun handleOnBackPressed() {
-                store.dispatch(NavigationAction.PopBackTo())
-                store.dispatch(TokensAction.ResetState)
-            }
-        })
+        Analytics.send(ManageTokens.ScreenOpened())
+
+        activity?.onBackPressedDispatcher?.addCallback(
+            this,
+            object : OnBackPressedCallback(true) {
+                override fun handleOnBackPressed() {
+                    store.dispatch(NavigationAction.PopBackTo())
+                    store.dispatch(TokensAction.ResetState)
+                }
+            },
+        )
         val inflater = TransitionInflater.from(requireContext())
         enterTransition = inflater.inflateTransition(R.transition.slide_right)
         exitTransition = inflater.inflateTransition(R.transition.fade)
@@ -80,6 +87,7 @@ class AddTokensFragment : Fragment(R.layout.fragment_add_tokens),
         toolbar.setNavigationOnClickListener { activity?.onBackPressed() }
 
         val onSaveChanges = { tokens: List<TokenWithBlockchain>, blockchains: List<Blockchain> ->
+            Analytics.send(ManageTokens.ButtonSaveChanges())
             store.dispatch(TokensAction.SaveChanges(tokens, blockchains))
         }
         val onNetworkItemClicked = { contractAddress: ContractAddress ->
@@ -88,11 +96,11 @@ class AddTokensFragment : Fragment(R.layout.fragment_add_tokens),
         }
 
         val onLoadMore = {
-                store.dispatch(
-                    TokensAction.LoadMore(
-                        scanResponse = store.state.globalState.scanResponse
-                    )
-                )
+            store.dispatch(
+                TokensAction.LoadMore(
+                    scanResponse = store.state.globalState.scanResponse,
+                ),
+            )
         }
 
         cvCurrencies.setContent {
@@ -101,7 +109,7 @@ class AddTokensFragment : Fragment(R.layout.fragment_add_tokens),
                     tokensState = tokensState,
                     onSaveChanges = onSaveChanges,
                     onNetworkItemClicked = onNetworkItemClicked,
-                    onLoadMore = onLoadMore
+                    onLoadMore = onLoadMore,
                 )
             }
         }
@@ -119,6 +127,7 @@ class AddTokensFragment : Fragment(R.layout.fragment_add_tokens),
         return when (item.itemId) {
             R.id.menu_search -> true
             R.id.menu_navigate_add_custom_token -> {
+                Analytics.send(ManageTokens.ButtonCustomToken())
                 store.dispatch(TokensAction.PrepareAndNavigateToAddCustomToken)
                 true
             }
@@ -154,15 +163,18 @@ class AddTokensFragment : Fragment(R.layout.fragment_add_tokens),
 }
 
 fun SearchView.inputtedTextAsFlow(): Flow<String> = callbackFlow {
-    val watcher = setOnQueryTextListener(object : SearchView.OnQueryTextListener {
-        override fun onQueryTextSubmit(query: String?): Boolean {
-            return false
-        }
+    val watcher =
+        setOnQueryTextListener(
+            object : SearchView.OnQueryTextListener {
+                override fun onQueryTextSubmit(query: String?): Boolean {
+                    return false
+                }
 
-        override fun onQueryTextChange(newText: String?): Boolean {
-            trySend(newText ?: "")
-            return false
-        }
-    })
+                override fun onQueryTextChange(newText: String?): Boolean {
+                    trySend(newText ?: "")
+                    return false
+                }
+            },
+        )
     awaitClose { (watcher) }
 }

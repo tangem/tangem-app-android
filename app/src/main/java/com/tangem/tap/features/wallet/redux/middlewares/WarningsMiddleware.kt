@@ -8,7 +8,6 @@ import com.tangem.common.card.Card
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.isTestCard
-import com.tangem.tap.common.analytics.AnalyticsEventAnOld
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.isGreaterThan
 import com.tangem.tap.common.redux.global.GlobalState
@@ -54,14 +53,10 @@ class WarningsMiddleware {
                 if (action.remainingSignatures != null &&
                     action.remainingSignatures <= WarningMessagesManager.REMAINING_SIGNATURES_WARNING
                 ) {
-                    store.state.globalState.warningManager
-                        ?.removeWarnings(
-                            messageRes = R.string.warning_low_signatures_format
-                        )
+                    store.state.globalState.warningManager?.removeWarnings(R.string.warning_low_signatures_format)
                     addWarningMessage(
-                        warning =
-                        WarningMessagesManager.remainingSignaturesNotEnough(action.remainingSignatures),
-                        autoUpdate = true
+                        warning = WarningMessagesManager.remainingSignaturesNotEnough(action.remainingSignatures),
+                        autoUpdate = true,
                     )
                 }
             }
@@ -69,7 +64,8 @@ class WarningsMiddleware {
             is WalletAction.Warnings.CheckHashesCount,
             is WalletAction.Warnings.CheckHashesCount.ConfirmHashesCount,
             is WalletAction.Warnings.CheckHashesCount.NeedToCheckHashesCountOnline,
-            is WalletAction.Warnings.Set -> Unit
+            is WalletAction.Warnings.Set,
+            -> Unit
         }
     }
 
@@ -81,7 +77,6 @@ class WarningsMiddleware {
             preferencesStorage.appRatingLaunchObserver.foundWalletWithFunds()
         }
         if (preferencesStorage.appRatingLaunchObserver.isReadyToShow()) {
-            store.state.globalState.analyticsHandler?.handleAnalyticsEvent(AnalyticsEventAnOld.APP_RATING_DISPLAYED)
             addWarningMessage(WarningMessagesManager.appRatingWarning(), true)
         }
     }
@@ -118,11 +113,7 @@ class WarningsMiddleware {
         if (remainingSignatures != null &&
             remainingSignatures <= WarningMessagesManager.REMAINING_SIGNATURES_WARNING
         ) {
-            addWarningMessage(
-                WarningMessagesManager.remainingSignaturesNotEnough(
-                    remainingSignatures
-                )
-            )
+            addWarningMessage(WarningMessagesManager.remainingSignaturesNotEnough(remainingSignatures))
         }
     }
 
@@ -178,15 +169,9 @@ class WarningsMiddleware {
                     }
                     is SimpleResult.Failure ->
                         if (result.error is BlockchainSdkError.SignatureCountNotMatched) {
-                            addWarningMessage(
-                                WarningMessagesManager.alreadySignedHashesWarning(),
-                                true
-                            )
+                            addWarningMessage(WarningMessagesManager.alreadySignedHashesWarning(), true)
                         } else if (signedHashes > 0) {
-                            addWarningMessage(
-                                WarningMessagesManager.alreadySignedHashesWarning(),
-                                true
-                            )
+                            addWarningMessage(WarningMessagesManager.alreadySignedHashesWarning(), true)
                         }
                     null -> Unit
                 }
@@ -207,7 +192,7 @@ class WarningsMiddleware {
         val warningManager = store.state.globalState.warningManager ?: return emptyList()
         return warningManager.getWarnings(
             WarningMessage.Location.MainScreen,
-            store.state.walletState.blockchains
+            store.state.walletState.blockchains,
         )
     }
 }
