@@ -1,4 +1,4 @@
-package com.tangem.tap.common.analytics.api
+package com.tangem.analytics.api
 
 /**
 [REDACTED_AUTHOR]

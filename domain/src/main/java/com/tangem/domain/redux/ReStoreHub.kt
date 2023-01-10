@@ -1,8 +1,8 @@
 package com.tangem.domain.redux
 
 import android.webkit.ValueCallback
-import com.tangem.domain.common.FeatureCoroutineExceptionHandler
 import com.tangem.domain.redux.global.DomainGlobalState
+import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
 import kotlinx.coroutines.*
 import org.rekotlin.Action
 import org.rekotlin.DispatchFunction
