@@ -29,7 +29,7 @@ private fun internalReduce(action: Action, appState: AppState): OnboardingWallet
         )
         is OnboardingWalletAction.ResumeBackup -> state.copy(step = OnboardingWalletStep.Backup)
         is OnboardingWalletAction.SetArtworkUrl -> {
-            state.copy(cardArtworkUrl = action.artworkUrl)
+            state.copy(cardArtworkUri = action.artworkUri)
         }
         is OnboardingWalletAction.Done -> state.copy(step = OnboardingWalletStep.Done)
         else -> state
@@ -52,7 +52,7 @@ private class ReducerForGlobalAction {
                 is GlobalAction.Onboarding.StartForUnfinishedBackup -> {
                     OnboardingWalletState(
                         backupState = state.backupState.copy(
-                            maxBackupCards = 2,
+                            maxBackupCards = action.addedBackupCardsCount,
                             canSkipBackup = false,
                         ),
                         isSaltPay = false,
