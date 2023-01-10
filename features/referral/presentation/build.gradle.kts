@@ -48,6 +48,7 @@ android {
 
 dependencies {
     /** Core modules */
+    implementation(project(":core:analytics"))
     implementation(project(":core:res"))
     implementation(project(":core:utils"))
     implementation(project(":core:ui"))
@@ -56,6 +57,7 @@ dependencies {
     implementation(AndroidX.appCompat)
     implementation(AndroidX.fragmentKtx)
     implementation(AndroidX.lifecycleViewModelKtx)
+    implementation(Library.materialComponent)
 
     /** Compose */
     implementation(Compose.foundation)
