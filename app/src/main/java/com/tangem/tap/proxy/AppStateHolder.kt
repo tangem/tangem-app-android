@@ -6,6 +6,8 @@ import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.TangemSdkManager
 import com.tangem.tap.domain.tokens.UserTokensRepository
+import com.tangem.tap.domain.userWalletList.UserWalletsListManager
+import com.tangem.tap.domain.walletStores.WalletStoresManager
 import com.tangem.tap.features.wallet.redux.WalletState
 import org.rekotlin.Store
 import javax.inject.Inject
@@ -22,6 +24,8 @@ class AppStateHolder @Inject constructor(){
     var mainStore: Store<AppState>? = null
     var tangemSdkManager: TangemSdkManager? = null
     var tangemSdk: TangemSdk? = null
+    var walletStoresManager: WalletStoresManager? = null
+    var userWalletsListManager: UserWalletsListManager? = null
 
     fun getActualCard(): CardDTO? {
         return scanResponse?.card
