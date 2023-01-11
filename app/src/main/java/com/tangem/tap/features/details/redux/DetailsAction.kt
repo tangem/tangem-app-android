@@ -4,7 +4,6 @@ import com.tangem.blockchain.common.Wallet
 import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.entities.FiatCurrency
-import com.tangem.tap.domain.termsOfUse.CardTou
 import org.rekotlin.Action
 
 sealed class DetailsAction : Action {
@@ -12,10 +11,8 @@ sealed class DetailsAction : Action {
     data class PrepareScreen(
         val scanResponse: ScanResponse,
         val wallets: List<Wallet>,
-        val cardTou: CardTou,
     ) : DetailsAction()
 
-    object ShowDisclaimer : DetailsAction()
     object ReCreateTwinsWallet : DetailsAction()
 
     sealed class ResetToFactory : DetailsAction() {

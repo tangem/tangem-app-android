@@ -1,10 +1,6 @@
-package com.tangem.tap.common.analytics.api
+package com.tangem.core.analytics.api
 
-import android.app.Application
-import com.tangem.common.json.MoshiJsonConverter
-import com.tangem.domain.common.AnalyticsHandlersLogConfig
-import com.tangem.tap.common.analytics.events.AnalyticsEvent
-import com.tangem.tap.domain.configurable.config.Config
+import com.tangem.core.analytics.AnalyticsEvent
 
 /**
 [REDACTED_AUTHOR]
@@ -35,16 +31,4 @@ interface ErrorEventHandler {
 interface AnalyticsHandlerHolder {
     fun addHandler(name: String, handler: AnalyticsHandler)
     fun removeHandler(name: String): AnalyticsHandler?
-}
-
-interface AnalyticsHandlerBuilder {
-    fun build(data: Data): AnalyticsHandler?
-
-    data class Data(
-        val application: Application,
-        val config: Config,
-        val isDebug: Boolean,
-        val logConfig: AnalyticsHandlersLogConfig,
-        val jsonConverter: MoshiJsonConverter,
-    )
 }
