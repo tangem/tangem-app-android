@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -16,11 +15,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.R
 import com.tangem.core.ui.components.appbar.models.AdditionalButton
-import com.tangem.core.ui.res.IconColorType
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TextColorType
-import com.tangem.core.ui.res.iconColor
-import com.tangem.core.ui.res.textColor
 
 /**
  * App bar with title and two additional buttons
@@ -49,7 +44,7 @@ fun AppBarWithAdditionalButtons(
                     painter = painterResource(id = startButton.iconRes),
                     contentDescription = null,
                     modifier = Modifier.size(TangemTheme.dimens.size24),
-                    tint = MaterialTheme.colors.iconColor(type = IconColorType.PRIMARY1),
+                    tint = TangemTheme.colors.icon.primary1,
                 )
             }
         }
@@ -57,9 +52,9 @@ fun AppBarWithAdditionalButtons(
         Text(
             text = text,
             modifier = Modifier.align(Alignment.Center),
-            color = MaterialTheme.colors.textColor(type = TextColorType.PRIMARY1),
+            color = TangemTheme.colors.text.primary1,
             maxLines = 1,
-            style = MaterialTheme.typography.subtitle1,
+            style = TangemTheme.typography.subtitle1,
         )
 
         if (endButton != null) {
@@ -68,7 +63,7 @@ fun AppBarWithAdditionalButtons(
                     painter = painterResource(id = endButton.iconRes),
                     contentDescription = null,
                     modifier = Modifier.size(TangemTheme.dimens.size24),
-                    tint = MaterialTheme.colors.iconColor(type = IconColorType.PRIMARY1),
+                    tint = TangemTheme.colors.icon.primary1,
                 )
             }
         }
