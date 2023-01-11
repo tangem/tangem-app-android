@@ -11,6 +11,7 @@ import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.util.*
 
+//todo move extensions to utils
 fun BigDecimal.toFormattedString(
     decimals: Int, roundingMode: RoundingMode = RoundingMode.DOWN, locale: Locale = Locale.US
 ): String {
