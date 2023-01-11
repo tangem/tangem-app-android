@@ -3,7 +3,6 @@ package com.tangem.feature.referral.ui
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -32,7 +31,7 @@ internal fun NonParticipateBottomBlock(onAgreementClicked: () -> Unit, onPartici
 @Composable
 fun Preview_NonParticipateBottomBlock_InLightTheme() {
     TangemTheme(isDark = false) {
-        Column(Modifier.background(MaterialTheme.colors.primary)) {
+        Column(Modifier.background(TangemTheme.colors.background.primary)) {
             NonParticipateBottomBlock(onAgreementClicked = {}, onParticipateClicked = {})
         }
     }
@@ -42,7 +41,7 @@ fun Preview_NonParticipateBottomBlock_InLightTheme() {
 @Composable
 fun Preview_NonParticipateBottomBlock_InDarkTheme() {
     TangemTheme(isDark = true) {
-        Column(Modifier.background(MaterialTheme.colors.primary)) {
+        Column(Modifier.background(TangemTheme.colors.background.primary)) {
             NonParticipateBottomBlock(onAgreementClicked = {}, onParticipateClicked = {})
         }
     }

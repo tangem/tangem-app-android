@@ -19,6 +19,7 @@ import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.isExcluded
 import com.tangem.domain.common.TapWorkarounds.isNotSupportedInThatRelease
 import com.tangem.domain.common.TapWorkarounds.isSaltPay
+import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.TapWorkarounds.isTangemNote
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
@@ -193,8 +194,9 @@ private class ScanWalletProcessor(
         session: CardSession,
         callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
-        val productType = when (card.isSaltPay) {
-            true -> ProductType.SaltPay
+        val productType = when {
+            card.isSaltPay -> ProductType.SaltPay
+            card.isStart2Coin -> ProductType.Start2Coin
             else -> ProductType.Wallet
         }
         scope.launch {
@@ -264,12 +266,7 @@ private class ScanWalletProcessor(
         }
         if (additionalBlockchainsToDerive != null) {
             blockchainsToDerive.addAll(
-                additionalBlockchainsToDerive.map {
-                    BlockchainNetwork(
-                        blockchain = it,
-                        card = card,
-                    )
-                },
+                additionalBlockchainsToDerive.map { BlockchainNetwork(it, card) }
             )
         }
         if (!card.useOldStyleDerivation) {
@@ -280,12 +277,7 @@ private class ScanWalletProcessor(
                     Blockchain.RSK,
                     Blockchain.Fantom, Blockchain.FantomTestnet,
                     Blockchain.Avalanche, Blockchain.AvalancheTestnet,
-                ).map {
-                    BlockchainNetwork(
-                        blockchain = it,
-                        card = card,
-                    )
-                },
+                ).map { BlockchainNetwork(it, card) },
             )
         }
         return blockchainsToDerive.distinct()

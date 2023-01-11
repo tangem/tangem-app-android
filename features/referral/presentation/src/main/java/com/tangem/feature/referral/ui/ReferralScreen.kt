@@ -7,8 +7,10 @@ import androidx.compose.foundation.LocalOverscrollConfiguration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -21,7 +23,6 @@ import androidx.compose.material.BottomSheetState
 import androidx.compose.material.BottomSheetValue
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Snackbar
 import androidx.compose.material.SnackbarDuration
 import androidx.compose.material.SnackbarHost
@@ -56,15 +57,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.tangem.core.ui.components.VerticalSpacer
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
-import com.tangem.core.ui.res.ButtonColorType
-import com.tangem.core.ui.res.IconColorType
 import com.tangem.core.ui.res.TangemColorPalette
-import com.tangem.core.ui.res.TangemColorPalette.Black
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TextColorType
-import com.tangem.core.ui.res.buttonColor
-import com.tangem.core.ui.res.iconColor
-import com.tangem.core.ui.res.textColor
 import com.tangem.feature.referral.models.ReferralStateHolder
 import com.tangem.feature.referral.models.ReferralStateHolder.ErrorSnackbar
 import com.tangem.feature.referral.models.ReferralStateHolder.ReferralInfoContentState
@@ -108,6 +102,7 @@ internal fun ReferralScreen(stateHolder: ReferralStateHolder) {
                 ReferralContent(
                     stateHolder = stateHolder,
                     onAgreementClicked = {
+                        stateHolder.analytics.onAgreementClicked.invoke()
                         coroutineScope.launch {
                             if (bottomSheetScaffoldState.bottomSheetState.isCollapsed) {
                                 bottomSheetScaffoldState.bottomSheetState.expand()
@@ -131,8 +126,8 @@ private fun ReferralContent(stateHolder: ReferralStateHolder, onAgreementClicked
         CompositionLocalProvider(LocalOverscrollConfiguration provides null) {
             LazyColumn(
                 modifier = Modifier
-                    .background(color = MaterialTheme.colors.primary)
-                    .fillMaxWidth(),
+                    .background(color = TangemTheme.colors.background.secondary)
+                    .fillMaxSize(),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 stickyHeader {
@@ -172,10 +167,10 @@ private fun Header() {
         Text(
             text = stringResource(id = R.string.referral_title),
             modifier = Modifier.padding(horizontal = dimensionResource(R.dimen.spacing50)),
-            color = MaterialTheme.colors.textColor(type = TextColorType.PRIMARY1),
+            color = TangemTheme.colors.text.primary1,
             textAlign = TextAlign.Center,
             maxLines = 2,
-            style = MaterialTheme.typography.h2,
+            style = TangemTheme.typography.h2,
         )
         VerticalSpacer(spaceResId = R.dimen.spacing16)
     }
@@ -196,6 +191,8 @@ private fun ReferralInfo(
                 shareLink = state.shareLink,
                 onAgreementClicked = onAgreementClicked,
                 showCopySnackbar = showCopySnackbar,
+                onCopyClicked = stateHolder.analytics.onCopyClicked,
+                onShareClicked = stateHolder.analytics.onShareClicked,
             )
         }
         is ReferralInfoState.NonParticipantContent -> {
@@ -262,7 +259,7 @@ private fun Condition(@DrawableRes iconResId: Int, infoBlock: @Composable () -> 
         Box(
             modifier = Modifier
                 .background(
-                    color = MaterialTheme.colors.buttonColor(type = ButtonColorType.SECONDARY),
+                    color = TangemTheme.colors.button.secondary,
                     shape = RoundedCornerShape(TangemTheme.dimens.radius16),
                 )
                 .size(TangemTheme.dimens.size56),
@@ -272,7 +269,7 @@ private fun Condition(@DrawableRes iconResId: Int, infoBlock: @Composable () -> 
                 painter = painterResource(id = iconResId),
                 contentDescription = null,
                 modifier = Modifier.size(TangemTheme.dimens.size28),
-                tint = MaterialTheme.colors.iconColor(type = IconColorType.PRIMARY1),
+                tint = TangemTheme.colors.icon.primary1,
             )
         }
         infoBlock()
@@ -285,7 +282,7 @@ private fun InfoForYou(award: String, networkName: String, address: String? = nu
         Text(
             text = buildAnnotatedString {
                 append(stringResource(id = R.string.referral_point_currencies_description_prefix))
-                withStyle(SpanStyle(color = MaterialTheme.colors.textColor(type = TextColorType.PRIMARY1))) {
+                withStyle(SpanStyle(color = TangemTheme.colors.text.primary1)) {
                     append(" $award ")
                 }
                 append(
@@ -296,8 +293,8 @@ private fun InfoForYou(award: String, networkName: String, address: String? = nu
                     ),
                 )
             },
-            color = MaterialTheme.colors.textColor(type = TextColorType.TERTIARY),
-            style = MaterialTheme.typography.body2,
+            color = TangemTheme.colors.text.tertiary,
+            style = TangemTheme.typography.body2,
         )
     }
 }
@@ -306,19 +303,21 @@ private fun InfoForYou(award: String, networkName: String, address: String? = nu
 private fun InfoForYourFriend(discount: String) {
     ConditionInfo(title = stringResource(id = R.string.referral_point_discount_title)) {
         Text(
-            text = buildString {
+            text = buildAnnotatedString {
                 append(stringResource(id = R.string.referral_point_discount_description_prefix))
-                append(
-                    String.format(
-                        stringResource(id = R.string.referral_point_discount_description_value),
-                        " $discount",
-                    ),
-                )
+                withStyle(SpanStyle(color = TangemTheme.colors.text.primary1)) {
+                    append(
+                        String.format(
+                            stringResource(id = R.string.referral_point_discount_description_value),
+                            " $discount",
+                        ),
+                    )
+                }
                 append(" ")
                 append(stringResource(id = R.string.referral_point_discount_description_suffix))
             },
-            color = MaterialTheme.colors.textColor(type = TextColorType.TERTIARY),
-            style = MaterialTheme.typography.body2,
+            color = TangemTheme.colors.text.tertiary,
+            style = TangemTheme.typography.body2,
         )
     }
 }
@@ -328,8 +327,8 @@ private fun ConditionInfo(title: String, subtitleContent: @Composable () -> Unit
     Column(verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing2)) {
         Text(
             text = title,
-            color = MaterialTheme.colors.textColor(type = TextColorType.PRIMARY1),
-            style = MaterialTheme.typography.subtitle1,
+            color = TangemTheme.colors.text.primary1,
+            style = TangemTheme.typography.subtitle1,
         )
         subtitleContent()
     }
@@ -350,6 +349,7 @@ private fun ShimmerInfo() {
                 .width(TangemTheme.dimens.size102)
                 .height(TangemTheme.dimens.size16)
                 .background(TangemColorPalette.White),
+            // .background(Color(0xFFF8F8F8)),
         )
         Box(
             modifier = Modifier
@@ -362,23 +362,23 @@ private fun ShimmerInfo() {
 }
 // [REDACTED_TODO_COMMENT]
 @Composable
-private fun ErrorSnackbarHost(errorSnackbar: ErrorSnackbar?) {
+private fun BoxScope.ErrorSnackbarHost(errorSnackbar: ErrorSnackbar?) {
     if (errorSnackbar != null) {
         val snackbarHostState by remember { mutableStateOf(SnackbarHostState()) }
         val coroutineScope = rememberCoroutineScope()
 
         SnackbarHost(
             hostState = snackbarHostState,
-            modifier = Modifier.padding(top = TangemTheme.dimens.spacing56),
+            modifier = Modifier.align(Alignment.BottomCenter),
             snackbar = {
                 Snackbar(
                     snackbarData = it,
                     modifier = Modifier.fillMaxWidth(),
                     actionOnNewLine = true,
                     shape = RoundedCornerShape(size = TangemTheme.dimens.radius8),
-                    backgroundColor = Black,
-                    contentColor = MaterialTheme.colors.textColor(type = TextColorType.PRIMARY2),
-                    actionColor = MaterialTheme.colors.textColor(type = TextColorType.PRIMARY2),
+                    backgroundColor = TangemColorPalette.Black,
+                    contentColor = TangemTheme.colors.text.primary2,
+                    actionColor = TangemTheme.colors.text.primary2,
                     elevation = TangemTheme.dimens.elevation3,
                 )
             },
@@ -410,7 +410,7 @@ private fun ErrorSnackbarHost(errorSnackbar: ErrorSnackbar?) {
 }
 // [REDACTED_TODO_COMMENT]
 @Composable
-private fun CopySnackbarHost(isCopyButtonPressed: MutableState<Boolean>) {
+private fun BoxScope.CopySnackbarHost(isCopyButtonPressed: MutableState<Boolean>) {
     if (isCopyButtonPressed.value) {
         val snackbarHostState by remember { mutableStateOf(SnackbarHostState()) }
         val coroutineScope = rememberCoroutineScope()
@@ -422,13 +422,14 @@ private fun CopySnackbarHost(isCopyButtonPressed: MutableState<Boolean>) {
         SnackbarHost(
             hostState = snackbarHostState,
             modifier = Modifier
-                .padding(top = TangemTheme.dimens.spacing56, start = (width - snackbarWidth).div(2))
+                .align(Alignment.BottomCenter)
+                .padding(start = (width - snackbarWidth).div(2), bottom = dimensionResource(R.dimen.spacing12))
                 .fillMaxWidth(),
             snackbar = {
                 Box(
                     modifier = Modifier
                         .onSizeChanged { snackbarSize = it.width }
-                        .background(Black, RoundedCornerShape(size = TangemTheme.dimens.radius8))
+                        .background(TangemColorPalette.Black, RoundedCornerShape(size = TangemTheme.dimens.radius8))
                         .shadow(
                             TangemTheme.dimens.elevation3,
                             RoundedCornerShape(size = TangemTheme.dimens.radius8),
@@ -440,8 +441,8 @@ private fun CopySnackbarHost(isCopyButtonPressed: MutableState<Boolean>) {
                 ) {
                     Text(
                         text = it.message,
-                        color = MaterialTheme.colors.textColor(type = TextColorType.PRIMARY2),
-                        style = MaterialTheme.typography.body2,
+                        color = TangemTheme.colors.text.primary2,
+                        style = TangemTheme.typography.body2,
                     )
                 }
             },
@@ -478,6 +479,11 @@ fun Preview_ReferralScreen_Participant_InLightTheme() {
                     url = "",
                 ),
                 errorSnackbar = null,
+                analytics = ReferralStateHolder.Analytics(
+                    onAgreementClicked = {},
+                    onCopyClicked = {},
+                    onShareClicked = {},
+                ),
             ),
         )
     }
@@ -501,6 +507,11 @@ fun Preview_ReferralScreen_Participant_InDarkTheme() {
                     url = "",
                 ),
                 errorSnackbar = null,
+                analytics = ReferralStateHolder.Analytics(
+                    onAgreementClicked = {},
+                    onCopyClicked = {},
+                    onShareClicked = {},
+                ),
             ),
         )
     }
@@ -521,6 +532,11 @@ fun Preview_ReferralScreen_NonParticipant_InLightTheme() {
                     onParticipateClicked = {},
                 ),
                 errorSnackbar = null,
+                analytics = ReferralStateHolder.Analytics(
+                    onAgreementClicked = {},
+                    onCopyClicked = {},
+                    onShareClicked = {},
+                ),
             ),
         )
     }
@@ -541,6 +557,11 @@ fun Preview_ReferralScreen_NonParticipant_InDarkTheme() {
                     onParticipateClicked = {},
                 ),
                 errorSnackbar = null,
+                analytics = ReferralStateHolder.Analytics(
+                    onAgreementClicked = {},
+                    onCopyClicked = {},
+                    onShareClicked = {},
+                ),
             ),
         )
     }
@@ -555,6 +576,11 @@ fun Preview_ReferralScreen_Loading_InLightTheme() {
                 headerState = ReferralStateHolder.HeaderState(onBackClicked = {}),
                 referralInfoState = ReferralInfoState.Loading,
                 errorSnackbar = null,
+                analytics = ReferralStateHolder.Analytics(
+                    onAgreementClicked = {},
+                    onCopyClicked = {},
+                    onShareClicked = {},
+                ),
             ),
         )
     }
@@ -569,6 +595,11 @@ fun Preview_ReferralScreen_Loading_InDarkTheme() {
                 headerState = ReferralStateHolder.HeaderState(onBackClicked = {}),
                 referralInfoState = ReferralInfoState.Loading,
                 errorSnackbar = null,
+                analytics = ReferralStateHolder.Analytics(
+                    onAgreementClicked = {},
+                    onCopyClicked = {},
+                    onShareClicked = {},
+                ),
             ),
         )
     }

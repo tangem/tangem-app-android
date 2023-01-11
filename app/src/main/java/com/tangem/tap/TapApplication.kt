@@ -18,7 +18,7 @@ import com.tangem.domain.common.LogConfig
 import com.tangem.tap.common.AndroidAssetReader
 import com.tangem.tap.common.AssetReader
 import com.tangem.tap.common.IntentHandler
-import com.tangem.tap.common.analytics.Analytics
+import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 import com.tangem.tap.common.analytics.filters.BasicSignInFilter
@@ -128,7 +128,6 @@ class TapApplication : Application(), ImageLoaderFactory {
             middleware = AppState.getMiddleware(),
             state = AppState(),
         )
-        appStateHolder.mainStore = store
 
         if (BuildConfig.DEBUG) {
             Timber.plant(Timber.DebugTree())
@@ -155,7 +154,9 @@ class TapApplication : Application(), ImageLoaderFactory {
             context = this,
             tangemTechService = store.state.domainNetworks.tangemTechService,
         )
+        appStateHolder.mainStore = store
         appStateHolder.userTokensRepository = userTokensRepository
+        appStateHolder.walletStoresManager = walletStoresManager
     }
 // [REDACTED_TODO_COMMENT]
     private fun initMoshiConverter() {

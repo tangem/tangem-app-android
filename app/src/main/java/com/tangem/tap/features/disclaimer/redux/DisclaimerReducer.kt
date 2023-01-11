@@ -15,13 +15,19 @@ private fun internalReduce(action: Action, state: AppState): DisclaimerState {
     val disclaimerState = state.disclaimerState
 
     return when (action) {
-        is DisclaimerAction.UpdateState -> disclaimerState.copy(
-            type = action.type,
-            accepted = action.accepted,
+        is DisclaimerAction.SetDisclaimer -> disclaimerState.copy(
+            disclaimer = action.disclaimer,
         )
-        is DisclaimerAction.SetCallbacks -> disclaimerState.copy(
-            onAcceptCallback = action.onAcceptCallback,
-            onDismissCallback = action.onDismissCallback,
+        is DisclaimerAction.Show -> disclaimerState.copy(
+            showedFromScreen = action.fromScreen,
+            callback = action.callback,
+        )
+        is DisclaimerAction.AcceptDisclaimer, is DisclaimerAction.OnBackPressed -> disclaimerState.copy(
+            callback = null,
+            progressState = null,
+        )
+        is DisclaimerAction.OnProgressStateChanged -> disclaimerState.copy(
+            progressState = action.state,
         )
         else -> disclaimerState
     }
