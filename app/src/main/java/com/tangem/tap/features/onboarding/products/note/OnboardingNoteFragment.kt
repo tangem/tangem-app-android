@@ -9,7 +9,7 @@ import androidx.core.view.isVisible
 import androidx.transition.TransitionManager
 import coil.load
 import com.tangem.blockchain.common.Blockchain
-import com.tangem.tap.common.analytics.Analytics
+import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.getDrawableCompat
 import com.tangem.tap.common.extensions.stripZeroPlainString
