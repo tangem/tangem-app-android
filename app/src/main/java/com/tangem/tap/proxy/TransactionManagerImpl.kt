@@ -33,7 +33,6 @@ class TransactionManagerImpl(
     private val appStateHolder: AppStateHolder,
 ) : TransactionManager {
 
-    @Throws(IllegalStateException::class)
     override suspend fun sendTransaction(
         networkId: String,
         amountToSend: BigDecimal,
@@ -61,6 +60,10 @@ class TransactionManagerImpl(
             return SendTxResult.UnknownError(ex)
         }
         return handleSendResult(sendResult)
+    }
+
+    override fun getNativeTokenDecimals(networkId: String): Int {
+        return Blockchain.fromNetworkId(networkId)?.decimals() ?: error("blockchain not found")
     }
 
     @Throws(IllegalStateException::class)
