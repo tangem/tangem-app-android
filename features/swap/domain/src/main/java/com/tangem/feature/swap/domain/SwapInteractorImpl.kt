@@ -4,8 +4,10 @@ import com.tangem.feature.swap.domain.cache.SwapDataCache
 import com.tangem.feature.swap.domain.converters.CryptoCurrencyConverter
 import com.tangem.feature.swap.domain.models.data.Currency
 import com.tangem.feature.swap.domain.models.data.DataError
+import com.tangem.feature.swap.domain.models.data.SwapAmount
 import com.tangem.feature.swap.domain.models.data.SwapState
 import com.tangem.feature.swap.domain.models.data.TransactionModel
+import com.tangem.feature.swap.domain.models.data.toStringWithRightOffset
 import com.tangem.lib.crypto.TransactionManager
 import com.tangem.lib.crypto.UserWalletManager
 import java.math.BigDecimal
@@ -34,23 +36,6 @@ internal class SwapInteractorImpl @Inject constructor(
         TODO("Not yet implemented")
     }
 
-    override suspend fun getFee(): BigDecimal {
-        return transactionManager.getFee(
-            networkId = cache.getNetworkId() ?: error("no networkId found, call getTokensToSwap first"),
-            amountToSend = cache.getAmountToSwap() ?: error("no amount found, call findBestQuote first"),
-            currencyToSend = cryptoCurrencyConverter.convert(
-                cache.getExchangeCurrencies()?.fromCurrency ?: error(
-                    "no fromCurrency found, call findBestQuote first",
-                ),
-            ),
-            destinationAddress = getTokenAddress(
-                cache.getExchangeCurrencies()?.toCurrency ?: error(
-                    "no toCurrency found, call findBestQuote first",
-                ),
-            ),
-        ).value
-    }
-
     override suspend fun givePermissionToSwap(tokenToApprove: Currency) {
         cache.getNetworkId()?.let { networkId ->
             if (tokenToApprove is Currency.NonNativeToken) {
@@ -71,11 +56,10 @@ internal class SwapInteractorImpl @Inject constructor(
         }
     }
 
-    override suspend fun findBestQuote(fromToken: Currency, toToken: Currency, amount: String): SwapState {
+    override suspend fun findBestQuote(fromToken: Currency, toToken: Currency, amount: SwapAmount): SwapState {
         val networkId = cache.getNetworkId()
         val fromTokenAddress = getTokenAddress(fromToken)
         val toTokenAddress = getTokenAddress(toToken)
-        val bigDecimalAmount = amount.toBigDecimalOrNull() ?: error("wrong amount format, use only digits")
         val isAllowedToSpend = if (networkId.isNullOrEmpty()) {
             error("no networkId found, please call getTokensToSwap first")
         } else {
@@ -91,13 +75,13 @@ internal class SwapInteractorImpl @Inject constructor(
             networkId = networkId,
             fromTokenAddress = fromTokenAddress,
             toTokenAddress = toTokenAddress,
-            amount = amount,
+            amount = amount.toStringWithRightOffset(),
         ).let { quotes ->
             val quoteDataModel = quotes.dataModel
             if (quoteDataModel != null) {
                 cache.cacheSwapParams(
                     quoteModel = quoteDataModel.copy(isAllowedToSpend = isAllowedToSpend),
-                    amount = bigDecimalAmount,
+                    amount = amount,
                     fromCurrency = fromToken,
                     toCurrency = toToken,
                 )
@@ -115,9 +99,9 @@ internal class SwapInteractorImpl @Inject constructor(
         if (quoteModel != null && amountToSwap != null && networkId != null) {
             repository.prepareSwapTransaction(
                 networkId = networkId,
-                fromTokenAddress = quoteModel.fromTokenAmount,
-                toTokenAddress = quoteModel.toTokenAmount,
-                amount = amountToSwap.toPlainString(),
+                fromTokenAddress = quoteModel.fromTokenAddress,
+                toTokenAddress = quoteModel.toTokenAddress,
+                amount = amountToSwap.toStringWithRightOffset(),
                 slippage = DEFAULT_SLIPPAGE,
                 fromWalletAddress = getWalletAddress(networkId),
             ).let {
@@ -134,6 +118,14 @@ internal class SwapInteractorImpl @Inject constructor(
             }
         } else {
             throw IllegalStateException("cache is empty, call 'findBestQuote' first")
+        }
+    }
+
+    override fun getTokenDecimals(token: Currency): Int {
+        return if (token is Currency.NonNativeToken) {
+            token.decimalCount
+        } else {
+            transactionManager.getNativeTokenDecimals(token.networkId)
         }
     }
 
