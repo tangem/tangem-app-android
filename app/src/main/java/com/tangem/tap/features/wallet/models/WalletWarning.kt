@@ -9,7 +9,12 @@ sealed class WalletWarning(
     ) : WalletWarning(1)
 
     object TransactionInProgress : WalletWarning(10)
-    data class BalanceNotEnoughForFee(val blockchainFullName: String) : WalletWarning(30)
+    data class BalanceNotEnoughForFee(
+        val tokenName: String,
+        val blockchainFullName: String,
+        val blockchainCurrencyName: String,
+    ) : WalletWarning(30)
+
     data class Rent(val walletRent: WalletRent) : WalletWarning(40)
 }
 
