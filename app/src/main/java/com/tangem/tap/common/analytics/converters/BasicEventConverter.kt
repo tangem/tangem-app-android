@@ -70,7 +70,7 @@ private fun statesIsReadyToCreateEvent(scanResponse: ScanResponse, state: Wallet
         if (it.currencyData.amount == null) 0 else 1
     }.reduce { acc, i -> acc + i }
 
-    if (balancesCount != state.wallets.size) return false
+    if (balancesCount != state.walletsData.size) return false
 
     return true
 }
