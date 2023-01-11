@@ -336,4 +336,19 @@ fun Preview_InfoCardWithWarning_InDarkTheme() {
     }
 }
 
+@Preview(widthDp = 328, heightDp = 48, showBackground = true)
+@Composable
+fun Preview_SimpleInfoCard_InLightTheme() {
+    TangemTheme(isDark = false) {
+        SmallInfoCard(startText = "Balance", endText = "0.4405434 BTC")
+    }
+}
+
+@Preview(widthDp = 328, heightDp = 48, showBackground = true)
+@Composable
+fun Preview_SimpleInfoCard_InDarkTheme() {
+    TangemTheme(isDark = true) {
+        SmallInfoCard(startText = "Balance", endText = "0.4405434 BTC")
+    }
+}
 // endregion Preview
