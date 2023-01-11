@@ -1,14 +1,13 @@
-package com.tangem.tap.common.analytics
+package com.tangem.core.analytics
 
-import com.tangem.domain.common.FeatureCoroutineExceptionHandler
-import com.tangem.tap.common.analytics.api.AnalyticsEventFilter
-import com.tangem.tap.common.analytics.api.AnalyticsEventHandler
-import com.tangem.tap.common.analytics.api.AnalyticsFilterHolder
-import com.tangem.tap.common.analytics.api.AnalyticsHandler
-import com.tangem.tap.common.analytics.api.AnalyticsHandlerHolder
-import com.tangem.tap.common.analytics.api.ParamsInterceptor
-import com.tangem.tap.common.analytics.api.ParamsInterceptorHolder
-import com.tangem.tap.common.analytics.events.AnalyticsEvent
+import com.tangem.core.analytics.api.AnalyticsEventFilter
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.analytics.api.AnalyticsFilterHolder
+import com.tangem.core.analytics.api.AnalyticsHandler
+import com.tangem.core.analytics.api.AnalyticsHandlerHolder
+import com.tangem.core.analytics.api.ParamsInterceptor
+import com.tangem.core.analytics.api.ParamsInterceptorHolder
+import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
