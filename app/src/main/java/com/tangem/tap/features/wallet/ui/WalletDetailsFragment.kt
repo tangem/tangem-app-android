@@ -22,7 +22,7 @@ import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.tangem_sdk_new.extensions.dpToPx
 import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.TestActions
-import com.tangem.tap.common.analytics.Analytics
+import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.DetailsScreen
 import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.extensions.appendIfNotNull
