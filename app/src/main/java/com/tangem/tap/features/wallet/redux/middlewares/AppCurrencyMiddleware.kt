@@ -1,7 +1,7 @@
 package com.tangem.tap.features.wallet.redux.middlewares
 
 import com.tangem.datasource.api.tangemTech.models.CurrenciesResponse
-import com.tangem.tap.common.analytics.Analytics
+import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.entities.FiatCurrency
