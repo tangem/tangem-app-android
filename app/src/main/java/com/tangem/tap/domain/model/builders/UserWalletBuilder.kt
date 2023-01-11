@@ -29,6 +29,7 @@ class UserWalletBuilder(
             ProductType.Note -> "Note"
             ProductType.Twins -> "Twin"
             ProductType.SaltPay -> "SaltPay"
+            ProductType.Start2Coin -> "Start2Coin"
             ProductType.Wallet -> when {
                 card.isBackupNotAllowed -> "Tangem card"
                 card.isStart2Coin -> "Start2Coin"
@@ -41,6 +42,7 @@ class UserWalletBuilder(
             ProductType.Note -> false
             ProductType.Twins -> false
             ProductType.SaltPay -> false
+            ProductType.Start2Coin -> false
             ProductType.Wallet -> when {
                 card.isStart2Coin -> false
                 card.firmwareVersion >= FirmwareVersion.MultiWalletAvailable -> true
