@@ -1,9 +1,8 @@
-package com.tangem.feature.swap.domain.models
+package com.tangem.feature.swap.domain.models.cache
 
-import com.tangem.feature.swap.domain.models.data.Currency
-import com.tangem.feature.swap.domain.models.data.SwapAmount
-import com.tangem.feature.swap.domain.models.data.SwapState.QuoteModel
-import java.math.BigDecimal
+import com.tangem.feature.swap.domain.models.Currency
+import com.tangem.feature.swap.domain.models.QuoteModel
+import com.tangem.feature.swap.domain.models.SwapAmount
 
 data class SwapDataHolder(
     val quoteModel: QuoteModel? = null,
