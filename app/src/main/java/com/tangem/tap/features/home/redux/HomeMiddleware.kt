@@ -117,5 +117,5 @@ private fun readCard() = scope.launch {
 }
 
 private fun changeButtonState(state: ButtonState) {
-    store.dispatch(HomeAction.ChangeScanCardButtonState(IndeterminateProgressButton(state)))
+    store.dispatchOnMain(HomeAction.ChangeScanCardButtonState(IndeterminateProgressButton(state)))
 }
