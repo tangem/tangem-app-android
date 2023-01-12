@@ -53,5 +53,7 @@ class NetworkModule {
     private companion object {
         const val PROD_TANGEM_TECH_BASE_URL = "https://api.tangem-tech.com/v1/"
         const val DEV_TANGEM_TECH_BASE_URL = "https://devapi.tangem-tech.com/v1/"
+
+        private const val PAYMENTOLOGY_BASE_URL: String = "https://paymentologygate.oa.r.appspot.com/"
     }
 }
