@@ -1,4 +1,4 @@
-package com.tangem.feature.swap.domain.models.data
+package com.tangem.feature.swap.domain.models
 
 import com.tangem.utils.toFormattedString
 import java.math.BigDecimal
