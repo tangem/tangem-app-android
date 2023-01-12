@@ -1,8 +1,8 @@
 package com.tangem.feature.swap.converters
 
 import com.tangem.datasource.api.oneinch.models.QuoteResponse
-import com.tangem.feature.swap.domain.models.data.SwapState.QuoteModel
-import com.tangem.feature.swap.domain.models.data.createFromAmountWithOffset
+import com.tangem.feature.swap.domain.models.QuoteModel
+import com.tangem.feature.swap.domain.models.createFromAmountWithOffset
 import com.tangem.utils.converter.Converter
 import javax.inject.Inject
 
