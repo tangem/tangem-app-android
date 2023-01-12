@@ -1,8 +1,8 @@
 package com.tangem.feature.swap.ui
 
-import com.tangem.feature.swap.domain.models.data.Currency
-import com.tangem.feature.swap.domain.models.data.SwapState
-import com.tangem.feature.swap.domain.models.data.formatToUIRepresentation
+import com.tangem.feature.swap.domain.models.Currency
+import com.tangem.feature.swap.domain.models.SwapState
+import com.tangem.feature.swap.domain.models.formatToUIRepresentation
 import com.tangem.feature.swap.models.FeeState
 import com.tangem.feature.swap.models.SwapButton
 import com.tangem.feature.swap.models.SwapCardData
@@ -50,7 +50,7 @@ class StateBuilder {
     ): SwapStateHolder {
         return uiStateHolder.copy(
             sendCardData = SwapCardData(
-                type = (uiStateHolder.sendCardData.type as TransactionCardType.SendCard),
+                type = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.SendCard),
                 amount = uiStateHolder.sendCardData.amount,
                 amountEquivalent = uiStateHolder.sendCardData.amountEquivalent,
                 tokenIconUrl = fromToken.logoUrl,
@@ -72,16 +72,19 @@ class StateBuilder {
 
     fun createQuotesLoadedState(
         uiStateHolder: SwapStateHolder,
-        quoteModel: SwapState.QuoteModel,
+        quoteModel: SwapState.QuotesLoadedState,
         fromToken: Currency,
         onSwapClick: () -> Unit,
     ): SwapStateHolder {
         return uiStateHolder.copy(
             sendCardData = SwapCardData(
-                type = (uiStateHolder.sendCardData.type as TransactionCardType.SendCard)
-                    .copy(permissionIsGiven = quoteModel.isAllowedToSpend),
+                type = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.SendCard)
+                    .copy(
+                        permissionIsGiven = quoteModel.isAllowedToSpend,
+                        balance = quoteModel.fromTokenWalletBalance,
+                    ),
                 amount = quoteModel.fromTokenAmount.formatToUIRepresentation(),
-                amountEquivalent = uiStateHolder.sendCardData.amountEquivalent,
+                amountEquivalent = quoteModel.fromTokenFiatBalance,
                 tokenIconUrl = uiStateHolder.sendCardData.tokenIconUrl,
                 tokenCurrency = uiStateHolder.sendCardData.tokenCurrency,
                 canSelectAnotherToken = uiStateHolder.sendCardData.canSelectAnotherToken,
@@ -89,7 +92,7 @@ class StateBuilder {
             receiveCardData = SwapCardData(
                 type = TransactionCardType.ReceiveCard(),
                 amount = quoteModel.toTokenAmount.formatToUIRepresentation(),
-                amountEquivalent = uiStateHolder.receiveCardData.amountEquivalent,
+                amountEquivalent = quoteModel.toTokenFiatBalance,
                 tokenIconUrl = uiStateHolder.receiveCardData.tokenIconUrl,
                 tokenCurrency = uiStateHolder.receiveCardData.tokenCurrency,
                 canSelectAnotherToken = uiStateHolder.receiveCardData.canSelectAnotherToken,
