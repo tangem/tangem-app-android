@@ -1,14 +1,12 @@
 package com.tangem.feature.swap.domain
 
-import com.tangem.feature.swap.domain.models.data.Currency
-import com.tangem.feature.swap.domain.models.data.SwapAmount
-import com.tangem.feature.swap.domain.models.data.SwapState
+import com.tangem.feature.swap.domain.models.Currency
+import com.tangem.feature.swap.domain.models.SwapAmount
+import com.tangem.feature.swap.domain.models.SwapState
 
 interface SwapInteractor {
 
     suspend fun getTokensToSwap(networkId: String): List<Currency>
-
-    suspend fun getTokenBalance(tokenId: String): String
 
     @Throws(IllegalStateException::class)
     suspend fun givePermissionToSwap(tokenToApprove: Currency)
