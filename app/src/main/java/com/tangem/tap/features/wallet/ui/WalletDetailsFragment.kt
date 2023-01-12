@@ -1,6 +1,8 @@
 package com.tangem.tap.features.wallet.ui
 
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.view.Menu
 import android.view.MenuInflater
 import android.view.MenuItem
@@ -18,11 +20,11 @@ import androidx.transition.TransitionInflater
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.badoo.mvicore.modelWatcher
 import com.tangem.common.doOnResult
+import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.tangem_sdk_new.extensions.dpToPx
 import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.TestActions
-import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.DetailsScreen
 import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.extensions.appendIfNotNull
@@ -64,6 +66,7 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
     private lateinit var pendingTransactionAdapter: PendingTransactionsAdapter
     private lateinit var warningMessagesAdapter: WalletDetailWarningMessagesAdapter
 
+    private val mainHandler = Handler(Looper.getMainLooper())
     private val binding: FragmentWalletDetailsBinding by viewBinding(FragmentWalletDetailsBinding::bind)
 
     private val walletDataWatcher = modelWatcher<WalletData> {
@@ -184,11 +187,14 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
     }
 
     override fun newState(state: WalletState) {
-        if (activity == null || view == null) return
         if (state.selectedWalletData == null) return
         walletStateWatcher.invoke(state)
 
-        updateViewMeasurements()
+        mainHandler.post {
+            if (activity != null && view != null) {
+                updateViewMeasurements()
+            }
+        }
     }
 
     private fun updateViewMeasurements() {
