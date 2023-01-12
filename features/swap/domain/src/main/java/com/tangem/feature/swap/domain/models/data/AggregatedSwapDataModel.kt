@@ -1,6 +1,6 @@
-package com.tangem.feature.swap.domain.models
+package com.tangem.feature.swap.domain.models.data
 
-import com.tangem.feature.swap.domain.models.data.DataError
+import com.tangem.feature.swap.domain.models.DataError
 
 /**
  * Model that aggregate data model from repository return with error [DataError] if it exists
