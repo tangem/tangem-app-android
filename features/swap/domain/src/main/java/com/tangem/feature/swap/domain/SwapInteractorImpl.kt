@@ -2,14 +2,17 @@ package com.tangem.feature.swap.domain
 
 import com.tangem.feature.swap.domain.cache.SwapDataCache
 import com.tangem.feature.swap.domain.converters.CryptoCurrencyConverter
-import com.tangem.feature.swap.domain.models.data.Currency
-import com.tangem.feature.swap.domain.models.data.DataError
-import com.tangem.feature.swap.domain.models.data.SwapAmount
-import com.tangem.feature.swap.domain.models.data.SwapState
-import com.tangem.feature.swap.domain.models.data.TransactionModel
-import com.tangem.feature.swap.domain.models.data.toStringWithRightOffset
+import com.tangem.feature.swap.domain.models.Currency
+import com.tangem.feature.swap.domain.models.DataError
+import com.tangem.feature.swap.domain.models.QuoteModel
+import com.tangem.feature.swap.domain.models.SwapAmount
+import com.tangem.feature.swap.domain.models.SwapState
+import com.tangem.feature.swap.domain.models.TransactionModel
+import com.tangem.feature.swap.domain.models.toStringWithRightOffset
 import com.tangem.lib.crypto.TransactionManager
 import com.tangem.lib.crypto.UserWalletManager
+import com.tangem.utils.toFiatString
+import com.tangem.utils.toFormattedString
 import java.math.BigDecimal
 import javax.inject.Inject
 
@@ -30,10 +33,6 @@ internal class SwapInteractorImpl @Inject constructor(
             cache.cacheNetworkId(networkId)
             tokens
         }
-    }
-
-    override suspend fun getTokenBalance(tokenId: String): String {
-        TODO("Not yet implemented")
     }
 
     override suspend fun givePermissionToSwap(tokenToApprove: Currency) {
@@ -85,7 +84,7 @@ internal class SwapInteractorImpl @Inject constructor(
                     fromCurrency = fromToken,
                     toCurrency = toToken,
                 )
-                return quoteDataModel
+                return updateBalances(networkId, fromToken, toToken, quoteDataModel)
             } else {
                 return SwapState.SwapError(quotes.error)
             }
@@ -129,6 +128,41 @@ internal class SwapInteractorImpl @Inject constructor(
         }
     }
 
+    private suspend fun updateBalances(
+        networkId: String,
+        fromToken: Currency,
+        toToken: Currency,
+        quoteModel: QuoteModel,
+    ): SwapState.QuotesLoadedState {
+        val appCurrency = userWalletManager.getUserAppCurrency()
+        val rates = repository.getRates(appCurrency.code, listOf(fromToken.id, toToken.id))
+        val tokensBalance = userWalletManager.getCurrentWalletTokensBalance(networkId)
+        val fromTokenBalance = tokensBalance[fromToken.symbol]?.let {
+            it.value.toFormattedString(it.decimals)
+        }
+        val toTokenBalance = tokensBalance[toToken.symbol]?.let {
+            it.value.toFormattedString(it.decimals)
+        }
+        return SwapState.QuotesLoadedState(
+            fromTokenAmount = quoteModel.fromTokenAmount,
+            toTokenAmount = quoteModel.toTokenAmount,
+            fromTokenAddress = quoteModel.fromTokenAddress,
+            toTokenAddress = quoteModel.toTokenAddress,
+            estimatedGas = quoteModel.estimatedGas,
+            isAllowedToSpend = quoteModel.isAllowedToSpend,
+            fromTokenWalletBalance = fromTokenBalance ?: ZERO_BALANCE,
+            fromTokenFiatBalance = quoteModel.fromTokenAmount.value.toFiatString(
+                rates[fromToken.id]?.toBigDecimal() ?: BigDecimal.ZERO,
+                appCurrency.symbol,
+            ),
+            toTokenWalletBalance = toTokenBalance ?: ZERO_BALANCE,
+            toTokenFiatBalance = quoteModel.fromTokenAmount.value.toFiatString(
+                rates[fromToken.id]?.toBigDecimal() ?: BigDecimal.ZERO,
+                appCurrency.symbol,
+            ),
+        )
+    }
+
     private fun getWalletAddress(networkId: String): String {
         return userWalletManager.getWalletAddress(networkId)
     }
@@ -149,5 +183,6 @@ internal class SwapInteractorImpl @Inject constructor(
 
     companion object {
         private const val DEFAULT_SLIPPAGE = 2
+        private const val ZERO_BALANCE = "0"
     }
 }

@@ -1,9 +1,9 @@
 package com.tangem.feature.swap.domain.cache
 
-import com.tangem.feature.swap.domain.models.ExchangeCurrencies
-import com.tangem.feature.swap.domain.models.data.Currency
-import com.tangem.feature.swap.domain.models.data.SwapAmount
-import com.tangem.feature.swap.domain.models.data.SwapState.QuoteModel
+import com.tangem.feature.swap.domain.models.Currency
+import com.tangem.feature.swap.domain.models.QuoteModel
+import com.tangem.feature.swap.domain.models.SwapAmount
+import com.tangem.feature.swap.domain.models.cache.ExchangeCurrencies
 
 interface SwapDataCache {
 

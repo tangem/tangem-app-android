@@ -10,12 +10,12 @@ import com.tangem.feature.swap.converters.QuotesConverter
 import com.tangem.feature.swap.converters.SwapConverter
 import com.tangem.feature.swap.converters.TokensConverter
 import com.tangem.feature.swap.domain.SwapRepository
-import com.tangem.feature.swap.domain.models.AggregatedSwapDataModel
-import com.tangem.feature.swap.domain.models.data.ApproveModel
-import com.tangem.feature.swap.domain.models.data.Currency
-import com.tangem.feature.swap.domain.models.data.SwapDataModel
-import com.tangem.feature.swap.domain.models.data.SwapState.QuoteModel
-import com.tangem.feature.swap.domain.models.data.mapErrors
+import com.tangem.feature.swap.domain.models.ApproveModel
+import com.tangem.feature.swap.domain.models.Currency
+import com.tangem.feature.swap.domain.models.QuoteModel
+import com.tangem.feature.swap.domain.models.SwapDataModel
+import com.tangem.feature.swap.domain.models.data.AggregatedSwapDataModel
+import com.tangem.feature.swap.domain.models.mapErrors
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
@@ -30,6 +30,12 @@ internal class SwapRepositoryImpl @Inject constructor(
     private val oneInchErrorsHandler: OneInchErrorsHandler,
     private val coroutineDispatcher: CoroutineDispatcherProvider,
 ) : SwapRepository {
+
+    override suspend fun getRates(currencyId: String, tokenIds: List<String>): Map<String, Double> {
+        return withContext(coroutineDispatcher.io) {
+            tangemTechApi.getRates(currencyId.lowercase(), tokenIds.joinToString(",")).rates
+        }
+    }
 
     override suspend fun getExchangeableTokens(networkId: String): List<Currency> {
         return withContext(coroutineDispatcher.io) {

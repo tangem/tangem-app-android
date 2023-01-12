@@ -39,6 +39,7 @@ fun globalReducer(action: Action, state: AppState, appStateHolder: AppStateHolde
             globalState.copy(scanResponse = action.scanResponse)
         }
         is GlobalAction.ChangeAppCurrency -> {
+            appStateHolder.appFiatCurrency = action.appCurrency
             globalState.copy(appCurrency = action.appCurrency)
         }
         is GlobalAction.RestoreAppCurrency.Success -> {
