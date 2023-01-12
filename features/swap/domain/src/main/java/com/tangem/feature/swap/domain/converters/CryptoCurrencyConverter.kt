@@ -1,6 +1,6 @@
 package com.tangem.feature.swap.domain.converters
 
-import com.tangem.feature.swap.domain.models.data.Currency
+import com.tangem.feature.swap.domain.models.Currency
 import com.tangem.utils.converter.Converter
 
 class CryptoCurrencyConverter : Converter<Currency, com.tangem.lib.crypto.models.Currency> {
