@@ -1,6 +1,8 @@
 package com.tangem.lib.crypto
 
 import com.tangem.lib.crypto.models.Currency
+import com.tangem.lib.crypto.models.ProxyAmount
+import com.tangem.lib.crypto.models.ProxyFiatCurrency
 
 /**
  * Provider for user tokens data
@@ -37,4 +39,18 @@ interface UserWalletManager {
      * @param networkId for currency
      */
     fun getWalletAddress(networkId: String): String
+
+    /**
+     * Return balances from wallet found by networkId
+     *
+     * @param networkId
+     * @return map of <Symbol, [ProxyAmount]>
+     */
+    @Throws(IllegalStateException::class)
+    fun getCurrentWalletTokensBalance(networkId: String): Map<String, ProxyAmount>
+
+    /**
+    * Returns selected app currency
+    */
+    fun getUserAppCurrency(): ProxyFiatCurrency
 }

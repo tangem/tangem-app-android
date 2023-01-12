@@ -1,12 +1,16 @@
-package com.tangem.feature.swap.domain.models.data
+package com.tangem.feature.swap.domain.models
 
 sealed interface SwapState {
 
-    data class QuoteModel(
+    data class QuotesLoadedState(
         val fromTokenAmount: SwapAmount,
         val toTokenAmount: SwapAmount,
         val fromTokenAddress: String,
         val toTokenAddress: String,
+        val fromTokenWalletBalance: String,
+        val fromTokenFiatBalance: String,
+        val toTokenWalletBalance: String,
+        val toTokenFiatBalance: String,
         val estimatedGas: Int,
         val isAllowedToSpend: Boolean = false,
     ) : SwapState
