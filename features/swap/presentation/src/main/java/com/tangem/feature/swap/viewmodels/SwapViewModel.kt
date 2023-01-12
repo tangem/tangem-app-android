@@ -8,9 +8,9 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.tangem.feature.swap.domain.SwapInteractor
-import com.tangem.feature.swap.domain.models.data.Currency
-import com.tangem.feature.swap.domain.models.data.SwapState
-import com.tangem.feature.swap.domain.models.data.createFromAmountWithoutOffset
+import com.tangem.feature.swap.domain.models.Currency
+import com.tangem.feature.swap.domain.models.SwapState
+import com.tangem.feature.swap.domain.models.createFromAmountWithoutOffset
 import com.tangem.feature.swap.models.SwapStateHolder
 import com.tangem.feature.swap.presentation.SwapFragment
 import com.tangem.feature.swap.router.SwapRouter
@@ -97,7 +97,7 @@ internal class SwapViewModel @Inject constructor(
             }
                 .onSuccess { swapState ->
                     when (swapState) {
-                        is SwapState.QuoteModel -> {
+                        is SwapState.QuotesLoadedState -> {
                             uiState = stateBuilder.createQuotesLoadedState(uiState, swapState, fromToken) {
                                 onSwapClick(toToken, swapState)
                             }
@@ -113,7 +113,7 @@ internal class SwapViewModel @Inject constructor(
         }
     }
 
-    private fun onSwapClick(toToken: Currency, quoteModel: SwapState.QuoteModel) {
+    private fun onSwapClick(toToken: Currency, quoteModel: SwapState.QuotesLoadedState) {
         viewModelScope.launch(dispatchers.main) {
             runCatching {
                 if (!quoteModel.isAllowedToSpend) {
