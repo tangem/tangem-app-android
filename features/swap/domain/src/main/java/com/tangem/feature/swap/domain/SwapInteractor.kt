@@ -8,6 +8,11 @@ interface SwapInteractor {
 
     suspend fun getTokensToSwap(networkId: String): List<Currency>
 
+    /**
+     * Give permission to swap
+     *
+     * @param tokenToApprove use token which you want to swap
+     */
     @Throws(IllegalStateException::class)
     suspend fun givePermissionToSwap(tokenToApprove: Currency)
 
