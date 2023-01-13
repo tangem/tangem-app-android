@@ -87,9 +87,9 @@ private fun handleOtherCardsAction(action: Action) {
                             onboardingManager.scanResponse = updatedResponse
                             onboardingManager.activationStarted(updatedCard.cardId)
 
-                            val primaryBlockchain = updatedResponse.getBlockchain()
+                            val primaryBlockchain = updatedResponse.cardTypesResolver.getBlockchain()
                             val blockchainNetworks = if (primaryBlockchain != Blockchain.Unknown) {
-                                val primaryToken = updatedResponse.getPrimaryToken()
+                                val primaryToken = updatedResponse.cardTypesResolver.getPrimaryToken()
                                 val blockchainNetwork =
                                     BlockchainNetwork(
                                         blockchain = primaryBlockchain,
