@@ -3,11 +3,12 @@ package com.tangem.datasource.api.oneinch
 import com.squareup.moshi.Moshi
 import com.tangem.datasource.api.oneinch.errors.OneIncResponseException
 import com.tangem.datasource.api.oneinch.models.SwapErrorDto
+import com.tangem.datasource.di.NetworkMoshi
 import retrofit2.HttpException
 import retrofit2.Response
 import javax.inject.Inject
 
-class OneInchErrorsHandler @Inject constructor(moshi: Moshi) {
+class OneInchErrorsHandler @Inject constructor(@NetworkMoshi moshi: Moshi) {
 
     private val errorMoshiAdapter = moshi.adapter(SwapErrorDto::class.java)
 
