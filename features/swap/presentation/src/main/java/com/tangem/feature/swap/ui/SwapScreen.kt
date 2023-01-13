@@ -11,6 +11,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.res.stringResource
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.feature.swap.models.SwapPermissionState
 import com.tangem.feature.swap.models.SwapStateHolder
 import com.tangem.feature.swap.presentation.R
 import kotlinx.coroutines.launch
@@ -34,7 +35,7 @@ internal fun SwapScreen(stateHolder: SwapStateHolder) {
             },
             sheetContent = {
                     SwapPermissionBottomSheetContent(
-                        data = stateHolder.permissionState,
+                        data = stateHolder.permissionState as? SwapPermissionState.ReadyForRequest,
                         onCancel = { coroutineScope.launch { bottomSheetScaffoldState.bottomSheetState.collapse() } },
                     )
             },
@@ -51,7 +52,7 @@ internal fun SwapScreen(stateHolder: SwapStateHolder) {
                     onPermissionWarningClick = {
                         coroutineScope.launch {
                             if (bottomSheetScaffoldState.bottomSheetState.isCollapsed
-                                && stateHolder.permissionState != null
+                                && stateHolder.permissionState is SwapPermissionState.ReadyForRequest
                             ) {
                                 bottomSheetScaffoldState.bottomSheetState.expand()
                             } else {
