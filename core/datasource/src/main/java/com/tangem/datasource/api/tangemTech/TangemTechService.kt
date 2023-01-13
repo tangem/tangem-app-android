@@ -28,7 +28,7 @@ object TangemTechService {
     private fun createApi(header: RequestHeader? = null): TangemTechApi {
         val headers = mutableListOf<RequestHeader>(CacheControlHeader).apply { header?.let(::add) }
         return Retrofit.Builder()
-            .addConverterFactory(MoshiConverter.createFactory())
+            .addConverterFactory(MoshiConverter.networkMoshiConverter)
             .baseUrl(TANGEM_TECH_BASE_URL)
             .client(
                 OkHttpClient.Builder()

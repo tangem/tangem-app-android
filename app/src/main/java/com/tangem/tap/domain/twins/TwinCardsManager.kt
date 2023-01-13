@@ -83,7 +83,7 @@ class TwinCardsManager(
         }
 
         private fun getAdapter(): JsonAdapter<List<Issuer>> {
-            return MoshiConverter.defaultMoshi().adapter(
+            return MoshiConverter.sdkMoshi.adapter(
                 Types.newParameterizedType(List::class.java, Issuer::class.java),
             )
         }

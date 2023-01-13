@@ -19,7 +19,7 @@ class OneInchApisModule {
 
     @Provides
     @Singleton
-    fun provideOneInchApiFactory(moshi: Moshi): OneInchApiFactory {
+    fun provideOneInchApiFactory(@NetworkMoshi moshi: Moshi): OneInchApiFactory {
         val apiFactory = OneInchApiFactory()
         apiFactory.putApi(ETH_NETWORK, createOneInchApiWithUrl(ONE_INCH_BASE_URL + ONE_INCH_ETH_PATH, moshi))
         apiFactory.putApi(BSC_NETWORK, createOneInchApiWithUrl(ONE_INCH_BASE_URL + ONE_INCH_BSC_PATH, moshi))

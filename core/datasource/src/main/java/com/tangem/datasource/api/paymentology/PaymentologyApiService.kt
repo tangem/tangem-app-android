@@ -17,7 +17,7 @@ object PaymentologyApiService {
 
     private fun createApi(): PaymentologyApi {
         return Retrofit.Builder()
-            .addConverterFactory(MoshiConverter.createFactory(MoshiConverter.sdkMoshi()))
+            .addConverterFactory(MoshiConverter.networkMoshiConverter)
             .baseUrl(PAYMENTOLOGY_BASE_URL)
             .client(
                 OkHttpClient.Builder()

@@ -13,9 +13,8 @@ class UserTokensStorageService(
     private val oldUserTokensRepository: OldUserTokensRepository,
     private val fileReader: FileReader,
 ) {
-    private val moshi = MoshiConverter.defaultMoshi()
     private val userTokensAdapter: JsonAdapter<UserTokensResponse> =
-        moshi.adapter(UserTokensResponse::class.java)
+        MoshiConverter.networkMoshi.adapter(UserTokensResponse::class.java)
 
     fun getUserTokens(userId: String): List<Currency>? {
         return try {
