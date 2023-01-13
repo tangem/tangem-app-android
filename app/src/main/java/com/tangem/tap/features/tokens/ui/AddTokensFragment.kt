@@ -50,7 +50,6 @@ class AddTokensFragment : Fragment(R.layout.fragment_add_tokens),
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setHasOptionsMenu(true)
-        Analytics.send(ManageTokens.ScreenOpened())
 
         activity?.onBackPressedDispatcher?.addCallback(
             this,
