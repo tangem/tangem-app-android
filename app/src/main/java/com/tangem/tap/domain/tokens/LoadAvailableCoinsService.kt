@@ -1,7 +1,6 @@
 package com.tangem.tap.domain.tokens
 
 import com.squareup.moshi.JsonAdapter
-import com.squareup.moshi.Moshi
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.services.Result
 import com.tangem.datasource.api.common.MoshiConverter
@@ -17,9 +16,8 @@ class LoadAvailableCoinsService(
     private val dispatchers: CoroutineDispatcherProvider,
     private val assetReader: AssetReader,
 ) {
-    private val moshi: Moshi by lazy { MoshiConverter.defaultMoshi() }
     private val currenciesAdapter: JsonAdapter<CurrenciesFromJson> =
-        moshi.adapter(CurrenciesFromJson::class.java)
+        MoshiConverter.networkMoshi.adapter(CurrenciesFromJson::class.java)
 
     suspend fun getSupportedTokens(
         isTestNet: Boolean = false,
