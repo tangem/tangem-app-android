@@ -28,6 +28,7 @@ fun WarningCard(
     modifier: Modifier = Modifier,
     title: String,
     description: String,
+    icon: @Composable (() -> Unit)? = null,
 ) {
     WarningCardSurface(
         modifier = modifier,
@@ -35,6 +36,7 @@ fun WarningCard(
             WarningBody(
                 title = title,
                 description = description,
+                icon = icon,
             )
         },
     )
@@ -55,12 +57,13 @@ fun ClickableWarningCard(
     modifier: Modifier = Modifier,
     title: String,
     description: String,
+    icon: @Composable (() -> Unit)? = null,
     onClick: () -> Unit,
 ) {
     WarningCardSurface(
         modifier = modifier,
         content = {
-            WarningBody(title = title, description = description) {
+            WarningBody(title = title, description = description, icon = icon) {
                 SpacerW12()
                 Icon(
                     painter = painterResource(id = R.drawable.ic_chevron_right_24),
@@ -88,12 +91,13 @@ fun RefreshableWaringCard(
     modifier: Modifier = Modifier,
     title: String,
     description: String,
+    icon: @Composable (() -> Unit)? = null,
     onClick: () -> Unit,
 ) {
     WarningCardSurface(
         modifier = modifier,
         content = {
-            WarningBody(title = title, description = description) {
+            WarningBody(title = title, description = description, icon = icon) {
                 SpacerW12()
                 Icon(
                     painter = painterResource(id = R.drawable.ic_refresh_24),
@@ -113,6 +117,7 @@ private fun WarningBody(
     modifier: Modifier = Modifier,
     title: String,
     description: String,
+    icon: @Composable (() -> Unit)? = null,
     additionalContent: @Composable () -> Unit = {},
 ) {
     IconWithTitleAndDescription(
@@ -120,7 +125,7 @@ private fun WarningBody(
         title = title,
         description = description,
         additionalContent = additionalContent,
-        icon = {
+        icon = icon ?: {
             Image(
                 painter = painterResource(id = R.drawable.img_attention_20),
                 contentDescription = null,
