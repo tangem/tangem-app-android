@@ -16,7 +16,7 @@ private fun internalReduce(action: Action, state: AppState): TwinCardsState {
 
     when (action) {
         is TwinCardsAction.IfTwinsPrepareState -> {
-            state = if (action.scanResponse.isTangemTwins()) {
+            state = if (action.scanResponse.cardTypesResolver.isTangemTwins()) {
                 val cardNumber = action.scanResponse.card.getTwinCardNumber() ?: return state
 
                 TwinCardsState(
