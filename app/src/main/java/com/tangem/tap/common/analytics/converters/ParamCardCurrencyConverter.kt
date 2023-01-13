@@ -2,24 +2,20 @@ package com.tangem.tap.common.analytics.converters
 
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.Converter
+import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.SaltPayWorkaround
-import com.tangem.domain.common.ScanResponse
-import com.tangem.domain.common.TapWorkarounds.getTangemNoteBlockchain
 import com.tangem.tap.common.analytics.events.AnalyticsParam
-import com.tangem.tap.domain.extensions.isMultiwalletAllowed
 
 /**
 [REDACTED_AUTHOR]
  */
-class ParamCardCurrencyConverter : Converter<ScanResponse, AnalyticsParam.CardCurrency?> {
+class ParamCardCurrencyConverter : Converter<CardTypesResolver, AnalyticsParam.CardCurrency?> {
 
-    override fun convert(value: ScanResponse): AnalyticsParam.CardCurrency? {
-        if (value.card.isMultiwalletAllowed) return AnalyticsParam.CardCurrency.MultiCurrency
+    override fun convert(value: CardTypesResolver): AnalyticsParam.CardCurrency? {
+        if (value.isMultiwalletAllowed()) return AnalyticsParam.CardCurrency.MultiCurrency
 
         val type = when {
-            value.isTangemNote() -> {
-                value.card.getTangemNoteBlockchain()?.let { AnalyticsParam.CurrencyType.Blockchain(it) }
-            }
+            value.isTangemNote() -> AnalyticsParam.CurrencyType.Blockchain(value.getBlockchain())
             value.isTangemTwins() -> AnalyticsParam.CurrencyType.Blockchain(Blockchain.Bitcoin)
             value.isSaltPay() -> AnalyticsParam.CurrencyType.Token(SaltPayWorkaround.tokenFrom(Blockchain.SaltPay))
             value.getPrimaryToken() != null -> AnalyticsParam.CurrencyType.Token(value.getPrimaryToken()!!)
