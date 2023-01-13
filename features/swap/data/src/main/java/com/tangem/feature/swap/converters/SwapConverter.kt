@@ -4,6 +4,7 @@ import com.tangem.datasource.api.oneinch.models.SwapResponse
 import com.tangem.datasource.api.oneinch.models.TransactionDto
 import com.tangem.feature.swap.domain.models.SwapDataModel
 import com.tangem.feature.swap.domain.models.TransactionModel
+import com.tangem.feature.swap.domain.models.createFromAmountWithOffset
 import com.tangem.utils.converter.Converter
 import javax.inject.Inject
 
@@ -13,8 +14,8 @@ class SwapConverter @Inject constructor() : Converter<SwapResponse, SwapDataMode
         return SwapDataModel(
             fromTokenAddress = value.fromToken.address,
             toTokenAddress = value.toToken.address,
-            toTokenAmount = value.fromTokenAmount,
-            fromTokenAmount = value.toTokenAmount,
+            fromTokenAmount = createFromAmountWithOffset(value.fromTokenAmount, value.fromToken.decimals),
+            toTokenAmount = createFromAmountWithOffset(value.toTokenAmount, value.toToken.decimals),
             transaction = convertTransaction(value.transaction),
         )
     }
