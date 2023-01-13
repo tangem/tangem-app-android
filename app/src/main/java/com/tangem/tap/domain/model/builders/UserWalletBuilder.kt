@@ -1,7 +1,5 @@
 package com.tangem.tap.domain.model.builders
 
-import com.tangem.common.card.EllipticCurve
-import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.extensions.toHexString
 import com.tangem.common.services.Result
 import com.tangem.domain.common.CardDTO
@@ -37,24 +35,6 @@ class UserWalletBuilder(
             }
         }
 
-    private val ScanResponse.isMultiCurrency: Boolean
-        get() = when (productType) {
-            ProductType.Note -> false
-            ProductType.Twins -> false
-            ProductType.SaltPay -> false
-            ProductType.Start2Coin -> false
-            ProductType.Wallet -> when {
-                card.isStart2Coin -> false
-                card.firmwareVersion >= FirmwareVersion.MultiWalletAvailable -> true
-                else -> {
-                    val cardWallets = card.wallets
-                    require(cardWallets.isNotEmpty()) { "Card wallets must not be empty" }
-
-                    cardWallets.first().curve == EllipticCurve.Secp256k1
-                }
-            }
-        }
-
     fun backupCardsIds(backupCardsIds: Set<String>?) = this.apply {
         if (backupCardsIds != null) {
             this.backupCardsIds = backupCardsIds
@@ -72,7 +52,7 @@ class UserWalletBuilder(
                         artworkUrl = loadArtworkUrl(card.cardId, card.cardPublicKey),
                         cardsInWallet = backupCardsIds.plus(card.cardId),
                         scanResponse = this,
-                        isMultiCurrency = isMultiCurrency,
+                        isMultiCurrency = cardTypesResolver.isMultiwalletAllowed(),
                     )
                 }
         }
