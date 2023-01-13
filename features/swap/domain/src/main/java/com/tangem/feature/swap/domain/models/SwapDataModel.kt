@@ -11,7 +11,7 @@ package com.tangem.feature.swap.domain.models
 data class SwapDataModel(
     val fromTokenAddress: String,
     val toTokenAddress: String,
-    val toTokenAmount: String,
-    val fromTokenAmount: String,
-    val transaction: TransactionModel
+    val toTokenAmount: SwapAmount,
+    val fromTokenAmount: SwapAmount,
+    val transaction: TransactionModel,
 )
