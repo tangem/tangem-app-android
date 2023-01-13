@@ -20,7 +20,7 @@ class OldUserTokensRepository(
     private val tangemTechApi: TangemTechApi,
     private val dispatchers: CoroutineDispatcherProvider,
 ) {
-    private val moshi = MoshiConverter.defaultMoshi()
+    private val moshi = MoshiConverter.networkMoshi
     private val blockchainsAdapter: JsonAdapter<List<Blockchain>> = moshi.adapter(
         Types.newParameterizedType(List::class.java, Blockchain::class.java),
     )

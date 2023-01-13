@@ -4,13 +4,11 @@ import android.app.Application
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
-import com.tangem.datasource.api.common.MoshiConverter
+import com.tangem.common.json.MoshiJsonConverter
+import com.tangem.datasource.api.common.BigDecimalAdapter
 import java.util.*
 
 class PreferencesStorage(applicationContext: Application) {
-
-    private val preferences: SharedPreferences =
-        applicationContext.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
 
     val appRatingLaunchObserver: AppRatingLaunchObserver
     val usedCardsPrefStorage: UsedCardsPrefStorage
@@ -18,15 +16,23 @@ class PreferencesStorage(applicationContext: Application) {
     val disclaimerPrefStorage: DisclaimerPrefStorage
     val toppedUpWalletStorage: ToppedUpWalletStorage
 
+    private val preferences: SharedPreferences =
+        applicationContext.getSharedPreferences(PREFERENCES_NAME, Context.MODE_PRIVATE)
+
+    private val moshiConverter = MoshiJsonConverter(
+        adapters = listOf(BigDecimalAdapter(), CardBalanceStateAdapter()) + MoshiJsonConverter.getTangemSdkAdapters(),
+        typedAdapters = MoshiJsonConverter.getTangemSdkTypedAdapters(),
+    )
+
     init {
         incrementLaunchCounter()
         appRatingLaunchObserver = AppRatingLaunchObserver(preferences, getCountOfLaunches())
-        usedCardsPrefStorage = UsedCardsPrefStorage(preferences, MoshiConverter.INSTANCE)
+        usedCardsPrefStorage = UsedCardsPrefStorage(preferences, moshiConverter)
         usedCardsPrefStorage.migrate()
-        fiatCurrenciesPrefStorage = FiatCurrenciesPrefStorage(preferences, MoshiConverter.INSTANCE)
+        fiatCurrenciesPrefStorage = FiatCurrenciesPrefStorage(preferences, moshiConverter)
         fiatCurrenciesPrefStorage.migrate()
         disclaimerPrefStorage = DisclaimerPrefStorage(preferences)
-        toppedUpWalletStorage = ToppedUpWalletStorage(preferences, MoshiConverter.INSTANCE)
+        toppedUpWalletStorage = ToppedUpWalletStorage(preferences, moshiConverter)
     }
 
     var chatFirstLaunchTime: Long?
