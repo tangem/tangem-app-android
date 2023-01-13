@@ -1,5 +1,7 @@
 package com.tangem.feature.swap.domain.models
 
+import java.math.BigDecimal
+
 sealed interface SwapState {
 
     data class QuotesLoadedState(
@@ -11,8 +13,9 @@ sealed interface SwapState {
         val fromTokenFiatBalance: String,
         val toTokenWalletBalance: String,
         val toTokenFiatBalance: String,
-        val estimatedGas: Int,
+        val fee: String,
         val isAllowedToSpend: Boolean = false,
+        val permissionState: PermissionDataState = PermissionDataState.Empty,
     ) : SwapState
 
     data class SwapSuccess(
@@ -23,4 +26,21 @@ sealed interface SwapState {
     data class SwapError(
         val errorType: DataError,
     ) : SwapState
+}
+
+sealed class PermissionDataState {
+
+    data class PermissionReadyForRequest(
+        val currency: String,
+        val amount: String,
+        val walletAddress: String,
+        val spenderAddress: String,
+        val fee: String,
+    ) : PermissionDataState()
+
+    object PermissionFailed : PermissionDataState()
+
+    object PermissionLoading : PermissionDataState()
+
+    object Empty : PermissionDataState()
 }

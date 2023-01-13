@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.domain.di
 
+import com.tangem.feature.swap.domain.AllowPermissionsHandlerImpl
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.feature.swap.domain.SwapInteractorImpl
 import com.tangem.feature.swap.domain.SwapRepository
@@ -28,6 +29,7 @@ class SwapDomainModule {
             userWalletManager = userWalletManager,
             repository = swapRepository,
             cache = SwapDataCacheImpl(),
+            allowPermissionsHandler = AllowPermissionsHandlerImpl(),
         )
     }
 }
