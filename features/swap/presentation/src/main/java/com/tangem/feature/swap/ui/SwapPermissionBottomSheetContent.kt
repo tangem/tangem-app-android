@@ -26,12 +26,12 @@ import com.tangem.core.ui.components.atoms.Hand
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.models.ApprovePermissionButton
 import com.tangem.feature.swap.models.CancelPermissionButton
-import com.tangem.feature.swap.models.SwapPermissionStateHolder
+import com.tangem.feature.swap.models.SwapPermissionState
 import com.tangem.feature.swap.presentation.R
 
 @Composable
 fun SwapPermissionBottomSheetContent(
-    data: SwapPermissionStateHolder?,
+    data: SwapPermissionState.ReadyForRequest?,
     onCancel: () -> Unit,
 ) {
     Column(
@@ -209,7 +209,7 @@ fun Preview_AgreementBottomSheet_InDarkTheme() {
     }
 }
 
-private val previewData = SwapPermissionStateHolder(
+private val previewData = SwapPermissionState.ReadyForRequest(
     currency = "DAI",
     amount = "∞",
     walletAddress = "",
