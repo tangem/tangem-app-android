@@ -191,6 +191,7 @@
     <string name="common_share">Поделиться</string>
     <string name="common_copy">Копировать</string>
     <string name="common_success">Успешно</string>
+    <string name="common_close">Закрыть</string>
     <string name="exchange_send_view_header">Вы отправляете</string>
     <string name="exchange_receive_view_header">Вы получаете</string>
     <string name="swapping_permission_header">Дать разрешение</string>
@@ -209,6 +210,9 @@
     <string name="swapping_token_list_other_tokens">Другие токены</string>
     <string name="swapping_pending_transaction_title">Подождите</string>
     <string name="swapping_pending_transaction_subtitle">Транзакция в процессе…</string>
+    <string name="swapping_success_view_title">В процессе</string>
+    <string name="swapping_success_view_explorer_button_title">Открыть в обозревателе</string>
+    <string name="swapping_token_not_available">не доступен</string>
     <string name="referral_error_failed_to_load_info">Не удалось загрузить информацию по реферальной программе. Пожалуйста, попробуйте позже.</string>
     <string name="referral_error_failed_to_load_info_with_reason">Не удалось загрузить информацию по реферальной программе. Код ошибки: %s. Пожалуйста, попробуйте позже.</string>
     <string name="referral_error_failed_to_participate">Не удалось обработать вашу заявку на участие. Код ошибки: %s. Пожалуйста, попробуйте позже. Если проблема сохранится, вы можете обратиться в техподдержку.</string>
