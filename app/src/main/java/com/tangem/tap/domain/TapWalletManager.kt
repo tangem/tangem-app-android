@@ -11,7 +11,6 @@ import com.tangem.common.doOnSuccess
 import com.tangem.common.services.Result
 import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.ScanResponse
-import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.domain.common.ThrottlerWithValues
 import com.tangem.domain.common.extensions.withMainContext
@@ -20,7 +19,6 @@ import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.configurable.config.ConfigManager
-import com.tangem.tap.domain.extensions.isMultiwalletAllowed
 import com.tangem.tap.domain.extensions.makePrimaryWalletManager
 import com.tangem.tap.domain.extensions.makeWalletManagersForApp
 import com.tangem.tap.domain.model.UserWallet
@@ -160,7 +158,11 @@ class TapWalletManager {
             store.dispatch(WalletConnectAction.ResetState)
             store.dispatch(GlobalAction.SaveScanResponse(data))
             store.dispatch(WalletAction.SetIfTestnetCard(data.card.isTestCard))
-            store.dispatch(WalletAction.MultiWallet.SetIsMultiwalletAllowed(data.card.isMultiwalletAllowed))
+            store.dispatch(
+                WalletAction.MultiWallet.SetIsMultiwalletAllowed(
+                    data.cardTypesResolver.isMultiwalletAllowed(),
+                ),
+            )
             store.dispatch(WalletConnectAction.RestoreSessions(data))
             store.dispatch(
                 WalletAction.MultiWallet.ShowWalletBackupWarning(
@@ -174,8 +176,8 @@ class TapWalletManager {
 
     fun updateConfigManager(data: ScanResponse) {
         val configManager = store.state.globalState.configManager
-        val blockchain = data.getBlockchain()
-        if (data.card.isStart2Coin) {
+        val blockchain = data.cardTypesResolver.getBlockchain()
+        if (data.cardTypesResolver.isStart2Coin()) {
             configManager?.turnOff(ConfigManager.isSendingToPayIdEnabled)
             configManager?.turnOff(ConfigManager.isTopUpEnabled)
         } else if (blockchain == Blockchain.Bitcoin
@@ -196,7 +198,7 @@ class TapWalletManager {
             return
         }
 
-        if (data.card.isMultiwalletAllowed) {
+        if (data.cardTypesResolver.isMultiwalletAllowed()) {
             loadMultiWalletData(data)
         } else {
             loadSingleWalletData(data)
@@ -225,11 +227,11 @@ class TapWalletManager {
     }
 
     private suspend fun loadSingleWalletData(data: ScanResponse) {
-        val blockchain = data.getBlockchain()
+        val blockchain = data.cardTypesResolver.getBlockchain()
         val primaryWalletManager = walletManagerFactory.makePrimaryWalletManager(data)
 
         if (blockchain != Blockchain.Unknown && primaryWalletManager != null) {
-            val primaryToken = data.getPrimaryToken()
+            val primaryToken = data.cardTypesResolver.getPrimaryToken()
 
             dispatchOnMain(WalletAction.MultiWallet.SetPrimaryBlockchain(blockchain))
             if (primaryToken != null) {
@@ -291,10 +293,11 @@ class TapWalletManager {
     private fun getActionIfUnknownBlockchainOrEmptyWallet(data: ScanResponse): WalletAction? {
         return when {
             // check order is important
-            data.isTangemTwins() && !data.twinsIsTwinned() -> {
+            data.cardTypesResolver.isTangemTwins() && !data.twinsIsTwinned() -> {
                 WalletAction.EmptyWallet
             }
-            data.getBlockchain() == Blockchain.Unknown && !data.card.isMultiwalletAllowed -> {
+            data.cardTypesResolver.getBlockchain() == Blockchain.Unknown &&
+                !data.cardTypesResolver.isMultiwalletAllowed() -> {
                 WalletAction.LoadData.Failure(TapError.UnknownBlockchain)
             }
             data.isDemoCard() -> {

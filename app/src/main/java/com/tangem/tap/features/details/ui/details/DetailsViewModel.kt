@@ -9,7 +9,6 @@ import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
-import com.tangem.tap.domain.extensions.isMultiwalletAllowed
 import com.tangem.tap.features.details.redux.DetailsAction
 import com.tangem.tap.features.details.redux.DetailsState
 import com.tangem.tap.features.disclaimer.redux.DisclaimerAction
@@ -23,22 +22,24 @@ class DetailsViewModel(private val store: Store<AppState>) {
 
     @Suppress("ComplexMethod")
     fun updateState(state: DetailsState): DetailsScreenState {
+        val cardTypesResolver = state.scanResponse?.cardTypesResolver
         val settings = SettingsElement.values().mapNotNull {
             when (it) {
                 SettingsElement.WalletConnect -> {
-                    if (state.scanResponse?.card?.isMultiwalletAllowed == true) it else null
+                    if (cardTypesResolver?.isMultiwalletAllowed() == true) it else null
                 }
-                SettingsElement.SendFeedback -> if (state.scanResponse?.card?.isSaltPay != true) it else null
+                SettingsElement.SendFeedback ->
+                    if (cardTypesResolver?.isSaltPay() != true) it else null
                 SettingsElement.LinkMoreCards -> {
                     // if (state.createBackupAllowed) it else null
 // [REDACTED_TODO_COMMENT]
-                    if (state.createBackupAllowed && state.scanResponse?.card?.isSaltPay != true) it else null
+                    if (state.createBackupAllowed && cardTypesResolver?.isSaltPay() != true) it else null
                 }
                 SettingsElement.PrivacyPolicy -> {
                     if (state.privacyPolicyUrl != null) it else null
                 }
                 SettingsElement.AppSettings -> if (state.isBiometricsAvailable) it else null
-                SettingsElement.AppCurrency -> if (state.scanResponse?.card?.isMultiwalletAllowed != true) it else null
+                SettingsElement.AppCurrency -> if (cardTypesResolver?.isMultiwalletAllowed() != true) it else null
                 // SettingsElement.ReferralProgram -> if (state.scanResponse?.card?.isTangemWallet == true) it else null
                 else -> it
             }

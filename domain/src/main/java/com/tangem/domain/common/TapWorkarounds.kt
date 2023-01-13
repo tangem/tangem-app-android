@@ -74,6 +74,10 @@ object TapWorkarounds {
 
     private val excludedIssuers = listOf("TTM BANK")
 
+    @Deprecated(
+        "Now blockchain is read form files (CardTypesResolver.getBlockchain), " +
+            "but for previously saved cards this method is still used",
+    )
     fun CardDTO.getTangemNoteBlockchain(): Blockchain? =
         tangemNoteBatches[batchId] ?: if (isSaltPay) Blockchain.Gnosis else null
 

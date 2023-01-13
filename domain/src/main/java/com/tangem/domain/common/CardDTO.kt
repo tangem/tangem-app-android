@@ -135,6 +135,9 @@ data class CardDTO(
             type = firmwareVersion.type,
         )
 
+        val doubleValue: Double
+            get() = "$major.$minor".toDouble()
+
         override fun compareTo(other: SdkFirmwareVersion): Int = when {
             major != other.major -> major.compareTo(other.major)
             minor != other.minor -> minor.compareTo(other.minor)

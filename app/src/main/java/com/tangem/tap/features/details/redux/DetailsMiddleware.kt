@@ -82,7 +82,12 @@ class DetailsMiddleware {
                             val isSameWallet = currentUserWalletId == scannedUserWalletId
 
                             if (isSameWallet) {
-                                store.dispatchOnMain(DetailsAction.PrepareCardSettingsData(scanResponse.card))
+                                store.dispatchOnMain(
+                                    DetailsAction.PrepareCardSettingsData(
+                                        scanResponse.card,
+                                        scanResponse.cardTypesResolver,
+                                    ),
+                                )
                             } else {
                                 store.dispatchDialogShow(
                                     AppDialog.SimpleOkDialogRes(
