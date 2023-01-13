@@ -2,11 +2,11 @@ package com.tangem.tap.common.analytics.converters
 
 import com.tangem.common.Converter
 import com.tangem.common.extensions.isZero
+import com.tangem.domain.common.CardTypesResolver
 import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Basic
 import com.tangem.tap.common.analytics.filters.BasicTopUpFilter
-import com.tangem.tap.domain.extensions.isMultiwalletAllowed
 import com.tangem.tap.domain.model.builders.UserWalletIdBuilder
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.features.wallet.redux.WalletData
@@ -21,8 +21,8 @@ class BasicSignInEventConverter(
 ) : Converter<WalletState, Basic.SignedIn?> {
 
     override fun convert(value: WalletState): Basic.SignedIn? {
-        if (!statesIsReadyToCreateEvent(scanResponse, value)) return null
-        val cardCurrency = ParamCardCurrencyConverter().convert(scanResponse) ?: return null
+        if (!statesIsReadyToCreateEvent(scanResponse.cardTypesResolver, value)) return null
+        val cardCurrency = ParamCardCurrencyConverter().convert(scanResponse.cardTypesResolver) ?: return null
 
         return Basic.SignedIn(
             state = AnalyticsParam.CardBalanceState.from(value.walletsDataFromStores),
@@ -41,8 +41,8 @@ class BasicTopUpEventConverter(
 ) : Converter<WalletState, Basic.ToppedUp?> {
 
     override fun convert(value: WalletState): Basic.ToppedUp? {
-        if (!statesIsReadyToCreateEvent(scanResponse, value)) return null
-        val cardCurrency = ParamCardCurrencyConverter().convert(scanResponse) ?: return null
+        if (!statesIsReadyToCreateEvent(scanResponse.cardTypesResolver, value)) return null
+        val cardCurrency = ParamCardCurrencyConverter().convert(scanResponse.cardTypesResolver) ?: return null
 
         val data = BasicTopUpFilter.Data(
             walletId = UserWalletIdBuilder.scanResponse(scanResponse).build()?.stringValue ?: "",
@@ -63,8 +63,8 @@ private fun AnalyticsParam.CardBalanceState.Companion.from(
     }
 }
 
-private fun statesIsReadyToCreateEvent(scanResponse: ScanResponse, state: WalletState): Boolean {
-    if (scanResponse.card.isMultiwalletAllowed && state.missingDerivations.isNotEmpty()) return false
+private fun statesIsReadyToCreateEvent(cardTypesResolver: CardTypesResolver, state: WalletState): Boolean {
+    if (cardTypesResolver.isMultiwalletAllowed() && state.missingDerivations.isNotEmpty()) return false
     if (state.walletsDataFromStores.isEmpty()) return false
 
     val totalBalanceState = state.totalBalance?.state ?: return false
