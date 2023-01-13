@@ -29,4 +29,6 @@ interface TransactionManager {
 
     @Throws(IllegalStateException::class)
     fun getNativeTokenDecimals(networkId: String): Int
+
+    fun calculateFee(networkId: String, gasPrice: String, estimatedGas: Int): BigDecimal
 }
