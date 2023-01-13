@@ -1,14 +1,21 @@
 package com.tangem.feature.swap.models
 
-data class SwapPermissionStateHolder(
-    val currency: String,
-    val amount: String,
-    val walletAddress: String,
-    val spenderAddress: String,
-    val fee: String,
-    val approveButton: ApprovePermissionButton,
-    val cancelButton: CancelPermissionButton,
-)
+sealed class SwapPermissionState {
+
+    object InProgress : SwapPermissionState()
+
+    object Empty : SwapPermissionState()
+
+    data class ReadyForRequest(
+        val currency: String,
+        val amount: String,
+        val walletAddress: String,
+        val spenderAddress: String,
+        val fee: String,
+        val approveButton: ApprovePermissionButton,
+        val cancelButton: CancelPermissionButton,
+    ) : SwapPermissionState()
+}
 
 data class ApprovePermissionButton(
     val enabled: Boolean,
