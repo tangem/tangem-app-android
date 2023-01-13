@@ -22,7 +22,7 @@ object OnboardingHelper {
         val cardInfoStorage = preferencesStorage.usedCardsPrefStorage
         val cardId = response.card.cardId
         return when {
-            response.isTangemTwins() -> {
+            response.cardTypesResolver.isTangemTwins() -> {
                 if (!response.twinsIsTwinned()) {
                     true
                 } else {
