@@ -10,7 +10,7 @@ sealed class Shop(
     params: Map<String, String> = mapOf(),
 ) : AnalyticsEvent("Shop", event, params) {
 
-    class ScreenOpened : IntroductionProcess("Shop Screen Opened")
+    class ScreenOpened : Shop("Shop Screen Opened")
 
     class Purchased(sku: String, count: String, amount: String, couponCode: String?) : Shop(
         event = "Purchased",
@@ -22,8 +22,8 @@ sealed class Shop(
         ).filterNotNull(),
     )
 
-    class Redirected(partnerName: String) : Shop(
+    class Redirected(partnerName: String?) : Shop(
         event = "Redirected",
-        params = mapOf("Partner" to partnerName),
+        params = partnerName?.let { mapOf("Partner" to partnerName) } ?: mapOf(),
     )
 }
