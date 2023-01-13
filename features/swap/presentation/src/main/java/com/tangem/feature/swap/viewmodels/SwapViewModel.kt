@@ -98,9 +98,13 @@ internal class SwapViewModel @Inject constructor(
                 .onSuccess { swapState ->
                     when (swapState) {
                         is SwapState.QuotesLoadedState -> {
-                            uiState = stateBuilder.createQuotesLoadedState(uiState, swapState, fromToken) {
-                                onSwapClick(toToken, swapState)
-                            }
+                            uiState = stateBuilder.createQuotesLoadedState(
+                                uiStateHolder = uiState,
+                                quoteModel = swapState,
+                                fromToken = fromToken,
+                                onSwapClick = { onSwapClick(toToken, swapState) },
+                                onGivePermissionClick = { givePermissionsToSwap(fromToken) },
+                            )
                         }
                         is SwapState.SwapSuccess -> {
                             //todo implement
@@ -116,10 +120,12 @@ internal class SwapViewModel @Inject constructor(
     private fun onSwapClick(toToken: Currency, quoteModel: SwapState.QuotesLoadedState) {
         viewModelScope.launch(dispatchers.main) {
             runCatching {
-                if (!quoteModel.isAllowedToSpend) {
-                    swapInteractor.givePermissionToSwap(toToken)
-                } else {
-                    swapInteractor.onSwap()
+                withContext(dispatchers.io) {
+                    if (!quoteModel.isAllowedToSpend) {
+                        swapInteractor.givePermissionToSwap(toToken)
+                    } else {
+                        swapInteractor.onSwap()
+                    }
                 }
             }
                 .onSuccess {
@@ -133,6 +139,18 @@ internal class SwapViewModel @Inject constructor(
                         }
                     }
                 }
+                .onFailure { }
+        }
+    }
+
+    private fun givePermissionsToSwap(tokenToApprove: Currency) {
+        viewModelScope.launch(dispatchers.main) {
+            runCatching {
+                withContext(dispatchers.io) {
+                    swapInteractor.givePermissionToSwap(tokenToApprove)
+                }
+            }
+                .onSuccess { }
                 .onFailure { }
         }
     }
