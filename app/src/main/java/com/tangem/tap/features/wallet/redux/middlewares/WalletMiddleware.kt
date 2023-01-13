@@ -12,6 +12,7 @@ import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.operations.attestation.Attestation
 import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.tap.common.analytics.Analytics
+import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.extensions.copyToClipboard
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
@@ -261,6 +262,9 @@ class WalletMiddleware {
                 } else {
                     store.dispatch(newAction)
                     if (newAction is PrepareSendScreen) {
+                        store.state.walletState.getSelectedWalletData()?.currency?.let { currency ->
+                            Analytics.send(Token.ButtonSend(AnalyticsParam.CurrencyType.Currency(currency)))
+                        }
                         store.dispatch(NavigationAction.NavigateTo(AppScreen.Send))
                     }
                 }
