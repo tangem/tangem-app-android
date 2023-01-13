@@ -1,6 +1,7 @@
 package com.tangem.feature.swap.ui
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -28,6 +29,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import com.tangem.core.ui.components.BasicDialog
 import com.tangem.core.ui.components.CardWithIcon
 import com.tangem.core.ui.components.ClickableWarningCard
 import com.tangem.core.ui.components.Keyboard
@@ -133,6 +135,10 @@ internal fun SwapScreenContent(
                 textAlign = TextAlign.Start,
             )
         }
+
+        if (state.alert != null) {
+            BasicDialog(message = state.alert.message, onDismissDialog = state.alert.onClick)
+        }
     }
 }
 
@@ -147,6 +153,7 @@ private fun MainInfo(state: SwapStateHolder) {
         Column {
             TransactionCard(
                 type = state.sendCardData.type,
+                balance = state.sendCardData.balance,
                 amount = state.sendCardData.amount,
                 amountEquivalent = state.sendCardData.amountEquivalent,
                 tokenIconUrl = state.sendCardData.tokenIconUrl,
@@ -157,6 +164,7 @@ private fun MainInfo(state: SwapStateHolder) {
             SpacerH16()
             TransactionCard(
                 type = state.receiveCardData.type,
+                balance = state.receiveCardData.balance,
                 amount = state.receiveCardData.amount,
                 amountEquivalent = state.receiveCardData.amountEquivalent,
                 tokenIconUrl = state.receiveCardData.tokenIconUrl,
@@ -203,6 +211,7 @@ private fun FeeItem(feeState: FeeState, currency: String) {
                 warningText = stringResource(id = R.string.token_details_send_blocked_fee_format, currency),
             )
         }
+        is FeeState.Empty -> {}
     }
 }
 
@@ -227,6 +236,13 @@ private fun SwapWarnings(
                             id = R.string.swapping_permission_subheader,
                             warning.tokenCurrency,
                         ),
+                        icon = {
+                            Image(
+                                painter = painterResource(id = com.tangem.core.ui.R.drawable.ic_locked_24),
+                                contentDescription = null,
+                                modifier = Modifier.size(TangemTheme.dimens.size20),
+                            )
+                        },
                         onClick = onApproveWarningClick,
                     )
                 }
@@ -252,13 +268,14 @@ private fun SwapWarnings(
 // region preview
 
 private val sendCard = SwapCardData(
-    type = TransactionCardType.SendCard("123", false, {}),
+    type = TransactionCardType.SendCard {},
     amount = "1 000 000",
     amountEquivalent = "1 000 000",
     tokenIconUrl = "",
     tokenCurrency = "DAI",
     networkIconRes = R.drawable.img_polygon_22,
     canSelectAnotherToken = false,
+    balance = "123",
 )
 
 private val receiveCard = SwapCardData(
@@ -269,17 +286,19 @@ private val receiveCard = SwapCardData(
     tokenCurrency = "DAI",
     networkIconRes = R.drawable.img_polygon_22,
     canSelectAnotherToken = true,
+    balance = "33333",
 )
 
 private val state = SwapStateHolder(
     sendCardData = sendCard,
     receiveCardData = receiveCard,
     fee = FeeState.Loaded(fee = "0.155 MATIC (0.14 $)"),
-    warnings = emptyList(),
+    warnings = listOf(SwapWarning.PermissionNeeded("DAI")),
     networkCurrency = "MATIC",
     swapButton = SwapButton(enabled = true, loading = false, onClick = {}),
     onRefresh = {}, onBackClicked = {}, onChangeCardsClicked = {},
     permissionState = SwapPermissionState.InProgress,
+    // alert = SwapWarning.GenericWarning("There was an error. Please try again.") {},
 )
 
 @Preview
