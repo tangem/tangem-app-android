@@ -14,6 +14,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.Card
+import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
@@ -27,6 +28,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import com.tangem.core.ui.components.CardWithIcon
 import com.tangem.core.ui.components.ClickableWarningCard
 import com.tangem.core.ui.components.Keyboard
 import com.tangem.core.ui.components.PrimaryButtonIconRight
@@ -39,6 +41,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.models.FeeState
 import com.tangem.feature.swap.models.SwapButton
 import com.tangem.feature.swap.models.SwapCardData
+import com.tangem.feature.swap.models.SwapPermissionState
 import com.tangem.feature.swap.models.SwapStateHolder
 import com.tangem.feature.swap.models.SwapWarning
 import com.tangem.feature.swap.models.TransactionCardType
@@ -81,6 +84,21 @@ internal fun SwapScreenContent(
                 SwapWarnings(
                     warnings = state.warnings,
                     onApproveWarningClick = onPermissionWarningClick,
+                )
+            }
+
+            if (state.permissionState is SwapPermissionState.InProgress) {
+                CardWithIcon(
+                    title = stringResource(id = R.string.swapping_pending_transaction_title),
+                    description = stringResource(id = R.string.swapping_pending_transaction_subtitle),
+                    icon = {
+                        CircularProgressIndicator(
+                            modifier = Modifier
+                                .size(TangemTheme.dimens.size16),
+                            color = TangemTheme.colors.icon.primary1,
+                            strokeWidth = TangemTheme.dimens.size2,
+                        )
+                    },
                 )
             }
 
@@ -261,6 +279,7 @@ private val state = SwapStateHolder(
     networkCurrency = "MATIC",
     swapButton = SwapButton(enabled = true, loading = false, onClick = {}),
     onRefresh = {}, onBackClicked = {}, onChangeCardsClicked = {},
+    permissionState = SwapPermissionState.InProgress,
 )
 
 @Preview
