@@ -56,7 +56,6 @@ import com.tangem.core.ui.components.CurrencyPlaceholderIcon
 import com.tangem.core.ui.components.FontSizeRange
 import com.tangem.core.ui.components.ResizableText
 import com.tangem.core.ui.components.SpacerH4
-import com.tangem.core.ui.components.SpacerW12
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.models.TransactionCardType
 import com.valentinilk.shimmer.shimmer
@@ -65,6 +64,7 @@ import com.valentinilk.shimmer.shimmer
 fun TransactionCard(
     modifier: Modifier = Modifier,
     type: TransactionCardType,
+    balance: String,
     amount: String?,
     amountEquivalent: String?,
     tokenIconUrl: String,
@@ -87,7 +87,7 @@ fun TransactionCard(
                 horizontalAlignment = Alignment.Start,
             ) {
 
-                Header(type = type)
+                Header(balance = balance, type = type)
 
                 Content(
                     type = type,
@@ -124,6 +124,7 @@ fun TransactionCard(
 @Composable
 private fun Header(
     type: TransactionCardType,
+    balance: String,
     modifier: Modifier = Modifier,
 ) {
     Row(
@@ -148,15 +149,13 @@ private fun Header(
             style = MaterialTheme.typography.subtitle2,
             modifier = Modifier.padding(top = TangemTheme.dimens.spacing12),
         )
-        if (type is TransactionCardType.SendCard) {
-            Text(
-                text = stringResource(R.string.common_balance, type.balance),
-                color = TangemTheme.colors.text.tertiary,
-                maxLines = 1,
-                style = MaterialTheme.typography.body2,
-                modifier = Modifier.padding(top = TangemTheme.dimens.spacing12),
-            )
-        }
+        Text(
+            text = stringResource(R.string.common_balance, balance),
+            color = TangemTheme.colors.text.tertiary,
+            maxLines = 1,
+            style = MaterialTheme.typography.body2,
+            modifier = Modifier.padding(top = TangemTheme.dimens.spacing12),
+        )
     }
 }
 
@@ -176,27 +175,6 @@ private fun Content(
         horizontalArrangement = Arrangement.Start,
         verticalAlignment = Alignment.Bottom,
     ) {
-
-        if (type is TransactionCardType.SendCard && !type.permissionIsGiven) {
-            Box(
-                modifier = Modifier
-                    .size(TangemTheme.dimens.size56)
-                    .background(
-                        color = TangemTheme.colors.button.secondary,
-                        shape = RoundedCornerShape(TangemTheme.dimens.size12),
-                    ),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    painter = painterResource(id = R.drawable.ic_locked_24),
-                    contentDescription = null,
-                    tint = TangemTheme.colors.icon.primary1,
-                )
-            }
-
-            SpacerW12()
-        }
-
         Column(
             modifier = Modifier
                 .padding(
@@ -453,13 +431,14 @@ fun Preview_SwapMainCard_InDarkTheme() {
 @Composable
 private fun TransactionCardPreview() {
     TransactionCard(
-        type = TransactionCardType.SendCard("123", false, {}),
+        type = TransactionCardType.SendCard {},
         amount = "1 000 000",
         amountEquivalent = "1 000 000",
         tokenIconUrl = "",
         tokenCurrency = "DAI",
         networkIconRes = R.drawable.img_polygon_22,
         onChangeTokenClick = {},
+        balance = "123",
     )
 }
 
