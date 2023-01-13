@@ -126,7 +126,8 @@ class DetailsMiddleware {
                                 store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Home))
                             }
                             is CompletionResult.Failure -> {
-                                (result.error as? TangemSdkError)?.let { error ->
+                                val error = result.error
+                                if (error is TangemSdkError && error !is TangemSdkError.UserCancelled) {
                                     Analytics.send(Settings.CardSettings.FactoryResetFinished(error))
                                 }
                             }
@@ -166,7 +167,8 @@ class DetailsMiddleware {
                                     store.dispatch(DetailsAction.ManageSecurity.SaveChanges.Success)
                                 }
                                 is CompletionResult.Failure -> {
-                                    (result.error as? TangemSdkError)?.let { error ->
+                                    val error = result.error
+                                    if (error is TangemSdkError && error !is TangemSdkError.UserCancelled) {
                                         Analytics.send(Settings.CardSettings.SecurityModeChanged(paramValue, error))
                                     }
                                     store.dispatch(DetailsAction.ManageSecurity.SaveChanges.Failure)
