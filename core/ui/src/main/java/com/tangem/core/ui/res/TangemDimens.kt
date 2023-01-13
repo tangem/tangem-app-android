@@ -31,6 +31,7 @@ data class TangemDimens internal constructor(
     // region Size
     val size0: Dp = 0.dp,
     val size0_5: Dp = 0.5.dp,
+    val size2: Dp = 2.dp,
     val size4: Dp = 4.dp,
     val size8: Dp = 8.dp,
     val size11: Dp = 11.dp,
