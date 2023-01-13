@@ -66,6 +66,12 @@ class TransactionManagerImpl(
         return Blockchain.fromNetworkId(networkId)?.decimals() ?: error("blockchain not found")
     }
 
+    override fun calculateFee(networkId: String, gasPrice: String, estimatedGas: Int): BigDecimal {
+        val blockchain = requireNotNull(Blockchain.fromNetworkId(networkId)) { "blockchain not found" }
+        val gasPriceValue = requireNotNull(gasPrice.toLongOrNull()) { "gasprice should be Long" }
+        return (gasPriceValue * estimatedGas).toBigDecimal().movePointLeft(blockchain.decimals())
+    }
+
     @Throws(IllegalStateException::class)
     override suspend fun getFee(
         networkId: String,

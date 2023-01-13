@@ -130,6 +130,11 @@ class UserWalletManagerImpl(
         )
     }
 
+    override fun getCurrencyByNetworkId(networkId: String): String {
+        val blockchain = requireNotNull(Blockchain.fromNetworkId(networkId)) { "blockchain not found" }
+        return blockchain.currency
+    }
+
     private fun addNativeTokenToWalletAction(token: NativeToken, card: CardDTO): Action {
         val blockchain = Blockchain.fromNetworkId(token.networkId)
         val scanResponse = appStateHolder.scanResponse
