@@ -1,8 +1,10 @@
 package com.tangem.feature.swap.domain.cache
 
+import com.tangem.feature.swap.domain.models.ApproveModel
 import com.tangem.feature.swap.domain.models.Currency
 import com.tangem.feature.swap.domain.models.QuoteModel
 import com.tangem.feature.swap.domain.models.SwapAmount
+import com.tangem.feature.swap.domain.models.SwapDataModel
 import com.tangem.feature.swap.domain.models.cache.ExchangeCurrencies
 import com.tangem.feature.swap.domain.models.cache.SwapDataHolder
 
@@ -28,6 +30,18 @@ class SwapDataCacheImpl : SwapDataCache {
             )
     }
 
+    override fun cacheSwapData(swapDataModel: SwapDataModel) {
+        lastDataForSwap = lastDataForSwap.copy(swapModel = swapDataModel)
+    }
+
+    override fun getLastSwapData(): SwapDataModel? {
+        return lastDataForSwap.swapModel
+    }
+
+    override fun cacheApproveTransactionData(approve: ApproveModel) {
+        lastDataForSwap = lastDataForSwap.copy(approveTxModel = approve)
+    }
+
     override fun getExchangeCurrencies(): ExchangeCurrencies? {
         return lastDataForSwap.exchangeCurrencies
     }
@@ -46,6 +60,10 @@ class SwapDataCacheImpl : SwapDataCache {
 
     override fun getAvailableTokens(networkId: String): List<Currency> {
         return availableTokensForNetwork.getOrElse(networkId) { emptyList() }
+    }
+
+    override fun getApproveTransactionData(): ApproveModel? {
+        return lastDataForSwap.approveTxModel
     }
 
     override fun getLastQuote(): QuoteModel? {
