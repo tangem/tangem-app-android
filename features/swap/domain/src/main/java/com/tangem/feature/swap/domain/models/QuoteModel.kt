@@ -8,7 +8,6 @@ package com.tangem.feature.swap.domain.models
  * @property fromTokenAddress address token you want to exchange
  * @property toTokenAddress address token you want to receive
  * @property estimatedGas fee
- * @property isAllowedToSpend does spend allowed
  */
 data class QuoteModel(
     val fromTokenAmount: SwapAmount,
@@ -16,5 +15,4 @@ data class QuoteModel(
     val fromTokenAddress: String,
     val toTokenAddress: String,
     val estimatedGas: Int,
-    val isAllowedToSpend: Boolean = false,
 )

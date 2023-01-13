@@ -1,11 +1,15 @@
 package com.tangem.feature.swap.ui
 
 import com.tangem.feature.swap.domain.models.Currency
+import com.tangem.feature.swap.domain.models.PermissionDataState
 import com.tangem.feature.swap.domain.models.SwapState
 import com.tangem.feature.swap.domain.models.formatToUIRepresentation
+import com.tangem.feature.swap.models.ApprovePermissionButton
+import com.tangem.feature.swap.models.CancelPermissionButton
 import com.tangem.feature.swap.models.FeeState
 import com.tangem.feature.swap.models.SwapButton
 import com.tangem.feature.swap.models.SwapCardData
+import com.tangem.feature.swap.models.SwapPermissionStateHolder
 import com.tangem.feature.swap.models.SwapStateHolder
 import com.tangem.feature.swap.models.SwapWarning
 import com.tangem.feature.swap.models.TransactionCardType
@@ -75,6 +79,7 @@ class StateBuilder {
         quoteModel: SwapState.QuotesLoadedState,
         fromToken: Currency,
         onSwapClick: () -> Unit,
+        onGivePermissionClick: () -> Unit,
     ): SwapStateHolder {
         return uiStateHolder.copy(
             sendCardData = SwapCardData(
@@ -102,12 +107,39 @@ class StateBuilder {
             } else {
                 emptyList()
             },
-            fee = FeeState.Loaded(quoteModel.estimatedGas.toString()),
+            permissionState = convertPermissionState(quoteModel.permissionState, onGivePermissionClick),
+            fee = FeeState.Loaded(quoteModel.fee),
             swapButton = SwapButton(
                 enabled = quoteModel.isAllowedToSpend,
                 loading = false,
                 onClick = onSwapClick,
             ),
         )
+    }
+
+    private fun convertPermissionState(
+        permissionDataState: PermissionDataState,
+        onGivePermissionClick: () -> Unit,
+    ): SwapPermissionStateHolder? {
+        return when (permissionDataState) {
+            PermissionDataState.Empty -> null
+            PermissionDataState.PermissionFailed -> null
+            PermissionDataState.PermissionLoading -> null
+            is PermissionDataState.PermissionReadyForRequest -> SwapPermissionStateHolder(
+                currency = permissionDataState.currency,
+                amount = permissionDataState.amount,
+                walletAddress = permissionDataState.walletAddress,
+                spenderAddress = permissionDataState.spenderAddress,
+                fee = permissionDataState.fee,
+                approveButton = ApprovePermissionButton(
+                    enabled = true,
+                    onClick = onGivePermissionClick,
+                ),
+                cancelButton = CancelPermissionButton(
+                    enabled = true,
+                    onClick = {},
+                ),
+            )
+        }
     }
 }
