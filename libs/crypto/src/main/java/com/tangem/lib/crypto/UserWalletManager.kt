@@ -53,4 +53,10 @@ interface UserWalletManager {
     * Returns selected app currency
     */
     fun getUserAppCurrency(): ProxyFiatCurrency
+
+    /**
+     * @param networkId
+     * @return currency name
+     */
+    fun getCurrencyByNetworkId(networkId: String): String
 }
