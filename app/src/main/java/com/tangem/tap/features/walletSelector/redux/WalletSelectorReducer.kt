@@ -108,7 +108,7 @@ internal object WalletSelectorReducer {
             )
         } else {
             UserWalletModel.Type.SingleCurrency(
-                blockchainName = scanResponse.getBlockchain().fullName,
+                blockchainName = scanResponse.cardTypesResolver.getBlockchain().fullName,
             )
         }
     }
