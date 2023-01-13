@@ -8,6 +8,7 @@ import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.TapWorkarounds.isTestCard
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.events.MainScreen
+import com.tangem.tap.common.analytics.events.ManageTokens
 import com.tangem.tap.common.analytics.events.Portfolio
 import com.tangem.tap.common.extensions.animateVisibility
 import com.tangem.tap.common.extensions.formatAmountAsSpannedString
@@ -105,6 +106,8 @@ class MultiWalletView : WalletView() {
                     derivationStyle = card.derivationStyle,
                 ),
             )
+
+            Analytics.send(ManageTokens.ScreenOpened())
             store.dispatch(NavigationAction.NavigateTo(AppScreen.AddTokens))
         }
         handleErrorStates(state = state, binding = binding, fragment = fragment)
