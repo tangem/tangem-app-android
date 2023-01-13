@@ -9,7 +9,7 @@ import com.tangem.feature.swap.models.CancelPermissionButton
 import com.tangem.feature.swap.models.FeeState
 import com.tangem.feature.swap.models.SwapButton
 import com.tangem.feature.swap.models.SwapCardData
-import com.tangem.feature.swap.models.SwapPermissionStateHolder
+import com.tangem.feature.swap.models.SwapPermissionState
 import com.tangem.feature.swap.models.SwapStateHolder
 import com.tangem.feature.swap.models.SwapWarning
 import com.tangem.feature.swap.models.TransactionCardType
@@ -120,12 +120,12 @@ class StateBuilder {
     private fun convertPermissionState(
         permissionDataState: PermissionDataState,
         onGivePermissionClick: () -> Unit,
-    ): SwapPermissionStateHolder? {
+    ): SwapPermissionState {
         return when (permissionDataState) {
-            PermissionDataState.Empty -> null
-            PermissionDataState.PermissionFailed -> null
-            PermissionDataState.PermissionLoading -> null
-            is PermissionDataState.PermissionReadyForRequest -> SwapPermissionStateHolder(
+            PermissionDataState.Empty -> SwapPermissionState.Empty
+            PermissionDataState.PermissionFailed -> SwapPermissionState.Empty
+            PermissionDataState.PermissionLoading -> SwapPermissionState.InProgress
+            is PermissionDataState.PermissionReadyForRequest -> SwapPermissionState.ReadyForRequest(
                 currency = permissionDataState.currency,
                 amount = permissionDataState.amount,
                 walletAddress = permissionDataState.walletAddress,
