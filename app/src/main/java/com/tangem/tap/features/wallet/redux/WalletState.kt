@@ -63,7 +63,7 @@ data class WalletState(
     }
 
     val isTangemTwins: Boolean
-        get() = store.state.globalState.scanResponse?.isTangemTwins() == true
+        get() = store.state.globalState.scanResponse?.cardTypesResolver?.isTangemTwins() == true
 
     val isExchangeServiceFeatureOn: Boolean
         get() = store.state.globalState.exchangeManager.featureIsSwitchedOn()
