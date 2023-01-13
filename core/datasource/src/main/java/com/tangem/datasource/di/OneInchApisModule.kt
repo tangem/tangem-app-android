@@ -23,6 +23,7 @@ class OneInchApisModule {
         val apiFactory = OneInchApiFactory()
         apiFactory.putApi(ETH_NETWORK, createOneInchApiWithUrl(ONE_INCH_BASE_URL + ONE_INCH_ETH_PATH, moshi))
         apiFactory.putApi(BSC_NETWORK, createOneInchApiWithUrl(ONE_INCH_BASE_URL + ONE_INCH_BSC_PATH, moshi))
+        apiFactory.putApi(POLYGON_NETWORK, createOneInchApiWithUrl(ONE_INCH_BASE_URL + ONE_INCH_POLYGON_PATH, moshi))
         return apiFactory
     }
 
@@ -45,8 +46,10 @@ class OneInchApisModule {
         private const val ONE_INCH_BASE_URL = "https://api.1inch.io/v5.0/"
         private const val ONE_INCH_ETH_PATH = "1/"
         private const val ONE_INCH_BSC_PATH = "56/"
+        private const val ONE_INCH_POLYGON_PATH = "137/"
 
         private const val ETH_NETWORK = "ethereum"
         private const val BSC_NETWORK = "binance-smart-chain"
+        private const val POLYGON_NETWORK = "polygon-pos"
     }
 }
