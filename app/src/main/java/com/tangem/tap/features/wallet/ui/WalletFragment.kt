@@ -218,7 +218,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
 
     private fun setupCardImage(state: WalletState) {
         //TODO: SaltPay: remove hardCode
-        if (store.state.globalState.scanResponse?.isSaltPay() == true) {
+        if (store.state.globalState.scanResponse?.cardTypesResolver?.isSaltPay() == true) {
             binding.ivCard.load(R.drawable.img_salt_pay_visa) {
                 scale(Scale.FIT)
                 crossfade(enable = true)
