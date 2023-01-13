@@ -1,11 +1,9 @@
 package com.tangem.datasource.di
 
 import com.squareup.moshi.Moshi
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import com.tangem.datasource.api.common.BigDecimalAdapter
+import com.tangem.datasource.api.paymentology.PaymentologyApi
 import com.tangem.datasource.api.tangemTech.TangemTechApi
-import com.tangem.datasource.utils.RequestHeader.AuthenticationHeader
-import com.tangem.datasource.utils.RequestHeader.CacheControlHeader
+import com.tangem.datasource.utils.RequestHeader.*
 import com.tangem.datasource.utils.addHeaders
 import com.tangem.datasource.utils.allowLogging
 import com.tangem.lib.auth.AuthProvider
@@ -24,16 +22,7 @@ class NetworkModule {
 
     @Provides
     @Singleton
-    fun provideMoshi(): Moshi {
-        return Moshi.Builder()
-            .add(KotlinJsonAdapterFactory())
-            .add(BigDecimalAdapter())
-            .build()
-    }
-
-    @Provides
-    @Singleton
-    fun provideTangemTechApi(authProvider: AuthProvider, moshi: Moshi): TangemTechApi {
+    fun provideTangemTechApi(authProvider: AuthProvider, @NetworkMoshi moshi: Moshi): TangemTechApi {
         return Retrofit.Builder()
             .addConverterFactory(MoshiConverterFactory.create(moshi))
             .baseUrl(PROD_TANGEM_TECH_BASE_URL)
@@ -48,6 +37,21 @@ class NetworkModule {
             )
             .build()
             .create(TangemTechApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun providePaymentologyApi(@NetworkMoshi moshi: Moshi): PaymentologyApi {
+        return Retrofit.Builder()
+            .addConverterFactory(MoshiConverterFactory.create(moshi))
+            .baseUrl(PAYMENTOLOGY_BASE_URL)
+            .client(
+                OkHttpClient.Builder()
+                    .allowLogging()
+                    .build(),
+            )
+            .build()
+            .create(PaymentologyApi::class.java)
     }
 
     private companion object {
