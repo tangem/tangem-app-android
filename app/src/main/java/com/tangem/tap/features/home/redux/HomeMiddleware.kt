@@ -11,6 +11,7 @@ import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.backupService
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.events.IntroductionProcess
+import com.tangem.tap.common.analytics.events.Shop
 import com.tangem.tap.common.analytics.paramsInterceptor.BatchIdParamsInterceptor
 import com.tangem.tap.common.entities.IndeterminateProgressButton
 import com.tangem.tap.common.extensions.dispatchDialogShow
@@ -100,6 +101,7 @@ private fun handleHomeAction(appState: () -> AppState?, action: Action, dispatch
             postUiDelayBg(300) { store.dispatch(scanCardAction) }
         }
         is HomeAction.GoToShop -> {
+            Analytics.send(Shop.ScreenOpened())
             when (action.userCountryCode) {
                 RUSSIA_COUNTRY_CODE, BELARUS_COUNTRY_CODE -> store.dispatchOpenUrl(BUY_WALLET_URL)
                 else -> store.dispatch(NavigationAction.NavigateTo(AppScreen.Shop))
