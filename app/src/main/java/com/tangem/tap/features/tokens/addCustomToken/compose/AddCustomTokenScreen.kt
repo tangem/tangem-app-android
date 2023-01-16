@@ -6,23 +6,16 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.BottomSheetScaffold
 import androidx.compose.material.BottomSheetScaffoldState
 import androidx.compose.material.BottomSheetState
 import androidx.compose.material.BottomSheetValue
 import androidx.compose.material.ExperimentalMaterialApi
-import androidx.compose.material.ExtendedFloatingActionButton
 import androidx.compose.material.FabPosition
-import androidx.compose.material.FloatingActionButtonDefaults
-import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Surface
-import androidx.compose.material.Text
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.rememberBottomSheetScaffoldState
 import androidx.compose.material.rememberScaffoldState
 import androidx.compose.runtime.Composable
@@ -33,12 +26,14 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import com.tangem.core.ui.components.PrimaryButtonIconLeft
 import com.tangem.core.ui.components.keyboardAsState
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.AddCustomTokenError
 import com.tangem.domain.common.form.DataField
 import com.tangem.domain.common.form.FieldId
@@ -56,7 +51,6 @@ import com.tangem.domain.redux.domainStore
 import com.tangem.tap.common.compose.AddCustomTokenWarning
 import com.tangem.tap.common.compose.ClosePopupTrigger
 import com.tangem.tap.common.compose.ComposeDialogManager
-import com.tangem.tap.common.compose.ToggledRippleTheme
 import com.tangem.tap.domain.moduleMessage.ModuleMessageConverter
 import com.tangem.tap.features.tokens.addCustomToken.compose.test.TestCase
 import com.tangem.tap.features.tokens.addCustomToken.compose.test.TestCasesList
@@ -127,8 +121,12 @@ private fun ScreenContent(
             }
         },
         floatingActionButtonPosition = FabPosition.Center,
-    ) {
-        Box(Modifier.fillMaxSize()) {
+    ) { paddings ->
+        Box(
+            modifier = Modifier
+                .padding(paddings)
+                .fillMaxSize(),
+        ) {
             LazyColumn(
                 contentPadding = PaddingValues(bottom = 90.dp),
             ) {
@@ -200,41 +198,15 @@ fun Warnings(warnings: List<AddCustomTokenError.Warning>) {
 
 @Composable
 private fun AddButton(state: MutableState<AddCustomTokenState>) {
-    AddCustomTokenFab(
+    PrimaryButtonIconLeft(
         modifier = Modifier
-            .widthIn(210.dp, 280.dp),
-        isEnabled = state.value.screenState.addButton.isEnabled,
-    ) { domainStore.dispatch(AddCustomTokenAction.OnAddCustomTokenClicked) }
-}
-
-@Suppress("MagicNumber")
-@Composable
-private fun AddCustomTokenFab(modifier: Modifier = Modifier, isEnabled: Boolean = true, onClick: () -> Unit) {
-    val contentColor = Color.White
-    val backgroundColor = if (isEnabled) Color(0xFF1ACE80) else Color(0xFFB9E6D3)
-    val elevation = if (!isEnabled) {
-        FloatingActionButtonDefaults.elevation(0.dp, 0.dp)
-    } else {
-        FloatingActionButtonDefaults.elevation()
-    }
-
-    ToggledRippleTheme(isEnabled) {
-        ExtendedFloatingActionButton(
-            modifier = modifier,
-            icon = {
-                Icon(
-                    imageVector = Icons.Filled.Add,
-                    tint = contentColor,
-                    contentDescription = "Add",
-                )
-            },
-            text = { Text(text = stringResource(id = R.string.common_add)) },
-            onClick = { if (isEnabled) onClick() },
-            backgroundColor = backgroundColor,
-            contentColor = contentColor,
-            elevation = elevation,
-        )
-    }
+            .padding(horizontal = TangemTheme.dimens.spacing16)
+            .fillMaxWidth(),
+        text = stringResource(id = R.string.common_add),
+        icon = painterResource(id = R.drawable.ic_plus_24),
+        enabled = state.value.screenState.addButton.isEnabled,
+        onClick = { domainStore.dispatch(AddCustomTokenAction.OnAddCustomTokenClicked) },
+    )
 }
 
 data class ScreenFieldData(
