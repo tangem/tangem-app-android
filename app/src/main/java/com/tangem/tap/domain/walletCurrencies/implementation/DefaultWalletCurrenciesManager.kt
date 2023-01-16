@@ -128,34 +128,35 @@ internal class DefaultWalletCurrenciesManager(
     private fun List<Currency>.addMissingBlockchains(card: CardDTO): List<Currency> {
         val newCurrencies = arrayListOf<Currency>()
 
-        for (currency in this.sortedByDescending { it is Currency.Blockchain }) {
-            when (currency) {
-                is Currency.Blockchain -> {
-                    newCurrencies.add(currency.updateDerivationPath(card.derivationStyle))
+        this
+            .groupBy { it.blockchain }
+            .forEach { (blockchain, currencies) ->
+                val rawDerivationPath: String?
+                val blockchainCurrency = currencies
+                    .firstOrNull { it is Currency.Blockchain }
+                    as? Currency.Blockchain
+
+                // Add blockchain currency
+                if (blockchainCurrency != null) {
+                    rawDerivationPath = findDerivationPath(blockchainCurrency, card.derivationStyle)
+                    newCurrencies.add(blockchainCurrency.copy(derivationPath = rawDerivationPath))
+                } else {
+                    rawDerivationPath = findDerivationPath(currencies.first(), card.derivationStyle)
+                    newCurrencies.add(
+                        Currency.Blockchain(
+                            blockchain = blockchain,
+                            derivationPath = rawDerivationPath,
+                        ),
+                    )
                 }
 
-                is Currency.Token -> {
-                    val containsTokenBlockchain = newCurrencies.any {
-                        it.isBlockchain() && it.blockchain == currency.blockchain
+                // Add tokens currencies
+                currencies
+                    .filterIsInstance<Currency.Token>()
+                    .forEach { currency ->
+                        newCurrencies.add(currency.copy(derivationPath = rawDerivationPath))
                     }
-
-                    if (containsTokenBlockchain) {
-                        newCurrencies.add(currency.updateDerivationPath(card.derivationStyle))
-                    } else {
-                        val derivationPath = findDerivationPath(currency, card.derivationStyle)
-                        newCurrencies.add(
-                            Currency.Blockchain(
-                                blockchain = currency.blockchain,
-                                derivationPath = derivationPath,
-                            ),
-                        )
-                        newCurrencies.add(
-                            currency.copy(derivationPath = derivationPath),
-                        )
-                    }
-                }
             }
-        }
 
         return newCurrencies
     }
@@ -181,22 +182,6 @@ internal class DefaultWalletCurrenciesManager(
                     }
             }
             .fold()
-    }
-
-    private fun Currency.updateDerivationPath(cardDerivationStyle: DerivationStyle?): Currency {
-        val findDerivationPath: () -> String? = {
-            findDerivationPath(this, cardDerivationStyle)
-        }
-
-        return when (this) {
-            is Currency.Blockchain -> this.copy(
-                derivationPath = findDerivationPath(),
-            )
-
-            is Currency.Token -> this.copy(
-                derivationPath = findDerivationPath(),
-            )
-        }
     }
 
     private fun findDerivationPath(currency: Currency, cardDerivationStyle: DerivationStyle?): String? {
