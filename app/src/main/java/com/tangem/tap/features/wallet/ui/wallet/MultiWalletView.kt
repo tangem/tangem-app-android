@@ -5,9 +5,9 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.badoo.mvicore.DiffStrategy
 import com.badoo.mvicore.modelWatcher
+import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.TapWorkarounds.isTestCard
-import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.analytics.events.Portfolio
 import com.tangem.tap.common.extensions.animateVisibility
@@ -69,7 +69,12 @@ class MultiWalletView : WalletView() {
         }
         watch({ it }, totalBalanceStrategy) { walletState ->
             binding?.let {
-                handleTotalBalance(it, walletState.totalBalance, walletState.state, walletState.walletsDataFromStores.size)
+                handleTotalBalance(
+                    binding = it,
+                    totalBalance = walletState.totalBalance,
+                    progressState = walletState.state,
+                    walletsCount = walletState.walletsDataFromStores.size,
+                )
             }
         }
     }
@@ -175,9 +180,7 @@ class MultiWalletView : WalletView() {
         walletsCount: Int,
     ) = with(binding.lCardTotalBalance) {
         if (walletsCount == 0) {
-            if (progressState != ProgressState.Loading) {
-                root.isVisible = false
-            }
+            root.isVisible = false
         } else {
             if (totalBalance == null) {
                 if (progressState != ProgressState.Loading) {
