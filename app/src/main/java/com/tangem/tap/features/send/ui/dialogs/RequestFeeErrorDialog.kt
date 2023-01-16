@@ -11,22 +11,19 @@ import com.tangem.wallet.R
 /**
  * Created by Anton Zhilenkov on 13/09/2022.
  */
-class RequestFeeErrorDialog {
+object RequestFeeErrorDialog {
+    fun create(context: Context, dialog: SendAction.Dialog.RequestFeeError): AlertDialog {
+        val errorMessage = dialog.error.customMessage
 
-    companion object {
-        fun create(context: Context, dialog: SendAction.Dialog.RequestFeeError): AlertDialog {
-            val errorMessage = dialog.error.customMessage
-
-            return AlertDialog.Builder(context).apply {
-                setTitle(R.string.common_fee_error)
-                setMessage(context.getString(R.string.alert_failed_to_send_transaction_message, errorMessage))
-                setNegativeButton(R.string.alert_button_send_feedback) { _, _ ->
-                    store.dispatch(GlobalAction.SendEmail(SendTransactionFailedEmail(errorMessage)))
-                }
-                setPositiveButton(R.string.common_retry) { _, _ -> dialog.onRetry() }
-                setNeutralButton(R.string.common_cancel) { _, _ -> }
-                setOnDismissListener { store.dispatch(SendAction.Dialog.Hide) }
-            }.create()
-        }
+        return AlertDialog.Builder(context).apply {
+            setTitle(R.string.common_fee_error)
+            setMessage(context.getString(R.string.alert_failed_to_send_transaction_message, errorMessage))
+            setNegativeButton(R.string.alert_button_send_feedback) { _, _ ->
+                store.dispatch(GlobalAction.SendEmail(SendTransactionFailedEmail(errorMessage)))
+            }
+            setPositiveButton(R.string.common_retry) { _, _ -> dialog.onRetry() }
+            setNeutralButton(R.string.common_cancel) { _, _ -> }
+            setOnDismissListener { store.dispatch(SendAction.Dialog.Hide) }
+        }.create()
     }
 }

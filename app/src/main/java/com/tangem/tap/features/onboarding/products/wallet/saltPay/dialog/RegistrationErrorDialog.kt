@@ -12,22 +12,20 @@ import com.tangem.wallet.R
 /**
  * Created by Anton Zhilenkov on 12.10.2022.
  */
-class RegistrationErrorDialog {
-    companion object {
-        fun create(context: Context, dialog: SaltPayDialog.Activation.OnError): Dialog {
-            val convertedMessage = SaltPayErrorConverter(context).convert(dialog.error) as ConvertedDialogMessage
+object RegistrationErrorDialog {
+    fun create(context: Context, dialog: SaltPayDialog.Activation.OnError): Dialog {
+        val convertedMessage = SaltPayErrorConverter(context).convert(dialog.error) as ConvertedDialogMessage
 
-            return AlertDialog.Builder(context).apply {
-                setTitle(convertedMessage.title)
-                setMessage(convertedMessage.message)
-                setPositiveButton(R.string.common_ok) { _, _ ->
-                    store.dispatch(GlobalAction.HideDialog)
-                }
-                setOnDismissListener {
-                    store.dispatch(GlobalAction.HideDialog)
-                }
-                setCancelable(false)
-            }.create()
-        }
+        return AlertDialog.Builder(context).apply {
+            setTitle(convertedMessage.title)
+            setMessage(convertedMessage.message)
+            setPositiveButton(R.string.common_ok) { _, _ ->
+                store.dispatch(GlobalAction.HideDialog)
+            }
+            setOnDismissListener {
+                store.dispatch(GlobalAction.HideDialog)
+            }
+            setCancelable(false)
+        }.create()
     }
 }

@@ -16,11 +16,6 @@ import me.dm7.barcodescanner.zxing.ZXingScannerView
  * Created by Anton Zhilenkov on 03/09/2020.
  */
 class ScanQrCodeActivity : AppCompatActivity(), ZXingScannerView.ResultHandler {
-    companion object {
-        val SCAN_QR_REQUEST_CODE = 1001
-        val SCAN_RESULT = "scanResult"
-    }
-
     private lateinit var mScannerView: ZXingScannerView
 
     override fun onCreate(state: Bundle?) {
@@ -29,7 +24,6 @@ class ScanQrCodeActivity : AppCompatActivity(), ZXingScannerView.ResultHandler {
         setContentView(mScannerView)
 
         if (!permissionIsGranted()) requestPermission()
-
     }
 
     override fun onResume() {
@@ -65,5 +59,10 @@ class ScanQrCodeActivity : AppCompatActivity(), ZXingScannerView.ResultHandler {
 
     private fun requestPermission() {
         ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), PERMISSION_REQUEST_CODE)
+    }
+
+    companion object {
+        const val SCAN_QR_REQUEST_CODE = 1001
+        const val SCAN_RESULT = "scanResult"
     }
 }

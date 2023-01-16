@@ -125,10 +125,6 @@ private fun PinElement(
     }
 }
 
-@Composable
-private fun HiddenInputField() {
-}
-
 private fun createPinSymbolsList(size: Int, text: String): List<String?> = List(size) {
     try {
         text[it].toString()

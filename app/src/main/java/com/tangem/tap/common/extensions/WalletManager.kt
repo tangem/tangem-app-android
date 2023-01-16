@@ -21,6 +21,7 @@ import timber.log.Timber
 /**
  * Created by Anton Zhilenkov on 03/10/2021.
  */
+@Suppress("MagicNumber")
 suspend fun WalletManager.safeUpdate(): Result<Wallet> = try {
     val scanResponse = store.state.globalState.scanResponse
 
@@ -72,8 +73,7 @@ fun WalletManager?.getAddressData(): AddressData? {
     val wallet = this?.wallet ?: return null
 
     val addressDataList = wallet.createAddressesData()
-    return if (addressDataList.isEmpty()) null
-    else addressDataList[0]
+    return if (addressDataList.isEmpty()) null else addressDataList[0]
 }
 
 fun <T> WalletManager.Companion.stub(): T {

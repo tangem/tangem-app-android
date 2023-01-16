@@ -1,12 +1,10 @@
 package com.tangem.tap.common.extensions
 
 import android.os.Bundle
-import androidx.activity.OnBackPressedCallback
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.FragmentActivity
 import androidx.fragment.app.FragmentManager
-import com.tangem.common.extensions.VoidCallback
 import com.tangem.feature.referral.ReferralFragment
 import com.tangem.feature.swap.presentation.SwapFragment
 import com.tangem.tap.common.redux.navigation.AppScreen
@@ -84,21 +82,15 @@ fun FragmentActivity.getPreviousScreen(): AppScreen? {
     } else {
         0
     }
-    val tag = if (indexOfLastFragment < this.supportFragmentManager.backStackEntryCount)
+    val tag = if (indexOfLastFragment < this.supportFragmentManager.backStackEntryCount) {
         this.supportFragmentManager.getBackStackEntryAt(indexOfLastFragment).name
-    else null
+    } else {
+        null
+    }
     return tag?.let { AppScreen.valueOf(tag) }
 }
 
-fun FragmentActivity.addOnBackPressedDispatcher(
-    isEnabled: Boolean = true,
-    onBackPressed: VoidCallback,
-): OnBackPressedCallback = (object : OnBackPressedCallback(isEnabled) {
-    override fun handleOnBackPressed() {
-        onBackPressed()
-    }
-}).also { this.onBackPressedDispatcher.addCallback(it) }
-
+@Suppress("ComplexMethod")
 private fun fragmentFactory(screen: AppScreen): Fragment {
     return when (screen) {
         AppScreen.Home -> HomeFragment()

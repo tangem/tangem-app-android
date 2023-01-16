@@ -5,8 +5,8 @@ import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.doOnSuccess
 import com.tangem.common.extensions.guard
-import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.core.analytics.Analytics
+import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.analytics.events.Token.ButtonRemoveToken
@@ -42,6 +42,7 @@ import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 
 class MultiWalletMiddleware {
+    @Suppress("LongMethod", "ComplexMethod")
     fun handle(
         action: WalletAction.MultiWallet, walletState: WalletState?, globalState: GlobalState?,
     ) {
@@ -129,11 +130,13 @@ class MultiWalletMiddleware {
             }
             is WalletAction.MultiWallet.RemoveWallet -> {
                 val selectedUserWallet = userWalletsListManager.selectedUserWalletSync
-                if (selectedUserWallet != null) scope.launch {
-                    walletCurrenciesManager.removeCurrency(
-                        userWallet = selectedUserWallet,
-                        currencyToRemove = action.currency,
-                    )
+                if (selectedUserWallet != null) {
+                    scope.launch {
+                        walletCurrenciesManager.removeCurrency(
+                            userWallet = selectedUserWallet,
+                            currencyToRemove = action.currency,
+                        )
+                    }
                 } else {
                     val currency = action.currency
                     val card = globalState.scanResponse?.card.guard {
@@ -144,8 +147,9 @@ class MultiWalletMiddleware {
                     var currencies = walletState?.currencies ?: emptyList()
                     currencies = currencies.filterNot { it == currency }
                     if (currency.isBlockchain()) {
-                        currencies
-                            .filter { it.blockchain == currency.blockchain && it.derivationPath == currency.derivationPath }
+                        currencies.filter {
+                            it.blockchain == currency.blockchain && it.derivationPath == currency.derivationPath
+                        }
                     }
                     scope.launch { userTokensRepository.saveUserTokens(card, currencies) }
                 }

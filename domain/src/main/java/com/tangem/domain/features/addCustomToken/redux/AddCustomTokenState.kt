@@ -265,7 +265,7 @@ data class AddCustomTokenState(
         private var builder: StringBuilder = StringBuilder()
 
         override fun convert(action: Action, stateHolder: DomainState): String? {
-            val action = (action as? AddCustomTokenAction) ?: return null
+            val action = action as? AddCustomTokenAction ?: return null
 
             val state = stateHolder.addCustomTokensState
             val fieldConverter =

@@ -13,25 +13,33 @@ import timber.log.Timber
 /**
  * Created by Anton Zhilenkov on 25/03/2022.
  */
-abstract class CustomTokenValidator<T> : Validator<T, AddCustomTokenError>
+interface CustomTokenValidator<T> : Validator<T, AddCustomTokenError>
 
-class StringIsEmptyValidator : CustomTokenValidator<String>() {
+class StringIsEmptyValidator : CustomTokenValidator<String> {
     override fun validate(data: String?): AddCustomTokenError? = when {
         data == null || data.isEmpty() -> null
         else -> AddCustomTokenError.FieldIsNotEmpty
     }
 }
 
-class StringIsNotEmptyValidator : CustomTokenValidator<String>() {
+class StringIsNotEmptyValidator : CustomTokenValidator<String> {
     override fun validate(data: String?): AddCustomTokenError? = when {
         data == null || data.isEmpty() -> AddCustomTokenError.FieldIsEmpty
         else -> null
     }
 }
 
-class TokenContractAddressValidator : CustomTokenValidator<String>() {
+class TokenContractAddressValidator : CustomTokenValidator<String> {
 
     private var blockchain: Blockchain = Blockchain.Unknown
+
+    private val successAddressValidator = object : AddressService() {
+        override fun makeAddress(walletPublicKey: ByteArray, curve: EllipticCurve?): String {
+            throw UnsupportedOperationException()
+        }
+
+        override fun validate(address: String): Boolean = true
+    }
 
     fun nextValidationFor(blockchain: Blockchain) {
         this.blockchain = blockchain
@@ -63,32 +71,25 @@ class TokenContractAddressValidator : CustomTokenValidator<String>() {
             }
         }
     }
-
-    private val successAddressValidator = object : AddressService() {
-        override fun makeAddress(walletPublicKey: ByteArray, curve: EllipticCurve?): String {
-            throw UnsupportedOperationException()
-        }
-
-        override fun validate(address: String): Boolean = true
-    }
 }
 
-class TokenNetworkValidator : CustomTokenValidator<Blockchain>() {
+class TokenNetworkValidator : CustomTokenValidator<Blockchain> {
     override fun validate(data: Blockchain?): AddCustomTokenError? = when (data) {
         null, Blockchain.Unknown -> AddCustomTokenError.NetworkIsNotSelected
         else -> null
     }
 }
 
-class TokenNameValidator : CustomTokenValidator<String>() {
+class TokenNameValidator : CustomTokenValidator<String> {
     override fun validate(data: String?): AddCustomTokenError? = StringIsNotEmptyValidator().validate(data)
 }
 
-class TokenSymbolValidator : CustomTokenValidator<String>() {
+class TokenSymbolValidator : CustomTokenValidator<String> {
     override fun validate(data: String?): AddCustomTokenError? = StringIsNotEmptyValidator().validate(data)
 }
 
-class TokenDecimalsValidator : CustomTokenValidator<String>() {
+@Suppress("MagicNumber")
+class TokenDecimalsValidator : CustomTokenValidator<String> {
     override fun validate(data: String?): AddCustomTokenError? {
         val decimal = data?.toIntOrNull() ?: return AddCustomTokenError.FieldIsEmpty
 

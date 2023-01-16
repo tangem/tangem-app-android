@@ -1,4 +1,4 @@
-package com.tangem.analytics.api
+package com.tangem.core.analytics.api
 
 /**
  * Created by Anton Zhilenkov on 23/09/2022.

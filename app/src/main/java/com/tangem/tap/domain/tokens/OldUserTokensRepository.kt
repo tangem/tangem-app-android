@@ -119,7 +119,7 @@ class OldUserTokensRepository(
                     .onSuccess { return@map it.coins.firstOrNull()?.id }
                     .onFailure { return@map null }
 
-                throw IllegalStateException("Unreachable code because runCatching must return result")
+                error("Unreachable code because runCatching must return result")
             }
             .mapIndexedNotNull { index, id ->
                 if (id == null) null else tokens[index].contractAddress to id

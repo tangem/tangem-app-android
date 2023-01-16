@@ -89,6 +89,7 @@ private fun AppSettings(
     }
 }
 
+@Suppress("LongMethod")
 @Composable
 private fun AppSettingsElement(
     modifier: Modifier = Modifier,

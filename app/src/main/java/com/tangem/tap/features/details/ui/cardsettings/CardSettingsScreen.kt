@@ -51,6 +51,7 @@ fun CardSettingsScreen(
     )
 }
 
+@Suppress("MagicNumber")
 @Composable
 fun CardSettingsReadCard(
     onScanCardClick: () -> Unit,
@@ -114,6 +115,7 @@ fun CardSettingsReadCard(
     }
 }
 
+@Suppress("ComplexMethod")
 @Composable
 fun CardSettings(
     state: CardSettingsScreenState,

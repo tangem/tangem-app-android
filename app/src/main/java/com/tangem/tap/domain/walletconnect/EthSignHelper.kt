@@ -9,50 +9,28 @@ import com.google.gson.JsonParser
 import com.google.gson.annotations.SerializedName
 import com.tangem.blockchain.common.Blockchain
 import com.trustwallet.walletconnect.JSONRPC_VERSION
-import com.trustwallet.walletconnect.models.ethereum.WCEthereumSignMessage
 
-class EthSignHelper {
-    companion object {
-        private val gson: Gson by lazy {
-            GsonBuilder()
-                .setPrettyPrinting()
-                .serializeNulls()
-                .create()
-        }
+object EthSignHelper {
+    private val gson: Gson by lazy {
+        GsonBuilder()
+            .setPrettyPrinting()
+            .serializeNulls()
+            .create()
+    }
 
-        fun parseCustomRequest(data: String): CustomJsonRpcRequest {
-            return gson.fromJson<CustomJsonRpcRequest>(data)
-        }
+    fun tryToParseEthTypedMessageString(message: String): String? {
+        return try {
+            val messageString = message
+                .replace("\\", "")
+                .removePrefix("\"")
+                .removeSuffix("\"")
+            val messageJson = JsonParser().parse(messageString)
+            val filteredMap = gson.fromJson<Map<*, *>>(messageJson)
+                .filterKeys { it == "domain" || it == "message" }
 
-        fun tryToParseEthTypedMessage(request: CustomJsonRpcRequest): WCEthereumSignMessage? {
-            return if (request.method == WCMethodExtended.ETH_SIGN_TYPE_DATA_V4) {
-                WCEthereumSignMessage(
-                    listOf(
-                        request.params[0].asString,
-                        request.params[1].asString,
-                    ),
-                    WCEthereumSignMessage.WCSignType.TYPED_MESSAGE
-                )
-            } else {
-                null
-            }
-        }
-
-        fun tryToParseEthTypedMessageString(message: String): String? {
-            return try {
-                val messageString = message
-                    .replace("\\", "")
-                    .removePrefix("\"")
-                    .removeSuffix("\"")
-                val messageJson = JsonParser().parse(messageString)
-                val filteredMap = gson.fromJson<Map<*,*>>(messageJson)
-                    .filterKeys { it == "domain" || it == "message"}
-
-                gson.toJson(filteredMap)
-            } catch (exception: Exception) {
-                null
-            }
-
+            gson.toJson(filteredMap)
+        } catch (exception: Exception) {
+            null
         }
     }
 }
@@ -61,7 +39,7 @@ data class CustomJsonRpcRequest(
     val id: Long,
     val jsonrpc: String = JSONRPC_VERSION,
     val method: WCMethodExtended?,
-    val params: JsonArray
+    val params: JsonArray,
 ) {
 
     fun blockchainFromChainId(): Blockchain? {

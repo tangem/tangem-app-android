@@ -69,6 +69,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
         }
     }
 
+    @Suppress("ComplexMethod")
     private fun handleTransactionExtrasState(fg: SendFragment, infoState: TransactionExtrasState) =
         with(fg.binding.lSendAddressPayid) {
 
@@ -220,7 +221,11 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
             tilAmountToSend.enableError(false)
         }
 
-        val filter = DecimalDigitsInputFilter(12, state.maxLengthOfAmount, state.decimalSeparator)
+        val filter = DecimalDigitsInputFilter(
+            digitsBeforeDecimal = 12,
+            digitsAfterDecimal = state.maxLengthOfAmount,
+            decimalSeparator = state.decimalSeparator,
+        )
         etAmountToSend.filters = arrayOf(filter)
         val amountToSend = state.viewAmountValue
         if (!amountToSend.isFromUserInput) etAmountToSend.update(amountToSend.value)
@@ -249,8 +254,8 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
         tvAmountCurrency.setTextColor(fg.getColor(textColor))
     }
 
+    @Suppress("MagicNumber")
     private fun handleFeeState(fg: SendFragment, state: FeeState) = with(fg.binding.clNetworkFee) {
-//        chipGroup.fitChipsByGroupWidth()
         fg.view?.findViewById<ViewGroup>(R.id.clNetworkFee)?.show(state.mainLayoutIsVisible)
         flExpandCollapse.imvExpandCollapse.rotation = if (state.controlsLayoutIsVisible) 0f else 180f
         llFeeControlsContainer.show(state.controlsLayoutIsVisible)
@@ -265,6 +270,7 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
         if (chipGroup.checkedChipId != chipId && chipId != View.NO_ID) chipGroup.check(chipId)
     }
 
+    @Suppress("LongMethod", "ComplexMethod")
     private fun handleReceiptState(
         fg: SendFragment,
         state: ReceiptState,

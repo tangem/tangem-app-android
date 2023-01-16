@@ -1,8 +1,7 @@
 package com.tangem.tap.features.details.ui.details
 
-import com.tangem.domain.common.TapWorkarounds.isSaltPay
-import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.core.analytics.Analytics
+import com.tangem.domain.common.TapWorkarounds.isSaltPay
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.feedback.FeedbackEmail
 import com.tangem.tap.common.feedback.SupportInfo
@@ -21,6 +20,8 @@ import com.tangem.wallet.BuildConfig
 import org.rekotlin.Store
 
 class DetailsViewModel(private val store: Store<AppState>) {
+
+    @Suppress("ComplexMethod")
     fun updateState(state: DetailsState): DetailsScreenState {
         val settings = SettingsElement.values().mapNotNull {
             when (it) {

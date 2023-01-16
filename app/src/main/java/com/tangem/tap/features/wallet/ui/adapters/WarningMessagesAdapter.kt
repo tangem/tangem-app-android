@@ -75,6 +75,7 @@ class WarningMessageVH(val binding: LayoutWarningCardActionBinding) : RecyclerVi
         binding.warningCardAction.setCardBackgroundColor(binding.root.getColor(color))
     }
 
+    @Suppress("LongMethod")
     private fun setupControlButtons(warning: WarningMessage) = when (warning.type) {
         WarningMessage.Type.Permanent, WarningMessage.Type.TestCard -> {
             binding.groupControlsTemporary.hide()

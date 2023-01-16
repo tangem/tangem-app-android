@@ -2,9 +2,9 @@ package com.tangem.tap.features.onboarding.products.note.redux
 
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.guard
+import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
-import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
@@ -36,10 +36,8 @@ import org.rekotlin.Action
 import org.rekotlin.DispatchFunction
 import org.rekotlin.Middleware
 
-class OnboardingNoteMiddleware {
-    companion object {
-        val handler = onboardingNoteMiddleware
-    }
+object OnboardingNoteMiddleware {
+    val handler = onboardingNoteMiddleware
 }
 
 private val onboardingNoteMiddleware: Middleware<AppState> = { dispatch, state ->
@@ -51,6 +49,7 @@ private val onboardingNoteMiddleware: Middleware<AppState> = { dispatch, state -
     }
 }
 
+@Suppress("LongMethod", "ComplexMethod", "MagicNumber")
 private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch: DispatchFunction) {
     if (action !is OnboardingNoteAction) return
     if (DemoHelper.tryHandle(appState, action)) return
@@ -80,7 +79,7 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
                 noteState.walletBalance.balanceIsToppedUp() -> OnboardingNoteStep.Done
                 else -> OnboardingNoteStep.TopUpWallet
             }
-            store.dispatch((OnboardingNoteAction.SetStepOfScreen(step)))
+            store.dispatch(OnboardingNoteAction.SetStepOfScreen(step))
         }
         is OnboardingNoteAction.SetStepOfScreen -> {
             when (action.step) {

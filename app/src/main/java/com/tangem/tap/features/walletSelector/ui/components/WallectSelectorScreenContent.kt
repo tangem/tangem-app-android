@@ -37,6 +37,7 @@ import com.tangem.domain.common.util.UserWalletId
 import com.tangem.tap.features.walletSelector.ui.WalletSelectorScreenState
 import com.tangem.wallet.R
 
+@Suppress("LongParameterList")
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun WalletSelectorScreenContent(

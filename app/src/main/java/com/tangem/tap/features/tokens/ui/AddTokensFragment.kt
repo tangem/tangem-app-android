@@ -103,6 +103,7 @@ class AddTokensFragment : BaseFragment(R.layout.fragment_add_tokens), StoreSubsc
         super.onDestroy()
     }
 
+    @Suppress("MagicNumber")
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.menu_popular_tokens, menu)
 
@@ -168,5 +169,5 @@ fun SearchView.inputtedTextAsFlow(): Flow<String> = callbackFlow {
             }
         },
     )
-    awaitClose { (watcher) }
+    awaitClose { watcher }
 }

@@ -11,14 +11,13 @@ import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.LeapView
 import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.LeapViewState
 import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.LeapfrogWidget
 
-
 /**
  * Created by Anton Zhilenkov on 14/10/2021.
  */
 class TwinsCardWidget(
     val leapfrogWidget: LeapfrogWidget,
     private val deviceScaleFactor: Float = 1f,
-    val getTopOfAnchorViewForActivateState: () -> Float
+    val getTopOfAnchorViewForActivateState: () -> Float,
 ) {
 
     var state: TwinCardsWidgetState? = null
@@ -37,7 +36,7 @@ class TwinsCardWidget(
         val animator = createAnimator(animate)
         animator.playTogether(
             createAnimator(TwinCardNumber.First, createWelcomeProperties(TwinCardNumber.First)),
-            createAnimator(TwinCardNumber.Second, createWelcomeProperties(TwinCardNumber.Second))
+            createAnimator(TwinCardNumber.Second, createWelcomeProperties(TwinCardNumber.Second)),
         )
         animator.doOnEnd { onEnd() }
         leapfrogWidget.fold(animate) { animator.start() }
@@ -50,7 +49,7 @@ class TwinsCardWidget(
         val animator = createAnimator(animate)
         animator.playTogether(
             createAnimator(TwinCardNumber.First, createLeapfrogProperties(TwinCardNumber.First)),
-            createAnimator(TwinCardNumber.Second, createLeapfrogProperties(TwinCardNumber.Second))
+            createAnimator(TwinCardNumber.Second, createLeapfrogProperties(TwinCardNumber.Second)),
         )
         animator.doOnEnd {
             leapfrogWidget.initViews()
@@ -66,7 +65,7 @@ class TwinsCardWidget(
         val animator = createAnimator(animate)
         animator.playTogether(
             createAnimator(TwinCardNumber.First, createActivateProperties(TwinCardNumber.First)),
-            createAnimator(TwinCardNumber.Second, createActivateProperties(TwinCardNumber.Second))
+            createAnimator(TwinCardNumber.Second, createActivateProperties(TwinCardNumber.Second)),
         )
         animator.doOnEnd { onEnd() }
         animator.start()
@@ -85,6 +84,7 @@ class TwinsCardWidget(
         return animator
     }
 
+    @Suppress("MagicNumber")
     private fun createWelcomeProperties(cardNumber: TwinCardNumber): TwinsCardProperties {
         return when (cardNumber) {
             TwinCardNumber.First -> {
@@ -118,6 +118,7 @@ class TwinsCardWidget(
         )
     }
 
+    @Suppress("MagicNumber")
     private fun createActivateProperties(cardNumber: TwinCardNumber): TwinsCardProperties {
         val topOfAnchorView = getTopOfAnchorViewForActivateState()
         val twinProperties = TwinsCardProperties.from(getLeapViewByCardNumber(cardNumber).state)

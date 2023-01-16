@@ -82,6 +82,7 @@ object DemoHelper {
     }
 }
 
+@Suppress("LargeClass")
 class DemoConfig {
 
     val demoBlockchains = listOf(
@@ -114,6 +115,7 @@ class DemoConfig {
         return (releaseDemoCardIds + testDemoCardIds).distinct()
     }
 
+    @Suppress("ClassOrdering")
     private val releaseDemoCardIds = mutableListOf(
         // === Not from the Google Sheet table ===
         "FB10000000000196", // Note BTC
@@ -476,20 +478,19 @@ class DemoConfig {
         "AB02000000058187",
     )
 
+    @Suppress("ClassOrdering")
     private val testDemoCardIds = listOf(
         "FB20000000000186", // Note ETH
         "FB10000000000196", // Note BTC
         "FB30000000000176", // Wallet
     )
 
+    @Suppress("ClassOrdering")
     private val debugTestDemoCardIds = listOf<String>(
     )
 }
 
-class DemoTransactionSender(
-    private val walletManager: WalletManager,
-    private val sender: TransactionSender = walletManager as TransactionSender
-) : TransactionSender {
+class DemoTransactionSender(private val walletManager: WalletManager) : TransactionSender {
 
     override suspend fun getFee(amount: Amount, destination: String): Result<List<Amount>> {
         val blockchain = walletManager.wallet.blockchain
@@ -502,6 +503,7 @@ class DemoTransactionSender(
         )
     }
 
+    @Suppress("MagicNumber")
     override suspend fun send(transactionData: TransactionData, signer: TransactionSigner): SimpleResult {
         val dataToSign = randomString(32).toByteArray()
         val signerResponse = signer.sign(

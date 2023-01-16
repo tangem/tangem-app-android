@@ -6,6 +6,7 @@ import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import java.util.concurrent.TimeUnit
 
+@Suppress("MagicNumber")
 @Deprecated("Create and provide by DI")
 fun createRetrofitInstance(
     baseUrl: String,

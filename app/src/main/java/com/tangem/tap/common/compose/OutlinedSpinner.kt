@@ -17,6 +17,7 @@ import com.tangem.tap.common.extensions.ValueCallback
 /**
  * Created by Anton Zhilenkov on 23/03/2022.
  */
+@Suppress("MagicNumber")
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun <T> OutlinedSpinner(
@@ -95,7 +96,7 @@ class ClosePopupTrigger {
 @Preview
 @Composable
 fun TestSpinnerPreview() {
-    Scaffold() {
+    Scaffold {
         OutlinedSpinner(
             label = "Blockchain name",
             itemList = listOf(Blockchain.values()),

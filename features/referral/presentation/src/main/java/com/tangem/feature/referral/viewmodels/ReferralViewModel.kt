@@ -123,6 +123,7 @@ internal class ReferralViewModel @Inject constructor(
 
     private fun ReferralData.getNetworkName(): String = getToken().networkId.replaceFirstChar(Char::uppercase)
 
+    @Suppress("MagicNumber")
     private fun ReferralInfo.getAddressValue(): String {
         check(address.length > 5) { "Invalid address" }
         return address.substring(startIndex = 0, endIndex = 4) + "..." +
