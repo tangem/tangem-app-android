@@ -30,6 +30,10 @@ allprojects {
     }
 }
 
+subprojects {
+    apply(plugin = "detekt-convention")
+}
+
 tasks.register("clean", Delete::class) {
     delete(rootProject.buildDir)
 }
