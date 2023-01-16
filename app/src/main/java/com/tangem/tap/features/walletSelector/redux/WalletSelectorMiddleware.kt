@@ -6,9 +6,9 @@ import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.common.flatMap
 import com.tangem.common.map
+import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.util.UserWalletId
-import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.MyWallets
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.onUserWalletSelected
@@ -98,21 +98,25 @@ internal class WalletSelectorMiddleware {
         }
     }
 
-    private fun updateBalances(walletStores: Map<UserWalletId, List<WalletStoreModel>>, state: WalletSelectorState) {
-        walletStores.forEach { (walletId, walletStores) ->
-            scope.launch(Dispatchers.Default) {
-                val foundWallet = state.wallets
-                    .find { it.id == walletId }
+    private fun updateBalances(
+        updatedWalletStores: Map<UserWalletId, List<WalletStoreModel>>,
+        state: WalletSelectorState,
+    ) {
+        if (updatedWalletStores.isNotEmpty()) scope.launch(Dispatchers.Default) {
+            state.wallets
+                .associateWith { updatedWalletStores[it.id] }
+                .forEach { (wallet, walletStores) ->
+                    val isWalletTokensEmpty = (wallet.type as? UserWalletModel.Type.MultiCurrency)?.tokensCount == 0
+                    val updatedWallet = if (walletStores == null && isWalletTokensEmpty) {
+                        wallet.copy(fiatBalance = TotalFiatBalance.Loaded(BigDecimal.ZERO))
+                    } else {
+                        wallet.updateWalletStoresAndCalculateFiatBalance(walletStores.orEmpty())
+                    }
 
-                if (foundWallet != null) {
-                    val updatedWallet = foundWallet
-                        .updateWalletStoresAndCalculateFiatBalance(walletStores)
-
-                    if (foundWallet != updatedWallet) {
+                    if (wallet != updatedWallet) {
                         store.dispatchOnMain(WalletSelectorAction.BalanceLoaded(updatedWallet))
                     }
                 }
-            }
         }
     }
 
@@ -287,7 +291,6 @@ internal class WalletSelectorMiddleware {
                     selectedUserWallet == null -> {
                         store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Welcome))
                     }
-
                     currentSelectedWalletId != selectedUserWallet.walletId -> {
                         store.onUserWalletSelected(selectedUserWallet)
                     }
@@ -320,9 +323,8 @@ internal class WalletSelectorMiddleware {
                 is UserWalletModel.Type.SingleCurrency -> type
             },
             fiatBalance = totalFiatBalanceCalculator.calculate(
-                prevAmount = fiatBalance.amount,
                 walletStores = walletStores,
-                initial = TotalFiatBalance.Loaded(BigDecimal.ZERO),
+                initial = TotalFiatBalance.Loading,
             ),
         )
     }
