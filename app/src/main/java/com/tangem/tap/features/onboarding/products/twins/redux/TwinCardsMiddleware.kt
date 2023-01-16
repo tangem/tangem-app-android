@@ -1,15 +1,15 @@
 package com.tangem.tap.features.onboarding.products.twins.redux
 
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.extensions.Result
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.guard
+import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
-import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Onboarding
+import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -26,9 +26,12 @@ import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.makePrimaryWalletManager
 import com.tangem.tap.domain.model.builders.UserWalletIdBuilder
 import com.tangem.tap.domain.twins.TwinCardsManager
+import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
 import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.redux.ProgressState
+import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.features.wallet.redux.models.WalletDialog
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
@@ -289,9 +292,20 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
             store.dispatchDialogShow(appDialog)
         }
         is TwinCardsAction.TopUp -> {
-            val topUpUrl = twinCardsState.walletManager?.getTopUpUrl() ?: return
+            val walletManager = twinCardsState.walletManager.guard {
+                store.dispatchDebugErrorNotification("NPE: WalletManager")
+                return
+            }
 
-            val currencyType = AnalyticsParam.CurrencyType.Blockchain(Blockchain.Bitcoin)
+            val topUpUrl = walletManager.getTopUpUrl() ?: return
+            val blockchain = walletManager.wallet.blockchain
+            if (globalState.userCountryCode == RUSSIA_COUNTRY_CODE) {
+                val dialogData = WalletDialog.RussianCardholdersWarningDialog.Data(topUpUrl, blockchain)
+                store.dispatchOnMain(WalletAction.DialogAction.RussianCardholdersWarningDialog(dialogData))
+                return
+            }
+
+            val currencyType = AnalyticsParam.CurrencyType.Blockchain(blockchain)
             Analytics.send(Onboarding.Topup.ButtonBuyCrypto(currencyType))
 
             store.dispatchOpenUrl(topUpUrl)
@@ -317,5 +331,6 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
                 scanResponse = action.scanResponse,
             )
         }
+        else -> Unit
     }
 }
