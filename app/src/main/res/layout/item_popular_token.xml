@@ -85,7 +85,7 @@
         android:elevation="0dp"
         android:text="@string/common_add"
         android:textAllCaps="false"
-        android:textColor="@color/btn_tap_text_color"
+        android:textColor="@color/selector_btn_text_primary"
         app:cornerRadius="20dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
