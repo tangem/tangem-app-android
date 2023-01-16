@@ -6,6 +6,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -15,6 +16,7 @@ import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
+import androidx.compose.material.TextFieldColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -28,6 +30,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tangem.common.module.ModuleError
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.common.form.Field
 import com.tangem.tap.common.CompositionLogger
 import com.tangem.tap.common.compose.extensions.stringResourceDefault
@@ -91,6 +94,8 @@ private fun OutlinedProgressTextField(
     debounce: Long = 400,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
+    colors: TextFieldColors = TangemTextFieldsDefault.defaultTextFieldColors,
+    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     trailingIcon: @Composable (() -> Unit)? = null,
     onTextChanged: (String) -> Unit,
 ) {
@@ -160,10 +165,22 @@ private fun OutlinedProgressTextField(
                 textDebouncer.emmit(it)
             },
             keyboardOptions = keyboardOptions,
-            label = { Text(label) },
+            label = {
+                Text(
+                    text = label,
+                    style = TangemTheme.typography.caption,
+                    color = colors.labelColor(
+                        enabled = isEnabled,
+                        error = error != null,
+                        interactionSource = interactionSource,
+                    ).value,
+                )
+            },
             placeholder = {
                 Text(
                     text = placeholder,
+                    style = TangemTheme.typography.body1,
+                    color = colors.placeholderColor(enabled = isEnabled).value,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -173,6 +190,8 @@ private fun OutlinedProgressTextField(
             enabled = isEnabled,
             isError = error != null,
             visualTransformation = visualTransformation,
+            colors = colors,
+            interactionSource = interactionSource,
         )
         AnimatedVisibility(
             modifier = modifier
@@ -180,7 +199,11 @@ private fun OutlinedProgressTextField(
                 .align(Alignment.BottomCenter)
                 .padding(start = 6.dp, top = 0.dp, end = 6.dp, bottom = 6.dp),
             visible = isLoading,
-        ) { LinearProgressIndicator() }
+        ) {
+            LinearProgressIndicator(
+                color = TangemTheme.colors.icon.primary1,
+            )
+        }
     }
 }
 
