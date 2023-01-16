@@ -15,7 +15,7 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_confirm_long"
-        style="@style/TapButtonWithIcon"
+        style="@style/TapPrimaryIconButton"
         android:layout_width="0dp"
             android:text="@string/wallet_button_send"
             app:icon="@drawable/ic_send"
