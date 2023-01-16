@@ -53,16 +53,16 @@ class Start2CoinDisclaimer(dataProvider: DisclaimerDataProvider) : BaseDisclaime
 
     private fun filename(languageCode: String, regionCode: String?): String {
         return when {
-            languageCode == "fr" && regionCode == "ch" -> "Start2Coin-fr-ch-tangem.html"
-            languageCode == "de" && regionCode == "ch" -> "Start2Coin-de-ch-tangem.html"
-            languageCode == "en" && regionCode == "ch" -> "Start2Coin-en-ch-tangem.html"
-            languageCode == "it" && regionCode == "ch" -> "Start2Coin-it-ch-tangem.html"
-            languageCode == "fr" && regionCode == "fr" -> "Start2Coin-fr-fr-atangem.html"
-            languageCode == "de" && regionCode == "at" -> "Start2Coin-de-at-tangem.html"
-            regionCode == "fr" -> "Start2Coin-fr-fr-atangem.html"
-            regionCode == "ch" -> "Start2Coin-en-ch-tangem.html"
-            regionCode == "at" -> "Start2Coin-de-at-tangem.html"
-            else -> "Start2Coin-fr-fr-atangem.html"
+            languageCode == "fr" && regionCode == "ch" -> "start2coin-fr-ch-tangem.html"
+            languageCode == "de" && regionCode == "ch" -> "start2coin-de-ch-tangem.html"
+            languageCode == "en" && regionCode == "ch" -> "start2coin-en-ch-tangem.html"
+            languageCode == "it" && regionCode == "ch" -> "start2coin-it-ch-tangem.html"
+            languageCode == "fr" && regionCode == "fr" -> "start2coin-fr-fr-tangem.html"
+            languageCode == "de" && regionCode == "at" -> "start2coin-de-at-tangem.html"
+            regionCode == "fr" -> "start2coin-fr-fr-tangem.html"
+            regionCode == "ch" -> "start2coin-en-ch-tangem.html"
+            regionCode == "at" -> "start2coin-de-at-tangem.html"
+            else -> "start2coin-fr-fr-tangem.html"
         }
     }
 
