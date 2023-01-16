@@ -67,6 +67,7 @@ fun <T> OutlinedSpinner(
             onValueChange = {},
             label = { Text(label) },
             trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = rIsExpanded.value) },
+            colors = TangemTextFieldsDefault.defaultTextFieldColors,
         )
 
         if (isEnabled) {
