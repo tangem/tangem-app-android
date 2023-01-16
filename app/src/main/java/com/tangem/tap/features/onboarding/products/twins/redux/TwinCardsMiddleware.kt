@@ -26,6 +26,7 @@ import com.tangem.tap.domain.TapError
 import com.tangem.tap.domain.extensions.makePrimaryWalletManager
 import com.tangem.tap.domain.model.builders.UserWalletIdBuilder
 import com.tangem.tap.domain.twins.TwinCardsManager
+import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
 import com.tangem.tap.features.onboarding.OnboardingHelper
 import com.tangem.tap.features.home.RUSSIA_COUNTRY_CODE
 import com.tangem.tap.features.wallet.models.Currency
@@ -331,6 +332,6 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
                 scanResponse = action.scanResponse,
             )
         }
-        else -> {}
+        else -> Unit
     }
 }
