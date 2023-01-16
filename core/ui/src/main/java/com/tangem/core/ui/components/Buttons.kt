@@ -35,7 +35,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import com.tangem.core.ui.R
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.ui.res.TangemTypography
 
 /**
  * [Show in Figma](https://www.figma.com/file/14ISV23YB1yVW1uNVwqrKv/Android?node-id=97%3A103&t=TmfD6UBHPg9uYfev-4)
@@ -305,7 +304,7 @@ private fun ButtonContent(
             }
             Text(
                 text = text,
-                style = TangemTypography.button,
+                style = TangemTheme.typography.button,
                 color = colors.contentColor(enabled = enabled).value,
             )
             if (buttonIcon is TangemButtonIcon.Right) {
