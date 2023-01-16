@@ -178,16 +178,16 @@ private fun handleNoteAction(appState: () -> AppState?, action: Action, dispatch
 
             val topUpUrl = walletManager.getTopUpUrl() ?: return
             val blockchain = walletManager.wallet.blockchain
-            if (globalState.userCountryCode == RUSSIA_COUNTRY_CODE) {
-                val dialogData = WalletDialog.RussianCardholdersWarningDialog.Data(topUpUrl, blockchain)
-                store.dispatchOnMain(WalletAction.DialogAction.RussianCardholdersWarningDialog(dialogData))
-                return
-            }
 
             val currencyType = AnalyticsParam.CurrencyType.Blockchain(blockchain)
             Analytics.send(Onboarding.Topup.ButtonBuyCrypto(currencyType))
 
-            store.dispatchOpenUrl(topUpUrl)
+            if (globalState.userCountryCode == RUSSIA_COUNTRY_CODE) {
+                val dialogData = WalletDialog.RussianCardholdersWarningDialog.Data(topUpUrl)
+                store.dispatchOnMain(WalletAction.DialogAction.RussianCardholdersWarningDialog(dialogData))
+            } else {
+                store.dispatchOpenUrl(topUpUrl)
+            }
         }
         OnboardingNoteAction.Done -> {
             store.dispatch(GlobalAction.Onboarding.Stop)
