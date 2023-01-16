@@ -16,9 +16,7 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_trade"
-            style="@style/TapButtonWithIcon"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            style="@style/TapPrimaryIconButton"
             android:text="@string/wallet_button_trade"
             android:visibility="gone"
             app:icon="@drawable/ic_arrows_up_down"
@@ -26,18 +24,14 @@
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_buy"
-            style="@style/TapButtonWithIcon"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            style="@style/TapPrimaryIconButton"
             android:text="@string/wallet_button_buy"
             android:visibility="gone"
             app:icon="@drawable/ic_arrow_up" />
 
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_sell"
-            style="@style/TapButtonWithIcon"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
+            style="@style/TapPrimaryIconButton"
             android:text="@string/wallet_button_sell"
             android:visibility="gone"
             app:icon="@drawable/ic_arrow_down" />
@@ -47,7 +41,7 @@
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/btn_send"
-        style="@style/TapButtonWithIcon"
+        style="@style/TapPrimaryIconButton"
         android:layout_width="0dp"
         android:layout_weight="1"
         android:text="@string/wallet_button_send"
