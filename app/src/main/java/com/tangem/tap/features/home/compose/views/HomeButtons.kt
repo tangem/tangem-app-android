@@ -95,6 +95,7 @@ fun ProgressButton(
     Button(
         modifier = modifier,
         onClick = onClick,
+        enabled = !inProgress,
         colors = ButtonDefaults.textButtonColors(
             backgroundColor = backgroundColor,
             contentColor = contentColor,
