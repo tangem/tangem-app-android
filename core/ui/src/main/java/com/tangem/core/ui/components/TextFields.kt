@@ -106,7 +106,7 @@ private fun TangemTextField(
                 .height(IntrinsicSize.Min)
                 .heightIn(size.toHeightDp()),
             value = value,
-            textStyle = TangemTypography.body1,
+            textStyle = TangemTheme.typography.body1,
             onValueChange = onValueChange,
             singleLine = singleLine,
             enabled = enabled,
@@ -121,7 +121,7 @@ private fun TangemTextField(
                 if (!label.isNullOrEmpty()) {
                     Text(
                         text = label,
-                        style = TangemTypography.caption,
+                        style = TangemTheme.typography.caption,
                         color = colors.labelColor(
                             enabled = enabled,
                             error = isError,
@@ -134,7 +134,7 @@ private fun TangemTextField(
                 if (!placeholder.isNullOrEmpty()) {
                     Text(
                         text = placeholder,
-                        style = TangemTypography.body1,
+                        style = TangemTheme.typography.body1,
                         color = colors.placeholderColor(enabled = enabled).value,
                     )
                 }
