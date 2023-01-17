@@ -1,20 +1,27 @@
 package com.tangem.feature.swap.domain
 
-import com.tangem.feature.swap.domain.models.Currency
 import com.tangem.feature.swap.domain.models.SwapAmount
-import com.tangem.feature.swap.domain.models.SwapState
+import com.tangem.feature.swap.domain.models.cache.ExchangeCurrencies
+import com.tangem.feature.swap.domain.models.domain.Currency
+import com.tangem.feature.swap.domain.models.ui.FoundTokensState
+import com.tangem.feature.swap.domain.models.ui.SwapState
+import com.tangem.feature.swap.domain.models.ui.TokensDataState
 
 interface SwapInteractor {
 
-    suspend fun getTokensToSwap(networkId: String): List<Currency>
+    suspend fun initTokensToSwap(initialCurrency: Currency): TokensDataState
+
+    suspend fun onSearchToken(searchQuery: String): FoundTokensState
+
+    fun getExchangeCurrencies(): ExchangeCurrencies?
+
+    fun findTokenById(id: String): Currency?
 
     /**
      * Give permission to swap
-     *
-     * @param tokenToApprove use token which you want to swap
      */
     @Throws(IllegalStateException::class)
-    suspend fun givePermissionToSwap(tokenToApprove: Currency)
+    suspend fun givePermissionToSwap()
 
     @Throws(IllegalStateException::class)
     suspend fun findBestQuote(
