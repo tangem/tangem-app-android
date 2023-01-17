@@ -1,8 +1,7 @@
 package com.tangem.feature.swap.models
 
 data class SwapSelectTokenStateHolder(
-    val addedTokens: List<TokenToSelect>,
-    val otherTokens: List<TokenToSelect>,
+    val tokens: List<TokenToSelect>,
     val onSearchEntered: (String) -> Unit,
     val onTokenSelected: (String) -> Unit,
 )
@@ -12,6 +11,7 @@ data class TokenToSelect(
     val name: String,
     val symbol: String,
     val iconUrl: String,
+    val available: Boolean = true,
     val addedTokenBalanceData: TokenBalanceData? = null,
 )
 
