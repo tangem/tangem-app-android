@@ -22,12 +22,13 @@ class StateBuilder {
     fun createInitialLoadingState(networkCurrency: String, onAmountChanged: (String) -> Unit): SwapStateHolder {
         return SwapStateHolder(
             sendCardData = SwapCardData(
-                type = TransactionCardType.SendCard("", true, onAmountChanged),
+                type = TransactionCardType.SendCard(onAmountChanged),
                 amount = null,
                 amountEquivalent = null,
                 tokenIconUrl = "",
                 tokenCurrency = "",
                 canSelectAnotherToken = false,
+                balance = "",
             ),
             receiveCardData = SwapCardData(
                 type = TransactionCardType.ReceiveCard(),
@@ -36,6 +37,7 @@ class StateBuilder {
                 tokenIconUrl = "",
                 tokenCurrency = "",
                 canSelectAnotherToken = false,
+                balance = "",
             ),
             fee = FeeState.Loading,
             networkCurrency = networkCurrency,
@@ -60,6 +62,7 @@ class StateBuilder {
                 tokenIconUrl = fromToken.logoUrl,
                 tokenCurrency = fromToken.symbol,
                 canSelectAnotherToken = mainTokenId != fromToken.id,
+                balance = "",
             ),
             receiveCardData = SwapCardData(
                 type = TransactionCardType.ReceiveCard(),
@@ -68,6 +71,7 @@ class StateBuilder {
                 tokenIconUrl = toToken.logoUrl,
                 tokenCurrency = toToken.symbol,
                 canSelectAnotherToken = mainTokenId != toToken.id,
+                balance = "",
             ),
             fee = FeeState.Loading,
             swapButton = SwapButton(enabled = false, loading = true, onClick = {}),
@@ -83,16 +87,13 @@ class StateBuilder {
     ): SwapStateHolder {
         return uiStateHolder.copy(
             sendCardData = SwapCardData(
-                type = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.SendCard)
-                    .copy(
-                        permissionIsGiven = quoteModel.isAllowedToSpend,
-                        balance = quoteModel.fromTokenWalletBalance,
-                    ),
+                type = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.SendCard),
                 amount = quoteModel.fromTokenAmount.formatToUIRepresentation(),
                 amountEquivalent = quoteModel.fromTokenFiatBalance,
                 tokenIconUrl = uiStateHolder.sendCardData.tokenIconUrl,
                 tokenCurrency = uiStateHolder.sendCardData.tokenCurrency,
                 canSelectAnotherToken = uiStateHolder.sendCardData.canSelectAnotherToken,
+                balance = quoteModel.fromTokenWalletBalance,
             ),
             receiveCardData = SwapCardData(
                 type = TransactionCardType.ReceiveCard(),
@@ -101,6 +102,7 @@ class StateBuilder {
                 tokenIconUrl = uiStateHolder.receiveCardData.tokenIconUrl,
                 tokenCurrency = uiStateHolder.receiveCardData.tokenCurrency,
                 canSelectAnotherToken = uiStateHolder.receiveCardData.canSelectAnotherToken,
+                balance = quoteModel.toTokenWalletBalance,
             ),
             warnings = if (!quoteModel.isAllowedToSpend) {
                 listOf(SwapWarning.PermissionNeeded(fromToken.symbol))
