@@ -1,9 +1,11 @@
 package com.tangem.feature.swap.ui
 
-import com.tangem.feature.swap.domain.models.Currency
-import com.tangem.feature.swap.domain.models.PermissionDataState
-import com.tangem.feature.swap.domain.models.SwapState
+import com.tangem.feature.swap.converters.TokensDataConverter
+import com.tangem.feature.swap.domain.models.domain.Currency
 import com.tangem.feature.swap.domain.models.formatToUIRepresentation
+import com.tangem.feature.swap.domain.models.ui.FoundTokensState
+import com.tangem.feature.swap.domain.models.ui.PermissionDataState
+import com.tangem.feature.swap.domain.models.ui.SwapState
 import com.tangem.feature.swap.models.ApprovePermissionButton
 import com.tangem.feature.swap.models.CancelPermissionButton
 import com.tangem.feature.swap.models.FeeState
@@ -13,16 +15,19 @@ import com.tangem.feature.swap.models.SwapPermissionState
 import com.tangem.feature.swap.models.SwapStateHolder
 import com.tangem.feature.swap.models.SwapWarning
 import com.tangem.feature.swap.models.TransactionCardType
+import com.tangem.feature.swap.models.UiActions
 
 /**
  * State builder creates a specific states for SwapScreen
  */
-class StateBuilder {
+class StateBuilder(val actions: UiActions) {
 
-    fun createInitialLoadingState(networkCurrency: String, onAmountChanged: (String) -> Unit): SwapStateHolder {
+    private val tokensDataConverter = TokensDataConverter(actions.onSearchEntered, actions.onTokenSelected)
+
+    fun createInitialLoadingState(networkCurrency: String): SwapStateHolder {
         return SwapStateHolder(
             sendCardData = SwapCardData(
-                type = TransactionCardType.SendCard(onAmountChanged),
+                type = TransactionCardType.SendCard(actions.onAmountChanged),
                 amount = null,
                 amountEquivalent = null,
                 tokenIconUrl = "",
@@ -43,8 +48,8 @@ class StateBuilder {
             networkCurrency = networkCurrency,
             swapButton = SwapButton(enabled = false, loading = true, onClick = {}),
             onRefresh = {},
-            onBackClicked = {},
-            onChangeCardsClicked = {},
+            onBackClicked = actions.onBackClicked,
+            onChangeCardsClicked = actions.onChangeCardsClicked,
         )
     }
 
@@ -66,8 +71,8 @@ class StateBuilder {
             ),
             receiveCardData = SwapCardData(
                 type = TransactionCardType.ReceiveCard(),
-                amount = uiStateHolder.receiveCardData.amount,
-                amountEquivalent = uiStateHolder.receiveCardData.amountEquivalent,
+                amount = null,
+                amountEquivalent = null,
                 tokenIconUrl = toToken.logoUrl,
                 tokenCurrency = toToken.symbol,
                 canSelectAnotherToken = mainTokenId != toToken.id,
@@ -75,6 +80,7 @@ class StateBuilder {
             ),
             fee = FeeState.Loading,
             swapButton = SwapButton(enabled = false, loading = true, onClick = {}),
+            permissionState = uiStateHolder.permissionState,
         )
     }
 
@@ -82,8 +88,6 @@ class StateBuilder {
         uiStateHolder: SwapStateHolder,
         quoteModel: SwapState.QuotesLoadedState,
         fromToken: Currency,
-        onSwapClick: () -> Unit,
-        onGivePermissionClick: () -> Unit,
     ): SwapStateHolder {
         return uiStateHolder.copy(
             sendCardData = SwapCardData(
@@ -109,13 +113,28 @@ class StateBuilder {
             } else {
                 emptyList()
             },
-            permissionState = convertPermissionState(quoteModel.permissionState, onGivePermissionClick),
+            permissionState = convertPermissionState(quoteModel.permissionState, actions.onGivePermissionClick),
             fee = FeeState.Loaded(quoteModel.fee),
             swapButton = SwapButton(
                 enabled = quoteModel.isAllowedToSpend,
                 loading = false,
-                onClick = onSwapClick,
+                onClick = actions.onSwapClick,
             ),
+        )
+    }
+
+    fun createSwapInProgressState(uiState: SwapStateHolder): SwapStateHolder {
+        return uiState.copy(
+            swapButton = uiState.swapButton.copy(
+                loading = true,
+                enabled = false,
+            ),
+        )
+    }
+
+    fun addTokensToState(uiState: SwapStateHolder, dataState: FoundTokensState): SwapStateHolder {
+        return uiState.copy(
+            selectTokenState = tokensDataConverter.convert(dataState),
         )
     }
 
@@ -143,5 +162,14 @@ class StateBuilder {
                 ),
             )
         }
+    }
+
+    fun updateSwapAmount(uiState: SwapStateHolder, amount: String, amountEquivalent: String): SwapStateHolder {
+        return uiState.copy(
+            sendCardData = uiState.sendCardData.copy(
+                amount = amount,
+                amountEquivalent = amountEquivalent,
+            ),
+        )
     }
 }
