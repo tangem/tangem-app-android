@@ -1,33 +1,52 @@
 package com.tangem.feature.swap.domain.cache
 
-import com.tangem.feature.swap.domain.models.ApproveModel
-import com.tangem.feature.swap.domain.models.Currency
-import com.tangem.feature.swap.domain.models.QuoteModel
 import com.tangem.feature.swap.domain.models.SwapAmount
-import com.tangem.feature.swap.domain.models.SwapDataModel
 import com.tangem.feature.swap.domain.models.cache.ExchangeCurrencies
 import com.tangem.feature.swap.domain.models.cache.SwapDataHolder
+import com.tangem.feature.swap.domain.models.domain.ApproveModel
+import com.tangem.feature.swap.domain.models.domain.Currency
+import com.tangem.feature.swap.domain.models.domain.QuoteModel
+import com.tangem.feature.swap.domain.models.domain.SwapDataModel
 
 class SwapDataCacheImpl : SwapDataCache {
 
     private var lastDataForSwap: SwapDataHolder = SwapDataHolder()
     private val availableTokensForNetwork: MutableMap<String, List<Currency>> = mutableMapOf()
+    private val lastInWalletTokens = mutableListOf<Currency>()
+    private val lastLoadedTokens = mutableListOf<Currency>()
 
-    override fun cacheSwapParams(
+    override fun cacheQuoteData(
         quoteModel: QuoteModel,
-        amount: SwapAmount,
-        fromCurrency: Currency,
-        toCurrency: Currency,
     ) {
+        lastDataForSwap = lastDataForSwap.copy(quoteModel = quoteModel)
+    }
+
+    override fun cacheExchangeCurrencies(fromToken: Currency, toToken: Currency) {
         lastDataForSwap =
             lastDataForSwap.copy(
-                quoteModel = quoteModel,
-                amountToSwap = amount,
                 exchangeCurrencies = ExchangeCurrencies(
-                    fromCurrency = fromCurrency,
-                    toCurrency = toCurrency,
+                    fromCurrency = fromToken,
+                    toCurrency = toToken,
                 ),
             )
+    }
+
+    override fun cacheInWalletTokens(tokens: List<Currency>) {
+        lastInWalletTokens.clear()
+        lastInWalletTokens.addAll(tokens)
+    }
+
+    override fun cacheLoadedTokens(tokens: List<Currency>) {
+        lastLoadedTokens.clear()
+        lastLoadedTokens.addAll(tokens)
+    }
+
+    override fun getInWalletTokens(): List<Currency> {
+        return lastInWalletTokens
+    }
+
+    override fun getLoadedTokens(): List<Currency> {
+        return lastLoadedTokens
     }
 
     override fun cacheSwapData(swapDataModel: SwapDataModel) {
@@ -52,6 +71,10 @@ class SwapDataCacheImpl : SwapDataCache {
 
     override fun cacheNetworkId(networkId: String) {
         lastDataForSwap = lastDataForSwap.copy(networkId = networkId)
+    }
+
+    override fun cacheAmountToSwap(amount: SwapAmount) {
+        lastDataForSwap = lastDataForSwap.copy(amountToSwap = amount)
     }
 
     override fun getNetworkId(): String? {
