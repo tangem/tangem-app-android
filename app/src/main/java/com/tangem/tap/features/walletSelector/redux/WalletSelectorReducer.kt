@@ -27,7 +27,6 @@ internal object WalletSelectorReducer {
             is WalletSelectorAction.BalanceLoaded -> state.copy(
                 wallets = state.wallets.updateWithBalance(action.userWalletModel),
             )
-            is WalletSelectorAction.HandleError -> state.copy(error = action.error)
             is WalletSelectorAction.CloseError -> state.copy(error = null)
             is WalletSelectorAction.UnlockWithBiometry -> state.copy(
                 isUnlockInProgress = true,
