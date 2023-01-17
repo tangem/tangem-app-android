@@ -218,7 +218,7 @@
     <string name="user_wallet_list_editing_count">%d selected</string>
     <string name="common_biometric_authentication">biometric authentication</string>
     <string name="common_biometrics">biometrics</string>
-    <string name="app_name">Tangem</string>
+    <string name="tangem_app_name">Tangem</string>
     <string name="common_save_changes">Sauvegarder les modifications</string>
     <string name="common_warning">Alerte</string>
     <string name="common_done">Exécuté</string>
