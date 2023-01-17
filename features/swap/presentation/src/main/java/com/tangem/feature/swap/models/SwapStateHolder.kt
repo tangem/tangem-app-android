@@ -6,8 +6,9 @@ data class SwapStateHolder(
     val sendCardData: SwapCardData,
     val receiveCardData: SwapCardData,
     val networkCurrency: String,
-    val fee: FeeState = FeeState.Loaded(),
+    val fee: FeeState = FeeState.Empty,
     val warnings: List<SwapWarning> = emptyList(),
+    val alert: SwapWarning.GenericWarning? = null,
 
     val permissionState: SwapPermissionState = SwapPermissionState.Empty,
     val successState: SwapSuccessStateHolder? = null,
@@ -29,6 +30,7 @@ data class SwapCardData(
     val amountEquivalent: String?,
     val tokenIconUrl: String,
     val tokenCurrency: String,
+    val balance: String,
     @DrawableRes val networkIconRes: Int? = null,
     val canSelectAnotherToken: Boolean = false,
 )
@@ -40,6 +42,9 @@ data class SwapButton(
 )
 
 sealed interface FeeState {
+
+    object Empty : FeeState
+
     data class Loaded(
         val fee: String = "",
     ) : FeeState
@@ -52,8 +57,6 @@ sealed interface FeeState {
 sealed interface TransactionCardType {
 
     data class SendCard(
-        val balance: String,
-        val permissionIsGiven: Boolean,
         val onAmountChanged: ((String) -> Unit),
     ) : TransactionCardType
 
