@@ -10,7 +10,6 @@ import androidx.core.view.WindowInsetsControllerCompat
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.google.android.material.snackbar.Snackbar
 import com.tangem.TangemSdk
-import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
 import com.tangem.operations.backup.BackupService
 import com.tangem.tangem_sdk_new.extensions.init
 import com.tangem.tap.common.ActivityResultCallbackHolder
@@ -27,9 +26,11 @@ import com.tangem.tap.common.shop.googlepay.GooglePayUtil.createPaymentsClient
 import com.tangem.tap.domain.TangemSdkManager
 import com.tangem.tap.domain.userWalletList.UserWalletsListManager
 import com.tangem.tap.domain.userWalletList.di.provideBiometricImplementation
+import com.tangem.tap.features.onboarding.products.wallet.redux.BackupAction
 import com.tangem.tap.features.shop.redux.ShopAction
 import com.tangem.tap.features.welcome.redux.WelcomeAction
 import com.tangem.tap.proxy.AppStateHolder
+import com.tangem.utils.coroutines.FeatureCoroutineExceptionHandler
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.ActivityMainBinding
 import dagger.hilt.android.AndroidEntryPoint
@@ -127,6 +128,7 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
                 store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Home))
                 intentHandler.handleWalletConnectLink(intent)
             }
+            store.dispatch(BackupAction.CheckForUnfinishedBackup)
         }
         intentHandler.handleBackgroundScan(intent)
         intentHandler.handleSellCurrencyCallback(intent)
