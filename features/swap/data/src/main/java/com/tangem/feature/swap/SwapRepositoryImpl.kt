@@ -10,10 +10,10 @@ import com.tangem.feature.swap.converters.QuotesConverter
 import com.tangem.feature.swap.converters.SwapConverter
 import com.tangem.feature.swap.converters.TokensConverter
 import com.tangem.feature.swap.domain.SwapRepository
-import com.tangem.feature.swap.domain.models.ApproveModel
-import com.tangem.feature.swap.domain.models.Currency
-import com.tangem.feature.swap.domain.models.QuoteModel
-import com.tangem.feature.swap.domain.models.SwapDataModel
+import com.tangem.feature.swap.domain.models.domain.ApproveModel
+import com.tangem.feature.swap.domain.models.domain.Currency
+import com.tangem.feature.swap.domain.models.domain.QuoteModel
+import com.tangem.feature.swap.domain.models.domain.SwapDataModel
 import com.tangem.feature.swap.domain.models.data.AggregatedSwapDataModel
 import com.tangem.feature.swap.domain.models.mapErrors
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
@@ -109,6 +109,7 @@ internal class SwapRepositoryImpl @Inject constructor(
                         slippage = slippage,
                     ),
                 )
+
                 AggregatedSwapDataModel(swapConverter.convert(swapResponse))
             } catch (ex: OneIncResponseException) {
                 AggregatedSwapDataModel(null, mapErrors(ex.data.description))
