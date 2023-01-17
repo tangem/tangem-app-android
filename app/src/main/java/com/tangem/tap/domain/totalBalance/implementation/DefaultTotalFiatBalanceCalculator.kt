@@ -10,18 +10,11 @@ import kotlinx.coroutines.withContext
 import java.math.BigDecimal
 
 internal class DefaultTotalFiatBalanceCalculator : TotalFiatBalanceCalculator {
-    override suspend fun calculate(
-        prevAmount: BigDecimal?,
-        walletStores: List<WalletStoreModel>,
-        initial: TotalFiatBalance,
-    ): TotalFiatBalance {
-        return calculateOrNull(prevAmount, walletStores) ?: initial
+    override suspend fun calculate(walletStores: List<WalletStoreModel>, initial: TotalFiatBalance): TotalFiatBalance {
+        return calculateOrNull(walletStores) ?: initial
     }
 
-    override suspend fun calculateOrNull(
-        prevAmount: BigDecimal?,
-        walletStores: List<WalletStoreModel>,
-    ): TotalFiatBalance? {
+    override suspend fun calculateOrNull(walletStores: List<WalletStoreModel>): TotalFiatBalance? {
         return if (walletStores.isEmpty()) {
             null
         } else {
