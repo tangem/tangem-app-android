@@ -13,6 +13,7 @@ interface TransactionManager {
         amountToSend: BigDecimal,
         currencyToSend: Currency,
         feeAmount: BigDecimal,
+        estimatedGas: Int,
         destinationAddress: String,
         dataToSign: String,
     ): SendTxResult
@@ -24,8 +25,6 @@ interface TransactionManager {
         currencyToSend: Currency,
         destinationAddress: String,
     ): ProxyAmount
-
-    fun getNativeAddress(networkId: String): String
 
     @Throws(IllegalStateException::class)
     fun getNativeTokenDecimals(networkId: String): Int
