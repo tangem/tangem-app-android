@@ -8,10 +8,10 @@ import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.isZero
 import com.tangem.common.services.Result
+import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.operations.attestation.Attestation
 import com.tangem.operations.attestation.OnlineCardVerifier
-import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.extensions.copyToClipboard
@@ -287,7 +287,7 @@ class WalletMiddleware {
             is WalletAction.UserWalletChanged -> Unit
             is WalletAction.WalletStoresChanged -> {
                 updateWalletStores(action.walletStores, walletState)
-                fetchTotalFiatBalance(action.walletStores, walletState)
+                fetchTotalFiatBalance(action.walletStores)
                 findMissedDerivations(action.walletStores)
                 tryToShowAppRatingWarning(action.walletStores)
             }
@@ -312,12 +312,9 @@ class WalletMiddleware {
         }
     }
 
-    private fun fetchTotalFiatBalance(walletStores: List<WalletStoreModel>, state: WalletState) {
+    private fun fetchTotalFiatBalance(walletStores: List<WalletStoreModel>) {
         scope.launch(Dispatchers.Default) {
-            val totalFiatBalance = totalFiatBalanceCalculator.calculateOrNull(
-                prevAmount = state.totalBalance?.fiatAmount,
-                walletStores = walletStores,
-            )?.mapToReduxModel()
+            val totalFiatBalance = totalFiatBalanceCalculator.calculateOrNull(walletStores)?.mapToReduxModel()
 
             if (totalFiatBalance != null) {
                 store.dispatchOnMain(WalletAction.TotalFiatBalanceChanged(totalFiatBalance))
