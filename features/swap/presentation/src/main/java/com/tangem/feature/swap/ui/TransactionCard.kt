@@ -208,7 +208,7 @@ private fun Content(
                 }
                 is TransactionCardType.SendCard -> {
                     AutoSizeTextField(
-                        amount = amount ?: "0",
+                        amount = amount ?: "1",
                         onAmoutChanged = { type.onAmountChanged(it) },
                     )
                 }
