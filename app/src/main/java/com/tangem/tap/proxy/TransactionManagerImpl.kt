@@ -27,7 +27,6 @@ import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdk
 import java.math.BigDecimal
-import java.math.BigInteger
 
 class TransactionManagerImpl(
     private val appStateHolder: AppStateHolder,
@@ -38,6 +37,7 @@ class TransactionManagerImpl(
         amountToSend: BigDecimal,
         currencyToSend: Currency,
         feeAmount: BigDecimal,
+        estimatedGas: Int,
         destinationAddress: String,
         dataToSign: String,
     ): SendTxResult {
@@ -49,7 +49,7 @@ class TransactionManagerImpl(
             amount = amount,
             fee = Amount(value = feeAmount, blockchain = blockchain),
             destination = destinationAddress,
-        ).copy(hash = dataToSign, extras = createExtras(walletManager, feeAmount, dataToSign))
+        ).copy(hash = dataToSign, extras = createExtras(walletManager, estimatedGas, dataToSign))
 
         val signer = transactionSigner(walletManager)
 
@@ -93,10 +93,6 @@ class TransactionManagerImpl(
                 error(fee.error.message ?: fee.error.customMessage)
             }
         }
-    }
-
-    override fun getNativeAddress(networkId: String): String {
-        return "" //todo implement
     }
 
     private fun handleSendResult(result: SimpleResult): SendTxResult {
@@ -155,14 +151,14 @@ class TransactionManagerImpl(
 
     private fun createExtras(
         walletManager: WalletManager,
-        feeAmount: BigDecimal,
+        estimatedGas: Int,
         transactionHash: String,
     ): TransactionExtras? {
         return when (walletManager) {
             is EthereumWalletManager -> {
                 return EthereumTransactionExtras(
                     data = transactionHash.removePrefix(HEX_PREFIX).hexToBytes(),
-                    gasLimit = BigInteger.valueOf(DEFAULT_GAS_LIMIT),
+                    gasLimit = estimatedGas.toBigInteger(),
                 )
             }
             else -> {
