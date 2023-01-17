@@ -29,7 +29,6 @@ import com.tangem.tap.userWalletsListManager
 import com.tangem.tap.walletStoresManager
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
@@ -82,7 +81,6 @@ internal class WalletSelectorMiddleware {
             is WalletSelectorAction.UnlockWithBiometry.Success,
             is WalletSelectorAction.BalanceLoaded,
             is WalletSelectorAction.IsLockedChanged,
-            is WalletSelectorAction.HandleError,
             is WalletSelectorAction.CloseError,
             -> Unit
         }
@@ -93,7 +91,6 @@ internal class WalletSelectorMiddleware {
             walletStoresManager.fetch(userWallets)
                 .doOnFailure { error ->
                     Timber.e(error, "Unable to fetch wallet stores")
-                    store.dispatchOnMain(WalletSelectorAction.HandleError(error))
                 }
         }
     }
@@ -126,6 +123,7 @@ internal class WalletSelectorMiddleware {
         scope.launch {
             userWalletsListManager.unlockWithBiometry()
                 .doOnFailure { error ->
+                    Timber.e(error, "Unable to unlock all user wallets")
                     store.dispatchOnMain(WalletSelectorAction.UnlockWithBiometry.Error(error))
                 }
                 .doOnSuccess {
@@ -158,12 +156,14 @@ internal class WalletSelectorMiddleware {
                     .doOnFailure { error ->
                         // Rollback policy if card saving was failed
                         tangemSdkManager.setAccessCodeRequestPolicy(prevUseBiometricsForAccessCode)
+                        Timber.e(error, "Unable to save user wallet")
                         store.dispatchOnMain(WalletSelectorAction.AddWallet.Error(error))
                     }
             },
             onFailure = { error ->
                 // Rollback policy if card scanning was failed
                 tangemSdkManager.setAccessCodeRequestPolicy(prevUseBiometricsForAccessCode)
+                Timber.e(error, "Unable to scan card")
                 store.dispatchOnMain(WalletSelectorAction.AddWallet.Error(error))
             },
         )
@@ -194,7 +194,13 @@ internal class WalletSelectorMiddleware {
                     }
                 }
                 .doOnFailure { error ->
-                    store.dispatchOnMain(WalletSelectorAction.HandleError(error))
+                    Timber.e(
+                        error,
+                        """
+                            Unable to select user wallet
+                            |- Wallet ID to select: $userWalletId
+                        """.trimIndent(),
+                    )
                 }
                 .doOnSuccess {
                     val selectedUserWallet = userWalletsListManager.selectedUserWalletSync
@@ -238,7 +244,14 @@ internal class WalletSelectorMiddleware {
                 )
             }
                 .doOnFailure { error ->
-                    store.dispatchOnMain(WalletSelectorAction.HandleError(error))
+                    Timber.e(
+                        error,
+                        """
+                            Unable to delete user wallets
+                            |- Wallets IDs to delete: $userWalletsIds
+                            |- Current wallets IDs: ${state.wallets.map { it.id }}
+                        """.trimIndent(),
+                    )
                 }
         }
     }
@@ -249,7 +262,14 @@ internal class WalletSelectorMiddleware {
         scope.launch {
             userWalletsListManager.update(userWalletId) { it.copy(name = newName) }
                 .doOnFailure { error ->
-                    store.dispatchOnMain(WalletSelectorAction.HandleError(error))
+                    Timber.e(
+                        error,
+                        """
+                            Unable to rename user wallet
+                            |- Wallet ID: $userWalletId
+                            |- New name: $newName
+                        """.trimIndent(),
+                    )
                 }
         }
     }
@@ -257,10 +277,10 @@ internal class WalletSelectorMiddleware {
     private fun refreshUserWalletsAmounts() {
         scope.launch {
             walletStoresManager.updateAmounts(
-                userWallets = userWalletsListManager.userWallets.first(),
+                userWallets = userWalletsListManager.userWallets.firstOrNull().orEmpty(),
             )
                 .doOnFailure { error ->
-                    store.dispatchOnMain(WalletSelectorAction.HandleError(error))
+                    Timber.e(error, "Unable to refresh user wallets amounts")
                 }
         }
     }
