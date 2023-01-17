@@ -18,15 +18,16 @@ import androidx.transition.TransitionInflater
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.badoo.mvicore.modelWatcher
 import com.tangem.common.doOnResult
+import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.tangem_sdk_new.extensions.dpToPx
 import com.tangem.tap.common.SnackbarHandler
 import com.tangem.tap.common.TestActions
-import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.DetailsScreen
 import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.extensions.appendIfNotNull
 import com.tangem.tap.common.extensions.beginDelayedTransition
+import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.fitChipsByGroupWidth
 import com.tangem.tap.common.extensions.getColor
 import com.tangem.tap.common.extensions.getString
@@ -230,8 +231,8 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
                             tokens = emptyList(),
                         )
 
-                        store.dispatch(WalletAction.LoadWallet(blockchainNetwork))
-                        store.dispatch(WalletAction.LoadFiatRate(coinsList = listOf(currency)))
+                        store.dispatchOnMain(WalletAction.LoadWallet(blockchainNetwork))
+                        store.dispatchOnMain(WalletAction.LoadFiatRate(coinsList = listOf(currency)))
                     }
                 }
             }
