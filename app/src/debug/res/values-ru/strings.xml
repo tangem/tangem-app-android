@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <string name="app_name">DebugTangem</string>
+    <string name="tangem_app_name">DebugTangem</string>
 
 </resources>
