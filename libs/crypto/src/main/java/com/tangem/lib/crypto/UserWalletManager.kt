@@ -12,7 +12,7 @@ interface UserWalletManager {
     /**
      * Returns all user tokens (merged from local and backend)
      */
-    suspend fun getUserTokens(): List<Currency>
+    suspend fun getUserTokens(networkId: String): List<Currency>
 
     /**
      * Returns user walletId
