@@ -107,6 +107,7 @@ class ConfigManager {
                 ),
                 infuraProjectId = configValues.infuraProjectId,
                 tronGridApiKey = configValues.tronGridApiKey,
+                saltPayAuthToken = configValues.saltPay.credentials.authToken,
             ),
             appsFlyerDevKey = configValues.appsFlyer.appsFlyerDevKey,
             amplitudeApiKey = configValues.amplitudeApiKey,
