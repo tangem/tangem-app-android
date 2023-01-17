@@ -1,4 +1,6 @@
-package com.tangem.feature.swap.domain.models
+package com.tangem.feature.swap.domain.models.domain
+
+import com.tangem.feature.swap.domain.models.SwapAmount
 
 /**
  * Quote model holds data about current amounts of exchange and fees
