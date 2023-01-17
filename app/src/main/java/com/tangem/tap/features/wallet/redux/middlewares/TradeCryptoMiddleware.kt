@@ -28,7 +28,7 @@ import com.tangem.tap.store
 import kotlinx.coroutines.launch
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import com.tangem.feature.swap.domain.models.Currency as SwapCurrency
+import com.tangem.feature.swap.domain.models.domain.Currency as SwapCurrency
 
 class TradeCryptoMiddleware {
     fun handle(state: () -> AppState?, action: WalletAction.TradeCryptoAction) {
