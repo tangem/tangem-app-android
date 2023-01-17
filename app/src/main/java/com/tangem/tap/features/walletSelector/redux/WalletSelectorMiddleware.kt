@@ -9,6 +9,8 @@ import com.tangem.common.map
 import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.util.UserWalletId
+import com.tangem.tap.common.ChainResult
+import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.analytics.events.MyWallets
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.onUserWalletSelected
@@ -20,6 +22,8 @@ import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.domain.model.WalletStoreModel
 import com.tangem.tap.domain.model.builders.UserWalletBuilder
 import com.tangem.tap.domain.scanCard.ScanCardProcessor
+import com.tangem.tap.domain.scanCard.ScanChainError
+import com.tangem.tap.domain.scanCard.chains.DisclaimerChainData
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
@@ -143,30 +147,34 @@ internal class WalletSelectorMiddleware {
         tangemSdkManager.setAccessCodeRequestPolicy(
             useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes,
         )
-
-        ScanCardProcessor.scan(
+        val processor = ScanCardProcessor.scan(
             onWalletNotCreated = {
                 // No need to rollback policy, continue with the policy set before the card scan
                 store.dispatchOnMain(WalletSelectorAction.AddWallet.Success)
                 store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
             },
-            disclaimerWillShow = {
-                store.dispatchOnMain(NavigationAction.PopBackTo())
-            },
-            onSuccess = { scanResponse ->
-                saveUserWalletAndPopBackToWalletScreen(scanResponse)
+            disclaimerChainData = DisclaimerChainData(
+                fromScreen = AppScreen.Wallet,
+                willShow = { store.dispatchOnMain(NavigationAction.PopBackTo()) },
+            ),
+            cardScannedEvent = MainScreen.CardWasScanned(),
+        )
+        when (val result = processor.launch()) {
+            is ChainResult.Success -> {
+                saveUserWalletAndPopBackToWalletScreen(result.data)
                     .doOnFailure { error ->
                         // Rollback policy if card saving was failed
                         tangemSdkManager.setAccessCodeRequestPolicy(prevUseBiometricsForAccessCode)
                         store.dispatchOnMain(WalletSelectorAction.AddWallet.Error(error))
                     }
-            },
-            onFailure = { error ->
+            }
+            is ChainResult.Failure -> {
                 // Rollback policy if card scanning was failed
                 tangemSdkManager.setAccessCodeRequestPolicy(prevUseBiometricsForAccessCode)
-                store.dispatchOnMain(WalletSelectorAction.AddWallet.Error(error))
-            },
-        )
+                val tangemError = (result.error as? ScanChainError.InterruptBy.ScanFailed)?.tangemError
+                store.dispatchOnMain(WalletSelectorAction.AddWallet.Error(tangemError))
+            }
+        }
     }
 
     private suspend fun saveUserWalletAndPopBackToWalletScreen(scanResponse: ScanResponse): CompletionResult<Unit> {

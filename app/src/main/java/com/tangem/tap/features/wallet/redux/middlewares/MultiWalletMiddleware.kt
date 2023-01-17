@@ -5,8 +5,9 @@ import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.doOnSuccess
 import com.tangem.common.extensions.guard
-import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.core.analytics.Analytics
+import com.tangem.domain.common.extensions.withMainContext
+import com.tangem.tap.common.ChainResult
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.analytics.events.Token.ButtonRemoveToken
@@ -185,22 +186,26 @@ class MultiWalletMiddleware {
         state: WalletState?,
     ) = scope.launch(Dispatchers.Default) {
         Analytics.send(MainScreen.CardWasScanned())
-        ScanCardProcessor.scan(
+        val processor = ScanCardProcessor.deriveBlockchains(
             cardId = selectedUserWallet.cardId,
             additionalBlockchainsToDerive = state?.missingDerivations?.map { it.blockchain },
-        ) { scanResponse ->
-            userWalletsListManager.update(
-                userWalletId = selectedUserWallet.walletId,
-                update = { userWallet ->
-                    userWallet.copy(
-                        scanResponse = scanResponse,
-                    )
-                },
-            )
-                .doOnSuccess { updatedUserWallet ->
-                    store.dispatchOnMain(WalletAction.MultiWallet.AddMissingDerivations(emptyList()))
-                    store.state.globalState.tapWalletManager.loadData(updatedUserWallet, refresh = true)
-                }
+        )
+        when (val result = processor.launch()) {
+            is ChainResult.Success -> {
+                userWalletsListManager.update(
+                    userWalletId = selectedUserWallet.walletId,
+                    update = { userWallet ->
+                        userWallet.copy(
+                            scanResponse = result.data,
+                        )
+                    },
+                )
+                    .doOnSuccess { updatedUserWallet ->
+                        store.dispatchOnMain(WalletAction.MultiWallet.AddMissingDerivations(emptyList()))
+                        store.state.globalState.tapWalletManager.loadData(updatedUserWallet, refresh = true)
+                    }
+            }
+            is ChainResult.Failure -> Unit
         }
     }
 

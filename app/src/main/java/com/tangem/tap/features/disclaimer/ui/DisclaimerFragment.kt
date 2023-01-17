@@ -5,7 +5,6 @@ import android.view.View
 import androidx.transition.TransitionInflater
 import by.kirich1409.viewbindingdelegate.viewBinding
 import com.tangem.core.ui.fragments.setStatusBarColor
-import com.tangem.tap.common.extensions.configureSettings
 import com.tangem.tap.common.extensions.beginDelayedTransition
 import com.tangem.tap.common.extensions.hide
 import com.tangem.tap.common.extensions.show
@@ -30,15 +29,14 @@ class DisclaimerFragment : BaseFragment(R.layout.fragment_disclaimer), StoreSubs
     override fun configureTransitions() {
         val inflater = TransitionInflater.from(requireContext())
         when (store.state.disclaimerState.showedFromScreen) {
-            AppScreen.Home -> {
-                enterTransition = inflater.inflateTransition(android.R.transition.slide_bottom)
-                exitTransition = inflater.inflateTransition(android.R.transition.slide_top)
-            }
             AppScreen.Details -> {
                 enterTransition = inflater.inflateTransition(android.R.transition.fade)
                 exitTransition = inflater.inflateTransition(android.R.transition.fade)
             }
-            else -> {}
+            else -> {
+                enterTransition = inflater.inflateTransition(android.R.transition.slide_bottom)
+                exitTransition = inflater.inflateTransition(android.R.transition.slide_top)
+            }
         }
     }
 

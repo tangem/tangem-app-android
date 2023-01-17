@@ -48,7 +48,7 @@ internal sealed interface WalletSelectorAction : Action {
 
     object AddWallet : WalletSelectorAction {
         object Success : WalletSelectorAction
-        data class Error(val error: TangemError) : WalletSelectorAction
+        data class Error(val error: TangemError?) : WalletSelectorAction
     }
 
     data class ChangeAppCurrency(

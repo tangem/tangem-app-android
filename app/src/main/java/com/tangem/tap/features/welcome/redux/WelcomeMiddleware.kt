@@ -4,6 +4,7 @@ import android.content.Intent
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.domain.common.ScanResponse
+import com.tangem.tap.common.ChainResult
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppState
@@ -11,6 +12,8 @@ import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.model.builders.UserWalletBuilder
 import com.tangem.tap.domain.scanCard.ScanCardProcessor
+import com.tangem.tap.domain.scanCard.ScanChainError
+import com.tangem.tap.domain.scanCard.chains.DisclaimerChainData
 import com.tangem.tap.intentHandler
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
@@ -97,16 +100,20 @@ internal class WelcomeMiddleware {
         tangemSdkManager.setAccessCodeRequestPolicy(
             useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes,
         )
-        ScanCardProcessor.scan(
-            onSuccess = { scanResponse ->
-                scope.launch { onCardScanned(scanResponse) }
-            },
-            onFailure = {
-                store.dispatchOnMain(WelcomeAction.ProceedWithCard.Error(it))
-            },
-            onWalletNotCreated = {
-                store.dispatchOnMain(WelcomeAction.ProceedWithCard.Success)
-            },
+
+        val processor = ScanCardProcessor.scan(
+            disclaimerChainData = DisclaimerChainData(AppScreen.Welcome),
+            onWalletNotCreated = { store.dispatchOnMain(WelcomeAction.ProceedWithCard.Success) },
         )
+        when (val result = processor.launch()) {
+            is ChainResult.Success -> {
+                onCardScanned(result.data)
+            }
+            is ChainResult.Failure -> {
+                (result.error as? ScanChainError.InterruptBy.ScanFailed)?.tangemError?.let {
+                    store.dispatchOnMain(WelcomeAction.ProceedWithCard.Error(it))
+                }
+            }
+        }
     }
 }
