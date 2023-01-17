@@ -39,7 +39,7 @@ class ConfigManager {
     fun load(configLoader: Loader<ConfigModel>, onComplete: ((config: Config) -> Unit)? = null) {
         configLoader.load { configModel ->
             setupFeature(configModel.features)
-            setupKey(configModel.configValues)
+            setupConfigValues(configModel.configValues)
             onComplete?.invoke(config)
         }
     }
@@ -77,67 +77,43 @@ class ConfigManager {
         )
     }
 
-    @Suppress("LongMethod")
-    private fun setupKey(configValues: ConfigValueModel?) {
+    private fun setupConfigValues(configValues: ConfigValueModel?) {
         val values = configValues ?: return
-        config = config.copy(
-            coinMarketCapKey = values.coinMarketCapKey,
-            moonPayApiKey = values.moonPayApiKey,
-            moonPayApiSecretKey = values.moonPayApiSecretKey,
-            mercuryoWidgetId = values.mercuryoWidgetId,
-            mercuryoSecret = values.mercuryoSecret,
+
+        config = createConfig(config, values)
+        defaultConfig = config.copy()
+    }
+
+    private fun createConfig(config: Config, configValues: ConfigValueModel): Config {
+        return config.copy(
+            coinMarketCapKey = configValues.coinMarketCapKey,
+            moonPayApiKey = configValues.moonPayApiKey,
+            moonPayApiSecretKey = configValues.moonPayApiSecretKey,
+            mercuryoWidgetId = configValues.mercuryoWidgetId,
+            mercuryoSecret = configValues.mercuryoSecret,
             blockchainSdkConfig = BlockchainSdkConfig(
                 blockchairCredentials = BlockchairCredentials(
-                    apiKey = values.blockchairApiKeys,
-                    authToken = values.blockchairAuthorizationToken,
+                    apiKey = configValues.blockchairApiKeys,
+                    authToken = configValues.blockchairAuthorizationToken,
                 ),
-                blockcypherTokens = values.blockcypherTokens,
+                blockcypherTokens = configValues.blockcypherTokens,
                 quickNodeCredentials = QuickNodeCredentials(
-                    apiKey = values.quiknodeApiKey,
-                    subdomain = values.quiknodeSubdomain,
+                    apiKey = configValues.quiknodeApiKey,
+                    subdomain = configValues.quiknodeSubdomain,
                 ),
                 bscQuickNodeCredentials = QuickNodeCredentials(
-                    apiKey = values.bscQuiknodeApiKey,
-                    subdomain = values.bscQuiknodeSubdomain,
+                    apiKey = configValues.bscQuiknodeApiKey,
+                    subdomain = configValues.bscQuiknodeSubdomain,
                 ),
-                infuraProjectId = values.infuraProjectId,
-                tronGridApiKey = values.tronGridApiKey,
-                saltPayAuthToken = values.saltPay.credentials.token,
+                infuraProjectId = configValues.infuraProjectId,
+                tronGridApiKey = configValues.tronGridApiKey,
+                saltPayAuthToken = configValues.saltPay.credentials.token,
             ),
-            appsFlyerDevKey = values.appsFlyer.appsFlyerDevKey,
-            amplitudeApiKey = values.amplitudeApiKey,
-            shopify = values.shopifyShop,
-            zendesk = values.zendesk,
-            saltPayConfig = values.saltPay,
-        )
-        defaultConfig = defaultConfig.copy(
-            coinMarketCapKey = values.coinMarketCapKey,
-            moonPayApiKey = values.moonPayApiKey,
-            moonPayApiSecretKey = values.moonPayApiSecretKey,
-            mercuryoWidgetId = values.mercuryoWidgetId,
-            mercuryoSecret = values.mercuryoSecret,
-            blockchainSdkConfig = BlockchainSdkConfig(
-                blockchairCredentials = BlockchairCredentials(
-                    apiKey = values.blockchairApiKeys,
-                    authToken = values.blockchairAuthorizationToken,
-                ),
-                blockcypherTokens = values.blockcypherTokens,
-                quickNodeCredentials = QuickNodeCredentials(
-                    apiKey = values.quiknodeApiKey,
-                    subdomain = values.quiknodeSubdomain,
-                ),
-                bscQuickNodeCredentials = QuickNodeCredentials(
-                    apiKey = values.bscQuiknodeApiKey,
-                    subdomain = values.bscQuiknodeSubdomain,
-                ),
-                infuraProjectId = values.infuraProjectId,
-                saltPayAuthToken = values.saltPay.credentials.token,
-            ),
-            appsFlyerDevKey = values.appsFlyer.appsFlyerDevKey,
-            amplitudeApiKey = values.amplitudeApiKey,
-            shopify = values.shopifyShop,
-            zendesk = values.zendesk,
-            saltPayConfig = values.saltPay,
+            appsFlyerDevKey = configValues.appsFlyer.appsFlyerDevKey,
+            amplitudeApiKey = configValues.amplitudeApiKey,
+            shopify = configValues.shopifyShop,
+            zendesk = configValues.zendesk,
+            saltPayConfig = configValues.saltPay,
         )
     }
 
