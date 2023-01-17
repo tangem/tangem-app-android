@@ -6,12 +6,12 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.common.services.Result
+import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.operations.backup.BackupService
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.backupService
-import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.IntroductionProcess
 import com.tangem.tap.common.analytics.paramsInterceptor.BatchIdParamsInterceptor
 import com.tangem.tap.common.extensions.dispatchDialogShow
@@ -69,7 +69,6 @@ object ScanCardProcessor {
 
         result
             .doOnFailure { error ->
-                onProgressStateChange(false)
                 onScanStateChange(false)
                 onFailure(error)
             }
@@ -84,7 +83,6 @@ object ScanCardProcessor {
                     nextHandler = { scanResponse1 ->
                         showDisclaimerIfNeed(
                             scanResponse = scanResponse1,
-                            onProgressStateChange = onProgressStateChange,
                             disclaimerWillShow = disclaimerWillShow,
                             onFailure = onFailure,
                             nextHandler = { scanResponse2 ->
@@ -133,7 +131,6 @@ object ScanCardProcessor {
     private suspend inline fun showDisclaimerIfNeed(
         scanResponse: ScanResponse,
         crossinline disclaimerWillShow: () -> Unit = {},
-        crossinline onProgressStateChange: suspend (showProgress: Boolean) -> Unit,
         crossinline nextHandler: suspend (ScanResponse) -> Unit,
         crossinline onFailure: suspend (error: TangemError) -> Unit,
     ) {
@@ -156,7 +153,6 @@ object ScanCardProcessor {
                         },
                         onDismiss = {
                             scope.launch(Dispatchers.Main) {
-                                onProgressStateChange(false)
                                 onFailure(TangemSdkError.UserCancelled())
                             }
                         },
@@ -201,14 +197,12 @@ object ScanCardProcessor {
                             } else {
                                 delay(DELAY_SDK_DIALOG_CLOSE)
                                 onSuccess(scanResponse)
-                                onProgressStateChange(false)
                             }
                         }
                         is Result.Failure -> {
                             SaltPayExceptionHandler.handle(result.error)
                             delay(DELAY_SDK_DIALOG_CLOSE)
                             onFailure(TangemSdkError.ExceptionError(result.error))
-                            onProgressStateChange(false)
                         }
                     }
                 }
@@ -216,10 +210,10 @@ object ScanCardProcessor {
                 delay(DELAY_SDK_DIALOG_CLOSE)
                 if (scanResponse.card.backupStatus?.isActive == false) {
                     showSaltPayTapVisaLogoCardDialog()
+                    onProgressStateChange(false)
                 } else {
                     onSuccess(scanResponse)
                 }
-                onProgressStateChange(false)
             }
         } else {
             if (OnboardingHelper.isOnboardingCase(scanResponse)) {
@@ -235,7 +229,6 @@ object ScanCardProcessor {
                 } else {
                     delay(DELAY_SDK_DIALOG_CLOSE)
                     onSuccess(scanResponse)
-                    onProgressStateChange(false)
                 }
             }
         }
