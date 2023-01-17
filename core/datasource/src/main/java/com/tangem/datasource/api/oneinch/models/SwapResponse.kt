@@ -7,6 +7,5 @@ data class SwapResponse(
     @Json(name = "toToken") val toToken: TokenOneInchDto,
     @Json(name = "toTokenAmount") val toTokenAmount: String,
     @Json(name = "fromTokenAmount") val fromTokenAmount: String,
-    @Json(name = "protocols") val protocols: List<PathViewDto>,
-    @Json(name = "transaction") val transaction: TransactionDto,
+    @Json(name = "tx") val transaction: TransactionDto,
 )
