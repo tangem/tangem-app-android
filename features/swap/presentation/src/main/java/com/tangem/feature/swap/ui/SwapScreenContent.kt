@@ -29,12 +29,12 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
-import com.tangem.core.ui.components.BasicDialog
 import com.tangem.core.ui.components.CardWithIcon
 import com.tangem.core.ui.components.ClickableWarningCard
 import com.tangem.core.ui.components.Keyboard
 import com.tangem.core.ui.components.PrimaryButtonIconRight
 import com.tangem.core.ui.components.RefreshableWaringCard
+import com.tangem.core.ui.components.SimpleOkDialog
 import com.tangem.core.ui.components.SmallInfoCard
 import com.tangem.core.ui.components.SmallInfoCardWithWarning
 import com.tangem.core.ui.components.SpacerH16
@@ -137,7 +137,7 @@ internal fun SwapScreenContent(
         }
 
         if (state.alert != null) {
-            BasicDialog(message = state.alert.message, onDismissDialog = state.alert.onClick)
+            SimpleOkDialog(message = state.alert.message, onDismissDialog = state.alert.onClick)
         }
     }
 }
