@@ -1,9 +1,5 @@
-@file:OptIn(ExperimentalFoundationApi::class)
-
 package com.tangem.feature.swap.ui
 
-import androidx.annotation.StringRes
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -23,9 +19,10 @@ import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
@@ -44,8 +41,8 @@ fun SwapSelectTokenScreen(state: SwapSelectTokenStateHolder, onBack: () -> Unit)
 
     TangemTheme {
         Scaffold(
-            content = {
-                ListOfTokens(state = state)
+            content = { padding ->
+                ListOfTokens(state = state, Modifier.padding(padding))
             },
             topBar = {
                 ExpandableSearchView(
@@ -61,9 +58,9 @@ fun SwapSelectTokenScreen(state: SwapSelectTokenStateHolder, onBack: () -> Unit)
 }
 
 @Composable
-private fun ListOfTokens(state: SwapSelectTokenStateHolder) {
+private fun ListOfTokens(state: SwapSelectTokenStateHolder, modifier: Modifier = Modifier) {
     LazyColumn(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .background(color = TangemTheme.colors.background.primary)
             .padding(
@@ -74,47 +71,15 @@ private fun ListOfTokens(state: SwapSelectTokenStateHolder) {
 
         ) {
 
-        stickyHeader {
-            Header(title = R.string.swapping_token_list_your_tokens)
-        }
-
-
-        itemsIndexed(items = state.addedTokens) { index, item ->
+        itemsIndexed(items = state.tokens) { index, item ->
             TokenItem(token = item, onTokenClick = { state.onTokenSelected(item.id) })
 
-            if (index != state.addedTokens.lastIndex) Divider(
-                color = TangemTheme.colors.stroke.primary,
-                startIndent = TangemTheme.dimens.spacing54,
-            )
-        }
-
-        stickyHeader {
-            Header(title = R.string.swapping_token_list_other_tokens)
-        }
-
-        itemsIndexed(items = state.otherTokens) { index, item ->
-            TokenItem(token = item, onTokenClick = { state.onTokenSelected(item.id) })
-            if (index != state.otherTokens.lastIndex) Divider(
+            if (index != state.tokens.lastIndex) Divider(
                 color = TangemTheme.colors.stroke.primary,
                 startIndent = TangemTheme.dimens.spacing54,
             )
         }
     }
-}
-
-@Composable
-private fun Header(@StringRes title: Int) {
-    Text(
-        text = stringResource(id = title).uppercase(),
-        style = TangemTheme.typography.overline,
-        color = TangemTheme.colors.text.tertiary,
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(color = TangemTheme.colors.background.primary)
-            .padding(vertical = TangemTheme.dimens.spacing6),
-        textAlign = TextAlign.Start,
-
-        )
 }
 
 @Composable
@@ -133,25 +98,10 @@ private fun TokenItem(
             .clickable(
                 onClick = { onTokenClick(token.id) },
             ),
+        verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(
-            modifier = Modifier
-                .padding(end = TangemTheme.dimens.spacing12)
-                .align(Alignment.CenterVertically),
-        ) {
-            val iconModifier = Modifier
-                .size(TangemTheme.dimens.size40)
-            SubcomposeAsyncImage(
-                modifier = iconModifier,
-                model = ImageRequest.Builder(LocalContext.current)
-                    .data(token.iconUrl)
-                    .crossfade(true)
-                    .build(),
-                contentDescription = token.id,
-                loading = { TokenImageShimmer(modifier = iconModifier) },
-                error = { CurrencyPlaceholderIcon(modifier = iconModifier, id = token.id) },
-            )
-        }
+
+        TokenIcon(token = token)
 
         Column(
             modifier = Modifier
@@ -160,7 +110,11 @@ private fun TokenItem(
             Text(
                 text = token.name,
                 style = TangemTheme.typography.subtitle1,
-                color = TangemTheme.colors.text.primary1,
+                color = if (token.available) {
+                    TangemTheme.colors.text.primary1
+                } else {
+                    TangemTheme.colors.text.tertiary
+                },
             )
             SpacerW2()
             Text(
@@ -172,7 +126,14 @@ private fun TokenItem(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        if (token.addedTokenBalanceData != null) {
+
+        if (!token.available) {
+            Text(
+                text = stringResource(id = R.string.swapping_token_not_available),
+                style = TangemTheme.typography.caption,
+                color = TangemTheme.colors.text.tertiary,
+            )
+        } else if (token.addedTokenBalanceData != null) {
             Column(
                 horizontalAlignment = Alignment.End,
                 verticalArrangement = Arrangement.Center,
@@ -193,6 +154,35 @@ private fun TokenItem(
             }
         }
 
+    }
+}
+
+@Composable
+private fun TokenIcon(token: TokenToSelect) {
+    Box(
+        modifier = Modifier
+            .padding(end = TangemTheme.dimens.spacing12),
+    ) {
+        val iconModifier = Modifier
+            .size(TangemTheme.dimens.size40)
+        val colorFilter = if (!token.available) {
+            val matrix = ColorMatrix().apply { setToSaturation(0f) }
+            ColorFilter.colorMatrix(matrix)
+        } else {
+            null
+        }
+        SubcomposeAsyncImage(
+            modifier = iconModifier,
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(token.iconUrl)
+                .crossfade(true)
+                .build(),
+            contentDescription = token.id,
+            loading = { TokenImageShimmer(modifier = iconModifier) },
+            error = { CurrencyPlaceholderIcon(modifier = iconModifier, id = token.id) },
+            alpha = if (!token.available) 0.7f else 1f,
+            colorFilter = colorFilter,
+        )
     }
 }
 
@@ -224,12 +214,14 @@ private val token = TokenToSelect(
     ),
 )
 
+private val tokenNotAvailable = token.copy(available = false)
+
 @Preview
 @Composable
 fun TokenScreenPreview() {
     SwapSelectTokenScreen(
         state = SwapSelectTokenStateHolder(
-            listOf(token, token, token), listOf(token, token, token), {}, {},
+            listOf(token, tokenNotAvailable, token), {}, {},
         ),
     ) {
 
