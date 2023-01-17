@@ -12,7 +12,7 @@ data class DetailsScreenState(
     val onItemsClick: (SettingsElement) -> Unit,
     val onSocialNetworkClick: (SocialNetworkLink) -> Unit,
 ) {
-    val appNameRes: Int = R.string.app_name
+    val appNameRes: Int = R.string.tangem_app_name
 }
 
 @Immutable
