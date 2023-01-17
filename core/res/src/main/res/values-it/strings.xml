@@ -191,6 +191,7 @@
     <string name="common_share">Share</string>
     <string name="common_copy">Copy</string>
     <string name="common_success">Con successo</string>
+    <string name="common_close">Close</string>
     <string name="exchange_send_view_header">You Send</string>
     <string name="exchange_receive_view_header">You Receive</string>
     <string name="swapping_permission_header">Give Permission</string>
@@ -209,6 +210,9 @@
     <string name="swapping_token_list_other_tokens">Other tokens</string>
     <string name="swapping_pending_transaction_title">Waiting</string>
     <string name="swapping_pending_transaction_subtitle">Transaction in progress…</string>
+    <string name="swapping_success_view_title">In progress</string>
+    <string name="swapping_success_view_explorer_button_title">View in Explorer</string>
+    <string name="swapping_token_not_available">not available</string>
     <string name="referral_error_failed_to_load_info">Failed to load the information about the referral program. Please try again later.</string>
     <string name="referral_error_failed_to_load_info_with_reason">Failed to load the information about the referral program. Reason: %s. Please try again later.</string>
     <string name="referral_error_failed_to_participate">Your participation request could not be processed. Reason: %s. Please try again later. If the problem persists — feel free to contact our support.</string>
