@@ -18,13 +18,11 @@ import androidx.compose.material.Card
 import androidx.compose.material.CircularProgressIndicator
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -32,6 +30,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.CardWithIcon
 import com.tangem.core.ui.components.ClickableWarningCard
 import com.tangem.core.ui.components.Keyboard
+import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.PrimaryButtonIconRight
 import com.tangem.core.ui.components.RefreshableWaringCard
 import com.tangem.core.ui.components.SimpleOkDialog
@@ -57,13 +56,12 @@ internal fun SwapScreenContent(state: SwapStateHolder, onPermissionWarningClick:
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(color = Color.Transparent),
+            .background(color = TangemTheme.colors.background.secondary),
     ) {
 
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(color = TangemTheme.colors.background.primary)
                 .verticalScroll(rememberScrollState())
                 .padding(
                     start = TangemTheme.dimens.spacing16,
@@ -101,14 +99,24 @@ internal fun SwapScreenContent(state: SwapStateHolder, onPermissionWarningClick:
                 )
             }
 
-            PrimaryButtonIconRight(
-                modifier = Modifier.fillMaxWidth(),
-                text = stringResource(id = R.string.swapping_swap),
-                icon = painterResource(id = R.drawable.ic_tangem_24),
-                enabled = state.swapButton.enabled,
-                showProgress = state.swapButton.loading,
-                onClick = state.swapButton.onClick,
-            )
+            if (state.warnings.any { it is SwapWarning.InsufficientFunds }) {
+                PrimaryButton(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = stringResource(id = R.string.swapping_insufficient_funds),
+                    enabled = false,
+                    showProgress = state.swapButton.loading,
+                    onClick = state.swapButton.onClick,
+                )
+            } else {
+                PrimaryButtonIconRight(
+                    modifier = Modifier.fillMaxWidth(),
+                    text = stringResource(id = R.string.swapping_swap),
+                    icon = painterResource(id = R.drawable.ic_tangem_24),
+                    enabled = state.swapButton.enabled,
+                    showProgress = state.swapButton.loading,
+                    onClick = state.swapButton.onClick,
+                )
+            }
         }
 
         AnimatedVisibility(
@@ -134,7 +142,10 @@ internal fun SwapScreenContent(state: SwapStateHolder, onPermissionWarningClick:
         }
 
         if (state.alert != null) {
-            SimpleOkDialog(message = state.alert.message, onDismissDialog = state.alert.onClick)
+            SimpleOkDialog(
+                message = state.alert.message ?: stringResource(id = R.string.swapping_generic_error),
+                onDismissDialog = state.alert.onClick,
+            )
         }
     }
 }
@@ -222,7 +233,7 @@ private fun SwapWarnings(
 ) {
     Column(
         modifier = Modifier
-            .background(color = MaterialTheme.colors.primary)
+            .background(color = TangemTheme.colors.background.secondary)
             .fillMaxWidth(),
     ) {
         warnings.forEach { warning ->
@@ -250,10 +261,11 @@ private fun SwapWarnings(
                 is SwapWarning.GenericWarning -> {
                     RefreshableWaringCard(
                         title = stringResource(id = R.string.common_warning),
-                        description = warning.message,
+                        description = warning.message ?: stringResource(id = R.string.swapping_generic_error),
                         onClick = warning.onClick,
                     )
                 }
+                else -> {}
                 // is SwapWarning.RateExpired -> {
                 //     RefreshableWaringCard(
                 //         title = stringResource(id = R.string.),
