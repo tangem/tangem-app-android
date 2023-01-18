@@ -39,13 +39,12 @@ import org.rekotlin.Action
 import timber.log.Timber
 import java.math.BigDecimal
 
-class WalletReducer {
-    companion object {
-        fun reduce(action: Action, state: AppState, appStateHolder: AppStateHolder): WalletState =
-            internalReduce(action, state, appStateHolder)
-    }
+object WalletReducer {
+    fun reduce(action: Action, state: AppState, appStateHolder: AppStateHolder): WalletState =
+        internalReduce(action, state, appStateHolder)
 }
 
+@Suppress("LongMethod", "ComplexMethod")
 private fun internalReduce(action: Action, state: AppState, appStateHolder: AppStateHolder): WalletState {
 
     val multiWalletReducer = MultiWalletReducer()

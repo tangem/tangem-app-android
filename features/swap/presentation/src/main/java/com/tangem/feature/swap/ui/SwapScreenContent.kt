@@ -49,6 +49,7 @@ import com.tangem.feature.swap.models.SwapWarning
 import com.tangem.feature.swap.models.TransactionCardType
 import com.tangem.feature.swap.presentation.R
 
+@Suppress("LongMethod")
 @Composable
 internal fun SwapScreenContent(
     modifier: Modifier = Modifier,
@@ -170,7 +171,11 @@ private fun MainInfo(state: SwapStateHolder) {
                 tokenIconUrl = state.receiveCardData.tokenIconUrl,
                 tokenCurrency = state.receiveCardData.tokenCurrency,
                 networkIconRes = state.receiveCardData.networkIconRes,
-                onChangeTokenClick = if (state.receiveCardData.canSelectAnotherToken) state.onSelectTokenClick else null,
+                onChangeTokenClick = if (state.receiveCardData.canSelectAnotherToken) {
+                    state.onSelectTokenClick
+                } else {
+                    null
+                },
             )
         }
         Card(
