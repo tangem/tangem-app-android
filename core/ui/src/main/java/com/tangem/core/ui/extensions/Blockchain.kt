@@ -3,6 +3,7 @@ package com.tangem.core.ui.extensions
 import androidx.annotation.DrawableRes
 import com.tangem.core.ui.R
 
+@Suppress("ComplexMethod")
 @DrawableRes
 fun getActiveIconRes(blockchainId: String): Int {
     return when (blockchainId) {

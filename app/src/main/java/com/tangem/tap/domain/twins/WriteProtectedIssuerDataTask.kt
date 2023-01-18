@@ -34,11 +34,14 @@ class WriteProtectedIssuerDataTask(
                                 is CompletionResult.Success -> {
                                     writeIssuerData(
                                         twinPublicKey, issuerKeys, signResult.data.signature,
-                                        readResult.data, session, callback
+                                        readResult.data, session, callback,
                                     )
                                 }
-                                is CompletionResult.Failure -> callback(CompletionResult.Failure(
-                                    readResult.error))
+                                is CompletionResult.Failure -> callback(
+                                    CompletionResult.Failure(
+                                        readResult.error,
+                                    ),
+                                )
                             }
                         }
                     }
@@ -47,6 +50,7 @@ class WriteProtectedIssuerDataTask(
             }
     }
 
+    @Suppress("LongParameterList")
     private fun writeIssuerData(
         twinPublicKey: ByteArray, issuerKeys: KeyPair, cardSignature: ByteArray,
         readResponse: ReadIssuerDataResponse,

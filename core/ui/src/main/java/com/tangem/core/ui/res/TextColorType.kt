@@ -28,4 +28,4 @@ enum class TextColorType(val lightColor: Color, val darkColor: Color) {
 }
 
 @Composable
-fun Colors.textColor(type: TextColorType): Color = if (isSystemInDarkTheme) type.darkColor else type.lightColor
+fun Colors.textColor(type: TextColorType): Color = if (IS_SYSTEM_IN_DARK_THEME) type.darkColor else type.lightColor
