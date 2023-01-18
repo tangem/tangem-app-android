@@ -56,6 +56,7 @@ class DialogManager : StoreSubscriber<GlobalState> {
         store.unsubscribe(this)
     }
 
+    @Suppress("LongMethod", "ComplexMethod")
     override fun newState(state: GlobalState) {
         if (state.dialog == null) {
             dialog?.dismiss()
@@ -73,7 +74,7 @@ class DialogManager : StoreSubscriber<GlobalState> {
             is AppDialog.ScanFailsDialog -> ScanFailsDialog.create(context)
             is AppDialog.AddressInfoDialog -> AddressInfoBottomSheetDialog(state.dialog, context)
             is AppDialog.TestActionsDialog -> TestActionsBottomSheetDialog(state.dialog, context)
-            is TwinCardsAction.Wallet.ShowInterruptDialog -> CreateWalletInterruptDialog.create(state.dialog, context)
+            is TwinCardsAction.Wallet.ShowInterruptDialog -> CreateWalletInterruptDialog.create(context)
             is OnboardingDialog.InterruptOnboarding -> InterruptOnboardingDialog.create(context, state.dialog)
             is WalletConnectDialog.UnsupportedCard ->
                 SimpleAlertDialog.create(

@@ -4,10 +4,10 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.extensions.Result
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.guard
+import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
-import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.dispatchDialogShow
@@ -39,10 +39,8 @@ import org.rekotlin.Action
 import org.rekotlin.DispatchFunction
 import org.rekotlin.Middleware
 
-class TwinCardsMiddleware {
-    companion object {
-        val handler = twinsWalletMiddleware
-    }
+object TwinCardsMiddleware {
+    val handler = twinsWalletMiddleware
 }
 
 private val twinsWalletMiddleware: Middleware<AppState> = { dispatch, state ->
@@ -54,6 +52,7 @@ private val twinsWalletMiddleware: Middleware<AppState> = { dispatch, state ->
     }
 }
 
+@Suppress("LongMethod", "ComplexMethod", "MagicNumber")
 private fun handle(action: Action, dispatch: DispatchFunction) {
     val action = action as? TwinCardsAction ?: return
 
@@ -111,7 +110,7 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
                             twinCardsState.walletBalance.balanceIsToppedUp() -> TwinCardsStep.Done
                             else -> TwinCardsStep.TopUpWallet
                         }
-                        store.dispatch((TwinCardsAction.SetStepOfScreen(step)))
+                        store.dispatch(TwinCardsAction.SetStepOfScreen(step))
                     } else {
                         store.dispatch(TwinCardsAction.SetStepOfScreen(TwinCardsStep.Welcome))
                     }
@@ -266,7 +265,7 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
 
             scope.launch {
                 val loadedBalance = onboardingManager?.updateBalance(walletManager) ?: return@launch
-                loadedBalance.criticalError?.let { store.dispatchErrorNotification(it) }
+                loadedBalance.criticalError?.let(store::dispatchErrorNotification)
                 delay(if (isLoadedBefore) 0 else 300)
                 withMainContext {
                     store.dispatch(TwinCardsAction.Balance.Set(loadedBalance))
