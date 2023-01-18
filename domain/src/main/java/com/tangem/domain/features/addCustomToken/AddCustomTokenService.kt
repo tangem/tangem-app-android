@@ -48,7 +48,7 @@ class AddCustomTokenService(
                 return@withContext emptyList()
             }
 
-        throw IllegalStateException("Unreachable code because runCatching must return result")
+        error("Unreachable code because runCatching must return result")
     }
 
     private fun selectNetworksForSearch(networkId: String?): String {

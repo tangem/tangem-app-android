@@ -15,6 +15,7 @@ interface FeedbackData {
 
     fun createOptionalMessage(infoHolder: AdditionalFeedbackInfo): String
 
+    @Suppress("MagicNumber")
     fun joinTogether(context: Context, infoHolder: AdditionalFeedbackInfo): String {
         return StringBuilder().apply {
             append(context.getString(mainMessageResId))
@@ -42,6 +43,7 @@ class ScanFailsEmail : FeedbackData {
     override val subjectResId: Int = R.string.feedback_subject_scan_failed
     override val mainMessageResId: Int = R.string.feedback_preface_scan_failed
 
+    @Suppress("MagicNumber")
     override fun joinTogether(context: Context, infoHolder: AdditionalFeedbackInfo): String = StringBuilder().apply {
         append(context.getString(mainMessageResId))
         breakLine(4)

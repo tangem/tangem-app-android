@@ -11,8 +11,8 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
 internal object WalletManagerStorage {
-    private val managers =
-        MutableSharedFlow<HashMap<UserWalletId, List<WalletManager>>>(replay = 1)
+    private val managers = MutableSharedFlow<HashMap<UserWalletId, List<WalletManager>>>(replay = 1)
+    private val mutex = Mutex()
 
     init {
         managers.tryEmit(hashMapOf())
@@ -22,7 +22,6 @@ internal object WalletManagerStorage {
         return managers.asSharedFlow()
     }
 
-    private val mutex = Mutex()
     suspend fun update(
         f: suspend (HashMap<UserWalletId, List<WalletManager>>) -> HashMap<UserWalletId, List<WalletManager>>,
     ) {

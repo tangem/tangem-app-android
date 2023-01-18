@@ -48,7 +48,8 @@ import com.tangem.core.ui.res.TangemTheme
  * @param onSearchChanged action when search is modified
  * @param onSearchDisplayClosed action when search is closed
  *
- * @see <a href = "https://www.figma.com/file/Vs6SkVsFnUPsSCNwlnVf5U/Android-%E2%80%93-UI?node-id=1123%3A4068&t=xj8BBj5DfCWn2Mli-1"
+ * @see <a href =
+ * "https://www.figma.com/file/Vs6SkVsFnUPsSCNwlnVf5U/Android-%E2%80%93-UI?node-id=1123%3A4068&t=xj8BBj5DfCWn2Mli-1"
  * >Figma component</a>
  */
 @Composable
@@ -87,15 +88,6 @@ fun ExpandableSearchView(
             )
         }
     }
-}
-
-@Composable
-private fun SearchIcon(iconTint: Color) {
-    Icon(
-        painter = painterResource(id = R.drawable.ic_search_24),
-        contentDescription = null,
-        tint = iconTint,
-    )
 }
 
 @Composable
@@ -151,16 +143,13 @@ private fun ExpandedSearchView(
     tint: Color = TangemTheme.colors.background.primary,
 ) {
     val focusManager = LocalFocusManager.current
-
     val textFieldFocusRequester = remember { FocusRequester() }
 
     SideEffect {
         textFieldFocusRequester.requestFocus()
     }
 
-    var textFieldValue by remember {
-        mutableStateOf(TextFieldValue("", TextRange("".length)))
-    }
+    var textFieldValue by remember { mutableStateOf(TextFieldValue("", TextRange("".length))) }
 
     Row(
         modifier = modifier
@@ -194,22 +183,17 @@ private fun ExpandedSearchView(
             placeholder = {
                 Text(text = placeholderSearchText)
             },
-            keyboardOptions = KeyboardOptions(
-                imeAction = ImeAction.Done,
-            ),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(
-                onDone = {
-                    focusManager.clearFocus()
-                },
+                onDone = { focusManager.clearFocus() },
             ),
-            colors = TangemTextFieldsDefault.defaultTextFieldColors
-                .copy(
-                    placeholderColor = TangemTheme.colors.text.disabled,
-                    cursorColor = TangemTheme.colors.text.tertiary,
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent,
-                    disabledIndicatorColor = Color.Transparent,
-                ),
+            colors = TangemTextFieldsDefault.defaultTextFieldColors.copy(
+                placeholderColor = TangemTheme.colors.text.disabled,
+                cursorColor = TangemTheme.colors.text.tertiary,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                disabledIndicatorColor = Color.Transparent,
+            ),
         )
     }
 }

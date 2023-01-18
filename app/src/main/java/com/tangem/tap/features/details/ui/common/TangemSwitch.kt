@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.tangem.wallet.R
 
+@Suppress("MagicNumber")
 @Composable
 fun TangemSwitch(
     modifier: Modifier = Modifier,
