@@ -53,7 +53,9 @@ class BasicTopUpEventConverter(
     }
 }
 
-private fun AnalyticsParam.CardBalanceState.Companion.from(walletsData: List<WalletData>): AnalyticsParam.CardBalanceState {
+private fun AnalyticsParam.CardBalanceState.Companion.from(
+    walletsData: List<WalletData>,
+): AnalyticsParam.CardBalanceState {
     val totalCryptoAmount = walletsData.calculateTotalCryptoAmount()
     return when {
         totalCryptoAmount.isZero() -> AnalyticsParam.CardBalanceState.Empty
