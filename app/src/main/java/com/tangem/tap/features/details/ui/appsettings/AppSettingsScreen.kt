@@ -31,25 +31,16 @@ import com.tangem.tap.features.details.ui.common.TangemSwitch
 import com.tangem.wallet.R
 
 @Composable
-fun AppSettingsScreen(
-    state: AppSettingsScreenState,
-    onBackPressed: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+fun AppSettingsScreen(state: AppSettingsScreenState, onBackClick: () -> Unit) {
     SettingsScreensScaffold(
-        content = {
-            AppSettings(state = state, modifier = modifier)
-        },
+        content = { AppSettings(state = state) },
         titleRes = R.string.app_settings_title,
-        onBackClick = onBackPressed,
+        onBackClick = onBackClick,
     )
 }
 
 @Composable
-private fun AppSettings(
-    state: AppSettingsScreenState,
-    modifier: Modifier = Modifier,
-) {
+private fun AppSettings(state: AppSettingsScreenState) {
     var dialogType by remember { mutableStateOf<PrivacySetting?>(null) }
     val onDialogStateChange: (PrivacySetting?) -> Unit = { dialogType = it }
 
@@ -57,21 +48,13 @@ private fun AppSettings(
         SettingsAlertDialog(
             element = it,
             onDialogStateChange = onDialogStateChange,
-            onSettingToggled = state.onSettingToggled,
+            onSettingToggle = { state.onSettingToggled(it, false) },
         )
     }
 
-    Column(
-        modifier = modifier
-            .fillMaxSize(),
-    ) {
+    Column(modifier = Modifier.fillMaxSize()) {
         if (state.showEnrollBiometricsCard) {
-            EnrollBiometricsCard(
-                modifier = Modifier
-                    .padding(horizontal = TangemTheme.dimens.spacing8)
-                    .fillMaxWidth(),
-                onClick = state.onEnrollBiometrics,
-            )
+            EnrollBiometricsCard(onClick = state.onEnrollBiometrics)
             SpacerH24()
         }
 
@@ -92,7 +75,6 @@ private fun AppSettings(
 @Suppress("LongMethod")
 @Composable
 private fun AppSettingsElement(
-    modifier: Modifier = Modifier,
     state: AppSettingsScreenState,
     setting: PrivacySetting,
     onDialogStateChange: (PrivacySetting?) -> Unit,
@@ -123,7 +105,7 @@ private fun AppSettingsElement(
     )
 
     Row(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = TangemTheme.dimens.spacing20),
         verticalAlignment = Alignment.CenterVertically,
@@ -195,7 +177,7 @@ private fun AppSettingsScreenSample(
                 onSettingToggled = { _, _ -> },
                 onEnrollBiometrics = {},
             ),
-            onBackPressed = { },
+            onBackClick = { },
         )
     }
 }
@@ -220,10 +202,7 @@ private fun AppSettingsScreenPreview_Dark() {
 private fun AppSettingsScreen_EnrollBiometrics_Sample(
     modifier: Modifier = Modifier,
 ) {
-    Column(
-        modifier = modifier
-            .background(TangemTheme.colors.background.primary),
-    ) {
+    Column(modifier = modifier.background(TangemTheme.colors.background.primary)) {
         AppSettingsScreen(
             state = AppSettingsScreenState(
                 settings = mapOf(
@@ -235,7 +214,7 @@ private fun AppSettingsScreen_EnrollBiometrics_Sample(
                 onSettingToggled = { _, _ -> },
                 onEnrollBiometrics = {},
             ),
-            onBackPressed = { },
+            onBackClick = { },
         )
     }
 }

@@ -88,10 +88,11 @@ fun SwapPermissionBottomSheetContent(
         SecondaryButton(
             text = stringResource(id = R.string.common_cancel),
             modifier = Modifier.fillMaxWidth(),
-        ) {
-            data?.cancelButton?.onClick?.invoke()
-            onCancel()
-        }
+            onClick = {
+                data?.cancelButton?.onClick?.invoke()
+                onCancel()
+            },
+        )
 
         SpacerH32()
 
@@ -195,7 +196,7 @@ private fun FeeItem(fee: String) {
 
 @Preview
 @Composable
-fun Preview_AgreementBottomSheet_InLightTheme() {
+private fun Preview_AgreementBottomSheet_InLightTheme() {
     TangemTheme(isDark = false) {
         SwapPermissionBottomSheetContent(data = previewData) {}
     }
@@ -203,7 +204,7 @@ fun Preview_AgreementBottomSheet_InLightTheme() {
 
 @Preview
 @Composable
-fun Preview_AgreementBottomSheet_InDarkTheme() {
+private fun Preview_AgreementBottomSheet_InDarkTheme() {
     TangemTheme(isDark = true) {
         SwapPermissionBottomSheetContent(data = previewData) {}
     }

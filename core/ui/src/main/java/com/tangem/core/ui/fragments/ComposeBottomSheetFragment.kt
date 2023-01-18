@@ -52,6 +52,7 @@ abstract class ComposeBottomSheetFragment<ScreenState> : BottomSheetDialogFragme
             setContent {
                 TangemTheme {
                     ScreenContent(
+                        state = provideState().value,
                         modifier = Modifier
                             .fillMaxWidth()
                             .let {
@@ -61,19 +62,20 @@ abstract class ComposeBottomSheetFragment<ScreenState> : BottomSheetDialogFragme
                                 color = TangemTheme.colors.background.plain,
                                 shape = TangemTheme.shapes.bottomSheet,
                             ),
-                        state = provideState().value,
                     )
                 }
             }
         }
     }
 
+    @Suppress("TopLevelComposableFunctions")
     @Composable
     protected abstract fun provideState(): State<ScreenState>
 
+    @Suppress("TopLevelComposableFunctions")
     @Composable
     protected abstract fun ScreenContent(
-        modifier: Modifier,
         state: ScreenState,
+        modifier: Modifier,
     )
 }

@@ -19,8 +19,7 @@ import com.tangem.wallet.R
 internal fun SettingsAlertDialog(
     element: PrivacySetting,
     onDialogStateChange: (PrivacySetting?) -> Unit,
-    onSettingToggled: (PrivacySetting, Boolean) -> Unit,
-    modifier: Modifier = Modifier,
+    onSettingToggle: () -> Unit
 ) {
     val text = when (element) {
         PrivacySetting.SaveWallets -> R.string.app_settings_off_saved_wallet_alert_message
@@ -43,7 +42,7 @@ internal fun SettingsAlertDialog(
                 text = stringResource(id = R.string.common_delete),
                 onClick = {
                     onDialogStateChange(null)
-                    onSettingToggled(element, false)
+                    onSettingToggle()
                 },
             )
         },
@@ -62,7 +61,6 @@ internal fun SettingsAlertDialog(
             )
         },
         shape = TangemTheme.shapes.roundedCornersLarge,
-        modifier = modifier,
     )
 }
 
@@ -78,7 +76,7 @@ private fun SettingsAlertDialogSample(
         SettingsAlertDialog(
             element = PrivacySetting.SaveAccessCode,
             onDialogStateChange = {},
-            onSettingToggled = { _, _ -> },
+            onSettingToggle = { },
         )
     }
 }

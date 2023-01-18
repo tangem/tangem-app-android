@@ -76,6 +76,7 @@ class HomeFragment : Fragment(), StoreSubscriber<HomeState> {
         homeState.value = state
     }
 
+    @Suppress("TopLevelComposableFunctions")
     @Composable
     private fun ScreenContent() {
         StoriesScreen(

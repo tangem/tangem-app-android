@@ -73,8 +73,8 @@ internal fun WalletSelectorScreenContent(
                 wallet = wallet,
                 isSelected = remember(state.selectedUserWalletId) { wallet.id == state.selectedUserWalletId },
                 isChecked = remember(state.editingUserWalletsIds) { wallet.id in state.editingUserWalletsIds },
-                onWalletClick = onWalletClick,
-                onWalletLongClick = onWalletLongClick,
+                onWalletClick = { onWalletClick(wallet.id) },
+                onWalletLongClick = { onWalletLongClick(wallet.id) },
             )
         }
 
@@ -90,20 +90,13 @@ internal fun WalletSelectorScreenContent(
                 wallet = wallet,
                 isSelected = remember(state.selectedUserWalletId) { wallet.id == state.selectedUserWalletId },
                 isChecked = remember(state.editingUserWalletsIds) { wallet.id in state.editingUserWalletsIds },
-                onWalletClick = onWalletClick,
-                onWalletLongClick = onWalletLongClick,
+                onWalletClick = { onWalletClick(wallet.id) },
+                onWalletLongClick = { onWalletLongClick(wallet.id) },
             )
         }
 
         item {
             Footer(
-                modifier = Modifier
-                    .padding(
-                        top = dimensionResource(id = R.dimen.spacing24),
-                        bottom = dimensionResource(id = R.dimen.spacing16),
-                    )
-                    .padding(horizontal = TangemTheme.dimens.spacing16)
-                    .fillMaxWidth(),
                 isLocked = state.isLocked,
                 showUnlockProgress = state.showUnlockProgress,
                 showAddCardProgress = state.showAddCardProgress,
@@ -141,9 +134,6 @@ private fun Header(
         ) {
             if (hasEditingWallets) {
                 EditWalletsBar(
-                    modifier = Modifier
-                        .padding(horizontal = TangemTheme.dimens.spacing16)
-                        .fillMaxWidth(),
                     editingWalletsSize = editingWalletsSize,
                     onClearSelectedClick = onClearSelectedClick,
                     onEditSelectedWalletClick = onEditSelectedWalletClick,
@@ -175,7 +165,6 @@ private fun WalletsTitle(@StringRes textResId: Int, wallets: List<*>) {
 
 @Composable
 private fun Footer(
-    modifier: Modifier = Modifier,
     isLocked: Boolean,
     showUnlockProgress: Boolean,
     showAddCardProgress: Boolean,
@@ -183,7 +172,13 @@ private fun Footer(
     onAddCardClick: () -> Unit,
 ) {
     Column(
-        modifier = modifier,
+        modifier = Modifier
+            .padding(
+                top = dimensionResource(id = R.dimen.spacing24),
+                bottom = dimensionResource(id = R.dimen.spacing16),
+            )
+            .padding(horizontal = TangemTheme.dimens.spacing16)
+            .fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
     ) {
         if (isLocked) {
@@ -209,7 +204,6 @@ private fun Footer(
 
 @Composable
 private fun EditWalletsBar(
-    modifier: Modifier = Modifier,
     editingWalletsSize: Int,
     onClearSelectedClick: () -> Unit,
     onEditSelectedWalletClick: () -> Unit,
@@ -220,7 +214,9 @@ private fun EditWalletsBar(
     }
 
     Row(
-        modifier = modifier,
+        modifier = Modifier
+            .padding(horizontal = TangemTheme.dimens.spacing16)
+            .fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing12),
     ) {

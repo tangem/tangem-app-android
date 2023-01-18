@@ -63,7 +63,6 @@ import com.valentinilk.shimmer.shimmer
 @Suppress("LongParameterList")
 @Composable
 fun TransactionCard(
-    modifier: Modifier = Modifier,
     type: TransactionCardType,
     balance: String,
     amount: String?,
@@ -74,7 +73,6 @@ fun TransactionCard(
     onChangeTokenClick: (() -> Unit)? = null,
 ) {
     Card(
-        modifier = modifier,
         shape = RoundedCornerShape(TangemTheme.dimens.radius12),
         backgroundColor = TangemTheme.colors.background.primary,
         elevation = TangemTheme.dimens.elevation2,
@@ -211,7 +209,7 @@ private fun Content(
                 is TransactionCardType.SendCard -> {
                     AutoSizeTextField(
                         amount = amount ?: "1",
-                        onAmoutChanged = { type.onAmountChanged(it) },
+                        onAmountChange = { type.onAmountChanged(it) },
                     )
                 }
             }
@@ -247,10 +245,7 @@ private fun Content(
 
 @Suppress("MagicNumber")
 @Composable
-private fun AutoSizeTextField(
-    amount: String,
-    onAmoutChanged: (String) -> Unit,
-) {
+private fun AutoSizeTextField(amount: String, onAmountChange: (String) -> Unit) {
     val focusManager = LocalFocusManager.current
     val textFieldFocusRequester = remember { FocusRequester() }
 
@@ -281,7 +276,7 @@ private fun AutoSizeTextField(
         BasicTextField(
             value = amount,
             onValueChange = {
-                onAmoutChanged(it)
+                onAmountChange(it)
             },
             singleLine = true,
             modifier = Modifier
@@ -338,7 +333,7 @@ fun Token(
                     .crossfade(true)
                     .build(),
                 loading = { TokenImageShimmer(modifier = tokenImageModifier) },
-                error = { CurrencyPlaceholderIcon(modifier = tokenImageModifier, tokenCurrency) },
+                error = { CurrencyPlaceholderIcon(modifier = tokenImageModifier, id = tokenCurrency) },
                 contentDescription = null,
             )
 
@@ -412,7 +407,7 @@ private fun TokenImageShimmer(
 
 @Preview(widthDp = 328, heightDp = 116, showBackground = true)
 @Composable
-fun Preview_SwapMainCard_InLightTheme() {
+private fun Preview_SwapMainCard_InLightTheme() {
     TangemTheme(isDark = false) {
         TransactionCardPreview()
     }
@@ -420,7 +415,7 @@ fun Preview_SwapMainCard_InLightTheme() {
 
 @Preview(widthDp = 328, heightDp = 116, showBackground = true)
 @Composable
-fun Preview_SwapMainCard_InDarkTheme() {
+private fun Preview_SwapMainCard_InDarkTheme() {
     TangemTheme(isDark = true) {
         TransactionCardPreview()
     }

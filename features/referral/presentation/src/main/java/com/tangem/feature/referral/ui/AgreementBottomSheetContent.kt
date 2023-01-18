@@ -63,7 +63,7 @@ private fun AgreementHtmlView(url: String) {
 
 @Preview
 @Composable
-fun Preview_AgreementBottomSheet_InLightTheme() {
+private fun Preview_AgreementBottomSheet_InLightTheme() {
     TangemTheme(isDark = false) {
         AgreementBottomSheetContent(url = "https://tangem.com/en/")
     }
@@ -71,7 +71,7 @@ fun Preview_AgreementBottomSheet_InLightTheme() {
 
 @Preview
 @Composable
-fun Preview_AgreementBottomSheet_InDarkTheme() {
+private fun Preview_AgreementBottomSheet_InDarkTheme() {
     TangemTheme(isDark = true) {
         AgreementBottomSheetContent(url = "https://tangem.com/en/")
     }

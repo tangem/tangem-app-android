@@ -2,7 +2,7 @@ package com.tangem.core.ui.components.appbar
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.Icon
@@ -35,7 +35,7 @@ fun AppBarWithAdditionalButtons(
     Box(
         modifier = Modifier
             .fillMaxWidth()
-            .height(TangemTheme.dimens.size56)
+            .heightIn(TangemTheme.dimens.size56)
             .padding(all = TangemTheme.dimens.spacing16),
     ) {
         if (startButton != null) {
@@ -72,7 +72,7 @@ fun AppBarWithAdditionalButtons(
 
 @Preview(widthDp = 360, heightDp = 56, showBackground = true)
 @Composable
-fun Preview_AppBarWithAdditionalButtons_InLightTheme() {
+private fun Preview_AppBarWithAdditionalButtons_InLightTheme() {
     TangemTheme(isDark = false) {
         AppBarWithAdditionalButtons(
             text = "Tangem",
@@ -90,7 +90,7 @@ fun Preview_AppBarWithAdditionalButtons_InLightTheme() {
 
 @Preview(widthDp = 360, heightDp = 56, showBackground = true)
 @Composable
-fun Preview_AppBarWithAdditionalButtons_InDarkTheme() {
+private fun Preview_AppBarWithAdditionalButtons_InDarkTheme() {
     TangemTheme(isDark = true) {
         AppBarWithAdditionalButtons(
             text = "Tangem",
@@ -108,7 +108,7 @@ fun Preview_AppBarWithAdditionalButtons_InDarkTheme() {
 
 @Preview(widthDp = 360, heightDp = 56, showBackground = true)
 @Composable
-fun Preview_AppBarWithOnlyStartButtons_InLightTheme() {
+private fun Preview_AppBarWithOnlyStartButtons_InLightTheme() {
     TangemTheme(isDark = false) {
         AppBarWithAdditionalButtons(
             text = "Tangem",
@@ -122,7 +122,7 @@ fun Preview_AppBarWithOnlyStartButtons_InLightTheme() {
 
 @Preview(widthDp = 360, heightDp = 56, showBackground = true)
 @Composable
-fun Preview_AppBarWithOnlyStartButtons_InDarkTheme() {
+private fun Preview_AppBarWithOnlyStartButtons_InDarkTheme() {
     TangemTheme(isDark = true) {
         AppBarWithAdditionalButtons(
             text = "Tangem",
@@ -136,7 +136,7 @@ fun Preview_AppBarWithOnlyStartButtons_InDarkTheme() {
 
 @Preview(widthDp = 360, heightDp = 56, showBackground = true)
 @Composable
-fun Preview_AppBarWithOnlyEndButtons_InLightTheme() {
+private fun Preview_AppBarWithOnlyEndButtons_InLightTheme() {
     TangemTheme(isDark = false) {
         AppBarWithAdditionalButtons(
             text = "Tangem",
@@ -150,7 +150,7 @@ fun Preview_AppBarWithOnlyEndButtons_InLightTheme() {
 
 @Preview(widthDp = 360, heightDp = 56, showBackground = true)
 @Composable
-fun Preview_AppBarWithOnlyEndButtons_InDarkTheme() {
+private fun Preview_AppBarWithOnlyEndButtons_InDarkTheme() {
     TangemTheme(isDark = true) {
         AppBarWithAdditionalButtons(
             text = "Tangem",

@@ -41,7 +41,7 @@ class SecurityModeFragment : Fragment(), StoreSubscriber<DetailsState> {
                 TangemTheme {
                     SecurityModeScreen(
                         state = screenState.value,
-                        onBackPressed = { store.dispatch(NavigationAction.PopBackTo()) },
+                        onBackClick = { store.dispatch(NavigationAction.PopBackTo()) },
                     )
                 }
             }

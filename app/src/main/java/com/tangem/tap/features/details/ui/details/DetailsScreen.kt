@@ -33,66 +33,52 @@ import com.tangem.tap.features.details.ui.common.SettingsScreensScaffold
 import com.tangem.wallet.R
 
 @Composable
-fun DetailsScreen(
-    state: DetailsScreenState,
-    onBackPressed: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
+fun DetailsScreen(state: DetailsScreenState, onBackClick: () -> Unit) {
     SystemBarsEffect {
         setSystemBarsColor(color = TangemColorPalette.Light1)
     }
 
     SettingsScreensScaffold(
-        content = { Content(state = state, modifier = modifier) },
-        onBackClick = onBackPressed,
+        content = { Content(state = state) },
+        onBackClick = onBackClick,
     )
 }
 
 @Composable
-fun Content(
-    state: DetailsScreenState,
-    modifier: Modifier = Modifier,
-) {
+fun Content(state: DetailsScreenState) {
     Column(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState()),
     ) {
-        ScreenTitle(titleRes = R.string.details_title, modifier.padding(bottom = 52.dp))
-        state.elements.map {
-            if (it == SettingsElement.WalletConnect) {
-                WalletConnectDetailsItem(
-                    onItemsClick = state.onItemsClick,
-                    modifier = modifier,
-                )
+        ScreenTitle(titleRes = R.string.details_title, Modifier.padding(bottom = 52.dp))
+        state.elements.map { element ->
+            if (element == SettingsElement.WalletConnect) {
+                WalletConnectDetailsItem(onItemsClick = state.onItemsClick)
             } else {
                 DetailsItem(
-                    item = it,
+                    item = element,
                     appCurrency = state.appCurrency,
-                    onItemsClick = state.onItemsClick,
-                    modifier = modifier,
+                    onItemsClick = { state.onItemsClick(element) },
                 )
             }
         }
-        Spacer(modifier = modifier.weight(1f))
+        Spacer(modifier = Modifier.weight(1f))
         TangemSocialAccounts(state.tangemLinks, state.onSocialNetworkClick)
         Spacer(modifier = Modifier.size(12.dp))
         Text(
             text = "${stringResource(id = state.appNameRes)} ${state.tangemVersion}",
             style = TangemTypography.caption,
             color = colorResource(id = R.color.text_tertiary),
-            modifier = modifier.padding(start = 16.dp, end = 16.dp, bottom = 40.dp),
+            modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 40.dp),
         )
     }
 }
 
 @Composable
-fun WalletConnectDetailsItem(
-    onItemsClick: (SettingsElement) -> Unit,
-    modifier: Modifier = Modifier,
-) {
+fun WalletConnectDetailsItem(onItemsClick: (SettingsElement) -> Unit) {
     Row(
-        modifier = modifier
+        modifier = Modifier
             .defaultMinSize(minHeight = 84.dp)
             .fillMaxWidth()
             .clickable { onItemsClick(SettingsElement.WalletConnect) },
@@ -102,23 +88,23 @@ fun WalletConnectDetailsItem(
         Icon(
             painter = painterResource(id = R.drawable.ic_walletconnect),
             contentDescription = stringResource(id = R.string.wallet_connect_title),
-            modifier = modifier.padding(start = 20.dp, end = 20.dp),
+            modifier = Modifier.padding(start = 20.dp, end = 20.dp),
             tint = colorResource(id = R.color.all_colors_azure),
         )
         Column(
-            modifier = modifier.defaultMinSize(minHeight = 56.dp),
+            modifier = Modifier.defaultMinSize(minHeight = 56.dp),
             horizontalAlignment = Alignment.Start,
             verticalArrangement = Arrangement.Center,
         ) {
             Text(
                 text = stringResource(id = R.string.wallet_connect_title),
-                modifier = modifier.padding(end = 20.dp, bottom = 4.dp),
+                modifier = Modifier.padding(end = 20.dp, bottom = 4.dp),
                 style = TangemTypography.headline3,
                 color = colorResource(id = R.color.text_primary_1),
             )
             Text(
                 text = stringResource(id = R.string.wallet_connect_subtitle),
-                modifier = modifier.padding(end = 20.dp, bottom = 4.dp),
+                modifier = Modifier.padding(end = 20.dp, bottom = 4.dp),
                 style = TangemTypography.body1,
                 color = colorResource(id = R.color.text_secondary),
             )
@@ -127,37 +113,31 @@ fun WalletConnectDetailsItem(
 }
 
 @Composable
-fun DetailsItem(
-    item: SettingsElement,
-    appCurrency: String,
-    onItemsClick: (SettingsElement) -> Unit,
-    modifier: Modifier = Modifier,
-) {
+fun DetailsItem(item: SettingsElement, appCurrency: String, onItemsClick: () -> Unit) {
     Row(
-        modifier = modifier
+        modifier = Modifier
             .height(56.dp)
             .fillMaxWidth()
-            .clickable { onItemsClick(item) },
+            .clickable(onClick = onItemsClick),
         horizontalArrangement = Arrangement.Start,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(
             painter = painterResource(id = item.iconRes),
             contentDescription = stringResource(id = item.titleRes),
-            modifier = modifier.padding(start = 20.dp, end = 20.dp),
+            modifier = Modifier.padding(start = 20.dp, end = 20.dp),
             tint = colorResource(id = R.color.icon_secondary),
         )
-        Column(modifier = modifier.padding(end = 20.dp)) {
+        Column(modifier = Modifier.padding(end = 20.dp)) {
             Text(
                 text = stringResource(id = item.titleRes),
-                modifier = modifier,
+                modifier = Modifier,
                 style = TangemTypography.subtitle1,
                 color = colorResource(id = R.color.text_primary_1),
             )
             if (item == SettingsElement.AppCurrency) {
                 Text(
                     text = appCurrency,
-                    modifier = modifier,
                     style = TangemTypography.body2,
                     color = colorResource(id = R.color.text_secondary),
                 )
@@ -170,16 +150,13 @@ fun DetailsItem(
 fun TangemSocialAccounts(
     links: List<SocialNetworkLink>,
     onSocialNetworkClick: (SocialNetworkLink) -> Unit,
-    modifier: Modifier = Modifier,
 ) {
-    LazyRow(
-        modifier = modifier.padding(start = 8.dp, end = 8.dp),
-    ) {
+    LazyRow(modifier = Modifier.padding(start = 8.dp, end = 8.dp)) {
         items(links) {
             Icon(
                 painter = painterResource(id = it.network.iconRes),
                 contentDescription = "",
-                modifier = modifier
+                modifier = Modifier
                     .padding(8.dp)
                     .clickable { onSocialNetworkClick(it) },
                 tint = colorResource(id = R.color.icon_informative),
@@ -190,7 +167,7 @@ fun TangemSocialAccounts(
 
 @Composable
 @Preview
-fun Preview() {
+private fun Preview() {
     DetailsScreen(
         state = DetailsScreenState(
             elements = SettingsElement.values().toList(),
@@ -199,6 +176,6 @@ fun Preview() {
             appCurrency = "Dollar",
             onItemsClick = {}, onSocialNetworkClick = {},
         ),
-        onBackPressed = {},
+        onBackClick = {},
     )
 }

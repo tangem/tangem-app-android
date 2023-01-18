@@ -19,7 +19,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.referral.presentation.R
 
 @Composable
-internal fun AgreementText(@StringRes firstPartResId: Int, onClicked: () -> Unit) {
+internal fun AgreementText(@StringRes firstPartResId: Int, onClick: () -> Unit) {
     val agreementText = annotatedAgreementString(firstPart = stringResource(firstPartResId))
     ClickableText(
         text = agreementText,
@@ -31,7 +31,7 @@ internal fun AgreementText(@StringRes firstPartResId: Int, onClicked: () -> Unit
         onClick = {
             val clickableSpanStyle = requireNotNull(agreementText.spanStyles.getOrNull(1))
             if (it in clickableSpanStyle.start..clickableSpanStyle.end) {
-                onClicked()
+                onClick()
             }
         },
     )
@@ -54,20 +54,20 @@ private fun annotatedAgreementString(firstPart: String): AnnotatedString {
 
 @Preview(widthDp = 360, showBackground = true)
 @Composable
-fun Preview_AgreementText_InLightTheme() {
+private fun Preview_AgreementText_InLightTheme() {
     TangemTheme(isDark = false) {
         Box(modifier = Modifier.background(TangemTheme.colors.background.primary)) {
-            AgreementText(firstPartResId = R.string.referral_tos_not_enroled_prefix, onClicked = {})
+            AgreementText(firstPartResId = R.string.referral_tos_not_enroled_prefix, onClick = {})
         }
     }
 }
 
 @Preview(widthDp = 360, showBackground = true)
 @Composable
-fun Preview_AgreementText_InDarkTheme() {
+private fun Preview_AgreementText_InDarkTheme() {
     TangemTheme(isDark = true) {
         Box(modifier = Modifier.background(TangemTheme.colors.background.primary)) {
-            AgreementText(firstPartResId = R.string.referral_tos_not_enroled_prefix, onClicked = {})
+            AgreementText(firstPartResId = R.string.referral_tos_not_enroled_prefix, onClick = {})
         }
     }
 }

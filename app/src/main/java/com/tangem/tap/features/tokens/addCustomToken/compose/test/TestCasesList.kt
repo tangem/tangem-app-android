@@ -19,30 +19,19 @@ import com.tangem.wallet.R
  * Created by Anton Zhilenkov on 12/04/2022.
  */
 @Composable
-fun TestCasesList(
-    onItemClick: (TestCase) -> Unit
-) {
+fun TestCasesList(onItemClick: (TestCase) -> Unit) {
     if (!BuildConfig.TEST_ACTION_ENABLED) return
 
-    Surface(
-        color = colorResource(id = R.color.lightGray5)
-    ) {
-        Column(
-            Modifier.padding(horizontal = 16.dp)
-        ) {
-            listOf(
-                TestCase.ContractAddress,
-                TestCase.SolanaTokens,
-            ).map { TestCaseListItem(it, onItemClick) }
+    Surface(color = colorResource(id = R.color.lightGray5)) {
+        Column(Modifier.padding(horizontal = 16.dp)) {
+            listOf(TestCase.ContractAddress, TestCase.SolanaTokens)
+                .map { case -> TestCaseListItem(testCase = case, onItemClick = { onItemClick(case) }) }
         }
     }
 }
 
 @Composable
-fun TestCaseListItem(
-    testCase: TestCase,
-    onItemClick: (TestCase) -> Unit,
-) {
+fun TestCaseListItem(testCase: TestCase, onItemClick: () -> Unit) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -51,7 +40,7 @@ fun TestCaseListItem(
             text = testCase.description,
         )
         Button(
-            onClick = { onItemClick(testCase) }
+            onClick = onItemClick,
         ) { Text("Start") }
     }
 }
@@ -59,5 +48,6 @@ fun TestCaseListItem(
 enum class TestCase(val description: String, val content: @Composable (VoidCallback) -> Unit) {
     ContractAddress("Test contract address field", { ContractAddressTests(it) }),
     Auto("Test contract address field", { ContractAddressTests(it) }),
-    SolanaTokens("Test Solana contract addresses", { SolanaAddressTests(it) }), ;
+    SolanaTokens("Test Solana contract addresses", { SolanaAddressTests(it) }),
+    ;
 }

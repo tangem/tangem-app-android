@@ -16,10 +16,10 @@ import androidx.compose.ui.unit.sp
 @Composable
 fun ResizableText(
     text: String,
+    fontSizeRange: FontSizeRange,
     modifier: Modifier = Modifier,
     color: Color = Color.Unspecified,
     style: TextStyle = LocalTextStyle.current,
-    fontSizeRange: FontSizeRange,
 ) {
     val fontSizeValue = remember { mutableStateOf(fontSizeRange.max.value) }
     val readyToDraw = remember { mutableStateOf(false) }
