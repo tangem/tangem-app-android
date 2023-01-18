@@ -25,22 +25,25 @@ fun List<WalletData>.calculateTotalCryptoAmount(): BigDecimal {
 
 private fun List<WalletData>.mapToProgressState(): List<ProgressState> {
     return this.map { wallet ->
-        if (wallet.fiatRate == null) ProgressState.Error
-        else when (wallet.currencyData.status) {
-            BalanceStatus.Refreshing -> ProgressState.Refreshing
-            BalanceStatus.VerifiedOnline,
-            BalanceStatus.SameCurrencyTransactionInProgress,
-            BalanceStatus.TransactionInProgress,
-            BalanceStatus.NoAccount,
-            -> ProgressState.Done
-            BalanceStatus.Unreachable,
-            BalanceStatus.EmptyCard,
-            BalanceStatus.UnknownBlockchain,
-            BalanceStatus.MissedDerivation,
-            -> ProgressState.Error
-            BalanceStatus.Loading,
-            null,
-            -> ProgressState.Loading
+        if (wallet.fiatRate == null) {
+            ProgressState.Error
+        } else {
+            when (wallet.currencyData.status) {
+                BalanceStatus.Refreshing -> ProgressState.Refreshing
+                BalanceStatus.VerifiedOnline,
+                BalanceStatus.SameCurrencyTransactionInProgress,
+                BalanceStatus.TransactionInProgress,
+                BalanceStatus.NoAccount,
+                -> ProgressState.Done
+                BalanceStatus.Unreachable,
+                BalanceStatus.EmptyCard,
+                BalanceStatus.UnknownBlockchain,
+                BalanceStatus.MissedDerivation,
+                -> ProgressState.Error
+                BalanceStatus.Loading,
+                null,
+                -> ProgressState.Loading
+            }
         }
     }
 }
