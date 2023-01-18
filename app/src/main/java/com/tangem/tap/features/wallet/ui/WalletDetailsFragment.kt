@@ -59,6 +59,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.rekotlin.StoreSubscriber
 
+@Suppress("LargeClass", "MagicNumber")
 class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
     StoreSubscriber<WalletState> {
 
@@ -256,8 +257,6 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
 
         rowButtons.updateButtonsVisibility(
             exchangeServiceFeatureOn = isExchangeServiceFeatureOn,
-            buyAllowed = selectedWallet.isAvailableToBuy,
-            sellAllowed = selectedWallet.isAvailableToSell,
             sendAllowed = selectedWallet.mainButton.enabled,
         )
         rowButtons.onTradeClick = {

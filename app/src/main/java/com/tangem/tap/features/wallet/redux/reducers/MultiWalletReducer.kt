@@ -33,13 +33,14 @@ import com.tangem.wallet.R
 import java.math.BigDecimal
 
 class MultiWalletReducer {
+    @Suppress("LongMethod", "ComplexMethod")
     fun reduce(action: WalletAction.MultiWallet, state: WalletState): WalletState {
         return when (action) {
             is WalletAction.MultiWallet.AddBlockchains -> {
                 val walletStores: List<WalletStore> = action.blockchains.map { blockchain ->
                     val walletManager = action.walletManagers.firstOrNull {
                         it.wallet.blockchain == blockchain.blockchain &&
-                            (it.wallet.publicKey.derivationPath?.rawPath == blockchain.derivationPath)
+                            it.wallet.publicKey.derivationPath?.rawPath == blockchain.derivationPath
                     }
                     val wallet = walletManager?.wallet
                     val cardToken = if (!state.isMultiwalletAllowed) {

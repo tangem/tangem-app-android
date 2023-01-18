@@ -1,3 +1,5 @@
+@file:Suppress("MagicNumber")
+
 package com.tangem.tap.features.home.compose
 
 import androidx.compose.foundation.Image
@@ -52,6 +54,9 @@ import com.tangem.tap.features.home.redux.HomeState
 import com.tangem.wallet.R
 import kotlin.math.max
 
+private const val STEPS = 6
+
+@Suppress("LongMethod", "ComplexMethod")
 @Composable
 fun StoriesScreen(
     homeState: MutableState<HomeState> = mutableStateOf(HomeState()),
@@ -59,7 +64,6 @@ fun StoriesScreen(
     onShopButtonClick: () -> Unit,
     onSearchTokensClick: () -> Unit,
 ) {
-    val steps = 6
     val currentStep = remember { mutableStateOf(1) }
     val systemUiController = rememberSystemUiController()
 
@@ -69,7 +73,7 @@ fun StoriesScreen(
         currentStep.value = max(1, currentStep.value - 1)
     }
     val goToNextScreen = {
-        currentStep.value = if (currentStep.value < steps) currentStep.value + 1 else 1
+        currentStep.value = if (currentStep.value < STEPS) currentStep.value + 1 else 1
     }
 
     val isPressed = remember { mutableStateOf(false) }
@@ -149,7 +153,7 @@ fun StoriesScreen(
             verticalArrangement = Arrangement.Center,
         ) {
             StoriesProgressBar(
-                steps = steps,
+                steps = STEPS,
                 currentStep = currentStep.value,
                 stepDuration = currentStep.duration(),
                 paused = isPaused,
@@ -181,27 +185,29 @@ fun StoriesScreen(
                 .align(Alignment.BottomCenter)
                 .fillMaxWidth(),
         ) {
-            if (currentStep.value == 4) Button(
-                onClick = onSearchTokensClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
-                    .height(48.dp),
-                colors = ButtonDefaults.textButtonColors(
-                    backgroundColor = Color.White,
-                    contentColor = Color(0xFF080C10),
-                ),
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_search),
-                    contentDescription = null,
-                )
-                Text(
-                    text = stringResource(id = R.string.search_tokens_title),
-                    fontWeight = FontWeight.Medium,
-                    fontSize = 16.sp,
-                    textAlign = TextAlign.Center,
-                )
+            if (currentStep.value == 4) {
+                Button(
+                    onClick = onSearchTokensClick,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
+                        .height(48.dp),
+                    colors = ButtonDefaults.textButtonColors(
+                        backgroundColor = Color.White,
+                        contentColor = Color(0xFF080C10),
+                    ),
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.ic_search),
+                        contentDescription = null,
+                    )
+                    Text(
+                        text = stringResource(id = R.string.search_tokens_title),
+                        fontWeight = FontWeight.Medium,
+                        fontSize = 16.sp,
+                        textAlign = TextAlign.Center,
+                    )
+                }
             }
             HomeButtons(
                 modifier = Modifier
@@ -216,6 +222,7 @@ fun StoriesScreen(
     }
 }
 
+@Suppress("MagicNumber")
 private fun MutableState<Int>.duration(): Int = when (this.value) {
     1 -> 8000
     else -> 6000

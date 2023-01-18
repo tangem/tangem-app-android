@@ -28,4 +28,4 @@ enum class IconColorType(val lightColor: Color, val darkColor: Color) {
 }
 
 @Composable
-fun Colors.iconColor(type: IconColorType): Color = if (isSystemInDarkTheme) type.darkColor else type.lightColor
+fun Colors.iconColor(type: IconColorType): Color = if (IS_SYSTEM_IN_DARK_THEME) type.darkColor else type.lightColor
