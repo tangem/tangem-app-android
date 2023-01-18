@@ -43,7 +43,7 @@ class LoadAvailableCoinsService(
                     LoadedCoins(
                         currencies = data.coins.map { Currency.fromCoinResponse(it, data.imageHost) },
                         moreAvailable = data.total > offset + LOAD_PER_PAGE,
-                    )
+                    ),
                 )
             }
             is Result.Failure -> {
@@ -70,7 +70,7 @@ class LoadAvailableCoinsService(
                 .onSuccess { return@withContext Result.Success(it) }
                 .onFailure { return@withContext Result.Failure(it) }
 
-            throw IllegalStateException("Unreachable code because runCatching must return result")
+            error("Unreachable code because runCatching must return result")
         }
     }
 

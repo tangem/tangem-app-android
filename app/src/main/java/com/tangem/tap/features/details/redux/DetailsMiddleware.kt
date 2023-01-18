@@ -5,8 +5,8 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.common.flatMap
-import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.core.analytics.Analytics
+import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
 import com.tangem.tap.common.extensions.dispatchDialogShow
@@ -146,6 +146,7 @@ class DetailsMiddleware {
     }
 
     class ManageSecurityMiddleware {
+        @Suppress("ComplexMethod")
         fun handle(action: DetailsAction.ManageSecurity) {
             when (action) {
                 is DetailsAction.ManageSecurity.OpenSecurity -> {
