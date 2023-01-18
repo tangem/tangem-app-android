@@ -42,6 +42,7 @@ fun ResetCardScreen(state: ResetCardScreenState, onBackPressed: () -> Unit) {
     )
 }
 
+@Suppress("LongMethod", "MagicNumber")
 @Composable
 fun ResetCardView(state: ResetCardScreenState) {
     Column(

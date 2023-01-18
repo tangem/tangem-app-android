@@ -60,6 +60,7 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.models.TransactionCardType
 import com.valentinilk.shimmer.shimmer
 
+@Suppress("LongParameterList")
 @Composable
 fun TransactionCard(
     modifier: Modifier = Modifier,
@@ -159,6 +160,7 @@ private fun Header(
     }
 }
 
+@Suppress("LongMethod")
 @Composable
 private fun Content(
     type: TransactionCardType,
@@ -243,6 +245,7 @@ private fun Content(
     }
 }
 
+@Suppress("MagicNumber")
 @Composable
 private fun AutoSizeTextField(
     amount: String,
@@ -302,6 +305,7 @@ private fun AutoSizeTextField(
     }
 }
 
+@Suppress("MagicNumber")
 @Composable
 fun Token(
     tokenIconUrl: String,
@@ -320,9 +324,7 @@ fun Token(
 
         Box(
             modifier = Modifier
-                .padding(
-                    end = TangemTheme.dimens.spacing16,
-                )
+                .padding(end = TangemTheme.dimens.spacing16)
                 .size(TangemTheme.dimens.size42),
         ) {
             val tokenImageModifier = Modifier
@@ -345,14 +347,11 @@ fun Token(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .size(TangemTheme.dimens.size18)
-                        .background(
-                            color = Color.White,
-                            shape = CircleShape,
-                        ),
+                        .background(color = Color.White, shape = CircleShape),
                     contentAlignment = Alignment.Center,
                 ) {
                     Image(
-                        modifier = Modifier.padding(all = (0.5).dp),
+                        modifier = Modifier.padding(all = 0.5.dp),
                         painter = painterResource(id = networkIconRes),
                         contentDescription = null,
                     )
@@ -368,8 +367,7 @@ fun Token(
             maxLines = 1,
             style = TangemTheme.typography.subtitle2,
             textAlign = TextAlign.Center,
-            modifier = Modifier
-                .defaultMinSize(minWidth = TangemTheme.dimens.size80),
+            modifier = Modifier.defaultMinSize(minWidth = TangemTheme.dimens.size80),
         )
     }
 }
