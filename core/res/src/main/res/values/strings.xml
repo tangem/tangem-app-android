@@ -194,13 +194,14 @@
     <string name="common_close">Close</string>
     <string name="exchange_send_view_header">You Send</string>
     <string name="exchange_receive_view_header">You Receive</string>
+    <string name="swapping_generic_error">There was an error. Please try again.</string>
     <string name="swapping_permission_header">Give Permission</string>
     <string name="swapping_permission_subheader">To continue you need to allow 1inch smart contracts to use your %s</string>
     <string name="swapping_permission_rows_amount">Amount %s</string>
     <string name="swapping_permission_rows_your_wallet">Your Wallet</string>
     <string name="swapping_permission_rows_spender">Spender</string>
     <string name="swapping_permission_buttons_approve">Approve</string>
-    <string name="swapping_swap_of_to">Swap of %s to</string>
+    <string name="swapping_swap_of_to">Swap of %s to %s</string>
     <string name="swapping_swap">Swap</string>
     <string name="swapping_insufficient_funds">Insufficient funds</string>
     <string name="swapping_give_permission">Give Permission</string>
