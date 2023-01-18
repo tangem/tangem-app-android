@@ -4,12 +4,11 @@ import com.tangem.domain.common.getTwinCardNumber
 import com.tangem.tap.common.redux.AppState
 import org.rekotlin.Action
 
-class TwinCardsReducer {
-    companion object {
-        fun reduce(action: Action, state: AppState): TwinCardsState = internalReduce(action, state)
-    }
+object TwinCardsReducer {
+    fun reduce(action: Action, state: AppState): TwinCardsState = internalReduce(action, state)
 }
 
+@Suppress("ComplexMethod")
 private fun internalReduce(action: Action, state: AppState): TwinCardsState {
     if (action !is TwinCardsAction) return state.twinCardsState
 

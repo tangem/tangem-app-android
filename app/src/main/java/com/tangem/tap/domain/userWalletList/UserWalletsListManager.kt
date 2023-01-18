@@ -21,10 +21,10 @@ interface UserWalletsListManager {
     /**
      * Save provided user wallet and set it as selected
      * @param userWallet [UserWallet] to save
-     * @param canOverride If false, then terminate with [UserWalletListError.WalletAlreadySaved] when user tries to save an
-     * already saved card
+     * @param canOverride If false, then terminate with [UserWalletListError.WalletAlreadySaved] when user tries
+     * to save an already saved card
      * @return [CompletionResult] of operation
-     * */
+     */
     suspend fun save(userWallet: UserWallet, canOverride: Boolean = false): CompletionResult<Unit>
 
     /**
