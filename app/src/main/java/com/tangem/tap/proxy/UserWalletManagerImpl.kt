@@ -81,11 +81,7 @@ class UserWalletManagerImpl(
     override fun addToken(currency: Currency) {
         val action = if (currency is NativeToken) {
             val card = appStateHolder.getActualCard()
-            if (card != null) {
-                addNativeTokenToWalletAction(currency, card)
-            } else {
-                throw  IllegalStateException("card not found")
-            }
+            if (card != null) addNativeTokenToWalletAction(currency, card) else error("Card not found")
         } else {
             addNonNativeTokenToWalletAction(currency as NonNativeToken)
         }
@@ -183,12 +179,15 @@ class UserWalletManagerImpl(
     }
 
     private fun createDerivationParams(derivationStyle: DerivationStyle?): DerivationParams? {
-        return derivationStyle?.let { DerivationParams.Default(derivationStyle) } //todo clarify if its need to add Custom
+// [REDACTED_TODO_COMMENT]
+        return derivationStyle?.let { DerivationParams.Default(derivationStyle) }
     }
 
     private fun getActualWalletManager(blockchain: Blockchain): WalletManager {
         val card = requireNotNull(appStateHolder.getActualCard()) { "card not found" }
         val blockchainNetwork = BlockchainNetwork(blockchain, card)
-        return requireNotNull(appStateHolder.walletState?.getWalletManager(blockchainNetwork)) { "no wallet manager found" }
+        return requireNotNull(appStateHolder.walletState?.getWalletManager(blockchainNetwork)) {
+            "No wallet manager found"
+        }
     }
 }

@@ -5,16 +5,17 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.remove
 import com.tangem.wallet.R
 
+@Suppress("ComplexMethod")
 @DrawableRes
 fun Blockchain.getGreyedOutIconRes(): Int {
     return when (this) {
         Blockchain.Arbitrum, Blockchain.ArbitrumTestnet -> R.drawable.ic_arbitrum_no_color
 //        Blockchain.Ducatus -> R.drawable.ic_ducatus
-        Blockchain.Bitcoin, Blockchain.BitcoinTestnet,-> R.drawable.ic_bitcoin_no_color
+        Blockchain.Bitcoin, Blockchain.BitcoinTestnet -> R.drawable.ic_bitcoin_no_color
         Blockchain.BitcoinCash -> R.drawable.ic_bitcoin_cash_no_color
         Blockchain.Litecoin -> R.drawable.ic_litecoin_no_color
-        Blockchain.Ethereum, Blockchain.EthereumTestnet, -> R.drawable.ic_eth_no_color
-        Blockchain.EthereumClassic, Blockchain.EthereumClassicTestnet, -> R.drawable.ic_eth_no_color
+        Blockchain.Ethereum, Blockchain.EthereumTestnet -> R.drawable.ic_eth_no_color
+        Blockchain.EthereumClassic, Blockchain.EthereumClassicTestnet -> R.drawable.ic_eth_no_color
         Blockchain.RSK -> R.drawable.ic_rsk_no_color
         Blockchain.Cardano, Blockchain.CardanoShelley -> R.drawable.ic_cardano_no_color
         Blockchain.Tezos -> R.drawable.ic_tezos_no_color
@@ -24,7 +25,8 @@ fun Blockchain.getGreyedOutIconRes(): Int {
         Blockchain.Polygon, Blockchain.PolygonTestnet -> R.drawable.ic_polygon_no_color
         Blockchain.Solana, Blockchain.SolanaTestnet -> R.drawable.ic_solana_no_color
         Blockchain.Fantom, Blockchain.FantomTestnet -> R.drawable.ic_fantom_no_color
-        Blockchain.BSC, Blockchain.BSCTestnet, Blockchain.Binance, Blockchain.BinanceTestnet -> R.drawable.ic_bsc_no_color
+        Blockchain.BSC, Blockchain.BSCTestnet, Blockchain.Binance, Blockchain.BinanceTestnet ->
+            R.drawable.ic_bsc_no_color
         Blockchain.Dogecoin -> R.drawable.ic_dogecoin_no_color
         Blockchain.Tron, Blockchain.TronTestnet -> R.drawable.ic_tron_no_color
         Blockchain.Gnosis -> R.drawable.ic_gnosis_no_color
@@ -49,4 +51,4 @@ fun Blockchain.getNetworkName(): String {
 }
 
 val Blockchain.fullNameWithoutTestnet
-get() = this.fullName.remove(" Testnet")
+    get() = this.fullName.remove(" Testnet")

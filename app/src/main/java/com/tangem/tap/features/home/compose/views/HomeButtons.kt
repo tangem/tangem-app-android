@@ -19,6 +19,7 @@ import androidx.compose.ui.unit.sp
 import com.tangem.core.ui.components.SpacerS8
 import com.tangem.wallet.R
 
+@Suppress("MagicNumber")
 @Composable
 fun HomeButtons(
     modifier: Modifier = Modifier,
@@ -82,6 +83,7 @@ fun HomeButtons(
     }
 }
 
+@Suppress("LongParameterList")
 @Composable
 fun ProgressButton(
     modifier: Modifier,

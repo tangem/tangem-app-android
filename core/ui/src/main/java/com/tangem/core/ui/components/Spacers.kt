@@ -1,4 +1,4 @@
-@file:Suppress("unused")
+@file:Suppress("TooManyFunctions")
 
 package com.tangem.core.ui.components
 
@@ -86,6 +86,7 @@ fun ColumnScope.SpacerHMax(modifier: Modifier = Modifier) {
     Spacer(modifier = modifier.weight(1f))
 }
 // [REDACTED_TODO_COMMENT]
+@Suppress("MagicNumber")
 @Composable
 fun ColumnScope.SpacerHHalf(modifier: Modifier = Modifier) {
     Spacer(modifier = modifier.weight(.5f))

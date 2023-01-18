@@ -31,7 +31,7 @@ data class BalanceWidgetData(
     val fiatAmountFormatted: String? = null,
     val token: TokenData? = null,
     val amountToCreateAccount: String? = null,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
 )
 
 data class TokenData(
@@ -44,7 +44,6 @@ data class TokenData(
     val fiatRate: BigDecimal? = null,
 )
 
-
 class BalanceWidget(
     private val binding: CardBalanceBinding,
     private val fragment: WalletFragment,
@@ -52,6 +51,7 @@ class BalanceWidget(
     private val isTwinCard: Boolean,
 ) {
 
+    @Suppress("LongMethod", "ComplexMethod")
     fun setup() {
 
         when (data.status) {
@@ -130,7 +130,7 @@ class BalanceWidget(
                 tvErrorDescriptions.text =
                     fragment.getString(
                         R.string.no_account_generic,
-                        data.amountToCreateAccount, data.currencySymbol
+                        data.amountToCreateAccount, data.currencySymbol,
                     )
             }
             BalanceStatus.UnknownBlockchain -> with(binding.lBalanceError) {

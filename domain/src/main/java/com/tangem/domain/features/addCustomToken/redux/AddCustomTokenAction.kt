@@ -31,7 +31,10 @@ sealed class AddCustomTokenAction : Action {
     data class OnTokenNetworkChanged(val blockchainNetwork: Field.Data<Blockchain>) : AddCustomTokenAction()
     data class OnTokenNameChanged(val tokenName: Field.Data<String>) : AddCustomTokenAction()
     data class OnTokenSymbolChanged(val tokenSymbol: Field.Data<String>) : AddCustomTokenAction()
-    data class OnTokenDerivationPathChanged(val blockchainDerivationPath: Field.Data<Blockchain>) : AddCustomTokenAction()
+    data class OnTokenDerivationPathChanged(
+        val blockchainDerivationPath: Field.Data<Blockchain>,
+    ) : AddCustomTokenAction()
+
     data class OnTokenDecimalsChanged(val tokenDecimals: Field.Data<String>) : AddCustomTokenAction()
     object OnAddCustomTokenClicked : AddCustomTokenAction()
 
@@ -51,7 +54,7 @@ sealed class AddCustomTokenAction : Action {
         data class Remove(val warnings: Set<AddCustomTokenError.Warning>) : Warning()
         data class Replace(
             val remove: Set<AddCustomTokenError.Warning>,
-            val add: Set<AddCustomTokenError.Warning>
+            val add: Set<AddCustomTokenError.Warning>,
         ) : Warning()
     }
 

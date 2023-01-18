@@ -36,6 +36,7 @@ fun CurrencyItemArrow(
     }
 }
 
+@Suppress("MagicNumber")
 @Composable
 private fun MiddleArrowView(rowHeight: Dp) {
     Box {

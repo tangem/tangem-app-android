@@ -63,11 +63,6 @@ import com.tangem.tap.features.tokens.addCustomToken.compose.test.TestCasesList
 import com.tangem.wallet.R
 import kotlinx.coroutines.launch
 
-/**
-* [REDACTED_AUTHOR]
- */
-private class AddCustomTokenScreen  // for simple search
-
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun AddCustomTokenScreen(
@@ -77,7 +72,7 @@ fun AddCustomTokenScreen(
     val selectedTestCase = remember { mutableStateOf(TestCase.ContractAddress) }
 
     val bottomSheetScaffoldState = rememberBottomSheetScaffoldState(
-        bottomSheetState = BottomSheetState(BottomSheetValue.Collapsed)
+        bottomSheetState = BottomSheetState(BottomSheetValue.Collapsed),
     )
     val coroutineScope = rememberCoroutineScope()
     val toggleBottomSheet = { coroutineScope.launch { bottomSheetScaffoldState.toggle() } }
@@ -146,7 +141,7 @@ private fun ScreenContent(
                         Column(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(16.dp)
+                                .padding(16.dp),
                         ) {
                             FormFields(state, closePopupTrigger)
                         }
@@ -197,7 +192,7 @@ fun Warnings(warnings: List<AddCustomTokenError.Warning>) {
             AddCustomTokenWarning(
                 modifier = modifier.fillMaxWidth(),
                 warning = item,
-                converter = warningConverter
+                converter = warningConverter,
             )
         }
     }
@@ -208,22 +203,15 @@ private fun AddButton(state: MutableState<AddCustomTokenState>) {
     AddCustomTokenFab(
         modifier = Modifier
             .widthIn(210.dp, 280.dp),
-        isEnabled = state.value.screenState.addButton.isEnabled
+        isEnabled = state.value.screenState.addButton.isEnabled,
     ) { domainStore.dispatch(AddCustomTokenAction.OnAddCustomTokenClicked) }
 }
 
+@Suppress("MagicNumber")
 @Composable
-private fun AddCustomTokenFab(
-    modifier: Modifier = Modifier,
-    isEnabled: Boolean = true,
-    onClick: () -> Unit
-) {
+private fun AddCustomTokenFab(modifier: Modifier = Modifier, isEnabled: Boolean = true, onClick: () -> Unit) {
     val contentColor = Color.White
-    val backgroundColor = if (isEnabled) {
-        Color(0xFF1ACE80)
-    } else {
-        Color(0xFFB9E6D3)
-    }
+    val backgroundColor = if (isEnabled) Color(0xFF1ACE80) else Color(0xFFB9E6D3)
     val elevation = if (!isEnabled) {
         FloatingActionButtonDefaults.elevation(0.dp, 0.dp)
     } else {
@@ -253,19 +241,19 @@ data class ScreenFieldData(
     val field: DataField<*>,
     val error: AddCustomTokenError?,
     val errorConverter: ModuleMessageConverter,
-    val viewState: ViewStates.TokenField
+    val viewState: ViewStates.TokenField,
 ) {
     companion object {
         fun fromState(
             field: DataField<*>,
             state: AddCustomTokenState,
-            errorConverter: ModuleMessageConverter
+            errorConverter: ModuleMessageConverter,
         ): ScreenFieldData {
             return ScreenFieldData(
                 field = field,
                 error = state.getError(field.id),
                 errorConverter = errorConverter,
-                viewState = selectField(field.id, state.screenState)
+                viewState = selectField(field.id, state.screenState),
             )
         }
 

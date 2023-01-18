@@ -17,6 +17,7 @@ import com.tangem.wallet.R
 /**
 * [REDACTED_AUTHOR]
  */
+@Suppress("MagicNumber")
 class RefreshBalanceWidget(
     private val root: ViewGroup,
 ) : ViewStateWidget {
@@ -57,6 +58,7 @@ class RefreshBalanceWidget(
         viewSwitcher.showNext()
     }
 
+    @Suppress("MagicNumber")
     private fun animateState(state: ProgressState) {
         when (state) {
             ProgressState.Done, ProgressState.Error -> {
@@ -94,6 +96,7 @@ class RefreshBalanceWidget(
     private fun getState(): ProgressState = if (isArrowRefreshActive()) ProgressState.Done else ProgressState.Loading
 }
 
+@Suppress("MagicNumber")
 class ShowAnimation : AnimationSet(true) {
     init {
         addAnimation(

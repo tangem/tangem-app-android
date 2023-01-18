@@ -7,6 +7,7 @@ import com.tangem.tap.domain.tokens.Currency
 import com.tangem.tap.features.tokens.redux.ContractAddress
 import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
 
+@Suppress("LongParameterList")
 @Composable
 fun CurrencyItem(
     currency: Currency,

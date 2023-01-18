@@ -66,6 +66,7 @@ import timber.log.Timber
 /**
 * [REDACTED_AUTHOR]
  */
+@Suppress("LargeClass")
 internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomTokenHub") {
 
     private val hubState: AddCustomTokenState
@@ -79,10 +80,11 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
         return storeState.copy(addCustomTokensState = newHubState)
     }
 
+    @Suppress("ComplexMethod")
     override suspend fun handleAction(
         action: Action,
         storeState: DomainState,
-        cancel: ValueCallback<Action>
+        cancel: ValueCallback<Action>,
     ) {
         if (action !is AddCustomTokenAction) return
 
@@ -225,7 +227,7 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
             val derivationField = DerivationPath.getField<TokenDerivationPathField>()
             derivationField.data = derivationField.data.copy(
                 value = Blockchain.Unknown,
-                isUserInput = false
+                isUserInput = false,
             )
             state.setField(derivationField)
             dispatchOnMain(UpdateForm(hubState))
@@ -344,6 +346,7 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
         }
     }
 
+    @Suppress("MagicNumber")
     private suspend fun requestInfoAboutToken(contractAddress: String): List<CoinsResponse.Coin> {
         val tangemTechServiceManager = requireNotNull(hubState.tangemTechServiceManager)
         dispatchOnMain(Screen.UpdateTokenFields(listOf(ContractAddress to ViewStates.TokenField(isLoading = true))))
@@ -375,7 +378,7 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
         tokenId: String? = hubState.foundToken?.id,
         tokenContractAddress: String = ContractAddress.getFieldValue(),
         tokenNetworkId: String = Network.getFieldValue<Blockchain>().toNetworkId(),
-        selectedDerivation: Blockchain = DerivationPath.getFieldValue()
+        selectedDerivation: Blockchain = DerivationPath.getFieldValue(),
     ): Boolean {
         val savedCurrencies = hubState.appSavedCurrencies ?: return false
 
@@ -388,6 +391,7 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
                     val sameAddress = tokenContractAddress == wrappedCurrency.token.contractAddress
                     val sameBlockchain = Blockchain.fromNetworkId(tokenNetworkId) == wrappedCurrency.blockchain
                     val sameDerivationPath = derivationPath?.rawPath == wrappedCurrency.derivationPath
+                    @Suppress("ComplexCondition")
                     if (sameId && sameAddress && sameBlockchain && sameDerivationPath) {
                         return true
                     }
@@ -399,7 +403,7 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
 
     private fun isBlockchainPersistIntoAppSavedTokensList(
         selectedNetwork: Blockchain = Network.getFieldValue(),
-        selectedDerivation: Blockchain = DerivationPath.getFieldValue()
+        selectedDerivation: Blockchain = DerivationPath.getFieldValue(),
     ): Boolean {
         val state = hubState
         val savedCurrencies = state.appSavedCurrencies ?: return false
@@ -419,11 +423,11 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
     }
 
     private fun getDerivationPathFromSelectedBlockchain(
-        selectedDerivationBlockchain: Blockchain
+        selectedDerivationBlockchain: Blockchain,
     ): com.tangem.common.hdWallet.DerivationPath? = AddCustomTokenState.getDerivationPath(
         mainNetwork = Network.getFieldValue(),
         derivationNetwork = selectedDerivationBlockchain,
-        derivationStyle = hubState.cardDerivationStyle
+        derivationStyle = hubState.cardDerivationStyle,
     )
 
     private suspend fun fillTokenFields(token: CoinsResponse.Coin, coinNetwork: CoinsResponse.Coin.Network) {
@@ -482,7 +486,7 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
     @Throws
     private fun throwUnAppropriateInitialization(objName: String) {
         throw AddCustomTokenError.UnAppropriateInitialization(
-            "AddCustomTokenHub", "$objName must be not NULL"
+            "AddCustomTokenHub", "$objName must be not NULL",
         )
     }
 
@@ -567,16 +571,14 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
     private suspend fun AddCustomTokenError.Warning.remove() {
         dispatchOnMain(Warning.Remove(setOf(this)))
     }
-
-    private suspend fun AddCustomTokenError.Warning.replaceBy(to: AddCustomTokenError.Warning) {
-        dispatchOnMain(Warning.Replace(setOf(this), setOf(to)))
-    }
 }
 
+@Suppress("ComplexMethod")
 private class AddCustomTokenReducer(
     private val globalState: DomainGlobalState,
 ) : ReStoreReducer<AddCustomTokenState> {
 
+    @Suppress("LongMethod")
     override fun reduceAction(action: Action, state: AddCustomTokenState): AddCustomTokenState {
         return when (action) {
             is Init.SetAddedCurrencies -> {

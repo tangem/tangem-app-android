@@ -3,8 +3,8 @@ package com.tangem.tap.domain.walletconnect
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.card.EllipticCurve
 import com.tangem.common.extensions.guard
-import com.tangem.domain.common.ScanResponse
 import com.tangem.core.analytics.Analytics
+import com.tangem.domain.common.ScanResponse
 import com.tangem.tap.common.analytics.events.WalletConnect
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.global.GlobalAction
@@ -43,6 +43,7 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.collections.set
 
+@Suppress("LargeClass")
 class WalletConnectManager {
 
     private var cardId: String? = null
@@ -126,6 +127,7 @@ class WalletConnectManager {
         }
     }
 
+    @Suppress("MagicNumber")
     private fun setupConnectionTimeoutCheck(session: WCSession) {
         scope.launch {
             delay(20_000)
@@ -345,6 +347,7 @@ class WalletConnectManager {
         }
     }
 
+    @Suppress("LongMethod", "ComplexMethod")
     fun setListeners(client: WCClient) {
         client.onSessionRequest = { id: Long, peer: WCPeerMeta ->
             Timber.d("OnSessionRequest: $peer")
@@ -490,12 +493,11 @@ class WalletConnectManager {
     }
 
     companion object {
-        private val tangemPeerMeta =
-            WCPeerMeta(name = "Tangem Wallet", url = "https://tangem.com")
+        const val WC_SCHEME = "wc"
+
+        private val tangemPeerMeta = WCPeerMeta(name = "Tangem Wallet", url = "https://tangem.com")
 
         fun isCorrectWcUri(string: String): Boolean = WCSession.from(string) != null
-
-        const val WC_SCHEME = "wc"
     }
 }
 
@@ -521,6 +523,7 @@ data class WalletConnectActiveData(
     }
 }
 
+@Suppress("MagicNumber")
 class RetryInterceptor : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val request: Request = chain.request()

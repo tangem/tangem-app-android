@@ -6,12 +6,12 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.common.services.Result
+import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.operations.backup.BackupService
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.backupService
-import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.IntroductionProcess
 import com.tangem.tap.common.analytics.paramsInterceptor.BatchIdParamsInterceptor
 import com.tangem.tap.common.extensions.dispatchDialogShow
@@ -140,31 +140,34 @@ object ScanCardProcessor {
         store.dispatchOnMain(DisclaimerAction.SetDisclaimer(disclaimer))
 
         if (disclaimer.isAccepted()) {
-            nextHandler((scanResponse))
-        } else scope.launch {
-            delay(DELAY_SDK_DIALOG_CLOSE)
-            disclaimerWillShow()
-            dispatchOnMain(
-                DisclaimerAction.Show(
-                    fromScreen = AppScreen.Home,
-                    callback = DisclaimerCallback(
-                        onAccept = {
-                            scope.launch(Dispatchers.Main) {
-                                nextHandler(scanResponse)
-                            }
-                        },
-                        onDismiss = {
-                            scope.launch(Dispatchers.Main) {
-                                onProgressStateChange(false)
-                                onFailure(TangemSdkError.UserCancelled())
-                            }
-                        },
+            nextHandler(scanResponse)
+        } else {
+            scope.launch {
+                delay(DELAY_SDK_DIALOG_CLOSE)
+                disclaimerWillShow()
+                dispatchOnMain(
+                    DisclaimerAction.Show(
+                        fromScreen = AppScreen.Home,
+                        callback = DisclaimerCallback(
+                            onAccept = {
+                                scope.launch(Dispatchers.Main) {
+                                    nextHandler(scanResponse)
+                                }
+                            },
+                            onDismiss = {
+                                scope.launch(Dispatchers.Main) {
+                                    onProgressStateChange(false)
+                                    onFailure(TangemSdkError.UserCancelled())
+                                }
+                            },
+                        ),
                     ),
-                ),
-            )
+                )
+            }
         }
     }
 
+    @Suppress("LongMethod", "MagicNumber")
     private suspend inline fun onScanSuccess(
         scanResponse: ScanResponse,
         crossinline onProgressStateChange: suspend (showProgress: Boolean) -> Unit,

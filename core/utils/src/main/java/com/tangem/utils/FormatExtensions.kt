@@ -23,7 +23,7 @@ fun BigDecimal.toFormattedString(
 fun BigDecimal.toFiatString(
     rateValue: BigDecimal,
     fiatCurrencyName: String,
-    formatWithSpaces: Boolean = false
+    formatWithSpaces: Boolean = false,
 ): String {
     val fiatValue = rateValue.multiply(this)
     return fiatValue.toFormattedFiatValue(fiatCurrencyName, formatWithSpaces)
@@ -31,13 +31,14 @@ fun BigDecimal.toFiatString(
 
 fun BigDecimal.toFormattedFiatValue(
     fiatCurrencyName: String,
-    formatWithSpaces: Boolean = false
+    formatWithSpaces: Boolean = false,
 ): String {
     val fiatValue = this.setScale(2, RoundingMode.HALF_UP)
         .let { if (formatWithSpaces) it.formatWithSpaces() else it }
     return " ${fiatValue}  $fiatCurrencyName"
 }
 
+@Suppress("MagicNumber")
 fun BigDecimal.formatWithSpaces(): String {
     val str = this.toString()
     var integerStr = str.substringBefore('.')

@@ -24,7 +24,7 @@ class SaltPayBalanceWidget(
     private val binding: LayoutSingleWalletBalanceBinding,
     private val data: SaltPayBalanceWidgetData,
 ) {
-    fun setup(): Unit = with(binding) {
+    fun setup() = with(binding) {
         if (data.state == ProgressState.Loading) {
             veilBalance.veil()
             veilBalanceCrypto.veil()
@@ -45,7 +45,7 @@ class SaltPayBalanceWidget(
             actionDebouncer(WalletAction.LoadFiatRate())
         } else {
             veilBalance.unVeil()
-            tvBalance.text = data.fiatAmount?.formatAmountAsSpannedString(
+            tvBalance.text = data.fiatAmount.formatAmountAsSpannedString(
                 currencySymbol = data.fiatCurrency?.symbol ?: "",
             )
         }

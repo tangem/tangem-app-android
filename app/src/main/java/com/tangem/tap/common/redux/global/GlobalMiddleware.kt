@@ -30,10 +30,8 @@ import org.rekotlin.DispatchFunction
 import org.rekotlin.Middleware
 import java.util.*
 
-class GlobalMiddleware {
-    companion object {
-        val handler = globalMiddlewareHandler
-    }
+object GlobalMiddleware {
+    val handler = globalMiddlewareHandler
 }
 
 private val globalMiddlewareHandler: Middleware<AppState> = { dispatch, appState ->
@@ -45,6 +43,7 @@ private val globalMiddlewareHandler: Middleware<AppState> = { dispatch, appState
     }
 }
 
+@Suppress("LongMethod", "ComplexMethod")
 private fun handleAction(action: Action, appState: () -> AppState?, dispatch: DispatchFunction) {
     when (action) {
         is GlobalAction.ScanFailsCounter.ChooseBehavior -> {

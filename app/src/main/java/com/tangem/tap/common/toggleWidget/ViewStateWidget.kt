@@ -2,7 +2,6 @@ package com.tangem.tap.common.toggleWidget
 
 import android.view.View
 
-
 /**
 * [REDACTED_AUTHOR]
  */

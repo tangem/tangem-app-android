@@ -98,10 +98,8 @@ class WarningsMiddleware {
             } else if (!preferencesStorage.usedCardsPrefStorage.wasScanned(card.cardId)) {
                 checkIfWarningNeeded(scanResponse)?.let { warning -> addWarningMessage(warning) }
             }
-            if (card.firmwareVersion.type == FirmwareVersion.FirmwareType.Release) {
-                if (!globalState.cardVerifiedOnline) {
-                    addWarningMessage(WarningMessagesManager.onlineVerificationFailed())
-                }
+            if (card.firmwareVersion.type == FirmwareVersion.FirmwareType.Release && !globalState.cardVerifiedOnline) {
+                addWarningMessage(WarningMessagesManager.onlineVerificationFailed())
             }
             if (scanResponse.isDemoCard()) {
                 addWarningMessage(WarningMessagesManager.demoCardWarning())

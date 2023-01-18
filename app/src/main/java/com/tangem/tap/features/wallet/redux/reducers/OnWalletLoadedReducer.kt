@@ -34,10 +34,11 @@ class OnWalletLoadedReducer {
         }
     }
 
+    @Suppress("LongMethod")
     private fun onMultiWalletLoaded(
         wallet: Wallet,
         blockchainNetwork: BlockchainNetwork,
-        walletState: WalletState
+        walletState: WalletState,
     ): WalletState {
         val walletData = walletState.getWalletData(blockchainNetwork) ?: return walletState
 
@@ -45,7 +46,7 @@ class OnWalletLoadedReducer {
         val coinAmountValue = wallet.amounts[AmountType.Coin]?.value
         val formattedAmount = coinAmountValue?.toFormattedCurrencyString(
             wallet.blockchain.decimals(),
-            wallet.blockchain.currency
+            wallet.blockchain.currency,
         )
 
         val pendingTransactions = wallet.getPendingTransactions()
@@ -98,7 +99,7 @@ class OnWalletLoadedReducer {
                     amount = tokenAmountValue,
                     amountFormatted = tokenAmountValue?.toFormattedCurrencyString(
                         token.decimals,
-                        token.symbol
+                        token.symbol,
                     ),
                     fiatAmount = tokenFiatAmount,
                     fiatAmountFormatted = tokenFiatAmountFormatted,
@@ -141,7 +142,7 @@ class OnWalletLoadedReducer {
         val amount = wallet.amounts[AmountType.Coin]?.value
         val formattedAmount = amount?.toFormattedCurrencyString(
             wallet.blockchain.decimals(),
-            wallet.blockchain.currency
+            wallet.blockchain.currency,
         )
         val fiatAmount = walletState.primaryWallet?.fiatRate?.let { amount?.toFiatValue(it) }
         val fiatAmountFormatted = fiatAmount?.toFormattedFiatValue(fiatCurrencyName) ?: UNKNOWN_AMOUNT_SIGN
@@ -162,7 +163,7 @@ class OnWalletLoadedReducer {
                 amount = amount,
                 amountFormatted = formattedAmount,
                 fiatAmount = fiatAmount,
-                fiatAmountFormatted = fiatAmountFormatted
+                fiatAmountFormatted = fiatAmountFormatted,
             ),
             pendingTransactions = pendingTransactions.removeUnknownTransactions(),
             mainButton = WalletMainButton.SendButton(sendButtonEnabled),
@@ -171,7 +172,7 @@ class OnWalletLoadedReducer {
         val updatedStore = walletState.getWalletStore(walletData?.currency)?.updateWallets(wallets)
 
         return walletState.updateWalletStore(updatedStore).copy(
-            state = ProgressState.Done, error = null
+            state = ProgressState.Done, error = null,
         )
     }
 }

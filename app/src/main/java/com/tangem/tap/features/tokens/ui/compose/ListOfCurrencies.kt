@@ -19,6 +19,7 @@ import com.tangem.tap.features.tokens.redux.ContractAddress
 import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
 import com.tangem.tap.features.tokens.ui.compose.currencyItem.CurrencyItem
 
+@Suppress("LongParameterList")
 @Composable
 fun ListOfCurrencies(
     header: @Composable () -> Unit,

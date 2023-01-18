@@ -18,6 +18,7 @@ sealed class Keyboard {
 /**
  * Allows to subscribe to a soft keyboard to detect when it's open/closed
  */
+@Suppress("MagicNumber")
 @Composable
 fun keyboardAsState(): State<Keyboard> {
     val keyboardState: MutableState<Keyboard> = remember { mutableStateOf(Keyboard.Closed) }

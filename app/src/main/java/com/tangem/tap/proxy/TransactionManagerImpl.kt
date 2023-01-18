@@ -97,15 +97,12 @@ class TransactionManagerImpl(
 
     private fun handleSendResult(result: SimpleResult): SendTxResult {
         when (result) {
-            is SimpleResult.Success -> {
-                return SendTxResult.Success
-            }
+            is SimpleResult.Success -> return SendTxResult.Success
             is SimpleResult.Failure -> {
-                val error = (result.error as? BlockchainSdkError) ?: return SendTxResult.UnknownError()
+                val error = result.error as? BlockchainSdkError ?: return SendTxResult.UnknownError()
                 when (error) {
                     is BlockchainSdkError.WrappedTangemError -> {
-                        val tangemSdkError = (error.tangemError as? TangemSdkError)
-                            ?: return SendTxResult.UnknownError()
+                        val tangemSdkError = error.tangemError as? TangemSdkError ?: return SendTxResult.UnknownError()
                         if (tangemSdkError is TangemSdkError.UserCancelled) return SendTxResult.UserCancelledError
                         return SendTxResult.TangemSdkError(tangemSdkError.code, tangemSdkError.cause)
                     }
@@ -202,6 +199,5 @@ class TransactionManagerImpl(
 
     companion object {
         private const val HEX_PREFIX = "0x"
-        private const val DEFAULT_GAS_LIMIT = 300000L
     }
 }

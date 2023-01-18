@@ -48,7 +48,7 @@ class UserTokensRepository(
                 return@withContext handleGetUserTokensFailure(card = card, userId = userId, error = it)
             }
 
-        throw IllegalStateException("Unreachable code because runCatching must return result")
+        error("Unreachable code because runCatching must return result")
     }
 // [REDACTED_TODO_COMMENT]
     suspend fun saveUserTokens(card: CardDTO, tokens: List<Currency>) = withContext(dispatchers.io) {

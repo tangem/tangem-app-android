@@ -12,7 +12,7 @@ import java.text.DecimalFormatSymbols
 import java.util.*
 // [REDACTED_TODO_COMMENT]
 fun BigDecimal.toFormattedString(
-    decimals: Int, roundingMode: RoundingMode = RoundingMode.DOWN, locale: Locale = Locale.US
+    decimals: Int, roundingMode: RoundingMode = RoundingMode.DOWN, locale: Locale = Locale.US,
 ): String {
     val symbols = DecimalFormatSymbols(locale)
     val df = DecimalFormat()
@@ -24,9 +24,10 @@ fun BigDecimal.toFormattedString(
     return df.format(this)
 }
 
+@Suppress("MagicNumber")
 fun BigDecimal.toFormattedCurrencyString(
     decimals: Int, currency: String, roundingMode: RoundingMode = RoundingMode.DOWN,
-    limitNumberOfDecimals: Boolean = true
+    limitNumberOfDecimals: Boolean = true,
 ): String {
     val decimalsForRounding = if (limitNumberOfDecimals) {
         if (decimals > 8) 8 else decimals
@@ -34,13 +35,13 @@ fun BigDecimal.toFormattedCurrencyString(
         decimals
     }
     val formattedAmount = this.toFormattedString(
-        decimals = decimalsForRounding, roundingMode = roundingMode
+        decimals = decimalsForRounding, roundingMode = roundingMode,
     )
     return "$formattedAmount $currency"
 }
 
 fun BigDecimal.toFiatRateString(
-    fiatCurrencyName: String
+    fiatCurrencyName: String,
 ): String {
     val value = this
         .setScale(2, RoundingMode.HALF_UP)
@@ -51,7 +52,7 @@ fun BigDecimal.toFiatRateString(
 fun BigDecimal.toFiatString(
     rateValue: BigDecimal,
     fiatCurrencyName: String,
-    formatWithSpaces: Boolean = false
+    formatWithSpaces: Boolean = false,
 ): String {
     val fiatValue = rateValue.multiply(this)
     return fiatValue.toFormattedFiatValue(fiatCurrencyName, formatWithSpaces)
@@ -64,7 +65,7 @@ fun BigDecimal.toFiatValue(rateValue: BigDecimal): BigDecimal {
 
 fun BigDecimal.toFormattedFiatValue(
     fiatCurrencyName: String,
-    formatWithSpaces: Boolean = false
+    formatWithSpaces: Boolean = false,
 ): String {
     val fiatValue = this.setScale(2, RoundingMode.HALF_UP)
         .let { if (formatWithSpaces) it.formatWithSpaces() else it }
@@ -81,9 +82,7 @@ fun BigDecimal.scaleToFiat(applyPrecision: Boolean = false): BigDecimal {
     if (this.isZero()) return this
 
     val scaledFiat = this.setScale(2, RoundingMode.DOWN)
-    return if (scaledFiat.isZero() && applyPrecision) this.setPrecision(1)
-    else scaledFiat
-
+    return if (scaledFiat.isZero() && applyPrecision) this.setPrecision(1) else scaledFiat
 }
 
 fun BigDecimal.setPrecision(precision: Int, roundingMode: RoundingMode = RoundingMode.DOWN): BigDecimal {
@@ -108,7 +107,7 @@ fun BigDecimal.isLessThanOrEqual(value: BigDecimal): Boolean {
 
 fun BigDecimal.formatAmountAsSpannedString(
     currencySymbol: String,
-    reminderPartSizeProportion: Float = 0.7f
+    reminderPartSizeProportion: Float = 0.7f,
 ): SpannedString {
     val amount = this
         .setScale(2, RoundingMode.HALF_UP)
@@ -124,11 +123,12 @@ fun BigDecimal.formatAmountAsSpannedString(
         append(
             "$reminder $currencySymbol",
             RelativeSizeSpan(reminderPartSizeProportion),
-            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE
+            Spanned.SPAN_EXCLUSIVE_EXCLUSIVE,
         )
     }
 }
 
+@Suppress("MagicNumber")
 fun BigDecimal.formatWithSpaces(): String {
     val str = this.toString()
     var integerStr = str.substringBefore('.')

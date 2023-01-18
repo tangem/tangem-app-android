@@ -1,7 +1,6 @@
 package com.tangem.tap.features.send.redux.middlewares
 
 import com.tangem.blockchain.common.Amount
-import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.BlockchainSdkError
 import com.tangem.blockchain.common.TransactionSender
 import com.tangem.blockchain.extensions.Result
@@ -81,34 +80,5 @@ class RequestFeeMiddleware {
                 dispatch(AmountActionUi.CheckAmountToSend)
             }
         }
-    }
-}
-
-class FeeMock {
-    companion object {
-        suspend fun getFee(blockchain: Blockchain): List<Amount> {
-            return feeStandard(blockchain)
-//            return feeSingle(blockchain)
-//            return feeStellar(blockchain)
-//            return feeZero(blockchain)
-        }
-
-        suspend fun feeStellar(blockchain: Blockchain): List<Amount> = listOf(Amount(0.0001.toBigDecimal(), blockchain))
-
-        suspend fun feeZero(blockchain: Blockchain): List<Amount> = listOf(Amount(BigDecimal.ZERO, blockchain))
-
-        suspend fun feeStandard(blockchain: Blockchain): List<Amount> = listOf(
-            Amount(0.001500.toBigDecimal(), blockchain),
-            Amount(0.0030.toBigDecimal(), blockchain),
-            Amount(0.0045001.toBigDecimal(), blockchain),
-        )
-
-        suspend fun feeStandardBig(blockchain: Blockchain): List<Amount> = listOf(
-            Amount(1.76.toBigDecimal(), blockchain),
-            Amount(2.30.toBigDecimal(), blockchain),
-            Amount(3.45.toBigDecimal(), blockchain),
-        )
-
-        suspend fun feeSingle(blockchain: Blockchain): List<Amount> = listOf(Amount(0.0015.toBigDecimal(), blockchain))
     }
 }

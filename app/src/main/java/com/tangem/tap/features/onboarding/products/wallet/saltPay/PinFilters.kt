@@ -5,9 +5,9 @@ import com.tangem.common.Filter
 /**
 * [REDACTED_AUTHOR]
  */
-abstract class PinFilter : Filter<String>
+interface PinFilter : Filter<String>
 
-class AllSymbolsTheSameFilter : PinFilter() {
+class AllSymbolsTheSameFilter : PinFilter {
     override fun filter(value: String): Boolean {
         if (value.isEmpty()) return false
 

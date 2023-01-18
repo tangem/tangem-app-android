@@ -15,6 +15,7 @@ class FeatureModel(
     val isCreatingTwinCardsAllowed: Boolean,
 )
 
+@Suppress("LongParameterList")
 class ConfigValueModel(
     val coinMarketCapKey: String,
     val mercuryoWidgetId: String,

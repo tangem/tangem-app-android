@@ -39,10 +39,8 @@ import timber.log.Timber
 /**
 * [REDACTED_AUTHOR]
  */
-class OnboardingSaltPayMiddleware {
-    companion object {
-        val handler = onboardingSaltPayMiddleware
-    }
+object OnboardingSaltPayMiddleware {
+    val handler = onboardingSaltPayMiddleware
 }
 
 private val onboardingSaltPayMiddleware: Middleware<AppState> = { dispatch, state ->
@@ -54,6 +52,7 @@ private val onboardingSaltPayMiddleware: Middleware<AppState> = { dispatch, stat
     }
 }
 
+@Suppress("LongMethod", "ComplexMethod")
 private fun handleOnboardingSaltPayAction(anyAction: Action, appState: () -> AppState?) {
     if (DemoHelper.tryHandle(appState, anyAction)) return
     val action = anyAction as? OnboardingSaltPayAction ?: return
@@ -292,6 +291,7 @@ suspend fun SaltPayActivationManager.update(
     return Result.Success(newStep)
 }
 
+@Suppress("ComplexMethod")
 private fun determineStep(
     currentStep: SaltPayActivationStep,
     amountToClaim: Amount?,
