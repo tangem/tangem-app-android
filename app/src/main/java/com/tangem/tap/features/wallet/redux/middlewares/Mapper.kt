@@ -54,6 +54,7 @@ internal fun WalletStoreModel.mapToReduxModel(
     )
 }
 
+@Suppress("LongMethod", "ComplexMethod")
 private fun List<WalletDataModel>.mapToReduxModel(
     isMultiWalletAllowed: Boolean,
     walletRent: WalletStoreModel.WalletRent?,
@@ -93,14 +94,16 @@ private fun List<WalletDataModel>.mapToReduxModel(
                 walletRent = walletRent?.let {
                     WalletRent(
                         minRentValue = "${it.rent.stripZeroPlainString()} ${currency.blockchain.currency}",
-                        rentExemptValue = "${it.exemptionAmount.stripZeroPlainString()} ${currency.blockchain.currency}",
+                        rentExemptValue = "${it.exemptionAmount.stripZeroPlainString()} " +
+                            currency.blockchain.currency,
                     )
                 },
                 currencyData = BalanceWidgetData(
                     status = when (status) {
                         is WalletDataModel.Loading -> BalanceStatus.Loading
                         is WalletDataModel.NoAccount -> BalanceStatus.NoAccount
-                        is WalletDataModel.SameCurrencyTransactionInProgress -> BalanceStatus.SameCurrencyTransactionInProgress
+                        is WalletDataModel.SameCurrencyTransactionInProgress ->
+                            BalanceStatus.SameCurrencyTransactionInProgress
                         is WalletDataModel.TransactionInProgress -> BalanceStatus.TransactionInProgress
                         is WalletDataModel.Unreachable -> BalanceStatus.Unreachable
                         is WalletDataModel.MissedDerivation -> BalanceStatus.MissedDerivation
