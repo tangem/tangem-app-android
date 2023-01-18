@@ -12,8 +12,7 @@ data class DisclaimerState(
     val showedFromScreen: AppScreen = AppScreen.Home,
     val callback: DisclaimerCallback? = null,
     val progressState: ProgressState? = null,
-) : StateType {
-}
+) : StateType
 
 data class DisclaimerCallback(
     val onAccept: VoidCallback? = null,
