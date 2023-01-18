@@ -41,6 +41,7 @@ import com.tangem.tap.features.tokens.redux.ContractAddress
 import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
 import com.tangem.tap.features.tokens.ui.compose.CurrencyPlaceholderIcon
 
+@Suppress("LongParameterList", "LongMethod", "MagicNumber")
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun NetworkItem(
@@ -158,6 +159,7 @@ fun NetworkItem(
     }
 }
 
+@Suppress("MagicNumber")
 @Composable
 private fun prepareNetworkNameSpannableText(
     blockchain: Blockchain,

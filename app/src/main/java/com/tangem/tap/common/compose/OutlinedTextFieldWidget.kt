@@ -78,6 +78,7 @@ fun OutlinedTextFieldWidget(
     }
 }
 
+@Suppress("LongMethod", "NestedBlockDepth", "MagicNumber", "MaxLineLength")
 @Composable
 private fun OutlinedProgressTextField(
     modifier: Modifier = Modifier,
@@ -127,7 +128,7 @@ private fun OutlinedProgressTextField(
             logger.log("$isNotUserInput: внешние данные ОДИНАКОВЫ с данными в поле")
         } else {
             logger.log("$isNotUserInput: внешние данные РАЗЛИЧАЮТСЯ с данными в поле")
-            if ((textDebouncer.emittedValue != textDebouncer.debounced) || textDebouncer.emitsCountBeforeDebounce > 0) {
+            if (textDebouncer.emittedValue != textDebouncer.debounced || textDebouncer.emitsCountBeforeDebounce > 0) {
                 logger.log("$isNotUserInput: пользователь ВВОДИТ данные -> внешние данные игнорируем, ждем RECOMPOSE")
             } else {
                 logger.log("$isNotUserInput: пользователь НЕ вводит данные -> пытаемся обработать внешние данные")
