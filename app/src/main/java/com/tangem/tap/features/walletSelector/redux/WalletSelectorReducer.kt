@@ -13,6 +13,7 @@ internal object WalletSelectorReducer {
         } else state.walletSelectorState
     }
 
+    @Suppress("ComplexMethod")
     private fun internalReduce(action: WalletSelectorAction, state: WalletSelectorState): WalletSelectorState {
         return when (action) {
             is WalletSelectorAction.UserWalletsLoaded -> state.copy(

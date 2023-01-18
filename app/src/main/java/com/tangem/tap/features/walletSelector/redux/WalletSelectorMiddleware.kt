@@ -99,21 +99,23 @@ internal class WalletSelectorMiddleware {
         updatedWalletStores: Map<UserWalletId, List<WalletStoreModel>>,
         state: WalletSelectorState,
     ) {
-        if (updatedWalletStores.isNotEmpty()) scope.launch(Dispatchers.Default) {
-            state.wallets
-                .associateWith { updatedWalletStores[it.id] }
-                .forEach { (wallet, walletStores) ->
-                    val isWalletTokensEmpty = (wallet.type as? UserWalletModel.Type.MultiCurrency)?.tokensCount == 0
-                    val updatedWallet = if (walletStores == null && isWalletTokensEmpty) {
-                        wallet.copy(fiatBalance = TotalFiatBalance.Loaded(BigDecimal.ZERO))
-                    } else {
-                        wallet.updateWalletStoresAndCalculateFiatBalance(walletStores.orEmpty())
-                    }
+        if (updatedWalletStores.isNotEmpty()) {
+            scope.launch(Dispatchers.Default) {
+                state.wallets
+                    .associateWith { updatedWalletStores[it.id] }
+                    .forEach { (wallet, walletStores) ->
+                        val isWalletTokensEmpty = (wallet.type as? UserWalletModel.Type.MultiCurrency)?.tokensCount == 0
+                        val updatedWallet = if (walletStores == null && isWalletTokensEmpty) {
+                            wallet.copy(fiatBalance = TotalFiatBalance.Loaded(BigDecimal.ZERO))
+                        } else {
+                            wallet.updateWalletStoresAndCalculateFiatBalance(walletStores.orEmpty())
+                        }
 
-                    if (wallet != updatedWallet) {
-                        store.dispatchOnMain(WalletSelectorAction.BalanceLoaded(updatedWallet))
+                        if (wallet != updatedWallet) {
+                            store.dispatchOnMain(WalletSelectorAction.BalanceLoaded(updatedWallet))
+                        }
                     }
-                }
+            }
         }
     }
 

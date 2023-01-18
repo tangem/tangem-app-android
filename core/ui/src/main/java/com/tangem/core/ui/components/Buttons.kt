@@ -232,6 +232,7 @@ fun SecondaryButtonIconLeft(
 }
 
 // region Defaults
+@Suppress("LongParameterList")
 @Composable
 private fun TangemButton(
     modifier: Modifier = Modifier,
@@ -286,29 +287,31 @@ private fun ButtonContent(
         )
     }
 
-    if (showProgress) Box(
-        modifier = Modifier.wrapContentSize(),
-    ) {
-        CircularProgressIndicator(
-            modifier = Modifier
-                .align(Alignment.Center)
-                .size(TangemTheme.dimens.size24),
-            color = colors.contentColor(enabled = enabled).value,
-            strokeWidth = TangemTheme.dimens.size4,
-        )
-    } else Row {
-        if (buttonIcon is TangemButtonIcon.Left) {
-            icon(buttonIcon.painter)
-            Spacer(modifier = Modifier.width(TangemTheme.dimens.size8))
+    if (showProgress) {
+        Box(modifier = Modifier.wrapContentSize()) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .size(TangemTheme.dimens.size24),
+                color = colors.contentColor(enabled = enabled).value,
+                strokeWidth = TangemTheme.dimens.size4,
+            )
         }
-        Text(
-            text = text,
-            style = TangemTypography.button,
-            color = colors.contentColor(enabled = enabled).value,
-        )
-        if (buttonIcon is TangemButtonIcon.Right) {
-            Spacer(modifier = Modifier.width(TangemTheme.dimens.size8))
-            icon(buttonIcon.painter)
+    } else {
+        Row {
+            if (buttonIcon is TangemButtonIcon.Left) {
+                icon(buttonIcon.painter)
+                Spacer(modifier = Modifier.width(TangemTheme.dimens.size8))
+            }
+            Text(
+                text = text,
+                style = TangemTypography.button,
+                color = colors.contentColor(enabled = enabled).value,
+            )
+            if (buttonIcon is TangemButtonIcon.Right) {
+                Spacer(modifier = Modifier.width(TangemTheme.dimens.size8))
+                icon(buttonIcon.painter)
+            }
         }
     }
 }

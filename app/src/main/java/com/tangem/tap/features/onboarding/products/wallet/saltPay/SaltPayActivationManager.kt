@@ -29,6 +29,7 @@ import com.tangem.tap.features.onboarding.products.wallet.saltPay.message.SaltPa
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.math.BigDecimal
+import com.tangem.blockchain.extensions.Result as BlockchainResult
 
 /**
 [REDACTED_AUTHOR]
@@ -50,12 +51,12 @@ class SaltPayActivationManager(
 
     suspend fun checkHasGas(): Result<Unit> {
         return when (val hasGasResult = gnosisRegistrator.checkHasGas()) {
-            is com.tangem.blockchain.extensions.Result.Success -> if (hasGasResult.data) {
+            is BlockchainResult.Success -> if (hasGasResult.data) {
                 Result.Success(Unit)
             } else {
                 Result.Failure(SaltPayActivationError.NoGas)
             }
-            is com.tangem.blockchain.extensions.Result.Failure -> Result.Failure(hasGasResult.error as BlockchainSdkError)
+            is BlockchainResult.Failure -> Result.Failure(hasGasResult.error as BlockchainSdkError)
         }
     }
 
@@ -92,7 +93,7 @@ class SaltPayActivationManager(
             if (response.results.isEmpty()) throw SaltPayActivationError.EmptyResponse
 
             val item = response.results[0]
-            if (item.error != null) throw Exception(response.makeErrorMessage())
+            if (item.error != null) throw IllegalStateException(response.makeErrorMessage())
 
             Result.Success(item)
         } catch (ex: Exception) {
@@ -117,7 +118,7 @@ class SaltPayActivationManager(
 
     suspend fun sendTransactions(
         signedTransactions: List<SignedEthereumTransaction>,
-    ): com.tangem.blockchain.extensions.Result<List<String>> {
+    ): BlockchainResult<List<String>> {
         return gnosisRegistrator.sendTransactions(signedTransactions)
     }
 

@@ -39,7 +39,7 @@ internal class DemoOnboardingNoteMiddleware : DemoMiddleware {
                     currency = Currency.Blockchain(walletManager.wallet.blockchain, null),
                     state = ProgressState.Done,
                     error = null,
-                    criticalError = null
+                    criticalError = null,
                 )
                 walletManager.wallet.setAmount(balanceAmount)
 

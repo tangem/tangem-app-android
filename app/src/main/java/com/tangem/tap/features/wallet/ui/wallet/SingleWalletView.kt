@@ -130,8 +130,6 @@ class SingleWalletView : WalletView() {
     ) {
         rowButtons.updateButtonsVisibility(
             exchangeServiceFeatureOn = isExchangeServiceFeatureEnabled,
-            buyAllowed = walletData.isAvailableToBuy,
-            sellAllowed = walletData.isAvailableToSell,
             sendAllowed = walletData.mainButton.enabled,
         )
 
