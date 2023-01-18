@@ -4,9 +4,9 @@ import com.tangem.blockchain.common.Amount
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.common.extensions.guard
+import com.tangem.datasource.api.paymentology.PaymentologyApiService
 import com.tangem.domain.common.SaltPayWorkaround
 import com.tangem.domain.common.ScanResponse
-import com.tangem.datasource.api.paymentology.PaymentologyApiService
 import com.tangem.tap.common.toggleWidget.WidgetState
 import com.tangem.tap.domain.extensions.makeSaltPayWalletManager
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.GnosisRegistrator
@@ -36,8 +36,6 @@ data class OnboardingSaltPayState(
 
     val mainButtonState: WidgetState
         get() = if (inProgress) ProgressState.Loading else ProgressState.Done
-
-    fun readyToClaim(): Boolean = amountToClaim != null
 
     val pinLength: Int = 4
 

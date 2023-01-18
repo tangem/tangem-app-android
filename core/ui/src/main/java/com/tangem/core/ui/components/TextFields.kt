@@ -79,6 +79,7 @@ fun OutlineTextField(
 }
 
 // region Defaults
+@Suppress("LongMethod")
 @Composable
 private fun TangemTextField(
     modifier: Modifier = Modifier,

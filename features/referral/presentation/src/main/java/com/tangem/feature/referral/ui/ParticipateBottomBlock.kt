@@ -29,6 +29,7 @@ import com.tangem.core.ui.components.SmallInfoCard
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.referral.presentation.R
 
+@Suppress("LongParameterList")
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 internal fun ParticipateBottomBlock(
