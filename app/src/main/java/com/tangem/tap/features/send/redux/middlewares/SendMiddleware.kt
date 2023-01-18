@@ -13,11 +13,11 @@ import com.tangem.blockchain.common.WalletManager
 import com.tangem.blockchain.extensions.SimpleResult
 import com.tangem.common.core.TangemSdkError
 import com.tangem.common.services.Result
+import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
-import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.extensions.dispatchDialogShow
@@ -145,6 +145,7 @@ private fun verifyAndSendTransaction(
     }
 }
 
+@Suppress("LongParameterList", "LongMethod", "ComplexMethod")
 private fun sendTransaction(
     action: SendActionUi.SendAmountToRecipient,
     walletManager: WalletManager,
@@ -235,7 +236,7 @@ private fun sendTransaction(
                     }
                     scope.launch(Dispatchers.IO) {
                         updateWallet(walletManager)
-                        delay(11000) // more than 10000 to avoid throttling
+                        delay(timeMillis = 11000) // more than 10000 to avoid throttling
                         updateWallet(walletManager)
                     }
                 }
@@ -246,13 +247,13 @@ private fun sendTransaction(
                         feeAmount = feeAmount,
                         destinationAddress = destinationAddress,
                     )
-                    val error = (sendResult.error as? BlockchainSdkError) ?: return@withMainContext
+                    val error = sendResult.error as? BlockchainSdkError ?: return@withMainContext
 
                     Analytics.send(Token.Send.TransactionSent(currencyType, error))
 
                     when (error) {
                         is BlockchainSdkError.WrappedTangemError -> {
-                            val tangemSdkError = (error.tangemError as? TangemSdkError) ?: return@withMainContext
+                            val tangemSdkError = error.tangemError as? TangemSdkError ?: return@withMainContext
                             if (tangemSdkError is TangemSdkError.UserCancelled) return@withMainContext
 
                             dispatch(SendAction.Dialog.SendTransactionFails.CardSdkError(tangemSdkError))

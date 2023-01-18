@@ -37,6 +37,7 @@ val CardDTO.isTangemWallet: Boolean
         && firmwareVersion >= FirmwareVersion.MultiWalletAvailable
         && !isSaltPay
 
+@Suppress("UnnecessaryParentheses")
 fun CardDTO.hasSignedHashes(): Boolean {
     return wallets.any { (it.totalSignedHashes ?: 0) > 0 }
 }
