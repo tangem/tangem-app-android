@@ -134,7 +134,7 @@ internal class BiometricUserWalletsKeysRepository(
     }
 
     private suspend fun deleteUserWalletsIds(userWalletsIds: List<UserWalletId>) {
-        val remainingIds = (getUserWalletsIds() - userWalletsIds.toSet())
+        val remainingIds = getUserWalletsIds() - userWalletsIds.toSet()
 
         withContext(Dispatchers.IO) {
             secureStorage.store(remainingIds.encode(), StorageKey.UserWalletIds.name)

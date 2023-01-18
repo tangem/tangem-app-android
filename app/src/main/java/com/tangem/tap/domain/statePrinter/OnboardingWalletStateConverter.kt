@@ -56,6 +56,7 @@ class BackupStepAdapter {
         }
     }
 
+    @Suppress("MagicNumber")
     @FromJson
     fun fromJson(json: String): BackupStep {
         return when (json) {

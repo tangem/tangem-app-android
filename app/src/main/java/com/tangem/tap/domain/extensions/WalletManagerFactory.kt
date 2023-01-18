@@ -45,7 +45,7 @@ fun WalletManagerFactory.makeWalletManagerForApp(
                 curve = wallet.curve,
             )
         }
-        scanResponse.card.isHdWalletAllowedByApp && (seedKey != null && derivationParams != null) -> {
+        scanResponse.card.isHdWalletAllowedByApp && seedKey != null && derivationParams != null -> {
             val derivedKeys = scanResponse.derivedKeys[wallet.publicKey.toMapKey()]
             val derivationPath = when (derivationParams) {
                 is DerivationParams.Default -> blockchain.derivationPath(derivationParams.style)
@@ -143,12 +143,13 @@ fun WalletManagerFactory.makeSaltPayWalletManager(
     scanResponse: ScanResponse,
 ): EthereumWalletManager {
     val blockchain = scanResponse.getBlockchain()
-    if (blockchain != Blockchain.SaltPay)
-        throw IllegalArgumentException("WalletManager for the SaltPay can be created based only on Blockchain.SaltPay")
+    if (blockchain != Blockchain.SaltPay) {
+        error("WalletManager for the SaltPay can be created based only on Blockchain.SaltPay")
+    }
 
     val token = SaltPayWorkaround.tokenFrom(blockchain)
     val cardWallet = scanResponse.card.wallets.firstOrNull().guard {
-        throw NullPointerException("SaltPay card must have one wallet at least")
+        error("SaltPay card must have one wallet at least")
     }
 
     return makeWalletManager(
