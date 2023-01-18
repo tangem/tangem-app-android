@@ -34,6 +34,7 @@ import com.tangem.blockchain.common.Blockchain
 import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.tap.common.extensions.getGreyedOutIconRes
 import com.tangem.tap.common.extensions.getRoundIconRes
+import com.tangem.tap.domain.tokens.Contract
 import com.tangem.tap.domain.tokens.Currency
 import com.tangem.tap.features.tokens.redux.TokenWithBlockchain
 import com.tangem.tap.features.tokens.ui.compose.CurrencyPlaceholderIcon
@@ -140,7 +141,7 @@ private fun NetworksRow(
                         addedBlockchains = addedBlockchains,
                     )
                 } else {
-                    val isAdded = addedTokens.map { it.token.contractAddress }.contains(contract.address)
+                    val isAdded = addedTokens.any(contract::isInclude)
                     val iconResId = if (isAdded) {
                         contract.blockchain.getRoundIconRes()
                     } else {
@@ -206,3 +207,6 @@ private fun BlockchainNetworkItem(
         Spacer(modifier = Modifier.size(5.dp))
     }
 }
+
+private fun Contract.isInclude(addedToken: TokenWithBlockchain): Boolean =
+    address == addedToken.token.contractAddress && blockchain == addedToken.blockchain
