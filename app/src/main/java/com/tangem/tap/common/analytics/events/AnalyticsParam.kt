@@ -8,7 +8,10 @@ sealed class AnalyticsParam {
         class Currency(currency: com.tangem.tap.features.wallet.models.Currency) : CurrencyType(currency.currencySymbol)
         class Blockchain(blockchain: com.tangem.blockchain.common.Blockchain) : CurrencyType(blockchain.currency)
         class Token(token: com.tangem.blockchain.common.Token) : CurrencyType(token.symbol)
-        class FiatCurrency(fiatCurrency: com.tangem.tap.common.entities.FiatCurrency) : CurrencyType(fiatCurrency.symbol)
+        class FiatCurrency(
+            fiatCurrency: com.tangem.tap.common.entities.FiatCurrency,
+        ) : CurrencyType(fiatCurrency.symbol)
+
         class Amount(amount: com.tangem.blockchain.common.Amount) : CurrencyType(amount.currencySymbol)
     }
 
