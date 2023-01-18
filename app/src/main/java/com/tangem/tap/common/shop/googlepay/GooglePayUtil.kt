@@ -14,20 +14,7 @@ object GooglePayUtil {
         put("apiVersionMinor", 0)
     }
 
-    private fun gatewayTokenizationSpecification(merchantID: String): JSONObject {
-        return JSONObject().apply {
-            put("type", "PAYMENT_GATEWAY")
-            put(
-                "parameters", JSONObject(
-                    mapOf(
-                        "gateway" to "shopify",
-                        "gatewayMerchantId" to merchantID
-                    )
-                )
-            )
-        }
-    }
-
+    @Suppress("MagicNumber")
     private val allowedCardNetworks = JSONArray(
         listOf(
             "AMEX",
@@ -35,16 +22,33 @@ object GooglePayUtil {
             "INTERAC",
             "JCB",
             "MASTERCARD",
-            "VISA"
-        )
+            "VISA",
+        ),
     )
 
     private val allowedCardAuthMethods = JSONArray(
         listOf(
             "PAN_ONLY",
-            "CRYPTOGRAM_3DS"
-        )
+            "CRYPTOGRAM_3DS",
+        ),
     )
+
+    private val merchantInfo: JSONObject = JSONObject().put("merchantName", "Example Merchant")
+
+    private fun gatewayTokenizationSpecification(merchantID: String): JSONObject {
+        return JSONObject().apply {
+            put("type", "PAYMENT_GATEWAY")
+            put(
+                "parameters",
+                JSONObject(
+                    mapOf(
+                        "gateway" to "shopify",
+                        "gatewayMerchantId" to merchantID,
+                    ),
+                ),
+            )
+        }
+    }
 
     private fun baseCardPaymentMethod(): JSONObject {
         return JSONObject().apply {
@@ -53,9 +57,12 @@ object GooglePayUtil {
                 put("allowedAuthMethods", allowedCardAuthMethods)
                 put("allowedCardNetworks", allowedCardNetworks)
                 put("billingAddressRequired", true)
-                put("billingAddressParameters", JSONObject().apply {
-                    put("format", "FULL")
-                })
+                put(
+                    "billingAddressParameters",
+                    JSONObject().apply {
+                        put("format", "FULL")
+                    },
+                )
             }
 
             put("type", "CARD")
@@ -83,7 +90,6 @@ object GooglePayUtil {
             baseRequest.apply {
                 put("allowedPaymentMethods", JSONArray().put(baseCardPaymentMethod()))
             }
-
         } catch (e: JSONException) {
             null
         }
@@ -92,7 +98,7 @@ object GooglePayUtil {
     private fun getTransactionInfo(
         price: String,
         countryCode: String,
-        currencyCode: String
+        currencyCode: String,
     ): JSONObject {
         return JSONObject().apply {
             put("totalPrice", price)
@@ -102,15 +108,11 @@ object GooglePayUtil {
         }
     }
 
-    private val merchantInfo: JSONObject =
-        JSONObject().put("merchantName", "Example Merchant")
-
-
     fun getPaymentDataRequest(
         price: String,
         countryCode: String,
         currencyCode: String,
-        merchantID: String
+        merchantID: String,
     ): JSONObject? {
         try {
             return baseRequest.apply {
@@ -132,6 +134,5 @@ object GooglePayUtil {
         }
     }
 }
-
 
 const val PAYMENTS_ENVIRONMENT = WalletConstants.ENVIRONMENT_TEST
