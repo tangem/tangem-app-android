@@ -74,19 +74,18 @@ private fun ListOfTokens(state: SwapSelectTokenStateHolder, modifier: Modifier =
         itemsIndexed(items = state.tokens) { index, item ->
             TokenItem(token = item, onTokenClick = { state.onTokenSelected(item.id) })
 
-            if (index != state.tokens.lastIndex) Divider(
-                color = TangemTheme.colors.stroke.primary,
-                startIndent = TangemTheme.dimens.spacing54,
-            )
+            if (index != state.tokens.lastIndex) {
+                Divider(
+                    color = TangemTheme.colors.stroke.primary,
+                    startIndent = TangemTheme.dimens.spacing54,
+                )
+            }
         }
     }
 }
 
 @Composable
-private fun TokenItem(
-    token: TokenToSelect,
-    onTokenClick: (String) -> Unit,
-) {
+private fun TokenItem(token: TokenToSelect, onTokenClick: (String) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -95,18 +94,12 @@ private fun TokenItem(
                 bottom = TangemTheme.dimens.spacing14,
                 end = TangemTheme.dimens.spacing16,
             )
-            .clickable(
-                onClick = { onTokenClick(token.id) },
-            ),
+            .clickable { onTokenClick(token.id) },
         verticalAlignment = Alignment.CenterVertically,
     ) {
-
         TokenIcon(token = token)
 
-        Column(
-            modifier = Modifier
-                .align(Alignment.CenterVertically),
-        ) {
+        Column(modifier = Modifier.align(Alignment.CenterVertically)) {
             Text(
                 text = token.name,
                 style = TangemTheme.typography.subtitle1,
@@ -126,7 +119,6 @@ private fun TokenItem(
 
         Spacer(modifier = Modifier.weight(1f))
 
-
         if (!token.available) {
             Text(
                 text = stringResource(id = R.string.swapping_token_not_available),
@@ -137,8 +129,7 @@ private fun TokenItem(
             Column(
                 horizontalAlignment = Alignment.End,
                 verticalArrangement = Arrangement.Center,
-                modifier = Modifier
-                    .padding(start = TangemTheme.dimens.spacing8),
+                modifier = Modifier.padding(start = TangemTheme.dimens.spacing8),
             ) {
                 Text(
                     text = token.addedTokenBalanceData.amount ?: "",
@@ -153,10 +144,10 @@ private fun TokenItem(
                 )
             }
         }
-
     }
 }
 
+@Suppress("MagicNumber")
 @Composable
 private fun TokenIcon(token: TokenToSelect) {
     Box(

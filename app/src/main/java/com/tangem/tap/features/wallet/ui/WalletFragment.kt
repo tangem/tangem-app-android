@@ -17,11 +17,11 @@ import androidx.transition.TransitionInflater
 import by.kirich1409.viewbindingdelegate.viewBinding
 import coil.load
 import coil.size.Scale
+import com.tangem.core.analytics.Analytics
 import com.tangem.core.ui.fragments.setStatusBarColor
 import com.tangem.core.ui.utils.OneTouchClickListener
 import com.tangem.domain.common.TapWorkarounds.isSaltPay
 import com.tangem.tap.MainActivity
-import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.converters.BasicSignInEventConverter
 import com.tangem.tap.common.analytics.converters.BasicTopUpEventConverter
 import com.tangem.tap.common.analytics.events.MainScreen
@@ -135,6 +135,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         }
     }
 
+    @Suppress("MagicNumber")
     private fun setupWarningsRecyclerView() {
         warningsAdapter = WarningMessagesAdapter()
         val layoutManager = LinearLayoutManager(context, RecyclerView.VERTICAL, false)
@@ -145,6 +146,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         }
     }
 
+    @Suppress("ComplexMethod")
     override fun newState(state: WalletState) {
         if (activity == null || view == null) return
 
@@ -152,7 +154,7 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
         val isSaltPay = store.state.globalState.scanResponse?.card?.isSaltPay == true
 
         when {
-            isSaltPay && (walletView !is SaltPaySingleWalletView) -> {
+            isSaltPay && walletView !is SaltPaySingleWalletView -> {
                 walletView = SaltPaySingleWalletView()
                 walletView.changeWalletView(this, binding)
             }

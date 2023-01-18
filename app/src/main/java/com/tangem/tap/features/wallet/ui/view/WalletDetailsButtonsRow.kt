@@ -33,12 +33,7 @@ internal class WalletDetailsButtonsRow @JvmOverloads constructor(
         }
     }
 
-    fun updateButtonsVisibility(
-        exchangeServiceFeatureOn: Boolean,
-        buyAllowed: Boolean,
-        sellAllowed: Boolean,
-        sendAllowed: Boolean,
-    ) = with(binding) {
+    fun updateButtonsVisibility(exchangeServiceFeatureOn: Boolean, sendAllowed: Boolean) = with(binding) {
         containerExchangeButtons.isVisible = exchangeServiceFeatureOn
         btnBuy.hide()
         btnSell.hide()
