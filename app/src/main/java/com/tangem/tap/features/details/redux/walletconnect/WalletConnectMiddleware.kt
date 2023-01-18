@@ -40,6 +40,7 @@ class WalletConnectMiddleware {
         }
     }
 
+    @Suppress("ComplexMethod", "LongMethod")
     private fun handle(state: () -> AppState?, action: Action) {
         if (DemoHelper.tryHandle(state, action)) return
 
@@ -49,10 +50,8 @@ class WalletConnectMiddleware {
                 walletConnectManager.restoreSessions(action.scanResponse)
             }
             is WalletConnectAction.HandleDeepLink -> {
-                if (!action.wcUri.isNullOrBlank()) {
-                    if (WalletConnectManager.isCorrectWcUri(action.wcUri)) {
-                        store.dispatchOnMain(WalletConnectAction.OpenSession(action.wcUri))
-                    }
+                if (!action.wcUri.isNullOrBlank() && WalletConnectManager.isCorrectWcUri(action.wcUri)) {
+                    store.dispatchOnMain(WalletConnectAction.OpenSession(action.wcUri))
                 }
             }
             is WalletConnectAction.StartWalletConnect -> {

@@ -327,7 +327,7 @@ private fun SelectedWalletBadge(
         contentAlignment = Alignment.Center,
     ) {
         Icon(
-            modifier = Modifier.padding(all = (0.5).dp),
+            modifier = Modifier.padding(all = 0.5.dp),
             painter = painterResource(id = R.drawable.ic_check_circle_18),
             tint = TangemTheme.colors.icon.accent,
             contentDescription = null,
