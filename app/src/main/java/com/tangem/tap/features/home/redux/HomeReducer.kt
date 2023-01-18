@@ -3,10 +3,8 @@ package com.tangem.tap.features.home.redux
 import com.tangem.tap.common.redux.AppState
 import org.rekotlin.Action
 
-class HomeReducer {
-    companion object {
-        fun reduce(action: Action, state: AppState): HomeState = internalReduce(action, state)
-    }
+object HomeReducer {
+    fun reduce(action: Action, state: AppState): HomeState = internalReduce(action, state)
 }
 
 private fun internalReduce(action: Action, state: AppState): HomeState {

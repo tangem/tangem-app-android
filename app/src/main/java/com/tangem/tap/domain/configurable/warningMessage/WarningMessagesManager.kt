@@ -70,6 +70,8 @@ class WarningMessagesManager {
     }
 
     companion object {
+        const val REMAINING_SIGNATURES_WARNING = 10
+
         fun devCardWarning(): WarningMessage = WarningMessage(
             "",
             "",
@@ -171,7 +173,5 @@ class WarningMessagesManager {
             R.string.alert_demo_message,
             WarningMessage.Origin.Local,
         )
-
-        const val REMAINING_SIGNATURES_WARNING = 10
     }
 }
