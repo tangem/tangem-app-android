@@ -74,7 +74,7 @@ data class WalletForSession(
     }
 
     override fun hashCode(): Int {
-        var result = (walletPublicKey?.contentHashCode() ?: 0)
+        var result = walletPublicKey?.contentHashCode() ?: 0
         result = 31 * result + (derivedPublicKey?.contentHashCode() ?: 0)
         result = 31 * result + (derivationPath?.hashCode() ?: 0)
         result = 31 * result + isTestNet.hashCode()

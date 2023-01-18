@@ -42,7 +42,7 @@ class RatesRepository(
                 }
                 .onFailure { Result.Failure(it) }
 
-            throw IllegalStateException("Unreachable code because runCatching must return result")
+            error("Unreachable code because runCatching must return result")
         }
 
     private fun handleFiatRatesResult(rates: Map<Currency, Result<BigDecimal>?>): Result.Success<RatesResult> {

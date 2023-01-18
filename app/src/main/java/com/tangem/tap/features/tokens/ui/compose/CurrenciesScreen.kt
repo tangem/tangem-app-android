@@ -1,3 +1,5 @@
+@file:Suppress("MagicNumber")
+
 package com.tangem.tap.features.tokens.ui.compose
 
 import androidx.compose.animation.AnimatedVisibility
@@ -26,12 +28,12 @@ import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.tangem.blockchain.common.Blockchain
+import com.tangem.core.analytics.Analytics
 import com.tangem.core.ui.components.Keyboard
 import com.tangem.core.ui.components.SystemBarsEffect
 import com.tangem.core.ui.components.keyboardAsState
 import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
 import com.tangem.domain.common.extensions.fromNetworkId
-import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.ManageTokens
 import com.tangem.tap.common.compose.extensions.addAndNotify
@@ -48,6 +50,7 @@ import com.tangem.tap.features.wallet.redux.models.WalletDialog
 import com.tangem.tap.store
 import com.tangem.wallet.R
 
+@Suppress("LongMethod")
 @Composable
 fun CurrenciesScreen(
     tokensState: MutableState<TokensState> = mutableStateOf(store.state.tokensState),
