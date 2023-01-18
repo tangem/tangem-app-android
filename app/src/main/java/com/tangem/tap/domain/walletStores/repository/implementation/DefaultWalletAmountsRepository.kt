@@ -48,6 +48,7 @@ import kotlinx.coroutines.withContext
 import timber.log.Timber
 import java.math.BigDecimal
 
+@Suppress("LargeClass")
 internal class DefaultWalletAmountsRepository(
     private val tangemTechApi: TangemTechApi,
     private val dispatchers: CoroutineDispatcherProvider,
@@ -59,13 +60,16 @@ internal class DefaultWalletAmountsRepository(
         userWallets: List<UserWallet>,
         fiatCurrency: FiatCurrency,
     ): CompletionResult<Unit> {
-        return if (userWallets.isEmpty()) CompletionResult.Success(Unit)
-        else withContext(Dispatchers.Default) {
-            awaitAll(
-                async { fetchAmountsForUserWallets(userWallets) },
-                async { fetchFiatRates(userWallets, walletStores = null, fiatCurrency) },
-            )
-                .fold()
+        return if (userWallets.isEmpty()) {
+            CompletionResult.Success(Unit)
+        } else {
+            withContext(Dispatchers.Default) {
+                awaitAll(
+                    async { fetchAmountsForUserWallets(userWallets) },
+                    async { fetchFiatRates(userWallets, walletStores = null, fiatCurrency) },
+                )
+                    .fold()
+            }
         }
     }
 
@@ -81,16 +85,19 @@ internal class DefaultWalletAmountsRepository(
         userWallet: UserWallet,
         fiatCurrency: FiatCurrency,
     ): CompletionResult<Unit> {
-        return if (walletStores.isEmpty()) CompletionResult.Success(Unit)
-        else withContext(Dispatchers.Default) {
-            val userWalletId = userWallet.walletId
-            val scanResponse = userWallet.scanResponse
+        return if (walletStores.isEmpty()) {
+            CompletionResult.Success(Unit)
+        } else {
+            withContext(Dispatchers.Default) {
+                val userWalletId = userWallet.walletId
+                val scanResponse = userWallet.scanResponse
 
-            awaitAll(
-                async { fetchAmountForWalletStores(userWalletId, scanResponse, walletStores) },
-                async { fetchFiatRates(listOf(userWallet), walletStores, fiatCurrency) },
-            )
-                .fold()
+                awaitAll(
+                    async { fetchAmountForWalletStores(userWalletId, scanResponse, walletStores) },
+                    async { fetchFiatRates(listOf(userWallet), walletStores, fiatCurrency) },
+                )
+                    .fold()
+            }
         }
     }
 
@@ -139,7 +146,7 @@ internal class DefaultWalletAmountsRepository(
                     return@withContext CompletionResult.Failure(error)
                 }
 
-            throw IllegalStateException("Unreachable code because runCatching must return result")
+            error("Unreachable code because runCatching must return result")
         }
     }
 
@@ -168,7 +175,7 @@ internal class DefaultWalletAmountsRepository(
     ): CompletionResult<Unit> = coroutineScope {
         walletStores.map { walletStore ->
             async {
-                // TODO: Find wallet manager via [com.tangem.tap.domain.walletStores.repository.WalletManagersRepository]
+                //TODO: Find wallet manager via [com.tangem.tap.domain.walletStores.repository.WalletManagersRepository]
                 val walletManager = walletStore.walletManager
                 fetchAmountsForWalletStore(userWalletId, scanResponse, walletStore, walletManager)
             }
@@ -408,8 +415,10 @@ internal class DefaultWalletAmountsRepository(
             val error = WalletStoresError.NoInternetConnection
             Timber.e(error)
             CompletionResult.Failure(error)
-        } else withContext(Dispatchers.IO) {
-            catching { block() }
+        } else {
+            withContext(Dispatchers.IO) {
+                catching { block() }
+            }
         }
     }
 

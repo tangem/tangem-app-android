@@ -22,6 +22,9 @@ import androidx.compose.ui.unit.dp
 import com.tangem.tap.common.compose.extensions.AnimatedValue
 import com.tangem.tap.common.compose.extensions.toAnimatable
 
+private const val SCALE_SWITCH_BARRIER = 1.15f
+
+@Suppress("LongParameterList")
 @Composable
 fun HorizontalSlidingImage(
     painter: Painter,
@@ -39,7 +42,7 @@ fun HorizontalSlidingImage(
             .requiredWidth(itemSize.width)
             .requiredHeight(itemSize.height)
             .graphicsLayer(
-                translationX = translateX.toAnimatable(isPaused = paused, duration = duration).value
+                translationX = translateX.toAnimatable(isPaused = paused, duration = duration).value,
             ),
         alignment = Alignment.TopStart,
         contentScale = ContentScale.FillBounds,
@@ -54,7 +57,7 @@ fun StoriesTextAnimation(
     slideInDelay: Int = 200,
     slideDistance: Dp = 60.dp,
     label: String = "",
-    content: @Composable (Modifier) -> Unit
+    content: @Composable (Modifier) -> Unit,
 ) {
     val isLaunched = remember { mutableStateOf(false) }
     val transition = updateTransition(targetState = isLaunched.value, label = label)
@@ -64,10 +67,10 @@ fun StoriesTextAnimation(
             tween(
                 durationMillis = slideInDuration,
                 delayMillis = slideInDelay,
-                easing = FastOutSlowInEasing
+                easing = FastOutSlowInEasing,
             )
         },
-        label = "Slide in"
+        label = "Slide in",
     ) { value -> if (value) 0.dp else slideDistance }
 
     val alpha = transition.animateFloat(
@@ -75,16 +78,16 @@ fun StoriesTextAnimation(
             tween(
                 durationMillis = slideInDuration * 2,
                 delayMillis = slideInDelay,
-                easing = FastOutSlowInEasing
+                easing = FastOutSlowInEasing,
             )
         },
-        label = "Visibility"
+        label = "Visibility",
     ) { value -> if (value) 1f else 0f }
 
     content(
         Modifier
             .absoluteOffset(y = offsetY.value)
-            .alpha(alpha.value)
+            .alpha(alpha.value),
     )
 
     LaunchedEffect(Unit) { isLaunched.value = true }
@@ -95,9 +98,8 @@ fun StoriesBottomImageAnimation(
     initialScale: Float = 2.5f,
     firstStepDuration: Int,
     totalDuration: Int,
-    content: @Composable (Modifier) -> Unit
+    content: @Composable (Modifier) -> Unit,
 ) {
-    val scaleSwitchBarrier = 1.15f
     val secondStepDuration = totalDuration - firstStepDuration
 
     val isFirstStepLaunched = remember { mutableStateOf(false) }
@@ -105,7 +107,7 @@ fun StoriesBottomImageAnimation(
 
     val firstTransition = updateTransition(
         targetState = isFirstStepLaunched.value,
-        label = "Image appearing"
+        label = "Image appearing",
     )
     val firstScaleStep = firstTransition.animateFloat(
         transitionSpec = {
@@ -114,12 +116,12 @@ fun StoriesBottomImageAnimation(
                 easing = FastOutLinearInEasing,
             )
         },
-        label = "Appearing scale"
-    ) { value -> if (value) scaleSwitchBarrier else initialScale }
+        label = "Appearing scale",
+    ) { value -> if (value) SCALE_SWITCH_BARRIER else initialScale }
 
     val secondTransition = updateTransition(
         targetState = isSecondStepLaunched.value,
-        label = "Image slow outgoing"
+        label = "Image slow outgoing",
     )
     val secondScaleStep = secondTransition.animateFloat(
         transitionSpec = {
@@ -128,15 +130,15 @@ fun StoriesBottomImageAnimation(
                 easing = LinearEasing,
             )
         },
-        label = "Outgoing scale"
-    ) { value -> if (value) 1f else scaleSwitchBarrier }
+        label = "Outgoing scale",
+    ) { value -> if (value) 1f else SCALE_SWITCH_BARRIER }
 
     val fadeIn = firstTransition.animateFloat(
         transitionSpec = { tween(durationMillis = 400) },
-        label = "Fade in on start"
+        label = "Fade in on start",
     ) { value -> if (value) 1f else 0f }
 
-    if (firstScaleStep.value == scaleSwitchBarrier) {
+    if (firstScaleStep.value == SCALE_SWITCH_BARRIER) {
         isSecondStepLaunched.value = true
     }
 

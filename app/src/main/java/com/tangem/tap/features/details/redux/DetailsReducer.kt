@@ -15,10 +15,8 @@ import com.tangem.tap.tangemSdkManager
 import org.rekotlin.Action
 import java.util.*
 
-class DetailsReducer {
-    companion object {
-        fun reduce(action: Action, state: AppState): DetailsState = internalReduce(action, state)
-    }
+object DetailsReducer {
+    fun reduce(action: Action, state: AppState): DetailsState = internalReduce(action, state)
 }
 
 private fun internalReduce(action: Action, state: AppState): DetailsState {
@@ -104,8 +102,7 @@ private fun prepareSecurityOptions(card: CardDTO): ManageSecurityState {
 private fun isResetToFactoryAllowedByCard(card: CardDTO): Boolean {
     val notAllowedByAnyWallet = card.wallets.any { it.settings.isPermanent }
     val notAllowedByCard = notAllowedByAnyWallet ||
-        (card.isWalletDataSupported && (!card.isTangemNote && !card.settings.isBackupAllowed)) ||
-        card.isSaltPay
+        card.isWalletDataSupported && !card.isTangemNote && !card.settings.isBackupAllowed || card.isSaltPay
     return !notAllowedByCard
 }
 
@@ -188,6 +185,7 @@ private fun prepareAllowedSecurityOptions(
     return allowedSecurityOptions
 }
 
+@Suppress("MagicNumber")
 private fun CardDTO.toCardInfo(): CardInfo {
     val cardId = this.cardId.chunked(4).joinToString(separator = " ")
     val issuer = this.issuer.name
