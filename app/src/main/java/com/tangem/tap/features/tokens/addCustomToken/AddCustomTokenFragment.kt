@@ -10,10 +10,10 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.ComposeView
-import com.google.accompanist.appcompattheme.AppCompatTheme
+import com.tangem.core.analytics.Analytics
+import com.tangem.core.ui.res.TangemTheme
 import com.tangem.domain.features.addCustomToken.redux.AddCustomTokenState
 import com.tangem.domain.redux.domainStore
-import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.ManageTokens
 import com.tangem.tap.common.compose.ClosePopupTrigger
 import com.tangem.tap.features.BaseStoreFragment
@@ -57,7 +57,7 @@ class AddCustomTokenFragment : BaseStoreFragment(R.layout.view_compose_fragment)
 
         val closePopupTrigger = initClosingPopupTriggerEvent()
         view.findViewById<ComposeView>(R.id.view_compose)?.setContent {
-            AppCompatTheme(requireContext()) {
+            TangemTheme {
                 Box(
                     modifier = Modifier
                         .fillMaxSize(),
