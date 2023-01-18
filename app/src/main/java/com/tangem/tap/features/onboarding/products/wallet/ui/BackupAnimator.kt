@@ -34,6 +34,8 @@ class WalletBackupAnimator(
     }
 
     private var currentStep = -1
+    private var firstBackupCardAnimated = false
+    private var secondBackupCardAnimated = false
 
     override fun updateBackupState(backupState: BackupState) {
     }
@@ -64,6 +66,7 @@ class WalletBackupAnimator(
         cardsWidget.toFolded()
     }
 
+    @Suppress("MagicNumber")
     override fun showAddBackupCards(state: BackupState, backupCardsCounts: Int) {
         when (backupCardsCounts) {
             0 -> {
@@ -101,6 +104,7 @@ class WalletBackupAnimator(
         currentStep = STEP_ADD_BACKUP_CARDS
     }
 
+    @Suppress("MagicNumber")
     override fun showWritePrimaryCard(state: BackupState) {
         currentStep = STEP_WRITE_PRIMARY_CARD
 
@@ -112,9 +116,7 @@ class WalletBackupAnimator(
         )
     }
 
-    private var firstBackupCardAnimated = false
-    private var secondBackupCardAnimated = false
-
+    @Suppress("MagicNumber")
     override fun showWriteBackupCard(state: BackupState, backupCard: Int) {
         when (viewState) {
             State.TwoCards -> {
@@ -244,6 +246,7 @@ class TestBackupAnimation(
         init(binding, this)
     }
 
+    @Suppress("MagicNumber")
     fun setStep(step: Int, onStepUpdate: (Int) -> Unit = {}) {
         steps = step
         when (steps) {

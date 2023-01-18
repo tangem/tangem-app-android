@@ -102,7 +102,8 @@ private fun SimpleOkDialogPreview() = SimpleOkDialog(
 
 @Composable
 private fun BasicDialogPreview() = BasicDialog(
-    message = "All protected passwords will be deleted from the secure storage, you must enter the wallet password to work with the app",
+    message = "All protected passwords will be deleted from the secure storage, you must enter the wallet password " +
+        "to work with the app",
     title = "Attention",
     confirmButton = DialogButton {},
     dismissButton = DialogButton {},
