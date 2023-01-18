@@ -194,13 +194,14 @@
     <string name="common_close">Закрыть</string>
     <string name="exchange_send_view_header">Вы отправляете</string>
     <string name="exchange_receive_view_header">Вы получаете</string>
+    <string name="swapping_generic_error">Произошла ошибка. Пожалуйста, попробуйте еще раз.</string>
     <string name="swapping_permission_header">Дать разрешение</string>
     <string name="swapping_permission_subheader">Чтобы продолжить, вам нужно разрешить смарт-контракту 1inch использовать ваш %s</string>
     <string name="swapping_permission_rows_amount">Количество %s</string>
     <string name="swapping_permission_rows_your_wallet">Ваш кошелек</string>
     <string name="swapping_permission_rows_spender">Отправитель</string>
     <string name="swapping_permission_buttons_approve">Подтвердить</string>
-    <string name="swapping_swap_of_to">Обмен %s на</string>
+    <string name="swapping_swap_of_to">Обмен %s на %s</string>
     <string name="swapping_swap">Обмен</string>
     <string name="swapping_insufficient_funds">Недостаточно средств</string>
     <string name="swapping_give_permission">Дать разрешение</string>
