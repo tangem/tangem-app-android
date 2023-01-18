@@ -45,8 +45,8 @@ import com.tangem.core.ui.res.TangemTheme
  * @param expandedInitially whether the search is expanded on launch
  * @param tint tint for most of the visual elements of toolbar
  * @param onBackClick action when close button is clicked
- * @param onSearchChange action when search is modified
- * @param onSearchDisplayClose action when search is closed
+ * @param onSearchChanged action when search is modified
+ * @param onSearchDisplayClosed action when search is closed
  *
  * @see <a href =
  * "https://www.figma.com/file/Vs6SkVsFnUPsSCNwlnVf5U/Android-%E2%80%93-UI?node-id=1123%3A4068&t=xj8BBj5DfCWn2Mli-1"
@@ -54,13 +54,14 @@ import com.tangem.core.ui.res.TangemTheme
  */
 @Composable
 fun ExpandableSearchView(
-    onBackClick: () -> Unit,
-    onSearchChange: (String) -> Unit,
-    onSearchDisplayClose: () -> Unit,
+    modifier: Modifier = Modifier,
     title: String? = null,
     placeholderSearchText: String = "",
     expandedInitially: Boolean = false,
-    tint: Color = TangemTheme.colors.text.primary1,
+    tint: Color = TangemTheme.colors.icon.primary1,
+    onBackClick: () -> Unit,
+    onSearchChanged: (String) -> Unit,
+    onSearchDisplayClosed: () -> Unit,
 ) {
     val (expanded, onExpandedChanged) = remember {
         mutableStateOf(expandedInitially)
@@ -70,16 +71,18 @@ fun ExpandableSearchView(
         if (isSearchFieldVisible) {
             ExpandedSearchView(
                 placeholderSearchText = placeholderSearchText,
-                onSearchChange = onSearchChange,
-                onSearchDisplayClose = onSearchDisplayClose,
-                onExpandedChange = onExpandedChanged,
+                onSearchChanged = onSearchChanged,
+                onSearchDisplayClosed = onSearchDisplayClosed,
+                onExpandedChanged = onExpandedChanged,
+                modifier = modifier,
                 tint = tint,
             )
         } else {
             CollapsedSearchView(
                 title = title,
                 onBackClick = onBackClick,
-                onExpandedChange = onExpandedChanged,
+                onExpandedChanged = onExpandedChanged,
+                modifier = modifier,
                 tint = tint,
             )
         }
@@ -88,14 +91,15 @@ fun ExpandableSearchView(
 
 @Composable
 private fun CollapsedSearchView(
-    onBackClick: () -> Unit,
-    onExpandedChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
     title: String? = null,
-    tint: Color = TangemTheme.colors.background.primary,
+    onBackClick: () -> Unit,
+    onExpandedChanged: (Boolean) -> Unit,
+    tint: Color,
 ) {
     Row(
-        modifier = Modifier
-            .background(TangemTheme.colors.background.primary)
+        modifier = modifier
+            .background(TangemTheme.colors.background.secondary)
             .padding(TangemTheme.dimens.spacing16)
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
@@ -123,7 +127,7 @@ private fun CollapsedSearchView(
             tint = tint,
             contentDescription = null,
             modifier = Modifier
-                .clickable { onExpandedChange(true) },
+                .clickable { onExpandedChanged(true) },
         )
     }
 }
@@ -131,10 +135,11 @@ private fun CollapsedSearchView(
 @Composable
 private fun ExpandedSearchView(
     placeholderSearchText: String,
-    onSearchChange: (String) -> Unit,
-    onSearchDisplayClose: () -> Unit,
-    onExpandedChange: (Boolean) -> Unit,
-    tint: Color = TangemTheme.colors.background.primary,
+    onSearchChanged: (String) -> Unit,
+    onSearchDisplayClosed: () -> Unit,
+    onExpandedChanged: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+    tint: Color,
 ) {
     val focusManager = LocalFocusManager.current
     val textFieldFocusRequester = remember { FocusRequester() }
@@ -146,16 +151,16 @@ private fun ExpandedSearchView(
     var textFieldValue by remember { mutableStateOf(TextFieldValue("", TextRange("".length))) }
 
     Row(
-        modifier = Modifier
-            .background(TangemTheme.colors.background.primary)
+        modifier = modifier
+            .background(TangemTheme.colors.background.secondary)
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.Start,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         IconButton(
             onClick = {
-                onExpandedChange(false)
-                onSearchDisplayClose()
+                onExpandedChanged(false)
+                onSearchDisplayClosed()
             },
         ) {
             Icon(
@@ -168,7 +173,7 @@ private fun ExpandedSearchView(
             value = textFieldValue,
             onValueChange = {
                 textFieldValue = it
-                onSearchChange(it.text)
+                onSearchChanged(it.text)
             },
             singleLine = true,
             modifier = Modifier
@@ -200,8 +205,8 @@ private fun CollapsedSearchViewPreview() {
             title = "Choose Token",
             onBackClick = {},
             placeholderSearchText = "Search",
-            onSearchChange = {},
-            onSearchDisplayClose = {},
+            onSearchChanged = {},
+            onSearchDisplayClosed = {},
         )
     }
 }
@@ -214,9 +219,9 @@ private fun ExpandedSearchViewPreview() {
             title = "Choose Token",
             onBackClick = {},
             placeholderSearchText = "Search",
-            onSearchChange = {},
+            onSearchChanged = {},
             expandedInitially = true,
-            onSearchDisplayClose = {},
+            onSearchDisplayClosed = {},
         )
     }
 }
