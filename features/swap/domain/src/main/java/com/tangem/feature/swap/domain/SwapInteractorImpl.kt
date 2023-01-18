@@ -25,6 +25,7 @@ import com.tangem.utils.toFormattedString
 import java.math.BigDecimal
 import javax.inject.Inject
 
+@Suppress("LargeClass")
 internal class SwapInteractorImpl @Inject constructor(
     private val transactionManager: TransactionManager,
     private val userWalletManager: UserWalletManager,
@@ -120,8 +121,9 @@ internal class SwapInteractorImpl @Inject constructor(
                             "estimatedGas not found call findBestQuote"
                         },
                     )
-                val transactionData =
-                    requireNotNull(cache.getApproveTransactionData()) { "getApproveTransactionData not found, call findQuotes" }
+                val transactionData = requireNotNull(cache.getApproveTransactionData()) {
+                    "getApproveTransactionData not found, call findQuotes"
+                }
                 val gasPrice = transactionData.gasPrice.toBigDecimalOrNull() ?: error("cannot parse gasPrice")
                 val fee = transactionManager.calculateFee(networkId, gasPrice.toPlainString(), estimatedGas)
                 val result = transactionManager.sendTransaction(
@@ -272,6 +274,7 @@ internal class SwapInteractorImpl @Inject constructor(
     /**
      * Load quote data calls only if spend is not allowed for token contract address
      */
+    @Suppress("LongParameterList")
     private suspend fun loadQuoteData(
         networkId: String,
         fromTokenAddress: String,
@@ -321,6 +324,7 @@ internal class SwapInteractorImpl @Inject constructor(
     /**
      * Load swap data calls only if spend is allowed for token contract address
      */
+    @Suppress("LongParameterList")
     private suspend fun loadSwapData(
         networkId: String,
         fromTokenAddress: String,
@@ -362,6 +366,7 @@ internal class SwapInteractorImpl @Inject constructor(
         }
     }
 
+    @Suppress("LongParameterList")
     private suspend fun updateBalances(
         networkId: String,
         fromToken: Currency,
@@ -448,6 +453,7 @@ internal class SwapInteractorImpl @Inject constructor(
         }
     }
 
+    @Suppress("MagicNumber")
     private fun increaseByPercents(percents: Int, value: Int): Int {
         return value * (percents / 100 + 1)
     }

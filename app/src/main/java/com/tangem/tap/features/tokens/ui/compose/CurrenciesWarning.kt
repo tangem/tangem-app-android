@@ -18,6 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.tangem.wallet.R
 
+@Suppress("MagicNumber")
 @Composable
 fun CurrenciesWarning() {
     Box(
