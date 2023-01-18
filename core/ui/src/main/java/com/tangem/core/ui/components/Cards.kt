@@ -142,7 +142,8 @@ fun SmallInfoCardWithWarning(
  * @param icon icon to the left
  * @param additionalContent shown at the right edge of the card
  *
- * @see <a href = "https://www.figma.com/file/Vs6SkVsFnUPsSCNwlnVf5U/Android-%E2%80%93-UI?node-id=1123%3A4040&t=izokIIb9WWetO32R-1"
+ * @see <a href =
+ * "https://www.figma.com/file/Vs6SkVsFnUPsSCNwlnVf5U/Android-%E2%80%93-UI?node-id=1123%3A4040&t=izokIIb9WWetO32R-1"
  * >Figma component</a>
  */
 @Composable
@@ -177,7 +178,8 @@ fun CardWithIcon(
  * @param icon icon to the left
  * @param additionalContent shown at the right edge of the card
  *
- * @see <a href = "https://www.figma.com/file/Vs6SkVsFnUPsSCNwlnVf5U/Android-%E2%80%93-UI?node-id=1123%3A4040&t=izokIIb9WWetO32R-1"
+ * @see <a href =
+ * "https://www.figma.com/file/Vs6SkVsFnUPsSCNwlnVf5U/Android-%E2%80%93-UI?node-id=1123%3A4040&t=izokIIb9WWetO32R-1"
  * >Figma component</a>
  */
 @Composable
@@ -290,6 +292,7 @@ private fun CardInfoBox(
 
 // region Preview
 
+@Suppress("MagicNumber")
 @Composable
 private fun CardsPreview() {
     Column(modifier = Modifier.fillMaxWidth()) {
@@ -300,8 +303,8 @@ private fun CardsPreview() {
         SmallInfoCardWithWarning(
             startText = "Balance",
             endText = "0.4405434 BTC",
-            warningText =
-            "Not enough funds for fee on your Polygon wallet  to create a transaction. Top up your Polygon wallet first.",
+            warningText = "Not enough funds for fee on your Polygon wallet  to create a transaction. " +
+                "Top up your Polygon wallet first.",
         )
 
         SpacerH32()
