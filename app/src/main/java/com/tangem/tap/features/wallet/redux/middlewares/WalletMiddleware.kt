@@ -65,6 +65,7 @@ import org.rekotlin.Middleware
 import timber.log.Timber
 import java.math.BigDecimal
 
+@Suppress("LargeClass")
 class WalletMiddleware {
     private val tradeCryptoMiddleware = TradeCryptoMiddleware()
     private val warningsMiddleware = WarningsMiddleware()
@@ -89,6 +90,7 @@ class WalletMiddleware {
         }
     }
 
+    @Suppress("LongMethod", "ComplexMethod")
     private fun handleAction(state: () -> AppState?, action: Action, dispatch: DispatchFunction) {
         if (DemoHelper.tryHandle(state, action)) return
 
@@ -117,17 +119,15 @@ class WalletMiddleware {
             is WalletAction.LoadWallet.Success -> {
                 checkForRentWarning(walletState.getWalletManager(action.blockchain))
                 val coinAmount = action.wallet.amounts[AmountType.Coin]?.value
-                if (coinAmount != null && !coinAmount.isZero()) {
-                    if (walletState.getWalletData(action.blockchain) == null) {
-                        store.dispatch(
-                            WalletAction.MultiWallet.AddBlockchain(
-                                action.blockchain,
-                                null,
-                                true,
-                            ),
-                        )
-                        store.dispatch(WalletAction.LoadWallet.Success(action.wallet, action.blockchain))
-                    }
+                if (coinAmount?.isZero() == false && walletState.getWalletData(action.blockchain) == null) {
+                    store.dispatch(
+                        WalletAction.MultiWallet.AddBlockchain(
+                            blockchain = action.blockchain,
+                            walletManager = null,
+                            save = true,
+                        ),
+                    )
+                    store.dispatch(WalletAction.LoadWallet.Success(action.wallet, action.blockchain))
                 }
                 store.dispatch(WalletAction.Warnings.CheckHashesCount.CheckHashesCountOnline)
                 warningsMiddleware.tryToShowAppRatingWarning(action.wallet)
@@ -402,7 +402,8 @@ class WalletMiddleware {
                     }
                 }
             } else {
-                if ((amounts?.size ?: 0) > 1) {
+                val amountsSize = amounts?.size ?: 0
+                if (amountsSize > 1) {
                     WalletAction.DialogAction.ChooseCurrency(amounts)
                 } else {
                     val amountToSend = amounts?.first()
@@ -468,8 +469,8 @@ class WalletMiddleware {
                         dispatchOnMain(
                             WalletAction.SetWalletRent(
                                 wallet = walletManager.wallet,
-                                minRent = ("${rentProvider.rentAmount().stripZeroPlainString()} $currency"),
-                                rentExempt = ("${rentExempt.stripZeroPlainString()} $currency"),
+                                minRent = "${rentProvider.rentAmount().stripZeroPlainString()} $currency",
+                                rentExempt = "${rentExempt.stripZeroPlainString()} $currency",
                             ),
                         )
                     } else {

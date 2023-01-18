@@ -159,11 +159,15 @@ class GnosisRegistrator(
         return Result.Success(Unit)
     }
 
+    @Suppress("MagicNumber")
     private fun Result<List<Amount>>.extractFeeAmount(): Result<Amount> {
         return when (this) {
             is Result.Success -> {
-                if (this.data.size != 3) Result.Failure(BlockchainSdkError.FailedToLoadFee)
-                else Result.Success(this.data[1])
+                if (this.data.size != 3) {
+                    Result.Failure(BlockchainSdkError.FailedToLoadFee)
+                } else {
+                    Result.Success(this.data[1])
+                }
             }
             is Result.Failure -> this
         }

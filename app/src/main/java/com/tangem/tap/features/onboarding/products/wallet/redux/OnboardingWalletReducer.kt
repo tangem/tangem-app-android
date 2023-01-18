@@ -7,10 +7,8 @@ import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.Onboardi
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayReducer
 import org.rekotlin.Action
 
-class OnboardingWalletReducer {
-    companion object {
-        fun reduce(action: Action, state: AppState): OnboardingWalletState = internalReduce(action, state)
-    }
+object OnboardingWalletReducer {
+    fun reduce(action: Action, state: AppState): OnboardingWalletState = internalReduce(action, state)
 }
 
 private fun internalReduce(action: Action, appState: AppState): OnboardingWalletState {
@@ -36,103 +34,78 @@ private fun internalReduce(action: Action, appState: AppState): OnboardingWallet
     }
 }
 
-private class ReducerForGlobalAction {
-    companion object {
-        fun reduce(action: GlobalAction.Onboarding, state: OnboardingWalletState): OnboardingWalletState {
-            return when (action) {
-                is GlobalAction.Onboarding.Start -> {
-                    OnboardingWalletState(
-                        backupState = state.backupState.copy(
-                            maxBackupCards = if (action.scanResponse.isSaltPay()) 1 else 2,
-                            canSkipBackup = if (action.scanResponse.isSaltPay()) false else action.canSkipBackup,
-                        ),
-                        isSaltPay = action.scanResponse.isSaltPay(),
-                    )
-                }
-                is GlobalAction.Onboarding.StartForUnfinishedBackup -> {
-                    OnboardingWalletState(
-                        backupState = state.backupState.copy(
-                            maxBackupCards = action.addedBackupCardsCount,
-                            canSkipBackup = false,
-                        ),
-                        isSaltPay = false,
-                    )
-                }
-                else -> state
+private object ReducerForGlobalAction {
+    fun reduce(action: GlobalAction.Onboarding, state: OnboardingWalletState): OnboardingWalletState {
+        return when (action) {
+            is GlobalAction.Onboarding.Start -> {
+                OnboardingWalletState(
+                    backupState = state.backupState.copy(
+                        maxBackupCards = if (action.scanResponse.isSaltPay()) 1 else 2,
+                        canSkipBackup = if (action.scanResponse.isSaltPay()) false else action.canSkipBackup,
+                    ),
+                    isSaltPay = action.scanResponse.isSaltPay(),
+                )
             }
+            is GlobalAction.Onboarding.StartForUnfinishedBackup -> {
+                OnboardingWalletState(
+                    backupState = state.backupState.copy(
+                        maxBackupCards = action.addedBackupCardsCount,
+                        canSkipBackup = false,
+                    ),
+                    isSaltPay = false,
+                )
+            }
+            else -> state
         }
     }
 }
 
-private class BackupReducer {
-    companion object {
-        fun reduce(
-            action: BackupAction,
-            state: BackupState,
-            isSaltPay: Boolean,
-        ): BackupState {
-
-            return when (action) {
-                is BackupAction.IntroduceBackup -> BackupState(
-                    backupStep = BackupStep.InitBackup,
-                    maxBackupCards = if (isSaltPay) 1 else 2,
-                    canSkipBackup = state.canSkipBackup,
+private object BackupReducer {
+    @Suppress("ComplexMethod")
+    fun reduce(action: BackupAction, state: BackupState, isSaltPay: Boolean): BackupState {
+        return when (action) {
+            is BackupAction.IntroduceBackup -> BackupState(
+                backupStep = BackupStep.InitBackup,
+                maxBackupCards = if (isSaltPay) 1 else 2,
+                canSkipBackup = state.canSkipBackup,
+            )
+            BackupAction.StartAddingPrimaryCard -> state.copy(backupStep = BackupStep.ScanOriginCard)
+            BackupAction.StartAddingBackupCards -> state.copy(backupStep = BackupStep.AddBackupCards)
+            BackupAction.AddBackupCard.Success -> state.copy(backupCardsNumber = state.backupCardsNumber + 1)
+            BackupAction.ShowAccessCodeInfoScreen -> state.copy(backupStep = BackupStep.SetAccessCode)
+            BackupAction.ShowEnterAccessCodeScreen -> state.copy(
+                backupStep = BackupStep.EnterAccessCode,
+                accessCodeError = null,
+            )
+            is BackupAction.SaveFirstAccessCode -> state.copy(
+                backupStep = BackupStep.ReenterAccessCode,
+                accessCode = action.accessCode,
+            )
+            is BackupAction.SetAccessCodeError -> state.copy(accessCodeError = action.error)
+            is BackupAction.PrepareToWritePrimaryCard -> if (state.primaryCardId == null) {
+                state.copy(
+                    primaryCardId = backupService.primaryCardId,
+                    backupCardIds = backupService.backupCardIds,
+                    backupCardsNumber = backupService.backupCardIds.size,
+                    backupStep = BackupStep.WritePrimaryCard,
                 )
-                BackupAction.StartAddingPrimaryCard -> state.copy(backupStep = BackupStep.ScanOriginCard)
-                BackupAction.StartAddingBackupCards -> {
-                    state.copy(backupStep = BackupStep.AddBackupCards)
-                }
-                BackupAction.AddBackupCard.Success -> {
-                    state.copy(backupCardsNumber = state.backupCardsNumber + 1)
-                }
-                BackupAction.ShowAccessCodeInfoScreen -> {
-                    state.copy(backupStep = BackupStep.SetAccessCode)
-                }
-                BackupAction.ShowEnterAccessCodeScreen -> {
-                    state.copy(backupStep = BackupStep.EnterAccessCode, accessCodeError = null)
-                }
-                is BackupAction.SaveFirstAccessCode -> {
-                    state.copy(
-                        backupStep = BackupStep.ReenterAccessCode,
-                        accessCode = action.accessCode,
-                    )
-                }
-                is BackupAction.SetAccessCodeError -> {
-                    state.copy(accessCodeError = action.error)
-                }
-                is BackupAction.PrepareToWritePrimaryCard -> {
-                    if (state.primaryCardId == null) {
-                        state.copy(
-                            primaryCardId = backupService.primaryCardId,
-                            backupCardIds = backupService.backupCardIds,
-                            backupCardsNumber = backupService.backupCardIds.size,
-                            backupStep = BackupStep.WritePrimaryCard,
-                        )
-                    } else {
-                        state.copy(backupStep = BackupStep.WritePrimaryCard)
-                    }
-                }
-                is BackupAction.PrepareToWriteBackupCard -> {
-                    if (state.primaryCardId == null) {
-                        state.copy(
-                            primaryCardId = backupService.primaryCardId,
-                            backupCardIds = backupService.backupCardIds,
-                            backupCardsNumber = backupService.backupCardIds.size,
-                            backupStep = BackupStep.WriteBackupCard(action.cardNumber),
-                        )
-                    } else {
-                        state.copy(backupStep = BackupStep.WriteBackupCard(action.cardNumber))
-                    }
-                }
-                is BackupAction.FinishBackup -> {
-                    state.copy(backupStep = BackupStep.Finished)
-                }
-                BackupAction.OnAccessCodeDialogClosed -> {
-                    state.copy(backupStep = BackupStep.AddBackupCards)
-                }
-                BackupAction.DiscardBackup -> BackupState()
-                else -> state
+            } else {
+                state.copy(backupStep = BackupStep.WritePrimaryCard)
             }
+            is BackupAction.PrepareToWriteBackupCard -> if (state.primaryCardId == null) {
+                state.copy(
+                    primaryCardId = backupService.primaryCardId,
+                    backupCardIds = backupService.backupCardIds,
+                    backupCardsNumber = backupService.backupCardIds.size,
+                    backupStep = BackupStep.WriteBackupCard(action.cardNumber),
+                )
+            } else {
+                state.copy(backupStep = BackupStep.WriteBackupCard(action.cardNumber))
+            }
+            is BackupAction.FinishBackup -> state.copy(backupStep = BackupStep.Finished)
+            BackupAction.OnAccessCodeDialogClosed -> state.copy(backupStep = BackupStep.AddBackupCards)
+            BackupAction.DiscardBackup -> BackupState()
+            else -> state
         }
     }
 }

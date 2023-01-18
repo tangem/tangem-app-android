@@ -49,7 +49,7 @@ class UserTokensRepository(
                 return@withContext handleGetUserTokensFailure(card = card, userId = userId, error = it)
             }
 
-        throw IllegalStateException("Unreachable code because runCatching must return result")
+        error("Unreachable code because runCatching must return result")
     }
 
     // TODO("After adding DI") replace with CoroutineDispatcherProvider
