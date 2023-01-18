@@ -2,6 +2,7 @@ package com.tangem.domain.common.extensions
 
 import com.tangem.blockchain.common.Blockchain
 
+@Suppress("ComplexMethod")
 fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
     return when (networkId) {
         "arbitrum-one" -> Blockchain.Arbitrum
@@ -52,6 +53,7 @@ fun Blockchain.Companion.fromNetworkId(networkId: String): Blockchain? {
     }
 }
 
+@Suppress("ComplexMethod")
 fun Blockchain.toNetworkId(): String {
     return when (this) {
         Blockchain.Unknown -> "unknown"
@@ -103,6 +105,7 @@ fun Blockchain.toNetworkId(): String {
     }
 }
 
+@Suppress("ComplexMethod")
 fun Blockchain.toCoinId(): String {
     return when (this) {
         Blockchain.Binance, Blockchain.BinanceTestnet, Blockchain.BSC, Blockchain.BSCTestnet -> "binancecoin"
