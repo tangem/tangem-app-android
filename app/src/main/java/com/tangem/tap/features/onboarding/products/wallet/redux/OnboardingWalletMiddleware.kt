@@ -4,13 +4,13 @@ import android.net.Uri
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.CompletionResult
 import com.tangem.common.extensions.ifNotNull
+import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.isSaltPay
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.operations.backup.BackupService
 import com.tangem.tap.backupService
-import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -37,10 +37,8 @@ import org.rekotlin.Action
 import org.rekotlin.DispatchFunction
 import org.rekotlin.Middleware
 
-class OnboardingWalletMiddleware {
-    companion object {
-        val handler = onboardingWalletMiddleware
-    }
+object OnboardingWalletMiddleware {
+    val handler = onboardingWalletMiddleware
 }
 
 private val onboardingWalletMiddleware: Middleware<AppState> = { dispatch, state ->
@@ -52,6 +50,7 @@ private val onboardingWalletMiddleware: Middleware<AppState> = { dispatch, state
     }
 }
 
+@Suppress("LongMethod", "ComplexMethod")
 private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch: DispatchFunction) {
     if (action !is OnboardingWalletAction) return
 
@@ -218,6 +217,7 @@ class BackupMiddleware {
     }
 }
 
+@Suppress("LongMethod", "ComplexMethod", "MagicNumber")
 private fun handleBackupAction(appState: () -> AppState?, action: BackupAction) {
     if (DemoHelper.tryHandle(appState, action)) return
     val globalState = appState()?.globalState ?: return
@@ -396,7 +396,7 @@ private fun initSaltPayOnBackupFinishedIfNeeded(
     onboardingWalletState: OnboardingWalletState,
 ) {
     if (onboardingWalletState.isSaltPay && onboardingWalletState.onboardingSaltPayState == null) {
-        if (scanResponse == null) throw IllegalArgumentException()
+        if (scanResponse == null) error("scanning response is null")
 
         val (manager, config) = OnboardingSaltPayState.initDependency(scanResponse)
         store.dispatchOnMain(OnboardingSaltPayAction.SetDependencies(manager, config))
