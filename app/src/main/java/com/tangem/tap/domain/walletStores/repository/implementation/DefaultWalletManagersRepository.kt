@@ -38,7 +38,9 @@ internal class DefaultWalletManagersRepository(
         return findOrMakeInternal(userWallet, blockchainNetwork)
     }
 
-    override suspend fun findOrMakeSingleCurrencyWalletManager(userWallet: UserWallet): CompletionResult<WalletManager> {
+    override suspend fun findOrMakeSingleCurrencyWalletManager(
+        userWallet: UserWallet,
+    ): CompletionResult<WalletManager> {
         return findOrMakeInternal(userWallet, blockchainNetwork = null)
     }
 
@@ -180,8 +182,11 @@ internal class DefaultWalletManagersRepository(
         blockchain: Blockchain?,
     ): WalletManager? {
         return walletManagersStorage.getAll().first()[userWalletId]?.let { userWalletManagers ->
-            if (blockchain == null) userWalletManagers.firstOrNull()
-            else userWalletManagers.find { it.wallet.blockchain == blockchain }
+            if (blockchain == null) {
+                userWalletManagers.firstOrNull()
+            } else {
+                userWalletManagers.find { it.wallet.blockchain == blockchain }
+            }
         }
     }
 

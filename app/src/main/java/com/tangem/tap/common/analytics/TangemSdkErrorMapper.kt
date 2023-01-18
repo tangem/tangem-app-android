@@ -2,10 +2,11 @@ package com.tangem.tap.common.analytics
 
 import com.tangem.common.core.TangemSdkError
 
-object TangemSdk {
+object TangemSdkErrorMapper {
 
     // This mapping is performed to group errors in FirebaseCrashlytics.
     // At the moment, the errors in Crashlytics can only be grouped by their place of creation (class and line).
+    @Suppress("LongMethod", "ComplexMethod")
     fun map(error: TangemSdkError): TangemSdkError {
         return when (error) {
             is TangemSdkError.TagLost -> TangemSdkError.TagLost()
@@ -90,7 +91,8 @@ object TangemSdk {
             is TangemSdkError.BackupFailedEmptyWallets -> TangemSdkError.BackupFailedEmptyWallets()
             is TangemSdkError.BackupFailedNotEmptyWallets -> TangemSdkError.BackupFailedNotEmptyWallets()
             is TangemSdkError.NoActiveBackup -> TangemSdkError.NoActiveBackup()
-            is TangemSdkError.ResetBackupFailedHasBackupedWallets -> TangemSdkError.ResetBackupFailedHasBackupedWallets()
+            is TangemSdkError.ResetBackupFailedHasBackupedWallets ->
+                TangemSdkError.ResetBackupFailedHasBackupedWallets()
             is TangemSdkError.BackupServiceInvalidState -> TangemSdkError.BackupServiceInvalidState()
             is TangemSdkError.NoBackupCardForIndex -> TangemSdkError.NoBackupCardForIndex()
             is TangemSdkError.EmptyBackupCards -> TangemSdkError.EmptyBackupCards()
