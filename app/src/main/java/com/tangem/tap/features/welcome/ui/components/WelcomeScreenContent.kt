@@ -24,6 +24,7 @@ import com.tangem.core.ui.components.SpacerHMax
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.wallet.R
 
+@Suppress("LongMethod")
 @Composable
 internal fun WelcomeScreenContent(
     modifier: Modifier = Modifier,

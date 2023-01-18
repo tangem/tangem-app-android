@@ -13,12 +13,12 @@ import coil.load
 import com.tangem.Message
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.VoidCallback
+import com.tangem.core.analytics.Analytics
 import com.tangem.core.ui.fragments.setStatusBarColor
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TwinCardNumber
 import com.tangem.tangem_sdk_new.ui.widget.leapfrogWidget.LeapfrogWidget
 import com.tangem.tap.common.AndroidAssetReader
-import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.beginDelayedTransition
 import com.tangem.tap.common.extensions.getDrawableCompat
@@ -40,6 +40,7 @@ import com.tangem.tap.store
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.LayoutOnboardingContainerTopBinding
 
+@Suppress("LargeClass")
 class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
 
     private val mainBinding by lazy { binding.vMain }
@@ -64,6 +65,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
         }
     }
 
+    @Suppress("MagicNumber")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         addBackPressHandler(this)
@@ -409,8 +411,7 @@ class TwinsCardsFragment : BaseOnboardingFragment<TwinCardsState>() {
             TwinCardsAction.Wallet.HandleOnBackPressed { should, popAction ->
                 store.dispatch(TwinCardsAction.Confetti.Hide)
                 showConfetti(false)
-                if (should) switchToCard(TwinCardNumber.First, true, popAction)
-                else popAction()
+                if (should) switchToCard(TwinCardNumber.First, true, popAction) else popAction()
             },
         )
     }

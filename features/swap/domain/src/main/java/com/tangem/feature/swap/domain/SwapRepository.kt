@@ -52,6 +52,7 @@ interface SwapRepository {
         walletAddress: String,
     ): AggregatedSwapDataModel<String>
 
+    @Suppress("LongParameterList")
     suspend fun prepareSwapTransaction(
         networkId: String,
         fromTokenAddress: String,
