@@ -77,6 +77,7 @@ class ConfigManager {
         )
     }
 
+    @Suppress("LongMethod")
     private fun setupKey(configValues: ConfigValueModel?) {
         val values = configValues ?: return
         config = config.copy(
