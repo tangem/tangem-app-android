@@ -31,11 +31,13 @@ data class OnboardingWalletState(
             else -> null
         }
 
+    @Suppress("MagicNumber")
     fun getMaxProgress(): Int = when {
         isSaltPay -> 12
         else -> 6
     }
 
+    @Suppress("ComplexMethod", "MagicNumber")
     fun getProgressStep(): Int {
         return when {
             step == OnboardingWalletStep.CreateWallet -> 1
@@ -106,7 +108,7 @@ sealed class BackupStep {
     object Finished : BackupStep()
 }
 
-sealed class OnboardingDialog: StateDialog {
+sealed class OnboardingDialog : StateDialog {
     data class InterruptOnboarding(val onOk: VoidCallback) : BackupDialog()
 }
 
