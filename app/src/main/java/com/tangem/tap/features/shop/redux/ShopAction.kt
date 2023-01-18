@@ -2,9 +2,9 @@ package com.tangem.tap.features.shop.redux
 
 import android.content.Intent
 import com.tangem.tap.common.redux.NotificationAction
-import com.tangem.tap.common.shop.GooglePayService
 import com.tangem.tap.common.shop.data.ProductType
 import com.tangem.tap.common.shop.data.TangemProduct
+import com.tangem.tap.common.shop.googlepay.GooglePayService
 import com.tangem.wallet.R
 import org.rekotlin.Action
 

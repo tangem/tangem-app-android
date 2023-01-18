@@ -8,7 +8,7 @@ import com.tangem.common.extensions.guard
 import com.tangem.operations.backup.ResetBackupCommand
 import com.tangem.operations.wallet.PurgeWalletCommand
 
-class ResetToFactorySettingsTask() : CardSessionRunnable<Card> {
+class ResetToFactorySettingsTask : CardSessionRunnable<Card> {
 
     override fun run(session: CardSession, callback: (result: CompletionResult<Card>) -> Unit) {
         deleteWallets(session, callback)
