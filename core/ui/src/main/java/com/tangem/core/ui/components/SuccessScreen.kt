@@ -40,7 +40,8 @@ import com.tangem.core.ui.res.TangemTheme
  * @param onSecondaryButtonClick  action on clicking secondary button
  * @param onButtonClick  action on clicking "Done" button
  *
- * @see <a href = "https://www.figma.com/file/Vs6SkVsFnUPsSCNwlnVf5U/Android-%E2%80%93-UI?node-id=1123%3A3863&t=wwR84h5IsMaMsDhq-1"
+ * @see <a href =
+ * "https://www.figma.com/file/Vs6SkVsFnUPsSCNwlnVf5U/Android-%E2%80%93-UI?node-id=1123%3A3863&t=wwR84h5IsMaMsDhq-1"
  * >Figma component</a>
  */
 @Composable
@@ -113,8 +114,7 @@ fun SuccessImage(
     Box(
         modifier = Modifier
             .background(
-                color = (resultColor)
-                    .copy(alpha = 0.2f),
+                color = resultColor.copy(alpha = 0.2f),
                 shape = CircleShape,
             ),
         contentAlignment = Alignment.Center,

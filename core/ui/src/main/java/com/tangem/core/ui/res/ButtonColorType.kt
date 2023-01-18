@@ -21,4 +21,4 @@ enum class ButtonColorType(val lightColor: Color, val darkColor: Color) {
 }
 
 @Composable
-fun Colors.buttonColor(type: ButtonColorType): Color = if (isSystemInDarkTheme) type.darkColor else type.lightColor
+fun Colors.buttonColor(type: ButtonColorType): Color = if (IS_SYSTEM_IN_DARK_THEME) type.darkColor else type.lightColor

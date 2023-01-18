@@ -14,7 +14,7 @@ class CardBalanceStateAdapter {
         return when (json) {
             AnalyticsParam.CardBalanceState.Empty.value -> AnalyticsParam.CardBalanceState.Empty
             AnalyticsParam.CardBalanceState.Full.value -> AnalyticsParam.CardBalanceState.Full
-            else -> throw IllegalArgumentException()
+            else -> error("CardBalanceState not found")
         }
     }
 }
