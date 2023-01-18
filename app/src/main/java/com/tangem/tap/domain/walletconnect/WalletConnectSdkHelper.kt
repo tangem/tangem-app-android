@@ -22,9 +22,9 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.common.extensions.hexToBytes
 import com.tangem.common.extensions.toDecompressedPublicKey
 import com.tangem.common.extensions.toHexString
+import com.tangem.core.analytics.Analytics
 import com.tangem.crypto.CryptoUtils
 import com.tangem.operations.sign.SignHashCommand
-import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.WalletConnect
 import com.tangem.tap.common.extensions.safeUpdate
 import com.tangem.tap.common.extensions.toFormattedString
@@ -48,6 +48,7 @@ import java.math.BigDecimal
 
 class WalletConnectSdkHelper {
 
+    @Suppress("MagicNumber")
     suspend fun prepareTransactionData(
         transaction: WCEthereumTransaction,
         session: WalletConnectSession,
@@ -101,7 +102,7 @@ class WalletConnectSdkHelper {
             gasAmount = fee.toFormattedString(decimals),
             totalAmount = total.toFormattedString(decimals),
             balance = balance.toFormattedString(decimals),
-            isEnoughFundsToSend = (balance - total) >= BigDecimal.ZERO,
+            isEnoughFundsToSend = balance - total >= BigDecimal.ZERO,
             session = session.session,
             id = id,
             type = type,
