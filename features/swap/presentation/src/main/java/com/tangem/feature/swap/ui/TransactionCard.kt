@@ -4,6 +4,7 @@ import androidx.annotation.DrawableRes
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -23,17 +24,22 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.selection.LocalTextSelectionColors
+import androidx.compose.foundation.text.selection.TextSelectionColors
 import androidx.compose.material.Card
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
+import androidx.compose.material.ripple.rememberRipple
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Color.Companion.Transparent
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -52,7 +58,6 @@ import androidx.compose.ui.unit.sp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 import com.tangem.core.ui.R
-import com.tangem.core.ui.components.CurrencyPlaceholderIcon
 import com.tangem.core.ui.components.FontSizeRange
 import com.tangem.core.ui.components.ResizableText
 import com.tangem.core.ui.components.SpacerH4
@@ -63,6 +68,7 @@ import com.valentinilk.shimmer.shimmer
 @Suppress("LongParameterList")
 @Composable
 fun TransactionCard(
+    modifier: Modifier = Modifier,
     type: TransactionCardType,
     balance: String,
     amount: String?,
@@ -73,6 +79,7 @@ fun TransactionCard(
     onChangeTokenClick: (() -> Unit)? = null,
 ) {
     Card(
+        modifier = modifier,
         shape = RoundedCornerShape(TangemTheme.dimens.radius12),
         backgroundColor = TangemTheme.colors.background.primary,
         elevation = TangemTheme.dimens.elevation2,
@@ -112,7 +119,10 @@ fun TransactionCard(
                         .align(Alignment.CenterEnd)
                         .height(TangemTheme.dimens.size116)
                         .width(TangemTheme.dimens.size102)
-                        .clickable { onChangeTokenClick() },
+                        .clickable(
+                            indication = rememberRipple(bounded = false),
+                            interactionSource = remember { MutableInteractionSource() },
+                        ) { onChangeTokenClick() },
                 )
             }
         }
@@ -209,7 +219,7 @@ private fun Content(
                 is TransactionCardType.SendCard -> {
                     AutoSizeTextField(
                         amount = amount ?: "1",
-                        onAmountChange = { type.onAmountChanged(it) },
+                        onAmoutChanged = { type.onAmountChanged(it) },
                     )
                 }
             }
@@ -245,7 +255,7 @@ private fun Content(
 
 @Suppress("MagicNumber")
 @Composable
-private fun AutoSizeTextField(amount: String, onAmountChange: (String) -> Unit) {
+private fun AutoSizeTextField(amount: String, onAmoutChanged: (String) -> Unit) {
     val focusManager = LocalFocusManager.current
     val textFieldFocusRequester = remember { FocusRequester() }
 
@@ -272,31 +282,39 @@ private fun AutoSizeTextField(amount: String, onAmountChange: (String) -> Unit) 
                 intrinsics = calculateIntrinsics()
             }
         }
-
-        BasicTextField(
-            value = amount,
-            onValueChange = {
-                onAmountChange(it)
-            },
-            singleLine = true,
-            modifier = Modifier
-                .fillMaxWidth()
-                .focusRequester(textFieldFocusRequester),
-            keyboardOptions = KeyboardOptions(
-                imeAction = ImeAction.Done,
-                keyboardType = KeyboardType.Decimal,
-            ),
-            keyboardActions = KeyboardActions(
-                onDone = {
-                    focusManager.clearFocus()
-                },
-            ),
-            textStyle = TangemTheme.typography.h2.copy(
-                color = TangemTheme.colors.text.primary1,
-                fontSize = shrunkFontSize,
-            ),
-            cursorBrush = SolidColor(TangemTheme.colors.text.primary1),
+        val customTextSelectionColors = TextSelectionColors(
+            handleColor = Transparent,
+            backgroundColor = TangemTheme.colors.text.secondary.copy(alpha = 0.4f),
         )
+        CompositionLocalProvider(
+            LocalTextSelectionColors provides customTextSelectionColors,
+        ) {
+
+            BasicTextField(
+                value = amount,
+                onValueChange = {
+                    onAmoutChanged(it)
+                },
+                singleLine = true,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(textFieldFocusRequester),
+                keyboardOptions = KeyboardOptions(
+                    imeAction = ImeAction.Done,
+                    keyboardType = KeyboardType.Decimal,
+                ),
+                keyboardActions = KeyboardActions(
+                    onDone = {
+                        focusManager.clearFocus()
+                    },
+                ),
+                textStyle = TangemTheme.typography.h2.copy(
+                    color = TangemTheme.colors.text.primary1,
+                    fontSize = shrunkFontSize,
+                ),
+                cursorBrush = SolidColor(TangemTheme.colors.text.primary1),
+            )
+        }
     }
 }
 
@@ -333,8 +351,8 @@ fun Token(
                     .crossfade(true)
                     .build(),
                 loading = { TokenImageShimmer(modifier = tokenImageModifier) },
-                error = { CurrencyPlaceholderIcon(modifier = tokenImageModifier, id = tokenCurrency) },
-                contentDescription = null,
+                // error = { CurrencyPlaceholderIcon(modifier = tokenImageModifier, tokenCurrency) },
+                contentDescription = tokenCurrency,
             )
 
             if (networkIconRes != null) {
