@@ -30,19 +30,19 @@ enum class StateId {
 interface SendScreenState : StateType, IdStateHolder
 
 data class SendState(
-        val walletManager: WalletManager? = null,
-        val coinConverter: CurrencyConverter? = null,
-        val tokenConverter: CurrencyConverter? = null,
-        val lastChangedStates: LinkedHashSet<StateId> = linkedSetOf(),
-        val addressPayIdState: AddressPayIdState = AddressPayIdState(),
-        val transactionExtrasState: TransactionExtrasState = TransactionExtrasState(),
-        val amountState: AmountState = AmountState(),
-        val feeState: FeeState = FeeState(),
-        val receiptState: ReceiptState = ReceiptState(),
-        val sendWarningsList: List<WarningMessage> = listOf(),
-        val sendButtonState: IndeterminateProgressButton = IndeterminateProgressButton(ButtonState.DISABLED),
-        val dialog: StateDialog? = null,
-        val externalTransactionData: ExternalTransactionData? = null
+    val walletManager: WalletManager? = null,
+    val coinConverter: CurrencyConverter? = null,
+    val tokenConverter: CurrencyConverter? = null,
+    val lastChangedStates: LinkedHashSet<StateId> = linkedSetOf(),
+    val addressPayIdState: AddressPayIdState = AddressPayIdState(),
+    val transactionExtrasState: TransactionExtrasState = TransactionExtrasState(),
+    val amountState: AmountState = AmountState(),
+    val feeState: FeeState = FeeState(),
+    val receiptState: ReceiptState = ReceiptState(),
+    val sendWarningsList: List<WarningMessage> = listOf(),
+    val sendButtonState: IndeterminateProgressButton = IndeterminateProgressButton(ButtonState.DISABLED),
+    val dialog: StateDialog? = null,
+    val externalTransactionData: ExternalTransactionData? = null,
 ) : SendScreenState {
 
     override val stateId: StateId = StateId.SEND_SCREEN
@@ -114,7 +114,7 @@ data class SendState(
         fun isReadyToRequestFee(): Boolean = addressPayIdIsReady() && amountIsReady()
 
         fun isReadyToSend(): Boolean = addressPayIdIsReady() && amountIsReady() &&
-                store.state.sendState.feeState.isReady()
+            store.state.sendState.feeState.isReady()
     }
 }
 
@@ -144,10 +144,13 @@ data class AmountState(
     fun isCoinAmount(): Boolean = typeOfAmount == AmountType.Coin
 
     fun createMainCurrency(type: MainCurrencyType, canSwitched: Boolean): MainCurrency {
-        return if (!canSwitched) MainCurrency(type, amountToExtract?.currencySymbol ?: "NONE", false)
-        else when (type) {
-            MainCurrencyType.FIAT -> MainCurrency(type, store.state.globalState.appCurrency.code)
-            MainCurrencyType.CRYPTO -> MainCurrency(type, amountToExtract?.currencySymbol ?: "NONE")
+        return if (!canSwitched) {
+            MainCurrency(type, amountToExtract?.currencySymbol ?: "NONE", false)
+        } else {
+            when (type) {
+                MainCurrencyType.FIAT -> MainCurrency(type, store.state.globalState.appCurrency.code)
+                MainCurrencyType.CRYPTO -> MainCurrency(type, amountToExtract?.currencySymbol ?: "NONE")
+            }
         }
     }
 
@@ -166,9 +169,9 @@ enum class MainCurrencyType {
 }
 
 data class MainCurrency(
-        val type: MainCurrencyType,
-        val currencySymbol: String,
-        val isEnabled: Boolean = true
+    val type: MainCurrencyType,
+    val currencySymbol: String,
+    val isEnabled: Boolean = true,
 )
 
 data class ExternalTransactionData(
@@ -176,5 +179,5 @@ data class ExternalTransactionData(
     val destinationAddress: String,
     val transactionId: String,
     val canAmountBeModified: Boolean = false,
-    val canDestinationAddressBeModified: Boolean = false
+    val canDestinationAddressBeModified: Boolean = false,
 )

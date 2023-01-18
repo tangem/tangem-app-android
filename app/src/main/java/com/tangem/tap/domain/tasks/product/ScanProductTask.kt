@@ -170,7 +170,8 @@ private class ScanWalletProcessor(
     ) {
         val activationInProgress = preferencesStorage.usedCardsPrefStorage.isActivationInProgress(card.cardId)
 
-        if ((card.backupStatus == CardDTO.BackupStatus.NoBackup && card.wallets.isNotEmpty())
+        @Suppress("ComplexCondition")
+        if (card.backupStatus == CardDTO.BackupStatus.NoBackup && card.wallets.isNotEmpty()
             && (activationInProgress || card.isSaltPay)
         ) {
             StartPrimaryCardLinkingTask().run(session) { linkingResult ->
@@ -266,7 +267,7 @@ private class ScanWalletProcessor(
         }
         if (additionalBlockchainsToDerive != null) {
             blockchainsToDerive.addAll(
-                additionalBlockchainsToDerive.map { BlockchainNetwork(it, card) }
+                additionalBlockchainsToDerive.map { BlockchainNetwork(it, card) },
             )
         }
         if (!card.useOldStyleDerivation) {
@@ -307,6 +308,7 @@ private class ScanWalletProcessor(
     }
 }
 
+@Suppress("MagicNumber")
 private class ScanTwinProcessor : ProductCommandProcessor<ScanResponse> {
     override fun proceed(
         card: CardDTO,

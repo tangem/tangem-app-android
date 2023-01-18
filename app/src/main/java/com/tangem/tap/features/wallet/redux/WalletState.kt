@@ -110,7 +110,7 @@ data class WalletState(
         if (currency == null) return null
         return walletsStores.firstOrNull {
             it.blockchainNetwork.derivationPath == currency.derivationPath &&
-                (it.blockchainNetwork.blockchain == currency.blockchain)
+                it.blockchainNetwork.blockchain == currency.blockchain
         }
     }
 
@@ -125,20 +125,13 @@ data class WalletState(
         if (blockchainNetwork == null) return null
         return walletsStores.firstOrNull {
             it.blockchainNetwork.derivationPath == blockchainNetwork.derivationPath &&
-                (it.blockchainNetwork.blockchain == blockchainNetwork.blockchain)
+                it.blockchainNetwork.blockchain == blockchainNetwork.blockchain
         }
     }
 
     fun getWalletData(currency: Currency?): WalletData? {
         if (currency == null) return null
         return getWalletStore(currency)?.walletsData?.firstOrNull { it.currency == currency }
-    }
-
-    private fun isPrimaryCurrency(walletData: WalletData): Boolean {
-        return (walletData.currency is Currency.Blockchain &&
-            walletData.currency.blockchain == store.state.walletState.primaryBlockchain)
-            || (walletData.currency is Currency.Token &&
-            walletData.currency.token == store.state.walletState.primaryToken)
     }
 
     fun replaceWalletStoreInWalletsStores(wallet: WalletStore?): List<WalletStore> {
@@ -231,9 +224,9 @@ data class WalletState(
                     fiatCurrency = store.state.globalState.appCurrency,
                 ),
             )
-        } else this.copy(
-            totalBalance = null,
-        )
+        } else {
+            this.copy(totalBalance = null)
+        }
     }
 
     private fun updateProgressState(): WalletState {
@@ -377,7 +370,7 @@ data class WalletData(
         if (!currency.isToken()) return
 
         val blockchainFullName = currency.blockchain.fullName
-        if ((blockchainAmountIsEmpty() && !tokenAmountIsEmpty())) {
+        if (blockchainAmountIsEmpty() && !tokenAmountIsEmpty()) {
             walletWarnings.add(WalletWarning.BalanceNotEnoughForFee(blockchainFullName))
         }
     }
