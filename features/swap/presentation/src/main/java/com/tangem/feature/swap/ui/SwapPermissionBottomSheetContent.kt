@@ -15,6 +15,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import com.tangem.core.ui.components.MiddleEllipsisText
 import com.tangem.core.ui.components.PrimaryButtonIconRight
 import com.tangem.core.ui.components.SecondaryButton
 import com.tangem.core.ui.components.SpacerH10
@@ -151,11 +152,11 @@ private fun InformationItem(subtitle: String, value: String) {
 
         SpacerH16()
 
-        Text(
+        MiddleEllipsisText(
             text = value,
             color = TangemTheme.colors.text.tertiary,
             style = TangemTheme.typography.body2,
-            maxLines = 1,
+            modifier = Modifier.padding(start = TangemTheme.dimens.spacing16),
         )
     }
 }
