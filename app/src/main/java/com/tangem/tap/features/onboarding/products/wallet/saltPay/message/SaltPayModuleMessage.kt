@@ -28,27 +28,26 @@ sealed class SaltPayActivationError(
     subCode = ERROR_CODE_REGISTRATION + subCode,
     message = message ?: EMPTY_MESSAGE,
 ) {
-    object Unknown : SaltPayActivationError(4)
-    object Empty : SaltPayActivationError(4)
+    object Unknown : SaltPayActivationError(subCode = 4)
+    object Empty : SaltPayActivationError(subCode = 4)
 
     // gnosis
-    object FailedToMakeTxData : SaltPayActivationError(1)
-    object FailedToSendTx : SaltPayActivationError(2)
+    object FailedToMakeTxData : SaltPayActivationError(subCode = 1)
+    object FailedToSendTx : SaltPayActivationError(subCode = 2)
 
-    object NeedPin : SaltPayActivationError(3)
-    object NoGas : SaltPayActivationError(5) //
-    object EmptyResponse : SaltPayActivationError(6)
-    object CardNotFound : SaltPayActivationError(8)
-    class CardDisabled(message: String?) : SaltPayActivationError(9, message)
-    class CardNotPassed(message: String?) : SaltPayActivationError(10, message)
-    object EmptyDynamicAttestResponse : SaltPayActivationError(11)
-    object EmptyBackupCardScanned : SaltPayActivationError(12)
-    object WeakPin : SaltPayActivationError(13)
+    object NeedPin : SaltPayActivationError(subCode = 3)
+    object NoGas : SaltPayActivationError(subCode = 5)
+    object EmptyResponse : SaltPayActivationError(subCode = 6)
+    object CardNotFound : SaltPayActivationError(subCode = 8)
+    class CardDisabled(message: String?) : SaltPayActivationError(subCode = 9, message = message)
+    class CardNotPassed(message: String?) : SaltPayActivationError(subCode = 10, message = message)
+    object EmptyDynamicAttestResponse : SaltPayActivationError(subCode = 11)
+    object EmptyBackupCardScanned : SaltPayActivationError(subCode = 12)
+    object WeakPin : SaltPayActivationError(subCode = 13)
 
-    object FailedToGetFundsToClaim : SaltPayActivationError(14)
-    object NoFundsToClaim : SaltPayActivationError(15)
-    object ClaimTransactionFailed : SaltPayActivationError(16)
-    object NotClaimed : SaltPayActivationError(17)
+    object FailedToGetFundsToClaim : SaltPayActivationError(subCode = 14)
+    object NoFundsToClaim : SaltPayActivationError(subCode = 15)
+    object ClaimTransactionFailed : SaltPayActivationError(subCode = 16)
 
     companion object {
         const val EMPTY_MESSAGE = ""
