@@ -13,7 +13,8 @@ import androidx.core.graphics.drawable.toBitmap
  */
 @Composable
 fun asImageBitmap(@DrawableRes drawableId: Int): ImageBitmap {
-    val drawable = AppCompatResources.getDrawable(LocalContext.current, drawableId)
-        ?: throw NullPointerException()
+    val drawable = requireNotNull(AppCompatResources.getDrawable(LocalContext.current, drawableId)) {
+        "drawable is null"
+    }
     return drawable.toBitmap().asImageBitmap()
 }

@@ -40,6 +40,7 @@ import com.tangem.tap.features.tokens.ui.compose.CurrencyPlaceholderIcon
 import com.tangem.tap.features.tokens.ui.compose.fullName
 import com.tangem.wallet.R
 
+@Suppress("LongMethod", "MagicNumber")
 @Composable
 fun CurrencyItemHeader(
     currency: Currency,
@@ -166,6 +167,7 @@ private fun NetworksRow(
     }
 }
 
+@Suppress("MagicNumber")
 @Composable
 private fun BlockchainNetworkItem(
     blockchain: Blockchain?,

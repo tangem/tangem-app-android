@@ -613,10 +613,11 @@ style:
     active: true
   UnusedPrivateClass:
     active: true
+    ignoreAnnotated: ['UnusedRequiredComponent']
   UnusedPrivateMember:
     active: true
     allowedNames: '(_|ignored|expected|serialVersionUID)'
-    ignoreAnnotated: ['Preview']
+    ignoreAnnotated: ['Preview', 'UnusedRequiredComponent']
   UseAnyOrNoneInsteadOfFind:
     active: true
   UseArrayLiteralsInAnnotations:

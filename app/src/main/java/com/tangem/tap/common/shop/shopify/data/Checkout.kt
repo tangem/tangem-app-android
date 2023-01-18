@@ -2,23 +2,24 @@ package com.tangem.tap.common.shop.shopify.data
 
 import com.shopify.buy3.Storefront
 
+@Suppress("LongMethod", "MagicNumber")
 fun Storefront.CheckoutQuery.checkoutFieldsFragment() {
-    //                            id()
     ready()
     webUrl()
     currencyCode()
     lineItemsSubtotalPrice { it.amount() }
     totalPriceV2 {
         it.currencyCode()
-        it.amount() }
+        it.amount()
+    }
     lineItems({ arg -> arg.first(250) }) {
         it.edges {
             it.node {
 //                                        it.id()
                 it.title()
                 it.quantity()
-                it.variant() {
-                    it.priceV2() { it.amount() }
+                it.variant {
+                    it.priceV2 { it.amount() }
                 }
             }
         }
