@@ -5,6 +5,9 @@ import androidx.compose.material.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.ResultScreenContent
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
@@ -18,7 +21,10 @@ fun SwapSuccessScreen(state: SwapSuccessStateHolder, onBack: () -> Unit) {
         Scaffold(
             content = { padding ->
                 ResultScreenContent(
-                    resultMessage = state.message,
+                    resultMessage = makeSuccessMessage(
+                        fromTokenAmount = state.fromTokenAmount,
+                        toTokenAmount = state.toTokenAmount,
+                    ),
                     resultColor = TangemTheme.colors.icon.attention,
                     onButtonClick = onBack,
                     icon = R.drawable.ic_clock_24,
@@ -40,10 +46,24 @@ fun SwapSuccessScreen(state: SwapSuccessStateHolder, onBack: () -> Unit) {
     }
 }
 
+@Composable
+private fun makeSuccessMessage(fromTokenAmount: String, toTokenAmount: String): AnnotatedString {
+    val message = stringResource(id = R.string.swapping_swap_of_to, fromTokenAmount, toTokenAmount)
+    return buildAnnotatedString {
+        append(message)
+        addStyle(
+            style = SpanStyle(color = TangemTheme.colors.text.accent),
+            start = message.indexOf(toTokenAmount),
+            end = message.length,
+        )
+    }
+}
+
 // region preview
 
 private val state = SwapSuccessStateHolder(
-    message = "Swap of 1 000 DAI to 1 131,46 MATIC",
+    fromTokenAmount = "1 000 DAI",
+    toTokenAmount = "1 131,46 MATIC",
 ) {}
 
 @Preview(showBackground = true)
