@@ -20,8 +20,8 @@ import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.redux.NotificationsHandler
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
-import com.tangem.tap.common.shop.GooglePayService
-import com.tangem.tap.common.shop.GooglePayService.Companion.LOAD_PAYMENT_DATA_REQUEST_CODE
+import com.tangem.tap.common.shop.googlepay.GooglePayService
+import com.tangem.tap.common.shop.googlepay.GooglePayService.Companion.LOAD_PAYMENT_DATA_REQUEST_CODE
 import com.tangem.tap.common.shop.googlepay.GooglePayUtil.createPaymentsClient
 import com.tangem.tap.domain.TangemSdkManager
 import com.tangem.tap.domain.userWalletList.UserWalletsListManager
@@ -120,7 +120,8 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         val isScannedBefore = store.state.globalState.scanResponse != null
         val isOnboardingServiceActive = store.state.globalState.onboardingState.onboardingStarted
         val shopOpened = store.state.shopState.total != null
-        if (backStackIsEmpty || (!isOnboardingServiceActive && !isScannedBefore && !shopOpened)) {
+        @Suppress("ComplexCondition")
+        if (backStackIsEmpty || !isOnboardingServiceActive && !isScannedBefore && !shopOpened) {
             if (userWalletsListManager.hasSavedUserWallets) {
                 store.dispatchOnMain(WelcomeAction.HandleDeepLink(intent))
                 store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Welcome))
