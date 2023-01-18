@@ -219,13 +219,18 @@ internal class BiometricUserWalletsListManager(
     private suspend fun loadModels(): CompletionResult<Unit> {
         return getSavedUserWallets()
             .map { userWallets ->
-                if (userWallets.isNotEmpty()) state.update { prevState ->
-                    val wallets = (userWallets + prevState.userWallets).distinctBy { it.walletId }
+                if (userWallets.isNotEmpty()) {
+                    state.update { prevState ->
+                        val wallets = (userWallets + prevState.userWallets).distinctBy { it.walletId }
 
-                    prevState.copy(
-                        userWallets = wallets,
-                        selectedUserWalletId = findOrSetSelectedUserWalletId(prevState.selectedUserWalletId, wallets),
-                    )
+                        prevState.copy(
+                            userWallets = wallets,
+                            selectedUserWalletId = findOrSetSelectedUserWalletId(
+                                prevSelectedWalletId = prevState.selectedUserWalletId,
+                                userWallets = wallets,
+                            ),
+                        )
+                    }
                 }
             }
             .doOnFailure { error ->

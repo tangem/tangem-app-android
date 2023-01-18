@@ -4,10 +4,8 @@ import com.tangem.tap.common.extensions.getPreviousScreen
 import com.tangem.tap.common.redux.AppState
 import org.rekotlin.Action
 
-class NavigationReducer {
-    companion object {
-        fun reduce(action: Action, state: AppState): NavigationState = internalReduce(action, state)
-    }
+object NavigationReducer {
+    fun reduce(action: Action, state: AppState): NavigationState = internalReduce(action, state)
 }
 
 private fun internalReduce(action: Action, state: AppState): NavigationState {
