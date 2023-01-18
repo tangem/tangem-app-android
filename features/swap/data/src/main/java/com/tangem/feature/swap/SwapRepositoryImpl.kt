@@ -20,6 +20,7 @@ import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
+@Suppress("LongParameterList")
 internal class SwapRepositoryImpl @Inject constructor(
     private val tangemTechApi: TangemTechApi,
     private val oneInchApiFactory: OneInchApiFactory,

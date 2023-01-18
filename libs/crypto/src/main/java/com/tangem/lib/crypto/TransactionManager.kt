@@ -7,6 +7,7 @@ import java.math.BigDecimal
 
 interface TransactionManager {
 
+    @Suppress("LongParameterList")
     @Throws(IllegalStateException::class)
     suspend fun sendTransaction(
         networkId: String,
