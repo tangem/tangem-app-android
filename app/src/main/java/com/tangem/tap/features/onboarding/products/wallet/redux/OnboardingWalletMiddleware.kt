@@ -80,11 +80,11 @@ private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch:
                 card.wallets.isNotEmpty() && card.backupStatus?.isActive == true -> {
                     when {
                         // check for unfinished backup for saltPay cards. See more
-                        scanResponse.isSaltPay() && backupService.hasIncompletedBackup -> {
+                        scanResponse.cardTypesResolver.isSaltPay() && backupService.hasIncompletedBackup -> {
                             store.dispatch(OnboardingWalletAction.ResumeBackup)
                         }
 
-                        scanResponse.isSaltPay() -> {
+                        scanResponse.cardTypesResolver.isSaltPay() -> {
                             store.dispatch(OnboardingWalletAction.GetToSaltPayStep)
                             store.dispatch(BackupAction.FinishBackup)
                         }
