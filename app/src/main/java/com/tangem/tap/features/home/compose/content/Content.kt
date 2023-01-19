@@ -216,9 +216,9 @@ private fun StoriesSubtitleText(subtitleText: AnnotatedString) {
 
 @Composable
 private fun StoriesImage(
-    modifier: Modifier = Modifier,
     @DrawableRes drawableResId: Int,
     isDarkBackground: Boolean,
+    modifier: Modifier = Modifier,
 ) {
     Image(
         painter = painterResource(id = drawableResId),
