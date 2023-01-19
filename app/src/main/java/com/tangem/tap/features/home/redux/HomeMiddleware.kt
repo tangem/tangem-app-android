@@ -11,6 +11,7 @@ import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.backupService
 import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.analytics.events.IntroductionProcess
+import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.analytics.events.Shop
 import com.tangem.tap.common.analytics.paramsInterceptor.BatchIdParamsInterceptor
 import com.tangem.tap.common.entities.IndeterminateProgressButton
@@ -76,7 +77,7 @@ private fun handleHomeAction(appState: () -> AppState?, action: Action, dispatch
         is HomeAction.ShouldScanCardOnResume -> {
             if (action.shouldScanCard) {
                 store.dispatch(HomeAction.ShouldScanCardOnResume(false))
-                postUiDelayBg(700) { store.dispatch(HomeAction.ReadCard) }
+                postUiDelayBg(700) { store.dispatch(HomeAction.ReadCard(AppScreen.Wallet)) }
             }
         }
         is HomeAction.ReadCard -> {
@@ -90,7 +91,7 @@ private fun handleHomeAction(appState: () -> AppState?, action: Action, dispatch
                         nextHandler = {
                             showDisclaimerIfNeed(
                                 scanResponse = scanResponse,
-                                nextHandler = ::onScanSuccess,
+                                nextHandler = { onScanSuccess(action.fromScreen, scanResponse) },
                             )
                         },
                     )
@@ -154,8 +155,12 @@ private fun showDisclaimerIfNeed(scanResponse: ScanResponse, nextHandler: (ScanR
     }
 }
 
-private fun onScanSuccess(scanResponse: ScanResponse) {
-    Analytics.send(IntroductionProcess.CardWasScanned())
+private fun onScanSuccess(fromScreen: AppScreen, scanResponse: ScanResponse) {
+    when (fromScreen) {
+        AppScreen.Wallet -> Analytics.send(MainScreen.CardWasScanned())
+        else -> Analytics.send(IntroductionProcess.CardWasScanned())
+    }
+
     val globalState = store.state.globalState
     val tapWalletManager = globalState.tapWalletManager
     tapWalletManager.updateConfigManager(scanResponse)
