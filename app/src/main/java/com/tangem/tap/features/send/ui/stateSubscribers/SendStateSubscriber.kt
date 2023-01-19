@@ -321,13 +321,19 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
                 tvReceiptAmountValue.update("${receipt.amountCrypto} ${receipt.symbols.crypto}")
                 tvReceiptFeeValue.update("${receipt.feeCrypto} ${receipt.symbols.crypto}")
                 llTotalContainer.tvTotalValue.update("${receipt.totalCrypto} ${receipt.symbols.crypto}")
-                llTotalContainer.tvWillBeSentValue.update(
-                    getString(
-                        R.string.send_total_subtitle_fiat_format,
-                        "${roughOrEmpty(receipt.willSentFiat)} ${receipt.symbols.fiat}",
-                        "${receipt.feeFiat} ${receipt.symbols.fiat}",
-                    ),
-                )
+
+                if (receipt.willSentFiat == UNKNOWN_AMOUNT_SIGN) {
+                    llTotalContainer.tvWillBeSentValue.hide()
+                } else {
+                    llTotalContainer.tvWillBeSentValue.show()
+                    llTotalContainer.tvWillBeSentValue.update(
+                        getString(
+                            R.string.send_total_subtitle_fiat_format,
+                            "${receipt.willSentFiat} ${receipt.symbols.fiat}",
+                            "${receipt.feeFiat} ${receipt.symbols.fiat}",
+                        ),
+                    )
+                }
             }
             ReceiptLayoutType.TOKEN_FIAT -> {
                 val receipt = state.tokenFiat ?: return
