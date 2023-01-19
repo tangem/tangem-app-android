@@ -14,10 +14,10 @@ console-reports:
 output-reports:
   active: true
   exclude:
-  # - 'TxtOutputReport'
-  - 'XmlOutputReport'
-  - 'HtmlOutputReport'
-  - 'MdOutputReport'
+    # - 'TxtOutputReport'
+    - 'XmlOutputReport'
+    - 'HtmlOutputReport'
+    - 'MdOutputReport'
 
 comments:
   active: false
@@ -36,7 +36,7 @@ comments:
     endOfSentenceFormat: '([.?!][ \t\n\r\f<])|([.?!:]$)'
   KDocReferencesNonPublicProperty:
     active: false
-    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**']
+    excludes: [ '**/test/**', '**/androidTest/**', '**/commonTest/**' ]
   OutdatedDocumentation:
     active: false
     matchTypeParameters: true
@@ -44,17 +44,17 @@ comments:
     allowParamOnConstructorProperties: false
   UndocumentedPublicClass:
     active: false
-    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**']
+    excludes: [ '**/test/**', '**/androidTest/**', '**/commonTest/**' ]
     searchInNestedClass: true
     searchInInnerClass: true
     searchInInnerObject: true
     searchInInnerInterface: true
   UndocumentedPublicFunction:
     active: false
-    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**']
+    excludes: [ '**/test/**', '**/androidTest/**', '**/commonTest/**' ]
   UndocumentedPublicProperty:
     active: false
-    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**']
+    excludes: [ '**/test/**', '**/androidTest/**', '**/commonTest/**' ]
 
 complexity:
   active: true
@@ -70,7 +70,7 @@ complexity:
     includePrivateDeclarations: false
   LabeledExpression:
     active: false
-    ignoredLabels: []
+    ignoredLabels: [ ]
   LargeClass:
     active: true
     threshold: 300
@@ -83,7 +83,7 @@ complexity:
     constructorThreshold: 7
     ignoreDefaultParameters: true
     ignoreDataClasses: true
-    ignoreAnnotated: ['Provides']
+    ignoreAnnotated: [ 'Provides' ]
   MethodOverloading:
     active: true
     threshold: 6
@@ -107,14 +107,14 @@ complexity:
     active: true
   StringLiteralDuplication:
     active: false
-    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**']
+    excludes: [ '**/test/**', '**/androidTest/**', '**/commonTest/**' ]
     threshold: 3
     ignoreAnnotation: true
     excludeStringsWithLessThan5Characters: true
     ignoreStringsRegex: '$^'
   TooManyFunctions:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**']
+    excludes: [ '**/test/**', '**/androidTest/**', '**/commonTest/**' ]
     thresholdInFiles: 20
     thresholdInClasses: 20
     thresholdInInterfaces: 20
@@ -189,7 +189,7 @@ exceptions:
       - 'toString'
   InstanceOfCheckForException:
     active: false
-    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**']
+    excludes: [ '**/test/**', '**/androidTest/**', '**/commonTest/**' ]
   NotImplementedDeclaration:
     active: false
   ObjectExtendsThrowable:
@@ -215,7 +215,7 @@ exceptions:
     active: false
   ThrowingExceptionsWithoutMessageOrCause:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**']
+    excludes: [ '**/test/**', '**/androidTest/**', '**/commonTest/**' ]
     exceptions:
       - 'ArrayIndexOutOfBoundsException'
       - 'Exception'
@@ -230,7 +230,7 @@ exceptions:
     active: true
   TooGenericExceptionCaught:
     active: false
-    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**']
+    excludes: [ '**/test/**', '**/androidTest/**', '**/commonTest/**' ]
     exceptionNames:
       - 'ArrayIndexOutOfBoundsException'
       - 'Error'
@@ -269,7 +269,7 @@ naming:
     enumEntryPattern: '[A-Z][_a-zA-Z0-9]*'
   ForbiddenClassName:
     active: false
-    forbiddenName: []
+    forbiddenName: [ ]
   FunctionMaxLength:
     active: false
     maximumFunctionNameLength: 30
@@ -278,11 +278,11 @@ naming:
     minimumFunctionNameLength: 3
   FunctionNaming:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**']
+    excludes: [ '**/test/**', '**/androidTest/**', '**/commonTest/**' ]
     functionPattern: '[a-z][a-zA-Z0-9]*'
     excludeClassPattern: '$^'
     ignoreOverridden: true
-    ignoreAnnotated: ['Composable']
+    ignoreAnnotated: [ 'Composable' ]
   FunctionParameterNaming:
     active: true
     parameterPattern: '[a-z][A-Za-z0-9]*'
@@ -340,10 +340,10 @@ performance:
     threshold: 3
   ForEachOnRange:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**']
+    excludes: [ '**/test/**', '**/androidTest/**', '**/commonTest/**' ]
   SpreadOperator:
     active: false
-    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**']
+    excludes: [ '**/test/**', '**/androidTest/**', '**/commonTest/**' ]
   UnnecessaryTemporaryInstantiation:
     active: true
 
@@ -389,7 +389,7 @@ potential-bugs:
       - '*.CheckReturnValue'
     ignoreReturnValueAnnotations:
       - '*.CanIgnoreReturnValue'
-    ignoreFunctionCall: []
+    ignoreFunctionCall: [ ]
   ImplicitDefaultLocale:
     active: true
   ImplicitUnitReturnType:
@@ -403,14 +403,14 @@ potential-bugs:
     active: true
   LateinitUsage:
     active: false
-    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**']
-    ignoreAnnotated: ['Inject']
+    excludes: [ '**/test/**', '**/androidTest/**', '**/commonTest/**' ]
+    ignoreAnnotated: [ 'Inject' ]
     ignoreOnClassesPattern: ''
   MapGetWithNotNullAssertionOperator:
     active: true
   MissingPackageDeclaration:
     active: true
-    excludes: ['**/*.kts']
+    excludes: [ '**/*.kts' ]
   NullCheckOnMutableProperty:
     active: true
   NullableToStringCall:
@@ -427,7 +427,7 @@ potential-bugs:
     active: true
   UnsafeCallOnNullableType:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**']
+    excludes: [ '**/test/**', '**/androidTest/**', '**/commonTest/**' ]
   UnsafeCast:
     active: true
   UnusedUnaryOperator:
@@ -478,7 +478,7 @@ style:
     customMessage: ''
   ForbiddenImport:
     active: false
-    imports: []
+    imports: [ ]
     forbiddenPatterns: ''
   ForbiddenMethodCall:
     active: false
@@ -489,7 +489,7 @@ style:
         value: 'kotlin.io.println'
   ForbiddenSuppress:
     active: false
-    rules: []
+    rules: [ ]
   ForbiddenVoid:
     active: false
     ignoreOverridden: false
@@ -503,7 +503,7 @@ style:
     maxJumpCount: 2
   MagicNumber:
     active: true
-    excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/*.kts']
+    excludes: [ '**/test/**', '**/androidTest/**', '**/commonTest/**', '**/*.kts' ]
     ignoreNumbers:
       - '-1'
       - '0'
@@ -519,7 +519,7 @@ style:
     ignoreEnums: false
     ignoreRanges: false
     ignoreExtensionFunctions: true
-    ignoreAnnotated: ['Preview']
+    ignoreAnnotated: [ 'Preview' ]
   MandatoryBracesIfStatements:
     active: true
   MandatoryBracesLoops:
@@ -613,11 +613,11 @@ style:
     active: true
   UnusedPrivateClass:
     active: true
-    ignoreAnnotated: ['UnusedRequiredComponent']
+    ignoreAnnotated: [ 'UnusedRequiredComponent' ]
   UnusedPrivateMember:
     active: true
     allowedNames: '(_|ignored|expected|serialVersionUID)'
-    ignoreAnnotated: ['Preview', 'UnusedRequiredComponent']
+    ignoreAnnotated: [ 'Preview', 'UnusedRequiredComponent' ]
   UseAnyOrNoneInsteadOfFind:
     active: true
   UseArrayLiteralsInAnnotations:
@@ -654,3 +654,27 @@ style:
     active: false
     excludeImports:
       - 'java.util.*'
+
+compose:
+  ReusedModifierInstance:
+    active: true
+  UnnecessaryEventHandlerParameter:
+    active: true
+  ComposableEventParameterNaming:
+    active: true
+  ComposableParametersOrdering:
+    active: true
+  ModifierDefaultValue:
+    active: true
+  MissingModifierDefaultValue:
+    active: true
+  ModifierHeightWithText:
+    active: true
+  ModifierParameterPosition:
+    active: true
+  PublicComposablePreview:
+    active: true
+  TopLevelComposableFunctions:
+    active: true
+  ComposeFunctionName:
+    active: true
