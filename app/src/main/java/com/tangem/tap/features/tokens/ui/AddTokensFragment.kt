@@ -77,7 +77,7 @@ class AddTokensFragment : BaseFragment(R.layout.fragment_add_tokens), StoreSubsc
                 CurrenciesScreen(
                     tokensState = tokensState,
                     onSaveChanges = onSaveChanges,
-                    onNetworkItemClicked = onNetworkItemClicked,
+                    onNetworkItemClick = onNetworkItemClicked,
                     onLoadMore = onLoadMore,
                 )
             }
