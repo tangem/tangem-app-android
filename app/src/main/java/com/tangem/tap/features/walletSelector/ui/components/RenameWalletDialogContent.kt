@@ -27,13 +27,10 @@ import com.tangem.tap.features.walletSelector.ui.model.RenameWalletDialog
 import com.tangem.wallet.R
 
 @Composable
-internal fun RenameWalletDialogContent(
-    modifier: Modifier = Modifier,
-    dialog: RenameWalletDialog,
-) {
+internal fun RenameWalletDialogContent(dialog: RenameWalletDialog) {
     Dialog(onDismissRequest = dialog.onCancel) {
         Column(
-            modifier = modifier
+            modifier = Modifier
                 .background(
                     shape = TangemTheme.shapes.roundedCornersLarge,
                     color = TangemTheme.colors.background.plain,

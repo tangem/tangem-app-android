@@ -15,9 +15,9 @@ fun CurrencyItem(
     addedBlockchains: List<Blockchain>,
     allowToAdd: Boolean,
     isExpanded: Boolean,
-    onCurrencyClick: (String) -> Unit,
-    onAddCurrencyToggled: (Currency, TokenWithBlockchain?) -> Unit,
-    onNetworkItemClicked: (ContractAddress) -> Unit,
+    onCurrencyClick: () -> Unit,
+    onAddCurrencyToggle: (Currency, TokenWithBlockchain?) -> Unit,
+    onNetworkItemClick: (ContractAddress) -> Unit,
 ) {
     Column {
         CurrencyItemHeader(
@@ -33,8 +33,8 @@ fun CurrencyItem(
             addedBlockchains = addedBlockchains,
             allowToAdd = allowToAdd,
             isExpanded = isExpanded,
-            onAddCurrencyToggled = onAddCurrencyToggled,
-            onNetworkItemClicked = onNetworkItemClicked,
+            onAddCurrencyToggle = onAddCurrencyToggle,
+            onNetworkItemClick = onNetworkItemClick,
         )
     }
 }

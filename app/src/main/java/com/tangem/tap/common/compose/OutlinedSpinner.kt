@@ -21,11 +21,11 @@ import com.tangem.tap.common.extensions.ValueCallback
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 fun <T> OutlinedSpinner(
-    modifier: Modifier = Modifier,
     label: String,
     itemList: List<T>,
     selectedItem: Field.Data<T>,
     onItemSelected: ValueCallback<T>,
+    modifier: Modifier = Modifier,
     textFieldConverter: (T) -> String = { it.toString() },
     dropdownItemView: @Composable ((T) -> Unit)? = null,
     isEnabled: Boolean = true,
@@ -96,13 +96,11 @@ class ClosePopupTrigger {
 
 @Preview
 @Composable
-fun TestSpinnerPreview() {
-    Scaffold {
-        OutlinedSpinner(
-            label = "Blockchain name",
-            itemList = listOf(Blockchain.values()),
-            selectedItem = Field.Data(Blockchain.Avalanche, false),
-            onItemSelected = {},
-        )
-    }
+private fun TestSpinnerPreview() {
+    OutlinedSpinner(
+        label = "Blockchain name",
+        itemList = listOf(Blockchain.values()),
+        selectedItem = Field.Data(Blockchain.Avalanche, false),
+        onItemSelected = {},
+    )
 }

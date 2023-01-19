@@ -37,8 +37,9 @@ import com.tangem.wallet.R
 @Suppress("LongMethod", "ComplexMethod", "MagicNumber")
 @Composable
 fun FirstStoriesContent(
-    isPaused: Boolean, duration: Int = 8_000,
-    hideContent: (Boolean) -> Unit,
+    isPaused: Boolean,
+    duration: Int,
+    onHideContent: (Boolean) -> Unit,
 ) {
     val screenState = remember { mutableStateOf(StartingScreenState.INIT) }
     val progress = remember { Animatable(0f) }
@@ -70,8 +71,8 @@ fun FirstStoriesContent(
         in 1.2f..2f -> screenState.value = StartingScreenState.MEET_TANGEM
     }
 
-    if (screenState.value == StartingScreenState.INIT) hideContent(true)
-    if (screenState.value == StartingScreenState.BUY) hideContent(false)
+    if (screenState.value == StartingScreenState.INIT) onHideContent(true)
+    if (screenState.value == StartingScreenState.BUY) onHideContent(false)
 
     val style = TextStyle(
         fontSize = 60.sp,
@@ -166,6 +167,6 @@ private fun MutableState<StartingScreenState>.isMeetTangemDisplaying(): Boolean 
 
 @Preview
 @Composable
-fun FirstStoriesPreview() {
+private fun FirstStoriesPreview() {
     FirstStoriesContent(false, 8000) {}
 }

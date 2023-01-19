@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -52,19 +52,19 @@ fun NetworkItem(
     added: Boolean,
     index: Int,
     size: Int,
-    onAddCurrencyToggled: (Currency, TokenWithBlockchain?) -> Unit,
-    onNetworkItemClicked: (ContractAddress) -> Unit,
+    onAddCurrencyToggle: (Currency, TokenWithBlockchain?) -> Unit,
+    onNetworkItemClick: (ContractAddress) -> Unit,
 ) {
     val rowHeight = 53.dp
 
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(rowHeight)
+            .heightIn(rowHeight)
             .combinedClickable(
                 enabled = allowToAdd,
                 onLongClick = {
-                    contract.address?.let { onNetworkItemClicked(it) }
+                    contract.address?.let { onNetworkItemClick(it) }
                 },
                 onClick = {},
                 indication = null,
@@ -150,7 +150,7 @@ fun NetworkItem(
                     .fillMaxHeight()
                     .padding(start = 16.dp, end = 16.dp),
                 checked = added,
-                onCheckedChange = { onAddCurrencyToggled(currencyToSave, tokenWithBlockchain) },
+                onCheckedChange = { onAddCurrencyToggle(currencyToSave, tokenWithBlockchain) },
                 colors = SwitchDefaults.colors(
                     checkedThumbColor = Color(0xFF1ACE80),
                 ),
