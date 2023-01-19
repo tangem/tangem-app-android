@@ -13,8 +13,8 @@ import com.tangem.tap.features.wallet.models.PendingTransactionType
 import com.tangem.wallet.R
 import com.tangem.wallet.databinding.ItemPendingTransactionBinding
 
-class PendingTransactionsAdapter
-    : ListAdapter<PendingTransaction, PendingTransactionsAdapter.TransactionsViewHolder>(DiffUtilCallback) {
+class PendingTransactionsAdapter :
+    ListAdapter<PendingTransaction, PendingTransactionsAdapter.TransactionsViewHolder>(DiffUtilCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TransactionsViewHolder {
         val binding = ItemPendingTransactionBinding.inflate(

@@ -13,8 +13,8 @@ import com.tangem.wallet.databinding.LayoutWarningCardBinding
 /**
  * Created by Anton Zhilenkov on 18/05/2022.
  */
-class WalletDetailWarningMessagesAdapter
-    : ListAdapter<WalletWarningDescription, WalletDetailsWarningMessageVH>(DiffUtilCallback()) {
+class WalletDetailWarningMessagesAdapter :
+    ListAdapter<WalletWarningDescription, WalletDetailsWarningMessageVH>(DiffUtilCallback()) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): WalletDetailsWarningMessageVH {
         val inflater = LayoutInflater.from(parent.context)

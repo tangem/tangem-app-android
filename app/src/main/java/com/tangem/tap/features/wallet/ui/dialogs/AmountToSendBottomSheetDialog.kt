@@ -55,8 +55,7 @@ class AmountToSendBottomSheetDialog(
     }
 }
 
-class ChooseAmountAdapter
-    : ListAdapter<Amount, ChooseAmountAdapter.AmountViewHolder>(DiffUtilCallback) {
+class ChooseAmountAdapter : ListAdapter<Amount, ChooseAmountAdapter.AmountViewHolder>(DiffUtilCallback) {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): AmountViewHolder {
         val binding = ItemWalletAmountToSendBinding.inflate(
