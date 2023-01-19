@@ -64,7 +64,7 @@ data class OnboardingSaltPayState(
             paymentologyService: PaymentologyApiService,
             kycProvider: KYCProvider,
         ): SaltPayActivationManager {
-            if (!scanResponse.isSaltPay()) {
+            if (!scanResponse.cardTypesResolver.isSaltPay()) {
                 throw IllegalArgumentException("Can't initialize the OnboardingSaltPayMiddleware if card is not SalPay")
             }
             val saltPaySingleWallet = scanResponse.card.wallets.firstOrNull().guard {
