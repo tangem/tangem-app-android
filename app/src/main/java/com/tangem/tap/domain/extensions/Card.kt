@@ -1,16 +1,12 @@
 package com.tangem.tap.domain.extensions
 
-import com.tangem.common.card.EllipticCurve
 import com.tangem.common.card.FirmwareVersion
 import com.tangem.common.extensions.toHexString
 import com.tangem.common.services.Result
 import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.TapWorkarounds.isSaltPay
-import com.tangem.domain.common.TapWorkarounds.isStart2Coin
-import com.tangem.domain.common.TapWorkarounds.isTangemNote
 import com.tangem.domain.common.TwinCardNumber
 import com.tangem.domain.common.getTwinCardNumber
-import com.tangem.domain.common.isTangemTwin
 import com.tangem.operations.attestation.CardVerifyAndGetInfo
 import com.tangem.operations.attestation.OnlineCardVerifier
 import com.tangem.tap.features.wallet.redux.Artwork
@@ -21,21 +17,11 @@ val CardDTO.remainingSignatures: Int?
 val CardDTO.isWalletDataSupported: Boolean
     get() = this.firmwareVersion.major >= 4
 
-val CardDTO.isMultiwalletAllowed: Boolean
-    get() {
-        return !isTangemTwin() && !isStart2Coin && !isTangemNote && !isSaltPay &&
-            (firmwareVersion >= FirmwareVersion.MultiWalletAvailable ||
-                wallets.firstOrNull()?.curve == EllipticCurve.Secp256k1)
-    }
+val CardDTO.isFirmwareMultiwalletAllowed: Boolean
+    get() = firmwareVersion >= FirmwareVersion.MultiWalletAvailable && settings.maxWalletsCount > 1
 
 val CardDTO.isHdWalletAllowedByApp: Boolean
     get() = settings.isHDWalletAllowed && !isSaltPay
-
-val CardDTO.isTangemWallet: Boolean
-    get() = settings.isBackupAllowed
-        && settings.isHDWalletAllowed
-        && firmwareVersion >= FirmwareVersion.MultiWalletAvailable
-        && !isSaltPay
 
 @Suppress("UnnecessaryParentheses")
 fun CardDTO.hasSignedHashes(): Boolean {
