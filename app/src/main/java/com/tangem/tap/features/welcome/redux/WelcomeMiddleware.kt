@@ -36,7 +36,7 @@ internal class WelcomeMiddleware {
     private fun handleAction(action: WelcomeAction, state: WelcomeState) {
         when (action) {
             is WelcomeAction.ProceedWithBiometrics -> {
-                proceedWithBiometry(state)
+                proceedWithBiometrics(state)
             }
             is WelcomeAction.ProceedWithCard -> {
                 proceedWithCard(state)
@@ -51,7 +51,7 @@ internal class WelcomeMiddleware {
         }
     }
 
-    private fun proceedWithBiometry(state: WelcomeState) {
+    private fun proceedWithBiometrics(state: WelcomeState) {
         scope.launch {
             userWalletsListManager.unlockWithBiometry()
                 .doOnFailure { error ->
