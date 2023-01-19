@@ -8,19 +8,23 @@ import com.tangem.common.core.CardSession
 import com.tangem.common.core.CardSessionRunnable
 import com.tangem.common.core.TangemError
 import com.tangem.common.core.TangemSdkError
+import com.tangem.common.deserialization.WalletDataDeserializer
 import com.tangem.common.extensions.ByteArrayKey
 import com.tangem.common.extensions.guard
+import com.tangem.common.extensions.hexToBytes
+import com.tangem.common.extensions.toByteArray
 import com.tangem.common.extensions.toHexString
 import com.tangem.common.extensions.toMapKey
 import com.tangem.common.hdWallet.DerivationPath
+import com.tangem.common.tlv.Tlv
+import com.tangem.common.tlv.TlvDecoder
+import com.tangem.crypto.CryptoUtils
 import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.ProductType
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.isExcluded
 import com.tangem.domain.common.TapWorkarounds.isNotSupportedInThatRelease
 import com.tangem.domain.common.TapWorkarounds.isSaltPay
-import com.tangem.domain.common.TapWorkarounds.isStart2Coin
-import com.tangem.domain.common.TapWorkarounds.isTangemNote
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.domain.common.TapWorkarounds.useOldStyleDerivation
 import com.tangem.domain.common.TwinsHelper
@@ -30,10 +34,11 @@ import com.tangem.operations.ScanTask
 import com.tangem.operations.backup.PrimaryCard
 import com.tangem.operations.backup.StartPrimaryCardLinkingTask
 import com.tangem.operations.derivation.DeriveMultipleWalletPublicKeysTask
+import com.tangem.operations.files.ReadFilesTask
 import com.tangem.operations.issuerAndUserData.ReadIssuerDataCommand
 import com.tangem.tap.domain.TapSdkError
 import com.tangem.tap.domain.extensions.getPrimaryCurve
-import com.tangem.tap.domain.extensions.isMultiwalletAllowed
+import com.tangem.tap.domain.extensions.isFirmwareMultiwalletAllowed
 import com.tangem.tap.domain.tokens.UserTokensRepository
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.preferencesStorage
@@ -66,7 +71,6 @@ class ScanProductTask(
         }
 
         val commandProcessor = when {
-            cardDto.isTangemNote -> ScanNoteProcessor()
             cardDto.isTangemTwins -> ScanTwinProcessor()
             else -> ScanWalletProcessor(userTokensRepository, additionalBlockchainsToDerive)
         }
@@ -126,7 +130,76 @@ private class ScanWalletProcessor(
         session: CardSession,
         callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
+
+        if (card.firmwareVersion.doubleValue >= 4.39) {
+            if (card.settings.maxWalletsCount == 1) {
+                readFile(card, session, callback)
+                return
+            }
+        }
+
         createMissingWalletsIfNeeded(card, session, callback)
+    }
+
+    private fun readFile(
+        card: CardDTO,
+        session: CardSession,
+        callback: (result: CompletionResult<ScanResponse>) -> Unit,
+    ) {
+        val funToContinue = { createMissingWalletsIfNeeded(card, session, callback) }
+
+        ReadFilesTask(fileName = "blockchainInfo", walletPublicKey = null).run(session) { result ->
+
+            when (result) {
+                is CompletionResult.Success -> {
+                    val file = result.data.firstOrNull()
+                    val counter = file?.counter
+                    val signature = file?.signature
+
+                    val tlv = file?.data?.let { Tlv.deserialize(it) }
+                    val walletData = tlv?.let { WalletDataDeserializer.deserialize(TlvDecoder(tlv)) }
+
+                    if (walletData == null || counter == null || signature == null) {
+                        funToContinue()
+                        return@run
+                    }
+
+                    val dataToVerify = card.cardId.hexToBytes() + file.data + counter.toByteArray()
+                    val isVerified = CryptoUtils.verify(
+                        publicKey = card.issuer.publicKey,
+                        message = dataToVerify,
+                        signature = signature,
+                    )
+                    if (!isVerified) {
+                        funToContinue()
+                        return@run
+                    }
+
+                    if (walletData.blockchain != "ANY") {
+                        callback(
+                            CompletionResult.Success(
+                                ScanResponse(
+                                    card = card,
+                                    productType = ProductType.Note,
+                                    walletData = walletData,
+                                ),
+                            ),
+                        )
+                    } else {
+                        funToContinue()
+                    }
+                }
+                is CompletionResult.Failure -> {
+                    when (result.error) {
+                        is TangemSdkError.FileNotFound, is TangemSdkError.InsNotSupported -> {
+                            funToContinue()
+                        }
+                        else -> callback(CompletionResult.Failure(result.error))
+                    }
+                }
+            }
+
+        }
     }
 
     private fun createMissingWalletsIfNeeded(
@@ -134,7 +207,7 @@ private class ScanWalletProcessor(
         session: CardSession,
         callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
-        if (card.wallets.isEmpty() || !card.isMultiwalletAllowed) {
+        if (card.wallets.isEmpty() || !card.isFirmwareMultiwalletAllowed) {
             startLinkingForBackupIfNeeded(card, session, callback)
             return
         }
@@ -195,9 +268,8 @@ private class ScanWalletProcessor(
         session: CardSession,
         callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
-        val productType = when {
-            card.isSaltPay -> ProductType.SaltPay
-            card.isStart2Coin -> ProductType.Start2Coin
+        val productType = when (card.isSaltPay) {
+            true -> ProductType.SaltPay
             else -> ProductType.Wallet
         }
         scope.launch {
@@ -267,7 +339,12 @@ private class ScanWalletProcessor(
         }
         if (additionalBlockchainsToDerive != null) {
             blockchainsToDerive.addAll(
-                additionalBlockchainsToDerive.map { BlockchainNetwork(it, card) },
+                additionalBlockchainsToDerive.map {
+                    BlockchainNetwork(
+                        blockchain = it,
+                        card = card,
+                    )
+                },
             )
         }
         if (!card.useOldStyleDerivation) {
@@ -278,7 +355,12 @@ private class ScanWalletProcessor(
                     Blockchain.RSK,
                     Blockchain.Fantom, Blockchain.FantomTestnet,
                     Blockchain.Avalanche, Blockchain.AvalancheTestnet,
-                ).map { BlockchainNetwork(it, card) },
+                ).map {
+                    BlockchainNetwork(
+                        blockchain = it,
+                        card = card,
+                    )
+                },
             )
         }
         return blockchainsToDerive.distinct()
