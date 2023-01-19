@@ -34,8 +34,8 @@ class IntentHandler {
 
     fun handleBackgroundScan(intent: Intent?) {
         if (intent != null && (NfcAdapter.ACTION_TECH_DISCOVERED == intent.action ||
-                NfcAdapter.ACTION_NDEF_DISCOVERED == intent.action
-                )
+            NfcAdapter.ACTION_NDEF_DISCOVERED == intent.action
+            )
         ) {
             val tag = intent.getParcelableExtra<Tag>(NfcAdapter.EXTRA_TAG)
             if (tag != null) {

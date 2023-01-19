@@ -34,7 +34,7 @@ private fun internalReduce(action: Action, state: ShopState): ShopState {
                 availableProducts = action.products,
                 promoCodeLoading = false,
 
-                )
+            )
         }
         is ShopAction.SelectProduct -> {
             state.copy(

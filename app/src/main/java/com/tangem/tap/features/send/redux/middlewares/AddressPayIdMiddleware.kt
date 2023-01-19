@@ -198,7 +198,7 @@ internal class AddressPayIdMiddleware {
 
 fun String.splitToMap(firstDelimiter: String, secondDelimiter: String): Map<String, String> {
     return this.split(firstDelimiter)
-            .map { it.split(secondDelimiter) }
-            .map { it.first() to it.last().toString() }
-            .toMap()
+        .map { it.split(secondDelimiter) }
+        .map { it.first() to it.last().toString() }
+        .toMap()
 }

@@ -23,10 +23,10 @@ class PayIdManager {
 
     private fun Blockchain.getPayIdNetwork(): String {
         return when (this) {
-                Blockchain.XRP -> "XRPL"
-                Blockchain.RSK -> "RSK"
-                else -> this.currency
-            }.lowercase(Locale.getDefault())
+            Blockchain.XRP -> "XRPL"
+            Blockchain.RSK -> "RSK"
+            else -> this.currency
+        }.lowercase(Locale.getDefault())
     }
 
     companion object {

@@ -190,7 +190,7 @@ class TangemShopService(application: Application, shopifyShop: ShopifyShop) {
                     appliedDiscount = it.getAppliedDiscount(),
                 ),
 
-                )
+            )
         }
         return Result.failure(result.exceptionOrNull()!!)
     }

@@ -140,7 +140,7 @@ internal class DefaultWalletAmountsRepository(
                         """
                         Unable to fetch fiat rates
                         |- Coins ids: $coinsIds
-                    """.trimIndent(),
+                        """.trimIndent(),
                     )
 
                     return@withContext CompletionResult.Failure(error)

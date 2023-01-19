@@ -53,7 +53,7 @@ private val backupInfoSnippets = listOf(
         R.string.onboarding_wallet_info_subtitle_fourth
     ),
 
-    )
+)
 
 class BackupInfoViewHolder(val binding: ItemBackupInfoAdapterBinding) :
     RecyclerView.ViewHolder(binding.root)

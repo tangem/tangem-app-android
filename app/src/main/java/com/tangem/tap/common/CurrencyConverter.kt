@@ -9,8 +9,8 @@ import java.math.RoundingMode
  * Created by Anton Zhilenkov on 08/09/2020.
  */
 class CurrencyConverter(
-        private val rateValue: BigDecimal,
-        private val decimals: Int
+    private val rateValue: BigDecimal,
+    private val decimals: Int
 ) {
     private val roundingMode = RoundingMode.HALF_UP
 

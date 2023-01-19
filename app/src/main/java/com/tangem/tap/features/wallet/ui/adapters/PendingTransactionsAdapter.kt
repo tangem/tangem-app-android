@@ -31,16 +31,16 @@ class PendingTransactionsAdapter
 
     object DiffUtilCallback : DiffUtil.ItemCallback<PendingTransaction>() {
         override fun areContentsTheSame(
-                oldItem: PendingTransaction, newItem: PendingTransaction
+            oldItem: PendingTransaction, newItem: PendingTransaction
         ) = oldItem == newItem
 
         override fun areItemsTheSame(
-                oldItem: PendingTransaction, newItem: PendingTransaction
+            oldItem: PendingTransaction, newItem: PendingTransaction
         ) = oldItem == newItem
     }
 
     class TransactionsViewHolder(val binding: ItemPendingTransactionBinding) :
-            RecyclerView.ViewHolder(binding.root) {
+        RecyclerView.ViewHolder(binding.root) {
 
         fun bind(transaction: PendingTransaction) {
 
@@ -71,7 +71,7 @@ class PendingTransactionsAdapter
 
             if (transaction.address != null) {
                 binding.tvPendingTransactionAddress.text =
-                        binding.root.getString(transactionAddressRes, transaction.address)
+                    binding.root.getString(transactionAddressRes, transaction.address)
             }
             binding.ivPendingTransaction.setImageDrawable(binding.root.context.getDrawableCompat(image))
         }

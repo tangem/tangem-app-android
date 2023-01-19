@@ -66,7 +66,7 @@ private fun ListOfTokens(state: SwapSelectTokenStateHolder, modifier: Modifier =
             .fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
 
-        ) {
+    ) {
 
         itemsIndexed(items = state.tokens) { index, item ->
             TokenItem(token = item, onTokenClick = { state.onTokenSelected(item.id) })

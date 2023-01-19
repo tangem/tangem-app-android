@@ -133,7 +133,7 @@ data class WcPersonalSignData(
     val id: Long,
     val dialogData: PersonalSignDialogData,
 
-    )
+)
 
 sealed class BinanceMessageData(
     val address: String,
