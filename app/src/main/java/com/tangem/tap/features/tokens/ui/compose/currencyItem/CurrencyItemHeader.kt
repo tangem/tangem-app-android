@@ -47,7 +47,7 @@ fun CurrencyItemHeader(
     addedTokens: List<TokenWithBlockchain>,
     addedBlockchains: List<Blockchain>,
     isExpanded: Boolean,
-    onCurrencyClick: (String) -> Unit,
+    onCurrencyClick: () -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -56,7 +56,7 @@ fun CurrencyItemHeader(
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
-                onClick = { onCurrencyClick(currency.id) },
+                onClick = onCurrencyClick,
             ),
     ) {
         Box(
