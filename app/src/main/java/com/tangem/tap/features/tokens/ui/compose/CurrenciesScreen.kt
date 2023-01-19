@@ -54,9 +54,9 @@ import com.tangem.wallet.R
 @Suppress("LongMethod")
 @Composable
 fun CurrenciesScreen(
-    tokensState: MutableState<TokensState> = mutableStateOf(store.state.tokensState),
+    tokensState: MutableState<TokensState>,
     onSaveChanges: (List<TokenWithBlockchain>, List<Blockchain>) -> Unit,
-    onNetworkItemClicked: (ContractAddress) -> Unit,
+    onNetworkItemClick: (ContractAddress) -> Unit,
     onLoadMore: () -> Unit,
 ) {
     val tokensAddedOnMainScreen = remember { tokensState.value.addedTokens }
@@ -123,10 +123,10 @@ fun CurrenciesScreen(
                     addedTokens = addedTokensState.value,
                     addedBlockchains = addedBlockchainsState.value,
                     allowToAdd = tokensState.value.allowToAdd,
-                    onAddCurrencyToggled = { currency, token ->
+                    onAddCurrencyToggle = { currency, token ->
                         onAddCurrencyToggleClick(currency, token)
                     },
-                    onNetworkItemClicked = onNetworkItemClicked,
+                    onNetworkItemClick = onNetworkItemClick,
                     onLoadMore = onLoadMore,
                 )
             }
