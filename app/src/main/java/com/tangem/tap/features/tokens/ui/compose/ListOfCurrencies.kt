@@ -27,8 +27,8 @@ fun ListOfCurrencies(
     addedTokens: List<TokenWithBlockchain>,
     addedBlockchains: List<Blockchain>,
     allowToAdd: Boolean,
-    onAddCurrencyToggled: (Currency, TokenWithBlockchain?) -> Unit,
-    onNetworkItemClicked: (ContractAddress) -> Unit,
+    onAddCurrencyToggle: (Currency, TokenWithBlockchain?) -> Unit,
+    onNetworkItemClick: (ContractAddress) -> Unit,
     onLoadMore: () -> Unit,
 ) {
 
@@ -56,16 +56,16 @@ fun ListOfCurrencies(
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         item { header() }
-        itemsIndexed(currencies) { index, currency ->
+        itemsIndexed(currencies) { _, currency ->
             CurrencyItem(
                 currency = currency,
                 addedTokens = addedTokens,
                 addedBlockchains = addedBlockchains,
                 allowToAdd = allowToAdd,
                 isExpanded = expandedCurrencies.value.contains(currency.id),
-                onCurrencyClick = onCurrencyClick,
-                onAddCurrencyToggled = onAddCurrencyToggled,
-                onNetworkItemClicked = onNetworkItemClicked,
+                onCurrencyClick = { onCurrencyClick(currency.id) },
+                onAddCurrencyToggle = onAddCurrencyToggle,
+                onNetworkItemClick = onNetworkItemClick,
             )
         }
     }
