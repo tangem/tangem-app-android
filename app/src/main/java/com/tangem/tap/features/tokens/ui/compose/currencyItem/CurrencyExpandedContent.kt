@@ -23,8 +23,8 @@ fun CurrencyExpandedContent(
     addedBlockchains: List<Blockchain>,
     allowToAdd: Boolean,
     isExpanded: Boolean,
-    onAddCurrencyToggled: (Currency, TokenWithBlockchain?) -> Unit,
-    onNetworkItemClicked: (ContractAddress) -> Unit,
+    onAddCurrencyToggle: (Currency, TokenWithBlockchain?) -> Unit,
+    onNetworkItemClick: (ContractAddress) -> Unit,
 ) {
     AnimatedVisibility(
         visible = isExpanded,
@@ -51,8 +51,8 @@ fun CurrencyExpandedContent(
                     added = added,
                     index = index,
                     size = blockchains.size,
-                    onAddCurrencyToggled = onAddCurrencyToggled,
-                    onNetworkItemClicked = onNetworkItemClicked,
+                    onAddCurrencyToggle = onAddCurrencyToggle,
+                    onNetworkItemClick = onNetworkItemClick,
                 )
             }
         }
