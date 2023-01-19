@@ -56,6 +56,7 @@ dependencies {
     implementation(AndroidX.appCompat)
     implementation(AndroidX.fragmentKtx)
     implementation(AndroidX.lifecycleViewModelKtx)
+    implementation(AndroidX.browser)
 
     /** Compose */
     implementation(Compose.foundation)
