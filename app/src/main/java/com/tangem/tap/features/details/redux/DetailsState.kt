@@ -29,9 +29,6 @@ data class DetailsState(
     val twinCardsState: TwinCardsState by ReadOnlyProperty<Any, TwinCardsState> { _, _ ->
         store.state.twinCardsState
     }
-
-    val isTangemTwins: Boolean
-        get() = store.state.globalState.scanResponse?.isTangemTwins() == true
 }
 
 data class CardInfo(
