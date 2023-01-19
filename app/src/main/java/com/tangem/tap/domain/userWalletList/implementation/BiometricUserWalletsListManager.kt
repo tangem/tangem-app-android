@@ -59,12 +59,7 @@ internal class BiometricUserWalletsListManager(
     }
 
     override fun lock() {
-        state.update { prevState ->
-            prevState.copy(
-                encryptionKeys = emptyList(),
-                isLocked = true,
-            )
-        }
+        state.update { State() }
     }
 
     override suspend fun selectWallet(userWalletId: UserWalletId): CompletionResult<UserWallet> = catching {
@@ -143,7 +138,7 @@ internal class BiometricUserWalletsListManager(
             .flatMap { keysRepository.clear() }
             .map {
                 selectedUserWalletRepository.set(null)
-                state.update { State() }
+                lock()
             }
     }
 
