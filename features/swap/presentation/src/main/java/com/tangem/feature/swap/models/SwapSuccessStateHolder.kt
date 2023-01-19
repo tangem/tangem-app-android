@@ -1,6 +1,7 @@
 package com.tangem.feature.swap.models
 
 data class SwapSuccessStateHolder(
-    val message: String,
+    val fromTokenAmount: String,
+    val toTokenAmount: String,
     val onSecondaryButtonClick: () -> Unit,
 )
