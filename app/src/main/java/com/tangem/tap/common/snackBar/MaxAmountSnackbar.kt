@@ -71,11 +71,9 @@ class MaxAmountSnackbarView @JvmOverloads constructor(
         clipToPadding = false
     }
 
-
     override fun animateContentIn(delay: Int, duration: Int) {
     }
 
     override fun animateContentOut(delay: Int, duration: Int) {
     }
 }
-

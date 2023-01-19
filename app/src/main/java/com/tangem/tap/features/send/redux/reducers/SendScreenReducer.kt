@@ -117,4 +117,3 @@ internal fun updateLastState(sendState: SendState, lastChangedState: IdStateHold
     sendState.lastChangedStates.add(lastChangedState.stateId)
     return sendState
 }
-

@@ -26,4 +26,3 @@ data class TokenBalanceData(
     val amount: String?,
     val amountEquivalent: String?,
 )
-

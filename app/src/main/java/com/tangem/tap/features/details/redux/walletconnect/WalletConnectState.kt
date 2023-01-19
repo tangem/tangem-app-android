@@ -83,7 +83,6 @@ data class WalletForSession(
     }
 }
 
-
 sealed class WalletConnectDialog : StateDialog {
     data class ClipboardOrScanQr(val clipboardUri: String) : WalletConnectDialog()
     object UnsupportedCard : WalletConnectDialog()

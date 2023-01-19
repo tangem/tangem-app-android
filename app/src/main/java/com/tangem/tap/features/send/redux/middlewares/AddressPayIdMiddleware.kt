@@ -172,7 +172,6 @@ internal class AddressPayIdMiddleware {
         val addressPayId = input ?: return
         val wallet = appState?.sendState?.walletManager?.wallet ?: return
 
-
         val internalDispatcher: (Action) -> Unit = {
             when (it) {
                 is SetWalletAddress, is SetPayIdWalletAddress -> {

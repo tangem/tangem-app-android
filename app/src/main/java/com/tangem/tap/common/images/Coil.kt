@@ -35,7 +35,6 @@ fun createCoilImageLoader(
         .build()
 }
 
-
 private class CoilTimberLogger : Logger {
 
     override var level: Int = Log.DEBUG

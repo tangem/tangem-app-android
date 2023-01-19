@@ -298,7 +298,6 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
             else -> {}
         }
 
-
         when (state.visibleTypeOfReceipt) {
             ReceiptLayoutType.FIAT -> {
                 val receipt = state.fiat ?: return

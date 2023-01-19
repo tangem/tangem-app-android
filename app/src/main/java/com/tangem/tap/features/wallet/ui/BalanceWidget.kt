@@ -65,7 +65,6 @@ class BalanceWidget(
                     lBalance.tvAmount.text = ""
                 }
 
-
                 showStatus(R.id.tv_status_loading)
 
                 if (data.token != null) {

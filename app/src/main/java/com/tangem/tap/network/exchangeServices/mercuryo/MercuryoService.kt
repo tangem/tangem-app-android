@@ -148,4 +148,3 @@ class MercuryoService(
         private const val RESPONSE_SUCCESS_STATUS_CODE = 200
     }
 }
-

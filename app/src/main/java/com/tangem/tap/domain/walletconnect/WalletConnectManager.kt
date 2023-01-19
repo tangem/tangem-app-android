@@ -437,7 +437,6 @@ class WalletConnectManager {
             }
         }
 
-
         client.onBnbCancel = { id: Long, order: WCBinanceCancelOrder ->
         }
         client.onBnbTrade = { id: Long, order: WCBinanceTradeOrder ->

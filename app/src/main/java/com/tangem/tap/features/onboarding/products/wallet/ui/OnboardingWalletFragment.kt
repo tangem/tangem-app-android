@@ -437,4 +437,3 @@ class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_walle
         return typedValue.float
     }
 }
-

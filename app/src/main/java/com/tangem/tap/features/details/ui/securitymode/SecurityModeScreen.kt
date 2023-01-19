@@ -47,7 +47,6 @@ fun SecurityModeOptions(state: SecurityModeScreenState) {
     ) {
         ScreenTitle(titleRes = R.string.card_settings_security_mode, Modifier.padding(bottom = 36.dp))
 
-
         state.availableOptions.map {
             SecurityOption(option = it, state = state)
         }

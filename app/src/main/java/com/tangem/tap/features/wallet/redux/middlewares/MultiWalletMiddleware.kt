@@ -70,7 +70,6 @@ class MultiWalletMiddleware {
                 val currencies: List<Currency> =
                     (walletState?.currencies ?: emptyList()) + action.blockchain.toCurrencies()
 
-
                 if (action.save && globalState.scanResponse != null) {
                     scope.launch {
                         userTokensRepository.saveUserTokens(

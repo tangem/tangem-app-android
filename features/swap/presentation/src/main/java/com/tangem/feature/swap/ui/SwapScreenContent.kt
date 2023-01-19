@@ -130,7 +130,6 @@ internal fun SwapScreenContent(state: SwapStateHolder, onPermissionWarningClick:
                 color = TangemTheme.colors.text.primary1,
                 modifier = Modifier
                     .fillMaxWidth()
-
                     .background(TangemTheme.colors.button.secondary)
                     .clickable { state.onMaxAmountSelected }
                     .padding(
@@ -323,4 +322,3 @@ private fun SwapScreenContentPreview() {
 }
 
 // endregion preview
-

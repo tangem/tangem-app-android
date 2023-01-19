@@ -24,7 +24,6 @@ data class WarningMessage(
         blockchains?.map { Blockchain.fromId(it.uppercase()) }
     }
 
-
     var isHidden = false
 
     enum class Priority {

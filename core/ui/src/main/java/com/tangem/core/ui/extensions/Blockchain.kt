@@ -35,5 +35,3 @@ fun getActiveIconRes(blockchainId: String): Int {
         else -> R.drawable.ic_alert_24
     }
 }
-
-

@@ -23,4 +23,3 @@ data class ShopState(
             return null
         }
 }
-

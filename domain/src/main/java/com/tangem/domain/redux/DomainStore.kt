@@ -41,4 +41,3 @@ private fun reduce(action: Action, domainState: DomainState?): DomainState {
 
     return assembleReducedDomainState
 }
-

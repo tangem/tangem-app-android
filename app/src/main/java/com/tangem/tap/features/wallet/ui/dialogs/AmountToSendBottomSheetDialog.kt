@@ -55,7 +55,6 @@ class AmountToSendBottomSheetDialog(
     }
 }
 
-
 class ChooseAmountAdapter
     : ListAdapter<Amount, ChooseAmountAdapter.AmountViewHolder>(DiffUtilCallback) {
 
