@@ -34,10 +34,10 @@ import com.tangem.tap.features.details.ui.common.SettingsScreensScaffold
 import com.tangem.wallet.R
 
 @Composable
-fun ResetCardScreen(state: ResetCardScreenState, onBackPressed: () -> Unit) {
+fun ResetCardScreen(state: ResetCardScreenState, onBackClick: () -> Unit) {
     SettingsScreensScaffold(
         content = { ResetCardView(state = state) },
-        onBackClick = onBackPressed,
+        onBackClick = onBackClick,
         backgroundColor = Color.Transparent,
     )
 }
@@ -148,7 +148,7 @@ private fun ResetCardScreenSample(
                 onAcceptWarningToggleClick = {},
                 onResetButtonClick = {},
             ),
-            onBackPressed = {},
+            onBackClick = {},
         )
     }
 }

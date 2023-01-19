@@ -27,16 +27,12 @@ import com.tangem.wallet.R
 @Suppress("LongMethod")
 @Composable
 internal fun WelcomeScreenContent(
-    modifier: Modifier = Modifier,
     showUnlockProgress: Boolean,
     showScanCardProgress: Boolean,
     onUnlockClick: () -> Unit,
     onScanCardClick: () -> Unit,
 ) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
         SpacerHMax()
         Icon(
             modifier = Modifier.size(TangemTheme.dimens.size96),
