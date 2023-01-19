@@ -23,8 +23,7 @@ fun CurrencyPlaceholderIcon(id: String) {
         contentAlignment = Alignment.Center,
         modifier = Modifier
             .background(circleColor, shape = CircleShape)
-    )
-    {
+    ) {
         Text(
             text = id.firstOrNull()?.titlecase() ?: "",
             textAlign = TextAlign.Center,
