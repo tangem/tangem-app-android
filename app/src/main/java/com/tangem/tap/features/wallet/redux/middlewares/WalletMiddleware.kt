@@ -237,10 +237,12 @@ class WalletMiddleware {
                 }
             }
             is WalletAction.CopyAddress -> {
+                Analytics.send(Token.Recieve.ButtonCopyAddress())
                 action.context.copyToClipboard(action.address)
                 store.dispatch(WalletAction.CopyAddress.Success)
             }
             is WalletAction.ShareAddress -> {
+                Analytics.send(Token.Recieve.ButtonShareAddress())
                 action.context.shareText(action.address)
             }
             is WalletAction.ExploreAddress -> {
