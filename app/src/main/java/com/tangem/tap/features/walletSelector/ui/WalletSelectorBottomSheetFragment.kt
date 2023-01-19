@@ -20,9 +20,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.rememberNestedScrollInteropConnection
 import androidx.fragment.app.viewModels
+import com.tangem.core.analytics.Analytics
 import com.tangem.core.ui.fragments.ComposeBottomSheetFragment
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.MyWallets
 import com.tangem.tap.features.details.ui.cardsettings.resolveReference
 import com.tangem.tap.features.walletSelector.ui.components.RenameWalletDialogContent
@@ -45,7 +45,7 @@ internal class WalletSelectorBottomSheetFragment : ComposeBottomSheetFragment<Wa
 
     @OptIn(ExperimentalComposeUiApi::class)
     @Composable
-    override fun ScreenContent(modifier: Modifier, state: WalletSelectorScreenState) {
+    override fun ScreenContent(state: WalletSelectorScreenState, modifier: Modifier) {
         val snackbarHostState = remember { SnackbarHostState() }
         val errorMessage by rememberUpdatedState(newValue = state.error?.resolveReference())
         val renameWalletDialog by rememberUpdatedState(newValue = state.renameWalletDialog)
@@ -81,9 +81,10 @@ internal class WalletSelectorBottomSheetFragment : ComposeBottomSheetFragment<Wa
         }
     }
 
+    @Suppress("TopLevelComposableFunctions")
     @Composable
-    private fun RenameWalletDialog(modifier: Modifier = Modifier, dialog: RenameWalletDialog?) {
+    private fun RenameWalletDialog(dialog: RenameWalletDialog?) {
         if (dialog == null) return
-        RenameWalletDialogContent(modifier, dialog)
+        RenameWalletDialogContent(dialog)
     }
 }
