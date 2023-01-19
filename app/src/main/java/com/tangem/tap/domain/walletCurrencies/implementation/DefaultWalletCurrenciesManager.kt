@@ -1,5 +1,6 @@
 package com.tangem.tap.domain.walletCurrencies.implementation
 
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.DerivationStyle
 import com.tangem.common.CompletionResult
 import com.tangem.common.flatMap
@@ -54,28 +55,17 @@ internal class DefaultWalletCurrenciesManager(
         currenciesToAdd: List<Currency>,
     ): CompletionResult<Unit> = withContext(Dispatchers.Default) {
         val card = userWallet.scanResponse.card
-        val updatedBlockchainNetworks = currenciesToAdd
-            .addMissingBlockchains(card)
-            .toBlockchainNetworks()
         val newCurrencies = (getSavedCurrencies(userWallet.walletId) + currenciesToAdd)
             .addMissingBlockchains(card)
 
-        updateWalletStores(userWallet, updatedBlockchainNetworks)
+        updateWalletStores(userWallet, newCurrencies.toBlockchainNetworks())
             .map {
                 saveUserCurrencies(card, newCurrencies)
             }
             .flatMap {
-                val updatedBlockchains = updatedBlockchainNetworks
-                    .map { it.blockchain }
-                val updatedWalletStores = walletStoresRepository.get(userWallet.walletId)
-                    .firstOrNull()
-                    ?.filter { it.blockchain in updatedBlockchains }
-                    ?: return@flatMap CompletionResult.Success(Unit)
-
-                walletAmountsRepository.updateAmountsForWalletStores(
-                    walletStores = updatedWalletStores,
+                updateWalletStoresAmounts(
                     userWallet = userWallet,
-                    fiatCurrency = appCurrencyProvider(),
+                    updatedBlockchains = currenciesToAdd.map { it.blockchain }.distinct(),
                 )
             }
     }
@@ -161,6 +151,10 @@ internal class DefaultWalletCurrenciesManager(
         return newCurrencies
     }
 
+    private fun findDerivationPath(currency: Currency, cardDerivationStyle: DerivationStyle?): String? {
+        return currency.derivationPath ?: currency.blockchain.derivationPath(cardDerivationStyle)?.rawPath
+    }
+
     private suspend fun updateWalletStores(
         userWallet: UserWallet,
         blockchainNetworks: List<BlockchainNetwork>,
@@ -184,7 +178,19 @@ internal class DefaultWalletCurrenciesManager(
             .fold()
     }
 
-    private fun findDerivationPath(currency: Currency, cardDerivationStyle: DerivationStyle?): String? {
-        return currency.derivationPath ?: currency.blockchain.derivationPath(cardDerivationStyle)?.rawPath
+    private suspend fun updateWalletStoresAmounts(
+        userWallet: UserWallet,
+        updatedBlockchains: List<Blockchain>,
+    ): CompletionResult<Unit> {
+        val updatedWalletStores = walletStoresRepository.get(userWallet.walletId)
+            .firstOrNull()
+            ?.filter { it.blockchain in updatedBlockchains }
+            ?: return CompletionResult.Success(Unit)
+
+        return walletAmountsRepository.updateAmountsForWalletStores(
+            walletStores = updatedWalletStores,
+            userWallet = userWallet,
+            fiatCurrency = appCurrencyProvider(),
+        )
     }
 }
