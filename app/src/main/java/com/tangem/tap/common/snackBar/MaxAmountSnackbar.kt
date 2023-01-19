@@ -57,7 +57,6 @@ class MaxAmountSnackbar(
             } while (view != null)
             return fallback
         }
-
     }
 }
 

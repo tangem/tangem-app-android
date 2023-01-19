@@ -48,7 +48,6 @@ data class WarningMessage(
         AppRating,
 
         TestCard
-
     }
 
     enum class Location {

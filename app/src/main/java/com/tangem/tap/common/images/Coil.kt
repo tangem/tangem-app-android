@@ -30,7 +30,6 @@ fun createCoilImageLoader(
                             }
                     )
                     .build()
-
             }
         }
         .build()

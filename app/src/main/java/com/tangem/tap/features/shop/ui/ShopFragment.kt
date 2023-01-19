@@ -164,7 +164,6 @@ class ShopFragment : BaseStoreFragment(R.layout.fragment_shop), StoreSubscriber<
         tvTotalBeforeDiscount.text = state.priceBeforeDiscount
 
         pbPrice.show(state.total == null)
-
     }
 
     private fun handlePromoCodeState(state: ShopState) = with(binding) {

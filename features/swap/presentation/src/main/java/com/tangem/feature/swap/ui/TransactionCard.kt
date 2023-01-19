@@ -126,7 +126,6 @@ fun TransactionCard(
                 )
             }
         }
-
     }
 }
 
@@ -249,7 +248,6 @@ private fun Content(
                 )
             }
         }
-
     }
 }
 

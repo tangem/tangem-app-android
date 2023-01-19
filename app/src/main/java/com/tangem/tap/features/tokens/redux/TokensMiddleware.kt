@@ -120,7 +120,6 @@ class TokensMiddleware {
                 }
                 is Result.Failure -> store.dispatchOnMain(TokensAction.LoadCurrencies.Failure)
             }
-
         }
     }
 

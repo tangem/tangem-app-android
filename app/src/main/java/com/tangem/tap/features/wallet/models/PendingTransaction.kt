@@ -99,7 +99,6 @@ fun Wallet.hasSendableAmountsOrPendingTransactions(): Boolean {
 
 fun Wallet.isSendableAmount(type: AmountType): Boolean {
     return amounts[type]?.isAboveZero() == true
-
 }
 
 fun Wallet.isSendableAmount(token: Token): Boolean {

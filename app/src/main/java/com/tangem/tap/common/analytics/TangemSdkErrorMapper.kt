@@ -116,5 +116,4 @@ object TangemSdkErrorMapper {
             is TangemSdkError.BiometricsAuthenticationFailed -> error
         }
     }
-
 }

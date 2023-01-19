@@ -155,7 +155,6 @@ private fun NetworksRow(
                     )
                     Spacer(Modifier.size(5.dp))
                 }
-
             }
         } else {
             BlockchainNetworkItem(

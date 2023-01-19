@@ -109,7 +109,6 @@ private fun handle(action: Action) {
                     ShopAction.CheckIfGooglePayAvailable.Failure
                 }
                 store.dispatchOnMain(newAction)
-
             }
         }
         ShopAction.StartWebCheckout -> {

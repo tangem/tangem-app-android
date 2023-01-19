@@ -113,7 +113,6 @@ fun StoriesWeb3Content(
                 )
             }
         }
-
     }
 }
 

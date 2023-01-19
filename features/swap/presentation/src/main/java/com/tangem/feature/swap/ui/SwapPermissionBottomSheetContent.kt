@@ -96,7 +96,6 @@ fun SwapPermissionBottomSheetContent(
         )
 
         SpacerH32()
-
     }
 }
 
