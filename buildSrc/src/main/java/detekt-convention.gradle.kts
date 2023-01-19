@@ -22,3 +22,7 @@ tasks.withType<Detekt> {
 
     jvmTarget = "1.8"
 }
+
+dependencies {
+    detektPlugins(Tools.composeDetektRules)
+}
