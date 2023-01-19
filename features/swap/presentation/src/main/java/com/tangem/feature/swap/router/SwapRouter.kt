@@ -8,6 +8,7 @@ import java.lang.ref.WeakReference
 
 internal class SwapRouter(
     private val fragmentManager: WeakReference<FragmentManager>,
+    private val customTabsManager: CustomTabsManager,
 ) {
 
     var currentScreen by mutableStateOf(SwapScreen.Main)
@@ -23,6 +24,10 @@ internal class SwapRouter(
         } else {
             fragmentManager.get()?.popBackStack()
         }
+    }
+
+    fun openUrl(url: String) {
+        customTabsManager.openUrl(url)
     }
 }
 
