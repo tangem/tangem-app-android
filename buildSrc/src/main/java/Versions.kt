@@ -61,9 +61,12 @@ object Versions {
 
     // region Tangem
     const val tangemBlockchainSdk = "develop-151"
-
-    const val tangemCardSgk = "develop-179"
+    const val tangemCardSdk = "develop-179"
     // endregion Tangem
+
+    // region Tools
+    const val composeDetektRules = "1.2.2"
+    // endregion Tools
 
     // region Testing
     const val espresso = "3.4.0"

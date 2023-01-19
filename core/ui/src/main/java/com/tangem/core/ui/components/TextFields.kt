@@ -50,9 +50,9 @@ import com.tangem.core.ui.res.TangemTypography
  * */
 @Composable
 fun OutlineTextField(
-    modifier: Modifier = Modifier,
     value: TextFieldValue,
     onValueChange: (TextFieldValue) -> Unit,
+    modifier: Modifier = Modifier,
     label: String? = null,
     placeholder: String? = null,
     caption: String? = null,
@@ -82,10 +82,10 @@ fun OutlineTextField(
 @Suppress("LongMethod")
 @Composable
 private fun TangemTextField(
-    modifier: Modifier = Modifier,
     value: TextFieldValue,
     singleLine: Boolean,
     onValueChange: (TextFieldValue) -> Unit,
+    modifier: Modifier = Modifier,
     label: String? = null,
     placeholder: String? = null,
     caption: String? = null,
@@ -331,6 +331,7 @@ internal data class TangemTextFieldColors(
         return rememberUpdatedState(if (isError) errorCursorColor else cursorColor)
     }
 
+    @Suppress("TopLevelComposableFunctions")
     @Composable
     fun captionColor(enabled: Boolean, isError: Boolean): State<Color> {
         return rememberUpdatedState(
