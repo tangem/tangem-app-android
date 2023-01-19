@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -39,7 +40,6 @@ import com.valentinilk.shimmer.shimmer
  */
 @Composable
 fun SmallInfoCard(
-    modifier: Modifier = Modifier,
     startText: String,
     endText: String,
     isLoading: Boolean = false,
@@ -50,7 +50,6 @@ fun SmallInfoCard(
         elevation = TangemTheme.dimens.elevation2,
     ) {
         CardInfoBox(
-            modifier = modifier,
             startText = startText,
             endText = endText,
             isLoading = isLoading,
@@ -70,7 +69,6 @@ fun SmallInfoCard(
  */
 @Composable
 fun SmallInfoCardWithWarning(
-    modifier: Modifier = Modifier,
     startText: String,
     endText: String,
     warningText: String,
@@ -81,8 +79,7 @@ fun SmallInfoCardWithWarning(
         elevation = TangemTheme.dimens.elevation2,
     ) {
         Column(
-            modifier = modifier
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxWidth(),
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
@@ -148,7 +145,6 @@ fun SmallInfoCardWithWarning(
  */
 @Composable
 fun CardWithIcon(
-    modifier: Modifier = Modifier,
     title: String,
     description: String,
     icon: @Composable () -> Unit,
@@ -160,7 +156,6 @@ fun CardWithIcon(
         elevation = TangemTheme.dimens.elevation2,
     ) {
         IconWithTitleAndDescription(
-            modifier = modifier,
             title = title,
             description = description,
             icon = icon,
@@ -188,10 +183,9 @@ fun IconWithTitleAndDescription(
     description: String,
     icon: @Composable () -> Unit,
     additionalContent: @Composable () -> Unit = {},
-    modifier: Modifier = Modifier,
 ) {
     Row(
-        modifier = modifier
+        modifier = Modifier
             .wrapContentHeight()
             .fillMaxWidth()
             .padding(
@@ -244,15 +238,14 @@ fun IconWithTitleAndDescription(
 
 @Composable
 private fun CardInfoBox(
-    modifier: Modifier = Modifier,
     startText: String,
     endText: String,
     isLoading: Boolean = false,
 ) {
     Row(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxWidth()
-            .height(TangemTheme.dimens.size48)
+            .heightIn(TangemTheme.dimens.size48)
             .padding(
                 horizontal = TangemTheme.dimens.spacing16,
                 vertical = TangemTheme.dimens.spacing12,
@@ -325,7 +318,7 @@ private fun CardsPreview() {
 
 @Preview(showBackground = true)
 @Composable
-fun Preview_Cards_InLightTheme() {
+private fun Preview_Cards_InLightTheme() {
     TangemTheme(isDark = false) {
         CardsPreview()
     }
@@ -333,7 +326,7 @@ fun Preview_Cards_InLightTheme() {
 
 @Preview(showBackground = true)
 @Composable
-fun Preview_InfoCardWithWarning_InDarkTheme() {
+private fun Preview_InfoCardWithWarning_InDarkTheme() {
     TangemTheme(isDark = true) {
         CardsPreview()
     }
@@ -341,7 +334,7 @@ fun Preview_InfoCardWithWarning_InDarkTheme() {
 
 @Preview(widthDp = 328, heightDp = 48, showBackground = true)
 @Composable
-fun Preview_SimpleInfoCard_InLightTheme() {
+private fun Preview_SimpleInfoCard_InLightTheme() {
     TangemTheme(isDark = false) {
         SmallInfoCard(startText = "Balance", endText = "0.4405434 BTC")
     }
@@ -349,7 +342,7 @@ fun Preview_SimpleInfoCard_InLightTheme() {
 
 @Preview(widthDp = 328, heightDp = 48, showBackground = true)
 @Composable
-fun Preview_SimpleInfoCard_InDarkTheme() {
+private fun Preview_SimpleInfoCard_InDarkTheme() {
     TangemTheme(isDark = true) {
         SmallInfoCard(startText = "Balance", endText = "0.4405434 BTC")
     }
