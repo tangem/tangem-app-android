@@ -33,7 +33,8 @@ sealed class WalletConnectAction : Action {
     object RefuseOpeningSession : WalletConnectAction()
     data class OpeningSessionTimeout(val session: WCSession) : WalletConnectAction()
     data class ScanCard(
-        val session: WalletConnectSession, val chainId: Int?,
+        val session: WalletConnectSession,
+        val chainId: Int?,
     ) : WalletConnectAction()
 
     data class ApproveSession(
@@ -93,17 +94,21 @@ sealed class WalletConnectAction : Action {
 
     object BinanceTransaction : WalletConnectAction() {
         data class Trade(
-            val id: Long, val order: WCBinanceTradeOrder,
+            val id: Long,
+            val order: WCBinanceTradeOrder,
             val sessionData: WalletConnectSession,
         ) : WalletConnectAction()
 
         data class Transfer(
-            val id: Long, val order: WCBinanceTransferOrder,
+            val id: Long,
+            val order: WCBinanceTransferOrder,
             val sessionData: WalletConnectSession,
         ) : WalletConnectAction()
 
         data class Sign(
-            val id: Long, val data: ByteArray, val sessionData: WCSession,
+            val id: Long,
+            val data: ByteArray,
+            val sessionData: WCSession,
         ) : WalletConnectAction()
     }
 }

@@ -4,7 +4,8 @@ import org.rekotlin.Action
 
 object WalletConnectReducer {
     fun reduce(
-        action: Action, state: WalletConnectState,
+        action: Action,
+        state: WalletConnectState,
     ): WalletConnectState {
         if (action !is WalletConnectAction) return state
 

@@ -44,7 +44,9 @@ import java.math.BigDecimal
 class MultiWalletMiddleware {
     @Suppress("LongMethod", "ComplexMethod")
     fun handle(
-        action: WalletAction.MultiWallet, walletState: WalletState?, globalState: GlobalState?,
+        action: WalletAction.MultiWallet,
+        walletState: WalletState?,
+        globalState: GlobalState?,
     ) {
         val globalState = globalState ?: return
 
@@ -227,8 +229,10 @@ class MultiWalletMiddleware {
     }
 
     private fun addTokens(
-        tokens: List<Token>, blockchainNetwork: BlockchainNetwork,
-        walletState: WalletState?, globalState: GlobalState?,
+        tokens: List<Token>,
+        blockchainNetwork: BlockchainNetwork,
+        walletState: WalletState?,
+        globalState: GlobalState?,
         save: Boolean,
     ) {
         if (tokens.isEmpty()) return

@@ -192,7 +192,8 @@ private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch:
 }
 
 private fun updateScanResponseAfterBackup(
-    scanResponse: ScanResponse, backupState: BackupState,
+    scanResponse: ScanResponse,
+    backupState: BackupState,
 ): ScanResponse {
     val card = if (backupState.backupCardsNumber > 0) {
         val cardsCount = backupState.backupCardsNumber

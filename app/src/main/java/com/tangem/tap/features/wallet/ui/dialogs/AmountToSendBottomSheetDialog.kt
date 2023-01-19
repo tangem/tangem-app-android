@@ -73,11 +73,13 @@ class ChooseAmountAdapter
 
     object DiffUtilCallback : DiffUtil.ItemCallback<Amount>() {
         override fun areContentsTheSame(
-            oldItem: Amount, newItem: Amount
+            oldItem: Amount,
+            newItem: Amount
         ) = oldItem.currencySymbol == newItem.currencySymbol
 
         override fun areItemsTheSame(
-            oldItem: Amount, newItem: Amount
+            oldItem: Amount,
+            newItem: Amount
         ) = oldItem == newItem
     }
 

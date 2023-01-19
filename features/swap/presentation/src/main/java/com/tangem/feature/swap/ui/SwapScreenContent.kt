@@ -225,7 +225,8 @@ private fun FeeItem(feeState: FeeState, currency: String) {
 
 @Composable
 private fun SwapWarnings(
-    warnings: List<SwapWarning>, onApproveWarningClick: () -> Unit,
+    warnings: List<SwapWarning>,
+    onApproveWarningClick: () -> Unit,
 ) {
     Column(
         modifier = Modifier

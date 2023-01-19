@@ -8,7 +8,9 @@ import java.util.*
 
 // todo determine where to place this extensions
 fun BigDecimal.toFormattedString(
-    decimals: Int, roundingMode: RoundingMode = RoundingMode.DOWN, locale: Locale = Locale.US,
+    decimals: Int,
+    roundingMode: RoundingMode = RoundingMode.DOWN,
+    locale: Locale = Locale.US,
 ): String {
     val symbols = DecimalFormatSymbols(locale)
     val df = DecimalFormat().apply {

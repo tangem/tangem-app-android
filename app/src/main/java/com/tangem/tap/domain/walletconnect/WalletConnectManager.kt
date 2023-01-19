@@ -288,7 +288,9 @@ class WalletConnectManager {
     }
 
     fun signBnb(
-        id: Long, data: ByteArray, sessionData: WCSession,
+        id: Long,
+        data: ByteArray,
+        sessionData: WCSession,
     ) {
         val activeData = sessions[sessionData] ?: return
         scope.launch {

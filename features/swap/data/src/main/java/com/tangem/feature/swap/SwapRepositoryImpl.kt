@@ -45,7 +45,9 @@ internal class SwapRepositoryImpl @Inject constructor(
     }
 
     override suspend fun findBestQuote(
-        networkId: String, fromTokenAddress: String, toTokenAddress: String,
+        networkId: String,
+        fromTokenAddress: String,
+        toTokenAddress: String,
         amount:
             String,
     ): AggregatedSwapDataModel<QuoteModel> {

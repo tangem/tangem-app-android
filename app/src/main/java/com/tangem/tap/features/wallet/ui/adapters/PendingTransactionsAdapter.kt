@@ -31,11 +31,13 @@ class PendingTransactionsAdapter
 
     object DiffUtilCallback : DiffUtil.ItemCallback<PendingTransaction>() {
         override fun areContentsTheSame(
-            oldItem: PendingTransaction, newItem: PendingTransaction
+            oldItem: PendingTransaction,
+            newItem: PendingTransaction
         ) = oldItem == newItem
 
         override fun areItemsTheSame(
-            oldItem: PendingTransaction, newItem: PendingTransaction
+            oldItem: PendingTransaction,
+            newItem: PendingTransaction
         ) = oldItem == newItem
     }
 

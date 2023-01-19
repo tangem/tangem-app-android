@@ -41,11 +41,13 @@ class WalletAdapter : ListAdapter<WalletData, WalletAdapter.WalletsViewHolder>(D
 
     object DiffUtilCallback : DiffUtil.ItemCallback<WalletData>() {
         override fun areContentsTheSame(
-            oldItem: WalletData, newItem: WalletData,
+            oldItem: WalletData,
+            newItem: WalletData,
         ) = oldItem == newItem
 
         override fun areItemsTheSame(
-            oldItem: WalletData, newItem: WalletData,
+            oldItem: WalletData,
+            newItem: WalletData,
         ) = oldItem == newItem
     }
 

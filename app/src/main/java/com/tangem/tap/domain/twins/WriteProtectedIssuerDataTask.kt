@@ -15,7 +15,8 @@ import com.tangem.operations.issuerAndUserData.WriteIssuerDataCommand
 import com.tangem.operations.sign.SignHashCommand
 
 class WriteProtectedIssuerDataTask(
-    private val twinPublicKey: ByteArray, private val issuerKeys: KeyPair,
+    private val twinPublicKey: ByteArray,
+    private val issuerKeys: KeyPair,
 ) : CardSessionRunnable<SuccessResponse> {
 
     override fun run(
@@ -56,7 +57,9 @@ class WriteProtectedIssuerDataTask(
 
     @Suppress("LongParameterList")
     private fun writeIssuerData(
-        twinPublicKey: ByteArray, issuerKeys: KeyPair, cardSignature: ByteArray,
+        twinPublicKey: ByteArray,
+        issuerKeys: KeyPair,
+        cardSignature: ByteArray,
         readResponse: ReadIssuerDataResponse,
         session: CardSession,
         callback: (

@@ -101,7 +101,11 @@ fun SwapPermissionBottomSheetContent(
 
 @Composable
 private fun ApprovalBottomSheetInfo(
-    currency: String, amount: String, walletAddress: String, spenderAddress: String, fee: String,
+    currency: String,
+    amount: String,
+    walletAddress: String,
+    spenderAddress: String,
+    fee: String,
 ) {
     Column(
         modifier = Modifier

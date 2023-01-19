@@ -311,7 +311,9 @@ class WalletConnectMiddleware {
     }
 
     private fun getWalletManager(
-        wallet: WalletForSession, blockchain: Blockchain, walletState: WalletState,
+        wallet: WalletForSession,
+        blockchain: Blockchain,
+        walletState: WalletState,
     ): WalletManager? {
         val blockchainToMake = if (blockchain == Blockchain.Ethereum && wallet.isTestNet) {
             Blockchain.EthereumTestnet

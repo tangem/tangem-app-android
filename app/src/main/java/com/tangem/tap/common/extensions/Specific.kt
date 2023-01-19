@@ -13,7 +13,9 @@ import java.util.*
 
 // todo move extensions to utils
 fun BigDecimal.toFormattedString(
-    decimals: Int, roundingMode: RoundingMode = RoundingMode.DOWN, locale: Locale = Locale.US,
+    decimals: Int,
+    roundingMode: RoundingMode = RoundingMode.DOWN,
+    locale: Locale = Locale.US,
 ): String {
     val symbols = DecimalFormatSymbols(locale)
     val df = DecimalFormat()
@@ -27,7 +29,9 @@ fun BigDecimal.toFormattedString(
 
 @Suppress("MagicNumber")
 fun BigDecimal.toFormattedCurrencyString(
-    decimals: Int, currency: String, roundingMode: RoundingMode = RoundingMode.DOWN,
+    decimals: Int,
+    currency: String,
+    roundingMode: RoundingMode = RoundingMode.DOWN,
     limitNumberOfDecimals: Boolean = true,
 ): String {
     val decimalsForRounding = if (limitNumberOfDecimals) {
