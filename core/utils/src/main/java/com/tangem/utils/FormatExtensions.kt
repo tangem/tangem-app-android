@@ -38,7 +38,7 @@ fun BigDecimal.toFormattedFiatValue(
 ): String {
     val fiatValue = this.setScale(2, RoundingMode.HALF_UP)
         .let { if (formatWithSpaces) it.formatWithSpaces() else it }
-    return " ${fiatValue}  $fiatCurrencyName"
+    return " $fiatValue  $fiatCurrencyName"
 }
 
 @Suppress("MagicNumber")

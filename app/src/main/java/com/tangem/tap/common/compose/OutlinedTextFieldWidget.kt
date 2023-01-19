@@ -114,7 +114,7 @@ private fun OutlinedProgressTextField(
     )
 
     logger.log("RECOMPOSE ---------------------------------------------------------------START [${logger.count}]")
-    logger.log("RECOMPOSE --data: fieldData.value: [${fieldData}]")
+    logger.log("RECOMPOSE --data: fieldData.value: [$fieldData]")
     logger.log("RECOMPOSE --data: textValueState.value: [${textValueState.value}]")
     logger.log("RECOMPOSE --data: textDebouncer.emittedValue = [${textDebouncer.emittedValue}]")
     logger.log("RECOMPOSE --data: textDebouncer.debounced = [${textDebouncer.debounced}]")

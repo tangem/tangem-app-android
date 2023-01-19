@@ -30,7 +30,7 @@ fun Activity.sendEmail(
             .setEmailTo(arrayOf(recipient))
             .setSubject(subject)
             .setText(text)
-        file?.let { builder.setStream(FileProvider.getUriForFile(this, "${packageName}.provider", it)) }
+        file?.let { builder.setStream(FileProvider.getUriForFile(this, "$packageName.provider", it)) }
         return builder.intent
     }
 
