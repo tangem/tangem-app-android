@@ -99,9 +99,9 @@ class HomeFragment : Fragment(), StoreSubscriber<HomeState> {
     }
 
     /*
-    * !!! Workaround !!!
-    * Used to roll back the color of icons in the system bars after the stories screen
-    * */
+     * !!! Workaround !!!
+     * Used to roll back the color of icons in the system bars after the stories screen
+     */
     private fun rollbackStatusBarIconsColor() {
         val windowInsetsController = WindowInsetsControllerCompat(
             activity?.window ?: return,
