@@ -99,7 +99,7 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
 
             // if config not set -> try to get it based on a scanResponse.productType
             val unsafeZendeskConfig = action.zendeskConfig ?: when {
-                scanResponse?.isSaltPay() == true -> config.saltPayConfig?.zendesk
+                scanResponse?.cardTypesResolver?.isSaltPay() == true -> config.saltPayConfig?.zendesk
                 else -> config.zendesk
             }
 
