@@ -30,9 +30,9 @@ import com.tangem.core.ui.res.TangemTheme
  */
 @Composable
 fun AppBarWithBackButton(
+    onBackClick: () -> Unit,
     text: String? = null,
     @DrawableRes iconRes: Int? = null,
-    onBackClick: () -> Unit,
 ) {
     Row(
         modifier = Modifier
@@ -63,7 +63,7 @@ fun AppBarWithBackButton(
 
 @Preview(widthDp = 360, heightDp = 56, showBackground = true)
 @Composable
-fun PreviewAppBarWithBackButtonInLightTheme() {
+private fun PreviewAppBarWithBackButtonInLightTheme() {
     TangemTheme(isDark = false) {
         AppBarWithBackButton(text = "Title", onBackClick = {})
     }
@@ -71,7 +71,7 @@ fun PreviewAppBarWithBackButtonInLightTheme() {
 
 @Preview(widthDp = 360, heightDp = 56, showBackground = true)
 @Composable
-fun PreviewAppBarWithBackButtonInDarkTheme() {
+private fun PreviewAppBarWithBackButtonInDarkTheme() {
     TangemTheme(isDark = true) {
         AppBarWithBackButton(text = "Title", onBackClick = {})
     }
