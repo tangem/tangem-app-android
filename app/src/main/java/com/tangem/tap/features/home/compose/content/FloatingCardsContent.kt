@@ -49,6 +49,7 @@ private data class CardValues(
 
 private object FloatingCard {
 
+    @Suppress("TopLevelComposableFunctions")
     @Composable
     fun Item(
         isPaused: Boolean,
