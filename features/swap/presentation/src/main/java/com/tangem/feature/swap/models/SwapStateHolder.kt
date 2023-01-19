@@ -67,7 +67,8 @@ sealed interface TransactionCardType {
 
 sealed interface SwapWarning {
     data class PermissionNeeded(val tokenCurrency: String) : SwapWarning
-    data class GenericWarning(val message: String, val onClick: () -> Unit) : SwapWarning
+    data class InsufficientFunds(val tokenCurrency: String) : SwapWarning
+    data class GenericWarning(val message: String?, val onClick: () -> Unit) : SwapWarning
     // data class RateExpired(val onClick: () -> Unit) : SwapWarning
     // object HighPriceImpact : SwapWarning
 }

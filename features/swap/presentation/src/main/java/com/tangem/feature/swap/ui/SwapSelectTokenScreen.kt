@@ -49,10 +49,11 @@ fun SwapSelectTokenScreen(state: SwapSelectTokenStateHolder, onBack: () -> Unit)
                     title = stringResource(R.string.swapping_token_list_your_title),
                     onBackClick = onBack,
                     placeholderSearchText = stringResource(id = R.string.search_tokens_title),
-                    onSearchChange = state.onSearchEntered,
-                    onSearchDisplayClose = { state.onSearchEntered("") },
+                    onSearchChanged = state.onSearchEntered,
+                    onSearchDisplayClosed = { state.onSearchEntered("") },
                 )
             },
+            modifier = Modifier.background(color = TangemTheme.colors.background.secondary),
         )
     }
 }
@@ -61,12 +62,8 @@ fun SwapSelectTokenScreen(state: SwapSelectTokenStateHolder, onBack: () -> Unit)
 private fun ListOfTokens(state: SwapSelectTokenStateHolder, modifier: Modifier = Modifier) {
     LazyColumn(
         modifier = modifier
-            .fillMaxWidth()
-            .background(color = TangemTheme.colors.background.primary)
-            .padding(
-                start = TangemTheme.dimens.spacing16,
-                bottom = TangemTheme.dimens.spacing32,
-            ),
+            .background(color = TangemTheme.colors.background.secondary)
+            .fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
 
         ) {
@@ -85,16 +82,17 @@ private fun ListOfTokens(state: SwapSelectTokenStateHolder, modifier: Modifier =
 }
 
 @Composable
-private fun TokenItem(token: TokenToSelect, onTokenClick: () -> Unit) {
+private fun TokenItem(token: TokenToSelect, onTokenClick: (String) -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(
-                top = TangemTheme.dimens.spacing14,
-                bottom = TangemTheme.dimens.spacing14,
-                end = TangemTheme.dimens.spacing16,
+            .clickable(
+                onClick = { onTokenClick(token.id) },
             )
-            .clickable(onClick = onTokenClick),
+            .padding(
+                vertical = TangemTheme.dimens.spacing14,
+                horizontal = TangemTheme.dimens.spacing16,
+            ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         TokenIcon(token = token)
