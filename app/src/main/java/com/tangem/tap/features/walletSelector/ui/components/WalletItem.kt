@@ -28,7 +28,6 @@ import com.tangem.core.ui.components.SpacerH2
 import com.tangem.core.ui.components.SpacerW6
 import com.tangem.core.ui.components.SpacerW8
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.domain.common.util.UserWalletId
 import com.tangem.tap.common.compose.TangemTypography
 import com.tangem.tap.features.walletSelector.ui.model.MultiCurrencyUserWalletItem
 import com.tangem.tap.features.walletSelector.ui.model.SingleCurrencyUserWalletItem
@@ -42,14 +41,14 @@ internal fun WalletItem(
     wallet: UserWalletItem,
     isSelected: Boolean,
     isChecked: Boolean,
-    onWalletClick: (UserWalletId) -> Unit,
-    onWalletLongClick: (UserWalletId) -> Unit,
+    onWalletClick: () -> Unit,
+    onWalletLongClick: () -> Unit,
 ) {
     Row(
         modifier = Modifier
             .combinedClickable(
-                onClick = { onWalletClick(wallet.id) },
-                onLongClick = { onWalletLongClick(wallet.id) },
+                onClick = onWalletClick,
+                onLongClick = onWalletLongClick,
             )
             .height(72.dp)
             .padding(all = TangemTheme.dimens.spacing16),
@@ -61,14 +60,9 @@ internal fun WalletItem(
             isSelected = isSelected,
         )
         SpacerW8()
-        WalletInfo(
-            modifier = Modifier.weight(weight = .6f),
-            wallet = wallet,
-            isSelected = isSelected,
-        )
+        WalletInfo(wallet = wallet, isSelected = isSelected)
         SpacerW6()
         TokensInfo(
-            modifier = Modifier.weight(weight = .4f),
             isLocked = wallet.isLocked,
             balance = wallet.balance,
             tokensCount = (wallet as? MultiCurrencyUserWalletItem)?.tokensCount,
@@ -78,13 +72,12 @@ internal fun WalletItem(
 
 @Composable
 private fun WalletCardImage(
-    modifier: Modifier = Modifier,
     cardImageUrl: String,
     isChecked: Boolean,
     isSelected: Boolean,
 ) {
     Box(
-        modifier = modifier
+        modifier = Modifier
             .width(TangemTheme.dimens.size62)
             .height(TangemTheme.dimens.size42),
     ) {
@@ -133,13 +126,12 @@ private fun WalletCardImage(
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-private fun WalletInfo(
-    modifier: Modifier = Modifier,
+private fun RowScope.WalletInfo(
     wallet: UserWalletItem,
     isSelected: Boolean,
 ) {
     Column(
-        modifier = modifier,
+        modifier = Modifier.weight(weight = .6f),
         verticalArrangement = Arrangement.SpaceAround,
     ) {
         Text(
@@ -166,14 +158,13 @@ private fun WalletInfo(
 }
 
 @Composable
-private fun TokensInfo(
-    modifier: Modifier = Modifier,
+private fun RowScope.TokensInfo(
     isLocked: Boolean,
     balance: UserWalletItem.Balance,
     tokensCount: Int?,
 ) {
     Column(
-        modifier = modifier,
+        modifier = Modifier.weight(weight = .4f),
         verticalArrangement = Arrangement.SpaceAround,
         horizontalAlignment = Alignment.End,
     ) {
@@ -181,9 +172,7 @@ private fun TokensInfo(
             LockedPlaceholder()
         } else {
             if (balance.isLoading) {
-                LoadingTokensInfo(
-                    isMultiCurrencyWallet = tokensCount != null,
-                )
+                LoadingTokensInfo(isMultiCurrencyWallet = tokensCount != null)
             } else {
                 LoadedTokensInfo(
                     balanceAmount = balance.amount,
@@ -195,12 +184,9 @@ private fun TokensInfo(
 }
 
 @Composable
-private fun LoadingTokensInfo(
-    modifier: Modifier = Modifier,
-    isMultiCurrencyWallet: Boolean,
-) {
+private fun LoadingTokensInfo(isMultiCurrencyWallet: Boolean) {
     Column(
-        modifier = modifier.shimmer(),
+        modifier = Modifier.shimmer(),
         horizontalAlignment = Alignment.End,
         verticalArrangement = Arrangement.SpaceAround,
     ) {
@@ -230,15 +216,8 @@ private fun LoadingTokensInfo(
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-private fun LoadedTokensInfo(
-    modifier: Modifier = Modifier,
-    balanceAmount: String,
-    tokensCount: Int?,
-) {
-    Column(
-        modifier = modifier,
-        horizontalAlignment = Alignment.End,
-    ) {
+private fun LoadedTokensInfo(balanceAmount: String, tokensCount: Int?) {
+    Column(horizontalAlignment = Alignment.End) {
         Text(
             text = balanceAmount,
             style = TangemTheme.typography.subtitle1,
