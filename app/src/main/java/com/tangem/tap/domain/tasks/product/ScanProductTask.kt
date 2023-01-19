@@ -244,8 +244,8 @@ private class ScanWalletProcessor(
         val activationInProgress = preferencesStorage.usedCardsPrefStorage.isActivationInProgress(card.cardId)
 
         @Suppress("ComplexCondition")
-        if (card.backupStatus == CardDTO.BackupStatus.NoBackup && card.wallets.isNotEmpty()
-            && (activationInProgress || card.isSaltPay)
+        if (card.backupStatus == CardDTO.BackupStatus.NoBackup && card.wallets.isNotEmpty() &&
+            (activationInProgress || card.isSaltPay)
         ) {
             StartPrimaryCardLinkingTask().run(session) { linkingResult ->
                 when (linkingResult) {

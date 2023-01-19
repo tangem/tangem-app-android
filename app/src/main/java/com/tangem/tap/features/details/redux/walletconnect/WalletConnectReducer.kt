@@ -35,8 +35,7 @@ object WalletConnectReducer {
             is WalletConnectAction.FailureEstablishingSession -> state.copy(loading = false)
             is WalletConnectAction.UpdateBlockchain -> state.copy(
                 sessions = state.sessions
-                    .filterNot { it.peerId == action.updatedSession.peerId }
-                    + action.updatedSession,
+                    .filterNot { it.peerId == action.updatedSession.peerId } + action.updatedSession,
             )
 
             else -> state

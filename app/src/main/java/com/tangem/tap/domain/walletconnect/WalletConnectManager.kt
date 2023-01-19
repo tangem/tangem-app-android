@@ -195,9 +195,9 @@ class WalletConnectManager {
 
     fun removeSimilarSessions(activeData: WalletConnectActiveData) {
         val sessionsToRemove = sessions.filter {
-            it.value.wallet.walletPublicKey?.equals(activeData.wallet.walletPublicKey) == true
-                && it.value.peerMeta?.url == activeData.peerMeta?.url
-                && it.value.session != activeData.session
+            it.value.wallet.walletPublicKey?.equals(activeData.wallet.walletPublicKey) == true &&
+                it.value.peerMeta?.url == activeData.peerMeta?.url &&
+                it.value.session != activeData.session
         }
         Timber.d("RemoveSimilarSessions: ${sessionsToRemove.values.map { it.client.session }}")
         sessionsToRemove.forEach { disconnect(it.value.session) }

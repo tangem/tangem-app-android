@@ -63,8 +63,8 @@ class TokensMiddleware {
                         )
                     }
                     is TokensAction.LoadMore -> {
-                        if (store.state.tokensState.needToLoadMore
-                            && store.state.tokensState.currencies.isNotEmpty()
+                        if (store.state.tokensState.needToLoadMore &&
+                            store.state.tokensState.currencies.isNotEmpty()
                         ) {
                             handleLoadCurrencies(action.scanResponse)
                         }
@@ -153,8 +153,8 @@ class TokensMiddleware {
         )
 
         @Suppress("ComplexCondition")
-        if (tokensToAdd.isEmpty() && tokensToRemove.isEmpty()
-            && blockchainsToAdd.isEmpty() && blockchainsToRemove.isEmpty()
+        if (tokensToAdd.isEmpty() && tokensToRemove.isEmpty() &&
+            blockchainsToAdd.isEmpty() && blockchainsToRemove.isEmpty()
         ) {
             store.dispatchDebugErrorNotification("Nothing to save")
             store.dispatchOnMain(NavigationAction.PopBackTo())

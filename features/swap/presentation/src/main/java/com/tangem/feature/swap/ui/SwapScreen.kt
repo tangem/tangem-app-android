@@ -54,8 +54,8 @@ internal fun SwapScreen(stateHolder: SwapStateHolder) {
                     state = stateHolder,
                     onPermissionWarningClick = {
                         coroutineScope.launch {
-                            if (bottomSheetScaffoldState.bottomSheetState.isCollapsed
-                                && stateHolder.permissionState is SwapPermissionState.ReadyForRequest
+                            if (bottomSheetScaffoldState.bottomSheetState.isCollapsed &&
+                                stateHolder.permissionState is SwapPermissionState.ReadyForRequest
                             ) {
                                 bottomSheetScaffoldState.bottomSheetState.expand()
                             } else {

@@ -82,13 +82,13 @@ internal class SwapInteractorImpl @Inject constructor(
         val searchQueryLowerCase = searchQuery.lowercase()
         val tokensInWallet = cache.getInWalletTokens()
             .filter {
-                it.name.lowercase().contains(searchQueryLowerCase)
-                    || it.symbol.lowercase().contains(searchQueryLowerCase)
+                it.name.lowercase().contains(searchQueryLowerCase) ||
+                    it.symbol.lowercase().contains(searchQueryLowerCase)
             }
         val loadedTokens = cache.getLoadedTokens()
             .filter {
-                it.name.lowercase().contains(searchQueryLowerCase)
-                    || it.symbol.lowercase().contains(searchQueryLowerCase)
+                it.name.lowercase().contains(searchQueryLowerCase) ||
+                    it.symbol.lowercase().contains(searchQueryLowerCase)
             }
         val tokensBalance = userWalletManager.getCurrentWalletTokensBalance(networkId)
         val appCurrency = userWalletManager.getUserAppCurrency()
