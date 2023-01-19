@@ -51,11 +51,7 @@ import com.tangem.feature.swap.presentation.R
 
 @Suppress("LongMethod")
 @Composable
-internal fun SwapScreenContent(
-    modifier: Modifier = Modifier,
-    state: SwapStateHolder,
-    onPermissionWarningClick: () -> Unit,
-) {
+internal fun SwapScreenContent(state: SwapStateHolder, onPermissionWarningClick: () -> Unit) {
     val keyboard by keyboardAsState()
 
     Box(
@@ -65,7 +61,7 @@ internal fun SwapScreenContent(
     ) {
 
         Column(
-            modifier = modifier
+            modifier = Modifier
                 .fillMaxWidth()
                 .background(color = TangemTheme.colors.background.primary)
                 .verticalScroll(rememberScrollState())
@@ -308,7 +304,7 @@ private val state = SwapStateHolder(
 
 @Preview
 @Composable
-fun SwapScreenContentPreview() {
+private fun SwapScreenContentPreview() {
     TangemTheme(isDark = false) {
         SwapScreenContent(state = state) {}
     }
