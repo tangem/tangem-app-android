@@ -24,12 +24,11 @@ import com.tangem.core.ui.res.TangemTheme
  */
 @Composable
 fun BasicDialog(
-    modifier: Modifier = Modifier,
     message: String,
-    title: String? = null,
     confirmButton: DialogButton,
-    dismissButton: DialogButton? = null,
     onDismissDialog: () -> Unit,
+    title: String? = null,
+    dismissButton: DialogButton? = null,
 ) {
     AlertDialog(
         text = {
@@ -68,8 +67,7 @@ fun BasicDialog(
             }
         },
         shape = TangemTheme.shapes.roundedCornersLarge,
-        modifier = modifier
-            .padding(TangemTheme.dimens.spacing24),
+        modifier = Modifier.padding(TangemTheme.dimens.spacing24),
     )
 }
 
@@ -79,13 +77,8 @@ data class DialogButton(
 )
 
 @Composable
-fun SimpleOkDialog(
-    modifier: Modifier = Modifier,
-    message: String,
-    onDismissDialog: () -> Unit,
-) {
+fun SimpleOkDialog(message: String, onDismissDialog: () -> Unit) {
     BasicDialog(
-        modifier = modifier,
         message = message,
         confirmButton = DialogButton(onClick = onDismissDialog),
         onDismissDialog = onDismissDialog,
@@ -95,23 +88,28 @@ fun SimpleOkDialog(
 // region Preview
 
 @Composable
-private fun SimpleOkDialogPreview() = SimpleOkDialog(
-    message = "All protected passwords will be deleted from the " +
-        "secure storage, you must enter the wallet password to work with the app.",
-) {}
+private fun SimpleOkDialogPreview() {
+    SimpleOkDialog(
+        message = "All protected passwords will be deleted from the " +
+            "secure storage, you must enter the wallet password to work with the app.",
+    ) {}
+}
 
 @Composable
-private fun BasicDialogPreview() = BasicDialog(
-    message = "All protected passwords will be deleted from the secure storage, you must enter the wallet password " +
-        "to work with the app",
-    title = "Attention",
-    confirmButton = DialogButton {},
-    dismissButton = DialogButton {},
-) {}
+private fun BasicDialogPreview() {
+    BasicDialog(
+        message = "All protected passwords will be deleted from the secure storage, you must enter the wallet " +
+            "password to work with the app",
+        title = "Attention",
+        confirmButton = DialogButton {},
+        dismissButton = DialogButton {},
+        onDismissDialog = {},
+    )
+}
 
 @Preview(showBackground = true)
 @Composable
-fun Preview_SimpleOkDialog_InLightTheme() {
+private fun Preview_SimpleOkDialog_InLightTheme() {
     TangemTheme(isDark = false) {
         SimpleOkDialogPreview()
     }
@@ -119,7 +117,7 @@ fun Preview_SimpleOkDialog_InLightTheme() {
 
 @Preview(showBackground = true)
 @Composable
-fun Preview_BasicDialog_InLightTheme() {
+private fun Preview_BasicDialog_InLightTheme() {
     TangemTheme(isDark = false) {
         BasicDialogPreview()
     }
@@ -127,7 +125,7 @@ fun Preview_BasicDialog_InLightTheme() {
 
 @Preview(showBackground = true)
 @Composable
-fun Preview_SimpleOkDialog_InDarkTheme() {
+private fun Preview_SimpleOkDialog_InDarkTheme() {
     TangemTheme(isDark = true) {
         SimpleOkDialogPreview()
     }
@@ -135,7 +133,7 @@ fun Preview_SimpleOkDialog_InDarkTheme() {
 
 @Preview(showBackground = true)
 @Composable
-fun Preview_BasicDialog_InDarkTheme() {
+private fun Preview_BasicDialog_InDarkTheme() {
     TangemTheme(isDark = true) {
         BasicDialogPreview()
     }
