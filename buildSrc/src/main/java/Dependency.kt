@@ -72,8 +72,12 @@ object Library {
 
 object Tangem {
     const val blockchain = "com.tangem:blockchain:" + Versions.tangemBlockchainSdk
-    const val cardAndroid = "com.tangem.tangem-sdk-kotlin:android:" + Versions.tangemCardSgk
-    const val cardCore = "com.tangem.tangem-sdk-kotlin:core:" + Versions.tangemCardSgk
+    const val cardAndroid = "com.tangem.tangem-sdk-kotlin:android:" + Versions.tangemCardSdk
+    const val cardCore = "com.tangem.tangem-sdk-kotlin:core:" + Versions.tangemCardSdk
+}
+
+object Tools {
+    const val composeDetektRules = "ru.kode:detekt-rules-compose:" + Versions.composeDetektRules
 }
 
 object Test {

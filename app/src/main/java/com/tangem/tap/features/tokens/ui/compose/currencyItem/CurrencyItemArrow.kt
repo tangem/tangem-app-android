@@ -68,11 +68,8 @@ private fun LastArrowView(rowHeight: Dp) {
 
 @Preview
 @Composable
-fun ArrowViewPreview() {
-    Box(
-        Modifier
-            .background(color = Color.White),
-    ) {
+private fun ArrowViewPreview() {
+    Box(Modifier.background(color = Color.White)) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
