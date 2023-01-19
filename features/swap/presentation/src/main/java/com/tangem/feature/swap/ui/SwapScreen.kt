@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.ui
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.BottomSheetScaffold
 import androidx.compose.material.BottomSheetState
@@ -8,6 +9,7 @@ import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.res.TangemTheme
@@ -26,6 +28,7 @@ internal fun SwapScreen(stateHolder: SwapStateHolder) {
 
     TangemTheme {
         BottomSheetScaffold(
+            modifier = Modifier.background(TangemTheme.colors.background.secondary),
             topBar = {
                 AppBarWithBackButton(
                     text = stringResource(R.string.swapping_swap),
@@ -34,8 +37,8 @@ internal fun SwapScreen(stateHolder: SwapStateHolder) {
                 )
             },
             sheetContent = {
-                    SwapPermissionBottomSheetContent(
-                        data = stateHolder.permissionState as? SwapPermissionState.ReadyForRequest,
+                SwapPermissionBottomSheetContent(
+                    data = stateHolder.permissionState as? SwapPermissionState.ReadyForRequest,
                         onCancel = { coroutineScope.launch { bottomSheetScaffoldState.bottomSheetState.collapse() } },
                     )
             },
