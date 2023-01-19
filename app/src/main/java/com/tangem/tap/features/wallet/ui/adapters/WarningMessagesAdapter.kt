@@ -28,7 +28,9 @@ class WarningMessagesAdapter : ListAdapter<WarningMessage, WarningMessageVH>(Dif
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): WarningMessageVH {
         val binding = LayoutWarningCardActionBinding.inflate(
-            LayoutInflater.from(parent.context), parent, false,
+            LayoutInflater.from(parent.context),
+            parent,
+            false,
         )
         return WarningMessageVH(binding)
     }

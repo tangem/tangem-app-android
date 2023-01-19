@@ -486,7 +486,8 @@ internal class AddCustomTokenHub : BaseStoreHub<AddCustomTokenState>("AddCustomT
     @Throws
     private fun throwUnAppropriateInitialization(objName: String) {
         throw AddCustomTokenError.UnAppropriateInitialization(
-            "AddCustomTokenHub", "$objName must be not NULL",
+            "AddCustomTokenHub",
+            "$objName must be not NULL",
         )
     }
 

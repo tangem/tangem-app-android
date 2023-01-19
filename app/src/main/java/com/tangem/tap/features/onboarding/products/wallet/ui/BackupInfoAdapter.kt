@@ -15,7 +15,9 @@ class BackupInfoAdapter : RecyclerView.Adapter<BackupInfoViewHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): BackupInfoViewHolder =
         BackupInfoViewHolder(
             ItemBackupInfoAdapterBinding.inflate(
-                LayoutInflater.from(parent.context), parent, false
+                LayoutInflater.from(parent.context),
+                parent,
+                false
             )
         )
 

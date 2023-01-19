@@ -67,9 +67,18 @@ class RefreshBalanceWidget(
             }
             ProgressState.Loading -> {
                 progressViewAnimation = RotateAnimation(
-                    0f, 360f,
-                    Animation.RELATIVE_TO_SELF, 0.5f,
-                    Animation.RELATIVE_TO_SELF, 0.5f,
+                    /* fromDegrees = */
+                    0f,
+                    /* toDegrees = */
+                    360f,
+                    /* pivotXType = */
+                    Animation.RELATIVE_TO_SELF,
+                    /* pivotXValue = */
+                    0.5f,
+                    /* pivotYType = */
+                    Animation.RELATIVE_TO_SELF,
+                    /* pivotYValue = */
+                    0.5f,
                 )
                 progressViewAnimation?.duration = 700
                 progressViewAnimation?.interpolator = AccelerateInterpolator()
@@ -101,10 +110,14 @@ class ShowAnimation : AnimationSet(true) {
     init {
         addAnimation(
             ScaleAnimation(
-                0f, 1f,
-                0f, 1f,
-                Animation.RELATIVE_TO_SELF, 0.5f,
-                Animation.RELATIVE_TO_SELF, 0.5f,
+                0f,
+                1f,
+                0f,
+                1f,
+                Animation.RELATIVE_TO_SELF,
+                0.5f,
+                Animation.RELATIVE_TO_SELF,
+                0.5f,
             ),
         )
         addAnimation(AlphaAnimation(0f, 1f))

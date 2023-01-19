@@ -6,8 +6,8 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.core.analytics.Analytics
+import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.tap.common.analytics.events.Portfolio
 import com.tangem.tap.common.extensions.getString
 import com.tangem.tap.common.extensions.hide
@@ -28,7 +28,9 @@ class WalletAdapter : ListAdapter<WalletData, WalletAdapter.WalletsViewHolder>(D
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): WalletsViewHolder {
         val layout = ItemCurrencyWalletBinding.inflate(
-            LayoutInflater.from(parent.context), parent, false,
+            LayoutInflater.from(parent.context),
+            parent,
+            false,
         )
         return WalletsViewHolder(layout)
     }

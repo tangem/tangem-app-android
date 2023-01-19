@@ -33,8 +33,12 @@ class WriteProtectedIssuerDataTask(
                             when (readResult) {
                                 is CompletionResult.Success -> {
                                     writeIssuerData(
-                                        twinPublicKey, issuerKeys, signResult.data.signature,
-                                        readResult.data, session, callback,
+                                        twinPublicKey,
+                                        issuerKeys,
+                                        signResult.data.signature,
+                                        readResult.data,
+                                        session,
+                                        callback,
                                     )
                                 }
                                 is CompletionResult.Failure -> callback(

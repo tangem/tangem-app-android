@@ -18,7 +18,9 @@ class PendingTransactionsAdapter
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TransactionsViewHolder {
         val binding = ItemPendingTransactionBinding.inflate(
-            LayoutInflater.from(parent.context), parent, false
+            LayoutInflater.from(parent.context),
+            parent,
+            false
         )
         return TransactionsViewHolder(binding)
     }

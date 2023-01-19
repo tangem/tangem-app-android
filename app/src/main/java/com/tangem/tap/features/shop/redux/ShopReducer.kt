@@ -25,7 +25,8 @@ private fun internalReduce(action: Action, state: ShopState): ShopState {
         }
         ShopAction.StartWebCheckout -> state
         ShopAction.ApplyPromoCode.InvalidPromoCode -> state.copy(
-            promoCode = null, promoCodeLoading = false,
+            promoCode = null,
+            promoCodeLoading = false,
         )
         is ShopAction.ApplyPromoCode.Success -> {
             state.copy(

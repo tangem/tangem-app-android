@@ -86,7 +86,9 @@ fun View.invisible(invisible: Boolean = true, invokeBeforeStateChanged: (() -> U
 
 fun Context.dpToPixels(dp: Int): Int =
     TypedValue.applyDimension(
-        TypedValue.COMPLEX_UNIT_DIP, dp.toFloat(), this.resources.displayMetrics,
+        TypedValue.COMPLEX_UNIT_DIP,
+        dp.toFloat(),
+        this.resources.displayMetrics,
     ).toInt()
 
 fun Context.pixelsToDp(pixels: Int): Int {

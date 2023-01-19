@@ -255,7 +255,8 @@ private fun internalReduce(action: Action, state: AppState, appStateHolder: AppS
                 .map {
                     it.copy(
                         currencyData = it.currencyData.copy(
-                            status = BalanceStatus.Unreachable, errorMessage = message,
+                            status = BalanceStatus.Unreachable,
+                            errorMessage = message,
                         ),
                     )
                 }

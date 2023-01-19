@@ -36,7 +36,8 @@ fun BigDecimal.toFormattedCurrencyString(
         decimals
     }
     val formattedAmount = this.toFormattedString(
-        decimals = decimalsForRounding, roundingMode = roundingMode,
+        decimals = decimalsForRounding,
+        roundingMode = roundingMode,
     )
     return "$formattedAmount $currency"
 }

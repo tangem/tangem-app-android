@@ -79,13 +79,15 @@ fun SecurityOption(option: SecurityOption, state: SecurityModeScreenState) {
         modifier = Modifier
             .fillMaxWidth()
             .selectable(
-                selected = selected, onClick = { state.onNewModeSelected(option) },
+                selected = selected,
+                onClick = { state.onNewModeSelected(option) },
             )
             .padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 16.dp),
     ) {
 
         RadioButton(
-            selected = selected, onClick = null,
+            selected = selected,
+            onClick = null,
             modifier = Modifier.padding(end = 20.dp),
             colors = RadioButtonDefaults.colors(
                 unselectedColor = colorResource(id = R.color.icon_secondary),

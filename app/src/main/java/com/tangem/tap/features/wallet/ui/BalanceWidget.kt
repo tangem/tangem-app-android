@@ -130,7 +130,8 @@ class BalanceWidget(
                 tvErrorDescriptions.text =
                     fragment.getString(
                         R.string.no_account_generic,
-                        data.amountToCreateAccount, data.currencySymbol,
+                        data.amountToCreateAccount,
+                        data.currencySymbol,
                     )
             }
             BalanceStatus.UnknownBlockchain -> with(binding.lBalanceError) {

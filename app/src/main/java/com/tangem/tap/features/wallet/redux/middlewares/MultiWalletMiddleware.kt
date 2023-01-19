@@ -92,7 +92,8 @@ class MultiWalletMiddleware {
                 )
                 store.dispatch(
                     WalletAction.LoadWallet(
-                        action.blockchain, action.walletManager,
+                        blockchain = action.blockchain,
+                        walletManager = action.walletManager,
                     ),
                 )
             }
@@ -249,7 +250,9 @@ class MultiWalletMiddleware {
             WalletAction.LoadFiatRate(
                 coinsList = tokens.map { token ->
                     Currency.Token(
-                        token, blockchainNetwork.blockchain, blockchainNetwork.derivationPath,
+                        token,
+                        blockchainNetwork.blockchain,
+                        blockchainNetwork.derivationPath,
                     )
                 },
             ),

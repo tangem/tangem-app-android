@@ -20,7 +20,7 @@ fun HangingOverKeyboardView(
     modifier: Modifier = Modifier,
     keyboardState: State<Keyboard>,
     spaceBetweenKeyboard: Dp = 0.dp,
-    content: @Composable() (BoxScope.() -> Unit)
+    content: @Composable (BoxScope.() -> Unit)
 ) {
 
     val context = LocalContext.current

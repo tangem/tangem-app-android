@@ -101,7 +101,10 @@ class TokensMiddleware {
                 )
             } else {
                 loadCoinsService.getSupportedTokens(
-                    isTestcard, supportedBlockchains, 0, newSearchInput.ifBlank { null },
+                    isTestNet = isTestcard,
+                    supportedBlockchains = supportedBlockchains,
+                    page = 0,
+                    searchInput = newSearchInput.ifBlank { null },
                 )
             }
             when (loadCoinsResult) {
@@ -110,7 +113,8 @@ class TokensMiddleware {
                         .filter(supportedBlockchains.toSet())
                     store.dispatchOnMain(
                         TokensAction.LoadCurrencies.Success(
-                            currencies, loadCoinsResult.data.moreAvailable,
+                            currencies,
+                            loadCoinsResult.data.moreAvailable,
                         ),
                     )
                 }

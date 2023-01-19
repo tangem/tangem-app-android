@@ -174,7 +174,8 @@ private fun Preview() {
             tangemLinks = TangemSocialAccounts.accountsEn,
             tangemVersion = "Tangem 2.14.12 (343)",
             appCurrency = "Dollar",
-            onItemsClick = {}, onSocialNetworkClick = {},
+            onItemsClick = {},
+            onSocialNetworkClick = {},
         ),
         onBackClick = {},
     )

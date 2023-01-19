@@ -76,7 +76,8 @@ class ShopifyService(private val application: Application, val shop: ShopifyShop
                 }
         }
         val retryHandler = RetryHandler.build<QueryRoot>(
-            1, TimeUnit.SECONDS,
+            delay = 1,
+            timeUnit = TimeUnit.SECONDS,
         ) {
             this.retryWhen { result ->
                 when (result) {
@@ -117,7 +118,8 @@ class ShopifyService(private val application: Application, val shop: ShopifyShop
             mutation { mutationQuery: MutationQuery ->
                 mutationQuery
                     .checkoutLineItemsReplace(
-                        storefrontLineItems, checkoutID,
+                        storefrontLineItems,
+                        checkoutID,
                     ) { payloadQuery: CheckoutLineItemsReplacePayloadQuery ->
                         payloadQuery
                             .checkout { checkoutQuery: CheckoutQuery ->
@@ -159,7 +161,8 @@ class ShopifyService(private val application: Application, val shop: ShopifyShop
         val query = mutation { mutationQuery: MutationQuery ->
             mutationQuery
                 .checkoutDiscountCodeApplyV2(
-                    discountCode, checkoutID,
+                    discountCode,
+                    checkoutID,
                 ) { payloadQuery: CheckoutDiscountCodeApplyV2PayloadQuery ->
                     payloadQuery
                         .checkout { checkoutQuery: CheckoutQuery ->
@@ -203,7 +206,8 @@ class ShopifyService(private val application: Application, val shop: ShopifyShop
         val query = mutation { mutationQuery: MutationQuery ->
             mutationQuery
                 .checkoutCompleteWithTokenizedPaymentV3(
-                    checkoutID, payment,
+                    checkoutID,
+                    payment,
                 ) { payloadQuery: CheckoutCompleteWithTokenizedPaymentV3PayloadQuery ->
                     payloadQuery
                         .payment { paymentQuery: PaymentQuery ->

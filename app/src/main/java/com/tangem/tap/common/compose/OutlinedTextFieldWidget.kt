@@ -134,14 +134,20 @@ private fun OutlinedProgressTextField(
                 if (textValueState.value != textDebouncer.emittedValue || textValueState.value != textDebouncer.debounced) {
                     logger.log("$isNotUserInput: даннные в поле не соответствуют данным из textDebouncer")
                     if (textDebouncer.emittedValue.isEmpty() && textDebouncer.debounced.isEmpty()) {
-                        logger.log("$isNotUserInput: даннные в textDebouncer ПУСТЫ -> start RECOMPOSE новые данные для textValueState.value = [${fieldData.value}]")
+                        logger.log(
+                            "$isNotUserInput: даннные в textDebouncer ПУСТЫ -> start RECOMPOSE новые данные для textValueState.value = [${fieldData.value}]"
+                        )
                         textValueState.value = fieldData.value
                     } else {
-                        logger.log("$isNotUserInput: даннные в textDebouncer НЕ ПУСТЫ  -> start RECOMPOSE новые данные для textValueState.value = [${fieldData.value}]")
+                        logger.log(
+                            "$isNotUserInput: даннные в textDebouncer НЕ ПУСТЫ  -> start RECOMPOSE новые данные для textValueState.value = [${fieldData.value}]"
+                        )
                         textValueState.value = fieldData.value
                     }
                 } else {
-                    logger.log("$isNotUserInput: в пустое поле вставляются данные -> start RECOMPOSE новые данные для textValueState.value = [${fieldData.value}]")
+                    logger.log(
+                        "$isNotUserInput: в пустое поле вставляются данные -> start RECOMPOSE новые данные для textValueState.value = [${fieldData.value}]"
+                    )
                     textValueState.value = fieldData.value
                 }
             }

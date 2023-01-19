@@ -271,7 +271,9 @@ class WalletConnectSdkHelper {
             is CompletionResult.Success -> {
                 val hash = result.data.signature
                 return EthereumUtils.prepareSignedMessageData(
-                    hash, hashToSign, CryptoUtils.decompressPublicKey(key!!),
+                    signedHash = hash,
+                    hashToSign = hashToSign,
+                    publicKey = CryptoUtils.decompressPublicKey(key!!),
                 )
             }
             is CompletionResult.Failure -> {

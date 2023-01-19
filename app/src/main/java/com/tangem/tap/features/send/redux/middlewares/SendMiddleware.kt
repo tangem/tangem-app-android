@@ -83,7 +83,8 @@ class SendMiddleware {
                         if (transactionData != null) {
                             store.dispatchOnMain(
                                 AddressPayIdVerifyAction.AddressVerification.SetWalletAddress(
-                                    transactionData.destinationAddress, false,
+                                    address = transactionData.destinationAddress,
+                                    isUserInput = false,
                                 ),
                             )
                             store.dispatchOnMain(AmountActionUi.SetMainCurrency(MainCurrencyType.CRYPTO))

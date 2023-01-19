@@ -210,9 +210,10 @@ private val tokenNotAvailable = token.copy(available = false)
 private fun TokenScreenPreview() {
     SwapSelectTokenScreen(
         state = SwapSelectTokenStateHolder(
-            listOf(token, tokenNotAvailable, token), {}, {},
+            tokens = listOf(token, tokenNotAvailable, token),
+            onSearchEntered = {},
+            onTokenSelected = {},
         ),
-    ) {
-
-    }
+        onBack = {},
+    )
 }

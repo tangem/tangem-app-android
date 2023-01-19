@@ -146,7 +146,8 @@ class MultiWalletReducer {
                         status = tokenBalanceStatus,
                         amount = action.amount.value,
                         amountFormatted = action.amount.value?.toFormattedCurrencyString(
-                            action.amount.decimals, action.amount.currencySymbol,
+                            decimals = action.amount.decimals,
+                            currency = action.amount.currencySymbol,
                         ),
                         fiatAmountFormatted = tokenWalletData.fiatRate?.let {
                             action.amount.value?.toFiatString(it, store.state.globalState.appCurrency.symbol)

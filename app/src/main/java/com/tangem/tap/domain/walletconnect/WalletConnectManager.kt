@@ -313,7 +313,9 @@ class WalletConnectManager {
         val activeData = sessions[session.session] ?: return
         scope.launch {
             val data = WalletConnectSdkHelper().prepareDataForPersonalSign(
-                message = message, session = session, id = id,
+                message = message,
+                session = session,
+                id = id,
             )
             sessions[session.session] = activeData.copy(personalSignData = data)
             store.dispatchOnMain(
@@ -443,7 +445,9 @@ class WalletConnectManager {
             sessions[client.session]?.toWalletConnectSession()?.let { sessionData ->
                 store.dispatchOnMain(
                     WalletConnectAction.BinanceTransaction.Trade(
-                        id = id, order = order, sessionData = sessionData,
+                        id = id,
+                        order = order,
+                        sessionData = sessionData,
                     ),
                 )
             }
@@ -452,7 +456,9 @@ class WalletConnectManager {
             sessions[client.session]?.toWalletConnectSession()?.let { sessionData ->
                 store.dispatchOnMain(
                     WalletConnectAction.BinanceTransaction.Transfer(
-                        id = id, order = order, sessionData = sessionData,
+                        id = id,
+                        order = order,
+                        sessionData = sessionData,
                     ),
                 )
             }

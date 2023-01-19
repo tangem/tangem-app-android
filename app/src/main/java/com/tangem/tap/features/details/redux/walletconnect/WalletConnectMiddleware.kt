@@ -187,7 +187,9 @@ class WalletConnectMiddleware {
             }
             is WalletConnectAction.BinanceTransaction.Sign -> {
                 walletConnectManager.signBnb(
-                    action.id, action.data, action.sessionData,
+                    id = action.id,
+                    data = action.data,
+                    sessionData = action.sessionData,
                 )
             }
             is WalletConnectAction.SwitchBlockchain -> {

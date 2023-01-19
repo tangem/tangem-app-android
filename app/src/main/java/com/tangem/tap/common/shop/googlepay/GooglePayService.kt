@@ -60,7 +60,9 @@ class GooglePayService(private val paymentsClient: PaymentsClient, private val a
         val request = PaymentDataRequest.fromJson(paymentDataRequestJson.toString())
 
         AutoResolveHelper.resolveTask(
-            paymentsClient.loadPaymentData(request), activity, LOAD_PAYMENT_DATA_REQUEST_CODE,
+            paymentsClient.loadPaymentData(request),
+            activity,
+            LOAD_PAYMENT_DATA_REQUEST_CODE,
         )
     }
 
