@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.OutlinedTextField
-import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.TextFieldColors
 import androidx.compose.runtime.Composable
@@ -41,7 +40,6 @@ import com.tangem.tap.domain.moduleMessage.ModuleMessageConverter
  */
 @Composable
 fun OutlinedTextFieldWidget(
-    modifier: Modifier = Modifier,
     fieldData: Field.Data<String>,
     labelId: Int? = null,
     label: String = "",
@@ -56,15 +54,12 @@ fun OutlinedTextFieldWidget(
     debounceTextChanges: Long = 400,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
-    onTextChanged: (String) -> Unit,
+    onTextChange: (String) -> Unit,
 ) {
     if (!isVisible) return
 
-    Column(
-        modifier = modifier.animateContentSize(),
-    ) {
+    Column(modifier = Modifier.animateContentSize()) {
         OutlinedProgressTextField(
-            modifier = modifier,
             fieldData = fieldData,
             label = stringResourceDefault(labelId, label),
             placeholder = stringResourceDefault(placeholderId, placeholder),
@@ -75,16 +70,15 @@ fun OutlinedTextFieldWidget(
             debounce = debounceTextChanges,
             visualTransformation = visualTransformation,
             keyboardOptions = keyboardOptions,
-            onTextChanged = onTextChanged,
+            onTextChange = onTextChange,
         )
-        errorConverter?.let { AnimatedErrorView(error, it) }
+        errorConverter?.let { AnimatedErrorView(errorConverter = it, error = error) }
     }
 }
 
 @Suppress("LongMethod", "NestedBlockDepth", "MagicNumber", "MaxLineLength")
 @Composable
 private fun OutlinedProgressTextField(
-    modifier: Modifier = Modifier,
     fieldData: Field.Data<String>,
     label: String = "",
     placeholder: String = "",
@@ -97,7 +91,7 @@ private fun OutlinedProgressTextField(
     colors: TextFieldColors = TangemTextFieldsDefault.defaultTextFieldColors,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     trailingIcon: @Composable (() -> Unit)? = null,
-    onTextChanged: (String) -> Unit,
+    onTextChange: (String) -> Unit,
 ) {
     val logger = remember {
         CompositionLogger(label, "OutlinedProgressTextField", listOf("Символ токена"))
@@ -108,14 +102,14 @@ private fun OutlinedProgressTextField(
     val textDebouncer = valueDebouncerAsState(
         initialValue = fieldData.value,
         debounce = debounce,
-        onEmitValueReceived = {
+        onEmitValueReceive = {
             logger.log("DEBOUNCER: onEmitValueReceived: [$it]")
             logger.log("DEBOUNCER: start RECOMPOSE by new value for textValueState.value = [$it]")
             textValueState.value = it
         },
-        onValueChanged = {
+        onValueChange = {
             logger.log("DEBOUNCER: onValueChanged:  >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>  dispatch.toStore([$it])")
-            onTextChanged(it)
+            onTextChange(it)
         },
     )
 
@@ -194,7 +188,7 @@ private fun OutlinedProgressTextField(
             interactionSource = interactionSource,
         )
         AnimatedVisibility(
-            modifier = modifier
+            modifier = Modifier
                 .fillMaxWidth()
                 .align(Alignment.BottomCenter)
                 .padding(start = 6.dp, top = 0.dp, end = 6.dp, bottom = 6.dp),
@@ -209,8 +203,8 @@ private fun OutlinedProgressTextField(
 
 @Composable
 private fun AnimatedErrorView(
-    error: ModuleError? = null,
     errorConverter: ModuleMessageConverter,
+    error: ModuleError? = null,
 ) {
     AnimatedVisibility(
         visible = error != null,
@@ -228,7 +222,7 @@ private fun AnimatedErrorView(
 
 @Preview
 @Composable
-fun OutlinedTextFieldWithErrorTest() {
+private fun OutlinedTextFieldWithErrorTest() {
     val context = LocalContext.current
     val converter = remember { ModuleMessageConverter(context) }
 
@@ -241,41 +235,35 @@ fun OutlinedTextFieldWithErrorTest() {
     val modifier = Modifier
         .fillMaxWidth()
         .padding(16.dp)
-    Scaffold {
-        Column {
-            OutlinedTextFieldWidget(
-                modifier = modifier,
-                fieldData = Field.Data("", false),
-                label = "First label",
-                placeholder = "1 placeholder",
-                error = null,
-                errorConverter = converter,
-            ) {}
-            OutlinedTextFieldWidget(
-                modifier = modifier,
-                fieldData = Field.Data("First", false),
-                label = "First label",
-                placeholder = "1 placeholder",
-                error = null,
-                errorConverter = converter,
-            ) {}
-            OutlinedTextFieldWidget(
-                modifier = modifier,
-                fieldData = Field.Data("First", false),
-                label = "First label",
-                placeholder = "1 placeholder",
-                isLoading = true,
-                error = null,
-                errorConverter = converter,
-            ) {}
-            OutlinedTextFieldWidget(
-                modifier = modifier,
-                fieldData = Field.Data("First", false),
-                label = "First label",
-                placeholder = "1 placeholder",
-                error = SimpleError(),
-                errorConverter = converter,
-            ) {}
-        }
+    Column {
+        OutlinedTextFieldWidget(
+            fieldData = Field.Data("", false),
+            label = "First label",
+            placeholder = "1 placeholder",
+            error = null,
+            errorConverter = converter,
+        ) {}
+        OutlinedTextFieldWidget(
+            fieldData = Field.Data("First", false),
+            label = "First label",
+            placeholder = "1 placeholder",
+            error = null,
+            errorConverter = converter,
+        ) {}
+        OutlinedTextFieldWidget(
+            fieldData = Field.Data("First", false),
+            label = "First label",
+            placeholder = "1 placeholder",
+            isLoading = true,
+            error = null,
+            errorConverter = converter,
+        ) {}
+        OutlinedTextFieldWidget(
+            fieldData = Field.Data("First", false),
+            label = "First label",
+            placeholder = "1 placeholder",
+            error = SimpleError(),
+            errorConverter = converter,
+        ) {}
     }
 }
