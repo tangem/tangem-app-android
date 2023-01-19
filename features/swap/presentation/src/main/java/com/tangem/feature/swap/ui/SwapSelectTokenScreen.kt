@@ -49,8 +49,8 @@ fun SwapSelectTokenScreen(state: SwapSelectTokenStateHolder, onBack: () -> Unit)
                     title = stringResource(R.string.swapping_token_list_your_title),
                     onBackClick = onBack,
                     placeholderSearchText = stringResource(id = R.string.search_tokens_title),
-                    onSearchChanged = state.onSearchEntered,
-                    onSearchDisplayClosed = { state.onSearchEntered("") },
+                    onSearchChange = state.onSearchEntered,
+                    onSearchDisplayClose = { state.onSearchEntered("") },
                 )
             },
         )
@@ -85,7 +85,7 @@ private fun ListOfTokens(state: SwapSelectTokenStateHolder, modifier: Modifier =
 }
 
 @Composable
-private fun TokenItem(token: TokenToSelect, onTokenClick: (String) -> Unit) {
+private fun TokenItem(token: TokenToSelect, onTokenClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -94,7 +94,7 @@ private fun TokenItem(token: TokenToSelect, onTokenClick: (String) -> Unit) {
                 bottom = TangemTheme.dimens.spacing14,
                 end = TangemTheme.dimens.spacing16,
             )
-            .clickable { onTokenClick(token.id) },
+            .clickable(onClick = onTokenClick),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         TokenIcon(token = token)
@@ -209,7 +209,7 @@ private val tokenNotAvailable = token.copy(available = false)
 
 @Preview
 @Composable
-fun TokenScreenPreview() {
+private fun TokenScreenPreview() {
     SwapSelectTokenScreen(
         state = SwapSelectTokenStateHolder(
             listOf(token, tokenNotAvailable, token), {}, {},
