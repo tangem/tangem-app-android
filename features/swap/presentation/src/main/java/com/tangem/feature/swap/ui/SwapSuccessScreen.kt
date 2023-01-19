@@ -48,7 +48,7 @@ private val state = SwapSuccessStateHolder(
 
 @Preview(showBackground = true)
 @Composable
-fun Preview_Success_InLightTheme() {
+private fun Preview_Success_InLightTheme() {
     TangemTheme(isDark = false) {
         SwapSuccessScreen(state) {}
     }
@@ -56,7 +56,7 @@ fun Preview_Success_InLightTheme() {
 
 @Preview(showBackground = true)
 @Composable
-fun Preview_Success_InDarkTheme() {
+private fun Preview_Success_InDarkTheme() {
     TangemTheme(isDark = true) {
         SwapSuccessScreen(state) {}
     }
