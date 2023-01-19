@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
@@ -59,7 +60,7 @@ private const val STEPS = 6
 @Suppress("LongMethod", "ComplexMethod")
 @Composable
 fun StoriesScreen(
-    homeState: MutableState<HomeState> = mutableStateOf(HomeState()),
+    homeState: MutableState<HomeState>,
     onScanButtonClick: () -> Unit,
     onShopButtonClick: () -> Unit,
     onSearchTokensClick: () -> Unit,
@@ -157,7 +158,7 @@ fun StoriesScreen(
                 currentStep = currentStep.value,
                 stepDuration = currentStep.duration(),
                 paused = isPaused,
-                onStepFinished = goToNextScreen,
+                onStepFinish = goToNextScreen,
             )
             Image(
                 painter = painterResource(id = R.drawable.ic_tangem_logo),
@@ -191,7 +192,7 @@ fun StoriesScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(start = 16.dp, end = 16.dp, bottom = 16.dp)
-                        .height(48.dp),
+                        .heightIn(48.dp),
                     colors = ButtonDefaults.textButtonColors(
                         backgroundColor = Color.White,
                         contentColor = Color(0xFF080C10),
@@ -230,6 +231,11 @@ private fun MutableState<Int>.duration(): Int = when (this.value) {
 
 @Preview
 @Composable
-fun StoriesScreenPreview() {
-    StoriesScreen(onScanButtonClick = {}, onShopButtonClick = {}, onSearchTokensClick = {})
+private fun StoriesScreenPreview() {
+    StoriesScreen(
+        onScanButtonClick = {},
+        onShopButtonClick = {},
+        onSearchTokensClick = {},
+        homeState = remember { mutableStateOf(HomeState()) },
+    )
 }

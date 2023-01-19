@@ -16,7 +16,7 @@ import androidx.compose.ui.unit.sp
 import com.tangem.core.ui.res.TangemTheme
 
 @Composable
-fun CurrencyPlaceholderIcon(modifier: Modifier = Modifier, id: String) {
+fun CurrencyPlaceholderIcon(id: String, modifier: Modifier = Modifier) {
 
     val letterColor: Color = TangemTheme.colors.text.primary2
     val circleColor: Color = TangemTheme.colors.icon.secondary
@@ -42,7 +42,7 @@ fun CurrencyPlaceholderIcon(modifier: Modifier = Modifier, id: String) {
 
 @Preview(showBackground = true, heightDp = 40, widthDp = 40)
 @Composable
-fun Preview_CurrencyPlaceholderIcon_InLightTheme() {
+private fun Preview_CurrencyPlaceholderIcon_InLightTheme() {
     TangemTheme(isDark = false) {
         CurrencyPlaceholderIcon(id = "DAI")
     }
@@ -50,7 +50,7 @@ fun Preview_CurrencyPlaceholderIcon_InLightTheme() {
 
 @Preview(showBackground = true, heightDp = 40, widthDp = 40)
 @Composable
-fun Preview_CurrencyPlaceholderIcon_InDarkTheme() {
+private fun Preview_CurrencyPlaceholderIcon_InDarkTheme() {
     TangemTheme(isDark = true) {
         CurrencyPlaceholderIcon(id = "DAI")
     }
