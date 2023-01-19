@@ -37,7 +37,7 @@ fun WalletManagerFactory.makeWalletManagerForApp(
 
     val seedKey = wallet.extendedPublicKey
     return when {
-        scanResponse.isTangemTwins() && scanResponse.secondTwinPublicKey != null -> {
+        scanResponse.cardTypesResolver.isTangemTwins() && scanResponse.secondTwinPublicKey != null -> {
             makeTwinWalletManager(
                 walletPublicKey = wallet.publicKey,
                 pairPublicKey = scanResponse.secondTwinPublicKey!!.hexToBytes(),
@@ -119,9 +119,9 @@ fun WalletManagerFactory.makePrimaryWalletManager(
     scanResponse: ScanResponse,
 ): WalletManager? {
     val blockchain = if (scanResponse.card.isTestCard) {
-        scanResponse.getBlockchain().getTestnetVersion() ?: return null
+        scanResponse.cardTypesResolver.getBlockchain().getTestnetVersion() ?: return null
     } else {
-        scanResponse.getBlockchain()
+        scanResponse.cardTypesResolver.getBlockchain()
     }
     val derivationParams = getDerivationParams(null, scanResponse.card)
     return makeWalletManagerForApp(
@@ -142,7 +142,7 @@ private fun selectWallet(wallets: List<CardDTO.Wallet>): CardDTO.Wallet? {
 fun WalletManagerFactory.makeSaltPayWalletManager(
     scanResponse: ScanResponse,
 ): EthereumWalletManager {
-    val blockchain = scanResponse.getBlockchain()
+    val blockchain = scanResponse.cardTypesResolver.getBlockchain()
     if (blockchain != Blockchain.SaltPay) {
         error("WalletManager for the SaltPay can be created based only on Blockchain.SaltPay")
     }

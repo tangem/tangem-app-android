@@ -121,7 +121,7 @@ object ScanCardProcessor {
             ?.let { it == scanResponse.card.cardId }
             ?: false
 
-        if (scanResponse.isSaltPayWallet() || !isTheSamePrimaryCard) {
+        if (scanResponse.cardTypesResolver.isSaltPayWallet() || !isTheSamePrimaryCard) {
             onProgressStateChange(false)
             showSaltPayTapVisaLogoCardDialog()
         } else {
@@ -185,8 +185,8 @@ object ScanCardProcessor {
 
         store.dispatchOnMain(TwinCardsAction.IfTwinsPrepareState(scanResponse))
 
-        if (scanResponse.isSaltPay()) {
-            if (scanResponse.isSaltPayVisa()) {
+        if (scanResponse.cardTypesResolver.isSaltPay()) {
+            if (scanResponse.cardTypesResolver.isSaltPayVisa()) {
                 val (manager, config) = OnboardingSaltPayState.initDependency(scanResponse)
                 val result = OnboardingSaltPayHelper.isOnboardingCase(scanResponse, manager)
                 delay(500)

@@ -85,7 +85,7 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
         scanResponse: ScanResponse,
     ): CompletionResult<CreateProductWalletTaskResponse> {
         return runTaskAsync(
-            CreateProductWalletTask(scanResponse.productType),
+            CreateProductWalletTask(scanResponse.cardTypesResolver),
             scanResponse.card.cardId,
             Message(context.getString(R.string.initial_message_create_wallet_body)),
         )
@@ -215,8 +215,8 @@ class TangemSdkManager(private val tangemSdk: TangemSdk, private val context: Co
     fun changeDisplayedCardIdNumbersCount(scanResponse: ScanResponse?) {
         tangemSdk.config.cardIdDisplayFormat = when {
             scanResponse == null -> CardIdDisplayFormat.Full
-            scanResponse.isTangemTwins() -> CardIdDisplayFormat.LastLuhn(4)
-            scanResponse.isSaltPay() -> CardIdDisplayFormat.None
+            scanResponse.cardTypesResolver.isTangemTwins() -> CardIdDisplayFormat.LastLuhn(4)
+            scanResponse.cardTypesResolver.isSaltPay() -> CardIdDisplayFormat.None
             else -> CardIdDisplayFormat.Full
         }
     }
