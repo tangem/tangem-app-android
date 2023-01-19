@@ -15,7 +15,7 @@ internal sealed interface WelcomeAction : Action {
         data class Error(val error: TangemError) : WelcomeAction
     }
 
-    data class HandleDeepLink(val intent: Intent?) : WelcomeAction
+    data class HandleIntentIfNeeded(val intent: Intent?) : WelcomeAction
 
     object CloseError : WelcomeAction
 }
