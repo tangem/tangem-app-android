@@ -101,7 +101,7 @@ internal fun ReferralScreen(stateHolder: ReferralStateHolder) {
             content = {
                 ReferralContent(
                     stateHolder = stateHolder,
-                    onAgreementClicked = {
+                    onAgreementClick = {
                         stateHolder.analytics.onAgreementClicked.invoke()
                         coroutineScope.launch {
                             if (bottomSheetScaffoldState.bottomSheetState.isCollapsed) {
@@ -119,7 +119,7 @@ internal fun ReferralScreen(stateHolder: ReferralStateHolder) {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun ReferralContent(stateHolder: ReferralStateHolder, onAgreementClicked: () -> Unit) {
+private fun ReferralContent(stateHolder: ReferralStateHolder, onAgreementClick: () -> Unit) {
     val isCopyButtonPressed = remember { mutableStateOf(false) }
 
     Box {
@@ -140,8 +140,8 @@ private fun ReferralContent(stateHolder: ReferralStateHolder, onAgreementClicked
                 item {
                     ReferralInfo(
                         stateHolder = stateHolder,
-                        onAgreementClicked = onAgreementClicked,
-                        showCopySnackbar = { isCopyButtonPressed.value = true },
+                        onAgreementClick = onAgreementClick,
+                        onShowCopySnackbar = { isCopyButtonPressed.value = true },
                     )
                 }
             }
@@ -179,8 +179,8 @@ private fun Header() {
 @Composable
 private fun ReferralInfo(
     stateHolder: ReferralStateHolder,
-    onAgreementClicked: () -> Unit,
-    showCopySnackbar: () -> Unit,
+    onAgreementClick: () -> Unit,
+    onShowCopySnackbar: () -> Unit,
 ) {
     when (val state = stateHolder.referralInfoState) {
         is ReferralInfoState.ParticipantContent -> {
@@ -189,18 +189,18 @@ private fun ReferralInfo(
                 purchasedWalletCount = state.purchasedWalletCount,
                 code = state.code,
                 shareLink = state.shareLink,
-                onAgreementClicked = onAgreementClicked,
-                showCopySnackbar = showCopySnackbar,
-                onCopyClicked = stateHolder.analytics.onCopyClicked,
-                onShareClicked = stateHolder.analytics.onShareClicked,
+                onAgreementClick = onAgreementClick,
+                onShowCopySnackbar = onShowCopySnackbar,
+                onCopyClick = stateHolder.analytics.onCopyClicked,
+                onShareClick = stateHolder.analytics.onShareClicked,
             )
         }
         is ReferralInfoState.NonParticipantContent -> {
             Conditions(state = state)
             VerticalSpacer(spaceResId = R.dimen.spacing44)
             NonParticipateBottomBlock(
-                onAgreementClicked = onAgreementClicked,
-                onParticipateClicked = state.onParticipateClicked,
+                onAgreementClick = onAgreementClick,
+                onParticipateClick = state.onParticipateClicked,
             )
         }
         is ReferralInfoState.Loading -> {
@@ -465,7 +465,7 @@ private fun BoxScope.CopySnackbarHost(isCopyButtonPressed: MutableState<Boolean>
 
 @Preview(widthDp = 360, showBackground = true)
 @Composable
-fun Preview_ReferralScreen_Participant_InLightTheme() {
+private fun Preview_ReferralScreen_Participant_InLightTheme() {
     TangemTheme(isDark = false) {
         ReferralScreen(
             stateHolder = ReferralStateHolder(
@@ -493,7 +493,7 @@ fun Preview_ReferralScreen_Participant_InLightTheme() {
 
 @Preview(widthDp = 360, showBackground = true)
 @Composable
-fun Preview_ReferralScreen_Participant_InDarkTheme() {
+private fun Preview_ReferralScreen_Participant_InDarkTheme() {
     TangemTheme(isDark = true) {
         ReferralScreen(
             stateHolder = ReferralStateHolder(
@@ -521,7 +521,7 @@ fun Preview_ReferralScreen_Participant_InDarkTheme() {
 
 @Preview(widthDp = 360, showBackground = true)
 @Composable
-fun Preview_ReferralScreen_NonParticipant_InLightTheme() {
+private fun Preview_ReferralScreen_NonParticipant_InLightTheme() {
     TangemTheme(isDark = false) {
         ReferralScreen(
             stateHolder = ReferralStateHolder(
@@ -546,7 +546,7 @@ fun Preview_ReferralScreen_NonParticipant_InLightTheme() {
 
 @Preview(widthDp = 360, showBackground = true)
 @Composable
-fun Preview_ReferralScreen_NonParticipant_InDarkTheme() {
+private fun Preview_ReferralScreen_NonParticipant_InDarkTheme() {
     TangemTheme(isDark = true) {
         ReferralScreen(
             stateHolder = ReferralStateHolder(
@@ -571,7 +571,7 @@ fun Preview_ReferralScreen_NonParticipant_InDarkTheme() {
 
 @Preview(widthDp = 360, showBackground = true)
 @Composable
-fun Preview_ReferralScreen_Loading_InLightTheme() {
+private fun Preview_ReferralScreen_Loading_InLightTheme() {
     TangemTheme(isDark = false) {
         ReferralScreen(
             stateHolder = ReferralStateHolder(
@@ -590,7 +590,7 @@ fun Preview_ReferralScreen_Loading_InLightTheme() {
 
 @Preview(widthDp = 360, showBackground = true)
 @Composable
-fun Preview_ReferralScreen_Loading_InDarkTheme() {
+private fun Preview_ReferralScreen_Loading_InDarkTheme() {
     TangemTheme(isDark = true) {
         ReferralScreen(
             stateHolder = ReferralStateHolder(
