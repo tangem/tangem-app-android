@@ -7,7 +7,7 @@ plugins {
 tasks.withType<Detekt> {
     parallel = true
     ignoreFailures = false
-    autoCorrect = true
+    autoCorrect = false
     buildUponDefaultConfig = true
 
     config.setFrom(rootProject.files("config/detekt/detekt.yml"))
@@ -25,4 +25,5 @@ tasks.withType<Detekt> {
 
 dependencies {
     detektPlugins(Tools.composeDetektRules)
+    detektPlugins(Tools.formattingDetektRules)
 }

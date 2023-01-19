@@ -69,6 +69,7 @@ object Versions {
 
     // region Tools
     const val composeDetektRules = "1.2.2"
+    const val formattingDetektRules = "1.21.0"
     // endregion Tools
 
     // region Testing
