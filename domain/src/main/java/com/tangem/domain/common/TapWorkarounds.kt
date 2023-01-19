@@ -16,7 +16,7 @@ object TapWorkarounds {
     val CardDTO.isTangemTwins: Boolean
         get() = TwinsHelper.getTwinCardNumber(cardId) != null
 
-    //TODO: replace by reading files from a card
+    // TODO: replace by reading files from a card
     val CardDTO.isTangemNote: Boolean
         get() = tangemNoteBatches.contains(batchId)
 

@@ -12,7 +12,7 @@ import org.rekotlin.Action
 /**
  * Created by Anton Zhilenkov on 07/04/2022.
  */
-//TODO: refactoring: is alias for the GlobalMiddleware and the GlobalReducer
+// TODO: refactoring: is alias for the GlobalMiddleware and the GlobalReducer
 internal class DomainGlobalHub : BaseStoreHub<DomainGlobalState>("DomainGlobalHub") {
 
     override fun getHubState(storeState: DomainState): DomainGlobalState {

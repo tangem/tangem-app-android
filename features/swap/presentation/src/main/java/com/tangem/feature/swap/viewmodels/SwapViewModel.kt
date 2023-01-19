@@ -49,7 +49,7 @@ internal class SwapViewModel @Inject constructor(
     var uiState: SwapStateHolder by mutableStateOf(stateBuilder.createInitialLoadingState(currency.symbol))
         private set
 
-    //shows currency order (direct - swap initial to selected, reversed = selected to initial)
+    // shows currency order (direct - swap initial to selected, reversed = selected to initial)
     private var isOrderReversed = false
     private val lastAmount = mutableStateOf(INITIAL_AMOUNT)
     private var swapRouter: SwapRouter by Delegates.notNull()

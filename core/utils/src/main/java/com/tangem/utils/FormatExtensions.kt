@@ -6,7 +6,7 @@ import java.text.DecimalFormat
 import java.text.DecimalFormatSymbols
 import java.util.*
 
-//todo determine where to place this extensions
+// todo determine where to place this extensions
 fun BigDecimal.toFormattedString(
     decimals: Int, roundingMode: RoundingMode = RoundingMode.DOWN, locale: Locale = Locale.US,
 ): String {

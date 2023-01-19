@@ -72,7 +72,7 @@ private fun handleAction(action: Action, appState: () -> AppState?, dispatch: Di
             store.state.globalState.warningManager?.let {
                 if (it.hideWarning(action.warning)) {
                     if (WarningMessagesManager.isAlreadySignedHashesWarning(action.warning)) {
-                        //TODO: No appropriate warningMessage identification. Make it better later
+                        // TODO: No appropriate warningMessage identification. Make it better later
                         store.dispatch(WalletAction.Warnings.CheckHashesCount.SaveCardId)
                     }
 

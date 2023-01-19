@@ -175,7 +175,7 @@ internal class DefaultWalletAmountsRepository(
     ): CompletionResult<Unit> = coroutineScope {
         walletStores.map { walletStore ->
             async {
-                //TODO: Find wallet manager via [com.tangem.tap.domain.walletStores.repository.WalletManagersRepository]
+                // TODO: Find wallet manager via [com.tangem.tap.domain.walletStores.repository.WalletManagersRepository]
                 val walletManager = walletStore.walletManager
                 fetchAmountsForWalletStore(userWalletId, scanResponse, walletStore, walletManager)
             }

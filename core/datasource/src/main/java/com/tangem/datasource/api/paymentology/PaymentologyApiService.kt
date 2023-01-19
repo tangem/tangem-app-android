@@ -8,7 +8,7 @@ import retrofit2.Retrofit
 /**
  * @author Anton Zhilenkov on 06.10.2022.
  */
-//TODO("Remove after removing Redux")
+// TODO("Remove after removing Redux")
 @Deprecated("Use PaymentologyApi")
 object PaymentologyApiService {
     val api = createApi()

@@ -63,7 +63,7 @@ class WalletConnectSdkHelper {
 
         val gas = transaction.gas?.hexToBigDecimal()
             ?: transaction.gasLimit?.hexToBigDecimal()
-            ?: BigDecimal(300000) //Set high gasLimit if not provided
+            ?: BigDecimal(300000) // Set high gasLimit if not provided
 
         val decimals = wallet.blockchain.decimals()
 

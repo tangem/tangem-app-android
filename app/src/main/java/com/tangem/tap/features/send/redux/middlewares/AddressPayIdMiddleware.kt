@@ -6,12 +6,17 @@ import com.tangem.common.services.Result
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.domain.PayIdManager
 import com.tangem.tap.domain.isPayIdSupported
-import com.tangem.tap.features.send.redux.*
+import com.tangem.tap.features.send.redux.AddressPayIdActionUi
+import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.AddressVerification.SetAddressError
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.AddressVerification.SetWalletAddress
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.Error
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.PayIdVerification.SetPayIdError
 import com.tangem.tap.features.send.redux.AddressPayIdVerifyAction.PayIdVerification.SetPayIdWalletAddress
+import com.tangem.tap.features.send.redux.AmountAction
+import com.tangem.tap.features.send.redux.AmountActionUi
+import com.tangem.tap.features.send.redux.FeeAction
+import com.tangem.tap.features.send.redux.TransactionExtrasAction
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import kotlinx.coroutines.Dispatchers
@@ -129,7 +134,7 @@ internal class AddressPayIdMiddleware {
             }
         }
 
-        val supposedAddress = noSchemeAddress.removeShareUriQuery() //TODO: parse query?
+        val supposedAddress = noSchemeAddress.removeShareUriQuery() // TODO: parse query?
 
         val failReason = isValidBlockchainAddressAndNotTheSameAsWallet(wallet, supposedAddress)
         if (failReason == null) {

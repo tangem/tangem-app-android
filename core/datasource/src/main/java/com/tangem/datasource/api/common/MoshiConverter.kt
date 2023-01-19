@@ -8,7 +8,7 @@ import retrofit2.converter.moshi.MoshiConverterFactory
 /**
  * @author Anton Zhilenkov on 02/04/2022
  */
-//TODO("Remove after removing Redux")
+// TODO("Remove after removing Redux")
 @Deprecated("Provide by DI")
 object MoshiConverter {
 
