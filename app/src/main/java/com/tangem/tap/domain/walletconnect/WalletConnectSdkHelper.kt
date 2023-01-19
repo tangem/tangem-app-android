@@ -71,8 +71,7 @@ class WalletConnectSdkHelper {
             ?.movePointLeft(decimals) ?: return null
 
         val gasPrice = transaction.gasPrice?.hexToBigDecimal()
-            ?: when (val result =
-                    (walletManager as? EthereumGasLoader)?.getGasPrice()) {
+            ?: when (val result = (walletManager as? EthereumGasLoader)?.getGasPrice()) {
                 is Result.Success -> result.data.toBigDecimal()
                 is Result.Failure -> {
                     (result.error as? Throwable)?.let { Timber.e(it) }

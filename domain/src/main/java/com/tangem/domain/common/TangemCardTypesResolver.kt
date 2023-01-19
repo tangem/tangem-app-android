@@ -14,14 +14,16 @@ import com.tangem.domain.common.TapWorkarounds.isStart2Coin
 import com.tangem.domain.common.TapWorkarounds.isTestCard
 
 class TangemCardTypesResolver(
-    private val card: CardDTO, private val productType: ProductType, private val walletData: WalletData?,
+    private val card: CardDTO,
+    private val productType: ProductType,
+    private val walletData: WalletData?,
 ) : CardTypesResolver {
 
     override fun isTangemNote(): Boolean = productType == ProductType.Note
-    override fun isTangemWallet(): Boolean = card.settings.isBackupAllowed
-        && card.settings.isHDWalletAllowed
-        && card.firmwareVersion >= FirmwareVersion.MultiWalletAvailable
-        && !card.isSaltPay
+    override fun isTangemWallet(): Boolean = card.settings.isBackupAllowed &&
+        card.settings.isHDWalletAllowed &&
+        card.firmwareVersion >= FirmwareVersion.MultiWalletAvailable &&
+        !card.isSaltPay
 
     override fun isSaltPay(): Boolean = productType == ProductType.SaltPay
     override fun isSaltPayVisa(): Boolean = card.isSaltPayVisa

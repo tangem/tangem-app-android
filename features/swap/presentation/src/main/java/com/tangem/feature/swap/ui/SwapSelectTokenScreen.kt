@@ -48,8 +48,8 @@ fun SwapSelectTokenScreen(state: SwapSelectTokenStateHolder, onBack: () -> Unit)
                     title = stringResource(R.string.swapping_token_list_your_title),
                     onBackClick = onBack,
                     placeholderSearchText = stringResource(id = R.string.search_tokens_title),
-                    onSearchChanged = state.onSearchEntered,
-                    onSearchDisplayClosed = { state.onSearchEntered("") },
+                    onSearchChange = state.onSearchEntered,
+                    onSearchDisplayClose = { state.onSearchEntered("") },
                 )
             },
             modifier = Modifier.background(color = TangemTheme.colors.background.secondary),
@@ -80,13 +80,11 @@ private fun ListOfTokens(state: SwapSelectTokenStateHolder, modifier: Modifier =
 }
 
 @Composable
-private fun TokenItem(token: TokenToSelect, onTokenClick: (String) -> Unit) {
+private fun TokenItem(token: TokenToSelect, onTokenClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clickable(
-                onClick = { onTokenClick(token.id) },
-            )
+            .clickable(onClick = onTokenClick)
             .padding(
                 vertical = TangemTheme.dimens.spacing14,
                 horizontal = TangemTheme.dimens.spacing16,

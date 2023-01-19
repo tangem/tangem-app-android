@@ -68,7 +68,6 @@ import com.valentinilk.shimmer.shimmer
 @Suppress("LongParameterList")
 @Composable
 fun TransactionCard(
-    modifier: Modifier = Modifier,
     type: TransactionCardType,
     balance: String,
     amount: String?,
@@ -79,7 +78,6 @@ fun TransactionCard(
     onChangeTokenClick: (() -> Unit)? = null,
 ) {
     Card(
-        modifier = modifier,
         shape = RoundedCornerShape(TangemTheme.dimens.radius12),
         backgroundColor = TangemTheme.colors.background.primary,
         elevation = TangemTheme.dimens.elevation2,
@@ -216,7 +214,7 @@ private fun Content(
                 is TransactionCardType.SendCard -> {
                     AutoSizeTextField(
                         amount = amount ?: "1",
-                        onAmoutChanged = { type.onAmountChanged(it) },
+                        onAmountChange = { type.onAmountChanged(it) },
                     )
                 }
             }
@@ -251,7 +249,7 @@ private fun Content(
 
 @Suppress("MagicNumber")
 @Composable
-private fun AutoSizeTextField(amount: String, onAmoutChanged: (String) -> Unit) {
+private fun AutoSizeTextField(amount: String, onAmountChange: (String) -> Unit) {
     val focusManager = LocalFocusManager.current
     val textFieldFocusRequester = remember { FocusRequester() }
 
@@ -284,12 +282,9 @@ private fun AutoSizeTextField(amount: String, onAmoutChanged: (String) -> Unit) 
         CompositionLocalProvider(
             LocalTextSelectionColors provides customTextSelectionColors,
         ) {
-
             BasicTextField(
                 value = amount,
-                onValueChange = {
-                    onAmoutChanged(it)
-                },
+                onValueChange = onAmountChange,
                 singleLine = true,
                 modifier = Modifier
                     .fillMaxWidth()

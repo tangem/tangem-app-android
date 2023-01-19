@@ -51,6 +51,7 @@ class SwapFragment : Fragment() {
         }
     }
 
+    @Suppress("TopLevelComposableFunctions")
     @Composable
     private fun ScreenContent(viewModel: SwapViewModel) {
         Crossfade(targetState = viewModel.currentScreen) { screen ->
