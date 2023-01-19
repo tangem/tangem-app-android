@@ -21,13 +21,10 @@ import com.tangem.core.ui.res.TangemTheme
 import com.tangem.tap.features.saveWallet.ui.models.EnrollBiometricsDialog
 
 @Composable
-fun EnrollBiometricsDialogContent(
-    modifier: Modifier = Modifier,
-    dialog: EnrollBiometricsDialog,
-) {
+fun EnrollBiometricsDialogContent(dialog: EnrollBiometricsDialog) {
     Dialog(onDismissRequest = dialog.onCancel) {
         Column(
-            modifier = modifier
+            modifier = Modifier
                 .background(
                     shape = TangemTheme.shapes.roundedCornersLarge,
                     color = TangemTheme.colors.background.plain,
