@@ -224,7 +224,6 @@ private fun AnalyticsParam.CurrencyType.sendOff() {
 
 @Composable
 fun SaveChangesButton(keyboardState: Keyboard, onSaveChanges: () -> Unit) {
-
     val padding = if (keyboardState is Keyboard.Opened) {
         LocalContext.current.pixelsToDp(keyboardState.height)
     } else {

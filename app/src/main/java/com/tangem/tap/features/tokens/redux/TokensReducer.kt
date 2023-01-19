@@ -33,7 +33,6 @@ private fun internalReduce(action: Action, state: AppState): TokensState {
             )
         }
         is TokensAction.SetAddedCurrencies -> {
-
             tokensState.copy(
                 addedBlockchains = action.wallets.toNonCustomBlockchains(action.derivationStyle),
                 addedTokens = action.wallets.toNonCustomTokensWithBlockchains(action.derivationStyle),

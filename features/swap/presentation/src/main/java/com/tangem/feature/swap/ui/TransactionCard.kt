@@ -92,7 +92,6 @@ fun TransactionCard(
                 verticalArrangement = Arrangement.SpaceBetween,
                 horizontalAlignment = Alignment.Start,
             ) {
-
                 Header(balance = balance, type = type)
 
                 Content(
@@ -192,7 +191,6 @@ private fun Content(
             verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.Start,
         ) {
-
             when (type) {
                 is TransactionCardType.ReceiveCard -> {
                     if (amount != null) {
@@ -258,7 +256,6 @@ private fun AutoSizeTextField(amount: String, onAmoutChanged: (String) -> Unit) 
     val textFieldFocusRequester = remember { FocusRequester() }
 
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-
         var shrunkFontSize = TangemTheme.typography.h2.fontSize
         val calculateIntrinsics = @Composable {
             ParagraphIntrinsics(
@@ -332,7 +329,6 @@ fun Token(
         verticalArrangement = Arrangement.Bottom,
         horizontalAlignment = Alignment.End,
     ) {
-
         Box(
             modifier = Modifier
                 .padding(end = TangemTheme.dimens.spacing16)

@@ -83,7 +83,6 @@ fun SecurityOption(option: SecurityOption, state: SecurityModeScreenState) {
             )
             .padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 16.dp),
     ) {
-
         RadioButton(
             selected = selected,
             onClick = null,

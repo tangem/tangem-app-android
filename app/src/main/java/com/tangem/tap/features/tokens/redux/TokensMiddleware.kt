@@ -91,7 +91,6 @@ class TokensMiddleware {
         )
 
         scope.launch {
-
             val loadCoinsResult = if (newSearchInput == null) {
                 loadCoinsService.getSupportedTokens(
                     isTestcard,

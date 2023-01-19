@@ -22,7 +22,6 @@ fun HangingOverKeyboardView(
     spaceBetweenKeyboard: Dp = 0.dp,
     content: @Composable (BoxScope.() -> Unit)
 ) {
-
     val context = LocalContext.current
     val padding = when (keyboardState.value) {
         Keyboard.Closed -> 0.dp

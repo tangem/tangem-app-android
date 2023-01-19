@@ -43,7 +43,6 @@ class PendingTransactionsAdapter
         RecyclerView.ViewHolder(binding.root) {
 
         fun bind(transaction: PendingTransaction) {
-
             if (transaction.type == PendingTransactionType.Unknown) {
                 binding.root.hide()
             }

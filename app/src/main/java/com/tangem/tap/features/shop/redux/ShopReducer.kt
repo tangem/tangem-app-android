@@ -8,7 +8,6 @@ object ShopReducer {
 
 @Suppress("ComplexMethod")
 private fun internalReduce(action: Action, state: ShopState): ShopState {
-
     if (action !is ShopAction) return state
 
     return when (action) {

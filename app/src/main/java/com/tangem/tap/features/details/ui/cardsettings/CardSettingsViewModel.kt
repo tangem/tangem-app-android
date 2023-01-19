@@ -13,7 +13,6 @@ import org.rekotlin.Store
 class CardSettingsViewModel(private val store: Store<AppState>) {
 
     fun updateState(state: CardSettingsState?): CardSettingsScreenState {
-
         return if (state?.manageSecurityState == null) {
             CardSettingsScreenState(
                 cardDetails = null,

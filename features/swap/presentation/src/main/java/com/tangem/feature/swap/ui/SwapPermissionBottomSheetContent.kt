@@ -113,7 +113,6 @@ private fun ApprovalBottomSheetInfo(
             ),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-
         AmountItem(currency = currency, amount = amount)
         DividerBottomSheet()
         WalletAddressItem(walletAddress = walletAddress)
@@ -141,7 +140,6 @@ private fun InformationItem(subtitle: String, value: String) {
             .fillMaxWidth()
             .padding(TangemTheme.dimens.spacing16),
     ) {
-
         Text(
             text = subtitle,
             color = TangemTheme.colors.text.primary1,

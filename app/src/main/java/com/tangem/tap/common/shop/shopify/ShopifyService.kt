@@ -64,7 +64,6 @@ class ShopifyService(private val application: Application, val shop: ShopifyShop
     }
 
     suspend fun checkout(pollUntilOrder: Boolean, checkoutID: ID): Result<Checkout> {
-
         val query = query { rootQuery: QueryRootQuery ->
             rootQuery
                 .node(checkoutID) { query ->
@@ -110,7 +109,6 @@ class ShopifyService(private val application: Application, val shop: ShopifyShop
         checkoutItems: List<CheckoutItem>,
         checkoutID: ID? = null,
     ): Result<Checkout> {
-
         val storefrontLineItems: MutableList<CheckoutLineItemInput> = checkoutItems
             .map { CheckoutLineItemInput(it.quantity, it.id) }.toMutableList()
 
@@ -202,7 +200,6 @@ class ShopifyService(private val application: Application, val shop: ShopifyShop
         payment: TokenizedPaymentInputV3,
         checkoutID: ID,
     ): Result<Checkout> {
-
         val query = mutation { mutationQuery: MutationQuery ->
             mutationQuery
                 .checkoutCompleteWithTokenizedPaymentV3(

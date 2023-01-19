@@ -17,7 +17,6 @@ object BnbTransactionDialog {
         dAppName: String,
         context: Context,
     ): AlertDialog {
-
         val message = when (data) {
             is BinanceMessageData.Trade -> data.tradeData.map {
                 context.getString(

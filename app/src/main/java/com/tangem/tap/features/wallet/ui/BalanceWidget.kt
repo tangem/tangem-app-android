@@ -53,7 +53,6 @@ class BalanceWidget(
 
     @Suppress("LongMethod", "ComplexMethod")
     fun setup() {
-
         when (data.status) {
             BalanceStatus.Loading -> {
                 with(binding) {

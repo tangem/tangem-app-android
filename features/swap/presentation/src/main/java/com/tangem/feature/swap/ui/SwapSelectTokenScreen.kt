@@ -38,7 +38,6 @@ import com.valentinilk.shimmer.shimmer
 
 @Composable
 fun SwapSelectTokenScreen(state: SwapSelectTokenStateHolder, onBack: () -> Unit) {
-
     TangemTheme {
         Scaffold(
             content = { padding ->
@@ -67,7 +66,6 @@ private fun ListOfTokens(state: SwapSelectTokenStateHolder, modifier: Modifier =
         horizontalAlignment = Alignment.CenterHorizontally,
 
     ) {
-
         itemsIndexed(items = state.tokens) { index, item ->
             TokenItem(token = item, onTokenClick = { state.onTokenSelected(item.id) })
 

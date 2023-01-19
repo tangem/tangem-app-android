@@ -29,7 +29,6 @@ class CreateWalletsTask(curves: List<EllipticCurve>? = null) : CardSessionRunnab
         curve: EllipticCurve, session: CardSession,
         callback: (result: CompletionResult<Card>) -> Unit
     ) {
-
         CreateWalletTask(curve).run(session) { result ->
             when (result) {
                 is CompletionResult.Success -> {

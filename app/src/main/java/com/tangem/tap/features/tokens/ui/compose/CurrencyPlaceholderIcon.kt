@@ -16,7 +16,6 @@ import androidx.compose.ui.unit.sp
 
 @Composable
 fun CurrencyPlaceholderIcon(id: String) {
-
     val letterColor: Color = Color.White
     val circleColor: Color = Color.Black
 

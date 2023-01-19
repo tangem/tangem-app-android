@@ -83,7 +83,6 @@ fun FirstStoriesContent(
     val textId = screenState.textId()
 
     Box(modifier = Modifier.fillMaxSize()) {
-
         if (screenState.isSplashingTextDisplaying()) {
             TextAutoSize(
                 modifier = Modifier

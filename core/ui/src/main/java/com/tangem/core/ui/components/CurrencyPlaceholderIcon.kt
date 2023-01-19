@@ -17,7 +17,6 @@ import com.tangem.core.ui.res.TangemTheme
 
 @Composable
 fun CurrencyPlaceholderIcon(id: String, modifier: Modifier = Modifier) {
-
     val letterColor: Color = TangemTheme.colors.text.primary2
     val circleColor: Color = TangemTheme.colors.icon.secondary
 

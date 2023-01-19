@@ -58,7 +58,6 @@ internal fun SwapScreenContent(state: SwapStateHolder, onPermissionWarningClick:
             .fillMaxSize()
             .background(color = TangemTheme.colors.background.secondary),
     ) {
-
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -72,7 +71,6 @@ internal fun SwapScreenContent(state: SwapStateHolder, onPermissionWarningClick:
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
         ) {
-
             MainInfo(state)
 
             FeeItem(feeState = state.fee, currency = state.networkCurrency)
@@ -206,7 +204,6 @@ private fun MainInfo(state: SwapStateHolder) {
 
 @Composable
 private fun FeeItem(feeState: FeeState, currency: String) {
-
     val titleString = stringResource(id = R.string.send_fee_label)
     when (feeState) {
         is FeeState.Loaded -> {

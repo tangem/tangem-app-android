@@ -45,7 +45,6 @@ object WalletReducer {
 
 @Suppress("LongMethod", "ComplexMethod")
 private fun internalReduce(action: Action, state: AppState, appStateHolder: AppStateHolder): WalletState {
-
     val multiWalletReducer = MultiWalletReducer()
     val onWalletLoadedReducer = OnWalletLoadedReducer()
     val appCurrencyReducer = AppCurrencyReducer()
