@@ -6,6 +6,7 @@ import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.common.flatMap
 import com.tangem.core.analytics.Analytics
+import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.TapWorkarounds.isTangemTwins
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.Settings
@@ -207,8 +208,8 @@ class DetailsMiddleware {
             when (action) {
                 is DetailsAction.AppSettings.SwitchPrivacySetting -> {
                     when (action.setting) {
-                        PrivacySetting.SaveWallets -> toggleSaveWallets(state, enable = action.enable)
-                        PrivacySetting.SaveAccessCode -> toggleSaveAccessCodes(state, enable = action.enable)
+                        AppSetting.SaveWallets -> toggleSaveWallets(state, enable = action.enable)
+                        AppSetting.SaveAccessCode -> toggleSaveAccessCodes(state, enable = action.enable)
                     }
                 }
                 is DetailsAction.AppSettings.CheckBiometricsStatus -> {
@@ -218,6 +219,7 @@ class DetailsMiddleware {
                     enrollBiometrics()
                 }
                 is DetailsAction.AppSettings.SwitchPrivacySetting.Success,
+                is DetailsAction.AppSettings.SwitchPrivacySetting.Failure,
                 is DetailsAction.AppSettings.BiometricsStatusChanged,
                 -> Unit
             }
@@ -230,7 +232,7 @@ class DetailsMiddleware {
         private fun checkBiometricsStatus(awaitStatusChange: Boolean, state: DetailsState) {
             scope.launch {
                 if (awaitStatusChange) {
-                    while (state.needEnrollBiometrics == tangemSdkManager.needEnrollBiometrics) {
+                    while (state.appSettingsState.needEnrollBiometrics == tangemSdkManager.needEnrollBiometrics) {
                         delay(timeMillis = 100)
                     }
                 }
@@ -248,46 +250,94 @@ class DetailsMiddleware {
         }
 
         private fun toggleSaveWallets(state: DetailsState, enable: Boolean) = scope.launch {
-            if (state.saveWallets == enable) return@launch
-            if (enable) {
-                saveCurrentWallet(state)
-            } else {
-                deleteSavedWallets()
-                if (state.saveAccessCodes) {
-                    deleteSavedAccessCodes()
+            // Nothing to change
+            if (preferencesStorage.shouldSaveUserWallets == enable) {
+                store.dispatchOnMain(DetailsAction.AppSettings.SwitchPrivacySetting.Success)
+                return@launch
+            }
+
+            toggleSaveWallets(state.scanResponse, enable)
+                .doOnFailure {
+                    store.dispatchOnMain(
+                        DetailsAction.AppSettings.SwitchPrivacySetting.Failure(
+                            prevState = !enable,
+                            setting = AppSetting.SaveWallets,
+                        ),
+                    )
                 }
+                .doOnSuccess {
+                    store.dispatchOnMain(DetailsAction.AppSettings.SwitchPrivacySetting.Success)
+                }
+        }
+
+        private suspend fun toggleSaveWallets(
+            scanResponse: ScanResponse?,
+            enable: Boolean,
+        ): CompletionResult<Unit> {
+            return if (enable) {
+                saveCurrentWallet(scanResponse, enableAccessCodesSaving = false)
+            } else {
+                deleteSavedWalletsAndAccessCodes()
             }
         }
 
         private fun toggleSaveAccessCodes(state: DetailsState, enable: Boolean) = scope.launch {
-            if (state.saveAccessCodes == enable) return@launch
-            if (enable) {
-                saveAccessCodes(state)
-                if (!state.saveWallets) {
-                    saveCurrentWallet(state)
+            // Nothing to change
+            if (preferencesStorage.shouldSaveAccessCodes == enable) {
+                store.dispatchOnMain(DetailsAction.AppSettings.SwitchPrivacySetting.Success)
+                return@launch
+            }
+
+            toggleSaveAccessCodes(state.scanResponse, state.appSettingsState.saveWallets, enable)
+                .doOnFailure {
+                    store.dispatchOnMain(
+                        DetailsAction.AppSettings.SwitchPrivacySetting.Failure(
+                            prevState = !enable,
+                            setting = AppSetting.SaveAccessCode,
+                        ),
+                    )
+                }
+                .doOnSuccess {
+                    store.dispatchOnMain(DetailsAction.AppSettings.SwitchPrivacySetting.Success)
+                }
+        }
+
+        private suspend fun toggleSaveAccessCodes(
+            scanResponse: ScanResponse?,
+            isWalletsSavingEnabled: Boolean,
+            enable: Boolean,
+        ): CompletionResult<Unit> {
+            return if (enable) {
+                if (!isWalletsSavingEnabled) {
+                    saveCurrentWallet(scanResponse, enableAccessCodesSaving = true)
+                } else {
+                    saveAccessCodes(scanResponse)
                 }
             } else {
                 deleteSavedAccessCodes()
             }
         }
 
-        private suspend fun saveCurrentWallet(state: DetailsState) {
-            val scanResponse = state.scanResponse ?: return
-            val userWallet = UserWalletBuilder(scanResponse).build() ?: return
+        private suspend fun saveCurrentWallet(
+            scanResponse: ScanResponse?,
+            enableAccessCodesSaving: Boolean,
+        ): CompletionResult<Unit> {
+            val userWallet = scanResponse?.let { UserWalletBuilder(it).build() }
+                ?: return CompletionResult.Failure(TangemSdkError.ExceptionError(IllegalStateException()))
 
-            userWalletsListManager.save(userWallet)
+            return userWalletsListManager.save(userWallet)
+                .flatMap {
+                    if (enableAccessCodesSaving) {
+                        saveAccessCodes(scanResponse)
+                    } else {
+                        CompletionResult.Success(Unit)
+                    }
+                }
                 .doOnSuccess {
                     Analytics.send(Settings.AppSettings.SaveWalletSwitcherChanged(AnalyticsParam.OnOffState.On))
 
                     preferencesStorage.shouldShowSaveUserWalletScreen = false
                     preferencesStorage.shouldSaveUserWallets = true
-
-                    store.dispatchOnMain(
-                        DetailsAction.AppSettings.SwitchPrivacySetting.Success(
-                            setting = PrivacySetting.SaveWallets,
-                            enable = true,
-                        ),
-                    )
 
                     store.onUserWalletSelected(userWallet)
                 }
@@ -296,20 +346,13 @@ class DetailsMiddleware {
                 }
         }
 
-        private suspend fun deleteSavedWallets() {
-            userWalletsListManager.clear()
+        private suspend fun deleteSavedWalletsAndAccessCodes(): CompletionResult<Unit> {
+            return userWalletsListManager.clear()
                 .flatMap { walletStoresManager.clear() }
                 .doOnSuccess {
                     Analytics.send(Settings.AppSettings.SaveWalletSwitcherChanged(AnalyticsParam.OnOffState.Off))
-
+                    deleteSavedAccessCodes()
                     preferencesStorage.shouldSaveUserWallets = false
-
-                    store.dispatchOnMain(
-                        DetailsAction.AppSettings.SwitchPrivacySetting.Success(
-                            setting = PrivacySetting.SaveWallets,
-                            enable = false,
-                        ),
-                    )
 
                     store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Home))
                 }
@@ -318,24 +361,19 @@ class DetailsMiddleware {
                 }
         }
 
-        private fun saveAccessCodes(state: DetailsState) {
+        private fun saveAccessCodes(scanResponse: ScanResponse?): CompletionResult<Unit> {
             Analytics.send(Settings.AppSettings.SaveAccessCodeSwitcherChanged(AnalyticsParam.OnOffState.On))
 
             preferencesStorage.shouldSaveAccessCodes = true
             tangemSdkManager.setAccessCodeRequestPolicy(
-                useBiometricsForAccessCode = state.scanResponse?.card?.isAccessCodeSet == true,
+                useBiometricsForAccessCode = scanResponse?.card?.isAccessCodeSet == true,
             )
 
-            store.dispatchOnMain(
-                DetailsAction.AppSettings.SwitchPrivacySetting.Success(
-                    setting = PrivacySetting.SaveAccessCode,
-                    enable = true,
-                ),
-            )
+            return CompletionResult.Success(Unit)
         }
 
-        private suspend fun deleteSavedAccessCodes() {
-            tangemSdkManager.clearSavedUserCodes()
+        private suspend fun deleteSavedAccessCodes(): CompletionResult<Unit> {
+            return tangemSdkManager.clearSavedUserCodes()
                 .doOnSuccess {
                     Analytics.send(Settings.AppSettings.SaveAccessCodeSwitcherChanged(AnalyticsParam.OnOffState.Off))
 
@@ -343,16 +381,6 @@ class DetailsMiddleware {
                     tangemSdkManager.setAccessCodeRequestPolicy(
                         useBiometricsForAccessCode = false,
                     )
-
-                    tangemSdkManager.clearSavedUserCodes()
-                        .doOnSuccess {
-                            store.dispatchOnMain(
-                                DetailsAction.AppSettings.SwitchPrivacySetting.Success(
-                                    setting = PrivacySetting.SaveAccessCode,
-                                    enable = false,
-                                ),
-                            )
-                        }
                 }
                 .doOnFailure { error ->
                     Timber.e(error, "Unable to delete saved access codes")
