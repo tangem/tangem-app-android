@@ -377,6 +377,18 @@ data class WalletData(
         if ((blockchainAmountIsEmpty() && !tokenAmountIsEmpty())) {
             walletWarnings.add(WalletWarning.BalanceNotEnoughForFee(blockchainFullName))
         }
+
+        // TODO: possible merge conflict biometrics with analytics from the hotfix 3.56
+        // TODO: Check it and choose
+        // if ((blockchainAmountIsEmpty() && !tokenAmountIsEmpty())) {
+        //     walletWarnings.add(
+        //         WalletWarning.BalanceNotEnoughForFee(
+        //             tokenName = currency.token.name,
+        //             blockchainFullName = currency.blockchain.fullName,
+        //             blockchainCurrencyName = currency.blockchain.currency,
+        //         ),
+        //     )
+        }
     }
 
     private fun blockchainAmountIsEmpty(): Boolean = currencyData.blockchainAmount?.isZero() == true
