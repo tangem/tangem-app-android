@@ -50,8 +50,8 @@ interface UserWalletManager {
     fun getCurrentWalletTokensBalance(networkId: String): Map<String, ProxyAmount>
 
     /**
-    * Returns selected app currency
-    */
+     * Returns selected app currency
+     */
     fun getUserAppCurrency(): ProxyFiatCurrency
 
     /**
