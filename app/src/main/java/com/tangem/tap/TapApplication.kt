@@ -11,13 +11,13 @@ import com.tangem.blockchain.common.BlockchainSdkConfig
 import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.common.json.MoshiJsonConverter
+import com.tangem.core.analytics.Analytics
 import com.tangem.datasource.api.common.MoshiConverter
 import com.tangem.domain.DomainLayer
 import com.tangem.domain.common.LogConfig
 import com.tangem.tap.common.AndroidAssetReader
 import com.tangem.tap.common.AssetReader
 import com.tangem.tap.common.IntentHandler
-import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 import com.tangem.tap.common.analytics.filters.BasicSignInFilter
@@ -159,17 +159,6 @@ class TapApplication : Application(), ImageLoaderFactory {
     }
 
     //todo refactor: move to datasource and provide via DI
-    private fun initMoshiConverter() {
-        fun appAdapters(): List<Any> = listOf(
-            BigDecimalAdapter(),
-            CardBalanceStateAdapter(),
-        )
-        MoshiConverter.reInitInstance(
-            adapters = appAdapters() + MoshiJsonConverter.getTangemSdkAdapters(),
-            typedAdapters = MoshiJsonConverter.getTangemSdkTypedAdapters(),
-        )
-    }
-
     private fun initMoshiConverter() {
         fun appAdapters(): List<Any> = listOf(
             BigDecimalAdapter(),
