@@ -47,7 +47,8 @@ fun TangemSwitch(
         },
         label = "",
     ) { isChecked ->
-        if (isChecked) checkedColor else uncheckedColor
+        (if (isChecked) checkedColor else uncheckedColor)
+            .copy(alpha = if (enabled) 1f else .4f)
     }
     val interactionSource = remember { MutableInteractionSource() }
 
