@@ -138,15 +138,16 @@ class MultiWalletReducer {
                     else -> BalanceStatus.VerifiedOnline
                 }
                 val tokenWalletData = state.getWalletData(currency)
-                val isTokenSendButtonEnabled = tokenWalletData?.shouldEnableTokenSendButton() == true
-                    && pendingTransactions.isEmpty()
+                val isTokenSendButtonEnabled = tokenWalletData?.shouldEnableTokenSendButton() == true &&
+                    pendingTransactions.isEmpty()
 
                 val newTokenWalletData = tokenWalletData?.copy(
                     currencyData = tokenWalletData.currencyData.copy(
                         status = tokenBalanceStatus,
                         amount = action.amount.value,
                         amountFormatted = action.amount.value?.toFormattedCurrencyString(
-                            action.amount.decimals, action.amount.currencySymbol,
+                            decimals = action.amount.decimals,
+                            currency = action.amount.currencySymbol,
                         ),
                         fiatAmountFormatted = tokenWalletData.fiatRate?.let {
                             action.amount.value?.toFiatString(it, store.state.globalState.appCurrency.symbol)
