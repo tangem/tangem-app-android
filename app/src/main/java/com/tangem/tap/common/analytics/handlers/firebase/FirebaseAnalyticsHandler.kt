@@ -1,10 +1,12 @@
 package com.tangem.tap.common.analytics.handlers.firebase
 
+import com.google.firebase.analytics.FirebaseAnalytics
 import com.tangem.core.analytics.AnalyticsEvent
 import com.tangem.core.analytics.api.AnalyticsHandler
 import com.tangem.core.analytics.api.ErrorEventHandler
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 import com.tangem.tap.common.analytics.converters.AnalyticsErrorConverter
+import com.tangem.tap.common.analytics.events.Shop
 
 class FirebaseAnalyticsHandler(
     private val client: FirebaseAnalyticsClient,
@@ -18,17 +20,23 @@ class FirebaseAnalyticsHandler(
 
     override fun send(event: AnalyticsEvent) {
         val error = event.error
-        if (error == null) {
-            super.send(event)
-        } else {
-            val errorConverter = AnalyticsErrorConverter()
-            if (!errorConverter.canBeHandled(error)) return
+        when {
+            error != null -> {
+                val errorConverter = AnalyticsErrorConverter()
+                if (!errorConverter.canBeHandled(error)) return
 
-            val errorParams = errorConverter.convert(error).toMutableMap()
-            errorParams["Category"] = event.category
-            errorParams["Event"] = event.event
-            errorParams.putAll(event.params)
-            send(error, errorParams)
+                val errorParams = errorConverter.convert(error).toMutableMap()
+                errorParams["Category"] = event.category
+                errorParams["Event"] = event.event
+                errorParams.putAll(event.params)
+                send(error, errorParams)
+            }
+            event is Shop.Purchased -> {
+                send(FirebaseAnalytics.Event.PURCHASE, event.params)
+            }
+            else -> {
+                super.send(event)
+            }
         }
     }
 
