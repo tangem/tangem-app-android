@@ -116,21 +116,8 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         super.onResume()
         notificationsHandler = NotificationsHandler(binding.fragmentContainer)
 
-        val backStackIsEmpty = supportFragmentManager.backStackEntryCount == 0
-        val isScannedBefore = store.state.globalState.scanResponse != null
-        val isOnboardingServiceActive = store.state.globalState.onboardingState.onboardingStarted
-        val shopOpened = store.state.shopState.total != null
-        @Suppress("ComplexCondition")
-        if (backStackIsEmpty || !isOnboardingServiceActive && !isScannedBefore && !shopOpened) {
-            if (userWalletsListManager.hasSavedUserWallets) {
-                store.dispatchOnMain(WelcomeAction.HandleDeepLink(intent))
-                store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Welcome))
-            } else {
-                store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Home))
-                intentHandler.handleWalletConnectLink(intent)
-            }
-            store.dispatch(BackupAction.CheckForUnfinishedBackup)
-        }
+        navigateToInitialScreenIfNeeded()
+
         intentHandler.handleBackgroundScan(intent)
         intentHandler.handleSellCurrencyCallback(intent)
     }
@@ -203,5 +190,32 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         super.onUserInteraction()
 
         lockUserWalletsTimer?.restart()
+    }
+
+    private fun navigateToInitialScreenIfNeeded() {
+        val backStackIsEmpty = supportFragmentManager.backStackEntryCount == 0
+        val isNotScannedBefore = store.state.globalState.scanResponse == null
+        val isOnboardingServiceNotActive = store.state.globalState.onboardingState.onboardingStarted
+        val isShopNotOpened = store.state.shopState.total != null
+        when {
+            !backStackIsEmpty && isNotScannedBefore && isOnboardingServiceNotActive && isShopNotOpened -> {
+                navigateToInitialScreen()
+            }
+            backStackIsEmpty -> {
+                navigateToInitialScreen()
+            }
+        }
+    }
+
+    private fun navigateToInitialScreen() {
+        if (userWalletsListManager.hasSavedUserWallets) {
+            store.dispatchOnMain(WelcomeAction.HandleDeepLink(intent))
+            store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Welcome))
+            store.dispatchOnMain(WelcomeAction.ProceedWithBiometrics)
+        } else {
+            store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Home))
+            intentHandler.handleWalletConnectLink(intent)
+        }
+        store.dispatch(BackupAction.CheckForUnfinishedBackup)
     }
 }
