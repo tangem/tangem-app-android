@@ -68,7 +68,8 @@ private class SendReducer : SendInternalReducer {
     }
 
     private fun handleSendSpecificTransactionAction(
-        action: SendAction.SendSpecificTransaction, state: SendState,
+        action: SendAction.SendSpecificTransaction,
+        state: SendState,
     ): SendState {
         return state.copy(
             externalTransactionData =

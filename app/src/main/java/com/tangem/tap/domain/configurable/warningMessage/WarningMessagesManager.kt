@@ -39,8 +39,8 @@ class WarningMessagesManager {
         val foundWarning = findWarning(warning)
         return when {
             foundWarning == null -> false
-            foundWarning.type == WarningMessage.Type.Temporary
-                || foundWarning.type == WarningMessage.Type.AppRating -> {
+            foundWarning.type == WarningMessage.Type.Temporary ||
+                foundWarning.type == WarningMessage.Type.AppRating -> {
                 if (foundWarning.isHidden) {
                     false
                 } else {
