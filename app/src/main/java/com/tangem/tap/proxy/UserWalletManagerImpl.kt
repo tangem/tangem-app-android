@@ -73,12 +73,12 @@ class UserWalletManagerImpl(
             requireNotNull(appStateHolder.userTokensRepository) { "userTokensRepository is null" }
         if (card != null) {
             return userTokensRepository.getUserTokens(card)
-                .any { it.coinId.equals(currency.id) } //todo ensure that its the same ids
+                .any { it.coinId.equals(currency.id) } // todo ensure that its the same ids
         }
         return false
     }
 
-    //todo check is it sync operation
+    // todo check is it sync operation
     override fun addToken(currency: Currency) {
         val action = if (currency is NativeToken) {
             val card = appStateHolder.getActualCard()
@@ -180,7 +180,7 @@ class UserWalletManagerImpl(
     }
 
     private fun createDerivationParams(derivationStyle: DerivationStyle?): DerivationParams? {
-        //todo clarify if its need to add Custom
+        // todo clarify if its need to add Custom
         return derivationStyle?.let { DerivationParams.Default(derivationStyle) }
     }
 

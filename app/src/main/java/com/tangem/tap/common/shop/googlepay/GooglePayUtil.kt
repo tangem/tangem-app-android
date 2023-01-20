@@ -52,7 +52,6 @@ object GooglePayUtil {
 
     private fun baseCardPaymentMethod(): JSONObject {
         return JSONObject().apply {
-
             val parameters = JSONObject().apply {
                 put("allowedAuthMethods", allowedCardAuthMethods)
                 put("allowedCardNetworks", allowedCardNetworks)

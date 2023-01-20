@@ -27,7 +27,6 @@ class ShopMiddleware {
 
 @Suppress("LongMethod", "ComplexMethod")
 private fun handle(action: Action) {
-
     val shopState = store.state.shopState
 
     if (action is NavigationAction.NavigateTo && action.screen == AppScreen.Shop) {
@@ -109,7 +108,6 @@ private fun handle(action: Action) {
                     ShopAction.CheckIfGooglePayAvailable.Failure
                 }
                 store.dispatchOnMain(newAction)
-
             }
         }
         ShopAction.StartWebCheckout -> {

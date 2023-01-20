@@ -88,7 +88,8 @@ class TangemShopService(application: Application, shopifyShop: ShopifyShop) {
     fun buyWithGooglePay(productType: ProductType) {
         val totalPrice = checkouts[productType]!!.totalPriceV2.amount
         googlePayService.payWithGooglePay(
-            totalPriceCents = totalPrice, currencyCode = checkouts[productType]!!.currencyCode.name,
+            totalPriceCents = totalPrice,
+            currencyCode = checkouts[productType]!!.currencyCode.name,
             merchantID = shopifyService.shop.merchantID,
         )
     }
@@ -189,7 +190,7 @@ class TangemShopService(application: Application, shopifyShop: ShopifyShop) {
                     appliedDiscount = it.getAppliedDiscount(),
                 ),
 
-                )
+            )
         }
         return Result.failure(result.exceptionOrNull()!!)
     }
