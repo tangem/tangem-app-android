@@ -15,6 +15,6 @@ class AnalyticsModule {
     @Singleton
     @Provides
     fun provideAnalyticsHandler(): AnalyticsEventHandler {
-        return Analytics //todo replace after refactoring calling Analytics in whole project
+        return Analytics // todo replace after refactoring calling Analytics in whole project
     }
 }

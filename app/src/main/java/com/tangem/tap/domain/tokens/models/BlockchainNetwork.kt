@@ -44,7 +44,8 @@ data class BlockchainNetwork(
     }
 
     override fun hashCode(): Int = calculateHashCode(
-        blockchain.hashCode(), derivationPath?.hashCode() ?: 0,
+        blockchain.hashCode(),
+        derivationPath?.hashCode() ?: 0,
     )
 
     companion object {

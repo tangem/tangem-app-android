@@ -31,7 +31,6 @@ fun ListOfCurrencies(
     onNetworkItemClick: (ContractAddress) -> Unit,
     onLoadMore: () -> Unit,
 ) {
-
     val expandedCurrencies = remember { mutableStateOf(listOf("")) }
 
     val onCurrencyClick = { currencyId: String ->

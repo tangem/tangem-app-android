@@ -210,7 +210,8 @@ private class CreateWalletTangemWallet : ProductCommandProcessor<CreateProductWa
                             callback(
                                 CompletionResult.Success(
                                     CreateProductWalletTaskResponse(
-                                        card = session.environment.card!!, primaryCard = primaryCard,
+                                        card = session.environment.card!!,
+                                        primaryCard = primaryCard,
                                     ),
                                 ),
                             )
