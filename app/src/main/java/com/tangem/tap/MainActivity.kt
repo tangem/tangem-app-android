@@ -162,7 +162,9 @@ class MainActivity : AppCompatActivity(), SnackbarHandler, ActivityResultCallbac
         if (snackbar != null) return
 
         snackbar = Snackbar.make(
-            binding.fragmentContainer, getString(text), Snackbar.LENGTH_INDEFINITE,
+            binding.fragmentContainer,
+            getString(text),
+            Snackbar.LENGTH_INDEFINITE,
         )
         if (buttonTitle != null && action != null) {
             snackbar?.setAction(getString(buttonTitle), action)

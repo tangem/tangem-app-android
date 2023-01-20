@@ -87,6 +87,6 @@ class UserWalletBuilder(
 
     private fun getUrlForArtwork(cardId: String, cardPublicKeyHex: String, artworkId: String): String {
         return TangemApi.Companion.BaseUrl.VERIFY.url + TangemApi.ARTWORK +
-            "?artworkId=${artworkId}&CID=${cardId}&publicKey=$cardPublicKeyHex"
+            "?artworkId=$artworkId&CID=$cardId&publicKey=$cardPublicKeyHex"
     }
 }

@@ -39,7 +39,6 @@ object SimpleCancelableAlertDialog {
         secondaryButtonAction: () -> Unit = {},
         context: Context,
     ): AlertDialog {
-
         return AlertDialog.Builder(context).apply {
             setTitle(titleRes?.let { context.getString(it) } ?: title)
             setMessage(messageRes?.let { context.getString(it) } ?: message)
