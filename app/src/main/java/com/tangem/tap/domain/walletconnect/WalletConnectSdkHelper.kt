@@ -63,7 +63,7 @@ class WalletConnectSdkHelper {
 
         val gas = transaction.gas?.hexToBigDecimal()
             ?: transaction.gasLimit?.hexToBigDecimal()
-            ?: BigDecimal(300000) //Set high gasLimit if not provided
+            ?: BigDecimal(300000) // Set high gasLimit if not provided
 
         val decimals = wallet.blockchain.decimals()
 
@@ -71,8 +71,7 @@ class WalletConnectSdkHelper {
             ?.movePointLeft(decimals) ?: return null
 
         val gasPrice = transaction.gasPrice?.hexToBigDecimal()
-            ?: when (val result =
-                (walletManager as? EthereumGasLoader)?.getGasPrice()) {
+            ?: when (val result = (walletManager as? EthereumGasLoader)?.getGasPrice()) {
                 is Result.Success -> result.data.toBigDecimal()
                 is Result.Failure -> {
                     (result.error as? Throwable)?.let { Timber.e(it) }
@@ -271,7 +270,9 @@ class WalletConnectSdkHelper {
             is CompletionResult.Success -> {
                 val hash = result.data.signature
                 return EthereumUtils.prepareSignedMessageData(
-                    hash, hashToSign, CryptoUtils.decompressPublicKey(key!!),
+                    signedHash = hash,
+                    hashToSign = hashToSign,
+                    publicKey = CryptoUtils.decompressPublicKey(key!!),
                 )
             }
             is CompletionResult.Failure -> {

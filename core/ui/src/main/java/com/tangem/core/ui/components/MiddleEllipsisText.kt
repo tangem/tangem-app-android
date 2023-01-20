@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.TextUnit
 /**
  * https://stackoverflow.com/questions/69083061/how-to-make-middle-ellipsis-in-text-with-jetpack-compose
  */
+@Suppress("LongMethod")
 @Composable
 fun MiddleEllipsisText(
     text: String,
@@ -71,25 +72,28 @@ fun MiddleEllipsisText(
             return@SubcomposeLayout layout(0, 0) {}
         val placeable = subcompose("visible") {
             val finalText = remember(text, textLayoutResult, constraints.maxWidth) {
-                if (text.isEmpty() || textLayoutResult.getBoundingBox(text.indices.last).right <= constraints.maxWidth) {
+                if (
+                    text.isEmpty() ||
+                    textLayoutResult.getBoundingBox(text.indices.last).right <= constraints.maxWidth
+                ) {
                     // text not including ellipsis fits on the first line.
                     return@remember text
                 }
 
                 val ellipsisWidth = layoutText.indices.toList()
-                    .takeLast(ellipsisCharactersCount)
+                    .takeLast(ELLIPSIS_CHARACTERS_COUNT)
                     .let widthLet@{ indices ->
                         // fix this bug: https://issuetracker.google.com/issues/197146630
                         // in this case width is invalid
                         for (i in indices) {
                             val width = textLayoutResult.getBoundingBox(i).width
                             if (width > 0) {
-                                return@widthLet width * ellipsisCharactersCount
+                                return@widthLet width * ELLIPSIS_CHARACTERS_COUNT
                             }
                         }
                         // this should not happen, because
                         // this error occurs only for the last character in the string
-                        throw IllegalStateException("all ellipsis chars have invalid width")
+                        error("all ellipsis chars have invalid width")
                     }
                 val availableWidth = constraints.maxWidth - ellipsisWidth
                 val startCounter = BoundCounter(text, textLayoutResult) { it }
@@ -98,8 +102,8 @@ fun MiddleEllipsisText(
                 while (availableWidth - startCounter.width - endCounter.width > 0) {
                     val possibleEndWidth = endCounter.widthWithNextChar()
                     if (
-                        startCounter.width >= possibleEndWidth
-                        && availableWidth - startCounter.width - possibleEndWidth >= 0
+                        startCounter.width >= possibleEndWidth &&
+                        availableWidth - startCounter.width - possibleEndWidth >= 0
                     ) {
                         endCounter.addNextChar()
                     } else if (availableWidth - startCounter.widthWithNextChar() - endCounter.width >= 0) {
@@ -132,9 +136,9 @@ fun MiddleEllipsisText(
     }
 }
 
-private const val ellipsisCharactersCount = 3
-private const val ellipsisCharacter = '.'
-private val ellipsisText = List(ellipsisCharactersCount) { ellipsisCharacter }.joinToString(separator = "")
+private const val ELLIPSIS_CHARACTERS_COUNT = 3
+private const val ELLIPSIS_CHARACTER = '.'
+private val ellipsisText = List(ELLIPSIS_CHARACTERS_COUNT) { ELLIPSIS_CHARACTER }.joinToString(separator = "")
 
 private class BoundCounter(
     private val text: String,
