@@ -121,9 +121,9 @@ private fun handle(action: Action, dispatch: DispatchFunction) {
             }
         }
         is TwinCardsAction.Wallet.HandleOnBackPressed -> {
-            val shouldReturnCardBack = twinCardsState.mode == CreateTwinWalletMode.CreateWallet
-                && twinCardsState.currentStep != TwinCardsStep.TopUpWallet
-                && twinCardsState.currentStep != TwinCardsStep.Done
+            val shouldReturnCardBack = twinCardsState.mode == CreateTwinWalletMode.CreateWallet &&
+                twinCardsState.currentStep != TwinCardsStep.TopUpWallet &&
+                twinCardsState.currentStep != TwinCardsStep.Done
 
             if (twinCardsState.showAlert) {
                 val onInterruptPrompt = {

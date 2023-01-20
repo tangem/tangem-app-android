@@ -68,7 +68,6 @@ import com.valentinilk.shimmer.shimmer
 @Suppress("LongParameterList")
 @Composable
 fun TransactionCard(
-    modifier: Modifier = Modifier,
     type: TransactionCardType,
     balance: String,
     amount: String?,
@@ -79,7 +78,6 @@ fun TransactionCard(
     onChangeTokenClick: (() -> Unit)? = null,
 ) {
     Card(
-        modifier = modifier,
         shape = RoundedCornerShape(TangemTheme.dimens.radius12),
         backgroundColor = TangemTheme.colors.background.primary,
         elevation = TangemTheme.dimens.elevation2,
@@ -92,7 +90,6 @@ fun TransactionCard(
                 verticalArrangement = Arrangement.SpaceBetween,
                 horizontalAlignment = Alignment.Start,
             ) {
-
                 Header(balance = balance, type = type)
 
                 Content(
@@ -126,7 +123,6 @@ fun TransactionCard(
                 )
             }
         }
-
     }
 }
 
@@ -193,7 +189,6 @@ private fun Content(
             verticalArrangement = Arrangement.SpaceBetween,
             horizontalAlignment = Alignment.Start,
         ) {
-
             when (type) {
                 is TransactionCardType.ReceiveCard -> {
                     if (amount != null) {
@@ -219,7 +214,7 @@ private fun Content(
                 is TransactionCardType.SendCard -> {
                     AutoSizeTextField(
                         amount = amount ?: "1",
-                        onAmoutChanged = { type.onAmountChanged(it) },
+                        onAmountChange = { type.onAmountChanged(it) },
                     )
                 }
             }
@@ -249,18 +244,16 @@ private fun Content(
                 )
             }
         }
-
     }
 }
 
 @Suppress("MagicNumber")
 @Composable
-private fun AutoSizeTextField(amount: String, onAmoutChanged: (String) -> Unit) {
+private fun AutoSizeTextField(amount: String, onAmountChange: (String) -> Unit) {
     val focusManager = LocalFocusManager.current
     val textFieldFocusRequester = remember { FocusRequester() }
 
     BoxWithConstraints(modifier = Modifier.fillMaxWidth()) {
-
         var shrunkFontSize = TangemTheme.typography.h2.fontSize
         val calculateIntrinsics = @Composable {
             ParagraphIntrinsics(
@@ -289,12 +282,9 @@ private fun AutoSizeTextField(amount: String, onAmoutChanged: (String) -> Unit) 
         CompositionLocalProvider(
             LocalTextSelectionColors provides customTextSelectionColors,
         ) {
-
             BasicTextField(
                 value = amount,
-                onValueChange = {
-                    onAmoutChanged(it)
-                },
+                onValueChange = onAmountChange,
                 singleLine = true,
                 modifier = Modifier
                     .fillMaxWidth()
@@ -334,7 +324,6 @@ fun Token(
         verticalArrangement = Arrangement.Bottom,
         horizontalAlignment = Alignment.End,
     ) {
-
         Box(
             modifier = Modifier
                 .padding(end = TangemTheme.dimens.spacing16)
