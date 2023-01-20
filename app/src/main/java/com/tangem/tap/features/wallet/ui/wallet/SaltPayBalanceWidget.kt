@@ -39,7 +39,7 @@ class SaltPayBalanceWidget(
             show = data.state != ProgressState.Error,
         )
         if (data.fiatAmount == null) {
-            //TODO: SaltPay: A tricky solution to the problem with displaying rates
+            // TODO: SaltPay: A tricky solution to the problem with displaying rates
             // If the rates are loaded after the walletManager.update() is completely updated,
             // then this problem can be avoided
             actionDebouncer(WalletAction.LoadFiatRate())
@@ -61,4 +61,3 @@ class SaltPayBalanceWidget(
 }
 
 private val actionDebouncer = debounce<Action>(500, mainScope) { store.dispatch(it) }
-
