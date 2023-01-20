@@ -140,7 +140,9 @@ class DialogManager : StoreSubscriber<GlobalState> {
             is WalletDialog.TokensAreLinkedDialog -> SimpleAlertDialog.create(
                 title = context.getString(state.dialog.titleRes, state.dialog.currencySymbol),
                 message = context.getString(
-                    state.dialog.messageRes, state.dialog.currencySymbol, state.dialog.currencyTitle,
+                    state.dialog.messageRes,
+                    state.dialog.currencySymbol,
+                    state.dialog.currencyTitle,
                 ),
                 context = context,
             )

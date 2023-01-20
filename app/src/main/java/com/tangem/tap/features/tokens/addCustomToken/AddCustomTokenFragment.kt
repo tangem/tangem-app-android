@@ -64,7 +64,6 @@ class AddCustomTokenFragment : BaseStoreFragment(R.layout.view_compose_fragment)
                 ) {
                     AddCustomTokenScreen(state, closePopupTrigger)
                 }
-
             }
         }
     }

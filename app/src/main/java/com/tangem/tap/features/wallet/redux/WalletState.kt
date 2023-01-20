@@ -190,8 +190,8 @@ data class WalletState(
         return when (val currency = walletData.currency) {
             is Currency.Blockchain -> {
                 val walletStores = walletsStores.filterNot {
-                    it.blockchainNetwork.blockchain == currency.blockchain
-                        && it.blockchainNetwork.derivationPath == currency.derivationPath
+                    it.blockchainNetwork.blockchain == currency.blockchain &&
+                        it.blockchainNetwork.derivationPath == currency.derivationPath
                 }
                 copy(walletsStores = walletStores)
                     .updateTotalBalance()

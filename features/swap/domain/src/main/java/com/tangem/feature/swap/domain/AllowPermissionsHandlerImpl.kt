@@ -2,7 +2,7 @@ package com.tangem.feature.swap.domain
 
 class AllowPermissionsHandlerImpl : AllowPermissionsHandler {
 
-    //todo maybe need to save in store
+    // todo maybe need to save in store
     private val allowPermissionsInProgress = mutableSetOf<String>()
 
     override fun addAddressToInProgress(tokenAddress: String) {

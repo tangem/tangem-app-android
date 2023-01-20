@@ -18,7 +18,6 @@ class ResetToFactorySettingsTask : CardSessionRunnable<Card> {
         session: CardSession,
         callback: (result: CompletionResult<Card>) -> Unit,
     ) {
-
         val wallet = session.environment.card?.wallets?.lastOrNull().guard {
             resetBackup(session, callback)
             return
@@ -38,7 +37,6 @@ class ResetToFactorySettingsTask : CardSessionRunnable<Card> {
         session: CardSession,
         callback: (result: CompletionResult<Card>) -> Unit,
     ) {
-
         val backupStatus = session.environment.card?.backupStatus
         if (backupStatus == null || backupStatus == Card.BackupStatus.NoBackup) {
             callback(CompletionResult.Success(session.environment.card!!))
