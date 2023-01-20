@@ -101,24 +101,6 @@ class ScanProductTask(
     }
 }
 
-private class ScanNoteProcessor : ProductCommandProcessor<ScanResponse> {
-    override fun proceed(
-        card: CardDTO,
-        session: CardSession,
-        callback: (result: CompletionResult<ScanResponse>) -> Unit,
-    ) {
-        callback(
-            CompletionResult.Success(
-                ScanResponse(
-                    card = card,
-                    productType = ProductType.Note,
-                    walletData = session.environment.walletData,
-                ),
-            ),
-        )
-    }
-}
-
 private class ScanWalletProcessor(
     private val userTokensRepository: UserTokensRepository?,
     private val additionalBlockchainsToDerive: Collection<Blockchain>? = null,
@@ -130,12 +112,10 @@ private class ScanWalletProcessor(
         session: CardSession,
         callback: (result: CompletionResult<ScanResponse>) -> Unit,
     ) {
-
-        if (card.firmwareVersion.doubleValue >= 4.39) {
-            if (card.settings.maxWalletsCount == 1) {
-                readFile(card, session, callback)
-                return
-            }
+        @Suppress("MagicNumber")
+        if (card.firmwareVersion.doubleValue >= 4.39 && card.settings.maxWalletsCount == 1) {
+            readFile(card, session, callback)
+            return
         }
 
         createMissingWalletsIfNeeded(card, session, callback)
@@ -198,7 +178,6 @@ private class ScanWalletProcessor(
                     }
                 }
             }
-
         }
     }
 
@@ -244,8 +223,8 @@ private class ScanWalletProcessor(
         val activationInProgress = preferencesStorage.usedCardsPrefStorage.isActivationInProgress(card.cardId)
 
         @Suppress("ComplexCondition")
-        if (card.backupStatus == CardDTO.BackupStatus.NoBackup && card.wallets.isNotEmpty()
-            && (activationInProgress || card.isSaltPay)
+        if (card.backupStatus == CardDTO.BackupStatus.NoBackup && card.wallets.isNotEmpty() &&
+            (activationInProgress || card.isSaltPay)
         ) {
             StartPrimaryCardLinkingTask().run(session) { linkingResult ->
                 when (linkingResult) {
