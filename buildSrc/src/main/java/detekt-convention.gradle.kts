@@ -25,4 +25,5 @@ tasks.withType<Detekt> {
 
 dependencies {
     detektPlugins(Tools.composeDetektRules)
+    detektPlugins(Tools.formattingDetektRules)
 }

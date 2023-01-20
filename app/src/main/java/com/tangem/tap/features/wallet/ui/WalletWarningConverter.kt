@@ -18,13 +18,15 @@ class WalletWarningConverter(
             is WalletWarning.ExistentialDeposit -> {
                 context.getString(
                     R.string.warning_existential_deposit_message,
-                    message.currencyName, message.edStringValueWithSymbol,
+                    message.currencyName,
+                    message.edStringValueWithSymbol,
                 )
             }
             is WalletWarning.BalanceNotEnoughForFee -> {
                 context.getString(
                     R.string.token_details_send_blocked_fee_format,
-                    message.blockchainFullName, message.blockchainFullName,
+                    message.blockchainFullName,
+                    message.blockchainFullName,
                 )
             }
             is WalletWarning.TransactionInProgress -> {
@@ -36,7 +38,8 @@ class WalletWarningConverter(
             is WalletWarning.Rent -> {
                 context.getString(
                     R.string.solana_rent_warning,
-                    message.walletRent.minRentValue, message.walletRent.rentExemptValue,
+                    message.walletRent.minRentValue,
+                    message.walletRent.rentExemptValue,
                 )
             }
         }

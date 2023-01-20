@@ -295,8 +295,8 @@ naming:
   LambdaParameterNaming:
     active: false
     parameterPattern: '[a-z][A-Za-z0-9]*|_'
-  MatchingDeclarationName:
-    active: true
+  MatchingDeclarationName: # Same as FileName
+    active: false
     mustBeFirst: true
   MemberNameEqualsClassName:
     active: false
@@ -528,7 +528,7 @@ style:
     active: true
     maxChainedCalls: 5
   MaxLineLength:
-    active: true
+    active: false # Same as MaximumLineLength
     maxLineLength: 120
     excludePackageStatements: true
     excludeImportStatements: true
@@ -536,13 +536,13 @@ style:
   MayBeConst:
     active: true
   ModifierOrder:
-    active: true
+    active: false # Same as ModifierOrdering
   MultilineLambdaItParameter:
     active: true
   NestedClassesVisibility:
     active: true
   NewLineAtEndOfFile:
-    active: false
+    active: false # This rules overlaps with style>NewLineAtEndOfFile from the standard rules
   NoTabs:
     active: true
   NullableBooleanCheck:
@@ -654,6 +654,154 @@ style:
     active: false
     excludeImports:
       - 'java.util.*'
+
+formatting:
+  active: true
+  android: true
+  AnnotationOnSeparateLine:
+    active: false
+  AnnotationSpacing:
+    active: true
+  ArgumentListWrapping:
+    active: true
+    indentSize: 4
+    maxLineLength: 120
+  BlockCommentInitialStarAlignment:
+    active: true
+  ChainWrapping:
+    active: true
+  CommentSpacing:
+    active: true
+  CommentWrapping:
+    active: false
+    indentSize: 4
+  DiscouragedCommentLocation:
+    active: true
+  EnumEntryNameCase:
+    active: true
+  Filename:
+    active: true # This rules overlaps with naming>MatchingDeclarationName from the standard rules
+    mustBeFirst: true
+  FinalNewline:
+    active: false
+    insertFinalNewLine: true
+  FunKeywordSpacing:
+    active: true
+  FunctionReturnTypeSpacing:
+    active: true
+  FunctionSignature:
+    active: true
+    forceMultilineWhenParameterCountGreaterOrEqualThan: 2147483647
+    functionBodyExpressionWrapping: 'default'
+    maxLineLength: 120
+    indentSize: 4
+  FunctionStartOfBodySpacing:
+    active: true
+  FunctionTypeReferenceSpacing:
+    active: true
+  ImportOrdering:
+    active: false
+    layout: 'java.**,javax.**,kotlin.**,kotlinx.**,android.**,androidx.**,*,^'
+  Indentation:
+    active: true
+    indentSize: 4
+  KdocWrapping:
+    active: true
+    indentSize: 4
+  MaximumLineLength:
+    excludes: [ "**/assets/**" ]
+    active: true # This rules overlaps with style>MaxLineLength from the standard rules
+    maxLineLength: 120
+    excludePackageStatements: true
+    excludeImportStatements: true
+    excludeCommentStatements: false
+  ModifierListSpacing:
+    active: true
+  ModifierOrdering:
+    active: true # This rules overlaps with style>ModifierOrder from the standard rules
+  MultiLineIfElse:
+    active: true
+  NoBlankLineBeforeRbrace:
+    active: true
+  NoBlankLinesInChainedMethodCalls:
+    active: true
+  NoConsecutiveBlankLines:
+    active: true
+  NoEmptyClassBody:
+    active: true
+  NoEmptyFirstLineInMethodBlock:
+    active: true
+  NoLineBreakAfterElse:
+    active: true
+  NoLineBreakBeforeAssignment:
+    active: true
+  NoMultipleSpaces:
+    active: true
+  NoSemicolons:
+    active: true
+  NoTrailingSpaces:
+    active: true
+  NoUnitReturn:
+    active: true
+  NoUnusedImports:
+    active: true
+  NoWildcardImports:
+    active: false
+    packagesToUseImportOnDemandProperty: 'java.util.*,kotlinx.android.synthetic.**'
+  NullableTypeSpacing:
+    active: true
+  PackageName:
+    active: true
+  ParameterListSpacing:
+    active: true
+  ParameterListWrapping:
+    active: true
+    maxLineLength: 120
+  SpacingAroundAngleBrackets:
+    active: true
+  SpacingAroundColon:
+    active: true
+  SpacingAroundComma:
+    active: true
+  SpacingAroundCurly:
+    active: true
+  SpacingAroundDot:
+    active: true
+  SpacingAroundDoubleColon:
+    active: true
+  SpacingAroundKeyword:
+    active: true
+  SpacingAroundOperators:
+    active: true
+  SpacingAroundParens:
+    active: true
+  SpacingAroundRangeOperator:
+    active: true
+  SpacingAroundUnaryOperator:
+    active: true
+  SpacingBetweenDeclarationsWithAnnotations:
+    active: true
+  SpacingBetweenDeclarationsWithComments:
+    active: false
+  SpacingBetweenFunctionNameAndOpeningParenthesis:
+    active: true
+  StringTemplate:
+    active: true
+  TrailingCommaOnCallSite:
+    active: true
+    useTrailingCommaOnCallSite: false
+  TrailingCommaOnDeclarationSite:
+    active: true
+    useTrailingCommaOnCallSite: false
+  TypeArgumentListSpacing:
+    active: true
+  TypeParameterListSpacing:
+    active: true
+  UnnecessaryParenthesesBeforeTrailingLambda:
+    active: true
+  Wrapping:
+    active: false
+    indentSize: 4
 
 compose:
   ReusedModifierInstance:
