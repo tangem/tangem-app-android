@@ -165,7 +165,6 @@ private fun prepareNetworkNameSpannableText(
     blockchain: Blockchain,
     contractAddress: String?,
 ): AnnotatedString {
-
     val blockchainName = blockchain.fullNameWithoutTestnet.uppercase()
     val additionalText =
         if (contractAddress == null) "MAIN" else blockchain.getNetworkName().uppercase()
