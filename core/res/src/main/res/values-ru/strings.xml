@@ -237,6 +237,7 @@
     <string name="common_cancel">Отмена</string>
     <string name="common_accept">Принять</string>
     <string name="common_camera_denied_alert_message">Вы не предоставили доступ к камере, пожалуйста, измените настройки конфиденциальности.</string>
+    <string name="wallet_button_actions">Действия</string>
     <string name="wallet_button_send">Отправить</string>
     <string name="wallet_button_create_wallet">Создать кошелек</string>
     <string name="wallet_title">Tangem</string>
