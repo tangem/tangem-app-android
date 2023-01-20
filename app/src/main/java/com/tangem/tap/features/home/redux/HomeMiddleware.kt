@@ -4,10 +4,9 @@ import com.tangem.common.doOnFailure
 import com.tangem.common.doOnResult
 import com.tangem.common.doOnSuccess
 import com.tangem.core.analytics.Analytics
-import com.tangem.core.analytics.events.IntroductionProcess
-import com.tangem.core.analytics.events.MainScreen
-import com.tangem.core.analytics.events.Shop
-import com.tangem.core.analytics.paramsInterceptor.BatchIdParamsInterceptor
+import com.tangem.tap.common.analytics.events.IntroductionProcess
+import com.tangem.tap.common.analytics.events.MainScreen
+import com.tangem.tap.common.analytics.events.Shop
 import com.tangem.tap.common.entities.IndeterminateProgressButton
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchOpenUrl
