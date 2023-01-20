@@ -1,10 +1,9 @@
 package com.tangem.tap.common.analytics.handlers.appsFlyer
 
 import com.appsflyer.AFInAppEventType
+import com.tangem.core.analytics.AnalyticsEvent
 import com.tangem.core.analytics.api.AnalyticsHandler
-import com.tangem.tap.common.analytics.api.AnalyticsHandler
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
-import com.tangem.tap.common.analytics.events.AnalyticsEvent
 import com.tangem.tap.common.analytics.events.Shop
 
 class AppsFlyerAnalyticsHandler(
