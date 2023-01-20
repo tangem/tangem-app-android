@@ -401,7 +401,8 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
                 lBalanceError.tvErrorDescriptions.text =
                     getString(
                         R.string.no_account_generic,
-                        data.amountToCreateAccount, data.currencySymbol,
+                        data.amountToCreateAccount,
+                        data.currencySymbol,
                     )
             }
             else -> {}

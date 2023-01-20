@@ -187,7 +187,9 @@ class WalletConnectMiddleware {
             }
             is WalletConnectAction.BinanceTransaction.Sign -> {
                 walletConnectManager.signBnb(
-                    action.id, action.data, action.sessionData,
+                    id = action.id,
+                    data = action.data,
+                    sessionData = action.sessionData,
                 )
             }
             is WalletConnectAction.SwitchBlockchain -> {
@@ -309,7 +311,9 @@ class WalletConnectMiddleware {
     }
 
     private fun getWalletManager(
-        wallet: WalletForSession, blockchain: Blockchain, walletState: WalletState,
+        wallet: WalletForSession,
+        blockchain: Blockchain,
+        walletState: WalletState,
     ): WalletManager? {
         val blockchainToMake = if (blockchain == Blockchain.Ethereum && wallet.isTestNet) {
             Blockchain.EthereumTestnet
