@@ -150,7 +150,9 @@ fun PrimaryStartIconButton(
     enabled: Boolean = true,
 ) {
     PrimaryButtonRow(
-        modifier = modifier, enabled = enabled, onClick = onClick,
+        modifier = modifier,
+        enabled = enabled,
+        onClick = onClick,
         content = {
             Icon(
                 painter = painterResource(id = iconResId),
@@ -184,7 +186,9 @@ fun PrimaryEndIconButton(
     enabled: Boolean = true,
 ) {
     PrimaryButtonRow(
-        modifier = modifier, enabled = enabled, onClick = onClick,
+        modifier = modifier,
+        enabled = enabled,
+        onClick = onClick,
         content = {
             Text(text = text)
             Spacer(modifier = Modifier.width(dimensionResource(R.dimen.spacing8)))

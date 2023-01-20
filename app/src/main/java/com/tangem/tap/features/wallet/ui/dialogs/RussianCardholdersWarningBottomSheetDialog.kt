@@ -20,7 +20,7 @@ class RussianCardholdersWarningBottomSheetDialog(
     context: Context,
     private val dialogData: WalletDialog.RussianCardholdersWarningDialog.Data?,
 ) : BottomSheetDialog
-    (context) {
+(context) {
 
     private var binding: DialogRussiansCardholdersWarningBinding? = null
 

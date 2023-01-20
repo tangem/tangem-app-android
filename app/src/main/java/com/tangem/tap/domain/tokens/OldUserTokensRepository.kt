@@ -83,7 +83,8 @@ class OldUserTokensRepository(
     }
 
     private suspend fun loadSavedCurrenciesOldWay(
-        cardId: String, isHdWalletSupported: Boolean = false,
+        cardId: String,
+        isHdWalletSupported: Boolean = false,
     ): List<BlockchainNetwork> {
         val blockchains = loadSavedBlockchains(cardId)
         val tokens = loadSavedTokens(cardId)

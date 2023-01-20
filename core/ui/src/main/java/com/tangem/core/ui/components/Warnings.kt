@@ -25,13 +25,11 @@ import com.tangem.core.ui.res.TangemTheme
  */
 @Composable
 fun WarningCard(
-    modifier: Modifier = Modifier,
     title: String,
     description: String,
     icon: @Composable (() -> Unit)? = null,
 ) {
     WarningCardSurface(
-        modifier = modifier,
         content = {
             WarningBody(
                 title = title,
@@ -54,14 +52,12 @@ fun WarningCard(
  */
 @Composable
 fun ClickableWarningCard(
-    modifier: Modifier = Modifier,
     title: String,
     description: String,
     icon: @Composable (() -> Unit)? = null,
     onClick: () -> Unit,
 ) {
     WarningCardSurface(
-        modifier = modifier,
         content = {
             WarningBody(title = title, description = description, icon = icon) {
                 SpacerW12()
@@ -88,14 +84,12 @@ fun ClickableWarningCard(
  */
 @Composable
 fun RefreshableWaringCard(
-    modifier: Modifier = Modifier,
     title: String,
     description: String,
     icon: @Composable (() -> Unit)? = null,
     onClick: () -> Unit,
 ) {
     WarningCardSurface(
-        modifier = modifier,
         content = {
             WarningBody(title = title, description = description, icon = icon) {
                 SpacerW12()
@@ -114,7 +108,6 @@ fun RefreshableWaringCard(
 
 @Composable
 private fun WarningBody(
-    modifier: Modifier = Modifier,
     title: String,
     description: String,
     icon: @Composable (() -> Unit)? = null,
@@ -136,7 +129,6 @@ private fun WarningBody(
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun WarningCardSurface(
-    modifier: Modifier = Modifier,
     onClick: (() -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
@@ -146,7 +138,6 @@ private fun WarningCardSurface(
         elevation = TangemTheme.dimens.elevation2,
         onClick = { onClick ?: Unit },
         enabled = onClick != null,
-        modifier = modifier,
     ) {
         content()
     }

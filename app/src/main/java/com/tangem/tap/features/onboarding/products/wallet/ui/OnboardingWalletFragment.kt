@@ -78,7 +78,7 @@ class OnboardingWalletFragment : BaseFragment(R.layout.fragment_onboarding_walle
             binding.tabLayoutBackupInfo,
             binding.viewPagerBackupInfo,
         ) { tab, position ->
-            //Some implementation
+            // Some implementation
         }.attach()
 
         (activity as? AppCompatActivity)?.setSupportActionBar(binding.toolbar)
