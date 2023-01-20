@@ -19,7 +19,6 @@ fun FloatingCardsContent(
     isPaused: Boolean,
     stepDuration: Int,
 ) {
-
     val imageBitmap = asImageBitmap(R.drawable.card_placeholder_wallet)
     val cards = listOf(
         FloatingCard.first(),
