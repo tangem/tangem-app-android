@@ -166,8 +166,8 @@ class TapWalletManager {
             store.dispatch(WalletConnectAction.RestoreSessions(data))
             store.dispatch(
                 WalletAction.MultiWallet.ShowWalletBackupWarning(
-                    show = data.card.settings.isBackupAllowed
-                        && data.card.backupStatus == CardDTO.BackupStatus.NoBackup,
+                    show = data.card.settings.isBackupAllowed &&
+                        data.card.backupStatus == CardDTO.BackupStatus.NoBackup,
                 ),
             )
             loadData(data)
@@ -180,8 +180,8 @@ class TapWalletManager {
         if (data.cardTypesResolver.isStart2Coin()) {
             configManager?.turnOff(ConfigManager.isSendingToPayIdEnabled)
             configManager?.turnOff(ConfigManager.isTopUpEnabled)
-        } else if (blockchain == Blockchain.Bitcoin
-            || data.walletData?.blockchain == Blockchain.Bitcoin.id
+        } else if (blockchain == Blockchain.Bitcoin ||
+            data.walletData?.blockchain == Blockchain.Bitcoin.id
         ) {
             configManager?.resetToDefault(ConfigManager.isSendingToPayIdEnabled)
             configManager?.resetToDefault(ConfigManager.isTopUpEnabled)

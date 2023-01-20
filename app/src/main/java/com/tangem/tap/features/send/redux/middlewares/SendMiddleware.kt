@@ -83,7 +83,8 @@ class SendMiddleware {
                         if (transactionData != null) {
                             store.dispatchOnMain(
                                 AddressPayIdVerifyAction.AddressVerification.SetWalletAddress(
-                                    transactionData.destinationAddress, false,
+                                    address = transactionData.destinationAddress,
+                                    isUserInput = false,
                                 ),
                             )
                             store.dispatchOnMain(AmountActionUi.SetMainCurrency(MainCurrencyType.CRYPTO))
@@ -104,7 +105,9 @@ class SendMiddleware {
 }
 
 private fun verifyAndSendTransaction(
-    action: SendActionUi.SendAmountToRecipient, appState: AppState?, dispatch: (Action) -> Unit,
+    action: SendActionUi.SendAmountToRecipient,
+    appState: AppState?,
+    dispatch: (Action) -> Unit,
 ) {
     val sendState = appState?.sendState ?: return
     val walletManager = sendState.walletManager ?: return

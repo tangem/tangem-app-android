@@ -7,7 +7,9 @@ import java.text.DecimalFormatSymbols
 import java.util.*
 // [REDACTED_TODO_COMMENT]
 fun BigDecimal.toFormattedString(
-    decimals: Int, roundingMode: RoundingMode = RoundingMode.DOWN, locale: Locale = Locale.US,
+    decimals: Int,
+    roundingMode: RoundingMode = RoundingMode.DOWN,
+    locale: Locale = Locale.US,
 ): String {
     val symbols = DecimalFormatSymbols(locale)
     val df = DecimalFormat().apply {
@@ -35,7 +37,7 @@ fun BigDecimal.toFormattedFiatValue(
 ): String {
     val fiatValue = this.setScale(2, RoundingMode.HALF_UP)
         .let { if (formatWithSpaces) it.formatWithSpaces() else it }
-    return " ${fiatValue}  $fiatCurrencyName"
+    return " $fiatValue  $fiatCurrencyName"
 }
 
 @Suppress("MagicNumber")

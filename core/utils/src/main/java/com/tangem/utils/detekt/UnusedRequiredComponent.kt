@@ -26,4 +26,3 @@ package com.tangem.utils.detekt
 )
 @Retention(AnnotationRetention.SOURCE)
 annotation class UnusedRequiredComponent(val description: String)
-

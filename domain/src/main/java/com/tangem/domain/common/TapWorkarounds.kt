@@ -64,7 +64,7 @@ object TapWorkarounds {
         "AB06" to Blockchain.XRP,
         "AB07" to Blockchain.Bitcoin,
         "AB08" to Blockchain.Ethereum,
-        "AB09" to Blockchain.Bitcoin,       // new batches for 3.34
+        "AB09" to Blockchain.Bitcoin, // new batches for 3.34
         "AB10" to Blockchain.Ethereum,
         "AB11" to Blockchain.Bitcoin,
         "AB12" to Blockchain.Ethereum,

@@ -132,9 +132,11 @@ fun DetailsMainButton(
         ),
     ) {
         Text(text = title)
-        Spacer(modifier = Modifier
-            .padding(start = 20.dp, end = 20.dp)
-            .size(8.dp))
+        Spacer(
+            modifier = Modifier
+                .padding(start = 20.dp, end = 20.dp)
+                .size(8.dp),
+        )
         Icon(painter = painterResource(id = R.drawable.ic_tangem_24), contentDescription = "")
     }
 }

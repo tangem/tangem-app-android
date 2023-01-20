@@ -58,7 +58,6 @@ internal fun SwapScreenContent(state: SwapStateHolder, onPermissionWarningClick:
             .fillMaxSize()
             .background(color = TangemTheme.colors.background.secondary),
     ) {
-
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -72,7 +71,6 @@ internal fun SwapScreenContent(state: SwapStateHolder, onPermissionWarningClick:
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
         ) {
-
             MainInfo(state)
 
             FeeItem(feeState = state.fee, currency = state.networkCurrency)
@@ -130,7 +128,6 @@ internal fun SwapScreenContent(state: SwapStateHolder, onPermissionWarningClick:
                 color = TangemTheme.colors.text.primary1,
                 modifier = Modifier
                     .fillMaxWidth()
-
                     .background(TangemTheme.colors.button.secondary)
                     .clickable { state.onMaxAmountSelected }
                     .padding(
@@ -207,7 +204,6 @@ private fun MainInfo(state: SwapStateHolder) {
 
 @Composable
 private fun FeeItem(feeState: FeeState, currency: String) {
-
     val titleString = stringResource(id = R.string.send_fee_label)
     when (feeState) {
         is FeeState.Loaded -> {
@@ -229,7 +225,8 @@ private fun FeeItem(feeState: FeeState, currency: String) {
 
 @Composable
 private fun SwapWarnings(
-    warnings: List<SwapWarning>, onApproveWarningClick: () -> Unit,
+    warnings: List<SwapWarning>,
+    onApproveWarningClick: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -323,4 +320,3 @@ private fun SwapScreenContentPreview() {
 }
 
 // endregion preview
-

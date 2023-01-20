@@ -7,11 +7,11 @@ import com.tangem.tap.features.wallet.models.Currency
 interface Exchanger {
     fun isBuyAllowed(): Boolean
     fun isSellAllowed(): Boolean
-    fun availableForBuy(currency: Currency):Boolean
-    fun availableForSell(currency: Currency):Boolean
+    fun availableForBuy(currency: Currency): Boolean
+    fun availableForSell(currency: Currency): Boolean
 }
 
-interface ExchangeService: Feature, Exchanger {
+interface ExchangeService : Feature, Exchanger {
     suspend fun update()
 
     companion object {
@@ -26,7 +26,7 @@ interface ExchangeService: Feature, Exchanger {
     }
 }
 
-interface ExchangeRules: Feature, Exchanger {
+interface ExchangeRules : Feature, Exchanger {
 
     companion object {
         fun dummy(): ExchangeRules = object : ExchangeRules {

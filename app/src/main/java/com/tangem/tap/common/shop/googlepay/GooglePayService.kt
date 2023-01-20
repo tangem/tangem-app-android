@@ -25,7 +25,6 @@ class GooglePayService(private val paymentsClient: PaymentsClient, private val a
 //    var responseCallback: ((Result<PaymentData>) -> Unit)? = null
 
     suspend fun checkIfGooglePayAvailable(): Result<Boolean> {
-
         val isReadyToPayJson = GooglePayUtil.isReadyToPayRequest() ?: return Result.success(false)
         val request = IsReadyToPayRequest.fromJson(isReadyToPayJson.toString())
 
@@ -60,7 +59,9 @@ class GooglePayService(private val paymentsClient: PaymentsClient, private val a
         val request = PaymentDataRequest.fromJson(paymentDataRequestJson.toString())
 
         AutoResolveHelper.resolveTask(
-            paymentsClient.loadPaymentData(request), activity, LOAD_PAYMENT_DATA_REQUEST_CODE,
+            paymentsClient.loadPaymentData(request),
+            activity,
+            LOAD_PAYMENT_DATA_REQUEST_CODE,
         )
     }
 

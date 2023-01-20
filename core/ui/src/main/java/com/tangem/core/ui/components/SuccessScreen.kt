@@ -47,15 +47,15 @@ import com.tangem.core.ui.res.TangemTheme
  */
 @Composable
 fun ResultScreenContent(
-    modifier: Modifier = Modifier,
     resultMessage: AnnotatedString,
+    onButtonClick: () -> Unit,
+    modifier: Modifier = Modifier,
     @StringRes title: Int = R.string.common_success,
     resultColor: Color = TangemTheme.colors.icon.accent,
     @DrawableRes icon: Int = R.drawable.ic_check_24,
     @DrawableRes secondaryButtonIcon: Int? = null,
     @StringRes secondaryButtonText: Int? = null,
     onSecondaryButtonClick: (() -> Unit)? = null,
-    onButtonClick: () -> Unit,
 ) {
     Column(
         modifier = modifier
@@ -93,8 +93,6 @@ fun ResultScreenContent(
                 secondaryButtonText = secondaryButtonText,
                 secondaryButtonIcon = secondaryButtonIcon,
                 onSecondaryButtonClick = onSecondaryButtonClick,
-                modifier = Modifier
-                    .fillMaxWidth(),
             )
             SpacerH12()
         }
@@ -143,23 +141,22 @@ fun SuccessImage(
 
 @Composable
 private fun SecondaryButtonForResultScreen(
-    modifier: Modifier = Modifier,
     @StringRes secondaryButtonText: Int,
+    onSecondaryButtonClick: () -> Unit,
     @DrawableRes secondaryButtonIcon: Int? = null,
-    onSecondaryButtonClick: (() -> Unit),
 ) {
     if (secondaryButtonIcon != null) {
         SecondaryButtonIconLeft(
             text = stringResource(id = secondaryButtonText),
             icon = painterResource(id = secondaryButtonIcon),
             onClick = onSecondaryButtonClick,
-            modifier = modifier,
+            modifier = Modifier.fillMaxWidth(),
         )
     } else {
         SecondaryButton(
             text = stringResource(id = secondaryButtonText),
             onClick = onSecondaryButtonClick,
-            modifier = modifier,
+            modifier = Modifier.fillMaxWidth(),
         )
     }
 }
@@ -178,7 +175,7 @@ private fun SuccessScreenPreview() {
 
 @Preview(showBackground = true)
 @Composable
-fun Preview_SuccessScreenContent_InLightTheme() {
+private fun Preview_SuccessScreenContent_InLightTheme() {
     TangemTheme(isDark = false) {
         SuccessScreenPreview()
     }
@@ -186,7 +183,7 @@ fun Preview_SuccessScreenContent_InLightTheme() {
 
 @Preview(showBackground = true)
 @Composable
-fun Preview_SuccessScreenContent_InDarkTheme() {
+private fun Preview_SuccessScreenContent_InDarkTheme() {
     TangemTheme(isDark = true) {
         SuccessScreenPreview()
     }

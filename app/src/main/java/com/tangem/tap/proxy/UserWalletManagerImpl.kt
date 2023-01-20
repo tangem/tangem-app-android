@@ -73,7 +73,7 @@ class UserWalletManagerImpl(
             requireNotNull(appStateHolder.userTokensRepository) { "userTokensRepository is null" }
         if (card != null) {
             return userTokensRepository.getUserTokens(card)
-                .any { it.coinId.equals(currency.id) } //todo ensure that its the same ids
+                .any { it.coinId.equals(currency.id) } // todo ensure that its the same ids
         }
         return false
     }

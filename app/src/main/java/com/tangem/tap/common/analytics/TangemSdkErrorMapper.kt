@@ -14,12 +14,15 @@ object TangemSdkErrorMapper {
             is TangemSdkError.SerializeCommandError -> TangemSdkError.SerializeCommandError()
             is TangemSdkError.DeserializeApduFailed -> TangemSdkError.DeserializeApduFailed()
             is TangemSdkError.EncodingFailedTypeMismatch -> TangemSdkError.EncodingFailedTypeMismatch(
-                error.customMessage)
+                error.customMessage
+            )
             is TangemSdkError.EncodingFailed -> TangemSdkError.EncodingFailed(error.customMessage)
             is TangemSdkError.DecodingFailedMissingTag -> TangemSdkError.DecodingFailedMissingTag(
-                error.customMessage)
+                error.customMessage
+            )
             is TangemSdkError.DecodingFailedTypeMismatch -> TangemSdkError.DecodingFailedTypeMismatch(
-                error.customMessage)
+                error.customMessage
+            )
             is TangemSdkError.DecodingFailed -> TangemSdkError.DecodingFailed(error.customMessage)
             is TangemSdkError.InvalidResponse -> TangemSdkError.InvalidResponse()
             is TangemSdkError.UnknownStatus -> TangemSdkError.UnknownStatus(error.statusWord)
@@ -113,5 +116,4 @@ object TangemSdkErrorMapper {
             is TangemSdkError.BiometricsAuthenticationFailed -> error
         }
     }
-
 }

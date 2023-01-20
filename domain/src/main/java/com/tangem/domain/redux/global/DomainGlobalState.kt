@@ -21,4 +21,3 @@ data class NetworkServices(
     val tangemTechService: TangemTechService = TangemTechService,
     val paymentologyService: PaymentologyApiService = PaymentologyApiService,
 )
-

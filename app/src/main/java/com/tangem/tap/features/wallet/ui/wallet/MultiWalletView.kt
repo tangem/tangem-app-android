@@ -239,7 +239,9 @@ class MultiWalletView : WalletView() {
     }
 
     private fun showErrorState(
-        binding: FragmentWalletBinding, errorTitle: CharSequence, errorDescription: CharSequence,
+        binding: FragmentWalletBinding,
+        errorTitle: CharSequence,
+        errorDescription: CharSequence,
     ) = with(binding) {
         lCardBalance.root.show()
         with(lCardBalance) {

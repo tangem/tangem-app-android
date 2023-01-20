@@ -15,12 +15,11 @@ data class ShopState(
         get() = availableProducts.firstOrNull { it.type == selectedProduct }?.totalSum?.finalValue
 
     val priceBeforeDiscount: String?
-    get() {
-        val totalSum = availableProducts.firstOrNull { it.type == selectedProduct }?.totalSum
-        if (totalSum?.finalValue != totalSum?.beforeDiscount) {
-            return totalSum?.beforeDiscount
+        get() {
+            val totalSum = availableProducts.firstOrNull { it.type == selectedProduct }?.totalSum
+            if (totalSum?.finalValue != totalSum?.beforeDiscount) {
+                return totalSum?.beforeDiscount
+            }
+            return null
         }
-        return null
-    }
 }
-

@@ -61,5 +61,3 @@ class SaltPayBalanceWidget(
 }
 
 private val actionDebouncer = debounce<Action>(500, mainScope) { store.dispatch(it) }
-
-
