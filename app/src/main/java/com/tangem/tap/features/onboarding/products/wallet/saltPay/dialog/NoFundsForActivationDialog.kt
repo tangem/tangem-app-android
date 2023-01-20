@@ -18,7 +18,7 @@ object NoFundsForActivationDialog {
         return AlertDialog.Builder(context).apply {
             setTitle(R.string.saltpay_error_no_gas_title)
             setMessage(R.string.saltpay_error_no_gas_message)
-            //TODO: SaltPay: change onboarding_supplement_button_kyc_waiting -> to appropriate string
+            // TODO: SaltPay: change onboarding_supplement_button_kyc_waiting -> to appropriate string
             setPositiveButton(R.string.onboarding_supplement_button_kyc_waiting) { _, _ ->
                 val config = store.state.globalState.configManager?.config?.saltPayConfig?.zendesk.guard {
                     store.dispatchDebugErrorNotification("SaltPayConfig not initialized")

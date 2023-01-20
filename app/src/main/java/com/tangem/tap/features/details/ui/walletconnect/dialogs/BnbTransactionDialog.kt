@@ -17,7 +17,6 @@ object BnbTransactionDialog {
         dAppName: String,
         context: Context,
     ): AlertDialog {
-
         val message = when (data) {
             is BinanceMessageData.Trade -> data.tradeData.map {
                 context.getString(
@@ -38,7 +37,8 @@ object BnbTransactionDialog {
 
         val fullMessage = context.getString(
             R.string.wallet_connect_bnb_sign_message,
-            dAppName, message,
+            dAppName,
+            message,
         )
         val positiveButtonTitle = context.getText(R.string.common_sign)
 
