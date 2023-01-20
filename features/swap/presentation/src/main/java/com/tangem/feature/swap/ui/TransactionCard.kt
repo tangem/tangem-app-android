@@ -44,7 +44,6 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.res.dimensionResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.ParagraphIntrinsics
@@ -61,6 +60,7 @@ import com.tangem.core.ui.R
 import com.tangem.core.ui.components.FontSizeRange
 import com.tangem.core.ui.components.ResizableText
 import com.tangem.core.ui.components.SpacerH4
+import com.tangem.core.ui.components.SpacerWMax
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.models.TransactionCardType
 import com.valentinilk.shimmer.shimmer
@@ -136,7 +136,8 @@ private fun Header(
         modifier = modifier
             .fillMaxWidth()
             .padding(
-                bottom = dimensionResource(id = R.dimen.spacing8),
+                bottom = TangemTheme.dimens.spacing8,
+                top = TangemTheme.dimens.spacing12,
                 start = TangemTheme.dimens.spacing16,
                 end = TangemTheme.dimens.spacing16,
             ),
@@ -152,15 +153,26 @@ private fun Header(
             color = TangemTheme.colors.text.tertiary,
             maxLines = 1,
             style = MaterialTheme.typography.subtitle2,
-            modifier = Modifier.padding(top = TangemTheme.dimens.spacing12),
         )
-        Text(
-            text = stringResource(R.string.common_balance, balance),
-            color = TangemTheme.colors.text.tertiary,
-            maxLines = 1,
-            style = MaterialTheme.typography.body2,
-            modifier = Modifier.padding(top = TangemTheme.dimens.spacing12),
-        )
+        SpacerWMax(Modifier.defaultMinSize(minWidth = TangemTheme.dimens.spacing16))
+        if (balance.isNotBlank()) {
+            Text(
+                text = stringResource(R.string.common_balance, balance),
+                color = TangemTheme.colors.text.tertiary,
+                maxLines = 1,
+                style = MaterialTheme.typography.body2,
+            )
+        } else {
+            Box(
+                modifier = Modifier
+                    .size(width = TangemTheme.dimens.size80, height = TangemTheme.dimens.size12)
+                    .shimmer()
+                    .background(
+                        color = TangemTheme.colors.button.secondary,
+                        shape = RoundedCornerShape(TangemTheme.dimens.radius3),
+                    ),
+            )
+        }
     }
 }
 
@@ -196,8 +208,7 @@ private fun Content(
                             text = amount,
                             color = TangemTheme.colors.text.primary1,
                             style = TangemTheme.typography.h2,
-                            fontSizeRange =
-                            FontSizeRange(min = 16.sp, max = TangemTheme.typography.h2.fontSize),
+                            fontSizeRange = FontSizeRange(min = 16.sp, max = TangemTheme.typography.h2.fontSize),
                         )
                     } else {
                         Box(
@@ -213,7 +224,7 @@ private fun Content(
                 }
                 is TransactionCardType.SendCard -> {
                     AutoSizeTextField(
-                        amount = amount ?: "1",
+                        amount = amount ?: "",
                         onAmountChange = { type.onAmountChanged(it) },
                     )
                 }
@@ -279,9 +290,7 @@ private fun AutoSizeTextField(amount: String, onAmountChange: (String) -> Unit) 
             handleColor = Transparent,
             backgroundColor = TangemTheme.colors.text.secondary.copy(alpha = 0.4f),
         )
-        CompositionLocalProvider(
-            LocalTextSelectionColors provides customTextSelectionColors,
-        ) {
+        CompositionLocalProvider(LocalTextSelectionColors provides customTextSelectionColors) {
             BasicTextField(
                 value = amount,
                 onValueChange = onAmountChange,
@@ -293,11 +302,17 @@ private fun AutoSizeTextField(amount: String, onAmountChange: (String) -> Unit) 
                     imeAction = ImeAction.Done,
                     keyboardType = KeyboardType.Decimal,
                 ),
-                keyboardActions = KeyboardActions(
-                    onDone = {
-                        focusManager.clearFocus()
-                    },
-                ),
+                keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() }),
+                decorationBox = { innerTextField ->
+                    if (amount.isBlank()) {
+                        Text(
+                            text = "0",
+                            color = TangemTheme.colors.text.disabled,
+                            style = TangemTheme.typography.h2,
+                        )
+                    }
+                    innerTextField()
+                },
                 textStyle = TangemTheme.typography.h2.copy(
                     color = TangemTheme.colors.text.primary1,
                     fontSize = shrunkFontSize,
