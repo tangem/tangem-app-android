@@ -23,16 +23,15 @@ class PayIdManager {
 
     private fun Blockchain.getPayIdNetwork(): String {
         return when (this) {
-                Blockchain.XRP -> "XRPL"
-                Blockchain.RSK -> "RSK"
-                else -> this.currency
-            }.lowercase(Locale.getDefault())
+            Blockchain.XRP -> "XRPL"
+            Blockchain.RSK -> "RSK"
+            else -> this.currency
+        }.lowercase(Locale.getDefault())
     }
 
     companion object {
-        @Suppress("MaxLineLength")
-        val payIdRegExp =
-            "^[a-z0-9!#@%&*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#@%&*+/=?^_`{|}~-]+)*\\\$(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z-]*[a-z0-9])?|(?:[0-9]{1,3}\\.){3}[0-9]{1,3})\$".toRegex()
+        private val payIdRegExp = ("^[a-z0-9!#@%&*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#@%&*+/=?^_`{|}~-]+)*\\\$(?:(?:[a-z0-9]" +
+            "(?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z-]*[a-z0-9])?|(?:[0-9]{1,3}\\.){3}[0-9]{1,3})\$").toRegex()
 
         val payIdSupported: EnumSet<Blockchain> = EnumSet.of(
             Blockchain.XRP,
