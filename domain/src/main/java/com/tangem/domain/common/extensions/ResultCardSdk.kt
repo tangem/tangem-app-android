@@ -19,4 +19,3 @@ inline fun <T> CompletionResult<T>.successOr(failureClause: (CompletionResult.Fa
         is CompletionResult.Failure -> failureClause(this)
     }
 }
-

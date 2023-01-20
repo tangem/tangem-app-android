@@ -9,7 +9,6 @@ object NavigationReducer {
 }
 
 private fun internalReduce(action: Action, state: AppState): NavigationState {
-
     val navigationAction = action as? NavigationAction ?: return state.navigationState
     val navState = state.navigationState
 
