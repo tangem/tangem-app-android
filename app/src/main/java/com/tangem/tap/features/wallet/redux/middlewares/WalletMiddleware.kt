@@ -276,7 +276,7 @@ class WalletMiddleware {
                 } else {
                     store.dispatch(newAction)
                     if (newAction is PrepareSendScreen) {
-                        store.state.walletState.getSelectedWalletData()?.currency?.let { currency ->
+                        store.state.walletState.selectedWalletData?.currency?.let { currency ->
                             Analytics.send(Token.ButtonSend(AnalyticsParam.CurrencyType.Currency(currency)))
                         }
                         store.dispatch(NavigationAction.NavigateTo(AppScreen.Send))
