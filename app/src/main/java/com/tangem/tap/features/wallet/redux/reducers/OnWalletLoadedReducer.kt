@@ -90,8 +90,8 @@ class OnWalletLoadedReducer {
             val tokenFiatAmountFormatted = tokenFiatAmount?.toFormattedFiatValue(fiatCurrency.symbol)
                 ?: UNKNOWN_AMOUNT_SIGN
 
-            val isTokenSendButtonEnabled = tokenWalletData?.shouldEnableTokenSendButton() == true
-                && pendingTransactions.isEmpty()
+            val isTokenSendButtonEnabled = tokenWalletData?.shouldEnableTokenSendButton() == true &&
+                pendingTransactions.isEmpty()
             tokenWalletData?.copy(
                 currencyData = tokenWalletData.currencyData.copy(
                     status = tokenBalanceStatus,
@@ -116,22 +116,19 @@ class OnWalletLoadedReducer {
 
     private fun onSingleWalletLoaded(wallet: Wallet, walletState: WalletState): WalletState {
         if (wallet.blockchain != walletState.primaryBlockchain) return walletState
-
         val fiatCurrencyName = store.state.globalState.appCurrency.code
         val token = wallet.getFirstToken()
         val tokenData = if (token != null) {
             val tokenAmount = wallet.getTokenAmount(token)
             if (tokenAmount != null) {
                 val tokenFiatRate = walletState.primaryWallet?.currencyData?.token?.fiatRate
-                val tokenFiatAmount =
-                    tokenFiatRate?.let { tokenAmount.value?.toFiatString(it, fiatCurrencyName) }
+                val tokenFiatAmount = tokenFiatRate?.let { tokenAmount.value?.toFiatString(it, fiatCurrencyName) }
                 TokenData(
                     amount = tokenAmount.value ?: BigDecimal.ZERO,
-                    tokenSymbol = tokenAmount.currencySymbol, fiatAmountFormatted = tokenFiatAmount,
+                    tokenSymbol = tokenAmount.currencySymbol,
+                    fiatAmountFormatted = tokenFiatAmount,
                     fiatAmount = tokenFiatRate?.let { tokenAmount.value?.toFiatValue(tokenFiatRate) },
-                    amountFormatted = tokenAmount.value?.toFormattedCurrencyString(
-                        token.decimals, token.symbol,
-                    ) ?: "",
+                    amountFormatted = tokenAmount.value?.toFormattedCurrencyString(token.decimals, token.symbol) ?: "",
                 )
             } else {
                 null
@@ -172,7 +169,8 @@ class OnWalletLoadedReducer {
         val updatedStore = walletState.getWalletStore(walletData?.currency)?.updateWallets(wallets)
 
         return walletState.updateWalletStore(updatedStore).copy(
-            state = ProgressState.Done, error = null,
+            state = ProgressState.Done,
+            error = null,
         )
     }
 }
