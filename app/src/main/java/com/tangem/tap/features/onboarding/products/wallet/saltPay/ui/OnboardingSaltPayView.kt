@@ -93,7 +93,7 @@ internal class OnboardingSaltPayView(
     }
 
     private fun handleCardArtworks(state: OnboardingWalletState) = with(walletFragment.binding) {
-        //TODO: SaltPay: remove hardCode
+        // TODO: SaltPay: remove hardCode
         if (state.onboardingSaltPayState?.saltPayCardArtworkUrl == null) {
             imvFrontCard.load(R.drawable.img_salt_pay_visa) {
                 scale(Scale.FILL)
