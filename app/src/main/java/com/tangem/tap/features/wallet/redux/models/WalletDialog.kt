@@ -16,7 +16,7 @@ sealed interface WalletDialog : StateDialog {
 
     data class RemoveWalletDialog(
         val currencyTitle: String,
-        val onOk: () -> Unit
+        val onOk: () -> Unit,
     ) : WalletDialog {
         val messageRes: Int = R.string.token_details_hide_alert_message
         val titleRes: Int = R.string.token_details_hide_alert_title
@@ -25,13 +25,13 @@ sealed interface WalletDialog : StateDialog {
 
     data class TokensAreLinkedDialog(
         val currencyTitle: String,
-        val currencySymbol: String
+        val currencySymbol: String,
     ) : WalletDialog {
         val messageRes: Int = R.string.token_details_unable_hide_alert_message
         val titleRes: Int = R.string.token_details_unable_hide_alert_title
     }
 
     data class RussianCardholdersWarningDialog(val data: Data?) : WalletDialog {
-        data class Data(val topUpUrl: String, val blockchain: Blockchain)
+        data class Data(val topUpUrl: String)
     }
 }
