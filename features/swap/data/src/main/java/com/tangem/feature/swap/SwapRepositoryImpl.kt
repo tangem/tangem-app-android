@@ -10,11 +10,11 @@ import com.tangem.feature.swap.converters.QuotesConverter
 import com.tangem.feature.swap.converters.SwapConverter
 import com.tangem.feature.swap.converters.TokensConverter
 import com.tangem.feature.swap.domain.SwapRepository
+import com.tangem.feature.swap.domain.models.data.AggregatedSwapDataModel
 import com.tangem.feature.swap.domain.models.domain.ApproveModel
 import com.tangem.feature.swap.domain.models.domain.Currency
 import com.tangem.feature.swap.domain.models.domain.QuoteModel
 import com.tangem.feature.swap.domain.models.domain.SwapDataModel
-import com.tangem.feature.swap.domain.models.data.AggregatedSwapDataModel
 import com.tangem.feature.swap.domain.models.mapErrors
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import kotlinx.coroutines.withContext
@@ -45,9 +45,11 @@ internal class SwapRepositoryImpl @Inject constructor(
     }
 
     override suspend fun findBestQuote(
-        networkId: String, fromTokenAddress: String, toTokenAddress: String,
+        networkId: String,
+        fromTokenAddress: String,
+        toTokenAddress: String,
         amount:
-        String,
+            String,
     ): AggregatedSwapDataModel<QuoteModel> {
         return withContext(coroutineDispatcher.io) {
             try {
