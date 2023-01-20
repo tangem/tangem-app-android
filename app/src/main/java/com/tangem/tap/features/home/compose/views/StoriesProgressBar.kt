@@ -44,7 +44,6 @@ fun StoriesProgressBar(
             progress.snapTo(0f)
             onStepFinish()
         }
-
     }
 
     Row(
