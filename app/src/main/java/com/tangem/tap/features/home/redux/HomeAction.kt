@@ -1,6 +1,7 @@
 package com.tangem.tap.features.home.redux
 
 import com.tangem.tap.common.entities.IndeterminateProgressButton
+import com.tangem.tap.common.redux.navigation.AppScreen
 import org.rekotlin.Action
 
 sealed class HomeAction : Action {
@@ -9,7 +10,10 @@ sealed class HomeAction : Action {
     data class ShouldScanCardOnResume(val shouldScanCard: Boolean) : HomeAction()
 
     // from ui
-    object ReadCard : HomeAction()
+    data class ReadCard(
+        val fromScreen: AppScreen = AppScreen.Home,
+    ) : HomeAction()
+
     data class ScanInProgress(val scanInProgress: Boolean) : HomeAction()
     data class GoToShop(val userCountryCode: String?) : HomeAction()
 
