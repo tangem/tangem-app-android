@@ -12,9 +12,10 @@ class DecimalDigitsInputFilter(
     digitsAfterDecimal: Int,
     private val decimalSeparator: String,
 ) : InputFilter {
-    @Suppress("MaxLineLength")
-    private val pattern: Pattern =
-        Pattern.compile("(([1-9]{1}[0-9]{0,${digitsBeforeDecimal - 1}})?||[0]{1})((\\$decimalSeparator[0-9]{0,$digitsAfterDecimal})?)||(\\$decimalSeparator)?")
+    private val pattern: Pattern = Pattern.compile(
+        "(([1-9]{1}[0-9]{0,${digitsBeforeDecimal - 1}})?||[0]{1})" +
+            "((\\$decimalSeparator[0-9]{0,$digitsAfterDecimal})?)||(\\$decimalSeparator)?",
+    )
 
     override fun filter(
         source: CharSequence,

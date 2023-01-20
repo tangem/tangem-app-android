@@ -11,7 +11,6 @@ import org.rekotlin.Action
 
 @Suppress("LongMethod", "ComplexMethod")
 fun globalReducer(action: Action, state: AppState, appStateHolder: AppStateHolder): GlobalState {
-
     if (action !is GlobalAction) return state.globalState
 
     val globalState = state.globalState

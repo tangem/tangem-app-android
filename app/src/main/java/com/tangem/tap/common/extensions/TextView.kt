@@ -18,7 +18,7 @@ fun EditText.update(text: String?) {
 
     val textLength = text?.length ?: 0
 
-    //prevent cursor jumping while editing a text
+    // prevent cursor jumping while editing a text
     val cursorPosition = if (selectionEnd > textLength) textLength else selectionEnd
     this.setText(text)
     if (!isFocused || textLength == 0) return
