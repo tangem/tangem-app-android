@@ -16,7 +16,6 @@ object AddMoreBackupCardsDialog {
                 store.dispatch(BackupAction.ShowAccessCodeInfoScreen)
             }
             setNegativeButton(R.string.common_cancel) { _, _ ->
-
             }
             setOnDismissListener {
                 store.dispatch(GlobalAction.HideDialog)

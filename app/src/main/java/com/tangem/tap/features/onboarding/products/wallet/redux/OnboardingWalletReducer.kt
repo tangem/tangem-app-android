@@ -35,31 +35,31 @@ private fun internalReduce(action: Action, appState: AppState): OnboardingWallet
 }
 
 private object ReducerForGlobalAction {
-        fun reduce(action: GlobalAction.Onboarding, state: OnboardingWalletState): OnboardingWalletState {
-            return when (action) {
-                is GlobalAction.Onboarding.Start -> {
-                    OnboardingWalletState(
-                        backupState = state.backupState.copy(
-                            maxBackupCards = if (action.scanResponse.cardTypesResolver.isSaltPay()) 1 else 2,
-                            canSkipBackup =
-                            if (action.scanResponse.cardTypesResolver.isSaltPay()) false else action.canSkipBackup,
-                        ),
-                        isSaltPay = action.scanResponse.cardTypesResolver.isSaltPay(),
-                    )
-                }
-                is GlobalAction.Onboarding.StartForUnfinishedBackup -> {
-                    OnboardingWalletState(
-                        backupState = state.backupState.copy(
-                            maxBackupCards = action.addedBackupCardsCount,
-                            canSkipBackup = false,
-                        ),
-                        isSaltPay = false,
-                    )
-                }
-                else -> state
+    fun reduce(action: GlobalAction.Onboarding, state: OnboardingWalletState): OnboardingWalletState {
+        return when (action) {
+            is GlobalAction.Onboarding.Start -> {
+                OnboardingWalletState(
+                    backupState = state.backupState.copy(
+                        maxBackupCards = if (action.scanResponse.cardTypesResolver.isSaltPay()) 1 else 2,
+                        canSkipBackup =
+                        if (action.scanResponse.cardTypesResolver.isSaltPay()) false else action.canSkipBackup,
+                    ),
+                    isSaltPay = action.scanResponse.cardTypesResolver.isSaltPay(),
+                )
             }
+            is GlobalAction.Onboarding.StartForUnfinishedBackup -> {
+                OnboardingWalletState(
+                    backupState = state.backupState.copy(
+                        maxBackupCards = action.addedBackupCardsCount,
+                        canSkipBackup = false,
+                    ),
+                    isSaltPay = false,
+                )
+            }
+            else -> state
         }
     }
+}
 
 private object BackupReducer {
     @Suppress("ComplexMethod")
