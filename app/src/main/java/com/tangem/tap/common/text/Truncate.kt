@@ -16,9 +16,9 @@ interface Truncate {
     companion object {
         fun create(type: TruncateType): Truncate {
             return when (type) {
-              TruncateType.START -> TruncateStart()
-              TruncateType.MIDDLE -> TruncateMiddle()
-              TruncateType.END -> TruncateEnd()
+                TruncateType.START -> TruncateStart()
+                TruncateType.MIDDLE -> TruncateMiddle()
+                TruncateType.END -> TruncateEnd()
             }
         }
     }
@@ -127,10 +127,10 @@ fun TextView.truncateWith(text: String, type: TruncateType, with: String = "..."
 }
 
 fun TextView.truncateStartWith(text: String, with: String = "..."): String =
-        this.truncateWith(text, TruncateType.START, with)
+    this.truncateWith(text, TruncateType.START, with)
 
 fun TextView.truncateMiddleWith(text: String, with: String = "..."): String =
-        this.truncateWith(text, TruncateType.MIDDLE, with)
+    this.truncateWith(text, TruncateType.MIDDLE, with)
 
 fun TextView.truncateEndWith(text: String, with: String = "..."): String =
-        this.truncateWith(text, TruncateType.END, with)
+    this.truncateWith(text, TruncateType.END, with)

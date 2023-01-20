@@ -49,6 +49,5 @@ fun AddCustomTokenWarning(
                 lineHeight = 18.sp
             )
         }
-
     }
 }
