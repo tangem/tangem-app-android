@@ -83,7 +83,6 @@ data class WalletForSession(
     }
 }
 
-
 sealed class WalletConnectDialog : StateDialog {
     data class ClipboardOrScanQr(val clipboardUri: String) : WalletConnectDialog()
     object UnsupportedCard : WalletConnectDialog()
@@ -133,7 +132,7 @@ data class WcPersonalSignData(
     val id: Long,
     val dialogData: PersonalSignDialogData,
 
-    )
+)
 
 sealed class BinanceMessageData(
     val address: String,

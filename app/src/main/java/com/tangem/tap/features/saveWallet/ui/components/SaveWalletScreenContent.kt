@@ -62,7 +62,7 @@ internal fun SaveWalletScreenContent(
 }
 
 @Composable
-private fun Header(onCloseClick: () -> Unit, ) {
+private fun Header(onCloseClick: () -> Unit) {
     Column(
         modifier = Modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing8),

@@ -88,7 +88,6 @@ class OnboardingOtherCardsFragment : BaseOnboardingFragment<OnboardingOtherCards
             requireContext().getDrawableCompat(R.drawable.shape_circle),
         )
         updateConstraints(R.layout.lp_onboarding_create_wallet)
-
     }
 
     private fun setupDoneState() = with(mainBinding.onboardingActionContainer) {
