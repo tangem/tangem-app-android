@@ -16,7 +16,7 @@ class BlockchainTests {
                 remove(Blockchain.Optimism)
             }
             .map { it to Blockchain.fromNetworkId(it.toNetworkId()) }
-            .mapNotNull { if(it.second == null) it.first else null }
+            .mapNotNull { if (it.second == null) it.first else null }
 
         Truth.assertThat(unimplementedIds).isEmpty()
     }
