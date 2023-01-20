@@ -78,6 +78,7 @@ object Tangem {
 
 object Tools {
     const val composeDetektRules = "ru.kode:detekt-rules-compose:" + Versions.composeDetektRules
+    const val formattingDetektRules = "io.gitlab.arturbosch.detekt:detekt-formatting:" + Versions.formattingDetektRules
 }
 
 object Test {
