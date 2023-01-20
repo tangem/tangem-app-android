@@ -17,7 +17,7 @@
         <com.google.android.material.button.MaterialButton
             android:id="@+id/btn_trade"
             style="@style/TapPrimaryIconButton"
-            android:text="@string/wallet_button_trade"
+            android:text="@string/wallet_button_actions"
             android:visibility="gone"
             app:icon="@drawable/ic_arrows_up_down"
             tools:visibility="visible" />
