@@ -87,9 +87,9 @@ private fun List<WalletDataModel>.mapToReduxModel(
                 fiatRateString = fiatRateFormatted,
                 pendingTransactions = status.pendingTransactions,
                 mainButton = WalletMainButton.SendButton(
-                    enabled = !blockchainAmountValue.isZero()
-                        && !status.amount.isZero()
-                        && status.pendingTransactions.isEmpty(),
+                    enabled = !blockchainAmountValue.isZero() &&
+                        !status.amount.isZero() &&
+                        status.pendingTransactions.isEmpty(),
                 ),
                 walletRent = walletRent?.let {
                     WalletRent(

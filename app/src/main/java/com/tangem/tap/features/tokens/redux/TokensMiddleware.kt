@@ -63,8 +63,8 @@ class TokensMiddleware {
                         )
                     }
                     is TokensAction.LoadMore -> {
-                        if (store.state.tokensState.needToLoadMore
-                            && store.state.tokensState.currencies.isNotEmpty()
+                        if (store.state.tokensState.needToLoadMore &&
+                            store.state.tokensState.currencies.isNotEmpty()
                         ) {
                             handleLoadCurrencies(action.scanResponse)
                         }
@@ -91,7 +91,6 @@ class TokensMiddleware {
         )
 
         scope.launch {
-
             val loadCoinsResult = if (newSearchInput == null) {
                 loadCoinsService.getSupportedTokens(
                     isTestcard,
@@ -101,7 +100,10 @@ class TokensMiddleware {
                 )
             } else {
                 loadCoinsService.getSupportedTokens(
-                    isTestcard, supportedBlockchains, 0, newSearchInput.ifBlank { null },
+                    isTestNet = isTestcard,
+                    supportedBlockchains = supportedBlockchains,
+                    page = 0,
+                    searchInput = newSearchInput.ifBlank { null },
                 )
             }
             when (loadCoinsResult) {
@@ -110,13 +112,13 @@ class TokensMiddleware {
                         .filter(supportedBlockchains.toSet())
                     store.dispatchOnMain(
                         TokensAction.LoadCurrencies.Success(
-                            currencies, loadCoinsResult.data.moreAvailable,
+                            currencies,
+                            loadCoinsResult.data.moreAvailable,
                         ),
                     )
                 }
                 is Result.Failure -> store.dispatchOnMain(TokensAction.LoadCurrencies.Failure)
             }
-
         }
     }
 
@@ -149,8 +151,8 @@ class TokensMiddleware {
         )
 
         @Suppress("ComplexCondition")
-        if (tokensToAdd.isEmpty() && tokensToRemove.isEmpty()
-            && blockchainsToAdd.isEmpty() && blockchainsToRemove.isEmpty()
+        if (tokensToAdd.isEmpty() && tokensToRemove.isEmpty() &&
+            blockchainsToAdd.isEmpty() && blockchainsToRemove.isEmpty()
         ) {
             store.dispatchDebugErrorNotification("Nothing to save")
             store.dispatchOnMain(NavigationAction.PopBackTo())
