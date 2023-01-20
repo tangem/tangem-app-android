@@ -142,7 +142,8 @@ private fun handleSecurityAction(
                 currentOption = state.cardSettingsState.manageSecurityState.selectedOption,
                 allowedOptions = state.scanResponse?.cardTypesResolver?.let {
                     prepareAllowedSecurityOptions(
-                        it, state.cardSettingsState.manageSecurityState.selectedOption,
+                        cardTypesResolver = it,
+                        currentSecurityOption = state.cardSettingsState.manageSecurityState.selectedOption,
                     )
                 } ?: EnumSet.of(SecurityOption.LongTap),
             )

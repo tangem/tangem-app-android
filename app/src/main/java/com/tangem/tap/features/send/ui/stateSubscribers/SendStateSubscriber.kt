@@ -72,7 +72,6 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
     @Suppress("ComplexMethod")
     private fun handleTransactionExtrasState(fg: SendFragment, infoState: TransactionExtrasState) =
         with(fg.binding.lSendAddressPayid) {
-
             fun showView(view: View, info: Any?) {
                 view.show(info != null)
             }
@@ -297,7 +296,6 @@ class SendStateSubscriber(fragment: BaseStoreFragment) :
             }
             else -> {}
         }
-
 
         when (state.visibleTypeOfReceipt) {
             ReceiptLayoutType.FIAT -> {
