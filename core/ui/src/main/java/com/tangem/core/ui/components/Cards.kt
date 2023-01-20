@@ -83,7 +83,6 @@ fun SmallInfoCardWithWarning(
             verticalArrangement = Arrangement.Center,
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-
             CardInfoBox(startText = startText, endText = endText)
 
             Divider(
@@ -195,7 +194,6 @@ fun IconWithTitleAndDescription(
         horizontalArrangement = Arrangement.Start,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-
         Box(
             modifier = Modifier
                 .background(

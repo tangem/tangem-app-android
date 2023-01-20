@@ -53,7 +53,6 @@ class BalanceWidget(
 
     @Suppress("LongMethod", "ComplexMethod")
     fun setup() {
-
         when (data.status) {
             BalanceStatus.Loading -> {
                 with(binding) {
@@ -64,7 +63,6 @@ class BalanceWidget(
                     lBalance.tvCurrency.text = data.currency
                     lBalance.tvAmount.text = ""
                 }
-
 
                 showStatus(R.id.tv_status_loading)
 
@@ -130,7 +128,8 @@ class BalanceWidget(
                 tvErrorDescriptions.text =
                     fragment.getString(
                         R.string.no_account_generic,
-                        data.amountToCreateAccount, data.currencySymbol,
+                        data.amountToCreateAccount,
+                        data.currencySymbol,
                     )
             }
             BalanceStatus.UnknownBlockchain -> with(binding.lBalanceError) {

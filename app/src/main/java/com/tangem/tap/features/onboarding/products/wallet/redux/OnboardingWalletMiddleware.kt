@@ -117,7 +117,7 @@ private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch:
                     when (result) {
                         is CompletionResult.Success -> {
                             Analytics.send(Onboarding.CreateWallet.WalletCreatedSuccessfully())
-                            //here we must use updated scanResponse after createWallet & derivation
+                            // here we must use updated scanResponse after createWallet & derivation
                             val updatedResponse = globalState.onboardingState.onboardingManager.scanResponse.copy(
                                 card = result.data.card,
                                 derivedKeys = result.data.derivedKeys,
@@ -192,7 +192,8 @@ private fun handleWalletAction(action: Action, state: () -> AppState?, dispatch:
 }
 
 private fun updateScanResponseAfterBackup(
-    scanResponse: ScanResponse, backupState: BackupState,
+    scanResponse: ScanResponse,
+    backupState: BackupState,
 ): ScanResponse {
     val card = if (backupState.backupCardsNumber > 0) {
         val cardsCount = backupState.backupCardsNumber
