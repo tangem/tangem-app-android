@@ -46,7 +46,7 @@ internal class SwapInteractorImpl @Inject constructor(
             tokens
         }.filter { it.symbol != initialCurrency.symbol }
 
-        //replace tokens in wallet tokens list with loaded same
+        // replace tokens in wallet tokens list with loaded same
         val loadedOnWalletsMap = mutableSetOf<String>()
         val tokensInWallet = userWalletManager.getUserTokens(networkId)
             .filter { it.symbol != initialCurrency.symbol }
@@ -82,13 +82,13 @@ internal class SwapInteractorImpl @Inject constructor(
         val searchQueryLowerCase = searchQuery.lowercase()
         val tokensInWallet = cache.getInWalletTokens()
             .filter {
-                it.name.lowercase().contains(searchQueryLowerCase)
-                    || it.symbol.lowercase().contains(searchQueryLowerCase)
+                it.name.lowercase().contains(searchQueryLowerCase) ||
+                    it.symbol.lowercase().contains(searchQueryLowerCase)
             }
         val loadedTokens = cache.getLoadedTokens()
             .filter {
-                it.name.lowercase().contains(searchQueryLowerCase)
-                    || it.symbol.lowercase().contains(searchQueryLowerCase)
+                it.name.lowercase().contains(searchQueryLowerCase) ||
+                    it.symbol.lowercase().contains(searchQueryLowerCase)
             }
         val tokensBalance = userWalletManager.getCurrentWalletTokensBalance(networkId)
         val appCurrency = userWalletManager.getUserAppCurrency()
@@ -420,7 +420,7 @@ internal class SwapInteractorImpl @Inject constructor(
         return quotesLoadedState.copy(
             permissionState = PermissionDataState.PermissionReadyForRequest(
                 currency = userWalletManager.getCurrencyByNetworkId(networkId),
-                amount = "infinite", //FIXME
+                amount = "infinite", // FIXME
                 walletAddress = getWalletAddress(networkId),
                 spenderAddress = transactionData.toAddress,
                 fee = transactionManager.calculateFee(

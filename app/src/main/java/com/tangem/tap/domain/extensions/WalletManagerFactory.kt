@@ -72,7 +72,8 @@ fun WalletManagerFactory.makeWalletManagerForApp(
 }
 
 fun WalletManagerFactory.makeWalletManagerForApp(
-    scanResponse: ScanResponse, blockchainNetwork: BlockchainNetwork,
+    scanResponse: ScanResponse,
+    blockchainNetwork: BlockchainNetwork,
 ): WalletManager? {
     return makeWalletManagerForApp(
         scanResponse,
