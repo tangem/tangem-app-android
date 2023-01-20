@@ -24,7 +24,7 @@ class OnboardingWalletStateConverter : StringStateConverter<AppState> {
             BackupStepAdapter(),
             BigIntegerAdapter(),
 
-            )
+        )
     }
 
     override fun convert(stateHolder: AppState): String {
