@@ -24,7 +24,6 @@ data class WarningMessage(
         blockchains?.map { Blockchain.fromId(it.uppercase()) }
     }
 
-
     var isHidden = false
 
     enum class Priority {
@@ -40,15 +39,14 @@ data class WarningMessage(
 
     enum class Type {
         @Json(name = "permanent")
-        Permanent,     // нельзя скрыть
+        Permanent, // нельзя скрыть
 
         @Json(name = "temporary")
-        Temporary,      // можно скрыть (кнопка ОК)
+        Temporary, // можно скрыть (кнопка ОК)
 
         AppRating,
 
         TestCard
-
     }
 
     enum class Location {

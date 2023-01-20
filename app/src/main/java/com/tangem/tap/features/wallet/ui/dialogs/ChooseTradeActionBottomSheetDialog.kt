@@ -32,8 +32,7 @@ class ChooseTradeActionBottomSheetDialog(
         }
 
         binding?.let {
-            with(it)
-            {
+            with(it) {
                 dialogBtnBuy.show(dialogData.buyAllowed)
                 dialogBtnSell.show(dialogData.sellAllowed)
                 dialogBtnSwap.show(dialogData.swapAllowed)

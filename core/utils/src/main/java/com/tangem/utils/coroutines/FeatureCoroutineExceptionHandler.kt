@@ -16,9 +16,10 @@ object FeatureCoroutineExceptionHandler {
         val sw = StringWriter()
         throwable.printStackTrace(PrintWriter(sw))
         val exceptionAsString: String = sw.toString()
-        //it delegates logging to android Logger, cause cant use timber in java module
+        // it delegates logging to android Logger, cause cant use timber in java module
         Logger.getLogger("CoroutineExceptHandler").log(
-            Level.INFO, "CoroutineException: from: $from, exception: $exceptionAsString",
+            Level.INFO,
+            "CoroutineException: from: $from, exception: $exceptionAsString",
         )
         throw throwable
     }

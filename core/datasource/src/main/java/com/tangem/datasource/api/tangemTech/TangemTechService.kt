@@ -12,7 +12,7 @@ import retrofit2.Retrofit
 /**
 [REDACTED_AUTHOR]
  */
-//TODO("Remove after removing Redux")
+// TODO("Remove after removing Redux")
 @Deprecated("Use TangemTechApi")
 object TangemTechService {
 
