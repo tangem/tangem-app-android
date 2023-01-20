@@ -28,7 +28,6 @@ fun keyboardAsState(): State<Keyboard> {
     }
     DisposableEffect(view) {
         val onGlobalListener = ViewTreeObserver.OnGlobalLayoutListener {
-
             val rect = Rect()
             view.getWindowVisibleDisplayFrame(rect)
             val screenHeight = view.rootView.height
