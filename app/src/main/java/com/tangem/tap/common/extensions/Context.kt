@@ -35,8 +35,8 @@ fun Context.isPermissionGranted(permission: String): Boolean {
 fun Context.resourceUri(@AnyRes resId: Int): Uri {
     return Uri.parse(
         ContentResolver.SCHEME_ANDROID_RESOURCE +
-            "://" + resources.getResourcePackageName(resId)
-            + '/' + resources.getResourceTypeName(resId)
-            + '/' + resources.getResourceEntryName(resId),
+            "://" + resources.getResourcePackageName(resId) +
+            '/' + resources.getResourceTypeName(resId) +
+            '/' + resources.getResourceEntryName(resId),
     )
 }

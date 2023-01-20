@@ -45,7 +45,6 @@ object WalletReducer {
 
 @Suppress("LongMethod", "ComplexMethod")
 private fun internalReduce(action: Action, state: AppState, appStateHolder: AppStateHolder): WalletState {
-
     val multiWalletReducer = MultiWalletReducer()
     val onWalletLoadedReducer = OnWalletLoadedReducer()
     val appCurrencyReducer = AppCurrencyReducer()
@@ -255,7 +254,8 @@ private fun internalReduce(action: Action, state: AppState, appStateHolder: AppS
                 .map {
                     it.copy(
                         currencyData = it.currencyData.copy(
-                            status = BalanceStatus.Unreachable, errorMessage = message,
+                            status = BalanceStatus.Unreachable,
+                            errorMessage = message,
                         ),
                     )
                 }

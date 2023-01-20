@@ -45,7 +45,8 @@ class TransactionExtrasReducer : SendInternalReducer {
                     } else {
                         TransactionExtrasState(
                             xrpDestinationTag = XrpDestinationTagState(
-                                InputViewValue("$tag", false), tag,
+                                viewFieldValue = InputViewValue("$tag", false),
+                                tag = tag,
                             ),
                         )
                     }
