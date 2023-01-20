@@ -96,13 +96,16 @@ fun SwapPermissionBottomSheetContent(
         )
 
         SpacerH32()
-
     }
 }
 
 @Composable
 private fun ApprovalBottomSheetInfo(
-    currency: String, amount: String, walletAddress: String, spenderAddress: String, fee: String,
+    currency: String,
+    amount: String,
+    walletAddress: String,
+    spenderAddress: String,
+    fee: String,
 ) {
     Column(
         modifier = Modifier
@@ -114,7 +117,6 @@ private fun ApprovalBottomSheetInfo(
             ),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-
         AmountItem(currency = currency, amount = amount)
         DividerBottomSheet()
         WalletAddressItem(walletAddress = walletAddress)
@@ -142,7 +144,6 @@ private fun InformationItem(subtitle: String, value: String) {
             .fillMaxWidth()
             .padding(TangemTheme.dimens.spacing16),
     ) {
-
         Text(
             text = subtitle,
             color = TangemTheme.colors.text.primary1,
