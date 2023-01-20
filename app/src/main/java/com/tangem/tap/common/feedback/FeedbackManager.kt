@@ -2,8 +2,8 @@ package com.tangem.tap.common.feedback
 
 import android.content.Context
 import android.os.Build
+import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.TapWorkarounds
-import com.tangem.tap.common.analytics.Analytics
 import com.tangem.tap.common.extensions.sendEmail
 import com.tangem.tap.common.log.TangemLogCollector
 import com.tangem.tap.common.zendesk.ZendeskConfig
