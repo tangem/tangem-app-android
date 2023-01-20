@@ -12,6 +12,7 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.operations.attestation.Attestation
 import com.tangem.operations.attestation.OnlineCardVerifier
+import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.extensions.copyToClipboard
@@ -248,10 +249,12 @@ class WalletMiddleware {
                 }
             }
             is WalletAction.CopyAddress -> {
+                Analytics.send(Token.Recieve.ButtonCopyAddress())
                 action.context.copyToClipboard(action.address)
                 store.dispatch(WalletAction.CopyAddress.Success)
             }
             is WalletAction.ShareAddress -> {
+                Analytics.send(Token.Recieve.ButtonShareAddress())
                 action.context.shareText(action.address)
             }
             is WalletAction.ExploreAddress -> {
@@ -273,6 +276,9 @@ class WalletMiddleware {
                 } else {
                     store.dispatch(newAction)
                     if (newAction is PrepareSendScreen) {
+                        store.state.walletState.getSelectedWalletData()?.currency?.let { currency ->
+                            Analytics.send(Token.ButtonSend(AnalyticsParam.CurrencyType.Currency(currency)))
+                        }
                         store.dispatch(NavigationAction.NavigateTo(AppScreen.Send))
                     }
                 }
