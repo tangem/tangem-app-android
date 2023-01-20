@@ -47,7 +47,6 @@ fun SecurityModeOptions(state: SecurityModeScreenState) {
     ) {
         ScreenTitle(titleRes = R.string.card_settings_security_mode, Modifier.padding(bottom = 36.dp))
 
-
         state.availableOptions.map {
             SecurityOption(option = it, state = state)
         }
@@ -79,13 +78,14 @@ fun SecurityOption(option: SecurityOption, state: SecurityModeScreenState) {
         modifier = Modifier
             .fillMaxWidth()
             .selectable(
-                selected = selected, onClick = { state.onNewModeSelected(option) },
+                selected = selected,
+                onClick = { state.onNewModeSelected(option) },
             )
             .padding(start = 20.dp, end = 20.dp, top = 16.dp, bottom = 16.dp),
     ) {
-
         RadioButton(
-            selected = selected, onClick = null,
+            selected = selected,
+            onClick = null,
             modifier = Modifier.padding(end = 20.dp),
             colors = RadioButtonDefaults.colors(
                 unselectedColor = colorResource(id = R.color.icon_secondary),
