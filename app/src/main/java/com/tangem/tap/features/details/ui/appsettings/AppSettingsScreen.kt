@@ -149,7 +149,7 @@ private fun onCheckedChange(
     onSettingToggled: (PrivacySetting, Boolean) -> Unit,
     onDialogStateChange: (PrivacySetting?) -> Unit,
 ) {
-    //Show warning if user wants to disable the switch
+    // Show warning if user wants to disable the switch
     if (!enabled) {
         onDialogStateChange(element)
     } else {

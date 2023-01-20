@@ -81,7 +81,8 @@ sealed class WalletAction : Action {
         ) : MultiWallet()
 
         data class SaveCurrencies(
-            val blockchainNetworks: List<BlockchainNetwork>, val card: CardDTO? = null,
+            val blockchainNetworks: List<BlockchainNetwork>,
+            val card: CardDTO? = null,
         ) : MultiWallet()
 
         data class TokenLoaded(
@@ -126,7 +127,8 @@ sealed class WalletAction : Action {
     }
 
     data class LoadFiatRate(
-        val wallet: Wallet? = null, val coinsList: List<Currency>? = null,
+        val wallet: Wallet? = null,
+        val coinsList: List<Currency>? = null,
     ) : WalletAction() {
         data class Success(
             val fiatRates: Map<Currency, BigDecimal?>,
