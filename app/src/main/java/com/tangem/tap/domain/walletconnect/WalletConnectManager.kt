@@ -195,9 +195,9 @@ class WalletConnectManager {
 
     fun removeSimilarSessions(activeData: WalletConnectActiveData) {
         val sessionsToRemove = sessions.filter {
-            it.value.wallet.walletPublicKey?.equals(activeData.wallet.walletPublicKey) == true
-                && it.value.peerMeta?.url == activeData.peerMeta?.url
-                && it.value.session != activeData.session
+            it.value.wallet.walletPublicKey?.equals(activeData.wallet.walletPublicKey) == true &&
+                it.value.peerMeta?.url == activeData.peerMeta?.url &&
+                it.value.session != activeData.session
         }
         Timber.d("RemoveSimilarSessions: ${sessionsToRemove.values.map { it.client.session }}")
         sessionsToRemove.forEach { disconnect(it.value.session) }
@@ -288,7 +288,9 @@ class WalletConnectManager {
     }
 
     fun signBnb(
-        id: Long, data: ByteArray, sessionData: WCSession,
+        id: Long,
+        data: ByteArray,
+        sessionData: WCSession,
     ) {
         val activeData = sessions[sessionData] ?: return
         scope.launch {
@@ -313,7 +315,9 @@ class WalletConnectManager {
         val activeData = sessions[session.session] ?: return
         scope.launch {
             val data = WalletConnectSdkHelper().prepareDataForPersonalSign(
-                message = message, session = session, id = id,
+                message = message,
+                session = session,
+                id = id,
             )
             sessions[session.session] = activeData.copy(personalSignData = data)
             store.dispatchOnMain(
@@ -435,15 +439,15 @@ class WalletConnectManager {
             }
         }
 
-
         client.onBnbCancel = { id: Long, order: WCBinanceCancelOrder ->
-
         }
         client.onBnbTrade = { id: Long, order: WCBinanceTradeOrder ->
             sessions[client.session]?.toWalletConnectSession()?.let { sessionData ->
                 store.dispatchOnMain(
                     WalletConnectAction.BinanceTransaction.Trade(
-                        id = id, order = order, sessionData = sessionData,
+                        id = id,
+                        order = order,
+                        sessionData = sessionData,
                     ),
                 )
             }
@@ -452,7 +456,9 @@ class WalletConnectManager {
             sessions[client.session]?.toWalletConnectSession()?.let { sessionData ->
                 store.dispatchOnMain(
                     WalletConnectAction.BinanceTransaction.Transfer(
-                        id = id, order = order, sessionData = sessionData,
+                        id = id,
+                        order = order,
+                        sessionData = sessionData,
                     ),
                 )
             }
