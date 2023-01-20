@@ -210,9 +210,12 @@ data class AddCustomTokenState(
                 .filter { card.isTestCard == it.isTestnet() }
 
             val additionalBlockchains = listOf(
-                Blockchain.Binance, Blockchain.BinanceTestnet,
-                Blockchain.Solana, Blockchain.SolanaTestnet,
-                Blockchain.Tron, Blockchain.TronTestnet,
+                Blockchain.Binance,
+                Blockchain.BinanceTestnet,
+                Blockchain.Solana,
+                Blockchain.SolanaTestnet,
+                Blockchain.Tron,
+                Blockchain.TronTestnet,
             )
 
             val supportedByCard = when (type) {
