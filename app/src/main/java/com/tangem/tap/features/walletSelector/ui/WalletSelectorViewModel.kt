@@ -2,7 +2,9 @@ package com.tangem.tap.features.walletSelector.ui
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.util.UserWalletId
+import com.tangem.tap.common.analytics.events.MyWallets
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.features.walletSelector.redux.WalletSelectorAction
 import com.tangem.tap.features.walletSelector.redux.WalletSelectorState
@@ -71,6 +73,7 @@ internal class WalletSelectorViewModel : ViewModel(), StoreSubscriber<WalletSele
                 .find { it.id == editedUserWalletId }
 
             if (editedUserWallet != null) {
+                Analytics.send(MyWallets.Button.EditWalletTapped())
                 val dialog = RenameWalletDialog(
                     currentName = editedUserWallet.name,
                     onApply = { newName ->
