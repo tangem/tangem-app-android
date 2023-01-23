@@ -28,9 +28,9 @@ internal class SaveWalletBottomSheetFragment : ComposeBottomSheetFragment<SaveWa
 
     private val viewModel by viewModels<SaveWalletViewModel>()
 
-    override fun onDismiss(dialog: DialogInterface) {
-        viewModel.dismiss()
-        super.onDismiss(dialog)
+    override fun onCancel(dialog: DialogInterface) {
+        viewModel.cancelOrClose()
+        super.onCancel(dialog)
     }
 
     @Composable
@@ -51,7 +51,10 @@ internal class SaveWalletBottomSheetFragment : ComposeBottomSheetFragment<SaveWa
             SaveWalletScreenContent(
                 showProgress = state.showProgress,
                 onSaveWalletClick = viewModel::saveWallet,
-                onCloseClick = this@SaveWalletBottomSheetFragment::dismissAllowingStateLoss,
+                onCloseClick = {
+                    viewModel.cancelOrClose()
+                    dismissAllowingStateLoss()
+                },
             )
 
             SnackbarHost(
