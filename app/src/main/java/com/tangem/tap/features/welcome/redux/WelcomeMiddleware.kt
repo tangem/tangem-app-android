@@ -4,6 +4,7 @@ import android.content.Intent
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.domain.common.ScanResponse
+import com.tangem.tap.common.analytics.events.IntroductionProcess
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppState
@@ -98,6 +99,7 @@ internal class WelcomeMiddleware {
             useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes,
         )
         ScanCardProcessor.scan(
+            analyticsEvent = IntroductionProcess.CardWasScanned(),
             onSuccess = { scanResponse ->
                 scope.launch { onCardScanned(scanResponse) }
             },
