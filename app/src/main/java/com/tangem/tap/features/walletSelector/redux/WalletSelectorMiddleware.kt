@@ -206,6 +206,7 @@ internal class WalletSelectorMiddleware {
     }
 
     private suspend fun unlockUserWalletWithScannedCard(userWallet: UserWallet): CompletionResult<Unit> {
+        Analytics.send(MyWallets.Button.WalletUnlockTapped())
         tangemSdkManager.changeDisplayedCardIdNumbersCount(userWallet.scanResponse)
         return tangemSdkManager.scanCard(userWallet.cardId)
             .map { scannedCard ->
@@ -243,8 +244,6 @@ internal class WalletSelectorMiddleware {
     }
 
     private fun renameWallet(userWalletId: UserWalletId, newName: String) {
-        Analytics.send(MyWallets.Button.EditWalletTapped())
-
         scope.launch {
             userWalletsListManager.update(userWalletId) { it.copy(name = newName) }
                 .doOnFailure { error ->
