@@ -5,9 +5,11 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.concurrent.atomic.AtomicBoolean
 
-class PeriodicTask(
+class PeriodicTask<T>(
     private val delay: Long,
-    private val task: suspend () -> Unit,
+    private val task: suspend () -> Result<T>,
+    private val onSuccess: (T) -> Unit,
+    private val onError: (Throwable) -> Unit,
 ) {
 
     private var isActive: AtomicBoolean = AtomicBoolean(false)
@@ -16,6 +18,18 @@ class PeriodicTask(
         isActive.set(true)
         while (isActive.get()) {
             task.invoke()
+                .onSuccess {
+                    if (!isActive.get()) {
+                        return@onSuccess
+                    }
+                    onSuccess.invoke(it)
+                }
+                .onFailure {
+                    if (!isActive.get()) {
+                        return@onFailure
+                    }
+                    onError.invoke(it)
+                }
             delay(delay)
         }
     }
@@ -25,11 +39,11 @@ class PeriodicTask(
     }
 }
 
-class SingleTaskScheduler {
+class SingleTaskScheduler<T> {
 
-    private var lastTask: PeriodicTask? = null
+    private var lastTask: PeriodicTask<T>? = null
 
-    fun scheduleTask(scope: CoroutineScope, task: PeriodicTask) {
+    fun scheduleTask(scope: CoroutineScope, task: PeriodicTask<T>) {
         lastTask?.cancel()
         lastTask = task
         scope.launch {
