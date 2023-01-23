@@ -7,16 +7,26 @@ import java.math.BigDecimal
 
 interface TransactionManager {
 
+    @Throws(IllegalStateException::class)
+    suspend fun sendApproveTransaction(
+        networkId: String,
+        feeAmount: BigDecimal,
+        estimatedGas: Int,
+        destinationAddress: String,
+        dataToSign: String,
+    ): SendTxResult
+
     @Suppress("LongParameterList")
     @Throws(IllegalStateException::class)
     suspend fun sendTransaction(
         networkId: String,
         amountToSend: BigDecimal,
-        currencyToSend: Currency,
         feeAmount: BigDecimal,
         estimatedGas: Int,
         destinationAddress: String,
         dataToSign: String,
+        isSwap: Boolean,
+        currencyToSend: Currency,
     ): SendTxResult
 
     @Throws(IllegalStateException::class)
@@ -29,6 +39,9 @@ interface TransactionManager {
 
     @Throws(IllegalStateException::class)
     fun getNativeTokenDecimals(networkId: String): Int
+
+    @Throws(IllegalStateException::class)
+    suspend fun updateWalletManager(networkId: String)
 
     fun calculateFee(networkId: String, gasPrice: String, estimatedGas: Int): BigDecimal
 }
