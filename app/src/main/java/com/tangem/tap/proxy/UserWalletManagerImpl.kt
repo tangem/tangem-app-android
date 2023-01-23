@@ -1,5 +1,6 @@
 package com.tangem.tap.proxy
 
+import com.tangem.blockchain.common.AmountType
 import com.tangem.blockchain.common.Blockchain
 import com.tangem.blockchain.common.DerivationParams
 import com.tangem.blockchain.common.DerivationStyle
@@ -116,6 +117,25 @@ class UserWalletManagerImpl(
                 amount.decimals,
             )
         }.toMap()
+    }
+
+    override fun getNativeTokenBalance(networkId: String): ProxyAmount? {
+        val blockchain = requireNotNull(Blockchain.fromNetworkId(networkId)) { "blockchain not found" }
+        val walletManager = getActualWalletManager(blockchain)
+        return walletManager.wallet.amounts.firstNotNullOfOrNull {
+            it.takeIf { it.key is AmountType.Coin }
+        }?.value?.let {
+            ProxyAmount(
+                it.currencySymbol,
+                it.value ?: BigDecimal.ZERO,
+                it.decimals,
+            )
+        }
+    }
+
+    override fun getNetworkCurrency(networkId: String): String {
+        val blockchain = requireNotNull(Blockchain.fromNetworkId(networkId)) { "blockchain not found" }
+        return blockchain.currency
     }
 
     override fun getUserAppCurrency(): ProxyFiatCurrency {
