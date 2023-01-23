@@ -49,6 +49,10 @@ interface UserWalletManager {
     @Throws(IllegalStateException::class)
     fun getCurrentWalletTokensBalance(networkId: String): Map<String, ProxyAmount>
 
+    fun getNativeTokenBalance(networkId: String): ProxyAmount?
+
+    fun getNetworkCurrency(networkId: String): String
+
     /**
      * Returns selected app currency
      */
