@@ -38,6 +38,7 @@ import com.tangem.core.ui.components.SmallInfoCard
 import com.tangem.core.ui.components.SmallInfoCardWithWarning
 import com.tangem.core.ui.components.SpacerH16
 import com.tangem.core.ui.components.keyboardAsState
+import com.tangem.core.ui.extensions.getActiveIconRes
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.models.FeeState
 import com.tangem.feature.swap.models.SwapButton
@@ -161,6 +162,7 @@ private fun MainInfo(state: SwapStateHolder) {
                 tokenIconUrl = state.sendCardData.tokenIconUrl,
                 tokenCurrency = state.sendCardData.tokenCurrency,
                 networkIconRes = state.sendCardData.networkIconRes,
+                iconPlaceholder = getActiveIconRes(state.sendCardData.tokenId),
                 onChangeTokenClick = if (state.sendCardData.canSelectAnotherToken) state.onSelectTokenClick else null,
             )
             SpacerH16()
@@ -172,6 +174,7 @@ private fun MainInfo(state: SwapStateHolder) {
                 tokenIconUrl = state.receiveCardData.tokenIconUrl,
                 tokenCurrency = state.receiveCardData.tokenCurrency,
                 networkIconRes = state.receiveCardData.networkIconRes,
+                iconPlaceholder = getActiveIconRes(state.receiveCardData.tokenId),
                 onChangeTokenClick = if (state.receiveCardData.canSelectAnotherToken) {
                     state.onSelectTokenClick
                 } else {
@@ -228,7 +231,7 @@ private fun FeeItem(feeState: FeeState, currency: String) {
             SmallInfoCardWithWarning(
                 startText = titleString,
                 endText = feeState.fee,
-                warningText = stringResource(id = R.string.token_details_send_blocked_fee_format, currency),
+                warningText = stringResource(id = R.string.token_details_send_blocked_fee_format, currency, currency),
             )
         }
         is FeeState.Empty -> {}
@@ -298,6 +301,7 @@ private val sendCard = SwapCardData(
     networkIconRes = R.drawable.img_polygon_22,
     canSelectAnotherToken = false,
     balance = "123",
+    tokenId = "",
 )
 
 private val receiveCard = SwapCardData(
@@ -309,6 +313,7 @@ private val receiveCard = SwapCardData(
     networkIconRes = R.drawable.img_polygon_22,
     canSelectAnotherToken = true,
     balance = "33333",
+    tokenId = "",
 )
 
 private val state = SwapStateHolder(
