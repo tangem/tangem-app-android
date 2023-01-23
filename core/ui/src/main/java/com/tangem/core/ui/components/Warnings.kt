@@ -136,7 +136,7 @@ private fun WarningCardSurface(
         shape = RoundedCornerShape(TangemTheme.dimens.size12),
         backgroundColor = TangemTheme.colors.background.primary,
         elevation = TangemTheme.dimens.elevation2,
-        onClick = { onClick ?: Unit },
+        onClick = onClick ?: {},
         enabled = onClick != null,
     ) {
         content()

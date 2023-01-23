@@ -9,6 +9,7 @@ data class SwapStateHolder(
     val fee: FeeState = FeeState.Empty,
     val warnings: List<SwapWarning> = emptyList(),
     val alert: SwapWarning.GenericWarning? = null,
+    val updateInProgress: Boolean = false,
 
     val permissionState: SwapPermissionState = SwapPermissionState.Empty,
     val successState: SwapSuccessStateHolder? = null,
