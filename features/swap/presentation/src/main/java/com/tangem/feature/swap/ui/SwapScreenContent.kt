@@ -78,7 +78,7 @@ internal fun SwapScreenContent(state: SwapStateHolder, onPermissionWarningClick:
             if (state.warnings.isNotEmpty()) {
                 SwapWarnings(
                     warnings = state.warnings,
-                    onApproveWarningClick = onPermissionWarningClick,
+                    onPermissionWarningClick = onPermissionWarningClick,
                 )
             }
 
@@ -119,8 +119,7 @@ internal fun SwapScreenContent(state: SwapStateHolder, onPermissionWarningClick:
 
         AnimatedVisibility(
             visible = keyboard is Keyboard.Opened,
-            modifier = Modifier
-                .align(Alignment.BottomCenter),
+            modifier = Modifier.align(Alignment.BottomCenter),
         ) {
             Text(
                 text = stringResource(id = R.string.send_max_amount_label),
@@ -147,12 +146,10 @@ internal fun SwapScreenContent(state: SwapStateHolder, onPermissionWarningClick:
     }
 }
 
-@OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun MainInfo(state: SwapStateHolder) {
     Box(
-        modifier = Modifier
-            .fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth(),
         contentAlignment = Alignment.Center,
     ) {
         Column {
@@ -182,21 +179,36 @@ private fun MainInfo(state: SwapStateHolder) {
                 },
             )
         }
-        Card(
-            elevation = TangemTheme.dimens.elevation3,
-            shape = CircleShape,
-            backgroundColor = TangemTheme.colors.background.plain,
-            contentColor = TangemTheme.colors.text.primary1,
-            modifier = Modifier
-                .size(TangemTheme.dimens.size48),
-            onClick = state.onChangeCardsClicked,
-        ) {
+        SwapButton()
+    }
+}
+
+@OptIn(ExperimentalMaterialApi::class)
+@Composable
+private fun SwapButton() {
+    Card(
+        elevation = TangemTheme.dimens.elevation3,
+        shape = CircleShape,
+        backgroundColor = TangemTheme.colors.background.plain,
+        contentColor = TangemTheme.colors.text.primary1,
+        modifier = Modifier.size(TangemTheme.dimens.size48),
+        onClick = state.onChangeCardsClicked,
+        enabled = !state.updateInProgress,
+    ) {
+        if (state.updateInProgress) {
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .size(TangemTheme.dimens.size16)
+                    .padding(TangemTheme.dimens.spacing14),
+                color = TangemTheme.colors.icon.primary1,
+                strokeWidth = TangemTheme.dimens.size2,
+            )
+        } else {
             Icon(
-                painter = painterResource(id = com.tangem.core.ui.R.drawable.ic_exchange_vertical_24),
+                painter = painterResource(id = R.drawable.ic_exchange_vertical_24),
                 contentDescription = null,
                 tint = TangemTheme.colors.text.primary1,
-                modifier = Modifier
-                    .padding(TangemTheme.dimens.spacing12),
+                modifier = Modifier.padding(TangemTheme.dimens.spacing12),
             )
         }
     }
@@ -226,7 +238,7 @@ private fun FeeItem(feeState: FeeState, currency: String) {
 @Composable
 private fun SwapWarnings(
     warnings: List<SwapWarning>,
-    onApproveWarningClick: () -> Unit,
+    onPermissionWarningClick: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -252,7 +264,7 @@ private fun SwapWarnings(
                                 modifier = Modifier.size(TangemTheme.dimens.size20),
                             )
                         },
-                        onClick = onApproveWarningClick,
+                        onClick = onPermissionWarningClick,
                     )
                 }
                 is SwapWarning.GenericWarning -> {
