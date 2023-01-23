@@ -30,6 +30,7 @@ data class SwapCardData(
     val amount: String?,
     val amountEquivalent: String?,
     val tokenIconUrl: String,
+    val tokenId: String,
     val tokenCurrency: String,
     val balance: String,
     @DrawableRes val networkIconRes: Int? = null,
@@ -68,7 +69,7 @@ sealed interface TransactionCardType {
 
 sealed interface SwapWarning {
     data class PermissionNeeded(val tokenCurrency: String) : SwapWarning
-    data class InsufficientFunds(val tokenCurrency: String) : SwapWarning
+    object InsufficientFunds : SwapWarning
     data class GenericWarning(val message: String?, val onClick: () -> Unit) : SwapWarning
     // data class RateExpired(val onClick: () -> Unit) : SwapWarning
     // object HighPriceImpact : SwapWarning

@@ -1,34 +1,17 @@
 package com.tangem.feature.swap.domain.cache
 
-import com.tangem.feature.swap.domain.models.SwapAmount
-import com.tangem.feature.swap.domain.models.cache.ExchangeCurrencies
-import com.tangem.feature.swap.domain.models.cache.SwapDataHolder
-import com.tangem.feature.swap.domain.models.domain.ApproveModel
 import com.tangem.feature.swap.domain.models.domain.Currency
-import com.tangem.feature.swap.domain.models.domain.QuoteModel
-import com.tangem.feature.swap.domain.models.domain.SwapDataModel
+import java.math.BigDecimal
 
 class SwapDataCacheImpl : SwapDataCache {
 
-    private var lastDataForSwap: SwapDataHolder = SwapDataHolder()
     private val availableTokensForNetwork: MutableMap<String, List<Currency>> = mutableMapOf()
+    private val feesForNetworks: MutableMap<String, BigDecimal> = mutableMapOf()
     private val lastInWalletTokens = mutableListOf<Currency>()
     private val lastLoadedTokens = mutableListOf<Currency>()
 
-    override fun cacheQuoteData(
-        quoteModel: QuoteModel,
-    ) {
-        lastDataForSwap = lastDataForSwap.copy(quoteModel = quoteModel)
-    }
-
-    override fun cacheExchangeCurrencies(fromToken: Currency, toToken: Currency) {
-        lastDataForSwap =
-            lastDataForSwap.copy(
-                exchangeCurrencies = ExchangeCurrencies(
-                    fromCurrency = fromToken,
-                    toCurrency = toToken,
-                ),
-            )
+    override fun cacheLastFeeForNetwork(fee: BigDecimal, networkId: String) {
+        feesForNetworks[networkId] = fee
     }
 
     override fun cacheInWalletTokens(tokens: List<Currency>) {
@@ -49,51 +32,15 @@ class SwapDataCacheImpl : SwapDataCache {
         return lastLoadedTokens
     }
 
-    override fun cacheSwapData(swapDataModel: SwapDataModel) {
-        lastDataForSwap = lastDataForSwap.copy(swapModel = swapDataModel)
-    }
-
-    override fun getLastSwapData(): SwapDataModel? {
-        return lastDataForSwap.swapModel
-    }
-
-    override fun cacheApproveTransactionData(approve: ApproveModel) {
-        lastDataForSwap = lastDataForSwap.copy(approveTxModel = approve)
-    }
-
-    override fun getExchangeCurrencies(): ExchangeCurrencies? {
-        return lastDataForSwap.exchangeCurrencies
-    }
-
     override fun cacheAvailableToSwapTokens(networkId: String, tokens: List<Currency>) {
         availableTokensForNetwork[networkId] = tokens
     }
 
-    override fun cacheNetworkId(networkId: String) {
-        lastDataForSwap = lastDataForSwap.copy(networkId = networkId)
-    }
-
-    override fun cacheAmountToSwap(amount: SwapAmount) {
-        lastDataForSwap = lastDataForSwap.copy(amountToSwap = amount)
-    }
-
-    override fun getNetworkId(): String? {
-        return lastDataForSwap.networkId
+    override fun getLastFeeForNetwork(networkId: String): BigDecimal? {
+        return feesForNetworks[networkId]
     }
 
     override fun getAvailableTokens(networkId: String): List<Currency> {
         return availableTokensForNetwork.getOrElse(networkId) { emptyList() }
-    }
-
-    override fun getApproveTransactionData(): ApproveModel? {
-        return lastDataForSwap.approveTxModel
-    }
-
-    override fun getLastQuote(): QuoteModel? {
-        return lastDataForSwap.quoteModel
-    }
-
-    override fun getAmountToSwap(): SwapAmount? {
-        return lastDataForSwap.amountToSwap
     }
 }

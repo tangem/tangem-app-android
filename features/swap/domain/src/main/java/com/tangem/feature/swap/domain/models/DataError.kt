@@ -1,21 +1,18 @@
 package com.tangem.feature.swap.domain.models
 
-enum class DataError {
-    NO_ERROR,
-    UNKNOWN_ERROR,
-    INSUFFICIENT_LIQUIDITY,
-    CANNOT_SYNC
+sealed class DataError {
+    object NoError : DataError()
+    data class UnknownError(val message: String) : DataError()
+    object InsufficientLiquidity : DataError()
 }
 
 fun mapErrors(error: String?): DataError {
     return if (error == null) {
-        DataError.UNKNOWN_ERROR
-    } else when {
-        error == INSUFFICIENT_LIQUIDITY_ERROR -> DataError.INSUFFICIENT_LIQUIDITY
-        error.startsWith(CANNOT_SYNC_ERROR) -> DataError.CANNOT_SYNC
-        else -> DataError.UNKNOWN_ERROR
+        DataError.NoError
+    } else when (error) {
+        INSUFFICIENT_LIQUIDITY_ERROR -> DataError.InsufficientLiquidity
+        else -> DataError.UnknownError(error)
     }
 }
 
 private const val INSUFFICIENT_LIQUIDITY_ERROR = "insufficient liquidity"
-private const val CANNOT_SYNC_ERROR = "cannot sync"
