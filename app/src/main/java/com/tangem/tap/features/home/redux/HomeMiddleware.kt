@@ -4,16 +4,13 @@ import com.tangem.common.doOnFailure
 import com.tangem.common.doOnResult
 import com.tangem.common.doOnSuccess
 import com.tangem.core.analytics.Analytics
-import com.tangem.tap.common.analytics.events.IntroductionProcess
-import com.tangem.tap.common.analytics.events.MainScreen
+import com.tangem.core.analytics.AnalyticsEvent
 import com.tangem.tap.common.analytics.events.Shop
-import com.tangem.tap.common.analytics.paramsInterceptor.BatchIdParamsInterceptor
 import com.tangem.tap.common.entities.IndeterminateProgressButton
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchOpenUrl
 import com.tangem.tap.common.extensions.onCardScanned
 import com.tangem.tap.common.extensions.onUserWalletSelected
-import com.tangem.tap.common.postUiDelayBg
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
@@ -59,13 +56,9 @@ private fun handleHomeAction(action: Action) {
             store.dispatch(GlobalAction.ExchangeManager.Init)
             store.dispatch(GlobalAction.FetchUserCountry)
         }
-        is HomeAction.ShouldScanCardOnResume -> {
-            if (action.shouldScanCard) {
-                store.dispatch(HomeAction.ShouldScanCardOnResume(false))
-                postUiDelayBg(700) { store.dispatch(HomeAction.ReadCard(AppScreen.Wallet)) }
-            }
+        is HomeAction.ReadCard -> {
+            readCard(action.analyticsEvent)
         }
-        is HomeAction.ReadCard -> readCard(action.fromScreen)
         is HomeAction.GoToShop -> {
             Analytics.send(Shop.ScreenOpened())
             when (action.userCountryCode) {
@@ -76,12 +69,13 @@ private fun handleHomeAction(action: Action) {
     }
 }
 
-private fun readCard(fromScreen: AppScreen) = scope.launch {
+private fun readCard(analyticsEvent: AnalyticsEvent?) = scope.launch {
     delay(timeMillis = 200)
     tangemSdkManager.setAccessCodeRequestPolicy(
         useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes,
     )
     ScanCardProcessor.scan(
+        analyticsEvent = analyticsEvent,
         onProgressStateChange = { showProgress ->
             if (showProgress) {
                 changeButtonState(ButtonState.PROGRESS)
@@ -97,10 +91,6 @@ private fun readCard(fromScreen: AppScreen) = scope.launch {
             changeButtonState(ButtonState.ENABLED)
         },
         onSuccess = { scanResponse ->
-            when (fromScreen) {
-                AppScreen.Wallet -> Analytics.send(MainScreen.CardWasScanned())
-                else -> Analytics.send(IntroductionProcess.CardWasScanned())
-            }
             scope.launch {
                 if (preferencesStorage.shouldSaveUserWallets) {
                     val userWallet = UserWalletBuilder(scanResponse).build() ?: return@launch
