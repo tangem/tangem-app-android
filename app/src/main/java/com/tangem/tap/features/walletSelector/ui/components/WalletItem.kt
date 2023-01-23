@@ -50,7 +50,7 @@ internal fun WalletItem(
                 onClick = onWalletClick,
                 onLongClick = onWalletLongClick,
             )
-            .height(72.dp)
+            .heightIn(min = TangemTheme.dimens.size72)
             .padding(all = TangemTheme.dimens.spacing16),
         verticalAlignment = Alignment.CenterVertically,
     ) {
