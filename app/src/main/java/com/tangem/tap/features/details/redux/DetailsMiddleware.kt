@@ -323,7 +323,9 @@ class DetailsMiddleware {
             enableAccessCodesSaving: Boolean,
         ): CompletionResult<Unit> {
             val userWallet = scanResponse?.let { UserWalletBuilder(it).build() }
-                ?: return CompletionResult.Failure(TangemSdkError.ExceptionError(IllegalStateException()))
+                ?: return CompletionResult.Failure(
+                    TangemSdkError.ExceptionError(IllegalStateException("scanResponse is null")),
+                )
 
             return userWalletsListManager.save(userWallet)
                 .flatMap {
