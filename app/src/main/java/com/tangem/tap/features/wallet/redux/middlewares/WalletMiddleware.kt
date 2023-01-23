@@ -249,12 +249,12 @@ class WalletMiddleware {
                 }
             }
             is WalletAction.CopyAddress -> {
-                Analytics.send(Token.Recieve.ButtonCopyAddress())
+                Analytics.send(Token.Receive.ButtonCopyAddress())
                 action.context.copyToClipboard(action.address)
                 store.dispatch(WalletAction.CopyAddress.Success)
             }
             is WalletAction.ShareAddress -> {
-                Analytics.send(Token.Recieve.ButtonShareAddress())
+                Analytics.send(Token.Receive.ButtonShareAddress())
                 action.context.shareText(action.address)
             }
             is WalletAction.ExploreAddress -> {
