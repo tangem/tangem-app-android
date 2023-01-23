@@ -5,8 +5,8 @@ import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.doOnSuccess
 import com.tangem.common.extensions.guard
-import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.core.analytics.Analytics
+import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.analytics.events.Token.ButtonRemoveToken
@@ -173,7 +173,7 @@ class MultiWalletMiddleware {
                 if (selectedWallet != null) {
                     scanAndUpdateCard(selectedWallet, walletState)
                 } else {
-                    store.dispatch(WalletAction.Scan)
+                    store.dispatch(WalletAction.Scan(onScanSuccessEvent = null))
                 }
             }
         }
@@ -185,6 +185,7 @@ class MultiWalletMiddleware {
     ) = scope.launch(Dispatchers.Default) {
         Analytics.send(MainScreen.CardWasScanned())
         ScanCardProcessor.scan(
+            analyticsEvent = null,
             cardId = selectedUserWallet.cardId,
             additionalBlockchainsToDerive = state?.missingDerivations?.map { it.blockchain },
         ) { scanResponse ->
