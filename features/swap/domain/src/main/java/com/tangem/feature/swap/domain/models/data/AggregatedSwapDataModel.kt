@@ -11,5 +11,5 @@ import com.tangem.feature.swap.domain.models.DataError
  */
 data class AggregatedSwapDataModel<T>(
     val dataModel: T?,
-    val error: DataError = DataError.NO_ERROR,
+    val error: DataError = DataError.NoError,
 )
