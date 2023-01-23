@@ -14,7 +14,8 @@ class TokensDataConverter(
 
     override fun convert(value: FoundTokensState): SwapSelectTokenStateHolder {
         return SwapSelectTokenStateHolder(
-            tokens = (value.tokensInWallet + value.loadedTokens).map { tokenWithBalanceToTokenToSelect(it) },
+            addedTokens = value.tokensInWallet.map { tokenWithBalanceToTokenToSelect(it) },
+            otherTokens = value.loadedTokens.map { tokenWithBalanceToTokenToSelect(it) },
             onSearchEntered = onSearchEntered,
             onTokenSelected = onTokenSelected,
         )
