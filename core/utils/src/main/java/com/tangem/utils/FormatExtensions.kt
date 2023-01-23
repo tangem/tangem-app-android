@@ -23,6 +23,25 @@ fun BigDecimal.toFormattedString(
     return df.format(this)
 }
 
+@Suppress("MagicNumber")
+fun BigDecimal.toFormattedCurrencyString(
+    decimals: Int,
+    currency: String,
+    roundingMode: RoundingMode = RoundingMode.DOWN,
+    limitNumberOfDecimals: Boolean = true,
+): String {
+    val decimalsForRounding = if (limitNumberOfDecimals) {
+        if (decimals > 8) 8 else decimals
+    } else {
+        decimals
+    }
+    val formattedAmount = this.toFormattedString(
+        decimals = decimalsForRounding,
+        roundingMode = roundingMode,
+    )
+    return "$formattedAmount $currency"
+}
+
 fun BigDecimal.toFiatString(
     rateValue: BigDecimal,
     fiatCurrencyName: String,
