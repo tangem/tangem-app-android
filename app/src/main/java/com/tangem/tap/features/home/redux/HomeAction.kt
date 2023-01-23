@@ -1,17 +1,16 @@
 package com.tangem.tap.features.home.redux
 
+import com.tangem.core.analytics.AnalyticsEvent
+import com.tangem.tap.common.analytics.events.IntroductionProcess
 import com.tangem.tap.common.entities.IndeterminateProgressButton
-import com.tangem.tap.common.redux.navigation.AppScreen
 import org.rekotlin.Action
 
 sealed class HomeAction : Action {
 
     object Init : HomeAction()
-    data class ShouldScanCardOnResume(val shouldScanCard: Boolean) : HomeAction()
 
-    // from ui
     data class ReadCard(
-        val fromScreen: AppScreen = AppScreen.Home,
+        val analyticsEvent: AnalyticsEvent? = IntroductionProcess.CardWasScanned(),
     ) : HomeAction()
 
     data class ScanInProgress(val scanInProgress: Boolean) : HomeAction()
