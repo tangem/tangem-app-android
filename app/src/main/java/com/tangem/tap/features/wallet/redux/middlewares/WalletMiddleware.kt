@@ -59,6 +59,7 @@ import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.DispatchFunction
@@ -194,8 +195,11 @@ class WalletMiddleware {
                 }
             }
             is WalletAction.Scan -> {
-                store.dispatch(HomeAction.ShouldScanCardOnResume(true))
                 store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
+                scope.launch {
+                    delay(700)
+                    store.dispatchOnMain(HomeAction.ReadCard(action.onScanSuccessEvent))
+                }
             }
             is WalletAction.LoadCardInfo -> {
                 val attestationFailed = action.card.attestation.status == Attestation.Status.Failed
@@ -366,7 +370,7 @@ class WalletMiddleware {
             }
             else -> {
                 Analytics.send(MainScreen.ButtonScanCard())
-                store.dispatch(WalletAction.Scan)
+                store.dispatch(WalletAction.Scan(MainScreen.CardWasScanned()))
             }
         }
     }
