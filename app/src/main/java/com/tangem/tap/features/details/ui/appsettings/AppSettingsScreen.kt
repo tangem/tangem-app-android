@@ -23,7 +23,7 @@ import com.tangem.core.ui.components.SpacerH32
 import com.tangem.core.ui.components.SpacerH4
 import com.tangem.core.ui.components.SpacerW32
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.tap.features.details.redux.PrivacySetting
+import com.tangem.tap.features.details.redux.AppSetting
 import com.tangem.tap.features.details.ui.appsettings.components.EnrollBiometricsCard
 import com.tangem.tap.features.details.ui.appsettings.components.SettingsAlertDialog
 import com.tangem.tap.features.details.ui.common.SettingsScreensScaffold
@@ -41,8 +41,8 @@ fun AppSettingsScreen(state: AppSettingsScreenState, onBackClick: () -> Unit) {
 
 @Composable
 private fun AppSettings(state: AppSettingsScreenState) {
-    var dialogType by remember { mutableStateOf<PrivacySetting?>(null) }
-    val onDialogStateChange: (PrivacySetting?) -> Unit = { dialogType = it }
+    var dialogType by remember { mutableStateOf<AppSetting?>(null) }
+    val onDialogStateChange: (AppSetting?) -> Unit = { dialogType = it }
 
     dialogType?.let {
         SettingsAlertDialog(
@@ -60,13 +60,13 @@ private fun AppSettings(state: AppSettingsScreenState) {
 
         AppSettingsElement(
             state = state,
-            setting = PrivacySetting.SaveWallets,
+            setting = AppSetting.SaveWallets,
             onDialogStateChange = onDialogStateChange,
         )
         SpacerH32()
         AppSettingsElement(
             state = state,
-            setting = PrivacySetting.SaveAccessCode,
+            setting = AppSetting.SaveAccessCode,
             onDialogStateChange = onDialogStateChange,
         )
     }
@@ -76,16 +76,16 @@ private fun AppSettings(state: AppSettingsScreenState) {
 @Composable
 private fun AppSettingsElement(
     state: AppSettingsScreenState,
-    setting: PrivacySetting,
-    onDialogStateChange: (PrivacySetting?) -> Unit,
+    setting: AppSetting,
+    onDialogStateChange: (AppSetting?) -> Unit,
 ) {
     val titleRes = when (setting) {
-        PrivacySetting.SaveWallets -> R.string.app_settings_saved_wallet
-        PrivacySetting.SaveAccessCode -> R.string.app_settings_saved_access_codes
+        AppSetting.SaveWallets -> R.string.app_settings_saved_wallet
+        AppSetting.SaveAccessCode -> R.string.app_settings_saved_access_codes
     }
     val subtitleRes = when (setting) {
-        PrivacySetting.SaveWallets -> R.string.app_settings_saved_wallet_footer
-        PrivacySetting.SaveAccessCode -> R.string.app_settings_saved_access_codes_footer
+        AppSetting.SaveWallets -> R.string.app_settings_saved_wallet_footer
+        AppSetting.SaveAccessCode -> R.string.app_settings_saved_access_codes_footer
     }
     val checked = state.settings[setting] ?: false
 
@@ -144,10 +144,10 @@ private fun AppSettingsElement(
 }
 
 private fun onCheckedChange(
-    element: PrivacySetting,
+    element: AppSetting,
     enabled: Boolean,
-    onSettingToggled: (PrivacySetting, Boolean) -> Unit,
-    onDialogStateChange: (PrivacySetting?) -> Unit,
+    onSettingToggled: (AppSetting, Boolean) -> Unit,
+    onDialogStateChange: (AppSetting?) -> Unit,
 ) {
     // Show warning if user wants to disable the switch
     if (!enabled) {
@@ -169,8 +169,8 @@ private fun AppSettingsScreenSample(
         AppSettingsScreen(
             state = AppSettingsScreenState(
                 settings = mapOf(
-                    PrivacySetting.SaveWallets to true,
-                    PrivacySetting.SaveAccessCode to false,
+                    AppSetting.SaveWallets to true,
+                    AppSetting.SaveAccessCode to false,
                 ),
                 showEnrollBiometricsCard = false,
                 isTogglesEnabled = true,
@@ -206,8 +206,8 @@ private fun AppSettingsScreen_EnrollBiometrics_Sample(
         AppSettingsScreen(
             state = AppSettingsScreenState(
                 settings = mapOf(
-                    PrivacySetting.SaveWallets to true,
-                    PrivacySetting.SaveAccessCode to false,
+                    AppSetting.SaveWallets to true,
+                    AppSetting.SaveAccessCode to false,
                 ),
                 showEnrollBiometricsCard = true,
                 isTogglesEnabled = false,

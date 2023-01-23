@@ -45,11 +45,13 @@ sealed class DetailsAction : Action {
     sealed class AppSettings : DetailsAction() {
         data class SwitchPrivacySetting(
             val enable: Boolean,
-            val setting: PrivacySetting,
+            val setting: AppSetting,
         ) : AppSettings() {
-            data class Success(
-                val enable: Boolean,
-                val setting: PrivacySetting,
+            object Success : AppSettings()
+
+            data class Failure(
+                val prevState: Boolean,
+                val setting: AppSetting,
             ) : AppSettings()
         }
 
