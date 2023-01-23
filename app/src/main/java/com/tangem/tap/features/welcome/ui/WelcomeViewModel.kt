@@ -1,6 +1,8 @@
 package com.tangem.tap.features.welcome.ui
 
 import androidx.lifecycle.ViewModel
+import com.tangem.core.analytics.Analytics
+import com.tangem.tap.common.analytics.events.SignIn
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.features.details.ui.cardsettings.TextReference
 import com.tangem.tap.features.welcome.redux.WelcomeAction
@@ -21,10 +23,12 @@ internal class WelcomeViewModel : ViewModel(), StoreSubscriber<WelcomeState> {
     }
 
     fun unlockWallets() {
+        Analytics.send(SignIn.ButtonBiometricSignIn())
         store.dispatch(WelcomeAction.ProceedWithBiometrics)
     }
 
     fun scanCard() {
+        Analytics.send(SignIn.ButtonCardSignIn())
         store.dispatch(WelcomeAction.ProceedWithCard)
     }
 
