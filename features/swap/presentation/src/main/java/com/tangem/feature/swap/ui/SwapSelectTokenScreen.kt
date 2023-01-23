@@ -1,5 +1,7 @@
 package com.tangem.feature.swap.ui
 
+import androidx.annotation.StringRes
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -23,6 +25,7 @@ import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
@@ -57,6 +60,7 @@ fun SwapSelectTokenScreen(state: SwapSelectTokenStateHolder, onBack: () -> Unit)
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun ListOfTokens(state: SwapSelectTokenStateHolder, modifier: Modifier = Modifier) {
     LazyColumn(
@@ -64,12 +68,25 @@ private fun ListOfTokens(state: SwapSelectTokenStateHolder, modifier: Modifier =
             .background(color = TangemTheme.colors.background.secondary)
             .fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
-
     ) {
-        itemsIndexed(items = state.tokens) { index, item ->
+        stickyHeader { Header(title = R.string.swapping_token_list_your_tokens) }
+
+        itemsIndexed(items = state.addedTokens) { index, item ->
             TokenItem(token = item, onTokenClick = { state.onTokenSelected(item.id) })
 
-            if (index != state.tokens.lastIndex) {
+            if (index != state.addedTokens.lastIndex) {
+                Divider(
+                    color = TangemTheme.colors.stroke.primary,
+                    startIndent = TangemTheme.dimens.spacing54,
+                )
+            }
+        }
+
+        stickyHeader { Header(title = R.string.swapping_token_list_other_tokens) }
+
+        itemsIndexed(items = state.otherTokens) { index, item ->
+            TokenItem(token = item, onTokenClick = { state.onTokenSelected(item.id) })
+            if (index != state.otherTokens.lastIndex) {
                 Divider(
                     color = TangemTheme.colors.stroke.primary,
                     startIndent = TangemTheme.dimens.spacing54,
@@ -77,6 +94,22 @@ private fun ListOfTokens(state: SwapSelectTokenStateHolder, modifier: Modifier =
             }
         }
     }
+}
+
+@Composable
+private fun Header(@StringRes title: Int) {
+    Text(
+        text = stringResource(id = title).uppercase(),
+        style = TangemTheme.typography.overline,
+        color = TangemTheme.colors.text.tertiary,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(
+                vertical = TangemTheme.dimens.spacing6,
+                horizontal = TangemTheme.dimens.spacing16,
+            ),
+        textAlign = TextAlign.Start,
+    )
 }
 
 @Composable
@@ -199,14 +232,13 @@ private val token = TokenToSelect(
     ),
 )
 
-private val tokenNotAvailable = token.copy(available = false)
-
 @Preview
 @Composable
 private fun TokenScreenPreview() {
     SwapSelectTokenScreen(
         state = SwapSelectTokenStateHolder(
-            tokens = listOf(token, tokenNotAvailable, token),
+            addedTokens = listOf(token, token, token),
+            otherTokens = listOf(token, token, token),
             onSearchEntered = {},
             onTokenSelected = {},
         ),
