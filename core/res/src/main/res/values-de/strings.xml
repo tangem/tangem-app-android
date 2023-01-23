@@ -237,6 +237,7 @@
     <string name="common_cancel">Abbrechen</string>
     <string name="common_accept">Akzeptieren</string>
     <string name="common_camera_denied_alert_message">Sie haben keinen Zugang zur Kamera erteilt, bitte passen Sie Ihre Datenschutzeinstellungen an</string>
+    <string name="wallet_button_actions">Actions</string>
     <string name="wallet_button_send">Absenden</string>
     <string name="wallet_button_create_wallet">ein Wallet erstellen</string>
     <string name="wallet_title">Tangem</string>
