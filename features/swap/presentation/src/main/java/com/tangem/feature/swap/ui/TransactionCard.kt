@@ -74,6 +74,7 @@ fun TransactionCard(
     amountEquivalent: String?,
     tokenIconUrl: String,
     tokenCurrency: String,
+    @DrawableRes iconPlaceholder: Int? = null,
     @DrawableRes networkIconRes: Int? = null,
     onChangeTokenClick: (() -> Unit)? = null,
 ) {
@@ -104,6 +105,7 @@ fun TransactionCard(
                     tokenIconUrl = tokenIconUrl,
                     tokenCurrency = tokenCurrency,
                     networkIconRes = networkIconRes,
+                    iconPlaceholder = iconPlaceholder,
                 )
             }
 
@@ -328,6 +330,7 @@ private fun AutoSizeTextField(amount: String, onAmountChange: (String) -> Unit) 
 fun Token(
     tokenIconUrl: String,
     tokenCurrency: String,
+    @DrawableRes iconPlaceholder: Int? = null,
     @DrawableRes networkIconRes: Int? = null,
 ) {
     Column(
@@ -353,6 +356,8 @@ fun Token(
                 model = ImageRequest.Builder(LocalContext.current)
                     .data(tokenIconUrl)
                     .crossfade(true)
+                    .error(iconPlaceholder ?: 0)
+                    .placeholder(iconPlaceholder ?: 0)
                     .build(),
                 loading = { TokenImageShimmer(modifier = tokenImageModifier) },
                 // error = { CurrencyPlaceholderIcon(modifier = tokenImageModifier, tokenCurrency) },
