@@ -54,9 +54,11 @@ private fun handlePrepareScreen(
         wallets = action.wallets,
         createBackupAllowed = action.scanResponse.card.backupStatus == CardDTO.BackupStatus.NoBackup,
         appCurrency = store.state.globalState.appCurrency,
-        isBiometricsAvailable = tangemSdkManager.canUseBiometry,
-        saveWallets = preferencesStorage.shouldSaveUserWallets,
-        saveAccessCodes = preferencesStorage.shouldSaveAccessCodes,
+        appSettingsState = AppSettingsState(
+            isBiometricsAvailable = tangemSdkManager.canUseBiometry,
+            saveWallets = preferencesStorage.shouldSaveUserWallets,
+            saveAccessCodes = preferencesStorage.shouldSaveAccessCodes,
+        ),
     )
 }
 
@@ -162,14 +164,41 @@ private fun handlePrivacyAction(
     state: DetailsState,
 ): DetailsState {
     return when (action) {
-        is DetailsAction.AppSettings.SwitchPrivacySetting.Success -> when (action.setting) {
-            PrivacySetting.SaveWallets -> state.copy(saveWallets = action.enable)
-            PrivacySetting.SaveAccessCode -> state.copy(saveAccessCodes = action.enable)
-        }
-        is DetailsAction.AppSettings.BiometricsStatusChanged -> state.copy(
-            needEnrollBiometrics = action.needEnrollBiometrics,
+        is DetailsAction.AppSettings.SwitchPrivacySetting -> state.copy(
+            appSettingsState = when (action.setting) {
+                AppSetting.SaveWallets -> state.appSettingsState.copy(
+                    isInProgress = true,
+                    saveWallets = action.enable,
+                )
+                AppSetting.SaveAccessCode -> state.appSettingsState.copy(
+                    isInProgress = true,
+                    saveWallets = true, // User can't enable access codes saving without wallets saving
+                    saveAccessCodes = action.enable,
+                )
+            },
         )
-        is DetailsAction.AppSettings.SwitchPrivacySetting,
+        is DetailsAction.AppSettings.SwitchPrivacySetting.Success -> state.copy(
+            appSettingsState = state.appSettingsState.copy(
+                isInProgress = false,
+            ),
+        )
+        is DetailsAction.AppSettings.SwitchPrivacySetting.Failure -> state.copy(
+            appSettingsState = when (action.setting) {
+                AppSetting.SaveWallets -> state.appSettingsState.copy(
+                    isInProgress = false,
+                    saveWallets = action.prevState,
+                )
+                AppSetting.SaveAccessCode -> state.appSettingsState.copy(
+                    isInProgress = false,
+                    saveAccessCodes = action.prevState,
+                )
+            },
+        )
+        is DetailsAction.AppSettings.BiometricsStatusChanged -> state.copy(
+            appSettingsState = state.appSettingsState.copy(
+                needEnrollBiometrics = action.needEnrollBiometrics,
+            ),
+        )
         is DetailsAction.AppSettings.EnrollBiometrics,
         is DetailsAction.AppSettings.CheckBiometricsStatus,
         -> state
