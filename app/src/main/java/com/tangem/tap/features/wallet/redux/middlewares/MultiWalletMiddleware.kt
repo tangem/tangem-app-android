@@ -8,7 +8,6 @@ import com.tangem.common.extensions.guard
 import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.common.analytics.events.AnalyticsParam
-import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.analytics.events.Token.ButtonRemoveToken
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchErrorNotification
@@ -183,7 +182,6 @@ class MultiWalletMiddleware {
         selectedUserWallet: UserWallet,
         state: WalletState?,
     ) = scope.launch(Dispatchers.Default) {
-        Analytics.send(MainScreen.CardWasScanned())
         ScanCardProcessor.scan(
             analyticsEvent = null,
             cardId = selectedUserWallet.cardId,
