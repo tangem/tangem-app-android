@@ -12,18 +12,18 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.tangem.core.ui.components.TextButton
 import com.tangem.core.ui.components.WarningTextButton
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.tap.features.details.redux.PrivacySetting
+import com.tangem.tap.features.details.redux.AppSetting
 import com.tangem.wallet.R
 
 @Composable
 internal fun SettingsAlertDialog(
-    element: PrivacySetting,
-    onDialogStateChange: (PrivacySetting?) -> Unit,
-    onSettingToggle: () -> Unit
+    element: AppSetting,
+    onDialogStateChange: (AppSetting?) -> Unit,
+    onSettingToggle: () -> Unit,
 ) {
     val text = when (element) {
-        PrivacySetting.SaveWallets -> R.string.app_settings_off_saved_wallet_alert_message
-        PrivacySetting.SaveAccessCode -> R.string.app_settings_off_saved_access_code_alert_message
+        AppSetting.SaveWallets -> R.string.app_settings_off_saved_wallet_alert_message
+        AppSetting.SaveAccessCode -> R.string.app_settings_off_saved_access_code_alert_message
     }
 
     AlertDialog(
@@ -74,7 +74,7 @@ private fun SettingsAlertDialogSample(
             .background(TangemTheme.colors.background.primary),
     ) {
         SettingsAlertDialog(
-            element = PrivacySetting.SaveAccessCode,
+            element = AppSetting.SaveAccessCode,
             onDialogStateChange = {},
             onSettingToggle = { },
         )
