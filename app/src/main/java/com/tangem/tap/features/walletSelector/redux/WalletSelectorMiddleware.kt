@@ -121,7 +121,7 @@ internal class WalletSelectorMiddleware {
     }
 
     private fun unlockWalletsWithBiometry() {
-        Analytics.send(MyWallets.Button.UnlockWithBiometrics)
+        Analytics.send(MyWallets.Button.UnlockWithBiometrics())
 
         scope.launch {
             userWalletsListManager.unlockWithBiometry()
@@ -135,7 +135,7 @@ internal class WalletSelectorMiddleware {
     }
 
     private fun addWallet() = scope.launch {
-        Analytics.send(MyWallets.Button.ScanNewCard)
+        Analytics.send(MyWallets.Button.ScanNewCard())
 
         val prevUseBiometricsForAccessCode = tangemSdkManager.useBiometricsForAccessCode()
 
@@ -145,6 +145,7 @@ internal class WalletSelectorMiddleware {
         )
 
         ScanCardProcessor.scan(
+            analyticsEvent = MyWallets.CardWasScanned(),
             onWalletNotCreated = {
                 // No need to rollback policy, continue with the policy set before the card scan
                 store.dispatchOnMain(WalletSelectorAction.AddWallet.Success)
@@ -175,8 +176,6 @@ internal class WalletSelectorMiddleware {
 
         return userWalletsListManager.save(userWallet)
             .doOnSuccess {
-                Analytics.send(MyWallets.CardWasScanned)
-
                 store.dispatchOnMain(WalletSelectorAction.AddWallet.Success)
                 store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
                 store.onUserWalletSelected(userWallet)
@@ -227,7 +226,7 @@ internal class WalletSelectorMiddleware {
     }
 
     private fun deleteWallets(userWalletsIds: List<UserWalletId>, state: WalletSelectorState) {
-        Analytics.send(MyWallets.Button.DeleteWalletTapped)
+        Analytics.send(MyWallets.Button.DeleteWalletTapped())
 
         scope.launch {
             when (userWalletsIds.size) {
@@ -244,7 +243,7 @@ internal class WalletSelectorMiddleware {
     }
 
     private fun renameWallet(userWalletId: UserWalletId, newName: String) {
-        Analytics.send(MyWallets.Button.EditWalletTapped)
+        Analytics.send(MyWallets.Button.EditWalletTapped())
 
         scope.launch {
             userWalletsListManager.update(userWalletId) { it.copy(name = newName) }
