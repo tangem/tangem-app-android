@@ -44,6 +44,10 @@ internal class DefaultWalletStoresManager(
             .distinctUntilChanged()
     }
 
+    override suspend fun getSync(userWalletId: UserWalletId): List<WalletStoreModel> {
+        return walletStoresRepository.getSync(userWalletId)
+    }
+
     override suspend fun delete(userWalletsIds: List<UserWalletId>): CompletionResult<Unit> {
         return walletStoresRepository.delete(userWalletsIds)
             .flatMap { walletManagersRepository.delete(userWalletsIds) }
