@@ -498,8 +498,9 @@ internal class SwapInteractorImpl @Inject constructor(
 
     private fun isBalanceEnough(fromToken: Currency, networkId: String, amount: SwapAmount, fee: BigDecimal?): Boolean {
         /** to compare [BigDecimal] use only comparator */
-        return (userWalletManager.getCurrentWalletTokensBalance(networkId)[fromToken.symbol]?.value
-            ?: BigDecimal.ZERO) > amount.value.plus(fee ?: BigDecimal.ZERO)
+        val balance = userWalletManager.getCurrentWalletTokensBalance(networkId)[fromToken.symbol]?.value
+            ?: BigDecimal.ZERO
+        return balance > amount.value.plus(fee ?: BigDecimal.ZERO)
     }
 
     private fun getWalletAddress(networkId: String): String {
@@ -522,11 +523,11 @@ internal class SwapInteractorImpl @Inject constructor(
             return false
         }
         userWalletManager.getNativeTokenBalance(networkId)?.let { balance ->
-            return (balance.value.minus(spendAmount.value) > fee.multiply(
+            return balance.value.minus(spendAmount.value) > fee.multiply(
                 BigDecimal.valueOf(
                     INCREASE_FEE_TO_CHECK_ENOUGH_PERCENT,
                 ),
-            ))
+            )
         }
         return false
     }
