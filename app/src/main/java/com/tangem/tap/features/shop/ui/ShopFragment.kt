@@ -14,6 +14,7 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.GlobalLayoutStateHandler
 import com.tangem.tap.common.KeyboardObserver
 import com.tangem.tap.common.analytics.events.Shop
+import com.tangem.tap.common.extensions.getQuantityString
 import com.tangem.tap.common.extensions.show
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.common.shop.data.ProductType
@@ -106,6 +107,8 @@ class ShopFragment : BaseStoreFragment(R.layout.fragment_shop), StoreSubscriber<
         chipProduct2.setOnCheckedChangeListener { _, isChecked ->
             if (isChecked) store.dispatch(ShopAction.SelectProduct(ProductType.WALLET_2_CARDS))
         }
+        chipProduct1.text = chipProduct1.getQuantityString(R.plurals.card_label_card_count, quantity = 3)
+        chipProduct2.text = chipProduct2.getQuantityString(R.plurals.card_label_card_count, quantity = 2)
     }
 
     private fun setupPromoCodeEditText() = with(binding) {
