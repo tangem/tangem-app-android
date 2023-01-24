@@ -4,13 +4,13 @@
         <item quantity="other">%d cards</item>
     </plurals>
 
-    <plurals name="tokens_count">
-        <item quantity="one">%d token</item>
-        <item quantity="other">%d tokens</item>
-    </plurals>
-
     <plurals name="referral_wallets_purchased_count">
         <item quantity="one">%d wallet</item>
         <item quantity="other">%d wallets</item>
+    </plurals>
+
+    <plurals name="tokens_count">
+        <item quantity="one">%d token</item>
+        <item quantity="other">%d tokens</item>
     </plurals>
 </resources>
