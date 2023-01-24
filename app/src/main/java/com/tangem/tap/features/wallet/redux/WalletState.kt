@@ -367,11 +367,18 @@ data class WalletData(
     }
 
     private fun assembleTokenWarnings(walletWarnings: MutableList<WalletWarning>) {
-        if (!currency.isToken()) return
+        with(currency) {
+            if (!isToken()) return
 
-        val blockchainFullName = currency.blockchain.fullName
-        if (blockchainAmountIsEmpty() && !tokenAmountIsEmpty()) {
-            walletWarnings.add(WalletWarning.BalanceNotEnoughForFee(blockchainFullName))
+            if (blockchainAmountIsEmpty() && !tokenAmountIsEmpty()) {
+                walletWarnings.add(
+                    WalletWarning.BalanceNotEnoughForFee(
+                        currencyName = currencyName,
+                        blockchainFullName = blockchain.fullName,
+                        blockchainSymbol = blockchain.currency
+                    )
+                )
+            }
         }
     }
 
