@@ -102,6 +102,7 @@ sealed class WalletAction : Action {
         data class SetPrimaryToken(val token: Token) : MultiWallet()
         data class ShowWalletBackupWarning(val show: Boolean) : MultiWallet()
         object BackupWallet : MultiWallet()
+        object ScheduleCheckForMissingDerivation : MultiWallet()
         data class AddMissingDerivations(val blockchains: List<BlockchainNetwork>) : MultiWallet()
         object ScanToGetDerivations : MultiWallet()
     }
