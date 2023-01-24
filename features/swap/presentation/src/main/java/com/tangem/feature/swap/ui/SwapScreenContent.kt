@@ -37,6 +37,7 @@ import com.tangem.core.ui.components.SimpleOkDialog
 import com.tangem.core.ui.components.SmallInfoCard
 import com.tangem.core.ui.components.SmallInfoCardWithWarning
 import com.tangem.core.ui.components.SpacerH16
+import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.components.keyboardAsState
 import com.tangem.core.ui.extensions.getActiveIconRes
 import com.tangem.core.ui.res.TangemTheme
@@ -59,62 +60,69 @@ internal fun SwapScreenContent(state: SwapStateHolder, onPermissionWarningClick:
             .fillMaxSize()
             .background(color = TangemTheme.colors.background.secondary),
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .verticalScroll(rememberScrollState())
-                .padding(
-                    start = TangemTheme.dimens.spacing16,
-                    end = TangemTheme.dimens.spacing16,
-                    top = TangemTheme.dimens.spacing16,
-                    bottom = TangemTheme.dimens.spacing32,
-                ),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
-        ) {
-            MainInfo(state)
+        Column {
+            AppBarWithBackButton(
+                text = stringResource(R.string.swapping_swap),
+                onBackClick = state.onBackClicked,
+                iconRes = R.drawable.ic_close_24,
+            )
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(
+                        start = TangemTheme.dimens.spacing16,
+                        end = TangemTheme.dimens.spacing16,
+                        top = TangemTheme.dimens.spacing16,
+                        bottom = TangemTheme.dimens.spacing32,
+                    ),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
+            ) {
+                MainInfo(state)
 
-            FeeItem(feeState = state.fee, currency = state.networkCurrency)
+                FeeItem(feeState = state.fee, currency = state.networkCurrency)
 
-            if (state.warnings.isNotEmpty()) {
-                SwapWarnings(
-                    warnings = state.warnings,
-                    onPermissionWarningClick = onPermissionWarningClick,
-                )
-            }
+                if (state.warnings.isNotEmpty()) {
+                    SwapWarnings(
+                        warnings = state.warnings,
+                        onPermissionWarningClick = onPermissionWarningClick,
+                    )
+                }
 
-            if (state.permissionState is SwapPermissionState.InProgress) {
-                CardWithIcon(
-                    title = stringResource(id = R.string.swapping_pending_transaction_title),
-                    description = stringResource(id = R.string.swapping_pending_transaction_subtitle),
-                    icon = {
-                        CircularProgressIndicator(
-                            modifier = Modifier
-                                .size(TangemTheme.dimens.size16),
-                            color = TangemTheme.colors.icon.primary1,
-                            strokeWidth = TangemTheme.dimens.size2,
-                        )
-                    },
-                )
-            }
+                if (state.permissionState is SwapPermissionState.InProgress) {
+                    CardWithIcon(
+                        title = stringResource(id = R.string.swapping_pending_transaction_title),
+                        description = stringResource(id = R.string.swapping_pending_transaction_subtitle),
+                        icon = {
+                            CircularProgressIndicator(
+                                modifier = Modifier
+                                    .size(TangemTheme.dimens.size16),
+                                color = TangemTheme.colors.icon.primary1,
+                                strokeWidth = TangemTheme.dimens.size2,
+                            )
+                        },
+                    )
+                }
 
-            if (state.warnings.any { it is SwapWarning.InsufficientFunds }) {
-                PrimaryButton(
-                    modifier = Modifier.fillMaxWidth(),
-                    text = stringResource(id = R.string.swapping_insufficient_funds),
-                    enabled = false,
-                    showProgress = state.swapButton.loading,
-                    onClick = state.swapButton.onClick,
-                )
-            } else {
-                PrimaryButtonIconRight(
-                    modifier = Modifier.fillMaxWidth(),
-                    text = stringResource(id = R.string.swapping_swap),
-                    icon = painterResource(id = R.drawable.ic_tangem_24),
-                    enabled = state.swapButton.enabled,
-                    showProgress = state.swapButton.loading,
-                    onClick = state.swapButton.onClick,
-                )
+                if (state.warnings.any { it is SwapWarning.InsufficientFunds }) {
+                    PrimaryButton(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = stringResource(id = R.string.swapping_insufficient_funds),
+                        enabled = false,
+                        showProgress = state.swapButton.loading,
+                        onClick = state.swapButton.onClick,
+                    )
+                } else {
+                    PrimaryButtonIconRight(
+                        modifier = Modifier.fillMaxWidth(),
+                        text = stringResource(id = R.string.swapping_swap),
+                        icon = painterResource(id = R.drawable.ic_tangem_24),
+                        enabled = state.swapButton.enabled,
+                        showProgress = state.swapButton.loading,
+                        onClick = state.swapButton.onClick,
+                    )
+                }
             }
         }
 
