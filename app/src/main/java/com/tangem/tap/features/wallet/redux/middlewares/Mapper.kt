@@ -1,6 +1,5 @@
 package com.tangem.tap.features.wallet.redux.middlewares
 
-import com.tangem.blockchain.common.AmountType
 import com.tangem.common.extensions.isZero
 import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.common.extensions.toFiatRateString
@@ -50,13 +49,14 @@ internal fun WalletStoreModel.mapToReduxModel(
     return WalletStore(
         walletManager = walletManager,
         blockchainNetwork = blockchainNetwork,
-        walletsData = walletsData.mapToReduxModel(isMultiWalletAllowed, walletRent),
+        walletsData = walletsData.mapToReduxModel(isMultiWalletAllowed, blockchainWalletData.status.amount, walletRent),
     )
 }
 
 @Suppress("LongMethod", "ComplexMethod")
 private fun List<WalletDataModel>.mapToReduxModel(
     isMultiWalletAllowed: Boolean,
+    blockchainAmount: BigDecimal,
     walletRent: WalletStoreModel.WalletRent?,
 ): List<WalletData> {
     return this.map { walletDataModel ->
@@ -72,7 +72,6 @@ private fun List<WalletDataModel>.mapToReduxModel(
                 ?.takeIf { !status.isErrorStatus }
                 ?.toFormattedFiatValue(appCurrency.symbol)
             val fiatRateFormatted = fiatRate?.toFiatRateString(appCurrency.symbol)
-            val blockchainAmountValue = getBlockchainAmount()
 
             WalletData(
                 currency = currency,
@@ -87,7 +86,7 @@ private fun List<WalletDataModel>.mapToReduxModel(
                 fiatRateString = fiatRateFormatted,
                 pendingTransactions = status.pendingTransactions,
                 mainButton = WalletMainButton.SendButton(
-                    enabled = !blockchainAmountValue.isZero() &&
+                    enabled = !blockchainAmount.isZero() &&
                         !status.amount.isZero() &&
                         status.pendingTransactions.isEmpty(),
                 ),
@@ -111,7 +110,7 @@ private fun List<WalletDataModel>.mapToReduxModel(
                     },
                     currency = currency.currencyName,
                     currencySymbol = currency.currencySymbol,
-                    blockchainAmount = blockchainAmountValue,
+                    blockchainAmount = blockchainAmount,
                     amount = amount,
                     amountFormatted = amountFormatted,
                     fiatAmount = fiatAmount,
@@ -138,9 +137,4 @@ private fun List<WalletDataModel>.mapToReduxModel(
             )
         }
     }
-}
-
-private fun WalletDataModel.getBlockchainAmount(): BigDecimal {
-    val walletStore = store.state.walletState.getWalletStore(currency) ?: return BigDecimal.ZERO
-    return walletStore.walletManager?.wallet?.amounts?.get(AmountType.Coin)?.value ?: BigDecimal.ZERO
 }
