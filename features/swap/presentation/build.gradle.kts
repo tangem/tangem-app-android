@@ -53,6 +53,7 @@ dependencies {
     implementation(project(":core:ui"))
 
     /** AndroidX */
+    implementation(AndroidX.activityCompose)
     implementation(AndroidX.appCompat)
     implementation(AndroidX.fragmentKtx)
     implementation(AndroidX.lifecycleViewModelKtx)
