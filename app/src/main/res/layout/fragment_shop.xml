@@ -145,7 +145,6 @@
                     android:layout_width="wrap_content"
                     android:layout_height="36dp"
                     android:checked="true"
-                    android:text="@string/shop_3_cards"
                     app:chipMinTouchTargetSize="0dp" />
 
                 <com.google.android.material.chip.Chip
@@ -154,10 +153,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="36dp"
                     android:checked="false"
-                    android:text="@string/shop_2_cards"
                     app:chipMinTouchTargetSize="0dp" />
-
-
             </com.google.android.material.chip.ChipGroup>
 
             <View
