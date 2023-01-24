@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.ui
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -22,7 +23,6 @@ import com.tangem.core.ui.components.SpacerH10
 import com.tangem.core.ui.components.SpacerH12
 import com.tangem.core.ui.components.SpacerH16
 import com.tangem.core.ui.components.SpacerH28
-import com.tangem.core.ui.components.SpacerH32
 import com.tangem.core.ui.components.atoms.Hand
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.models.ApprovePermissionButton
@@ -31,10 +31,9 @@ import com.tangem.feature.swap.models.SwapPermissionState
 import com.tangem.feature.swap.presentation.R
 
 @Composable
-fun SwapPermissionBottomSheetContent(
-    data: SwapPermissionState.ReadyForRequest?,
-    onCancel: () -> Unit,
-) {
+fun SwapPermissionBottomSheetContent(data: SwapPermissionState.ReadyForRequest, onCancel: () -> Unit) {
+    BackHandler(onBack = onCancel)
+
     Column(
         modifier = Modifier
             .background(color = TangemTheme.colors.background.primary)
@@ -57,7 +56,7 @@ fun SwapPermissionBottomSheetContent(
         Text(
             text = stringResource(
                 id = R.string.swapping_permission_subheader,
-                data?.currency ?: "",
+                data.currency,
             ),
             color = TangemTheme.colors.text.secondary,
             style = TangemTheme.typography.body2,
@@ -67,13 +66,7 @@ fun SwapPermissionBottomSheetContent(
 
         SpacerH16()
 
-        ApprovalBottomSheetInfo(
-            currency = data?.currency ?: "",
-            amount = data?.amount ?: "",
-            walletAddress = data?.walletAddress ?: "",
-            spenderAddress = data?.spenderAddress ?: "",
-            fee = data?.fee ?: "",
-        )
+        ApprovalBottomSheetInfo(data)
 
         SpacerH28()
 
@@ -81,7 +74,7 @@ fun SwapPermissionBottomSheetContent(
             text = stringResource(id = R.string.swapping_permission_buttons_approve),
             icon = painterResource(id = R.drawable.ic_tangem_24),
             modifier = Modifier.fillMaxWidth(),
-            onClick = { data?.approveButton?.onClick?.invoke() },
+            onClick = data.approveButton.onClick,
         )
 
         SpacerH12()
@@ -90,23 +83,17 @@ fun SwapPermissionBottomSheetContent(
             text = stringResource(id = R.string.common_cancel),
             modifier = Modifier.fillMaxWidth(),
             onClick = {
-                data?.cancelButton?.onClick?.invoke()
+                data.cancelButton.onClick()
                 onCancel()
             },
         )
 
-        SpacerH32()
+        SpacerH16()
     }
 }
 
 @Composable
-private fun ApprovalBottomSheetInfo(
-    currency: String,
-    amount: String,
-    walletAddress: String,
-    spenderAddress: String,
-    fee: String,
-) {
+private fun ApprovalBottomSheetInfo(data: SwapPermissionState.ReadyForRequest) {
     Column(
         modifier = Modifier
             .background(color = TangemTheme.colors.background.primary)
@@ -117,13 +104,13 @@ private fun ApprovalBottomSheetInfo(
             ),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        AmountItem(currency = currency, amount = amount)
+        AmountItem(currency = data.currency, amount = data.amount)
         DividerBottomSheet()
-        WalletAddressItem(walletAddress = walletAddress)
+        WalletAddressItem(walletAddress = data.walletAddress)
         DividerBottomSheet()
-        SpenderItem(spenderAddress = spenderAddress)
+        SpenderItem(spenderAddress = data.spenderAddress)
         DividerBottomSheet()
-        FeeItem(fee = fee)
+        FeeItem(fee = data.fee)
     }
 }
 
@@ -138,11 +125,11 @@ private fun DividerBottomSheet() {
 @Composable
 private fun InformationItem(subtitle: String, value: String) {
     Row(
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .fillMaxWidth()
             .padding(TangemTheme.dimens.spacing16),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             text = subtitle,
@@ -151,13 +138,11 @@ private fun InformationItem(subtitle: String, value: String) {
             maxLines = 1,
         )
 
-        SpacerH16()
-
         MiddleEllipsisText(
             text = value,
             color = TangemTheme.colors.text.tertiary,
             style = TangemTheme.typography.body2,
-            modifier = Modifier.padding(start = TangemTheme.dimens.spacing16),
+            modifier = Modifier.padding(start = TangemTheme.dimens.spacing16)
         )
     }
 }
