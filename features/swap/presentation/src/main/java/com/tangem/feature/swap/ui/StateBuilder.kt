@@ -134,9 +134,9 @@ class StateBuilder(val actions: UiActions) {
             permissionState = convertPermissionState(quoteModel.permissionState, actions.onGivePermissionClick),
             fee = feeState,
             swapButton = SwapButton(
-                enabled = quoteModel.preparedSwapConfigState.isAllowedToSpend
-                    && quoteModel.preparedSwapConfigState.isBalanceEnough
-                    && quoteModel.preparedSwapConfigState.isFeeEnough,
+                enabled = quoteModel.preparedSwapConfigState.isAllowedToSpend &&
+                    quoteModel.preparedSwapConfigState.isBalanceEnough &&
+                    quoteModel.preparedSwapConfigState.isFeeEnough,
                 loading = false,
                 onClick = actions.onSwapClick,
             ),
@@ -270,7 +270,7 @@ class StateBuilder(val actions: UiActions) {
 
     fun mapError(uiState: SwapStateHolder, error: DataError): SwapStateHolder {
         return when (error) {
-            //todo use if needed later
+            // todo use if needed later
             // DataError.InsufficientLiquidity -> TODO()
             // DataError.NoError -> TODO()
             is DataError.UnknownError -> addWarning(uiState, error.message)
