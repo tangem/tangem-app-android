@@ -167,6 +167,9 @@ class MultiWalletMiddleware {
                     store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingWallet))
                 }
             }
+            is WalletAction.MultiWallet.AddMissingDerivations -> {
+                scope.launch { handleBasicAnalyticsEvent() }
+            }
             is WalletAction.MultiWallet.ScanToGetDerivations -> {
                 val selectedWallet = userWalletsListManager.selectedUserWalletSync
                 if (selectedWallet != null) {
@@ -182,6 +185,7 @@ class MultiWalletMiddleware {
         selectedUserWallet: UserWallet,
         state: WalletState?,
     ) = scope.launch(Dispatchers.Default) {
+        dispatchOnMain(WalletAction.MultiWallet.ScheduleCheckForMissingDerivation)
         ScanCardProcessor.scan(
             analyticsEvent = null,
             cardId = selectedUserWallet.cardId,
