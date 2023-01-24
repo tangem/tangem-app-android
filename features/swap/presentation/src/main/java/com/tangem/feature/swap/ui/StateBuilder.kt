@@ -134,9 +134,9 @@ class StateBuilder(val actions: UiActions) {
             permissionState = convertPermissionState(quoteModel.permissionState, actions.onGivePermissionClick),
             fee = feeState,
             swapButton = SwapButton(
-                enabled = quoteModel.preparedSwapConfigState.isAllowedToSpend
-                    && quoteModel.preparedSwapConfigState.isBalanceEnough
-                    && quoteModel.preparedSwapConfigState.isFeeEnough,
+                enabled = quoteModel.preparedSwapConfigState.isAllowedToSpend &&
+                    quoteModel.preparedSwapConfigState.isBalanceEnough &&
+                    quoteModel.preparedSwapConfigState.isFeeEnough,
                 loading = false,
                 onClick = actions.onSwapClick,
             ),
