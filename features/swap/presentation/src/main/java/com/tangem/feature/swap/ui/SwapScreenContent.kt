@@ -231,7 +231,11 @@ private fun FeeItem(feeState: FeeState, currency: String) {
             SmallInfoCardWithWarning(
                 startText = titleString,
                 endText = feeState.fee,
-                warningText = stringResource(id = R.string.token_details_send_blocked_fee_format, currency, currency),
+                warningText = stringResource(
+                    id = R.string.swapping_not_enough_funds_for_fee,
+                    currency,
+                    currency,
+                ),
             )
         }
         is FeeState.Empty -> {}
