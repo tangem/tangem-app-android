@@ -31,6 +31,7 @@ import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.features.wallet.models.toBlockchainNetworks
 import com.tangem.tap.features.wallet.redux.WalletAction
+import com.tangem.tap.features.wallet.redux.middlewares.handleBasicAnalyticsEvent
 import com.tangem.tap.network.NetworkConnectivity
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
@@ -117,6 +118,7 @@ class TapWalletManager {
             .doOnSuccess {
                 Timber.d("Wallet stores fetched for ${userWallet.walletId}")
                 store.dispatchOnMain(WalletAction.LoadData.Success)
+                handleBasicAnalyticsEvent()
             }
             .doOnFailure { error ->
                 val errorAction = when (error) {
@@ -190,6 +192,7 @@ class TapWalletManager {
         }
 
         if (data.card.isMultiwalletAllowed) {
+            dispatchOnMain(WalletAction.MultiWallet.ScheduleCheckForMissingDerivation)
             loadMultiWalletData(data)
         } else {
             loadSingleWalletData(data)
@@ -212,9 +215,7 @@ class TapWalletManager {
             .filter {
                 it.derivationPath != null && !scanResponse.hasDerivation(it.blockchain, it.derivationPath)
             }
-        if (missingDerivations.isNotEmpty()) {
-            store.dispatch(WalletAction.MultiWallet.AddMissingDerivations(missingDerivations))
-        }
+        store.dispatch(WalletAction.MultiWallet.AddMissingDerivations(missingDerivations))
     }
 
     private suspend fun loadSingleWalletData(data: ScanResponse) {
