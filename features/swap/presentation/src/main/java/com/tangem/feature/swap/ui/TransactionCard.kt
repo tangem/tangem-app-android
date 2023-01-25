@@ -351,13 +351,14 @@ fun Token(
                 .align(Alignment.BottomStart)
                 .size(TangemTheme.dimens.size36)
 
+            val data = tokenIconUrl.ifEmpty {
+                iconPlaceholder
+            }
             SubcomposeAsyncImage(
                 modifier = tokenImageModifier,
                 model = ImageRequest.Builder(LocalContext.current)
-                    .data(tokenIconUrl)
+                    .data(data)
                     .crossfade(true)
-                    .error(iconPlaceholder ?: 0)
-                    .placeholder(iconPlaceholder ?: 0)
                     .build(),
                 loading = { TokenImageShimmer(modifier = tokenImageModifier) },
                 // error = { CurrencyPlaceholderIcon(modifier = tokenImageModifier, tokenCurrency) },
