@@ -8,6 +8,7 @@ import androidx.compose.material.ModalBottomSheetLayout
 import androidx.compose.material.ModalBottomSheetValue
 import androidx.compose.material.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import com.tangem.core.ui.res.TangemTheme
@@ -34,6 +35,10 @@ internal fun SwapScreen(stateHolder: SwapStateHolder) {
                     )
                 } else {
                     // Required "else" block to prevent compose crash
+                    // always close BS if its empty, cause user should not see this
+                    LaunchedEffect(Unit) {
+                        coroutineScope.launch { bottomSheetState.hide() }
+                    }
                     Box(modifier = Modifier.fillMaxSize())
                 }
             },

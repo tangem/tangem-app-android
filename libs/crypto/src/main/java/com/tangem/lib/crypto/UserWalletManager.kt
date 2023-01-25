@@ -14,6 +14,8 @@ interface UserWalletManager {
      */
     suspend fun getUserTokens(networkId: String): List<Currency>
 
+    fun getNativeTokenForNetwork(networkId: String): Currency
+
     /**
      * Returns user walletId
      */
@@ -51,16 +53,14 @@ interface UserWalletManager {
 
     fun getNativeTokenBalance(networkId: String): ProxyAmount?
 
+    /**
+     * @param networkId
+     * @return currency name
+     */
     fun getNetworkCurrency(networkId: String): String
 
     /**
      * Returns selected app currency
      */
     fun getUserAppCurrency(): ProxyFiatCurrency
-
-    /**
-     * @param networkId
-     * @return currency name
-     */
-    fun getCurrencyByNetworkId(networkId: String): String
 }
