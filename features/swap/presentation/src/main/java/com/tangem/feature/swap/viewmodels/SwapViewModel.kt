@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.feature.swap.domain.models.domain.Currency
 import com.tangem.feature.swap.domain.models.domain.SwapDataModel
+import com.tangem.feature.swap.domain.models.formatToUIRepresentation
 import com.tangem.feature.swap.domain.models.ui.FoundTokensState
 import com.tangem.feature.swap.domain.models.ui.PermissionDataState
 import com.tangem.feature.swap.domain.models.ui.SwapState
@@ -23,6 +24,7 @@ import com.tangem.feature.swap.ui.StateBuilder
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.Debouncer
 import com.tangem.utils.coroutines.runCatching
+import com.tangem.utils.toFormattedString
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import kotlinx.serialization.decodeFromString
@@ -125,6 +127,7 @@ internal class SwapViewModel @Inject constructor(
         return PeriodicTask(
             UPDATE_DELAY,
             task = {
+                uiState = stateBuilder.createSilentLoadState(uiState)
                 runCatching(dispatchers.io) {
                     dataState = dataState.copy(
                         amount = amount,
@@ -244,7 +247,7 @@ internal class SwapViewModel @Inject constructor(
     private fun onSearchEntered(searchQuery: String) {
         viewModelScope.launch(dispatchers.main) {
             runCatching(dispatchers.io) {
-                swapInteractor.onSearchToken(dataState.networkId, searchQuery)
+                swapInteractor.searchTokens(dataState.networkId, searchQuery)
             }
                 .onSuccess {
                     updateTokensState(it)
@@ -283,20 +286,34 @@ internal class SwapViewModel @Inject constructor(
                 toCurrency = newToToken,
             )
             isOrderReversed = !isOrderReversed
+            lastAmount.value = cutAmountWithDecimals(swapInteractor.getTokenDecimals(newFromToken), lastAmount.value)
+            uiState = stateBuilder.updateSwapAmount(uiState, lastAmount.value)
             startLoadingQuotes(newFromToken, newToToken, lastAmount.value)
         }
     }
 
     private fun onAmountChanged(value: String) {
-        uiState = stateBuilder.updateSwapAmount(uiState, value)
-        lastAmount.value = value
-        amountDebouncer.debounce(DEBOUNCE_AMOUNT_DELAY, viewModelScope) {
-            val fromToken = dataState.fromCurrency
-            val toToken = dataState.toCurrency
-            if (fromToken != null && toToken != null) {
+        val fromToken = dataState.fromCurrency
+        val toToken = dataState.toCurrency
+        if (fromToken != null && toToken != null) {
+            val cutValue = cutAmountWithDecimals(swapInteractor.getTokenDecimals(fromToken), value)
+            uiState = stateBuilder.updateSwapAmount(uiState, cutValue)
+            lastAmount.value = cutValue
+            amountDebouncer.debounce(DEBOUNCE_AMOUNT_DELAY, viewModelScope) {
                 startLoadingQuotes(fromToken, toToken, lastAmount.value)
             }
         }
+    }
+
+    private fun onMaxAmountClicked() {
+        dataState.fromCurrency?.let {
+            val balance = swapInteractor.getTokenBalance(it)
+            onAmountChanged(balance.formatToUIRepresentation())
+        }
+    }
+
+    private fun cutAmountWithDecimals(maxDecimals: Int, amount: String): String {
+        return amount.toBigDecimalOrNull()?.toFormattedString(maxDecimals) ?: INITIAL_AMOUNT
     }
 
     private fun createUiActions(): UiActions {
@@ -308,12 +325,13 @@ internal class SwapViewModel @Inject constructor(
             onGivePermissionClick = { givePermissionsToSwap() },
             onChangeCardsClicked = { onChangeCardsClicked() },
             onBackClicked = { onSearchEntered("") },
+            onMaxAmountSelected = { onMaxAmountClicked() },
         )
     }
 
     companion object {
         private const val INITIAL_AMOUNT = ""
-        private const val UPDATE_DELAY = 60000L
+        private const val UPDATE_DELAY = 10000L
         private const val DEBOUNCE_AMOUNT_DELAY = 1000L
     }
 }
