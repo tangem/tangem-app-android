@@ -9,6 +9,7 @@ import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.domain.common.CardDTO
 import com.tangem.domain.common.TapWorkarounds.derivationStyle
 import com.tangem.domain.common.extensions.fromNetworkId
+import com.tangem.domain.common.extensions.toCoinId
 import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.lib.crypto.UserWalletManager
 import com.tangem.lib.crypto.models.Currency
@@ -57,6 +58,16 @@ class UserWalletManagerImpl(
         } else {
             emptyList()
         }
+    }
+
+    override fun getNativeTokenForNetwork(networkId: String): Currency {
+        val blockchain = requireNotNull(Blockchain.fromNetworkId(networkId)) { "blockchain not found" }
+        return NativeToken(
+            id = blockchain.toCoinId(),
+            name = blockchain.fullName,
+            symbol = blockchain.currency,
+            networkId = networkId,
+        )
     }
 
     override fun getWalletId(): String {
@@ -145,11 +156,6 @@ class UserWalletManagerImpl(
             name = appCurrency.name,
             symbol = appCurrency.symbol,
         )
-    }
-
-    override fun getCurrencyByNetworkId(networkId: String): String {
-        val blockchain = requireNotNull(Blockchain.fromNetworkId(networkId)) { "blockchain not found" }
-        return blockchain.currency
     }
 
     private fun addNativeTokenToWalletAction(token: NativeToken, card: CardDTO): Action {
