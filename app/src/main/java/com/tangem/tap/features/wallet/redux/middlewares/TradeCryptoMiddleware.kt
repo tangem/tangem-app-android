@@ -4,6 +4,7 @@ import androidx.core.os.bundleOf
 import com.tangem.blockchain.blockchains.ethereum.EthereumWalletManager
 import com.tangem.blockchain.common.AmountType
 import com.tangem.core.analytics.Analytics
+import com.tangem.domain.common.extensions.toCoinId
 import com.tangem.domain.common.extensions.toNetworkId
 import com.tangem.feature.swap.presentation.SwapFragment
 import com.tangem.tap.common.analytics.events.AnalyticsParam
@@ -155,11 +156,11 @@ class TradeCryptoMiddleware {
         return when (this) {
             is Currency.Blockchain -> {
                 SwapCurrency.NativeToken(
-                    id = blockchain.id,
+                    id = blockchain.toCoinId(),
                     name = this.currencyName,
                     symbol = this.currencySymbol,
                     networkId = this.blockchain.toNetworkId(),
-                    logoUrl = getIconUrl(this.blockchain.toNetworkId()),
+                    logoUrl = getIconUrl(this.blockchain.toCoinId()),
                 )
             }
             is Currency.Token -> SwapCurrency.NonNativeToken(
