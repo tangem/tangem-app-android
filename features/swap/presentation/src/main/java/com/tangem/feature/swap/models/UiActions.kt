@@ -8,4 +8,5 @@ data class UiActions(
     val onGivePermissionClick: () -> Unit,
     val onChangeCardsClicked: () -> Unit,
     val onBackClicked: () -> Unit,
+    val onMaxAmountSelected: () -> Unit,
 )
