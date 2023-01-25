@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.domain
 
+import com.tangem.feature.swap.domain.models.SwapAmount
 import com.tangem.feature.swap.domain.models.domain.ApproveModel
 import com.tangem.feature.swap.domain.models.domain.Currency
 import com.tangem.feature.swap.domain.models.domain.SwapDataModel
@@ -27,7 +28,7 @@ interface SwapInteractor {
      * @param searchQuery string query for search
      * @return [FoundTokensState] that contains list of tokens matching condition query
      */
-    suspend fun onSearchToken(networkId: String, searchQuery: String): FoundTokensState
+    suspend fun searchTokens(networkId: String, searchQuery: String): FoundTokensState
 
     /**
      * Find specific token by id, null if not found
@@ -91,4 +92,11 @@ interface SwapInteractor {
     ): TxState
 
     fun getTokenDecimals(token: Currency): Int
+
+    /**
+     * Returns token in wallet balance
+     *
+     * @param token
+     */
+    fun getTokenBalance(token: Currency): SwapAmount
 }
