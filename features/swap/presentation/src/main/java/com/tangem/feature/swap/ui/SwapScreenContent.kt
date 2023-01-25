@@ -39,7 +39,7 @@ import com.tangem.core.ui.components.SmallInfoCardWithWarning
 import com.tangem.core.ui.components.SpacerH16
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.components.keyboardAsState
-import com.tangem.core.ui.extensions.getActiveIconRes
+import com.tangem.core.ui.extensions.getActiveIconResByCoinId
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.models.FeeState
 import com.tangem.feature.swap.models.SwapButton
@@ -137,7 +137,7 @@ internal fun SwapScreenContent(state: SwapStateHolder, onPermissionWarningClick:
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(TangemTheme.colors.button.secondary)
-                    .clickable { state.onMaxAmountSelected }
+                    .clickable { state.onMaxAmountSelected?.invoke() }
                     .padding(
                         horizontal = TangemTheme.dimens.spacing14,
                         vertical = TangemTheme.dimens.spacing16,
@@ -170,7 +170,9 @@ private fun MainInfo(state: SwapStateHolder) {
                 tokenIconUrl = state.sendCardData.tokenIconUrl,
                 tokenCurrency = state.sendCardData.tokenCurrency,
                 networkIconRes = state.sendCardData.networkIconRes,
-                iconPlaceholder = getActiveIconRes(state.sendCardData.tokenId),
+                iconPlaceholder = state.sendCardData.coinId?.let {
+                    getActiveIconResByCoinId(it, state.networkId)
+                },
                 onChangeTokenClick = if (state.sendCardData.canSelectAnotherToken) state.onSelectTokenClick else null,
             )
             SpacerH16()
@@ -182,7 +184,9 @@ private fun MainInfo(state: SwapStateHolder) {
                 tokenIconUrl = state.receiveCardData.tokenIconUrl,
                 tokenCurrency = state.receiveCardData.tokenCurrency,
                 networkIconRes = state.receiveCardData.networkIconRes,
-                iconPlaceholder = getActiveIconRes(state.receiveCardData.tokenId),
+                iconPlaceholder = state.receiveCardData.coinId?.let {
+                    getActiveIconResByCoinId(it, state.networkId)
+                },
                 onChangeTokenClick = if (state.receiveCardData.canSelectAnotherToken) {
                     state.onSelectTokenClick
                 } else {
@@ -190,13 +194,13 @@ private fun MainInfo(state: SwapStateHolder) {
                 },
             )
         }
-        SwapButton()
+        SwapButton(state)
     }
 }
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-private fun SwapButton() {
+private fun SwapButton(state: SwapStateHolder) {
     Card(
         elevation = TangemTheme.dimens.elevation3,
         shape = CircleShape,
@@ -313,7 +317,7 @@ private val sendCard = SwapCardData(
     networkIconRes = R.drawable.img_polygon_22,
     canSelectAnotherToken = false,
     balance = "123",
-    tokenId = "",
+    coinId = "",
 )
 
 private val receiveCard = SwapCardData(
@@ -325,10 +329,11 @@ private val receiveCard = SwapCardData(
     networkIconRes = R.drawable.img_polygon_22,
     canSelectAnotherToken = true,
     balance = "33333",
-    tokenId = "",
+    coinId = "",
 )
 
 private val state = SwapStateHolder(
+    networkId = "ethereum",
     sendCardData = sendCard,
     receiveCardData = receiveCard,
     fee = FeeState.Loaded(fee = "0.155 MATIC (0.14 $)"),
