@@ -39,21 +39,22 @@ class TradeCryptoMiddleware {
         state: () -> AppState?,
         action: WalletAction.TradeCryptoAction.Buy,
     ) {
+        val selectedWalletData = store.state.walletState.selectedWalletData ?: return
+
+        val currency = selectedWalletData.currency
+        Analytics.send(Token.ButtonBuy(AnalyticsParam.CurrencyType.Currency(currency)))
+
         if (action.checkUserLocation && state()?.globalState?.userCountryCode == RUSSIA_COUNTRY_CODE) {
             store.dispatchOnMain(WalletAction.DialogAction.RussianCardholdersWarningDialog())
             return
         }
 
-        val selectedWalletData = store.state.walletState.selectedWalletData ?: return
         val card = store.state.globalState.scanResponse?.card ?: return
-
         val addresses = selectedWalletData.walletAddresses?.list.orEmpty()
         if (addresses.isEmpty()) return
 
         val exchangeManager = store.state.globalState.exchangeManager
         val appCurrency = store.state.globalState.appCurrency
-        val currency = selectedWalletData.currency
-        Analytics.send(Token.ButtonBuy(AnalyticsParam.CurrencyType.Currency(currency)))
 
         if (currency is Currency.Token && currency.blockchain.isTestnet()) {
             val walletManager = store.state.walletState.getWalletManager(currency)
