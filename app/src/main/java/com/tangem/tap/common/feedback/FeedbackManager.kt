@@ -2,6 +2,7 @@ package com.tangem.tap.common.feedback
 
 import android.content.Context
 import android.os.Build
+import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.TapWorkarounds
 import com.tangem.tap.common.extensions.sendEmail
 import com.tangem.tap.common.log.TangemLogCollector
@@ -108,6 +109,7 @@ class FeedbackManager(
     }
 
     private fun showMessagingActivity(context: Context) {
+        Analytics.send(com.tangem.tap.common.analytics.events.Chat.ScreenOpened())
         MessagingActivity.builder()
             .withMultilineResponseOptionsEnabled(false)
             .withBotLabelStringRes(R.string.chat_bot_name)
