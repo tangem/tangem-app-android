@@ -29,13 +29,14 @@ class StateBuilder(val actions: UiActions) {
 
     fun createInitialLoadingState(initialCurrency: Currency): SwapStateHolder {
         return SwapStateHolder(
+            networkId = initialCurrency.networkId,
             sendCardData = SwapCardData(
                 type = TransactionCardType.SendCard(actions.onAmountChanged),
                 amount = null,
                 amountEquivalent = null,
                 tokenIconUrl = initialCurrency.logoUrl,
                 tokenCurrency = initialCurrency.symbol,
-                tokenId = initialCurrency.id,
+                coinId = initialCurrency.id,
                 canSelectAnotherToken = false,
                 balance = "",
             ),
@@ -47,7 +48,7 @@ class StateBuilder(val actions: UiActions) {
                 tokenCurrency = "",
                 canSelectAnotherToken = false,
                 balance = "",
-                tokenId = "",
+                coinId = null,
             ),
             fee = FeeState.Loading,
             networkCurrency = initialCurrency.symbol,
@@ -55,6 +56,8 @@ class StateBuilder(val actions: UiActions) {
             onRefresh = {},
             onBackClicked = actions.onBackClicked,
             onChangeCardsClicked = actions.onChangeCardsClicked,
+            onMaxAmountSelected = actions.onMaxAmountSelected,
+            updateInProgress = true,
         )
     }
 
@@ -68,10 +71,10 @@ class StateBuilder(val actions: UiActions) {
             sendCardData = SwapCardData(
                 type = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.SendCard),
                 amount = uiStateHolder.sendCardData.amount,
-                amountEquivalent = uiStateHolder.sendCardData.amountEquivalent,
+                amountEquivalent = null,
                 tokenIconUrl = fromToken.logoUrl,
                 tokenCurrency = fromToken.symbol,
-                tokenId = fromToken.id,
+                coinId = fromToken.id,
                 canSelectAnotherToken = mainTokenId != fromToken.id,
                 balance = "",
             ),
@@ -81,13 +84,14 @@ class StateBuilder(val actions: UiActions) {
                 amountEquivalent = null,
                 tokenIconUrl = toToken.logoUrl,
                 tokenCurrency = toToken.symbol,
-                tokenId = toToken.id,
+                coinId = toToken.id,
                 canSelectAnotherToken = mainTokenId != toToken.id,
                 balance = "",
             ),
             fee = FeeState.Loading,
             swapButton = SwapButton(enabled = false, loading = true, onClick = {}),
             permissionState = uiStateHolder.permissionState,
+            updateInProgress = true,
         )
     }
 
@@ -111,10 +115,10 @@ class StateBuilder(val actions: UiActions) {
         return uiStateHolder.copy(
             sendCardData = SwapCardData(
                 type = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.SendCard),
-                amount = quoteModel.fromTokenInfo.tokenAmount.formatToUIRepresentation(),
+                amount = uiStateHolder.sendCardData.amount,
                 amountEquivalent = quoteModel.fromTokenInfo.tokenFiatBalance,
                 tokenIconUrl = uiStateHolder.sendCardData.tokenIconUrl,
-                tokenId = quoteModel.fromTokenInfo.tokenId,
+                coinId = quoteModel.fromTokenInfo.coinId,
                 tokenCurrency = uiStateHolder.sendCardData.tokenCurrency,
                 canSelectAnotherToken = uiStateHolder.sendCardData.canSelectAnotherToken,
                 balance = quoteModel.fromTokenInfo.tokenWalletBalance,
@@ -124,7 +128,7 @@ class StateBuilder(val actions: UiActions) {
                 amount = quoteModel.toTokenInfo.tokenAmount.formatToUIRepresentation(),
                 amountEquivalent = quoteModel.toTokenInfo.tokenFiatBalance,
                 tokenIconUrl = uiStateHolder.receiveCardData.tokenIconUrl,
-                tokenId = quoteModel.toTokenInfo.tokenId,
+                coinId = quoteModel.toTokenInfo.coinId,
                 tokenCurrency = uiStateHolder.receiveCardData.tokenCurrency,
                 canSelectAnotherToken = uiStateHolder.receiveCardData.canSelectAnotherToken,
                 balance = quoteModel.toTokenInfo.tokenWalletBalance,
@@ -140,6 +144,7 @@ class StateBuilder(val actions: UiActions) {
                 loading = false,
                 onClick = actions.onSwapClick,
             ),
+            updateInProgress = false,
         )
     }
 
@@ -151,9 +156,9 @@ class StateBuilder(val actions: UiActions) {
             sendCardData = SwapCardData(
                 type = requireNotNull(uiStateHolder.sendCardData.type as? TransactionCardType.SendCard),
                 amount = uiStateHolder.sendCardData.amount,
-                amountEquivalent = uiStateHolder.sendCardData.amountEquivalent,
+                amountEquivalent = "",
                 tokenIconUrl = uiStateHolder.sendCardData.tokenIconUrl,
-                tokenId = uiStateHolder.sendCardData.tokenId,
+                coinId = uiStateHolder.sendCardData.coinId,
                 tokenCurrency = uiStateHolder.sendCardData.tokenCurrency,
                 canSelectAnotherToken = uiStateHolder.sendCardData.canSelectAnotherToken,
                 balance = emptyAmountState.fromTokenWalletBalance,
@@ -161,9 +166,9 @@ class StateBuilder(val actions: UiActions) {
             receiveCardData = SwapCardData(
                 type = TransactionCardType.ReceiveCard(),
                 amount = "0",
-                amountEquivalent = uiStateHolder.receiveCardData.amountEquivalent,
+                amountEquivalent = "",
                 tokenIconUrl = uiStateHolder.receiveCardData.tokenIconUrl,
-                tokenId = uiStateHolder.receiveCardData.tokenId,
+                coinId = uiStateHolder.receiveCardData.coinId,
                 tokenCurrency = uiStateHolder.receiveCardData.tokenCurrency,
                 canSelectAnotherToken = uiStateHolder.receiveCardData.canSelectAnotherToken,
                 balance = emptyAmountState.toTokenWalletBalance,
@@ -174,6 +179,7 @@ class StateBuilder(val actions: UiActions) {
                 loading = false,
                 onClick = { },
             ),
+            updateInProgress = false,
         )
     }
 
@@ -251,6 +257,7 @@ class StateBuilder(val actions: UiActions) {
                 message = null,
                 onClick = onAlertClick,
             ),
+            updateInProgress = false,
         )
     }
 
@@ -301,5 +308,11 @@ class StateBuilder(val actions: UiActions) {
         const val ADDRESS_MIN_LENGTH = 11
         const val ADDRESS_FIRST_PART_LENGTH = 7
         const val ADDRESS_SECOND_PART_LENGTH = 4
+    }
+
+    fun createSilentLoadState(uiState: SwapStateHolder): SwapStateHolder {
+        return uiState.copy(
+            updateInProgress = true,
+        )
     }
 }
