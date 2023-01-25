@@ -17,13 +17,11 @@ import androidx.transition.TransitionInflater
 import by.kirich1409.viewbindingdelegate.viewBinding
 import coil.load
 import coil.size.Scale
+import com.tangem.core.analytics.Analytics
 import com.tangem.core.ui.fragments.setStatusBarColor
 import com.tangem.core.ui.utils.OneTouchClickListener
 import com.tangem.domain.common.TapWorkarounds.isSaltPay
 import com.tangem.tap.MainActivity
-import com.tangem.core.analytics.Analytics
-import com.tangem.tap.common.analytics.converters.BasicSignInEventConverter
-import com.tangem.tap.common.analytics.converters.BasicTopUpEventConverter
 import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.analytics.events.Portfolio
 import com.tangem.tap.common.extensions.show
@@ -148,7 +146,6 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
     override fun newState(state: WalletState) {
         if (activity == null || view == null) return
 
-        handleBasicAnalyticsEvent(state)
         val isSaltPay = store.state.globalState.scanResponse?.card?.isSaltPay == true
 
         when {
@@ -257,12 +254,5 @@ class WalletFragment : Fragment(R.layout.fragment_wallet), StoreSubscriber<Walle
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         if (store.state.walletState.shouldShowDetails) inflater.inflate(R.menu.menu_wallet, menu)
-    }
-
-    private fun handleBasicAnalyticsEvent(state: WalletState) {
-        val scanResponse = store.state.globalState.scanResponse ?: return
-
-        BasicSignInEventConverter(scanResponse).convert(state)?.let { Analytics.send(it) }
-        BasicTopUpEventConverter(scanResponse).convert(state)?.let { Analytics.send(it) }
     }
 }
