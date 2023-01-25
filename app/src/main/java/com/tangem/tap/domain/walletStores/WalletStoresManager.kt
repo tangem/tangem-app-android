@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.Flow
 interface WalletStoresManager {
     fun getAll(): Flow<Map<UserWalletId, List<WalletStoreModel>>>
     fun get(userWalletId: UserWalletId): Flow<List<WalletStoreModel>>
+    suspend fun getSync(userWalletId: UserWalletId): List<WalletStoreModel>
 
     suspend fun delete(userWalletsIds: List<UserWalletId>): CompletionResult<Unit>
     suspend fun clear(): CompletionResult<Unit>
