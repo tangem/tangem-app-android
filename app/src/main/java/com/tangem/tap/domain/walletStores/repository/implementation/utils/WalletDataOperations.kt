@@ -158,12 +158,12 @@ internal fun List<WalletDataModel>.updateWithUnreachable(): List<WalletDataModel
 }
 
 internal fun List<WalletDataModel>.updateWithSelf(
-    walletsData: List<WalletDataModel>,
+    newWalletsData: List<WalletDataModel>,
 ): List<WalletDataModel> {
     val oldWalletsData = this
     val updatedWalletsData = arrayListOf<WalletDataModel>()
 
-    walletsData.forEach { newWalletData ->
+    newWalletsData.forEach { newWalletData ->
         val walletDataToUpdate = oldWalletsData.find(newWalletData::isSameWalletData)
         if (walletDataToUpdate != null) {
             updatedWalletsData.add(walletDataToUpdate.updateWithSelf(newWalletData))
