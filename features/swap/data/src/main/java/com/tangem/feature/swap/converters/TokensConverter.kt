@@ -31,11 +31,12 @@ class TokensConverter @Inject constructor() : Converter<CoinsResponse.Coin, Curr
     }
 
     private fun getSmallIconUrl(coin: String): String {
-        return "$DEFAULT_IMAGE_HOST$SMALL_ICON_PATH/$coin.png"
+        return "$DEFAULT_IMAGE_HOST$LARGE_ICON_PATH/$coin.png"
     }
 
     companion object {
         private const val DEFAULT_IMAGE_HOST = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/"
         private const val SMALL_ICON_PATH = "small"
+        private const val LARGE_ICON_PATH = "large"
     }
 }
