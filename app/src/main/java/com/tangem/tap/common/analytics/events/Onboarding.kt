@@ -75,6 +75,8 @@ sealed class Onboarding(
     class ClaimScreenOpened : Onboarding("Onboarding", "Claim screen opened")
     class ButtonClaim : Onboarding("Onboarding", "Button - Claim")
     class ClaimWasSuccessfully : Onboarding("Onboarding", "Claim was successfully")
+    class ButtonChat: Onboarding("Onboarding", "Button - Chat")
+
     class EnableBiometrics(state: AnalyticsParam.OnOffState) : Onboarding(
         category = "Onboarding / Biometric",
         event = "Enable Biometric",
