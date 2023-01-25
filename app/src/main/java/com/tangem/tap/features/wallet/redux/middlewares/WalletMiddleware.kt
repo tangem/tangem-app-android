@@ -12,6 +12,9 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.operations.attestation.Attestation
 import com.tangem.operations.attestation.OnlineCardVerifier
+import com.tangem.tap.common.analytics.converters.BasicEventsPreChecker
+import com.tangem.tap.common.analytics.converters.BasicEventsSourceData
+import com.tangem.tap.common.analytics.events.AnalyticsParam
 import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.analytics.events.Token
 import com.tangem.tap.common.extensions.copyToClipboard
@@ -33,6 +36,7 @@ import com.tangem.tap.domain.failedRates
 import com.tangem.tap.domain.loadedRates
 import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.domain.model.WalletStoreModel
+import com.tangem.tap.domain.model.builders.UserWalletIdBuilder
 import com.tangem.tap.features.demo.DemoHelper
 import com.tangem.tap.features.home.redux.HomeAction
 import com.tangem.tap.features.send.redux.PrepareSendScreen
@@ -54,10 +58,12 @@ import com.tangem.tap.tangemSdkManager
 import com.tangem.tap.totalFiatBalanceCalculator
 import com.tangem.tap.userWalletsListManager
 import com.tangem.tap.userWalletsListManagerSafe
+import com.tangem.tap.walletStoresManager
 import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.rekotlin.Action
 import org.rekotlin.DispatchFunction
@@ -106,6 +112,7 @@ class WalletMiddleware {
                         walletState.walletManagers.map { walletManager ->
                             async { globalState.tapWalletManager.loadWalletData(walletManager) }
                         }.awaitAll()
+                        handleBasicAnalyticsEvent()
                     } else {
                         val walletManager = walletState.getWalletManager(action.blockchain)
                             ?: action.walletManager
@@ -193,8 +200,11 @@ class WalletMiddleware {
                 }
             }
             is WalletAction.Scan -> {
-                store.dispatch(HomeAction.ShouldScanCardOnResume(true))
                 store.dispatch(NavigationAction.PopBackTo(AppScreen.Home))
+                scope.launch {
+                    delay(700)
+                    store.dispatchOnMain(HomeAction.ReadCard(action.onScanSuccessEvent))
+                }
             }
             is WalletAction.LoadCardInfo -> {
                 val attestationFailed = action.card.attestation.status == Attestation.Status.Failed
@@ -248,10 +258,12 @@ class WalletMiddleware {
                 }
             }
             is WalletAction.CopyAddress -> {
+                Analytics.send(Token.Receive.ButtonCopyAddress())
                 action.context.copyToClipboard(action.address)
                 store.dispatch(WalletAction.CopyAddress.Success)
             }
             is WalletAction.ShareAddress -> {
+                Analytics.send(Token.Receive.ButtonShareAddress())
                 action.context.shareText(action.address)
             }
             is WalletAction.ExploreAddress -> {
@@ -273,6 +285,9 @@ class WalletMiddleware {
                 } else {
                     store.dispatch(newAction)
                     if (newAction is PrepareSendScreen) {
+                        store.state.walletState.selectedWalletData?.currency?.let { currency ->
+                            Analytics.send(Token.ButtonSend(AnalyticsParam.CurrencyType.Currency(currency)))
+                        }
                         store.dispatch(NavigationAction.NavigateTo(AppScreen.Send))
                     }
                 }
@@ -285,6 +300,7 @@ class WalletMiddleware {
             }
             is WalletAction.UserWalletChanged -> Unit
             is WalletAction.WalletStoresChanged -> {
+                store.dispatchOnMain(WalletAction.MultiWallet.ScheduleCheckForMissingDerivation)
                 updateWalletStores(action.walletStores, walletState)
                 fetchTotalFiatBalance(action.walletStores)
                 findMissedDerivations(action.walletStores)
@@ -360,7 +376,7 @@ class WalletMiddleware {
             }
             else -> {
                 Analytics.send(MainScreen.ButtonScanCard())
-                store.dispatch(WalletAction.Scan)
+                store.dispatch(WalletAction.Scan(MainScreen.CardWasScanned()))
             }
         }
     }
@@ -479,4 +495,19 @@ class WalletMiddleware {
             }
         }
     }
+}
+
+suspend fun handleBasicAnalyticsEvent() {
+    val scanResponse = store.state.globalState.scanResponse ?: return
+
+    val biometricsWalletDataModels = if (preferencesStorage.shouldSaveUserWallets) {
+        UserWalletIdBuilder.scanResponse(scanResponse).build()?.let { userWalletId ->
+            walletStoresManager.getSync(userWalletId).map { it.walletsData }.flatten()
+        }
+    } else {
+        null
+    }
+
+    val converterData = BasicEventsSourceData(scanResponse, store.state.walletState, biometricsWalletDataModels)
+    BasicEventsPreChecker().tryToSend(converterData)
 }
