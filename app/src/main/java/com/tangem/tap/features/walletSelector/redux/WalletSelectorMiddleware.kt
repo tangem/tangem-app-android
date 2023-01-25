@@ -10,6 +10,7 @@ import com.tangem.core.analytics.Analytics
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.util.UserWalletId
 import com.tangem.tap.common.analytics.events.MyWallets
+import com.tangem.tap.common.analytics.paramsInterceptor.BatchIdParamsInterceptor
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.onUserWalletSelected
 import com.tangem.tap.common.redux.AppState
@@ -121,7 +122,7 @@ internal class WalletSelectorMiddleware {
     }
 
     private fun unlockWalletsWithBiometry() {
-        Analytics.send(MyWallets.Button.UnlockWithBiometrics)
+        Analytics.send(MyWallets.Button.UnlockWithBiometrics())
 
         scope.launch {
             userWalletsListManager.unlockWithBiometry()
@@ -135,7 +136,7 @@ internal class WalletSelectorMiddleware {
     }
 
     private fun addWallet() = scope.launch {
-        Analytics.send(MyWallets.Button.ScanNewCard)
+        Analytics.send(MyWallets.Button.ScanNewCard())
 
         val prevUseBiometricsForAccessCode = tangemSdkManager.useBiometricsForAccessCode()
 
@@ -145,6 +146,7 @@ internal class WalletSelectorMiddleware {
         )
 
         ScanCardProcessor.scan(
+            analyticsEvent = MyWallets.CardWasScanned(),
             onWalletNotCreated = {
                 // No need to rollback policy, continue with the policy set before the card scan
                 store.dispatchOnMain(WalletSelectorAction.AddWallet.Success)
@@ -175,8 +177,6 @@ internal class WalletSelectorMiddleware {
 
         return userWalletsListManager.save(userWallet)
             .doOnSuccess {
-                Analytics.send(MyWallets.CardWasScanned)
-
                 store.dispatchOnMain(WalletSelectorAction.AddWallet.Success)
                 store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
                 store.onUserWalletSelected(userWallet)
@@ -199,6 +199,9 @@ internal class WalletSelectorMiddleware {
                 .doOnSuccess {
                     val selectedUserWallet = userWalletsListManager.selectedUserWalletSync
                     if (selectedUserWallet != null) {
+                        val batchId = selectedUserWallet.scanResponse.card.batchId
+                        Analytics.addParamsInterceptor(BatchIdParamsInterceptor(batchId))
+
                         store.dispatchOnMain(NavigationAction.PopBackTo(AppScreen.Wallet))
                         store.onUserWalletSelected(selectedUserWallet)
                     }
@@ -207,6 +210,7 @@ internal class WalletSelectorMiddleware {
     }
 
     private suspend fun unlockUserWalletWithScannedCard(userWallet: UserWallet): CompletionResult<Unit> {
+        Analytics.send(MyWallets.Button.WalletUnlockTapped())
         tangemSdkManager.changeDisplayedCardIdNumbersCount(userWallet.scanResponse)
         return tangemSdkManager.scanCard(userWallet.cardId)
             .map { scannedCard ->
@@ -227,7 +231,7 @@ internal class WalletSelectorMiddleware {
     }
 
     private fun deleteWallets(userWalletsIds: List<UserWalletId>, state: WalletSelectorState) {
-        Analytics.send(MyWallets.Button.DeleteWalletTapped)
+        Analytics.send(MyWallets.Button.DeleteWalletTapped())
 
         scope.launch {
             when (userWalletsIds.size) {
@@ -244,8 +248,6 @@ internal class WalletSelectorMiddleware {
     }
 
     private fun renameWallet(userWalletId: UserWalletId, newName: String) {
-        Analytics.send(MyWallets.Button.EditWalletTapped)
-
         scope.launch {
             userWalletsListManager.update(userWalletId) { it.copy(name = newName) }
                 .doOnFailure { error ->
