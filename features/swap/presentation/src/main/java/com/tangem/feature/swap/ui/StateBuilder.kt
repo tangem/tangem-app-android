@@ -187,9 +187,7 @@ class StateBuilder(val actions: UiActions) {
     }
 
     fun addTokensToState(uiState: SwapStateHolder, dataState: FoundTokensState): SwapStateHolder {
-        return uiState.copy(
-            selectTokenState = tokensDataConverter.convert(dataState),
-        )
+        return uiState.copy(selectTokenState = tokensDataConverter.convert(dataState))
     }
 
     private fun convertPermissionState(
@@ -203,8 +201,8 @@ class StateBuilder(val actions: UiActions) {
             is PermissionDataState.PermissionReadyForRequest -> SwapPermissionState.ReadyForRequest(
                 currency = permissionDataState.currency,
                 amount = permissionDataState.amount,
-                walletAddress = permissionDataState.walletAddress,
-                spenderAddress = permissionDataState.spenderAddress,
+                walletAddress = getShortAddressValue(permissionDataState.walletAddress),
+                spenderAddress = getShortAddressValue(permissionDataState.spenderAddress),
                 fee = permissionDataState.fee,
                 approveButton = ApprovePermissionButton(
                     enabled = true,
@@ -287,9 +285,21 @@ class StateBuilder(val actions: UiActions) {
         )
     }
 
-    fun clearAlert(uiState: SwapStateHolder): SwapStateHolder {
-        return uiState.copy(
-            alert = null,
+    fun clearAlert(uiState: SwapStateHolder): SwapStateHolder = uiState.copy(alert = null)
+
+    private fun getShortAddressValue(fullAddress: String): String {
+        check(fullAddress.length > ADDRESS_MIN_LENGTH) { "Invalid address" }
+        val firstAddressPart = fullAddress.substring(startIndex = 0, endIndex = ADDRESS_FIRST_PART_LENGTH)
+        val secondAddressPart = fullAddress.substring(
+            startIndex = fullAddress.length - ADDRESS_SECOND_PART_LENGTH,
+            endIndex = fullAddress.length,
         )
+        return "$firstAddressPart...$secondAddressPart"
+    }
+
+    private companion object {
+        const val ADDRESS_MIN_LENGTH = 11
+        const val ADDRESS_FIRST_PART_LENGTH = 7
+        const val ADDRESS_SECOND_PART_LENGTH = 4
     }
 }
