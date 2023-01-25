@@ -46,7 +46,7 @@ sealed class PermissionDataState {
 
 data class TokenSwapInfo(
     val tokenAmount: SwapAmount,
-    val tokenId: String,
+    val coinId: String,
     val tokenWalletBalance: String,
     val tokenFiatBalance: String,
 )
