@@ -8,19 +8,19 @@ import com.tangem.tap.common.shop.data.ProductType
 /**
 * [REDACTED_AUTHOR]
  */
-class ShopOrderToEventConverter : Converter<Pair<Storefront.Order, ProductType>, Shop.Purchased> {
+class ShopOrderToEventConverter : Converter<Pair<Storefront.Checkout, ProductType>, Shop.Purchased> {
 
-    override fun convert(value: Pair<Storefront.Order, ProductType>): Shop.Purchased {
-        val order = value.first
+    override fun convert(value: Pair<Storefront.Checkout, ProductType>): Shop.Purchased {
+        val checkout = value.first
         val productType = value.second
 
-        val sku = order.lineItems.edges.firstOrNull()?.node?.variant?.sku ?: productType.sku
+        val sku = checkout.lineItems?.edges?.firstOrNull()?.node?.variant?.sku ?: productType.sku
         val count = when (productType) {
             ProductType.WALLET_2_CARDS -> "2"
             ProductType.WALLET_3_CARDS -> "3"
         }
-        val amount = "${order.totalPriceV2.amount} ${order.totalPriceV2.currencyCode.name}"
-        val code = (order.discountApplications.edges.firstOrNull()?.node as? Storefront.DiscountCodeApplication)?.code
+        val amount = "${checkout.totalPriceV2.amount} ${checkout.totalPriceV2.currencyCode.name}"
+        val code = (checkout.discountApplications.edges.firstOrNull()?.node as? Storefront.DiscountCodeApplication)?.code
 
         return Shop.Purchased(sku, count, amount, code)
     }

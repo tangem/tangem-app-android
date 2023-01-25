@@ -5,10 +5,9 @@ import com.tangem.blockchain.common.Token
 import com.tangem.blockchain.common.WalletManager
 import com.tangem.common.doOnSuccess
 import com.tangem.common.extensions.guard
-import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.core.analytics.Analytics
+import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.common.analytics.events.AnalyticsParam
-import com.tangem.tap.common.analytics.events.MainScreen
 import com.tangem.tap.common.analytics.events.Token.ButtonRemoveToken
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchErrorNotification
@@ -168,12 +167,15 @@ class MultiWalletMiddleware {
                     store.dispatch(NavigationAction.NavigateTo(AppScreen.OnboardingWallet))
                 }
             }
+            is WalletAction.MultiWallet.AddMissingDerivations -> {
+                scope.launch { handleBasicAnalyticsEvent() }
+            }
             is WalletAction.MultiWallet.ScanToGetDerivations -> {
                 val selectedWallet = userWalletsListManager.selectedUserWalletSync
                 if (selectedWallet != null) {
                     scanAndUpdateCard(selectedWallet, walletState)
                 } else {
-                    store.dispatch(WalletAction.Scan)
+                    store.dispatch(WalletAction.Scan(onScanSuccessEvent = null))
                 }
             }
         }
@@ -183,8 +185,9 @@ class MultiWalletMiddleware {
         selectedUserWallet: UserWallet,
         state: WalletState?,
     ) = scope.launch(Dispatchers.Default) {
-        Analytics.send(MainScreen.CardWasScanned())
+        dispatchOnMain(WalletAction.MultiWallet.ScheduleCheckForMissingDerivation)
         ScanCardProcessor.scan(
+            analyticsEvent = null,
             cardId = selectedUserWallet.cardId,
             additionalBlockchainsToDerive = state?.missingDerivations?.map { it.blockchain },
         ) { scanResponse ->

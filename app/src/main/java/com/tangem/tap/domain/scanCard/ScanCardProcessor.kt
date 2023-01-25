@@ -6,13 +6,13 @@ import com.tangem.common.core.TangemSdkError
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.common.services.Result
+import com.tangem.core.analytics.Analytics
+import com.tangem.core.analytics.AnalyticsEvent
 import com.tangem.domain.common.ScanResponse
 import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.operations.backup.BackupService
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.backupService
-import com.tangem.core.analytics.Analytics
-import com.tangem.tap.common.analytics.events.IntroductionProcess
 import com.tangem.tap.common.analytics.paramsInterceptor.BatchIdParamsInterceptor
 import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -44,6 +44,7 @@ import kotlinx.coroutines.launch
 // [REDACTED_TODO_COMMENT]
 object ScanCardProcessor {
     suspend fun scan(
+        analyticsEvent: AnalyticsEvent? = null,
         additionalBlockchainsToDerive: Collection<Blockchain>? = null,
         cardId: String? = null,
         onProgressStateChange: suspend (showProgress: Boolean) -> Unit = {},
@@ -76,6 +77,8 @@ object ScanCardProcessor {
                 tangemSdkManager.changeDisplayedCardIdNumbersCount(scanResponse)
 
                 onScanStateChange(false)
+                sendAnalytics(analyticsEvent, scanResponse.card.batchId)
+
                 checkForUnfinishedBackupForSaltPay(
                     backupService = backupService,
                     scanResponse = scanResponse,
@@ -99,6 +102,14 @@ object ScanCardProcessor {
                     },
                 )
             }
+    }
+
+    private fun sendAnalytics(
+        analyticsEvent: AnalyticsEvent?,
+        batchId: String,
+    ) {
+        Analytics.addParamsInterceptor(BatchIdParamsInterceptor(batchId))
+        analyticsEvent?.let { Analytics.send(it) }
     }
 
     /**
@@ -172,13 +183,9 @@ object ScanCardProcessor {
         crossinline onSuccess: suspend (ScanResponse) -> Unit,
         crossinline onFailure: suspend (error: TangemError) -> Unit,
     ) {
-        Analytics.send(IntroductionProcess.CardWasScanned())
-
         val globalState = store.state.globalState
         val tapWalletManager = globalState.tapWalletManager
         tapWalletManager.updateConfigManager(scanResponse)
-
-        Analytics.addParamsInterceptor(BatchIdParamsInterceptor(scanResponse.card.batchId))
 
         store.dispatchOnMain(TwinCardsAction.IfTwinsPrepareState(scanResponse))
 

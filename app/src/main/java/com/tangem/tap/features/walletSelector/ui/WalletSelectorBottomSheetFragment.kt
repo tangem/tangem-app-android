@@ -20,9 +20,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.rememberNestedScrollInteropConnection
 import androidx.fragment.app.viewModels
+import com.tangem.core.analytics.Analytics
 import com.tangem.core.ui.fragments.ComposeBottomSheetFragment
 import com.tangem.core.ui.res.TangemTheme
-import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.events.MyWallets
 import com.tangem.tap.features.details.ui.cardsettings.resolveReference
 import com.tangem.tap.features.walletSelector.ui.components.RenameWalletDialogContent
@@ -33,7 +33,7 @@ internal class WalletSelectorBottomSheetFragment : ComposeBottomSheetFragment<Wa
     private val viewModel by viewModels<WalletSelectorViewModel>()
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        Analytics.send(MyWallets.MyWalletsScreenOpened)
+        Analytics.send(MyWallets.MyWalletsScreenOpened())
 
         return super.onCreateDialog(savedInstanceState)
     }

@@ -11,18 +11,17 @@ import com.tangem.blockchain.common.BlockchainSdkConfig
 import com.tangem.blockchain.common.WalletManagerFactory
 import com.tangem.blockchain.network.BlockchainSdkRetrofitBuilder
 import com.tangem.common.json.MoshiJsonConverter
+import com.tangem.core.analytics.Analytics
 import com.tangem.datasource.api.common.MoshiConverter
 import com.tangem.domain.DomainLayer
 import com.tangem.domain.common.LogConfig
 import com.tangem.tap.common.AndroidAssetReader
 import com.tangem.tap.common.AssetReader
 import com.tangem.tap.common.IntentHandler
-import com.tangem.core.analytics.Analytics
 import com.tangem.tap.common.analytics.AnalyticsFactory
 import com.tangem.tap.common.analytics.api.AnalyticsHandlerBuilder
 import com.tangem.tap.common.analytics.filters.BasicSignInFilter
 import com.tangem.tap.common.analytics.filters.BasicTopUpFilter
-import com.tangem.tap.common.analytics.filters.ShopPurchasedEventFilter
 import com.tangem.tap.common.analytics.handlers.amplitude.AmplitudeAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.appsFlyer.AppsFlyerAnalyticsHandler
 import com.tangem.tap.common.analytics.handlers.firebase.FirebaseAnalyticsHandler
@@ -197,7 +196,6 @@ class TapApplication : Application(), ImageLoaderFactory {
         factory.addHandlerBuilder(AppsFlyerAnalyticsHandler.Builder())
         factory.addHandlerBuilder(FirebaseAnalyticsHandler.Builder())
 
-        factory.addFilter(ShopPurchasedEventFilter())
         factory.addFilter(BasicSignInFilter())
         factory.addFilter(BasicTopUpFilter(preferencesStorage.toppedUpWalletStorage))
 
