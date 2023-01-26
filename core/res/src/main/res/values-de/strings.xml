@@ -18,7 +18,7 @@
     <string name="app_settings_enable_biometrics_description">Go to settings to enable biometric authentication in the Tangem App</string>
     <string name="app_settings_enable_biometrics_title">Enable biometric authentication</string>
     <string name="app_settings_off_saved_access_code_alert_message">This will delete all the saved wallet access codes. Any further operation with the wallet will require submitting the access code.</string>
-    <string name="app_settings_off_saved_wallet_alert_message">Removing the saved card deletes all the saved wallets and their access codes.</string>
+    <string name="app_settings_off_saved_wallet_alert_message">Removing the saved card deletes all the saved wallets and their access codes from the app.</string>
     <string name="app_settings_saved_access_codes">Save Access Code</string>
     <string name="app_settings_saved_access_codes_footer">Biometric authentication will be requested instead of the access code for interactions with your card.</string>
     <string name="app_settings_saved_wallet">Keep the wallet in the app</string>
