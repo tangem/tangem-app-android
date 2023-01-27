@@ -44,4 +44,12 @@ interface TransactionManager {
     suspend fun updateWalletManager(networkId: String)
 
     fun calculateFee(networkId: String, gasPrice: String, estimatedGas: Int): BigDecimal
+
+    /**
+     * In app blockchain id, actual in blockchain sdk, not the same as networkId
+     *
+     * workaround till not use backend only and not integrated server vs sdk
+     */
+    @Throws(IllegalStateException::class)
+    fun getBlockchainId(networkId: String): String
 }
