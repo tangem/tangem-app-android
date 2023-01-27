@@ -36,7 +36,6 @@ class TokensConverter @Inject constructor() : Converter<CoinsResponse.Coin, Curr
 
     companion object {
         private const val DEFAULT_IMAGE_HOST = "https://s3.eu-central-1.amazonaws.com/tangem.api/coins/"
-        private const val SMALL_ICON_PATH = "small"
         private const val LARGE_ICON_PATH = "large"
     }
 }
