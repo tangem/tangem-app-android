@@ -2,6 +2,7 @@ package com.tangem.lib.crypto
 
 import com.tangem.lib.crypto.models.Currency
 import com.tangem.lib.crypto.models.ProxyAmount
+import com.tangem.lib.crypto.models.ProxyNetworkInfo
 import com.tangem.lib.crypto.models.transactions.SendTxResult
 import java.math.BigDecimal
 
@@ -51,5 +52,5 @@ interface TransactionManager {
      * workaround till not use backend only and not integrated server vs sdk
      */
     @Throws(IllegalStateException::class)
-    fun getBlockchainId(networkId: String): String
+    fun getBlockchainInfo(networkId: String): ProxyNetworkInfo
 }
