@@ -28,8 +28,8 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.constraintlayout.compose.ConstraintLayout
 import com.tangem.core.ui.components.CardWithIcon
-import com.tangem.core.ui.components.ClickableWarningCard
 import com.tangem.core.ui.components.Keyboard
 import com.tangem.core.ui.components.PrimaryButton
 import com.tangem.core.ui.components.PrimaryButtonIconRight
@@ -37,7 +37,7 @@ import com.tangem.core.ui.components.RefreshableWaringCard
 import com.tangem.core.ui.components.SimpleOkDialog
 import com.tangem.core.ui.components.SmallInfoCard
 import com.tangem.core.ui.components.SmallInfoCardWithWarning
-import com.tangem.core.ui.components.SpacerH16
+import com.tangem.core.ui.components.WarningCard
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.components.keyboardAsState
 import com.tangem.core.ui.extensions.getActiveIconRes
@@ -85,12 +85,7 @@ internal fun SwapScreenContent(state: SwapStateHolder, onPermissionWarningClick:
 
                 FeeItem(feeState = state.fee, currency = state.networkCurrency)
 
-                if (state.warnings.isNotEmpty()) {
-                    SwapWarnings(
-                        warnings = state.warnings,
-                        onPermissionWarningClick = onPermissionWarningClick,
-                    )
-                }
+                if (state.warnings.isNotEmpty()) SwapWarnings(warnings = state.warnings)
 
                 if (state.permissionState is SwapPermissionState.InProgress) {
                     CardWithIcon(
@@ -106,25 +101,7 @@ internal fun SwapScreenContent(state: SwapStateHolder, onPermissionWarningClick:
                         },
                     )
                 }
-
-                if (state.warnings.any { it is SwapWarning.InsufficientFunds }) {
-                    PrimaryButton(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = stringResource(id = R.string.swapping_insufficient_funds),
-                        enabled = false,
-                        showProgress = state.swapButton.loading,
-                        onClick = state.swapButton.onClick,
-                    )
-                } else {
-                    PrimaryButtonIconRight(
-                        modifier = Modifier.fillMaxWidth(),
-                        text = stringResource(id = R.string.swapping_swap),
-                        icon = painterResource(id = R.drawable.ic_tangem_24),
-                        enabled = state.swapButton.enabled,
-                        showProgress = state.swapButton.loading,
-                        onClick = state.swapButton.onClick,
-                    )
-                }
+                MainButton(state = state, onPermissionWarningClick = onPermissionWarningClick)
             }
         }
 
@@ -159,59 +136,71 @@ internal fun SwapScreenContent(state: SwapStateHolder, onPermissionWarningClick:
 
 @Composable
 private fun MainInfo(state: SwapStateHolder) {
-    Box(
+    ConstraintLayout(
         modifier = Modifier.fillMaxWidth(),
-        contentAlignment = Alignment.Center,
     ) {
         val networkIconRes = remember {
             getActiveIconRes(state.blockchainId)
         }
-        Column {
-            TransactionCard(
-                type = state.sendCardData.type,
-                balance = state.sendCardData.balance,
-                amount = state.sendCardData.amount,
-                amountEquivalent = state.sendCardData.amountEquivalent,
-                tokenIconUrl = state.sendCardData.tokenIconUrl,
-                tokenCurrency = state.sendCardData.tokenCurrency,
-                networkIconRes = if (state.sendCardData.isNotNativeToken) networkIconRes else null,
-                iconPlaceholder = state.sendCardData.coinId?.let {
-                    getActiveIconResByCoinId(it, state.networkId)
-                },
-                onChangeTokenClick = if (state.sendCardData.canSelectAnotherToken) state.onSelectTokenClick else null,
-            )
-            SpacerH16()
-            TransactionCard(
-                type = state.receiveCardData.type,
-                balance = state.receiveCardData.balance,
-                amount = state.receiveCardData.amount,
-                amountEquivalent = state.receiveCardData.amountEquivalent,
-                tokenIconUrl = state.receiveCardData.tokenIconUrl,
-                tokenCurrency = state.receiveCardData.tokenCurrency,
-                networkIconRes = if (state.receiveCardData.isNotNativeToken) networkIconRes else null,
-                iconPlaceholder = state.receiveCardData.coinId?.let {
-                    getActiveIconResByCoinId(it, state.networkId)
-                },
-                onChangeTokenClick = if (state.receiveCardData.canSelectAnotherToken) {
-                    state.onSelectTokenClick
-                } else {
-                    null
-                },
-            )
-        }
-        SwapButton(state)
+        val (topCard, bottomCard, button) = createRefs()
+        TransactionCard(
+            type = state.sendCardData.type,
+            balance = state.sendCardData.balance,
+            amount = state.sendCardData.amount,
+            amountEquivalent = state.sendCardData.amountEquivalent,
+            tokenIconUrl = state.sendCardData.tokenIconUrl,
+            tokenCurrency = state.sendCardData.tokenCurrency,
+            networkIconRes = if (state.sendCardData.isNotNativeToken) networkIconRes else null,
+            iconPlaceholder = state.sendCardData.coinId?.let {
+                getActiveIconResByCoinId(it, state.networkId)
+            },
+            onChangeTokenClick = if (state.sendCardData.canSelectAnotherToken) state.onSelectTokenClick else null,
+            modifier = Modifier.constrainAs(topCard) {
+                top.linkTo(parent.top)
+            },
+        )
+        val marginCard = TangemTheme.dimens.spacing16
+        TransactionCard(
+            type = state.receiveCardData.type,
+            balance = state.receiveCardData.balance,
+            amount = state.receiveCardData.amount,
+            amountEquivalent = state.receiveCardData.amountEquivalent,
+            tokenIconUrl = state.receiveCardData.tokenIconUrl,
+            tokenCurrency = state.receiveCardData.tokenCurrency,
+            networkIconRes = if (state.receiveCardData.isNotNativeToken) networkIconRes else null,
+            iconPlaceholder = state.receiveCardData.coinId?.let {
+                getActiveIconResByCoinId(it, state.networkId)
+            },
+            onChangeTokenClick = if (state.receiveCardData.canSelectAnotherToken) {
+                state.onSelectTokenClick
+            } else {
+                null
+            },
+            modifier = Modifier.constrainAs(bottomCard) {
+                top.linkTo(topCard.bottom, margin = marginCard)
+            },
+        )
+        val marginButton = TangemTheme.dimens.spacing32
+        SwapButton(
+            state,
+            modifier = Modifier.constrainAs(button) {
+                bottom.linkTo(topCard.bottom, margin = -marginButton)
+                start.linkTo(topCard.start)
+                end.linkTo(topCard.end)
+            },
+        )
     }
 }
 
 @OptIn(ExperimentalMaterialApi::class)
 @Composable
-private fun SwapButton(state: SwapStateHolder) {
+private fun SwapButton(state: SwapStateHolder, modifier: Modifier = Modifier) {
     Card(
         elevation = TangemTheme.dimens.elevation3,
         shape = CircleShape,
         backgroundColor = TangemTheme.colors.background.plain,
         contentColor = TangemTheme.colors.text.primary1,
-        modifier = Modifier.size(TangemTheme.dimens.size48),
+        modifier = modifier.size(TangemTheme.dimens.size48),
         onClick = state.onChangeCardsClicked,
         enabled = !state.updateInProgress,
     ) {
@@ -262,7 +251,6 @@ private fun FeeItem(feeState: FeeState, currency: String) {
 @Composable
 private fun SwapWarnings(
     warnings: List<SwapWarning>,
-    onPermissionWarningClick: () -> Unit,
 ) {
     Column(
         modifier = Modifier
@@ -275,7 +263,7 @@ private fun SwapWarnings(
                 //     WarningCard(title = stringResource(id = R.string.), description = stringResource(id = R.string.))
                 // }
                 is SwapWarning.PermissionNeeded -> {
-                    ClickableWarningCard(
+                    WarningCard(
                         title = stringResource(id = R.string.swapping_permission_header),
                         description = stringResource(
                             id = R.string.swapping_permission_subheader,
@@ -288,7 +276,6 @@ private fun SwapWarnings(
                                 modifier = Modifier.size(TangemTheme.dimens.size20),
                             )
                         },
-                        onClick = onPermissionWarningClick,
                     )
                 }
                 is SwapWarning.GenericWarning -> {
@@ -311,10 +298,44 @@ private fun SwapWarnings(
     }
 }
 
+@Composable
+private fun MainButton(state: SwapStateHolder, onPermissionWarningClick: () -> Unit) {
+    when {
+        state.warnings.any { it is SwapWarning.PermissionNeeded } -> {
+            PrimaryButton(
+                modifier = Modifier.fillMaxWidth(),
+                text = stringResource(id = R.string.swapping_give_permission),
+                enabled = true,
+                showProgress = state.swapButton.loading,
+                onClick = onPermissionWarningClick,
+            )
+        }
+        state.warnings.any { it is SwapWarning.InsufficientFunds } -> {
+            PrimaryButton(
+                modifier = Modifier.fillMaxWidth(),
+                text = stringResource(id = R.string.swapping_insufficient_funds),
+                enabled = false,
+                showProgress = state.swapButton.loading,
+                onClick = state.swapButton.onClick,
+            )
+        }
+        else -> {
+            PrimaryButtonIconRight(
+                modifier = Modifier.fillMaxWidth(),
+                text = stringResource(id = R.string.swapping_swap),
+                icon = painterResource(id = R.drawable.ic_tangem_24),
+                enabled = state.swapButton.enabled,
+                showProgress = state.swapButton.loading,
+                onClick = state.swapButton.onClick,
+            )
+        }
+    }
+}
+
 // region preview
 
 private val sendCard = SwapCardData(
-    type = TransactionCardType.SendCard {},
+    type = TransactionCardType.SendCard({}) {},
     amount = "1 000 000",
     amountEquivalent = "1 000 000",
     tokenIconUrl = "",
