@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -32,7 +33,9 @@ import coil.request.ImageRequest
 import com.tangem.core.ui.components.CurrencyPlaceholderIcon
 import com.tangem.core.ui.components.SpacerW2
 import com.tangem.core.ui.components.appbar.ExpandableSearchView
+import com.tangem.core.ui.extensions.getActiveIconRes
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.feature.swap.models.Network
 import com.tangem.feature.swap.models.SwapSelectTokenStateHolder
 import com.tangem.feature.swap.models.TokenBalanceData
 import com.tangem.feature.swap.models.TokenToSelect
@@ -53,6 +56,8 @@ fun SwapSelectTokenScreen(state: SwapSelectTokenStateHolder, onBack: () -> Unit)
                     placeholderSearchText = stringResource(id = R.string.search_tokens_title),
                     onSearchChange = state.onSearchEntered,
                     onSearchDisplayClose = { state.onSearchEntered("") },
+                    subtitle = state.network.name,
+                    icon = painterResource(id = getActiveIconRes(state.network.blockchainId)),
                 )
             },
             modifier = Modifier.background(color = TangemTheme.colors.background.secondary),
@@ -69,7 +74,9 @@ private fun ListOfTokens(state: SwapSelectTokenStateHolder, modifier: Modifier =
             .fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        stickyHeader { Header(title = R.string.swapping_token_list_your_tokens) }
+        if (state.addedTokens.isNotEmpty()) {
+            stickyHeader { Header(title = R.string.swapping_token_list_your_tokens) }
+        }
 
         itemsIndexed(items = state.addedTokens) { index, item ->
             TokenItem(token = item, onTokenClick = { state.onTokenSelected(item.id) })
@@ -82,7 +89,9 @@ private fun ListOfTokens(state: SwapSelectTokenStateHolder, modifier: Modifier =
             }
         }
 
-        stickyHeader { Header(title = R.string.swapping_token_list_other_tokens) }
+        if (state.otherTokens.isNotEmpty()) {
+            stickyHeader { Header(title = R.string.swapping_token_list_other_tokens) }
+        }
 
         itemsIndexed(items = state.otherTokens) { index, item ->
             TokenItem(token = item, onTokenClick = { state.onTokenSelected(item.id) })
@@ -241,6 +250,7 @@ private fun TokenScreenPreview() {
             otherTokens = listOf(token, token, token),
             onSearchEntered = {},
             onTokenSelected = {},
+            network = Network("Ethereum", "ETH"),
         ),
         onBack = {},
     )
