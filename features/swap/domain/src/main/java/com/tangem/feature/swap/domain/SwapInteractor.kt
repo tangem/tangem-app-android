@@ -91,8 +91,6 @@ interface SwapInteractor {
         amountToSwap: String,
     ): TxState
 
-    fun getTokenDecimals(token: Currency): Int
-
     /**
      * Returns token in wallet balance
      *
