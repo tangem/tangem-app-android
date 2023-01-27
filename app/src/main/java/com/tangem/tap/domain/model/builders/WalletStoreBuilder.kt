@@ -97,7 +97,7 @@ private fun BlockchainNetwork.getBlockchainWalletData(walletManager: WalletManag
         walletAddresses = walletManager?.wallet?.createAddressesData().orEmpty(),
         existentialDeposit = getExistentialDeposit(walletManager),
         fiatRate = null,
-        isCardSingleToken = false
+        isCardSingleToken = false,
     )
 }
 
@@ -114,7 +114,7 @@ private fun BlockchainNetwork.getTokensWalletsData(walletManager: WalletManager?
                 walletAddresses = walletManager?.wallet?.createAddressesData().orEmpty(),
                 existentialDeposit = getExistentialDeposit(walletManager),
                 fiatRate = null,
-                isCardSingleToken = walletManager?.cardTokens?.contains(token) ?: false
+                isCardSingleToken = walletManager?.cardTokens?.contains(token) ?: false,
             )
         }
 }
@@ -146,7 +146,7 @@ private fun Token.toTokenWalletData(walletManager: WalletManager): WalletDataMod
         walletAddresses = wallet.createAddressesData(),
         existentialDeposit = getExistentialDeposit(walletManager),
         fiatRate = null,
-        isCardSingleToken = walletManager.cardTokens.contains(this)
+        isCardSingleToken = walletManager.cardTokens.contains(this),
     )
 }
 
