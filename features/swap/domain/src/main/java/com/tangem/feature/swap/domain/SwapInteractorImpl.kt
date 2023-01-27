@@ -215,7 +215,7 @@ internal class SwapInteractorImpl @Inject constructor(
                 userWalletManager.addToken(cryptoCurrencyConverter.convert(currencyToGet))
                 TxState.TxSent(
                     fromAmount = amountFormatter.formatSwapAmountToUI(swapData.fromTokenAmount, currencyToSend.symbol),
-                    toAmount = amountFormatter.formatSwapAmountToUI(swapData.toTokenAmount, currencyToSend.symbol),
+                    toAmount = amountFormatter.formatSwapAmountToUI(swapData.toTokenAmount, currencyToGet.symbol),
                 )
             }
             SendTxResult.UserCancelledError -> TxState.UserCancelled
@@ -225,18 +225,18 @@ internal class SwapInteractorImpl @Inject constructor(
         }
     }
 
-    override fun getTokenDecimals(token: Currency): Int {
+    override fun getTokenBalance(token: Currency): SwapAmount {
+        return userWalletManager.getCurrentWalletTokensBalance(token.networkId)[token.symbol]?.let {
+            SwapAmount(it.value, it.decimals)
+        } ?: SwapAmount(BigDecimal.ZERO, getTokenDecimals(token))
+    }
+
+    fun getTokenDecimals(token: Currency): Int {
         return if (token is Currency.NonNativeToken) {
             token.decimalCount
         } else {
             transactionManager.getNativeTokenDecimals(token.networkId)
         }
-    }
-
-    override fun getTokenBalance(token: Currency): SwapAmount {
-        return userWalletManager.getCurrentWalletTokensBalance(token.networkId)[token.symbol]?.let {
-            SwapAmount(it.value, it.decimals)
-        } ?: SwapAmount(BigDecimal.ZERO, getTokenDecimals(token))
     }
 
     private fun selectToToken(
