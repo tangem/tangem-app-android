@@ -152,7 +152,7 @@ internal class SwapInteractorImpl @Inject constructor(
         val isAllowedToSpend = checkAllowance(networkId, fromTokenAddress)
         val fee = getAndUpdateFee(networkId, fromToken)
         val isBalanceEnough = isBalanceEnough(fromToken, networkId, amount, fee)
-        val isFeeEnough = checkFeeIsEnough(fee, amount, networkId)
+        val isFeeEnough = checkFeeIsEnough(fee, amount, networkId, fromToken)
         if (isAllowedToSpend && allowPermissionsHandler.isAddressAllowanceInProgress(fromTokenAddress)) {
             allowPermissionsHandler.removeAddressFromProgress(fromTokenAddress)
             transactionManager.updateWalletManager(networkId)
@@ -497,6 +497,7 @@ internal class SwapInteractorImpl @Inject constructor(
         )
     }
 
+    @Suppress("LongParameterList")
     private fun updatePermissionState(
         networkId: String,
         fromToken: Currency,
@@ -526,13 +527,12 @@ internal class SwapInteractorImpl @Inject constructor(
     }
 
     private fun isBalanceEnough(fromToken: Currency, networkId: String, amount: SwapAmount, fee: BigDecimal?): Boolean {
+        val tokenBalance =
+            userWalletManager.getCurrentWalletTokensBalance(networkId)[fromToken.symbol]?.value ?: BigDecimal.ZERO
         return if (fromToken is Currency.NonNativeToken) {
-            (userWalletManager.getCurrentWalletTokensBalance(networkId)[fromToken.symbol]?.value
-                ?: BigDecimal.ZERO) >= amount.value
+            tokenBalance >= amount.value
         } else {
-            /** to compare [BigDecimal] use only comparator */
-            (userWalletManager.getCurrentWalletTokensBalance(networkId)[fromToken.symbol]?.value
-                ?: BigDecimal.ZERO) > amount.value.plus(fee ?: BigDecimal.ZERO)
+            tokenBalance > amount.value.plus(fee ?: BigDecimal.ZERO)
         }
     }
 
@@ -551,16 +551,28 @@ internal class SwapInteractorImpl @Inject constructor(
         }
     }
 
-    private fun checkFeeIsEnough(fee: BigDecimal?, spendAmount: SwapAmount, networkId: String): Boolean {
+    private fun checkFeeIsEnough(
+        fee: BigDecimal?,
+        spendAmount: SwapAmount,
+        networkId: String,
+        fromToken: Currency,
+    ): Boolean {
         if (fee == null) {
             return false
         }
-        userWalletManager.getNativeTokenBalance(networkId)?.let { balance ->
-            return balance.value.minus(spendAmount.value) > fee.multiply(
-                BigDecimal.valueOf(
-                    INCREASE_FEE_TO_CHECK_ENOUGH_PERCENT,
-                ),
-            )
+        val nativeTokenBalance = userWalletManager.getNativeTokenBalance(networkId)
+        val percentsToFeeIncrease = BigDecimal.valueOf(INCREASE_FEE_TO_CHECK_ENOUGH_PERCENT)
+        return when (fromToken) {
+            is Currency.NativeToken -> {
+                nativeTokenBalance?.let { balance ->
+                    return balance.value.minus(spendAmount.value) > fee.multiply(percentsToFeeIncrease)
+                } ?: false
+            }
+            is Currency.NonNativeToken -> {
+                nativeTokenBalance?.let { balance ->
+                    return balance.value > fee.multiply(percentsToFeeIncrease)
+                } ?: false
+            }
         }
         return false
     }
