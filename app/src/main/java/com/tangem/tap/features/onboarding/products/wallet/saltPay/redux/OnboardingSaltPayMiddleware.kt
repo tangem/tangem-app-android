@@ -6,11 +6,11 @@ import com.tangem.blockchain.extensions.successOr
 import com.tangem.common.Filter
 import com.tangem.common.extensions.guard
 import com.tangem.common.services.Result
-import com.tangem.domain.common.extensions.successOr
-import com.tangem.domain.common.extensions.withMainContext
+import com.tangem.core.analytics.Analytics
 import com.tangem.datasource.api.paymentology.KYCStatus
 import com.tangem.datasource.api.paymentology.RegistrationResponse
-import com.tangem.core.analytics.Analytics
+import com.tangem.domain.common.extensions.successOr
+import com.tangem.domain.common.extensions.withMainContext
 import com.tangem.tap.common.analytics.events.Onboarding
 import com.tangem.tap.common.extensions.dispatchDebugErrorNotification
 import com.tangem.tap.common.extensions.dispatchOnMain
@@ -286,7 +286,7 @@ suspend fun SaltPayActivationManager.update(
         return Result.Failure(ex)
     }
 
-    // checkGasIfNeeded(this, newStep).successOr { return it }
+    checkGasIfNeeded(this, newStep).successOr { return it }
 
     Timber.d("update: success: %s", newStep)
     return Result.Success(newStep)
