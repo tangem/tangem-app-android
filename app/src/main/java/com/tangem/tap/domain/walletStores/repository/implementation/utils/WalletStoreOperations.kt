@@ -49,6 +49,14 @@ internal fun WalletStoreModel.updateWithAmounts(
     )
 }
 
+internal fun WalletStoreModel.updateWithDemoAmounts(
+    wallet: Wallet,
+): WalletStoreModel {
+    return this.copy(
+        walletsData = walletsData.updateWithDemoAmounts(wallet = wallet),
+    )
+}
+
 internal fun WalletStoreModel.updateWithFiatRates(
     rates: Map<String, Double>,
 ): WalletStoreModel {
