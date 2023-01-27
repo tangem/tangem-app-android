@@ -24,8 +24,8 @@ internal sealed interface WalletSelectorAction : Action {
         val walletsStores: Map<UserWalletId, List<WalletStoreModel>>,
     ) : WalletSelectorAction
 
-    data class BalanceLoaded(
-        val userWalletModel: UserWalletModel,
+    data class BalancesLoaded(
+        val userWalletModels: List<UserWalletModel>,
     ) : WalletSelectorAction
 
     object UnlockWithBiometry : WalletSelectorAction {
