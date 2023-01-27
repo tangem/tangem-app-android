@@ -1,6 +1,6 @@
 package com.tangem.tap.features.wallet.redux.middlewares
 
-import com.tangem.blockchain.common.AmountType
+import com.tangem.blockchain.common.Blockchain
 import com.tangem.common.extensions.isZero
 import com.tangem.tap.common.extensions.stripZeroPlainString
 import com.tangem.tap.common.extensions.toFiatRateString
@@ -10,7 +10,6 @@ import com.tangem.tap.common.extensions.toFormattedFiatValue
 import com.tangem.tap.domain.model.TotalFiatBalance
 import com.tangem.tap.domain.model.WalletDataModel
 import com.tangem.tap.domain.model.WalletStoreModel
-import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.TotalBalance
 import com.tangem.tap.features.wallet.models.WalletRent
 import com.tangem.tap.features.wallet.redux.ProgressState
@@ -22,13 +21,12 @@ import com.tangem.tap.features.wallet.ui.BalanceStatus
 import com.tangem.tap.features.wallet.ui.BalanceWidgetData
 import com.tangem.tap.features.wallet.ui.TokenData
 import com.tangem.tap.store
+import timber.log.Timber
 import java.math.BigDecimal
 
-internal fun List<WalletStoreModel>.mapToReduxModels(
-    isMultiWalletAllowed: Boolean,
-): List<WalletStore> {
+internal fun List<WalletStoreModel>.mapToReduxModels(): List<WalletStore> {
     return this.map { walletStoreModel ->
-        walletStoreModel.mapToReduxModel(isMultiWalletAllowed)
+        walletStoreModel.mapToReduxModel()
     }
 }
 
@@ -44,19 +42,20 @@ internal fun TotalFiatBalance.mapToReduxModel(): TotalBalance {
     )
 }
 
-internal fun WalletStoreModel.mapToReduxModel(
-    isMultiWalletAllowed: Boolean,
-): WalletStore {
+internal fun WalletStoreModel.mapToReduxModel(): WalletStore {
+    val appCurrencySymbol = store.state.globalState.appCurrency.symbol
     return WalletStore(
         walletManager = walletManager,
         blockchainNetwork = blockchainNetwork,
-        walletsData = walletsData.mapToReduxModel(isMultiWalletAllowed, walletRent),
+        walletsData = walletsData.mapToReduxModel(walletRent, appCurrencySymbol),
     )
+        .updateTokenModels(blockchain)
+        .setupIfHadCardSingleToken(blockchain, walletsData, appCurrencySymbol)
 }
 
 private fun List<WalletDataModel>.mapToReduxModel(
-    isMultiWalletAllowed: Boolean,
     walletRent: WalletStoreModel.WalletRent?,
+    appCurrencySymbol: String,
 ): List<WalletData> {
     return this.map { walletDataModel ->
         with(walletDataModel) {
@@ -65,13 +64,11 @@ private fun List<WalletDataModel>.mapToReduxModel(
                 decimals = currency.decimals,
                 currency = currency.currencySymbol,
             )
-            val appCurrency = store.state.globalState.appCurrency
             val fiatAmount = fiatRate?.let { status.amount.toFiatValue(it) }
             val fiatAmountFormatted = fiatAmount
                 ?.takeIf { !status.isErrorStatus }
-                ?.toFormattedFiatValue(appCurrency.symbol)
-            val fiatRateFormatted = fiatRate?.toFiatRateString(appCurrency.symbol)
-            val blockchainAmountValue = getBlockchainAmount()
+                ?.toFormattedFiatValue(appCurrencySymbol)
+            val fiatRateFormatted = fiatRate?.toFiatRateString(appCurrencySymbol)
 
             WalletData(
                 currency = currency,
@@ -86,9 +83,7 @@ private fun List<WalletDataModel>.mapToReduxModel(
                 fiatRateString = fiatRateFormatted,
                 pendingTransactions = status.pendingTransactions,
                 mainButton = WalletMainButton.SendButton(
-                    enabled = !blockchainAmountValue.isZero()
-                        && !status.amount.isZero()
-                        && status.pendingTransactions.isEmpty(),
+                    enabled = !status.amount.isZero() && status.pendingTransactions.isEmpty(),
                 ),
                 walletRent = walletRent?.let {
                     WalletRent(
@@ -108,25 +103,12 @@ private fun List<WalletDataModel>.mapToReduxModel(
                     },
                     currency = currency.currencyName,
                     currencySymbol = currency.currencySymbol,
-                    blockchainAmount = blockchainAmountValue,
+                    blockchainAmount = BigDecimal.ZERO,
                     amount = amount,
                     amountFormatted = amountFormatted,
                     fiatAmount = fiatAmount,
                     fiatAmountFormatted = fiatAmountFormatted,
-                    token = when {
-                        !isMultiWalletAllowed && currency is Currency.Token -> {
-                            TokenData(
-                                amount = amount,
-                                amountFormatted = amountFormatted,
-                                fiatAmount = fiatAmount,
-                                fiatAmountFormatted = fiatAmountFormatted,
-                                tokenSymbol = currency.currencySymbol,
-                                fiatRate = fiatRate,
-                                fiatRateString = fiatRateFormatted,
-                            )
-                        }
-                        else -> null
-                    },
+                    token = null,
                     amountToCreateAccount = (status as? WalletDataModel.NoAccount)
                         ?.amountToCreateAccount
                         ?.toString(),
@@ -137,7 +119,74 @@ private fun List<WalletDataModel>.mapToReduxModel(
     }
 }
 
-private fun WalletDataModel.getBlockchainAmount(): BigDecimal {
-    val walletStore = store.state.walletState.getWalletStore(currency) ?: return BigDecimal.ZERO
-    return walletStore.walletManager?.wallet?.amounts?.get(AmountType.Coin)?.value ?: BigDecimal.ZERO
+private fun WalletStore.updateTokenModels(blockchain: Blockchain): WalletStore {
+    val foundBlockchains = this.walletsData.filter {
+        it.currency.isBlockchain() && it.currency.blockchain == blockchain
+    }
+    if (foundBlockchains.size != 1) {
+        val warningMessage = "Can't update information about Tokens in the WalletData list, because " +
+            "of the WalletStore doesn't contains the Blockchain: %s, or contains more than one"
+        Timber.w(warningMessage, blockchain.id)
+        return this
+    }
+
+    val blockchainAmountValue = foundBlockchains.first().currencyData.blockchainAmount ?: BigDecimal.ZERO
+    val updatedTokensWalletData = walletsData.filter { it.currency.isToken() }.map {
+        it.copy(
+            mainButton = when (it.mainButton) {
+                is WalletMainButton.SendButton -> {
+                    WalletMainButton.SendButton(it.mainButton.enabled && !blockchainAmountValue.isZero())
+                }
+                is WalletMainButton.CreateWalletButton -> it.mainButton
+            },
+            currencyData = it.currencyData.copy(
+                blockchainAmount = blockchainAmountValue,
+            ),
+        )
+    }
+    return updateWallets(updatedTokensWalletData)
+}
+
+private fun WalletStore.setupIfHadCardSingleToken(
+    blockchain: Blockchain,
+    walletsDataModel: List<WalletDataModel>,
+    appCurrencySymbol: String,
+): WalletStore {
+    // Card with single token contains only 2 model - blockchain and token
+    if (walletsData.size != 2) return this
+
+    val blockchainWalletData = walletsData.firstOrNull {
+        it.currency.isBlockchain() && it.currency.blockchain == blockchain
+    }
+    val cardSingleTokenWalletData = walletsDataModel.firstOrNull {
+        it.currency.isToken() && it.currency.blockchain == blockchain && it.isCardSingleToken
+    }
+    if (blockchainWalletData == null || cardSingleTokenWalletData == null) return this
+
+    val blockchainWalletDataWithSingleToken = blockchainWalletData.copy(
+        currencyData = blockchainWalletData.currencyData.copy(
+            token = cardSingleTokenWalletData.toTokenData(appCurrencySymbol),
+        ),
+    )
+    return updateWallets(listOf(blockchainWalletDataWithSingleToken))
+}
+
+private fun WalletDataModel.toTokenData(appCurrencySymbol: String): TokenData {
+    val amount = status.amount
+    val fiatAmount = fiatRate?.let { status.amount.toFiatValue(it) }
+
+    return TokenData(
+        amount = amount,
+        amountFormatted = amount.toFormattedCurrencyString(
+            decimals = currency.decimals,
+            currency = currency.currencySymbol,
+        ),
+        fiatAmount = fiatAmount,
+        fiatAmountFormatted = fiatAmount
+            ?.takeIf { !status.isErrorStatus }
+            ?.toFormattedFiatValue(appCurrencySymbol),
+        tokenSymbol = currency.currencySymbol,
+        fiatRate = fiatRate,
+        fiatRateString = fiatRate?.toFiatRateString(appCurrencySymbol),
+    )
 }
