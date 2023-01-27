@@ -7,6 +7,10 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.tangem.core.analytics.api.AnalyticsEventHandler
+import com.tangem.core.ui.utils.getValidatedNumberWithFixedDecimals
+import com.tangem.feature.swap.analytics.SwapEvents
+import com.tangem.feature.swap.domain.BlockchainInteractor
 import com.tangem.feature.swap.domain.SwapInteractor
 import com.tangem.feature.swap.domain.models.domain.Currency
 import com.tangem.feature.swap.domain.models.domain.SwapDataModel
@@ -24,7 +28,6 @@ import com.tangem.feature.swap.ui.StateBuilder
 import com.tangem.utils.coroutines.CoroutineDispatcherProvider
 import com.tangem.utils.coroutines.Debouncer
 import com.tangem.utils.coroutines.runCatching
-import com.tangem.utils.toFormattedString
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import kotlinx.serialization.decodeFromString
@@ -35,7 +38,9 @@ import kotlin.properties.Delegates
 @HiltViewModel
 internal class SwapViewModel @Inject constructor(
     private val swapInteractor: SwapInteractor,
+    private val blockchainInteractor: BlockchainInteractor,
     private val dispatchers: CoroutineDispatcherProvider,
+    private val analyticsEventHandler: AnalyticsEventHandler,
     savedStateHandle: SavedStateHandle,
 ) : ViewModel() {
 
@@ -51,7 +56,12 @@ internal class SwapViewModel @Inject constructor(
     private val singleTaskScheduler = SingleTaskScheduler<SwapState>()
 
     private var dataState by mutableStateOf(SwapProcessDataState(networkId = currency.networkId))
-    var uiState: SwapStateHolder by mutableStateOf(stateBuilder.createInitialLoadingState(currency))
+    var uiState: SwapStateHolder by mutableStateOf(
+        stateBuilder.createInitialLoadingState(
+            initialCurrency = currency,
+            blockchainId = blockchainInteractor.getBlockchainId(currency.networkId),
+        ),
+    )
         private set
 
     // shows currency order (direct - swap initial to selected, reversed = selected to initial)
@@ -70,12 +80,21 @@ internal class SwapViewModel @Inject constructor(
         super.onCleared()
     }
 
+    fun onScreenOpened() {
+        analyticsEventHandler.send(SwapEvents.SwapScreenOpened(currency.symbol))
+    }
+
     fun setRouter(router: SwapRouter) {
         swapRouter = router
         uiState = uiState.copy(
             onBackClicked = router::back,
-            onSelectTokenClick = { router.openScreen(SwapScreen.SelectToken) },
-            onSuccess = { router.openScreen(SwapScreen.Success) },
+            onSelectTokenClick = {
+                router.openScreen(SwapScreen.SelectToken)
+                analyticsEventHandler.send(SwapEvents.ChooseTokenScreenOpened)
+            },
+            onSuccess = {
+                router.openScreen(SwapScreen.Success)
+            },
         )
     }
 
@@ -190,16 +209,17 @@ internal class SwapViewModel @Inject constructor(
             runCatching(dispatchers.io) {
                 swapInteractor.onSwap(
                     networkId = dataState.networkId,
-                    swapData = dataState.swapModel!!,
-                    currencyToSend = dataState.fromCurrency!!,
-                    currencyToGet = dataState.toCurrency!!,
-                    amountToSwap = dataState.amount!!,
+                    swapData = requireNotNull(dataState.swapModel),
+                    currencyToSend = requireNotNull(dataState.fromCurrency),
+                    currencyToGet = requireNotNull(dataState.toCurrency),
+                    amountToSwap = requireNotNull(dataState.amount),
                 )
             }
                 .onSuccess {
                     when (it) {
                         is TxState.TxSent -> {
                             uiState = stateBuilder.createSuccessState(uiState, it)
+                            analyticsEventHandler.send(SwapEvents.SwapInProgressScreen)
                             swapRouter.openScreen(SwapScreen.Success)
                         }
                         else -> {
@@ -209,7 +229,7 @@ internal class SwapViewModel @Inject constructor(
                         }
                     }
                 }
-                .onFailure { }
+                .onFailure { makeDefaultAlert() }
         }
     }
 
@@ -230,16 +250,12 @@ internal class SwapViewModel @Inject constructor(
                             uiState = stateBuilder.loadingPermissionState(uiState)
                         }
                         else -> {
-                            uiState = stateBuilder.addAlert(uiState) {
-                                uiState = stateBuilder.clearAlert(uiState)
-                            }
+                            makeDefaultAlert()
                         }
                     }
                 }
                 .onFailure {
-                    uiState = stateBuilder.addAlert(uiState) {
-                        uiState = stateBuilder.clearAlert(uiState)
-                    }
+                    makeDefaultAlert()
                 }
         }
     }
@@ -286,7 +302,8 @@ internal class SwapViewModel @Inject constructor(
                 toCurrency = newToToken,
             )
             isOrderReversed = !isOrderReversed
-            lastAmount.value = cutAmountWithDecimals(swapInteractor.getTokenDecimals(newFromToken), lastAmount.value)
+            lastAmount.value =
+                cutAmountWithDecimals(blockchainInteractor.getTokenDecimals(newFromToken), lastAmount.value)
             uiState = stateBuilder.updateSwapAmount(uiState, lastAmount.value)
             startLoadingQuotes(newFromToken, newToToken, lastAmount.value)
         }
@@ -296,7 +313,7 @@ internal class SwapViewModel @Inject constructor(
         val fromToken = dataState.fromCurrency
         val toToken = dataState.toCurrency
         if (fromToken != null && toToken != null) {
-            val cutValue = cutAmountWithDecimals(swapInteractor.getTokenDecimals(fromToken), value)
+            val cutValue = cutAmountWithDecimals(blockchainInteractor.getTokenDecimals(fromToken), value)
             uiState = stateBuilder.updateSwapAmount(uiState, cutValue)
             lastAmount.value = cutValue
             amountDebouncer.debounce(DEBOUNCE_AMOUNT_DELAY, viewModelScope) {
@@ -313,19 +330,52 @@ internal class SwapViewModel @Inject constructor(
     }
 
     private fun cutAmountWithDecimals(maxDecimals: Int, amount: String): String {
-        return amount.toBigDecimalOrNull()?.toFormattedString(maxDecimals) ?: INITIAL_AMOUNT
+        return getValidatedNumberWithFixedDecimals(amount, maxDecimals)
+    }
+
+    private fun makeDefaultAlert() {
+        uiState = stateBuilder.addAlert(uiState) {
+            uiState = stateBuilder.clearAlert(uiState)
+        }
     }
 
     private fun createUiActions(): UiActions {
         return UiActions(
             onSearchEntered = { onSearchEntered(it) },
-            onTokenSelected = { onTokenSelect(it) },
+            onTokenSelected = {
+                onTokenSelect(it)
+                analyticsEventHandler.send(SwapEvents.SearchTokenClicked)
+            },
             onAmountChanged = { onAmountChanged(it) },
-            onSwapClick = { onSwapClick() },
-            onGivePermissionClick = { givePermissionsToSwap() },
-            onChangeCardsClicked = { onChangeCardsClicked() },
+            onSwapClick = {
+                onSwapClick()
+                val sendTokenSymbol = dataState.fromCurrency?.symbol
+                val receiveTokenSymbol = dataState.toCurrency?.symbol
+                if (sendTokenSymbol != null && receiveTokenSymbol != null) {
+                    analyticsEventHandler.send(
+                        SwapEvents.ButtonSwapClicked(
+                            sendToken = sendTokenSymbol,
+                            receiveToken = receiveTokenSymbol,
+                        ),
+                    )
+                }
+            },
+            onGivePermissionClick = {
+                givePermissionsToSwap()
+                analyticsEventHandler.send(SwapEvents.ButtonPermissionApproveClicked)
+            },
+            onChangeCardsClicked = {
+                onChangeCardsClicked()
+                analyticsEventHandler.send(SwapEvents.ButtonSwipeClicked)
+            },
             onBackClicked = { onSearchEntered("") },
             onMaxAmountSelected = { onMaxAmountClicked() },
+            openPermissionBottomSheet = {
+                analyticsEventHandler.send(SwapEvents.ButtonGivePermissionClicked)
+            },
+            hidePermissionBottomSheet = {
+                analyticsEventHandler.send(SwapEvents.ButtonPermissionCancelClicked)
+            },
         )
     }
 
