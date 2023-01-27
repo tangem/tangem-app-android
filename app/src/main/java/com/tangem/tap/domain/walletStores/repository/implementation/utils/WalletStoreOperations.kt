@@ -104,6 +104,9 @@ private inline fun List<WalletStoreModel>.replaceWalletStores(
 
     walletStoresToUpdate.forEach { walletStoreToUpdate ->
         val index = mutableStores.indexOfFirst(walletStoreToUpdate::isSameWalletStore)
+        // Can be possible if user hides wallet store when it's tokens is loading
+        if (index == -1) return@forEach
+
         val currentWalletStore = mutableStores[index]
         val updatedWalletStore = update(currentWalletStore)
 
@@ -124,6 +127,7 @@ private inline fun List<WalletStoreModel>.replaceWalletStores(
 }
 
 internal fun WalletStoreModel.isSameWalletStore(other: WalletStoreModel): Boolean {
-    return this.blockchain == other.blockchain &&
+    return this.userWalletId == other.userWalletId &&
+        this.blockchain == other.blockchain &&
         this.derivationPath == other.derivationPath
 }
