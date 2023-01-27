@@ -3,6 +3,7 @@ package com.tangem.feature.swap.ui
 import com.tangem.feature.swap.converters.TokensDataConverter
 import com.tangem.feature.swap.domain.models.DataError
 import com.tangem.feature.swap.domain.models.domain.Currency
+import com.tangem.feature.swap.domain.models.domain.isNonNative
 import com.tangem.feature.swap.domain.models.formatToUIRepresentation
 import com.tangem.feature.swap.domain.models.ui.FoundTokensState
 import com.tangem.feature.swap.domain.models.ui.PermissionDataState
@@ -27,9 +28,10 @@ class StateBuilder(val actions: UiActions) {
 
     private val tokensDataConverter = TokensDataConverter(actions.onSearchEntered, actions.onTokenSelected)
 
-    fun createInitialLoadingState(initialCurrency: Currency): SwapStateHolder {
+    fun createInitialLoadingState(initialCurrency: Currency, blockchainId: String): SwapStateHolder {
         return SwapStateHolder(
             networkId = initialCurrency.networkId,
+            blockchainId = blockchainId,
             sendCardData = SwapCardData(
                 type = TransactionCardType.SendCard(actions.onAmountChanged),
                 amount = null,
@@ -38,6 +40,7 @@ class StateBuilder(val actions: UiActions) {
                 tokenCurrency = initialCurrency.symbol,
                 coinId = initialCurrency.id,
                 canSelectAnotherToken = false,
+                isNotNativeToken = initialCurrency.isNonNative(),
                 balance = "",
             ),
             receiveCardData = SwapCardData(
@@ -48,6 +51,7 @@ class StateBuilder(val actions: UiActions) {
                 tokenCurrency = "",
                 canSelectAnotherToken = false,
                 balance = "",
+                isNotNativeToken = false,
                 coinId = null,
             ),
             fee = FeeState.Loading,
@@ -58,6 +62,8 @@ class StateBuilder(val actions: UiActions) {
             onChangeCardsClicked = actions.onChangeCardsClicked,
             onMaxAmountSelected = actions.onMaxAmountSelected,
             updateInProgress = true,
+            onShowPermissionBottomSheet = actions.openPermissionBottomSheet,
+            onCancelPermissionBottomSheet = actions.hidePermissionBottomSheet,
         )
     }
 
@@ -75,6 +81,7 @@ class StateBuilder(val actions: UiActions) {
                 tokenIconUrl = fromToken.logoUrl,
                 tokenCurrency = fromToken.symbol,
                 coinId = fromToken.id,
+                isNotNativeToken = fromToken.isNonNative(),
                 canSelectAnotherToken = mainTokenId != fromToken.id,
                 balance = "",
             ),
@@ -85,6 +92,7 @@ class StateBuilder(val actions: UiActions) {
                 tokenIconUrl = toToken.logoUrl,
                 tokenCurrency = toToken.symbol,
                 coinId = toToken.id,
+                isNotNativeToken = toToken.isNonNative(),
                 canSelectAnotherToken = mainTokenId != toToken.id,
                 balance = "",
             ),
@@ -119,6 +127,7 @@ class StateBuilder(val actions: UiActions) {
                 amountEquivalent = quoteModel.fromTokenInfo.tokenFiatBalance,
                 tokenIconUrl = uiStateHolder.sendCardData.tokenIconUrl,
                 coinId = quoteModel.fromTokenInfo.coinId,
+                isNotNativeToken = uiStateHolder.sendCardData.isNotNativeToken,
                 tokenCurrency = uiStateHolder.sendCardData.tokenCurrency,
                 canSelectAnotherToken = uiStateHolder.sendCardData.canSelectAnotherToken,
                 balance = quoteModel.fromTokenInfo.tokenWalletBalance,
@@ -129,6 +138,7 @@ class StateBuilder(val actions: UiActions) {
                 amountEquivalent = quoteModel.toTokenInfo.tokenFiatBalance,
                 tokenIconUrl = uiStateHolder.receiveCardData.tokenIconUrl,
                 coinId = quoteModel.toTokenInfo.coinId,
+                isNotNativeToken = uiStateHolder.receiveCardData.isNotNativeToken,
                 tokenCurrency = uiStateHolder.receiveCardData.tokenCurrency,
                 canSelectAnotherToken = uiStateHolder.receiveCardData.canSelectAnotherToken,
                 balance = quoteModel.toTokenInfo.tokenWalletBalance,
@@ -159,6 +169,7 @@ class StateBuilder(val actions: UiActions) {
                 amountEquivalent = "",
                 tokenIconUrl = uiStateHolder.sendCardData.tokenIconUrl,
                 coinId = uiStateHolder.sendCardData.coinId,
+                isNotNativeToken = uiStateHolder.sendCardData.isNotNativeToken,
                 tokenCurrency = uiStateHolder.sendCardData.tokenCurrency,
                 canSelectAnotherToken = uiStateHolder.sendCardData.canSelectAnotherToken,
                 balance = emptyAmountState.fromTokenWalletBalance,
@@ -169,6 +180,7 @@ class StateBuilder(val actions: UiActions) {
                 amountEquivalent = "",
                 tokenIconUrl = uiStateHolder.receiveCardData.tokenIconUrl,
                 coinId = uiStateHolder.receiveCardData.coinId,
+                isNotNativeToken = uiStateHolder.receiveCardData.isNotNativeToken,
                 tokenCurrency = uiStateHolder.receiveCardData.tokenCurrency,
                 canSelectAnotherToken = uiStateHolder.receiveCardData.canSelectAnotherToken,
                 balance = emptyAmountState.toTokenWalletBalance,
