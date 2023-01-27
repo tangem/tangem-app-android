@@ -35,7 +35,6 @@ import kotlinx.coroutines.flow.firstOrNull
 import kotlinx.coroutines.launch
 import org.rekotlin.Middleware
 import timber.log.Timber
-import java.math.BigDecimal
 
 internal class WalletSelectorMiddleware {
     val middleware: Middleware<AppState> = { _, appStateProvider ->
@@ -81,7 +80,7 @@ internal class WalletSelectorMiddleware {
             is WalletSelectorAction.SelectedWalletChanged,
             is WalletSelectorAction.UnlockWithBiometry.Error,
             is WalletSelectorAction.UnlockWithBiometry.Success,
-            is WalletSelectorAction.BalanceLoaded,
+            is WalletSelectorAction.BalancesLoaded,
             is WalletSelectorAction.IsLockedChanged,
             is WalletSelectorAction.HandleError,
             is WalletSelectorAction.CloseError,
@@ -104,20 +103,10 @@ internal class WalletSelectorMiddleware {
         state: WalletSelectorState,
     ) {
         if (updatedWalletStores.isNotEmpty()) scope.launch(Dispatchers.Default) {
-            state.wallets
-                .associateWith { updatedWalletStores[it.id] }
-                .forEach { (wallet, walletStores) ->
-                    val isWalletTokensEmpty = (wallet.type as? UserWalletModel.Type.MultiCurrency)?.tokensCount == 0
-                    val updatedWallet = if (walletStores == null && isWalletTokensEmpty) {
-                        wallet.copy(fiatBalance = TotalFiatBalance.Loaded(BigDecimal.ZERO))
-                    } else {
-                        wallet.updateWalletStoresAndCalculateFiatBalance(walletStores.orEmpty())
-                    }
-
-                    if (wallet != updatedWallet) {
-                        store.dispatchOnMain(WalletSelectorAction.BalanceLoaded(updatedWallet))
-                    }
-                }
+            val updatedWallets = state.wallets.updateWalletStoresAndCalculateFiatBalance(updatedWalletStores)
+            if (updatedWallets != state.wallets) {
+                store.dispatchOnMain(WalletSelectorAction.BalancesLoaded(updatedWallets))
+            }
         }
     }
 
@@ -314,18 +303,28 @@ internal class WalletSelectorMiddleware {
         }
     }
 
+    private suspend fun List<UserWalletModel>.updateWalletStoresAndCalculateFiatBalance(
+        walletStores: Map<UserWalletId, List<WalletStoreModel>>,
+    ): List<UserWalletModel> {
+        return this
+            .associateWith { walletStores[it.id] }
+            .map { (wallet, walletStores) ->
+                wallet.updateWalletStoresAndCalculateFiatBalance(walletStores)
+            }
+    }
+
     private suspend fun UserWalletModel.updateWalletStoresAndCalculateFiatBalance(
-        walletStores: List<WalletStoreModel>,
+        walletStores: List<WalletStoreModel>?,
     ): UserWalletModel {
         return this.copy(
             type = when (type) {
                 is UserWalletModel.Type.MultiCurrency -> type.copy(
-                    tokensCount = walletStores.flatMap { it.walletsData }.size,
+                    tokensCount = walletStores?.flatMap { it.walletsData }?.size ?: 0,
                 )
                 is UserWalletModel.Type.SingleCurrency -> type
             },
             fiatBalance = totalFiatBalanceCalculator.calculate(
-                walletStores = walletStores,
+                walletStores = walletStores.orEmpty(),
                 initial = TotalFiatBalance.Loading,
             ),
         )
