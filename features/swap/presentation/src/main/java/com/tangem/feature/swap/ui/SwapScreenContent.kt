@@ -21,6 +21,7 @@ import androidx.compose.material.Icon
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -39,6 +40,7 @@ import com.tangem.core.ui.components.SmallInfoCardWithWarning
 import com.tangem.core.ui.components.SpacerH16
 import com.tangem.core.ui.components.appbar.AppBarWithBackButton
 import com.tangem.core.ui.components.keyboardAsState
+import com.tangem.core.ui.extensions.getActiveIconRes
 import com.tangem.core.ui.extensions.getActiveIconResByCoinId
 import com.tangem.core.ui.res.TangemTheme
 import com.tangem.feature.swap.models.FeeState
@@ -161,6 +163,9 @@ private fun MainInfo(state: SwapStateHolder) {
         modifier = Modifier.fillMaxWidth(),
         contentAlignment = Alignment.Center,
     ) {
+        val networkIconRes = remember {
+            getActiveIconRes(state.blockchainId)
+        }
         Column {
             TransactionCard(
                 type = state.sendCardData.type,
@@ -169,7 +174,7 @@ private fun MainInfo(state: SwapStateHolder) {
                 amountEquivalent = state.sendCardData.amountEquivalent,
                 tokenIconUrl = state.sendCardData.tokenIconUrl,
                 tokenCurrency = state.sendCardData.tokenCurrency,
-                networkIconRes = state.sendCardData.networkIconRes,
+                networkIconRes = if (state.sendCardData.isNotNativeToken) networkIconRes else null,
                 iconPlaceholder = state.sendCardData.coinId?.let {
                     getActiveIconResByCoinId(it, state.networkId)
                 },
@@ -183,7 +188,7 @@ private fun MainInfo(state: SwapStateHolder) {
                 amountEquivalent = state.receiveCardData.amountEquivalent,
                 tokenIconUrl = state.receiveCardData.tokenIconUrl,
                 tokenCurrency = state.receiveCardData.tokenCurrency,
-                networkIconRes = state.receiveCardData.networkIconRes,
+                networkIconRes = if (state.receiveCardData.isNotNativeToken) networkIconRes else null,
                 iconPlaceholder = state.receiveCardData.coinId?.let {
                     getActiveIconResByCoinId(it, state.networkId)
                 },
@@ -314,7 +319,7 @@ private val sendCard = SwapCardData(
     amountEquivalent = "1 000 000",
     tokenIconUrl = "",
     tokenCurrency = "DAI",
-    networkIconRes = R.drawable.img_polygon_22,
+    isNotNativeToken = true,
     canSelectAnotherToken = false,
     balance = "123",
     coinId = "",
@@ -326,7 +331,7 @@ private val receiveCard = SwapCardData(
     amountEquivalent = "1 000 000",
     tokenIconUrl = "",
     tokenCurrency = "DAI",
-    networkIconRes = R.drawable.img_polygon_22,
+    isNotNativeToken = true,
     canSelectAnotherToken = true,
     balance = "33333",
     coinId = "",
@@ -342,6 +347,7 @@ private val state = SwapStateHolder(
     swapButton = SwapButton(enabled = true, loading = false, onClick = {}),
     onRefresh = {}, onBackClicked = {}, onChangeCardsClicked = {},
     permissionState = SwapPermissionState.InProgress,
+    blockchainId = "POLYGON",
     // alert = SwapWarning.GenericWarning("There was an error. Please try again.") {},
 )
 
