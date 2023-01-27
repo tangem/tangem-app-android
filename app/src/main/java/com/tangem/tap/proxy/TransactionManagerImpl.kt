@@ -148,6 +148,10 @@ class TransactionManagerImpl(
         }
     }
 
+    override fun getBlockchainId(networkId: String): String {
+        return requireNotNull(Blockchain.fromNetworkId(networkId)) { "blockchain not found" }.id
+    }
+
     private fun handleSendResult(result: SimpleResult): SendTxResult {
         when (result) {
             is SimpleResult.Success -> return SendTxResult.Success

@@ -9,4 +9,6 @@ data class UiActions(
     val onChangeCardsClicked: () -> Unit,
     val onBackClicked: () -> Unit,
     val onMaxAmountSelected: () -> Unit,
+    val openPermissionBottomSheet: () -> Unit,
+    val hidePermissionBottomSheet: () -> Unit,
 )

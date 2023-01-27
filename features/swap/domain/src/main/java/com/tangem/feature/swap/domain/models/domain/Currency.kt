@@ -30,3 +30,7 @@ sealed class Currency {
         val decimalCount: Int,
     ) : Currency()
 }
+
+fun Currency.isNonNative(): Boolean {
+    return this is Currency.NonNativeToken
+}

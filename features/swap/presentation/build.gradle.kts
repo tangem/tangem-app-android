@@ -49,6 +49,7 @@ android {
 
 dependencies {
     /** Core modules */
+    implementation(project(":core:analytics"))
     implementation(project(":core:utils"))
     implementation(project(":core:ui"))
 
