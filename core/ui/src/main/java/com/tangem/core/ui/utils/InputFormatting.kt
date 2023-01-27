@@ -10,9 +10,9 @@ package com.tangem.core.ui.utils
  */
 fun getValidatedNumberWithFixedDecimals(text: String, decimals: Int): String {
     val filteredChars = text.filterIndexed { index, c ->
-        c.isDigit()
-            || (c == '.' && index != 0 && text.indexOf('.') == index)
-            || (c == '.' && index != 0 && text.count { it == '.' } <= 1)
+        val isOneOrZeroPoint = c == '.' && index != 0 && text.count { it == '.' } <= 1
+        val isIndexPointIndex = c == '.' && index != 0 && text.indexOf('.') == index
+        c.isDigit() || isIndexPointIndex || isOneOrZeroPoint
     }
     // If dot is present, take first 3 digits before decimal and first decimals digits after decimal
     return if (filteredChars.count { it == '.' } == 1) {
