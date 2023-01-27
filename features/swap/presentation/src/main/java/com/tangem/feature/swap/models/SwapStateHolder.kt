@@ -62,6 +62,7 @@ sealed interface TransactionCardType {
 
     data class SendCard(
         val onAmountChanged: ((String) -> Unit),
+        val onFocusChanged: ((Boolean) -> Unit),
     ) : TransactionCardType
 
     data class ReceiveCard(
