@@ -1,10 +1,13 @@
 package com.tangem.core.ui.components.appbar
 
 import androidx.compose.animation.Crossfade
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -26,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextRange
@@ -40,13 +44,15 @@ import com.tangem.core.ui.res.TangemTheme
 /**
  * App bar with close icon and search functionality
  *
- * @param title        optional title
+ * @param title optional title
  * @param placeholderSearchText optional text placeholder for search TextField
  * @param expandedInitially whether the search is expanded on launch
  * @param tint tint for most of the visual elements of toolbar
  * @param onBackClick action when close button is clicked
  * @param onSearchChange action when search is modified
  * @param onSearchDisplayClose action when search is closed
+ * @param subtitle additional text under the title (optional)
+ * @param icon additional icon under the title (optional)
  *
  * @see <a href =
  * "https://www.figma.com/file/Vs6SkVsFnUPsSCNwlnVf5U/Android-%E2%80%93-UI?node-id=1123%3A4068&t=xj8BBj5DfCWn2Mli-1"
@@ -61,6 +67,8 @@ fun ExpandableSearchView(
     placeholderSearchText: String = "",
     expandedInitially: Boolean = false,
     tint: Color = TangemTheme.colors.icon.primary1,
+    subtitle: String? = null,
+    icon: Painter? = null,
 ) {
     val (expanded, onExpandedChanged) = remember { mutableStateOf(expandedInitially) }
 
@@ -79,6 +87,8 @@ fun ExpandableSearchView(
                 onBackClick = onBackClick,
                 onExpandedChange = onExpandedChanged,
                 tint = tint,
+                subtitle = subtitle,
+                icon = icon,
             )
         }
     }
@@ -90,11 +100,12 @@ private fun CollapsedSearchView(
     onBackClick: () -> Unit,
     onExpandedChange: (Boolean) -> Unit,
     title: String? = null,
+    subtitle: String? = null,
+    icon: Painter? = null,
 ) {
     Row(
         modifier = Modifier
             .background(TangemTheme.colors.background.secondary)
-            .padding(TangemTheme.dimens.spacing16)
             .fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing16),
         verticalAlignment = Alignment.CenterVertically,
@@ -103,25 +114,59 @@ private fun CollapsedSearchView(
             painter = painterResource(R.drawable.ic_close_24),
             contentDescription = null,
             modifier = Modifier
+                .padding(TangemTheme.dimens.spacing16)
                 .size(TangemTheme.dimens.size24)
                 .clickable { onBackClick() },
             tint = MaterialTheme.colors.onPrimary,
         )
-        if (!title.isNullOrBlank()) {
-            Text(
-                text = title,
-                color = TangemTheme.colors.text.primary1,
-                maxLines = 1,
-                style = TangemTheme.typography.subtitle1,
-            )
+        Column(
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.Start,
+        ) {
+            if (!title.isNullOrBlank()) {
+                Text(
+                    text = title,
+                    color = TangemTheme.colors.text.primary1,
+                    maxLines = 1,
+                    style = TangemTheme.typography.subtitle1,
+                    modifier = Modifier.defaultMinSize(minHeight = TangemTheme.dimens.size24),
+                )
+            }
+            if (subtitle != null) {
+                SubtitleView(subtitle = subtitle, icon = icon)
+            }
         }
+
         SpacerWMax()
         Icon(
             painter = painterResource(id = R.drawable.ic_search_24),
             tint = tint,
             contentDescription = null,
             modifier = Modifier
-                .clickable { onExpandedChange(true) },
+                .clickable { onExpandedChange(true) }
+                .padding(end = TangemTheme.dimens.spacing16),
+        )
+    }
+}
+
+@Composable
+private fun SubtitleView(subtitle: String, icon: Painter?) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        icon?.let {
+            Image(
+                painter = icon,
+                contentDescription = null,
+                modifier = Modifier.size(TangemTheme.dimens.size16),
+            )
+        }
+        Text(
+            text = subtitle,
+            color = TangemTheme.colors.text.secondary,
+            maxLines = 1,
+            style = TangemTheme.typography.caption,
         )
     }
 }
@@ -200,6 +245,8 @@ private fun CollapsedSearchViewPreview() {
             placeholderSearchText = "Search",
             onSearchChange = {},
             onSearchDisplayClose = {},
+            subtitle = "Ethereum",
+            icon = painterResource(id = R.drawable.img_eth_22),
         )
     }
 }
