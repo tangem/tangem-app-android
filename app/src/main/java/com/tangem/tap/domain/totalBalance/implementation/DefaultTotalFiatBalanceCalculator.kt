@@ -43,7 +43,8 @@ internal class DefaultTotalFiatBalanceCalculator : TotalFiatBalanceCalculator {
 
     private fun Sequence<WalletDataModel>.mapToStatus(): Sequence<TotalFiatBalanceStatus> {
         return this.map { walletData ->
-            when (walletData.status) {
+            if (walletData.fiatRate == null) TotalFiatBalanceStatus.Error
+            else when (walletData.status) {
                 is WalletDataModel.VerifiedOnline,
                 is WalletDataModel.SameCurrencyTransactionInProgress,
                 is WalletDataModel.TransactionInProgress,
