@@ -73,13 +73,13 @@ private class WalletMangerWalletStoreBuilderImpl(
     override fun build(): WalletStoreModel {
         val wallet = walletManager.wallet
         val blockchainWalletData = wallet.blockchain.toBlockchainWalletData(walletManager)
-        val tokenWalletsData = wallet.getTokens().firstOrNull()?.toTokenWalletData(walletManager)
+        val tokenWalletsData = walletManager.cardTokens.map { it.toTokenWalletData(walletManager) }
 
         return WalletStoreModel(
             userWalletId = userWalletId,
             blockchain = wallet.blockchain,
             derivationPath = wallet.publicKey.derivationPath,
-            walletsData = (listOf(blockchainWalletData) + listOfNotNull(tokenWalletsData)),
+            walletsData = (listOf(blockchainWalletData) + tokenWalletsData),
             walletRent = null,
             walletManager = walletManager,
             blockchainNetwork = BlockchainNetwork.fromWalletManager(walletManager),
@@ -97,6 +97,7 @@ private fun BlockchainNetwork.getBlockchainWalletData(walletManager: WalletManag
         walletAddresses = walletManager?.wallet?.createAddressesData().orEmpty(),
         existentialDeposit = getExistentialDeposit(walletManager),
         fiatRate = null,
+        isCardSingleToken = false
     )
 }
 
@@ -113,6 +114,7 @@ private fun BlockchainNetwork.getTokensWalletsData(walletManager: WalletManager?
                 walletAddresses = walletManager?.wallet?.createAddressesData().orEmpty(),
                 existentialDeposit = getExistentialDeposit(walletManager),
                 fiatRate = null,
+                isCardSingleToken = walletManager?.cardTokens?.contains(token) ?: false
             )
         }
 }
@@ -128,6 +130,7 @@ private fun Blockchain.toBlockchainWalletData(walletManager: WalletManager): Wal
         walletAddresses = wallet.createAddressesData(),
         existentialDeposit = getExistentialDeposit(walletManager),
         fiatRate = null,
+        isCardSingleToken = false,
     )
 }
 
@@ -143,6 +146,7 @@ private fun Token.toTokenWalletData(walletManager: WalletManager): WalletDataMod
         walletAddresses = wallet.createAddressesData(),
         existentialDeposit = getExistentialDeposit(walletManager),
         fiatRate = null,
+        isCardSingleToken = walletManager.cardTokens.contains(this)
     )
 }
 
