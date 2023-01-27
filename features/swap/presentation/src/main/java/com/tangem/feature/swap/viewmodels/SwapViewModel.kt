@@ -330,6 +330,10 @@ internal class SwapViewModel @Inject constructor(
         }
     }
 
+    @Suppress("UnusedPrivateMember")
+    private fun onAmountSelected(selected: Boolean) { // TODO
+    }
+
     private fun cutAmountWithDecimals(maxDecimals: Int, amount: String): String {
         return getValidatedNumberWithFixedDecimals(amount, maxDecimals)
     }
@@ -377,6 +381,7 @@ internal class SwapViewModel @Inject constructor(
             hidePermissionBottomSheet = {
                 analyticsEventHandler.send(SwapEvents.ButtonPermissionCancelClicked)
             },
+            onAmountSelected = { onAmountSelected(it) },
         )
     }
 
