@@ -16,6 +16,8 @@ import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.transition.TransitionInflater
 import by.kirich1409.viewbindingdelegate.viewBinding
+import com.badoo.mvicore.DiffStrategy
+import com.badoo.mvicore.ModelWatcher
 import com.badoo.mvicore.modelWatcher
 import com.tangem.common.doOnResult
 import com.tangem.core.analytics.Analytics
@@ -39,6 +41,8 @@ import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
 import com.tangem.tap.features.wallet.models.Currency
 import com.tangem.tap.features.wallet.models.PendingTransaction
+import com.tangem.tap.features.wallet.models.WalletWarning
+import com.tangem.tap.features.wallet.redux.AddressData
 import com.tangem.tap.features.wallet.redux.ErrorType
 import com.tangem.tap.features.wallet.redux.ProgressState
 import com.tangem.tap.features.wallet.redux.WalletAction
@@ -67,7 +71,13 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
 
     private val binding: FragmentWalletDetailsBinding by viewBinding(FragmentWalletDetailsBinding::bind)
 
-    private val walletDataWatcher = modelWatcher<WalletData> {
+    private val walletDataWatcher: ModelWatcher<WalletData> = modelWatcher {
+        val addressCardStrategy: DiffStrategy<WalletData> = { old, new ->
+            old.currency != new.currency ||
+                old.walletAddresses?.selectedAddress != new.walletAddresses?.selectedAddress ||
+                old.shouldShowMultipleAddress() != new.shouldShowMultipleAddress()
+        }
+
         WalletData::pendingTransactions {
             showPendingTransactionsIfPresent(it)
         }
@@ -77,25 +87,35 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
         WalletData::currencyData {
             setupBalanceData(it)
         }
+        WalletData::walletAddresses { walletAddresses ->
+            setupCopyAndShareButtons(walletAddresses?.selectedAddress?.address)
+        }
+        WalletData::assembleWarnings { warnings ->
+            handleWarnings(warnings)
+        }
         (WalletData::currencyData or WalletData::currency) { walletData ->
             setupCurrency(walletData.currencyData, walletData.currency)
             setupSwipeRefresh(walletData.currencyData, walletData.currency)
         }
+        watch({ it }, addressCardStrategy) { walletData ->
+            setupAddressCard(
+                shouldShowMultipleAddress = walletData.shouldShowMultipleAddress(),
+                selectedAddress = walletData.walletAddresses?.selectedAddress,
+                currency = walletData.currency,
+            )
+        }
     }
 
-    private val walletStateWatcher = modelWatcher<WalletState> {
-        (WalletState::selectedCurrency or WalletState::selectedWalletData) { state ->
-            val selectedWalletData = state.selectedWalletData
-            if (selectedWalletData != null) {
-                walletDataWatcher.invoke(selectedWalletData)
-                setupButtons(selectedWalletData, state.isExchangeServiceFeatureOn)
-                setupAddressCard(selectedWalletData)
-                handleWarnings(selectedWalletData)
+    private val walletStateWatcher: ModelWatcher<WalletState> = modelWatcher {
+        WalletState::selectedWalletData { selectedWallet ->
+            if (selectedWallet != null) {
+                walletDataWatcher.invoke(selectedWallet)
             }
         }
-        (WalletState::selectedCurrency or WalletState::isExchangeServiceFeatureOn) { state ->
-            if (state.selectedWalletData != null) {
-                setupButtons(state.selectedWalletData!!, state.isExchangeServiceFeatureOn)
+        (WalletState::selectedWalletData or WalletState::isExchangeServiceFeatureOn) { state ->
+            val selectedWallet = state.selectedWalletData
+            if (selectedWallet != null) {
+                setupButtonsRow(selectedWallet, state.isExchangeServiceFeatureOn)
             }
         }
         (WalletState::state or WalletState::error) { state ->
@@ -132,8 +152,6 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
     override fun onStop() {
         super.onStop()
         store.unsubscribe(this)
-        walletDataWatcher.clear()
-        walletStateWatcher.clear()
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -145,6 +163,11 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
         setupButtons()
         setupWarningsRecyclerView()
         setupTestActionButton()
+    }
+
+    override fun onDestroyView() {
+        super.onDestroyView()
+        clearWatchers()
     }
 
     private fun setupTransactionsRecyclerView() = with(binding) {
@@ -251,19 +274,21 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
             currencyData.status == BalanceStatus.Refreshing
     }
 
-    private fun setupButtons(selectedWallet: WalletData, isExchangeServiceFeatureOn: Boolean) = with(binding) {
-        lWalletDetails.btnCopy.setOnClickListener {
-            selectedWallet.walletAddresses?.selectedAddress?.address?.let { addressString ->
-                store.dispatch(WalletAction.CopyAddress(addressString, requireContext()))
+    private fun setupCopyAndShareButtons(walletAddress: String?) {
+        binding.lWalletDetails.btnCopy.setOnClickListener {
+            if (walletAddress != null) {
+                store.dispatch(WalletAction.CopyAddress(walletAddress, requireContext()))
             }
         }
-        lWalletDetails.btnShare.setOnClickListener {
-            selectedWallet.walletAddresses?.selectedAddress?.address?.let { addressString ->
-                store.dispatch(WalletAction.ShareAddress(addressString, requireContext()))
+        binding.lWalletDetails.btnShare.setOnClickListener {
+            if (walletAddress != null) {
+                store.dispatch(WalletAction.ShareAddress(walletAddress, requireContext()))
             }
         }
+    }
 
-        rowButtons.updateButtonsVisibility(
+    private fun setupButtonsRow(selectedWallet: WalletData, isExchangeServiceFeatureOn: Boolean) {
+        binding.rowButtons.updateButtonsVisibility(
             exchangeServiceFeatureOn = isExchangeServiceFeatureOn,
             buyAllowed = selectedWallet.isAvailableToBuy,
             sellAllowed = selectedWallet.isAvailableToSell,
@@ -271,9 +296,9 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
         )
     }
 
-    private fun handleWarnings(selectedWallet: WalletData) = with(binding) {
+    private fun handleWarnings(warnings: List<WalletWarning>) = with(binding) {
         val converter = WalletWarningConverter(requireContext())
-        val warningDetails = selectedWallet.assembleWarnings().map { converter.convert(it) }
+        val warningDetails = warnings.map { converter.convert(it) }
 
         warningMessagesAdapter.submitList(warningDetails)
         rvWarningMessages.show(warningDetails.isNotEmpty())
@@ -294,51 +319,59 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
         binding.rvPendingTransaction.show(pendingTransactions.isNotEmpty())
     }
 
-    private fun setupAddressCard(state: WalletData) = with(binding.lWalletDetails) {
-        if (state.walletAddresses != null) {
-            if (state.shouldShowMultipleAddress() && state.currency is Currency.Blockchain) {
-                (cardBalance as? ViewGroup)?.beginDelayedTransition()
-                chipGroupAddressType.show()
-                chipGroupAddressType.fitChipsByGroupWidth()
+    private fun setupAddressCard(
+        shouldShowMultipleAddress: Boolean,
+        selectedAddress: AddressData?,
+        currency: Currency,
+    ) = with(binding.lWalletDetails) {
+        if (selectedAddress == null) return@with
 
-                val checkedId =
-                    MultipleAddressUiHelper.typeToId(state.walletAddresses.selectedAddress.type)
-                if (checkedId != View.NO_ID) chipGroupAddressType.check(checkedId)
+        setupAddressTypeChips(shouldShowMultipleAddress, selectedAddress, currency)
 
-                chipGroupAddressType.setOnCheckedChangeListener { group, checkedId ->
-                    if (checkedId == -1) return@setOnCheckedChangeListener
-                    val type =
-                        MultipleAddressUiHelper.idToType(checkedId, state.currency.blockchain)
-                    type?.let { store.dispatch(WalletAction.ChangeSelectedAddress(type)) }
-                }
-            } else {
-                chipGroupAddressType.hide()
-            }
-            tvAddress.text = state.walletAddresses.selectedAddress.address
-            tvExplore.setOnClickListener {
-                store.dispatch(
-                    WalletAction.ExploreAddress(
-                        state.walletAddresses.selectedAddress.exploreUrl,
-                        requireContext(),
-                    ),
-                )
-            }
-            ivQrCode.setImageBitmap(state.walletAddresses.selectedAddress.shareUrl.toQrCode())
+        tvAddress.text = selectedAddress.address
+        tvExplore.setOnClickListener {
+            store.dispatch(WalletAction.ExploreAddress(selectedAddress.exploreUrl, requireContext()))
+        }
+        ivQrCode.setImageBitmap(selectedAddress.shareUrl.toQrCode())
 
-            tvReceiveMessage.text = when (val currency = state.currency) {
-                is Currency.Blockchain -> tvReceiveMessage.getString(
-                    id = R.string.address_qr_code_message_format,
-                    currency.blockchain.fullName,
-                    currency.currencySymbol,
-                    currency.blockchain.fullName,
-                )
-                is Currency.Token -> tvReceiveMessage.getString(
-                    id = R.string.address_qr_code_message_format,
-                    currency.token.name,
-                    currency.currencySymbol,
-                    currency.blockchain.fullName,
-                )
+        tvReceiveMessage.text = when (currency) {
+            is Currency.Blockchain -> tvReceiveMessage.getString(
+                id = R.string.address_qr_code_message_format,
+                currency.blockchain.fullName,
+                currency.currencySymbol,
+                currency.blockchain.fullName,
+            )
+            is Currency.Token -> tvReceiveMessage.getString(
+                id = R.string.address_qr_code_message_format,
+                currency.token.name,
+                currency.currencySymbol,
+                currency.blockchain.fullName,
+            )
+        }
+    }
+
+    private fun setupAddressTypeChips(
+        shouldShowMultipleAddress: Boolean,
+        selectedAddress: AddressData,
+        currency: Currency,
+    ) = with(binding.lWalletDetails) {
+        if (shouldShowMultipleAddress && currency is Currency.Blockchain) {
+            (cardBalance as? ViewGroup)?.beginDelayedTransition()
+            chipGroupAddressType.show()
+            chipGroupAddressType.fitChipsByGroupWidth()
+
+            val checkedId =
+                MultipleAddressUiHelper.typeToId(selectedAddress.type)
+            if (checkedId != View.NO_ID) chipGroupAddressType.check(checkedId)
+
+            chipGroupAddressType.setOnCheckedChangeListener { _, checkedId ->
+                if (checkedId == -1) return@setOnCheckedChangeListener
+                val type =
+                    MultipleAddressUiHelper.idToType(checkedId, currency.blockchain)
+                type?.let { store.dispatch(WalletAction.ChangeSelectedAddress(type)) }
             }
+        } else {
+            chipGroupAddressType.hide()
         }
     }
 
@@ -423,6 +456,11 @@ class WalletDetailsFragment : Fragment(R.layout.fragment_wallet_details),
 
     override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.menu_wallet_details, menu)
+    }
+
+    private fun clearWatchers() {
+        walletDataWatcher.clear()
+        walletStateWatcher.clear()
     }
 
     private fun TextView.setWarningStatus(mainMessage: Int, error: String? = null) {
