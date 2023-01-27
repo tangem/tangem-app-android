@@ -1,6 +1,7 @@
 package com.tangem.feature.swap.domain
 
 import com.tangem.feature.swap.domain.models.domain.Currency
+import com.tangem.feature.swap.domain.models.domain.NetworkInfo
 
 interface BlockchainInteractor {
 
@@ -11,5 +12,5 @@ interface BlockchainInteractor {
      *
      * workaround till not use backend only and not integrated server vs sdk
      */
-    fun getBlockchainId(networkId: String): String
+    fun getBlockchainInfo(networkId: String): NetworkInfo
 }
