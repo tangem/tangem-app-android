@@ -3,6 +3,7 @@ package com.tangem.feature.swap.ui
 import com.tangem.feature.swap.converters.TokensDataConverter
 import com.tangem.feature.swap.domain.models.DataError
 import com.tangem.feature.swap.domain.models.domain.Currency
+import com.tangem.feature.swap.domain.models.domain.NetworkInfo
 import com.tangem.feature.swap.domain.models.domain.isNonNative
 import com.tangem.feature.swap.domain.models.formatToUIRepresentation
 import com.tangem.feature.swap.domain.models.ui.FoundTokensState
@@ -24,14 +25,14 @@ import com.tangem.feature.swap.models.UiActions
 /**
  * State builder creates a specific states for SwapScreen
  */
-class StateBuilder(val actions: UiActions) {
+internal class StateBuilder(val actions: UiActions) {
 
     private val tokensDataConverter = TokensDataConverter(actions.onSearchEntered, actions.onTokenSelected)
 
-    fun createInitialLoadingState(initialCurrency: Currency, blockchainId: String): SwapStateHolder {
+    fun createInitialLoadingState(initialCurrency: Currency, networkInfo: NetworkInfo): SwapStateHolder {
         return SwapStateHolder(
             networkId = initialCurrency.networkId,
-            blockchainId = blockchainId,
+            blockchainId = networkInfo.blockchainId,
             sendCardData = SwapCardData(
                 type = TransactionCardType.SendCard(actions.onAmountChanged),
                 amount = null,
@@ -55,7 +56,7 @@ class StateBuilder(val actions: UiActions) {
                 coinId = null,
             ),
             fee = FeeState.Loading,
-            networkCurrency = initialCurrency.symbol,
+            networkCurrency = networkInfo.blockchainCurrency,
             swapButton = SwapButton(enabled = false, loading = true, onClick = {}),
             onRefresh = {},
             onBackClicked = actions.onBackClicked,
@@ -316,15 +317,15 @@ class StateBuilder(val actions: UiActions) {
         return "$firstAddressPart...$secondAddressPart"
     }
 
-    private companion object {
-        const val ADDRESS_MIN_LENGTH = 11
-        const val ADDRESS_FIRST_PART_LENGTH = 7
-        const val ADDRESS_SECOND_PART_LENGTH = 4
-    }
-
     fun createSilentLoadState(uiState: SwapStateHolder): SwapStateHolder {
         return uiState.copy(
             updateInProgress = true,
         )
+    }
+
+    private companion object {
+        const val ADDRESS_MIN_LENGTH = 11
+        const val ADDRESS_FIRST_PART_LENGTH = 7
+        const val ADDRESS_SECOND_PART_LENGTH = 4
     }
 }

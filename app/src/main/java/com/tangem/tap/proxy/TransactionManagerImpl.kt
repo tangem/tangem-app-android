@@ -20,6 +20,7 @@ import com.tangem.domain.common.extensions.fromNetworkId
 import com.tangem.lib.crypto.TransactionManager
 import com.tangem.lib.crypto.models.Currency
 import com.tangem.lib.crypto.models.ProxyAmount
+import com.tangem.lib.crypto.models.ProxyNetworkInfo
 import com.tangem.lib.crypto.models.transactions.SendTxResult
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.domain.TangemSigner
@@ -148,8 +149,13 @@ class TransactionManagerImpl(
         }
     }
 
-    override fun getBlockchainId(networkId: String): String {
-        return requireNotNull(Blockchain.fromNetworkId(networkId)) { "blockchain not found" }.id
+    override fun getBlockchainInfo(networkId: String): ProxyNetworkInfo {
+        val blockchain = requireNotNull(Blockchain.fromNetworkId(networkId)) { "blockchain not found" }
+        return ProxyNetworkInfo(
+            name = blockchain.fullName,
+            blockchainId = blockchain.id,
+            blockchainCurrency = blockchain.currency,
+        )
     }
 
     private fun handleSendResult(result: SimpleResult): SendTxResult {
