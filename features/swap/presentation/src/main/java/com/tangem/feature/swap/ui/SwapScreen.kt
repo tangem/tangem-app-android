@@ -31,7 +31,12 @@ internal fun SwapScreen(stateHolder: SwapStateHolder) {
                 if (stateHolder.permissionState is SwapPermissionState.ReadyForRequest) {
                     SwapPermissionBottomSheetContent(
                         data = stateHolder.permissionState,
-                        onCancel = { coroutineScope.launch { bottomSheetState.hide() } },
+                        onCancel = {
+                            coroutineScope.launch {
+                                stateHolder.onCancelPermissionBottomSheet.invoke()
+                                bottomSheetState.hide()
+                            }
+                        },
                     )
                 } else {
                     // Required "else" block to prevent compose crash
@@ -55,7 +60,12 @@ internal fun SwapScreen(stateHolder: SwapStateHolder) {
                         val isBottomSheetReady = !bottomSheetState.isVisible &&
                             stateHolder.permissionState is SwapPermissionState.ReadyForRequest
                         coroutineScope.launch {
-                            if (isBottomSheetReady) bottomSheetState.show() else bottomSheetState.hide()
+                            if (isBottomSheetReady) {
+                                bottomSheetState.show()
+                                stateHolder.onShowPermissionBottomSheet.invoke()
+                            } else {
+                                bottomSheetState.hide()
+                            }
                         }
                     },
                 )
