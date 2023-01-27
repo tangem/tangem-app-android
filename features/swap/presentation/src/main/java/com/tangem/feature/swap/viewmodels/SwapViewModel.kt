@@ -35,6 +35,7 @@ import kotlinx.serialization.json.Json
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
+@Suppress("LargeClass")
 @HiltViewModel
 internal class SwapViewModel @Inject constructor(
     private val swapInteractor: SwapInteractor,
@@ -59,7 +60,7 @@ internal class SwapViewModel @Inject constructor(
     var uiState: SwapStateHolder by mutableStateOf(
         stateBuilder.createInitialLoadingState(
             initialCurrency = currency,
-            blockchainId = blockchainInteractor.getBlockchainId(currency.networkId),
+            networkInfo = blockchainInteractor.getBlockchainInfo(currency.networkId),
         ),
     )
         private set
