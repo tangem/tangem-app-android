@@ -178,7 +178,7 @@ internal fun List<WalletDataModel>.updateWithSelf(
     val updatedWalletsData = arrayListOf<WalletDataModel>()
 
     newWalletsData.forEach { newWalletData ->
-        val walletDataToUpdate = oldWalletsData.find(newWalletData::isSameWalletData)
+        val walletDataToUpdate = oldWalletsData.firstOrNull(newWalletData::isSameWalletData)
         if (walletDataToUpdate != null) {
             updatedWalletsData.add(walletDataToUpdate.updateWithSelf(newWalletData))
         } else {
@@ -190,5 +190,5 @@ internal fun List<WalletDataModel>.updateWithSelf(
 }
 
 internal fun WalletDataModel.isSameWalletData(other: WalletDataModel): Boolean {
-    return currency == other.currency
+    return this.currency == other.currency
 }
