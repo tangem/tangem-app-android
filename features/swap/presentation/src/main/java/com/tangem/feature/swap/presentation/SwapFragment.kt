@@ -34,6 +34,7 @@ class SwapFragment : Fragment() {
                 customTabsManager = CustomTabsManager(WeakReference(activity?.application)),
             ),
         )
+        viewModel.onScreenOpened()
 
         activity?.onBackPressedDispatcher?.addCallback(
             viewLifecycleOwner,
