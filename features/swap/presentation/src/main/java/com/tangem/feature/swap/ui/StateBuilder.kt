@@ -30,11 +30,12 @@ internal class StateBuilder(val actions: UiActions) {
     private val tokensDataConverter = TokensDataConverter(actions.onSearchEntered, actions.onTokenSelected)
 
     fun createInitialLoadingState(initialCurrency: Currency, networkInfo: NetworkInfo): SwapStateHolder {
+        tokensDataConverter.setNetworkData(networkInfo.name, networkInfo.blockchainId)
         return SwapStateHolder(
             networkId = initialCurrency.networkId,
             blockchainId = networkInfo.blockchainId,
             sendCardData = SwapCardData(
-                type = TransactionCardType.SendCard(actions.onAmountChanged),
+                type = TransactionCardType.SendCard(actions.onAmountChanged, actions.onAmountSelected),
                 amount = null,
                 amountEquivalent = null,
                 tokenIconUrl = initialCurrency.logoUrl,
@@ -206,7 +207,11 @@ internal class StateBuilder(val actions: UiActions) {
     }
 
     fun addTokensToState(uiState: SwapStateHolder, dataState: FoundTokensState): SwapStateHolder {
-        return uiState.copy(selectTokenState = tokensDataConverter.convert(dataState))
+        return uiState.copy(
+            selectTokenState = tokensDataConverter.convert(
+                value = dataState,
+            ),
+        )
     }
 
     private fun convertPermissionState(
