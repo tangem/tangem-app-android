@@ -9,9 +9,8 @@ import com.tangem.tap.features.walletSelector.ui.model.UserWalletItem
 internal object MockData {
     private val multiCurrencyUserWallet = MultiCurrencyUserWalletItem(
         id = UserWalletId("wallet_1"),
-        balance = UserWalletItem.Balance(
+        balance = UserWalletItem.Balance.Loaded(
             amount = "6781.05 $",
-            isLoading = false,
         ),
         name = "Wallet",
         imageUrl = "https://app.tangem.com/cards/card_default.png",
@@ -22,9 +21,8 @@ internal object MockData {
 
     private val singleCurrencyUserWallet = SingleCurrencyUserWalletItem(
         id = UserWalletId("wallet_4"),
-        balance = UserWalletItem.Balance(
+        balance = UserWalletItem.Balance.Loaded(
             amount = "6781.05 $",
-            isLoading = false,
         ),
         name = "Wallet",
         imageUrl = "https://app.tangem.com/cards/card_default.png",
