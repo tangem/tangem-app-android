@@ -24,8 +24,8 @@ internal object WalletSelectorReducer {
             is WalletSelectorAction.IsLockedChanged -> state.copy(
                 isLocked = action.isLocked,
             )
-            is WalletSelectorAction.BalanceLoaded -> state.copy(
-                wallets = state.wallets.updateWithBalance(action.userWalletModel),
+            is WalletSelectorAction.BalancesLoaded -> state.copy(
+                wallets = action.userWalletModels,
             )
             is WalletSelectorAction.HandleError -> state.copy(error = action.error)
             is WalletSelectorAction.CloseError -> state.copy(error = null)
@@ -82,19 +82,6 @@ internal object WalletSelectorReducer {
                         isLocked = isLocked,
                     )
                 }
-        }
-    }
-
-    private fun List<UserWalletModel>.updateWithBalance(
-        userWalletModel: UserWalletModel,
-    ): List<UserWalletModel> {
-        return ArrayList(this).apply {
-            val index = indexOfFirst { it.id == userWalletModel.id }
-            if (index == -1) {
-                add(userWalletModel)
-            } else {
-                this[index] = userWalletModel
-            }
         }
     }
 
