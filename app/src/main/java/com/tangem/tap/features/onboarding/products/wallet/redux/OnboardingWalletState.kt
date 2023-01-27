@@ -105,7 +105,7 @@ sealed class BackupStep {
     object Finished : BackupStep()
 }
 
-sealed class OnboardingDialog: StateDialog {
+sealed class OnboardingDialog : StateDialog {
     data class InterruptOnboarding(val onOk: VoidCallback) : BackupDialog()
 }
 
