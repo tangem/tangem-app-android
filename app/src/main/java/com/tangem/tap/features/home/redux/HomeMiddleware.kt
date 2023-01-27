@@ -79,10 +79,9 @@ private fun readCard(analyticsEvent: AnalyticsEvent?) = scope.launch {
         onProgressStateChange = { showProgress ->
             if (showProgress) {
                 changeButtonState(ButtonState.PROGRESS)
+            } else {
+                changeButtonState(ButtonState.ENABLED)
             }
-            // else { //todo hide this because
-            //     changeButtonState(ButtonState.ENABLED)
-            // }
         },
         onScanStateChange = { scanInProgress ->
             store.dispatch(HomeAction.ScanInProgress(scanInProgress))
@@ -103,17 +102,21 @@ private fun readCard(analyticsEvent: AnalyticsEvent?) = scope.launch {
                             scope.launch { store.onUserWalletSelected(userWallet) }
                         }
                         .doOnResult {
-                            changeButtonState(ButtonState.ENABLED)
-                            store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Wallet))
+                            navigateTo(AppScreen.Wallet)
                         }
                 } else {
                     store.onCardScanned(scanResponse)
-                    changeButtonState(ButtonState.ENABLED)
-                    store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Wallet))
+                    navigateTo(AppScreen.Wallet)
                 }
             }
         },
     )
+}
+
+private suspend fun navigateTo(appScreen: AppScreen) {
+    store.dispatchOnMain(NavigationAction.NavigateTo(appScreen))
+    delay(200)
+    changeButtonState(ButtonState.ENABLED)
 }
 
 private fun changeButtonState(state: ButtonState) {
