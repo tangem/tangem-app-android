@@ -1,12 +1,11 @@
 package com.tangem.feature.swap.models
 
-import androidx.annotation.DrawableRes
-
 data class SwapStateHolder(
     val sendCardData: SwapCardData,
     val receiveCardData: SwapCardData,
     val networkCurrency: String,
     val networkId: String,
+    val blockchainId: String, // not the same as networkId, its local id in app
     val fee: FeeState = FeeState.Empty,
     val warnings: List<SwapWarning> = emptyList(),
     val alert: SwapWarning.GenericWarning? = null,
@@ -24,6 +23,8 @@ data class SwapStateHolder(
     val onSelectTokenClick: (() -> Unit)? = null,
     val onSuccess: (() -> Unit)? = null,
     val onMaxAmountSelected: (() -> Unit)? = null,
+    val onShowPermissionBottomSheet: () -> Unit = {},
+    val onCancelPermissionBottomSheet: () -> Unit = {},
 )
 
 data class SwapCardData(
@@ -34,7 +35,7 @@ data class SwapCardData(
     val tokenIconUrl: String,
     val tokenCurrency: String,
     val balance: String,
-    @DrawableRes val networkIconRes: Int? = null,
+    val isNotNativeToken: Boolean,
     val canSelectAnotherToken: Boolean = false,
 )
 
