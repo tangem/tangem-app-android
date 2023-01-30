@@ -43,13 +43,15 @@ internal class DefaultTotalFiatBalanceCalculator : TotalFiatBalanceCalculator {
 
     private fun Sequence<WalletDataModel>.mapToStatus(): Sequence<TotalFiatBalanceStatus> {
         return this.map { walletData ->
-            if (walletData.fiatRate == null) TotalFiatBalanceStatus.Error
-            else when (walletData.status) {
+            when (walletData.status) {
                 is WalletDataModel.VerifiedOnline,
                 is WalletDataModel.SameCurrencyTransactionInProgress,
                 is WalletDataModel.TransactionInProgress,
                 is WalletDataModel.NoAccount,
-                -> TotalFiatBalanceStatus.Loaded
+                -> {
+                    if (walletData.fiatRate == null) TotalFiatBalanceStatus.Error
+                    else TotalFiatBalanceStatus.Loaded
+                }
                 is WalletDataModel.Unreachable,
                 is WalletDataModel.MissedDerivation,
                 -> TotalFiatBalanceStatus.Error
