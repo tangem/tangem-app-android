@@ -9,6 +9,7 @@ import com.tangem.tap.features.walletSelector.redux.WalletSelectorState
 import com.tangem.tap.features.walletSelector.ui.model.MultiCurrencyUserWalletItem
 import com.tangem.tap.features.walletSelector.ui.model.SingleCurrencyUserWalletItem
 import com.tangem.tap.features.walletSelector.ui.model.UserWalletItem
+import java.math.BigDecimal
 
 internal fun WalletSelectorScreenState.updateWithNewState(
     newState: WalletSelectorState,
@@ -50,10 +51,14 @@ private fun List<UserWalletModel>.toUiModels(
 ): Sequence<UserWalletItem> {
     return this.asSequence().map { userWalletModel ->
         with(userWalletModel) {
-            val balance = UserWalletItem.Balance(
-                amount = fiatBalance.amount.toFormattedFiatValue(appCurrency.symbol),
-                isLoading = fiatBalance is TotalFiatBalance.Loading,
-            )
+            val formatAmount = { amount: BigDecimal ->
+                amount.toFormattedFiatValue(appCurrency.symbol)
+            }
+            val balance = when (fiatBalance) {
+                is TotalFiatBalance.Error -> UserWalletItem.Balance.Error(formatAmount(fiatBalance.amount))
+                is TotalFiatBalance.Loaded -> UserWalletItem.Balance.Loaded(formatAmount(fiatBalance.amount))
+                is TotalFiatBalance.Loading -> UserWalletItem.Balance.Loading
+            }
             when (type) {
                 is UserWalletModel.Type.MultiCurrency -> MultiCurrencyUserWalletItem(
                     id = id,
