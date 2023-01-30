@@ -22,6 +22,7 @@ interface WalletStoresManager {
      * @return [Flow] with [WalletStoreModel] list
      * */
     fun get(userWalletId: UserWalletId): Flow<List<WalletStoreModel>>
+    suspend fun getSync(userWalletId: UserWalletId): List<WalletStoreModel>
 
     /**
      * Delete [WalletStoreModel]s associated with provided [UserWalletId]s
