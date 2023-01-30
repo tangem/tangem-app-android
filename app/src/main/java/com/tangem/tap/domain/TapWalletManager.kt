@@ -267,7 +267,9 @@ class TapWalletManager {
     }
 
     suspend fun reloadData(data: ScanResponse) {
-        loadUserCurrencies(data, walletManagerFactory)
+        if (data.card.isMultiwalletAllowed) {
+            loadUserCurrencies(data, walletManagerFactory)
+        }
         withContext(Dispatchers.Main) {
             getActionIfUnknownBlockchainOrEmptyWallet(data)?.let {
                 store.dispatch(it)
