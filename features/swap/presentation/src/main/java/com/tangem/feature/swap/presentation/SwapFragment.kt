@@ -31,7 +31,7 @@ class SwapFragment : Fragment() {
         viewModel.setRouter(
             SwapRouter(
                 fragmentManager = WeakReference(parentFragmentManager),
-                customTabsManager = CustomTabsManager(WeakReference(activity?.application)),
+                customTabsManager = CustomTabsManager(WeakReference(context)),
             ),
         )
         viewModel.onScreenOpened()
