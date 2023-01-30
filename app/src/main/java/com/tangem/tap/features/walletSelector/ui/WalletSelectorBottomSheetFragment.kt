@@ -33,7 +33,7 @@ internal class WalletSelectorBottomSheetFragment : ComposeBottomSheetFragment<Wa
     private val viewModel by viewModels<WalletSelectorViewModel>()
 
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
-        Analytics.send(MyWallets.MyWalletsScreenOpened)
+        Analytics.send(MyWallets.MyWalletsScreenOpened())
 
         return super.onCreateDialog(savedInstanceState)
     }
