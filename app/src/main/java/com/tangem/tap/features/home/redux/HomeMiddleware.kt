@@ -3,12 +3,14 @@ package com.tangem.tap.features.home.redux
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnResult
 import com.tangem.common.doOnSuccess
+import com.tangem.core.analytics.Analytics
+import com.tangem.core.analytics.AnalyticsEvent
+import com.tangem.tap.common.analytics.events.Shop
 import com.tangem.tap.common.entities.IndeterminateProgressButton
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.dispatchOpenUrl
 import com.tangem.tap.common.extensions.onCardScanned
 import com.tangem.tap.common.extensions.onUserWalletSelected
-import com.tangem.tap.common.postUiDelayBg
 import com.tangem.tap.common.redux.AppState
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
@@ -52,14 +54,11 @@ private fun handleHomeAction(action: Action) {
             store.dispatch(GlobalAction.ExchangeManager.Init)
             store.dispatch(GlobalAction.FetchUserCountry)
         }
-        is HomeAction.ShouldScanCardOnResume -> {
-            if (action.shouldScanCard) {
-                store.dispatch(HomeAction.ShouldScanCardOnResume(false))
-                postUiDelayBg(ms = 700) { store.dispatch(HomeAction.ReadCard) }
-            }
+        is HomeAction.ReadCard -> {
+            readCard(action.analyticsEvent)
         }
-        is HomeAction.ReadCard -> readCard()
         is HomeAction.GoToShop -> {
+            Analytics.send(Shop.ScreenOpened())
             when (action.userCountryCode) {
                 RUSSIA_COUNTRY_CODE, BELARUS_COUNTRY_CODE -> store.dispatchOpenUrl(BUY_WALLET_URL)
                 else -> store.dispatch(NavigationAction.NavigateTo(AppScreen.Shop))
@@ -68,19 +67,19 @@ private fun handleHomeAction(action: Action) {
     }
 }
 
-private fun readCard() = scope.launch {
+private fun readCard(analyticsEvent: AnalyticsEvent?) = scope.launch {
     delay(timeMillis = 200)
     tangemSdkManager.setAccessCodeRequestPolicy(
         useBiometricsForAccessCode = preferencesStorage.shouldSaveAccessCodes,
     )
     ScanCardProcessor.scan(
+        analyticsEvent = analyticsEvent,
         onProgressStateChange = { showProgress ->
             if (showProgress) {
                 changeButtonState(ButtonState.PROGRESS)
+            } else {
+                changeButtonState(ButtonState.ENABLED)
             }
-            // else { //todo hide this because
-            //     changeButtonState(ButtonState.ENABLED)
-            // }
         },
         onScanStateChange = { scanInProgress ->
             store.dispatch(HomeAction.ScanInProgress(scanInProgress))
@@ -92,23 +91,30 @@ private fun readCard() = scope.launch {
             scope.launch {
                 if (preferencesStorage.shouldSaveUserWallets) {
                     val userWallet = UserWalletBuilder(scanResponse).build() ?: return@launch
-                    userWalletsListManager.save(userWallet).doOnFailure { error ->
-                        Timber.e(error, "Unable to save user wallet")
-                        store.onCardScanned(scanResponse)
-                    }.doOnSuccess {
-                        scope.launch { store.onUserWalletSelected(userWallet) }
-                    }.doOnResult {
-                        changeButtonState(ButtonState.ENABLED)
-                        store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Wallet))
-                    }
+                    userWalletsListManager.save(userWallet)
+                        .doOnFailure { error ->
+                            Timber.e(error, "Unable to save user wallet")
+                            store.onCardScanned(scanResponse)
+                        }
+                        .doOnSuccess {
+                            scope.launch { store.onUserWalletSelected(userWallet) }
+                        }
+                        .doOnResult {
+                            navigateTo(AppScreen.Wallet)
+                        }
                 } else {
                     store.onCardScanned(scanResponse)
-                    changeButtonState(ButtonState.ENABLED)
-                    store.dispatchOnMain(NavigationAction.NavigateTo(AppScreen.Wallet))
+                    navigateTo(AppScreen.Wallet)
                 }
             }
         },
     )
+}
+
+private suspend fun navigateTo(appScreen: AppScreen) {
+    store.dispatchOnMain(NavigationAction.NavigateTo(appScreen))
+    delay(200)
+    changeButtonState(ButtonState.ENABLED)
 }
 
 private fun changeButtonState(state: ButtonState) {
