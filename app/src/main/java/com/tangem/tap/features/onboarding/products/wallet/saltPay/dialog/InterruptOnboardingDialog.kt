@@ -11,15 +11,17 @@ import com.tangem.wallet.R
 /**
 [REDACTED_AUTHOR]
  */
-object InterruptOnboardingDialog {
-    fun create(context: Context, dialog: OnboardingDialog.InterruptOnboarding): Dialog {
-        return AlertDialog.Builder(context).apply {
-            setTitle(context.getString(R.string.onboarding_exit_alert_title))
-            setMessage(context.getString(R.string.onboarding_exit_alert_message))
-            setPositiveButton(R.string.common_ok) { _, _ -> dialog.onOk() }
-            setNegativeButton(R.string.common_cancel) { _, _ -> }
-            setOnDismissListener { store.dispatchDialogHide() }
-            setCancelable(false)
-        }.create()
+class InterruptOnboardingDialog {
+    companion object {
+        fun create(context: Context, dialog: OnboardingDialog.InterruptOnboarding): Dialog {
+            return AlertDialog.Builder(context).apply {
+                setTitle(context.getString(R.string.onboarding_exit_alert_title))
+                setMessage(context.getString(R.string.onboarding_exit_alert_message))
+                setPositiveButton(R.string.common_ok) { _, _ -> dialog.onOk() }
+                setNegativeButton(R.string.common_cancel) { _, _ -> }
+                setOnDismissListener { store.dispatchDialogHide() }
+                setCancelable(false)
+            }.create()
+        }
     }
 }
