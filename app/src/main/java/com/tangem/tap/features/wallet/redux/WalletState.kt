@@ -29,6 +29,9 @@ import org.rekotlin.StateType
 import java.math.BigDecimal
 import kotlin.properties.ReadOnlyProperty
 
+/**
+ * @property derivationsCheckIsScheduled - used only for analytics
+ */
 data class WalletState(
     val cardId: String = "",
     val state: ProgressState = ProgressState.Done,
@@ -46,6 +49,7 @@ data class WalletState(
     val totalBalance: TotalBalance? = null,
     val showBackupWarning: Boolean = false,
     val missingDerivations: List<BlockchainNetwork> = emptyList(),
+    val derivationsCheckIsScheduled: Boolean = false,
     val loadingUserTokens: Boolean = false,
     val walletCardsCount: Int? = null,
 ) : StateType {
