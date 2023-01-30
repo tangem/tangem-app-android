@@ -123,7 +123,11 @@ internal class SwapViewModel @Inject constructor(
     }
 
     private fun updateTokensState(dataState: FoundTokensState) {
-        uiState = stateBuilder.addTokensToState(uiState, dataState)
+        uiState = stateBuilder.addTokensToState(
+            uiState = uiState,
+            dataState = dataState,
+            networkInfo = blockchainInteractor.getBlockchainInfo(currency.networkId),
+        )
     }
 
     private fun startLoadingQuotes(fromToken: Currency, toToken: Currency, amount: String) {
@@ -330,6 +334,13 @@ internal class SwapViewModel @Inject constructor(
         }
     }
 
+    @Suppress("UnusedPrivateMember")
+    private fun onAmountSelected(selected: Boolean) {
+        if (selected) {
+            analyticsEventHandler.send(SwapEvents.SendTokenBalanceClicked)
+        }
+    }
+
     private fun cutAmountWithDecimals(maxDecimals: Int, amount: String): String {
         return getValidatedNumberWithFixedDecimals(amount, maxDecimals)
     }
@@ -377,6 +388,7 @@ internal class SwapViewModel @Inject constructor(
             hidePermissionBottomSheet = {
                 analyticsEventHandler.send(SwapEvents.ButtonPermissionCancelClicked)
             },
+            onAmountSelected = { onAmountSelected(it) },
         )
     }
 
