@@ -21,6 +21,7 @@ sealed class Settings(
     class ButtonCardSettings : Settings(event = "Button - Card Settings")
     class ButtonAppSettings : Settings(event = "Button - App Settings")
     class ButtonCreateBackup : Settings(event = "Button - Create Backup")
+    class ButtonWalletConnect : Settings(event = "Button - Wallet Connect")
 
     class ButtonSocialNetwork(network: SocialNetwork) : Settings(
         event = "Button - Social Network",

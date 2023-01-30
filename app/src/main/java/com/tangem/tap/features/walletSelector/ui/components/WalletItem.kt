@@ -171,13 +171,24 @@ private fun RowScope.TokensInfo(
         if (isLocked) {
             LockedPlaceholder()
         } else {
-            if (balance.isLoading) {
-                LoadingTokensInfo(isMultiCurrencyWallet = tokensCount != null)
-            } else {
-                LoadedTokensInfo(
-                    balanceAmount = balance.amount,
-                    tokensCount = tokensCount,
-                )
+            when (balance) {
+                is UserWalletItem.Balance.Error -> {
+                    LoadedTokensInfo(
+                        balanceAmount = balance.amount,
+                        tokensCount = tokensCount,
+                        showWarning = true,
+                    )
+                }
+                is UserWalletItem.Balance.Loaded -> {
+                    LoadedTokensInfo(
+                        balanceAmount = balance.amount,
+                        tokensCount = tokensCount,
+                        showWarning = false,
+                    )
+                }
+                is UserWalletItem.Balance.Loading -> {
+                    LoadingTokensInfo(isMultiCurrencyWallet = tokensCount != null)
+                }
             }
         }
     }
@@ -216,14 +227,35 @@ private fun LoadingTokensInfo(isMultiCurrencyWallet: Boolean) {
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-private fun LoadedTokensInfo(balanceAmount: String, tokensCount: Int?) {
-    Column(horizontalAlignment = Alignment.End) {
-        Text(
-            text = balanceAmount,
-            style = TangemTheme.typography.subtitle1,
-            color = TangemTheme.colors.text.primary1,
-            textAlign = TextAlign.End,
-        )
+private fun LoadedTokensInfo(
+    modifier: Modifier = Modifier,
+    balanceAmount: String,
+    tokensCount: Int?,
+    showWarning: Boolean,
+) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.End,
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(TangemTheme.dimens.spacing4),
+        ) {
+            Text(
+                text = balanceAmount,
+                style = TangemTheme.typography.subtitle1,
+                color = TangemTheme.colors.text.primary1,
+                textAlign = TextAlign.End,
+            )
+            if (showWarning) {
+                Icon(
+                    modifier = Modifier.size(TangemTheme.dimens.size16),
+                    painter = painterResource(id = R.drawable.ic_alert_24),
+                    tint = TangemTheme.colors.icon.attention,
+                    contentDescription = null,
+                )
+            }
+        }
         if (tokensCount != null) {
             SpacerH2()
             Text(
