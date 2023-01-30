@@ -30,7 +30,6 @@ internal class StateBuilder(val actions: UiActions) {
     private val tokensDataConverter = TokensDataConverter(actions.onSearchEntered, actions.onTokenSelected)
 
     fun createInitialLoadingState(initialCurrency: Currency, networkInfo: NetworkInfo): SwapStateHolder {
-        tokensDataConverter.setNetworkData(networkInfo.name, networkInfo.blockchainId)
         return SwapStateHolder(
             networkId = initialCurrency.networkId,
             blockchainId = networkInfo.blockchainId,
@@ -206,10 +205,15 @@ internal class StateBuilder(val actions: UiActions) {
         )
     }
 
-    fun addTokensToState(uiState: SwapStateHolder, dataState: FoundTokensState): SwapStateHolder {
+    fun addTokensToState(
+        uiState: SwapStateHolder,
+        dataState: FoundTokensState,
+        networkInfo: NetworkInfo,
+    ): SwapStateHolder {
         return uiState.copy(
-            selectTokenState = tokensDataConverter.convert(
+            selectTokenState = tokensDataConverter.convertWithNetwork(
                 value = dataState,
+                network = networkInfo,
             ),
         )
     }
