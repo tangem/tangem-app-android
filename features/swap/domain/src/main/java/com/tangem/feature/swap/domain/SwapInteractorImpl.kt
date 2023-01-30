@@ -266,7 +266,7 @@ internal class SwapInteractorImpl @Inject constructor(
         appCurrency: ProxyFiatCurrency,
     ): List<TokenWithBalance> {
         return tokens.map {
-            val balance = balances[it.id]
+            val balance = balances[it.symbol]
             TokenWithBalance(
                 token = it,
                 tokenBalanceData = TokenBalanceData(
