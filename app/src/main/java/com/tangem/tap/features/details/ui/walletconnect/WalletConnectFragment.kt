@@ -9,7 +9,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.platform.ComposeView
 import androidx.fragment.app.Fragment
 import androidx.transition.TransitionInflater
+import com.tangem.core.analytics.Analytics
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.tap.common.analytics.events.WalletConnect
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectAction
 import com.tangem.tap.features.details.redux.walletconnect.WalletConnectState
@@ -23,6 +25,7 @@ class WalletConnectFragment : Fragment(), StoreSubscriber<WalletConnectState> {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Analytics.send(WalletConnect.ScreenOpened())
         val inflater = TransitionInflater.from(requireContext())
         enterTransition = inflater.inflateTransition(android.R.transition.fade)
         exitTransition = inflater.inflateTransition(android.R.transition.fade)
