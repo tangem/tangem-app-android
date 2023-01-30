@@ -6,10 +6,12 @@ import com.tangem.common.hdWallet.DerivationPath
 import com.tangem.domain.common.util.UserWalletId
 import com.tangem.tap.domain.model.WalletStoreModel.WalletRent
 import com.tangem.tap.domain.tokens.models.BlockchainNetwork
+import com.tangem.tap.features.wallet.models.Currency
 import java.math.BigDecimal
 
 /**
  * Contains info about the blockchain and its currencies
+ *
  * @param userWalletId ID of the associated [UserWallet]
  * @param blockchain [Blockchain] of this WalletStore
  * @param derivationPath [DerivationPath] of this store, null if the card does not support the
@@ -21,6 +23,9 @@ import java.math.BigDecimal
  * TODO: Remove after WalletMiddleware refactoring
  * @param walletManager [WalletManager], may be null if it fails to create this manager.
  * TODO: Remove after WalletMiddleware refactoring
+ *
+ * @property blockchainWalletData Returns the [WalletDataModel] of the blockchain of this wallet store
+ * or throw [NoSuchElementException] if this wallet store not contains [WalletDataModel] of the blockchain
  * */
 data class WalletStoreModel(
     val userWalletId: UserWalletId,
@@ -33,6 +38,9 @@ data class WalletStoreModel(
     @Deprecated("Don't use it, will be removed")
     val walletManager: WalletManager?,
 ) {
+
+    val blockchainWalletData: WalletDataModel
+        get() = walletsData.first { it.currency is Currency.Blockchain }
 
     /**
      * Represents wallet blockchain rent
