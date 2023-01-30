@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.ui
 
+import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -24,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -32,7 +34,9 @@ import coil.request.ImageRequest
 import com.tangem.core.ui.components.CurrencyPlaceholderIcon
 import com.tangem.core.ui.components.SpacerW2
 import com.tangem.core.ui.components.appbar.ExpandableSearchView
+import com.tangem.core.ui.extensions.getActiveIconRes
 import com.tangem.core.ui.res.TangemTheme
+import com.tangem.feature.swap.models.Network
 import com.tangem.feature.swap.models.SwapSelectTokenStateHolder
 import com.tangem.feature.swap.models.TokenBalanceData
 import com.tangem.feature.swap.models.TokenToSelect
@@ -53,6 +57,8 @@ fun SwapSelectTokenScreen(state: SwapSelectTokenStateHolder, onBack: () -> Unit)
                     placeholderSearchText = stringResource(id = R.string.search_tokens_title),
                     onSearchChange = state.onSearchEntered,
                     onSearchDisplayClose = { state.onSearchEntered("") },
+                    subtitle = state.network.name,
+                    icon = painterResource(id = getActiveIconRes(state.network.blockchainId)),
                 )
             },
             modifier = Modifier.background(color = TangemTheme.colors.background.secondary),
@@ -69,10 +75,12 @@ private fun ListOfTokens(state: SwapSelectTokenStateHolder, modifier: Modifier =
             .fillMaxWidth(),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        stickyHeader { Header(title = R.string.swapping_token_list_your_tokens) }
+        if (state.addedTokens.isNotEmpty()) {
+            stickyHeader { Header(title = R.string.swapping_token_list_your_tokens) }
+        }
 
         itemsIndexed(items = state.addedTokens) { index, item ->
-            TokenItem(token = item, onTokenClick = { state.onTokenSelected(item.id) })
+            TokenItem(token = item, network = state.network, onTokenClick = { state.onTokenSelected(item.id) })
 
             if (index != state.addedTokens.lastIndex) {
                 Divider(
@@ -82,10 +90,12 @@ private fun ListOfTokens(state: SwapSelectTokenStateHolder, modifier: Modifier =
             }
         }
 
-        stickyHeader { Header(title = R.string.swapping_token_list_other_tokens) }
+        if (state.otherTokens.isNotEmpty()) {
+            stickyHeader { Header(title = R.string.swapping_token_list_other_tokens) }
+        }
 
         itemsIndexed(items = state.otherTokens) { index, item ->
-            TokenItem(token = item, onTokenClick = { state.onTokenSelected(item.id) })
+            TokenItem(token = item, network = state.network, onTokenClick = { state.onTokenSelected(item.id) })
             if (index != state.otherTokens.lastIndex) {
                 Divider(
                     color = TangemTheme.colors.stroke.primary,
@@ -112,8 +122,9 @@ private fun Header(@StringRes title: Int) {
     )
 }
 
+@Suppress("LongMethod")
 @Composable
-private fun TokenItem(token: TokenToSelect, onTokenClick: () -> Unit) {
+private fun TokenItem(token: TokenToSelect, network: Network, onTokenClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -124,7 +135,10 @@ private fun TokenItem(token: TokenToSelect, onTokenClick: () -> Unit) {
             ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        TokenIcon(token = token)
+        TokenIcon(
+            token = token,
+            iconPlaceholder = if (token.isNative) getActiveIconRes(network.blockchainId) else null,
+        )
 
         Column(modifier = Modifier.align(Alignment.CenterVertically)) {
             Text(
@@ -176,7 +190,13 @@ private fun TokenItem(token: TokenToSelect, onTokenClick: () -> Unit) {
 
 @Suppress("MagicNumber")
 @Composable
-private fun TokenIcon(token: TokenToSelect) {
+private fun TokenIcon(
+    token: TokenToSelect,
+    @DrawableRes iconPlaceholder: Int?,
+) {
+    val data = token.iconUrl.ifEmpty {
+        iconPlaceholder
+    }
     Box(
         modifier = Modifier
             .padding(end = TangemTheme.dimens.spacing12),
@@ -192,7 +212,7 @@ private fun TokenIcon(token: TokenToSelect) {
         SubcomposeAsyncImage(
             modifier = iconModifier,
             model = ImageRequest.Builder(LocalContext.current)
-                .data(token.iconUrl)
+                .data(data)
                 .crossfade(true)
                 .build(),
             contentDescription = token.id,
@@ -225,6 +245,7 @@ private val token = TokenToSelect(
     name = "USDC",
     symbol = "USDC",
     iconUrl = "",
+    isNative = false,
     addedTokenBalanceData = TokenBalanceData(
         amount = "15 000 $",
         amountEquivalent = "15 000 " +
@@ -241,6 +262,7 @@ private fun TokenScreenPreview() {
             otherTokens = listOf(token, token, token),
             onSearchEntered = {},
             onTokenSelected = {},
+            network = Network("Ethereum", "ETH"),
         ),
         onBack = {},
     )
