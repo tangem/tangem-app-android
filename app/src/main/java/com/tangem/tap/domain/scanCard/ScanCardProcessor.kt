@@ -14,10 +14,8 @@ import com.tangem.operations.backup.BackupService
 import com.tangem.tap.DELAY_SDK_DIALOG_CLOSE
 import com.tangem.tap.backupService
 import com.tangem.tap.common.analytics.paramsInterceptor.BatchIdParamsInterceptor
-import com.tangem.tap.common.extensions.dispatchDialogShow
 import com.tangem.tap.common.extensions.dispatchOnMain
 import com.tangem.tap.common.extensions.primaryCardIsSaltPayVisa
-import com.tangem.tap.common.redux.AppDialog
 import com.tangem.tap.common.redux.global.GlobalAction
 import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
@@ -30,6 +28,7 @@ import com.tangem.tap.features.onboarding.OnboardingSaltPayHelper
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsAction
 import com.tangem.tap.features.onboarding.products.twins.redux.TwinCardsStep
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.SaltPayExceptionHandler
+import com.tangem.tap.features.onboarding.products.wallet.saltPay.message.SaltPayActivationError
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayAction
 import com.tangem.tap.features.onboarding.products.wallet.saltPay.redux.OnboardingSaltPayState
 import com.tangem.tap.preferencesStorage
@@ -37,7 +36,6 @@ import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
 import com.tangem.tap.userTokensRepository
-import com.tangem.wallet.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -81,7 +79,7 @@ object ScanCardProcessor {
                 checkForUnfinishedBackupForSaltPay(
                     backupService = backupService,
                     scanResponse = scanResponse,
-                    onProgressStateChange = { onProgressStateChange(it) },
+                    onFailure = onFailure,
                     nextHandler = { scanResponse1 ->
                         showDisclaimerIfNeed(
                             scanResponse = scanResponse1,
@@ -115,11 +113,11 @@ object ScanCardProcessor {
      * see BackupAction.CheckForUnfinishedBackup
      * If user touches card other than Visa SaltPay - show dialog and block next processing
      */
-    private inline fun checkForUnfinishedBackupForSaltPay(
+    private suspend inline fun checkForUnfinishedBackupForSaltPay(
         backupService: BackupService,
         scanResponse: ScanResponse,
-        onProgressStateChange: (showProgress: Boolean) -> Unit,
         nextHandler: (ScanResponse) -> Unit,
+        onFailure: suspend (error: TangemError) -> Unit,
     ) {
         if (!backupService.hasIncompletedBackup || !backupService.primaryCardIsSaltPayVisa()) {
             nextHandler(scanResponse)
@@ -131,8 +129,9 @@ object ScanCardProcessor {
             ?: false
 
         if (scanResponse.isSaltPayWallet() || !isTheSamePrimaryCard) {
-            onProgressStateChange(false)
-            showSaltPayTapVisaLogoCardDialog()
+            val error = SaltPayActivationError.PutVisaCard
+            SaltPayExceptionHandler.handle(error)
+            onFailure(TangemSdkError.ExceptionError(error))
         } else {
             nextHandler(scanResponse)
         }
@@ -206,8 +205,8 @@ object ScanCardProcessor {
                             }
                         }
                         is Result.Failure -> {
-                            SaltPayExceptionHandler.handle(result.error)
                             delay(DELAY_SDK_DIALOG_CLOSE)
+                            SaltPayExceptionHandler.handle(result.error)
                             onFailure(TangemSdkError.ExceptionError(result.error))
                         }
                     }
@@ -215,8 +214,9 @@ object ScanCardProcessor {
             } else {
                 delay(DELAY_SDK_DIALOG_CLOSE)
                 if (scanResponse.card.backupStatus?.isActive == false) {
-                    showSaltPayTapVisaLogoCardDialog()
-                    onProgressStateChange(false)
+                    val error = SaltPayActivationError.PutVisaCard
+                    SaltPayExceptionHandler.handle(error)
+                    onFailure(TangemSdkError.ExceptionError(error))
                 } else {
                     onSuccess(scanResponse)
                 }
@@ -238,15 +238,6 @@ object ScanCardProcessor {
                 }
             }
         }
-    }
-
-    private fun showSaltPayTapVisaLogoCardDialog() {
-        store.dispatchDialogShow(
-            AppDialog.SimpleOkDialogRes(
-                headerId = R.string.saltpay_error_empty_backup_title,
-                messageId = R.string.saltpay_error_empty_backup_message,
-            ),
-        )
     }
 
     private suspend inline fun navigateTo(
