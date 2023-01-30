@@ -1,6 +1,7 @@
 package com.tangem.tap.features.welcome.redux
 
 import android.content.Intent
+import com.tangem.common.core.TangemSdkError
 import com.tangem.common.doOnFailure
 import com.tangem.common.doOnSuccess
 import com.tangem.domain.common.ScanResponse
@@ -12,6 +13,7 @@ import com.tangem.tap.common.redux.navigation.AppScreen
 import com.tangem.tap.common.redux.navigation.NavigationAction
 import com.tangem.tap.domain.model.builders.UserWalletBuilder
 import com.tangem.tap.domain.scanCard.ScanCardProcessor
+import com.tangem.tap.features.onboarding.products.wallet.saltPay.message.SaltPayActivationError
 import com.tangem.tap.intentHandler
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
@@ -104,7 +106,14 @@ internal class WelcomeMiddleware {
                 scope.launch { onCardScanned(scanResponse) }
             },
             onFailure = {
-                store.dispatchOnMain(WelcomeAction.ProceedWithCard.Error(it))
+                when {
+                    it is TangemSdkError.ExceptionError && it.cause is SaltPayActivationError -> {
+                        store.dispatchOnMain(WelcomeAction.ProceedWithCard.Success)
+                    }
+                    else -> {
+                        store.dispatchOnMain(WelcomeAction.ProceedWithCard.Error(it))
+                    }
+                }
             },
             onWalletNotCreated = {
                 store.dispatchOnMain(WelcomeAction.ProceedWithCard.Success)
