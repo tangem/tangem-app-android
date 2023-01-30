@@ -6,7 +6,6 @@ import com.tangem.tap.features.wallet.redux.ProgressState
 import org.rekotlin.StateType
 
 data class HomeState(
-    val shouldScanCardOnResume: Boolean = false,
     val scanInProgress: Boolean = false,
     val btnScanState: IndeterminateProgressButton = IndeterminateProgressButton(ButtonState.ENABLED),
 ) : StateType {
