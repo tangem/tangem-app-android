@@ -223,7 +223,17 @@ internal class SwapViewModel @Inject constructor(
                 .onSuccess {
                     when (it) {
                         is TxState.TxSent -> {
-                            uiState = stateBuilder.createSuccessState(uiState, it)
+                            uiState = stateBuilder.createSuccessState(uiState, it) {
+                                val txHash = it.txAddress
+                                if (txHash.isNotEmpty()) {
+                                    swapRouter.openUrl(
+                                        blockchainInteractor.getExplorerTransactionLink(
+                                            networkId = dataState.networkId,
+                                            txAddress = it.txAddress,
+                                        ),
+                                    )
+                                }
+                            }
                             analyticsEventHandler.send(SwapEvents.SwapInProgressScreen)
                             swapRouter.openScreen(SwapScreen.Success)
                         }
