@@ -19,12 +19,14 @@ import com.tangem.tap.domain.model.TotalFiatBalance
 import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.domain.model.WalletStoreModel
 import com.tangem.tap.domain.model.builders.UserWalletBuilder
+import com.tangem.tap.domain.model.builders.UserWalletIdBuilder
 import com.tangem.tap.domain.scanCard.ScanCardProcessor
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
 import com.tangem.tap.tangemSdkManager
 import com.tangem.tap.totalFiatBalanceCalculator
+import com.tangem.tap.userTokensRepository
 import com.tangem.tap.userWalletsListManager
 import com.tangem.tap.walletStoresManager
 import kotlinx.coroutines.Dispatchers
@@ -35,6 +37,8 @@ import org.rekotlin.Middleware
 import timber.log.Timber
 import java.math.BigDecimal
 
+// Refactoring is coming
+@Suppress("LargeClass")
 internal class WalletSelectorMiddleware {
     val middleware: Middleware<AppState> = { _, appStateProvider ->
         { next ->
@@ -216,13 +220,22 @@ internal class WalletSelectorMiddleware {
 
     private suspend fun unlockUserWalletWithScannedCard(userWallet: UserWallet): CompletionResult<Unit> {
         tangemSdkManager.changeDisplayedCardIdNumbersCount(userWallet.scanResponse)
-        return tangemSdkManager.scanCard(userWallet.cardId)
-            .map { scannedCard ->
-                userWallet.copy(
-                    scanResponse = userWallet.scanResponse.copy(
-                        card = scannedCard,
-                    ),
-                )
+        return tangemSdkManager.scanProduct(userTokensRepository)
+            .map { scanResponse ->
+                val scannedUserWalletId = UserWalletIdBuilder.scanResponse(scanResponse).build()
+                if (scannedUserWalletId == userWallet.walletId) {
+                    userWallet.updateCardWallets(scanResponse)
+                } else {
+// [REDACTED_TODO_COMMENT]
+                    Timber.e(
+                        """
+                            Unable to unlock and select user wallet
+                            |- Excepted ID: ${userWallet.walletId}
+                            |- Received ID: $scannedUserWalletId
+                        """.trimIndent(),
+                    )
+                    error("Wrong card")
+                }
             }
             .flatMap { updatedUserWallet ->
                 userWalletsListManager.save(updatedUserWallet, canOverride = true)
@@ -232,6 +245,16 @@ internal class WalletSelectorMiddleware {
                     scanResponse = userWalletsListManager.selectedUserWalletSync?.scanResponse,
                 )
             }
+    }
+
+    private fun UserWallet.updateCardWallets(scanResponse: ScanResponse): UserWallet {
+        return this.copy(
+            scanResponse = this.scanResponse.copy(
+                card = this.scanResponse.card.copy(
+                    wallets = scanResponse.card.wallets,
+                ),
+            ),
+        )
     }
 
     private fun deleteWallets(userWalletsIds: List<UserWalletId>, state: WalletSelectorState) {
