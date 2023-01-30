@@ -44,7 +44,6 @@ class ShopFragment : BaseStoreFragment(R.layout.fragment_shop), StoreSubscriber<
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        Analytics.send(Shop.ScreenOpened())
 
         activity?.onBackPressedDispatcher?.addCallback(
             this,
