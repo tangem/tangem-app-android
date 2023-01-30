@@ -14,6 +14,7 @@ import java.math.BigDecimal
  * @param existentialDeposit Amount that must be held on currency's balance, if balance is below that amount all
  * founds will be destroyed. Null if currency don't have existential deposit
  * @param fiatRate Wallet's fiat rate, used to calculate fiat balance. Null if not provided
+ * @param isCardSingleToken shows that [Currency] is a card token
  * */
 data class WalletDataModel(
     val currency: Currency,
@@ -21,6 +22,7 @@ data class WalletDataModel(
     val walletAddresses: List<AddressData>,
     val existentialDeposit: BigDecimal?,
     val fiatRate: BigDecimal?,
+    val isCardSingleToken: Boolean,
 ) {
 
     /**
