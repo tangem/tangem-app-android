@@ -49,6 +49,14 @@ internal fun WalletStoreModel.updateWithAmounts(
     )
 }
 
+internal fun WalletStoreModel.updateWithDemoAmounts(
+    wallet: Wallet,
+): WalletStoreModel {
+    return this.copy(
+        walletsData = walletsData.updateWithDemoAmounts(wallet = wallet),
+    )
+}
+
 internal fun WalletStoreModel.updateWithFiatRates(
     rates: Map<String, Double>,
 ): WalletStoreModel {
@@ -96,26 +104,30 @@ private inline fun List<WalletStoreModel>.replaceWalletStores(
 
     walletStoresToUpdate.forEach { walletStoreToUpdate ->
         val index = mutableStores.indexOfFirst(walletStoreToUpdate::isSameWalletStore)
+        // Can be possible if user hides wallet store when it's tokens is loading
+        if (index == -1) return@forEach
+
         val currentWalletStore = mutableStores[index]
         val updatedWalletStore = update(currentWalletStore)
 
-        if (currentWalletStore != updatedWalletStore) {
-            Timber.d(
-                """
-                    Update wallet store in storage
-                    |- User wallet ID: ${updatedWalletStore.userWalletId}
-                    |- Blockchain: ${updatedWalletStore.blockchain}
-                """.trimIndent(),
-            )
+            if (currentWalletStore != updatedWalletStore) {
+                Timber.d(
+                    """
+                        Update wallet store in storage
+                        |- User wallet ID: ${updatedWalletStore.userWalletId}
+                        |- Blockchain: ${updatedWalletStore.blockchain}
+                    """.trimIndent(),
+                )
 
-            mutableStores[index] = updatedWalletStore
+                mutableStores[index] = updatedWalletStore
+            }
         }
-    }
 
     return mutableStores
 }
 
 internal fun WalletStoreModel.isSameWalletStore(other: WalletStoreModel): Boolean {
-    return this.blockchain == other.blockchain &&
+    return this.userWalletId == other.userWalletId &&
+        this.blockchain == other.blockchain &&
         this.derivationPath == other.derivationPath
 }
