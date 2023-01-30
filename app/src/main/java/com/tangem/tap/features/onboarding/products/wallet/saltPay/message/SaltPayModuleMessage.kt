@@ -50,6 +50,8 @@ sealed class SaltPayActivationError(
     object ClaimTransactionFailed : SaltPayActivationError(16)
     object NotClaimed : SaltPayActivationError(17)
 
+    object PutVisaCard : SaltPayActivationError(18)
+
     companion object {
         const val EMPTY_MESSAGE = ""
     }
