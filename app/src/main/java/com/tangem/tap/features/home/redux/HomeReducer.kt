@@ -15,9 +15,6 @@ private fun internalReduce(action: Action, state: AppState): HomeState {
         is HomeAction.ScanInProgress -> {
             state = state.copy(scanInProgress = action.scanInProgress)
         }
-        is HomeAction.ShouldScanCardOnResume -> {
-            state = state.copy(shouldScanCardOnResume = action.shouldScanCard)
-        }
         is HomeAction.ChangeScanCardButtonState -> {
             state = state.copy(btnScanState = action.state)
         }
