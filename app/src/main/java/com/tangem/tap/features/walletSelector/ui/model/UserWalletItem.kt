@@ -9,10 +9,13 @@ internal sealed interface UserWalletItem {
     val balance: Balance
     val isLocked: Boolean
 
-    data class Balance(
-        val amount: String,
-        val isLoading: Boolean,
-    )
+    sealed interface Balance {
+        object Loading : Balance
+
+        data class Error(val amount: String) : Balance
+
+        data class Loaded(val amount: String) : Balance
+    }
 }
 
 internal data class MultiCurrencyUserWalletItem(
