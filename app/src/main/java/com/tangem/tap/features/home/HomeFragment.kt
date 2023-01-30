@@ -83,7 +83,7 @@ class HomeFragment : Fragment(), StoreSubscriber<HomeState> {
             homeState,
             onScanButtonClick = {
                 Analytics.send(IntroductionProcess.ButtonScanCard())
-                store.dispatch(HomeAction.ReadCard)
+                store.dispatch(HomeAction.ReadCard())
             },
             onShopButtonClick = {
                 Analytics.send(IntroductionProcess.ButtonBuyCards())
