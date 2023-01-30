@@ -21,6 +21,7 @@ import com.tangem.tap.domain.model.UserWallet
 import com.tangem.tap.domain.model.WalletStoreModel
 import com.tangem.tap.domain.model.builders.UserWalletBuilder
 import com.tangem.tap.domain.scanCard.ScanCardProcessor
+import com.tangem.tap.features.onboarding.products.wallet.saltPay.message.SaltPayActivationError
 import com.tangem.tap.preferencesStorage
 import com.tangem.tap.scope
 import com.tangem.tap.store
@@ -155,7 +156,15 @@ internal class WalletSelectorMiddleware {
             onFailure = { error ->
                 // Rollback policy if card scanning was failed
                 tangemSdkManager.setAccessCodeRequestPolicy(prevUseBiometricsForAccessCode)
-                store.dispatchOnMain(WalletSelectorAction.AddWallet.Error(error))
+                when {
+                    error is TangemSdkError.ExceptionError && error.cause is SaltPayActivationError -> {
+                        store.dispatchOnMain(WalletSelectorAction.AddWallet.Success)
+                        store.dispatchOnMain(NavigationAction.PopBackTo())
+                    }
+                    else -> {
+                        store.dispatchOnMain(WalletSelectorAction.AddWallet.Error(error))
+                    }
+                }
             },
         )
     }
