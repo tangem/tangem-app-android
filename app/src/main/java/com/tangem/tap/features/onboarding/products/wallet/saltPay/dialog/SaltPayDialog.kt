@@ -9,6 +9,7 @@ import com.tangem.tap.features.onboarding.products.wallet.saltPay.message.SaltPa
 sealed class SaltPayDialog : StateDialog {
     sealed class Activation : SaltPayDialog() {
         object NoGas : SaltPayDialog()
+        object PutVisaCard : SaltPayDialog()
         data class OnError(val error: SaltPayActivationError) : SaltPayDialog()
     }
 }
