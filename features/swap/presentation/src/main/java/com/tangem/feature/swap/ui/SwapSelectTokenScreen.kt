@@ -1,5 +1,6 @@
 package com.tangem.feature.swap.ui
 
+import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -79,7 +80,7 @@ private fun ListOfTokens(state: SwapSelectTokenStateHolder, modifier: Modifier =
         }
 
         itemsIndexed(items = state.addedTokens) { index, item ->
-            TokenItem(token = item, onTokenClick = { state.onTokenSelected(item.id) })
+            TokenItem(token = item, network = state.network, onTokenClick = { state.onTokenSelected(item.id) })
 
             if (index != state.addedTokens.lastIndex) {
                 Divider(
@@ -94,7 +95,7 @@ private fun ListOfTokens(state: SwapSelectTokenStateHolder, modifier: Modifier =
         }
 
         itemsIndexed(items = state.otherTokens) { index, item ->
-            TokenItem(token = item, onTokenClick = { state.onTokenSelected(item.id) })
+            TokenItem(token = item, network = state.network, onTokenClick = { state.onTokenSelected(item.id) })
             if (index != state.otherTokens.lastIndex) {
                 Divider(
                     color = TangemTheme.colors.stroke.primary,
@@ -121,8 +122,9 @@ private fun Header(@StringRes title: Int) {
     )
 }
 
+@Suppress("LongMethod")
 @Composable
-private fun TokenItem(token: TokenToSelect, onTokenClick: () -> Unit) {
+private fun TokenItem(token: TokenToSelect, network: Network, onTokenClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -133,7 +135,10 @@ private fun TokenItem(token: TokenToSelect, onTokenClick: () -> Unit) {
             ),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        TokenIcon(token = token)
+        TokenIcon(
+            token = token,
+            iconPlaceholder = if (token.isNative) getActiveIconRes(network.blockchainId) else null,
+        )
 
         Column(modifier = Modifier.align(Alignment.CenterVertically)) {
             Text(
@@ -185,7 +190,13 @@ private fun TokenItem(token: TokenToSelect, onTokenClick: () -> Unit) {
 
 @Suppress("MagicNumber")
 @Composable
-private fun TokenIcon(token: TokenToSelect) {
+private fun TokenIcon(
+    token: TokenToSelect,
+    @DrawableRes iconPlaceholder: Int?,
+) {
+    val data = token.iconUrl.ifEmpty {
+        iconPlaceholder
+    }
     Box(
         modifier = Modifier
             .padding(end = TangemTheme.dimens.spacing12),
@@ -201,7 +212,7 @@ private fun TokenIcon(token: TokenToSelect) {
         SubcomposeAsyncImage(
             modifier = iconModifier,
             model = ImageRequest.Builder(LocalContext.current)
-                .data(token.iconUrl)
+                .data(data)
                 .crossfade(true)
                 .build(),
             contentDescription = token.id,
@@ -234,6 +245,7 @@ private val token = TokenToSelect(
     name = "USDC",
     symbol = "USDC",
     iconUrl = "",
+    isNative = false,
     addedTokenBalanceData = TokenBalanceData(
         amount = "15 000 $",
         amountEquivalent = "15 000 " +
